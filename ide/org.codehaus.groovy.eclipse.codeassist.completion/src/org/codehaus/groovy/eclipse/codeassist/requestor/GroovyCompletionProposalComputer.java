@@ -73,13 +73,12 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
         locationFactories.put(ContentAssistLocation.ANNOTATION, Collections.unmodifiableList(Arrays.asList(
             new TypeCompletionProcessorFactory(),
             new PackageCompletionProcessorFactory(),
-            new ConstructorCompletionProcessorFactory(),
             new AnnotationCollectorTypeCompletionProcessorFactory()
         )));
 
-        locationFactories.put(ContentAssistLocation.ANNOTATION_BODY, Collections.unmodifiableList(Arrays.<IGroovyCompletionProcessorFactory>asList(
+        locationFactories.put(ContentAssistLocation.ANNOTATION_BODY, Collections.<IGroovyCompletionProcessorFactory>singletonList(
             new AnnotationMemberValueCompletionProcessorFactory()
-        )));
+        ));
 
         locationFactories.put(ContentAssistLocation.CLASS_BODY, Collections.unmodifiableList(Arrays.asList(
             new ModifiersCompletionProcessorFactory(),
@@ -99,8 +98,7 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
 
         locationFactories.put(ContentAssistLocation.EXCEPTIONS, Collections.unmodifiableList(Arrays.asList(
             new TypeCompletionProcessorFactory(),
-            new PackageCompletionProcessorFactory(),
-            new ConstructorCompletionProcessorFactory()
+            new PackageCompletionProcessorFactory()
         )));
 
         locationFactories.put(ContentAssistLocation.EXPRESSION, Collections.unmodifiableList(Arrays.asList(
@@ -110,20 +108,17 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
 
         locationFactories.put(ContentAssistLocation.EXTENDS, Collections.unmodifiableList(Arrays.asList(
             new TypeCompletionProcessorFactory(),
-            new PackageCompletionProcessorFactory(),
-            new ConstructorCompletionProcessorFactory()
+            new PackageCompletionProcessorFactory()
         )));
 
         locationFactories.put(ContentAssistLocation.IMPLEMENTS, Collections.unmodifiableList(Arrays.asList(
             new TypeCompletionProcessorFactory(),
-            new PackageCompletionProcessorFactory(),
-            new ConstructorCompletionProcessorFactory()
+            new PackageCompletionProcessorFactory()
         )));
 
         locationFactories.put(ContentAssistLocation.IMPORT, Collections.unmodifiableList(Arrays.asList(
             new TypeCompletionProcessorFactory(),
             new PackageCompletionProcessorFactory(),
-            new ConstructorCompletionProcessorFactory(),
             new ExpressionCompletionProcessorFactory()
         )));
 
@@ -138,27 +133,25 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
 
         locationFactories.put(ContentAssistLocation.PARAMETER, Collections.unmodifiableList(Arrays.asList(
             new TypeCompletionProcessorFactory(),
-            new PackageCompletionProcessorFactory(),
-            new ConstructorCompletionProcessorFactory()
+            new PackageCompletionProcessorFactory()
         )));
 
         locationFactories.put(ContentAssistLocation.SCRIPT, Collections.unmodifiableList(Arrays.asList(
-            new ModifiersCompletionProcessorFactory(),
-            new NewMethodCompletionProcessorFactory(),
-            new GetSetMethodCompletionProcessorFactory(),
-            new NewFieldCompletionProcessorFactory(),
             new TypeCompletionProcessorFactory(),
+            new PackageCompletionProcessorFactory(),
             new ExpressionCompletionProcessorFactory(),
             new LocalVariableCompletionProcessorFactory(),
-            new PackageCompletionProcessorFactory(),
+            new ModifiersCompletionProcessorFactory(),
+            new NewFieldCompletionProcessorFactory(),
+            new NewMethodCompletionProcessorFactory(),
             new NewVariableCompletionProcessorFactory()
         )));
 
         locationFactories.put(ContentAssistLocation.STATEMENT, Collections.unmodifiableList(Arrays.asList(
             new TypeCompletionProcessorFactory(),
+            new PackageCompletionProcessorFactory(),
             new ExpressionCompletionProcessorFactory(),
             new LocalVariableCompletionProcessorFactory(),
-            new PackageCompletionProcessorFactory(),
             new NewVariableCompletionProcessorFactory()
         )));
 

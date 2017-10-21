@@ -457,8 +457,8 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         }
 
         Expression arguments = expression.getArguments();
-        ClassNode constructorType = expression.getType();
         checkForAfterClosingParen(expression, arguments);
+        ClassNode constructorType = expression.getType();
 
         if (check(constructorType)) {
             createContext(constructorType, blockStack.getLast(), ContentAssistLocation.CONSTRUCTOR);
@@ -467,17 +467,15 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         // see comments in visitMethodCallExpression
         visitArguments(arguments, expression);
 
-        // GRECLIPSE-1235
-        // determine if we are completing on the fully qualified name
-        // assume that this is not a partially qualified name
-        String constructorName = constructorType.getNameWithoutPackage();
-        if (constructorName.length() < constructorType.getLength()) {
-            // assume fully qualified name
-            constructorName = constructorType.getName();
-        }
-        fullCompletionExpression = "new " + constructorName;
+        // GRECLIPSE-1235: completion invocation offset is outside of type name and argument expressions; it is probably after opening paren or separating comma
 
-        createContextForCallContext(expression, constructorType, constructorName);
+        int offset = expression.getNameStart(), length = expression.getNameEnd() - offset + 1;
+        String constructorText = constructorType.getNameWithoutPackage();
+        if (constructorText.length() < length) {
+            constructorText = constructorType.getName();
+        }
+
+        createContextForCallContext(expression, constructorType, constructorText);
     }
 
     @Override

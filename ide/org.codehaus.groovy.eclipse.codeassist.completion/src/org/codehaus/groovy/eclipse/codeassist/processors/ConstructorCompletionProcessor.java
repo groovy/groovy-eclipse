@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.codeassist.processors;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -33,7 +32,6 @@ import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.codehaus.groovy.eclipse.codeassist.requestor.MethodInfoContentAssistContext;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.search.ITypeResolver;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
@@ -47,32 +45,32 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
         super(context, javaContext, nameEnvironment);
     }
 
+    public void setResolverInformation(ModuleNode module, JDTResolver resolver) {
+        this.resolver = resolver;
+    }
+
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
         ContentAssistContext context = getContext();
-        char[] constructorCompletionText = getCompletionText(context.fullCompletionExpression);
-        if (constructorCompletionText == null) {
-            return Collections.emptyList();
-        }
-        int completionExprStart;
-        if (context.location == ContentAssistLocation.METHOD_CONTEXT) {
-            completionExprStart = ((MethodInfoContentAssistContext) context).methodNameEnd - ((MethodInfoContentAssistContext) context).methodName.length();
-        } else {
-            completionExprStart = context.completionLocation - constructorCompletionText.length;
-        }
-
-        if (completionExprStart < 0) {
-            // will get here for some kinds of bad syntax
-            return Collections.emptyList();
+        char[] constructorText; int constructorStart;
+        switch (context.location) {
+        case CONSTRUCTOR:
+            constructorText = context.completionExpression.replaceFirst("^new\\s+", "").toCharArray();
+            constructorStart = context.completionLocation - constructorText.length;
+            break;
+        case METHOD_CONTEXT:
+            constructorText = ((MethodInfoContentAssistContext) context).methodName.toCharArray();
+            constructorStart = ((MethodInfoContentAssistContext) context).methodNameEnd - constructorText.length;
+            break;
+        default:
+            throw new IllegalStateException("Invalid constructor completion location: " + context.location.name());
         }
 
-        GroovyProposalTypeSearchRequestor requestor = new GroovyProposalTypeSearchRequestor(
-            context, getJavaContext(), completionExprStart, context.completionEnd - completionExprStart, getNameEnvironment().nameLookup, monitor);
+        GroovyProposalTypeSearchRequestor requestor = new GroovyProposalTypeSearchRequestor(context, getJavaContext(),
+                constructorStart, context.completionEnd - constructorStart, getNameEnvironment().nameLookup, monitor);
 
-        getNameEnvironment().findConstructorDeclarations(constructorCompletionText, true, requestor, monitor);
+        getNameEnvironment().findConstructorDeclarations(constructorText, true, requestor, monitor);
 
-        List<ICompletionProposal> constructorProposals = requestor.processAcceptedConstructors(findUsedParameters(context), resolver);
-
-        return constructorProposals;
+        return requestor.processAcceptedConstructors(findUsedParameters(context), resolver);
     }
 
     private Set<String> findUsedParameters(ContentAssistContext context) {
@@ -105,41 +103,5 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
             }
         }
         return usedParams;
-    }
-
-    /**
-     * Removes whitespace and the 'new ' prefix and does a fail-fast if a non-java identifier is found.
-     */
-    private char[] getCompletionText(String fullCompletionExpression) {
-        List<Character> chars = new LinkedList<Character>();
-        if (fullCompletionExpression == null) {
-            return CharOperation.NO_CHAR;
-        }
-        char[] fullArray = fullCompletionExpression.toCharArray();
-        int newIndex = CharOperation.indexOf("new ".toCharArray(), fullArray, true) + 4;
-        if (newIndex == -1) {
-            return null;
-        }
-        for (int i = newIndex; i < fullArray.length; i++) {
-            if (Character.isWhitespace(fullArray[i])) {
-                continue;
-            } else if (Character.isJavaIdentifierPart(fullArray[i]) || fullArray[i] == '.') {
-                chars.add(fullArray[i]);
-            } else {
-                // fail fast if something odd is found like parens or brackets
-                return null;
-            }
-        }
-        char[] res = new char[chars.size()];
-        int i = 0;
-        for (Character c : chars) {
-            res[i] = c.charValue();
-            i++;
-        }
-        return res;
-    }
-
-    public void setResolverInformation(ModuleNode module, JDTResolver resolver) {
-        this.resolver = resolver;
     }
 }
