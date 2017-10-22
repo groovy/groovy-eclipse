@@ -56,7 +56,7 @@ public class GroovyNamedArgumentProposal implements IGroovyProposal {
         int length = methodContext.completionEnd - offset;
         Image image = ProposalUtils.getParameterImage();
         StyledString displayString = createDisplayString();
-        int relevance = Relevance.HIGH.getRelevance();
+        int relevance = Relevance.VERY_HIGH.getRelevance();
         boolean inJavadoc = false;
         boolean tryParameterGuessing = ProposalFormattingOptions.newFromOptions().doParameterGuessing;
 

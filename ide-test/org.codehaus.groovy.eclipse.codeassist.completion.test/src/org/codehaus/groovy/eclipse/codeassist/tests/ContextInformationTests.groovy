@@ -132,7 +132,7 @@ final class ContextInformationTests extends CompletionTestSuite {
     }
 
     @Test
-    void testConstructorContext1a() {
+    void testConstructorContext2() {
         addGroovySource('''\
             class Other {
               Other(a) { }
@@ -144,7 +144,7 @@ final class ContextInformationTests extends CompletionTestSuite {
     }
 
     @Test
-    void testConstructorContext1b() {
+    void testConstructorContext3() {
         addGroovySource('''\
             class Other {
               Other(a) { }
@@ -156,7 +156,7 @@ final class ContextInformationTests extends CompletionTestSuite {
     }
 
     @Test
-    void testConstructorContext2() {
+    void testConstructorContext4() {
         addGroovySource('''\
             class Other {
               Other(a) { }
@@ -168,7 +168,7 @@ final class ContextInformationTests extends CompletionTestSuite {
     }
 
     @Test
-    void testConstructorContext3() {
+    void testConstructorContext5() {
         addGroovySource('''\
             class Other {
               Other(a) { }
@@ -180,7 +180,7 @@ final class ContextInformationTests extends CompletionTestSuite {
     }
 
     @Test
-    void testConstructorContext4() {
+    void testConstructorContext6() {
         addGroovySource('''\
             class Other {
               Other(a) { }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,10 @@
 package org.codehaus.groovy.eclipse.codeassist.requestor;
 
 /**
- * The set of different contexts available for content assist.
- *
- * @author Andrew Eisenberg
- * @created Nov 9, 2009
+ * Set of contexts available for content assist.
  */
 public enum ContentAssistLocation {
+
     /** Proposals should be restricted to annotation types. */
     ANNOTATION,
 
@@ -35,43 +33,43 @@ public enum ContentAssistLocation {
     IMPORT,
 
     /**
-     * package declarations. package proposals only.
+     * Package declarations. package proposals only.
      */
     PACKAGE,
 
     /**
-     * types for parameters. Types proposals are available only. They cause the
+     * Types for parameters. Types proposals are available only. They cause the
      * standard import statement to appear if required
      */
     PARAMETER,
 
     /**
-     * types for implements clauses
+     * Types for implements clauses.
      */
     IMPLEMENTS,
 
     /**
-     * types for extends clauses
+     * Types for extends clauses.
      */
     EXTENDS,
 
     /**
-     * exception types
+     * Exception types.
      */
     EXCEPTIONS,
 
     /**
-     * part of an expression (e.g. foo.bar^, or foo().bar^).
+     * Part of an expression (e.g. foo.bar|, or foo().bar|).
      */
     EXPRESSION,
 
     /**
-     * a constructor call types and their constructors are available
+     * Constructor call types and their constructors are available.
      */
     CONSTRUCTOR,
 
     /**
-     * start of a new statement. So, everything from expressions are available,
+     * Start of a new statement. So, everything from expressions are available,
      * but also local variables and types should be included
      * Eg- all cases of 'A' fall into the STATEMENT location
      *
@@ -89,20 +87,19 @@ public enum ContentAssistLocation {
     STATEMENT,
 
     /**
-     * inside a class body.  Here, type proposals, modifiers, and overridable methods should appear
+     * Inside a class body.  Here, type proposals, modifiers, and overridable methods should appear
      */
     CLASS_BODY,
 
     /**
-     * inside a script, but not in an expression. Here, type proposals,
+     * Inside a script, but not in an expression. Here, type proposals,
      * modifiers, and overridable methods, as well as statements should
      * appear
      */
     SCRIPT,
 
     /**
-     * Method call at a paren or a comma. Here should show
-     * context information of the relevant method only
+     * Method call at a paren or a comma. Here should show context information of the relevant method.
      */
     METHOD_CONTEXT
 }

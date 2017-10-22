@@ -44,6 +44,7 @@ import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
+import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
@@ -65,6 +66,9 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
     }
 
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
+        if (replaceLength < 1 && getContext().location == ContentAssistLocation.METHOD_CONTEXT) {
+            return Collections.emptyList();
+        }
         Map<String, ClassNode> localNames = findLocalNames(extractVariableNameStart());
         List<ICompletionProposal> proposals = createProposals(localNames);
         // now add closure proposals if necessary
@@ -73,8 +77,9 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
     }
 
     private List<ICompletionProposal> createClosureProposals() {
-        if (getContext().currentScope.getEnclosingClosure() != null) {
-            org.eclipse.jdt.groovy.search.VariableScope scope = getContext().currentScope;
+        ContentAssistContext context = getContext();
+        if (context.currentScope != null && context.currentScope.getEnclosingClosure() != null) {
+            org.eclipse.jdt.groovy.search.VariableScope scope = context.currentScope;
             org.eclipse.jdt.groovy.search.VariableScope.VariableInfo ownerInfo = scope.lookupName("owner");
             org.eclipse.jdt.groovy.search.VariableScope.VariableInfo delegateInfo = scope.lookupName("delegate");
 

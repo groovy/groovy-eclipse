@@ -123,8 +123,11 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
         )));
 
         locationFactories.put(ContentAssistLocation.METHOD_CONTEXT, Collections.unmodifiableList(Arrays.asList(
-            new ExpressionCompletionProcessorFactory(),
-            new ConstructorCompletionProcessorFactory()
+            new ExpressionCompletionProcessorFactory(), // for method contexts
+            new ConstructorCompletionProcessorFactory(), // for constructor contexts
+            new TypeCompletionProcessorFactory(),
+            new PackageCompletionProcessorFactory(),
+            new LocalVariableCompletionProcessorFactory()
         )));
 
         locationFactories.put(ContentAssistLocation.PACKAGE, Collections.<IGroovyCompletionProcessorFactory>singletonList(

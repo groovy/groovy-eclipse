@@ -45,11 +45,11 @@ public enum Relevance {
      */
     MEDIUM_HIGH,
     /**
-     * Intended for local variables, parameters, new get/set method proposals, and receiver type matches (good assignment candidates).
+     * Intended for local variables, method parameters, new get/set method proposals, and receiver type matches (good assignment candidates).
      */
     HIGH,
     /**
-     * New field or method proposals, most recently used, type favorites, or other special cases.
+     * Named parameters, new field or method proposals, most recently used, or other special cases.
      */
     VERY_HIGH;
 

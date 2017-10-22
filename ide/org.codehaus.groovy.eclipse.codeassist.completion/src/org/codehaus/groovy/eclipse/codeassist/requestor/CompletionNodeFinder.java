@@ -464,8 +464,15 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
             createContext(constructorType, blockStack.getLast(), ContentAssistLocation.CONSTRUCTOR);
         }
 
-        // see comments in visitMethodCallExpression
-        visitArguments(arguments, expression);
+        try {
+            // see comments in visitMethodCallExpression
+            visitArguments(arguments, expression);
+        } catch (VisitCompleteException e) {
+            if (context.location != ContentAssistLocation.STATEMENT) {
+                throw e;
+            }
+            // completing constructor argument (https://github.com/groovy/groovy-eclipse/issues/331)
+        }
 
         // GRECLIPSE-1235: completion invocation offset is outside of type name and argument expressions; it is probably after opening paren or separating comma
 

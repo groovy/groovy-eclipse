@@ -41,8 +41,7 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
         // This is technically a bug, but I actually want this to be
         // the expected behaviour since having the extra completions
         // available from script can be annoying
-        assertLocation('a', 1, ContentAssistLocation.STATEMENT)
-//        assertLocation('a', 1, ContentAssistLocation.SCRIPT)
+        assertLocation('a', 1, ContentAssistLocation.STATEMENT/*SCRIPT*/)
     }
 
     @Test
@@ -67,8 +66,7 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
         // This is technically a bug, but I actually want this to be
         // the expected behaviour since having the extra completions
         // available from script can be annoying
-        assertLocation('a\na', 3, ContentAssistLocation.STATEMENT)
-//        assertLocation('a\na', 3, ContentAssistLocation.SCRIPT)
+        assertLocation('a\na', 3, ContentAssistLocation.STATEMENT/*SCRIPT*/)
     }
 
     @Test
@@ -127,12 +125,6 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
 
     @Test
     void testStatement16() {
-        String contents = 'new ArrayList(a,b)'
-        assertLocation(contents, contents.indexOf(')'), ContentAssistLocation.STATEMENT)
-    }
-
-    @Test
-    void testStatement17() {
         String contents = 'new ArrayList(a,b)'
         assertLocation(contents, contents.indexOf(')') + 1, ContentAssistLocation.STATEMENT)
     }
@@ -211,48 +203,55 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
 
     @Test
     void testMethodContext13() {
+        String contents = 'new ArrayList(a,b)'
+        // see https://github.com/groovy/groovy-eclipse/issues/331
+        assertLocation(contents, contents.indexOf('b') + 1, ContentAssistLocation.METHOD_CONTEXT)
+    }
+
+    @Test
+    void testMethodContext14() {
         String contents = 'new ArrayList<String>()'
         assertLocation(contents, contents.indexOf('(') + 1, ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
-    void testMethodContext14() {
+    void testMethodContext15() {
         String contents = 'new ArrayList<String>(a)'
         assertLocation(contents, contents.indexOf('(') + 1, ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
-    void testMethodContext15() {
+    void testMethodContext16() {
         String contents = 'new ArrayList<String>(a,b)'
         assertLocation(contents, contents.indexOf(',') + 1, ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
-    void testMethodContext16() {
+    void testMethodContext17() {
         String contents = 'foo \nh'
         assertLocation(contents, contents.indexOf('foo ') + 4, ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
-    void testMethodContext17() {
+    void testMethodContext18() {
         String contents = 'foo a, \nh'
         assertLocation(contents, contents.indexOf(', ') + 2, ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
-    void testMethodContext18() {
+    void testMethodContext19() {
         String contents = 'foo a, b \nh'
         assertLocation(contents, contents.indexOf('b ') + 2, ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
-    void testMethodContext19() {
+    void testMethodContext20() {
         String contents = 'foo (a, b )\nh'
         assertLocation(contents, contents.indexOf('b ') + 2, ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
-    void testMethodContext20() {
+    void testMethodContext21() {
         String contents = 'foo (a, )\nh'
         assertLocation(contents, contents.indexOf(', ') + 1, ContentAssistLocation.METHOD_CONTEXT)
     }
