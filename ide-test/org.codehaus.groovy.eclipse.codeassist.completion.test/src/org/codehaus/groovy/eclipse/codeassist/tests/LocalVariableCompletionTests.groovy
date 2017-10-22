@@ -160,4 +160,11 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'getDelegate', 0)
         proposalExists(proposals, 'getOwner', 0)
     }
+
+    @Test
+    void testDeclaredVar() {
+        String contents = 'def xxx = new ArrayList(xx)'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'xx'))
+        proposalExists(proposals, 'xxx', 0) // declared variable should not be proposed within its own initializer
+    }
 }

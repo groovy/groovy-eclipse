@@ -31,13 +31,17 @@ import java.util.Map.Entry;
 import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.CodeVisitorSupport;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GroovyCodeVisitor;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.VariableScope;
+import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
@@ -56,13 +60,12 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
 
     private final int offset;
     private final int replaceLength;
-    private final JavaContentAssistInvocationContext javaContext;
 
     public LocalVariableCompletionProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
         super(context, javaContext, nameEnvironment);
-        this.javaContext = javaContext;
-        this.replaceLength = context.completionExpression.length();
+
         this.offset = context.completionLocation;
+        this.replaceLength = context.completionExpression.length();
     }
 
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
@@ -146,8 +149,15 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
     }
 
     private Map<String,ClassNode> findLocalNames(String prefix) {
-        Map<String, ClassNode> nameTypeMap = new HashMap<String, ClassNode>();
-        VariableScope scope = getVariableScope(getContext().containingCodeBlock);
+        ContentAssistContext context = getContext();
+        BlockStatement block = getContainingBlock(context.containingCodeBlock);
+        if (block == null) {
+            return Collections.emptyMap();
+        }
+
+        final Map<String, ClassNode> nameTypeMap = new HashMap<String, ClassNode>();
+
+        VariableScope scope = block.getVariableScope();
         while (scope != null) {
             for (Iterator<Variable> varIter = scope.getDeclaredVariablesIterator(); varIter.hasNext();) {
                 Variable var = varIter.next();
@@ -165,18 +175,31 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
             }
             scope = scope.getParent();
         }
+
+        // if completion location is within declaration expression, exclude declared variable
+        GroovyCodeVisitor visitor = new CodeVisitorSupport() {
+            public void visitDeclarationExpression(DeclarationExpression expression) {
+                if (expression.getStart() <= offset && offset <= expression.getEnd()) {
+                    nameTypeMap.remove(expression.getVariableExpression().getName());
+                }
+                super.visitDeclarationExpression(expression);
+            }
+        };
+        for (Statement stmt : block.getStatements()) {
+            stmt.visit(visitor);
+        }
+
         return nameTypeMap;
     }
 
-    private VariableScope getVariableScope(ASTNode astNode) {
-        if (astNode instanceof BlockStatement) {
-            return ((BlockStatement) astNode).getVariableScope();
-        } else if (astNode instanceof ClassNode && ((ClassNode) astNode).isScript()) {
-            // use scope of the run method
-            ClassNode clazz = (ClassNode) astNode;
-            MethodNode method = clazz.getMethod("run", Parameter.EMPTY_ARRAY);
-            if (method != null && method.getCode() instanceof BlockStatement) {
-                return ((BlockStatement) method.getCode()).getVariableScope();
+    private BlockStatement getContainingBlock(ASTNode node) {
+        if (node instanceof BlockStatement) {
+            return (BlockStatement) node;
+        }
+        if (node instanceof ClassNode && ((ClassNode) node).isScript()) {
+            MethodNode script = ((ClassNode) node).getMethod("run", Parameter.EMPTY_ARRAY);
+            if (script != null && script.getCode() instanceof BlockStatement) {
+                return (BlockStatement) script.getCode();
             }
         }
         return null;
@@ -196,7 +219,7 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
         proposal.setReplaceRange(offset - replaceLength, getContext().completionEnd);
         proposal.setSignature(ProposalUtils.createTypeSignature(type));
         proposal.setRelevance(Relevance.HIGH.getRelevance());
-        LazyJavaCompletionProposal completion = new LazyJavaCompletionProposal(proposal, javaContext);
+        LazyJavaCompletionProposal completion = new LazyJavaCompletionProposal(proposal, getJavaContext());
         completion.setRelevance(proposal.getRelevance());
         return completion;
     }
