@@ -236,7 +236,7 @@ public class GroovyParser {
         // Prior to 2.6.0 all transforms were turned OFF for reconciling, and by turned off that meant no phase
         // processing for them was done at all. With 2.6.0 this phase processing is now active during reconciling
         // but it is currently limited to only allowing the Grab (global) transform to run. (Not sure why Grab
-        // is a global transform... isn't is always annotation driven). Non global transforms are all off.
+        // is a global transform... isn't it always annotation driven). Non-global transforms are all off.
         // This means the transformLoader is setup for the compilation unit but the cu is also told the
         // allowTransforms setting so it can decide what should be allowed through.
         // ---

@@ -229,7 +229,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
     private static void doAddGlobalTransforms(ASTTransformationsContext context, boolean isFirstScan) {
         final CompilationUnit compilationUnit = context.getCompilationUnit();
         // GRECLIPSE add
-        ensurelobalTransformsAllowedInReconcileInitialized();
+        ensureGlobalTransformsAllowedInReconcileInitialized();
         // GRECLIPSE end
         GroovyClassLoader transformLoader = compilationUnit.getTransformLoader();
         Map<String, URL> transformNames = new LinkedHashMap<String, URL>();
@@ -339,14 +339,17 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
         return false;
     }
 
-    private static List<String> globalTransformsAllowedInReconcile = null;
+    private static Set<String> globalTransformsAllowedInReconcile = null;
 
-    private static void ensurelobalTransformsAllowedInReconcileInitialized() {
+    private static void ensureGlobalTransformsAllowedInReconcileInitialized() {
         if (globalTransformsAllowedInReconcile == null) {
-            globalTransformsAllowedInReconcile = new ArrayList<>();
-            globalTransformsAllowedInReconcile.addAll(Arrays.asList(
-                System.getProperty("greclipse.globalTransformsInReconcile", "").split(",")));
+            globalTransformsAllowedInReconcile = new TreeSet<>();
             globalTransformsAllowedInReconcile.add("groovy.grape.GrabAnnotationTransformation");
+            String transformNames = System.getProperty("greclipse.globalTransformsInReconcile", "");
+            for (String transformName : transformNames.split(",")) {
+                globalTransformsAllowedInReconcile.add(transformName.trim());
+            }
+            globalTransformsAllowedInReconcile.remove("");
         }
     }
     // GRECLIPSE end
