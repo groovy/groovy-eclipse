@@ -81,47 +81,47 @@ final class RenamePackageTests extends RenameRefactoringTestSuite {
     @Test
     void testRenamePackage1() {
         renamePackage(new TestSource(
-            pack: 'p', name: 'C.groovy',
-            contents: 'package p; class C {}',
-            finalContents: 'package q; class C {}'
+            pack: 'p', name: 'A.groovy',
+            contents: 'package p; class A {}',
+            finalContents: 'package q; class A {}'
         ))
     }
 
     @Test // qualified reference
     void testRenamePackage2() {
         renamePackage(new TestSource(
-            pack: 'p', name: 'A.java',
-            contents: 'package p; interface A { String B = ""; }',
-            finalContents: 'package q; interface A { String B = ""; }'
+            pack: 'p', name: 'B.java',
+            contents: 'package p; interface B { String CONST = ""; }',
+            finalContents: 'package q; interface B { String CONST = ""; }'
         ), new TestSource(
             pack: 'x', name: 'C.groovy',
-            contents: 'package x; class C { def foo = p.A.B }',
-            finalContents: 'package x; class C { def foo = q.A.B }'
+            contents: 'package x; class C { def foo = p.B.CONST }',
+            finalContents: 'package x; class C { def foo = q.B.CONST }'
         ))
     }
 
     @Test // more qualified references
     void testRenamePackage3() {
         renamePackage(new TestSource(
-            pack: 'p', name: 'A.java',
-            contents: 'package p; class A { }',
-            finalContents: 'package q; class A { }'
+            pack: 'p', name: 'D.java',
+            contents: 'package p; class D { }',
+            finalContents: 'package q; class D { }'
         ), new TestSource(
-            pack: 'p', name: 'C.groovy',
+            pack: 'p', name: 'E.groovy',
             contents: '''\
                 package p
-                class C {
-                  p.A foo
-                  private p.A bar
-                  p.A baz() { new p.A() }
+                class E {
+                  p.D foo
+                  private p.D bar
+                  p.D baz() { new p.D() }
                 }
                 '''.stripIndent(),
             finalContents: '''\
                 package q
-                class C {
-                  q.A foo
-                  private q.A bar
-                  q.A baz() { new q.A() }
+                class E {
+                  q.D foo
+                  private q.D bar
+                  q.D baz() { new q.D() }
                 }
                 '''.stripIndent()
         ))
@@ -130,23 +130,23 @@ final class RenamePackageTests extends RenameRefactoringTestSuite {
     @Test // import reference
     void testRenamePackage4() {
         renamePackage(new TestSource(
-            pack: 'p', name: 'A.java',
-            contents: 'package p; interface A { String B = ""; }',
-            finalContents: 'package q; interface A { String B = ""; }'
+            pack: 'p', name: 'F.java',
+            contents: 'package p; interface F { String CONST = ""; }',
+            finalContents: 'package q; interface F { String CONST = ""; }'
         ), new TestSource(
-            pack: 'x', name: 'C.groovy',
+            pack: 'x', name: 'G.groovy',
             contents: '''\
                 package x
-                import p.A
+                import p.F
                 class C {
-                  def foo = A.B
+                  def foo = F.CONST
                 }
                 '''.stripIndent(),
             finalContents: '''\
                 package x
-                import q.A
+                import q.F
                 class C {
-                  def foo = A.B
+                  def foo = F.CONST
                 }
                 '''.stripIndent()
         ))
@@ -155,23 +155,23 @@ final class RenamePackageTests extends RenameRefactoringTestSuite {
     @Test // static import reference
     void testRenamePackage5() {
         renamePackage(new TestSource(
-            pack: 'p', name: 'A.java',
-            contents: 'package p; interface A { String B = ""; }',
-            finalContents: 'package q; interface A { String B = ""; }'
+            pack: 'p', name: 'H.java',
+            contents: 'package p; interface H { String CONST = ""; }',
+            finalContents: 'package q; interface H { String CONST = ""; }'
         ), new TestSource(
-            pack: 'x', name: 'C.groovy',
+            pack: 'x', name: 'I.groovy',
             contents: '''\
                 package x
-                import static p.A.*
+                import static p.H.*
                 class C {
-                  def foo = B
+                  def foo = CONST
                 }
                 '''.stripIndent(),
             finalContents: '''\
                 package x
-                import static q.A.*
+                import static q.H.*
                 class C {
-                  def foo = B
+                  def foo = CONST
                 }
                 '''.stripIndent()
         ))
