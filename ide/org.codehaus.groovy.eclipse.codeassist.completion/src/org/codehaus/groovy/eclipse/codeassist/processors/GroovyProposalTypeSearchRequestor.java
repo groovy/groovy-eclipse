@@ -32,8 +32,8 @@ import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaMethodCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyNamedArgumentProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOptions;
+import org.codehaus.groovy.eclipse.codeassist.relevance.IRelevanceRule;
 import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
-import org.codehaus.groovy.eclipse.codeassist.relevance.RelevanceRules;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.codehaus.groovy.eclipse.codeassist.requestor.MethodInfoContentAssistContext;
@@ -58,6 +58,7 @@ import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.internal.codeassist.CompletionEngine;
 import org.eclipse.jdt.internal.codeassist.ISearchRequestor;
 import org.eclipse.jdt.internal.codeassist.RelevanceConstants;
+import org.eclipse.jdt.internal.codeassist.impl.AssistOptions;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.lookup.ImportBinding;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObject;
@@ -86,11 +87,9 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
 
     private int foundTypesCount = 0;
     private int foundConstructorsCount = 0;
-    private final IProgressMonitor monitor;
 
     private ObjectVector acceptedTypes;
     private Set<String> acceptedPackages;
-
     private boolean shouldAcceptConstructors;
     private ObjectVector acceptedConstructors;
 
@@ -104,6 +103,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
     private char[][] onDemandimports;
 
     private final NameLookup nameLookup;
+    private final IProgressMonitor monitor;
     private final String completionExpression;
 
     private final ModuleNode module;
@@ -124,6 +124,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
     private final boolean isImport;
 
     private final ContentAssistContext context;
+    private final        AssistOptions options;
 
     public GroovyProposalTypeSearchRequestor(
             ContentAssistContext context,
@@ -142,7 +143,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
         this.replaceLength = replaceLength;
         this.actualCompletionPosition = context.completionLocation;
         this.monitor = monitor;
-        this.acceptedTypes = new ObjectVector();
         this.nameLookup = nameLookup;
         this.isImport = context.location == ContentAssistLocation.IMPORT;
         // if contextOnly then do not insert any text, only show context information
@@ -150,6 +150,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
         this.shouldAcceptConstructors = (context.location == ContentAssistLocation.CONSTRUCTOR || context.location == ContentAssistLocation.METHOD_CONTEXT);
         this.completionExpression = (context.location == ContentAssistLocation.METHOD_CONTEXT ? ((MethodInfoContentAssistContext) context).methodName : context.completionExpression);
         this.groovyRewriter = new GroovyImportRewriteFactory(this.unit, this.module);
+        this.options = new AssistOptions(javaContext.getProject().getOptions(true));
 
         try {
             this.allTypesInUnit = this.unit.getAllTypes();
@@ -188,27 +189,47 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
             AccessRestriction accessRestriction) {
 
         if (shouldAcceptConstructors) {
-            // do not check cancellation for every types to avoid performance loss
-            if ((foundConstructorsCount++ % (CHECK_CANCEL_FREQUENCY)) == 0)
+            // do not check cancellation for every ctor to avoid performance loss
+            if ((foundConstructorsCount % (CHECK_CANCEL_FREQUENCY)) == 0)
                 checkCancel();
+            foundConstructorsCount += 1;
 
             // do not propose enum constructors
-            if (Flags.isEnum(typeModifiers))
+            if (Flags.isEnum(typeModifiers)) {
                 return;
-
+            }
             if (TypeFilter.isFiltered(packageName, simpleTypeName)) {
                 return;
+            }
+            if (this.options.checkDeprecation && (typeModifiers & Flags.AccDeprecated) != 0) {
+                return;
+            }
+
+            if (this.options.checkVisibility) {
+                if ((typeModifiers & Flags.AccPublic) == 0) {
+                    if ((typeModifiers & Flags.AccPrivate) != 0)
+                        return;
+
+                    if (!CharOperation.equals(packageName, CharOperation.concatWith(unit.getPackageName(), '.')))
+                        return;
+                }
             }
 
             int accessibility = IAccessRule.K_ACCESSIBLE;
             if (accessRestriction != null) {
                 switch (accessRestriction.getProblemId()) {
-                case IProblem.ForbiddenReference:
-                    // forbidden references are removed
-                    return;
                 case IProblem.DiscouragedReference:
-                    // discouraged references have lower priority
+                    if (options.checkDiscouragedReference) {
+                        return;
+                    }
                     accessibility = IAccessRule.K_DISCOURAGED;
+                    break;
+                case IProblem.ForbiddenReference:
+                    if (options.checkForbiddenReference) {
+                        return;
+                    }
+                    accessibility = IAccessRule.K_NON_ACCESSIBLE;
+                    break;
                 }
             }
 
@@ -218,8 +239,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
 
             if (acceptedConstructors == null)
                 acceptedConstructors = new ObjectVector();
-            acceptedConstructors.add(new AcceptedCtor(modifiers, simpleTypeName, parameterCount,
-                signature, parameterTypes, parameterNames, typeModifiers, packageName, extraFlags, accessibility));
+            acceptedConstructors.add(new AcceptedCtor(modifiers, simpleTypeName, parameterCount, signature, parameterTypes, parameterNames, typeModifiers, packageName, extraFlags, accessibility));
         }
     }
 
@@ -230,27 +250,50 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
             int modifiers,
             AccessRestriction accessRestriction) {
 
-        // do not check cancellation for every types to avoid performance loss
-        if ((foundTypesCount++ % CHECK_CANCEL_FREQUENCY) == 0)
+        // do not check cancellation for every type to avoid performance loss
+        if ((foundTypesCount % CHECK_CANCEL_FREQUENCY) == 0)
             checkCancel();
+        foundTypesCount += 1;
 
         // do not propose synthetic types
-        if (CharOperation.contains('$', simpleTypeName))
+        if (CharOperation.contains('$', simpleTypeName)) {
             return;
-
+        }
         if (TypeFilter.isFiltered(packageName, simpleTypeName)) {
             return;
+        }
+        if (options.checkDeprecation && (modifiers & Flags.AccDeprecated) != 0) {
+            return;
+        }
+        if (context.location == ContentAssistLocation.EXTENDS && (modifiers & Flags.AccFinal) != 0) {
+            return;
+        }
+
+        if (options.checkVisibility) {
+            if ((modifiers & Flags.AccPublic) == 0) {
+                if ((modifiers & Flags.AccPrivate) != 0)
+                    return;
+
+                if (!CharOperation.equals(packageName, CharOperation.concatWith(unit.getPackageName(), '.')))
+                    return;
+            }
         }
 
         int accessibility = IAccessRule.K_ACCESSIBLE;
         if (accessRestriction != null) {
             switch (accessRestriction.getProblemId()) {
-            case IProblem.ForbiddenReference:
-                // forbidden references are removed
-                return;
             case IProblem.DiscouragedReference:
-                // discouraged references have a lower priority
+                if (options.checkDiscouragedReference) {
+                    return;
+                }
                 accessibility = IAccessRule.K_DISCOURAGED;
+                break;
+            case IProblem.ForbiddenReference:
+                if (options.checkForbiddenReference) {
+                    return;
+                }
+                accessibility = IAccessRule.K_NON_ACCESSIBLE;
+                break;
             }
         }
 
@@ -275,7 +318,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
 
         int n;
         if (acceptedTypes == null || (n = acceptedTypes.size()) == 0) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
 
         HashtableOfObject onDemandFound = new HashtableOfObject();
@@ -303,8 +346,8 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
                     flatEnclosingTypeNames = null;
                     typeName = simpleTypeName;
                 } else {
-                    flatEnclosingTypeNames = CharOperation.concatWith(acceptedType.enclosingTypeNames, '.');
-                    typeName = CharOperation.concat(flatEnclosingTypeNames, simpleTypeName, '.');
+                    flatEnclosingTypeNames = CharOperation.concatWith(acceptedType.enclosingTypeNames, '$');
+                    typeName = CharOperation.concat(flatEnclosingTypeNames, simpleTypeName, '$');
                 }
                 char[] fullyQualifiedName = CharOperation.concat(packageName, typeName, '.');
 
@@ -382,7 +425,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
         proposal.setFlags(modifiers);
         proposal.setReplaceRange(offset, offset + replaceLength);
         proposal.setTokenRange(offset, actualCompletionPosition);
-        proposal.setRelevance(RelevanceRules.ALL_RULES.getRelevance(fullyQualifiedName, allTypesInUnit, accessibility, modifiers));
+        proposal.setRelevance(IRelevanceRule.DEFAULT.getRelevance(fullyQualifiedName, allTypesInUnit, accessibility, modifiers));
         proposal.setTypeName(simpleTypeName);
         proposal.setAccessibility(accessibility);
         proposal.setPackageName(packageName);
@@ -417,7 +460,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
         proposal.setFlags(modifiers);
         proposal.setReplaceRange(offset, offset + replaceLength);
         proposal.setTokenRange(offset, actualCompletionPosition);
-        proposal.setRelevance(RelevanceRules.ALL_RULES.getRelevance(fullyQualifiedName, allTypesInUnit, accessibility, modifiers));
+        proposal.setRelevance(IRelevanceRule.DEFAULT.getRelevance(fullyQualifiedName, allTypesInUnit, accessibility, modifiers));
         proposal.setNameLookup(nameLookup);
         proposal.setTypeName(simpleTypeName);
         proposal.setAccessibility(accessibility);
@@ -711,7 +754,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
         typeProposal.setCompletion(typeCompletion);
         typeProposal.setReplaceRange(offset, offset + replaceLength);
         typeProposal.setTokenRange(offset, offset + replaceLength);
-        typeProposal.setRelevance(RelevanceRules.ALL_RULES.getRelevance(fullyQualifiedName, allTypesInUnit, accessibility, augmentedModifiers));
+        typeProposal.setRelevance(IRelevanceRule.DEFAULT.getRelevance(fullyQualifiedName, allTypesInUnit, accessibility, augmentedModifiers));
         return typeProposal;
     }
 
@@ -883,7 +926,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
             buffer.append(',');
             buffer.append(simpleTypeName);
             buffer.append(',');
-            buffer.append(CharOperation.concatWith(enclosingTypeNames, '.'));
+            buffer.append(CharOperation.concatWith(enclosingTypeNames, '$'));
             buffer.append('}');
             return buffer.toString();
         }

@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.codehaus.groovy.eclipse.codeassist.relevance.RelevanceRules;
+import org.codehaus.groovy.eclipse.codeassist.relevance.IRelevanceRule;
 import org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixPlugin;
 import org.codehaus.groovy.eclipse.refactoring.actions.TypeSearch;
 import org.codehaus.groovy.eclipse.refactoring.actions.TypeSearch.UnresolvedTypeData;
@@ -214,7 +214,6 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
     }
 
     protected int getRelevance(IType type) {
-        if (type == null) return 0;
-        return RelevanceRules.ALL_RULES.getRelevance(type, getContextTypes());
+        return (type == null ? 0 : IRelevanceRule.DEFAULT.getRelevance(type, getContextTypes()));
     }
 }

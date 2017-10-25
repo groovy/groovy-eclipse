@@ -15,8 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests;
 
-import static org.eclipse.jdt.ui.PreferenceConstants.TYPEFILTER_ENABLED
-
+import org.eclipse.jdt.internal.codeassist.impl.AssistOptions
+import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Test
 
@@ -267,23 +267,37 @@ final class TypeCompletionTests extends CompletionTestSuite {
 
     @Test
     void testTypeFilter1() {
-        try {
-            setJavaPreference(TYPEFILTER_ENABLED, 'javax.swing.JFrame')
-            ICompletionProposal[] proposals = createProposalsAtOffset('JFr', 2)
-            proposalExists(proposals, 'JFrame - javax.swing', 0)
-        } finally {
-            setJavaPreference(TYPEFILTER_ENABLED, '')
-        }
+        setJavaPreference(PreferenceConstants.TYPEFILTER_ENABLED, 'javax.swing.JFrame')
+
+        ICompletionProposal[] proposals = createProposalsAtOffset('JFr', 2)
+        proposalExists(proposals, 'JFrame - javax.swing', 0)
     }
 
     @Test
     void testTypeFilter2() {
-        try {
-            setJavaPreference(TYPEFILTER_ENABLED, 'javax.swing.*')
-            ICompletionProposal[] proposals = createProposalsAtOffset('JFr', 2)
-            proposalExists(proposals, 'JFrame - javax.swing', 0)
-        } finally {
-            setJavaPreference(TYPEFILTER_ENABLED, '')
-        }
+        setJavaPreference(PreferenceConstants.TYPEFILTER_ENABLED, 'javax.swing.*')
+
+        ICompletionProposal[] proposals = createProposalsAtOffset('JFr', 2)
+        proposalExists(proposals, 'JFrame - javax.swing', 0)
+    }
+
+    @Test
+    void testDeprecationCheck0() {
+        setJavaPreference(AssistOptions.OPTION_PerformDeprecationCheck, AssistOptions.DISABLED)
+        addJUnit4()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset('Assert', 2)
+        proposalExists(proposals, 'Assert - junit.framework', 1)
+        proposalExists(proposals, 'Assert - org.junit', 1)
+    }
+
+    @Test
+    void testDeprecationCheck1() {
+        setJavaPreference(AssistOptions.OPTION_PerformDeprecationCheck, AssistOptions.ENABLED)
+        addJUnit4()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset('Assert', 2)
+        proposalExists(proposals, 'Assert - junit.framework', 0)
+        proposalExists(proposals, 'Assert - org.junit', 1)
     }
 }

@@ -31,67 +31,69 @@ import org.eclipse.jdt.core.IType;
  * @author Nieraj Singh
  * @created 2011-02-18
  */
+@Deprecated
 public abstract class AbstractRule implements IRelevanceRule {
 
-	/**
-	 * Additional granularity for Types only. Allows rules to have different
-	 * priorities, as some rules may carry more weight than others.
-	 *
-	 */
-	public enum TypeRelevanceCategory {
+    /**
+     * Additional granularity for Types only. Allows rules to have different
+     * priorities, as some rules may carry more weight than others.
+     *
+     */
+    @Deprecated
+    public enum TypeRelevanceCategory {
 
-		LOWEST_TYPE(1), LOW_TYPE(4), MEDIUM_TYPE(8), MEDIUM_HIGH_TYPE(12), HIGH_TYPE(16);
+        LOWEST_TYPE(1), LOW_TYPE(4), MEDIUM_TYPE(8), MEDIUM_HIGH_TYPE(12), HIGH_TYPE(16);
 
-		private final double multiplier;
+        private final double multiplier;
 
-		private TypeRelevanceCategory(double multiplier) {
-			this.multiplier = multiplier;
-		}
+        private TypeRelevanceCategory(double multiplier) {
+            this.multiplier = multiplier;
+        }
 
-		public double getMultiplier() {
-			return multiplier;
-		}
+        public double getMultiplier() {
+            return multiplier;
+        }
 
-		public int applyCategory(int value) {
-			return (int) getMultiplier() * value;
-		}
-	}
+        public int applyCategory(int value) {
+            return (int) getMultiplier() * value;
+        }
+    }
 
-	/**
-	 * Returns true if an only if the relevance type is contained in the same
-	 * project as ALL other context types. If the context types includes types
-	 * from different folders, or the relevance type is in a different project
-	 * than the context types, false is returned.
-	 *
-	 * @param relevanceType
-	 *            type whose relevance needs to be determined
-	 * @param contextTypes
-	 *            context types where this rule is being invoked, like the
-	 *            compilation unit where the relevance type is being imported
-	 * @return true if and only if the relevance type is contained in the same
-	 *         project as ALL other context types
-	 */
+    /**
+     * Returns true if an only if the relevance type is contained in the same
+     * project as ALL other context types. If the context types includes types
+     * from different folders, or the relevance type is in a different project
+     * than the context types, false is returned.
+     *
+     * @param relevanceType
+     *            type whose relevance needs to be determined
+     * @param contextTypes
+     *            context types where this rule is being invoked, like the
+     *            compilation unit where the relevance type is being imported
+     * @return true if and only if the relevance type is contained in the same
+     *         project as ALL other context types
+     */
     public boolean areTypesInSameProject(IType relevanceType,
-			IType[] contextTypes) {
-		if (relevanceType == null || contextTypes == null
-				|| contextTypes.length == 0) {
-			return false;
-		}
+            IType[] contextTypes) {
+        if (relevanceType == null || contextTypes == null
+                || contextTypes.length == 0) {
+            return false;
+        }
 
-		IJavaProject relevanceProject = relevanceType.getJavaProject();
+        IJavaProject relevanceProject = relevanceType.getJavaProject();
 
-		if (relevanceProject == null) {
-			return false;
-		}
-		for (IType cType : contextTypes) {
+        if (relevanceProject == null) {
+            return false;
+        }
+        for (IType cType : contextTypes) {
 
-			if (!relevanceProject.equals(cType.getJavaProject())) {
-				return false;
-			}
-		}
-		return true;
+            if (!relevanceProject.equals(cType.getJavaProject())) {
+                return false;
+            }
+        }
+        return true;
 
-	}
+    }
 
     /**
      * Returns true if an only if the relevance type is contained in the same package as ALL other
@@ -136,58 +138,57 @@ public abstract class AbstractRule implements IRelevanceRule {
      * @return true if and only if the relevance type and all context types are in the same
      *         compilation unit. False otherwise
      */
-	public boolean areTypesInSameCompilationUnit(IType relevanceType,
-			IType[] contextTypes) {
+    public boolean areTypesInSameCompilationUnit(IType relevanceType,
+            IType[] contextTypes) {
 
-		if (relevanceType == null || contextTypes == null
-				|| contextTypes.length == 0) {
-			return false;
-		}
+        if (relevanceType == null || contextTypes == null
+                || contextTypes.length == 0) {
+            return false;
+        }
 
-		ICompilationUnit relevanceCompilationUnit = relevanceType
-				.getCompilationUnit();
-		if (relevanceCompilationUnit != null) {
-			for (IType contextType : contextTypes) {
-				ICompilationUnit contextCu = contextType.getCompilationUnit();
-				if (!relevanceCompilationUnit.equals(contextCu)) {
-					return false;
-				}
-			}
-			return true;
-		}
-		return false;
-	}
+        ICompilationUnit relevanceCompilationUnit = relevanceType
+                .getCompilationUnit();
+        if (relevanceCompilationUnit != null) {
+            for (IType contextType : contextTypes) {
+                ICompilationUnit contextCu = contextType.getCompilationUnit();
+                if (!relevanceCompilationUnit.equals(contextCu)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
 
-	/**
-	 * This returns the package fragment containing ALL the context types. If
-	 * the list of context types includes types from different packages, null is
-	 * returned.
-	 *
-	 * @param contextTypes
-	 *            . Should all be part of the same compilation unit. therefore
-	 *            contained in the same package
-	 * @return package fragment containing ALL the context types, or null if a
-	 *         single package fragment cannot be resolved from the context types
-	 */
-	public IPackageFragment getContextPackageFragment(IType[] contextTypes) {
-		if (contextTypes == null) {
-			return null;
-		}
-		IPackageFragment frag = null;
-		for (IType type : contextTypes) {
-			IPackageFragment fragToCheck = type.getPackageFragment();
-			if (frag != null && !frag.equals(fragToCheck)) {
-				return null;
-			}
-			frag = fragToCheck;
+    /**
+     * This returns the package fragment containing ALL the context types. If
+     * the list of context types includes types from different packages, null is
+     * returned.
+     *
+     * @param contextTypes
+     *            . Should all be part of the same compilation unit. therefore
+     *            contained in the same package
+     * @return package fragment containing ALL the context types, or null if a
+     *         single package fragment cannot be resolved from the context types
+     */
+    public IPackageFragment getContextPackageFragment(IType[] contextTypes) {
+        if (contextTypes == null) {
+            return null;
+        }
+        IPackageFragment frag = null;
+        for (IType type : contextTypes) {
+            IPackageFragment fragToCheck = type.getPackageFragment();
+            if (frag != null && !frag.equals(fragToCheck)) {
+                return null;
+            }
+            frag = fragToCheck;
 
-		}
-		return frag;
-	}
+        }
+        return frag;
+    }
 
-	public IType getFirstContextType(IType[] contextTypes) {
-		return contextTypes != null && contextTypes.length > 0 ? contextTypes[0]
-				: null;
-	}
-
+    public IType getFirstContextType(IType[] contextTypes) {
+        return contextTypes != null && contextTypes.length > 0 ? contextTypes[0]
+                : null;
+    }
 }

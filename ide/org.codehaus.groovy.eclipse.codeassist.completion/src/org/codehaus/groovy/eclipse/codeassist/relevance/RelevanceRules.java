@@ -36,10 +36,12 @@ import org.eclipse.jdt.internal.core.SourceType;
  * <p>
  * New rules can be added and require a corresponding type definition
  */
+@Deprecated // replaced by internal.CompositeRule
 public class RelevanceRules implements IRelevanceRule {
 
     public static int DEFAULT_STARTING_RELEVANCE_VALUE = 1;
 
+    @Deprecated
     public static enum RelevanceRuleType {
         SOURCE_TYPE, ACCESSIBILITY, MODIFIERS, LIBRARY_TYPE, SIMILAR_PACKAGE
     }
@@ -48,8 +50,6 @@ public class RelevanceRules implements IRelevanceRule {
 
     public static RelevanceRules ALL_RULES = new RelevanceRules(
             RelevanceRuleType.LIBRARY_TYPE, RelevanceRuleType.SOURCE_TYPE,
-            // FIXNS: Enable only after it has been tested
-            // RelevanceRuleType.ACCESSIBILITY,
             RelevanceRuleType.MODIFIERS, RelevanceRuleType.SIMILAR_PACKAGE);
 
     public static IRelevanceRule getRule(RelevanceRuleType type) {
@@ -63,10 +63,9 @@ public class RelevanceRules implements IRelevanceRule {
         case SOURCE_TYPE:
             rule = new SourceRule();
             break;
-        // FIXNS: Enable only after it has been tested
-        // case ACCESSIBILITY:
-        // rule = new AccessibilityRule();
-        // break;
+        case ACCESSIBILITY:
+            //rule = new AccessibilityRule();
+            break;
         case MODIFIERS:
             rule = new ModifierRule();
             break;
@@ -151,24 +150,21 @@ public class RelevanceRules implements IRelevanceRule {
      */
 
     /**
-     * Simple rule that places higher priority on Source types. Binary types
-     * have lower priority.
+     * Simple rule that places higher priority on Source types.
      */
+    @Deprecated
     public static class SourceRule extends AbstractRule {
 
         public int getRelevance(IType relevanceType, IType[] contextTypes) {
             // Source have higher relevance than Binary
-            return relevanceType instanceof SourceType ? TypeRelevanceCategory.MEDIUM_TYPE
-                    .applyCategory(1) : TypeRelevanceCategory.LOW_TYPE
-                    .applyCategory(1);
+            return relevanceType instanceof SourceType
+                ? TypeRelevanceCategory.MEDIUM_TYPE.applyCategory(1)
+                : TypeRelevanceCategory.LOW_TYPE   .applyCategory(1);
         }
 
-        public int getRelevance(char[] fullyQualifiedName,
-                IType[] contextTypes, int accessibility, int modifiers) {
-            // don't know
+        public int getRelevance(char[] fullyQualifiedName, IType[] contextTypes, int accessibility, int modifiers) {
             return 0;
         }
-
     }
 
     /**
@@ -177,6 +173,7 @@ public class RelevanceRules implements IRelevanceRule {
      * Accessible types have higher priority than restricted types.
      *
      */
+    @Deprecated // replaced by internal.AccessibilityRule
     public static class AccessibilityRule extends AbstractRule {
 
         public int getRelevance(IType relevanceType, IType[] contextTypes) {
@@ -185,8 +182,7 @@ public class RelevanceRules implements IRelevanceRule {
             }
 
             // determine associated access restriction
-            AccessRestriction accessRestriction = ProposalUtils
-                    .getTypeAccessibility(relevanceType);
+            AccessRestriction accessRestriction = ProposalUtils.getTypeAccessibility(relevanceType);
 
             // If no access restriction found, assume accessible?
             int accessibility = IAccessRule.K_ACCESSIBLE;
@@ -205,10 +201,8 @@ public class RelevanceRules implements IRelevanceRule {
             return getRelevance(null, null, accessibility, 0);
         }
 
-        public int getRelevance(char[] fullyQualifiedName,
-                IType[] contextTypes, int accessibility, int modifiers) {
-            return accessibility == IAccessRule.K_ACCESSIBLE ? TypeRelevanceCategory.MEDIUM_TYPE
-                    .applyCategory(1) : 0;
+        public int getRelevance(char[] fullyQualifiedName, IType[] contextTypes, int accessibility, int modifiers) {
+            return accessibility == IAccessRule.K_ACCESSIBLE ? TypeRelevanceCategory.MEDIUM_TYPE.applyCategory(1) : 0;
         }
     }
 
@@ -218,11 +212,10 @@ public class RelevanceRules implements IRelevanceRule {
      * that types in other projects. Furthermore, private types have the highest
      * priority, followed by package private, followed by public
      */
+    @Deprecated
     public static class ModifierRule extends AbstractRule {
 
-        protected TypeRelevanceCategory getTypeCategory(IType relevanceType,
-                IType[] contextTypes) {
-
+        protected TypeRelevanceCategory getTypeCategory(IType relevanceType, IType[] contextTypes) {
             TypeRelevanceCategory category = null;
             if (areTypesInSameCompilationUnit(relevanceType, contextTypes)) {
                 category = TypeRelevanceCategory.HIGH_TYPE;
@@ -233,11 +226,9 @@ public class RelevanceRules implements IRelevanceRule {
                 category = null;
             }
             return category;
-
         }
 
         public int getRelevance(IType relevanceType, IType[] contextTypes) {
-
             int relevance = 0;
             TypeRelevanceCategory category = null;
             try {
@@ -255,11 +246,9 @@ public class RelevanceRules implements IRelevanceRule {
         }
 
         // don't do for relevance calculation involving content assist
-        public int getRelevance(char[] fullyQualifiedName,
-                IType[] contextTypes, int accessibility, int modifiers) {
+        public int getRelevance(char[] fullyQualifiedName, IType[] contextTypes, int accessibility, int modifiers) {
             return 0;
         }
-
     }
 
     /**
@@ -275,6 +264,7 @@ public class RelevanceRules implements IRelevanceRule {
      * com.lang.SomeType</li>
      *
      */
+    @Deprecated // replaced by internal.PackagePriorityRule
     public static class LibraryTypeRule extends AbstractRule {
 
         enum LibraryType {
@@ -308,19 +298,16 @@ public class RelevanceRules implements IRelevanceRule {
                 }
             }
             return null;
-
         }
 
         public int getRelevance(IType relevanceType, IType[] contextTypes) {
             if (relevanceType == null) {
                 return 0;
             }
-            return getRelevance(relevanceType.getFullyQualifiedName()
-                    .toCharArray(), contextTypes, 0, 0);
+            return getRelevance(relevanceType.getFullyQualifiedName().toCharArray(), contextTypes, 0, 0);
         }
 
-        public int getRelevance(char[] fullyQualifiedName,
-                IType[] contextTypes, int accessibility, int modifiers) {
+        public int getRelevance(char[] fullyQualifiedName, IType[] contextTypes, int accessibility, int modifiers) {
             // Default is zero, meaning relevance for types in any other library
             // is governed by other rules. Only types in the following libraries
             // get higher priority
@@ -342,10 +329,8 @@ public class RelevanceRules implements IRelevanceRule {
                     break;
                 }
             }
-
             return TypeRelevanceCategory.LOW_TYPE.applyCategory(relevance);
         }
-
     }
 
     /**
@@ -373,6 +358,7 @@ public class RelevanceRules implements IRelevanceRule {
      * javax.lang.SomeType</li>
      *
      */
+    @Deprecated // replaced by internal.PackageLocalityRule
     public static class SimilarPackagesRule extends AbstractRule {
 
         protected String convertToDot(String name) {
@@ -380,12 +366,10 @@ public class RelevanceRules implements IRelevanceRule {
         }
 
         public int getRelevance(IType relevanceType, IType[] contextTypes) {
-            return getRelevance(relevanceType.getFullyQualifiedName('.')
-                    .toCharArray(), contextTypes, 0, 0);
+            return getRelevance(relevanceType.getFullyQualifiedName('.').toCharArray(), contextTypes, 0, 0);
         }
 
-        public int getRelevance(char[] fullyQualifiedName,
-                IType[] contextTypes, int accessibility, int modifiers) {
+        public int getRelevance(char[] fullyQualifiedName, IType[] contextTypes, int accessibility, int modifiers) {
             int relevance = 0;
             IPackageFragment contextFragment = getContextPackageFragment(contextTypes);
             if (contextFragment != null && fullyQualifiedName != null) {
