@@ -218,11 +218,11 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
 
     @Override
     protected StyledString computeDisplayString() {
-        return super.computeDisplayString().append(getStyledGroovy());
-    }
-
-    private StyledString getStyledGroovy() {
-        return new StyledString(" (" + contributor + ")", StyledString.DECORATIONS_STYLER);
+        StyledString displayString = super.computeDisplayString();
+        if (contributor != null && contributor.trim().length() > 0) {
+            displayString.append(new StyledString(" (" + contributor.trim() + ")", StyledString.DECORATIONS_STYLER));
+        }
+        return displayString;
     }
 
     /**

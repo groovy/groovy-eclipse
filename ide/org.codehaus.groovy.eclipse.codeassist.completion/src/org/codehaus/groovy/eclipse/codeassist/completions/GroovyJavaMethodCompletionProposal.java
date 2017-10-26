@@ -108,7 +108,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     protected StyledString computeDisplayString() {
         StyledString displayString = super.computeDisplayString();
         if (contributor != null && contributor.trim().length() > 0) {
-            displayString.append(new StyledString(" (" + contributor + ")", StyledString.DECORATIONS_STYLER));
+            displayString.append(new StyledString(" (" + contributor.trim() + ")", StyledString.DECORATIONS_STYLER));
         }
         return displayString;
     }
