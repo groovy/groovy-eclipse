@@ -330,6 +330,22 @@ tokens {
         return ast;
     }
 
+    public AST missingIdentifier(Token prev, Token next) {
+        int line, column;
+        if (!(prev instanceof SourceInfo)) {
+            line = prev.getLine();
+            column = prev.getColumn() + 1;
+        } else {
+            line = ((SourceInfo) prev).getLineLast();
+            column = ((SourceInfo) prev).getColumnLast();
+        }
+        GroovySourceToken ident = new GroovySourceToken(IDENT);
+        ident.setText("?");
+        ident.setLine(line);
+        ident.setColumn(column);
+        return #(create(ident.getType(), ident.getText(), ident, next));
+    }
+
     private Stack<Integer> commentStartPositions = new Stack<Integer>();
 
     public void startComment(int line, int column) {
@@ -603,7 +619,7 @@ compilationUnit
         catch [RecognitionException e] {
             // report the error but don't throw away what we've successfully parsed
             reportError(e);
-            compilationUnit_AST = (AST) currentAST.root;
+            #compilationUnit = (AST) currentAST.root;
         }
         // GRECLIPSE end
     ;
@@ -650,7 +666,7 @@ importStatement
      * change in AntlrParserPlugin that deals with a null type reference and constructs
      * a suitable 'fake' ImportNode.
      */
-    :   an:annotationsOpt "import"! ( "static"! {isStatic=true;})? (is:identifierStar!)?
+    :   an:annotationsOpt "import"! ( "static"! {isStatic=true;} )? (is:identifierStar!)?
         {
           if (isStatic) {
             if (#is == null) {
@@ -1124,12 +1140,7 @@ annotation!  {Token first = LT(1);}
         {#annotation = #(create(ANNOTATION,"ANNOTATION",first,LT(1)), i, args);}
     // GRECLIPSE add -- allow freestanding '@' for content assist
     |   AT! nls!
-        {
-          String type = "_";
-          Token token = new Token(IDENT, type);
-          #i = create(IDENT, type, token, token);
-          #annotation = #(create(ANNOTATION,"ANNOTATION",first,LT(1)),i,null);
-        }
+        {#annotation = #(create(ANNOTATION,"ANNOTATION",first,LT(1)), missingIdentifier(first,LT(1)), null);}
     // GRECLIPSE end
     ;
 
@@ -1176,9 +1187,7 @@ annotationMemberValuePair!  {Token first = LT(1);}
             if (LT(1).getType() == RPAREN) {
                 reportError(e);
                 if (#i == null) {
-                    String ident = "?";
-                    Token itkn = new Token(IDENT, ident);
-                    #i = #(create(IDENT, ident, itkn, itkn));
+                    #i = missingIdentifier(first, LT(1));
                 }
                 #annotationMemberValuePair = #(create(ANNOTATION_MEMBER_VALUE_PAIR,"ANNOTATION_MEMBER_VALUE_PAIR",first,LT(1)),i,v);
             } else {
@@ -1836,6 +1845,20 @@ declaratorBrackets[AST typ]
 varInitializer
     :   ASSIGN^ nls! expressionStatementNoCheck
         // In {T x = y}, the left-context of y is that of an initializer.
+
+        // GRECLIPSE add
+        exception
+        catch [RecognitionException e] {
+            // if empty assignment was found, produce something compatible with content assist
+            if (ASSIGN == LT(-1).getType()) {
+                astFactory.addASTChild(currentAST, missingIdentifier(LT(-1), LT(0)));
+                #varInitializer = (AST) currentAST.root;
+                reportError(e);
+            } else {
+                throw e;
+            }
+        }
+        // GRECLIPSE end
     ;
 
 /*OBS*

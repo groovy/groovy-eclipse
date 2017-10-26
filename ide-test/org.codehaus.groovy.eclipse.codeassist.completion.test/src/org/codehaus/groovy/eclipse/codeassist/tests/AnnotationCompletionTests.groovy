@@ -42,7 +42,7 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
 
     @Test
     void testAnno0a() {
-        String contents = '@Generated @ class Foo { }'
+        String contents = '@Deprecated class Foo { }'
         def proposals = getProposals(contents, '@')
 
         assertThat(proposals).includes('Deprecated')
@@ -50,8 +50,16 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
 
     @Test
     void testAnno0b() {
-        String contents = '@ @Generated class Foo { }'
+        String contents = 'import javax.annotation.*\n @ @Generated("") class Foo { }'
         def proposals = getProposals(contents, '@')
+
+        assertThat(proposals).includes('Deprecated')
+    }
+
+    @Test
+    void testAnno0c() {
+        String contents = 'import javax.annotation.*\n @Generated("") @ class Foo { }'
+        def proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '@'))
 
         assertThat(proposals).includes('Deprecated')
     }

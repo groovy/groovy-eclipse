@@ -23,35 +23,32 @@ import org.junit.Test
  */
 final class InnerTypeCompletionTests extends CompletionTestSuite {
 
-    private static final String HTML = 'HTML'
-    private static final String HTML_PROPOSAL = 'HTML - javax.swing.text.html'
-
     @Test
     void testInInnerClass1() {
         String contents = 'class Outer { class Inner { \nHTML\n } }'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, HTML))
-        proposalExists(proposals, HTML_PROPOSAL, 1)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'HTML'))
+        proposalExists(proposals, 'HTML - javax.swing.text.html', 1)
     }
 
     @Test
     void testInInnerClass2() {
         String contents = 'class Outer { class Inner { def x(HTML) { } } }'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, HTML))
-        proposalExists(proposals, HTML_PROPOSAL, 1)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'HTML'))
+        proposalExists(proposals, 'HTML - javax.swing.text.html', 1)
     }
 
     @Test
     void testInInnerClass3() {
         String contents = 'class Outer { class Inner extends HTML { } }'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, HTML))
-        proposalExists(proposals, HTML_PROPOSAL, 1)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'HTML'))
+        proposalExists(proposals, 'HTML - javax.swing.text.html', 1)
     }
 
     @Test
     void testInInnerClass4() {
         String contents = 'class Outer { class Inner { def x() {  HTML } } }'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, HTML))
-        proposalExists(proposals, HTML_PROPOSAL, 1)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'HTML'))
+        proposalExists(proposals, 'HTML - javax.swing.text.html', 1)
     }
 
     @Test

@@ -256,7 +256,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
     @Override
     protected void visitAnnotation(AnnotationNode node) {
-        if (check(node.getClassNode())) {
+        if (node.getStart() <= completionOffset && completionOffset <= node.getClassNode().getEnd()) {
             createContext(node, declarationStack.getLast(), ContentAssistLocation.ANNOTATION);
         }
         blockStack.add(node);
@@ -276,11 +276,18 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
     protected void visitParameter(Parameter node) {
         super.visitParameter(node);
 
-        if (check(node.getType()) || (node.getNameStart() < completionOffset && node.getNameEnd() >= completionOffset)) {
-            createContext(null, blockStack.getLast(), ContentAssistLocation.PARAMETER);
+        // check parameter type
+        if (check(node.getType()) || (check(node) && completionOffset < node.getNameStart())) {
+            createContext(node, blockStack.getLast(), ContentAssistLocation.PARAMETER);
         }
+
+        // check parameter name
+        if (node.getNameStart() <= completionOffset && completionOffset <= node.getNameEnd()) {
+            createContext(node, blockStack.getLast(), ContentAssistLocation.PARAMETER);
+        }
+
+        // check for default value expression (that was moved during verification)
         if (check(node)) {
-            // mighe have an initial expression, but was moved out during part of the verification phase or might be a param without any type
             createContext(node, blockStack.getLast(), expressionOrStatement());
         }
     }

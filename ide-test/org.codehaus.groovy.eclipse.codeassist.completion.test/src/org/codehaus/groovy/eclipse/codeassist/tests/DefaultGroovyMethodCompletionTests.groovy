@@ -28,7 +28,7 @@ import org.junit.Test
  */
 final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
 
-    private static final String CONTENTS = 'class Class { public Class() {\n }\n void doNothing(int x) { this.toString(); new Object().toString(); } }'
+    private static final String CONTENTS = 'class Class {\n public Class(int x) {\n }\n void doNothing(int x) {\n  this.toString();\n  new Object().toString();\n }\n}'
     private static final String SCRIPTCONTENTS = 'def x = 9\nx++\nnew Object().toString()'
     private static final String CLOSURECONTENTS = 'def x = { t -> print t }'
     private static final String LISTCONTENTS = '[].findA'
@@ -75,7 +75,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     @Test
     void testDGMInConstructorScope() {
         def unit = createGroovy()
-        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'Class() {\n'))
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'Class(int x) {\n'))
         proposalExists(proposals, 'identity', 1)
     }
 
@@ -96,8 +96,8 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     @Test
     void testDGMInClassScope() {
         def unit = createGroovy()
-        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'Class() { }'))
-        proposalExists(proposals, 'identity', 0)
+        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'Class(int x) {\n }'))
+        proposalExists(proposals, 'identity', 1) // TODO: Is there a restriction on what DGMs may run in constructor?
     }
 
     @Test

@@ -19,8 +19,10 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
+import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -46,32 +48,39 @@ public class PackageCompletionProcessor extends AbstractGroovyCompletionProcesso
 
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
         ContentAssistContext context = getContext();
-        char[] packageCompletionText = getPackageCompletionText(context.fullCompletionExpression);
-        if (mightBePackage(packageCompletionText)) {
-            int expressionStart = context.completionLocation - context.fullCompletionExpression.trim().length();
-            GroovyProposalTypeSearchRequestor requestor = new GroovyProposalTypeSearchRequestor(//
-                context, getJavaContext(), expressionStart, context.completionEnd - expressionStart,
-                getNameEnvironment().nameLookup, monitor);
-            getNameEnvironment().findPackages(packageCompletionText, requestor);
-            List<ICompletionProposal> typeProposals = requestor.processAcceptedPackages();
 
-            boolean alsoLookForTypes = shouldLookForTypes(packageCompletionText);
-            if (alsoLookForTypes) {
-                getNameEnvironment().findTypes(packageCompletionText,
-                    true /* find all member types, should be false when in constructor*/,
-                    true /* camel case match */, getSearchFor(), requestor, monitor);
-                typeProposals.addAll(requestor.processAcceptedTypes(resolver));
-            }
-            return typeProposals;
+        char[] packageCompletionText = getPackageCompletionText(context.fullCompletionExpression);
+        if (packageCompletionText == null || packageCompletionText.length == 0 || !mightBePackage(packageCompletionText)) {
+            return Collections.emptyList();
         }
-        return Collections.emptyList();
+
+        if (context.location == ContentAssistLocation.PARAMETER) {
+            AnnotatedNode completionNode = (AnnotatedNode) context.completionNode;
+            if (completionNode.getStart() < completionNode.getNameStart() &&
+                    context.completionLocation >= completionNode.getNameStart()) {
+                return Collections.emptyList();
+            }
+        }
+
+        int expressionStart = context.completionLocation - context.fullCompletionExpression.trim().length();
+        GroovyProposalTypeSearchRequestor requestor = new GroovyProposalTypeSearchRequestor(
+            context, getJavaContext(), expressionStart, context.completionEnd - expressionStart, getNameEnvironment().nameLookup, monitor);
+        getNameEnvironment().findPackages(packageCompletionText, requestor);
+        List<ICompletionProposal> proposals = requestor.processAcceptedPackages();
+
+        boolean alsoLookForTypes = shouldLookForTypes(packageCompletionText);
+        if (alsoLookForTypes) {
+            getNameEnvironment().findTypes(packageCompletionText,
+                true /* find all member types, should be false when in constructor*/,
+                true /* camel case match */, getSearchFor(), requestor, monitor);
+            proposals.addAll(requestor.processAcceptedTypes(resolver));
+        }
+        return proposals;
     }
 
     /**
      * Do not look for types if there is no '.'.  In this case,
      * type searching is handled by {@link TypeCompletionProcessor}.
-     * @param packageCompletionText
-     * @return
      */
     private boolean shouldLookForTypes(char[] packageCompletionText) {
         return CharOperation.indexOf('.', packageCompletionText) > -1;
@@ -79,13 +88,8 @@ public class PackageCompletionProcessor extends AbstractGroovyCompletionProcesso
 
     /**
      * more complete search to see if this is a valid package name
-     * @param packageCompletionText
-     * @return
      */
     private boolean mightBePackage(char[] packageCompletionText) {
-        if (packageCompletionText == null || packageCompletionText.length == 0) {
-            return false;
-        }
         String text = String.valueOf(packageCompletionText);
         String[] splits = text.split("\\.");
         for (String split : splits) {
@@ -109,7 +113,7 @@ public class PackageCompletionProcessor extends AbstractGroovyCompletionProcesso
             return CharOperation.NO_CHAR;
         }
         char[] fullArray = fullCompletionExpression.toCharArray();
-        for (int i = 0; i < fullArray.length; i++) {
+        for (int i = 0, n = fullArray.length; i < n; i += 1) {
             if (Character.isWhitespace(fullArray[i])) {
                 continue;
             } else if (Character.isJavaIdentifierPart(fullArray[i]) || fullArray[i] == '.') {
@@ -123,22 +127,21 @@ public class PackageCompletionProcessor extends AbstractGroovyCompletionProcesso
         int i = 0;
         for (Character c : chars) {
             res[i] = c.charValue();
-            i++;
+            i += 1;
         }
         return res;
     }
 
     private int getSearchFor() {
         switch(getContext().location) {
-            case EXTENDS:
-                return IJavaSearchConstants.CLASS;
-            case IMPLEMENTS:
-                return IJavaSearchConstants.INTERFACE;
-            case EXCEPTIONS:
-                return IJavaSearchConstants.CLASS;
-            default:
-                return IJavaSearchConstants.TYPE;
+        case EXTENDS:
+            return IJavaSearchConstants.CLASS;
+        case IMPLEMENTS:
+            return IJavaSearchConstants.INTERFACE;
+        case EXCEPTIONS:
+            return IJavaSearchConstants.CLASS;
+        default:
+            return IJavaSearchConstants.TYPE;
         }
     }
-
 }

@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.codeassist.CharArraySourceBuffer;
@@ -58,7 +59,7 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor i
             return Collections.emptyList();
         }
 
-        int replacementLength = prefix.length()/*context.completionEnd - expressionStart*/;
+        int replacementLength = prefix.length();
         int replacementOffset = context.completionLocation - replacementLength;
         GroovyProposalTypeSearchRequestor requestor = new GroovyProposalTypeSearchRequestor(
             context, getJavaContext(), replacementOffset, replacementLength, getNameEnvironment().nameLookup, monitor);
@@ -85,19 +86,22 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor i
     }
 
     /**
+     * Don't show types...
      * <ul>
-     * <li>Don't show types if there is no previous text (except for imports or annotations)
-     * <li>Don't show types if there is a '.'
-     * <li>Don't show types when in a class body and there is a type declaration immediately before
+     * <li>if there is no previous text (except for imports or annotations)
+     * <li>if completing a method or constructor parameter name
+     * <li>if there is a '.'
+     * <li>when in a class body and there is a type declaration immediately before
      * </ul>
      */
     private static boolean canProposeTypes(ContentAssistContext context, String prefix) {
         if (prefix.length() == 0) {
-            switch (context.location) {
-            case ANNOTATION:
-            case IMPORT:
-                return true;
-            default:
+            return (context.location == ContentAssistLocation.ANNOTATION || context.location == ContentAssistLocation.IMPORT);
+        }
+        if (context.location == ContentAssistLocation.PARAMETER) {
+            AnnotatedNode completionNode = (AnnotatedNode) context.completionNode;
+            if (completionNode.getStart() < completionNode.getNameStart() &&
+                    context.completionLocation >= completionNode.getNameStart()) {
                 return false;
             }
         }
@@ -111,7 +115,8 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor i
         if (context.location != ContentAssistLocation.CLASS_BODY) {
             return false;
         }
-        NameAndLocation nameAndLocation = new ExpressionFinder().findPreviousTypeNameToken(new CharArraySourceBuffer(context.unit.getContents()), context.completionLocation);
+        NameAndLocation nameAndLocation = new ExpressionFinder().findPreviousTypeNameToken(
+            new CharArraySourceBuffer(context.unit.getContents()), context.completionLocation);
         if (nameAndLocation == null) {
             return false;
         }

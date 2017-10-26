@@ -15,7 +15,11 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
@@ -65,6 +69,101 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "  public java.lang.Object baz() {\n" +
             "  }\n" +
             "}\n");
+    }
+
+    @Test
+    public void testIncompleteAssignmentParsingRecovery1() {
+        runNegativeTest(new String[] {
+            "X.groovy",
+            "public class X {\n" +
+            "  int err = \n" +
+            "}",
+        },
+        "----------\n" +
+        "1. ERROR in X.groovy (at line 2)\n" +
+        "\tint err = \n" +
+        "\t         ^\n" +
+        "Groovy:Invalid variable name. Must start with a letter but was: ?\n" +
+        "----------\n" +
+        "2. ERROR in X.groovy (at line 3)\n" +
+        "\t}\n" +
+        "\t^\n" +
+        "Groovy:unexpected token: } @ line 3, column 1.\n" +
+        "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "public class X {\n" +
+            "  private int err;\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testIncompleteAssignmentParsingRecovery2() {
+        runNegativeTest(new String[] {
+            "X.groovy",
+            "public class X {\n" +
+            "  void bar() {\n" +
+            "    int err = \n" +
+            "  }\n" +
+            "  def baz() {\n" +
+            "    def good = { ->\n" +
+            "    }\n" +
+            "  }\n" +
+            "}",
+        },
+        "----------\n" +
+        "1. ERROR in X.groovy (at line 3)\n" +
+        "\tint err = \n" +
+        "\t         ^\n" +
+        "Groovy:Invalid variable name. Must start with a letter but was: ?\n" +
+        "----------\n" +
+        "2. ERROR in X.groovy (at line 4)\n" +
+        "\t}\n" +
+        "\t^\n" +
+        "Groovy:unexpected token: } @ line 4, column 3.\n" +
+        "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "public class X {\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "  public void bar() {\n" +
+            "  }\n" +
+            "  public java.lang.Object baz() {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testIncompleteAssignmentParsingRecovery3() {
+        // previous version of assignment recovery was trying to add missing identifier for error within init expression
+        runNegativeTest(new String[] {
+            "X.groovy",
+            "public class X {\n" +
+            "  void bar() {\n" +
+            "    int good = {\n" +
+            "      \"\n" + // err
+            "    }\n" +
+            "  }\n" +
+            "}",
+        },
+        "----------\n" +
+        "1. ERROR in X.groovy (at line 4)\n" +
+        "\t\"\n" +
+        "    }\n" +
+        "\t ^\n" +
+        "Groovy:expecting anything but ''\\n''; got it anyway @ line 4, column 8.\n" +
+        "----------\n");
+
+        /*checkGCUDeclaration("X.groovy",
+            "public class X {\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "  public void bar() {\n" +
+            "  }\n" +
+            "}\n");*/
     }
 
     @Test

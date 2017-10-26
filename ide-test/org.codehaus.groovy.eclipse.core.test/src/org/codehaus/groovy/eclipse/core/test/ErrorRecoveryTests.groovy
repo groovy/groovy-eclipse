@@ -37,7 +37,7 @@ final class ErrorRecoveryTests extends GroovyEclipseTestSuite {
     }
 
     private CompilationResult compileScript(String script) {
-        compiler.compileForErrors(script, 'Test')
+        compiler.compileForErrors(script, nextUnitName())
     }
 
     @Test

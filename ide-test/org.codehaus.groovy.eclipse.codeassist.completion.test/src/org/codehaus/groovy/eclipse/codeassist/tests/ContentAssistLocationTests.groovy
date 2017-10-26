@@ -501,11 +501,11 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     @Test
     void testAnnotation2d() {
         String contents = '@B @ @C class A { void t(v y = hh) {} }'
-        int loc = contents.indexOf('@') + 1
+        int loc = contents.indexOf('@ ') + 1
         assertLocation(contents, loc, ContentAssistLocation.ANNOTATION)
     }
 
-    @Test @NotYetImplemented
+    @Test
     void testAnnotation3() {
         String contents = ' class A { @ void t(v y = hh) {} }'
         int loc = contents.indexOf('@') + 1
@@ -519,7 +519,7 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
         assertLocation(contents, loc, ContentAssistLocation.ANNOTATION)
     }
 
-    @Test @NotYetImplemented
+    @Test
     void testAnnotation5() {
         String contents = ' class A { @ def t }'
         int loc = contents.indexOf('@') + 1

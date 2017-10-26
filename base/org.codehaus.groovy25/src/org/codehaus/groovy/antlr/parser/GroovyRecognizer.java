@@ -312,6 +312,22 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
         return ast;
     }
 
+    public AST missingIdentifier(Token prev, Token next) {
+        int line, column;
+        if (!(prev instanceof SourceInfo)) {
+            line = prev.getLine();
+            column = prev.getColumn() + 1;
+        } else {
+            line = ((SourceInfo) prev).getLineLast();
+            column = ((SourceInfo) prev).getColumnLast();
+        }
+        GroovySourceToken ident = new GroovySourceToken(IDENT);
+        ident.setText("?");
+        ident.setLine(line);
+        ident.setColumn(column);
+        return (AST)astFactory.make( (new ASTArray(1)).add(create(ident.getType(),ident.getText(),ident,next)));
+    }
+
     private Stack<Integer> commentStartPositions = new Stack<>();
 
     public void startComment(int line, int column) {
@@ -511,7 +527,7 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
     private void dump(AST node, String offset) {
         System.out.println(offset+"Type: " + getTokenName(node) + " text: " + node.getText());
     }
-    
+
     private String getTokenName(AST node) {
         if (node == null) return "null";
         return getTokenName(node.getType());
@@ -3064,14 +3080,32 @@ inputState.guessing--;
         ASTPair currentAST = new ASTPair();
         AST varInitializer_AST = null;
         
-        AST tmp47_AST = null;
-        tmp47_AST = astFactory.create(LT(1));
-        astFactory.makeASTRoot(currentAST, tmp47_AST);
-        match(ASSIGN);
-        nls();
-        expressionStatementNoCheck();
-        astFactory.addASTChild(currentAST, returnAST);
-        varInitializer_AST = (AST)currentAST.root;
+        try {      // for error handling
+            AST tmp47_AST = null;
+            tmp47_AST = astFactory.create(LT(1));
+            astFactory.makeASTRoot(currentAST, tmp47_AST);
+            match(ASSIGN);
+            nls();
+            expressionStatementNoCheck();
+            astFactory.addASTChild(currentAST, returnAST);
+            varInitializer_AST = (AST)currentAST.root;
+        }
+        catch (RecognitionException e) {
+            if (inputState.guessing==0) {
+                
+                // if empty assignment was found, produce something compatible with content assist
+                if (ASSIGN == LT(-1).getType()) {
+                astFactory.addASTChild(currentAST, missingIdentifier(LT(-1), LT(0)));
+                varInitializer_AST = (AST) currentAST.root;
+                reportError(e);
+                } else {
+                throw e;
+                }
+                
+            } else {
+                throw e;
+            }
+        }
         returnAST = varInitializer_AST;
     }
     
@@ -3497,12 +3531,7 @@ inputState.guessing--;
             nls();
             if ( inputState.guessing==0 ) {
                 annotation_AST = (AST)currentAST.root;
-                
-                String type = "_";
-                Token token = new Token(IDENT, type);
-                i_AST = create(IDENT, type, token, token);
-                annotation_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(ANNOTATION,"ANNOTATION",first,LT(1))).add(i_AST).add(null));
-                
+                annotation_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(ANNOTATION,"ANNOTATION",first,LT(1))).add(missingIdentifier(first,LT(1))).add(null));
                 currentAST.root = annotation_AST;
                 currentAST.child = annotation_AST!=null &&annotation_AST.getFirstChild()!=null ?
                     annotation_AST.getFirstChild() : annotation_AST;
@@ -4879,9 +4908,7 @@ inputState.guessing--;
                 if (LT(1).getType() == RPAREN) {
                 reportError(e);
                 if (i_AST == null) {
-                String ident = "?";
-                Token itkn = new Token(IDENT, ident);
-                i_AST = (AST)astFactory.make( (new ASTArray(1)).add(create(IDENT,ident,itkn,itkn)));
+                i_AST = missingIdentifier(first, LT(1));
                 }
                 annotationMemberValuePair_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(ANNOTATION_MEMBER_VALUE_PAIR,"ANNOTATION_MEMBER_VALUE_PAIR",first,LT(1))).add(i_AST).add(v_AST));
                 } else {
@@ -5667,7 +5694,7 @@ inputState.guessing--;
                 classBlock_AST = (AST)astFactory.make( (new ASTArray(2)).add(create(OBJBLOCK,"OBJBLOCK",first,LT(1))).add(classBlock_AST));
                 currentAST.root = classBlock_AST;
                 currentAST.child = classBlock_AST != null && classBlock_AST.getFirstChild() != null ? classBlock_AST.getFirstChild() : classBlock_AST;
-                currentAST.advanceChildToEnd(); 
+                currentAST.advanceChildToEnd();
                 
             } else {
                 throw e;
