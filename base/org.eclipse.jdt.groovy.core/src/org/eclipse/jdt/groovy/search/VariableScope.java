@@ -79,6 +79,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
 
     public static final ClassNode OBJECT_CLASS_NODE = ClassHelper.OBJECT_TYPE;
     public static final ClassNode GROOVY_OBJECT_CLASS_NODE = ClassHelper.GROOVY_OBJECT_TYPE;
+    public static final ClassNode GROOVY_SUPPORT_CLASS_NODE = ClassHelper.GROOVY_OBJECT_SUPPORT_TYPE;
     public static final ClassNode CLOSURE_CLASS_NODE = ClassHelper.CLOSURE_TYPE;
     public static final ClassNode ENUMERATION_CLASS = ClassHelper.make(Enumeration.class);
     public static final ClassNode ITERATOR_CLASS = ClassHelper.Iterator_TYPE;
