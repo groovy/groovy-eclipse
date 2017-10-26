@@ -10677,7 +10677,7 @@ public final class CompletionEngine
 		setTokenRange((int) (completionPosition >>> 32), (int) completionPosition);
 	}
 	private void setCompletionToken(char[][] tokens, int sourceStart, int sourceEnd, long[] sourcePositions) {
-		setCompletionToken(tokens, sourceStart, sourceEnd, sourcePositions, true);
+		setCompletionToken(tokens, sourceStart, sourceEnd, sourcePositions, tokens.length > 0 && tokens[tokens.length - 1].length > 0);
 	}
 	private void findModules(CompletionOnModuleReference moduleReference, boolean targetted) {
 		setCompletionToken(moduleReference.tokens, moduleReference.sourceStart, moduleReference.sourceEnd, moduleReference.sourcePositions);

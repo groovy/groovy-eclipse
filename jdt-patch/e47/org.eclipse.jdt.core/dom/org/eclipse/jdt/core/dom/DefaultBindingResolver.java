@@ -61,6 +61,7 @@ import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedGenericMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemFieldBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ProblemPackageBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
@@ -317,7 +318,7 @@ class DefaultBindingResolver extends BindingResolver {
 	 * Method declared on BindingResolver.
 	 */
 	synchronized IPackageBinding getPackageBinding(org.eclipse.jdt.internal.compiler.lookup.PackageBinding packageBinding) {
-		if (packageBinding == null) {
+		if (packageBinding == null || packageBinding instanceof ProblemPackageBinding) {
 			return null;
 		}
 		IPackageBinding binding = (IPackageBinding) this.bindingTables.compilerBindingsToASTBindings.get(packageBinding);
