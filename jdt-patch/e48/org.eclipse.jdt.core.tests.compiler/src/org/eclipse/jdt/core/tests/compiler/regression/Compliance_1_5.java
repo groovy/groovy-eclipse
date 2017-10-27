@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -2968,7 +2968,7 @@ public void test088() {
 		"Type null of the last argument to method getMethod(String, Class...) doesn't exactly match the vararg parameter type. Cast to Class[] to confirm the non-varargs invocation, or pass individual arguments of type Class for a varargs invocation.\n" +
 		"----------\n";
 	String javaVersion = System.getProperty("java.version");
-	if (isJRELevel(AbstractCompilerTest.F_1_6|AbstractCompilerTest.F_1_7|AbstractCompilerTest.F_1_8)
+	if (isJRELevel(AbstractCompilerTest.F_1_6|AbstractCompilerTest.F_1_7|AbstractCompilerTest.F_1_8|AbstractCompilerTest.F_9)
 			|| (AbstractCompilerTest.getPossibleComplianceLevels() == AbstractCompilerTest.F_1_5
 				&& javaVersion.indexOf("1.5") == -1)) {
 		errorMessage =
@@ -3002,10 +3002,10 @@ public void test088() {
 			"import java.lang.reflect.*;\n" +
 			"public class X extends Date implements Runnable{\n" +
 			" \n" +
-			" Integer w = new Integer(90);\n" +
+			" Integer w = Integer.valueOf(90);\n" +
 			" protected double x = 91.1;\n" +
 			" public long y = 92;\n" +
-			" static public Boolean z = new Boolean(true); \n" +
+			" static public Boolean z = Boolean.valueOf(true); \n" +
 			" public class X_inner {\n" +
 			"  public X_inner() {\n" +
 			"   this.super();\n" +

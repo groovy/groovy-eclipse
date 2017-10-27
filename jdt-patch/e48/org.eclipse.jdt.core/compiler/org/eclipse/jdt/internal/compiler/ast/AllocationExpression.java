@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -466,6 +466,14 @@ public TypeBinding resolveType(BlockScope scope) {
 			return new PolyTypeBinding(this);
 		}
 		this.resolvedType = this.type.resolvedType = this.binding.declaringClass;
+		// 15.9.3 - If the compile-time declaration is applicable by variable arity invocation...
+		if (this.binding.isVarargs()) {
+			TypeBinding lastArg = this.binding.parameters[this.binding.parameters.length - 1].leafComponentType();
+			if (!lastArg.erasure().canBeSeenBy(scope)) {
+				scope.problemReporter().invalidType(this, new ProblemReferenceBinding(new char[][] {lastArg.readableName()}, (ReferenceBinding)lastArg, ProblemReasons.NotVisible));
+				return this.resolvedType = null;
+			}
+		}
 		resolvePolyExpressionArguments(this, this.binding, this.argumentTypes, scope);
 	} else {
 		this.binding = findConstructorBinding(scope, this, (ReferenceBinding) this.resolvedType, this.argumentTypes);
@@ -591,15 +599,21 @@ public static MethodBinding inferDiamondConstructor(Scope scope, InvocationSite 
 		if (constructorTypeArguments.length > 0)
 			System.arraycopy(((ParameterizedGenericMethodBinding)factory).typeArguments, sfmb.typeVariables().length - constructorTypeArguments.length , 
 												constructorTypeArguments, 0, constructorTypeArguments.length);
+		if (allocationType.isInterface()) {
+			ParameterizedTypeBinding parameterizedType = (ParameterizedTypeBinding) factory.returnType;
+			return new ParameterizedMethodBinding(parameterizedType, sfmb.getConstructor());
+		}
 		return sfmb.applyTypeArgumentsOnConstructor(((ParameterizedTypeBinding)factory.returnType).arguments, constructorTypeArguments, genericFactory.inferredWithUncheckedConversion);
 	}
 	return null;
 }
-
 public TypeBinding[] inferElidedTypes(final Scope scope) {
+	return inferElidedTypes((ParameterizedTypeBinding) this.resolvedType, scope);
+}
+public TypeBinding[] inferElidedTypes(ParameterizedTypeBinding parameterizedType, final Scope scope) {
 	
-	ReferenceBinding genericType = ((ParameterizedTypeBinding) this.resolvedType).genericType();
-	ReferenceBinding enclosingType = this.resolvedType.enclosingType();
+	ReferenceBinding genericType = parameterizedType.genericType();
+	ReferenceBinding enclosingType = parameterizedType.enclosingType();
 	ParameterizedTypeBinding allocationType = scope.environment().createParameterizedType(genericType, genericType.typeVariables(), enclosingType);
 	
 	/* Given the allocation type and the arguments to the constructor, see if we can synthesize a generic static factory
@@ -643,7 +657,7 @@ public void checkTypeArgumentRedundancy(ParameterizedTypeBinding allocationType,
 		// checking for redundant type parameters must fake a diamond, 
 		// so we infer the same results as we would get with a diamond in source code:
 		this.type.bits |= IsDiamond;
-		inferredTypes = inferElidedTypes(scope);
+		inferredTypes = inferElidedTypes(allocationType, scope);
 	} finally {
 		// reset effects of inference
 		this.type.bits = previousBits;

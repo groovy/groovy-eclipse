@@ -24,4 +24,12 @@ char[] getTypeName();
  * @return the list of element value pairs of the annotation
  */
 IBinaryElementValuePair[] getElementValuePairs();
+
+/**
+ * @return true, if this an external annotation
+ */
+default boolean isExternalAnnotation() {
+	return false;
 }
+}
+

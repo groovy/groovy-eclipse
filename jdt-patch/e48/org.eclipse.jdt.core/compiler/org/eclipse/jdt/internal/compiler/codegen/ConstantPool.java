@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -51,6 +51,8 @@ public class ConstantPool implements ClassFileConstants, TypeIds {
 	protected CharArrayCache stringCache;
 	protected HashtableOfObject methodsAndFieldsCache;
 	protected CharArrayCache classCache;
+	protected CharArrayCache moduleCache;
+	protected CharArrayCache packageCache;
 	protected HashtableOfObject nameAndTypeCacheForFieldsAndMethods;
 	public byte[] poolContent;
 	public int currentIndex = 1;
@@ -306,6 +308,8 @@ public class ConstantPool implements ClassFileConstants, TypeIds {
 		this.stringCache = new CharArrayCache(STRING_INITIAL_SIZE);
 		this.methodsAndFieldsCache = new HashtableOfObject(METHODS_AND_FIELDS_INITIAL_SIZE);
 		this.classCache = new CharArrayCache(CLASS_INITIAL_SIZE);
+		this.moduleCache = new CharArrayCache(5);
+		this.packageCache = new CharArrayCache(5);
 		this.nameAndTypeCacheForFieldsAndMethods = new HashtableOfObject(NAMEANDTYPE_INITIAL_SIZE);
 		this.offsets = new int[5];
 		initialize(classFile);
@@ -666,6 +670,64 @@ public class ConstantPool implements ClassFileConstants, TypeIds {
 			}
 			this.currentOffset+=2;
 			final int stringIndex = literalIndex(stringCharArray);
+			this.poolContent[stringIndexOffset++] = (byte) (stringIndex >> 8);
+			this.poolContent[stringIndexOffset] = (byte) stringIndex;
+		}
+		return index;
+	}
+	public int literalIndexForModule(final char[] moduleName) {
+		int index;
+		if ((index = this.moduleCache.putIfAbsent(moduleName, this.currentIndex)) < 0) {
+			// The entry doesn't exit yet
+			this.currentIndex++;
+			if ((index = -index) > 0xFFFF){
+				this.classFile.referenceBinding.scope.problemReporter().noMoreAvailableSpaceInConstantPool(this.classFile.referenceBinding.scope.referenceType());
+			}
+			// Write the tag first
+			int length = this.offsets.length;
+			if (length <= index) {
+				// resize
+				System.arraycopy(this.offsets, 0, (this.offsets = new int[index * 2]), 0, length);
+			}
+			this.offsets[index] = this.currentOffset;
+			writeU1(ModuleTag);
+			// Then the string index
+			int stringIndexOffset = this.currentOffset;
+			if (this.currentOffset + 2 >= this.poolContent.length) {
+				resizePoolContents(2);
+			}
+			this.currentOffset+=2;
+
+			final int stringIndex = literalIndex(moduleName);
+			this.poolContent[stringIndexOffset++] = (byte) (stringIndex >> 8);
+			this.poolContent[stringIndexOffset] = (byte) stringIndex;
+		}
+		return index;
+	}
+	public int literalIndexForPackage(final char[] packageName) {
+		int index;
+		if ((index = this.packageCache.putIfAbsent(packageName, this.currentIndex)) < 0) {
+			// The entry doesn't exit yet
+			this.currentIndex++;
+			if ((index = -index) > 0xFFFF){
+				this.classFile.referenceBinding.scope.problemReporter().noMoreAvailableSpaceInConstantPool(this.classFile.referenceBinding.scope.referenceType());
+			}
+			// Write the tag first
+			int length = this.offsets.length;
+			if (length <= index) {
+				// resize
+				System.arraycopy(this.offsets, 0, (this.offsets = new int[index * 2]), 0, length);
+			}
+			this.offsets[index] = this.currentOffset;
+			writeU1(PackageTag);
+			// Then the string index
+			int stringIndexOffset = this.currentOffset;
+			if (this.currentOffset + 2 >= this.poolContent.length) {
+				resizePoolContents(2);
+			}
+			this.currentOffset+=2;
+
+			final int stringIndex = literalIndex(packageName);
 			this.poolContent[stringIndexOffset++] = (byte) (stringIndex >> 8);
 			this.poolContent[stringIndexOffset] = (byte) stringIndex;
 		}
@@ -1112,6 +1174,8 @@ public class ConstantPool implements ClassFileConstants, TypeIds {
 		this.stringCache.clear();
 		this.methodsAndFieldsCache.clear();
 		this.classCache.clear();
+		this.packageCache.clear();
+		this.moduleCache.clear();
 		this.nameAndTypeCacheForFieldsAndMethods.clear();
 		this.currentIndex = 1;
 		this.currentOffset = 0;

@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,6 +14,7 @@ package org.eclipse.jdt.internal.core;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
@@ -30,6 +31,8 @@ import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IModularClassFile;
+import org.eclipse.jdt.core.IOrdinaryClassFile;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IParent;
@@ -37,6 +40,7 @@ import org.eclipse.jdt.core.ISourceManipulation;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.WorkingCopyOwner;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 import org.eclipse.jdt.internal.core.JavaModelManager.PerProjectInfo;
 import org.eclipse.jdt.internal.core.util.MementoTokenizer;
@@ -52,6 +56,7 @@ public class PackageFragment extends Openable implements IPackageFragment, Suffi
 	 * Constant empty list of class files
 	 */
 	protected static final IClassFile[] NO_CLASSFILES = new IClassFile[] {};
+	protected static final IOrdinaryClassFile[] NO_ORDINARY_CLASSFILES = new IOrdinaryClassFile[] {};
 	/**
 	 * Constant empty list of compilation units
 	 */
@@ -185,12 +190,16 @@ public boolean exists() {
 	return super.exists() && !Util.isExcluded(this) && isValidPackageName();
 }
 /**
- * @see IPackageFragment#getClassFile(String)
- * @exception IllegalArgumentException if the name does not end with ".class"
+ * @see IPackageFragment#getOrdinaryClassFile(String)
+ * @exception IllegalArgumentException if the name does not end with ".class" or if the name is "module-info.class".
  */
-public IClassFile getClassFile(String classFileName) {
+@Override
+public IOrdinaryClassFile getOrdinaryClassFile(String classFileName) {
 	if (!org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(classFileName)) {
 		throw new IllegalArgumentException(Messages.bind(Messages.element_invalidClassFileName, classFileName));
+	}
+	if (TypeConstants.MODULE_INFO_CLASS_NAME_STRING.equals(classFileName)) {
+		throw new IllegalArgumentException(Messages.element_moduleInfoNotSupported);
 	}
 	// don't hold on the .class file extension to save memory
 	// also make sure to not use substring as the resulting String may hold on the underlying char[] which might be much bigger than necessary
@@ -200,13 +209,52 @@ public IClassFile getClassFile(String classFileName) {
 	return new ClassFile(this, new String(nameWithoutExtension));
 }
 /**
- * Returns a the collection of class files in this - a folder package fragment which has a root
+ * @see IPackageFragment#getClassFile(String)
+ * @exception IllegalArgumentException if the name does not end with ".class".
+ */
+@Override
+public IClassFile getClassFile(String classFileName) {
+	if (TypeConstants.MODULE_INFO_CLASS_NAME_STRING.equals(classFileName))
+		return getModularClassFile();
+	return getOrdinaryClassFile(classFileName);
+}
+@Override
+public IModularClassFile getModularClassFile() {
+	// don't hold on the .class file extension to save memory
+	// also make sure to not use substring as the resulting String may hold on the underlying char[] which might be much bigger than necessary
+	return new ModularClassFile(this);
+}
+
+/**
+ * Returns a collection of ordinary class files in this - a folder package fragment which has a root
  * that has its kind set to <code>IPackageFragmentRoot.K_Source</code> does not
  * recognize class files.
  *
- * @see IPackageFragment#getClassFiles()
+ * @see IPackageFragment#getOrdinaryClassFiles()
  */
-public IClassFile[] getClassFiles() throws JavaModelException {
+@Override
+public IOrdinaryClassFile[] getOrdinaryClassFiles() throws JavaModelException {
+	if (getKind() == IPackageFragmentRoot.K_SOURCE) {
+		return NO_ORDINARY_CLASSFILES;
+	}
+
+	ArrayList list = getChildrenOfType(CLASS_FILE);
+	for (Iterator iterator = list.iterator(); iterator.hasNext();) {
+		if (iterator.next() instanceof ModularClassFile)
+			iterator.remove();
+	}
+	IOrdinaryClassFile[] array= new IOrdinaryClassFile[list.size()];
+	list.toArray(array);
+	return array;
+}
+/**
+ * Returns a collection of all class files in this - a folder package fragment which has a root
+ * that has its kind set to <code>IPackageFragmentRoot.K_Source</code> does not
+ * recognize class files.
+ *
+ * @see IPackageFragment#getAllClassFiles()
+ */
+public IClassFile[] getAllClassFiles() throws JavaModelException {
 	if (getKind() == IPackageFragmentRoot.K_SOURCE) {
 		return NO_CLASSFILES;
 	}
@@ -216,6 +264,13 @@ public IClassFile[] getClassFiles() throws JavaModelException {
 	list.toArray(array);
 	return array;
 }
+
+@Deprecated
+@Override
+public IClassFile[] getClassFiles() throws JavaModelException {
+	return getOrdinaryClassFiles();
+}
+
 /**
  * @see IPackageFragment#getCompilationUnit(String)
  * @exception IllegalArgumentException if the name does not end with ".java"
@@ -281,7 +336,10 @@ public IJavaElement getHandleFromMemento(String token, MementoTokenizer memento,
 		case JEM_CLASSFILE:
 			if (!memento.hasMoreTokens()) return this;
 			String classFileName = memento.nextToken();
-			JavaElement classFile = (JavaElement)getClassFile(classFileName);
+			JavaElement classFile = (JavaElement) getClassFile(classFileName);
+			return classFile.getHandleFromMemento(memento, owner);
+		case JEM_MODULAR_CLASSFILE:
+			classFile = (JavaElement) getModularClassFile();
 			return classFile.getHandleFromMemento(memento, owner);
 		case JEM_COMPILATIONUNIT:
 			if (!memento.hasMoreTokens()) return this;

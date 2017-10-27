@@ -45,15 +45,13 @@ public class CancelableNameEnvironment extends SearchableEnvironment implements 
 		return super.findType(name, packageName);
 	}
 
-	public NameEnvironmentAnswer findType(char[] typeName, char[][] packageName, boolean searchWithSecondaryTypes) {
-		return findType(typeName, packageName);
-	}
-
 	public NameEnvironmentAnswer findType(char[][] compoundTypeName) {
 		checkCanceled();
 		return super.findType(compoundTypeName);
 	}
-
+	public NameEnvironmentAnswer findType(char[] typeName, char[][] packageName, boolean searchWithSecondaryTypes, char[] moduleName) {
+		return findType(typeName, packageName, moduleName);
+	}
 	public void findTypes(char[] prefix, boolean findMembers, boolean camelCaseMatch, int searchFor, ISearchRequestor storage, IProgressMonitor progressMonitor) {
 		checkCanceled();
 		super.findTypes(prefix, findMembers, camelCaseMatch, searchFor, storage, progressMonitor);

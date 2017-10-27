@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007, 2014 IBM Corporation and others.
+ * Copyright (c) 2007, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -260,6 +260,42 @@ public void testBug509027() throws Exception {
 		"        [pc: 19, line: 3]\n" + 
 		"      Local variable table:\n" + 
 		"        [pc: 0, pc: 20] local: this index: 0 type: linenumber.Test\n"; 
+	int index = actualOutput.indexOf(expectedOutput);
+	if (index == -1 || expectedOutput.length() == 0) {
+		System.out.println(Util.displayString(actualOutput, 2));
+	}
+	if (index == -1) {
+		assertEquals("Wrong contents", expectedOutput, actualOutput);
+	}
+}
+//https://bugs.eclipse.org/bugs/show_bug.cgi?id=520714
+public void testBug520714() throws Exception {
+	runConformTest(
+		new String[] {
+			"TestAnon.java",
+			"public class TestAnon {\n" + 
+			"	void f1() {\n" + 
+			"		new Object() {\n" + 
+			"		};\n" + 
+			"	}\n" + 
+			"}"
+		}
+	);
+
+	ClassFileBytesDisassembler disassembler = ToolFactory.createDefaultClassFileBytesDisassembler();
+	byte[] classFileBytes = org.eclipse.jdt.internal.compiler.util.Util.getFileByteContent(new File(OUTPUT_DIR + File.separator  +"TestAnon$1.class"));
+	String actualOutput =
+		disassembler.disassemble(
+			classFileBytes,
+			"\n",
+			ClassFileBytesDisassembler.DETAILED);
+
+	String expectedOutput =
+			"     9  return\n" + 
+			"      Line numbers:\n" + 
+			"        [pc: 0, line: 3]\n" + 
+			"      Local variable table:\n" + 
+			""; 
 	int index = actualOutput.indexOf(expectedOutput);
 	if (index == -1 || expectedOutput.length() == 0) {
 		System.out.println(Util.displayString(actualOutput, 2));

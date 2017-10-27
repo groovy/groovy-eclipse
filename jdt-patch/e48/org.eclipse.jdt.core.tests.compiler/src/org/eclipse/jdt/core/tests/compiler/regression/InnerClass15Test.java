@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2014 IBM Corporation and others.
+ * Copyright (c) 2010, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,21 +14,22 @@ import java.util.Map;
 
 import junit.framework.Test;
 
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
-@SuppressWarnings({ "unchecked", "rawtypes" })
 public class InnerClass15Test extends AbstractRegressionTest {
 public InnerClass15Test(String name) {
 	super(name);
 }
 static {
 //	TESTS_NUMBERS = new int[] { 2 };
+	//TESTS_NAMES = new String[] {"testBug520874"};
 }
 public static Test suite() {
 	return buildMinimalComplianceTestSuite(testClass(), F_1_5);
 }
-protected Map getCompilerOptions() {
-	Map options = super.getCompilerOptions();
+protected Map<String, String> getCompilerOptions() {
+	Map<String, String> options = super.getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportRawTypeReference, CompilerOptions.IGNORE);
 	return options;
 }
@@ -424,7 +425,290 @@ public void test0014() {
 	"Cycle detected: a cycle exists in the type hierarchy between C and X\n" + 
 	"----------\n");
 }
-public static Class testClass() {
+public void testBug520874a() {
+	if (this.complianceLevel < ClassFileConstants.JDK9)
+		return; // Limit the new tests to newer levels
+	this.runNegativeTest(new String[] {
+			"cycle/A.java",
+			"package p;\n" +
+			"class A extends C {\n" +
+			"    static class B {}\n" +
+			"}\n",
+			"cycle/X.java",
+			"package p;\n" +
+			"import p.A.B;\n" +
+			"class C extends B {}\n" +
+			"public class X {\n" +
+			"    public static void main(String argv[]) {\n" +
+			"      new C();\n" +
+			"    }\n" +
+			"}\n",
+		},
+			"----------\n" + 
+			"1. ERROR in cycle\\A.java (at line 2)\n" + 
+			"	class A extends C {\n" + 
+			"	      ^\n" + 
+			"The hierarchy of the type A is inconsistent\n" + 
+			"----------\n" + 
+			"----------\n" + 
+			"1. ERROR in cycle\\X.java (at line 3)\n" + 
+			"	class C extends B {}\n" + 
+			"	                ^\n" + 
+			"Cycle detected: a cycle exists in the type hierarchy between C and A\n" + 
+			"----------\n");
+}
+public void testBug520874b() {
+	if (this.complianceLevel < ClassFileConstants.JDK9)
+		return; // Limit the new tests to newer levels
+	this.runNegativeTest(new String[] {
+			"cycle/X.java",
+			"package p;\n" +
+			"import p.A.*;\n" +
+			"class C extends B {}\n" +
+			"public class X {\n" +
+			"    public static void main(String argv[]) {\n" +
+			"      new C();\n" +
+			"    }\n" +
+			"}\n",
+			"cycle/A.java",
+			"package p;\n" +
+			"class A extends C {\n" +
+			"    static class B {}\n" +
+			"}\n"
+		},
+			"----------\n" + 
+			"1. ERROR in cycle\\X.java (at line 3)\n" + 
+			"	class C extends B {}\n" + 
+			"	      ^\n" + 
+			"The hierarchy of the type C is inconsistent\n" + 
+			"----------\n" + 
+			"----------\n" + 
+			"1. ERROR in cycle\\A.java (at line 2)\n" + 
+			"	class A extends C {\n" + 
+			"	                ^\n" + 
+			"Cycle detected: a cycle exists in the type hierarchy between A and C\n" + 
+			"----------\n");
+}
+public void testBug520874c() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_8)
+		return; // Limit the new tests to newer levels
+	this.runNegativeTest(new String[] {
+			"cycle/X.java",
+			"package cycle;\n" +
+			"import cycle.A.B;\n" +
+			"class C implements B {}\n" +
+			"public class X {\n" +
+			"    public static void main(String argv[]) {\n" +
+			"      new C();\n" +
+			"    }\n" +
+			"}\n",
+			"cycle/A.java",
+			"package cycle;\n" +
+			"class A extends C {\n" +
+			"    static interface B {}\n" +
+			"}\n"
+		},
+			"----------\n" + 
+			"1. ERROR in cycle\\X.java (at line 3)\n" + 
+			"	class C implements B {}\n" + 
+			"	      ^\n" + 
+			"The hierarchy of the type C is inconsistent\n" + 
+			"----------\n" + 
+			"----------\n" + 
+			"1. ERROR in cycle\\A.java (at line 2)\n" + 
+			"	class A extends C {\n" + 
+			"	                ^\n" + 
+			"Cycle detected: a cycle exists in the type hierarchy between A and C\n" + 
+			"----------\n");
+}
+public void testBug520874d() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_8)
+		return; // Limit the new tests to newer levels
+	this.runNegativeTest(new String[] {
+			"cycle/X.java",
+			"package cycle;\n" +
+			"import cycle.A.*;\n" +
+			"class C implements B {}\n" +
+			"public class X {\n" +
+			"    public static void main(String argv[]) {\n" +
+			"      new C();\n" +
+			"    }\n" +
+			"}\n",
+			"cycle/A.java",
+			"package cycle;\n" +
+			"class A extends C {\n" +
+			"    static interface B {}\n" +
+			"}\n"
+		},
+			"----------\n" + 
+			"1. ERROR in cycle\\X.java (at line 3)\n" + 
+			"	class C implements B {}\n" + 
+			"	      ^\n" + 
+			"The hierarchy of the type C is inconsistent\n" + 
+			"----------\n" + 
+			"----------\n" + 
+			"1. ERROR in cycle\\A.java (at line 2)\n" + 
+			"	class A extends C {\n" + 
+			"	                ^\n" + 
+			"Cycle detected: a cycle exists in the type hierarchy between A and C\n" + 
+			"----------\n");
+}
+public void testBug520874e() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_8)
+		return; // Limit the new tests to newer levels
+	this.runNegativeTest(new String[] {
+			"cycle/X.java",
+			"package cycle;\n" +
+			"import cycle.A.B;\n" +
+			"interface C extends B {}\n" +
+			"public class X {\n" +
+			"    public static void main(String argv[]) {\n" +
+			"    }\n" +
+			"}\n",
+			"cycle/A.java",
+			"package cycle;\n" +
+			"class A extends C {\n" +
+			"    static interface B {}\n" +
+			"}\n"
+		},
+			"----------\n" + 
+			"1. ERROR in cycle\\X.java (at line 3)\n" + 
+			"	interface C extends B {}\n" + 
+			"	          ^\n" + 
+			"The hierarchy of the type C is inconsistent\n" + 
+			"----------\n" + 
+			"----------\n" + 
+			"1. ERROR in cycle\\A.java (at line 2)\n" + 
+			"	class A extends C {\n" + 
+			"	                ^\n" + 
+			"Cycle detected: a cycle exists in the type hierarchy between A and C\n" + 
+			"----------\n");
+}
+public void testBug520874f() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_8)
+		return; // Limit the new tests to newer levels
+	this.runNegativeTest(new String[] {
+			"cycle/X.java",
+			"package cycle;\n" +
+			"import cycle.A.*;\n" +
+			"interface C extends B {}\n" +
+			"public class X {\n" +
+			"    public static void main(String argv[]) {\n" +
+			"    }\n" +
+			"}\n",
+			"cycle/A.java",
+			"package cycle;\n" +
+			"class A extends C {\n" +
+			"    static interface B {}\n" +
+			"}\n"
+		},
+			"----------\n" + 
+			"1. ERROR in cycle\\X.java (at line 3)\n" + 
+			"	interface C extends B {}\n" + 
+			"	          ^\n" + 
+			"The hierarchy of the type C is inconsistent\n" + 
+			"----------\n" + 
+			"----------\n" + 
+			"1. ERROR in cycle\\A.java (at line 2)\n" + 
+			"	class A extends C {\n" + 
+			"	                ^\n" + 
+			"Cycle detected: a cycle exists in the type hierarchy between A and C\n" + 
+			"----------\n");
+}
+public void testBug520874g() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_8)
+		return; // Limit the new tests to newer levels
+	this.runNegativeTest(new String[] {
+			"cycle/X.java",
+			"package cycle;\n" +
+			"import cycle.A.B;\n" +
+			"interface C extends B {}\n" +
+			"public class X {\n" +
+			"    public static void main(String argv[]) {\n" +
+			"    }\n" +
+			"}\n",
+			"cycle/A.java",
+			"package cycle;\n" +
+			"interface A extends C {\n" +
+			"    static interface B {}\n" +
+			"}\n"
+		},
+			"----------\n" + 
+			"1. ERROR in cycle\\X.java (at line 3)\n" + 
+			"	interface C extends B {}\n" + 
+			"	          ^\n" + 
+			"The hierarchy of the type C is inconsistent\n" + 
+			"----------\n" + 
+			"----------\n" + 
+			"1. ERROR in cycle\\A.java (at line 2)\n" + 
+			"	interface A extends C {\n" + 
+			"	                    ^\n" + 
+			"Cycle detected: a cycle exists in the type hierarchy between A and C\n" + 
+			"----------\n");
+}
+public void testBug520874h() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_8)
+		return; // Limit the new tests to newer levels
+	this.runNegativeTest(new String[] {
+			"cycle/X.java",
+			"package cycle;\n" +
+			"import cycle.A.*;\n" +
+			"interface C extends B {}\n" +
+			"public class X {\n" +
+			"    public static void main(String argv[]) {\n" +
+			"    }\n" +
+			"}\n",
+			"cycle/A.java",
+			"package cycle;\n" +
+			"interface A extends C {\n" +
+			"    static interface B {}\n" +
+			"}\n"
+		},
+			"----------\n" + 
+			"1. ERROR in cycle\\X.java (at line 3)\n" + 
+			"	interface C extends B {}\n" + 
+			"	          ^\n" + 
+			"The hierarchy of the type C is inconsistent\n" + 
+			"----------\n" + 
+			"----------\n" + 
+			"1. ERROR in cycle\\A.java (at line 2)\n" + 
+			"	interface A extends C {\n" + 
+			"	                    ^\n" + 
+			"Cycle detected: a cycle exists in the type hierarchy between A and C\n" + 
+			"----------\n");
+}
+public void testBug520874i() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_8)
+		return; // Limit the new tests to newer levels
+	this.runNegativeTest(new String[] {
+			"cycle/X.java",
+			"package cycle;\n" +
+			"import cycle.A.*;\n" +
+			"interface C extends A {}\n" +
+			"public class X {\n" +
+			"    public static void main(String argv[]) {\n" +
+			"    }\n" +
+			"}\n",
+			"cycle/A.java",
+			"package cycle;\n" +
+			"interface A extends C {\n" +
+			"    static interface B {}\n" +
+			"}\n"
+		},
+		"----------\n" + 
+		"1. ERROR in cycle\\X.java (at line 3)\n" + 
+		"	interface C extends A {}\n" + 
+		"	          ^\n" + 
+		"The hierarchy of the type C is inconsistent\n" + 
+		"----------\n" + 
+		"----------\n" + 
+		"1. ERROR in cycle\\A.java (at line 2)\n" + 
+		"	interface A extends C {\n" + 
+		"	                    ^\n" + 
+		"Cycle detected: a cycle exists in the type hierarchy between A and C\n" + 
+		"----------\n");
+}
+public static Class<InnerClass15Test> testClass() {
 	return InnerClass15Test.class;
 }
 }

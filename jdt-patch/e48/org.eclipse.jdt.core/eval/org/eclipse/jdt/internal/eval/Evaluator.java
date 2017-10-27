@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -144,6 +144,11 @@ ClassFile[] getClasses() {
 		}
 		public boolean ignoreOptionalProblems() {
 			return false;
+		}
+		@Override
+		public char[] getModuleName() {
+			// TODO Java 9 Auto-generated method stub
+			return null;
 		}
 	}});
 	if (compilerRequestor.hasErrors) {

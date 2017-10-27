@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,8 +14,20 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.parser;
 
-import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
+/**
+ * Converter from source element type to parsed compilation unit.
+ *
+ * Limitation:
+ * | The source element field does not carry any information for its constant part, thus
+ * | the converted parse tree will not include any field initializations.
+ * | Therefore, any binary produced by compiling against converted source elements will
+ * | not take advantage of remote field constant inlining.
+ * | Given the intended purpose of the conversion is to resolve references, this is not
+ * | a problem.
+ *
+ */
 
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.jdt.core.IAnnotatable;
 import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.IImportDeclaration;
@@ -37,18 +49,6 @@ import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.core.*;
 import org.eclipse.jdt.internal.core.util.Util;
 
-/**
- * Converter from source element type to parsed compilation unit.
- *
- * Limitation:
- * | The source element field does not carry any information for its constant part, thus
- * | the converted parse tree will not include any field initializations.
- * | Therefore, any binary produced by compiling against converted source elements will
- * | not take advantage of remote field constant inlining.
- * | Given the intended purpose of the conversion is to resolve references, this is not
- * | a problem.
- *
- */
 public class SourceTypeConverter extends TypeConverter {
 
 	/*

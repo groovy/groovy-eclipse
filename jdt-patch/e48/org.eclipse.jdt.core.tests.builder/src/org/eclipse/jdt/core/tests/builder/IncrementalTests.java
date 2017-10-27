@@ -1231,4 +1231,28 @@ public class IncrementalTests extends BuilderTests {
 		expectingSpecificProblemFor(aPath, new Problem("A", "The import w.I cannot be resolved", aPath, 18, 21, CategorizedProblem.CAT_IMPORT, IMarker.SEVERITY_ERROR)); //$NON-NLS-1$ //$NON-NLS-2$
 		env.removeProject(projectPath);
 	}
+
+	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=520640
+	public void testRemovePackageInDependencyProject() throws JavaModelException {
+		IPath projectPath1 = env.addProject("Project1"); 
+		env.addExternalJars(projectPath1, Util.getJavaClassLibs());
+		
+		IPath projectPath2 = env.addProject("Project2"); 
+		env.addExternalJars(projectPath2, Util.getJavaClassLibs());
+	
+		
+		env.addRequiredProject(projectPath1, projectPath2);
+		
+		env.addPackage(projectPath2, "emptypackage"); 
+
+		fullBuild();
+		expectingNoProblems();
+		
+		env.removePackage(projectPath2, "emptypackage"); 
+		incrementalBuild();
+		expectingNoProblems();
+		
+		env.removeProject(projectPath2);
+		env.removeProject(projectPath1);
+	}
 }

@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,6 +17,7 @@ import org.eclipse.core.runtime.CoreException;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
+import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -115,6 +116,13 @@ public String toString() {
 	return "SourceFile[" //$NON-NLS-1$
 		+ this.resource.getFullPath() + "]";  //$NON-NLS-1$
 }
+
+@Override
+public char[] getModuleName() {
+	IModule mod = this.sourceLocation.module();
+	return mod == null ? null : mod.name();
+}
+
 // GROOVY add -- GRECLIPSE-963
 public static final String LINK_TO_GRAILS_PLUGINS = ".link_to_grails_plugins"; //$NON-NLS-1$
 public boolean isInLinkedSourceFolder() {

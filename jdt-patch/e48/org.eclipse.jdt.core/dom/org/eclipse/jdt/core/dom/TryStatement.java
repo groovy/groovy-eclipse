@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -28,18 +28,30 @@ import java.util.List;
  * Not all node arrangements will represent legal Java constructs. In particular,
  * at least one resource, catch clause, or finally block must be present.</p>
  * 
+ * <p>A resource is either a {@link VariableDeclarationExpression} or (since JLS9) a {@link Name}.</p>
+ * 
  * @since 2.0
  * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noextend This class is not intended to be subclassed by clients.
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class TryStatement extends Statement {
 
+	
 	/**
 	 * The "resources" structural property of this node type (element type: {@link VariableDeclarationExpression}) (added in JLS4 API).
+	 * @deprecated In the JLS9 API, this property is replaced by {@link #RESOURCES2_PROPERTY}.
 	 * @since 3.7.1
 	 */
 	public static final ChildListPropertyDescriptor RESOURCES_PROPERTY =
 		new ChildListPropertyDescriptor(TryStatement.class, "resources", VariableDeclarationExpression.class, CYCLE_RISK); //$NON-NLS-1$
+
+	/**
+	 * The "resources" structural property of this node type (element type: {@link Expression}) (added in JLS9 API).
+	 * @since 3.14
+	 */
+	public static final ChildListPropertyDescriptor RESOURCES2_PROPERTY =
+		new ChildListPropertyDescriptor(TryStatement.class, "resources", Expression.class, CYCLE_RISK); //$NON-NLS-1$
 
 	/**
 	 * The "body" structural property of this node type (child type: {@link Block}).
@@ -77,6 +89,14 @@ public class TryStatement extends Statement {
 	 */
 	private static final List PROPERTY_DESCRIPTORS_4_0;
 
+	/**
+	 * A list of property descriptors (element type:
+	 * {@link StructuralPropertyDescriptor}),
+	 * or null if uninitialized.
+	 * @since 3.14
+	 */
+	private static final List PROPERTY_DESCRIPTORS_9_0;
+
 	static {
 		List propertyList = new ArrayList(4);
 		createPropertyList(TryStatement.class, propertyList);
@@ -92,6 +112,14 @@ public class TryStatement extends Statement {
 		addProperty(CATCH_CLAUSES_PROPERTY, propertyList);
 		addProperty(FINALLY_PROPERTY, propertyList);
 		PROPERTY_DESCRIPTORS_4_0 = reapPropertyList(propertyList);
+
+		propertyList = new ArrayList(5);
+		createPropertyList(TryStatement.class, propertyList);
+		addProperty(RESOURCES2_PROPERTY, propertyList);
+		addProperty(BODY_PROPERTY, propertyList);
+		addProperty(CATCH_CLAUSES_PROPERTY, propertyList);
+		addProperty(FINALLY_PROPERTY, propertyList);
+		PROPERTY_DESCRIPTORS_9_0 = reapPropertyList(propertyList);
 	}
 
 	/**
@@ -109,15 +137,20 @@ public class TryStatement extends Statement {
 			case AST.JLS2_INTERNAL :
 			case AST.JLS3_INTERNAL :
 				return PROPERTY_DESCRIPTORS;
-			default :
+			case AST.JLS4_INTERNAL :
+			case AST.JLS8_INTERNAL :
 				return PROPERTY_DESCRIPTORS_4_0;
+			default :
+				return PROPERTY_DESCRIPTORS_9_0;
 		}
 	}
 
 	/**
-	 * The resource expressions (element type: {@link VariableDeclarationExpression}).
-	 * Null in JLS2 and JLS3. Added in JLS4; defaults to an empty list
-	 * (see constructor).
+	 * The resource expressions (element type: {@link Expression}).
+	 * Null in JLS2 and JLS3. Added in JLS4.
+	 * In the deprecated JLS4 and JLS8 APIs, this used to be
+	 * (element type: {@link VariableDeclarationExpression}).
+	 * Defaults to an empty list (see constructor).
 	 * @since 3.7
 	 */
 	private ASTNode.NodeList resources = null;
@@ -153,7 +186,9 @@ public class TryStatement extends Statement {
 	 */
 	TryStatement(AST ast) {
 		super(ast);
-		if (ast.apiLevel >= AST.JLS4_INTERNAL) {
+		if (ast.apiLevel >= AST.JLS9_INTERNAL) {
+			this.resources = new ASTNode.NodeList(RESOURCES2_PROPERTY);
+		} else if (ast.apiLevel >= AST.JLS4_INTERNAL) {
 			this.resources = new ASTNode.NodeList(RESOURCES_PROPERTY);
 		}
 	}
@@ -193,7 +228,7 @@ public class TryStatement extends Statement {
 	 * Method declared on ASTNode.
 	 */
 	final List internalGetChildListProperty(ChildListPropertyDescriptor property) {
-		if (property == RESOURCES_PROPERTY) {
+		if (property == RESOURCES_PROPERTY || property == RESOURCES2_PROPERTY) {
 			return resources();
 		}
 		if (property == CATCH_CLAUSES_PROPERTY) {
@@ -336,9 +371,12 @@ public class TryStatement extends Statement {
 
 	/**
 	 * Returns the live ordered list of resources for this try statement (added in JLS4 API).
+	 * 
+	 * <p>A resource is either a {@link VariableDeclarationExpression} or (since JLS9) a {@link Name}.</p>
 	 *
-	 * @return the live list of resources
-	 *    (element type: {@link VariableDeclarationExpression})
+	 * @return the live list of resources (element type: {@link Expression}).
+	 *    In the deprecated JLS4 and JLS8 APIs, this used to be
+	 *    (element type: {@link VariableDeclarationExpression}).
 	 * @exception UnsupportedOperationException if this operation is used
 	 *            in a JLS2 or JLS3 AST
 	 * @since 3.7.1

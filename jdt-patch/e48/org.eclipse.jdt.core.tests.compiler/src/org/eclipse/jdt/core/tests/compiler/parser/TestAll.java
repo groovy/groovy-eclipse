@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -117,7 +117,25 @@ public static TestSuite getTestSuite(boolean addComplianceDiagnoseTest) {
 		TestCase.resetForgottenFilters(tests_1_8);
 		all.addTest(AbstractCompilerTest.buildComplianceTestSuite(ClassFileConstants.JDK1_8, tests_1_8));
 	}
-
+	if ((possibleComplianceLevels & AbstractCompilerTest.F_9) != 0) {
+		ArrayList tests_9 = (ArrayList)testClasses.clone();
+		tests_9.addAll(TEST_CLASSES_1_5);
+		tests_9.add(ParserTest1_7.class);
+		tests_9.add(LambdaExpressionSyntaxTest.class);
+		tests_9.add(ReferenceExpressionSyntaxTest.class);
+		tests_9.add(TypeAnnotationSyntaxTest.class);
+		tests_9.add(CompletionParserTest18.class);
+		tests_9.add(SelectionParserTest18.class);
+		tests_9.add(SelectionParserTest9.class);
+		tests_9.add(ModuleDeclarationSyntaxTest.class);
+		// Reset forgotten subsets tests
+		TestCase.TESTS_PREFIX = null;
+		TestCase.TESTS_NAMES = null;
+		TestCase.TESTS_NUMBERS= null;
+		TestCase.TESTS_RANGE = null;
+		TestCase.RUN_ONLY_ID = null;
+		all.addTest(AbstractCompilerTest.buildComplianceTestSuite(ClassFileConstants.JDK9, tests_9));
+	}
 	return all;
 }
 public static Test suite() {

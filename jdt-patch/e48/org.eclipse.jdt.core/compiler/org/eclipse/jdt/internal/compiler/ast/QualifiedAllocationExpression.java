@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -36,6 +36,8 @@ package org.eclipse.jdt.internal.compiler.ast;
 
 import static org.eclipse.jdt.internal.compiler.ast.ExpressionContext.INVOCATION_CONTEXT;
 
+import java.util.Arrays;
+
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
@@ -48,6 +50,7 @@ import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.lookup.ImplicitNullAnnotationVerifier;
+import org.eclipse.jdt.internal.compiler.lookup.IntersectionTypeBinding18;
 import org.eclipse.jdt.internal.compiler.lookup.LocalTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
@@ -59,8 +62,10 @@ import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.RawTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
+import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TypeBindingVisitor;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
@@ -305,7 +310,7 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 		}
 		return result;
 	}
-
+	
 	private TypeBinding resolveTypeForQualifiedAllocationExpression(BlockScope scope) {
 		// Propagate the type checking to the arguments, and checks if the constructor is defined.
 		// ClassInstanceCreationExpression ::= Primary '.' 'new' SimpleName '(' ArgumentListopt ')' ClassBodyopt
@@ -480,8 +485,10 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 				}
 			} else {
 				if (isDiamond) {
-					scope.problemReporter().diamondNotWithAnoymousClasses(this.type);
-					return null;
+					if (sourceLevel < ClassFileConstants.JDK9) {
+						scope.problemReporter().diamondNotWithAnoymousClasses(this.type);
+						return null;
+					}
 				}	
 				ReferenceBinding superType = (ReferenceBinding) receiverType;
 				if (superType.isTypeVariable()) {
@@ -492,61 +499,7 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 					scope.problemReporter().cannotInstantiate(this.type, superType);
 					return this.resolvedType = superType;
 				}
-				// anonymous type scenario
-				// an anonymous class inherits from java.lang.Object when declared "after" an interface
-				ReferenceBinding anonymousSuperclass = superType.isInterface() ? scope.getJavaLangObject() : superType;
-				// insert anonymous type in scope
-				scope.addAnonymousType(this.anonymousType, superType);
-				this.anonymousType.resolve(scope);
-
-				// find anonymous super constructor
-				this.resolvedType = this.anonymousType.binding; // 1.2 change
-				if ((this.resolvedType.tagBits & TagBits.HierarchyHasProblems) != 0) {
-					return null; // stop secondary errors
-				}
-				MethodBinding inheritedBinding = findConstructorBinding(scope, this, anonymousSuperclass, this.argumentTypes);
-
-				if (!inheritedBinding.isValidBinding()) {
-					if (inheritedBinding.declaringClass == null) {
-						inheritedBinding.declaringClass = anonymousSuperclass;
-					}
-					if (this.type != null && !this.type.resolvedType.isValidBinding()) {
-						// problem already got signaled on type reference, do not report secondary problem
-						return null;
-					}
-					scope.problemReporter().invalidConstructor(this, inheritedBinding);
-					return this.resolvedType;
-				}
-				if ((inheritedBinding.tagBits & TagBits.HasMissingType) != 0) {
-					scope.problemReporter().missingTypeInConstructor(this, inheritedBinding);
-				}
-				if (this.enclosingInstance != null) {
-					ReferenceBinding targetEnclosing = inheritedBinding.declaringClass.enclosingType();
-					if (targetEnclosing == null) {
-						scope.problemReporter().unnecessaryEnclosingInstanceSpecification(this.enclosingInstance, superType);
-						return this.resolvedType;
-					} else if (!enclosingInstanceType.isCompatibleWith(targetEnclosing) && !scope.isBoxingCompatibleWith(enclosingInstanceType, targetEnclosing)) {
-						scope.problemReporter().typeMismatchError(enclosingInstanceType, targetEnclosing, this.enclosingInstance, null);
-						return this.resolvedType;
-					}
-					this.enclosingInstance.computeConversion(scope, targetEnclosing, enclosingInstanceType);
-				}
-				if (this.arguments != null) {
-					if (checkInvocationArguments(scope, null, anonymousSuperclass, inheritedBinding, this.arguments, this.argumentTypes, this.argsContainCast, this)) {
-						this.bits |= ASTNode.Unchecked;
-					}
-				}
-				if (this.typeArguments != null && inheritedBinding.original().typeVariables == Binding.NO_TYPE_VARIABLES) {
-					scope.problemReporter().unnecessaryTypeArgumentsForMethodInvocation(inheritedBinding, this.genericTypeArguments, this.typeArguments);
-				}
-				// Update the anonymous inner class : superclass, interface
-				LookupEnvironment environment=scope.environment();
-				if (environment.globalOptions.isAnnotationBasedNullAnalysisEnabled) {
-					ImplicitNullAnnotationVerifier.ensureNullnessIsKnown(inheritedBinding, scope);
-				}
-
-				this.binding = this.anonymousType.createDefaultConstructorWithBinding(inheritedBinding, 	(this.bits & ASTNode.Unchecked) != 0 && this.genericTypeArguments == null);
-				return this.resolvedType;
+				this.resolvedType = receiverType;
 			}
 		} else {
 			if (this.enclosingInstance != null) {
@@ -554,8 +507,9 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 				this.resolvedType = receiverType = this.type.resolvedType;
 			}
 		}
+		MethodBinding constructorBinding = null;
 		if (isDiamond) {
-			this.binding = inferConstructorOfElidedParameterizedType(scope);
+			this.binding = constructorBinding = inferConstructorOfElidedParameterizedType(scope);
 			if (this.binding == null || !this.binding.isValidBinding()) {
 				scope.problemReporter().cannotInferElidedTypes(this);
 				return this.resolvedType = null;
@@ -564,50 +518,143 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 				return new PolyTypeBinding(this);
 			}
 			this.resolvedType = this.type.resolvedType = receiverType = this.binding.declaringClass;
+			if (this.anonymousType != null) {
+				constructorBinding = getAnonymousConstructorBinding((ReferenceBinding) receiverType, scope);
+				if (constructorBinding == null)
+					return null;
+				this.resolvedType = this.anonymousType.binding;
+				// Check that inferred type is valid
+				if (!validate((ParameterizedTypeBinding) receiverType, scope)) {
+					return this.resolvedType;
+				}
+			} else {
+				// 15.9.3 - If the compile-time declaration is applicable by variable arity invocation...
+				if (this.binding.isVarargs()) {
+					TypeBinding lastArg = this.binding.parameters[this.binding.parameters.length - 1].leafComponentType();
+					if (!lastArg.erasure().canBeSeenBy(scope)) {
+						scope.problemReporter().invalidType(this, new ProblemReferenceBinding(new char[][] {lastArg.readableName()}, (ReferenceBinding)lastArg, ProblemReasons.NotVisible));
+						return this.resolvedType = null;
+					}
+				}
+			}
 			resolvePolyExpressionArguments(this, this.binding, this.argumentTypes, scope);
 		} else {
-			this.binding = findConstructorBinding(scope, this, (ReferenceBinding) receiverType, this.argumentTypes);
-		}
-
-		if (this.binding.isValidBinding()) {	
-			if (isMethodUseDeprecated(this.binding, scope, true)) {
-				scope.problemReporter().deprecatedMethod(this.binding, this);
+			if (this.anonymousType != null) {
+				constructorBinding = getAnonymousConstructorBinding((ReferenceBinding) receiverType, scope);
+				if (constructorBinding == null)
+					return null;
+				this.resolvedType = this.anonymousType.binding;
+			} else {
+				this.binding = constructorBinding = findConstructorBinding(scope, this, (ReferenceBinding) receiverType, this.argumentTypes);
 			}
-			if (checkInvocationArguments(scope, null, receiverType, this.binding, this.arguments, this.argumentTypes, this.argsContainCast, this)) {
+		}
+		ReferenceBinding receiver = (ReferenceBinding) receiverType;
+		ReferenceBinding superType = receiver.isInterface() ? scope.getJavaLangObject() : receiver;
+		if (constructorBinding.isValidBinding()) {
+			if (isMethodUseDeprecated(constructorBinding, scope, true)) {
+				scope.problemReporter().deprecatedMethod(constructorBinding, this);
+			}
+			if (checkInvocationArguments(scope, null, superType, constructorBinding, this.arguments,
+					this.argumentTypes, this.argsContainCast, this)) {
 				this.bits |= ASTNode.Unchecked;
 			}
-			if (this.typeArguments != null && this.binding.original().typeVariables == Binding.NO_TYPE_VARIABLES) {
-				scope.problemReporter().unnecessaryTypeArgumentsForMethodInvocation(this.binding, this.genericTypeArguments, this.typeArguments);
+			if (this.typeArguments != null && constructorBinding.original().typeVariables == Binding.NO_TYPE_VARIABLES) {
+				scope.problemReporter().unnecessaryTypeArgumentsForMethodInvocation(constructorBinding,
+						this.genericTypeArguments, this.typeArguments);
 			}
 		} else {
-			if (this.binding.declaringClass == null) {
-				this.binding.declaringClass = (ReferenceBinding) receiverType;
+			if (constructorBinding.declaringClass == null) {
+				constructorBinding.declaringClass = superType;
 			}
 			if (this.type != null && !this.type.resolvedType.isValidBinding()) {
 				// problem already got signaled on type reference, do not report secondary problem
 				return null;
 			}
-			scope.problemReporter().invalidConstructor(this, this.binding);
+			scope.problemReporter().invalidConstructor(this, constructorBinding);
+			return this.resolvedType;
+		}
+		if ((constructorBinding.tagBits & TagBits.HasMissingType) != 0) {
+			scope.problemReporter().missingTypeInConstructor(this, constructorBinding);
+		}
+		if (this.enclosingInstance != null) {
+			ReferenceBinding targetEnclosing = constructorBinding.declaringClass.enclosingType();
+			if (targetEnclosing == null) {
+				scope.problemReporter().unnecessaryEnclosingInstanceSpecification(this.enclosingInstance, receiver);
+				return this.resolvedType;
+			} else if (!enclosingInstanceType.isCompatibleWith(targetEnclosing) && !scope.isBoxingCompatibleWith(enclosingInstanceType, targetEnclosing)) {
+				scope.problemReporter().typeMismatchError(enclosingInstanceType, targetEnclosing, this.enclosingInstance, null);
+				return this.resolvedType;
+			}
+			this.enclosingInstance.computeConversion(scope, targetEnclosing, enclosingInstanceType);
+		}
+		if (!isDiamond && receiverType.isParameterizedTypeWithActualArguments() && 
+				(this.anonymousType == null || sourceLevel >= ClassFileConstants.JDK9)) {
+			checkTypeArgumentRedundancy((ParameterizedTypeBinding) receiverType, scope);
+		}
+		if (this.anonymousType != null) {
+			// anonymous type scenario
+			// Update the anonymous inner class : superclass, interface
+			LookupEnvironment environment=scope.environment();
+			if (environment.globalOptions.isAnnotationBasedNullAnalysisEnabled) {
+				ImplicitNullAnnotationVerifier.ensureNullnessIsKnown(constructorBinding, scope);
+			}
+			this.binding = this.anonymousType.createDefaultConstructorWithBinding(constructorBinding, (this.bits & ASTNode.Unchecked) != 0 && this.genericTypeArguments == null);
+			return this.resolvedType;
+		} else {
 			return this.resolvedType = receiverType;
 		}
-		if ((this.binding.tagBits & TagBits.HasMissingType) != 0) {
-			scope.problemReporter().missingTypeInConstructor(this, this.binding);
-		}
-		if (!isDiamond && receiverType.isParameterizedTypeWithActualArguments()) {
-			checkTypeArgumentRedundancy((ParameterizedTypeBinding)receiverType, scope);
-		}
-		// The enclosing instance must be compatible with the innermost enclosing type
-		ReferenceBinding expectedType = this.binding.declaringClass.enclosingType();
-		if (TypeBinding.notEquals(expectedType, enclosingInstanceType)) // must call before computeConversion() and typeMismatchError()
-			scope.compilationUnitScope().recordTypeConversion(expectedType, enclosingInstanceType);
-		if (enclosingInstanceType.isCompatibleWith(expectedType) || scope.isBoxingCompatibleWith(enclosingInstanceType, expectedType)) {
-			this.enclosingInstance.computeConversion(scope, expectedType, enclosingInstanceType);
-			return this.resolvedType = receiverType;
-		}
-		scope.problemReporter().typeMismatchError(enclosingInstanceType, expectedType, this.enclosingInstance, null);
-		return this.resolvedType = receiverType;
 	}
 
+	private boolean validate(final ParameterizedTypeBinding allocationType, final Scope scope) {
+		class ValidityInspector extends TypeBindingVisitor {
+			private boolean noErrors;
+
+			public ValidityInspector() {
+				this.noErrors = true;
+			}
+
+			public boolean visit(IntersectionTypeBinding18 intersectionTypeBinding18) {
+				Arrays.sort(intersectionTypeBinding18.intersectingTypes, (t1, t2) -> t1.id - t2.id);
+				scope.problemReporter().anonymousDiamondWithNonDenotableTypeArguments(QualifiedAllocationExpression.this.type, allocationType);
+				return this.noErrors = false;  // stop traversal
+			}
+			public boolean visit(TypeVariableBinding typeVariable) {
+				if (typeVariable.isCapture()) {
+					scope.problemReporter().anonymousDiamondWithNonDenotableTypeArguments(QualifiedAllocationExpression.this.type, allocationType);
+					return this.noErrors = false;  // stop traversal
+				}
+				return true; // continue traversal
+			}
+			public boolean visit(ReferenceBinding ref) {
+				if (!ref.canBeSeenBy(scope)) {
+					scope.problemReporter().invalidType(QualifiedAllocationExpression.this.anonymousType, new ProblemReferenceBinding(ref.compoundName, ref, ProblemReasons.NotVisible));
+					return this.noErrors = false;
+				}
+				return true;
+			}
+			public boolean isValid() {
+				TypeBindingVisitor.visit(this, allocationType);
+				return this.noErrors;
+			}
+		}
+		
+		return new ValidityInspector().isValid();
+	}
+	private MethodBinding getAnonymousConstructorBinding(ReferenceBinding receiverType, BlockScope scope) {
+		ReferenceBinding superType = receiverType;
+		// an anonymous class inherits from java.lang.Object when declared "after" an interface
+		ReferenceBinding anonymousSuperclass = superType.isInterface() ? scope.getJavaLangObject() : superType;
+		// insert anonymous type in scope
+		scope.addAnonymousType(this.anonymousType, superType);
+		this.anonymousType.resolve(scope);
+
+		// find anonymous super constructor
+		this.resolvedType = this.anonymousType.binding; // 1.2 change
+		if ((this.resolvedType.tagBits & TagBits.HierarchyHasProblems) != 0) {
+			return null; // stop secondary errors
+		}
+		return findConstructorBinding(scope, this, anonymousSuperclass, this.argumentTypes);
+	}
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		if (visitor.visit(this, scope)) {
 			if (this.enclosingInstance != null)

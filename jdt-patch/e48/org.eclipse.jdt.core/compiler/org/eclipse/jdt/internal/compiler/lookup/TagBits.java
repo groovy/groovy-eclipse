@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contributions for
@@ -120,11 +120,12 @@ public interface TagBits {
 	long AnnotationForPackage = ASTNode.Bit44L;
 	long AnnotationForTypeUse = ASTNode.Bit54L;
 	long AnnotationForTypeParameter = ASTNode.Bit55L;
+	long AnnotationForModule = ASTNode.Bit62L;
 	long SE7AnnotationTargetMASK = AnnotationForType | AnnotationForField | AnnotationForMethod
 				| AnnotationForParameter | AnnotationForConstructor | AnnotationForLocalVariable
 				| AnnotationForAnnotationType | AnnotationForPackage;
 	long AnnotationTargetMASK = SE7AnnotationTargetMASK | AnnotationTarget
-				| AnnotationForTypeUse | AnnotationForTypeParameter;
+				| AnnotationForTypeUse | AnnotationForTypeParameter | AnnotationForModule;
 	// 2-bits for retention (should check (tagBits & RetentionMask) == RuntimeRetention
 	long AnnotationSourceRetention = ASTNode.Bit45L;
 	long AnnotationClassRetention = ASTNode.Bit46L;
@@ -153,11 +154,14 @@ public interface TagBits {
 	/** From Java 8 */
 	long AnnotationRepeatable = ASTNode.Bit61L; // Only for annotation types and since these cannot have constructors, we can overload HasNonPrivateConstructor.
 
+	/** From Java 9 */
+	long AnnotationTerminallyDeprecated = ASTNode.Bit63L;
 
 	long AllStandardAnnotationsMask =
 				  AnnotationTargetMASK
 				| AnnotationRetentionMASK
 				| AnnotationDeprecated
+				| AnnotationTerminallyDeprecated
 				| AnnotationDocumented
 				| AnnotationInherited
 				| AnnotationOverride

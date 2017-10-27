@@ -49,6 +49,7 @@ public class IrritantSet {
 	public static final IrritantSet BOXING = new IrritantSet(CompilerOptions.AutoBoxing);
 	public static final IrritantSet CAST = new IrritantSet(CompilerOptions.UnnecessaryTypeCheck);
 	public static final IrritantSet DEPRECATION = new IrritantSet(CompilerOptions.UsingDeprecatedAPI);
+	public static final IrritantSet TERMINAL_DEPRECATION = new IrritantSet(CompilerOptions.UsingTerminallyDeprecatedAPI);
 	public static final IrritantSet DEP_ANN = new IrritantSet(CompilerOptions.MissingDeprecatedAnnotation);
 	public static final IrritantSet FALLTHROUGH = new IrritantSet(CompilerOptions.FallthroughCase);
 	public static final IrritantSet FINALLY = new IrritantSet(CompilerOptions.FinallyBlockNotCompleting);
@@ -69,6 +70,7 @@ public class IrritantSet {
 	public static final IrritantSet UNQUALIFIED_FIELD_ACCESS = new IrritantSet(CompilerOptions.UnqualifiedFieldAccess);
 	public static final IrritantSet RESOURCE = new IrritantSet(CompilerOptions.UnclosedCloseable);
 	public static final IrritantSet UNLIKELY_ARGUMENT_TYPE = new IrritantSet(CompilerOptions.UnlikelyCollectionMethodArgumentType);
+	public static final IrritantSet API_LEAK = new IrritantSet(CompilerOptions.APILeak);
 
 	public static final IrritantSet JAVADOC = new IrritantSet(CompilerOptions.InvalidJavadoc);
 	public static final IrritantSet COMPILER_DEFAULT_ERRORS = new IrritantSet(0); // no optional error by default	
@@ -125,7 +127,9 @@ public class IrritantSet {
 				|CompilerOptions.NonnullParameterAnnotationDropped
 				|CompilerOptions.PessimisticNullAnalysisForFreeTypeVariables
 				|CompilerOptions.NonNullTypeVariableFromLegacyInvocation
-				|CompilerOptions.UnlikelyCollectionMethodArgumentType);
+				|CompilerOptions.UnlikelyCollectionMethodArgumentType
+				|CompilerOptions.UsingTerminallyDeprecatedAPI
+				|CompilerOptions.APILeak);
 		// default errors IF AnnotationBasedNullAnalysis is enabled:
 		COMPILER_DEFAULT_ERRORS.set(
 				CompilerOptions.NullSpecViolation

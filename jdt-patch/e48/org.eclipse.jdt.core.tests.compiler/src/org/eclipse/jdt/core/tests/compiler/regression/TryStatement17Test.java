@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2014 IBM Corporation and others.
+ * Copyright (c) 2003, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,6 +10,8 @@
  *     Jesper Steen Moller - bug 404146 nested try-catch-finally-blocks leads to unrunnable Java byte code
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.compiler.regression;
+
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 
 import junit.framework.Test;
 @SuppressWarnings({ "rawtypes" })
@@ -1260,6 +1262,61 @@ public void testBug404146() {
 			"    public static void decoy3() throws NamingException {}\n" +
 			"}\n"
 		});
+}
+public void testBug488569_001() {
+	if (this.complianceLevel < ClassFileConstants.JDK9) {
+		this.runNegativeTest(
+			new String[] {
+					"X.java",
+					"public class X {\n" +
+					"    public static void main(String [] args) throws Exception {\n" +
+					"    	Z z1 = new Z();\n" +
+					"        try (Y y1 = new Y(); z1;) {\n" +
+					"        }  \n" +
+					"    }  \n" +
+					"}\n" +
+					"class Y implements AutoCloseable {\n" +
+					"	public void close() throws Exception {\n" +
+					"	}\n" +
+					"}\n" +
+					"\n" +
+					"class Z implements AutoCloseable {\n" +
+					"	public void close() throws Exception {\n" +
+					"	}   \n" +
+					"}\n" +
+					"\n"
+			},
+			"----------\n" + 
+			"1. ERROR in X.java (at line 4)\n" + 
+			"	try (Y y1 = new Y(); z1;) {\n" + 
+			"	                     ^^\n" + 
+			"Variable resource not allowed here for source level below 9\n" + 
+			"----------\n");
+	} else {
+		this.runConformTest(
+			new String[] {
+				"X.java",
+				"public class X {\n" +
+				"    public static void main(String [] args) throws Exception {\n" +
+				"    	Z z1 = new Z();\n" +
+				"        try (Y y1 = new Y(); z1;) {\n" +
+				"        }  \n" +
+				"    }  \n" +
+				"}\n" +
+				"class Y implements AutoCloseable {\n" +
+				"	public void close() throws Exception {\n" +
+				"	}\n" +
+				"}\n" +
+				"\n" +
+				"class Z implements AutoCloseable {\n" +
+				"	public void close() throws Exception {\n" +
+				"	}   \n" +
+				"}\n" +
+				"\n"
+			}, 
+			"");
+
+	}
 }
 
 public static Class testClass() {

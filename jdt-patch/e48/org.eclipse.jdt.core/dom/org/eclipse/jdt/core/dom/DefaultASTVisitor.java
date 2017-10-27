@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -181,6 +181,12 @@ class DefaultASTVisitor extends ASTVisitor {
 		endVisitNode(node);
 	}
 	public void endVisit(Modifier node) {
+		endVisitNode(node);
+	}
+	public void endVisit(ModuleDeclaration node) {
+		endVisitNode(node);
+	}
+	public void endVisit(ModuleDirective node) {
 		endVisitNode(node);
 	}
 	public void endVisit(NameQualifiedType node) {
@@ -466,6 +472,12 @@ class DefaultASTVisitor extends ASTVisitor {
 		return visitNode(node);
 	}
 	public boolean visit(Modifier node) {
+		return visitNode(node);
+	}
+	public boolean visit(ModuleDeclaration node) {
+		return visitNode(node);
+	}
+	public boolean visit(ModuleDirective node) {
 		return visitNode(node);
 	}
 	public boolean visit(MethodRefParameter node) {

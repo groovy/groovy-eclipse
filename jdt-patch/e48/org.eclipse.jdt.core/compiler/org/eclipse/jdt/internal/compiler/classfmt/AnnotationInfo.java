@@ -289,7 +289,6 @@ private int scanAnnotation(int offset, boolean expectRuntimeVisibleAnno, boolean
 			case 22:
 				if (CharOperation.equals(typeName, ConstantPool.JAVA_LANG_DEPRECATED)) {
 					this.standardAnnotationTagBits |= TagBits.AnnotationDeprecated;
-					return currentOffset;
 				}
 				break;
 			case 23:

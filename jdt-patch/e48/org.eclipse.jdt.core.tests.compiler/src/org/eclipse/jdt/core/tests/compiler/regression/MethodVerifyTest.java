@@ -1926,7 +1926,7 @@ public class MethodVerifyTest extends AbstractComparableTest {
 				"public class X {\n" +
 				"	void test() {\n" +
 				"		Pair<Double, Integer> p = new InvertedPair<Integer, Double>();\n" +
-				"		p.setA(new Double(1.1));\n" +
+				"		p.setA(Double.valueOf(1.1));\n" +
 				"	}\n" +
 				"}\n" +
 				"class Pair<A, B> {\n" +
@@ -2991,7 +2991,7 @@ public class MethodVerifyTest extends AbstractComparableTest {
 		this.runNegativeTest(
 			new String[] {
 				"X.java",
-				"public class X { void test(E<Integer,Integer> e) { e.id(new Integer(1)); } }\n" +
+				"public class X { void test(E<Integer,Integer> e) { e.id(Integer.valueOf(1)); } }\n" +
 				"abstract class C<A> { public abstract void id(A x); }\n" +
 				"interface I<B> { void id(B x); }\n" +
 				"abstract class E<A, B> extends C<A> implements I<B> {}\n"
@@ -3012,7 +3012,7 @@ public class MethodVerifyTest extends AbstractComparableTest {
 		this.runNegativeTest(
 			new String[] {
 				"X.java",
-				"public class X { void test(E<Integer,Integer> e) { e.id(new Integer(1)); } }\n" +
+				"public class X { void test(E<Integer,Integer> e) { e.id(Integer.valueOf(1)); } }\n" +
 				"class C<A> { public void id(A x) {} }\n" +
 				"interface I<B> { void id(B x); }\n" +
 				"abstract class E<A, B> extends C<A> implements I<B> {}\n"
@@ -3030,14 +3030,14 @@ public class MethodVerifyTest extends AbstractComparableTest {
 		this.runNegativeTest(
 			new String[] {
 				"X.java",
-				"public class X { void test(E<Integer,Integer> e) { e.id(new Integer(2)); } }\n" +
+				"public class X { void test(E<Integer,Integer> e) { e.id(Integer.valueOf(2)); } }\n" +
 				"abstract class C<A extends Number> { public abstract void id(A x); }\n" +
 				"interface I<B> { void id(B x); }\n" +
 				"abstract class E<A extends Number, B> extends C<A> implements I<B> {}\n"
 			},
 			"----------\n" +
 			"1. ERROR in X.java (at line 1)\n" +
-			"	public class X { void test(E<Integer,Integer> e) { e.id(new Integer(2)); } }\n" +
+			"	public class X { void test(E<Integer,Integer> e) { e.id(Integer.valueOf(2)); } }\n" +
 			"	                                                     ^^\n" +
 			"The method id(Integer) is ambiguous for the type E<Integer,Integer>\n" +
 			"----------\n"
@@ -3049,14 +3049,14 @@ public class MethodVerifyTest extends AbstractComparableTest {
 		this.runNegativeTest(
 			new String[] {
 				"X.java",
-				"public class X { void test(E<Integer,Integer> e) { e.id(new Integer(111)); } }\n" +
+				"public class X { void test(E<Integer,Integer> e) { e.id(Integer.valueOf(111)); } }\n" +
 				"abstract class C<A extends Number> { public void id(A x) {} }\n" +
 				"interface I<B> { void id(B x); }\n" +
 				"class E<A extends Number, B> extends C<A> implements I<B> { public void id(B b) {} }\n"
 			},
 			"----------\n" +
 			"1. ERROR in X.java (at line 1)\n" +
-			"	public class X { void test(E<Integer,Integer> e) { e.id(new Integer(111)); } }\n" +
+			"	public class X { void test(E<Integer,Integer> e) { e.id(Integer.valueOf(111)); } }\n" +
 			"	                                                     ^^\n" +
 			"The method id(Integer) is ambiguous for the type E<Integer,Integer>\n" +
 			"----------\n"
@@ -3069,12 +3069,12 @@ public class MethodVerifyTest extends AbstractComparableTest {
 			new String[] {
 				"X.java",
 				"public class X {\n" +
-				"	void test(E<Integer,Integer> e) { e.id(new Integer(111)); }\n" +
+				"	void test(E<Integer,Integer> e) { e.id(Integer.valueOf(111)); }\n" +
 				"	void test(M<Integer,Integer> m) {\n" +
-				"		m.id(new Integer(111));\n" +
-				"		((E<Integer, Integer>) m).id(new Integer(111));\n" +
+				"		m.id(Integer.valueOf(111));\n" +
+				"		((E<Integer, Integer>) m).id(Integer.valueOf(111));\n" +
 				"	}\n" +
-				"	void test(N<Integer> n) { n.id(new Integer(111)); }\n" +
+				"	void test(N<Integer> n) { n.id(Integer.valueOf(111)); }\n" +
 				"}\n" +
 				"abstract class C<A extends Number> { public void id(A x) {} }\n" +
 				"interface I<B> { void id(B x); }\n" +
@@ -3084,7 +3084,7 @@ public class MethodVerifyTest extends AbstractComparableTest {
 			},
 			"----------\n" +
 			"1. ERROR in X.java (at line 4)\n" +
-			"	m.id(new Integer(111));\n" +
+			"	m.id(Integer.valueOf(111));\n" +
 			"	  ^^\n" +
 			"The method id(Integer) is ambiguous for the type M<Integer,Integer>\n" +
 			"----------\n"
@@ -3279,7 +3279,7 @@ public class MethodVerifyTest extends AbstractComparableTest {
 				"X.java",
 				"public class X {\n" +
 				"	void test(M<Integer,Integer> m) {\n" +
-				"		m.id(new Integer(111));\n" +
+				"		m.id(Integer.valueOf(111));\n" +
 				"	}\n" +
 				"}\n" +
 				"abstract class C<T1 extends Number> { public void id(T1 x) {} }\n" +
@@ -3289,7 +3289,7 @@ public class MethodVerifyTest extends AbstractComparableTest {
 			},
 			"----------\n" +
 			"1. ERROR in X.java (at line 3)\n" +
-			"	m.id(new Integer(111));\n" +
+			"	m.id(Integer.valueOf(111));\n" +
 			"	  ^^\n" +
 			"The method id(Integer) is ambiguous for the type M<Integer,Integer>\n" +
 			"----------\n"
@@ -5514,14 +5514,14 @@ X.java:7: name clash: <T#1>foo2(T#1) in X and <T#2>foo2(A) in Y have the same er
 				"public class Try {\n" +
 				"	public static void main(String[] args) {\n" +
 				"		Ex<String> ex = new Ex<String>();\n" +
-				"		ex.one(\"eclipse\", new Integer(1));\n" +
-				"		ex.two(new Integer(1));\n" +
+				"		ex.one(\"eclipse\", Integer.valueOf(1));\n" +
+				"		ex.two(Integer.valueOf(1));\n" +
 				"		ex.three(\"eclipse\");\n" +
 				"		ex.four(\"eclipse\");\n" +
 				"		System.out.print(',');\n" +
 				"		Ex ex2 = ex;\n" +
-				"		ex2.one(\"eclipse\", new Integer(1));\n" + // unchecked warning
-				"		ex2.two(new Integer(1));\n" + // unchecked warning
+				"		ex2.one(\"eclipse\", Integer.valueOf(1));\n" + // unchecked warning
+				"		ex2.two(Integer.valueOf(1));\n" + // unchecked warning
 				"		ex2.three(\"eclipse\");\n" + // unchecked warning
 				"		ex2.four(\"eclipse\");\n" + // unchecked warning
 				"	}\n" +
@@ -5546,13 +5546,13 @@ X.java:7: name clash: <T#1>foo2(T#1) in X and <T#2>foo2(A) in Y have the same er
 			"Ex is a raw type. References to generic type Ex<C> should be parameterized\n" +
 			"----------\n" +
 			"2. WARNING in Try.java (at line 10)\n" +
-			"	ex2.one(\"eclipse\", new Integer(1));\n" +
-			"	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"	ex2.one(\"eclipse\", Integer.valueOf(1));\n" +
+			"	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
 			"Type safety: The method one(Object, Object) belongs to the raw type Ex. References to generic type Ex<C> should be parameterized\n" +
 			"----------\n" +
 			"3. WARNING in Try.java (at line 11)\n" +
-			"	ex2.two(new Integer(1));\n" +
-			"	^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"	ex2.two(Integer.valueOf(1));\n" +
+			"	^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
 			"Type safety: The method two(Object) belongs to the raw type Ex. References to generic type Ex<C> should be parameterized\n" +
 			"----------\n" +
 			"4. WARNING in Try.java (at line 12)\n" +
@@ -5846,6 +5846,8 @@ X.java:7: name clash: <T#1>foo2(T#1) in X and <T#2>foo2(A) in Y have the same er
 	}
 	//https://bugs.eclipse.org/bugs/show_bug.cgi?id=101049
 	public void test070() {
+		Map<String,String> options = getCompilerOptions();
+		options.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.IGNORE);
 		this.runConformTest(
 			true,
 			new String[] {
@@ -5858,7 +5860,7 @@ X.java:7: name clash: <T#1>foo2(T#1) in X and <T#2>foo2(A) in Y have the same er
 				"		try { return c.newInstance(); } catch(Exception e) { return null; }\n" +
 				"	}\n" +
 				"}\n"
-			},
+			}, null, options,
 			"----------\n" +
 			"1. WARNING in BooleanFactory.java (at line 5)\n" +
 			"	public <U extends Boolean> U create(Class<U> c) {\n" +
@@ -14317,7 +14319,9 @@ public void testBug500673() {
 		"	                      ^^^^^^^^^^^^^^^^^^^^^^\n" +
 		(this.complianceLevel < ClassFileConstants.JDK1_8
 		? "Illegal modifier for the interface method a; only public & abstract are permitted\n"
-		: "Illegal modifier for the interface method a; only public, abstract, default, static and strictfp are permitted\n"
+		: this.complianceLevel < ClassFileConstants.JDK9 ? 
+				"Illegal modifier for the interface method a; only public, abstract, default, static and strictfp are permitted\n" :
+				"Illegal modifier for the interface method a; only public, private, abstract, default, static and strictfp are permitted\n"
 		) +
 		"----------\n" + 
 		"----------\n" + 

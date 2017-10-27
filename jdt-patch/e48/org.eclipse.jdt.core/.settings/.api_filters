@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component id="org.eclipse.jdt.core" version="2">
+    <resource path="META-INF/MANIFEST.MF">
+        <filter comment="keep the same version as 4.7.1 for now" id="924844039">
+            <message_arguments>
+                <message_argument value="3.13.0"/>
+                <message_argument value="3.13.0"/>
+            </message_arguments>
+        </filter>
+        <filter comment="API was backported to 4.7.1a" id="926941240">
+            <message_arguments>
+                <message_argument value="3.14.0"/>
+                <message_argument value="3.13.50"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="compiler/org/eclipse/jdt/core/compiler/CategorizedProblem.java" type="org.eclipse.jdt.core.compiler.CategorizedProblem">
+        <filter comment="future additions have always been announced in the API" id="336658481">
+            <message_arguments>
+                <message_argument value="org.eclipse.jdt.core.compiler.CategorizedProblem"/>
+                <message_argument value="CAT_MODULE"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="compiler/org/eclipse/jdt/core/compiler/IProblem.java" type="org.eclipse.jdt.core.compiler.IProblem">
+        <filter comment="must react to added constant CAT_MODULE" id="388194388">
+            <message_arguments>
+                <message_argument value="org.eclipse.jdt.core.compiler.IProblem"/>
+                <message_argument value="IgnoreCategoriesMask"/>
+                <message_argument value="16777215"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/CompilationUnit.java" type="org.eclipse.jdt.core.dom.CompilationUnit">
+        <filter comment="has never been subclassable" id="336744520">
+            <message_arguments>
+                <message_argument value="org.eclipse.jdt.core.dom.CompilationUnit"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/TryStatement.java" type="org.eclipse.jdt.core.dom.TryStatement">
+        <filter comment="has never been subclassable" id="336744520">
+            <message_arguments>
+                <message_argument value="org.eclipse.jdt.core.dom.TryStatement"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="formatter/org/eclipse/jdt/core/formatter/CodeFormatter.java" type="org.eclipse.jdt.core.formatter.CodeFormatter">
+        <filter id="336658481">
+            <message_arguments>
+                <message_argument value="org.eclipse.jdt.core.formatter.CodeFormatter"/>
+                <message_argument value="K_MODULE_INFO"/>
+            </message_arguments>
+        </filter>
+    </resource>
+</component>

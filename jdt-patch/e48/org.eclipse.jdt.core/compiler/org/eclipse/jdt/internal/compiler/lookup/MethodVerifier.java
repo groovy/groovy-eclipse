@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -634,7 +634,7 @@ void computeInheritedMethods(ReferenceBinding superclass, ReferenceBinding[] sup
 			MethodBinding[] methods = superType.unResolvedMethods();
 			nextMethod : for (int m = methods.length; --m >= 0;) { // Interface methods are all abstract public
 				MethodBinding inheritedMethod = methods[m];
-				if (inheritedMethod.isStatic()) continue nextMethod;
+				if (inheritedMethod.isStatic() || inheritedMethod.isPrivate()) continue nextMethod;
 				MethodBinding[] existingMethods = (MethodBinding[]) this.inheritedMethods.get(inheritedMethod.selector);
 				if (existingMethods == null) {
 					existingMethods = new MethodBinding[] {inheritedMethod};

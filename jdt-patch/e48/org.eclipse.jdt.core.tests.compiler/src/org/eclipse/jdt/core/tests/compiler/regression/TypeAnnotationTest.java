@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011, 2016 IBM Corporation and others.
+ * Copyright (c) 2011, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -65,12 +65,12 @@ public class TypeAnnotationTest extends AbstractRegressionTest {
 		"\n"+
 		// Print type annotations on super types
 		"  public static void printTypeAnnotations(Class<?> clazz) {\n"+
-		"    System.out.println(\"Annotations on superclass of \"+clazz.getName());\n"+
+		"    System.out.print(\"Annotations on superclass of \"+clazz.getName() +\"\\n\");\n"+
 		"    AnnotatedType superat = clazz.getAnnotatedSuperclass();\n"+
 		"    Helper.printAnnos(\"  \", superat.getType(),superat.getAnnotations());\n"+
 		"    AnnotatedType[] superinterfaces = clazz.getAnnotatedInterfaces();\n"+
 		"    if (superinterfaces.length!=0) {\n"+
-		"      System.out.println(\"Annotations on superinterfaces of \"+clazz.getName());\n"+
+		"      System.out.print(\"Annotations on superinterfaces of \"+clazz.getName() +\"\\n\");\n"+
 		"      for (int j=0;j<superinterfaces.length;j++) {\n"+
 		"        Helper.printAnnos(\"  \", superinterfaces[j].getType(),superinterfaces[j].getAnnotations());\n"+
 		"      }\n"+
@@ -89,20 +89,22 @@ public class TypeAnnotationTest extends AbstractRegressionTest {
 		"      System.out.print(tv.getName());\n"+
 		"      if ((t+1)<tvs.length) System.out.print(\",\");\n"+
 		"    }\n"+
-		"    System.out.println(\">\");\n"+
+		"    System.out.print(\">\\n\");\n"+
 		"  }\n"+
 		"  public static String toStringAnno(Annotation anno) {\n"+
 		"    String s = anno.toString();\n"+
+		"	 s = s.replace(\"\\\"\", \"\");\n" +
+		"	 s = s.replace(\"'\", \"\");\n" +
 		"    if (s.endsWith(\"()\")) return s.substring(0,s.length()-2); else return s;\n"+
 		"  }\n"+
 		"  \n"+
 		"  public static void printAnnos(String header, Type t, Annotation[] annos) {\n"+
-		"    if (annos.length==0) { System.out.println(header+t+\":no annotations\"); return;} \n"+
+		"    if (annos.length==0) { System.out.print(header+t+\":no annotations\\n\"); return;} \n"+
 		"    System.out.print(header+t+\":\");\n"+
 		"    for (int i=0;i<annos.length;i++) {\n"+
 		"      System.out.print(toStringAnno(annos[i])+\" \");\n"+
 		"    }\n"+
-		"    System.out.println();\n"+
+		"    System.out.print(\"\\n\");\n"+
 		"  }\n"+
 		"}\n";
 	
@@ -6616,7 +6618,7 @@ public class TypeAnnotationTest extends AbstractRegressionTest {
 				"  }\n" + 
 				"}\n"
 			},
-			"@TestAnn1(value=1)");
+			"@TestAnn1(value=" + decorateAnnotationValueLiteral("1") + ")");
 	}
 	public void testBug492322readFromClass() {
 		runConformTest(
@@ -6673,7 +6675,7 @@ public class TypeAnnotationTest extends AbstractRegressionTest {
 		Compiler compiler = new Compiler(getNameEnvironment(new String[0], null), getErrorHandlingPolicy(),
 				new CompilerOptions(customOptions), requestor, getProblemFactory());
 		char [][] compoundName = new char [][] { "test1".toCharArray(), "Base".toCharArray()};
-		ReferenceBinding type = compiler.lookupEnvironment.askForType(compoundName);		
+		ReferenceBinding type = compiler.lookupEnvironment.askForType(compoundName, compiler.lookupEnvironment.UnNamedModule);
 		assertNotNull(type);
 		MethodBinding[] methods1 = type.getMethods("method1".toCharArray());
 		assertEquals("Base.@A2 Static.@A3 Middle1.@A4 Middle2<Object>.@A5 Middle3.@A6 GenericInner<String>",
@@ -6743,7 +6745,7 @@ public class TypeAnnotationTest extends AbstractRegressionTest {
 		Compiler compiler = new Compiler(getNameEnvironment(new String[0], null), getErrorHandlingPolicy(),
 				new CompilerOptions(customOptions), requestor, getProblemFactory());
 		char [][] compoundName = new char [][] { "test1".toCharArray(), "Base".toCharArray()};
-		ReferenceBinding type = compiler.lookupEnvironment.askForType(compoundName);		
+		ReferenceBinding type = compiler.lookupEnvironment.askForType(compoundName, compiler.lookupEnvironment.UnNamedModule);
 		assertNotNull(type);
 		MethodBinding[] methods1 = type.getMethods("method1".toCharArray());
 		assertEquals("Base.@A2 Static.@A3 Middle1.@A4 Middle2<Object>.@A5 Middle3.@A6 GenericInner<String>",
@@ -6816,7 +6818,7 @@ public class TypeAnnotationTest extends AbstractRegressionTest {
 			Compiler compiler = new Compiler(getNameEnvironment(new String[0], paths), getErrorHandlingPolicy(),
 					new CompilerOptions(customOptions), requestor, getProblemFactory());
 			char [][] compoundName = new char [][] { "test1".toCharArray(), "Base".toCharArray()};
-			ReferenceBinding type = compiler.lookupEnvironment.askForType(compoundName);		
+			ReferenceBinding type = compiler.lookupEnvironment.askForType(compoundName, compiler.lookupEnvironment.UnNamedModule);
 			assertNotNull(type);
 			MethodBinding[] methods1 = type.getMethods("method1".toCharArray());
 			assertEquals("Base.Static.@A2 Static2<Exception>.@A3 Middle1.@A4 Middle2<Object>.@A5 Middle3.@A6 GenericInner<String>",

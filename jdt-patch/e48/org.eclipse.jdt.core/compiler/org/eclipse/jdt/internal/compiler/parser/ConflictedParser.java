@@ -18,4 +18,10 @@ public interface ConflictedParser {
 	   we treat the type annotation as a declarative annotation.
 	*/
 	boolean atConflictScenario(int token);
+	/*
+	 * Return true if the parser is parsing a module declaration. In Java 9, module, requires, exports,
+	 * to, uses, provides, and with are restricted keywords (i.e. they are keywords solely where they
+	 * appear as terminals in ModuleDeclaration, and are identifiers everywhere else)
+	 */
+	boolean isParsingModuleDeclaration();
 }

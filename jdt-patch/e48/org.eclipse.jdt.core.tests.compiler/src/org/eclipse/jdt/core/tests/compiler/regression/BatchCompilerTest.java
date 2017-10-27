@@ -48,6 +48,7 @@ import junit.framework.Test;
 
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.batch.ClasspathDirectory;
 import org.eclipse.jdt.internal.compiler.batch.ClasspathJar;
@@ -623,6 +624,13 @@ public void test012(){
         "                       If multiple default encodings are specified, the last\n" + 
         "                       one will be used.\n" + 
         " \n" +
+        " Module compilation options:\n" +
+        "   These options are meaningful only in Java 9 environment or later.\n" +
+        "    --module-source-path <directories separated by " + File.pathSeparator + ">\n" +
+        "                       specify where to find source files for multiple modules\n" +
+        "    -p --module-path <directories separated by " + File.pathSeparator + ">\n" +
+        "                       specify where to find application modules\n" +
+        "    --system <jdk>      Override location of system modules \n" +
         " Compliance options:\n" +
         "    -1.3               use 1.3 compliance (-source 1.3 -target 1.1)\n" +
         "    -1.4             + use 1.4 compliance (-source 1.3 -target 1.2)\n" +
@@ -630,8 +638,9 @@ public void test012(){
         "    -1.6 -6 -6.0       use 1.6 compliance (-source 1.6 -target 1.6)\n" +
         "    -1.7 -7 -7.0       use 1.7 compliance (-source 1.7 -target 1.7)\n" +
         "    -1.8 -8 -8.0       use 1.8 compliance (-source 1.8 -target 1.8)\n" +
-        "    -source <version>  set source level: 1.3 to 1.8 (or 5, 5.0, etc)\n" +
-        "    -target <version>  set classfile target: 1.1 to 1.8 (or 5, 5.0, etc)\n" +
+        "    -1.9 -9 -9.0       use 1.9 compliance (-source 1.9 -target 1.9)\n" +
+        "    -source <version>  set source level: 1.3 to 1.9 (or 6, 6.0, etc)\n" +
+        "    -target <version>  set classfile target: 1.1 to 1.9 (or 6, 6.0, etc)\n" +
         "                       cldc1.1 can also be used to generate the StackMap\n" +
         "                       attribute\n" +
         " \n" +
@@ -852,6 +861,7 @@ public void test012b(){
         "      paramAssign          assignment to a parameter\n" + 
         "      pkgDefaultMethod   + attempt to override package-default method\n" + 
         "      raw                + usage of raw type\n" + 
+        "      removal            + deprecation marked for removal\n" + 
         "      resource           + (pot.) unsafe usage of resource of type Closeable\n" + 
         "      semicolon            unnecessary semicolon, empty statement\n" + 
         "      serial             + missing serialVersionUID\n" + 
@@ -987,7 +997,8 @@ public void test012b(){
 			"		<option key=\"org.eclipse.jdt.core.compiler.generateClassFiles\" value=\"enabled\"/>\n" + 
 			"		<option key=\"org.eclipse.jdt.core.compiler.groovy.buildGroovyFiles\" value=\"disabled\"/>\n" + 
 			"		<option key=\"org.eclipse.jdt.core.compiler.groovy.groovyTransformsToRunOnReconcile\" value=\"\"/>\n" + 
-			"		<option key=\"org.eclipse.jdt.core.compiler.maxProblemPerUnit\" value=\"100\"/>\n" + 
+			"		<option key=\"org.eclipse.jdt.core.compiler.maxProblemPerUnit\" value=\"100\"/>\n" +
+			"		<option key=\"org.eclipse.jdt.core.compiler.problem.APILeak\" value=\"warning\"/>\n" + 
 			"		<option key=\"org.eclipse.jdt.core.compiler.problem.annotationSuperInterface\" value=\"warning\"/>\n" + 
 			"		<option key=\"org.eclipse.jdt.core.compiler.problem.assertIdentifier\" value=\"warning\"/>\n" + 
 			"		<option key=\"org.eclipse.jdt.core.compiler.problem.autoboxing\" value=\"ignore\"/>\n" + 
@@ -1065,6 +1076,7 @@ public void test012b(){
 			"		<option key=\"org.eclipse.jdt.core.compiler.problem.syntacticNullAnalysisForFields\" value=\"disabled\"/>\n" +
 			"		<option key=\"org.eclipse.jdt.core.compiler.problem.syntheticAccessEmulation\" value=\"ignore\"/>\n" + 
 			"		<option key=\"org.eclipse.jdt.core.compiler.problem.tasks\" value=\"warning\"/>\n" + 
+			"		<option key=\"org.eclipse.jdt.core.compiler.problem.terminalDeprecation\" value=\"warning\"/>\n" +
 			"		<option key=\"org.eclipse.jdt.core.compiler.problem.typeParameterHiding\" value=\"warning\"/>\n" + 
 			"		<option key=\"org.eclipse.jdt.core.compiler.problem.unavoidableGenericTypeProblems\" value=\"enabled\"/>\n" + 
 			"		<option key=\"org.eclipse.jdt.core.compiler.problem.uncheckedTypeOperation\" value=\"warning\"/>\n" + 
@@ -12548,7 +12560,8 @@ public void test385780_warn_option() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=405225
 public void test405225_extdirs() {
-	// check the option introduced in bug 359721
+	if (AbstractCompilerTest.isJRE9)
+		return;
 	this.runConformTest(
 		new String[] {
 			"X.java",
@@ -12752,13 +12765,9 @@ public void test408038e() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=419351
 public void testBug419351() {
 	String backup = System.getProperty("java.endorsed.dirs");
-	String currentWorkingDirectoryPath = System.getProperty("user.dir");
-	if (currentWorkingDirectoryPath == null) {
-		fail("BatchCompilerTest#testBug419351 could not access the current working directory " + currentWorkingDirectoryPath);
-	} else if (!new File(currentWorkingDirectoryPath).isDirectory()) {
-		fail("BatchCompilerTest#testBug419351 current working directory is not a directory " + currentWorkingDirectoryPath);
-	}
-	String endorsedPath = currentWorkingDirectoryPath + File.separator + "endorsed";
+	if (backup == null)
+		return; // Don't bother running if it is JRE9, where there's no endorsed.dir
+	String endorsedPath = LIB_DIR + File.separator + "endorsed";
 	new File(endorsedPath).mkdir();
 	String lib1Path = endorsedPath + File.separator + "lib1.jar";
 	try {
@@ -12791,7 +12800,6 @@ public void testBug419351() {
 				"",
 		        true);
 	} catch (IOException e) {
-		System.err.println("BatchCompilerTest#testBug419351 could not write to current working directory " + currentWorkingDirectoryPath);
 	} finally {
 		System.setProperty("java.endorsed.dirs", backup);
 		new File(endorsedPath).delete();

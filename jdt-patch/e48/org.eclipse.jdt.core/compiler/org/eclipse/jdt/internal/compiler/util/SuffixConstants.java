@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,6 +15,8 @@ public interface SuffixConstants {
 	public final static String EXTENSION_CLASS = "CLASS"; //$NON-NLS-1$
 	public final static String EXTENSION_java = "java"; //$NON-NLS-1$
 	public final static String EXTENSION_JAVA = "JAVA"; //$NON-NLS-1$
+	public final static String EXTENSION_jmod = "jmod"; //$NON-NLS-1$
+	public final static String EXTENSION_JMOD = "JMOD"; //$NON-NLS-1$
 
 	public final static String SUFFIX_STRING_class = "." + EXTENSION_class; //$NON-NLS-1$
 	public final static String SUFFIX_STRING_CLASS = "." + EXTENSION_CLASS; //$NON-NLS-1$

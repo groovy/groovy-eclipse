@@ -1,7 +1,8 @@
-.TH ecj 1 "10 August 2015"
+.TH ecj "13 March 2017"
 .LP
 .SH NAME
 ecj \- the eclipse JDT Batch Compiler
+
 .SH SYNOPSIS
 .B ecj [OPTION]... [SOURCEFILE]...
 .B ...
@@ -16,6 +17,11 @@ annotations processing support, a 1.6 VM is required.
 Here is a summary of all the options, grouped by type.  Explanations are in the \fBOPTIONS\fR section.
 .sp
 .ul
+Module Options
+.sp
+.B -p|--module-path \--module-source-path \--system
+.sp
+.ul
 ClassPath Options
 .sp
 .B \-bootclasspath \-cp|\-classpath \-extdirs \-endorseddirs \-sourcepath \-d \-encoding
@@ -23,7 +29,7 @@ ClassPath Options
 .ul
 Compliance Options
 .sp
-.B \-target \-1.3 \-1.4 \-1.5 \-1.6 \-1.7 \-1.8 \-source 
+.B \-target \-1.3 \-1.4 \-1.5 \-1.6 \-1.7 \-1.8 \1.9 \-source 
 .sp
 .ul
 Warning Options
@@ -57,6 +63,23 @@ Helping Options
 
 .SH OPTIONS
 .sp
+.ul
+Module Options (Supported from 9 onwards)
+
+.B
+.IP  "-p|--module-path <dir 1>;<dir 2>;...;<dir P>" 
+This is a list of directories where application modules can be found. Entries are separated by the platform path separator.
+
+.B
+.IP  "--module-source-path <dir 1>;<dir 2>;...;<dir P>" 
+This is a list of directories where source files for modules can be found. Entries are separated by the platform path separator.
+
+
+.B
+.IP  "--system <jdk>"
+ Override location of system modules.
+
+.P
 .ul
 ClassPath Options
 
@@ -112,7 +135,7 @@ All source files will be read using Cp1252 encoding. X.java is the only file ins
 Compliance Options
 
 .B
-.IP "\-target 1.1 to 1.8 (or 8, 8.0, etc.)"
+.IP "\-target 1.1 to 1.9 (or 9, 9.0, etc.)"
 This specifies the .class file target setting. The possible value are: 
 .br
 .B 1.1
@@ -138,6 +161,9 @@ This specifies the .class file target setting. The possible value are:
 .br
 .B 1.8, 8 or 8.0
 (major version: 52 minor: 0)
+.br
+.B 1.9, 9 or 9.0
+(major version: 53 minor: 0)
 
 Defaults are: 
 .br
@@ -152,6 +178,8 @@ Defaults are:
 1.7 in \-1.7 mode
 .br
 1.8 in \-1.8 mode
+.br
+1.9 in \-1.9 mode
 clcd1.1 can be used to generate the StackMap attribute.
 
 .B
@@ -179,7 +207,11 @@ Set compliance level to 1.7. Implicit \-source 1.7 \-target 1.7.
 Set compliance level to 1.8. Implicit \-source 1.8 \-target 1.8.
 
 .B
-.IP "\-source 1.1 to 1.8 (or 8, 8.0, etc.)"
+.IP \-1.9
+Set compliance level to 1.9. Implicit \-source 1.9\-target 1.9.
+
+.B
+.IP "\-source 1.1 to 1.9 (or 9, 9.0, etc.)"
 This is used to specify the source level expected by the compiler.
 The possible value are: 
 .br
@@ -194,6 +226,8 @@ The possible value are:
 .B 1.7, 7 or 7.0
 .br
 .B 1.8, 8 or 8.0
+.br
+.B 1.9, 9 or 9.0
 
 Defaults are: 
 .br
@@ -208,6 +242,8 @@ Defaults are:
 1.7 in \-1.7 mode
 .br
 1.8 in \-1.8 mode
+.br
+1.9 in \-1.9 mode
 .br
 In 1.4, assert is treated as a keyword. In 1.5 and 1.6, enum and assert are treated as keywords.
 

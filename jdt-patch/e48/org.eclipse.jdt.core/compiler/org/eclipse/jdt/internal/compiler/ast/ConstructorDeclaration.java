@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -414,7 +414,7 @@ private void internalGenerateCode(ClassScope classScope, ClassFile classFile) {
 
 		if (needFieldInitializations && preInitSyntheticFields){
 			generateSyntheticFieldInitializationsIfNecessary(this.scope, codeStream, declaringClass);
-			codeStream.recordPositionsFrom(0, this.bodyStart);
+			codeStream.recordPositionsFrom(0, this.bodyStart > 0 ? this.bodyStart : this.sourceStart);
 		}
 		// generate constructor call
 		if (this.constructorCall != null) {
@@ -450,7 +450,7 @@ private void internalGenerateCode(ClassScope classScope, ClassFile classFile) {
 		}
 		// local variable attributes
 		codeStream.exitUserScope(this.scope);
-		codeStream.recordPositionsFrom(0, this.bodyEnd);
+		codeStream.recordPositionsFrom(0, this.bodyEnd > 0 ? this.bodyEnd : this.sourceStart);
 		try {
 			classFile.completeCodeAttribute(codeAttributeOffset);
 		} catch(NegativeArraySizeException e) {

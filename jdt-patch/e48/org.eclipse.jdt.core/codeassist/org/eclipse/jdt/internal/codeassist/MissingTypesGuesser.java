@@ -477,6 +477,10 @@ public class MissingTypesGuesser extends ASTVisitor {
 					AccessRestriction access) {
 				// constructors aren't searched
 			}
+			@Override
+			public void acceptModule(char[] moduleName) {
+				// TODO Auto-generated method stub
+			}
 			public void acceptPackage(char[] packageName) {
 				// package aren't searched
 			}

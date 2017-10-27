@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -153,6 +153,16 @@ public static Test suite() {
 	since_1_8.add(Unicode18Test.class);
 	since_1_8.add(LambdaShapeTests.class);
 
+	ArrayList since_9 = new ArrayList();
+	since_9.add(Unicode9Test.class);
+	since_9.add(ModuleCompilationTests.class);
+	since_9.add(GenericsRegressionTest_9.class);
+	since_9.add(InterfaceMethodsTest_9.class);
+	since_9.add(Deprecated9Test.class);
+	since_9.add(ModuleAttributeTests.class);
+	since_9.add(AutomaticModuleNamingTest.class);
+	since_9.add(UnnamedModuleTest.class);
+	
 	// Build final test suite
 	TestSuite all = new TestSuite(TestAll.class.getName());
 	all.addTest(new TestSuite(StandAloneASTParserTest.class));
@@ -207,6 +217,22 @@ public static Test suite() {
 		tests_1_8.addAll(since_1_8);
 		TestCase.resetForgottenFilters(tests_1_8);
 		all.addTest(AbstractCompilerTest.buildComplianceTestSuite(ClassFileConstants.JDK1_8, tests_1_8));
+	}
+	if ((possibleComplianceLevels & AbstractCompilerTest.F_9) != 0) {
+		ArrayList tests_9 = (ArrayList)standardTests.clone();
+		tests_9.addAll(since_1_4);
+		tests_9.addAll(since_1_5);
+		tests_9.addAll(since_1_6);
+		tests_9.addAll(since_1_7);
+		tests_9.addAll(since_1_8);
+		tests_9.addAll(since_9);
+		// Reset forgotten subsets tests
+		TestCase.TESTS_PREFIX = null;
+		TestCase.TESTS_NAMES = null;
+		TestCase.TESTS_NUMBERS= null;
+		TestCase.TESTS_RANGE = null;
+		TestCase.RUN_ONLY_ID = null;
+		all.addTest(AbstractCompilerTest.buildComplianceTestSuite(ClassFileConstants.JDK9, tests_9));
 	}
 	all.addTest(new TestSuite(Jsr14Test.class));
 	return all;

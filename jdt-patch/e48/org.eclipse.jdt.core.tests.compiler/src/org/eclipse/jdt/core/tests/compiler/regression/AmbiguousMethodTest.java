@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -220,7 +220,7 @@ public class AmbiguousMethodTest extends AbstractComparableTest {
 			new String[] {
 				"X.java",
 				"public class X {\n" +
-				"	void ambiguous() { new BB().test(new N(), new Integer(1)); }\n" +
+				"	void ambiguous() { new BB().test(new N(), Integer.valueOf(1)); }\n" +
 				"}\n" +
 				"class AA<T> { void test(T t, Integer i) {} }\n" +
 				"class BB extends AA<M> { <U extends Number> void test(N n, U u) {} }\n" +
@@ -229,7 +229,7 @@ public class AmbiguousMethodTest extends AbstractComparableTest {
 			},
 			"----------\n" +
 			"1. ERROR in X.java (at line 2)\n" +
-			"	void ambiguous() { new BB().test(new N(), new Integer(1)); }\n" +
+			"	void ambiguous() { new BB().test(new N(), Integer.valueOf(1)); }\n" +
 			"	                            ^^^^\n" +
 			"The method test(N, Integer) is ambiguous for the type BB\n" +
 			"----------\n"
@@ -241,7 +241,7 @@ public class AmbiguousMethodTest extends AbstractComparableTest {
 				"X.java",
 				"public class X {\n" +
 				"	void test(M<Integer> m) {\n" +
-				"		m.id(new Integer(111));\n" +
+				"		m.id(Integer.valueOf(111));\n" +
 				"	}\n" +
 				"}\n" +
 				"class C<T extends Number> { public void id(T t) {} }\n" +
@@ -249,7 +249,7 @@ public class AmbiguousMethodTest extends AbstractComparableTest {
 			},
 			"----------\n" +
 			"1. ERROR in X.java (at line 3)\n" +
-			"	m.id(new Integer(111));\n" +
+			"	m.id(Integer.valueOf(111));\n" +
 			"	  ^^\n" +
 			"The method id(Integer) is ambiguous for the type M<Integer>\n" +
 			"----------\n"
@@ -429,8 +429,8 @@ sure, yet neither overrides the other
 				"B.java",
 				"public class B {\n" +
 				"   public static void main(String[] args) {\n" +
-				"   	new M().foo(new Integer(1), 2);\n" +
-				"   	new N().foo(new Integer(1), 2);\n" +
+				"   	new M().foo(Integer.valueOf(1), 2);\n" +
+				"   	new N().foo(Integer.valueOf(1), 2);\n" +
 				"   }\n" +
 				"}" +
 				"interface I { void foo(Number arg1, Number arg2); }\n" +
@@ -445,12 +445,12 @@ sure, yet neither overrides the other
 			},
 			"----------\n" +
 			"1. ERROR in B.java (at line 3)\r\n" +
-			"	new M().foo(new Integer(1), 2);\r\n" +
+			"	new M().foo(Integer.valueOf(1), 2);\r\n" +
 			"	        ^^^\n" +
 			"The method foo(int, int) is ambiguous for the type M\n" +
 			"----------\n" +
 			"2. ERROR in B.java (at line 4)\r\n" +
-			"	new N().foo(new Integer(1), 2);\r\n" +
+			"	new N().foo(Integer.valueOf(1), 2);\r\n" +
 			"	        ^^^\n" +
 			"The method foo(int, int) is ambiguous for the type N\n" +
 			"----------\n"
@@ -631,8 +631,8 @@ public void test010c() {
 				"X.java",
 				"public class X<A extends Number> extends Y<A> {\n" +
 				"	<T> void foo(A n, T t) throws ExOne {}\n" +
-				"	void test(X<Integer> x) throws ExTwo { x.foo(new Integer(1), new Integer(2)); }\n" +
-				"	void test2(X x) throws ExTwo { x.foo(new Integer(1), new Integer(2)); }\n" +
+				"	void test(X<Integer> x) throws ExTwo { x.foo(Integer.valueOf(1), Integer.valueOf(2)); }\n" +
+				"	void test2(X x) throws ExTwo { x.foo(Integer.valueOf(1), Integer.valueOf(2)); }\n" +
 				"}\n" +
 				"class Y<C extends Number> {\n" +
 				"	void foo(C x, C n) throws ExTwo {}\n" +
@@ -642,13 +642,13 @@ public void test010c() {
 			},
 			"----------\n" +
 			"1. WARNING in X.java (at line 4)\n" +
-			"	void test2(X x) throws ExTwo { x.foo(new Integer(1), new Integer(2)); }\n" +
+			"	void test2(X x) throws ExTwo { x.foo(Integer.valueOf(1), Integer.valueOf(2)); }\n" +
 			"	           ^\n" +
 			"X is a raw type. References to generic type X<A> should be parameterized\n" +
 			"----------\n" +
 			"2. WARNING in X.java (at line 4)\n" +
-			"	void test2(X x) throws ExTwo { x.foo(new Integer(1), new Integer(2)); }\n" +
-			"	                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
+			"	void test2(X x) throws ExTwo { x.foo(Integer.valueOf(1), Integer.valueOf(2)); }\n" +
+			"	                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
 			"Type safety: The method foo(Number, Number) belongs to the raw type Y. References to generic type Y<C> should be parameterized\n" +
 			"----------\n"
 			// test2 - warning: [unchecked] unchecked call to foo(C,C) as a member of the raw type Y
@@ -689,7 +689,7 @@ public void test010c() {
 				"	void pickOne(Combined<Integer,Integer> c) throws ExOne { c.pickOne(\"test\"); }\n" +
 				"	<T extends Number> void pickTwo(Number n, T t) throws ExOne {}\n" +
 				"	void pickTwo(A x, Number n) throws ExTwo {}\n" +
-				"	void pickTwo(Combined<Integer,Integer> c) throws ExTwo { c.pickTwo(new Integer(1), 2); }\n" +
+				"	void pickTwo(Combined<Integer,Integer> c) throws ExTwo { c.pickTwo(Integer.valueOf(1), 2); }\n" +
 				"}\n" +
 				"class ExOne extends Exception {static final long serialVersionUID = 1;}\n" +
 				"class ExTwo extends Exception {static final long serialVersionUID = 2;}"
@@ -801,14 +801,14 @@ X.java:4: warning: [unchecked] unchecked method invocation: method pickOne in cl
 			new String[] {
 				"XX.java",
 				"public class XX {\n" +
-				"	public static void main(String[] s) { System.out.println(new B().id(new Integer(1))); }\n" +
+				"	public static void main(String[] s) { System.out.println(new B().id(Integer.valueOf(1))); }\n" +
 				"}\n" +
 				"class A<T extends Number> { public int id(T t) {return 2;} }\n" +
 				"class B extends A<Integer> { public <ZZ> int id(Integer i) {return 1;} }"
 			},
 			"----------\n" +
 			"1. ERROR in XX.java (at line 2)\r\n" +
-			"	public static void main(String[] s) { System.out.println(new B().id(new Integer(1))); }\r\n" +
+			"	public static void main(String[] s) { System.out.println(new B().id(Integer.valueOf(1))); }\r\n" +
 			"	                                                                 ^^\n" +
 			"The method id(Integer) is ambiguous for the type B\n" +
 			"----------\n"
@@ -1960,32 +1960,32 @@ X.java:13: warning: [unchecked] unchecked method invocation: method make in clas
 		"	                               ^^^^^^^^^^^^^^^^^^^^\n" + 
 		"Erasure of method make(Class<U>) is the same as another method in type Y<V>\n" +
 		"----------\n" + 
-		"5. WARNING in X.java (at line 11)\n" + 
+		"5. WARNING in X.java (at line 12)\n" + 
 		"	Y y = new Y();\n" + 
 		"	^\n" + 
 		"Y is a raw type. References to generic type Y<V> should be parameterized\n" + 
 		"----------\n" + 
-		"6. WARNING in X.java (at line 11)\n" + 
+		"6. WARNING in X.java (at line 12)\n" + 
 		"	Y y = new Y();\n" + 
 		"	          ^\n" + 
 		"Y is a raw type. References to generic type Y<V> should be parameterized\n" + 
 		"----------\n" + 
-		"7. ERROR in X.java (at line 12)\n" + 
+		"7. ERROR in X.java (at line 13)\n" + 
 		"	y.make(String.class);\n" + 
 		"	  ^^^^\n" + 
 		"The method make(Class) is ambiguous for the type Y\n" + 
 		"----------\n" + 
-		"8. ERROR in X.java (at line 13)\n" + 
+		"8. ERROR in X.java (at line 14)\n" + 
 		"	y.make(getClazz());\n" + 
 		"	  ^^^^\n" + 
 		"The method make(Class) is ambiguous for the type Y\n" + 
 		"----------\n" + 
-		"9. ERROR in X.java (at line 14)\n" + 
+		"9. ERROR in X.java (at line 15)\n" + 
 		"	y.make(getClazz().newInstance().getClass());\n" + 
 		"	  ^^^^\n" + 
 		"The method make(Class) is ambiguous for the type Y\n" + 
 		"----------\n" + 
-		"10. WARNING in X.java (at line 16)\n" + 
+		"10. WARNING in X.java (at line 17)\n" + 
 		"	public static Class getClazz() {\n" + 
 		"	              ^^^^^\n" + 
 		"Class is a raw type. References to generic type Class<T> should be parameterized\n" + 
@@ -2011,32 +2011,32 @@ X.java:13: warning: [unchecked] unchecked method invocation: method make in clas
 			"	                               ^^^^^^^^^^^^^^^^^^^^\n" + 
 			"Erasure of method make(Class<U>) is the same as another method in type Y<V>\n" +
 			"----------\n" + 
-			"5. WARNING in X.java (at line 11)\n" + 
+			"5. WARNING in X.java (at line 12)\n" + 
 			"	Y y = new Y();\n" + 
 			"	^\n" + 
 			"Y is a raw type. References to generic type Y<V> should be parameterized\n" + 
 			"----------\n" + 
-			"6. WARNING in X.java (at line 11)\n" + 
+			"6. WARNING in X.java (at line 12)\n" + 
 			"	Y y = new Y();\n" + 
 			"	          ^\n" + 
 			"Y is a raw type. References to generic type Y<V> should be parameterized\n" + 
 			"----------\n" + 
-			"7. WARNING in X.java (at line 12)\n" + 
+			"7. WARNING in X.java (at line 13)\n" + 
 			"	y.make(String.class);\n" + 
 			"	^^^^^^^^^^^^^^^^^^^^\n" + 
 			"Type safety: The method make(Class) belongs to the raw type Y. References to generic type Y<V> should be parameterized\n" + 
 			"----------\n" + 
-			"8. WARNING in X.java (at line 13)\n" + 
+			"8. WARNING in X.java (at line 14)\n" + 
 			"	y.make(getClazz());\n" + 
 			"	^^^^^^^^^^^^^^^^^^\n" + 
 			"Type safety: The method make(Class) belongs to the raw type Y. References to generic type Y<V> should be parameterized\n" + 
 			"----------\n" + 
-			"9. WARNING in X.java (at line 14)\n" + 
+			"9. WARNING in X.java (at line 15)\n" + 
 			"	y.make(getClazz().newInstance().getClass());\n" + 
 			"	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
 			"Type safety: The method make(Class) belongs to the raw type Y. References to generic type Y<V> should be parameterized\n" + 
 			"----------\n" + 
-			"10. WARNING in X.java (at line 16)\n" + 
+			"10. WARNING in X.java (at line 17)\n" + 
 			"	public static Class getClazz() {\n" + 
 			"	              ^^^^^\n" + 
 			"Class is a raw type. References to generic type Class<T> should be parameterized\n" + 
@@ -2053,6 +2053,7 @@ X.java:13: warning: [unchecked] unchecked method invocation: method make in clas
 				"  public <U extends Object> X<U> make(Class<U> clazz) {\n" +
 				"    return new X<U>();\n" +
 				"  }\n" +
+				"  @SuppressWarnings({\"deprecation\"})\n" +
 				"  public static void main(String[] args) throws Exception {\n" +
 				"    Y y = new Y();\n" +
 				"    y.make(String.class);\n" +

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,11 +13,14 @@ package org.eclipse.jdt.internal.core;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Map;
+import java.util.jar.Manifest;
 
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.*;
 import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.env.AutomaticModuleNaming;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.core.util.MementoTokenizer;
 import org.eclipse.jdt.internal.core.util.Messages;
 import org.eclipse.jdt.internal.core.util.Util;
@@ -196,6 +199,12 @@ protected boolean computeChildren(OpenableElementInfo info, IResource underlying
 			char[][] inclusionPatterns = fullInclusionPatternChars();
 			char[][] exclusionPatterns = fullExclusionPatternChars();
 			computeFolderChildren(rootFolder, !Util.isExcluded(rootFolder, inclusionPatterns, exclusionPatterns), CharOperation.NO_STRINGS, vChildren, inclusionPatterns, exclusionPatterns);
+//			char[] suffix = getKind() == K_SOURCE ? SuffixConstants.SUFFIX_java : SuffixConstants.SUFFIX_class;
+//			char[] moduleInfoName = CharOperation.concat(TypeConstants.MODULE_INFO_NAME, suffix);
+//			IResource module = rootFolder.findMember(String.valueOf(moduleInfoName), true);
+//			if (module != null && module.exists()) {
+//				vChildren.add(new ClassFile(getPackageFragment(CharOperation.NO_STRINGS), String.valueOf(TypeConstants.MODULE_INFO_NAME)));
+//			}
 			IJavaElement[] children = new IJavaElement[vChildren.size()];
 			vChildren.toArray(children);
 			info.setChildren(children);
@@ -209,7 +218,7 @@ protected boolean computeChildren(OpenableElementInfo info, IResource underlying
 }
 
 /**
- * Starting at this folder, create package fragments and add the fragments that are not exclused
+ * Starting at this folder, create package fragments and add the fragments that are not excluded
  * to the collection of children.
  *
  * @exception JavaModelException  The resource associated with this package fragment does not exist
@@ -439,7 +448,7 @@ public IJavaElement getHandleFromMemento(String token, MementoTokenizer memento,
 			if (memento.hasMoreTokens()) {
 				token = memento.nextToken();
 				char firstChar = token.charAt(0);
-				if (firstChar == JEM_CLASSFILE || firstChar == JEM_COMPILATIONUNIT || firstChar == JEM_COUNT) {
+				if (firstChar == JEM_CLASSFILE || firstChar == JEM_MODULAR_CLASSFILE || firstChar == JEM_COMPILATIONUNIT || firstChar == JEM_COUNT) {
 					pkgName = CharOperation.NO_STRINGS;
 				} else {
 					pkgName = Util.splitOn('.', token, 0, token.length());
@@ -478,6 +487,10 @@ protected void getHandleMemento(StringBuffer buff) {
 	((JavaElement)getParent()).getHandleMemento(buff);
 	buff.append(getHandleMementoDelimiter());
 	escapeMementoName(buff, path.toString());
+	if (org.eclipse.jdt.internal.compiler.util.Util.isJrt(path.toOSString())) {
+		buff.append(getHandleMementoDelimiter());
+		escapeMementoName(buff, getElementName());
+	}
 }
 /**
  * @see IPackageFragmentRoot
@@ -516,6 +529,9 @@ public IPackageFragment getPackageFragment(String packageName) {
 }
 public PackageFragment getPackageFragment(String[] pkgName) {
 	return new PackageFragment(this, pkgName);
+}
+public PackageFragment getPackageFragment(String[] pkgName, String mod) {
+	return new PackageFragment(this, pkgName); // Overridden in JImageModuleFragmentBridge
 }
 /**
  * Returns the package name for the given folder
@@ -823,5 +839,86 @@ protected void verifyAttachSource(IPath sourcePath) throws JavaModelException {
 		throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.RELATIVE_PATH, sourcePath));
 	}
 }
+/**
+ * Returns the relative path within an archive for the given class file name. In certain
+ * kind of archives, such as a JMOD file, class files are stored in a nested folder, as opposed
+ * to directly under the root. It is the responsibility of such package fragment roots to
+ * provide the custom behavior.
+ *
+ * @param classname
+ * @return the relative path for the class file within the archive
+ */
+public String getClassFilePath(String classname) {
+	return classname;
+}
+public IModuleDescription getModuleDescription() {
+	try {
+		IJavaElement[] pkgs = getChildren();
+		for (int j = 0, length = pkgs.length; j < length; j++) {
+			// only look in the default package
+			if (pkgs[j].getElementName().length() == 0) {
+				OpenableElementInfo info = null;
+				if (getKind() == IPackageFragmentRoot.K_SOURCE) {
+					ICompilationUnit unit = ((PackageFragment) pkgs[j])
+							.getCompilationUnit(TypeConstants.MODULE_INFO_FILE_NAME_STRING);
+					if (unit instanceof CompilationUnit && unit.exists()) {
+						info = (CompilationUnitElementInfo) ((CompilationUnit) unit)
+								.getElementInfo();
+						if (info != null)
+							return info.getModule();
+					}
+				} else {
+					IModularClassFile classFile = ((IPackageFragment)pkgs[j]).getModularClassFile();
+					if (classFile.exists()) {
+						return classFile.getModule();
+					}
+				}
+				break;
+			}
+		}
+	} catch (JavaModelException e) {
+	}
+	return null;
+}
 
+public IModuleDescription getAutomaticModuleDescription() throws JavaModelException {
+	return getAutomaticModuleDescription(getRawClasspathEntry());
+}
+
+IModuleDescription getAutomaticModuleDescription(IClasspathEntry classpathEntry) {
+	String elementName = getElementName();
+	Manifest manifest = null;
+	switch (classpathEntry.getEntryKind()) {
+		case IClasspathEntry.CPE_SOURCE:
+			manifest = ((JavaProject) getJavaProject()).getManifest();
+			elementName = getJavaProject().getElementName();
+			break;
+		case IClasspathEntry.CPE_LIBRARY:
+			manifest = getManifest();
+			break;
+		case IClasspathEntry.CPE_PROJECT:
+			JavaProject javaProject = (JavaProject) getJavaModel().getJavaProject(classpathEntry.getPath().lastSegment());
+			manifest = javaProject.getManifest();
+			elementName = javaProject.getElementName();
+			break;
+	}
+	char[] moduleName = AutomaticModuleNaming.determineAutomaticModuleName(elementName, isArchive(), manifest);
+	return new AbstractModule.AutoModule(this, String.valueOf(moduleName));
+}
+
+/** @see org.eclipse.jdt.internal.compiler.env.IModulePathEntry#hasCompilationUnit(String, String) */
+public boolean hasCompilationUnit(String qualifiedPackageName, String moduleName) {
+	IPackageFragment fragment = getPackageFragment(qualifiedPackageName.replace('/', '.'));
+	try {
+		if (fragment.exists())
+			return fragment.containsJavaResources();
+	} catch (JavaModelException e) {
+		// silent
+	}
+	return false;
+}
+/** Convenience lookup, though currently only JarPackageFragmentRoot is searched for a manifest. */
+public Manifest getManifest() {
+	return null;
+}
 }

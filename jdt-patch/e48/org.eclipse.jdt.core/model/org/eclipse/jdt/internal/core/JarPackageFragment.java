@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,6 +27,7 @@ import org.eclipse.jdt.core.IJarEntryResource;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaModelStatusConstants;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
@@ -73,7 +74,10 @@ private IJavaElement[] computeChildren(ArrayList namesWithoutExtension) {
 	IJavaElement[] children = new IJavaElement[size];
 	for (int i = 0; i < size; i++) {
 		String nameWithoutExtension = (String) namesWithoutExtension.get(i);
-		children[i] = new ClassFile(this, nameWithoutExtension);
+		if (TypeConstants.MODULE_INFO_NAME_STRING.equals(nameWithoutExtension))
+			children[i] = new ModularClassFile(this);
+		else
+			children[i] = new ClassFile(this, nameWithoutExtension);
 	}
 	return children;
 }
@@ -173,7 +177,7 @@ protected Object createElementInfo() {
 /**
  * @see org.eclipse.jdt.core.IPackageFragment
  */
-public IClassFile[] getClassFiles() throws JavaModelException {
+public IClassFile[] getAllClassFiles() throws JavaModelException {
 	ArrayList list = getChildrenOfType(CLASS_FILE);
 	IClassFile[] array= new IClassFile[list.size()];
 	list.toArray(array);

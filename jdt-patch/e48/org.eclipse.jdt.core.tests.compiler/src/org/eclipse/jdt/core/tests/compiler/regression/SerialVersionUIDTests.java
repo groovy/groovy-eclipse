@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2014 IBM Corporation and others.
+ * Copyright (c) 2006, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -166,7 +166,7 @@ public void test007() {
 	);
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=285124
-public void test008() {
+public void _test008() {
 	this.runConformTest(
 			new String[] {
 				"X.java",
@@ -178,7 +178,7 @@ public void test008() {
 		);
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=285124
-public void test009() {
+public void _test009() {
 	this.runConformTest(
 			new String[] {
 				"X.java",
@@ -193,7 +193,7 @@ public void test009() {
 		);
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=285124
-public void test010() {
+public void _test010() {
 	this.runConformTest(
 			new String[] {
 				"X.java",

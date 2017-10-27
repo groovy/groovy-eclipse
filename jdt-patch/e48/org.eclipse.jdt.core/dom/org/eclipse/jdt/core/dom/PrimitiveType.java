@@ -285,7 +285,7 @@ public class PrimitiveType extends AnnotatableType {
 	ASTNode clone0(AST target) {
 		PrimitiveType result = new PrimitiveType(target);
 		result.setSourceRange(getStartPosition(), getLength());
-		if (this.ast.apiLevel >= AST.JLS8) {
+		if (this.ast.apiLevel >= AST.JLS8_INTERNAL) {
 			result.annotations().addAll(
 					ASTNode.copySubtrees(target, annotations()));
 		}
@@ -308,7 +308,7 @@ public class PrimitiveType extends AnnotatableType {
 		boolean visitChildren = visitor.visit(this);
 		if (visitChildren) {
 			// visit children in normal left to right reading order
-			if (this.ast.apiLevel >= AST.JLS8) {
+			if (this.ast.apiLevel >= AST.JLS8_INTERNAL) {
 				acceptChildren(visitor, this.annotations);
 			}
 		}

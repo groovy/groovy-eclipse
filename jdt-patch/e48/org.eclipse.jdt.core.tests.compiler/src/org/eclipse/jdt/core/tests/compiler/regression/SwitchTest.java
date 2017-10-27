@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2014 IBM Corporation and others.
+ * Copyright (c) 2005, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1056,7 +1056,7 @@ public void testCaseTypeMismatch3() {
 			"        switch(Days.Sunday) {\n" +
 			"            case \"Sunday\": break;\n" +
 			"        }\n" +
-			"        switch (new Integer(argv.length)) {\n" +
+			"        switch (Integer.valueOf(argv.length)) {\n" +
 			"            case \"0\": break;\n" +
 			"        }\n" +
 			"    }\n" +

@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -19,6 +19,7 @@ import org.eclipse.jdt.core.search.SearchDocument;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.core.*;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -65,14 +66,23 @@ public boolean equals(Object obj) {
 public char[] getContents() {
 	char[] contents = (this.source == NO_SOURCE_FILE) ? null : this.source;
 	if (this.source == null) {
-		if (this.openable instanceof ClassFile) {
+		if (this.openable instanceof AbstractClassFile) {
 			String fileName = getSourceFileName();
 			if (fileName == NO_SOURCE_FILE_NAME) return CharOperation.NO_CHAR;
 
 			SourceMapper sourceMapper = this.openable.getSourceMapper();
 			if (sourceMapper != null) {
-				IType type = ((ClassFile) this.openable).getType();
-				contents = sourceMapper.findSource(type, fileName);
+				if (this.openable instanceof ClassFile) {
+					IType type = ((ClassFile) this.openable).getType();
+					contents = sourceMapper.findSource(type, fileName);
+				} else if (this.openable instanceof ModularClassFile) {
+					try {
+						IModuleDescription module = ((ModularClassFile) this.openable).getModule();
+						contents = module != null ? sourceMapper.findSource(module) : CharOperation.NO_CHAR; // FIXME(SHMOD)
+					} catch (JavaModelException e) {
+						return CharOperation.NO_CHAR;
+					}
+				}
 			}
 		} else {
 			contents = this.document.getCharContents();
@@ -121,6 +131,11 @@ private char[] getQualifiedName() {
 		String simpleName = index==-1 ? fileName : fileName.substring(0, index);
 		PackageFragment pkg = (PackageFragment) this.openable.getParent();
 		return Util.concatWith(pkg.names, simpleName, '.').toCharArray();
+	} else if (this.openable instanceof ModularClassFile) {
+		// FIXME(SHMOD): not useful https://bugs.eclipse.org/501162#c30
+		String simpleName = TypeConstants.MODULE_INFO_NAME_STRING;
+		PackageFragment pkg = (PackageFragment) this.openable.getParent();
+		return Util.concatWith(pkg.names, simpleName, '.').toCharArray();
 	}
 	return null;
 }
@@ -136,17 +151,22 @@ private String getSourceFileName() {
 
 	this.sourceFileName = NO_SOURCE_FILE_NAME;
 	if (this.openable.getSourceMapper() != null) {
-		BinaryType type = (BinaryType) ((ClassFile) this.openable).getType();
-		IBinaryType reader = MatchLocator.classFileReader(type);
-		if (reader != null) {
-			String fileName = type.sourceFileName(reader);
-			this.sourceFileName = fileName == null ? NO_SOURCE_FILE_NAME : fileName;
+		if (this.openable instanceof ClassFile) {
+			BinaryType type = (BinaryType) ((ClassFile) this.openable).getType();
+			IBinaryType reader = MatchLocator.classFileReader(type);
+			if (reader != null) {
+				String fileName = type.sourceFileName(reader);
+				this.sourceFileName = fileName == null ? NO_SOURCE_FILE_NAME : fileName;
+			}
+		} else if (this.openable instanceof ModularClassFile) {
+			// FIXME(SHMOD): premature https://bugs.eclipse.org/501162#c31
+			this.sourceFileName = TypeConstants.MODULE_INFO_FILE_NAME_STRING;
 		}
 	}
 	return this.sourceFileName;
 }
 boolean hasSimilarMatch() {
-	return this.similarMatch != null && this.source == NO_SOURCE_FILE;
+	return this.similarMatch != null && (this.source == NO_SOURCE_FILE || isModuleInfo(this));
 }
 public int hashCode() {
 	if (this.compoundName == null) return super.hashCode();
@@ -159,14 +179,29 @@ public int hashCode() {
 public boolean ignoreOptionalProblems() {
 	return false;
 }
+private boolean isModuleInfo(PossibleMatch possibleMatch) {
+	return CharOperation.equals(getMainTypeName(), TypeConstants.MODULE_INFO_NAME);
+}
 void setSimilarMatch(PossibleMatch possibleMatch) {
 	// source does not matter on similar match as it is read on
 	// the first stored possible match
-	possibleMatch.source = NO_SOURCE_FILE;
+	possibleMatch.source = isModuleInfo(possibleMatch) ? null : NO_SOURCE_FILE;
 	this.similarMatch = possibleMatch;
 }
 public String toString() {
 	return this.openable == null ? "Fake PossibleMatch" : this.openable.toString(); //$NON-NLS-1$
+}
+@Override
+public char[] getModuleName() {
+	if (this.openable instanceof CompilationUnit) {
+		return ((CompilationUnit) this.openable).getModuleName();
+	} else if (this.openable instanceof ClassFile) {
+		IModuleDescription moduleDescription = this.openable.getPackageFragmentRoot().getModuleDescription();
+		if (moduleDescription != null) {
+			return moduleDescription.getElementName().toCharArray();
+		}
+	}
+	return null;
 }
 // GROOVY add
 /**

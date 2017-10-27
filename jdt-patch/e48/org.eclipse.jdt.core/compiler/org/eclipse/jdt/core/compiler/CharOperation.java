@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,6 +14,7 @@
 package org.eclipse.jdt.core.compiler;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.eclipse.jdt.internal.compiler.parser.ScannerHelper;
 
@@ -40,6 +41,18 @@ public final class CharOperation {
 	 * @since 3.1
 	 */
 	public static final String[] NO_STRINGS = new String[0];
+
+	/**
+	 * Constant for all Prefix
+	 * @since 3.14
+	 */
+	public static final char[] ALL_PREFIX = new char[] {'*'};
+
+	/**
+	 * Constant for comma
+	 * @since 3.14
+	 */
+	public static final char[] COMMA_SEPARATOR = new char[] {','};
 
 /**
  * Answers a new array with appending the suffix character at the end of the array.
@@ -163,6 +176,39 @@ public static final char[] append(char[] target, int index, char[] array, int st
 	}
 	System.arraycopy(array, start, target, index, subLength);
 	return target;
+}
+
+/**
+ * Answers a new array with prepending the prefix character at the start of the array.
+ * <br>
+ * <br>
+ * For example:<br>
+ * <ol>
+ * <li><pre>
+ *    prefix = 'c'
+ *    array = { 'a', 'b' }
+ *    => result = { 'c' , 'a', 'b' }
+ * </pre>
+ * </li>
+ * <li><pre>
+ *    prefix = 'c'
+ *    array = null
+ *    => result = { 'c' }
+ * </pre></li>
+ * </ol>
+ *
+ * @param array the array that is concatenated with the prefix character
+ * @param prefix the prefix character
+ * @return the new array
+ * @since 3.14
+ */
+public static final char[] prepend(char prefix, char[] array) {
+	if (array == null)
+		return new char[] { prefix };
+	int length = array.length;
+	System.arraycopy(array, 0, array = new char[length + 1], 1, length);
+	array[0] = prefix;
+	return array;
 }
 
 /**
@@ -817,6 +863,22 @@ public static String charToString(char[] charArray) {
 }
 
 /**
+ * Converts the given list of strings to an array of equal size,
+ * containing the individual strings converted to char[] each.
+ * 
+ * @param stringList
+ * @return an array of char[], representing the elements in the input list, or {@code null} if the list was {@code null}.
+ * @since 3.14
+ */
+public static char[][] toCharArrays(List<String> stringList) {
+	if (stringList == null)
+		return null;
+	char[][] result = new char[stringList.size()][];
+	for (int i = 0; i < result.length; i++)
+		result[i] = stringList.get(i).toCharArray();
+	return result;
+}
+/**
  * Answers a new array adding the second array at the end of first array.
  * It answers null if the first and second are null.
  * If the first array is null, then a new array char[][] is created with second.
@@ -1161,6 +1223,77 @@ public static final char[] concat(
 	System.arraycopy(first, 0, result, 0, length1);
 	result[length1] = separator;
 	System.arraycopy(second, 0, result, length1 + 1, length2);
+	return result;
+}
+
+/**
+ * Answers the concatenation of the two arrays inserting the separator character between the two arrays. Differs from
+ * {@link CharOperation#contains(char, char[])} in case second array is a zero length array.
+ * It answers null if the two arrays are null.
+ * If the first array is null, then the second array is returned.
+ * If the second array is null, then the first array is returned.
+ * if the second array is zero length array, the separator is appended.
+ * <br>
+ * <br>
+ * For example:
+ * <ol>
+ * <li><pre>
+ *    first = null
+ *    second = { 'a' }
+ *    separator = '/'
+ *    => result = { ' a' }
+ * </pre>
+ * </li>
+ * <li><pre>
+ *    first = { ' a' }
+ *    second = null
+ *    separator = '/'
+ *    => result = { ' a' }
+ * </pre>
+ * </li>
+ * <li><pre>
+ *    first = { ' a' }
+ *    second = { ' b' }
+ *    separator = '/'
+ *    => result = { ' a' , '/', 'b' }
+ * </pre>
+ * </li>
+ * <li><pre>
+ *    first = { ' a' }
+ *    second = { '' }
+ *    separator = '.'
+ *    => result = { ' a' , '.', }
+ * </pre>
+ * </li>
+ * </ol>
+ *
+ * @param first the first array to concatenate
+ * @param second the second array to concatenate
+ * @param separator the character to insert
+ * @return the concatenation of the two arrays inserting the separator character
+ * between the two arrays , or null if the two arrays are null. If second array
+ * is of zero length, the separator is appended to the first array and returned.
+ * @since 3.14
+ */
+public static final char[] concatAll(
+	char[] first,
+	char[] second,
+	char separator) {
+	if (first == null)
+		return second;
+	if (second == null)
+		return first;
+
+	int length1 = first.length;
+	if (length1 == 0)
+		return second;
+	int length2 = second.length;
+
+	char[] result = new char[length1 + length2 + 1];
+	System.arraycopy(first, 0, result, 0, length1);
+	result[length1] = separator;
+	if (length2 > 0)
+		System.arraycopy(second, 0, result, length1 + 1, length2);
 	return result;
 }
 
@@ -1777,6 +1910,21 @@ public static final boolean contains(char[] characters, char[] array) {
 		for (int j = characters.length; --j >= 0;)
 			if (array[i] == characters[j])
 				return true;
+	return false;
+}
+
+/**
+ * Does the given array contain a char sequence that is equal to the give sequence?
+ * @param array
+ * @param sequence
+ * @return true if sequence is equal to an element in array
+ * @since 3.14
+ */
+public static boolean containsEqual(char[][] array, char[] sequence) {
+	for (int i = 0; i < array.length; i++) {
+		if (equals(array[i], sequence))
+			return true;
+	}
 	return false;
 }
 

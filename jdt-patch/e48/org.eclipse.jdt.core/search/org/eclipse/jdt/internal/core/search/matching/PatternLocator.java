@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -93,6 +93,8 @@ public static PatternLocator patternLocator(SearchPattern pattern) {
 			return new LocalVariableLocator((LocalVariablePattern) pattern);
 		case IIndexConstants.TYPE_PARAM_PATTERN:
 			return new TypeParameterLocator((TypeParameterPattern) pattern);
+		case IIndexConstants.MODULE_PATTERN:
+			return new ModuleLocator((ModulePattern) pattern);
 	}
 	return null;
 }
@@ -220,6 +222,12 @@ public int match(MemberValuePair node, MatchingNodeSet nodeSet) {
 }
 public int match(MessageSend node, MatchingNodeSet nodeSet) {
 	// each subtype should override if needed
+	return IMPOSSIBLE_MATCH;
+}
+protected int match(ModuleDeclaration node, MatchingNodeSet nodeSet) {
+	return IMPOSSIBLE_MATCH;
+}
+protected int match(ModuleReference node, MatchingNodeSet nodeSet) {
 	return IMPOSSIBLE_MATCH;
 }
 public int match(Reference node, MatchingNodeSet nodeSet) {
@@ -417,6 +425,9 @@ protected void matchReportReference(ASTNode reference, IJavaElement element, Bin
 			break;
 		case IJavaElement.TYPE_PARAMETER:
 			this.match = locator.newTypeParameterReferenceMatch(element, accuracy, offset, reference.sourceEnd-offset+1, reference);
+			break;
+		case IJavaElement.JAVA_MODULE:
+			this.match = locator.newModuleReferenceMatch(element, elementBinding, accuracy, offset, reference.sourceEnd-offset+1, reference);
 			break;
 	}
 	if (this.match != null) {

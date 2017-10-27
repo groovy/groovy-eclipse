@@ -67,14 +67,16 @@ public class AbstractSyntaxTreeTest extends AbstractCompilerTest implements IDoc
 		this.referenceCompiler = referenceCompiler;
 		this.referenceCompilerTestsScratchArea = referenceCompilerTestsScratchArea;
 	}
-
 	public void checkParse(int parserToCheck, char[] source, String expectedSyntaxErrorDiagnosis,
 			String testName, String expectedUnitToString, ASTVisitor visitor) throws IOException {
-			
-				CompilerOptions options = new CompilerOptions(getCompilerOptions());
-				options.complianceLevel = ClassFileConstants.JDK1_8;
-				options.sourceLevel = ClassFileConstants.JDK1_8;
-				options.targetJDK = ClassFileConstants.JDK1_8;
+		CompilerOptions options = new CompilerOptions(getCompilerOptions());
+		options.complianceLevel = ClassFileConstants.JDK1_8;
+		options.sourceLevel = ClassFileConstants.JDK1_8;
+		options.targetJDK = ClassFileConstants.JDK1_8;
+		checkParse(parserToCheck, source, expectedSyntaxErrorDiagnosis, testName, expectedUnitToString, visitor, options);
+	}
+	public void checkParse(int parserToCheck, char[] source, String expectedSyntaxErrorDiagnosis,
+			String testName, String expectedUnitToString, ASTVisitor visitor, CompilerOptions options) throws IOException {
 			
 				ICompilationUnit sourceUnit = null;
 				CompilationResult compilationResult = null;

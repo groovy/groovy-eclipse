@@ -1,11 +1,11 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -537,6 +537,12 @@ protected void consumeNormalAnnotation(boolean isTypeAnnotation) {
 		this.requestor.acceptAnnotationTypeReference(annotation.type.getTypeName(), annotation.sourceStart, annotation.sourceEnd);
 	}
 }
+protected void consumeProvidesStatement() {
+	super.consumeProvidesStatement();
+	ProvidesStatement service = (ProvidesStatement) this.astStack[this.astPtr];
+	TypeReference ref = service.serviceInterface;
+	this.requestor.acceptTypeReference(ref.getTypeName(), ref.sourceStart, ref.sourceEnd);
+}
 protected void consumeSingleMemberAnnotation(boolean isTypeAnnotation) {
 	super.consumeSingleMemberAnnotation(isTypeAnnotation);
 	SingleMemberAnnotation member = (SingleMemberAnnotation) (isTypeAnnotation ? this.typeAnnotationStack[this.typeAnnotationPtr] : this.expressionStack[this.expressionPtr]);
@@ -718,6 +724,19 @@ protected void consumeTypeImportOnDemandDeclarationName() {
 	if (this.reportReferenceInfo) {
 		this.requestor.acceptUnknownReference(impt.tokens, impt.sourceStart, impt.sourceEnd);
 	}
+}
+protected void consumeUsesStatement() {
+	super.consumeUsesStatement();
+	UsesStatement ref = (UsesStatement) this.astStack[this.astPtr];
+	this.requestor.acceptTypeReference(ref.serviceInterface.getTypeName(), ref.sourceStart, ref.sourceEnd);
+}
+protected void consumeWithClause() {
+	super.consumeWithClause();
+	ProvidesStatement service = (ProvidesStatement) this.astStack[this.astPtr];
+		for (int i = 0; i < service.implementations.length; i++) {
+			TypeReference ref = service.implementations[i];
+			this.requestor.acceptTypeReference(ref.getTypeName(), ref.sourceStart, ref.sourceEnd);
+		}
 }
 public MethodDeclaration convertToMethodDeclaration(ConstructorDeclaration c, CompilationResult compilationResult) {
 	MethodDeclaration methodDeclaration = super.convertToMethodDeclaration(c, compilationResult);

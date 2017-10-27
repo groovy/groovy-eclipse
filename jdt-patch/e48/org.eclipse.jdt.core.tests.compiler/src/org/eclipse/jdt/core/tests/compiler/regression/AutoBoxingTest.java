@@ -527,6 +527,7 @@ public class AutoBoxingTest extends AbstractComparableTest {
 			new String[] {
 				"X.java",
 				"public class X {\n" +
+				"	@SuppressWarnings(\"deprecation\")\n" +
 				"	public static void main(String[] s) {\n" +
 				"		new Y().test(1, 1);\n" + // reference to test is ambiguous, both method test(java.lang.Integer,int) in Y and method test(int,java.lang.Integer) in Y match
 				"		new Y().test(new Integer(1), new Integer(1));\n" + // reference to test is ambiguous
@@ -538,12 +539,12 @@ public class AutoBoxingTest extends AbstractComparableTest {
 				"}\n",
 			},
 			"----------\n" +
-			"1. ERROR in X.java (at line 3)\n" +
+			"1. ERROR in X.java (at line 4)\n" +
 			"	new Y().test(1, 1);\n" +
 			"	        ^^^^\n" +
 			"The method test(Integer, int) is ambiguous for the type Y\n" +
 			"----------\n" +
-			"2. ERROR in X.java (at line 4)\n" +
+			"2. ERROR in X.java (at line 5)\n" +
 			"	new Y().test(new Integer(1), new Integer(1));\n" +
 			"	        ^^^^\n" +
 			"The method test(Integer, int) is ambiguous for the type Y\n" +
@@ -753,6 +754,7 @@ public class AutoBoxingTest extends AbstractComparableTest {
 			new String[] {
 				"X.java",
 				"public class X {\n" +
+				"	@SuppressWarnings(\"deprecation\")\n" +
 				"	public static void main(String[] args) {\n" +
 				"		Float f = args.length == 0 ? new Float(0) : 0;\n" +
 				"		System.out.println((int)f);\n" +
@@ -760,17 +762,17 @@ public class AutoBoxingTest extends AbstractComparableTest {
 				"}\n",
 			},
 			"----------\n" +
-			"1. WARNING in X.java (at line 3)\n" +
+			"1. WARNING in X.java (at line 4)\n" +
 			"	Float f = args.length == 0 ? new Float(0) : 0;\n" +
 			"	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
 			"The expression of type float is boxed into Float\n" +
 			"----------\n" +
-			"2. WARNING in X.java (at line 3)\n" +
+			"2. WARNING in X.java (at line 4)\n" +
 			"	Float f = args.length == 0 ? new Float(0) : 0;\n" +
 			"	                             ^^^^^^^^^^^^\n" +
 			"The expression of type Float is unboxed into float\n" +
 			"----------\n" +
-			"3. ERROR in X.java (at line 4)\n" +
+			"3. ERROR in X.java (at line 5)\n" +
 			"	System.out.println((int)f);\n" +
 			"	                   ^^^^^^\n" +
 			"Cannot cast from Float to int\n" +
@@ -1918,6 +1920,7 @@ public class AutoBoxingTest extends AbstractComparableTest {
 			new String[] {
 				"X.java",
 				"public class X {\n" +
+				"	@SuppressWarnings(\"deprecation\")\n" +
 				"    public static void main(String[] args) {\n" +
 				"        a(new Integer(1), 2);\n" +
 				"    }\n" +
@@ -1926,7 +1929,7 @@ public class AutoBoxingTest extends AbstractComparableTest {
 				"}\n",
 			},
 			"----------\n" +
-			"1. ERROR in X.java (at line 3)\n" +
+			"1. ERROR in X.java (at line 4)\n" +
 			"	a(new Integer(1), 2);\n" +
 			"	^\n" +
 			"The method a(int, int) is ambiguous for the type X\n" +
@@ -2747,6 +2750,7 @@ public class AutoBoxingTest extends AbstractComparableTest {
             new String[] {
                 "X.java",
 				"public class X {\n" +
+				"	@SuppressWarnings(\"deprecation\")\n" +
 				"	public static void main(String[] args) {\n" +
 				"		boolean b = true;\n" +
 				"		Character _Character = new Character(\' \');\n" +
@@ -2761,17 +2765,17 @@ public class AutoBoxingTest extends AbstractComparableTest {
 				"}\n"
             },
 			"----------\n" +
-			"1. WARNING in X.java (at line 7)\n" +
+			"1. WARNING in X.java (at line 8)\n" +
 			"	if ((b ? _Character : _Integer) == c) {\n" +
 			"	         ^^^^^^^^^^\n" +
 			"The expression of type Character is unboxed into int\n" +
 			"----------\n" +
-			"2. WARNING in X.java (at line 7)\n" +
+			"2. WARNING in X.java (at line 8)\n" +
 			"	if ((b ? _Character : _Integer) == c) {\n" +
 			"	                      ^^^^^^^^\n" +
 			"The expression of type Integer is unboxed into int\n" +
 			"----------\n" +
-			"3. ERROR in X.java (at line 8)\n" +
+			"3. ERROR in X.java (at line 9)\n" +
 			"	System.out.println(zork);\n" +
 			"	                   ^^^^\n" +
 			"zork cannot be resolved to a variable\n" +
@@ -2919,6 +2923,7 @@ public class AutoBoxingTest extends AbstractComparableTest {
 				"public class X {\n" +
 				"	void foo(Object... i) { System.out.print(1); }\n" +
 				"	void foo(int... i) { System.out.print(2); }\n" +
+				"	@SuppressWarnings(\"deprecation\")\n" +
 				"	public static void main(String[] args) {\n" +
 				"		new X().foo(1);\n" +
 				"		new X().foo(new Integer(1));\n" +
@@ -2927,17 +2932,17 @@ public class AutoBoxingTest extends AbstractComparableTest {
 				"}\n",
 			},
 			"----------\n" + 
-			"1. ERROR in X.java (at line 5)\n" + 
+			"1. ERROR in X.java (at line 6)\n" + 
 			"	new X().foo(1);\n" + 
 			"	        ^^^\n" + 
 			"The method foo(Object[]) is ambiguous for the type X\n" + 
 			"----------\n" + 
-			"2. ERROR in X.java (at line 6)\n" + 
+			"2. ERROR in X.java (at line 7)\n" + 
 			"	new X().foo(new Integer(1));\n" + 
 			"	        ^^^\n" + 
 			"The method foo(Object[]) is ambiguous for the type X\n" + 
 			"----------\n" + 
-			"3. ERROR in X.java (at line 7)\n" + 
+			"3. ERROR in X.java (at line 8)\n" + 
 			"	new X().foo(1, new Integer(1));\n" + 
 			"	        ^^^\n" + 
 			"The method foo(Object[]) is ambiguous for the type X\n" + 
@@ -2948,6 +2953,7 @@ public class AutoBoxingTest extends AbstractComparableTest {
 				"public class X {\n" +
 				"	void foo(Number... i) { System.out.print(1); }\n" +
 				"	void foo(int... i) { System.out.print(2); }\n" +
+				"	@SuppressWarnings(\"deprecation\")\n" +
 				"	public static void main(String[] args) {\n" +
 				"		new X().foo(1);\n" +
 				"		new X().foo(new Integer(1));\n" +
@@ -2956,17 +2962,17 @@ public class AutoBoxingTest extends AbstractComparableTest {
 				"}\n",
 			},
 			"----------\n" +
-			"1. ERROR in X.java (at line 5)\n" +
+			"1. ERROR in X.java (at line 6)\n" +
 			"	new X().foo(1);\n" +
 			"	        ^^^\n" +
 			"The method foo(Number[]) is ambiguous for the type X\n" +
 			"----------\n" +
-			"2. ERROR in X.java (at line 6)\n" +
+			"2. ERROR in X.java (at line 7)\n" +
 			"	new X().foo(new Integer(1));\n" +
 			"	        ^^^\n" +
 			"The method foo(Number[]) is ambiguous for the type X\n" +
 			"----------\n" +
-			"3. ERROR in X.java (at line 7)\n" +
+			"3. ERROR in X.java (at line 8)\n" +
 			"	new X().foo(1, new Integer(1));\n" +
 			"	        ^^^\n" +
 			"The method foo(Number[]) is ambiguous for the type X\n" +
@@ -2978,6 +2984,7 @@ public class AutoBoxingTest extends AbstractComparableTest {
 				"public class X {\n" +
 				"	void foo(int i, Object... o) { System.out.print(1); }\n" +
 				"	void foo(Integer o, int... i) { System.out.print(2); }\n" +
+				"	@SuppressWarnings(\"deprecation\")\n" +
 				"	public static void main(String[] args) {\n" +
 				"		new X().foo(1);\n" +
 				"		new X().foo(new Integer(1));\n" +
@@ -2986,17 +2993,17 @@ public class AutoBoxingTest extends AbstractComparableTest {
 				"}\n",
 			},
 			"----------\n" +
-			"1. ERROR in X.java (at line 5)\n" +
+			"1. ERROR in X.java (at line 6)\n" +
 			"	new X().foo(1);\n" +
 			"	        ^^^\n" +
 			"The method foo(int, Object[]) is ambiguous for the type X\n" +
 			"----------\n" +
-			"2. ERROR in X.java (at line 6)\n" +
+			"2. ERROR in X.java (at line 7)\n" +
 			"	new X().foo(new Integer(1));\n" +
 			"	        ^^^\n" +
 			"The method foo(int, Object[]) is ambiguous for the type X\n" +
 			"----------\n" +
-			"3. ERROR in X.java (at line 7)\n" +
+			"3. ERROR in X.java (at line 8)\n" +
 			"	new X().foo(1, new Integer(1));\n" +
 			"	        ^^^\n" +
 			"The method foo(int, Object[]) is ambiguous for the type X\n" +
@@ -5138,6 +5145,7 @@ public void test168() {
 	this.runNegativeTest(
 		new String[] {
 			"X.java",
+			"@SuppressWarnings(\"deprecation\")\n" +
 			"public class X {\n" + 
 			"    <T extends Integer> T a() { return 35; }\n" + 
 			"    <T extends Integer> T[] b() { return new int[]{35}; }\n" + 
@@ -5146,47 +5154,47 @@ public void test168() {
 			"}\n",
 		},
 		"----------\n" + 
-		"1. WARNING in X.java (at line 2)\n" + 
+		"1. WARNING in X.java (at line 3)\n" + 
 		"	<T extends Integer> T a() { return 35; }\n" + 
 		"	           ^^^^^^^\n" + 
 		"The type parameter T should not be bounded by the final type Integer. Final types cannot be further extended\n" + 
 		"----------\n" + 
-		"2. ERROR in X.java (at line 2)\n" + 
+		"2. ERROR in X.java (at line 3)\n" + 
 		"	<T extends Integer> T a() { return 35; }\n" + 
 		"	                                   ^^\n" + 
 		"Type mismatch: cannot convert from int to T\n" + 
 		"----------\n" + 
-		"3. WARNING in X.java (at line 3)\n" + 
+		"3. WARNING in X.java (at line 4)\n" + 
 		"	<T extends Integer> T[] b() { return new int[]{35}; }\n" + 
 		"	           ^^^^^^^\n" + 
 		"The type parameter T should not be bounded by the final type Integer. Final types cannot be further extended\n" + 
 		"----------\n" + 
-		"4. ERROR in X.java (at line 3)\n" + 
+		"4. ERROR in X.java (at line 4)\n" + 
 		"	<T extends Integer> T[] b() { return new int[]{35}; }\n" + 
 		"	                                     ^^^^^^^^^^^^^\n" + 
 		"Type mismatch: cannot convert from int[] to T[]\n" + 
 		"----------\n" + 
-		"5. WARNING in X.java (at line 4)\n" + 
+		"5. WARNING in X.java (at line 5)\n" + 
 		"	<T extends Integer> T c() { return new Integer(35); }\n" + 
 		"	           ^^^^^^^\n" + 
 		"The type parameter T should not be bounded by the final type Integer. Final types cannot be further extended\n" + 
 		"----------\n" + 
-		"6. ERROR in X.java (at line 4)\n" + 
+		"6. ERROR in X.java (at line 5)\n" + 
 		"	<T extends Integer> T c() { return new Integer(35); }\n" + 
 		"	                                   ^^^^^^^^^^^^^^^\n" + 
 		"Type mismatch: cannot convert from Integer to T\n" + 
 		"----------\n" + 
-		"7. WARNING in X.java (at line 5)\n" + 
+		"7. WARNING in X.java (at line 6)\n" + 
 		"	<T extends Integer> T[] d() { return new Integer[]{35}; }\n" + 
 		"	           ^^^^^^^\n" + 
 		"The type parameter T should not be bounded by the final type Integer. Final types cannot be further extended\n" + 
 		"----------\n" + 
-		"8. ERROR in X.java (at line 5)\n" + 
+		"8. ERROR in X.java (at line 6)\n" + 
 		"	<T extends Integer> T[] d() { return new Integer[]{35}; }\n" + 
 		"	                                     ^^^^^^^^^^^^^^^^^\n" + 
 		"Type mismatch: cannot convert from Integer[] to T[]\n" + 
 		"----------\n" + 
-		"9. WARNING in X.java (at line 5)\n" + 
+		"9. WARNING in X.java (at line 6)\n" + 
 		"	<T extends Integer> T[] d() { return new Integer[]{35}; }\n" + 
 		"	                                                   ^^\n" + 
 		"The expression of type int is boxed into Integer\n" + 

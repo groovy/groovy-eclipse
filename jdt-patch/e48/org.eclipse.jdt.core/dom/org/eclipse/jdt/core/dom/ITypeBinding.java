@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,7 +14,7 @@
 package org.eclipse.jdt.core.dom;
 
 /**
- * A type binding represents fully-resolved type. There are a number of
+ * A type binding represents a fully-resolved type. There are a number of
  * different kinds of type bindings:
  * <ul>
  * <li>a class - represents the class declaration;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -74,9 +74,9 @@ public interface IClassFileReader {
 	int ALL_BUT_METHOD_BODIES   = ALL & ~METHOD_BODIES;
 
 	/**
-	 * Answer back the access flag of the .class file.
+	 * Answer back the access flags of the .class file.
 	 *
-	 * @return the access flag of the .class file
+	 * @return the access flags of the .class file
 	 */
 	int getAccessFlags();
 
@@ -157,9 +157,9 @@ public interface IClassFileReader {
 	int getSuperclassIndex();
 
 	/**
-	 * Answer true if this .class file represents an class, false otherwise.
+	 * Answer true if this .class file represents a class, false otherwise.
 	 *
-	 * @return true if this .class file represents an class, false otherwise
+	 * @return true if this .class file represents a class, false otherwise
 	 */
 	boolean isClass();
 

@@ -1,10 +1,9 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -64,8 +63,31 @@ public interface IModifierConstants {
 	int ACC_ENUM         = 0x4000;
 
 	/**
+	 * Indicates a module (added in Java SE 9).
+	 * @since 3.14
+	 */
+	int ACC_MODULE       = 0x8000;
+
+	/**
 	 * Indicates a mandated parameter, such as this$1 (added in Java SE 8).
 	 * @since 3.10
 	 */
 	int ACC_MANDATED     = 0x8000;
+	/**
+	 * Indicates an open module in module-info file (added in Java SE 9).
+	 * @since 3.14
+	 */
+	int ACC_OPEN			= 0x0020;
+
+	/**
+	 * Indicates a transitive requires in module-info file (added in Java SE 9).
+	 * @since 3.14
+	 */
+	int ACC_TRANSITIVE     = 0x0020;
+
+	/**
+	 * Indicates a static requires in module-info file (added in Java SE 9).
+	 * @since 3.14
+	 */
+	int ACC_STATIC_PHASE	= 0x0040;
 }

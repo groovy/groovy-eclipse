@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2016 IBM Corporation and others.
+ * Copyright (c) 2004, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -227,7 +227,8 @@ public class ASTParser {
 			case AST.JLS2_INTERNAL:
 			case AST.JLS3_INTERNAL:
 			case AST.JLS4_INTERNAL:
-			case AST.JLS8:
+			case AST.JLS8_INTERNAL:
+			case AST.JLS9_INTERNAL:
 				break;
 			default:
 				throw new IllegalArgumentException();
@@ -1133,19 +1134,27 @@ public class ASTParser {
 							}
 							PackageFragment packageFragment = (PackageFragment) this.typeRoot.getParent();
 							BinaryType type = (BinaryType) this.typeRoot.findPrimaryType();
-							IBinaryType binaryType = (IBinaryType) type.getElementInfo();
-							// file name is used to recreate the Java element, so it has to be the toplevel .class file name
-							char[] fileName = binaryType.getFileName();
-							int firstDollar = CharOperation.indexOf('$', fileName);
-							if (firstDollar != -1) {
-								char[] suffix = SuffixConstants.SUFFIX_class;
-								int suffixLength = suffix.length;
-								char[] newFileName = new char[firstDollar + suffixLength];
-								System.arraycopy(fileName, 0, newFileName, 0, firstDollar);
-								System.arraycopy(suffix, 0, newFileName, firstDollar, suffixLength);
-								fileName = newFileName;
+							String fileNameString = null;
+							if (type != null) {
+								IBinaryType binaryType = (IBinaryType) type.getElementInfo();
+								// file name is used to recreate the Java element, so it has to be the toplevel .class file name
+								char[] fileName = binaryType.getFileName();
+
+								int firstDollar = CharOperation.indexOf('$', fileName);
+								if (firstDollar != -1) {
+									char[] suffix = SuffixConstants.SUFFIX_class;
+									int suffixLength = suffix.length;
+									char[] newFileName = new char[firstDollar + suffixLength];
+									System.arraycopy(fileName, 0, newFileName, 0, firstDollar);
+									System.arraycopy(suffix, 0, newFileName, firstDollar, suffixLength);
+									fileName = newFileName;
+								}
+								fileNameString = new String(fileName);
+							} else {
+								// assumed to be "module-info.class" (which has no type):
+								fileNameString = this.typeRoot.getElementName();
 							}
-							sourceUnit = new BasicCompilationUnit(sourceString.toCharArray(), Util.toCharArrays(packageFragment.names), new String(fileName), this.project);
+							sourceUnit = new BasicCompilationUnit(sourceString.toCharArray(), Util.toCharArrays(packageFragment.names), fileNameString, this.typeRoot);
 						} catch(JavaModelException e) {
 							// an error occured accessing the java element
 							StringWriter stringWriter = new StringWriter();

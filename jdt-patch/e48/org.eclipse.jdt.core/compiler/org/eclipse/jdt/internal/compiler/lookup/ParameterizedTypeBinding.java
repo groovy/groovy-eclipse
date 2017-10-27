@@ -115,6 +115,7 @@ public class ParameterizedTypeBinding extends ReferenceBinding implements Substi
 			boolean hasErrors = false;
 			TypeVariableBinding[] typeVariables = this.type.typeVariables();
 			if (this.arguments != null && typeVariables != null) { // arguments may be null in error cases
+				// per JLS 4.5 we should capture 'this'
 				for (int i = 0, length = typeVariables.length; i < length; i++) {
 				    BoundCheckStatus checkStatus = typeVariables[i].boundCheck(this, this.arguments[i], scope, argumentReferences[i]);
 				    hasErrors |= checkStatus != BoundCheckStatus.OK;

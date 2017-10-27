@@ -8122,6 +8122,8 @@ public void testBug457210() {
 }
 public void testBug462790() {
 	if (this.complianceLevel < ClassFileConstants.JDK1_7) return; // multi catch used
+	Map<String,String> options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.IGNORE);
 	runConformTestWithLibs(
 		new String[] {
 			"EclipseBug.java",
@@ -8141,7 +8143,7 @@ public void testBug462790() {
 			"	}\n" + 
 			"}"
 		},
-		getCompilerOptions(),
+		options,
 		"----------\n" + 
 		"1. WARNING in EclipseBug.java (at line 5)\n" + 
 		"	String command = (String)getCommand(commandType);\n" + 

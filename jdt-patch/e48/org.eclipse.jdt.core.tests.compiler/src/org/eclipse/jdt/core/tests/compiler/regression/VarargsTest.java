@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contribution for
@@ -3736,4 +3736,42 @@ public class VarargsTest extends AbstractComparableTest {
 			},
 			"");
 		}
+		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=488658
+		public void testBug488658_001() throws Exception {
+			if (this.complianceLevel < ClassFileConstants.JDK9) return;
+			this.runConformTest(
+				new String[] {
+					"X.java",
+					"class Y<T> {}\n"+
+					"@SuppressWarnings(\"unused\")\n" +
+					"public class X {\n"+
+					"	@SafeVarargs\n"+
+					"	private <T> Y<T> foo(T ... a) {\n"+
+					"		return null;\n"+
+					"	}\n"+
+					"}\n",
+				},
+			"");
+			Map options = getCompilerOptions();
+			options.put(JavaCore.COMPILER_PB_UNCHECKED_TYPE_OPERATION, JavaCore.ERROR);
+			this.runNegativeTest(
+				new String[] {
+					"X.java",
+					"class Y<T> {}\n"+
+					"public class X {\n"+
+					"@SuppressWarnings(\"unused\")\n" +
+					"	private <T> Y<T> foo(T ... a) {\n"+
+					"		return null;\n"+
+					"	}\n"+
+					"}\n"
+				},
+				"----------\n" + 
+				"1. WARNING in X.java (at line 4)\n" + 
+				"	private <T> Y<T> foo(T ... a) {\n" + 
+				"	                           ^\n" + 
+				"Type safety: Potential heap pollution via varargs parameter a\n" + 
+				"----------\n");
+
+		}
+
 }

@@ -97,6 +97,12 @@ public class HandleFactory {
 				this.packageHandles= new HashtableOfArrayToObject(5);
 			}
 			// create handle
+			String module = null;
+			String rootPath = this.lastPkgFragmentRoot.getPath().toOSString();
+			if (org.eclipse.jdt.internal.compiler.util.Util.isJrt(rootPath)) {
+				module = resourcePath.substring(separatorIndex + 1, 
+						(separatorIndex = resourcePath.lastIndexOf(IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR)));
+			}
 			String classFilePath= resourcePath.substring(separatorIndex + 1);
 			String[] simpleNames = new Path(classFilePath).segments();
 			String[] pkgName;
@@ -109,7 +115,7 @@ public class HandleFactory {
 			}
 			IPackageFragment pkgFragment= (IPackageFragment) this.packageHandles.get(pkgName);
 			if (pkgFragment == null) {
-				pkgFragment= this.lastPkgFragmentRoot.getPackageFragment(pkgName);
+				pkgFragment= this.lastPkgFragmentRoot.getPackageFragment(pkgName, module);
 				this.packageHandles.put(pkgName, pkgFragment);
 			}
 			IClassFile classFile= pkgFragment.getClassFile(simpleNames[length]);

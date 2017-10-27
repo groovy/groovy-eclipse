@@ -124,6 +124,7 @@ public class DefaultCodeFormatterOptions {
 	public int alignment_for_expressions_in_array_initializer;
 	public int alignment_for_expressions_in_for_loop_header;
 	public int alignment_for_method_declaration;
+	public int alignment_for_module_statements;
 	// TODO following option cannot be set in preferences dialog (but it's used by old.CodeFormatter)
 	public int alignment_for_multiple_fields;
 	public int alignment_for_parameterized_type_references;
@@ -460,6 +461,7 @@ public class DefaultCodeFormatterOptions {
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_EXPRESSIONS_IN_ARRAY_INITIALIZER, getAlignment(this.alignment_for_expressions_in_array_initializer));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_EXPRESSIONS_IN_FOR_LOOP_HEADER, getAlignment(this.alignment_for_expressions_in_for_loop_header));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_METHOD_DECLARATION, getAlignment(this.alignment_for_method_declaration));
+		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_MODULE_STATEMENTS, getAlignment(this.alignment_for_module_statements));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_MULTIPLE_FIELDS, getAlignment(this.alignment_for_multiple_fields));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_PARAMETERIZED_TYPE_REFERENCES, getAlignment(this.alignment_for_parameterized_type_references));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_PARAMETERS_IN_CONSTRUCTOR_DECLARATION, getAlignment(this.alignment_for_parameters_in_constructor_declaration));
@@ -897,6 +899,10 @@ public class DefaultCodeFormatterOptions {
 				this.alignment_for_method_declaration = Alignment.M_COMPACT_SPLIT;
 			}
 		}
+		final Object alignmentForModuleStatementsOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_MODULE_STATEMENTS);
+		if (alignmentForModuleStatementsOption != null)
+			this.alignment_for_module_statements = toInt(alignmentForModuleStatementsOption, Alignment.M_COMPACT_SPLIT);
+
 		final Object alignmentForMultipleFieldsOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_MULTIPLE_FIELDS);
 		if (alignmentForMultipleFieldsOption != null) {
 			try {
@@ -2430,6 +2436,7 @@ public class DefaultCodeFormatterOptions {
 		this.alignment_for_expressions_in_array_initializer = Alignment.M_COMPACT_SPLIT;
 		this.alignment_for_expressions_in_for_loop_header = Alignment.M_NO_ALIGNMENT;
 		this.alignment_for_method_declaration = Alignment.M_NO_ALIGNMENT;
+		this.alignment_for_module_statements = Alignment.M_COMPACT_SPLIT;
 		this.alignment_for_multiple_fields = Alignment.M_COMPACT_SPLIT;
 		this.alignment_for_parameterized_type_references = Alignment.M_NO_ALIGNMENT;
 		this.alignment_for_parameters_in_constructor_declaration = Alignment.M_COMPACT_SPLIT;
@@ -2740,6 +2747,7 @@ public class DefaultCodeFormatterOptions {
 		this.alignment_for_expressions_in_array_initializer = Alignment.M_COMPACT_SPLIT;
 		this.alignment_for_expressions_in_for_loop_header = Alignment.M_NO_ALIGNMENT;
 		this.alignment_for_method_declaration = Alignment.M_NO_ALIGNMENT;
+		this.alignment_for_module_statements = Alignment.M_COMPACT_SPLIT;
 		this.alignment_for_multiple_fields = Alignment.M_COMPACT_SPLIT;
 		this.alignment_for_parameterized_type_references = Alignment.M_NO_ALIGNMENT;
 		this.alignment_for_parameters_in_constructor_declaration = Alignment.M_COMPACT_SPLIT;

@@ -21,13 +21,21 @@ import org.eclipse.jdt.core.ToolFactory;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
 import org.eclipse.jdt.core.util.ClassFormatException;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class JSR335ClassFileTest extends AbstractComparableTest {
 
+	String versionString = null;
+
 public JSR335ClassFileTest(String name) {
 	super(name);
+}
+// No need for a tearDown()
+protected void setUp() throws Exception {
+	super.setUp();
+	this.versionString = (this.complianceLevel < ClassFileConstants.JDK9) ? "version 1.8 : 52.0" : "version 9 : 53.0";
 }
 
 /*
@@ -77,7 +85,7 @@ public void test001() throws Exception {
 	);
 
 	String expectedOutput =
-		"// Compiled from X.java (version 1.8 : 52.0, super bit)\n" + 
+		"// Compiled from X.java (" + this.versionString + ", super bit)\n" + 
 		"public class X {\n" + 
 		"  Constant pool:\n" + 
 		"    constant #1 class: #2 X\n" + 
@@ -184,7 +192,7 @@ public void test002() throws Exception {
 	);
 
 	String expectedOutput =
-			"// Compiled from X.java (version 1.8 : 52.0, super bit)\n" + 
+			"// Compiled from X.java (" + this.versionString + ", super bit)\n" + 
 			"public class X {\n" + 
 			"  Constant pool:\n" + 
 			"    constant #1 class: #2 X\n" + 
@@ -293,7 +301,7 @@ public void test003() throws Exception {
 	);
 
 	String expectedOutput =
-			"// Compiled from X.java (version 1.8 : 52.0, super bit)\n" + 
+			"// Compiled from X.java (" + this.versionString + ", super bit)\n" + 
 			"public class X {\n" + 
 			"  Constant pool:\n" + 
 			"    constant #1 class: #2 X\n" + 
@@ -398,7 +406,7 @@ public void test004() throws Exception {
 	);
 
 	String expectedOutput =
-			"// Compiled from X.java (version 1.8 : 52.0, super bit)\n" + 
+			"// Compiled from X.java (" + this.versionString + ", super bit)\n" + 
 			"public class X {\n" + 
 			"  Constant pool:\n" + 
 			"    constant #1 class: #2 X\n" + 
@@ -520,7 +528,7 @@ public void test005() throws Exception {
 		},
 	"SUCCESS"
 	);
-	verifyClassFile(			"// Compiled from X.java (version 1.8 : 52.0, super bit)\n" + 
+	verifyClassFile("// Compiled from X.java (" + this.versionString + ", super bit)\n" + 
 			"public class X {\n" + 
 			"  Constant pool:\n" + 
 			"    constant #1 class: #2 X\n" + 
@@ -634,7 +642,7 @@ public void test006() throws Exception {
 	"SUCCESS"
 	);
 	String expected =
-			"// Compiled from X.java (version 1.8 : 52.0, super bit)\n" + 
+			"// Compiled from X.java (" + this.versionString + ", super bit)\n" + 
 			"public class X {\n" + 
 			"  Constant pool:\n" + 
 			"    constant #1 class: #2 X\n" + 
@@ -745,7 +753,7 @@ public void test007() throws Exception {
 	);
 
 	String expectedOutput =
-			"// Compiled from X.java (version 1.8 : 52.0, super bit)\n" + 
+			"// Compiled from X.java (" + this.versionString + ", super bit)\n" + 
 			"public class X {\n" + 
 			"  Constant pool:\n" + 
 			"    constant #1 class: #2 X\n" + 
@@ -868,7 +876,7 @@ public void test007a() throws Exception {
 	);
 
 	String expectedOutput =
-			"// Compiled from X.java (version 1.8 : 52.0, super bit)\n" + 
+			"// Compiled from X.java (" + this.versionString + ", super bit)\n" + 
 			"public class X {\n" + 
 			"  Constant pool:\n" + 
 			"    constant #1 class: #2 X\n" + 
@@ -990,7 +998,7 @@ public void test008() throws Exception {
 	);
 
 	String expectedOutput =
-			"// Compiled from X.java (version 1.8 : 52.0, super bit)\n" + 
+			"// Compiled from X.java (" + this.versionString + ", super bit)\n" + 
 			"public class X {\n" + 
 			"  Constant pool:\n" + 
 			"    constant #1 class: #2 X\n" + 
@@ -1109,7 +1117,7 @@ public void test009() throws Exception {
 	);
 
 	String expectedOutput =
-			"// Compiled from X.java (version 1.8 : 52.0, super bit)\n" + 
+			"// Compiled from X.java (" + this.versionString + ", super bit)\n" + 
 			"public class X {\n" + 
 			"  Constant pool:\n" + 
 			"    constant #1 class: #2 X\n" + 
@@ -1261,7 +1269,7 @@ public void test010() throws Exception {
 	);
 
 	String expectedOutput =
-			"// Compiled from X.java (version 1.8 : 52.0, super bit)\n" + 
+			"// Compiled from X.java (" + this.versionString + ", super bit)\n" + 
 			"public class X {\n" + 
 			"  Constant pool:\n" + 
 			"    constant #1 class: #2 X\n" + 
@@ -1429,7 +1437,7 @@ public void test011() throws Exception {
 	);
 
 	String expectedOutput =
-			"// Compiled from X.java (version 1.8 : 52.0, super bit)\n" + 
+			"// Compiled from X.java (" + this.versionString + ", super bit)\n" + 
 			"public class X {\n" + 
 			"  Constant pool:\n" + 
 			"    constant #1 class: #2 X\n" + 
@@ -1597,7 +1605,7 @@ public void test012() throws Exception {
 		"");
 
 	String expectedOutput =
-			"// Compiled from X.java (version 1.8 : 52.0, super bit)\n" + 
+			"// Compiled from X.java (" + this.versionString + ", super bit)\n" + 
 			"public class X {\n" + 
 			"  Constant pool:\n" + 
 			"    constant #1 class: #2 X\n" + 
@@ -1759,7 +1767,7 @@ public void test013() throws Exception {
 		"");
 
 	String expectedOutput =
-			"// Compiled from X.java (version 1.8 : 52.0, super bit)\n" + 
+			"// Compiled from X.java (" + this.versionString + ", super bit)\n" + 
 			"public class X {\n" + 
 			"  Constant pool:\n" + 
 			"    constant #1 class: #2 X\n" + 
@@ -1898,7 +1906,7 @@ public void test014() throws Exception {
 		"");
 
 	String expectedOutput =
-			"// Compiled from X.java (version 1.8 : 52.0, super bit)\n" + 
+			"// Compiled from X.java (" + this.versionString + ", super bit)\n" + 
 			"public class X {\n" + 
 			"  Constant pool:\n" + 
 			"    constant #1 class: #2 X\n" + 
@@ -2092,7 +2100,7 @@ public void test015() throws Exception {
 		"");
 
 	String expectedOutput =
-			"// Compiled from X.java (version 1.8 : 52.0, super bit)\n" + 
+			"// Compiled from X.java (" + this.versionString + ", super bit)\n" + 
 			"public class X {\n" + 
 			"  Constant pool:\n" + 
 			"    constant #1 class: #2 X\n" + 
@@ -2334,7 +2342,7 @@ public void test016() throws Exception {
 		"Lambda");
 
 	String expectedOutput =
-			"// Compiled from X.java (version 1.8 : 52.0, super bit)\n" + 
+			"// Compiled from X.java (" + this.versionString + ", super bit)\n" + 
 			"class X$1Y {\n" + 
 			"  Constant pool:\n" + 
 			"    constant #1 class: #2 X$1Y\n" + 
@@ -2511,7 +2519,7 @@ public void test017() throws Exception {
 		"Lambda");
 
 	String expectedOutput =
-			"// Compiled from X.java (version 1.8 : 52.0, super bit)\n" + 
+			"// Compiled from X.java (" + this.versionString + ", super bit)\n" + 
 			"class X$1Y {\n" + 
 			"  Constant pool:\n" + 
 			"    constant #1 class: #2 X$1Y\n" + 
@@ -2934,7 +2942,7 @@ public void test430035() throws IOException, ClassFormatException {
 			"m(bridge method(i))");
 		
 		String expectedOutput =
-						"// Compiled from X.java (version 1.8 : 52.0, super bit)\n" + 
+						"// Compiled from X.java (" + this.versionString + ", super bit)\n" + 
 						"public class X {\n" + 
 						"  Constant pool:\n" + 
 						"    constant #1 class: #2 X\n" + 

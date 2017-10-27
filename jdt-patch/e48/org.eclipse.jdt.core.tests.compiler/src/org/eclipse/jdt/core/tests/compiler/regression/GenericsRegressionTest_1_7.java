@@ -513,12 +513,19 @@ public void test004b() {
 			"	}\n" +
 			"}",
 		},
+		this.complianceLevel < ClassFileConstants.JDK9 ?
 		"----------\n" + 
 		"1. ERROR in X.java (at line 5)\n" + 
 		"	new X<>().new X2<>(){\n" + 
 		"	              ^^\n" + 
 		"\'<>\' cannot be used with anonymous classes\n" + 
-		"----------\n");
+		"----------\n":
+			"----------\n" + 
+			"1. ERROR in X.java (at line 6)\n" + 
+			"	void newMethod(){\n" + 
+			"	     ^^^^^^^^^^^\n" + 
+			"The method newMethod() of type new X<Object>.X2<Object>(){} must override or implement a supertype method\n" + 
+			"----------\n");
 }
 public void test004c() {
 	this.runConformTest(
@@ -1219,8 +1226,7 @@ public void test0027() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=345239
 public void test0028() {
-	this.runNegativeTest(
-		new String[] {
+	String[] testFiles = new String[] {
 			"X.java",
 			"public class X<T> {\n" +
 			"     X<String> x = new X<> () {}\n;" +
@@ -1228,18 +1234,24 @@ public void test0028() {
 			"	  }\n" +
 			"     X<String>.Y<String> y = x.new Y<>() {};\n" +
 			"}\n"
-		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 2)\n" + 
-		"	X<String> x = new X<> () {}\n" + 
-		"	                  ^\n" + 
-		"\'<>\' cannot be used with anonymous classes\n" + 
-		"----------\n" + 
-		"2. ERROR in X.java (at line 5)\n" + 
-		"	X<String>.Y<String> y = x.new Y<>() {};\n" + 
-		"	                              ^\n" + 
-		"\'<>\' cannot be used with anonymous classes\n" + 
-		"----------\n");
+		};
+	if (this.complianceLevel < ClassFileConstants.JDK9) {
+		this.runNegativeTest(
+			testFiles,
+			"----------\n" + 
+			"1. ERROR in X.java (at line 2)\n" + 
+			"	X<String> x = new X<> () {}\n" + 
+			"	                  ^\n" + 
+			"\'<>\' cannot be used with anonymous classes\n" + 
+			"----------\n" + 
+			"2. ERROR in X.java (at line 5)\n" + 
+			"	X<String>.Y<String> y = x.new Y<>() {};\n" + 
+			"	                              ^\n" + 
+			"\'<>\' cannot be used with anonymous classes\n" + 
+			"----------\n");
+	} else {
+		this.runConformTest(testFiles);
+	}
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=345359
 public void test0029() {

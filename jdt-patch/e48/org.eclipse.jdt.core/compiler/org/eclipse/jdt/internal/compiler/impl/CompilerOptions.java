@@ -58,6 +58,7 @@ public class CompilerOptions {
 	public static final String OPTION_ReportMethodWithConstructorName = "org.eclipse.jdt.core.compiler.problem.methodWithConstructorName"; //$NON-NLS-1$
 	public static final String OPTION_ReportOverridingPackageDefaultMethod = "org.eclipse.jdt.core.compiler.problem.overridingPackageDefaultMethod"; //$NON-NLS-1$
 	public static final String OPTION_ReportDeprecation = "org.eclipse.jdt.core.compiler.problem.deprecation"; //$NON-NLS-1$
+	public static final String OPTION_ReportTerminalDeprecation = "org.eclipse.jdt.core.compiler.problem.terminalDeprecation"; //$NON-NLS-1$
 	public static final String OPTION_ReportDeprecationInDeprecatedCode = "org.eclipse.jdt.core.compiler.problem.deprecationInDeprecatedCode"; //$NON-NLS-1$
 	public static final String OPTION_ReportDeprecationWhenOverridingDeprecatedMethod = "org.eclipse.jdt.core.compiler.problem.deprecationWhenOverridingDeprecatedMethod"; //$NON-NLS-1$
 	public static final String OPTION_ReportHiddenCatchBlock = "org.eclipse.jdt.core.compiler.problem.hiddenCatchBlock"; //$NON-NLS-1$
@@ -195,6 +196,8 @@ public class CompilerOptions {
 	public static final String OPTION_ReportUnlikelyCollectionMethodArgumentTypeStrict = "org.eclipse.jdt.core.compiler.problem.unlikelyCollectionMethodArgumentTypeStrict"; //$NON-NLS-1$
 	public static final String OPTION_ReportUnlikelyEqualsArgumentType = "org.eclipse.jdt.core.compiler.problem.unlikelyEqualsArgumentType"; //$NON-NLS-1$
 
+	public static final String OPTION_ReportAPILeak = "org.eclipse.jdt.core.compiler.problem.APILeak"; //$NON-NLS-1$
+
 	// GROOVY add
 	// This first one is the MASTER OPTION and if null, rather than ENABLED or DISABLED then the compiler will abort
 	// FIXASC (M3) aborting is just a short term action to enable us to ensure the right paths into the compiler configure it
@@ -225,7 +228,7 @@ public class CompilerOptions {
 	public static final String VERSION_1_6 = "1.6"; //$NON-NLS-1$
 	public static final String VERSION_1_7 = "1.7"; //$NON-NLS-1$
 	public static final String VERSION_1_8 = "1.8"; //$NON-NLS-1$
-	public static final String VERSION_1_9 = "1.9"; //$NON-NLS-1$
+	public static final String VERSION_9 = "9"; //$NON-NLS-1$
 	public static final String ERROR = "error"; //$NON-NLS-1$
 	public static final String WARNING = "warning"; //$NON-NLS-1$
 	public static final String INFO = "info"; //$NON-NLS-1$
@@ -332,6 +335,9 @@ public class CompilerOptions {
 	public static final int NonNullTypeVariableFromLegacyInvocation = IrritantSet.GROUP2 | ASTNode.Bit21;
 	public static final int UnlikelyCollectionMethodArgumentType = IrritantSet.GROUP2 | ASTNode.Bit22;
 	public static final int UnlikelyEqualsArgumentType = IrritantSet.GROUP2 | ASTNode.Bit23;
+	public static final int UsingTerminallyDeprecatedAPI = IrritantSet.GROUP2 | ASTNode.Bit24;
+	public static final int APILeak = IrritantSet.GROUP2 | ASTNode.Bit25;
+
 
 	// Severity level for handlers
 	/** 
@@ -508,13 +514,9 @@ public class CompilerOptions {
 	/** Should the compiler tolerate illegal ambiguous varargs invocation in compliance < 1.7 
 	 * to be bug compatible with javac? (bug 383780) */
 	public static boolean tolerateIllegalAmbiguousVarargsInvocation;
-	/** Should the compiler use performance optimization during type inference (bug 476718) */
-	public static boolean useunspecdtypeinferenceperformanceoptimization;
 	{
 		String tolerateIllegalAmbiguousVarargs = System.getProperty("tolerateIllegalAmbiguousVarargsInvocation"); //$NON-NLS-1$
 		tolerateIllegalAmbiguousVarargsInvocation = tolerateIllegalAmbiguousVarargs != null && tolerateIllegalAmbiguousVarargs.equalsIgnoreCase("true"); //$NON-NLS-1$
-		String useunspecdtypeinferenceoptimization = System.getProperty("useunspecdtypeinferenceperformanceoptimization"); //$NON-NLS-1$
-		useunspecdtypeinferenceperformanceoptimization = useunspecdtypeinferenceoptimization != null && useunspecdtypeinferenceoptimization.equalsIgnoreCase("true"); //$NON-NLS-1$
 	}
 	/** Should null annotations of overridden methods be inherited? */
 	public boolean inheritNullAnnotations;
@@ -538,6 +540,7 @@ public class CompilerOptions {
 		"cast", //$NON-NLS-1$
 		"dep-ann", //$NON-NLS-1$
 		"deprecation", //$NON-NLS-1$
+		"exports",  //$NON-NLS-1$
 		"fallthrough", //$NON-NLS-1$
 		"finally", //$NON-NLS-1$
 		"hiding", //$NON-NLS-1$
@@ -546,6 +549,7 @@ public class CompilerOptions {
 		"nls", //$NON-NLS-1$
 		"null", //$NON-NLS-1$
 		"rawtypes", //$NON-NLS-1$
+		"removal", //$NON-NLS-1$
 		"resource", //$NON-NLS-1$
 		"restriction", //$NON-NLS-1$		
 		"serial", //$NON-NLS-1$
@@ -601,6 +605,9 @@ public class CompilerOptions {
 			case UsingDeprecatedAPI :
 			case (InvalidJavadoc | UsingDeprecatedAPI) :
 				return OPTION_ReportDeprecation;
+			case UsingTerminallyDeprecatedAPI :
+			case (InvalidJavadoc | UsingTerminallyDeprecatedAPI) :
+				return OPTION_ReportTerminalDeprecation;
 			case MaskedCatchBlock  :
 				return OPTION_ReportHiddenCatchBlock;
 			case UnusedLocalVariable :
@@ -755,6 +762,8 @@ public class CompilerOptions {
 				return OPTION_ReportUnlikelyCollectionMethodArgumentType;
 			case UnlikelyEqualsArgumentType:
 				return OPTION_ReportUnlikelyEqualsArgumentType;
+			case APILeak:
+				return OPTION_ReportAPILeak;
 		}
 		return null;
 	}
@@ -793,9 +802,9 @@ public class CompilerOptions {
 				if (jdkLevel == ClassFileConstants.JDK1_8)
 					return VERSION_1_8;
 				break;
-			case ClassFileConstants.MAJOR_VERSION_1_9 :
-				if (jdkLevel == ClassFileConstants.JDK1_9)
-					return VERSION_1_9;
+			case ClassFileConstants.MAJOR_VERSION_9 :
+				if (jdkLevel == ClassFileConstants.JDK9)
+					return VERSION_9;
 				break;
 		}
 		return Util.EMPTY_STRING; // unknown version
@@ -804,28 +813,34 @@ public class CompilerOptions {
 	public static long versionToJdkLevel(String versionID) {
 		String version = versionID;
 		// verification is optimized for all versions with same length and same "1." prefix
-		if (version != null && version.length() == 3 && version.charAt(0) == '1' && version.charAt(1) == '.') {
-			switch (version.charAt(2)) {
-				case '1':
-					return ClassFileConstants.JDK1_1;
-				case '2':
-					return ClassFileConstants.JDK1_2;
-				case '3':
-					return ClassFileConstants.JDK1_3;
-				case '4':
-					return ClassFileConstants.JDK1_4;
-				case '5':
-					return ClassFileConstants.JDK1_5;
-				case '6':
-					return ClassFileConstants.JDK1_6;
-				case '7':
-					return ClassFileConstants.JDK1_7;
-				case '8':
-					return ClassFileConstants.JDK1_8;
-				case '9':
-					return ClassFileConstants.JDK1_9;
-				default:
-					return 0; // unknown
+		if (version != null && version.length() > 0) {
+			if (version.length() >= 3 && version.charAt(0) == '1' && version.charAt(1) == '.') {
+				switch (version.charAt(2)) {
+					case '1':
+						return ClassFileConstants.JDK1_1;
+					case '2':
+						return ClassFileConstants.JDK1_2;
+					case '3':
+						return ClassFileConstants.JDK1_3;
+					case '4':
+						return ClassFileConstants.JDK1_4;
+					case '5':
+						return ClassFileConstants.JDK1_5;
+					case '6':
+						return ClassFileConstants.JDK1_6;
+					case '7':
+						return ClassFileConstants.JDK1_7;
+					case '8':
+						return ClassFileConstants.JDK1_8;
+					default:
+						return 0; // unknown
+				}
+			} else {
+				switch (version.charAt(0)) {
+					case '9':
+						return ClassFileConstants.JDK9;
+					// No default - let it go through the remaining checks.
+				}
 			}
 		}
 		if (VERSION_JSR14.equals(versionID)) {
@@ -949,6 +964,7 @@ public class CompilerOptions {
 			OPTION_ReportNonnullParameterAnnotationDropped,
 			OPTION_ReportUnlikelyCollectionMethodArgumentType,
 			OPTION_ReportUnlikelyEqualsArgumentType,
+			OPTION_ReportAPILeak,
 		};
 		return result;
 	}
@@ -962,6 +978,9 @@ public class CompilerOptions {
 			case (InvalidJavadoc | UsingDeprecatedAPI) :
 			case UsingDeprecatedAPI :
 				return "deprecation"; //$NON-NLS-1$
+			case (InvalidJavadoc | UsingTerminallyDeprecatedAPI) :
+			case UsingTerminallyDeprecatedAPI :
+				return "removal"; //$NON-NLS-1$
 			case FinallyBlockNotCompleting :
 				return "finally"; //$NON-NLS-1$
 			case FieldHiding :
@@ -1043,6 +1062,8 @@ public class CompilerOptions {
 			case UnlikelyEqualsArgumentType:
 			case UnlikelyCollectionMethodArgumentType:
 				return "unlikely-arg-type"; //$NON-NLS-1$
+			case APILeak:
+				return "exports"; //$NON-NLS-1$
 		}
 		return null;
 	}
@@ -1068,6 +1089,10 @@ public class CompilerOptions {
 					return IrritantSet.DEPRECATION;
 				if ("dep-ann".equals(warningToken)) //$NON-NLS-1$
 					return IrritantSet.DEP_ANN;
+				break;
+			case 'e' :
+				if ("exports".equals(warningToken)) //$NON-NLS-1$
+					return IrritantSet.API_LEAK;
 				break;
 			case 'f' :
 				if ("fallthrough".equals(warningToken)) //$NON-NLS-1$
@@ -1100,6 +1125,8 @@ public class CompilerOptions {
 					return IrritantSet.RESOURCE;
 				if ("restriction".equals(warningToken)) //$NON-NLS-1$
 					return IrritantSet.RESTRICTION;
+				if ("removal".equals(warningToken)) //$NON-NLS-1$
+					return IrritantSet.TERMINAL_DEPRECATION;
 				break;
 			case 's' :
 				if ("serial".equals(warningToken)) //$NON-NLS-1$
@@ -1143,6 +1170,7 @@ public class CompilerOptions {
 		optionsMap.put(OPTION_ReportMethodWithConstructorName, getSeverityString(MethodWithConstructorName));
 		optionsMap.put(OPTION_ReportOverridingPackageDefaultMethod, getSeverityString(OverriddenPackageDefaultMethod));
 		optionsMap.put(OPTION_ReportDeprecation, getSeverityString(UsingDeprecatedAPI));
+		optionsMap.put(OPTION_ReportTerminalDeprecation, getSeverityString(UsingTerminallyDeprecatedAPI));
 		optionsMap.put(OPTION_ReportDeprecationInDeprecatedCode, this.reportDeprecationInsideDeprecatedCode ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_ReportDeprecationWhenOverridingDeprecatedMethod, this.reportDeprecationWhenOverridingDeprecatedMethod ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_ReportHiddenCatchBlock, getSeverityString(MaskedCatchBlock));
@@ -1273,6 +1301,7 @@ public class CompilerOptions {
 		optionsMap.put(OPTION_ReportUnlikelyCollectionMethodArgumentType, getSeverityString(UnlikelyCollectionMethodArgumentType));
 		optionsMap.put(OPTION_ReportUnlikelyCollectionMethodArgumentTypeStrict, this.reportUnlikelyCollectionMethodArgumentTypeStrict ? ENABLED : DISABLED);
 		optionsMap.put(OPTION_ReportUnlikelyEqualsArgumentType, getSeverityString(UnlikelyEqualsArgumentType));
+		optionsMap.put(OPTION_ReportAPILeak, getSeverityString(APILeak));
 		// GROOVY add
 		// if not supplied here it isn't seen as something that can be set from elsewhere
 		optionsMap.put(OPTIONG_GroovyTransformsToRunOnReconcile, ""); //$NON-NLS-1$
@@ -1711,6 +1740,7 @@ public class CompilerOptions {
 		if ((optionValue = optionsMap.get(OPTION_ReportMethodWithConstructorName)) != null) updateSeverity(MethodWithConstructorName, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportOverridingPackageDefaultMethod)) != null) updateSeverity(OverriddenPackageDefaultMethod, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportDeprecation)) != null) updateSeverity(UsingDeprecatedAPI, optionValue);
+		if ((optionValue = optionsMap.get(OPTION_ReportTerminalDeprecation)) != null) updateSeverity(UsingTerminallyDeprecatedAPI, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportHiddenCatchBlock)) != null) updateSeverity(MaskedCatchBlock, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportUnusedLocal)) != null) updateSeverity(UnusedLocalVariable, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_ReportUnusedParameter)) != null) updateSeverity(UnusedArgument, optionValue);
@@ -1793,6 +1823,7 @@ public class CompilerOptions {
 		} else {
 			this.analyseResourceLeaks = true;
 		}
+		if ((optionValue = optionsMap.get(OPTION_ReportAPILeak)) != null) updateSeverity(APILeak, optionValue);
 		if ((optionValue = optionsMap.get(OPTION_AnnotationBasedNullAnalysis)) != null) {
 			this.isAnnotationBasedNullAnalysisEnabled = ENABLED.equals(optionValue);
 		}
@@ -2077,6 +2108,7 @@ public class CompilerOptions {
 		buf.append("\n\t- method with constructor name: ").append(getSeverityString(MethodWithConstructorName)); //$NON-NLS-1$
 		buf.append("\n\t- overridden package default method: ").append(getSeverityString(OverriddenPackageDefaultMethod)); //$NON-NLS-1$
 		buf.append("\n\t- deprecation: ").append(getSeverityString(UsingDeprecatedAPI)); //$NON-NLS-1$
+		buf.append("\n\t- removal: ").append(getSeverityString(UsingTerminallyDeprecatedAPI)); //$NON-NLS-1$
 		buf.append("\n\t- masked catch block: ").append(getSeverityString(MaskedCatchBlock)); //$NON-NLS-1$
 		buf.append("\n\t- unused local variable: ").append(getSeverityString(UnusedLocalVariable)); //$NON-NLS-1$
 		buf.append("\n\t- unused parameter: ").append(getSeverityString(UnusedArgument)); //$NON-NLS-1$
@@ -2181,6 +2213,7 @@ public class CompilerOptions {
 		buf.append("\n\t- unlikely argument type for collection methods: ").append(getSeverityString(UnlikelyCollectionMethodArgumentType)); //$NON-NLS-1$
 		buf.append("\n\t- unlikely argument type for collection methods, strict check against expected type: ").append(this.reportUnlikelyCollectionMethodArgumentTypeStrict ? ENABLED : DISABLED); //$NON-NLS-1$
 		buf.append("\n\t- unlikely argument types for equals(): ").append(getSeverityString(UnlikelyEqualsArgumentType)); //$NON-NLS-1$
+		buf.append("\n\t- API leak: ").append(getSeverityString(APILeak)); //$NON-NLS-1$
 		// GROOVY add
 		buf.append("\n\t- build groovy files: ").append((this.buildGroovyFiles == 0) ? "dontknow" : (this.buildGroovyFiles == 1 ? "no" : "yes")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		buf.append("\n\t- build groovy flags: ").append(Integer.toHexString(this.groovyFlags)); //$NON-NLS-1$

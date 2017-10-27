@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,7 +16,10 @@ package org.eclipse.jdt.internal.core;
 
 import java.io.*;
 import java.net.URI;
+import java.nio.file.FileVisitResult;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -24,6 +27,9 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -50,6 +56,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.QualifiedName;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.content.IContentDescription;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.IScopeContext;
@@ -62,6 +69,7 @@ import org.eclipse.jdt.core.IJavaModelMarker;
 import org.eclipse.jdt.core.IJavaModelStatus;
 import org.eclipse.jdt.core.IJavaModelStatusConstants;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IModuleDescription;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IRegion;
@@ -73,6 +81,14 @@ import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.eval.IEvaluationContext;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
+import org.eclipse.jdt.internal.compiler.env.AutomaticModuleNaming;
+import org.eclipse.jdt.internal.compiler.env.IModule;
+import org.eclipse.jdt.internal.compiler.env.IModule.IModuleReference;
+import org.eclipse.jdt.internal.compiler.env.IModule.IPackageExport;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
+import org.eclipse.jdt.internal.compiler.util.JRTUtil;
 import org.eclipse.jdt.internal.compiler.util.ObjectVector;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 import org.eclipse.jdt.internal.core.JavaModelManager.PerProjectInfo;
@@ -461,8 +477,25 @@ public class JavaProject
 		IClasspathEntry[] resolvedClasspath = getResolvedClasspath();
 
 		// compute the pkg fragment roots
-		info.setChildren(computePackageFragmentRoots(resolvedClasspath, false, null /*no reverse map*/));
-
+		IPackageFragmentRoot[] roots = computePackageFragmentRoots(resolvedClasspath, false, true, null /*no reverse map*/);
+		info.setChildren(roots);
+		IModuleDescription module = null;
+		IModuleDescription current = null;
+		for (IPackageFragmentRoot root : roots) {
+			if (root.getKind() != IPackageFragmentRoot.K_SOURCE)
+				continue;
+			module = root.getModuleDescription();
+			if (module != null) {
+				if (current != null) {
+					throw new JavaModelException(new Status(IStatus.ERROR, JavaCore.PLUGIN_ID, 
+							Messages.bind(Messages.classpath_duplicateEntryPath, TypeConstants.MODULE_INFO_FILE_NAME_STRING, getElementName())));
+				}
+				current = module;
+				JavaModelManager.getModulePathManager().addEntry(module, this);
+				//break; continue looking, there may be other roots containing module-info
+				info.setModule(module);
+			}
+		}
 		return true;
 	}
 
@@ -553,6 +586,7 @@ public class JavaProject
 				computePackageFragmentRoots(
 					new IClasspathEntry[]{ resolvedEntry },
 					false, // don't retrieve exported roots
+					true, // respect limit-modules
 					null /* no reverse map */
 				);
 		} catch (JavaModelException e) {
@@ -564,6 +598,9 @@ public class JavaProject
 	 * Returns the package fragment roots identified by the given entry. In case it refers to
 	 * a project, it will follow its classpath so as to find exported roots as well.
 	 * Only works with resolved entry
+	 * <p><strong>Note:</strong> this method is retained for the sole purpose of supporting
+	 * old versions of Xtext [2.8.x,2.12], which illegally call this internal method.
+	 * </p>
 	 * @param resolvedEntry IClasspathEntry
 	 * @param accumulatedRoots ObjectVector
 	 * @param rootIDs HashSet
@@ -577,6 +614,31 @@ public class JavaProject
 		HashSet rootIDs,
 		IClasspathEntry referringEntry,
 		boolean retrieveExportedRoots,
+		Map rootToResolvedEntries) throws JavaModelException {
+		computePackageFragmentRoots(resolvedEntry, accumulatedRoots, rootIDs, referringEntry, retrieveExportedRoots, true, rootToResolvedEntries);
+	}
+
+	/**
+	 * Returns the package fragment roots identified by the given entry. In case it refers to
+	 * a project, it will follow its classpath so as to find exported roots as well.
+	 * Only works with resolved entry
+	 * @param resolvedEntry IClasspathEntry
+	 * @param accumulatedRoots ObjectVector
+	 * @param rootIDs HashSet
+	 * @param referringEntry the CP entry (project) referring to this entry, or null if initial project
+	 * @param retrieveExportedRoots boolean
+	 * @param filterModuleRoots if true, roots corresponding to modules will be filtered if applicable:
+	 *    if a limit-modules attribute exists, this is used, otherwise system modules will be filtered
+	 *    according to the rules of root modules per JEP 261.
+	 * @throws JavaModelException
+	 */
+	public void computePackageFragmentRoots(
+		IClasspathEntry resolvedEntry,
+		ObjectVector accumulatedRoots,
+		HashSet rootIDs,
+		IClasspathEntry referringEntry,
+		boolean retrieveExportedRoots,
+		boolean filterModuleRoots,
 		Map rootToResolvedEntries) throws JavaModelException {
 
 		String rootID = ((ClasspathEntry)resolvedEntry).rootID();
@@ -616,7 +678,36 @@ public class JavaProject
 				} else if (target instanceof File) {
 					// external target
 					if (JavaModel.isFile(target)) {
-						root = new JarPackageFragmentRoot(entryPath, this);
+						if (JavaModel.isJimage((File) target)) {
+							PerProjectInfo info = getPerProjectInfo();
+							ObjectVector imageRoots;
+							if (info.jrtRoots == null || !info.jrtRoots.containsKey(entryPath)) {
+								imageRoots = new ObjectVector();
+								loadModulesInJimage(entryPath, imageRoots, rootToResolvedEntries, resolvedEntry, referringEntry);
+								info.setJrtPackageRoots(entryPath, imageRoots); // unfiltered
+								rootIDs.add(rootID);
+							} else {
+								imageRoots = info.jrtRoots.get(entryPath);
+							}
+							if (filterModuleRoots) {
+								List<String> rootModules = null;
+								String limitModules = ClasspathEntry.getExtraAttribute(resolvedEntry, IClasspathAttribute.LIMIT_MODULES);
+								if (limitModules != null) {
+									rootModules = Arrays.asList(limitModules.split(",")); //$NON-NLS-1$
+								} else if (isUnNamedModule()) {
+									rootModules = defaultRootModules((Iterable) imageRoots);
+								}
+								if (rootModules != null) {
+									imageRoots = filterLimitedModules(entryPath, imageRoots, rootModules);
+								}
+							}
+							accumulatedRoots.addAll(imageRoots);
+						} else if (JavaModel.isJmod((File) target)) {
+							root = new JModPackageFragmentRoot(entryPath, this);
+						}
+						else {
+							root = new JarPackageFragmentRoot(entryPath, this);
+						}
 					} else if (((File) target).isDirectory()) {
 						root = new ExternalPackageFragmentRoot(entryPath, this);
 					}
@@ -641,6 +732,7 @@ public class JavaProject
 							rootIDs,
 							rootToResolvedEntries == null ? resolvedEntry : ((ClasspathEntry)resolvedEntry).combineWith((ClasspathEntry) referringEntry), // only combine if need to build the reverse map
 							retrieveExportedRoots,
+							filterModuleRoots,
 							rootToResolvedEntries);
 					}
 				break;
@@ -653,6 +745,166 @@ public class JavaProject
 		}
 	}
 
+	/** Implements selection of root modules per JEP 261. */
+	public static List<String> defaultRootModules(Iterable<IPackageFragmentRoot> allSystemRoots) {
+		return internalDefaultRootModules(allSystemRoots,
+				IPackageFragmentRoot::getElementName,
+				r ->  (r instanceof JrtPackageFragmentRoot) ? ((JrtPackageFragmentRoot) r).getModule() : null);
+	}
+
+	public static <T> List<String> internalDefaultRootModules(Iterable<T> allSystemModules, Function<T,String> getModuleName, Function<T,IModule> getModule) {
+		List<String> result = new ArrayList<>();
+		boolean hasJavaDotSE = false;
+		for (T mod : allSystemModules) {
+			String moduleName = getModuleName.apply(mod);
+			if ("java.se".equals(moduleName)) { //$NON-NLS-1$
+				result.add(moduleName);
+				hasJavaDotSE = true;
+				break;
+			}
+		}
+		for (T mod : allSystemModules) {
+			String moduleName = getModuleName.apply(mod);
+			boolean isJavaDotStart = moduleName.startsWith("java."); //$NON-NLS-1$
+			boolean isPotentialRoot = !isJavaDotStart;	// always include non-java.*
+			if (!hasJavaDotSE)
+				isPotentialRoot |= isJavaDotStart;		// no java.se => add all java.*
+			
+			if (isPotentialRoot) {
+				IModule module = getModule.apply(mod);
+				if (module != null) {
+					for (IPackageExport packageExport : module.exports()) {
+						if (!packageExport.isQualified()) {
+							result.add(moduleName);
+							break;
+						}
+					}
+				}
+			}
+		}
+		return result;
+	}
+
+	private ObjectVector filterLimitedModules(IPath jrtPath, ObjectVector imageRoots, List<String> rootModuleNames) {
+		Set<String> limitModulesSet = new HashSet<>(rootModuleNames);
+		ModuleLookup lookup = new ModuleLookup(jrtPath.toFile());
+		// collect all module roots:
+		for (int i = 0; i < imageRoots.size(); i++) {
+			lookup.recordRoot((JrtPackageFragmentRoot) imageRoots.elementAt(i));
+		}
+		// for those contained in limitModules, add the transitive closure:
+		for (int i = 0; i < imageRoots.size(); i++) {
+			String moduleName = ((JrtPackageFragmentRoot) imageRoots.elementAt(i)).moduleName;
+			if (limitModulesSet.contains(moduleName))
+				lookup.addTransitive(moduleName);
+		}
+		// map the result back to package fragment roots:
+		ObjectVector result = new ObjectVector(lookup.resultModuleSet.size());
+		for (IModule mod : lookup.resultModuleSet) {
+			result.add(lookup.getRoot(mod));
+		}
+		return result;
+	}
+
+	/** Helper for computing the transitive closure of a set of modules. */
+	private static class ModuleLookup {
+		File jrtFile;
+		Map<String, JrtPackageFragmentRoot> modNames2Roots = new HashMap<>();
+		Map<String, IModule> modules = new HashMap<>();
+		Set<IModule> resultModuleSet = new HashSet<>();
+		
+		public ModuleLookup(File jrtFile) {
+			this.jrtFile = jrtFile;
+		}
+
+		void recordRoot(JrtPackageFragmentRoot root) {
+			this.modNames2Roots.put(root.moduleName, root);
+		}
+		void addTransitive(String moduleName) {
+			IModule module = getModule(moduleName);
+			if (module != null && this.resultModuleSet.add(module)) {
+				for (IModuleReference reqRef : module.requires())
+					addTransitive(String.valueOf(reqRef.name()));
+			}
+		}
+		private IModule getModule(String moduleName) {
+			IModule result = this.modules.get(moduleName);
+			if (result == null) {
+				JrtPackageFragmentRoot root = this.modNames2Roots.get(moduleName);
+				if (root != null) {
+					try {
+						ClassFileReader classFile = JRTUtil.getClassfile(this.jrtFile, TypeConstants.MODULE_INFO_CLASS_NAME_STRING, root.moduleName);
+						result = classFile.getModuleDeclaration();
+						this.modules.put(moduleName, result);
+					} catch (IOException | ClassFormatException e) {
+						JavaCore.getJavaCore().getLog().log(new Status(IStatus.ERROR, JavaCore.PLUGIN_ID, "Failed to read module-info.class", e)); //$NON-NLS-1$
+					}
+				}
+			}
+			return result;
+		}
+		JrtPackageFragmentRoot getRoot(IModule module) {
+			return this.modNames2Roots.get(String.valueOf(module.name()));
+		}
+	}
+
+	/**
+	 * This bogus package fragment root acts as placeholder plus bridge for the
+	 * real one until the module name becomes available. It is useful in certain
+	 * scenarios like creating package roots from delta processors, search etc.
+	 */
+	class JImageModuleFragmentBridge extends JarPackageFragmentRoot {
+
+		protected JImageModuleFragmentBridge(IPath externalJarPath) {
+			super(externalJarPath, JavaProject.this);
+		}
+		public PackageFragment getPackageFragment(String[] pkgName) {
+			return getPackageFragment(pkgName, null);
+		}
+		public PackageFragment getPackageFragment(String[] pkgName, String mod) {
+			PackageFragmentRoot realRoot = new JrtPackageFragmentRoot(this.jarPath,
+												mod == null ?  JRTUtil.JAVA_BASE : mod,
+														JavaProject.this);
+			return new JarPackageFragment(realRoot, pkgName);
+		}
+		protected boolean computeChildren(OpenableElementInfo info, IResource underlyingResource) throws JavaModelException {
+			// Do nothing, idea is to avoid this being read in JarPackageFragmentRoot as a Jar.
+			return true;
+		}
+		public boolean isModule() {
+			return true;
+		}
+	}
+
+	private void loadModulesInJimage(final IPath imagePath, final ObjectVector roots, final Map rootToResolvedEntries, 
+				final IClasspathEntry resolvedEntry, final IClasspathEntry referringEntry) {
+		try {
+			org.eclipse.jdt.internal.compiler.util.JRTUtil.walkModuleImage(imagePath.toFile(),
+					new org.eclipse.jdt.internal.compiler.util.JRTUtil.JrtFileVisitor<java.nio.file.Path>() {
+				@Override
+				public FileVisitResult visitPackage(java.nio.file.Path dir, java.nio.file.Path mod, BasicFileAttributes attrs) throws IOException {
+					return FileVisitResult.SKIP_SIBLINGS;
+				}
+
+				@Override
+				public FileVisitResult visitFile(java.nio.file.Path path, java.nio.file.Path mod, BasicFileAttributes attrs) throws IOException {
+					return FileVisitResult.SKIP_SIBLINGS;
+				}
+
+				@Override
+				public FileVisitResult visitModule(java.nio.file.Path mod) throws IOException {
+					JrtPackageFragmentRoot root = new JrtPackageFragmentRoot(imagePath, mod.toString(), JavaProject.this);
+					roots.add(root);
+					if (rootToResolvedEntries != null) 
+						rootToResolvedEntries.put(root, ((ClasspathEntry)resolvedEntry).combineWith((ClasspathEntry) referringEntry));
+					return FileVisitResult.SKIP_SUBTREE;
+				}
+			}, JRTUtil.NOTIFY_MODULES);
+		} catch (IOException e) {
+			Util.log(IStatus.ERROR, "Error reading modules from " + imagePath.toOSString()); //$NON-NLS-1$
+		}
+	}
+
 	/**
 	 * Returns (local/all) the package fragment roots identified by the given project's classpath.
 	 * Note: this follows project classpath references to find required project contributions,
@@ -660,12 +912,16 @@ public class JavaProject
 	 * Only works with resolved entries
 	 * @param resolvedClasspath IClasspathEntry[]
 	 * @param retrieveExportedRoots boolean
+	 * @param filterModuleRoots if true, roots corresponding to modules will be filtered if applicable:
+	 *    if a limit-modules attribute exists, this is used, otherwise system modules will be filtered
+	 *    according to the rules of root modules per JEP 261.
 	 * @return IPackageFragmentRoot[]
 	 * @throws JavaModelException
 	 */
 	public IPackageFragmentRoot[] computePackageFragmentRoots(
 					IClasspathEntry[] resolvedClasspath,
 					boolean retrieveExportedRoots,
+					boolean filterModuleRoots,
 					Map rootToResolvedEntries) throws JavaModelException {
 
 		ObjectVector accumulatedRoots = new ObjectVector();
@@ -675,6 +931,7 @@ public class JavaProject
 			new HashSet(5), // rootIDs
 			null, // inside original project
 			retrieveExportedRoots,
+			filterModuleRoots,
 			rootToResolvedEntries);
 		IPackageFragmentRoot[] rootArray = new IPackageFragmentRoot[accumulatedRoots.size()];
 		accumulatedRoots.copyInto(rootArray);
@@ -691,6 +948,9 @@ public class JavaProject
 	 * @param rootIDs HashSet
 	 * @param referringEntry project entry referring to this CP or null if initial project
 	 * @param retrieveExportedRoots boolean
+	 * @param filterModuleRoots if true, roots corresponding to modules will be filtered if applicable:
+	 *    if a limit-modules attribute exists, this is used, otherwise system modules will be filtered
+	 *    according to the rules of root modules per JEP 261.
 	 * @throws JavaModelException
 	 */
 	public void computePackageFragmentRoots(
@@ -699,6 +959,7 @@ public class JavaProject
 		HashSet rootIDs,
 		IClasspathEntry referringEntry,
 		boolean retrieveExportedRoots,
+		boolean filterModuleRoots,
 		Map rootToResolvedEntries) throws JavaModelException {
 
 		if (referringEntry == null){
@@ -711,6 +972,7 @@ public class JavaProject
 				rootIDs,
 				referringEntry,
 				retrieveExportedRoots,
+				filterModuleRoots,
 				rootToResolvedEntries);
 		}
 	}
@@ -1231,7 +1493,7 @@ public class JavaProject
 		}
 		for (int i= 0; i < allRoots.length; i++) {
 			IPackageFragmentRoot classpathRoot= allRoots[i];
-			if (classpathRoot.getPath().equals(path)) {
+			if (classpathRoot.getPath() != null && classpathRoot.getPath().equals(path)) {
 				return classpathRoot;
 			}
 		}
@@ -1249,6 +1511,7 @@ public class JavaProject
 						computePackageFragmentRoots(
 							resolveClasspath(new IClasspathEntry[] {entry}),
 							false, // don't retrieve exported roots
+							true, // respect limit-modules
 							null); /*no reverse map*/
 				}
 			}
@@ -1366,6 +1629,21 @@ public class JavaProject
 		return findType(fullyQualifiedName, lookup, true, progressMonitor);
 	}
 
+	public IModuleDescription findModule(String moduleName, WorkingCopyOwner owner) throws JavaModelException {
+		NameLookup lookup = newNameLookup(owner);
+		return findModule(moduleName, lookup);
+	}
+
+	/*
+	 * Internal findModule with instantiated name lookup
+	 */
+	IModuleDescription findModule(String moduleName, NameLookup lookup) throws JavaModelException {
+		NameLookup.Answer answer = lookup.findModule(moduleName.toCharArray());
+		if (answer != null)
+			return answer.module;
+		return null;
+	}
+
 	/**
 	 * Remove all markers denoting classpath problems
 	 */ //TODO (philippe) should improve to use a bitmask instead of booleans (CYCLE, FORMAT, VALID)
@@ -1427,7 +1705,7 @@ public class JavaProject
 
 	public IPackageFragmentRoot[] getAllPackageFragmentRoots(Map rootToResolvedEntries) throws JavaModelException {
 
-		return computePackageFragmentRoots(getResolvedClasspath(), true/*retrieveExportedRoots*/, rootToResolvedEntries);
+		return computePackageFragmentRoots(getResolvedClasspath(), true/*retrieveExportedRoots*/, true/*respectLimitModules*/, rootToResolvedEntries);
 	}
 
 	/**
@@ -1588,6 +1866,7 @@ public class JavaProject
 	 * @see JavaElement
 	 */
 	public IJavaElement getHandleFromMemento(String token, MementoTokenizer memento, WorkingCopyOwner owner) {
+		String mod = null;
 		switch (token.charAt(0)) {
 			case JEM_PACKAGEFRAGMENTROOT:
 				String rootPath = IPackageFragmentRoot.DEFAULT_PACKAGEROOT_PATH;
@@ -1597,11 +1876,22 @@ public class JavaProject
 					// https://bugs.eclipse.org/bugs/show_bug.cgi?id=331821
 					if (token == MementoTokenizer.PACKAGEFRAGMENT || token == MementoTokenizer.COUNT) {
 						break;
+					} else if (token == MementoTokenizer.PACKAGEFRAGMENTROOT) {
+						if (memento.hasMoreTokens()) {
+							token = memento.nextToken();
+							if (token != null) {
+								mod = token;
+							
+							}
+						}
+						continue;
 					}
 					rootPath += token;
 				}
-				JavaElement root = (JavaElement)getPackageFragmentRoot(new Path(rootPath));
-				if (token != null && token.charAt(0) == JEM_PACKAGEFRAGMENT) {
+				JavaElement root = (mod == null) ?
+						(JavaElement)getPackageFragmentRoot(new Path(rootPath)) :
+							new JrtPackageFragmentRoot(new Path(rootPath), mod, this);
+				if (token != null && (token.charAt(0) == JEM_PACKAGEFRAGMENT)) {
 					return root.getHandleFromMemento(token, memento, owner);
 				} else {
 					return root.getHandleFromMemento(memento, owner);
@@ -1833,6 +2123,15 @@ public class JavaProject
 		IFolder linkedFolder = JavaModelManager.getExternalManager().getFolder(externalLibraryPath);
 		if (linkedFolder != null)
 			return new ExternalPackageFragmentRoot(linkedFolder, externalLibraryPath, this);
+		if (JavaModelManager.isJrt(externalLibraryPath)) {
+			return this.new JImageModuleFragmentBridge(externalLibraryPath);
+		}
+		Object target = JavaModel.getTarget(externalLibraryPath, true/*check existency*/);
+		if (target instanceof File && JavaModel.isFile(target)) {
+			if (JavaModel.isJmod((File) target)) {
+				return new JModPackageFragmentRoot(externalLibraryPath, this);
+			}
+		}
 		return new JarPackageFragmentRoot(externalLibraryPath, this);
 	}
 
@@ -3238,4 +3537,78 @@ public class JavaProject
 		}
 		return JavaModelStatus.VERIFIED_OK;
 	}
+
+	@Override
+	public IModuleDescription getModuleDescription() throws JavaModelException {
+		JavaProjectElementInfo info = (JavaProjectElementInfo) getElementInfo();
+		IModuleDescription module = info.getModule();
+		if (module != null)
+			return module;
+		for(IClasspathEntry entry : getRawClasspath()) {
+			String mainModule = ClasspathEntry.getExtraAttribute(entry, IClasspathAttribute.PATCH_MODULE);
+			if (mainModule != null) {
+				switch (entry.getEntryKind()) {
+					case IClasspathEntry.CPE_PROJECT:
+						IJavaProject referencedProject = getJavaModel().getJavaProject(entry.getPath().toString());
+						module = referencedProject.getModuleDescription();
+						if (module != null && module.getElementName().equals(mainModule))
+							return module;
+						break;
+					case IClasspathEntry.CPE_LIBRARY:
+					case IClasspathEntry.CPE_CONTAINER:
+						for (IPackageFragmentRoot root : findPackageFragmentRoots(entry)) {
+							module = root.getModuleDescription();
+							if (module != null && module.getElementName().equals(mainModule))
+								return module;
+						}
+				}
+			}
+		}
+		return null;
+	}
+
+	public IModuleDescription getAutomaticModuleDescription() throws JavaModelException {
+		char[] moduleName = AutomaticModuleNaming.determineAutomaticModuleName(getElementName(), false, getManifest());
+		return new AbstractModule.AutoModule(this, String.valueOf(moduleName));
+	}
+
+	public void setModuleDescription(IModuleDescription module) throws JavaModelException {
+		JavaProjectElementInfo info = (JavaProjectElementInfo) getElementInfo();	
+		IModuleDescription current = info.getModule();
+		if (current != null) {
+			IPackageFragmentRoot root = (IPackageFragmentRoot) current.getAncestor(IJavaElement.PACKAGE_FRAGMENT_ROOT);
+			IPackageFragmentRoot newRoot = (IPackageFragmentRoot) module.getAncestor(IJavaElement.PACKAGE_FRAGMENT_ROOT);
+			if (!root.equals(newRoot))
+				throw new JavaModelException(new Status(IStatus.ERROR, JavaCore.PLUGIN_ID,
+						Messages.bind(Messages.classpath_duplicateEntryPath, TypeConstants.MODULE_INFO_FILE_NAME_STRING, getElementName())));
+		}
+		info.setModule(module);
+	}
+	
+	private boolean isUnNamedModule() throws JavaModelException {
+		JavaProjectElementInfo info = (JavaProjectElementInfo) getElementInfo();
+		IModuleDescription module = info.getModule();
+		if (module != null)
+			return false;
+		for(IClasspathEntry entry : getRawClasspath()) {
+			String mainModule = ClasspathEntry.getExtraAttribute(entry, IClasspathAttribute.PATCH_MODULE);
+			if (mainModule != null)
+				return false;
+
+		}
+		return true;
+	}
+
+	public Manifest getManifest() {
+		IFile file = getProject().getFile(new Path(TypeConstants.META_INF_MANIFEST_MF));
+		if (file.exists()) {
+			try (InputStream contents = file.getContents()) {
+				return new Manifest(contents);
+			} catch (IOException | CoreException e) {
+				// unusable manifest
+			}
+		}
+		return null;
+	}
+
 }

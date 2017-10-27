@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -214,7 +214,6 @@ public CategorizedProblem[] getErrors() {
 	return errors;
 }
 
-
 /**
  * Answer the initial file name
  */
@@ -249,10 +248,10 @@ public CategorizedProblem[] getProblems() {
 
 		// Stable sort problems per source positions.
 		Arrays.sort(this.problems, 0, this.problems.length, CompilationResult.PROBLEM_COMPARATOR);
-		//quickSort(problems, 0, problems.length-1);
 	}
 	return this.problems;
 }
+
 /**
  * Same as getProblems() but don't answer problems that actually concern the enclosing package.
  */
@@ -284,7 +283,6 @@ public CategorizedProblem[] getCUProblems() {
 
 		// Stable sort problems per source positions.
 		Arrays.sort(this.problems, 0, this.problems.length, CompilationResult.PROBLEM_COMPARATOR);
-		//quickSort(problems, 0, problems.length-1);
 	}
 	return this.problems;
 }
@@ -306,7 +304,6 @@ public CategorizedProblem[] getTasks() {
 		}
 		// Stable sort problems per source positions.
 		Arrays.sort(this.tasks, 0, this.tasks.length, CompilationResult.PROBLEM_COMPARATOR);
-		//quickSort(tasks, 0, tasks.length-1);
 	}
 	return this.tasks;
 }
@@ -374,7 +371,6 @@ public void record(CategorizedProblem newProblem, ReferenceContext referenceCont
 }
 
 public void record(CategorizedProblem newProblem, ReferenceContext referenceContext, boolean mandatoryError) {
-	//new Exception("VERBOSE PROBLEM REPORTING").printStackTrace();
 	if(newProblem.getID() == IProblem.Task) {
 		recordTask(newProblem);
 		return;
@@ -417,7 +413,7 @@ ReferenceContext getContext(CategorizedProblem problem) {
  */
 public void record(char[] typeName, ClassFile classFile) {
 	SourceTypeBinding sourceType = classFile.referenceBinding;
-	if (!sourceType.isLocalType() && sourceType.isHierarchyInconsistent()) {
+	if (sourceType != null && !sourceType.isLocalType() && sourceType.isHierarchyInconsistent()) {
 		this.hasInconsistentToplevelHierarchies = true;
 	}
 	this.compiledTypes.put(typeName, classFile);
@@ -431,6 +427,7 @@ private void recordTask(CategorizedProblem newProblem) {
 	}
 	this.tasks[this.taskCount++] = newProblem;
 }
+
 public void removeProblem(CategorizedProblem problem) {
 	if (this.problemsMap != null) this.problemsMap.remove(problem);
 	if (this.firstErrors != null) this.firstErrors.remove(problem);
@@ -439,6 +436,7 @@ public void removeProblem(CategorizedProblem problem) {
 	}
 	this.problemCount--;
 }
+
 public CompilationResult tagAsAccepted(){
 	this.hasBeenAccepted = true;
 	this.problemsMap = null; // flush

@@ -877,6 +877,7 @@ public class RepeatableAnnotationTest extends AbstractComparableTest {
 		this.runConformTest(
 			new String[] {
 				"X.java",
+				"import java.lang.annotation.Annotation;\n" +
 				"import java.lang.annotation.Repeatable;\n" +
 				"import java.lang.annotation.Retention;\n" +
 				"import static java.lang.annotation.RetentionPolicy.*;\n" +
@@ -895,10 +896,17 @@ public class RepeatableAnnotationTest extends AbstractComparableTest {
 				"  @Attr(1) class Y1 {}\n" +
 				"  @Attr(1) @Attr(2) class Y2 {} \n" +
 				"  public static void main(String args[]) {\n" +
-				"  	System.out.println(\"Y1: \" + Y1.class.getAnnotation(Attr.class));\n" +
-				"  	System.out.println(\"Y2: \" + Y2.class.getAnnotation(Attr.class));\n" +
-				"  	System.out.println(\"Y1: \" + Y1.class.getAnnotation(AttrContainer.class));\n" +
-				"  	System.out.println(\"Y2: \" + Y2.class.getAnnotation(AttrContainer.class));\n" +
+				"  	System.out.print(\"Y1: \" + normalizeAnnotation(Y1.class.getAnnotation(Attr.class)) + \"\\n\");\n" +
+				"  	System.out.print(\"Y2: \" + normalizeAnnotation(Y2.class.getAnnotation(Attr.class)) + \"\\n\");\n" +
+				"  	System.out.print(\"Y1: \" + normalizeAnnotation(Y1.class.getAnnotation(AttrContainer.class)) + \"\\n\");\n" +
+				"  	System.out.print(\"Y2: \" + normalizeAnnotation(Y2.class.getAnnotation(AttrContainer.class)) + \"\\n\");\n" +
+				"  }\n" +
+				"  static String normalizeAnnotation(Annotation a) {\n" +
+				" 		if (a == null) return null;\n" +
+				"	  String str = a.toString();\n" +
+				"	  str = str.replace(\"value={@\", \"value=[@\");\n" +
+				"	  str = str.replace(\")}\", \")]\");\n" +
+				"	  return str;\n" +
 				"  }\n" +
 				"}"
 			},
@@ -1085,11 +1093,18 @@ public class RepeatableAnnotationTest extends AbstractComparableTest {
 				"			  if (annotations.length == 0 || (annotations.length == 1 && annotations[0] == null)) continue;\n" +
 				"			  System.out.print(name + (j == 0 ? \".getAnnotation(\" : \".getAnnotationByType(\") + annotation.getName() + \".class): \");\n" +
 				"			  for (Annotation a : annotations) {\n" +
-				"				  System.out.print(a + \" \");\n" +
+				"				  System.out.print(normalizeAnnotation(a) + \" \");\n" +
 				"			  }\n" +
-				"			  System.out.println();\n" +
+				"			  System.out.print(\"\\n\");\n" +
 				"		  }\n" +
 				"	  }\n" +
+				"  }\n" +
+				"  static String normalizeAnnotation(Annotation a) {\n" +
+				" 		if (a == null) return null;\n" +
+				"	  String str = a.toString();\n" +
+				"	  str = str.replace(\"value={@\", \"value=[@\");\n" +
+				"	  str = str.replace(\")}\", \")]\");\n" +
+				"	  return str;\n" +
 				"  }\n" +
 				"}\n"
 
@@ -1224,11 +1239,18 @@ public class RepeatableAnnotationTest extends AbstractComparableTest {
 				"			  if (annotations.length == 0 || (annotations.length == 1 && annotations[0] == null)) continue;\n" +
 				"			  System.out.print(name + (j == 0 ? \".getAnnotation(\" : \".getAnnotationByType(\") + annotation.getName() + \".class): \");\n" +
 				"			  for (Annotation a : annotations) {\n" +
-				"				  System.out.print(a + \" \");\n" +
+				"				  System.out.print(normalizeAnnotation(a) + \" \");\n" +
 				"			  }\n" +
-				"			  System.out.println();\n" +
+				"			  System.out.print(\"\\n\");\n" +
 				"		  }\n" +
 				"	  }\n" +
+				"  }\n" +
+				"  static String normalizeAnnotation(Annotation a) {\n" +
+				" 		if (a == null) return null;\n" +
+				"	  String str = a.toString();\n" +
+				"	  str = str.replace(\"value={@\", \"value=[@\");\n" +
+				"	  str = str.replace(\")}\", \")]\");\n" +
+				"	  return str;\n" +
 				"  }\n" +
 				"}\n"
 

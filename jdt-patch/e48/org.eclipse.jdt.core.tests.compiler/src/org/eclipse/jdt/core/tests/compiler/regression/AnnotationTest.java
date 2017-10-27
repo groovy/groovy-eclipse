@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -4872,7 +4872,7 @@ public void test143() {
 				"public class X {\n" +
 				"	 static void foo(int i) {}\n" +
 				"	 public static void main(String[] args) {\n" +
-				"		foo(new Integer(0));\n" +
+				"		foo(Integer.valueOf(0));\n" +
 				"	 }\n" +
 				"}",
             },
@@ -10813,7 +10813,7 @@ public void testBug384663() {
 
 // Bug 386356 - Type mismatch error with annotations and generics
 // test case from comment 9
-public void testBug386356_1() {
+public void _testBug386356_1() {
 	runConformTest(
 		new String[] {
 			"p/X.java",
@@ -11836,5 +11836,70 @@ public void testBug506888f() throws Exception {
 	assertNotNull(requestor.problemArguments);
 	assertEquals(1, requestor.problemArguments.length);
 	assertEquals(JavaCore.COMPILER_PB_UNUSED_PARAMETER, requestor.problemArguments[0]);
+}
+public void testBug521054a() throws Exception {
+	if (this.complianceLevel <= ClassFileConstants.JDK1_8) {
+		return;
+	}
+	this.runNegativeTest(
+		new String[] {
+				"X.java",
+				"public @interface X {\n" +
+				"	String value(X this);\n" +
+				"}\n",
+		},
+		"----------\n" + 
+		"1. ERROR in X.java (at line 2)\n" + 
+		"	String value(X this);\n" + 
+		"	       ^^^^^^^^^^^^^\n" + 
+		"Annotation attributes cannot have parameters\n" + 
+		"----------\n", 
+		null, true);
+}
+public void testBug521054b() throws Exception {
+	if (this.complianceLevel <= ClassFileConstants.JDK1_8) {
+		return;
+	}
+	this.runNegativeTest(
+		new String[] {
+				"X.java",
+				"@java.lang.annotation.Repeatable(Container.class)\n" +
+				"public @interface X {\n" +
+				"	String value();\n" +
+				"}\n" +
+				"@interface Container {\n" +
+				"	X[] value(Container this);\n" +
+				"}\n",
+		},
+		"----------\n" + 
+		"1. ERROR in X.java (at line 6)\n" + 
+		"	X[] value(Container this);\n" + 
+		"	    ^^^^^^^^^^^^^^^^^^^^^\n" + 
+		"Annotation attributes cannot have parameters\n" + 
+		"----------\n", 
+		null, true);
+}
+public void testBug521054c() throws Exception {
+	if (this.complianceLevel <= ClassFileConstants.JDK1_8) {
+		return;
+	}
+	this.runNegativeTest(
+		new String[] {
+				"X.java",
+				"@java.lang.annotation.Repeatable(Container.class)\n" +
+				"public @interface X {\n" +
+				"	String value(X this, int i);\n" +
+				"}\n" +
+				"@interface Container {\n" +
+				"	X[] value();\n" +
+				"}\n",
+		},
+		"----------\n" + 
+		"1. ERROR in X.java (at line 3)\n" + 
+		"	String value(X this, int i);\n" + 
+		"	       ^^^^^^^^^^^^^^^^^^^^\n" + 
+		"Annotation attributes cannot have parameters\n" + 
+		"----------\n", 
+		null, true);
 }
 }

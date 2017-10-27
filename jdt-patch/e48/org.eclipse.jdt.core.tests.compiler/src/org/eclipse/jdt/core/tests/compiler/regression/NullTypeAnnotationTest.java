@@ -5094,6 +5094,8 @@ public void testDefault02_bin() {
 
 //apply null default to return type - annotation at method:
 public void testDefault03_bin() {
+	Map<String,String> options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.IGNORE);
 	runConformTestWithLibs(
 		new String[] {
 			"X.java",
@@ -5105,7 +5107,7 @@ public void testDefault03_bin() {
 			"	}\n" +
 			"}\n"
 		},
-		getCompilerOptions(),
+		options,
 		"");
 	runConformTestWithLibs(
 		new String[] {
@@ -5117,12 +5119,14 @@ public void testDefault03_bin() {
 			"	}\n" +
 			"}\n"
 		},
-		getCompilerOptions(),
+		options,
 		"");
 }
 
 // apply null default to field - also test mixing of explicit annotation with default @NonNull (other annot is not rendered in error)
 public void testDefault04_bin() {
+	Map<String,String> options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.IGNORE);
 	runConformTestWithLibs(
 		new String[] {
 			"X.java",
@@ -5131,10 +5135,10 @@ public void testDefault04_bin() {
 			"@Target(ElementType.TYPE_USE) @Retention(RetentionPolicy.CLASS) @interface Important {}\n" +
 			"@NonNullByDefault(DefaultLocation.FIELD)\n" +
 			"public class X {\n" +
-			"	@Important Number field = new Double(1.1d);\n" +
+			"	@Important Number field = new Double(1.1);\n" +
 			"}\n"
 		},
-		getCompilerOptions(),
+		options,
 		"");
 	runNegativeTestWithLibs(
 		new String[] {
@@ -5155,6 +5159,8 @@ public void testDefault04_bin() {
 
 // default default
 public void testDefault05_bin() {
+	Map<String,String> options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.IGNORE);
 	runConformTestWithLibs(
 		new String[] {
 			"X.java",
@@ -5167,7 +5173,7 @@ public void testDefault05_bin() {
 			"	}\n" +
 			"}\n"
 		},
-		getCompilerOptions(),
+		options,
 		"");
 	runNegativeTestWithLibs(
 		new String[] {
@@ -7315,7 +7321,7 @@ public void testBug446442_5() {
 			"interface Baz extends Foo<Integer, Integer> {}\n" + 
 			"\n" +
 			"class Impl implements Baz {\n" + 
-			"  public Integer m(Integer i) { return new Integer(0); }\n" + 
+			"  public Integer m(Integer i) { return Integer.valueOf(0); }\n" + 
 			"}\n" +
 			"\n" + 
 			"public class Test {\n" + 
@@ -7324,7 +7330,7 @@ public void testBug446442_5() {
 		},
 		"----------\n" + 
 		"1. ERROR in Test.java (at line 11)\n" + 
-		"	public Integer m(Integer i) { return new Integer(0); }\n" + 
+		"	public Integer m(Integer i) { return Integer.valueOf(0); }\n" + 
 		"	       ^^^^^^^\n" + 
 		"The return type is incompatible with \'@NonNull Integer\' returned from Foo<Integer,Integer>.m(Integer) (mismatching null constraints)\n" + 
 		"----------\n" + 
@@ -9013,6 +9019,7 @@ public void testBug481322a() {
 public void testBug477719() {
 	Map compilerOptions = getCompilerOptions();
 	compilerOptions.put(CompilerOptions.OPTION_ReportNonNullTypeVariableFromLegacyInvocation, CompilerOptions.IGNORE);
+	compilerOptions.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.IGNORE);
 	runConformTestWithLibs(
 		new String[] {
 			"X.java",
@@ -12396,6 +12403,7 @@ public void testBug488495collector() {
 		""
 	);
 }
+
 public void testBug496591() {
 	runConformTestWithLibs(
 		new String[] {

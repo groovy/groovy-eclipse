@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2008 IBM Corporation and others.
+ * Copyright (c) 2005, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,6 +12,8 @@ package org.eclipse.jdt.internal.compiler;
 
 import java.util.Arrays;
 
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 
 public class ClassFilePool {
@@ -37,12 +39,29 @@ public synchronized ClassFile acquire(SourceTypeBinding typeBinding) {
 			return newClassFile;
 		}
 		if (!classFile.isShared) {
-			classFile.reset(typeBinding);
+			classFile.reset(typeBinding, typeBinding.scope.compilerOptions());
 			classFile.isShared = true;
 			return classFile;
 		}
 	}
 	return new ClassFile(typeBinding);
+}
+public synchronized ClassFile acquireForModule(ModuleBinding moduleBinding, CompilerOptions options) {
+	for (int i = 0; i < POOL_SIZE; i++) {
+		ClassFile classFile = this.classFiles[i];
+		if (classFile == null) {
+			ClassFile newClassFile = new ClassFile(moduleBinding, options);
+			this.classFiles[i] = newClassFile;
+			newClassFile.isShared = true;
+			return newClassFile;
+		}
+		if (!classFile.isShared) {
+			classFile.reset(null, options);
+			classFile.isShared = true;
+			return classFile;
+		}
+	}
+	return new ClassFile(moduleBinding, options);
 }
 public synchronized void release(ClassFile classFile) {
 	classFile.isShared = false;

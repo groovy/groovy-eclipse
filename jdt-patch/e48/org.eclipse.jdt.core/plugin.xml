@@ -187,6 +187,17 @@
    </extension>
 
 <!-- =================================================================================== -->
+<!-- Extension: Module Path Container                                                   -->
+<!-- =================================================================================== -->
+<extension
+      point="org.eclipse.jdt.core.classpathContainerInitializer">
+      <classpathContainerInitializer
+            class="org.eclipse.jdt.internal.core.ModulePathContainerInitializer"
+            id="org.eclipse.jdt.MODULE_PATH">
+      </classpathContainerInitializer>
+   </extension>
+
+<!-- =================================================================================== -->
 <!-- Extension: Java File Types                                                          -->
 <!-- =================================================================================== -->
 <extension point="org.eclipse.team.core.fileTypes">

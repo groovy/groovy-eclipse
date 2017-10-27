@@ -231,7 +231,7 @@ public class QualifiedType extends AnnotatableType {
 		QualifiedType result = new QualifiedType(target);
 		result.setSourceRange(getStartPosition(), getLength());
 		result.setQualifier((Type) ((ASTNode) getQualifier()).clone(target));
-		if (this.ast.apiLevel >= AST.JLS8) {
+		if (this.ast.apiLevel >= AST.JLS8_INTERNAL) {
 			result.annotations().addAll(
 					ASTNode.copySubtrees(target, annotations()));
 		}
@@ -255,7 +255,7 @@ public class QualifiedType extends AnnotatableType {
 		if (visitChildren) {
 			// visit children in normal left to right reading order
 			acceptChild(visitor, getQualifier());
-			if (this.ast.apiLevel >= AST.JLS8) {
+			if (this.ast.apiLevel >= AST.JLS8_INTERNAL) {
 				acceptChildren(visitor, this.annotations);
 			}
 			acceptChild(visitor, getName());

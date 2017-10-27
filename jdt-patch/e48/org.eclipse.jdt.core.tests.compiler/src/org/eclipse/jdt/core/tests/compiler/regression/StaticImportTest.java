@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,7 +23,7 @@ public class StaticImportTest extends AbstractComparableTest {
 	// Static initializer to specify tests subset using TESTS_* static variables
 	// All specified tests which do not belong to the class are skipped...
 	static {
-//		TESTS_NAMES = new String[] { "testBug401271" };
+//		TESTS_NAMES = new String[] { "test075" };
 //		TESTS_NAMES = new String[] { "test085c" };
 //		TESTS_NUMBERS = new int[] { 80 };
 //		TESTS_RANGE = new int[] { 75, -1 };
@@ -2573,12 +2573,7 @@ public class StaticImportTest extends AbstractComparableTest {
 				"	}\n" +
 				"}\n",
 			},
-			"----------\n" +
-			"1. ERROR in A\\A.java (at line 3)\n" +
-			"	import static B.B.C1;\n" +
-			"	              ^^^^^^\n" +
-			"The import B.B.C1 collides with another import statement\n" +
-			"----------\n"
+			""
 		);
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=302865
@@ -2678,7 +2673,8 @@ public class StaticImportTest extends AbstractComparableTest {
 	}
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=302865
 	// To verify that a static import importing a type which has already been
-	// imported by a single type import is reported as duplicate
+	// imported by a single type import is not reported as duplicate
+	// if they are just the same type
 	public void test079() {
 		this.runNegativeTest(
 			new String[] {
@@ -2697,10 +2693,10 @@ public class StaticImportTest extends AbstractComparableTest {
 				"}\n",
 			},
 			"----------\n" + 
-			"1. ERROR in A\\A.java (at line 3)\n" + 
-			"	import B.B.C1;\n" + 
-			"	       ^^^^^^\n" + 
-			"The import B.B.C1 collides with another import statement\n" + 
+			"1. WARNING in A\\A.java (at line 2)\n" + 
+			"	import static B.B.C1;\n" + 
+			"	              ^^^^^^\n" + 
+			"The import B.B.C1 is never used\n" + 
 			"----------\n"
 		);
 	}
@@ -3257,5 +3253,166 @@ public class StaticImportTest extends AbstractComparableTest {
 				"	}\n" + 
 				"}"
 		});
+	}
+	public void testBug520874a() {
+		if (this.complianceLevel <= ClassFileConstants.JDK1_8) {
+			return;
+		}
+		runNegativeTest(
+				new String[] {
+						"p/X.java",
+						"package p;\n" +
+						"import static p.A1.Outer.*;\n" +
+						"import static p.A1.AnotherOuter.Inner;\n" +
+						"public class X {}\n" +
+						"class A1 {\n" +
+						"	static class Outer<T extends Inner> {\n" +
+						"		private static interface Inner {}\n" +
+						"    }\n" +
+						"	static class AnotherOuter {\n" + 
+						"		private static class Inner {}\n" + 
+						"	}\n" + 
+						"}\n"
+				},
+				"----------\n" + 
+				"1. ERROR in p\\X.java (at line 3)\n" + 
+				"	import static p.A1.AnotherOuter.Inner;\n" + 
+				"	              ^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+				"The type p.A1.AnotherOuter.Inner is not visible\n" + 
+				"----------\n" + 
+				"2. ERROR in p\\X.java (at line 6)\n" + 
+				"	static class Outer<T extends Inner> {\n" + 
+				"	                             ^^^^^\n" + 
+				"The type Inner is not visible\n" + 
+				"----------\n");
+	}
+	public void testBug520874b() {
+		if (this.complianceLevel <= ClassFileConstants.JDK1_8) {
+			return;
+		}
+		runNegativeTest(
+				new String[] {
+						"p/X.java",
+						"package p;\n" +
+						"import p.A1.Outer.*;\n" +
+						"public class X {}\n" +
+						"class A1 {\n" +
+						"	static class Outer<T extends Inner> {\n" +
+						"		private static interface Inner {}\n" +
+						"    }\n" +
+						"}\n"
+				},
+				"----------\n" + 
+				"1. ERROR in p\\X.java (at line 5)\n" + 
+				"	static class Outer<T extends Inner> {\n" + 
+				"	                             ^^^^^\n" + 
+				"The type Inner is not visible\n" + 
+				"----------\n");
+	}
+	public void testBug520874c() {
+		if (this.complianceLevel <= ClassFileConstants.JDK1_8) {
+			return;
+		}
+		runNegativeTest(
+				new String[] {
+						"p/X.java",
+						"package p;\n" +
+						"import static p.A1.Outer.Inner;\n" +
+						"import static p.A1.AnotherOuter.Inner;\n" +
+						"public class X {}\n" +
+						"class A1 {\n" +
+						"	static class Outer<T extends Inner> {\n" +
+						"		private static interface Inner {}\n" +
+						"    }\n" +
+						"	static class AnotherOuter<T extends Inner> {\n" + 
+						"		private static class Inner {}\n" + 
+						"	}\n" + 
+						"}\n"
+				},
+				"----------\n" + 
+				"1. ERROR in p\\X.java (at line 2)\n" + 
+				"	import static p.A1.Outer.Inner;\n" + 
+				"	              ^^^^^^^^^^^^^^^^\n" + 
+				"The type p.A1.Outer.Inner is not visible\n" + 
+				"----------\n" + 
+				"2. ERROR in p\\X.java (at line 3)\n" + 
+				"	import static p.A1.AnotherOuter.Inner;\n" + 
+				"	              ^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+				"The type p.A1.AnotherOuter.Inner is not visible\n" + 
+				"----------\n" + 
+				"3. ERROR in p\\X.java (at line 6)\n" + 
+				"	static class Outer<T extends Inner> {\n" + 
+				"	                             ^^^^^\n" + 
+				"Inner cannot be resolved to a type\n" + 
+				"----------\n" + 
+				"4. ERROR in p\\X.java (at line 9)\n" + 
+				"	static class AnotherOuter<T extends Inner> {\n" + 
+				"	                                    ^^^^^\n" + 
+				"Inner cannot be resolved to a type\n" + 
+				"----------\n");
+	}
+	public void testBug520874d() {
+		if (this.complianceLevel <= ClassFileConstants.JDK1_8) {
+			return;
+		}
+		runNegativeTest(
+				new String[] {
+						"p/X.java",
+						"package p;\n" +
+						"import static p.A.B.Inner;\n" +
+						"import p.Bar.Inner;\n" +
+						"public class X {}\n" +
+						"class A {\n" +
+						"    static class B extends Bar {}\n" +
+						"}\n",
+						"p/Bar.java",
+						"package p;\n" +
+						"public class Bar {;\n" +
+						"	public static class Inner {}\n" +
+						"}\n"
+				},
+				"----------\n" + 
+				"1. WARNING in p\\X.java (at line 2)\n" + 
+				"	import static p.A.B.Inner;\n" + 
+				"	              ^^^^^^^^^^^\n" + 
+				"The import p.A.B.Inner is never used\n" + 
+				"----------\n" + 
+				"2. WARNING in p\\X.java (at line 3)\n" + 
+				"	import p.Bar.Inner;\n" + 
+				"	       ^^^^^^^^^^^\n" + 
+				"The import p.Bar.Inner is never used\n" + 
+				"----------\n");
+	}
+	public void testBug520874e() {
+		if (this.complianceLevel <= ClassFileConstants.JDK1_8) {
+			return;
+		}
+		runNegativeTest(
+				new String[] {
+						"p/X.java",
+						"package p;\n" +
+						"import static p.A.B.Inner;\n" +
+						"import p.Bar.*;\n" +
+						"public class X {}\n" +
+						"class A {\n" +
+						"    static class B extends Bar {}\n" +
+						"}\n",
+						"p/Bar.java",
+						"package p;\n" +
+						"public class Bar {;\n" +
+						"	public static class Inner {}\n" +
+						"}\n"
+				},
+				"----------\n" + 
+				"1. WARNING in p\\X.java (at line 2)\n" + 
+				"	import static p.A.B.Inner;\n" + 
+				"	              ^^^^^^^^^^^\n" + 
+				"The import p.A.B.Inner is never used\n" + 
+				"----------\n" + 
+				"2. WARNING in p\\X.java (at line 3)\n" + 
+				"	import p.Bar.*;\n" + 
+				"	       ^^^^^\n" + 
+				"The import p.Bar is never used\n" + 
+				"----------\n");
 	}
 }

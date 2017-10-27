@@ -41,6 +41,7 @@ class PackageFragmentRootInfo extends OpenableElementInfo {
 
 	private boolean ignoreOptionalProblems;
 	private boolean initialized;
+
 /**
  * Create and initialize a new instance of the receiver
  */
@@ -157,6 +158,7 @@ synchronized Object[] getNonJavaResources(IJavaProject project, IResource underl
 	}
 	return resources;
 }
+
 /**
  * Returns the kind of this root.
  */

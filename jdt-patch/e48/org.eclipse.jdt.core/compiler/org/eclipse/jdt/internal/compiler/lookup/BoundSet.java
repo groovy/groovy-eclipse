@@ -23,7 +23,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 /**
  * Implementation of 18.1.3 in JLS8.
@@ -45,103 +44,32 @@ class BoundSet {
 		Set<TypeBound> subBounds;
 		TypeBinding	instantiation;
 		Map<InferenceVariable,TypeBound> inverseBounds; // from right inference variable to bound
-		
+		Set<InferenceVariable> dependencies;
 		public ThreeSets() {
 			// empty, the sets are lazily initialized
 		}
-		public ParameterizedTypeBinding mergeTypeParameters(ParameterizedTypeBinding current, ParameterizedTypeBinding newB) {
-			TypeBinding[] curTypeArgs = current.typeArguments();
-			TypeBinding[] newTypeArgs = newB.typeArguments();
-			TypeBinding[] merged = new TypeBinding[curTypeArgs.length];
-			System.arraycopy(curTypeArgs, 0, merged, 0, curTypeArgs.length);
-			boolean wasMerged = false;
-			for (int i = 0; i < curTypeArgs.length; i++) {
-				if (TypeBinding.equalsEquals(curTypeArgs[i], newTypeArgs[i]))
-					continue;
-				// Don't mess with captures
-				if(curTypeArgs[i].isCapture() || newTypeArgs[i].isCapture())
-					return null;
-				if (curTypeArgs[i] instanceof InferenceVariable) {
-					if (!(newTypeArgs[i] instanceof InferenceVariable)) {
-						// Short circuit incorporation
-						// Merge the type parameters, we are going to
-						// end up with this bound during incorporation anyway because of the SAME
-						// bound on the inference variable
-						ThreeSets three = BoundSet.this.boundsPerVariable.get(curTypeArgs[i]);
-						if(three != null && three.sameBounds != null && three.sameBounds.contains(new TypeBound((InferenceVariable) curTypeArgs[i], newTypeArgs[i], ReductionResult.SAME))) {
-							merged[i] = newTypeArgs[i];
-							wasMerged = true;
-						}
-					} else if (!curTypeArgs[i].equals(newTypeArgs[i])) {
-						return null;
-					}
-				} else {
-					if (!(newTypeArgs[i] instanceof InferenceVariable)) {
-						if (!TypeBinding.equalsEquals(curTypeArgs[i], newTypeArgs[i])) {
-							return null;
-						}
-					} else {
-						ThreeSets three = BoundSet.this.boundsPerVariable.get(newTypeArgs[i]);
-						// We do not have a SAME bounds for this inference variable, do not substitute
-						if(three == null || three.sameBounds == null || !three.sameBounds.contains(new TypeBound((InferenceVariable) newTypeArgs[i], curTypeArgs[i], ReductionResult.SAME))) {
-							return null;
-						}
-					}
-				}
-			}
-			if(wasMerged) {
-				ParameterizedTypeBinding clone = (ParameterizedTypeBinding)current.clone(current.enclosingType());
-				clone.arguments = merged;
-				return clone;
-			}
-			return null;
-		}
 		/** Add a type bound to the appropriate set. */
 		public boolean addBound(TypeBound bound) {
-			Iterator<TypeBound> it = null;
+			boolean result = addBound1(bound);
+			if(result) {
+				Set<InferenceVariable> set = (this.dependencies == null ? new HashSet<>() : this.dependencies);
+				bound.right.collectInferenceVariables(set);
+				if (this.dependencies == null && set.size() > 0) {
+					this.dependencies = set;
+				}
+			}
+			return result;
+		}
+		private boolean addBound1(TypeBound bound) {
 			switch (bound.relation) {
 				case ReductionResult.SUPERTYPE:
 					if (this.superBounds == null) this.superBounds = new HashSet<>();
-					if (CompilerOptions.useunspecdtypeinferenceperformanceoptimization) {
-						if (!bound.right.isProperType(true)) {
-							it = this.superBounds.iterator();
-							while (it.hasNext()) {
-								TypeBound b = it.next();
-								if (bound.right.isParameterizedType() && b.right.isParameterizedType()
-										&& b.right.original() == bound.right.original()) { //$IDENTITY-COMPARISON$
-									TypeBinding clone = mergeTypeParameters((ParameterizedTypeBinding) b.right,
-											(ParameterizedTypeBinding) bound.right);
-									if (clone != null) {
-										b.right = clone;
-										return false;
-									}
-								}
-							}
-						}
-					}
 					return this.superBounds.add(bound);
 				case ReductionResult.SAME:
 					if (this.sameBounds == null) this.sameBounds = new HashSet<>();
 					return this.sameBounds.add(bound);
 				case ReductionResult.SUBTYPE:
 					if (this.subBounds == null) this.subBounds = new HashSet<>();
-					if (CompilerOptions.useunspecdtypeinferenceperformanceoptimization) {
-						if (!bound.right.isProperType(true)) {
-							it = this.subBounds.iterator();
-							while (it.hasNext()) {
-								TypeBound b = it.next();
-								if (bound.right.isParameterizedType() && b.right.isParameterizedType()
-										&& b.right.original() == bound.right.original()) { //$IDENTITY-COMPARISON$
-									TypeBinding clone = mergeTypeParameters((ParameterizedTypeBinding) b.right,
-											(ParameterizedTypeBinding) bound.right);
-									if (clone != null) {
-										b.right = clone;
-										return false;
-									}
-								}
-							}
-						}
-					}
 					return this.subBounds.add(bound);
 				default:
 					throw new IllegalArgumentException("Unexpected bound relation in : " + bound); //$NON-NLS-1$
@@ -201,27 +129,13 @@ class BoundSet {
 		}
 		// pre: beta is a prototype
 		public boolean hasDependency(InferenceVariable beta) {
-			if (this.superBounds != null && hasDependency(this.superBounds, beta))
-				return true;
-			if (this.sameBounds != null && hasDependency(this.sameBounds, beta))
-				return true;
-			if (this.subBounds != null && hasDependency(this.subBounds, beta))
+			if(this.dependencies != null && this.dependencies.contains(beta))
 				return true;
 			if (this.inverseBounds != null) {
 				if (this.inverseBounds.containsKey(beta)) {
 					// TODO: not yet observed in tests
 					return true;
 				}
-			}
-			return false;
-		}
-		// pre: var is a prototype
-		private boolean hasDependency(Set<TypeBound> someBounds, InferenceVariable var) {
-			Iterator<TypeBound> bIt = someBounds.iterator();
-			while (bIt.hasNext()) {
-				TypeBound bound = bIt.next();
-				if (TypeBinding.equalsEquals(bound.right, var) || bound.right.mentionsAny(new TypeBinding[] {var}, -1))
-					return true;
 			}
 			return false;
 		}
@@ -263,6 +177,9 @@ class BoundSet {
 			if (this.subBounds != null)
 				copy.subBounds = new HashSet<>(this.subBounds);
 			copy.instantiation = this.instantiation;
+			if (this.dependencies != null) {
+				copy.dependencies = new HashSet<>(this.dependencies);
+			}
 			return copy;
 		}
 		public TypeBinding findSingleWrapperType() {

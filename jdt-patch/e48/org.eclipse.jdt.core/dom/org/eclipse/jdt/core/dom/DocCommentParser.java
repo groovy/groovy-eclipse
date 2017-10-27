@@ -144,7 +144,7 @@ class DocCommentParser extends AbstractCommentParser {
 				}
 			}
 			argument.setType(argType);
-			if (this.ast.apiLevel > AST.JLS8) {
+			if (this.ast.apiLevel > AST.JLS8_INTERNAL) {
 				argument.setVarargs(isVarargs);
 			}
 			argument.setSourceRange(argStart, argEnd - argStart + 1);

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2003, 2015 IBM Corporation and others.
+ * Copyright (c) 2003, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1417,8 +1417,7 @@ public void test034() throws Exception {
 }
 // javac incorrectly accepts it
 public void test035() {
-	this.runNegativeTest(
-		new String[] {
+	String[] sources = {
 			"Test231.java",
 			"public class Test231 implements Test231i\n" +
 			"{\n" +
@@ -1437,16 +1436,21 @@ public void test035() {
 			"\n" +
 			"interface Test231i\n" +
 			"{\n" +
-			"}\n",
-		},
-		"----------\n" +
-		"1. ERROR in Test231.java (at line 9)\n" +
-		"	return	(Test231i)this;\n" +
-		"	      	^^^^^^^^^^^^^^\n" +
-		"Cannot cast from new Object(){} to Test231i\n" +
-		"----------\n",
+			"}\n"
+		};
+	if (this.complianceLevel < ClassFileConstants.JDK9) {
+		runNegativeTest(sources,
+			"----------\n" +
+			"1. ERROR in Test231.java (at line 9)\n" +
+			"	return	(Test231i)this;\n" +
+			"	      	^^^^^^^^^^^^^^\n" +
+			"Cannot cast from new Object(){} to Test231i\n" +
+			"----------\n",
 		// javac options
 		JavacTestOptions.JavacHasABug.JavacBugFixed_6_10 /* javac test options */);
+	} else {
+		runConformTest(sources, "");
+	}
 }
 public void test036() {
 	runConformTest(
@@ -1626,7 +1630,7 @@ public void test041() {
 			"        public void callSite() {\n" +
 			"            // expect warning not there:\n" +
 			"            ((A) this.getAA()).callMe();\n" +
-			"            Integer max = new Integer(1);\n" +
+			"            Integer max = Integer.valueOf(1);\n" +
 			"            // execpted warning there:\n" +
 			"            Integer other = (Integer) max;\n" +
 			"        }\n" +
@@ -1923,7 +1927,7 @@ public void test052() {
 			"		System.out.println(y);\n" + 
 			"	}\n" + 
 			"	public static Object foo() {\n" + 
-			"		return new Byte((byte)1);\n" + 
+			"		return Byte.valueOf((byte)1);\n" + 
 			"	}\n" + 
 			"}";
 	if (options.sourceLevel < ClassFileConstants.JDK1_7) {
@@ -1960,7 +1964,7 @@ public void test053() {
 			"		System.out.println(y);\n" + 
 			"	}\n" + 
 			"	public static Object foo() {\n" + 
-			"		return new Character('d');\n" + 
+			"		return Character.valueOf('d');\n" + 
 			"	}\n" + 
 			"}";
 	if (options.sourceLevel < ClassFileConstants.JDK1_7) {
@@ -1998,7 +2002,7 @@ public void test054() throws Exception {
 			"		System.out.println(y);\n" + 
 			"	}\n" + 
 			"	public static Object foo() {\n" + 
-			"		return new Integer(1);\n" + 
+			"		return Integer.valueOf(1);\n" + 
 			"	}\n" + 
 			"}";
 	if (options.sourceLevel < ClassFileConstants.JDK1_7) {
@@ -2070,7 +2074,7 @@ public void test055() {
 			"		System.out.println(y);\n" + 
 			"	}\n" + 
 			"	public static Object foo() {\n" + 
-			"		return new Long(Long.MAX_VALUE);\n" + 
+			"		return Long.valueOf(Long.MAX_VALUE);\n" + 
 			"	}\n" + 
 			"}";
 	if (options.sourceLevel < ClassFileConstants.JDK1_7) {
@@ -2107,7 +2111,7 @@ public void test056() {
 			"		System.out.println(y);\n" + 
 			"	}\n" + 
 			"	public static Object foo() {\n" + 
-			"		return new Short((short) 1);\n" + 
+			"		return Short.valueOf((short) 1);\n" + 
 			"	}\n" + 
 			"}";
 	if (options.sourceLevel < ClassFileConstants.JDK1_7) {
@@ -2144,7 +2148,7 @@ public void test057() {
 			"		System.out.println(y);\n" + 
 			"	}\n" + 
 			"	public static Object foo() {\n" + 
-			"		return new Double(1.0);\n" + 
+			"		return Double.valueOf(1.0);\n" + 
 			"	}\n" + 
 			"}";
 	if (options.sourceLevel < ClassFileConstants.JDK1_7) {
@@ -2181,7 +2185,7 @@ public void test058() {
 			"		System.out.println(y);\n" + 
 			"	}\n" + 
 			"	public static Object foo() {\n" + 
-			"		return new Float(1.0f);\n" + 
+			"		return Float.valueOf(1.0f);\n" + 
 			"	}\n" + 
 			"}";
 	if (options.sourceLevel < ClassFileConstants.JDK1_7) {
@@ -2223,7 +2227,7 @@ public void test059() {
 			"		System.out.println(\"FAIL\");\n" + 
 			"	}\n" + 
 			"	public static Object foo() {\n" + 
-			"		return new Float(1.0f);\n" + 
+			"		return Float.valueOf(1.0f);\n" + 
 			"	}\n" + 
 			"}";
 	if (options.sourceLevel < ClassFileConstants.JDK1_7) {
@@ -3264,6 +3268,31 @@ public void test461706a() {
 		null,
 		true,
 		customOptions);
+}
+public void testAnonymous_bug520727() {
+	String[] source = {
+		"O.java",
+		"import java.io.Serializable;\n" +
+		"public class O {\n" +
+		"	Object in = new Object() {\n" +
+		"        public Object foo() {\n" +
+		"                return (Serializable) this;\n" +
+		"        }\n" +
+		"	};\n" +
+		"}\n"
+	};
+	if (this.complianceLevel < ClassFileConstants.JDK9) {
+		runNegativeTest(source,
+				"----------\n" +
+				"1. ERROR in O.java (at line 5)\n" +
+				"	return (Serializable) this;\n" +
+				"	       ^^^^^^^^^^^^^^^^^^^\n" +
+				"Cannot cast from new Object(){} to Serializable\n" +
+				"----------\n");
+	} else {
+		// starting from JLS 9, anonymous classes are *not* final, hence casting is legal:
+		runConformTest(source,"");
+	}
 }
 public static Class testClass() {
 	return CastTest.class;

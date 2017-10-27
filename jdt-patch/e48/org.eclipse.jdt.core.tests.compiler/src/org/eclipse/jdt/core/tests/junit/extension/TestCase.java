@@ -230,7 +230,7 @@ public class TestCase extends PerformanceTestCase {
 	}
 
 public static void assertEquals(String expected, String actual) {
-	assertEquals(null, expected, actual);
+    assertEquals(null, expected, actual);
 }
 public static void assertEquals(String message, String expected, String actual) {
 	assertStringEquals(message, expected, actual, true);
@@ -257,7 +257,9 @@ public static void assertStringEquals(String message, String expected, String ac
 		formatted.append("\n------------ but was ------------\n"); //$NON-NLS-1$
 		formatted.append(actualWithLineSeparators);
 		formatted.append("\n--------- Difference is ----------\n"); //$NON-NLS-1$
-		throw new ComparisonFailure(formatted.toString(), expectedWithLineSeparators, actualWithLineSeparators);
+		throw new ComparisonFailure(formatted.toString(),
+			    expectedWithLineSeparators,
+			    actualWithLineSeparators);
 	} else {
 		formatted.append("\n----------- Expected ------------\n"); //$NON-NLS-1$
 		formatted.append(expected);

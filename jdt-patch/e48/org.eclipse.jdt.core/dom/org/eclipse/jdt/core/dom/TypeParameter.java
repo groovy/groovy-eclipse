@@ -130,7 +130,7 @@ public class TypeParameter extends ASTNode {
 	TypeParameter(AST ast) {
 		super(ast);
 	    unsupportedIn2();
-	    if (ast.apiLevel >= AST.JLS8) {
+	    if (ast.apiLevel >= AST.JLS8_INTERNAL) {
 			this.modifiers = new ASTNode.NodeList(MODIFIERS_PROPERTY);
 		}
 	}
@@ -185,7 +185,7 @@ public class TypeParameter extends ASTNode {
 	ASTNode clone0(AST target) {
 		TypeParameter result = new TypeParameter(target);
 		result.setSourceRange(getStartPosition(), getLength());
-		if (this.ast.apiLevel >= AST.JLS8) {
+		if (this.ast.apiLevel >= AST.JLS8_INTERNAL) {
 			result.modifiers().addAll(
 					ASTNode.copySubtrees(target, modifiers()));
 		}
@@ -210,7 +210,7 @@ public class TypeParameter extends ASTNode {
 		boolean visitChildren = visitor.visit(this);
 		if (visitChildren) {
 			// visit children in normal left to right reading order
-			if (this.ast.apiLevel >= AST.JLS8) {
+			if (this.ast.apiLevel >= AST.JLS8_INTERNAL) {
 				acceptChildren(visitor, this.modifiers);
 			}
 			acceptChild(visitor, getName());

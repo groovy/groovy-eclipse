@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -840,7 +840,6 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 						parsedUnit.scope.faultInTypes();
 						parsedUnit.resolve();
 					}
-					
 					rememberAllTypes(parsedUnit, cus[i], containsLocalType);
 				}
 			}
@@ -889,14 +888,14 @@ public ReferenceBinding setFocusType(char[][] compoundName) {
 	if (compoundName == null || this.lookupEnvironment == null) return null;
 	this.focusType = this.lookupEnvironment.getCachedType(compoundName);
 	if (this.focusType == null) {
-		this.focusType = this.lookupEnvironment.askForType(compoundName);
+		this.focusType = this.lookupEnvironment.askForType(compoundName, this.lookupEnvironment.UnNamedModule);
 		if (this.focusType == null) {
 			int length = compoundName.length;
 			char[] typeName = compoundName[length-1];
 			int firstDollar = CharOperation.indexOf('$', typeName);
 			if (firstDollar != -1) {
 				compoundName[length-1] = CharOperation.subarray(typeName, 0, firstDollar);
-				this.focusType = this.lookupEnvironment.askForType(compoundName);
+				this.focusType = this.lookupEnvironment.askForType(compoundName, this.lookupEnvironment.UnNamedModule);
 				if (this.focusType != null) {
 					char[][] memberTypeNames = CharOperation.splitOn('$', typeName, firstDollar+1, typeName.length);
 					for (int i = 0; i < memberTypeNames.length; i++) {

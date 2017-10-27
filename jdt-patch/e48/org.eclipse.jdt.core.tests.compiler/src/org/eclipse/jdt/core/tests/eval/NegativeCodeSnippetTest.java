@@ -38,7 +38,7 @@ public static Test suite() {
 /**
  * Test a scenario where the change of the package declaration causes a problem in a code snippet.
  */
-public void testChangePackage() {
+public void _testChangePackage() {
 	if (isJRockitVM()) return;
 	try {
 		// define the package

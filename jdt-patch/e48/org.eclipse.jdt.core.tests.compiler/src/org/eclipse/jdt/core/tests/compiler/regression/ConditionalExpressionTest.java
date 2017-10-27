@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2015 IBM Corporation and others.
+ * Copyright (c) 2005, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,7 +10,10 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.compiler.regression;
 
+import java.util.Map;
+
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 import junit.framework.Test;
 
@@ -518,6 +521,8 @@ public class ConditionalExpressionTest extends AbstractRegressionTest {
 	public void test427625() {
 		if (this.complianceLevel < ClassFileConstants.JDK1_5)
 			return;
+		Map<String,String> options = getCompilerOptions();
+		options.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.IGNORE);
 		this.runNegativeTest(
 				new String[] {
 						"X.java",
@@ -536,7 +541,8 @@ public class ConditionalExpressionTest extends AbstractRegressionTest {
 						"	}\n" +
 						"}\n",
 				},
-				"");
+				"",
+				null, true, options);
 	}	
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=432487,  NullPointerException during compilation using jdk1.8.0
 	public void testBug432487() {

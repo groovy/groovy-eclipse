@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,6 +27,10 @@ import org.eclipse.jdt.internal.compiler.env.ClassSignature;
 import org.eclipse.jdt.internal.compiler.env.EnumConstantSignature;
 import org.eclipse.jdt.internal.compiler.env.IBinaryAnnotation;
 import org.eclipse.jdt.internal.compiler.env.IBinaryElementValuePair;
+import org.eclipse.jdt.internal.compiler.env.IModule;
+import org.eclipse.jdt.internal.compiler.env.IModule.IModuleReference;
+import org.eclipse.jdt.internal.compiler.env.IModule.IPackageExport;
+import org.eclipse.jdt.internal.compiler.env.IModule.IService;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
@@ -146,6 +150,13 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 				addTypeReference(compoundName[compoundName.length-1]);
 			}
 			addFieldReference(TypeConstants.TYPE);
+		}
+		if ((bits & TagBits.AnnotationForModule) != 0) {
+			if (compoundName == null) {
+				compoundName = TypeConstants.JAVA_LANG_ANNOTATION_ELEMENTTYPE;
+				addTypeReference(compoundName[compoundName.length-1]);
+			}
+			addFieldReference(TypeConstants.UPPER_MODULE);
 		}
 	}
 	private void addBinaryRetentionAnnotation(long bits) {
@@ -634,6 +645,12 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 			if (contents == null) return;
 			final String path = this.document.getPath();
 			ClassFileReader reader = new ClassFileReader(contents, path == null ? null : path.toCharArray());
+			
+			IModule module = reader.getModuleDeclaration();
+			if (module != null) {
+				indexModule(module);
+				return;
+			}
 
 			// first add type references
 			char[] className = replace('/', '.', reader.getName()); // looks like java/lang/String
@@ -840,6 +857,56 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 			this.document.removeAllIndexEntries();
 			Util.log(IStatus.WARNING, "The Java indexing could not index " + this.document.getPath() + ". This .class file doesn't follow the class file format specification. Please report this issue against the .class file vendor"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
+	}
+	
+	private void indexModule(IModule module) {
+		addModuleDeclaration(module.name());
+		IModuleReference[] requiredModules = module.requires();
+		if (requiredModules != null) {
+			for (IModuleReference req : requiredModules) {
+				addModuleReference(req.name());
+			}
+		}
+		indexPackageVisibilityDirective(module.exports());
+		indexPackageVisibilityDirective(module.opens());
+		char[][] refUsed = module.uses();
+		if (refUsed != null) {
+			for (char[] ref : refUsed) {
+				indexTypeReference(ref);
+			}
+		}
+		IService[] services = module.provides();
+		if (services != null) {
+			for (IService service : services) {
+				indexTypeReference(service.name());
+				indexTypeReferences(service.with());
+			}
+		}
+	}
+	private void indexPackageVisibilityDirective(IPackageExport[] exportedPackages) {
+		if (exportedPackages != null) {
+			for (IPackageExport pack : exportedPackages) {
+				addModuleExportedPackages(pack.name());
+				char[][] tgts = pack.targets();
+				if (tgts == null || tgts.equals(CharOperation.NO_CHAR_CHAR)) continue;
+				for (char[] tgt : tgts) {
+					if (tgt != null && !tgt.equals(CharOperation.NO_CHAR)) 
+						addModuleReference(tgt);
+				}
+			}
+		}
+	}
+	private void indexTypeReferences(char[][] ref) {
+		if (ref == null || ref.equals(CharOperation.NO_CHAR))
+			return;
+		for (int i = 0; i < ref.length; i++) {
+			addTypeReference(ref[i]);
+		}
+	}
+	private void indexTypeReference(char[] ref) {
+		if (ref == null || ref.equals(CharOperation.NO_CHAR))
+			return;
+		addTypeReference(ref);
 	}
 	
 	private char[] removeFirstSyntheticParameter(char[] descriptor) {

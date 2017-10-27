@@ -283,7 +283,7 @@ public final boolean canBeSeenBy(PackageBinding invocationPackage) {
 public final boolean canBeSeenBy(TypeBinding receiverType, InvocationSite invocationSite, Scope scope) {
 
 	SourceTypeBinding invocationType = scope.enclosingSourceType();
-	if (this.declaringClass.isInterface() && isStatic()) {
+	if (this.declaringClass.isInterface() && isStatic() && !isPrivate()) {
 		// Static interface methods can be explicitly invoked only through the type reference of the declaring interface or implicitly in the interface itself or via static import.
 		if (scope.compilerOptions().sourceLevel < ClassFileConstants.JDK1_8)
 			return false;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -95,6 +95,11 @@ public abstract class CategorizedProblem implements IProblem {
 	public static final int CAT_NLS = 140;
 	/** Category for optional problems related to access restrictions */
 	public static final int CAT_RESTRICTION = 150;
+	/**
+	 * Category for fatal problems relating to modules
+	 * @since 3.14
+	 */
+	public static final int CAT_MODULE = 160;
 
 /**
  * Returns an integer identifying the category of this problem. Categories, like problem IDs are

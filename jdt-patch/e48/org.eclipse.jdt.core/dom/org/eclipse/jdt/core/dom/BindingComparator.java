@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2013 IBM Corporation and others.
+ * Copyright (c) 2004, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -101,6 +101,13 @@ class BindingComparator {
 			return importBinding.isStatic() == importBinding2.isStatic()
 				&& importBinding.onDemand == importBinding2.onDemand
 				&& CharOperation.equals(importBinding.compoundName, importBinding2.compoundName);
+		} else if (declaringElement instanceof org.eclipse.jdt.internal.compiler.lookup.ModuleBinding) {
+			if (!(declaringElement2 instanceof org.eclipse.jdt.internal.compiler.lookup.ModuleBinding)) {
+				return false;
+			}
+			org.eclipse.jdt.internal.compiler.lookup.ModuleBinding moduleBinding = (org.eclipse.jdt.internal.compiler.lookup.ModuleBinding) declaringElement;
+			org.eclipse.jdt.internal.compiler.lookup.ModuleBinding moduleBinding2 = (org.eclipse.jdt.internal.compiler.lookup.ModuleBinding) declaringElement2;
+			return isEqual(moduleBinding, moduleBinding2);
 		}
 		return false;
 	}
@@ -123,6 +130,18 @@ class BindingComparator {
 				&& isEqual(methodBinding.declaringClass, methodBinding2.declaringClass, visitedTypes)
 				&& isEqual(methodBinding.typeVariables, methodBinding2.typeVariables, visitedTypes)
 				&& isEqual(methodBinding.parameters, methodBinding2.parameters, visitedTypes);
+	}
+
+	/*
+	 * Assumption here is that there is only one module with the same name.
+	 */
+	static boolean isEqual(org.eclipse.jdt.internal.compiler.lookup.ModuleBinding moduleBinding,
+			org.eclipse.jdt.internal.compiler.lookup.ModuleBinding moduleBinding2) {
+		if (moduleBinding == null)
+			return moduleBinding2 == null;
+		if (moduleBinding2 == null)
+			return false;
+		return CharOperation.equals(moduleBinding.moduleName, moduleBinding2.moduleName); 
 	}
 
 	static boolean isEqual(VariableBinding variableBinding, VariableBinding variableBinding2) {

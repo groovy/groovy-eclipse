@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -150,6 +150,21 @@ class BindingResolver {
 	 * @return the new member value pair binding
 	 */
 	IMemberValuePairBinding getMemberValuePairBinding(ElementValuePair valuePair) {
+		return null;
+	}
+
+	/**
+	 * Returns the new module binding corresponding to the given old module binding.
+	 * <p>
+	 * The default implementation of this method returns <code>null</code>.
+	 * Subclasses may reimplement.
+	 * </p>
+	 *
+	 * @param moduleBinding the old module binding
+	 * @return the new module binding
+	 *
+	 */
+	IModuleBinding getModuleBinding(org.eclipse.jdt.internal.compiler.lookup.ModuleBinding moduleBinding) {
 		return null;
 	}
 
@@ -658,6 +673,29 @@ class BindingResolver {
 	 *    <code>null</code> if no binding is available
 	 */
 	IMethodBinding resolveMethod(SuperMethodInvocation method) {
+		return null;
+	}
+
+	/**
+	 * Resolves the given module declaration and returns the binding for it.
+	 * <p>
+	 * The implementation of <code>ModuleDeclaration.resolveBinding</code>
+	 * forwards to this method. How the method resolves is often a function of
+	 * the context in which the method declaration node is embedded as well as
+	 * the method declaration subtree itself.
+	 * </p>
+	 * <p>
+	 * The default implementation of this method returns <code>null</code>.
+	 * Subclasses may reimplement.
+	 * </p>
+	 *
+	 * @param module declaration of interest
+	 * @return the binding for the given module declaration, or
+	 *    <code>null</code> if no binding is available
+	 *    
+	 * @since 3.14
+	 */
+	IModuleBinding resolveModule(ModuleDeclaration module) {
 		return null;
 	}
 

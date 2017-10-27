@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -174,6 +174,30 @@ public class Disassembler extends ClassFileBytesDisassembler {
 				IModifierConstants.ACC_ABSTRACT,
 				IModifierConstants.ACC_FINAL,
 		});
+	}
+	private final void decodeModifiersForModuleRequires(StringBuffer buffer, int accessFlags) {
+		int[] checkBits = new int[] {
+				IModifierConstants.ACC_TRANSITIVE,
+				IModifierConstants.ACC_STATIC_PHASE,
+		};
+		boolean firstModifier = true;
+		for (int i = 0, max = checkBits.length; i < max; i++) {
+			switch(checkBits[i]) {
+				case IModifierConstants.ACC_TRANSITIVE :
+					firstModifier = appendModifier(buffer, accessFlags, IModifierConstants.ACC_TRANSITIVE, "transitive", firstModifier); //$NON-NLS-1$
+					break;
+				case IModifierConstants.ACC_STATIC_PHASE :
+					firstModifier = appendModifier(buffer, accessFlags, IModifierConstants.ACC_STATIC_PHASE, "protected", firstModifier); //$NON-NLS-1$
+					break;
+			}
+		}
+		if (!firstModifier) {
+			buffer.append(Messages.disassembler_space);
+		}
+	}
+	private final void decodeModifiersForModule(StringBuffer buffer, int accessFlags) {
+		appendModifier(buffer, accessFlags, IModifierConstants.ACC_OPEN, "open", true); //$NON-NLS-1$
+		buffer.append(Messages.disassembler_space);
 	}
 	public static String escapeString(String s) {
 		return decodeStringValue(s);
@@ -974,6 +998,8 @@ public class Disassembler extends ClassFileBytesDisassembler {
 				versionNumber = JavaCore.VERSION_1_7;
 			} else if (minorVersion == 0 && majorVersion == 52) {
 				versionNumber = JavaCore.VERSION_1_8;
+			} else if (minorVersion == 0 && majorVersion == 53) {
+				versionNumber = JavaCore.VERSION_9;
 			}
 			buffer.append(
 				Messages.bind(Messages.classfileformat_versiondetails,
@@ -1009,7 +1035,8 @@ public class Disassembler extends ClassFileBytesDisassembler {
 		IClassFileAttribute runtimeInvisibleTypeAnnotationsAttribute = Util.getAttribute(classFileReader, IAttributeNamesConstants.RUNTIME_INVISIBLE_TYPE_ANNOTATIONS);
 
 		IClassFileAttribute bootstrapMethods = Util.getAttribute(classFileReader, IAttributeNamesConstants.BOOTSTRAP_METHODS);
-	
+		IModuleAttribute moduleAttribute = (IModuleAttribute) Util.getAttribute(classFileReader, IAttributeNamesConstants.MODULE);
+
 		if (checkMode(mode, DETAILED)) {
 			// disassemble compact version of annotations
 			if (runtimeInvisibleAnnotationsAttribute != null) {
@@ -1049,9 +1076,12 @@ public class Disassembler extends ClassFileBytesDisassembler {
 		}
 	
 		final boolean isAnnotation = (accessFlags & IModifierConstants.ACC_ANNOTATION) != 0;
+		final boolean isModule = (accessFlags & IModifierConstants.ACC_MODULE) != 0;
 		boolean isInterface = false;
 		if (isEnum) {
 			buffer.append("enum "); //$NON-NLS-1$
+		} else if (isModule) {
+			// skip - process under module attribute
 		} else if (classFileReader.isClass()) {
 			buffer.append("class "); //$NON-NLS-1$
 		} else {
@@ -1070,7 +1100,7 @@ public class Disassembler extends ClassFileBytesDisassembler {
 			if (signatureAttribute != null) {
 				disassembleGenericSignature(mode, buffer, signatureAttribute.getSignature());
 			}
-		} else {
+		} else if (!isModule) {
 			buffer.append(className);
 		}
 	
@@ -1104,15 +1134,29 @@ public class Disassembler extends ClassFileBytesDisassembler {
 				}
 			}
 		}
-		buffer.append(Messages.bind(Messages.disassembler_opentypedeclaration));
+		if (!isModule)
+			buffer.append(Messages.bind(Messages.disassembler_opentypedeclaration));
 		if (checkMode(mode, SYSTEM)) {
 			disassemble(classFileReader.getConstantPool(), buffer, lineSeparator, 1);
+		}
+		if (isModule && moduleAttribute != null) { // print attributes - module package and main class only if the mandatory module attribute non-null
+			decodeModifiersForModule(buffer, accessFlags);
+			buffer.append("module"); //$NON-NLS-1$
+			buffer.append(Messages.disassembler_space);
+			buffer.append(moduleAttribute.getModuleName());
+			buffer.append(Messages.disassembler_space);
+			buffer.append(Messages.bind(Messages.disassembler_opentypedeclaration));
+			disassembleModule(moduleAttribute, buffer, lineSeparator, 1);
+			IModulePackagesAttribute modulePackagesAttribute = (IModulePackagesAttribute) Util.getAttribute(classFileReader, IAttributeNamesConstants.MODULE_PACKAGES);
+			disassembleModule(modulePackagesAttribute, buffer, lineSeparator, 1);
+			IModuleMainClassAttribute mainClassAttribute = (IModuleMainClassAttribute) Util.getAttribute(classFileReader, IAttributeNamesConstants.MODULE_MAIN_CLASS);
+			disassembleModule(mainClassAttribute, buffer, lineSeparator, 1);
 		}
 		disassembleTypeMembers(classFileReader, className, buffer, lineSeparator, 1, mode, isEnum);
 		if (checkMode(mode, SYSTEM | DETAILED)) {
 			IClassFileAttribute[] attributes = classFileReader.getAttributes();
 			int length = attributes.length;
-			IEnclosingMethodAttribute enclosingMethodAttribute = getEnclosingMethodAttribute(classFileReader);
+			IEnclosingMethodAttribute enclosingMethodAttribute = (IEnclosingMethodAttribute) Util.getAttribute(classFileReader, IAttributeNamesConstants.ENCLOSING_METHOD);
 			int remainingAttributesLength = length;
 			if (innerClassesAttribute != null) {
 				remainingAttributesLength--;
@@ -1129,9 +1173,13 @@ public class Disassembler extends ClassFileBytesDisassembler {
 			if (bootstrapMethods != null) {
 				remainingAttributesLength--;
 			}
+			if (moduleAttribute != null) {
+				remainingAttributesLength--;
+			}
 			if (innerClassesAttribute != null
 					|| enclosingMethodAttribute != null
 					|| bootstrapMethods != null
+					|| moduleAttribute != null
 					|| remainingAttributesLength != 0) {
 				// this test is to ensure we don't insert more than one line separator
 				if (buffer.lastIndexOf(lineSeparator) != buffer.length() - lineSeparator.length()) {
@@ -1173,7 +1221,9 @@ public class Disassembler extends ClassFileBytesDisassembler {
 								&& attribute != runtimeVisibleTypeAnnotationsAttribute
 								&& !CharOperation.equals(attribute.getAttributeName(), IAttributeNamesConstants.DEPRECATED)
 								&& !CharOperation.equals(attribute.getAttributeName(), IAttributeNamesConstants.SYNTHETIC)
-								&& attribute != bootstrapMethods) {
+								&& attribute != bootstrapMethods
+								&& attribute != moduleAttribute
+								) {
 							disassemble(attribute, buffer, lineSeparator, 0, mode);
 						}
 					}
@@ -1183,6 +1233,130 @@ public class Disassembler extends ClassFileBytesDisassembler {
 		writeNewLine(buffer, lineSeparator, 0);
 		buffer.append(Messages.disassembler_closetypedeclaration);
 		return buffer.toString();
+	}
+
+	private void disassembleModule(IModuleAttribute moduleAttribute, StringBuffer buffer, String lineSeparator, int tabNumber) {
+		writeNewLine(buffer, lineSeparator, tabNumber);
+		char[] moduleVersion = moduleAttribute.getModuleVersionValue();
+		if (moduleVersion == null) {
+			moduleVersion = Messages.disassembler_module_version_none.toCharArray();
+		}
+		buffer.append(Messages.bind(Messages.disassembler_module_version, new String(moduleVersion)));
+		IRequiresInfo[] requiresInfo = moduleAttribute.getRequiresInfo();
+		if (requiresInfo.length > 0) {
+			writeNewLine(buffer, lineSeparator, 0);
+			for (int i = 0, max = requiresInfo.length; i < max; i++) {
+				writeNewLine(buffer, lineSeparator, tabNumber);
+				disassemble(requiresInfo[i], buffer, lineSeparator, tabNumber);
+			}
+		}
+		IPackageVisibilityInfo[] exportInfos = moduleAttribute.getExportsInfo();
+		if (exportInfos.length > 0) {
+			writeNewLine(buffer, lineSeparator, 0);
+			for (int i = 0, max = exportInfos.length; i < max; i++) {
+				writeNewLine(buffer, lineSeparator, tabNumber);
+				disassemble(exportInfos[i], buffer, lineSeparator, tabNumber, true);
+			}
+		}
+		IPackageVisibilityInfo[] opensInfos = moduleAttribute.getOpensInfo();
+		if (opensInfos.length > 0) {
+			writeNewLine(buffer, lineSeparator, 0);
+			for (int i = 0, max = opensInfos.length; i < max; i++) {
+				writeNewLine(buffer, lineSeparator, tabNumber);
+				disassemble(opensInfos[i], buffer, lineSeparator, tabNumber, false);
+			}
+		}
+		char[][] usesNames = moduleAttribute.getUsesClassNames();
+		if (usesNames.length > 0) {
+			writeNewLine(buffer, lineSeparator, 0);
+			for (int i = 0, max = usesNames.length; i < max; i++) {
+				writeNewLine(buffer, lineSeparator, tabNumber);
+				buffer.append("uses " + CharOperation.charToString(CharOperation.replaceOnCopy(usesNames[i], '/','.'))); //$NON-NLS-1$
+			}
+		}
+		IProvidesInfo[] providesInfos = moduleAttribute.getProvidesInfo();
+		if (providesInfos.length > 0) {
+			writeNewLine(buffer, lineSeparator, 0);
+			for (int i = 0, max = providesInfos.length; i < max; i++) {
+				writeNewLine(buffer, lineSeparator, tabNumber);
+				disassemble(providesInfos[i], buffer, lineSeparator, tabNumber);
+			}
+		}
+	}
+	private void convertModuleNames(StringBuffer buffer, char[] name) {
+		buffer.append(CharOperation.replaceOnCopy(CharOperation.replaceOnCopy(name, '$','.'), '/','.'));				
+	}
+
+	private void disassembleModule(IModulePackagesAttribute modulePackagesAttribute, StringBuffer buffer, String lineSeparator, int tabNumber) {
+		if (modulePackagesAttribute == null) return;
+		writeNewLine(buffer, lineSeparator, tabNumber);
+		writeNewLine(buffer, lineSeparator, tabNumber);
+		buffer.append(Messages.disassembler_modulepackagesattributeheader);
+		char[][] names = modulePackagesAttribute.getPackageNames();
+		for (int i = 0, l = modulePackagesAttribute.getPackagesCount(); i < l; ++i) {
+			writeNewLine(buffer, lineSeparator, tabNumber + 1);
+			convertModuleNames(buffer, names[i]);				
+		}
+		writeNewLine(buffer, lineSeparator, 0);
+	}
+
+	private void disassembleModule(IModuleMainClassAttribute moduleMainClassAttribute, StringBuffer buffer, String lineSeparator, int tabNumber) {
+		if (moduleMainClassAttribute == null) return;
+		writeNewLine(buffer, lineSeparator, tabNumber);
+		buffer.append(Messages.disassembler_modulemainclassattributeheader);
+		writeNewLine(buffer, lineSeparator, tabNumber + 1);
+		convertModuleNames(buffer, moduleMainClassAttribute.getMainClassName());				
+		writeNewLine(buffer, lineSeparator, 0);
+	}
+
+	private void disassemble(IProvidesInfo iProvidesInfo, StringBuffer buffer, String lineSeparator, int tabNumber) {
+		buffer.append("provides"); //$NON-NLS-1$
+		buffer.append(Messages.disassembler_space);
+		convertModuleNames(buffer, iProvidesInfo.getServiceName());
+		buffer.append(Messages.disassembler_space);
+		char[][] implementations = iProvidesInfo.getImplementationNames();
+		if (implementations.length > 0) {
+			buffer.append( "with"); //$NON-NLS-1$
+			buffer.append(Messages.disassembler_space);
+			for (int i = 0, l = implementations.length; i < l; ++i) {
+				if (i != 0) {
+					buffer
+						.append(Messages.disassembler_comma)
+						.append(Messages.disassembler_space);
+				}
+				convertModuleNames(buffer, implementations[i]);				
+			}
+		}
+		buffer.append(';');		
+	}
+
+	private void disassemble(IPackageVisibilityInfo iPackageVisibilityInfo, StringBuffer buffer, String lineSeparator,
+			int tabNumber, boolean isExports) {
+		buffer.append(isExports ? "exports" : "opens"); //$NON-NLS-1$ //$NON-NLS-2$
+		buffer.append(Messages.disassembler_space);
+		convertModuleNames(buffer, iPackageVisibilityInfo.getPackageName());
+		char[][] targets = iPackageVisibilityInfo.getTargetModuleNames();		
+		if (targets.length > 0) {
+			buffer.append(Messages.disassembler_space);
+			buffer.append( "to"); //$NON-NLS-1$
+			buffer.append(Messages.disassembler_space);
+			for (int i = 0, l = targets.length; i < l; ++i) {
+				if (i != 0) {
+					buffer
+						.append(Messages.disassembler_comma)
+						.append(Messages.disassembler_space);
+				}
+				buffer.append(targets[i]);
+			}
+		}
+		buffer.append(';');		
+	}
+
+	private void disassemble(IRequiresInfo iRequiresInfo, StringBuffer buffer, String lineSeparator, int tabNumber) {
+		buffer.append("requires "); //$NON-NLS-1$
+		decodeModifiersForModuleRequires(buffer, iRequiresInfo.getRequiresFlags());
+		buffer.append(iRequiresInfo.getRequiresModuleName());
+		buffer.append(';');		
 	}
 
 	private void disassembleGenericSignature(int mode, StringBuffer buffer, final char[] signature) {
@@ -1331,7 +1505,7 @@ public class Disassembler extends ClassFileBytesDisassembler {
 					}));
 			}
 		}
-		final ILocalVariableTypeTableAttribute localVariableTypeAttribute= (ILocalVariableTypeTableAttribute) getAttribute(IAttributeNamesConstants.LOCAL_VARIABLE_TYPE_TABLE, codeAttribute);
+		final ILocalVariableTypeTableAttribute localVariableTypeAttribute= (ILocalVariableTypeTableAttribute) Util.getAttribute(codeAttribute, IAttributeNamesConstants.LOCAL_VARIABLE_TYPE_TABLE);
 		final int localVariableTypeTableLength = localVariableTypeAttribute == null ? 0 : localVariableTypeAttribute.getLocalVariableTypeTableLength();
 		if (localVariableTypeTableLength != 0) {
 			int tabNumberForLocalVariableAttribute = tabNumber + 2;
@@ -2448,25 +2622,6 @@ public class Disassembler extends ClassFileBytesDisassembler {
 	 */
 	public String getDescription() {
 		return Messages.disassembler_description;
-	}
-
-	private IEnclosingMethodAttribute getEnclosingMethodAttribute(IClassFileReader classFileReader) {
-		IClassFileAttribute[] attributes = classFileReader.getAttributes();
-		for (int i = 0, max = attributes.length; i < max; i++) {
-			if (CharOperation.equals(attributes[i].getAttributeName(), IAttributeNamesConstants.ENCLOSING_METHOD)) {
-				return (IEnclosingMethodAttribute) attributes[i];
-			}
-		}
-		return null;
-	}
-	private IClassFileAttribute getAttribute(final char[] attributeName, final ICodeAttribute codeAttribute) {
-		IClassFileAttribute[] attributes = codeAttribute.getAttributes();
-		for (int i = 0, max = attributes.length; i < max; i++) {
-			if (CharOperation.equals(attributes[i].getAttributeName(), attributeName)) {
-				return attributes[i];
-			}
-		}
-		return null;
 	}
 
 	private char[][] getParameterNames(char[] methodDescriptor, ICodeAttribute codeAttribute, IMethodParametersAttribute parametersAttribute, int accessFlags) {

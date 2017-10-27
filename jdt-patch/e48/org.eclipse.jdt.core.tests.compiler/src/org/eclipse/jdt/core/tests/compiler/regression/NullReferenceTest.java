@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2014 IBM Corporation and others.
+ * Copyright (c) 2005, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11944,7 +11944,7 @@ public void testBug190623() {
 			"        }\n" +
 			"    }\n" +
 			"    private static Number getNumber() {\n" +
-			"        return new Double(Math.sqrt(-1));\n" +
+			"        return Double.valueOf(Math.sqrt(-1));\n" +
 			"    }\n" +
 			"}\n"},
 		"----------\n" +

@@ -31,7 +31,8 @@ private static final long TARGET_ANNOTATION_BITS =
 	TagBits.AnnotationForLocalVariable |
 	TagBits.AnnotationForField |
 	TagBits.AnnotationForConstructor |
-	TagBits.AnnotationForAnnotationType;
+	TagBits.AnnotationForAnnotationType |
+	TagBits.AnnotationForModule;
 private static final char[] JAVA_LANG_ANNOTATION_ELEMENTTYPE = CharOperation.concatWith(TypeConstants.JAVA_LANG_ANNOTATION_ELEMENTTYPE, '.');
 public static char[] convertClassFileFormat(char[] name) {
 	return CharOperation.replaceOnCopy(name, '/', '.');

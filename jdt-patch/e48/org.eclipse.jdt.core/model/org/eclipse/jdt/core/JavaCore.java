@@ -149,6 +149,7 @@ import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.TypeNameRequestor;
+import org.eclipse.jdt.core.util.IAttributeNamesConstants;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
@@ -169,11 +170,13 @@ import org.eclipse.jdt.internal.core.Region;
 import org.eclipse.jdt.internal.core.SetContainerOperation;
 import org.eclipse.jdt.internal.core.SetVariablesOperation;
 import org.eclipse.jdt.internal.core.builder.JavaBuilder;
+import org.eclipse.jdt.internal.core.builder.ModuleInfoBuilder;
 import org.eclipse.jdt.internal.core.builder.State;
 import org.eclipse.jdt.internal.core.nd.indexer.Indexer;
 import org.eclipse.jdt.internal.core.search.indexing.IndexManager;
 import org.eclipse.jdt.internal.core.util.MementoTokenizer;
 import org.eclipse.jdt.internal.core.util.Messages;
+import org.eclipse.jdt.internal.core.util.ModuleUtil;
 import org.eclipse.jdt.internal.core.util.Util;
 import org.osgi.framework.BundleContext;
 
@@ -239,6 +242,11 @@ public final class JavaCore extends Plugin {
 	 * @since 3.0
 	 */
 	public static final String USER_LIBRARY_CONTAINER_ID= "org.eclipse.jdt.USER_LIBRARY"; //$NON-NLS-1$
+
+	/**
+	 * @since 3.14
+	 */
+	public static final String MODULE_PATH_CONTAINER_ID = "org.eclipse.jdt.MODULE_PATH"; //$NON-NLS-1$
 
 	// Begin configurable option IDs {
 
@@ -313,7 +321,7 @@ public final class JavaCore extends Plugin {
 	 * <p><code>"cldc1.1"</code> requires the source version to be <code>"1.3"</code> and the compliance version to be <code>"1.4"</code> or lower.</p>
 	 * <dl>
 	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.codegen.targetPlatform"</code></dd>
-	 * <dt>Possible values:</dt><dd><code>{ "1.1", "cldc1.1", "1.2", "1.3", "1.4", "1.5", "1.6", "1.7", "1.8" }</code></dd>
+	 * <dt>Possible values:</dt><dd><code>{ "1.1", "cldc1.1", "1.2", "1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "9" }</code></dd>
 	 * <dt>Default:</dt><dd><code>"1.2"</code></dd>
 	 * </dl>
 	 * @category CompilerOptionID
@@ -405,6 +413,19 @@ public final class JavaCore extends Plugin {
 	 * @category CompilerOptionID
 	 */
 	public static final String COMPILER_PB_DEPRECATION = PLUGIN_ID + ".compiler.problem.deprecation"; //$NON-NLS-1$
+	/**
+	 * Compiler option ID: Reporting Terminal Deprecation.
+	 * <p>When enabled, the compiler will signal use of terminally deprecated API either as an
+	 *    error or a warning.</p>
+	 * <dl>
+	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.terminalDeprecation"</code></dd>
+	 * <dt>Possible values:</dt><dd><code>{ "error", "warning", "info", "ignore" }</code></dd>
+	 * <dt>Default:</dt><dd><code>"warning"</code></dd>
+	 * </dl>
+	 * @since 3.14
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_TERMINAL_DEPRECATION = PLUGIN_ID + ".compiler.problem.terminalDeprecation"; //$NON-NLS-1$
 	/**
 	 * Compiler option ID: Reporting Deprecation Inside Deprecated Code.
 	 * <p>When enabled, the compiler will signal use of deprecated API inside deprecated code.</p>
@@ -1571,6 +1592,30 @@ public final class JavaCore extends Plugin {
 	public static final String COMPILER_PB_UNLIKELY_EQUALS_ARGUMENT_TYPE = PLUGIN_ID + ".compiler.problem.unlikelyEqualsArgumentType"; //$NON-NLS-1$
 
 	/**
+	 * Compiler option ID: Reporting when public API uses a non-API type.
+	 * <p>
+	 * This option is relevant only when compiling code in a named module (at compliance 9 or greater).
+	 * <p>
+	 * When enabled, the compiler will issue an error or warning when public API mentions a type that is not
+	 * accessible to clients. Here, public API refers to signatures of public fields and methods declared
+	 * by a public type in an exported package.
+	 * In these positions types are complained against that are either not public or not in an exported package.
+	 * Export qualification is not taken into account.
+	 * If a type in one of these positions is declared in another module that is required by the current module,
+	 * but without the {@code transitive} modifier, this is reported as a problem, too.
+	 * <dl>
+	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.APILeak"</code></dd>
+	 * <dt>Possible values:</dt>
+	 * <dd><code>{ "error", "warning", "info", "ignore" }</code></dd>
+	 * <dt>Default:</dt><dd><code>"warning"</code></dd>
+	 * </dl>
+	 * 
+	 * @since 3.14
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_API_LEAKS = PLUGIN_ID + ".compiler.problem.APILeak"; //$NON-NLS-1$
+	
+	/**
 	 * Compiler option ID: Annotation-based Null Analysis.
 	 * <p>This option controls whether the compiler will use null annotations for
 	 *    improved analysis of (potential) null references.</p>
@@ -1975,7 +2020,7 @@ public final class JavaCore extends Plugin {
 	 *    set to the same version as the source level.</p>
 	 * <dl>
 	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.source"</code></dd>
-	 * <dt>Possible values:</dt><dd><code>{ "1.3", "1.4", "1.5", "1.6", "1.7", "1.8" }</code></dd>
+	 * <dt>Possible values:</dt><dd><code>{ "1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "9" }</code></dd>
 	 * <dt>Default:</dt><dd><code>"1.3"</code></dd>
 	 * </dl>
 	 * @since 2.0
@@ -1993,7 +2038,7 @@ public final class JavaCore extends Plugin {
 	 *    should match the compliance setting.</p>
 	 * <dl>
 	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.compliance"</code></dd>
-	 * <dt>Possible values:</dt><dd><code>{ "1.3", "1.4", "1.5", "1.6", "1.7", "1.8" }</code></dd>
+	 * <dt>Possible values:</dt><dd><code>{ "1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "9" }</code></dd>
 	 * <dt>Default:</dt><dd><code>"1.4"</code></dd>
 	 * </dl>
 	 * @since 2.0
@@ -2892,6 +2937,12 @@ public final class JavaCore extends Plugin {
 	 * @category OptionValue
 	 */
 	public static final String VERSION_1_8 = "1.8"; //$NON-NLS-1$
+	/**
+	 * Configurable option value: {@value}.
+	 * @since 3.14
+	 * @category OptionValue
+	 */
+	public static final String VERSION_9 = "9"; //$NON-NLS-1$
 	/**
 	 * Configurable option value: {@value}.
 	 * @since 3.4
@@ -4473,8 +4524,8 @@ public final class JavaCore extends Plugin {
 			if (element.equals(markerElement)) return true; // external elements may still be equal with different handleIDs.
 
 			// cycle through enclosing types in case marker is associated with a classfile (15568)
-			if (markerElement instanceof IClassFile){
-				IType enclosingType = ((IClassFile)markerElement).getType().getDeclaringType();
+			if (markerElement instanceof IOrdinaryClassFile){
+				IType enclosingType = ((IOrdinaryClassFile)markerElement).getType().getDeclaringType();
 				if (enclosingType != null){
 					markerElement = enclosingType.getClassFile(); // retry with immediate enclosing classfile
 					continue;
@@ -4516,8 +4567,8 @@ public final class JavaCore extends Plugin {
 			if (element.equals(markerElement)) return true; // external elements may still be equal with different handleIDs.
 
 			// cycle through enclosing types in case marker is associated with a classfile (15568)
-			if (markerElement instanceof IClassFile){
-				IType enclosingType = ((IClassFile)markerElement).getType().getDeclaringType();
+			if (markerElement instanceof IOrdinaryClassFile){
+				IType enclosingType = ((IOrdinaryClassFile)markerElement).getType().getDeclaringType();
 				if (enclosingType != null){
 					markerElement = enclosingType.getClassFile(); // retry with immediate enclosing classfile
 					continue;
@@ -5846,6 +5897,14 @@ public final class JavaCore extends Plugin {
 				options.put(JavaCore.COMPILER_PB_ENUM_IDENTIFIER, JavaCore.ERROR);
 				options.put(JavaCore.COMPILER_CODEGEN_INLINE_JSR_BYTECODE, JavaCore.ENABLED);
 				break;
+			case ClassFileConstants.MAJOR_VERSION_9:
+				options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_9);
+				options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_9);
+				options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_9);
+				options.put(JavaCore.COMPILER_PB_ASSERT_IDENTIFIER, JavaCore.ERROR);
+				options.put(JavaCore.COMPILER_PB_ENUM_IDENTIFIER, JavaCore.ERROR);
+				options.put(JavaCore.COMPILER_CODEGEN_INLINE_JSR_BYTECODE, JavaCore.ENABLED);
+				break;
 		}
 	}
 
@@ -5887,6 +5946,61 @@ public final class JavaCore extends Plugin {
 	 */
 	public static int compareJavaVersions(String first, String second) {
 		return Long.compare(CompilerOptions.versionToJdkLevel(first), CompilerOptions.versionToJdkLevel(second));
+	}
+	/**
+	 * Returns an array of module names referenced by this project indirectly. 
+	 * This is a helper method that can be used to construct a Java module 
+	 * description of an existing project. The referenced modules can either be 
+	 * system modules or user modules found in project build path in the form of 
+	 * libraries.
+	 * The prerequisites for this to be effective are:
+	 * <ul>
+	 * <li>the project is already in compliance level 9 or above.
+	 * <li>the system library on the build path of the project is a modularized Java Runtime.
+	 * </ul>
+	 *
+	 * @param project
+	 *            the project whose referenced modules to be computed
+	 * @return an array of String containing module names
+	 * @throws CoreException
+	 * @since 3.14
+	 */
+	public static String[] getReferencedModules(IJavaProject project) throws CoreException {
+		return ModuleUtil.getReferencedModules(project);
+	}
+
+	/**
+	 * Compile the given module description in the context of its enclosing Java project
+	 * and add class file attributes using the given map of attribute values.
+	 * <p>In this map, the following keys are supported</p>
+	 * <dl>
+	 * <dt>{@link IAttributeNamesConstants#MODULE_MAIN_CLASS}</dt>
+	 * <dd>The associated value will be used for the <code>ModuleMainClass</code> attribute.</dd>
+	 * <dt>{@link IAttributeNamesConstants#MODULE_PACKAGES}</dt>
+	 * <dd>If the associated value is an empty string, then the compiler will generate a
+	 * <code>ModulePackages</code> attribute with a list of packages that is computed from
+	 * <ul>
+	 * <li>all <code>exports</code> directives
+	 * <li>all <code>opens</code> directives
+	 * <li>the implementation classes of all <code>provides</code> directives.
+	 * </ul>
+	 * If the associated value is not empty, it must be a comma-separated list of package names,
+	 * which will be added to the computed list.
+	 * </dl>
+	 * <p>No other keys are supported in this version, but more keys may be added in the future.</p>
+	 *
+	 * @param module handle for the <code>module-info.java</code> file to be compiled.
+	 * @param classFileAttributes map of attribute names and values to be used during class file generation
+	 * @return the compiled byte code
+	 * 
+	 * @throws JavaModelException
+	 * @throws IllegalArgumentException if the map of classFileAttributes contains an unsupported key.
+	 * @since 3.14
+	 */
+	public static byte[] compileWithAttributes(IModuleDescription module, Map<String,String> classFileAttributes)
+			throws JavaModelException, IllegalArgumentException
+	{
+		return new ModuleInfoBuilder().compileWithAttributes(module, classFileAttributes);
 	}
 
 	/* (non-Javadoc)

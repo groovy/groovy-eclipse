@@ -329,138 +329,159 @@ public class NonFatalErrorTest extends AbstractRegressionTest {
 	}
 	public void testImportUnresolved_fatal() {
 		Map<String,String> options = getCompilerOptions();
-		options.put(JavaCore.COMPILER_PB_UNUSED_IMPORT, JavaCore.ERROR);
-		options.put(JavaCore.COMPILER_PB_FATAL_OPTIONAL_ERROR, JavaCore.ENABLED);
-		runNegativeTest(
-			true, // flush dir
-			new String[] {
-				"p/Z.java",
-				"package p;\n" +
-				"public class Z {\n" +
-				"	public static void main(String[] args) throws Exception {\n" +
-				"		try {\n" +
-				"			Class.forName(\"X\").newInstance();\n" + // forward reference, workaround by using reflection
-				"		} catch (java.lang.Error e) {\n" +
-				"			System.err.println(e.getMessage());\n" +
-				"		}\n" +
-				"	}\n" +
-				"}\n",
-				"X.java",
-				"import com.bogus.Missing;\n" +
-				"public class X {\n" +
-				"	public static void main(String[] args) {\n" +
-				"		new X().test();\n" +
-				"	}\n" +
-				"	void test() {\n" +
-				"		System.out.println(\"OK\");\n" +
-				"	}\n" +
-				"}\n"
-			},
-			null, // libs
-			options,
-			"----------\n" + 
-			"1. ERROR in X.java (at line 1)\n" + 
-			"	import com.bogus.Missing;\n" + 
-			"	       ^^^^^^^^^\n" + 
-			"The import com.bogus cannot be resolved\n" + 
-			"----------\n",
-			"",
-			"Unresolved compilation problem: \n" + 
-			"	The import com.bogus cannot be resolved",
-			JavacTestOptions.SKIP);
+		try {
+			options.put(JavaCore.COMPILER_PB_UNUSED_IMPORT, JavaCore.ERROR);
+			options.put(JavaCore.COMPILER_PB_FATAL_OPTIONAL_ERROR, JavaCore.ENABLED);
+			options.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.IGNORE);
+			runNegativeTest(
+					true, // flush dir
+					new String[] {
+							"p/Z.java",
+							"package p;\n" +
+									"public class Z {\n" +
+									"	public static void main(String[] args) throws Exception {\n" +
+									"		try {\n" +
+									"			Class.forName(\"X\").newInstance();\n" + // forward reference, workaround by using reflection
+									"		} catch (java.lang.Error e) {\n" +
+									"			System.err.println(e.getMessage());\n" +
+									"		}\n" +
+									"	}\n" +
+									"}\n",
+									"X.java",
+									"import com.bogus.Missing;\n" +
+											"public class X {\n" +
+											"	public static void main(String[] args) {\n" +
+											"		new X().test();\n" +
+											"	}\n" +
+											"	void test() {\n" +
+											"		System.out.println(\"OK\");\n" +
+											"	}\n" +
+											"}\n"
+					},
+					null, // libs
+					options,
+					"----------\n" + 
+							"1. ERROR in X.java (at line 1)\n" + 
+							"	import com.bogus.Missing;\n" + 
+							"	       ^^^^^^^^^\n" + 
+							"The import com.bogus cannot be resolved\n" + 
+							"----------\n",
+							"",
+							"Unresolved compilation problem: \n" + 
+									"	The import com.bogus cannot be resolved",
+									JavacTestOptions.SKIP);
+		} finally {
+			options.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.WARNING);
+		}
 	}
 	public void testPackageConflict() {
-		runNegativeTest(
-			true, // flush dir
-			new String[] {
-				"p/z.java",
-				"package p;\n" +
-				"public class z {\n" +
-				"	public static void main(String[] args) throws Exception {\n" +
-				"		try {\n" +
-				"			Class.forName(\"p.z.X\").newInstance();\n" +
-				"		} catch (ClassNotFoundException e) {\n" +
-				"			System.out.println(e.getClass().getName());\n" +
-				"		}\n" +
-				"	}\n" +
-				"}\n",
-				"p/z/X.java",
-				"package p.z;\n" +
-				"public class X {\n" +
-				"	public X() {\n" +
-				"		System.out.println(\"OK\");\n" +
-				"	}\n" +
-				"}\n",
-			},
-			null, // libs
-			getCompilerOptions(),
-			"----------\n" + 
-			"1. ERROR in p\\z\\X.java (at line 1)\n" + 
-			"	package p.z;\n" + 
-			"	        ^^^\n" + 
-			"The package p.z collides with a type\n" + 
-			"----------\n",
-			"java.lang.ClassNotFoundException", // cannot generate code in presence of the above error
-			"",
-			JavacTestOptions.SKIP);
+		Map<String,String> options = getCompilerOptions();
+		try {
+			options.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.IGNORE);
+
+			runNegativeTest(
+					true, // flush dir
+					new String[] {
+							"p/z.java",
+							"package p;\n" +
+									"public class z {\n" +
+									"	public static void main(String[] args) throws Exception {\n" +
+									"		try {\n" +
+									"			Class.forName(\"p.z.X\").newInstance();\n" +
+									"		} catch (ClassNotFoundException e) {\n" +
+									"			System.out.println(e.getClass().getName());\n" +
+									"		}\n" +
+									"	}\n" +
+									"}\n",
+									"p/z/X.java",
+									"package p.z;\n" +
+											"public class X {\n" +
+											"	public X() {\n" +
+											"		System.out.println(\"OK\");\n" +
+											"	}\n" +
+											"}\n",
+					},
+					null, // libs
+					options,
+					"----------\n" + 
+							"1. ERROR in p\\z\\X.java (at line 1)\n" + 
+							"	package p.z;\n" + 
+							"	        ^^^\n" + 
+							"The package p.z collides with a type\n" + 
+							"----------\n",
+							"java.lang.ClassNotFoundException", // cannot generate code in presence of the above error
+							"",
+							JavacTestOptions.SKIP);
+		} finally {
+			options.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.WARNING);
+		}
 	}
 	public void testImportVariousProblems() {
-		runNegativeTest(
-			true, // flush dir
-			new String[] {
-				"p/Z.java",
-				"package p;\n" +
-				"public class Z {\n" +
-				"	public static void main(String[] args) throws Exception {\n" +
-				"		try {\n" +
-				"			Class.forName(\"X\").newInstance();\n" + // forward reference, workaround by using reflection
-				"		} catch (ClassNotFoundException e) {\n" +
-				"			System.out.println(e.getClass().getName());\n" +
-				"		}\n" +
-				"	}\n" +
-				"}\n",
-				"p1/Y.java",
-				"package p1;\n" +
-				"public class Y {}\n",
-				"p2/Y.java",
-				"package p2;\n" +
-				"public class Y {}\n",
-				"X.java",
-				"import java.util;\n" +
-				"import p.Z;\n" +
-				"import p1.Y;\n" +
-				"import p2.Y;\n" +
-				"public class X {\n" +
-				"	public X() {\n" +
-				"		System.out.println(\"OK\");\n" +
-				"	}\n" +
-				"}\n" +
-				"class Z {}\n"
-			},
-			null, // libs
-			getCompilerOptions(),
-			"----------\n" + 
-			"1. ERROR in X.java (at line 1)\n" + 
-			"	import java.util;\n" + 
-			"	       ^^^^^^^^^\n" + 
-			"Only a type can be imported. java.util resolves to a package\n" + 
-			"----------\n" + 
-			"2. ERROR in X.java (at line 2)\n" + 
-			"	import p.Z;\n" + 
-			"	       ^^^\n" + 
-			"The import p.Z conflicts with a type defined in the same file\n" + 
-			"----------\n" + 
-			"3. ERROR in X.java (at line 4)\n" + 
-			"	import p2.Y;\n" + 
-			"	       ^^^^\n" + 
-			"The import p2.Y collides with another import statement\n" + 
-			"----------\n",
-			"OK",
-			"",
-			JavacTestOptions.SKIP);
+		Map<String,String> options = getCompilerOptions();
+		try {
+			options.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.IGNORE);
+
+			runNegativeTest(
+					true, // flush dir
+					new String[] {
+							"p/Z.java",
+							"package p;\n" +
+									"public class Z {\n" +
+									"	public static void main(String[] args) throws Exception {\n" +
+									"		try {\n" +
+									"			Class.forName(\"X\").newInstance();\n" + // forward reference, workaround by using reflection
+									"		} catch (ClassNotFoundException e) {\n" +
+									"			System.out.println(e.getClass().getName());\n" +
+									"		}\n" +
+									"	}\n" +
+									"}\n",
+									"p1/Y.java",
+									"package p1;\n" +
+											"public class Y {}\n",
+											"p2/Y.java",
+											"package p2;\n" +
+													"public class Y {}\n",
+													"X.java",
+													"import java.util;\n" +
+															"import p.Z;\n" +
+															"import p1.Y;\n" +
+															"import p2.Y;\n" +
+															"public class X {\n" +
+															"	public X() {\n" +
+															"		System.out.println(\"OK\");\n" +
+															"	}\n" +
+															"}\n" +
+															"class Z {}\n"
+					},
+					null, // libs
+					options,
+					"----------\n" + 
+							"1. ERROR in X.java (at line 1)\n" + 
+							"	import java.util;\n" + 
+							"	       ^^^^^^^^^\n" + 
+							"Only a type can be imported. java.util resolves to a package\n" + 
+							"----------\n" + 
+							"2. ERROR in X.java (at line 2)\n" + 
+							"	import p.Z;\n" + 
+							"	       ^^^\n" + 
+							"The import p.Z conflicts with a type defined in the same file\n" + 
+							"----------\n" + 
+							"3. ERROR in X.java (at line 4)\n" + 
+							"	import p2.Y;\n" + 
+							"	       ^^^^\n" + 
+							"The import p2.Y collides with another import statement\n" + 
+							"----------\n",
+							"OK",
+							"",
+							JavacTestOptions.SKIP);
+		} finally {
+			options.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.WARNING);
+		}
 	}
 	public void testImportStaticProblems() {
 		if (this.complianceLevel < ClassFileConstants.JDK1_5) return; // uses static imports
+		Map<String,String> options = getCompilerOptions();
+		options.put(CompilerOptions.OPTION_ReportDeprecation, CompilerOptions.IGNORE);
 		runNegativeTest(
 			true, // flush dir
 			new String[] {
@@ -491,7 +512,7 @@ public class NonFatalErrorTest extends AbstractRegressionTest {
 				"class Z {}\n"
 			},
 			null, // libs
-			getCompilerOptions(),
+			options,
 			"----------\n" + 
 			"1. ERROR in X.java (at line 1)\n" + 
 			"	import static p1.Y;\n" + 

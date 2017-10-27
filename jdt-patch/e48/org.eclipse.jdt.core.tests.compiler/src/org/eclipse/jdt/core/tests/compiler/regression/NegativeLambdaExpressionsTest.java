@@ -7341,6 +7341,7 @@ public void testIntersectionCast() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=421711, [1.8][compiler] '_' as identifier for a lambda parameter should be rejected.
 public void testUnderScoreParameter() {
+		String level = this.complianceLevel >= ClassFileConstants.JDK9 ? "ERROR" : "WARNING";
 		this.runNegativeTest(
 			new String[] {
 					"X.java", 
@@ -7361,7 +7362,7 @@ public void testUnderScoreParameter() {
 			"	           ^\n" + 
 			"\'_\' should not be used as an identifier, since it is a reserved keyword from source level 1.8 on\n" + 
 			"----------\n" + 
-			"2. WARNING in X.java (at line 8)\n" + 
+			"2. "+ level +" in X.java (at line 8)\n" + 
 			"	F f2 = _ -> {};\n" + 
 			"	       ^\n" + 
 			"\'_\' should not be used as an identifier, since it is a reserved keyword from source level 1.8 on\n" + 

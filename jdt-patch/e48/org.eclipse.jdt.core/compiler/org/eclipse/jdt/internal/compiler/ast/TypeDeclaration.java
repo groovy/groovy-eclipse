@@ -1515,7 +1515,6 @@ public boolean isPackageInfo() {
 public boolean isSecondary() {
 	return (this.bits & ASTNode.IsSecondaryType) != 0;
 }
-
 // GROOVY add
 public boolean isScannerUsableOnThisDeclaration() {
 	return true;

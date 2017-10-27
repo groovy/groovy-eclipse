@@ -4,7 +4,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contributions for
@@ -102,8 +102,9 @@ public interface TypeConstants {
     char[] ANONYMOUS_METHOD = "lambda$".toCharArray(); //$NON-NLS-1$
     char[] DESERIALIZE_LAMBDA = "$deserializeLambda$".toCharArray(); //$NON-NLS-1$
     char[] LAMBDA_TYPE = "<lambda>".toCharArray(); //$NON-NLS-1$
-    
-	// jsr308
+    char[] UPPER_MODULE = "MODULE".toCharArray(); //$NON-NLS-1$
+
+    // jsr308
 	char[] TYPE_USE_TARGET  = "TYPE_USE".toCharArray(); //$NON-NLS-1$
 	char[] TYPE_PARAMETER_TARGET = "TYPE_PARAMETER".toCharArray(); //$NON-NLS-1$
     
@@ -165,6 +166,7 @@ public interface TypeConstants {
 	char[][] JAVA_UTIL_OBJECTS = {JAVA, UTIL, "Objects".toCharArray()}; //$NON-NLS-1$
 	char[][] JAVA_UTIL_LIST = {JAVA, UTIL, "List".toCharArray()}; //$NON-NLS-1$
 	char[][] JAVA_LANG_DEPRECATED = {JAVA, LANG, "Deprecated".toCharArray()}; //$NON-NLS-1$
+	char[] FOR_REMOVAL = "forRemoval".toCharArray(); //$NON-NLS-1$
 	char[][] JAVA_LANG_ANNOTATION_DOCUMENTED = {JAVA, LANG, ANNOTATION, "Documented".toCharArray()}; //$NON-NLS-1$
 	char[][] JAVA_LANG_ANNOTATION_INHERITED = {JAVA, LANG, ANNOTATION, "Inherited".toCharArray()}; //$NON-NLS-1$
 	char[][] JAVA_LANG_ANNOTATION_REPEATABLE = {JAVA, LANG, ANNOTATION, "Repeatable".toCharArray()}; //$NON-NLS-1$
@@ -319,7 +321,8 @@ public interface TypeConstants {
 	// ... methods:
 	char[] IS_TRUE = "isTrue".toCharArray(); //$NON-NLS-1$
 	char[] NOT_NULL = "notNull".toCharArray(); //$NON-NLS-1$
-	
+	char[] PROVIDER = "provider".toCharArray(); //$NON-NLS-1$
+
 	char[][] COM_GOOGLE_COMMON_BASE_PRECONDITIONS = new char[][] { 
 			COM, GOOGLE, "common".toCharArray(), "base".toCharArray(), "Preconditions".toCharArray() }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	// ... methods:
@@ -464,4 +467,13 @@ public interface TypeConstants {
 
 	// synthetic package-info name
 	public static final char[] PACKAGE_INFO_NAME = "package-info".toCharArray(); //$NON-NLS-1$
+	public static final char[] MODULE_INFO_NAME = "module-info".toCharArray(); //$NON-NLS-1$
+	public static final String MODULE_INFO_NAME_STRING = "module-info"; //$NON-NLS-1$
+	public static final char[] MODULE_INFO_FILE_NAME = "module-info.java".toCharArray(); //$NON-NLS-1$
+	public static final char[] MODULE_INFO_CLASS_NAME = "module-info.class".toCharArray(); //$NON-NLS-1$
+	public static final String MODULE_INFO_FILE_NAME_STRING = "module-info.java"; //$NON-NLS-1$
+	public static final String MODULE_INFO_CLASS_NAME_STRING = "module-info.class"; //$NON-NLS-1$
+	// java.base module name
+	char[] JAVA_BASE = "java.base".toCharArray(); //$NON-NLS-1$
+	String META_INF_MANIFEST_MF = "META-INF/MANIFEST.MF"; //$NON-NLS-1$
 }

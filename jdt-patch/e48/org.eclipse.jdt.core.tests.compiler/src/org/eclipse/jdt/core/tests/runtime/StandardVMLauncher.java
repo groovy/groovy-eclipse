@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -28,10 +28,15 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 @SuppressWarnings({ "rawtypes" ,"unchecked" })
 public class StandardVMLauncher extends LocalVMLauncher {
 	String batchFileName;
+	private boolean isJrtBasedVM;
 /**
  * Creates a new StandardVMLauncher that launches a standard VM
  * on the same machine.
  */
+public StandardVMLauncher(boolean isJrtBasedVM) {
+	super();
+	this.isJrtBasedVM = isJrtBasedVM;
+}
 public StandardVMLauncher() {
 	super();
 }
@@ -50,17 +55,19 @@ protected String buildBootClassPath() {
 			bootPathString.append(pathSeparator);
 		}
 	} else {
-		// Add regular rt.jar
-		bootPathString.append(this.vmPath);
-		bootPathString.append(File.separator);
-		if (!(this.vmPath.toLowerCase().endsWith("jre") || this.vmPath.toLowerCase().endsWith("jre" + File.separator))) {
-			bootPathString.append("jre");
+		if (!this.isJrtBasedVM) {
+			// Add regular rt.jar
+			bootPathString.append(this.vmPath);
 			bootPathString.append(File.separator);
+			if (!(this.vmPath.toLowerCase().endsWith("jre") || this.vmPath.toLowerCase().endsWith("jre" + File.separator))) {
+				bootPathString.append("jre");
+				bootPathString.append(File.separator);
+			}
+			bootPathString.append("lib");
+			bootPathString.append(File.separator);
+			bootPathString.append("rt.jar");
+			bootPathString.append(pathSeparator);
 		}
-		bootPathString.append("lib");
-		bootPathString.append(File.separator);
-		bootPathString.append("rt.jar");
-		bootPathString.append(pathSeparator);
 	}
 
 	// Add boot class path directory if needed

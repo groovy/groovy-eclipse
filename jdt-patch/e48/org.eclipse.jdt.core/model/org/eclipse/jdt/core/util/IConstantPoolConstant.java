@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2011 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -42,6 +42,15 @@ public interface IConstantPoolConstant {
 	 */
 	int CONSTANT_InvokeDynamic = 18;
 
+	/**
+	 * @since 3.14
+	 */
+	int CONSTANT_Module = 19;
+	/**
+	 * @since 3.14
+	 */
+	int CONSTANT_Package = 20;
+
 	int CONSTANT_Methodref_SIZE = 5;
 	int CONSTANT_Class_SIZE = 3;
 	int CONSTANT_Double_SIZE = 9;
@@ -66,6 +75,15 @@ public interface IConstantPoolConstant {
 	 */
 	int CONSTANT_InvokeDynamic_SIZE = 5;
 
+	/**
+	 * @since 3.14
+	 */
+	int CONSTANT_Module_SIZE = 3;
+
+	/**
+	 * @since 3.14
+	 */
+	int CONSTANT_Package_SIZE = 3;
 	/**
 	 * The constant is described at 5.4.3.5 in the Java 7 VM specification (part 3).
 	 * @since 3.8

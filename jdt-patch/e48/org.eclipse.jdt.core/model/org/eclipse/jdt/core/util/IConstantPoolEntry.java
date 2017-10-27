@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,8 +14,11 @@ package org.eclipse.jdt.core.util;
  * Description of a constant pool entry as described in the JVM specifications.
  * Its contents is initialized according to its kind.
  *
- * This interface may be implemented by clients.
+ * This interface may be implemented by clients. Because of that questionable choice,
+ * clients may have to cast to {@link IConstantPoolEntry3} to get access to the relevant content.
  *
+ * @see IConstantPoolEntry2
+ * @see IConstantPoolEntry3
  * @since 2.0
  */
 public interface IConstantPoolEntry {

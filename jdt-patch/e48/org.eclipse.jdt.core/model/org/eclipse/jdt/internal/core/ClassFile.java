@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,13 +18,9 @@ package org.eclipse.jdt.internal.core;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
-import org.eclipse.core.resources.IContainer;
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
@@ -35,11 +31,13 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.*;
-import org.eclipse.jdt.core.compiler.IProblem;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
 import org.eclipse.jdt.internal.compiler.classfmt.ExternalAnnotationDecorator;
 import org.eclipse.jdt.internal.compiler.classfmt.ExternalAnnotationProvider;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
+import org.eclipse.jdt.internal.compiler.env.IDependent;
+import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 import org.eclipse.jdt.internal.core.nd.java.JavaNames;
 import org.eclipse.jdt.internal.core.nd.java.model.BinaryTypeDescriptor;
@@ -53,9 +51,8 @@ import org.eclipse.jdt.internal.core.util.Util;
  */
 
 @SuppressWarnings({"rawtypes"})
-public class ClassFile extends Openable implements IClassFile, SuffixConstants {
+public class ClassFile extends AbstractClassFile implements IOrdinaryClassFile {
 
-	protected String name;
 	protected BinaryType binaryType = null;
 
 	private IPath externalAnnotationBase;
@@ -64,27 +61,7 @@ public class ClassFile extends Openable implements IClassFile, SuffixConstants {
  * Creates a handle to a class file.
  */
 protected ClassFile(PackageFragment parent, String nameWithoutExtension) {
-	super(parent);
-	this.name = nameWithoutExtension;
-}
-
-/*
- * @see IClassFile#becomeWorkingCopy(IProblemRequestor, WorkingCopyOwner, IProgressMonitor)
- */
-public ICompilationUnit becomeWorkingCopy(IProblemRequestor problemRequestor, WorkingCopyOwner owner, IProgressMonitor monitor) throws JavaModelException {
-	JavaModelManager manager = JavaModelManager.getJavaModelManager();
-	CompilationUnit workingCopy = new ClassFileWorkingCopy(this, owner == null ? DefaultWorkingCopyOwner.PRIMARY : owner);
-	JavaModelManager.PerWorkingCopyInfo perWorkingCopyInfo = manager.getPerWorkingCopyInfo(workingCopy, false/*don't create*/, true /*record usage*/, null/*no problem requestor needed*/);
-	if (perWorkingCopyInfo == null) {
-		// close cu and its children
-		close();
-
-		BecomeWorkingCopyOperation operation = new BecomeWorkingCopyOperation(workingCopy, problemRequestor);
-		operation.runOperation(monitor);
-
-		return workingCopy;
-	}
-	return perWorkingCopyInfo.workingCopy;
+	super(parent, nameWithoutExtension);
 }
 
 /**
@@ -104,54 +81,14 @@ protected boolean buildStructure(OpenableElementInfo info, IProgressMonitor pm, 
 		info.setChildren(new IJavaElement[] {});
 		return false;
 	}
-
+	
 	// Make the type
 	IType type = getType();
 	info.setChildren(new IJavaElement[] {type});
 	newElements.put(type, typeInfo);
-
 	// Read children
 	((ClassFileInfo) info).readBinaryChildren(this, (HashMap) newElements, typeInfo);
-
 	return true;
-}
-/**
- * @see ICodeAssist#codeComplete(int, ICompletionRequestor)
- * @deprecated
- */
-@Deprecated
-public void codeComplete(int offset, ICompletionRequestor requestor) throws JavaModelException {
-	codeComplete(offset, requestor, DefaultWorkingCopyOwner.PRIMARY);
-}
-/**
- * @see ICodeAssist#codeComplete(int, ICompletionRequestor, WorkingCopyOwner)
- * @deprecated
- */
-@Deprecated
-public void codeComplete(int offset, ICompletionRequestor requestor, WorkingCopyOwner owner) throws JavaModelException {
-	if (requestor == null) {
-		throw new IllegalArgumentException("Completion requestor cannot be null"); //$NON-NLS-1$
-	}
-	codeComplete(offset, new org.eclipse.jdt.internal.codeassist.CompletionRequestorWrapper(requestor), owner);
-}
-
-/* (non-Javadoc)
- * @see org.eclipse.jdt.core.ICodeAssist#codeComplete(int, org.eclipse.jdt.core.CompletionRequestor)
- */
-public void codeComplete(int offset, CompletionRequestor requestor) throws JavaModelException {
-	codeComplete(offset, requestor, DefaultWorkingCopyOwner.PRIMARY);
-}
-/* (non-Javadoc)
- * @see org.eclipse.jdt.core.ICodeAssist#codeComplete(int, org.eclipse.jdt.core.CompletionRequestor, org.eclipse.core.runtime.IProgressMonitor)
- */
-public void codeComplete(int offset, CompletionRequestor requestor, IProgressMonitor monitor) throws JavaModelException {
-	codeComplete(offset, requestor, DefaultWorkingCopyOwner.PRIMARY, monitor);
-}
-/* (non-Javadoc)
- * @see org.eclipse.jdt.core.ICodeAssist#codeComplete(int, org.eclipse.jdt.core.CompletionRequestor, org.eclipse.jdt.core.WorkingCopyOwner)
- */
-public void codeComplete(int offset, CompletionRequestor requestor, WorkingCopyOwner owner) throws JavaModelException {
-	codeComplete(offset, requestor, owner, null);
 }
 /* (non-Javadoc)
  * @see org.eclipse.jdt.core.ICodeAssist#codeComplete(int, org.eclipse.jdt.core.CompletionRequestor, org.eclipse.jdt.core.WorkingCopyOwner, org.eclipse.core.runtime.IProgressMonitor)
@@ -171,12 +108,6 @@ public void codeComplete(int offset, CompletionRequestor requestor, WorkingCopyO
 }
 
 /**
- * @see ICodeAssist#codeSelect(int, int)
- */
-public IJavaElement[] codeSelect(int offset, int length) throws JavaModelException {
-	return codeSelect(offset, length, DefaultWorkingCopyOwner.PRIMARY);
-}
-/**
  * @see ICodeAssist#codeSelect(int, int, WorkingCopyOwner)
  */
 public IJavaElement[] codeSelect(int offset, int length, WorkingCopyOwner owner) throws JavaModelException {
@@ -185,32 +116,19 @@ public IJavaElement[] codeSelect(int offset, int length, WorkingCopyOwner owner)
 	if (buffer != null && (contents = buffer.getCharacters()) != null) {
 	    BinaryType type = (BinaryType) getType();
 		// GROOVY edit
-		//BasicCompilationUnit cu = new BasicCompilationUnit(contents, null, type.sourceFileName((IBinaryType) type.getElementInfo()));
+		//BasicCompilationUnit cu = new BasicCompilationUnit(contents, null, type.sourceFileName((IBinaryType) type.getElementInfo()), this);
 		// handle code select for Groovy files differently
 		IBinaryType typeInfo = (IBinaryType) type.getElementInfo();
 		if (LanguageSupportFactory.isInterestingBinary(type, typeInfo)) {
 			return LanguageSupportFactory.binaryCodeSelect(this, offset, length, owner);
 		}
-		BasicCompilationUnit cu = new BasicCompilationUnit(contents, null, type.sourceFileName(typeInfo));
+		BasicCompilationUnit cu = new BasicCompilationUnit(contents, null, type.sourceFileName(typeInfo), this);
 		// GROOVY end
 		return super.codeSelect(cu, offset, length, owner);
 	} else {
 		//has no associated souce
 		return new IJavaElement[] {};
 	}
-}
-/**
- * Returns a new element info for this element.
- */
-@Override
-protected Object createElementInfo() {
-	return new ClassFileInfo();
-}
-@Override
-public boolean equals(Object o) {
-	if (!(o instanceof ClassFile)) return false;
-	ClassFile other = (ClassFile) o;
-	return this.name.equals(other.name) && this.parent.equals(other.parent);
 }
 public boolean existsUsingJarTypeCache() {
 	if (getPackageFragmentRoot().isArchive()) {
@@ -248,32 +166,6 @@ public boolean existsUsingJarTypeCache() {
 		return exists();
 }
 
-/**
- * Finds the deepest <code>IJavaElement</code> in the hierarchy of
- * <code>elt</elt>'s children (including <code>elt</code> itself)
- * which has a source range that encloses <code>position</code>
- * according to <code>mapper</code>.
- */
-protected IJavaElement findElement(IJavaElement elt, int position, SourceMapper mapper) {
-	SourceRange range = mapper.getSourceRange(elt);
-	if (range == null || position < range.getOffset() || range.getOffset() + range.getLength() - 1 < position) {
-		return null;
-	}
-	if (elt instanceof IParent) {
-		try {
-			IJavaElement[] children = ((IParent) elt).getChildren();
-			for (int i = 0; i < children.length; i++) {
-				IJavaElement match = findElement(children[i], position, mapper);
-				if (match != null) {
-					return match;
-				}
-			}
-		} catch (JavaModelException npe) {
-			// elt doesn't exist: return the element
-		}
-	}
-	return elt;
-}
 /**
  * @see ITypeRoot#findPrimaryType()
  */
@@ -324,36 +216,6 @@ public IBinaryType getBinaryTypeInfo() throws JavaModelException {
 	}
 }
 
-public byte[] getBytes() throws JavaModelException {
-	JavaElement pkg = (JavaElement) getParent();
-	if (pkg instanceof JarPackageFragment) {
-		JarPackageFragmentRoot root = (JarPackageFragmentRoot) pkg.getParent();
-		ZipFile zip = null;
-		try {
-			zip = root.getJar();
-			String entryName = Util.concatWith(((PackageFragment) pkg).names, getElementName(), '/');
-			ZipEntry ze = zip.getEntry(entryName);
-			if (ze != null) {
-				return org.eclipse.jdt.internal.compiler.util.Util.getZipEntryByteContent(ze, zip);
-			}
-			throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.ELEMENT_DOES_NOT_EXIST, this));
-		} catch (IOException ioe) {
-			throw new JavaModelException(ioe, IJavaModelStatusConstants.IO_EXCEPTION);
-		} catch (CoreException e) {
-			if (e instanceof JavaModelException) {
-				throw (JavaModelException)e;
-			} else {
-				throw new JavaModelException(e);
-			}
-		} finally {
-			JavaModelManager.getJavaModelManager().closeZipFile(zip);
-		}
-	} else {
-		IFile file = (IFile) resource();
-		return Util.getResourceContentsAsByteArray(file);
-	}
-}
-
 public String getName() {
 	return this.name;
 }
@@ -364,33 +226,52 @@ private IBinaryType getJarBinaryTypeInfo() throws CoreException, IOException, Cl
 	if (descriptor == null) {
 		return null;
 	}
-
-	IBinaryType result = BinaryTypeFactory.readType(descriptor, null);
-
+	IBinaryType result = null;
+	IPackageFragmentRoot root = getPackageFragmentRoot();
+	if (getPackageFragmentRoot() instanceof JarPackageFragmentRoot) {
+		if (root instanceof JrtPackageFragmentRoot || this.name.equals(IModule.MODULE_INFO)) {
+			PackageFragment pkg = (PackageFragment) getParent();
+			JarPackageFragmentRoot jarRoot = (JarPackageFragmentRoot) getPackageFragmentRoot();
+			String entryName = jarRoot.getClassFilePath(Util.concatWith(pkg.names, getElementName(), '/'));
+			byte[] contents = getClassFileContent(jarRoot, entryName);
+			if (contents != null) {
+				String fileName;
+				String rootPath = root.getPath().toOSString();
+				if (org.eclipse.jdt.internal.compiler.util.Util.isJrt(rootPath)) {
+					fileName = root.getHandleIdentifier() + IDependent.JAR_FILE_ENTRY_SEPARATOR + 
+							root.getElementName() + IDependent.JAR_FILE_ENTRY_SEPARATOR + entryName;
+				} else {
+					fileName = root.getHandleIdentifier() + IDependent.JAR_FILE_ENTRY_SEPARATOR + entryName;
+				}
+				result = new ClassFileReader(contents, fileName.toCharArray(), false);
+			}
+		} else {
+			result = BinaryTypeFactory.readType(descriptor, null);
+		}
+	} else {
+		result = BinaryTypeFactory.readType(descriptor, null);
+	}
+		
 	if (result == null) {
 		return null;
 	}
 
 	// TODO(sxenos): setup the external annotation provider if the IBinaryType came from the index
-	PackageFragment pkg = (PackageFragment) getParent();
-	IJavaElement grandparent = pkg.getParent();
-	if (grandparent instanceof JarPackageFragmentRoot) {
-		JarPackageFragmentRoot root = (JarPackageFragmentRoot) grandparent;
-
-		if (root.getKind() == IPackageFragmentRoot.K_BINARY) {
-			JavaProject javaProject = (JavaProject) getAncestor(IJavaElement.JAVA_PROJECT);
-			IClasspathEntry entry = javaProject.getClasspathEntryFor(getPath());
-			if (entry != null) {
-				String entryName = new String(CharArrayUtils.concat(
-						JavaNames.fieldDescriptorToBinaryName(descriptor.fieldDescriptor), SuffixConstants.SUFFIX_CLASS));
-				IProject project = javaProject.getProject();
-				IPath externalAnnotationPath = ClasspathEntry.getExternalAnnotationPath(entry, project, false); // unresolved for use in ExternalAnnotationTracker
-				if (externalAnnotationPath != null) {
-					result = setupExternalAnnotationProvider(project, externalAnnotationPath, result, 
+	if (root.getKind() == IPackageFragmentRoot.K_BINARY) {
+		JavaProject javaProject = (JavaProject) getAncestor(IJavaElement.JAVA_PROJECT);
+		IClasspathEntry entry = javaProject.getClasspathEntryFor(getPath());
+		if (entry != null) {
+			PackageFragment pkg = (PackageFragment) getParent();
+			String entryName = Util.concatWith(pkg.names, getElementName(), '/');
+			entryName = new String(CharArrayUtils.concat(
+					JavaNames.fieldDescriptorToBinaryName(descriptor.fieldDescriptor), SuffixConstants.SUFFIX_CLASS));
+			IProject project = javaProject.getProject();
+			IPath externalAnnotationPath = ClasspathEntry.getExternalAnnotationPath(entry, project, false); // unresolved for use in ExternalAnnotationTracker
+			if (externalAnnotationPath != null) {
+				result = setupExternalAnnotationProvider(project, externalAnnotationPath, result, 
 						entryName.substring(0, entryName.length() - SuffixConstants.SUFFIX_CLASS.length));
-				} else if (entry.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
-					result = new ExternalAnnotationDecorator(result, true);
-				}
+			} else if (entry.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
+				result = new ExternalAnnotationDecorator(result, true);
 			}
 		}
 	}
@@ -465,48 +346,12 @@ public void close() throws JavaModelException {
 	}
 	super.close();
 }
-@Override
-public IBuffer getBuffer() throws JavaModelException {
-	IStatus status = validateClassFile();
-	if (status.isOK()) {
-		return super.getBuffer();
-	} else {
-		switch (status.getCode()) {
-		case IJavaModelStatusConstants.ELEMENT_NOT_ON_CLASSPATH: // don't throw a JavaModelException to be able to open .class file outside the classpath (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=138507 )
-		case IJavaModelStatusConstants.INVALID_ELEMENT_TYPES: // don't throw a JavaModelException to be able to open .class file in proj==src case without source (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=221904 )
-			return null;
-		default:
-			throw new JavaModelException((IJavaModelStatus) status);
-		}
-	}
-}
 /**
  * @see IMember
  */
 @Override
 public IClassFile getClassFile() {
 	return this;
-}
-/**
- * @see IMember#getTypeRoot()
- */
-public ITypeRoot getTypeRoot() {
-	return this;
-}
-/**
- * A class file has a corresponding resource unless it is contained
- * in a jar.
- *
- * @see IJavaElement
- */
-@Override
-public IResource getCorrespondingResource() throws JavaModelException {
-	IPackageFragmentRoot root= (IPackageFragmentRoot)getParent().getParent();
-	if (root.isArchive()) {
-		return null;
-	} else {
-		return getUnderlyingResource();
-	}
 }
 /**
  * @see IClassFile
@@ -528,59 +373,7 @@ public IJavaElement getElementAt(int position) throws JavaModelException {
 		return findElement(type, position, mapper);
 	}
 }
-public IJavaElement getElementAtConsideringSibling(int position) throws JavaModelException {
-	IPackageFragment fragment = (IPackageFragment)getParent();
-	PackageFragmentRoot root = (PackageFragmentRoot) fragment.getAncestor(IJavaElement.PACKAGE_FRAGMENT_ROOT);
-	SourceMapper mapper = root.getSourceMapper();
-	if (mapper == null) {
-		return null;
-	} else {
-		int index = this.name.indexOf('$');
-		int prefixLength = index < 0 ? this.name.length() : index;
 
-		IType type = null;
-		int start = -1;
-		int end = Integer.MAX_VALUE;
-		IJavaElement[] children = fragment.getChildren();
-		for (int i = 0; i < children.length; i++) {
-			String childName = children[i].getElementName();
-
-			int childIndex = childName.indexOf('$');
-			int childPrefixLength = childIndex < 0 ? childName.indexOf('.') : childIndex;
-			if (prefixLength == childPrefixLength && this.name.regionMatches(0, childName, 0, prefixLength)) {
-				IClassFile classFile = (IClassFile) children[i];
-
-				// ensure this class file's buffer is open so that source ranges are computed
-				classFile.getBuffer();
-
-				SourceRange range = mapper.getSourceRange(classFile.getType());
-				if (range == SourceMapper.UNKNOWN_RANGE) continue;
-				int newStart = range.getOffset();
-				int newEnd = newStart + range.getLength() - 1;
-				if(newStart > start && newEnd < end
-						&& newStart <= position && newEnd >= position) {
-					type = classFile.getType();
-					start = newStart;
-					end = newEnd;
-				}
-			}
-		}
-		if(type != null) {
-			return findElement(type, position, mapper);
-		}
-		return null;
-	}
-}
-@Override
-public String getElementName() {
-	return this.name + SuffixConstants.SUFFIX_STRING_class;
-}
-/**
- * @see IJavaElement
- */
-public int getElementType() {
-	return CLASS_FILE;
-}
 /*
  * @see JavaElement
  */
@@ -601,47 +394,6 @@ public IJavaElement getHandleFromMemento(String token, MementoTokenizer memento,
 @Override
 protected char getHandleMementoDelimiter() {
 	return JavaElement.JEM_CLASSFILE;
-}
-/*
- * @see IJavaElement
- */
-public IPath getPath() {
-	PackageFragmentRoot root = getPackageFragmentRoot();
-	if (root.isArchive()) {
-		return root.getPath();
-	} else {
-		return getParent().getPath().append(getElementName());
-	}
-}
-/*
- * @see IJavaElement
- */
-@Override
-public IResource resource(PackageFragmentRoot root) {
-	return ((IContainer) ((Openable) this.parent).resource(root)).getFile(new Path(getElementName()));
-}
-/**
- * @see ISourceReference
- */
-public String getSource() throws JavaModelException {
-	IBuffer buffer = getBuffer();
-	if (buffer == null) {
-		return null;
-	}
-	return buffer.getContents();
-}
-/**
- * @see ISourceReference
- */
-public ISourceRange getSourceRange() throws JavaModelException {
-	IBuffer buffer = getBuffer();
-	if (buffer != null) {
-		String contents = buffer.getContents();
-		if (contents == null) return null;
-		return new SourceRange(0, contents.length());
-	} else {
-		return null;
-	}
 }
 /*
  * Returns the name of the toplevel type of this class file.
@@ -687,25 +439,6 @@ public ICompilationUnit getWorkingCopy(WorkingCopyOwner owner, IProgressMonitor 
 }
 /**
  * @see IClassFile
- * @deprecated
- */
-@Deprecated
-public IJavaElement getWorkingCopy(IProgressMonitor monitor, org.eclipse.jdt.core.IBufferFactory factory) throws JavaModelException {
-	return getWorkingCopy(BufferFactoryWrapper.create(factory), monitor);
-}
-/**
- * @see Openable
- */
-@Override
-protected boolean hasBuffer() {
-	return true;
-}
-@Override
-public int hashCode() {
-	return Util.combineHashCodes(this.name.hashCode(), this.parent.hashCode());
-}
-/**
- * @see IClassFile
  */
 public boolean isClass() throws JavaModelException {
 	return getType().isClass();
@@ -715,24 +448,6 @@ public boolean isClass() throws JavaModelException {
  */
 public boolean isInterface() throws JavaModelException {
 	return getType().isInterface();
-}
-/**
- * Returns true - class files are always read only.
- */
-@Override
-public boolean isReadOnly() {
-	return true;
-}
-private IStatus validateClassFile() {
-	IPackageFragmentRoot root = getPackageFragmentRoot();
-	try {
-		if (root.getKind() != IPackageFragmentRoot.K_BINARY)
-			return new JavaModelStatus(IJavaModelStatusConstants.INVALID_ELEMENT_TYPES, root);
-	} catch (JavaModelException e) {
-		return e.getJavaModelStatus();
-	}
-	IJavaProject project = getJavaProject();
-	return JavaConventions.validateClassFileName(getElementName(), project.getOption(JavaCore.COMPILER_SOURCE, true), project.getOption(JavaCore.COMPILER_COMPLIANCE, true));
 }
 /**
  * Opens and returns buffer on the source code associated with this class file.
@@ -775,7 +490,7 @@ private IBuffer mapSource(SourceMapper mapper, IBinaryType info, IClassFile buff
 		buffer.addBufferChangedListener(this);
 
 		// do the source mapping
-		mapper.mapSource(getOuterMostEnclosingType(), contents, info);
+		mapper.mapSource((NamedMember) getOuterMostEnclosingType(), contents, info);
 
 		return buffer;
 	} else {
@@ -877,85 +592,5 @@ public static char[] translatedName(char[] name) {
 		count++;
 	}
 	return className;
-}
-
-/**
- * @see ICodeAssist#codeComplete(int, ICodeCompletionRequestor)
- * @deprecated - should use codeComplete(int, ICompletionRequestor) instead
- */
-@Deprecated
-public void codeComplete(int offset, final org.eclipse.jdt.core.ICodeCompletionRequestor requestor) throws JavaModelException {
-
-	if (requestor == null){
-		codeComplete(offset, (ICompletionRequestor)null);
-		return;
-	}
-	codeComplete(
-		offset,
-		new ICompletionRequestor(){
-			public void acceptAnonymousType(char[] superTypePackageName,char[] superTypeName, char[][] parameterPackageNames,char[][] parameterTypeNames,char[][] parameterNames,char[] completionName,int modifiers,int completionStart,int completionEnd, int relevance) {
-				// ignore
-			}
-			public void acceptClass(char[] packageName, char[] className, char[] completionName, int modifiers, int completionStart, int completionEnd, int relevance) {
-				requestor.acceptClass(packageName, className, completionName, modifiers, completionStart, completionEnd);
-			}
-			public void acceptError(IProblem error) {
-				// was disabled in 1.0
-			}
-			public void acceptField(char[] declaringTypePackageName, char[] declaringTypeName, char[] fieldName, char[] typePackageName, char[] typeName, char[] completionName, int modifiers, int completionStart, int completionEnd, int relevance) {
-				requestor.acceptField(declaringTypePackageName, declaringTypeName, fieldName, typePackageName, typeName, completionName, modifiers, completionStart, completionEnd);
-			}
-			public void acceptInterface(char[] packageName,char[] interfaceName,char[] completionName,int modifiers,int completionStart,int completionEnd, int relevance) {
-				requestor.acceptInterface(packageName, interfaceName, completionName, modifiers, completionStart, completionEnd);
-			}
-			public void acceptKeyword(char[] keywordName,int completionStart,int completionEnd, int relevance){
-				requestor.acceptKeyword(keywordName, completionStart, completionEnd);
-			}
-			public void acceptLabel(char[] labelName,int completionStart,int completionEnd, int relevance){
-				requestor.acceptLabel(labelName, completionStart, completionEnd);
-			}
-			public void acceptLocalVariable(char[] localVarName,char[] typePackageName,char[] typeName,int modifiers,int completionStart,int completionEnd, int relevance){
-				// ignore
-			}
-			public void acceptMethod(char[] declaringTypePackageName,char[] declaringTypeName,char[] selector,char[][] parameterPackageNames,char[][] parameterTypeNames,char[][] parameterNames,char[] returnTypePackageName,char[] returnTypeName,char[] completionName,int modifiers,int completionStart,int completionEnd, int relevance){
-				// skip parameter names
-				requestor.acceptMethod(declaringTypePackageName, declaringTypeName, selector, parameterPackageNames, parameterTypeNames, returnTypePackageName, returnTypeName, completionName, modifiers, completionStart, completionEnd);
-			}
-			public void acceptMethodDeclaration(char[] declaringTypePackageName,char[] declaringTypeName,char[] selector,char[][] parameterPackageNames,char[][] parameterTypeNames,char[][] parameterNames,char[] returnTypePackageName,char[] returnTypeName,char[] completionName,int modifiers,int completionStart,int completionEnd, int relevance){
-				// ignore
-			}
-			public void acceptModifier(char[] modifierName,int completionStart,int completionEnd, int relevance){
-				requestor.acceptModifier(modifierName, completionStart, completionEnd);
-			}
-			public void acceptPackage(char[] packageName,char[] completionName,int completionStart,int completionEnd, int relevance){
-				requestor.acceptPackage(packageName, completionName, completionStart, completionEnd);
-			}
-			public void acceptType(char[] packageName,char[] typeName,char[] completionName,int completionStart,int completionEnd, int relevance){
-				requestor.acceptType(packageName, typeName, completionName, completionStart, completionEnd);
-			}
-			public void acceptVariableName(char[] typePackageName,char[] typeName,char[] varName,char[] completionName,int completionStart,int completionEnd, int relevance){
-				// ignore
-			}
-		});
-}
-
-@Override
-protected IStatus validateExistence(IResource underlyingResource) {
-	// check whether the class file can be opened
-	IStatus status = validateClassFile();
-	if (!status.isOK())
-		return status;
-	if (underlyingResource != null) {
-		if (!underlyingResource.isAccessible())
-			return newDoesNotExistStatus();
-		PackageFragmentRoot root;
-		if ((underlyingResource instanceof IFolder) && (root = getPackageFragmentRoot()).isArchive()) { // see https://bugs.eclipse.org/bugs/show_bug.cgi?id=204652
-			return root.newDoesNotExistStatus();
-		}
-	}
-	return JavaModelStatus.VERIFIED_OK;
-}
-public ISourceRange getNameRange() {
-	return null;
 }
 }

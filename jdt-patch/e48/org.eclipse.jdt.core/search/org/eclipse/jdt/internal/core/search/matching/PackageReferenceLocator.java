@@ -179,7 +179,7 @@ protected void matchReportImportRef(ImportReference importRef, Binding binding, 
 			if (binding instanceof PackageBinding)
 				last = ((PackageBinding) binding).compoundName.length;
 			int start = (int) (positions[0] >>> 32);
-			int end = (int) positions[last - 1];
+			int end = (int) positions[last > 0 ? last - 1 : 0];
 			this.match = locator.newPackageReferenceMatch(element, accuracy, start, end-start+1, importRef);
 			locator.report(this.match);
 		}

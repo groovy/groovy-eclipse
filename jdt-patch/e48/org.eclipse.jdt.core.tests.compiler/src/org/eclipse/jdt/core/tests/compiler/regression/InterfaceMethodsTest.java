@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2015 GK Software AG, IBM Corporation and others.
+ * Copyright (c) 2013, 2016 GK Software AG, IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -77,6 +77,7 @@ public class InterfaceMethodsTest extends AbstractComparableTest {
 
 	// default methods with various modifiers, negative cases
 	public void testModifiers1a() {
+		String infMod = this.complianceLevel >= ClassFileConstants.JDK9 ? " private," : "";
 		runNegativeTest(
 		new String[] {
 			"I.java",
@@ -93,17 +94,17 @@ public class InterfaceMethodsTest extends AbstractComparableTest {
 			"1. ERROR in I.java (at line 5)\n" + 
 			"	public default synchronized void foo2() { System.exit(0); }\n" + 
 			"	                                 ^^^^^^\n" + 
-			"Illegal modifier for the interface method foo2; only public, abstract, default, static and strictfp are permitted\n" + 
+			"Illegal modifier for the interface method foo2; only public,"+ infMod +" abstract, default, static and strictfp are permitted\n" + 
 			"----------\n" + 
 			"2. ERROR in I.java (at line 7)\n" + 
 			"	public default strictfp synchronized void foo4() {}\n" + 
 			"	                                          ^^^^^^\n" + 
-			"Illegal modifier for the interface method foo4; only public, abstract, default, static and strictfp are permitted\n" + 
+			"Illegal modifier for the interface method foo4; only public,"+ infMod +" abstract, default, static and strictfp are permitted\n" + 
 			"----------\n" + 
 			"3. ERROR in I.java (at line 8)\n" + 
 			"	public default strictfp synchronized @Annot void foo5() {}\n" + 
 			"	                                                 ^^^^^^\n" + 
-			"Illegal modifier for the interface method foo5; only public, abstract, default, static and strictfp are permitted\n" + 
+			"Illegal modifier for the interface method foo5; only public,"+ infMod +" abstract, default, static and strictfp are permitted\n" + 
 			"----------\n");
 	}
 
@@ -142,6 +143,7 @@ public class InterfaceMethodsTest extends AbstractComparableTest {
 
 	// regular interface with illegal modifiers
 	public void testModifiers2() {
+		String infMod = this.complianceLevel >= ClassFileConstants.JDK9 ? " private," : "";
 		runNegativeTest(
 		new String[] {
 			"I.java",
@@ -158,7 +160,7 @@ public class InterfaceMethodsTest extends AbstractComparableTest {
 			"1. ERROR in I.java (at line 5)\n" +
 			"	public synchronized void foo2();\n" +
 			"	                         ^^^^^^\n" +
-			"Illegal modifier for the interface method foo2; only public, abstract, default, static and strictfp are permitted\n" +
+			"Illegal modifier for the interface method foo2; only public,"+ infMod +" abstract, default, static and strictfp are permitted\n" +
 			"----------\n" +
 			"2. ERROR in I.java (at line 6)\n" +
 			"	strictfp void foo3();\n" +
@@ -173,7 +175,7 @@ public class InterfaceMethodsTest extends AbstractComparableTest {
 			"4. ERROR in I.java (at line 7)\n" +
 			"	public strictfp synchronized void foo4();\n" +
 			"	                                  ^^^^^^\n" +
-			"Illegal modifier for the interface method foo4; only public, abstract, default, static and strictfp are permitted\n" +
+			"Illegal modifier for the interface method foo4; only public,"+ infMod +" abstract, default, static and strictfp are permitted\n" +
 			"----------\n" +
 			"5. ERROR in I.java (at line 8)\n" +
 			"	public strictfp synchronized @Annot void foo5();\n" +
@@ -183,12 +185,13 @@ public class InterfaceMethodsTest extends AbstractComparableTest {
 			"6. ERROR in I.java (at line 8)\n" +
 			"	public strictfp synchronized @Annot void foo5();\n" +
 			"	                                         ^^^^^^\n" + 
-			"Illegal modifier for the interface method foo5; only public, abstract, default, static and strictfp are permitted\n" +
+			"Illegal modifier for the interface method foo5; only public,"+ infMod +" abstract, default, static and strictfp are permitted\n" +
 			"----------\n");
 	}
 
 	// default & regular methods with modifiers that are illegal even for default methods
 	public void testModifiers3() {
+		String infMod = this.complianceLevel >= ClassFileConstants.JDK9 ? " private," : "";
 		runNegativeTest(
 		new String[] {
 			"I.java",
@@ -204,7 +207,7 @@ public class InterfaceMethodsTest extends AbstractComparableTest {
 			"1. ERROR in I.java (at line 2)\n" + 
 			"	native void foo1();\n" + 
 			"	            ^^^^^^\n" + 
-			"Illegal modifier for the interface method foo1; only public, abstract, default, static and strictfp are permitted\n" + 
+			"Illegal modifier for the interface method foo1; only public,"+ infMod +" abstract, default, static and strictfp are permitted\n" + 
 			"----------\n" + 
 			"2. ERROR in I.java (at line 3)\n" + 
 			"	static void foo2();\n" + 
@@ -214,12 +217,12 @@ public class InterfaceMethodsTest extends AbstractComparableTest {
 			"3. ERROR in I.java (at line 4)\n" + 
 			"	native default void foo3() {}\n" + 
 			"	                    ^^^^^^\n" + 
-			"Illegal modifier for the interface method foo3; only public, abstract, default, static and strictfp are permitted\n" + 
+			"Illegal modifier for the interface method foo3; only public,"+ infMod +" abstract, default, static and strictfp are permitted\n" + 
 			"----------\n" + 
 			"4. ERROR in I.java (at line 5)\n" + 
 			"	default native void foo4() {}\n" + 
 			"	                    ^^^^^^\n" + 
-			"Illegal modifier for the interface method foo4; only public, abstract, default, static and strictfp are permitted\n" + 
+			"Illegal modifier for the interface method foo4; only public,"+ infMod +" abstract, default, static and strictfp are permitted\n" + 
 			"----------\n" + 
 			"5. ERROR in I.java (at line 6)\n" + 
 			"	static default void foo5() {}\n" + 
@@ -2133,6 +2136,7 @@ public class InterfaceMethodsTest extends AbstractComparableTest {
     
     // test for different error messages in modifiers.
 	public void test400977() {
+		String infMod = this.complianceLevel >= ClassFileConstants.JDK9 ? " private," : "";
 		runNegativeTest(
 		new String[] {
 			"I.java",
@@ -2159,7 +2163,7 @@ public class InterfaceMethodsTest extends AbstractComparableTest {
 			"4. ERROR in I.java (at line 3)\n" +
 			"	public abstract default strictfp final void bar();}\n" +
 			"	                                            ^^^^^\n" +
-			"Illegal modifier for the interface method bar; only public, abstract, default, static and strictfp are permitted\n" +
+			"Illegal modifier for the interface method bar; only public,"+ infMod +" abstract, default, static and strictfp are permitted\n" +
 			"----------\n");
 	}
     // https://bugs.eclipse.org/bugs/show_bug.cgi?id=420084,  [1.8] static interface method cannot be resolved without receiver when imported statically
