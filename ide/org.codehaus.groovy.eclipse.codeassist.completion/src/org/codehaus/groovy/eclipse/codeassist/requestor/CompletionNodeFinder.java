@@ -74,7 +74,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
     private ContentAssistContext context;
 
     /**
-     * Left hand side of any assignment statement or null if there is none
+     * Left hand side of any assignment statement or {@code null} if there is none.
      */
     private Expression lhsNode;
 
@@ -298,7 +298,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
      * only show context information.
      */
     private void visitArguments(Expression args, Expression call) {
-        // check to see if we are definitely doing the context
+        // check to see if we are definitely doing context
         boolean doContext = false;
         if (args instanceof TupleExpression) {
             TupleExpression tuple = (TupleExpression) args;
@@ -309,15 +309,20 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
                 }
             }
             argumentListStack.add(tuple);
-        } else if (args != null) {
-            if (args.getStart() == completionOffset) {
-                doContext = true;
-            }
+        } else if (args != null && args.getStart() == completionOffset) {
+            doContext = true;
         }
 
         if (!doContext) {
-            // check to see if we are exactly inside of one of the arguments, ignores in between arguments
+            blockStack.add(call);
+            // outer receiver is irrelevant within argument list
+            final Expression lhs = lhsNode; lhsNode = null;
+
+            // check the arguments; ignores in-between locations
             args.visit(this);
+
+            lhsNode = lhs;
+            blockStack.removeLast();
         }
         if (args instanceof TupleExpression) {
             argumentListStack.removeLast();
@@ -702,13 +707,13 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         }
     }
 
-    private void createContext(ASTNode completionNode, ASTNode declaringNode, ContentAssistLocation location) {
+    private void createContext(ASTNode completionNode, ASTNode containingNode, ContentAssistLocation location) {
         context = new ContentAssistContext(
             completionOffset,
             completionExpression,
             fullCompletionExpression,
             completionNode,
-            declaringNode,
+            containingNode,
             lhsNode,
             location,
             unit,

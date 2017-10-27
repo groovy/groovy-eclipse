@@ -317,9 +317,9 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
     }
 
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
-        TypeInferencingVisitorFactory factory = new TypeInferencingVisitorFactory();
         ContentAssistContext context = getContext();
-        TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(context.unit);
+        TypeInferencingVisitorWithRequestor visitor =
+            new TypeInferencingVisitorFactory().createVisitor(context.unit);
         ExpressionCompletionRequestor requestor = new ExpressionCompletionRequestor();
 
         // if completion node is null, then it is likely because of a syntax error
