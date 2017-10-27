@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import groovy.transform.NotYetImplemented
+
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.contentassist.ICompletionProposal
@@ -320,8 +322,50 @@ final class FieldCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'xxx', 1)
     }
 
+    @Test
+    void testEnumReceiver1() {
+        addJavaSource('enum E { CONST; public static final String VALUE = ""; }', 'E')
+
+        String contents = 'E e = '
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
+        proposalExists(proposals, 'CONST', 1)
+        proposalExists(proposals, 'VALUE', 0)
+    }
+
+    @Test
+    void testEnumReceiver1a() {
+        addJavaSource('enum E { CONST; public static final String VALUE = ""; }', 'E')
+
+        String contents = 'E e = ;'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length() - 1)
+        proposalExists(proposals, 'CONST', 1)
+        proposalExists(proposals, 'VALUE', 0)
+    }
+
+    @Test
+    void testEnumReceiver1b() {
+        addJavaSource('enum E { CONST; public static final String VALUE = ""; }', 'E')
+
+        String contents = 'E e = \n'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length() - 1)
+        proposalExists(proposals, 'CONST', 1)
+        proposalExists(proposals, 'VALUE', 0)
+    }
+
+    @Test @NotYetImplemented
+    void testEnumReceiver2() {
+        addJavaSource('public enum Color { RED, BLACK }', 'Color', 'tree.node')
+
+        String contents = '''\
+            def meth(tree.node.Color c) { }
+            meth(B)
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'B'))
+        proposalExists(proposals, 'BLACK', 1)
+    }
+
     @Test // GRECLIPSE-1175
-    void testInitializer1() {
+    void testInitializer() {
         String contents = '''\
             class MyClass {
               def something = Class.

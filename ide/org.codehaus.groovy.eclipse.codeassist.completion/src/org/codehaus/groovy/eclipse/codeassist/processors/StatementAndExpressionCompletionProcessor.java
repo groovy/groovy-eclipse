@@ -16,6 +16,8 @@
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -45,6 +47,7 @@ import org.codehaus.groovy.eclipse.codeassist.creators.CategoryProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.creators.FieldProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.creators.IProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.creators.MethodProposalCreator;
+import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
@@ -353,6 +356,17 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 if (closureThis != null && !closureThis.equals(completionType)) {
                     // inside of a closure; must also add content assist for this (previously did the delegate)
                     proposalCreatorLoop(context, requestor, closureThis, isStatic, groovyProposals, creators, true);
+                }
+                // if receiver type is an enum, propose its constants directly
+                if (context.lhsType != null && context.lhsType.isEnum() && !context.lhsType.equals(completionType)) {
+                    List<IGroovyProposal> enumFields = new FieldProposalCreator().findAllProposals(
+                        context.lhsType, Collections.EMPTY_SET, context.getPerceivedCompletionExpression(), true, true);
+                    for (Iterator<IGroovyProposal> it = enumFields.iterator(); it.hasNext();) {
+                        if (!((GroovyFieldProposal) it.next()).getField().isEnum()) {
+                            it.remove();
+                        }
+                    }
+                    groovyProposals.addAll(enumFields);
                 }
             }
         } else {
