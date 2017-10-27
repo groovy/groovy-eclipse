@@ -46,23 +46,11 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
 
     @Test
     void testStatement3() {
-        String contents = 'a.g()'
-        assertLocation(contents, contents.indexOf(')') + 1, ContentAssistLocation.STATEMENT)
-    }
-
-    @Test
-    void testStatement4() {
-        String contents = 'def x = { a.g() }'
-        assertLocation(contents, contents.indexOf(')') + 1, ContentAssistLocation.STATEMENT)
-    }
-
-    @Test
-    void testStatement5() {
         assertLocation('a\n', 2, ContentAssistLocation.SCRIPT)
     }
 
     @Test
-    void testStatement6() {
+    void testStatement4() {
         // This is technically a bug, but I actually want this to be
         // the expected behaviour since having the extra completions
         // available from script can be annoying
@@ -70,68 +58,137 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     }
 
     @Test
+    void testStatement5() {
+        String contents = 'a.g()'
+        assertLocation(contents, contents.length(), ContentAssistLocation.STATEMENT)
+    }
+
+    @Test
+    void testStatement6() {
+        String contents = 'def x = '
+        assertLocation(contents, contents.length(), ContentAssistLocation.STATEMENT)
+    }
+
+    @Test
     void testStatement7() {
+        String contents = 'def x = ;'
+        assertLocation(contents, contents.length() - 1, ContentAssistLocation.STATEMENT)
+    }
+
+    @Test
+    void testStatement8() {
+        String contents = 'def x = \n'
+        assertLocation(contents, contents.length() - 1, ContentAssistLocation.STATEMENT)
+    }
+
+    @Test
+    void testStatement9() {
         String contents = 'def x = { }'
         assertLocation(contents, contents.indexOf('{') + 1, ContentAssistLocation.STATEMENT)
     }
 
     @Test
-    void testStatement8() {
+    void testStatement10() {
+        String contents = 'def x = { a.g() }'
+        assertLocation(contents, contents.indexOf(')') + 1, ContentAssistLocation.STATEMENT)
+    }
+
+    @Test
+    void testStatement11() {
         String contents = 'def x() { }'
         assertLocation(contents, contents.indexOf('{') + 1, ContentAssistLocation.STATEMENT)
     }
 
     @Test
-    void testStatement9() {
+    void testStatement12() {
         String contents = 'class Blar { def x() { } }'
         assertLocation(contents, contents.indexOf('}'), ContentAssistLocation.STATEMENT)
     }
 
     @Test
-    void testStatement10() {
+    void testStatement13() {
         String contents = 'class Blar { def x = { } }'
         assertLocation(contents, contents.indexOf('}'), ContentAssistLocation.STATEMENT)
     }
 
     @Test
-    void testStatement11() {
+    void testStatement14() {
         String contents = 'def x = { a.g(    c,b) }'
         assertLocation(contents, contents.indexOf('c') + 1, ContentAssistLocation.STATEMENT)
     }
 
     @Test
-    void testStatement12() {
+    void testStatement15() {
         String contents = 'def x = { a.g a, b }'
         assertLocation(contents, contents.indexOf('b') + 1, ContentAssistLocation.STATEMENT)
     }
 
     @Test
-    void testStatement13() {
+    void testStatement16() {
         String contents = 'a.g a, b'
         assertLocation(contents, contents.indexOf('b') + 1, ContentAssistLocation.STATEMENT)
     }
 
     @Test
-    void testStatement14() {
+    void testStatement17() {
         String contents = 'a()'
         assertLocation(contents, contents.indexOf('a') + 1, ContentAssistLocation.STATEMENT)
     }
 
     @Test
-    void testStatement15() {
+    void testStatement18() {
         String contents = 'b a()'
         assertLocation(contents, contents.indexOf('a') + 1, ContentAssistLocation.STATEMENT)
     }
 
     @Test
-    void testStatement16() {
+    void testStatement19() {
         String contents = 'new ArrayList(a,b)'
         assertLocation(contents, contents.indexOf(')') + 1, ContentAssistLocation.STATEMENT)
     }
 
     @Test
-    void testExpression() {
+    void testExpression1() {
+        assertLocation('a.a', 3, ContentAssistLocation.EXPRESSION)
+    }
+
+    @Test
+    void testExpression2() {
+        assertLocation('a.', 2, ContentAssistLocation.EXPRESSION)
+    }
+
+    @Test
+    void testExpression3() {
+        assertLocation('a.\n', 3, ContentAssistLocation.EXPRESSION)
+    }
+
+    @Test
+    void testExpression4() {
+        String contents = 'a.// \n'
+        assertLocation(contents, contents.length(), ContentAssistLocation.EXPRESSION)
+    }
+
+    @Test
+    void testExpression5() {
+        String contents = 'a.g(b.)// \n'
+        assertLocation(contents, contents.indexOf('b.') + 2, ContentAssistLocation.EXPRESSION)
+    }
+
+    @Test
+    void testExpression6() {
         String contents = 'a.g a, a.b'
+        assertLocation(contents, contents.indexOf('b') + 1, ContentAssistLocation.EXPRESSION)
+    }
+
+    @Test
+    void testExpression7() {
+        String contents = 'def x = { a.g(    z.c,\nb) }'
+        assertLocation(contents, contents.indexOf('c') + 1, ContentAssistLocation.EXPRESSION)
+    }
+
+    @Test
+    void testExpression8() {
+        String contents = 'def x = { a.g(    c,\nz.b) }'
         assertLocation(contents, contents.indexOf('b') + 1, ContentAssistLocation.EXPRESSION)
     }
 
@@ -254,45 +311,6 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     void testMethodContext21() {
         String contents = 'foo (a, )\nh'
         assertLocation(contents, contents.indexOf(', ') + 1, ContentAssistLocation.METHOD_CONTEXT)
-    }
-
-    @Test
-    void testExpression1() {
-        assertLocation('a.a', 3, ContentAssistLocation.EXPRESSION)
-    }
-
-    @Test
-    void testExpression2() {
-        assertLocation('a.', 2, ContentAssistLocation.EXPRESSION)
-    }
-
-    @Test
-    void testExpression3() {
-        assertLocation('a.\n', 3, ContentAssistLocation.EXPRESSION)
-    }
-
-    @Test
-    void testExpression4() {
-        String contents = 'a.// \n'
-        assertLocation(contents, contents.length(), ContentAssistLocation.EXPRESSION)
-    }
-
-    @Test
-    void testExpression5() {
-        String contents = 'a.g(b.)// \n'
-        assertLocation(contents, contents.indexOf('b.') + 2, ContentAssistLocation.EXPRESSION)
-    }
-
-    @Test
-    void testExpression6() {
-        String contents = 'def x = { a.g(    z.c,\nb) }'
-        assertLocation(contents, contents.indexOf('c') + 1, ContentAssistLocation.EXPRESSION)
-    }
-
-    @Test
-    void testExpression7() {
-        String contents = 'def x = { a.g(    c,\nz.b) }'
-        assertLocation(contents, contents.indexOf('b') + 1, ContentAssistLocation.EXPRESSION)
     }
 
     @Test @NotYetImplemented

@@ -3093,8 +3093,9 @@ inputState.guessing--;
 			if (inputState.guessing==0) {
 				
 				// if empty assignment was found, produce something compatible with content assist
-				if (ASSIGN == LT(-1).getType()) {
-				astFactory.addASTChild(currentAST, missingIdentifier(LT(-1), LT(0)));
+				int index = 0;
+				if (ASSIGN == LT(index).getType() || ASSIGN == LT(--index).getType()) {
+				astFactory.addASTChild(currentAST, missingIdentifier(LT(index), LT(index + 1)));
 				varInitializer_AST = (AST) currentAST.root;
 				reportError(e);
 				} else {

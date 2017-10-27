@@ -75,6 +75,37 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     public void testIncompleteAssignmentParsingRecovery1() {
         runNegativeTest(new String[] {
             "X.groovy",
+            "int err = ",
+        },
+        "----------\n" +
+        "1. ERROR in X.groovy (at line 1)\n" +
+        "\tint err = \n" +
+        "\t         ^\n" +
+        "Groovy:unexpected token:  @ line 1, column 10.\n" +
+        "----------\n" +
+        "2. ERROR in X.groovy (at line 1)\n" +
+        "\tint err = \n" +
+        "\t         ^\n" +
+        "Groovy:Invalid variable name. Must start with a letter but was: ?\n" +
+        "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "public class X extends groovy.lang.Script {\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "  public X(public groovy.lang.Binding context) {\n" +
+            "  }\n" +
+            "  public static void main(public java.lang.String... args) {\n" +
+            "  }\n" +
+            "  public java.lang.Object run() {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testIncompleteAssignmentParsingRecovery2() {
+        runNegativeTest(new String[] {
+            "X.groovy",
             "public class X {\n" +
             "  int err = \n" +
             "}",
@@ -100,7 +131,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testIncompleteAssignmentParsingRecovery2() {
+    public void testIncompleteAssignmentParsingRecovery3() {
         runNegativeTest(new String[] {
             "X.groovy",
             "public class X {\n" +
@@ -137,7 +168,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testIncompleteAssignmentParsingRecovery3() {
+    public void testIncompleteAssignmentParsingRecovery4() {
         // previous version of assignment recovery was trying to add missing identifier for error within init expression
         runNegativeTest(new String[] {
             "X.groovy",
