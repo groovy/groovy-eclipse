@@ -30,6 +30,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
@@ -38,6 +39,7 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
+import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
@@ -220,6 +222,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         }
 
         private void maybeRememberTypeOfLHS(TypeLookupResult result) {
+            VariableScope.CallAndType cat;
             if (isAssignmentOfLHS(result.enclosingAssignment)) {
                 // check to see if this is the rhs of an assignment.
                 // if so, then attempt to use the type of the lhs for
@@ -233,9 +236,19 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 }*/ else if (lhsNode instanceof PropertyExpression) {
                     lhsType = ((PropertyExpression) lhsNode).getProperty().getType();
                 }
-                if (VariableScope.OBJECT_CLASS_NODE.equals(lhsType)) {
-                    lhsType = null;
+            } else if ((cat = result.scope.getEnclosingMethodCallExpression()) != null) {
+                // is a method parameter the receiver of the completion expression?
+                int paramIndex = getParameterPosition(result.declaration, cat.call);
+                if (paramIndex >= 0 && cat.declaration instanceof MethodNode) {
+                    Parameter[] params = ((MethodNode) cat.declaration).getParameters();
+                    lhsType = params[Math.min(paramIndex, params.length - 1)].getType();
+                    if (lhsType.isArray() && paramIndex >= params.length - 1) {
+                        lhsType = lhsType.getComponentType();
+                    }
                 }
+            }
+            if (VariableScope.OBJECT_CLASS_NODE.equals(lhsType)) {
+                lhsType = null;
             }
         }
 
@@ -246,6 +259,19 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                     expression.getStart() == lhsNode.getStart() && expression.getEnd() == lhsNode.getEnd());
             }
             return false;
+        }
+
+        private int getParameterPosition(ASTNode argumentCandidate, MethodCallExpression callExpression) {
+            if (callExpression != null && callExpression.getArguments() instanceof TupleExpression) {
+                int paramIndex = -1;
+                for (Expression argument : ((TupleExpression) callExpression.getArguments()).getExpressions()) {
+                    paramIndex += 1;
+                    if (argument == argumentCandidate) {
+                        return paramIndex;
+                    }
+                }
+            }
+            return -1;
         }
 
         private boolean doTest(ASTNode node) {

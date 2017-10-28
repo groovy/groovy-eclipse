@@ -15,8 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
-import groovy.transform.NotYetImplemented
-
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.contentassist.ICompletionProposal
@@ -352,13 +350,25 @@ final class FieldCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'VALUE', 0)
     }
 
-    @Test @NotYetImplemented
+    @Test
     void testEnumReceiver2() {
         addJavaSource('public enum Color { RED, BLACK }', 'Color', 'tree.node')
 
         String contents = '''\
             def meth(tree.node.Color c) { }
             meth(B)
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'B'))
+        proposalExists(proposals, 'BLACK', 1)
+    }
+
+    @Test
+    void testEnumReceiver3() {
+        addJavaSource('public enum Color { RED, BLACK }', 'Color', 'tree.node')
+
+        String contents = '''\
+            def meth(tree.node.Color... colors) { }
+            meth(RED, B)
             '''.stripIndent()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'B'))
         proposalExists(proposals, 'BLACK', 1)
