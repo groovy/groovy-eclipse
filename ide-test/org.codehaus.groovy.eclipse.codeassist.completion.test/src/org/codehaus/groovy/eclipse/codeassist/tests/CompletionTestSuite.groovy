@@ -117,7 +117,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
                 foundCount += 1
             } else
             // type
-            if (isType && proposal.displayString.startsWith(name)) {
+            if (isType && (name.contains('.') ? proposal.displayString == name : proposal.displayString.startsWith(name))) {
                 foundCount += 1
             }
         }
