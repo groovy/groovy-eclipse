@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
+import java.beans.Introspector;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -567,16 +568,15 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
                                     if (parameters == null || parameters.length == 0) {
                                         // instead of proposing no-arg constructor, propose type's properties as named arguments
                                         proposals.remove(constructorProposal);
-                                        for (PropertyNode prop : resolved.getProperties()) {
-                                            if (!"metaClass".equals(prop.getName()) && !usedParams.contains(prop.getName()) && prop.getName().startsWith(context.completionExpression)) {
-                                                GroovyNamedArgumentProposal namedArgument = new GroovyNamedArgumentProposal(prop.getName(), prop.getType(), null, String.valueOf(simpleTypeName));
+                                        for (PropertyNode prop : resolved.getProperties()) { String name = prop.getName();
+                                            if (!"metaClass".equals(name) && !usedParams.contains(name) && name.startsWith(context.completionExpression)) {
+                                                GroovyNamedArgumentProposal namedArgument = new GroovyNamedArgumentProposal(name, prop.getType(), null, String.valueOf(simpleTypeName));
                                                 proposals.add(namedArgument.createJavaProposal(context, javaContext));
                                             }
                                         }
                                         for (MethodNode meth : resolved.getMethods()) {
-                                            if (!meth.isStatic() && AccessorSupport.isSetter(meth)) {
-                                                String name = Character.toLowerCase(meth.getName().charAt(3)) + meth.getName().substring(4);
-                                                if (!"metaClass".equals(name) && !usedParams.contains(name) && resolved.getProperty(name) == null) {
+                                            if (!meth.isStatic() && AccessorSupport.isSetter(meth)) { String name = Introspector.decapitalize(meth.getName().substring(3));
+                                                if (!"metaClass".equals(name) && !usedParams.contains(name) && name.startsWith(context.completionExpression) && resolved.getProperty(name) == null) {
                                                     GroovyNamedArgumentProposal namedArgument = new GroovyNamedArgumentProposal(name, meth.getParameters()[0].getType(), null, String.valueOf(simpleTypeName));
                                                     proposals.add(namedArgument.createJavaProposal(context, javaContext));
                                                 }

@@ -274,6 +274,36 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'abc : __', 1)
     }
 
+    @Test
+    void testNamedArgs12() {
+        String contents = '''\
+            class Foo {
+              String aaa
+              void setAbc(Number abc) {}
+            }
+            new Foo(a)
+            '''.stripIndent()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'a'))
+        proposalExists(proposals, 'aaa : __', 1)
+        proposalExists(proposals, 'abc : __', 1)
+    }
+
+    @Test
+    void testNamedArgs13() {
+        String contents = '''\
+            class Foo {
+              String aaa
+              void setXyz(Number xyz) {}
+            }
+            new Foo(a)
+            '''.stripIndent()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'a'))
+        proposalExists(proposals, 'aaa : __', 1)
+        proposalExists(proposals, 'xyz : __', 0)
+    }
+
     @Test // explicit no-arg and tuple constructors exist
     void testNoNamedArgs() {
         String contents = '''\
