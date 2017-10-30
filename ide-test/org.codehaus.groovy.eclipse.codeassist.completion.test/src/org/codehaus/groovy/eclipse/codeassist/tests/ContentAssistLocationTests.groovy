@@ -364,44 +364,44 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
 
     @Test
     void testClassBody4() {
+        String contents = 'class A { void t \n }'
+        int loc = contents.indexOf('\n') + 1
+        assertLocation(contents, loc, ContentAssistLocation.CLASS_BODY)
+    }
+
+    @Test
+    void testExtends1() {
         String contents = 'class A extends T { void t }'
         int loc = contents.indexOf('ds') + 4
         assertLocation(contents, loc, ContentAssistLocation.EXTENDS)
     }
 
     @Test
-    void testClassBody5() {
+    void testExtends2() {
         String contents = 'class A extends ArrayList { void t }'
         int loc = contents.indexOf('Arr') + 3
         assertLocation(contents, loc, ContentAssistLocation.EXTENDS)
     }
 
     @Test
-    void testClassBody6() {
+    void testImplements1() {
         String contents = 'class A extends ArrayList implements T { void t }'
         int loc = contents.indexOf('ents ') + 6
         assertLocation(contents, loc, ContentAssistLocation.IMPLEMENTS)
     }
 
     @Test
-    void testClassBody7() {
+    void testImplements2() {
         String contents = 'class A extends ArrayList implements Li { void t }'
         int loc = contents.indexOf(' Li') + 3
         assertLocation(contents, loc, ContentAssistLocation.IMPLEMENTS)
     }
 
     @Test
-    void testClassBody8() {
+    void testImplements3() {
         String contents = 'class A extends ArrayList implements Foo, Li { void t }'
         int loc = contents.indexOf(' Li') + 3
         assertLocation(contents, loc, ContentAssistLocation.IMPLEMENTS)
-    }
-
-    @Test
-    void testClassBody9() {
-        String contents = 'class A { void t \n }'
-        int loc = contents.indexOf('\n') + 1
-        assertLocation(contents, loc, ContentAssistLocation.CLASS_BODY)
     }
 
     @Test
@@ -556,5 +556,68 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
         String contents = '@A import java.util.List\n class A { }'
         int loc = contents.indexOf('@A') + 2
         assertLocation(contents, loc, ContentAssistLocation.ANNOTATION)
+    }
+
+    @Test
+    void testAnnotationBody1() {
+        String contents = '@A() class A { }'
+        int loc = contents.indexOf('@A') + 3
+        assertLocation(contents, loc, ContentAssistLocation.ANNOTATION_BODY)
+    }
+
+    @Test
+    void testAnnotationBody2() {
+        String contents = '@A(v) class A { }'
+        int loc = contents.indexOf('@A') + 4
+        assertLocation(contents, loc, ContentAssistLocation.ANNOTATION_BODY)
+    }
+
+    @Test
+    void testAnnotationBody3() {
+        String contents = '@A(value=) class A { }'
+        int loc = contents.indexOf('value=') + 6
+        assertLocation(contents, loc, ContentAssistLocation.ANNOTATION_BODY)
+    }
+
+    @Test
+    void testAnnotationBody4() {
+        String contents = '@A(value=x) class A { }'
+        int loc = contents.indexOf('=x') + 2
+        assertLocation(contents, loc, ContentAssistLocation.ANNOTATION_BODY)
+    }
+
+    @Test
+    void testAnnotationBody5() {
+        String contents = '@A(value=[x,y]) class A { }'
+        int loc = contents.indexOf(',y') + 2
+        assertLocation(contents, loc, ContentAssistLocation.ANNOTATION_BODY)
+    }
+
+    @Test
+    void testAnnotationBody6() {
+        String contents = '@A(value=[x,y],) class A { }'
+        int loc = contents.indexOf('],') + 2
+        assertLocation(contents, loc, ContentAssistLocation.ANNOTATION_BODY)
+    }
+
+    @Test
+    void testAnnotationBody7() {
+        String contents = '@A(one = null, two = ) class A { }'
+        int loc = contents.indexOf('= )') + 2
+        assertLocation(contents, loc, ContentAssistLocation.ANNOTATION_BODY)
+    }
+
+    @Test @NotYetImplemented
+    void testAnnotationBody8() {
+        String contents = '@A(value = Object.) class A { }'
+        int loc = contents.indexOf('.)') + 1
+        assertLocation(contents, loc, ContentAssistLocation.ANNOTATION_BODY)
+    }
+
+    @Test @NotYetImplemented
+    void testAnnotationBody8a() {
+        String contents = '@A(value = java.lang.Object.) class A { }'
+        int loc = contents.indexOf('.)') + 1
+        assertLocation(contents, loc, ContentAssistLocation.ANNOTATION_BODY)
     }
 }
