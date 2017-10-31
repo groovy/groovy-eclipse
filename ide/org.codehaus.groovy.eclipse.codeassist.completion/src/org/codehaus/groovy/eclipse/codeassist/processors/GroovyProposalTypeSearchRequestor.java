@@ -67,7 +67,6 @@ import org.eclipse.jdt.internal.compiler.util.ObjectVector;
 import org.eclipse.jdt.internal.core.NameLookup;
 import org.eclipse.jdt.internal.corext.util.TypeFilter;
 import org.eclipse.jdt.internal.ui.text.java.JavaTypeCompletionProposal;
-import org.eclipse.jdt.internal.ui.text.java.LazyGenericTypeProposal;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaTypeCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
@@ -443,38 +442,26 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor, Rele
             : proposeImportableType(packageName, simpleTypeName, modifiers, accessibility, qualifiedTypeName, fullyQualifiedName, isQualified);
     }
 
-    private ICompletionProposal proposeImportableType(char[] packageName,
-            char[] simpleTypeName, int modifiers, int accessibility,
-            char[] qualifiedTypeName, char[] fullyQualifiedName,
-            boolean isQualified) {
-        char[] completionName;
-        if (isQualified) {
-            completionName = fullyQualifiedName;
-        } else {
-            completionName = simpleTypeName;
-        }
-
+    private ICompletionProposal proposeImportableType(char[] packageName, char[] simpleTypeName, int modifiers, int accessibility, char[] qualifiedTypeName, char[] fullyQualifiedName, boolean isQualified) {
         GroovyCompletionProposal proposal = createProposal(CompletionProposal.TYPE_REF, actualCompletionPosition - offset);
-        proposal.setDeclarationSignature(packageName);
-        proposal.setSignature(CompletionEngine.createNonGenericTypeSignature(packageName, simpleTypeName));
-        proposal.setCompletion(completionName);
-        proposal.setFlags(modifiers);
-        proposal.setReplaceRange(offset, offset + replaceLength);
-        proposal.setTokenRange(offset, actualCompletionPosition);
-        proposal.setRelevance(IRelevanceRule.DEFAULT.getRelevance(fullyQualifiedName, allTypesInUnit, accessibility, modifiers));
-        proposal.setNameLookup(nameLookup);
-        proposal.setTypeName(simpleTypeName);
         proposal.setAccessibility(accessibility);
+        proposal.setCompletion(isQualified ? fullyQualifiedName : simpleTypeName);
+        proposal.setDeclarationSignature(packageName);
+        proposal.setFlags(modifiers);
+        proposal.setNameLookup(nameLookup);
         proposal.setPackageName(packageName);
+        proposal.setReplaceRange(offset, offset + replaceLength);
+        proposal.setRelevance(IRelevanceRule.DEFAULT.getRelevance(fullyQualifiedName, allTypesInUnit, accessibility, modifiers));
+        proposal.setSignature(CompletionEngine.createNonGenericTypeSignature(packageName, simpleTypeName));
+        proposal.setTokenRange(offset, actualCompletionPosition);
+        proposal.setTypeName(simpleTypeName);
 
-        LazyGenericTypeProposal javaCompletionProposal = new LazyGenericTypeProposal(proposal, javaContext);
+        LazyJavaTypeCompletionProposal javaCompletionProposal = new LazyJavaTypeCompletionProposal(proposal, javaContext);
         javaCompletionProposal.setTriggerCharacters(ProposalUtils.TYPE_TRIGGERS);
         javaCompletionProposal.setRelevance(proposal.getRelevance());
         ImportRewrite r = groovyRewriter.getImportRewrite(monitor);
         if (r != null) {
-            ReflectionUtils.setPrivateField(
-                    LazyJavaTypeCompletionProposal.class, "fImportRewrite",
-                    javaCompletionProposal, r);
+            ReflectionUtils.setPrivateField(LazyJavaTypeCompletionProposal.class, "fImportRewrite", javaCompletionProposal, r);
         }
         return javaCompletionProposal;
     }

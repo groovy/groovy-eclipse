@@ -209,11 +209,23 @@ final class TypeCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testGRECLIPSE673() {
+    void testCompleteExceptionClass() {
         String contents = 'throw new MPE'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'MPE'))
         // found twice: once as a type proposal and once as a constructor proposal
         proposalExists(proposals, 'MissingPropertyExceptionNoStack', 2, true)
+    }
+
+    @Test
+    void testCompleteGenericType1() {
+        String contents = 'ArLi', expected = 'ArrayList' // not 'ArrayList<E>'
+        checkProposalApplication(contents, expected, contents.length(), 'ArrayList - java.util', true)
+    }
+
+    @Test
+    void testCompleteGenericType2() {
+        String contents = 'def list = ArrLis', expected = 'def list = ArrayList'
+        checkProposalApplication(contents, expected, contents.length(), 'ArrayList - java.util', true)
     }
 
     @Test
