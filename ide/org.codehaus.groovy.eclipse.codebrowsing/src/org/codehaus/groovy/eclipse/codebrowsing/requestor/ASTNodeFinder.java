@@ -332,7 +332,12 @@ public class ASTNodeFinder extends DepthFirstVisitor {
      */
     protected void check(ASTNode node) {
         if (node instanceof ClassNode) {
-            checkGenerics((ClassNode) node);
+            ClassNode type = (ClassNode) node;
+            if (type.isArray()) {
+                check(type.getComponentType(), node.getStart(), node.getEnd() - 2);
+            } else {
+                checkGenerics(type);
+            }
         }
         if (node.getEnd() > 0 && sloc.regionIsCoveredByNode(node)) {
             completeVisitation(node, null);

@@ -517,6 +517,12 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
         assertCodeSelect([contents], 'Collection')
     }
 
+    @Test
+    void testSelectTypecastType3() {
+        String contents = 'def arr = (Object[]) null'
+        assertCodeSelect([contents], 'Object')
+    }
+
     @Test // GRECLIPSE-1219
     void testSelectAnnotationOnImport() {
         String contents = '@Deprecated import java.util.List; class Type { }'
@@ -632,6 +638,19 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
     @Test
     void testSelectPackageOnFullyQualifiedName4a() {
         String contents = 'java.util.List<java.util.regex.Pattern> x'
+        assertCodeSelect([contents], 'x')
+        assertCodeSelect([contents], 'List')
+        assertCodeSelect(contents, new SourceRange(contents.indexOf('java'), 1), 'java')
+        assertCodeSelect(contents, new SourceRange(contents.indexOf('util'), 1), 'java.util')
+        assertCodeSelect([contents], 'Pattern')
+        assertCodeSelect([contents], 'java', 'java')
+        assertCodeSelect([contents], 'util', 'java.util')
+        assertCodeSelect([contents], 'regex', 'java.util.regex')
+    }
+
+    @Test
+    void testSelectPackageOnFullyQualifiedName4b() {
+        String contents = 'java.util.List<java.util.regex.Pattern>[] x'
         assertCodeSelect([contents], 'x')
         assertCodeSelect([contents], 'List')
         assertCodeSelect(contents, new SourceRange(contents.indexOf('java'), 1), 'java')
