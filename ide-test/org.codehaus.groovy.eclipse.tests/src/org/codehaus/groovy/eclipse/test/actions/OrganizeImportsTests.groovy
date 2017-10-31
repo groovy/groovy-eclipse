@@ -217,7 +217,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testAddImportForGenerics() {
+    void testAddImportForGenerics1() {
         String originalContents = '''
             import java.util.Map.Entry
 
@@ -235,8 +235,48 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(originalContents, expectedContents)
     }
 
-    @Test // GRECLIPSE-1693
+    @Test
     void testAddImportForGenerics2() {
+        String originalContents = '''
+            import java.util.Map.Entry
+
+            Entry<SecondClass, FirstClass<HTML>>[] array
+            '''
+        String expectedContents = '''
+            import java.util.Map.Entry
+
+            import javax.swing.text.html.HTML
+
+            import other.FirstClass
+            import other.SecondClass
+
+            Entry<SecondClass, FirstClass<HTML>>[] array
+            '''
+        doContentsCompareTest(originalContents, expectedContents)
+    }
+
+    @Test
+    void testAddImportForGenerics3() {
+        String originalContents = '''
+            import java.util.Map.Entry
+
+            def array = new Entry<SecondClass, FirstClass<HTML>>[0]
+            '''
+        String expectedContents = '''
+            import java.util.Map.Entry
+
+            import javax.swing.text.html.HTML
+
+            import other.FirstClass
+            import other.SecondClass
+
+            def array = new Entry<SecondClass, FirstClass<HTML>>[0]
+            '''
+        doContentsCompareTest(originalContents, expectedContents)
+    }
+
+    @Test
+    void testAddImportForGenerics4() {
         createGroovyType 'p1', 'Foo', 'class Foo<T> {}'
         createGroovyType 'p2', 'Bar', 'class Bar {}'
 
@@ -255,7 +295,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testAddImportForGenerics3() {
+    void testAddImportForGenerics5() {
         createGroovyType 'foo', 'Bar', 'class Bar {}'
 
         String contents = '''
@@ -266,7 +306,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testAddImportForGenerics4() {
+    void testAddImportForGenerics6() {
         createGroovyType 'foo', 'Bar', 'class Bar {}'
 
         String contents = '''
@@ -276,7 +316,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRemoveImport() {
+    void testRemoveImport1() {
         String originalContents = '''\
             import other.SecondClass
             '''
@@ -538,7 +578,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test // GRECLIPSE-506
-    void testImportDateFormat() {
+    void testImportDateFormat1() {
         String contents = '''\
             import java.text.DateFormat
             new String(DateFormat.getDateInstance())
@@ -578,7 +618,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test @Ignore('Currently not possible due to heuristic in FindUnresolvedReferencesVisitor.handleVariable()')
-    void testDynamicVariable() {
+    void testDynamicVariable1() {
         String contents = '''
             HTML.NULL_ATTRIBUTE_VALUE
             '''
@@ -992,7 +1032,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test // GRECLIPSE-929
-    void testStarImport() {
+    void testStarImport1() {
         String contents = '''\
             import javax.swing.text.html.*
             HTML
@@ -1024,7 +1064,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test // GRECLIPSE-929
-    void testStaticStarImport() {
+    void testStaticStarImport1() {
         // never remove static star imports
         String contents = '''\
             import static java.lang.String.*
@@ -1076,7 +1116,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testCompileDynamicImport() {
+    void testCompileDynamicImport1() {
         assumeTrue(isAtLeastGroovy(21))
         String contents = '''
             @CompileDynamic

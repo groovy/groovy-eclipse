@@ -44,7 +44,7 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
             'Outer', 'other'
 
         addGroovySource '''\
-            class FirstClass { }
+            class FirstClass<T> { }
             class SecondClass { }
             class ThirdClass { }
             '''.stripIndent(),

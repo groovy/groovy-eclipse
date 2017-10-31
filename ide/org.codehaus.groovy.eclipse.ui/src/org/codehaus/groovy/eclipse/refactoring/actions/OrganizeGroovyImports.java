@@ -284,11 +284,13 @@ public class OrganizeGroovyImports {
          * that the import will be retained if the type is resolved.
          */
         private void handleTypeReference(ClassNode node, boolean isAnnotation) {
-            if (getBaseType(node).isPrimitive()) {
+            ClassNode type = getBaseType(node);
+            String name = getTypeName(type);
+            if (type.isPrimitive()) {
                 return;
             }
 
-            GenericsType[] generics = node.getGenericsTypes();
+            GenericsType[] generics = type.getGenericsTypes();
             int start = node.getNameStart(),
                 until = node.getNameEnd();
             if (until < 1) {
@@ -296,23 +298,22 @@ public class OrganizeGroovyImports {
                 until = node.getEnd()-1;
 
                 // getEnd() includes generics; try to constrain the range
-                if (isNotEmpty(generics)) {
+                if (until > 0 && isNotEmpty(generics)) {
                     if (generics[0].getStart() > 0)
                         until = generics[0].getStart() - 1;
-                } else if (node.isArray() && getBaseType(node).getEnd() > 0) {
-                    assert start <= getBaseType(node).getStart();
-                    assert until <= 0 || getBaseType(node).getEnd() < until;
+                } else if (node.isArray() && type.getEnd() > 0) {
+                    assert start <= type.getStart();
+                    assert until <= 0 || type.getEnd() < until;
 
-                    start = getBaseType(node).getStart();
-                    until = getBaseType(node).getEnd();
+                    start = type.getStart();
+                    until = type.getEnd();
                 }
             }
             int length = until - start;
-            String name = getTypeName(node);
 
             // check node's generics types
-            if (isNotEmpty(node.getGenericsTypes())) {
-                visitTypeParameters(node.getGenericsTypes(), node.getName());
+            if (isNotEmpty(generics)) {
+                visitTypeParameters(generics, name);
             }
 
             if (!node.isResolved() && node.redirect() != current) {
