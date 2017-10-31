@@ -26,32 +26,61 @@ public final class ArrayInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testArray1() {
+        String contents = "def x = new CharSequence[0]";
+        assertExprType(contents, "x", "java.lang.CharSequence[]");
+        assertExprType(contents, "CharSequence", "java.lang.CharSequence");
+    }
+
+    @Test
+    public void testArray2() {
+        String contents = "def x = (CharSequence[]) null";
+        assertExprType(contents, "x", "java.lang.CharSequence[]");
+        assertExprType(contents, "CharSequence", "java.lang.CharSequence");
+    }
+
+    @Test
+    public void testArray3() {
         String contents = "def x = [\"1\", \"2\"] as CharSequence[]; x";
         assertExprType(contents, "x", "java.lang.CharSequence[]");
     }
 
     @Test
-    public void testArray2() {
+    public void testArray4() {
         String contents = "def x = [\"1\", \"2\"] as CharSequence[]; x[0]";
         assertExprType(contents, "x[0]", "java.lang.CharSequence");
     }
 
     @Test
-    public void testArray3() {
+    public void testArray5() {
         String contents = "def x = [\"1\", \"2\"] as CharSequence[]; x[0].length";
         assertExprType(contents, "length", "java.lang.Integer");
     }
 
     @Test
-    public void testArray4() {
+    public void testArray6() {
         String contents = "int i = 0; def x = [\"1\", \"2\"] as CharSequence[]; x[i]";
         assertExprType(contents, "x[i]", "java.lang.CharSequence");
     }
 
     @Test
-    public void testArray5() {
+    public void testArray7() {
         String contents = "int i = 0; def x = [\"1\", \"2\"] as CharSequence[]; x[i].length";
         assertExprType(contents, "length", "java.lang.Integer");
+    }
+
+    @Test
+    public void testArrayGenerics1() {
+        String contents = "Class<? extends CharSequence>[] array";
+        assertExprType(contents, "CharSequence", "java.lang.CharSequence");
+        assertExprType(contents, "Class",  "java.lang.Class<? extends java.lang.CharSequence>");
+    }
+
+    @Test
+    public void testArrayGenerics2() {
+        String contents = "import java.util.regex.*; Map<String, Pattern>[] array";
+        assertExprType(contents, "String", "java.lang.String");
+        assertExprType(contents, "Pattern", "java.util.regex.Pattern");
+        assertExprType(contents, "Map", "java.util.Map<java.lang.String,java.util.regex.Pattern>");
     }
 
     @Test

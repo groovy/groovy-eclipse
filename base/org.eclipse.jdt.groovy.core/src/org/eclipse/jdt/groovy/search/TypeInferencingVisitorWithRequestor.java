@@ -719,6 +719,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
     private void visitClassReference(ClassNode node) {
         TypeLookupResult result = null;
+        node = GroovyUtils.getBaseType(node);
         VariableScope scope = scopes.getLast();
         for (ITypeLookup lookup : lookups) {
             TypeLookupResult candidate = lookup.lookupType(node, scope);
@@ -831,6 +832,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     public void visitArrayExpression(ArrayExpression node) {
         boolean shouldContinue = handleSimpleExpression(node);
         if (shouldContinue) {
+            visitClassReference(node.getType());
             super.visitArrayExpression(node);
         }
     }
