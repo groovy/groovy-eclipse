@@ -99,8 +99,8 @@ void buildFieldsAndMethods() {
 }
 // GROOVY add
 /**
-* @return {@code true} if error gets reported
-*/
+ * @return {@code true} if error gets reported
+ */
 protected boolean reportPackageIsNotExpectedPackage(CompilationUnitDeclaration unitDecl) {
 	problemReporter().packageIsNotExpectedPackage(unitDecl);	
 	return true;

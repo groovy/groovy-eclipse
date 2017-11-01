@@ -1397,9 +1397,10 @@ public final class CompletionEngine
 		if (this.options.checkVisibility) {
 			if((modifiers & ClassFileConstants.AccPublic) == 0) {
 				if((modifiers & ClassFileConstants.AccPrivate) != 0) return;
-
-				char[] currentPackage = CharOperation.concatWith(this.unitScope.fPackage.compoundName, '.');
-				if(!CharOperation.equals(packageName, currentPackage)) return;
+				if (this.moduleDeclaration == null) {
+					char[] currentPackage = CharOperation.concatWith(this.unitScope.fPackage.compoundName, '.');
+					if(!CharOperation.equals(packageName, currentPackage)) return;
+				}
 			}
 		}
 
@@ -2079,56 +2080,65 @@ public final class CompletionEngine
 							}
 						}
 					}
-					UsesStatement[] uses = this.moduleDeclaration.uses;
-					if (uses != null) {
-						for (int i = 0, l = uses.length; i < l; ++i) {
-							TypeReference usesReference = uses[i].serviceInterface;
-							if (usesReference instanceof CompletionOnUsesSingleTypeReference ||
-									usesReference instanceof CompletionOnUsesQualifiedTypeReference) {
-								this.lookupEnvironment.buildTypeBindings(parsedUnit, null);
-								if ((this.unitScope = parsedUnit.scope) != null) {
-									contextAccepted = true;
-									buildContext(usesReference, null, parsedUnit, null, null);
-									findTypeReferences(usesReference, true);
-									debugPrintf();
+					try {
+						UsesStatement[] uses = this.moduleDeclaration.uses;
+						if (uses != null) {
+							for (int i = 0, l = uses.length; i < l; ++i) {
+								UsesStatement usesStatement = uses[i];
+								this.parser.enclosingNode = usesStatement;
+								TypeReference usesReference = usesStatement.serviceInterface;
+								if (usesReference instanceof CompletionOnUsesSingleTypeReference ||
+										usesReference instanceof CompletionOnUsesQualifiedTypeReference) {
+									contextAccepted = checkForCNF(usesReference, parsedUnit, true);
 									return;
 								}
 							}
 						}
-					}
-					ProvidesStatement[] providesStmts = this.moduleDeclaration.services;
-					for (int i = 0, l = providesStmts != null ? providesStmts.length : 0; i < l; ++i) {
-						ProvidesStatement providesStmt = providesStmts[i];
-						TypeReference pInterface = providesStmt.serviceInterface;
-						if (pInterface instanceof CompletionOnProvidesInterfacesSingleTypeReference ||
-								pInterface instanceof CompletionOnProvidesInterfacesQualifiedTypeReference) {
-							this.lookupEnvironment.buildTypeBindings(parsedUnit, null);
-							if ((this.unitScope = parsedUnit.scope) != null) {
-								contextAccepted = true;
-								buildContext(pInterface, null, parsedUnit, null, null);
-								findTypeReferences(pInterface, true);
-								debugPrintf();
+						ProvidesStatement[] providesStmts = this.moduleDeclaration.services;
+						for (int i = 0, l = providesStmts != null ? providesStmts.length : 0; i < l; ++i) {
+							ProvidesStatement providesStmt = providesStmts[i];
+							this.parser.enclosingNode = providesStmt;
+							TypeReference pInterface = providesStmt.serviceInterface;
+							if (pInterface instanceof CompletionOnProvidesInterfacesSingleTypeReference ||
+									pInterface instanceof CompletionOnProvidesInterfacesQualifiedTypeReference) {
+								contextAccepted = checkForCNF(pInterface, parsedUnit, true);
 								return;
 							}
-						}
-						TypeReference[] implementations = providesStmt.implementations;
-						for (int j = 0, k = implementations.length; j < k; ++j) {
-							TypeReference implementation = implementations[i];
-							
-							if (implementation instanceof CompletionOnProvidesImplementationsSingleTypeReference ||
-									implementation instanceof CompletionOnProvidesImplementationsQualifiedTypeReference) {
-								this.lookupEnvironment.buildTypeBindings(parsedUnit, null);
-								if ((this.unitScope = parsedUnit.scope) != null) {
-									contextAccepted = true;
-									buildContext(implementation, null, parsedUnit, null, null);
-									findImplementations(providesStmt, i/* stmtIndex */, j/* implIndex */);
-									debugPrintf();
+							TypeReference[] implementations = providesStmt.implementations;
+							for (int j = 0, k = implementations.length; j < k; ++j) {
+								TypeReference implementation = implementations[j];
+								if (implementation instanceof CompletionOnProvidesImplementationsSingleTypeReference ||
+										implementation instanceof CompletionOnProvidesImplementationsQualifiedTypeReference) {
+									contextAccepted = checkForCNF(implementation, parsedUnit, false);
 									return;
+								} else if (implementation instanceof CompletionOnKeyword) {
+									contextAccepted = true;
+									processModuleKeywordCompletion(parsedUnit, implementation, (CompletionOnKeyword) implementation);
 								}
-							} else if (implementation instanceof CompletionOnKeyword) {
-								contextAccepted = true;
-								processModuleKeywordCompletion(parsedUnit, implementation, (CompletionOnKeyword) implementation);
 							}
+						}
+					} catch (CompletionNodeFound e) {
+						//					completionNodeFound = true;
+						if (e.astNode != null) {
+							// if null then we found a problem in the completion node
+							if(DEBUG) {
+								System.out.print("COMPLETION - Completion node : "); //$NON-NLS-1$
+								System.out.println(e.astNode.toString());
+								if(this.parser.assistNodeParent != null) {
+									System.out.print("COMPLETION - Parent Node : ");  //$NON-NLS-1$
+									System.out.println(this.parser.assistNodeParent);
+								}
+							}
+							this.lookupEnvironment.unitBeingCompleted = parsedUnit; // better resilient to further error reporting
+							contextAccepted =
+									complete(
+											e.astNode,
+											this.parser.assistNodeParent,
+											this.parser.enclosingNode,
+											parsedUnit,
+											e.qualifiedBinding,
+											e.scope,
+											e.insideTypeAnnotation);
 						}
 					}
 				}
@@ -2306,6 +2316,26 @@ public final class CompletionEngine
 			if (this.monitor != null) this.monitor.done();
 			reset();
 		}
+	}
+
+	private boolean checkForCNF(TypeReference ref, CompilationUnitDeclaration parsedUnit, boolean showAll) {
+		this.lookupEnvironment.buildTypeBindings(parsedUnit, null);
+		this.lookupEnvironment.completeTypeBindings(parsedUnit, true);
+		parsedUnit.resolve();
+		if ((this.unitScope = parsedUnit.scope) != null) {
+			if (showAll) {
+				char[][] tokens = ref.getTypeName();
+				char[] typeName = CharOperation.concatWithAll(tokens, '.');
+				if (typeName.length == 0) {
+					buildContext(ref, null, parsedUnit, null, null);
+					this.completionToken = new char[] {'*'};
+					findTypesAndPackages(this.completionToken, this.unitScope, true, true, new ObjectVector());
+					return true;
+				}
+			}
+			parsedUnit.scope.faultInTypes();
+		}
+		return false; // should not come here - will throw exception
 	}
 
 	private boolean completeOnPackageVisibilityStatements(boolean contextAccepted,
@@ -3622,8 +3652,7 @@ public final class CompletionEngine
 	}
 
 	private void completionOnProvidesImplementationsQualifiedTypeReference(ASTNode astNode, ASTNode astNodeParent, Binding qualifiedBinding, Scope scope) {
-		// TODO: Filter the results wrt accessibility and add relevance to the results.
-		completionOnQualifiedTypeReference(astNode, astNodeParent, qualifiedBinding, scope);
+		findImplementations((ProvidesStatement) this.parser.enclosingNode, (TypeReference) astNode);
 	}
 
 	private void completionOnSingleNameReference(ASTNode astNode, ASTNode astNodeParent, Scope scope,
@@ -3760,12 +3789,11 @@ public final class CompletionEngine
 	}
 
 	private void completionOnProvidesInterfacesSingleTypeReference(ASTNode astNode, ASTNode astNodeParent, Binding qualifiedBinding, Scope scope) {
-		// TODO : filter the results.
 		completionOnSingleTypeReference(astNode, astNodeParent, qualifiedBinding, scope);
 	}
 	private void completionOnProvidesImplementationsSingleTypeReference(ASTNode astNode, ASTNode astNodeParent, Binding qualifiedBinding, Scope scope) {
-		// TODO : filter the results.
-		completionOnSingleTypeReference(astNode, astNodeParent, qualifiedBinding, scope);
+		findImplementations((ProvidesStatement) this.parser.enclosingNode, (TypeReference) astNode);
+		// TODO : filter the results - remove packs without a type in impl.
 	}
 
 	private char[][] computeAlreadyDefinedName(
@@ -11855,30 +11883,7 @@ public final class CompletionEngine
 		return null;
 	}
 
-	private void findTypeReferences(TypeReference reference, boolean findMembers) {
-		char[][] tokens = reference.getTypeName();
-
-		char[] typeName = CharOperation.concatWithAll(tokens, '.');
-
-		if (typeName.length == 0) {
-			this.completionToken = new char[] {'*'};
-		} else if (reference instanceof CompletionOnUsesQualifiedTypeReference ||
-				reference instanceof CompletionOnProvidesInterfacesQualifiedTypeReference) {
-			CompletionOnQualifiedTypeReference qReference = (CompletionOnQualifiedTypeReference) reference;
-			if (qReference.completionIdentifier != null) {
-				this.completionToken = CharOperation.concatAll(typeName, qReference.completionIdentifier, '.');
-			}
-		} else {
-			 char[] lastToken = tokens[tokens.length - 1];
-			 this.completionToken = lastToken != null && lastToken.length == 0 ?
-					 CharOperation.concat(typeName, new char[]{'.'}) :lastToken;
-		}
-		setSourceRange(reference.sourceStart, reference.sourceEnd);
-		findTypesAndPackages(this.completionToken, this.unitScope, true, true, new ObjectVector());
-	}
-
-	private void findImplementations(ProvidesStatement providesStmt, int stmtIndex, int implIndex) {
-		TypeReference reference = providesStmt.implementations[implIndex];
+	private void findImplementations(ProvidesStatement providesStmt, TypeReference reference ) {
 		char[][] tokens = reference.getTypeName();
 		char[] typeName = CharOperation.concatWithAll(tokens, '.');
 
@@ -11895,15 +11900,19 @@ public final class CompletionEngine
 					 CharOperation.concat(typeName, new char[]{'.'}) :lastToken;
 		}
 		setSourceRange(reference.sourceStart, reference.sourceEnd);
-		findImplementations(this.completionToken, this.unitScope, providesStmt, stmtIndex);
+		findImplementations(this.completionToken, this.unitScope, providesStmt, -1);
 	}
 
 	private void findImplementations(char[] token, Scope scope, ProvidesStatement providesStmt, int stmtIndex) {
-
 		TypeReference theInterface = providesStmt.serviceInterface;
-
 		if (token == null) return;
-		char[][] theInterfaceType = theInterface.getTypeName();
+		char[][] theInterfaceType = null;
+		if (theInterface.resolvedType != null && theInterface.resolvedType.isValidBinding()) {
+			char[] readableName = theInterface.resolvedType.readableName();
+			if (readableName != null)
+				theInterfaceType = CharOperation.splitOn('.', readableName);
+		}
+		theInterfaceType = theInterfaceType == null ? theInterface.getTypeName() : theInterfaceType;
 		if (theInterfaceType == null) return;
 		SearchPattern pattern  = null;
 		NameEnvironmentAnswer answer =  this.nameEnvironment.findTypeInModules(theInterfaceType, scope.module());
@@ -11930,7 +11939,7 @@ public final class CompletionEngine
 			}
 			@Override
 			public void acceptSearchMatch(SearchMatch match) throws CoreException {
-				checkCancel();
+			//	checkCancel();
 				IJavaElement element = ((IJavaElement) match.getElement());
 				if (element.getElementType() == IJavaElement.TYPE) {
 					IType type = (IType) element;
@@ -11941,7 +11950,9 @@ public final class CompletionEngine
 						} else {
 							fullTypeName = type.getElementName();
 						}
-						if (!fullTypeName.startsWith(this.prefix) || this.filter.contains(fullTypeName)) return;
+						if (this.filter.contains(fullTypeName)) return;
+						if (!(fullTypeName.startsWith(this.prefix) || type.getElementName().startsWith(this.prefix)))
+							return;
 					}
 					this.types.add(type);
 				}
