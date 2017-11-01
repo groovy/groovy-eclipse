@@ -41,6 +41,14 @@ final class CodeSelectVariablesTests extends BrowsingTestSuite {
         assertCodeSelect([contents], 'yyy')
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/355
+    void testSelectLocalVar5() {
+        addJavaSource 'public class Calendar { public static Calendar instance() { return null; } }', 'Calendar', 'domain'
+        String contents = 'def cal = domain.Calendar.instance()'
+        def elem = assertCodeSelect([contents], 'cal')
+        assert elem.typeSignature =~ 'domain.Calendar'
+    }
+
     @Test // GRECLIPSE-1330
     void testSelectLocalVarInGString1() {
         String contents = 'def i\n"$i"'

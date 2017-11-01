@@ -93,7 +93,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     void testCodeSelectClosure() {
         String contents = 'def x = { t -> print t }\nx("hello")'
         IJavaElement elem = assertCodeSelect([contents], 'x')
-        assert elem.typeSignature == 'QClosure;'
+        assert elem.typeSignature =~ 'groovy.lang.Closure'
     }
 
     @Test

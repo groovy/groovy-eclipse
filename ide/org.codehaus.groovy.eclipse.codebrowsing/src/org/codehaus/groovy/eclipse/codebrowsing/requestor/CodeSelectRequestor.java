@@ -272,8 +272,6 @@ public class CodeSelectRequestor implements ITypeRequestor {
     }
 
     private LocalVariable createLocalVariable(TypeLookupResult result, IJavaElement enclosingElement, Variable var) {
-        ClassNode type = result.type != null ? result.type : var.getType();
-
         int start;
         if (var instanceof Parameter) {
             start = ((Parameter) var).getNameStart();
@@ -281,7 +279,8 @@ public class CodeSelectRequestor implements ITypeRequestor {
             start = ((VariableExpression) var).getStart();
         }
         int until = start + var.getName().length() - 1;
-        String signature = GroovyUtils.getTypeSignature(type, false, false);
+        ClassNode type = result.type != null ? result.type : var.getType();
+        String signature = GroovyUtils.getTypeSignature(type, /*fully-qualified:*/ true, false);
         return new LocalVariable((JavaElement) enclosingElement, var.getName(), start, until, start, until, signature, null, 0, false);
     }
 

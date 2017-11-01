@@ -31,8 +31,13 @@ import org.osgi.framework.Version;
 
 public final class InferencingTests extends InferencingTestSuite {
 
-    private void assertNoUnknowns(String contents) {
-        GroovyCompilationUnit unit = createUnit("Search", contents);
+    private void assertExprType(String source, String target, String type) {
+        final int offset = source.lastIndexOf(target);
+        assertType(source, offset, offset + target.length(), type);
+    }
+
+    private void assertNoUnknowns(String source) {
+        GroovyCompilationUnit unit = createUnit("Search", source);
 
         TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
         visitor.DEBUG = true;
@@ -2844,6 +2849,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  private Wrapper<String> foo = new Wrapper<>(\"foo\");\n" +
             "  public String getFoo() { return foo.getWrapped(); }\n" +
             "}");
+
         String contents =
             "class GroovyTest {\n" +
             "  static void main(String[] args) {\n" +
@@ -2851,9 +2857,16 @@ public final class InferencingTests extends InferencingTestSuite {
             "    println b.foo.toUpperCase()\n" +
             "  }\n" +
             "}";
+        assertExprType(contents, "foo", "java.lang.String");
+    }
 
-        int start = contents.lastIndexOf("foo");
-        int end = start + "foo".length();
-        assertType(contents, start, end, "java.lang.String");
+    @Test // https://github.com/groovy/groovy-eclipse/issues/355
+    public void testLocalTypeAndDefaultImportCollision() {
+        createJavaUnit("domain", "Calendar",
+            "public class Calendar { public static Calendar instance() { return null; } }");
+
+        String contents = "def cal = domain.Calendar.instance()";
+        assertExprType(contents, "instance", "domain.Calendar");
+        assertExprType(contents, "cal", "domain.Calendar");
     }
 }
