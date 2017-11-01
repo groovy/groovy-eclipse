@@ -543,6 +543,11 @@ public abstract class JavaElement extends PlatformObject implements IJavaElement
 		else
 			return new JavaModelException(new JavaModelStatus(status.getSeverity(), status.getCode(), status.getMessage()));
 	}
+	@Deprecated // GROOVY add -- Eclipse 3.5 backwards compatibility for GGTS
+	protected Object openWhenClosed(Object info, IProgressMonitor monitor) throws JavaModelException {
+		return openWhenClosed(info, true, monitor);
+	}
+	// GROOVY end
 	/*
 	 * Opens an <code>Openable</code> that is known to be closed (no check for <code>isOpen()</code>).
 	 * Returns the created element info.
