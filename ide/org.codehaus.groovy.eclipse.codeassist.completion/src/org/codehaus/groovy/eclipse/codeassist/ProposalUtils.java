@@ -50,25 +50,22 @@ public class ProposalUtils {
 
     private ProposalUtils() {}
 
-    // Taken from org.eclipse.jdt.ui.text.java.CompletionProposalCollector
+    // See org.eclipse.jdt.ui.text.java.CompletionProposalCollector
 
-    /** Triggers for method proposals without parameters. Do not modify. */
-    public final static char[] METHOD_TRIGGERS = new char[] { ';', ',', '.', '\t', '[', ' ' };
+    /** Triggers for method proposals without parameters. Do not modify! */
+    public static final char[] METHOD_TRIGGERS = { ';', ',', '.', '[', ' ', '\t' };
 
-    /** Triggers for method proposals. Do not modify. */
-    public final static char[] METHOD_WITH_ARGUMENTS_TRIGGERS = new char[] { '(', '-', ' ' };
+    /** Triggers for method proposals. Do not modify! */
+    public static final char[] METHOD_WITH_ARGUMENTS_TRIGGERS = { '(', '{', '-', ' ' };
 
-    /** Triggers for types. Do not modify. */
-    // public final static char[] TYPE_TRIGGERS = new char[] { '.', '\t', '[', '(', ' ' };
-    // In groovy, types are valid expression, so add all the var triggers as well
-    public final static char[] TYPE_TRIGGERS = new char[] { '.', '[', '(', ' ', '\t', '=', ';' };
+    /** Triggers for types. Do not modify! */
+    public static final char[] TYPE_TRIGGERS = { ';', '.', '=', '[', '(', ' ', '\t' };
 
-    /** Triggers for variables. Do not modify. */
-    public final static char[] VAR_TRIGGER = new char[] { '\t', ' ', '=', ';', '.' };
-
-    public static final List<IGroovyProposal> NO_PROPOSALS = Collections.emptyList();
+    /** Triggers for variables. Do not modify! */
+    public static final char[] VAR_TRIGGER = new char[] { ';', '.', '=', '[', '(', '{', ' ', '\t' };
 
     public static final ICompletionProposal[] NO_COMPLETIONS = new ICompletionProposal[0];
+    public static final List<IGroovyProposal> NO_PROPOSALS = Collections.EMPTY_LIST;
 
     private static ImageDescriptorRegistry registry;
     static {

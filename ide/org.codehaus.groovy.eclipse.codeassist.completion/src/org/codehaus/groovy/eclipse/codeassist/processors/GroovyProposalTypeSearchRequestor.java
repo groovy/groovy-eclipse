@@ -456,14 +456,14 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         proposal.setTokenRange(offset, context.completionLocation);
         proposal.setTypeName(simpleTypeName);
 
-        LazyJavaTypeCompletionProposal javaCompletionProposal = new LazyJavaTypeCompletionProposal(proposal, javaContext);
-        javaCompletionProposal.setTriggerCharacters(ProposalUtils.TYPE_TRIGGERS);
-        javaCompletionProposal.setRelevance(proposal.getRelevance());
+        LazyJavaTypeCompletionProposal javaProposal = new LazyJavaTypeCompletionProposal(proposal, javaContext);
+        javaProposal.setTriggerCharacters(ProposalUtils.TYPE_TRIGGERS);
+        javaProposal.setRelevance(proposal.getRelevance());
         ImportRewrite r = groovyRewriter.getImportRewrite(monitor);
         if (r != null) {
-            ReflectionUtils.setPrivateField(LazyJavaTypeCompletionProposal.class, "fImportRewrite", javaCompletionProposal, r);
+            ReflectionUtils.setPrivateField(LazyJavaTypeCompletionProposal.class, "fImportRewrite", javaProposal, r);
         }
-        return javaCompletionProposal;
+        return javaProposal;
     }
 
     List<ICompletionProposal> processAcceptedPackages() {
@@ -479,9 +479,11 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                 proposal.setReplaceRange(offset, context.completionLocation);
                 proposal.setTokenRange(offset, context.completionLocation);
                 proposal.setRelevance(Relevance.LOWEST.getRelevance());
+
                 LazyJavaCompletionProposal javaProposal = new LazyJavaCompletionProposal(proposal, javaContext);
-                proposals.add(javaProposal);
+                javaProposal.setTriggerCharacters(ProposalUtils.TYPE_TRIGGERS);
                 javaProposal.setRelevance(proposal.getRelevance());
+                proposals.add(javaProposal);
             }
         }
         return proposals;
