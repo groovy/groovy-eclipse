@@ -54,6 +54,7 @@ import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
+import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.internal.codeassist.CompletionEngine;
@@ -95,7 +96,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
 
     private final int offset;
     private final int replaceLength;
-    private final int actualCompletionPosition;
 
     /** Array of simple name, fully-qualified name pairs. Default imports should be included (aka BigDecimal, etc.). */
     private char[][][] imports;
@@ -141,14 +141,14 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         this.module = context.unit.getModuleNode();
         this.unit = context.unit;
         this.replaceLength = replaceLength;
-        this.actualCompletionPosition = context.completionLocation;
         this.monitor = monitor;
         this.nameLookup = nameLookup;
         this.isImport = (context.location == ContentAssistLocation.IMPORT);
         // if contextOnly then do not insert any text, only show context information
         this.contextOnly = (context.location == ContentAssistLocation.METHOD_CONTEXT);
-        this.shouldAcceptConstructors = (context.location == ContentAssistLocation.CONSTRUCTOR || context.location == ContentAssistLocation.METHOD_CONTEXT);
-        this.completionExpression = (context.location == ContentAssistLocation.METHOD_CONTEXT ? ((MethodInfoContentAssistContext) context).methodName : context.fullCompletionExpression.replaceFirst("^new ", ""));
+        this.shouldAcceptConstructors = (context.location == ContentAssistLocation.METHOD_CONTEXT || context.location == ContentAssistLocation.CONSTRUCTOR);
+        this.completionExpression = (contextOnly ? ((MethodInfoContentAssistContext) context).methodName : context.fullCompletionExpression.replaceFirst("^new\\s+", ""));
+
         this.groovyRewriter = new GroovyImportRewriteFactory(this.unit, this.module);
         this.options = new AssistOptions(javaContext.getProject().getOptions(true));
 
@@ -418,13 +418,13 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             completionName = simpleTypeName;
         }
 
-        GroovyCompletionProposal proposal = createProposal(CompletionProposal.TYPE_REF, actualCompletionPosition - offset);
+        GroovyCompletionProposal proposal = createProposal(CompletionProposal.TYPE_REF, context.completionLocation - offset);
         proposal.setDeclarationSignature(packageName);
         proposal.setSignature(CompletionEngine.createNonGenericTypeSignature(packageName, simpleTypeName));
         proposal.setCompletion(completionName);
         proposal.setFlags(modifiers);
         proposal.setReplaceRange(offset, offset + replaceLength);
-        proposal.setTokenRange(offset, actualCompletionPosition);
+        proposal.setTokenRange(offset, context.completionLocation);
         proposal.setRelevance(IRelevanceRule.DEFAULT.getRelevance(fullyQualifiedName, allTypesInUnit, accessibility, modifiers));
         proposal.setTypeName(simpleTypeName);
         proposal.setAccessibility(accessibility);
@@ -443,7 +443,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
     }
 
     private ICompletionProposal proposeImportableType(char[] packageName, char[] simpleTypeName, int modifiers, int accessibility, char[] qualifiedTypeName, char[] fullyQualifiedName, boolean isQualified) {
-        GroovyCompletionProposal proposal = createProposal(CompletionProposal.TYPE_REF, actualCompletionPosition - offset);
+        GroovyCompletionProposal proposal = createProposal(CompletionProposal.TYPE_REF, context.completionLocation - offset);
         proposal.setAccessibility(accessibility);
         proposal.setCompletion(isQualified ? fullyQualifiedName : simpleTypeName);
         proposal.setDeclarationSignature(packageName);
@@ -453,7 +453,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         proposal.setReplaceRange(offset, offset + replaceLength);
         proposal.setRelevance(IRelevanceRule.DEFAULT.getRelevance(fullyQualifiedName, allTypesInUnit, accessibility, modifiers));
         proposal.setSignature(CompletionEngine.createNonGenericTypeSignature(packageName, simpleTypeName));
-        proposal.setTokenRange(offset, actualCompletionPosition);
+        proposal.setTokenRange(offset, context.completionLocation);
         proposal.setTypeName(simpleTypeName);
 
         LazyJavaTypeCompletionProposal javaCompletionProposal = new LazyJavaTypeCompletionProposal(proposal, javaContext);
@@ -472,12 +472,12 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         if (acceptedPackages != null && acceptedPackages.size() > 0) {
             for (String packageNameStr : acceptedPackages) {
                 char[] packageName = packageNameStr.toCharArray();
-                GroovyCompletionProposal proposal = createProposal(CompletionProposal.PACKAGE_REF, actualCompletionPosition);
+                GroovyCompletionProposal proposal = createProposal(CompletionProposal.PACKAGE_REF, context.completionLocation);
                 proposal.setDeclarationSignature(packageName);
                 proposal.setPackageName(packageName);
                 proposal.setCompletion(packageName);
-                proposal.setReplaceRange(offset, actualCompletionPosition);
-                proposal.setTokenRange(offset, actualCompletionPosition);
+                proposal.setReplaceRange(offset, context.completionLocation);
+                proposal.setTokenRange(offset, context.completionLocation);
                 proposal.setRelevance(Relevance.LOWEST.getRelevance());
                 LazyJavaCompletionProposal javaProposal = new LazyJavaCompletionProposal(proposal, javaContext);
                 proposals.add(javaProposal);
@@ -556,14 +556,14 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                                         // instead of proposing no-arg constructor, propose type's properties as named arguments
                                         proposals.remove(constructorProposal);
                                         for (PropertyNode prop : resolved.getProperties()) { String name = prop.getName();
-                                            if (!"metaClass".equals(name) && !usedParams.contains(name) && name.startsWith(context.completionExpression)) {
+                                            if (!"metaClass".equals(name) && !usedParams.contains(name) && isCamelCaseMatch(context.completionExpression, name)) {
                                                 GroovyNamedArgumentProposal namedArgument = new GroovyNamedArgumentProposal(name, prop.getType(), null, String.valueOf(simpleTypeName));
                                                 proposals.add(namedArgument.createJavaProposal(context, javaContext));
                                             }
                                         }
                                         for (MethodNode meth : resolved.getMethods()) {
                                             if (!meth.isStatic() && AccessorSupport.isSetter(meth)) { String name = Introspector.decapitalize(meth.getName().substring(3));
-                                                if (!"metaClass".equals(name) && !usedParams.contains(name) && name.startsWith(context.completionExpression) && resolved.getProperty(name) == null) {
+                                                if (!"metaClass".equals(name) && !usedParams.contains(name) && resolved.getProperty(name) == null && isCamelCaseMatch(context.completionExpression, name)) {
                                                     GroovyNamedArgumentProposal namedArgument = new GroovyNamedArgumentProposal(name, meth.getParameters()[0].getType(), null, String.valueOf(simpleTypeName));
                                                     proposals.add(namedArgument.createJavaProposal(context, javaContext));
                                                 }
@@ -660,16 +660,16 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
 
     private void populateReplacementInfo(GroovyCompletionProposal proposal, char[] packageName, char[] simpleTypeName, char[] fullyQualifiedName) {
         if (contextOnly) {
-            proposal.setReplaceRange(actualCompletionPosition, actualCompletionPosition);
-            proposal.setTokenRange(actualCompletionPosition, actualCompletionPosition);
+            proposal.setReplaceRange(context.completionLocation, context.completionLocation);
+            proposal.setTokenRange(context.completionLocation, context.completionLocation);
             proposal.setCompletion(CharOperation.NO_CHAR);
         } else {
             proposal.setReplaceRange(offset + replaceLength, offset + replaceLength);
-            proposal.setTokenRange(offset, actualCompletionPosition);
+            proposal.setTokenRange(offset, context.completionLocation);
             char[] completion = new char[] {'(', ')'};
             try {
                 // try not to insert an extra set of parentheses when completing the constructor name
-                if (javaContext.getDocument().getChar(actualCompletionPosition) == '(') {
+                if (javaContext.getDocument().getChar(context.completionLocation) == '(') {
                     completion = CharOperation.NO_CHAR;
                 }
             } catch (BadLocationException ignored) {
@@ -701,7 +701,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                 if (!imported) typeCompletion = fullyQualifiedName;
             }
 
-            GroovyCompletionProposal typeProposal = createProposal(CompletionProposal.TYPE_REF, actualCompletionPosition - 1);
+            GroovyCompletionProposal typeProposal = createProposal(CompletionProposal.TYPE_REF, context.completionLocation - 1);
             typeProposal.setSignature(proposal.getDeclarationSignature());
             typeProposal.setReplaceRange(offset, offset + replaceLength);
             typeProposal.setTokenRange(offset, offset + replaceLength);
@@ -787,6 +787,13 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
 
         imports = typeImports;
         onDemandImports = starImports;
+    }
+
+    private static boolean isCamelCaseMatch(String pattern, String candidate) {
+        if (pattern == null || pattern.length() == 0) {
+            return true;
+        }
+        return SearchPattern.camelCaseMatch(pattern, candidate);
     }
 
     private boolean isCurrentPackage(char[] packageName) {
