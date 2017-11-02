@@ -32,6 +32,7 @@ import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.codehaus.groovy.eclipse.codeassist.requestor.MethodInfoContentAssistContext;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.search.ITypeResolver;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
@@ -54,12 +55,12 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
         char[] constructorText; int constructorStart;
         switch (context.location) {
         case CONSTRUCTOR:
-            constructorText = context.completionExpression.replaceFirst("^new\\s+", "").toCharArray();
-            constructorStart = context.completionLocation - constructorText.length;
+            constructorText = context.fullCompletionExpression.replaceFirst("^new\\s+", "").toCharArray();
+            constructorStart = context.completionLocation - CharOperation.lastSegment(constructorText, '.').length;
             break;
         case METHOD_CONTEXT:
             constructorText = ((MethodInfoContentAssistContext) context).methodName.toCharArray();
-            constructorStart = ((MethodInfoContentAssistContext) context).methodNameEnd - constructorText.length;
+            constructorStart = ((MethodInfoContentAssistContext) context).methodNameEnd - CharOperation.lastSegment(constructorText, '.').length;;
             break;
         default:
             throw new IllegalStateException("Invalid constructor completion location: " + context.location.name());

@@ -90,6 +90,38 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
     }
 
     @Test
+    void testContructorCompletionWithQualifier() {
+        String contents = 'new java.text.Anno'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length());
+        proposalExists(proposals, 'AnnotationVisitor', 0)
+        proposalExists(proposals, 'Annotation', 1)
+    }
+
+    @Test
+    void testContructorCompletionImportHandling0() {
+        String contents = '''\
+            def a = new java.text.Anno
+            '''.stripIndent()
+        String expected = '''\
+            def a = new java.text.Annotation(value)
+            '''.stripIndent()
+        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'Anno'), 'Annotation')
+    }
+
+    @Test
+    void testContructorCompletionImportHandling1() {
+        String contents = '''\
+            def a = new Anno
+            '''.stripIndent()
+        String expected = '''\
+            import java.text.Annotation
+
+            def a = new Annotation(value)
+            '''.stripIndent()
+        checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new Anno'), 'Annotation')
+    }
+
+    @Test
     void testNamedArgs1() {
         String contents = '''\
             class Foo {

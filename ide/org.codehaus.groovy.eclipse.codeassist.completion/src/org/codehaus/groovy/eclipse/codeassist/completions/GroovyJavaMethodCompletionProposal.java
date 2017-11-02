@@ -23,6 +23,7 @@ import org.codehaus.groovy.eclipse.codeassist.processors.GroovyCompletionProposa
 import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOptions;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.javaeditor.EditorHighlightingSynchronizer;
@@ -30,6 +31,7 @@ import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.text.java.JavaMethodCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.LazyGenericTypeProposal;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
+import org.eclipse.jdt.internal.ui.text.java.LazyJavaTypeCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.MethodProposalInfo;
 import org.eclipse.jdt.internal.ui.text.java.ProposalContextInformation;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
@@ -63,7 +65,8 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
     private int[] fArgumentOffsets;
     private int[] fArgumentLengths;
-    private IRegion fSelectedRegion; // initialized by apply()
+    private IRegion fSelectedRegion;
+    private ImportRewrite fImportRewite;
 
     public GroovyJavaMethodCompletionProposal(GroovyCompletionProposal proposal, JavaContentAssistInvocationContext context, ProposalFormattingOptions options) {
         this(proposal, context, options, null);
@@ -77,6 +80,10 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         this.setRelevance(proposal.getRelevance());
         this.setProposalInfo(new MethodProposalInfo(context.getProject(), proposal));
         this.setTriggerCharacters(!proposal.hasParameters() ? ProposalUtils.METHOD_TRIGGERS : ProposalUtils.METHOD_WITH_ARGUMENTS_TRIGGERS);
+    }
+
+    public void setImportRewite(ImportRewrite importRewite) {
+        fImportRewite = importRewite;
     }
 
     public void contextOnly() {
@@ -128,14 +135,19 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     @Override
     protected LazyJavaCompletionProposal createRequiredTypeCompletionProposal(CompletionProposal completionProposal, JavaContentAssistInvocationContext invocationContext) {
         LazyJavaCompletionProposal requiredProposal = super.createRequiredTypeCompletionProposal(completionProposal, invocationContext);
-        // disable generics completion for constructors (i.e. complete expression as "new ArrayList()" instead of "new ArrayList<E>()"
-        if (fProposal.getKind() == CompletionProposal.CONSTRUCTOR_INVOCATION && requiredProposal instanceof LazyGenericTypeProposal) {
-            try {
-                //requiredProposal.fTypeArgumentProposals = new LazyGenericTypeProposal.TypeArgumentProposal[0];
-                ReflectionUtils.setPrivateField(LazyGenericTypeProposal.class, "fTypeArgumentProposals", requiredProposal,
-                    Array.newInstance(Class.forName("org.eclipse.jdt.internal.ui.text.java.LazyGenericTypeProposal$TypeArgumentProposal"), 0));
-            } catch (Exception e) {
-                GroovyContentAssist.logError(e);
+        if (fProposal.getKind() == CompletionProposal.CONSTRUCTOR_INVOCATION && requiredProposal instanceof LazyJavaTypeCompletionProposal) {
+            if (fImportRewite != null) {
+                ReflectionUtils.setPrivateField(LazyJavaTypeCompletionProposal.class, "fImportRewrite", requiredProposal, fImportRewite);
+            }
+            if (requiredProposal instanceof LazyGenericTypeProposal) {
+                // disable generics completion for constructors (i.e. complete expression as "new ArrayList()" instead of "new ArrayList<E>()"
+                try {
+                    //requiredProposal.fTypeArgumentProposals = new LazyGenericTypeProposal.TypeArgumentProposal[0];
+                    ReflectionUtils.setPrivateField(LazyGenericTypeProposal.class, "fTypeArgumentProposals", requiredProposal,
+                        Array.newInstance(Class.forName("org.eclipse.jdt.internal.ui.text.java.LazyGenericTypeProposal$TypeArgumentProposal"), 0));
+                } catch (Exception e) {
+                    GroovyContentAssist.logError(e);
+                }
             }
         }
         return requiredProposal;

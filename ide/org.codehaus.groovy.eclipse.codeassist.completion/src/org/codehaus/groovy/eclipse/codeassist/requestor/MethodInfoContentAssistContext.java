@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,13 +55,21 @@ public class MethodInfoContentAssistContext extends ContentAssistContext {
      */
     public final String methodName;
 
-    public MethodInfoContentAssistContext(int completionLocation, String completionExpression, String fullCompletionExpression,
-            ASTNode completionNode, ASTNode containingCodeBlock, Expression lhsNode,
-            GroovyCompilationUnit unit, AnnotatedNode containingDeclaration, int completionEnd,
- AnnotatedNode methodExpression, String methodName,
+    public MethodInfoContentAssistContext(
+            int completionLocation,
+            String completionExpression,
+            String fullCompletionExpression,
+            ASTNode completionNode,
+            ASTNode containingCodeBlock,
+            Expression lhsNode,
+            GroovyCompilationUnit unit,
+            AnnotatedNode containingDeclaration,
+            int completionEnd,
+            AnnotatedNode methodExpression,
+            String methodName,
             int methodNameEnd) {
-        super(completionLocation, completionExpression, fullCompletionExpression, completionNode, containingCodeBlock, lhsNode,
-                ContentAssistLocation.METHOD_CONTEXT, unit, containingDeclaration, completionEnd);
+
+        super(completionLocation, completionExpression, fullCompletionExpression, completionNode, containingCodeBlock, lhsNode, ContentAssistLocation.METHOD_CONTEXT, unit, containingDeclaration, completionEnd);
         this.methodNameEnd = methodNameEnd;
         this.methodExpression = methodExpression;
         this.methodName = methodName;
