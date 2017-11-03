@@ -360,8 +360,15 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             isStatic = isStatic() || requestor.isStatic;
             completionType = getCompletionType(requestor);
 
-            IProposalCreator[] creators = chooseProposalCreators(isStatic);
-            proposalCreatorLoop(context, requestor, completionType, isStatic, groovyProposals, creators, false);
+            boolean isStatic1 = isStatic;
+            if (context.location == ContentAssistLocation.STATEMENT) {
+                ClassNode closureThis = requestor.currentScope.getThis();
+                if (closureThis != null && !closureThis.equals(completionType)) {
+                    isStatic1 = false; // completionType refers to delegate, which is an instance
+                }
+            }
+            IProposalCreator[] creators = chooseProposalCreators(isStatic1);
+            proposalCreatorLoop(context, requestor, completionType, isStatic1, groovyProposals, creators, false);
 
             if (completionType.equals(VariableScope.CLASS_CLASS_NODE) &&
                     !completionType.getGenericsTypes()[0].getType().equals(VariableScope.CLASS_CLASS_NODE) &&

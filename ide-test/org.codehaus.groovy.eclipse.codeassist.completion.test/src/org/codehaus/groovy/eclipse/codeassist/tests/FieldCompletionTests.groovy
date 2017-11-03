@@ -292,8 +292,9 @@ final class FieldCompletionTests extends CompletionTestSuite {
             }
             class Sub extends Super {
               def meth() {
-              (0..10).each {
-                xx
+                (0..10).each {
+                  xx
+                }
               }
             }
             '''.stripIndent()
@@ -310,14 +311,55 @@ final class FieldCompletionTests extends CompletionTestSuite {
             }
             class Sub extends Super {
               def meth() {
-              (0..10).each {
-                xx
+                (0..10).each {
+                  xx
+                }
               }
             }
             '''.stripIndent()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'xx'))
         // from the delegate
         proposalExists(proposals, 'xxx', 1)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/360
+    void testClosure8() {
+        String contents = '''\
+            class A {
+              def xxx
+            }
+            class B {
+              def xyz
+              void meth(A a) {
+                a.with {
+                  x
+                }
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'x'))
+        proposalExists(proposals, 'xxx', 1) // from the delegate
+        proposalExists(proposals, 'xyz', 1) // from the owner
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/360
+    void testClosure9() {
+        String contents = '''\
+            class A {
+              def xxx
+            }
+            class B {
+              def xyz
+              static void meth(A a) {
+                a.with {
+                  x
+                }
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'x'))
+        proposalExists(proposals, 'xxx', 1) // from the delegate
+        proposalExists(proposals, 'xyz', 0) // *not* from owner
     }
 
     @Test
