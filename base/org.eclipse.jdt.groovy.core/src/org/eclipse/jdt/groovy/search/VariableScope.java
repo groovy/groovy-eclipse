@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 
+import groovy.lang.Closure;
 import groovy.lang.Tuple;
 
 import org.codehaus.groovy.ast.ASTNode;
@@ -53,6 +54,7 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
@@ -209,32 +211,79 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
 
     public static class CallAndType {
 
-        public CallAndType(MethodCallExpression call, ClassNode declaringType, ASTNode declaration) {
-            this.call = call;
-            this.declaringType = declaringType;
-            this.declaration = declaration;
+        public final ASTNode declaration;
+        public final ClassNode declaringType;
+        public final MethodCallExpression call;
+        private Map<ClosureExpression, Object[]> delegatesTo;
 
-            // the @DelegatesTo Groovy 2.1 annotation
+        public CallAndType(MethodCallExpression call, ClassNode declaringType, ASTNode declaration, ModuleNode enclosingModule) {
+            this.call = call;
+            this.declaration = declaration;
+            this.declaringType = declaringType;
+
+            // handle the Groovy 2.1+ @DelegatesTo annotation; see also org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor#checkClosureWithDelegatesTo
             if (DELEGATES_TO != null && declaration instanceof MethodNode) {
-                MethodNode methodDecl = (MethodNode) declaration;
-                if (methodDecl.getParameters() != null) {
-                    Expression argsExpr = call.getArguments();
-                    List<Expression> args = null;
-                    if (argsExpr instanceof TupleExpression) {
-                        args = ((TupleExpression) argsExpr).getExpressions();
+                MethodNode methodNode = (MethodNode) declaration;
+                Parameter[] parameters = methodNode.getParameters();
+                if (parameters != null && parameters.length > 0) {
+                    List<Expression> arguments = null;
+                    if (call.getArguments() instanceof TupleExpression) {
+                        arguments = ((TupleExpression) call.getArguments()).getExpressions();
                     }
-                    if (args != null) {
-                        Parameter[] parameters = methodDecl.getParameters();
-                        for (int i = 0; i < parameters.length; i++) {
-                            Parameter p = parameters[i];
-                            List<AnnotationNode> annotations = p.getAnnotations();
-                            if (annotations != null) {
+                    if (arguments != null && !arguments.isEmpty()) {
+                        if (!declaringType.equals(methodNode.getDeclaringClass())) {
+                            List<Expression> categoryMethodArguments = new ArrayList<Expression>(arguments.size() + 1);
+                            categoryMethodArguments.add(new ClassExpression(declaringType));
+                            categoryMethodArguments.addAll(arguments);
+                            arguments = categoryMethodArguments;
+                        }
+                        for (int i = 0, n = parameters.length; i < n; i += 1) {
+                            List<AnnotationNode> annotations = parameters[i].getAnnotations();
+                            if (annotations != null && !annotations.isEmpty()) {
                                 for (AnnotationNode annotation : annotations) {
                                     if (annotation.getClassNode().getName().equals(DELEGATES_TO.getName()) &&
-                                            args.size() > i && args.get(i) instanceof ClosureExpression &&
-                                            annotation.getMember("value") instanceof ClassExpression) {
-                                        delegatesToClosures = Collections.singletonMap(
-                                            (ClosureExpression) args.get(i), annotation.getMember("value").getType());
+                                            i < arguments.size() && arguments.get(i) instanceof ClosureExpression) {
+                                        ClosureExpression closure = (ClosureExpression) arguments.get(i);
+
+                                        Expression delegatesToType = annotation.getMember("type");
+                                        Expression delegatesToValue = annotation.getMember("value");
+                                        Expression delegatesToTarget = annotation.getMember("target");
+                                        Expression delegatesToStrategy = annotation.getMember("strategy");
+                                        Expression delegatesToGenericTypeIndex = annotation.getMember("genericTypeIndex");
+
+                                        Integer strategy = null, generics = null;
+                                        /*if (delegatesToStrategy != null) {
+                                            strategy = (Integer) org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.evaluateExpression(org.codehaus.groovy.ast.tools.GeneralUtils.castX(INTEGER_CLASS_NODE, delegatesToStrategy), enclosingModule.getUnit().getConfig());
+                                        }
+                                        if (delegatesToGenericTypeIndex != null) {
+                                            strategy = (Integer) org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.evaluateExpression(org.codehaus.groovy.ast.tools.GeneralUtils.castX(INTEGER_CLASS_NODE, delegatesToGenericTypeIndex), enclosingModule.getUnit().getConfig());
+                                        }*/
+                                        if (delegatesToStrategy instanceof ConstantExpression) {
+                                            strategy = Integer.valueOf(delegatesToStrategy.getText());
+                                        }
+                                        if (delegatesToGenericTypeIndex instanceof ConstantExpression) {
+                                            generics = Integer.valueOf(delegatesToGenericTypeIndex.getText());
+                                        }
+
+                                        // handle three modes: @DelegatesTo(Type.class), @DelegatesTo(type="pack.Type"), @DelegatesTo(target="name", genericTypeIndex=i)
+                                        if (delegatesToValue instanceof ClassExpression && !delegatesToValue.getType().getName().equals("groovy.lang.DelegatesTo$Target")) {
+                                            addDelegatesToClosure(closure, delegatesToValue.getType(), strategy);
+
+                                        } else if (delegatesToType instanceof ConstantExpression && !"".equals(delegatesToType.getText())) {
+                                            //ClassNode[] resolved = org.codehaus.groovy.ast.tools.GenericsUtils.parseClassNodesFromString(delegatesToType.getText(), enclosingModule.getContext(), an org.codehaus.groovy.control.CompilationUnit, methodNode, delegatesToType);
+                                            //addDelegatesToClosure(closure, resolved[0], strategy);
+
+                                        } else if (delegatesToValue instanceof ClassExpression && delegatesToValue.getType().getName().equals("groovy.lang.DelegatesTo$Target")) {
+                                            int j = indexOfDelegatesToTarget(parameters, delegatesToTarget.getText());
+                                            if (j >= 0 && j < arguments.size()) {
+                                                Expression target = arguments.get(j);
+                                                ClassNode targetType = target.getType(); // TODO: lookup expression type (unless j is 0 and it's a category method)
+                                                if (generics != null && generics >= 0 && targetType.isUsingGenerics()) {
+                                                    targetType.getGenericsTypes()[generics].getType();
+                                                }
+                                                addDelegatesToClosure(closure, targetType, strategy);
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -242,15 +291,49 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                     }
                 }
             }
-            if (delegatesToClosures == null) {
-                delegatesToClosures = Collections.emptyMap();
+            if (delegatesTo == null) {
+                delegatesTo = Collections.emptyMap();
             }
         }
 
-        public final ASTNode declaration;
-        public final MethodCallExpression call;
-        public final ClassNode declaringType;
-        public Map<ClosureExpression, ClassNode> delegatesToClosures;
+        public ClassNode getDelegateType(ClosureExpression closure) {
+            Object[] tuple = delegatesTo.get(closure);
+            return (tuple != null ? (ClassNode) tuple[0] : declaringType);
+        }
+
+        public int getResolveStrategy(ClosureExpression closure) {
+            Object[] tuple = delegatesTo.get(closure);
+            return (tuple != null && tuple[1] != null ? (Integer) tuple[1] : Closure.OWNER_FIRST);
+        }
+
+        private void addDelegatesToClosure(ClosureExpression closure, ClassNode delegateType, Integer resolveStrategy) {
+            if (delegatesTo == null) {
+                delegatesTo = new HashMap<ClosureExpression, Object[]>();
+            }
+            delegatesTo.put(closure, new Object[] {delegateType, resolveStrategy});
+        }
+
+        /**
+         * Finds param with DelegatesTo.Target annotation that has matching value string.
+         */
+        private int indexOfDelegatesToTarget(Parameter[] parameters, String target) {
+            for (int i = 0, n = parameters.length; i < n; i += 1) {
+                List<AnnotationNode> annotations = parameters[i].getAnnotations();
+                if (annotations != null && !annotations.isEmpty()) {
+                    for (AnnotationNode annotation : annotations) {
+                        if (annotation.getClassNode().getName().equals("groovy.lang.DelegatesTo$Target")) {
+                            if (annotation.getMember("value") instanceof ConstantExpression) {
+                                String value = annotation.getMember("value").getText();
+                                if (value.equals(target)) {
+                                    return i;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return -1;
+        }
     }
 
     /**

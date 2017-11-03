@@ -157,63 +157,61 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     private static final String[] NO_PARAMS = CharOperation.NO_STRINGS;
     private static final Parameter[] NO_PARAMETERS = Parameter.EMPTY_ARRAY;
 
-    /**
-     * We hard code the list of methods that take a closure and expect to iterate over that closure
-     */
-    private static final Set<String> dgmClosureMethods = new HashSet<String>();
+    /** methods that take a closure and pass self or element of self to that closure */
+    private static final Set<String> dgmClosureDelegateMethods = new HashSet<String>();
     static {
-        dgmClosureMethods.add("find");
-        dgmClosureMethods.add("each");
-        dgmClosureMethods.add("reverseEach");
-        dgmClosureMethods.add("eachWithIndex");
-        dgmClosureMethods.add("unique");
-        dgmClosureMethods.add("every");
-        dgmClosureMethods.add("collect");
-        dgmClosureMethods.add("collectEntries");
-        dgmClosureMethods.add("collectNested");
-        dgmClosureMethods.add("collectMany");
-        dgmClosureMethods.add("findAll");
-        dgmClosureMethods.add("groupBy");
-        dgmClosureMethods.add("groupEntriesBy");
-
-        dgmClosureMethods.add("inject");
-        dgmClosureMethods.add("count");
-        dgmClosureMethods.add("countBy");
-        dgmClosureMethods.add("findResult");
-        dgmClosureMethods.add("findResults");
-        dgmClosureMethods.add("grep");
-        dgmClosureMethods.add("split");
-        dgmClosureMethods.add("sum");
-        dgmClosureMethods.add("any");
-        dgmClosureMethods.add("flatten");
-        dgmClosureMethods.add("findIndexOf");
-        dgmClosureMethods.add("findIndexValues");
-        dgmClosureMethods.add("findLastIndexOf");
-        dgmClosureMethods.add("collectAll");
-        dgmClosureMethods.add("min");
-        dgmClosureMethods.add("max");
-        dgmClosureMethods.add("eachPermutation");
-        dgmClosureMethods.add("sort");
-        dgmClosureMethods.add("withDefault");
+        dgmClosureDelegateMethods.add("each");
+        dgmClosureDelegateMethods.add("eachByte");
+        dgmClosureDelegateMethods.add("reverseEach");
+        dgmClosureDelegateMethods.add("eachWithIndex");
+        dgmClosureDelegateMethods.add("eachPermutation");
+        dgmClosureDelegateMethods.add("inject");
+        dgmClosureDelegateMethods.add("collect");
+        dgmClosureDelegateMethods.add("collectAll");
+        dgmClosureDelegateMethods.add("collectMany");
+        dgmClosureDelegateMethods.add("collectNested");
+        dgmClosureDelegateMethods.add("collectEntries");
+        dgmClosureDelegateMethods.add("removeAll");
+        dgmClosureDelegateMethods.add("retainAll");
+        dgmClosureDelegateMethods.add("count");
+        dgmClosureDelegateMethods.add("countBy");
+        dgmClosureDelegateMethods.add("groupBy");
+        dgmClosureDelegateMethods.add("groupEntriesBy");
+        dgmClosureDelegateMethods.add("find");
+        dgmClosureDelegateMethods.add("findAll");
+        dgmClosureDelegateMethods.add("findResult");
+        dgmClosureDelegateMethods.add("findResults");
+        dgmClosureDelegateMethods.add("grep");
+        dgmClosureDelegateMethods.add("any");
+        dgmClosureDelegateMethods.add("every");
+        dgmClosureDelegateMethods.add("sum");
+        dgmClosureDelegateMethods.add("split");
+        dgmClosureDelegateMethods.add("flatten");
+        dgmClosureDelegateMethods.add("findIndexOf");
+        dgmClosureDelegateMethods.add("findIndexValues");
+        dgmClosureDelegateMethods.add("findLastIndexOf");
+        dgmClosureDelegateMethods.add("min");
+        dgmClosureDelegateMethods.add("max");
+        dgmClosureDelegateMethods.add("sort");
+        dgmClosureDelegateMethods.add("toSorted");
+        dgmClosureDelegateMethods.add("unique");
+        dgmClosureDelegateMethods.add("toUnique");
+        dgmClosureDelegateMethods.add("dropWhile");
+        dgmClosureDelegateMethods.add("takeWhile");
+        dgmClosureDelegateMethods.add("withDefault");
 
         // these don't take collections, but can be handled in the same way
-        dgmClosureMethods.add("identity");
-        dgmClosureMethods.add("times");
-        dgmClosureMethods.add("upto");
-        dgmClosureMethods.add("downto");
-        dgmClosureMethods.add("step");
-        dgmClosureMethods.add("eachFile");
-        dgmClosureMethods.add("eachDir");
-        dgmClosureMethods.add("eachFileRecurse");
-        dgmClosureMethods.add("eachDirRecurse");
-        dgmClosureMethods.add("traverse");
-    }
-
-    // These methods have a type for the closure argument that is the same as the declaring type
-    private static final Set<String> dgmClosureIdentityMethods = new HashSet<String>();
-    static {
-        dgmClosureIdentityMethods.add("with");
-        dgmClosureIdentityMethods.add("addShutdownHook");
+        dgmClosureDelegateMethods.add("identity");
+        dgmClosureDelegateMethods.add("with");
+        dgmClosureDelegateMethods.add("upto");
+        dgmClosureDelegateMethods.add("downto");
+        dgmClosureDelegateMethods.add("step");
+        dgmClosureDelegateMethods.add("times");
+        dgmClosureDelegateMethods.add("traverse");
+        dgmClosureDelegateMethods.add("eachDir");
+        dgmClosureDelegateMethods.add("eachFile");
+        dgmClosureDelegateMethods.add("eachDirRecurse");
+        dgmClosureDelegateMethods.add("eachFileRecurse");
     }
 
     // these methods can be called with a collection or a map.
@@ -224,6 +222,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         dgmClosureMaybeMap.add("any");
         dgmClosureMaybeMap.add("every");
         dgmClosureMaybeMap.add("each");
+        dgmClosureMaybeMap.add("inject");
         dgmClosureMaybeMap.add("collect");
         dgmClosureMaybeMap.add("collectEntries");
         dgmClosureMaybeMap.add("findResult");
@@ -231,33 +230,32 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         dgmClosureMaybeMap.add("findAll");
         dgmClosureMaybeMap.add("groupBy");
         dgmClosureMaybeMap.add("groupEntriesBy");
-        dgmClosureMaybeMap.add("inject");
         dgmClosureMaybeMap.add("withDefault");
     }
 
     // These methods have a fixed type for the closure argument
-    private static final Map<String, ClassNode> dgmClosureMethodsMap = new HashMap<String, ClassNode>();
+    private static final Map<String, ClassNode> dgmClosureFixedTypeMethods = new HashMap<String, ClassNode>();
     static {
-        dgmClosureMethodsMap.put("eachLine", VariableScope.STRING_CLASS_NODE);
-        dgmClosureMethodsMap.put("splitEachLine", VariableScope.STRING_CLASS_NODE);
-        dgmClosureMethodsMap.put("withObjectOutputStream", VariableScope.OBJECT_OUTPUT_STREAM);
-        dgmClosureMethodsMap.put("withObjectInputStream", VariableScope.OBJECT_INPUT_STREAM);
-        dgmClosureMethodsMap.put("withDataOutputStream", VariableScope.DATA_OUTPUT_STREAM_CLASS);
-        dgmClosureMethodsMap.put("withDataInputStream", VariableScope.DATA_INPUT_STREAM_CLASS);
-        dgmClosureMethodsMap.put("withOutputStream", VariableScope.OUTPUT_STREAM_CLASS);
-        dgmClosureMethodsMap.put("withInputStream", VariableScope.INPUT_STREAM_CLASS);
-        dgmClosureMethodsMap.put("withStream", VariableScope.OUTPUT_STREAM_CLASS);
-        dgmClosureMethodsMap.put("metaClass", ClassHelper.METACLASS_TYPE);
-        dgmClosureMethodsMap.put("eachFileMatch", VariableScope.FILE_CLASS_NODE);
-        dgmClosureMethodsMap.put("eachDirMatch", VariableScope.FILE_CLASS_NODE);
-        dgmClosureMethodsMap.put("withReader", VariableScope.BUFFERED_READER_CLASS_NODE);
-        dgmClosureMethodsMap.put("withWriter", VariableScope.BUFFERED_WRITER_CLASS_NODE);
-        dgmClosureMethodsMap.put("withWriterAppend", VariableScope.BUFFERED_WRITER_CLASS_NODE);
-        dgmClosureMethodsMap.put("withPrintWriter", VariableScope.PRINT_WRITER_CLASS_NODE);
-        dgmClosureMethodsMap.put("transformChar", VariableScope.STRING_CLASS_NODE);
-        dgmClosureMethodsMap.put("transformLine", VariableScope.STRING_CLASS_NODE);
-        dgmClosureMethodsMap.put("filterLine", VariableScope.STRING_CLASS_NODE);
-        dgmClosureMethodsMap.put("eachMatch", VariableScope.STRING_CLASS_NODE);
+        dgmClosureFixedTypeMethods.put("eachLine", VariableScope.STRING_CLASS_NODE);
+        dgmClosureFixedTypeMethods.put("splitEachLine", VariableScope.STRING_CLASS_NODE);
+        dgmClosureFixedTypeMethods.put("withObjectOutputStream", VariableScope.OBJECT_OUTPUT_STREAM);
+        dgmClosureFixedTypeMethods.put("withObjectInputStream", VariableScope.OBJECT_INPUT_STREAM);
+        dgmClosureFixedTypeMethods.put("withDataOutputStream", VariableScope.DATA_OUTPUT_STREAM_CLASS);
+        dgmClosureFixedTypeMethods.put("withDataInputStream", VariableScope.DATA_INPUT_STREAM_CLASS);
+        dgmClosureFixedTypeMethods.put("withOutputStream", VariableScope.OUTPUT_STREAM_CLASS);
+        dgmClosureFixedTypeMethods.put("withInputStream", VariableScope.INPUT_STREAM_CLASS);
+        dgmClosureFixedTypeMethods.put("withStream", VariableScope.OUTPUT_STREAM_CLASS);
+        dgmClosureFixedTypeMethods.put("metaClass", ClassHelper.METACLASS_TYPE);
+        dgmClosureFixedTypeMethods.put("eachFileMatch", VariableScope.FILE_CLASS_NODE);
+        dgmClosureFixedTypeMethods.put("eachDirMatch", VariableScope.FILE_CLASS_NODE);
+        dgmClosureFixedTypeMethods.put("withReader", VariableScope.BUFFERED_READER_CLASS_NODE);
+        dgmClosureFixedTypeMethods.put("withWriter", VariableScope.BUFFERED_WRITER_CLASS_NODE);
+        dgmClosureFixedTypeMethods.put("withWriterAppend", VariableScope.BUFFERED_WRITER_CLASS_NODE);
+        dgmClosureFixedTypeMethods.put("withPrintWriter", VariableScope.PRINT_WRITER_CLASS_NODE);
+        dgmClosureFixedTypeMethods.put("transformChar", VariableScope.STRING_CLASS_NODE);
+        dgmClosureFixedTypeMethods.put("transformLine", VariableScope.STRING_CLASS_NODE);
+        dgmClosureFixedTypeMethods.put("filterLine", VariableScope.STRING_CLASS_NODE);
+        dgmClosureFixedTypeMethods.put("eachMatch", VariableScope.STRING_CLASS_NODE);
     }
 
     private final GroovyCompilationUnit unit;
@@ -1020,16 +1018,12 @@ assert primaryExprType != null && dependentExprType != null;
             // Delegate is the declaring type of the enclosing call if one exists, or it is 'this'
             CallAndType cat = scope.getEnclosingMethodCallExpression();
             if (cat != null) {
-                ClassNode declaringType = cat.declaringType;
-                if (cat.delegatesToClosures.containsKey(node)) {
-                    declaringType = cat.delegatesToClosures.get(node);
-                }
-                scope.addVariable("delegate", declaringType, VariableScope.CLOSURE_CLASS_NODE);
-                scope.addVariable("getDelegate", declaringType, VariableScope.CLOSURE_CLASS_NODE);
+                ClassNode delegateType = cat.getDelegateType(node);
+                scope.addVariable("delegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
+                scope.addVariable("getDelegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
             } else {
                 ClassNode thisType = scope.getThis();
-                // GRECLIPSE-1348 someone is silly enough to have a variable named "delegate".
-                // don't override that
+                // GRECLIPSE-1348: if someone is silly enough to have a variable named "delegate"; don't override it
                 if (scope.lookupName("delegate") == null) {
                     scope.addVariable("delegate", thisType, VariableScope.CLOSURE_CLASS_NODE);
                 }
@@ -1042,8 +1036,7 @@ assert primaryExprType != null && dependentExprType != null;
                 scope.addVariable("getOwner", VariableScope.CLOSURE_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
             } else {
                 ClassNode thisType = scope.getThis();
-                // GRECLIPSE-1348 someone is silly enough to have a variable named "owner".
-                // don't override that
+                // GRECLIPSE-1348: if someone is silly enough to have a variable named "owner"; don't override it
                 if (scope.lookupName("owner") == null) {
                     scope.addVariable("owner", thisType, VariableScope.CLOSURE_CLASS_NODE);
                 }
@@ -1430,7 +1423,7 @@ assert primaryExprType != null && dependentExprType != null;
 
         // this is the inferred declaring type of this method
         Tuple t = dependentDeclarationStack.removeLast();
-        CallAndType call = new CallAndType(node, t.declaringType, t.declaration);
+        CallAndType call = new CallAndType(node, t.declaringType, t.declaration, unit.getModuleNode());
 
         completeExpressionStack.removeLast();
 
@@ -2625,23 +2618,20 @@ assert primaryExprType != null && dependentExprType != null;
 
         // TODO: Could this use the Closure annotations to determine the type?
 
-        CallAndType call = scope.getEnclosingMethodCallExpression();
-        if (call != null) {
-            ClassNode delegateType = call.declaringType;
-            String methodName = call.call.getMethodAsString();
+        CallAndType cat = scope.getEnclosingMethodCallExpression();
+        if (cat != null) {
+            ClassNode delegateType = cat.declaringType;
+            String methodName = cat.call.getMethodAsString();
 
-            ClassNode inferredType;
-            if (dgmClosureMethods.contains(methodName)) {
-                inferredType = VariableScope.extractElementType(delegateType);
-            } else if (dgmClosureIdentityMethods.contains(methodName)) {
-                inferredType = VariableScope.clone(delegateType);
+            ClassNode inferredParamType;
+            if (dgmClosureDelegateMethods.contains(methodName)) {
+                inferredParamType = VariableScope.extractElementType(delegateType);
             } else {
-                // inferredType might be null
-                inferredType = dgmClosureMethodsMap.get(methodName);
+                inferredParamType = dgmClosureFixedTypeMethods.get(methodName);
             }
 
-            if (inferredType != null) {
-                Arrays.fill(inferredTypes, inferredType);
+            if (inferredParamType != null) {
+                Arrays.fill(inferredTypes, inferredParamType);
                 // special cases: eachWithIndex has last element an integer
                 if (methodName.equals("eachWithIndex") && inferredTypes.length > 1) {
                     inferredTypes[inferredTypes.length - 1] = VariableScope.INTEGER_CLASS_NODE;
@@ -2650,7 +2640,7 @@ assert primaryExprType != null && dependentExprType != null;
                 if (delegateType.getName().equals(VariableScope.MAP_CLASS_NODE.getName())) {
                     if ((dgmClosureMaybeMap.contains(methodName) && paramCount == 2) ||
                             (methodName.equals("eachWithIndex") && paramCount == 3)) {
-                        GenericsType[] typeParams = inferredType.getGenericsTypes();
+                        GenericsType[] typeParams = inferredParamType.getGenericsTypes();
                         if (typeParams != null && typeParams.length == 2) {
                             inferredTypes[0] = typeParams[0].getType();
                             inferredTypes[1] = typeParams[1].getType();

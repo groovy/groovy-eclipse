@@ -22,6 +22,8 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 
+import groovy.lang.Closure;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -422,6 +424,22 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         Variable accessedVar = var.getAccessedVariable();
         VariableInfo variableInfo = scope.lookupName(var.getName());
 
+        VariableScope.CallAndType cat; int resolveStrategy = 0;
+        if ((cat = scope.getEnclosingMethodCallExpression()) != null) {
+            resolveStrategy = cat.getResolveStrategy(scope.getEnclosingClosure());
+            switch (resolveStrategy) {
+            case Closure.OWNER_FIRST:
+            case Closure.OWNER_ONLY:
+                break;
+            default:
+                if (accessedVar instanceof AnnotatedNode && declaringType.equals(((AnnotatedNode) accessedVar).getDeclaringClass())) {
+                    // accessed variable was found using owner search; forget the owner reference
+                    accessedVar = new DynamicVariable(var.getName(), scope.isStatic());
+                    ((DynamicVariable) accessedVar).setClosureSharedVariable(true);
+                }
+            }
+        }
+
         if (accessedVar instanceof ASTNode) {
             decl = (ASTNode) accessedVar;
             if (decl instanceof FieldNode ||
@@ -432,8 +450,23 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 type = getTypeFromDeclaration(decl, ((AnnotatedNode) decl).getDeclaringClass());
             }
         } else if (accessedVar instanceof DynamicVariable) {
-            // likely a reference to a field or method in a type in the hierarchy; find the declaration
-            ASTNode candidate = findDeclaration(accessedVar.getName(), getMorePreciseType(declaringType, variableInfo), (scope.getWormhole().remove("lhs") == var), false, scope.getMethodCallArgumentTypes());
+            ASTNode candidate = null;
+            String varName = accessedVar.getName();
+            List<ClassNode> callArgs = scope.getMethodCallArgumentTypes();
+            boolean isLhsExpr = (scope.getWormhole().remove("lhs") == var);
+
+            // if this is a closure shared variable, execute the indicated resolve strategy
+            if (((DynamicVariable) accessedVar).isClosureSharedVariable() && resolveStrategy > 0) {
+                if (resolveStrategy == Closure.DELEGATE_FIRST || resolveStrategy == Closure.DELEGATE_ONLY) {
+                    candidate = findDeclaration(varName, cat.getDelegateType(scope.getEnclosingClosure()), isLhsExpr, false, callArgs);
+                } else if (resolveStrategy == Closure.TO_SELF) {
+                    candidate = findDeclaration(varName, VariableScope.CLOSURE_CLASS_NODE, isLhsExpr, false, callArgs);
+                }
+            }
+            if (candidate == null && resolveStrategy < Closure.DELEGATE_ONLY) { // search declaring type (aka the owner)
+                candidate = findDeclaration(varName, getMorePreciseType(declaringType, variableInfo), isLhsExpr, isOwnerStatic(scope), callArgs);
+            }
+
             if (candidate != null) {
                 decl = candidate;
                 declaringType = getDeclaringTypeFromDeclaration(decl, variableInfo != null ? variableInfo.declaringType : VariableScope.OBJECT_CLASS_NODE);
@@ -704,6 +737,17 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         } else {
             return typeOfDeclaration;
         }
+    }
+
+    protected static boolean isOwnerStatic(VariableScope scope) {
+        AnnotatedNode enclosing;
+        boolean isOwnerStatic = false;
+        if ((enclosing = scope.getEnclosingMethodDeclaration()) != null) {
+            isOwnerStatic = ((MethodNode) enclosing).isStatic();
+        } else if ((enclosing = scope.getEnclosingFieldDeclaration()) != null) {
+            isOwnerStatic = ( (FieldNode) enclosing).isStatic();
+        }
+        return isOwnerStatic;
     }
 
     /**

@@ -23,43 +23,35 @@ import org.junit.Test;
 public final class DGMInferencingTests extends InferencingTestSuite {
 
     @Test
-    public void testDGM1() throws Exception {
-        String contents = "[1].collectNested { it }";
-        String str = "it";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.Integer");
-    }
-
-    @Test
-    public void testDGM2() throws Exception {
-        String contents = "[1].collectNested { it }";
-        String str = "it";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.Integer");
-    }
-
-    @Test
-    public void testDGM3() throws Exception {
+    public void testDGM1() {
         String contents = "1.with { it.intValue() }";
-        String str = "it";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        int start = contents.lastIndexOf("it");
+        assertType(contents, start, start + 2, "java.lang.Integer");
     }
 
     @Test
-    public void testDGM4() throws Exception {
-        String contents = "1.addShutdownHook { it.intValue() }";
-        String str = "it";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.Integer");
+    public void testDGM2() { // with has a delegate-first resolve strategy (default is owner-first)
+        String contents = "class Y { String value }\n class Z { Number value\n void meth(Y y) { y.with { value } } }";
+        int start = contents.lastIndexOf("value");
+        assertType(contents, start, start + 5, "java.lang.String");
     }
 
     @Test
-    public void testDGM5() throws Exception {
+    public void testDGM3() {
+        String contents = "[1].collectNested { it }";
+        int start = contents.lastIndexOf("it");
+        assertType(contents, start, start + 2, "java.lang.Integer");
+    }
+
+    @Test
+    public void testDGM4() {
+        String contents = "[1].collectNested { it }";
+        int start = contents.lastIndexOf("it");
+        assertType(contents, start, start + 2, "java.lang.Integer");
+    }
+
+    @Test
+    public void testDGM5() {
         String contents = "[key:1].every { key, value -> key.toUpperCase() + value.intValue() }";
         String str = "key";
         int start = contents.lastIndexOf(str);
@@ -68,7 +60,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM6() throws Exception {
+    public void testDGM6() {
         String contents = "[key:1].any { key, value -> key.toUpperCase() + value.intValue() }";
         String str = "value";
         int start = contents.lastIndexOf(str);
@@ -77,7 +69,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM7() throws Exception {
+    public void testDGM7() {
         String contents = "[key:1].every { key, value -> key.toUpperCase() + value.intValue() }";
         String str = "key";
         int start = contents.lastIndexOf(str);
@@ -86,7 +78,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM8() throws Exception {
+    public void testDGM8() {
         String contents = "[key:1].any { key, value -> key.toUpperCase() + value.intValue() }";
         String str = "value";
         int start = contents.lastIndexOf(str);
@@ -95,7 +87,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM9() throws Exception {
+    public void testDGM9() {
         String contents = "[1].collectMany { [it.intValue()] }";
         String str = "it";
         int start = contents.lastIndexOf(str);
@@ -104,7 +96,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test @Ignore
-    public void testDGM10() throws Exception {
+    public void testDGM10() {
         // this one is not working since Inferencing Engine gets tripped up with the different variants of 'metaClass'
         String contents = "Integer.metaClass { this }";
         String str = "this";
@@ -114,7 +106,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM11() throws Exception {
+    public void testDGM11() {
         String contents = "([1] ).collectEntries { index -> index.intValue() }";
         String str = "index";
         int start = contents.lastIndexOf(str);
@@ -123,7 +115,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM12() throws Exception {
+    public void testDGM12() {
         String contents = "[key:1].findResult(1) { key, value -> key.toUpperCase() + value.intValue() }";
         String str = "key";
         int start = contents.lastIndexOf(str);
@@ -132,7 +124,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM13() throws Exception {
+    public void testDGM13() {
         String contents = "[key:1].findResult(1) { key, value -> key.toUpperCase() + value.intValue() }";
         String str = "value";
         int start = contents.lastIndexOf(str);
@@ -141,7 +133,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM14() throws Exception {
+    public void testDGM14() {
         String contents = "[1].findResults { it.intValue() }";
         String str = "it";
         int start = contents.lastIndexOf(str);
@@ -150,7 +142,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM15() throws Exception {
+    public void testDGM15() {
         String contents = "[key:1].findResults { it.getKey().toUpperCase() + it.getValue().intValue() }";
         String str = "it";
         int start = contents.lastIndexOf(str);
@@ -159,7 +151,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM16() throws Exception {
+    public void testDGM16() {
         String contents = "[key:1].findResults { key, value -> key.toUpperCase() + value.intValue() }";
         String str = "key";
         int start = contents.lastIndexOf(str);
@@ -168,7 +160,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM17() throws Exception {
+    public void testDGM17() {
         String contents = "[key:1].findResults { key, value -> key.toUpperCase() + value.intValue() }";
         String str = "value";
         int start = contents.lastIndexOf(str);
@@ -177,7 +169,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM18() throws Exception {
+    public void testDGM18() {
         String contents = "[key:1].findAll { key, value -> key.toUpperCase() + value.intValue() }";
         String str = "key";
         int start = contents.lastIndexOf(str);
@@ -186,7 +178,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM19() throws Exception {
+    public void testDGM19() {
         String contents = "[key:1].findAll { key, value -> key.toUpperCase() + value.intValue() }";
         String str = "value";
         int start = contents.lastIndexOf(str);
@@ -195,7 +187,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM20() throws Exception {
+    public void testDGM20() {
         String contents = "[key:1].groupBy { key, value -> key.toUpperCase() + value.intValue() }";
         String str = "key";
         int start = contents.lastIndexOf(str);
@@ -204,7 +196,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM21() throws Exception {
+    public void testDGM21() {
         String contents = "[key:1].groupBy { key, value -> key.toUpperCase() + value.intValue() }";
         String str = "value";
         int start = contents.lastIndexOf(str);
@@ -213,7 +205,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM22() throws Exception {
+    public void testDGM22() {
         String contents = "([1]).countBy { it.intValue() }";
         String str = "it";
         int start = contents.lastIndexOf(str);
@@ -222,7 +214,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM23() throws Exception {
+    public void testDGM23() {
         String contents = "[key:1].groupEntriesBy { key, value -> key.toUpperCase() + value.intValue() }";
         String str = "key";
         int start = contents.lastIndexOf(str);
@@ -231,7 +223,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM24() throws Exception {
+    public void testDGM24() {
         String contents = "[key:1].groupEntriesBy { key, value -> key.toUpperCase() + value.intValue() }";
         String str = "value";
         int start = contents.lastIndexOf(str);
@@ -240,7 +232,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM25() throws Exception {
+    public void testDGM25() {
         String contents = "[key:1].inject(1) { key, value -> key.toUpperCase() + value.intValue() }";
         String str = "key";
         int start = contents.lastIndexOf(str);
@@ -249,7 +241,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM26() throws Exception {
+    public void testDGM26() {
         String contents = "[key:1].inject(1) { key, value -> key.toUpperCase() + value.intValue() }";
         String str = "value";
         int start = contents.lastIndexOf(str);
@@ -258,7 +250,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM27() throws Exception {
+    public void testDGM27() {
         String contents = "[key:1].withDefault { key, value -> key.toUpperCase() + value.intValue() }";
         String str = "key";
         int start = contents.lastIndexOf(str);
@@ -267,7 +259,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM28() throws Exception {
+    public void testDGM28() {
         String contents = "[key:1].withDefault { key, value -> key.toUpperCase() + value.intValue() }";
         String str = "value";
         int start = contents.lastIndexOf(str);
@@ -276,7 +268,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM29() throws Exception {
+    public void testDGM29() {
         String contents = "new FileOutputStream().withStream { it }";
         String str = "it";
         int start = contents.lastIndexOf(str);
@@ -285,7 +277,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM30() throws Exception {
+    public void testDGM30() {
         String contents = "new File(\"test\").eachFileMatch(FileType.FILES, 1) { it.getName() }";
         String str = "it";
         int start = contents.lastIndexOf(str);
@@ -294,7 +286,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM31() throws Exception {
+    public void testDGM31() {
         String contents = "new File(\"test\").eachDirMatch(FileType.FILES, 1) { it.getName() }";
         String str = "it";
         int start = contents.lastIndexOf(str);
@@ -303,7 +295,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM32() throws Exception {
+    public void testDGM32() {
         String contents = "new File(\"test\").withReader { it.reset() }";
         String str = "it";
         int start = contents.lastIndexOf(str);
@@ -312,7 +304,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM33() throws Exception {
+    public void testDGM33() {
         String contents = "new FileReader(new File(\"test\")).filterLine(new FileWriter(new File(\"test\"))) { it.toUpperCase() }";
         String str = "it";
         int start = contents.lastIndexOf(str);
@@ -321,7 +313,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM34() throws Exception {
+    public void testDGM34() {
         String contents = "new File(\"test\").withOutputStream { it.flush() }";
         String str = "it";
         int start = contents.lastIndexOf(str);
@@ -330,7 +322,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM35() throws Exception {
+    public void testDGM35() {
         String contents = "new File(\"test\").withInputStream { it.flush() }";
         String str = "it";
         int start = contents.lastIndexOf(str);
@@ -339,7 +331,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM36() throws Exception {
+    public void testDGM36() {
         String contents = "new File(\"test\").withDataOutputStream { it.flush() }";
         String str = "it";
         int start = contents.lastIndexOf(str);
@@ -348,7 +340,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM37() throws Exception {
+    public void testDGM37() {
         String contents = "new File(\"test\").withDataInputStream { it.flush() }";
         String str = "it";
         int start = contents.lastIndexOf(str);
@@ -357,7 +349,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM38() throws Exception {
+    public void testDGM38() {
         String contents = "new File(\"test\").withWriter { it.flush() }";
         String str = "it";
         int start = contents.lastIndexOf(str);
@@ -366,7 +358,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM39() throws Exception {
+    public void testDGM39() {
         String contents = "new File(\"test\").withWriterAppend { it.flush() }";
         String str = "it";
         int start = contents.lastIndexOf(str);
@@ -375,7 +367,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM40() throws Exception {
+    public void testDGM40() {
         String contents = "new File(\"test\").withPrintWriter { it.flush() }";
         String str = "it";
         int start = contents.lastIndexOf(str);
@@ -384,7 +376,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM41() throws Exception {
+    public void testDGM41() {
         String contents = "new FileReader(new File(\"test\")).transformChar(new FileWriter(new File(\"test\"))) { it.toUpperCase() }";
         String str = "it";
         int start = contents.lastIndexOf(str);
@@ -393,7 +385,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM42() throws Exception {
+    public void testDGM42() {
         String contents = "new FileReader(new File(\"test\")).transformLine(new FileWriter(new File(\"test\"))) { it.toUpperCase() }";
         String str = "it";
         int start = contents.lastIndexOf(str);
@@ -402,7 +394,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM43() throws Exception {
+    public void testDGM43() {
         String contents = "\"\".eachMatch(\"\") { it.toLowerCase() }";
         String str = "it";
         int start = contents.lastIndexOf(str);
@@ -411,7 +403,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test // GRECLIPSE-1695
-    public void testDGM44() throws Exception {
+    public void testDGM44() {
         String contents = "List<String> myList = new ArrayList<String>()\n" +
             "myList.toSorted { a, b ->\n" +
             "  a.trim() <=> b.trim()\n" +
@@ -439,7 +431,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM46() throws Exception {
+    public void testDGM46() {
         String contents = "java.util.regex.Pattern[] pats = [~/one/, ~/two/]\n" +
             "pats.eachWithIndex { pat, idx ->\n" + // T <T> eachWithIndex(T self, Closure task)
             "  \n" +
@@ -450,7 +442,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM47() throws Exception {
+    public void testDGM47() {
         String contents = "java.util.regex.Pattern[] pats = [~/one/, ~/two/]\n" +
             "pats.eachWithIndex { pat, idx ->\n" +
             "  \n" +
@@ -463,7 +455,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM48() throws Exception {
+    public void testDGM48() {
         String contents = "int[] ints = [1, 2, 3]\n" +
             "String dgm(Object[] arr) { null }\n" +
             "Object dgm(Object obj) { null }\n" +
@@ -474,7 +466,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM48a() throws Exception {
+    public void testDGM48a() {
         // TODO: runtime preference seems to be the Object method
         String contents = "int[] ints = [1, 2, 3]\n" +
             "Object dgm(Object obj) { null }\n" +
@@ -486,7 +478,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM49() throws Exception {
+    public void testDGM49() {
         // primitive array is not compatible with boxed-type array
         String contents = "int[] ints = [1, 2, 3]\n" +
             "Integer dgm(Integer[] arr) { null }\n" +
@@ -498,7 +490,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM50() throws Exception {
+    public void testDGM50() {
         // SimpleTypeLookup returns first method in case of no type-compatible matches
         // TODO: primitive array is not compatible with derived-from-boxed-type array
         String contents = "int[] ints = [1, 2, 3]\n" +
@@ -511,7 +503,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM50a() throws Exception {
+    public void testDGM50a() {
         String contents = "Integer[] ints = [1, 2, 3]\n" +
             "Number dgm(Number[] arr) { null }\n" +
             "def result = dgm(ints)\n";
@@ -521,7 +513,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGMDeclaring1() throws Exception {
+    public void testDGMDeclaring1() {
         // With groovy 2.0, there are some new DGM classes.  Need to ensure that we are using those classes as the declaring type, but only for 2.0 or later.
         String contents = "\"\".eachLine";
         String str = "eachLine";
@@ -535,7 +527,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGMDeclaring2() throws Exception {
+    public void testDGMDeclaring2() {
         String contents = "new File().eachLine";
         String str = "eachLine";
         int start = contents.lastIndexOf(str);
@@ -548,7 +540,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGMDeclaring3() throws Exception {
+    public void testDGMDeclaring3() {
         String contents = "Writer w\nw.leftShift";
         String str = "leftShift";
         int start = contents.lastIndexOf(str);
