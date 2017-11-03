@@ -593,6 +593,15 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         return null;
     }
 
+    public int getEnclosingClosureResolveStrategy() {
+        int resolveStrategy = Closure.OWNER_FIRST;
+        CallAndType cat = getEnclosingMethodCallExpression();
+        if (cat != null) {
+            resolveStrategy = cat.getResolveStrategy(getEnclosingClosure());
+        }
+        return resolveStrategy;
+    }
+
     private static PropertyNode createPropertyNodeForMethodNode(MethodNode methodNode) {
         ClassNode propertyType = methodNode.getReturnType();
         String methodName = methodNode.getName();

@@ -423,21 +423,12 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         TypeConfidence newConfidence = confidence;
         Variable accessedVar = var.getAccessedVariable();
         VariableInfo variableInfo = scope.lookupName(var.getName());
+        int resolveStrategy = scope.getEnclosingClosureResolveStrategy();
 
-        VariableScope.CallAndType cat; int resolveStrategy = 0;
-        if ((cat = scope.getEnclosingMethodCallExpression()) != null) {
-            resolveStrategy = cat.getResolveStrategy(scope.getEnclosingClosure());
-            switch (resolveStrategy) {
-            case Closure.OWNER_FIRST:
-            case Closure.OWNER_ONLY:
-                break;
-            default:
-                if (accessedVar instanceof AnnotatedNode && declaringType.equals(((AnnotatedNode) accessedVar).getDeclaringClass())) {
-                    // accessed variable was found using owner search; forget the owner reference
-                    accessedVar = new DynamicVariable(var.getName(), scope.isStatic());
-                    ((DynamicVariable) accessedVar).setClosureSharedVariable(true);
-                }
-            }
+        if (resolveStrategy != Closure.OWNER_FIRST && resolveStrategy != Closure.OWNER_ONLY &&
+                accessedVar instanceof AnnotatedNode && declaringType.equals(((AnnotatedNode) accessedVar).getDeclaringClass())) {
+            // accessed variable was found using owner search; forget the owner reference
+            accessedVar = new DynamicVariable(var.getName(), scope.isStatic());
         }
 
         if (accessedVar instanceof ASTNode) {
@@ -450,23 +441,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 type = getTypeFromDeclaration(decl, ((AnnotatedNode) decl).getDeclaringClass());
             }
         } else if (accessedVar instanceof DynamicVariable) {
-            ASTNode candidate = null;
-            String varName = accessedVar.getName();
-            List<ClassNode> callArgs = scope.getMethodCallArgumentTypes();
-            boolean isLhsExpr = (scope.getWormhole().remove("lhs") == var);
-
-            // if this is a closure shared variable, execute the indicated resolve strategy
-            if (((DynamicVariable) accessedVar).isClosureSharedVariable() && resolveStrategy > 0) {
-                if (resolveStrategy == Closure.DELEGATE_FIRST || resolveStrategy == Closure.DELEGATE_ONLY) {
-                    candidate = findDeclaration(varName, cat.getDelegateType(scope.getEnclosingClosure()), isLhsExpr, false, callArgs);
-                } else if (resolveStrategy == Closure.TO_SELF) {
-                    candidate = findDeclaration(varName, VariableScope.CLOSURE_CLASS_NODE, isLhsExpr, false, callArgs);
-                }
-            }
-            if (candidate == null && resolveStrategy < Closure.DELEGATE_ONLY) { // search declaring type (aka the owner)
-                candidate = findDeclaration(varName, getMorePreciseType(declaringType, variableInfo), isLhsExpr, isOwnerStatic(scope), callArgs);
-            }
-
+            ASTNode candidate = findDeclarationForDynamicVariable(var, getMorePreciseType(declaringType, variableInfo), scope, resolveStrategy);
             if (candidate != null) {
                 decl = candidate;
                 declaringType = getDeclaringTypeFromDeclaration(decl, variableInfo != null ? variableInfo.declaringType : VariableScope.OBJECT_CLASS_NODE);
@@ -486,6 +461,28 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
 
         return new TypeLookupResult(type, declaringType, decl, newConfidence, scope);
+    }
+
+    protected ASTNode findDeclarationForDynamicVariable(VariableExpression var, ClassNode owner, VariableScope scope, int resolveStrategy) {
+        ASTNode candidate = null;
+        List<ClassNode> callArgs = scope.getMethodCallArgumentTypes();
+        boolean isLhsExpr = (scope.getWormhole().remove("lhs") == var);
+
+        if (resolveStrategy > 0) {
+            if (resolveStrategy == Closure.DELEGATE_FIRST || resolveStrategy == Closure.DELEGATE_ONLY) {
+                candidate = findDeclaration(var.getName(), scope.getDelegate(), isLhsExpr, false, callArgs);
+            } else if (resolveStrategy == Closure.TO_SELF) {
+                candidate = findDeclaration(var.getName(), VariableScope.CLOSURE_CLASS_NODE, isLhsExpr, false, callArgs);
+            }
+        }
+        if (candidate == null && resolveStrategy < Closure.DELEGATE_ONLY) {
+            candidate = findDeclaration(var.getName(), owner, isLhsExpr, isOwnerStatic(scope), callArgs);
+            if (candidate == null && resolveStrategy < Closure.OWNER_FIRST) {
+                candidate = findDeclaration(var.getName(), scope.getDelegate(), isLhsExpr, false, callArgs);
+            }
+        }
+
+        return candidate;
     }
 
     /**
