@@ -473,6 +473,22 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testClosure11() {
+        String contents =
+            "class A {\n" +
+            "  String b\n" +
+            "  static void main(args) {\n" +
+            "    def c = {\n" +
+            "      b\n" + // unknown because enclosing declaration is static
+            "    }\n" +
+            "  }\n" +
+            "}";
+
+        int offset = contents.lastIndexOf('b');
+        assertUnknownConfidence(contents, offset, offset + 1, "A", false);
+    }
+
+    @Test
     public void testSpread1() {
         String contents = "def z = [1,2]*.value";
         int start = contents.lastIndexOf("value");

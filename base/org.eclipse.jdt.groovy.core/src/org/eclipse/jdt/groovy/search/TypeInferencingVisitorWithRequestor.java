@@ -367,17 +367,17 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     public void visitJDT(IType type, ITypeRequestor requestor) {
-        IJavaElement oldEnclosing = enclosingElement;
-        ASTNode oldEnclosingNode = enclosingDeclarationNode;
-        enclosingElement = type;
         ClassNode node = findClassNode(createName(type));
         if (node == null) {
             // probably some sort of AST transformation is making this node invisible
             return;
         }
+        scopes.add(new VariableScope(scopes.getLast(), node, false));
+        ASTNode  enclosingDeclaration0 = enclosingDeclarationNode;
+        IJavaElement enclosingElement0 = enclosingElement;
+        enclosingDeclarationNode = node;
+        enclosingElement = type;
         try {
-            scopes.add(new VariableScope(scopes.getLast(), node, false));
-            enclosingDeclarationNode = node;
             visitClassInternal(node);
 
             try {
@@ -400,7 +400,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         // visit fields created by @Field
                         for (FieldNode field : node.getFields()) {
                             if (field.getEnd() > 0) {
-                                visitField(field);
+                                visitFieldInternal(field);
                             }
                         }
                     } else {
@@ -409,14 +409,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         List<FieldNode> traitFields = (List<FieldNode>) node.getNodeMetaData("trait.fields");
                         if (traitFields != null) {
                             for (FieldNode field : traitFields) {
-                                visitField(field);
+                                visitFieldInternal(field);
                             }
                         }
                         @SuppressWarnings("unchecked")
                         List<MethodNode> traitMethods = (List<MethodNode>) node.getNodeMetaData("trait.methods");
                         if (traitMethods != null) {
                             for (MethodNode method : traitMethods) {
-                                visitConstructorOrMethod(method, false);
+                                visitConstructorOrMethodInternal(method, false);
                             }
                         }
                     }
@@ -426,7 +426,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                     if (!type.getMethod(type.getElementName(), NO_PARAMS).exists()) {
                         ConstructorNode defConstructor = findDefaultConstructor(node);
                         if (defConstructor != null) {
-                            visitConstructorOrMethod(defConstructor, true);
+                            visitConstructorOrMethodInternal(defConstructor, true);
                         }
                     }
                 }
@@ -434,7 +434,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 // visit relocated @Memoized method bodies
                 for (MethodNode method : node.getMethods()) {
                     if (method.getName().startsWith("memoizedMethodPriv$")) {
-                        visitClassCodeContainer(method.getCode());
+                        scopes.add(new VariableScope(scopes.getLast(), method, method.isStatic()));
+                        enclosingDeclarationNode = method;
+                        try {
+                            visitClassCodeContainer(method.getCode());
+                        } finally {
+                            scopes.removeLast();
+                            enclosingDeclarationNode = node;
+                        }
                     }
                 }
 
@@ -446,9 +453,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 throw vc;
             }
         } finally {
-            enclosingElement = oldEnclosing;
-            enclosingDeclarationNode = oldEnclosingNode;
             scopes.removeLast();
+            enclosingElement = enclosingElement0;
+            enclosingDeclarationNode = enclosingDeclaration0;
         }
     }
 
@@ -744,6 +751,30 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             case CANCEL_MEMBER:
             case STOP_VISIT:
                 throw new VisitCompleted(status);
+        }
+    }
+
+    private void visitFieldInternal(FieldNode field) {
+        scopes.add(new VariableScope(scopes.getLast(), field, field.isStatic()));
+        ASTNode enclosingDeclarationNode0 = enclosingDeclarationNode;
+        enclosingDeclarationNode = field;
+        try {
+            visitField(field);
+        } finally {
+            scopes.removeLast();
+            enclosingDeclarationNode = enclosingDeclarationNode0;
+        }
+    }
+
+    private void visitConstructorOrMethodInternal(MethodNode method, boolean isCtor) {
+        scopes.add(new VariableScope(scopes.getLast(), method, method.isStatic()));
+        ASTNode enclosingDeclarationNode0 = enclosingDeclarationNode;
+        enclosingDeclarationNode = method;
+        try {
+            visitConstructorOrMethod(method, isCtor);
+        } finally {
+            scopes.removeLast();
+            enclosingDeclarationNode = enclosingDeclarationNode0;
         }
     }
 

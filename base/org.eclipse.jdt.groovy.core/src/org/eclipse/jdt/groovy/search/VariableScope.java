@@ -515,6 +515,11 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         return delegate != null ? delegate.type : null;
     }
 
+    public ClassNode getDelegateOrThis() {
+        VariableInfo info = getDelegateOrThisInfo();
+        return info != null ? info.type : null;
+    }
+
     /**
      * @return the current delegate type if exists, or this type if exists, or
      * Object.  Returns null if in top level scope (i.e. in import statement).
@@ -530,9 +535,14 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         return info;
     }
 
-    public ClassNode getDelegateOrThis() {
-        VariableInfo info = getDelegateOrThisInfo();
-        return info != null ? info.type : null;
+    public boolean isOwnerStatic() {
+        FieldNode field; MethodNode method;
+        if (isStatic() ||
+                ((field = getEnclosingFieldDeclaration()) != null && field.isStatic()) ||
+                ((method = getEnclosingMethodDeclaration()) != null && method.isStatic())) {
+            return true;
+        }
+        return false;
     }
 
     public void addVariable(String name, ClassNode type, ClassNode declaringType) {

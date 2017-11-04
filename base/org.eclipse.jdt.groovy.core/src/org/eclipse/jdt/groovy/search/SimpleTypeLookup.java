@@ -476,7 +476,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }
         }
         if (candidate == null && resolveStrategy < Closure.DELEGATE_ONLY) {
-            candidate = findDeclaration(var.getName(), owner, isLhsExpr, isOwnerStatic(scope), callArgs);
+            candidate = findDeclaration(var.getName(), owner, isLhsExpr, scope.isOwnerStatic(), callArgs);
             if (candidate == null && resolveStrategy < Closure.OWNER_FIRST) {
                 candidate = findDeclaration(var.getName(), scope.getDelegate(), isLhsExpr, false, callArgs);
             }
@@ -524,14 +524,14 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         // look for property
         for (ClassNode type : typeHierarchy) {
             PropertyNode property = type.getProperty(name);
-            if (property != null) {
+            if (isCompatible(property, isStaticExpression)) {
                 return property;
             }
         }
 
         // look for field
         FieldNode field = declaringType.getField(name);
-        if (field != null) {
+        if (isCompatible(field, isStaticExpression)) {
             return field;
         }
 
@@ -550,7 +550,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
 
         // look for static or synthetic accessor
-        if (accessor != null) {
+        if (isCompatible(accessor, isStaticExpression)) {
             return accessor;
         }
 
@@ -736,15 +736,21 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
     }
 
-    protected static boolean isOwnerStatic(VariableScope scope) {
-        AnnotatedNode enclosing;
-        boolean isOwnerStatic = false;
-        if ((enclosing = scope.getEnclosingMethodDeclaration()) != null) {
-            isOwnerStatic = ((MethodNode) enclosing).isStatic();
-        } else if ((enclosing = scope.getEnclosingFieldDeclaration()) != null) {
-            isOwnerStatic = ( (FieldNode) enclosing).isStatic();
+    protected static boolean isCompatible(AnnotatedNode declaration, boolean isStaticExpression) {
+        if (declaration != null) {
+            boolean isStatic = false;
+            if (declaration instanceof FieldNode) {
+                isStatic = ((FieldNode) declaration).isStatic();
+            } else if (declaration instanceof MethodNode) {
+                isStatic = ((MethodNode) declaration).isStatic();
+            } else if (declaration instanceof PropertyNode) {
+                isStatic = ((PropertyNode) declaration).isStatic();
+            }
+            if (!isStaticExpression || isStatic || declaration.getDeclaringClass().equals(VariableScope.CLASS_CLASS_NODE)) {
+                return true;
+            }
         }
-        return isOwnerStatic;
+        return false;
     }
 
     /**

@@ -1,18 +1,19 @@
 package p
-class B extends A {
-    def f
-    void s() {
-        f = A.f
-        f = super.f
-    }
-    static s2() {
+
+class A {
+    public static def f
+    static def s() {
         f = A.f
     }
 }
 
-class A {
-    static f = 7
-    static s() {
+class B extends A {
+    public def f
+    void m() {
+        f = A.f
+        f = super.f
+    }
+    static def s2() {
         f = A.f
     }
 }
