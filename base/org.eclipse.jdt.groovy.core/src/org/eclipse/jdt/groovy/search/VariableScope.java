@@ -216,10 +216,10 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         public final MethodCallExpression call;
         private Map<ClosureExpression, Object[]> delegatesTo;
 
-        public CallAndType(MethodCallExpression call, ClassNode declaringType, ASTNode declaration, ModuleNode enclosingModule) {
+        public CallAndType(MethodCallExpression call, ASTNode declaration, ClassNode declaringClass, ClassNode enclosingClass, boolean staticEnclosure) {
             this.call = call;
             this.declaration = declaration;
-            this.declaringType = declaringType;
+            this.declaringType = declaringClass;
 
             // handle the Groovy 2.1+ @DelegatesTo annotation; see also org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor#checkClosureWithDelegatesTo
             if (DELEGATES_TO != null && declaration instanceof MethodNode) {
@@ -231,9 +231,11 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                         arguments = ((TupleExpression) call.getArguments()).getExpressions();
                     }
                     if (arguments != null && !arguments.isEmpty()) {
-                        if (!declaringType.equals(methodNode.getDeclaringClass())) {
+                        if (!declaringClass.equals(methodNode.getDeclaringClass())) {
+                            ClassNode delegateType = (!staticEnclosure || !enclosingClass.equals(declaringClass)
+                                            ? declaringClass : VariableScope.newClassClassNode(declaringClass));
                             List<Expression> categoryMethodArguments = new ArrayList<Expression>(arguments.size() + 1);
-                            categoryMethodArguments.add(new ClassExpression(declaringType));
+                            categoryMethodArguments.add(new ClassExpression(delegateType));
                             categoryMethodArguments.addAll(arguments);
                             arguments = categoryMethodArguments;
                         }
@@ -253,10 +255,10 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
 
                                         Integer strategy = null, generics = null;
                                         /*if (delegatesToStrategy != null) {
-                                            strategy = (Integer) org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.evaluateExpression(org.codehaus.groovy.ast.tools.GeneralUtils.castX(INTEGER_CLASS_NODE, delegatesToStrategy), enclosingModule.getUnit().getConfig());
+                                            strategy = (Integer) org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.evaluateExpression(org.codehaus.groovy.ast.tools.GeneralUtils.castX(INTEGER_CLASS_NODE, delegatesToStrategy), enclosingClass.getModule().getUnit().getConfig());
                                         }
                                         if (delegatesToGenericTypeIndex != null) {
-                                            strategy = (Integer) org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.evaluateExpression(org.codehaus.groovy.ast.tools.GeneralUtils.castX(INTEGER_CLASS_NODE, delegatesToGenericTypeIndex), enclosingModule.getUnit().getConfig());
+                                            strategy = (Integer) org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.evaluateExpression(org.codehaus.groovy.ast.tools.GeneralUtils.castX(INTEGER_CLASS_NODE, delegatesToGenericTypeIndex), enclosingClass.getModule().getUnit().getConfig());
                                         }*/
                                         if (delegatesToStrategy instanceof ConstantExpression) {
                                             strategy = Integer.valueOf(delegatesToStrategy.getText());
@@ -270,7 +272,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                                             addDelegatesToClosure(closure, delegatesToValue.getType(), strategy);
 
                                         } else if (delegatesToType instanceof ConstantExpression && !"".equals(delegatesToType.getText())) {
-                                            //ClassNode[] resolved = org.codehaus.groovy.ast.tools.GenericsUtils.parseClassNodesFromString(delegatesToType.getText(), enclosingModule.getContext(), an org.codehaus.groovy.control.CompilationUnit, methodNode, delegatesToType);
+                                            //ClassNode[] resolved = org.codehaus.groovy.ast.tools.GenericsUtils.parseClassNodesFromString(delegatesToType.getText(), enclosingClass.getModule().getContext(), an org.codehaus.groovy.control.CompilationUnit, methodNode, delegatesToType);
                                             //addDelegatesToClosure(closure, resolved[0], strategy);
 
                                         } else if (delegatesToValue instanceof ClassExpression && delegatesToValue.getType().getName().equals("groovy.lang.DelegatesTo$Target")) {

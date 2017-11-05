@@ -325,11 +325,10 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
         }
         String arraySuffix = "";
         while (type.getComponentType() != null) {
-            arraySuffix += "[]";
             type = type.getComponentType();
+            arraySuffix += "[]";
         }
-        String name = type.getName() + arraySuffix;
-        return name + printGenerics(type);
+        return type.getName() + printGenerics(type) + arraySuffix;
     }
 
     public static String printGenerics(ClassNode type) {

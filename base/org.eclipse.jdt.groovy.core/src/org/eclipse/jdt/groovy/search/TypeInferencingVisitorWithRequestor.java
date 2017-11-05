@@ -1053,6 +1053,7 @@ assert primaryExprType != null && dependentExprType != null;
                 scope.addVariable("getDelegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
             } else {
                 ClassNode delegateType = scope.getThis();
+                if (scope.isOwnerStatic()) delegateType = VariableScope.newClassClassNode(delegateType); // TODO: Push this into VariableScope?
                 // GRECLIPSE-1348: if someone is silly enough to have a variable named "delegate"; don't override it
                 VariableScope.VariableInfo inf = scope.lookupName("delegate");
                 if (inf == null || inf.scopeNode instanceof ClosureExpression) {
@@ -1067,6 +1068,7 @@ assert primaryExprType != null && dependentExprType != null;
                 scope.addVariable("getOwner", VariableScope.CLOSURE_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
             } else {
                 ClassNode ownerType = scope.getThis();
+                if (scope.isOwnerStatic()) ownerType = VariableScope.newClassClassNode(ownerType); // TODO: Push this into VariableScope?
                 // GRECLIPSE-1348: if someone is silly enough to have a variable named "owner"; don't override it
                 VariableScope.VariableInfo inf = scope.lookupName("owner");
                 if (inf == null || inf.scopeNode instanceof ClosureExpression) {
@@ -1079,8 +1081,8 @@ assert primaryExprType != null && dependentExprType != null;
                 scope.addVariable("getThisObject", VariableScope.OBJECT_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
                 scope.addVariable("directive", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
                 scope.addVariable("getDirective", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
-                scope.addVariable("resolveStategy", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
-                scope.addVariable("getResolveStategy", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
+                scope.addVariable("resolveStrategy", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
+                scope.addVariable("getResolveStrategy", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
                 scope.addVariable("parameterTypes", VariableScope.CLASS_ARRAY_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
                 scope.addVariable("getParameterTypes", VariableScope.CLASS_ARRAY_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
                 scope.addVariable("maximumNumberOfParameters", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
@@ -1430,7 +1432,8 @@ assert primaryExprType != null && dependentExprType != null;
 
     @Override
     public void visitMethodCallExpression(MethodCallExpression node) {
-        scopes.getLast().setCurrentNode(node);
+        VariableScope scope = scopes.getLast();
+        scope.setCurrentNode(node);
         if (isDependentExpression(node)) {
             primaryTypeStack.removeLast();
         }
@@ -1455,15 +1458,14 @@ assert primaryExprType != null && dependentExprType != null;
 
         // this is the inferred declaring type of this method
         Tuple t = dependentDeclarationStack.removeLast();
-        VariableScope.CallAndType call = new VariableScope.CallAndType(node, t.declaringType, t.declaration, unit.getModuleNode());
+        VariableScope.CallAndType call = new VariableScope.CallAndType(node, t.declaration, t.declaringType, scope.getEnclosingTypeDeclaration(), scope.isOwnerStatic());
 
         completeExpressionStack.removeLast();
 
         ClassNode catNode = isCategoryDeclaration(node);
         if (catNode != null) {
-            scopes.getLast().setCategoryBeingDeclared(catNode);
+            scope.setCategoryBeingDeclared(catNode);
         }
-        VariableScope scope = scopes.getLast();
 
         // remember that we are inside a method call while analyzing the arguments
         scope.addEnclosingMethodCall(call);
@@ -1483,7 +1485,7 @@ assert primaryExprType != null && dependentExprType != null;
         } else {
             handleCompleteExpression(node, returnType, t.declaringType);
         }
-        scopes.getLast().forgetCurrentNode();
+        scope.forgetCurrentNode();
     }
 
     @Override

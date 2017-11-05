@@ -469,18 +469,18 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         List<ClassNode> callArgs = scope.getMethodCallArgumentTypes();
         boolean isLhsExpr = (scope.getWormhole().remove("lhs") == var);
 
-        if (resolveStrategy > 0) {
-            if (resolveStrategy == Closure.DELEGATE_FIRST || resolveStrategy == Closure.DELEGATE_ONLY) {
-                candidate = findDeclaration(var.getName(), scope.getDelegate(), isLhsExpr, false, callArgs);
-            } else if (resolveStrategy == Closure.TO_SELF) {
-                candidate = findDeclaration(var.getName(), VariableScope.CLOSURE_CLASS_NODE, isLhsExpr, false, callArgs);
-            }
+        if (resolveStrategy == Closure.DELEGATE_FIRST || resolveStrategy == Closure.DELEGATE_ONLY) {
+            candidate = findDeclaration(var.getName(), scope.getDelegate(), isLhsExpr, false, callArgs);
         }
         if (candidate == null && resolveStrategy < Closure.DELEGATE_ONLY) {
             candidate = findDeclaration(var.getName(), owner, isLhsExpr, scope.isOwnerStatic(), callArgs);
-            if (candidate == null && resolveStrategy < Closure.OWNER_FIRST) {
+
+            if (candidate == null && resolveStrategy < Closure.DELEGATE_FIRST && scope.getEnclosingClosure() != null) {
                 candidate = findDeclaration(var.getName(), scope.getDelegate(), isLhsExpr, false, callArgs);
             }
+        }
+        if (candidate == null && (resolveStrategy <= Closure.DELEGATE_FIRST || resolveStrategy == Closure.TO_SELF) && (resolveStrategy > 0 || scope.getEnclosingClosure() != null)) {
+            candidate = findDeclaration(var.getName(), VariableScope.CLOSURE_CLASS_NODE, isLhsExpr, false, callArgs);
         }
 
         return candidate;

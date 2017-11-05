@@ -26,6 +26,7 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.framework.Version;
 
@@ -253,167 +254,277 @@ public final class InferencingTests extends InferencingTestSuite {
     @Test
     public void testClosure1() {
         String contents = "def fn = { a, b -> a + b }";
-        assertType(contents, 4, 6, "groovy.lang.Closure");
+        assertExprType(contents, "fn", "groovy.lang.Closure");
     }
 
     @Test
     public void testClosure2() {
         String contents = "def fn = x.&y";
-        assertType(contents, 4, 6, "groovy.lang.Closure");
+        assertExprType(contents, "fn", "groovy.lang.Closure");
     }
 
     @Test
     public void testClosure3() {
         String contents =
-            "class Baz {\n" +
+            "class Foo {\n" +
             "  URL other\n" +
-            "  def method() {\n" +
-            "    sumthin { other }\n" +
+            "  def method(Number param) {\n" +
+            "    def x = { param }\n" +
             "  }\n" +
             "}";
-        int start = contents.lastIndexOf("other");
-        int end = start + "other".length();
-        assertType(contents, start, end, "java.net.URL");
+        assertExprType(contents, "param", "java.lang.Number");
     }
 
     @Test
     public void testClosure4() {
         String contents =
-            "class Baz {\n" +
+            "class Foo {\n" +
             "  URL other\n" +
             "  def method() {\n" +
-            "    sumthin {\n" +
-            "      delegate\n" +
-            "      owner\n" +
-            "      getDelegate()\n" +
-            "      getOwner()\n" +
-            "    }\n" +
+            "    Number local\n" +
+            "    def x = { local }\n" +
             "  }\n" +
             "}";
-        int start = contents.lastIndexOf("delegate");
-        int end = start + "delegate".length();
-        assertType(contents, start, end, "Baz");
-        start = contents.lastIndexOf("owner");
-        end = start + "owner".length();
-        assertType(contents, start, end, "Baz");
-        start = contents.lastIndexOf("getDelegate");
-        end = start + "getDelegate".length();
-        assertType(contents, start, end, "Baz");
-        start = contents.lastIndexOf("getOwner");
-        end = start + "getOwner".length();
-        assertType(contents, start, end, "Baz");
+        assertExprType(contents, "local", "java.lang.Number");
     }
 
     @Test
     public void testClosure5() {
         String contents =
-            "def x = {\n" +
-            "  maximumNumberOfParameters\n" +
-            "  getMaximumNumberOfParameters()\n" +
-            "  thisObject\n" +
-            "  getThisObject()\n" +
+            "class Foo {\n" +
+            "  URL proper\n" +
+            "  def method() {\n" +
+            "    def x = { proper }\n" +
+            "  }\n" +
             "}";
-        int start = contents.lastIndexOf("maximumNumberOfParameters");
-        int end = start + "maximumNumberOfParameters".length();
-        assertType(contents, start, end, "java.lang.Integer");
-        start = contents.lastIndexOf("getMaximumNumberOfParameters");
-        end = start + "getMaximumNumberOfParameters".length();
-        assertType(contents, start, end, "java.lang.Integer");
-        start = contents.lastIndexOf("thisObject");
-        end = start + "thisObject".length();
-        assertType(contents, start, end, "java.lang.Object");
-        start = contents.lastIndexOf("getThisObject");
-        end = start + "getThisObject".length();
-        assertType(contents, start, end, "java.lang.Object");
+        assertExprType(contents, "proper", "java.net.URL");
     }
 
     @Test
     public void testClosure6() {
         String contents =
-            "def x = { def y = {\n" +
-            "  maximumNumberOfParameters\n" +
-            "  getMaximumNumberOfParameters()\n" +
-            "  thisObject\n" +
-            "  getThisObject()\n" +
-            "}}";
-        int start = contents.lastIndexOf("maximumNumberOfParameters");
-        int end = start + "maximumNumberOfParameters".length();
-        assertType(contents, start, end, "java.lang.Integer");
-        start = contents.lastIndexOf("getMaximumNumberOfParameters");
-        end = start + "getMaximumNumberOfParameters".length();
-        assertType(contents, start, end, "java.lang.Integer");
-        start = contents.lastIndexOf("thisObject");
-        end = start + "thisObject".length();
-        assertType(contents, start, end, "java.lang.Object");
-        start = contents.lastIndexOf("getThisObject");
-        end = start + "getThisObject".length();
-        assertType(contents, start, end, "java.lang.Object");
+            "class Foo {\n" +
+            "  static URL proper\n" +
+            "  def method() {\n" +
+            "    def x = { proper }\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "proper", "java.net.URL");
     }
 
     @Test
     public void testClosure7() {
         String contents =
-            "class A {\n" +
-            "  def m() { }\n" +
-            "}\n" +
-            "class B extends A {\n" +
-            "  def m() {\n" +
-            "    def c = {\n" +
+            "class Foo { }\n" +
+            "class Bar extends Foo {\n" +
+            "  def method() {\n" +
+            "    def x = {\n" +
             "      this\n" +
             "      super\n" +
-            "      thisObject\n" +
-            "      getThisObject()\n" +
+            "      owner\n" +
+            "      getOwner()\n" +
+            "      delegate\n" +
+            "      getDelegate()\n" +
             "    }\n" +
             "  }\n" +
             "}";
+        assertExprType(contents, "this",        "Bar");
+        assertExprType(contents, "super",       "Foo");
+        assertExprType(contents, "owner",       "Bar");
+        assertExprType(contents, "getOwner",    "Bar");
+        assertExprType(contents, "delegate",    "Bar");
+        assertExprType(contents, "getDelegate", "Bar");
+    }
 
-        int start = contents.indexOf("this");
-        int end = start + "this".length();
-        assertType(contents, start, end, "B");
-        start = contents.indexOf("super");
-        end = start + "super".length();
-        assertType(contents, start, end, "A");
-        start = contents.indexOf("thisObject");
-        end = start + "thisObject".length();
-        assertType(contents, start, end, "java.lang.Object");
-        start = contents.indexOf("getThisObject");
-        end = start + "getThisObject".length();
-        assertType(contents, start, end, "java.lang.Object");
+    @Test // closure with non-default resolve strategy
+    public void testClosure8() {
+        String contents =
+            "class Foo { }\n" +
+            "class Bar {\n" +
+            "  def method() {\n" +
+            "    new Foo().with {\n" +
+            "      this\n" +
+            "      super\n" +
+            "      owner\n" +
+            "      getOwner()\n" +
+            "      delegate\n" +
+            "      getDelegate()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "this",        "Bar");
+        assertExprType(contents, "super",       "java.lang.Object");
+        assertExprType(contents, "owner",       "Bar");
+        assertExprType(contents, "getOwner",    "Bar");
+        assertExprType(contents, "delegate",    "Foo");
+        assertExprType(contents, "getDelegate", "Foo");
+    }
+
+    @Test // closure within static scope wrt owner
+    public void testClosure9() {
+        String contents =
+            "class Foo { }\n" +
+            "class Bar extends Foo {\n" +
+            "  static void main(args) {\n" +
+            "    def closure = {\n" +
+            "      owner\n" +
+            "      getOwner()\n" +
+            "      delegate\n" +
+            "      getDelegate()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "owner",       "java.lang.Class<Bar>");
+        assertExprType(contents, "getOwner",    "java.lang.Class<Bar>");
+        assertExprType(contents, "delegate",    "java.lang.Class<Bar>");
+        assertExprType(contents, "getDelegate", "java.lang.Class<Bar>");
+    }
+
+    @Test @Ignore("not yet implemented")
+    public void testClosure10() {
+        String contents =
+            "class Foo { }\n" +
+            "class Bar extends Foo {\n" +
+            "  static void main(args) {\n" +
+            "    def closure = {\n" +
+            "      this\n" +
+            "      super\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "this",  "java.lang.Class<Bar>");
+        assertExprType(contents, "super", "java.lang.Class<Foo>");
+    }
+
+    @Test // other (invariant) members of Closure
+    public void testClosure11() {
+        String contents =
+            "def x = {\n" +
+            "  thisObject\n" +
+            "  getThisObject()\n" +
+            "  directive\n" +
+            "  getDirective()\n" +
+            "  resolveStrategy\n" +
+            "  getResolveStrategy()\n" +
+            "  parameterTypes\n" +
+            "  getParameterTypes()\n" +
+            "  maximumNumberOfParameters\n" +
+            "  getMaximumNumberOfParameters()\n" +
+            "}";
+        assertExprType(contents, "thisObject", "java.lang.Object");
+        assertExprType(contents, "getThisObject", "java.lang.Object");
+        assertExprType(contents, "directive", "java.lang.Integer");
+        assertExprType(contents, "getDirective", "java.lang.Integer");
+        assertExprType(contents, "resolveStrategy", "java.lang.Integer");
+        assertExprType(contents, "getResolveStrategy", "java.lang.Integer");
+        assertExprType(contents, "parameterTypes", "java.lang.Class<T extends java.lang.Object>[]");
+        assertExprType(contents, "getParameterTypes", "java.lang.Class<T extends java.lang.Object>[]");
+        assertExprType(contents, "maximumNumberOfParameters", "java.lang.Integer");
+        assertExprType(contents, "getMaximumNumberOfParameters", "java.lang.Integer");
+    }
+
+    @Test // other members of Closure (within static scope wrt owner)
+    public void testClosure12() {
+        String contents =
+            "class A { static void main(args) { def x = {\n" +
+            "  thisObject\n" +
+            "  getThisObject()\n" +
+            "  directive\n" +
+            "  getDirective()\n" +
+            "  resolveStrategy\n" +
+            "  getResolveStrategy()\n" +
+            "  parameterTypes\n" +
+            "  getParameterTypes()\n" +
+            "  maximumNumberOfParameters\n" +
+            "  getMaximumNumberOfParameters()\n" +
+            "}}}";
+        assertExprType(contents, "thisObject", "java.lang.Object");
+        assertExprType(contents, "getThisObject", "java.lang.Object");
+        assertExprType(contents, "directive", "java.lang.Integer");
+        assertExprType(contents, "getDirective", "java.lang.Integer");
+        assertExprType(contents, "resolveStrategy", "java.lang.Integer");
+        assertExprType(contents, "getResolveStrategy", "java.lang.Integer");
+        assertExprType(contents, "parameterTypes", "java.lang.Class<T extends java.lang.Object>[]");
+        assertExprType(contents, "getParameterTypes", "java.lang.Class<T extends java.lang.Object>[]");
+        assertExprType(contents, "maximumNumberOfParameters", "java.lang.Integer");
+        assertExprType(contents, "getMaximumNumberOfParameters", "java.lang.Integer");
     }
 
     @Test
-    public void testClosure8() {
+    public void testClosure13() {
+        String contents =
+            "class A {\n" +
+            "  Number b\n" +
+            "  static void main(args) {\n" +
+            "    def c = {\n" +
+            "      b\n" + // unknown because enclosing declaration is static
+            "    }\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf('b');
+        assertUnknownConfidence(contents, offset, offset + 1, "A", false);
+    }
+
+    @Test
+    public void testClosure14() {
+        String contents =
+            "class A {\n" +
+            "  Number b\n" +
+            "  static void main(args) {\n" +
+            "    with {\n" + // <-- changes the resolve strategy
+            "      b\n" + // unknown because enclosing declaration is static
+            "    }\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf('b');
+        assertUnknownConfidence(contents, offset, offset + 1, "A", false);
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/360
+    public void testClosure15() {
+        String contents =
+            "class A {\n" +
+            "  public C xxx\n" +
+            "}\n" +
+            "class B {\n" +
+            "  public C xyz\n" +
+            "  static void meth(A a) {\n" +
+            "    a.with {\n" +
+            "      xxx\n" + // from delegate
+            "      xyz\n" + // not available
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "class C { }";
+        assertExprType(contents, "xxx", "C");
+        int offset = contents.lastIndexOf("xyz");
+        assertUnknownConfidence(contents, offset, offset + 3, "B", false);
+    }
+
+    @Test // closure is part of method call expression
+    public void testClosure16() {
         String contents =
             "class A {\n" +
             "  def m() { }\n" +
             "}\n" +
             "class B extends A {\n" +
             "  def m() {\n" +
-            "    [].collect {\n" + // closure is part of method call expression
+            "    [''].collect {\n" +
             "      this\n" +
             "      super\n" +
-            "      thisObject\n" +
-            "      getThisObject()\n" +
+            "      owner\n" +
+            "      delegate\n" +
             "    }\n" +
             "  }\n" +
             "}";
-
-        int start = contents.indexOf("this");
-        int end = start + "this".length();
-        assertType(contents, start, end, "B");
-        start = contents.indexOf("super");
-        end = start + "super".length();
-        assertType(contents, start, end, "A");
-        start = contents.indexOf("thisObject");
-        end = start + "thisObject".length();
-        assertType(contents, start, end, "java.lang.Object");
-        start = contents.indexOf("getThisObject");
-        end = start + "getThisObject".length();
-        assertType(contents, start, end, "java.lang.Object");
+        assertExprType(contents, "this", "B");
+        assertExprType(contents, "super", "A");
+        assertExprType(contents, "owner", "B");
+        assertExprType(contents, "delegate", "java.util.List<java.lang.String>");
     }
 
     @Test
-    public void testClosure9() {
+    public void testClosure17() {
         assumeTrue(isAtLeastGroovy(20));
 
         String contents =
@@ -424,34 +535,25 @@ public final class InferencingTests extends InferencingTestSuite {
             "class B extends A {\n" +
             "  def m() {\n" +
             "    def c = {\n" +
-            "      this\n" +
-            "      super.m()\n" +
-            "      thisObject\n" +
             "      getThisObject()\n" +
+            "      thisObject\n" +
+            "      super.m()\n" +
+            "      this\n" +
             "    }\n" +
             "  }\n" +
             "}";
-
-        int start = contents.indexOf("this");
-        int end = start + "this".length();
-        assertType(contents, start, end, "B");
-        start = contents.indexOf("super");
-        end = start + "super".length();
-        assertType(contents, start, end, "A");
-        start = contents.indexOf("thisObject");
-        end = start + "thisObject".length();
-        assertType(contents, start, end, "java.lang.Object");
-        start = contents.indexOf("getThisObject");
-        end = start + "getThisObject".length();
-        assertType(contents, start, end, "java.lang.Object");
+        assertExprType(contents, "getThisObject", "java.lang.Object");
+        assertExprType(contents, "thisObject", "java.lang.Object");
+        assertExprType(contents, "super", "A");
+        assertExprType(contents, "this", "B");
 
         // @CompileStatic 2.3+ alters calls to super methods
-        start = contents.lastIndexOf("m()"); end = start + 1;
+        int start = contents.lastIndexOf("m()"), end = start + 1;
         assertDeclaration(contents, start, end, "A", "m", DeclarationKind.METHOD);
     }
 
     @Test
-    public void testClosure10() {
+    public void testClosure18() {
         assumeTrue(isAtLeastGroovy(20));
 
         String contents =
@@ -473,19 +575,390 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure11() {
+    public void testClosure19() {
         String contents =
+            "''.foo {\n" +
+            "  substring" +
+            "}";
+        int start = contents.lastIndexOf("substring");
+        int end = start + "substring".length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+
+    @Test
+    public void testClosure20() {
+        String contents =
+            "''.foo {\n" +
+            "  delegate.substring()" +
+            "}";
+        int start = contents.lastIndexOf("substring");
+        int end = start + "substring".length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+
+    @Test
+    public void testClosure21() {
+        String contents =
+            "''.foo {\n" +
+            "  this.substring" +
+            "}";
+        int start = contents.lastIndexOf("substring");
+        int end = start + "substring".length();
+        assertUnknownConfidence(contents, start, end, "Search", false);
+    }
+
+    @Test
+    public void testClosure22() {
+        String contents =
+            "''.foo {\n" +
+            "  this\n" +
+            "}";
+        int start = contents.lastIndexOf("this");
+        int end = start + "this".length();
+        assertType(contents, start, end, "Search", false);
+    }
+
+    @Test
+    public void testClosure23() {
+        String contents =
+            "new Date().with {\n" +
+            "  def t = time\n" +
+            "}";
+        int start = contents.lastIndexOf("time");
+        int end = start + "time".length();
+        assertType(contents, start, end, "java.lang.Long", false);
+    }
+
+    @Test
+    public void testClosure24() {
+        String contents =
+            "new Date().with {\n" +
+            "  time = 0L\n" +
+            "}";
+        int start = contents.lastIndexOf("time");
+        int end = start + "time".length();
+        assertType(contents, start, end, "java.lang.Void", false);
+    }
+
+    @Test
+    public void testClosure25() {
+        String contents =
+            "new Date().with {\n" +
+            "  time = 0L\n" +
+            "  def t = time\n" + // this 'time' property should not be seen as setTime()
+            "}";
+        int start = contents.lastIndexOf("time");
+        int end = start + "time".length();
+        assertType(contents, start, end, "java.lang.Long", false);
+    }
+
+    @Test // closure within closure
+    public void testDoubleClosure1() {
+        String contents =
+            "def x = { def y = {\n" +
+            "  owner\n" +
+            "  delegate()\n" +
+            "  thisObject\n" +
+            "  getThisObject()\n" +
+            "  resolveStrategy\n" +
+            "  getResolveStrategy()\n" +
+            "}}";
+        assertExprType(contents, "owner", "groovy.lang.Closure<V extends java.lang.Object>");
+        assertExprType(contents, "delegate", "Search");
+        assertExprType(contents, "thisObject", "java.lang.Object");
+        assertExprType(contents, "getThisObject", "java.lang.Object");
+        assertExprType(contents, "resolveStrategy", "java.lang.Integer");
+        assertExprType(contents, "getResolveStrategy", "java.lang.Integer");
+    }
+
+    @Test
+    public void testDoubleClosure2() {
+        String contents =
+            "''.foo {\n" +
+            "  1.foo {\n" +
+            "    intValue\n" +
+            "  }" +
+            "}";
+        assertExprType(contents, "intValue", "java.lang.Integer");
+    }
+
+    @Test
+    public void testDoubleClosure3() {
+        String contents =
+            "''.foo {\n" +
+            "  1.foo {\n" +
+            "    intValue()\n" +
+            "  }" +
+            "}";
+        assertExprType(contents, "intValue", "java.lang.Integer");
+    }
+
+    @Test
+    public void testDoubleClosure4() {
+        String contents =
+            "''.foo {\n" +
+            "  1.foo {\n" +
+            "    delegate.intValue()\n" +
+            "  }" +
+            "}";
+        assertExprType(contents, "intValue", "java.lang.Integer");
+    }
+
+    @Test // DGM
+    public void testDoubleClosure5() {
+        String contents =
+            "''.foo {\n" +
+            "  1.foo {\n" +
+            "    abs\n" +
+            "  }" +
+            "}";
+        assertExprType(contents, "abs", "java.lang.Integer");
+    }
+
+    @Test
+    public void testDoubleClosure6() {
+        String contents =
+            "''.foo {\n" +
+            "  1.foo {\n" +
+            "    abs()\n" +
+            "  }" +
+            "}";
+        assertExprType(contents, "abs", "java.lang.Integer");
+    }
+
+    @Test
+    public void testDoubleClosure7() {
+        String contents =
+            "''.foo {\n" +
+            "  1.foo {\n" +
+            "    delegate.abs()\n" +
+            "  }" +
+            "}";
+        assertExprType(contents, "abs", "java.lang.Integer");
+    }
+
+    @Test
+    public void testDoubleClosure8() {
+        String contents =
+            "''.foo {\n" +
+            "  1.foo {\n" +
+            "    this.abs()\n" +
+            "  }" +
+            "}";
+        int start = contents.lastIndexOf("abs");
+        int end = start + "abs".length();
+        assertUnknownConfidence(contents, start, end, "Search", false);
+    }
+
+    @Test
+    public void testDoubleClosure9() {
+        String contents =
+            "''.foo {\n" +
+            "  1.foo {\n" +
+            "    this\n" +
+            "  }" +
+            "}";
+        assertExprType(contents, "this", "Search");
+    }
+
+    @Test // Closure type inference without @CompileStatic
+    public void testCompileStaticClosure0() {
+        assumeTrue(isAtLeastGroovy(22));
+
+        String contents =
+            "import groovy.beans.Bindable\n" +
             "class A {\n" +
-            "  String b\n" +
-            "  static void main(args) {\n" +
-            "    def c = {\n" +
-            "      b\n" + // unknown because enclosing declaration is static
+            "    @Bindable\n" +
+            "    String foo\n" +
+            "    static void main(String[] args) {\n" +
+            "        A a = new A()\n" +
+            "        a.foo = 'old'\n" +
+            "        a.addPropertyChangeListener('foo') {\n" +
+            "            println 'foo changed: ' + it.oldValue + ' -> ' + it.newValue\n" +
+            "        }\n" +
+            "        a.foo = 'new'\n" +
             "    }\n" +
-            "  }\n" +
             "}";
 
-        int offset = contents.lastIndexOf('b');
-        assertUnknownConfidence(contents, offset, offset + 1, "A", false);
+        int start = contents.lastIndexOf("it");
+        int end = start + "it".length();
+        assertType(contents, start, end, "java.beans.PropertyChangeEvent");
+    }
+
+    @Test // GRECLIPSE-1748: Closure type inference with @CompileStatic
+    public void testCompileStaticClosure1() {
+        assumeTrue(isAtLeastGroovy(22));
+
+        String contents =
+            "import groovy.beans.Bindable\n" +
+            "import groovy.transform.CompileStatic\n" +
+            "class A {\n" +
+            "    @Bindable\n" +
+            "    String foo\n" +
+            "    @CompileStatic" +
+            "    static void main(String[] args) {\n" +
+            "        A a = new A()\n" +
+            "        a.foo = 'old'\n" +
+            "        a.addPropertyChangeListener('foo') {\n" +
+            "            println 'foo changed: ' + it.oldValue + ' -> ' + it.newValue\n" +
+            "        }\n" +
+            "        a.foo = 'new'\n" +
+            "    }\n" +
+            "}";
+
+        int start = contents.lastIndexOf("it");
+        int end = start + "it".length();
+        assertType(contents, start, end, "java.beans.PropertyChangeEvent");
+    }
+
+    @Test // GRECLIPSE-1751: Test 'with' operator. No annotations.
+    public void testWithAndClosure1() throws Exception {
+        createUnit("p", "D",
+            "package p\n" +
+            "class D {\n" +
+            "    String foo\n" +
+            "    D bar\n" +
+            "}");
+        String contents =
+            "package p\n" +
+            "class E {\n" +
+            "    D d = new D()\n" +
+            "    void doSomething() {\n" +
+            "        d.with {\n" +
+            "            foo = 'foo'\n" +
+            "            bar = new D()\n" +
+            "            bar.foo = 'bar'\n" +
+            "        }\n" +
+            "    }\n" +
+            "}";
+
+        int start = contents.indexOf("foo");
+        int end = start + "foo".length();
+        assertType(contents, start, end, "java.lang.String");
+
+        start = contents.indexOf("bar", end);
+        end = start + "bar".length();
+        assertType(contents, start, end, "p.D");
+
+        start = contents.indexOf("bar", end);
+        end = start + "bar".length();
+        assertType(contents, start, end, "p.D");
+
+        start = contents.indexOf("foo", end);
+        end = start + "foo".length();
+        assertType(contents, start, end, "java.lang.String");
+    }
+
+    @Test // Test 'with' operator. @TypeChecked annotation.
+    public void testWithAndClosure2() throws Exception {
+        createUnit("p", "D",
+            "package p\n" +
+            "class D {\n" +
+            "    String foo\n" +
+            "    D bar\n" +
+            "}");
+        String contents =
+            "package p\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "class E {\n" +
+            "    D d = new D()\n" +
+            "    void doSomething() {\n" +
+            "        d.with {\n" +
+            "            foo = 'foo'\n" +
+            "            bar = new D()\n" +
+            "            bar.foo = 'bar'\n" +
+            "        }\n" +
+            "    }\n" +
+            "}";
+
+        int start = contents.indexOf("foo");
+        int end = start + "foo".length();
+        assertType(contents, start, end, "java.lang.String");
+
+        start = contents.indexOf("bar", end);
+        end = start + "bar".length();
+        assertType(contents, start, end, "p.D");
+
+        start = contents.indexOf("bar", end);
+        end = start + "bar".length();
+        assertType(contents, start, end, "p.D");
+
+        start = contents.indexOf("foo", end);
+        end = start + "foo".length();
+        assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void": "java.lang.String");
+    }
+
+    @Test // Test 'with' operator. @CompileStatic annotation.
+    public void testWithAndClosure3() throws Exception {
+        createUnit("p", "D",
+            "package p\n" +
+            "class D {\n" +
+            "    String foo\n" +
+            "    D bar\n" +
+            "}");
+        String contents =
+            "package p\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class E {\n" +
+            "    D d = new D()\n" +
+            "    void doSomething() {\n" +
+            "        d.with {\n" +
+            "            foo = 'foo'\n" +
+            "            bar = new D()\n" +
+            "            bar.foo = 'bar'\n" +
+            "        }\n" +
+            "    }\n" +
+            "}";
+
+        int start = contents.indexOf("foo");
+        int end = start + "foo".length();
+        assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void" : "java.lang.String");
+
+        start = contents.indexOf("bar", end);
+        end = start + "bar".length();
+        assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void" : "p.D");
+
+        start = contents.indexOf("bar", end);
+        end = start + "bar".length();
+        assertType(contents, start, end, "p.D");
+
+        start = contents.indexOf("foo", end);
+        end = start + "foo".length();
+        assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void" : "java.lang.String");
+    }
+
+    @Test // Another test 'with' operator. @CompileStatic annotation.
+    public void testWithAndClosure4() throws Exception {
+        createUnit("p", "D",
+            "package p\n" +
+            "class D {\n" +
+            "    String foo\n" +
+            "    D bar = new D()\n" +
+            "}");
+        String contents =
+            "package p\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class E {\n" +
+            "    D d = new D()\n" +
+            "    void doSomething() {\n" +
+            "        d.with {\n" +
+            "            foo = 'foo'\n" +
+            "            bar.foo = 'bar'\n" +
+            "        }\n" +
+            "    }\n" +
+            "}";
+
+        int start = contents.indexOf("foo");
+        int end = start + "foo".length();
+        assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void" : "java.lang.String");
+
+        start = contents.indexOf("bar", end);
+        end = start + "bar".length();
+        assertType(contents, start, end, "p.D");
+
+        start = contents.indexOf("foo", end);
+        end = start + "foo".length();
+        assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void" : "java.lang.String");
     }
 
     @Test
@@ -1250,155 +1723,6 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
-    @Test
-    public void testInClosure1() {
-        String contents =
-            "class Bar {\n" +
-            "  def meth() { }\n" +
-            "}\n" +
-            "new Bar().meth {\n delegate }";
-        int start = contents.lastIndexOf("delegate");
-        int end = start + "delegate".length();
-        assertType(contents, start, end, "Bar");
-    }
-
-    @Test
-    public void testInClosure2() {
-        String contents =
-            "class Bar {\n" +
-            "  def meth(x) { }\n" +
-            "}\n" +
-            "new Bar().meth(6) {\n this }";
-        int start = contents.lastIndexOf("this");
-        int end = start + "this".length();
-        assertType(contents, start, end, "Search");
-    }
-
-    @Test
-    public void testInClosure2a() {
-        String contents =
-            "class Bar {\n" +
-            "  def meth(x) { }\n" +
-            "}\n" +
-            "new Bar().meth(6) {\n delegate }";
-        int start = contents.lastIndexOf("delegate");
-        int end = start + "delegate".length();
-        assertType(contents, start, end, "Bar");
-    }
-
-    @Test
-    public void testInClosure2b() {
-        String contents =
-            "class Bar {\n" +
-            "  def meth(x) { }\n" +
-            "}\n" +
-            "new Bar().meth(6) {\n owner }";
-        int start = contents.lastIndexOf("owner");
-        int end = start + "owner".length();
-        assertType(contents, start, end, "Search");
-    }
-
-    @Test
-    public void testInClosure2c() {
-        // closure in a closure and owner is outer closure
-        String contents = "first {\n second {\n owner } }";
-        int start = contents.lastIndexOf("owner");
-        int end = start + "owner".length();
-        assertType(contents, start, end, "groovy.lang.Closure<V extends java.lang.Object>");
-    }
-
-    @Test
-    public void testInClosure3() {
-        String contents = "class Baz { }\n" +
-            "class Bar {\n" +
-            "  def meth(x) { }\n" +
-            "}\n" +
-            "new Bar().meth(6) {\n" +
-            "  new Baz()" +
-            "}";
-        int start = contents.lastIndexOf("Baz");
-        int end = start + "Baz".length();
-        assertType(contents, start, end, "Baz");
-    }
-
-    @Test
-    public void testInClosure4() {
-        String contents =
-            "''.foo {\n" +
-            "  substring" +
-            "}";
-        int start = contents.lastIndexOf("substring");
-        int end = start + "substring".length();
-        assertType(contents, start, end, "java.lang.String");
-    }
-
-    @Test
-    public void testInClosure5() {
-        String contents =
-            "''.foo {\n" +
-            "  delegate.substring()" +
-            "}";
-        int start = contents.lastIndexOf("substring");
-        int end = start + "substring".length();
-        assertType(contents, start, end, "java.lang.String");
-    }
-
-    @Test
-    public void testInClosure6() {
-        String contents =
-            "''.foo {\n" +
-            "  this.substring" +
-            "}";
-        int start = contents.lastIndexOf("substring");
-        int end = start + "substring".length();
-        assertUnknownConfidence(contents, start, end, "Search", false);
-    }
-
-    @Test
-    public void testInClosure7() {
-        String contents =
-            "''.foo {\n" +
-            "  this\n" +
-            "}";
-        int start = contents.lastIndexOf("this");
-        int end = start + "this".length();
-        assertType(contents, start, end, "Search", false);
-    }
-
-    @Test
-    public void testInClosure8() {
-        String contents =
-            "new Date().with {\n" +
-            "  def t = time\n" +
-            "}";
-        int start = contents.lastIndexOf("time");
-        int end = start + "time".length();
-        assertType(contents, start, end, "java.lang.Long", false);
-    }
-
-    @Test
-    public void testInClosure9() {
-        String contents =
-            "new Date().with {\n" +
-            "  time = 0L\n" +
-            "}";
-        int start = contents.lastIndexOf("time");
-        int end = start + "time".length();
-        assertType(contents, start, end, "java.lang.Void", false);
-    }
-
-    @Test
-    public void testInClosure10() {
-        String contents =
-            "new Date().with {\n" +
-            "  time = 0L\n" +
-            "  def t = time\n" + // this 'time' property should not be seen as setTime()
-            "}";
-        int start = contents.lastIndexOf("time");
-        int end = start + "time".length();
-        assertType(contents, start, end, "java.lang.Long", false);
-    }
-
     // the declaring type of things inside of a closure should be the declaring
     // type of the method that calls the closure
     @Test
@@ -1512,327 +1836,6 @@ public final class InferencingTests extends InferencingTestSuite {
         int start = contents.lastIndexOf("other");
         int end = start + "other".length();
         assertDeclaringType(contents, start, end, "Baz", false, true);
-    }
-
-    @Test
-    public void testDoubleClosure1() {
-        String contents =
-            "''.foo {\n" +
-            "  1.foo {\n" +
-            "    intValue\n" +
-            "  }" +
-            "}";
-
-        int start = contents.lastIndexOf("intValue");
-        int end = start + "intValue".length();
-        assertType(contents, start, end, "java.lang.Integer");
-    }
-
-    @Test
-    public void testDoubleClosure2() {
-        String contents =
-            "''.foo {\n" +
-            "  1.foo {\n" +
-            "    intValue()\n" +
-            "  }" +
-            "}";
-
-        int start = contents.lastIndexOf("intValue");
-        int end = start + "intValue".length();
-        assertType(contents, start, end, "java.lang.Integer");
-    }
-
-    @Test
-    public void testDoubleClosure2a() {
-        String contents =
-            "''.foo {\n" +
-            "  1.foo {\n" +
-            "    delegate.intValue()\n" +
-            "  }" +
-            "}";
-
-        int start = contents.lastIndexOf("intValue");
-        int end = start + "intValue".length();
-        assertType(contents, start, end, "java.lang.Integer");
-    }
-
-    // test DGM
-    @Test
-    public void testDoubleClosure3() {
-        String contents =
-            "''.foo {\n" +
-            "  1.foo {\n" +
-            "    abs\n" +
-            "  }" +
-            "}";
-
-        int start = contents.lastIndexOf("abs");
-        int end = start + "abs".length();
-        assertType(contents, start, end, "java.lang.Integer");
-    }
-
-    @Test
-    public void testDoubleClosure4() {
-        String contents =
-            "''.foo {\n" +
-            "  1.foo {\n" +
-            "    abs()\n" +
-            "  }" +
-            "}";
-
-        int start = contents.lastIndexOf("abs");
-        int end = start + "abs".length();
-        assertType(contents, start, end, "java.lang.Integer");
-    }
-
-    @Test
-    public void testDoubleClosure5() {
-        String contents =
-            "''.foo {\n" +
-            "  1.foo {\n" +
-            "    delegate.abs()\n" +
-            "  }" +
-            "}";
-
-        int start = contents.lastIndexOf("abs");
-        int end = start + "abs".length();
-        assertType(contents, start, end, "java.lang.Integer");
-    }
-
-    @Test
-    public void testDoubleClosure6() {
-        String contents =
-            "''.foo {\n" +
-            "  1.foo {\n" +
-            "    this.abs()\n" +
-            "  }" +
-            "}";
-
-        int start = contents.lastIndexOf("abs");
-        int end = start + "abs".length();
-        assertUnknownConfidence(contents, start, end, "Search", false);
-    }
-
-    @Test
-    public void testDoubleClosure7() {
-        String contents =
-            "''.foo {\n" +
-            "  1.foo {\n" +
-            "    this\n" +
-            "  }" +
-            "}";
-
-        int start = contents.lastIndexOf("this");
-        int end = start + "this".length();
-        assertType(contents, start, end, "Search");
-    }
-
-    // GRECLIPSE-1748
-    // Closure type inference with @CompileStatic
-    @Test
-    public void testClosureTypeInference1() {
-        assumeTrue(isAtLeastGroovy(22));
-
-        String contents =
-            "import groovy.beans.Bindable\n" +
-            "import groovy.transform.CompileStatic\n" +
-            "class A {\n" +
-            "    @Bindable\n" +
-            "    String foo\n" +
-            "    @CompileStatic" +
-            "    static void main(String[] args) {\n" +
-            "        A a = new A()\n" +
-            "        a.foo = 'old'\n" +
-            "        a.addPropertyChangeListener('foo') {\n" +
-            "            println 'foo changed: ' + it.oldValue + ' -> ' + it.newValue\n" +
-            "        }\n" +
-            "        a.foo = 'new'\n" +
-            "    }\n" +
-            "}";
-
-        int start = contents.lastIndexOf("it");
-        int end = start + "it".length();
-        assertType(contents, start, end, "java.beans.PropertyChangeEvent");
-    }
-
-    // Closure type inference without @CompileStatic
-    @Test
-    public void testClosureTypeInference2() {
-        assumeTrue(isAtLeastGroovy(22));
-
-        String contents =
-            "import groovy.beans.Bindable\n" +
-            "class A {\n" +
-            "    @Bindable\n" +
-            "    String foo\n" +
-            "    static void main(String[] args) {\n" +
-            "        A a = new A()\n" +
-            "        a.foo = 'old'\n" +
-            "        a.addPropertyChangeListener('foo') {\n" +
-            "            println 'foo changed: ' + it.oldValue + ' -> ' + it.newValue\n" +
-            "        }\n" +
-            "        a.foo = 'new'\n" +
-            "    }\n" +
-            "}";
-
-        int start = contents.lastIndexOf("it");
-        int end = start + "it".length();
-        assertType(contents, start, end, "java.beans.PropertyChangeEvent");
-    }
-
-    // GRECLIPSE-1751
-    // Test 'with' operator. No annotations.
-    @Test
-    public void testWithAndClosure1() throws Exception {
-        createUnit("p", "D",
-            "package p\n" +
-            "class D {\n" +
-            "    String foo\n" +
-            "    D bar\n" +
-            "}");
-        String contents =
-            "package p\n" +
-            "class E {\n" +
-            "    D d = new D()\n" +
-            "    void doSomething() {\n" +
-            "        d.with {\n" +
-            "            foo = 'foo'\n" +
-            "            bar = new D()\n" +
-            "            bar.foo = 'bar'\n" +
-            "        }\n" +
-            "    }\n" +
-            "}";
-
-        int start = contents.indexOf("foo");
-        int end = start + "foo".length();
-        assertType(contents, start, end, "java.lang.String");
-
-        start = contents.indexOf("bar", end);
-        end = start + "bar".length();
-        assertType(contents, start, end, "p.D");
-
-        start = contents.indexOf("bar", end);
-        end = start + "bar".length();
-        assertType(contents, start, end, "p.D");
-
-        start = contents.indexOf("foo", end);
-        end = start + "foo".length();
-        assertType(contents, start, end, "java.lang.String");
-    }
-
-    // Test 'with' operator. @TypeChecked annotation.
-    @Test
-    public void testWithAndClosure2() throws Exception {
-        createUnit("p", "D",
-            "package p\n" +
-            "class D {\n" +
-            "    String foo\n" +
-            "    D bar\n" +
-            "}");
-        String contents =
-            "package p\n" +
-            "@groovy.transform.TypeChecked\n" +
-            "class E {\n" +
-            "    D d = new D()\n" +
-            "    void doSomething() {\n" +
-            "        d.with {\n" +
-            "            foo = 'foo'\n" +
-            "            bar = new D()\n" +
-            "            bar.foo = 'bar'\n" +
-            "        }\n" +
-            "    }\n" +
-            "}";
-
-        int start = contents.indexOf("foo");
-        int end = start + "foo".length();
-        assertType(contents, start, end, "java.lang.String");
-
-        start = contents.indexOf("bar", end);
-        end = start + "bar".length();
-        assertType(contents, start, end, "p.D");
-
-        start = contents.indexOf("bar", end);
-        end = start + "bar".length();
-        assertType(contents, start, end, "p.D");
-
-        start = contents.indexOf("foo", end);
-        end = start + "foo".length();
-        assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void": "java.lang.String");
-    }
-
-    // Test 'with' operator. @CompileStatic annotation.
-    @Test
-    public void testWithAndClosure3() throws Exception {
-        createUnit("p", "D",
-            "package p\n" +
-            "class D {\n" +
-            "    String foo\n" +
-            "    D bar\n" +
-            "}");
-        String contents =
-            "package p\n" +
-            "@groovy.transform.CompileStatic\n" +
-            "class E {\n" +
-            "    D d = new D()\n" +
-            "    void doSomething() {\n" +
-            "        d.with {\n" +
-            "            foo = 'foo'\n" +
-            "            bar = new D()\n" +
-            "            bar.foo = 'bar'\n" +
-            "        }\n" +
-            "    }\n" +
-            "}";
-
-        int start = contents.indexOf("foo");
-        int end = start + "foo".length();
-        assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void" : "java.lang.String");
-
-        start = contents.indexOf("bar", end);
-        end = start + "bar".length();
-        assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void" : "p.D");
-
-        start = contents.indexOf("bar", end);
-        end = start + "bar".length();
-        assertType(contents, start, end, "p.D");
-
-        start = contents.indexOf("foo", end);
-        end = start + "foo".length();
-        assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void" : "java.lang.String");
-    }
-
-    // Another test 'with' operator. @CompileStatic annotation.
-    @Test
-    public void testWithAndClosure4() throws Exception {
-        createUnit("p", "D",
-            "package p\n" +
-            "class D {\n" +
-            "    String foo\n" +
-            "    D bar = new D()\n" +
-            "}");
-        String contents =
-            "package p\n" +
-            "@groovy.transform.CompileStatic\n" +
-            "class E {\n" +
-            "    D d = new D()\n" +
-            "    void doSomething() {\n" +
-            "        d.with {\n" +
-            "            foo = 'foo'\n" +
-            "            bar.foo = 'bar'\n" +
-            "        }\n" +
-            "    }\n" +
-            "}";
-
-        int start = contents.indexOf("foo");
-        int end = start + "foo".length();
-        assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void" : "java.lang.String");
-
-        start = contents.indexOf("bar", end);
-        end = start + "bar".length();
-        assertType(contents, start, end, "p.D");
-
-        start = contents.indexOf("foo", end);
-        end = start + "foo".length();
-        assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void" : "java.lang.String");
     }
 
     // Unknown references should have the declaring type of the enclosing closure
