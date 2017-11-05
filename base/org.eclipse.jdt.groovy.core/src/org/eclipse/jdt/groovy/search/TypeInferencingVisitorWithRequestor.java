@@ -111,7 +111,6 @@ import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.ITypeRequestor.VisitStatus;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
-import org.eclipse.jdt.groovy.search.VariableScope.CallAndType;
 import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
 import org.eclipse.jdt.internal.core.SourceType;
 import org.eclipse.jdt.internal.core.util.Util;
@@ -834,7 +833,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
     @Override
     public void visitArgumentlistExpression(ArgumentListExpression node) {
-        CallAndType callAndType = scopes.getLast().getEnclosingMethodCallExpression();
+        VariableScope.CallAndType callAndType = scopes.getLast().getEnclosingMethodCallExpression();
         boolean closureFound = false;
         if (callAndType != null && callAndType.declaration instanceof MethodNode) {
             Map<ClosureExpression, ClassNode> map = new HashMap<ClosureExpression, ClassNode>();
@@ -1046,19 +1045,20 @@ assert primaryExprType != null && dependentExprType != null;
                 inferItType(node, scope);
             }
 
-            // Delegate is the declaring type of the enclosing call if one exists, or it is 'this'
-            CallAndType cat = scope.getEnclosingMethodCallExpression();
+            // Delegate is the declaring type of the enclosing call, if one exists, or it is 'this'
+            VariableScope.CallAndType cat = scope.getEnclosingMethodCallExpression();
             if (cat != null) {
                 ClassNode delegateType = cat.getDelegateType(node);
                 scope.addVariable("delegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
                 scope.addVariable("getDelegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
             } else {
-                ClassNode thisType = scope.getThis();
+                ClassNode delegateType = scope.getThis();
                 // GRECLIPSE-1348: if someone is silly enough to have a variable named "delegate"; don't override it
-                if (scope.lookupName("delegate") == null) {
-                    scope.addVariable("delegate", thisType, VariableScope.CLOSURE_CLASS_NODE);
+                VariableScope.VariableInfo inf = scope.lookupName("delegate");
+                if (inf == null || inf.scopeNode instanceof ClosureExpression) {
+                    scope.addVariable("delegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
                 }
-                scope.addVariable("getDelegate", thisType, VariableScope.CLOSURE_CLASS_NODE);
+                scope.addVariable("getDelegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
             }
 
             // Owner is 'this' if no enclosing closure, or 'Closure' if there is
@@ -1066,12 +1066,13 @@ assert primaryExprType != null && dependentExprType != null;
                 scope.addVariable("owner", VariableScope.CLOSURE_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
                 scope.addVariable("getOwner", VariableScope.CLOSURE_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
             } else {
-                ClassNode thisType = scope.getThis();
+                ClassNode ownerType = scope.getThis();
                 // GRECLIPSE-1348: if someone is silly enough to have a variable named "owner"; don't override it
-                if (scope.lookupName("owner") == null) {
-                    scope.addVariable("owner", thisType, VariableScope.CLOSURE_CLASS_NODE);
+                VariableScope.VariableInfo inf = scope.lookupName("owner");
+                if (inf == null || inf.scopeNode instanceof ClosureExpression) {
+                    scope.addVariable("owner", ownerType, VariableScope.CLOSURE_CLASS_NODE);
                 }
-                scope.addVariable("getOwner", thisType, VariableScope.CLOSURE_CLASS_NODE);
+                scope.addVariable("getOwner", ownerType, VariableScope.CLOSURE_CLASS_NODE);
 
                 // only do this if we are not already in a closure; no need to add twice
                 scope.addVariable("thisObject", VariableScope.OBJECT_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
@@ -1454,7 +1455,7 @@ assert primaryExprType != null && dependentExprType != null;
 
         // this is the inferred declaring type of this method
         Tuple t = dependentDeclarationStack.removeLast();
-        CallAndType call = new CallAndType(node, t.declaringType, t.declaration, unit.getModuleNode());
+        VariableScope.CallAndType call = new VariableScope.CallAndType(node, t.declaringType, t.declaration, unit.getModuleNode());
 
         completeExpressionStack.removeLast();
 
@@ -2649,7 +2650,7 @@ assert primaryExprType != null && dependentExprType != null;
 
         // TODO: Could this use the Closure annotations to determine the type?
 
-        CallAndType cat = scope.getEnclosingMethodCallExpression();
+        VariableScope.CallAndType cat = scope.getEnclosingMethodCallExpression();
         if (cat != null) {
             ClassNode delegateType = cat.declaringType;
             String methodName = cat.call.getMethodAsString();

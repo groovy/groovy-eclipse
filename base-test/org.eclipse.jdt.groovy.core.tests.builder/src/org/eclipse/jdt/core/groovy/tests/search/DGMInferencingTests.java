@@ -31,7 +31,32 @@ public final class DGMInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testDGM2() { // with has a delegate-first resolve strategy (default is owner-first)
-        String contents = "class Y { String value }\n class Z { Number value\n void meth(Y y) { y.with { value } } }";
+        String contents =
+            "class Y {\n" +
+            "  String value\n" +
+            "}\n" +
+            "class Z {\n" +
+            "  Number value\n" +
+            "  void meth(Y y) {\n" +
+            "    y.with { value }\n" +
+            "  }\n" +
+            "}";
+        int start = contents.lastIndexOf("value");
+        assertType(contents, start, start + 5, "java.lang.String");
+    }
+
+    @Test
+    public void testDGM2a() {
+        String contents =
+            "class Y {\n" +
+            "  String value\n" +
+            "}\n" +
+            "class Z {\n" +
+            "  Number value\n" +
+            "  void meth(Y y) {\n" +
+            "    y.with { println \"Value: $value\" }\n" + // another enclosing method call
+            "  }\n" +
+            "}";
         int start = contents.lastIndexOf("value");
         assertType(contents, start, start + 5, "java.lang.String");
     }

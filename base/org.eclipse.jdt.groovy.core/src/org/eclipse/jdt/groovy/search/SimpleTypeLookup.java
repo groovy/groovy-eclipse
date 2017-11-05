@@ -214,6 +214,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             return findTypeForVariable((VariableExpression) node, scope, confidence, declaringType);
         }
 
+        // NOTE: method calls with no object expression go here instead of findTypeForVariable
         ClassNode nodeType = node.getType();
         if ((!isPrimaryExpression || scope.isMethodCall()) && node instanceof ConstantExpression) {
             return findTypeForNameWithKnownObjectExpression(node.getText(), nodeType, declaringType, scope, confidence,

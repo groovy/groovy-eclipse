@@ -347,7 +347,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         /**
          * the enclosing method call is the one where there are the current node is part of an argument list
          */
-        final LinkedList<CallAndType> enclosingCallStack = new LinkedList<VariableScope.CallAndType>();
+        final List<CallAndType> enclosingCallStack = new ArrayList<VariableScope.CallAndType>();
         /**
          * Node currently being evaluated, or null if none
          */
@@ -385,9 +385,9 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
      */
     private ClassNode categoryBeingDeclared;
 
+    private int enclosingCallStackDepth;
     private List<ClassNode> methodCallArgumentTypes;
     private GenericsType[]  methodCallGenericsTypes;
-
     private final Map<String, VariableInfo> nameVariableMap = new HashMap<String, VariableInfo>();
 
     //--------------------------------------------------------------------------
@@ -396,9 +396,9 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         this.parent = parent;
         this.scopeNode = enclosingNode;
         this.shared = parent != null ? parent.shared : new SharedState();
+        this.enclosingCallStackDepth = shared.enclosingCallStack.size();
         this.isStaticScope = (isStatic || (parent != null && parent.isStaticScope)) &&
             (getEnclosingClosure() == null); // if in a closure, items may be found on delegate or owner
-
         // keep track of whether or not in a script body; also, try not to recalculate each time
         if (enclosingNode instanceof MethodNode) {
             this.shared.isRunMethod = ((MethodNode) enclosingNode).isScriptBody();
@@ -594,22 +594,31 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     }
 
     public ClosureExpression getEnclosingClosure() {
-        if (scopeNode instanceof ClosureExpression) {
-            return (ClosureExpression) scopeNode;
-        }
-        if (parent != null) {
-            return parent.getEnclosingClosure();
-        }
-        return null;
+        VariableScope scope = getEnclosingClosureScope();
+        return (scope != null ? (ClosureExpression) scope.scopeNode : null);
     }
 
     public int getEnclosingClosureResolveStrategy() {
+        VariableScope scope = getEnclosingClosureScope();
         int resolveStrategy = Closure.OWNER_FIRST;
-        CallAndType cat = getEnclosingMethodCallExpression();
-        if (cat != null) {
-            resolveStrategy = cat.getResolveStrategy(getEnclosingClosure());
+        if (scope != null) {
+            CallAndType cat = scope.getEnclosingMethodCallExpression();
+            if (cat != null) {
+                resolveStrategy = cat.getResolveStrategy((ClosureExpression) scope.scopeNode);
+            }
         }
         return resolveStrategy;
+    }
+
+    private VariableScope getEnclosingClosureScope() {
+        VariableScope scope = this;
+        do {
+            if (scope.scopeNode instanceof ClosureExpression) {
+                return scope;
+            }
+        } while ((scope = scope.parent) != null);
+
+        return null;
     }
 
     private static PropertyNode createPropertyNodeForMethodNode(MethodNode methodNode) {
@@ -934,23 +943,24 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
      *     </pre>
      */
     public List<CallAndType> getAllEnclosingMethodCallExpressions() {
-        return shared.enclosingCallStack;
+        return shared.enclosingCallStack.subList(0, enclosingCallStackDepth);
     }
 
     public CallAndType getEnclosingMethodCallExpression() {
-        if (shared.enclosingCallStack.isEmpty()) {
-            return null;
-        } else {
-            return shared.enclosingCallStack.getLast();
-        }
+        List<CallAndType> enclosingCalls = getAllEnclosingMethodCallExpressions();
+        return (!enclosingCalls.isEmpty() ? enclosingCalls.get(enclosingCalls.size() - 1) : null);
     }
 
     public void addEnclosingMethodCall(CallAndType enclosingMethodCall) {
+        assert enclosingCallStackDepth == shared.enclosingCallStack.size();
         shared.enclosingCallStack.add(enclosingMethodCall);
+        enclosingCallStackDepth += 1;
     }
 
     public void forgetEnclosingMethodCall() {
-        shared.enclosingCallStack.removeLast();
+        assert enclosingCallStackDepth == shared.enclosingCallStack.size();
+        shared.enclosingCallStack.remove(enclosingCallStackDepth - 1);
+        enclosingCallStackDepth -= 1;
     }
 
     public boolean isTopLevel() {
