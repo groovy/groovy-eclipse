@@ -1,0 +1,15 @@
+###prop
+setPreferences=true
+###src
+import java.beans.*
+
+PropertyChangeListener l = { PropertyChangeEvent e ->
+	println e.oldValue
+} as PropertyChangeListener
+###exp
+import java.beans.*
+
+PropertyChangeListener l = { PropertyChangeEvent e ->
+	println e.oldValue
+} as PropertyChangeListener
+###end

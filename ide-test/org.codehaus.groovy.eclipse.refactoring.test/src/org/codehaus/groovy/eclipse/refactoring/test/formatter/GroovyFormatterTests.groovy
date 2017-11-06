@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.formatter
 
+import static org.junit.Assert.assertEquals
+
 import org.codehaus.groovy.eclipse.refactoring.formatter.DefaultGroovyFormatter
 import org.codehaus.groovy.eclipse.refactoring.formatter.FormatterPreferencesOnStore
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSpec
@@ -64,6 +66,6 @@ final class GroovyFormatterTests {
 
         String actual = spec.document.get()
         String expect = spec.expected.get()
-        assert actual == expect
+        assertEquals(expect, actual)
     }
 }
