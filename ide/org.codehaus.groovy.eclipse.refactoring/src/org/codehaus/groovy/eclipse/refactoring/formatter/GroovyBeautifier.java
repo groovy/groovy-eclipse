@@ -343,11 +343,10 @@ public class GroovyBeautifier {
 
                     // ensure a newline exists after the "{" token...
                     ASTNode node = formatter.findCorrespondingNode(token);
-                    if (node instanceof CastExpression) node = ((CastExpression) node).getExpression();
-                    if (node == null || !(node instanceof ClosureExpression || node instanceof ArgumentListExpression)) {
-                        // this rule doesn't apply for closures which have their own formatting logic. Note that
-                        // ArgumentListExpression is included because when an argument list expression is returned for
-                        // a "{" this means it is a "special" argument list without any "()" and just one closure in it.
+                    // this rule does not apply for closures, which have their own formatting logic. Note that
+                    // ArgumentListExpression is included because when an argument list expression is returned for
+                    // a "{" this means it is a "special" argument list without any "()" and just one closure in it.
+                    if (node == null || !(node instanceof ClosureExpression || node instanceof CastExpression || node instanceof ArgumentListExpression)) {
                         Token nextToken = tokens.getNextToken(token);
                         if (nextToken != null) {
                             int type = nextToken.getType();
