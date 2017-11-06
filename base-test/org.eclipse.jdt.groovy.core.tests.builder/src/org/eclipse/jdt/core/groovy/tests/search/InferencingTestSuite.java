@@ -32,6 +32,7 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
@@ -231,7 +232,7 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
         assertDeclaringType(contents, exprStart, exprEnd, expectedDeclaringType, false);
     }
 
-    protected enum DeclarationKind { FIELD, METHOD, PROPERTY, CLASS }
+    protected enum DeclarationKind { CLASS, FIELD, METHOD, PROPERTY, VARIABLE }
 
     protected <N extends ASTNode> N assertDeclaration(String contents, int exprStart, int exprEnd, String expectedDeclaringType, String declarationName, DeclarationKind kind) {
         assertDeclaringType(contents, exprStart, exprEnd, expectedDeclaringType, false, false);
@@ -239,21 +240,27 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
         SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, false);
 
         switch (kind) {
-            case FIELD:
-                assertTrue("Expecting field, but was " + requestor.result.declaration, requestor.result.declaration instanceof FieldNode);
-                assertEquals("Wrong field name", declarationName, ((FieldNode) requestor.result.declaration).getName());
-                break;
-            case METHOD:
-                assertTrue("Expecting method, but was " + requestor.result.declaration, requestor.result.declaration instanceof MethodNode);
-                assertEquals("Wrong method name", declarationName, ((MethodNode) requestor.result.declaration).getName());
-                break;
-            case PROPERTY:
-                assertTrue("Expecting property, but was " + requestor.result.declaration, requestor.result.declaration instanceof PropertyNode);
-                assertEquals("Wrong property name", declarationName, ((PropertyNode) requestor.result.declaration).getName());
-                break;
-            case CLASS:
-                assertTrue("Expecting class, but was " + requestor.result.declaration, requestor.result.declaration instanceof ClassNode);
-                assertEquals("Wrong class name", declarationName, ((ClassNode) requestor.result.declaration).getName());
+        case CLASS:
+            assertTrue("Expecting class, but was " + requestor.result.declaration, requestor.result.declaration instanceof ClassNode);
+            assertEquals("Wrong class name", declarationName, ((ClassNode) requestor.result.declaration).getName());
+            break;
+        case FIELD:
+            assertTrue("Expecting field, but was " + requestor.result.declaration, requestor.result.declaration instanceof FieldNode);
+            assertEquals("Wrong field name", declarationName, ((FieldNode) requestor.result.declaration).getName());
+            break;
+        case METHOD:
+            assertTrue("Expecting method, but was " + requestor.result.declaration, requestor.result.declaration instanceof MethodNode);
+            assertEquals("Wrong method name", declarationName, ((MethodNode) requestor.result.declaration).getName());
+            break;
+        case PROPERTY:
+            assertTrue("Expecting property, but was " + requestor.result.declaration, requestor.result.declaration instanceof PropertyNode);
+            assertEquals("Wrong property name", declarationName, ((PropertyNode) requestor.result.declaration).getName());
+            break;
+        case VARIABLE:
+            assertTrue("Expecting variable, but was " + requestor.result.declaration, requestor.result.declaration instanceof Variable &&
+                !(requestor.result.declaration instanceof FieldNode || requestor.result.declaration instanceof PropertyNode));
+            assertEquals("Wrong variable name", declarationName, ((Variable) requestor.result.declaration).getName());
+            break;
         }
 
         @SuppressWarnings("unchecked")

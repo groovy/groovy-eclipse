@@ -341,7 +341,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     /**
      * Contains state that is shared amongst {@link VariableScope}s
      */
-    private class SharedState {
+    private static class SharedState {
         /**
          * this field stores values that need to get passed between parts of the file to another
          */
@@ -545,6 +545,10 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
             return true;
         }
         return false;
+    }
+
+    public boolean isFieldAccessDirect() {
+        return (!isOwnerStatic() && getEnclosingClosureScope() == null);
     }
 
     public void addVariable(String name, ClassNode type, ClassNode declaringType) {

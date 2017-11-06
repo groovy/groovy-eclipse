@@ -59,13 +59,13 @@ public final class FieldReferenceSearchTests extends SearchTestSuite {
     @Test
     public void testFieldReferencesInScript8() throws Exception {
         doTestForTwoFieldReferencesInScript(
-                "class SubClass extends First { } \n " +
-                "def f = new SubClass()\n " +
-                "f.xxx\n" + // here
-                "f = 9\n" +
-                "f.xxx\n" +  // invalid reference
-                "f = new SubClass()\n" +
-                "f.xxx");  // here
+            "class SubClass extends First { } \n " +
+            "def f = new SubClass()\n " +
+            "f.xxx\n" + // here
+            "f = 9\n" +
+            "f.xxx\n" +  // invalid reference
+            "f = new SubClass()\n" +
+            "f.xxx");  // here
     }
 
     @Test
@@ -81,75 +81,75 @@ public final class FieldReferenceSearchTests extends SearchTestSuite {
     @Test
     public void testFieldReferencesInClass3() throws Exception {
         doTestForTwoFieldReferencesInClass(
-                "class Second extends First {\n" +
-                "  def method() {\n" +
-                "    this.xxx = 'nothing'\n" + // yes
-                "  }\n" +
-                "  def xxx() { }\n" +  // no
-                "  def method2() {\n" +  // no
-                "    def nothing = super.xxx()\n" +  // yes...field reference used as a closure
-                "  }\n" +
-                "}");
+            "class Second extends First {\n" +
+            "  def method() {\n" +
+            "    this.xxx = 'nothing'\n" + // yes
+            "  }\n" +
+            "  def xxx() { }\n" +  // no
+            "  def method2() {\n" +  // no
+            "    def nothing = super.xxx()\n" +  // yes...field reference used as a closure
+            "  }\n" +
+            "}");
     }
 
     @Test
     public void testFieldReferencesInClass4() throws Exception {
         createUnit("Third",
-                "class Third {\n" +
-                "  def xxx\n" + // no
-        "}\n");
+            "class Third {\n" +
+            "  def xxx\n" + // no
+            "}\n");
         doTestForTwoFieldReferencesInClass(
-                "class Second extends First {\n" +
-                "  def method() {\n" +
-                "    this.xxx = 'nothing'\n" + // yes
-                "  }\n" +
-                "  def xxx() { }\n" +  // no
-                "  def method3(xxx) {\n" +  // no
-                "    new Third().xxx\n" + // no
-                "    xxx()\n" + // no
-                "    xxx = xxx\n" +  // no, no
-                "    def nothing = super.xxx()\n" +  // yes...field reference used as a closure
-                "  }\n" +
-        "}");
+            "class Second extends First {\n" +
+            "  def method() {\n" +
+            "    this.xxx = 'nothing'\n" + // yes
+            "  }\n" +
+            "  def xxx() { }\n" +  // no
+            "  def method3(xxx) {\n" +  // no
+            "    new Third().xxx\n" + // no
+            "    xxx()\n" + // no
+            "    xxx = xxx\n" +  // no, no
+            "    def nothing = super.xxx()\n" +  // yes...field reference used as a closure
+            "  }\n" +
+            "}");
     }
 
     @Test
     public void testFieldReferenceInGString1() throws Exception {
-        doTestForTwoFieldReferencesInGString("class Second extends First {\ndef x() { \"${xxx}\"\n\"${xxx.toString()}\" }");
+        doTestForTwoFieldReferencesInGString("class Second extends First {\ndef x() { \"${xxx}\"\n\"${xxx.toString()}\" } }");
     }
 
     @Test
     public void testFieldReferenceInGString2() throws Exception {
-        doTestForTwoFieldReferencesInGString("class Second extends First {\ndef x() { \"${ xxx }\"\n\"${ xxx .toString()}\" }");
+        doTestForTwoFieldReferencesInGString("class Second extends First {\ndef x() { \"${ xxx }\"\n\"${ xxx .toString()}\" } }");
     }
 
     @Test
     public void testFieldReferenceInGString3() throws Exception {
-        doTestForTwoFieldReferencesInGString("class Second extends First {\ndef x() { \"${xxx} ${xxx.toString()}\" }");
+        doTestForTwoFieldReferencesInGString("class Second extends First {\ndef x() { \"${xxx} ${xxx.toString()}\" } }");
     }
 
     @Test
     public void testFieldReferenceInGString4() throws Exception {
-        doTestForTwoFieldReferencesInGString("class Second extends First {\ndef x() { \"${foo(xxx)} ${super.xxx}\" }");
+        doTestForTwoFieldReferencesInGString("class Second extends First {\ndef x() { \"${dunno(xxx)} ${super.xxx}\" } }");
     }
 
     @Test
     public void testFieldWritesInScript1() throws Exception {
         doTestForTwoFieldWritesInScript(
-                "new First().xxx = 1\n" +
-                "new First().xxx\n" +
-                "def f = new First()\n" +
-                "def y = f.xxx\n" +
-        "f.xxx = 8");
+            "new First().xxx = 1\n" +
+            "new First().xxx\n" +
+            "def f = new First()\n" +
+            "def y = f.xxx\n" +
+            "f.xxx = 8");
     }
 
     @Test
     public void testFieldReadsInScript1() throws Exception {
         doTestForTwoFieldReadsInScript(
-                "new First().xxx\n" +
-                "new First().xxx = 1\n" +
-                "def f = new First()\n" +
-        "f.xxx = f.xxx");
+            "new First().xxx\n" +
+            "new First().xxx = 1\n" +
+            "def f = new First()\n" +
+            "f.xxx = f.xxx");
     }
 
     //--------------------------------------------------------------------------
