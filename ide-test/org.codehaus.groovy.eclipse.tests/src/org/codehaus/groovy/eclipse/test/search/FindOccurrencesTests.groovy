@@ -171,15 +171,15 @@ public final class FindOccurrencesTests extends GroovyEclipseTestSuite {
     void testFindStaticMethods() {
         String contents =
             'class Static {\n' +
-            '  static staticMethod()  { staticMethod }\n' +
-            '  static { staticMethod }\n' +
-            '  { staticMethod }\n' +
+            '  static staticMethod()  { staticMethod() }\n' +
+            '  static { staticMethod() }\n' +
+            '  { staticMethod() }\n' +
             '  def t = staticMethod()\n' +
-            '  def x() { ' +
-            '    def a = staticMethod() \n' +
-            '    def b = staticMethod \n' +
+            '  def x() {\n' +
+            '    def a = staticMethod()\n' +
+            '    def b = staticMethod  \n' +
             '    Static.staticMethod 3, 4, 5\n' +
-            '    Static.staticMethod(3, 4, 5) \n' +
+            '    Static.staticMethod(3, 4, 5)\n' +
             '  }\n' +
             '}'
 

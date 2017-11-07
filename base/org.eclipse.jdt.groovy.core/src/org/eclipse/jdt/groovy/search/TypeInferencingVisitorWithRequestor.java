@@ -349,8 +349,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             for (IType type : unit.getTypes()) {
                 visitJDT(type, requestor);
             }
-            scopes.removeLast();
-
         } catch (VisitCompleted vc) {
             // can ignore
         } catch (Exception e) {
@@ -359,6 +357,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 System.err.println("Excpetion thrown from inferencing engine");
                 e.printStackTrace();
             }
+        } finally {
+            scopes.removeLast();
         }
         if (DEBUG) {
             postVisitSanityCheck();
@@ -399,7 +399,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         // visit fields created by @Field
                         for (FieldNode field : node.getFields()) {
                             if (field.getEnd() > 0) {
-                                visitFieldInternal(field);
+                                visitField(field);
                             }
                         }
                     } else {
@@ -408,14 +408,14 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         List<FieldNode> traitFields = (List<FieldNode>) node.getNodeMetaData("trait.fields");
                         if (traitFields != null) {
                             for (FieldNode field : traitFields) {
-                                visitFieldInternal(field);
+                                visitField(field);
                             }
                         }
                         @SuppressWarnings("unchecked")
                         List<MethodNode> traitMethods = (List<MethodNode>) node.getNodeMetaData("trait.methods");
                         if (traitMethods != null) {
                             for (MethodNode method : traitMethods) {
-                                visitConstructorOrMethodInternal(method, false);
+                                visitMethodInternal(method, false);
                             }
                         }
                     }
@@ -425,7 +425,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                     if (!type.getMethod(type.getElementName(), NO_PARAMS).exists()) {
                         ConstructorNode defConstructor = findDefaultConstructor(node);
                         if (defConstructor != null) {
-                            visitConstructorOrMethodInternal(defConstructor, true);
+                            visitMethodInternal(defConstructor, true);
                         }
                     }
                 }
@@ -459,18 +459,15 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     public void visitJDT(IField field, ITypeRequestor requestor) {
-        IJavaElement oldEnclosing = enclosingElement;
-        ASTNode oldEnclosingNode = enclosingDeclarationNode;
-        enclosingElement = field;
-        this.requestor = requestor;
         FieldNode fieldNode = findFieldNode(field);
         if (fieldNode == null) {
             // probably some sort of AST transformation is making this node invisible
             return;
         }
+        this.requestor = requestor;
 
-        enclosingDeclarationNode = fieldNode;
-        scopes.add(new VariableScope(scopes.getLast(), fieldNode, fieldNode.isStatic()));
+        IJavaElement enclosingElement0 = enclosingElement;
+        enclosingElement = field;
         try {
             visitField(fieldNode);
         } catch (VisitCompleted vc) {
@@ -478,16 +475,15 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 throw vc;
             }
         } finally {
-            enclosingDeclarationNode = oldEnclosingNode;
-            enclosingElement = oldEnclosing;
-            scopes.removeLast();
+            enclosingElement = enclosingElement0;
         }
 
         if (isLazy(fieldNode)) {
             MethodNode lazyMethod = getLazyMethod(field.getElementName());
             if (lazyMethod != null) {
-                enclosingDeclarationNode = lazyMethod;
                 scopes.add(new VariableScope(scopes.getLast(), lazyMethod, lazyMethod.isStatic()));
+                ASTNode enclosingDeclarationNode0 = enclosingDeclarationNode;
+                enclosingDeclarationNode = lazyMethod;
                 try {
                     visitConstructorOrMethod(lazyMethod, lazyMethod instanceof ConstructorNode);
                 } catch (VisitCompleted vc) {
@@ -496,26 +492,25 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                     }
                 } finally {
                     scopes.removeLast();
-                    enclosingElement = oldEnclosing;
-                    enclosingDeclarationNode = oldEnclosingNode;
+                    enclosingDeclarationNode = enclosingDeclarationNode0;
                 }
             }
         }
     }
 
     public void visitJDT(IMethod method, ITypeRequestor requestor) {
-        IJavaElement oldEnclosing = enclosingElement;
-        ASTNode oldEnclosingNode = enclosingDeclarationNode;
-        enclosingElement = method;
         MethodNode methodNode = findMethodNode(method);
         if (methodNode == null) {
             // probably some sort of AST transformation is making this node invisible
             return;
         }
-
-        enclosingDeclarationNode = methodNode;
         this.requestor = requestor;
+
         scopes.add(new VariableScope(scopes.getLast(), methodNode, methodNode.isStatic()));
+        ASTNode  enclosingDeclaration0 = enclosingDeclarationNode;
+        IJavaElement enclosingElement0 = enclosingElement;
+        enclosingDeclarationNode = methodNode;
+        enclosingElement = method;
         try {
             visitConstructorOrMethod(methodNode, method.isConstructor());
 
@@ -532,9 +527,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         } catch (Exception e) {
             log(e, "Error visiting method %s in class %s", method.getElementName(), method.getParent().getElementName());
         } finally {
-            enclosingElement = oldEnclosing;
-            enclosingDeclarationNode = oldEnclosingNode;
             scopes.removeLast();
+            enclosingElement = enclosingElement0;
+            enclosingDeclarationNode = enclosingDeclaration0;
         }
     }
 
@@ -644,7 +639,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             resolver.currentClass = node;
         }
         VariableScope scope = scopes.getLast();
-        scope.addVariable("this", node, node);
 
         visitAnnotations(node);
 
@@ -753,27 +747,15 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
     }
 
-    private void visitFieldInternal(FieldNode field) {
-        scopes.add(new VariableScope(scopes.getLast(), field, field.isStatic()));
-        ASTNode enclosingDeclarationNode0 = enclosingDeclarationNode;
-        enclosingDeclarationNode = field;
+    private void visitMethodInternal(MethodNode node, boolean isCtor) {
+        scopes.add(new VariableScope(scopes.getLast(), node, node.isStatic()));
+        ASTNode enclosingDeclaration0 = enclosingDeclarationNode;
+        enclosingDeclarationNode = node;
         try {
-            visitField(field);
+            visitConstructorOrMethod(node, isCtor);
         } finally {
             scopes.removeLast();
-            enclosingDeclarationNode = enclosingDeclarationNode0;
-        }
-    }
-
-    private void visitConstructorOrMethodInternal(MethodNode method, boolean isCtor) {
-        scopes.add(new VariableScope(scopes.getLast(), method, method.isStatic()));
-        ASTNode enclosingDeclarationNode0 = enclosingDeclarationNode;
-        enclosingDeclarationNode = method;
-        try {
-            visitConstructorOrMethod(method, isCtor);
-        } finally {
-            scopes.removeLast();
-            enclosingDeclarationNode = enclosingDeclarationNode0;
+            enclosingDeclarationNode = enclosingDeclaration0;
         }
     }
 
@@ -1053,7 +1035,6 @@ assert primaryExprType != null && dependentExprType != null;
                 scope.addVariable("getDelegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
             } else {
                 ClassNode delegateType = scope.getThis();
-                if (scope.isOwnerStatic()) delegateType = VariableScope.newClassClassNode(delegateType); // TODO: Push this into VariableScope?
                 // GRECLIPSE-1348: if someone is silly enough to have a variable named "delegate"; don't override it
                 VariableScope.VariableInfo inf = scope.lookupName("delegate");
                 if (inf == null || inf.scopeNode instanceof ClosureExpression) {
@@ -1068,7 +1049,6 @@ assert primaryExprType != null && dependentExprType != null;
                 scope.addVariable("getOwner", VariableScope.CLOSURE_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
             } else {
                 ClassNode ownerType = scope.getThis();
-                if (scope.isOwnerStatic()) ownerType = VariableScope.newClassClassNode(ownerType); // TODO: Push this into VariableScope?
                 // GRECLIPSE-1348: if someone is silly enough to have a variable named "owner"; don't override it
                 VariableScope.VariableInfo inf = scope.lookupName("owner");
                 if (inf == null || inf.scopeNode instanceof ClosureExpression) {
@@ -1187,46 +1167,54 @@ assert primaryExprType != null && dependentExprType != null;
 
     @Override
     public void visitField(FieldNode node) {
-        TypeLookupResult result = null;
-        VariableScope scope = scopes.getLast();
+        VariableScope scope = new VariableScope(scopes.getLast(), node, node.isStatic());
+        ASTNode enclosingDeclaration0 = enclosingDeclarationNode;
         assignmentStorer.storeField(node, scope);
-        for (ITypeLookup lookup : lookups) {
-            TypeLookupResult candidate = lookup.lookupType(node, scope);
-            if (candidate != null) {
-                if (result == null || result.confidence.isLessThan(candidate.confidence)) {
-                    result = candidate;
-                }
-                if (result.confidence.isAtLeast(TypeConfidence.INFERRED)) {
-                    break;
-                }
-            }
-        }
-        scope.setPrimaryNode(false);
-
-        VisitStatus status = notifyRequestor(node, requestor, result);
-        switch (status) {
-            case CONTINUE:
-                visitAnnotations(node);
-                if (node.getEnd() > 0 && node.getDeclaringClass().isScript()) {
-                    for (ASTNode anno : GroovyUtils.getTransformNodes(node.getDeclaringClass(), FieldASTTransformation.class)) {
-                        if (anno.getStart() >= node.getStart() && anno.getEnd() < node.getEnd()) {
-                            visitAnnotation((AnnotationNode) anno);
-                        }
+        enclosingDeclarationNode = node;
+        scopes.add(scope);
+        try {
+            TypeLookupResult result = null;
+            for (ITypeLookup lookup : lookups) {
+                TypeLookupResult candidate = lookup.lookupType(node, scope);
+                if (candidate != null) {
+                    if (result == null || result.confidence.isLessThan(candidate.confidence)) {
+                        result = candidate;
+                    }
+                    if (result.confidence.isAtLeast(TypeConfidence.INFERRED)) {
+                        break;
                     }
                 }
-                // if two values are == then that means the type is synthetic and doesn't exist in code...probably an enum field
-                if (node.getType() != node.getDeclaringClass()) {
-                    visitClassReference(node.getType());
-                }
-                Expression init = node.getInitialExpression();
-                if (init != null) {
-                    init.visit(this);
-                }
-            case CANCEL_BRANCH:
-                return;
-            case CANCEL_MEMBER:
-            case STOP_VISIT:
-                throw new VisitCompleted(status);
+            }
+            scope.setPrimaryNode(false);
+
+            VisitStatus status = notifyRequestor(node, requestor, result);
+            switch (status) {
+                case CONTINUE:
+                    visitAnnotations(node);
+                    if (node.getEnd() > 0 && node.getDeclaringClass().isScript()) {
+                        for (ASTNode anno : GroovyUtils.getTransformNodes(node.getDeclaringClass(), FieldASTTransformation.class)) {
+                            if (anno.getStart() >= node.getStart() && anno.getEnd() < node.getEnd()) {
+                                visitAnnotation((AnnotationNode) anno);
+                            }
+                        }
+                    }
+                    // if two values are == then that means the type is synthetic and doesn't exist in code...probably an enum field
+                    if (node.getType() != node.getDeclaringClass()) {
+                        visitClassReference(node.getType());
+                    }
+                    Expression init = node.getInitialExpression();
+                    if (init != null) {
+                        init.visit(this);
+                    }
+                case CANCEL_BRANCH:
+                    return;
+                case CANCEL_MEMBER:
+                case STOP_VISIT:
+                    throw new VisitCompleted(status);
+            }
+        } finally {
+            scopes.removeLast();
+            enclosingDeclarationNode = enclosingDeclaration0;
         }
     }
 
@@ -1458,7 +1446,7 @@ assert primaryExprType != null && dependentExprType != null;
 
         // this is the inferred declaring type of this method
         Tuple t = dependentDeclarationStack.removeLast();
-        VariableScope.CallAndType call = new VariableScope.CallAndType(node, t.declaration, t.declaringType, scope.getEnclosingTypeDeclaration(), scope.isOwnerStatic());
+        VariableScope.CallAndType call = new VariableScope.CallAndType(node, t.declaration, t.declaringType, unit.getModuleNode());
 
         completeExpressionStack.removeLast();
 
@@ -2654,7 +2642,7 @@ assert primaryExprType != null && dependentExprType != null;
 
         VariableScope.CallAndType cat = scope.getEnclosingMethodCallExpression();
         if (cat != null) {
-            ClassNode delegateType = cat.declaringType;
+            ClassNode delegateType = cat.objExprType;
             String methodName = cat.call.getMethodAsString();
 
             ClassNode inferredParamType;

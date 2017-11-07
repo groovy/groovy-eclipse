@@ -82,8 +82,7 @@ public class GroovyDSLDContext {
     }
 
     /**
-     * Not API!!!
-     * Should not use this constructor.  It is only for testing
+     * Not API!!! Should not use this constructor. It is only for testing.
      */
     @Deprecated
     public GroovyDSLDContext(String[] projectNatures, String fullPathName, String packageRootPath) {
@@ -136,17 +135,18 @@ public class GroovyDSLDContext {
     private boolean isPrimaryNode;
 
     /**
-     * called by the type lookup, not by the pointcuts
-     * @param targetType
+     * Called by type lookup, not by the pointcuts.
      */
     public void setTargetType(ClassNode targetType) {
-        cachedHierarchy = null;
+        if (VariableScope.CLASS_CLASS_NODE.equals(targetType) && currentScope.isPrimaryNode()) {
+            targetType = targetType.getGenericsTypes()[0].getType();
+        }
         this.targetType = targetType;
+        cachedHierarchy = null;
     }
 
     /**
-     * Only the type lookup should use this method
-     * @param currentBinding
+     * Only type lookup should use this method.
      */
     public void setCurrentBinding(BindingSet currentBinding) {
         this.currentBinding = currentBinding;
@@ -157,7 +157,7 @@ public class GroovyDSLDContext {
     }
 
     /**
-     * Only the type lookup and the proposl provider should use this method.
+     * Only type lookup and the proposl provider should use this method.
      */
     public BindingSet getCurrentBinding() {
         return currentBinding;
@@ -184,7 +184,7 @@ public class GroovyDSLDContext {
     }
 
     /**
-     * @return true iff typeName equals the targetType name or any tyoe in the hierarchy
+     * @return true iff typeName equals the targetType name or any type in the hierarchy
      */
     public boolean matchesType(String typeName) {
         return matchesType(typeName, targetType);

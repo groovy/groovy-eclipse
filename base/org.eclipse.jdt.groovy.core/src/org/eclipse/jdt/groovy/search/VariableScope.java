@@ -212,14 +212,14 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     public static class CallAndType {
 
         public final ASTNode declaration;
-        public final ClassNode declaringType;
+        public final ClassNode objExprType;
         public final MethodCallExpression call;
         private Map<ClosureExpression, Object[]> delegatesTo;
 
-        public CallAndType(MethodCallExpression call, ASTNode declaration, ClassNode declaringClass, ClassNode enclosingClass, boolean staticEnclosure) {
+        public CallAndType(MethodCallExpression call, ASTNode declaration, ClassNode objExprType, ModuleNode enclosingModule) {
             this.call = call;
             this.declaration = declaration;
-            this.declaringType = declaringClass;
+            this.objExprType = objExprType;
 
             // handle the Groovy 2.1+ @DelegatesTo annotation; see also org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor#checkClosureWithDelegatesTo
             if (DELEGATES_TO != null && declaration instanceof MethodNode) {
@@ -231,11 +231,9 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                         arguments = ((TupleExpression) call.getArguments()).getExpressions();
                     }
                     if (arguments != null && !arguments.isEmpty()) {
-                        if (!declaringClass.equals(methodNode.getDeclaringClass())) {
-                            ClassNode delegateType = (!staticEnclosure || !enclosingClass.equals(declaringClass)
-                                            ? declaringClass : VariableScope.newClassClassNode(declaringClass));
+                        if (!methodNode.getDeclaringClass().equals(getPerceivedDeclaringType())) {
                             List<Expression> categoryMethodArguments = new ArrayList<Expression>(arguments.size() + 1);
-                            categoryMethodArguments.add(new ClassExpression(delegateType));
+                            categoryMethodArguments.add(new ClassExpression(objExprType));
                             categoryMethodArguments.addAll(arguments);
                             arguments = categoryMethodArguments;
                         }
@@ -255,10 +253,10 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
 
                                         Integer strategy = null, generics = null;
                                         /*if (delegatesToStrategy != null) {
-                                            strategy = (Integer) org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.evaluateExpression(org.codehaus.groovy.ast.tools.GeneralUtils.castX(INTEGER_CLASS_NODE, delegatesToStrategy), enclosingClass.getModule().getUnit().getConfig());
+                                            strategy = (Integer) org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.evaluateExpression(org.codehaus.groovy.ast.tools.GeneralUtils.castX(INTEGER_CLASS_NODE, delegatesToStrategy), enclosingModule.getUnit().getConfig());
                                         }
                                         if (delegatesToGenericTypeIndex != null) {
-                                            strategy = (Integer) org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.evaluateExpression(org.codehaus.groovy.ast.tools.GeneralUtils.castX(INTEGER_CLASS_NODE, delegatesToGenericTypeIndex), enclosingClass.getModule().getUnit().getConfig());
+                                            strategy = (Integer) org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.evaluateExpression(org.codehaus.groovy.ast.tools.GeneralUtils.castX(INTEGER_CLASS_NODE, delegatesToGenericTypeIndex), enclosingModule.getUnit().getConfig());
                                         }*/
                                         if (delegatesToStrategy instanceof ConstantExpression) {
                                             strategy = Integer.valueOf(delegatesToStrategy.getText());
@@ -272,7 +270,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                                             addDelegatesToClosure(closure, delegatesToValue.getType(), strategy);
 
                                         } else if (delegatesToType instanceof ConstantExpression && !"".equals(delegatesToType.getText())) {
-                                            //ClassNode[] resolved = org.codehaus.groovy.ast.tools.GenericsUtils.parseClassNodesFromString(delegatesToType.getText(), enclosingClass.getModule().getContext(), an org.codehaus.groovy.control.CompilationUnit, methodNode, delegatesToType);
+                                            //ClassNode[] resolved = org.codehaus.groovy.ast.tools.GenericsUtils.parseClassNodesFromString(delegatesToType.getText(), enclosingModule.getContext(), an org.codehaus.groovy.control.CompilationUnit, methodNode, delegatesToType);
                                             //addDelegatesToClosure(closure, resolved[0], strategy);
 
                                         } else if (delegatesToValue instanceof ClassExpression && delegatesToValue.getType().getName().equals("groovy.lang.DelegatesTo$Target")) {
@@ -298,9 +296,21 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
             }
         }
 
+        /**
+         * Returns the perceived declaring type of the call, which may differ
+         * from the actual declaring class in case of class/category methods.
+         */
+        public ClassNode getPerceivedDeclaringType() {
+            if (objExprType.equals(CLASS_CLASS_NODE)) { // TODO: What if a class instance is the object expression?
+                assert objExprType.isUsingGenerics();
+                return objExprType.getGenericsTypes()[0].getType();
+            }
+            return objExprType;
+        }
+
         public ClassNode getDelegateType(ClosureExpression closure) {
             Object[] tuple = delegatesTo.get(closure);
-            return (tuple != null ? (ClassNode) tuple[0] : declaringType);
+            return (tuple != null ? (ClassNode) tuple[0] : objExprType);
         }
 
         public int getResolveStrategy(ClosureExpression closure) {
@@ -400,12 +410,24 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         this.shared = parent != null ? parent.shared : new SharedState();
         this.enclosingCallStackDepth = shared.enclosingCallStack.size();
         this.isStaticScope = (isStatic || (parent != null && parent.isStaticScope)) &&
-            (getEnclosingClosure() == null); // if in a closure, items may be found on delegate or owner
-        // keep track of whether or not in a script body; also, try not to recalculate each time
-        if (enclosingNode instanceof MethodNode) {
-            this.shared.isRunMethod = ((MethodNode) enclosingNode).isScriptBody();
-        } else if (enclosingNode instanceof FieldNode || enclosingNode instanceof ClassNode) {
+            (getEnclosingClosureScope() == null); // if in a closure, items may be found on delegate or owner
+
+        // determine if scope belongs to script body
+        if (enclosingNode instanceof ClassNode ||
+                enclosingNode instanceof FieldNode) {
             this.shared.isRunMethod = false;
+        } else if (enclosingNode instanceof MethodNode) {
+            this.shared.isRunMethod = ((MethodNode) enclosingNode).isScriptBody();
+        }
+        // TODO: When scope is popped, should the flag be restored to its previous value?
+
+        // initialize type of "this" (and by deduction "super"; see lookupName("super"))
+        if (enclosingNode instanceof ClassNode) {
+            ClassNode type = (ClassNode) enclosingNode;
+            addVariable("this", newClassClassNode(type), type);
+        } else if (!isStatic && (parent != null && parent.scopeNode instanceof ClassNode)) {
+            ClassNode type = (ClassNode) parent.scopeNode;
+            addVariable("this", type, type); // switch from Class<T> to T
         }
     }
 
@@ -424,10 +446,6 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         return null;
     }
 
-    public void setPrimaryNode(boolean isPrimaryNode) {
-        this.isPrimaryNode = isPrimaryNode;
-    }
-
     public void setCurrentNode(ASTNode currentNode) {
         shared.nodeStack.add(currentNode);
     }
@@ -444,6 +462,17 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         } else {
             return null;
         }
+    }
+
+    public void setPrimaryNode(boolean isPrimaryNode) {
+        this.isPrimaryNode = isPrimaryNode;
+    }
+
+    /**
+     * @return {@code true} iff the current node is not the RHS of a dotted expression
+     */
+    public boolean isPrimaryNode() {
+        return isPrimaryNode;
     }
 
     /**
@@ -482,9 +511,27 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         if ("super".equals(name)) {
             ClassNode type = getThis();
             if (type != null) {
-                ClassNode superType = type.getSuperClass();
-                if (superType == null)
+                ClassNode superType = type;
+
+                // within a closure in a static scope, "super" and "this" both refer to Class<T>
+                VariableScope scope = getEnclosingClosureScope();
+                if (scope == null || !scope.isOwnerStatic()) {
+                    // outside of a closure "super" may be super of T (non-static scope),
+                    // Class<super of T> (static scope) or Object (Is this a Groovy bug?)
+                    if (!isStatic()) {
+                        superType = type.getSuperClass();
+                    } else { // type is Class<T>, so produce Class<super of T>
+                        assert type.equals(VariableScope.CLASS_CLASS_NODE) && type.isUsingGenerics();
+                        superType = type.getGenericsTypes()[0].getType().getSuperClass(); //super of T
+                        if (superType != null && !superType.equals(VariableScope.OBJECT_CLASS_NODE)) {
+                            superType = newClassClassNode(superType);
+                        }
+                    }
+                }
+
+                if (superType == null) {
                     superType = VariableScope.OBJECT_CLASS_NODE;
+                }
                 return new VariableInfo(name, superType, superType);
             }
         }
@@ -523,18 +570,22 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     }
 
     /**
-     * @return the current delegate type if exists, or this type if exists, or
-     * Object.  Returns null if in top level scope (i.e. in import statement).
+     * @return the current delegate type if exists, or this type if exists.
+     *       Returns null if in top level scope (i.e. in import statement).
      */
     public VariableInfo getDelegateOrThisInfo() {
         VariableInfo info = lookupName("delegate");
-        if (info != null) {
-            return info;
+        if (info == null) {
+            info = lookupName("this");
         }
-        info = lookupName("this");
+        return info; // might be null if in imports
+    }
 
-        // might be null if in imports
-        return info;
+    /**
+     * @return {@code true} iff this is a static stack frame
+     */
+    public boolean isStatic() {
+        return isStaticScope;
     }
 
     public boolean isOwnerStatic() {
@@ -922,20 +973,6 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         classType.setGenericsTypes(new GenericsType[] {new GenericsType(type)});
         classType.setRedirect(CLASS_CLASS_NODE);
         return classType;
-    }
-
-    /**
-     * @return true iff this is a static stack frame
-     */
-    public boolean isStatic() {
-        return isStaticScope;
-    }
-
-    /**
-     * @return true iff the current node is not the RHS of a dotted expression
-     */
-    public boolean isPrimaryNode() {
-        return isPrimaryNode;
     }
 
     /**

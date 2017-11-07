@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,9 +29,7 @@ import org.eclipse.core.resources.IStorage;
 import org.eclipse.jdt.groovy.search.VariableScope.CallAndType;
 
 /**
- * Tests that the declaring type of the enclosing call matches the name or type passed in as an argument
- * @author andrew
- * @created Feb 10, 2011
+ * Tests that the declaring type of the enclosing call matches the name or type passed in as an argument.
  */
 public class EnclosingCallDeclaringTypePointcut extends AbstractPointcut {
 
@@ -46,19 +44,17 @@ public class EnclosingCallDeclaringTypePointcut extends AbstractPointcut {
      */
     @Override
     public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
-
         List<CallAndType> enclosing = pattern.getCurrentScope().getAllEnclosingMethodCallExpressions();
         if (enclosing == null) {
             return null;
         }
-        
         Object firstArgument = getFirstArgument();
         if (firstArgument == null) {
             List<CallAndType> allEnclosingMethodCallExpressions = pattern.getCurrentScope().getAllEnclosingMethodCallExpressions();
             if (allEnclosingMethodCallExpressions != null && allEnclosingMethodCallExpressions.size() > 0) {
                 List<ClassNode> enclosingCallTypes = new ArrayList<ClassNode>(allEnclosingMethodCallExpressions.size());
                 for (CallAndType callAndType : allEnclosingMethodCallExpressions) {
-                    enclosingCallTypes.add(callAndType.declaringType);
+                    enclosingCallTypes.add(callAndType.getPerceivedDeclaringType());
                 }
                 return enclosingCallTypes;
             }
@@ -82,16 +78,17 @@ public class EnclosingCallDeclaringTypePointcut extends AbstractPointcut {
     private List<ClassNode> asTypeList(List<CallAndType> enclosing) {
         List<ClassNode> types = new ArrayList<ClassNode>(enclosing.size());
         for (CallAndType callAndType : enclosing) {
-            types.add(callAndType.declaringType);
+            types.add(callAndType.getPerceivedDeclaringType());
         }
         return types;
     }
 
-    private ClassNode matchesInCalls(List<CallAndType> enclosing,
-            String typeName, GroovyDSLDContext pattern) {
+    private ClassNode matchesInCalls(List<CallAndType> enclosing, String typeName, GroovyDSLDContext pattern) {
         for (CallAndType callAndType : enclosing) {
-            if (callAndType.declaringType.getName().equals(typeName)) {
-                return callAndType.declaringType;
+            ClassNode declaringType =
+                callAndType.getPerceivedDeclaringType();
+            if (declaringType.getName().equals(typeName)) {
+                return declaringType;
             }
         }
         return null;

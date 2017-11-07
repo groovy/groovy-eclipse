@@ -133,6 +133,7 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
                 // looking at prefix is a good approximation
                 if (!varName.startsWith("get") &&
                     !varName.startsWith("set") &&
+                    !varName.equals("this" ) &&
                     !varName.equals("super") &&
                     !varName.startsWith("<") &&
                     !nameElementMap.containsKey(varName)) {

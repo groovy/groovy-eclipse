@@ -26,7 +26,6 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.framework.Version;
 
@@ -380,7 +379,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertExprType(contents, "getDelegate", "java.lang.Class<Bar>");
     }
 
-    @Test @Ignore("not yet implemented")
+    @Test
     public void testClosure10() {
         String contents =
             "class Foo { }\n" +
@@ -393,11 +392,35 @@ public final class InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}";
         assertExprType(contents, "this",  "java.lang.Class<Bar>");
-        assertExprType(contents, "super", "java.lang.Class<Foo>");
+        assertExprType(contents, "super", "java.lang.Class<Bar>");
+    }
+
+    @Test // non-static delegate is same type as static owner
+    public void testClosure11() {
+        String contents =
+            "class Foo {\n" +
+            "  Number bar\n" +
+            "  static main(args) {\n" +
+            "    new Foo().with {\n" +
+            "      delegate.bar\n" +
+            "      owner.bar\n" +
+            "      bar\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "delegate", "Foo"); // obj exp of with
+        assertExprType(contents, "owner", "java.lang.Class<Foo>");
+        assertExprType(contents, "bar", "java.lang.Number");
+
+        int offset = contents.indexOf("delegate.bar") + "delegate.".length();
+        assertType(contents, offset, offset + 3, "java.lang.Number");
+
+        offset = contents.indexOf("owner.bar") + "owner.".length();
+        assertUnknownConfidence(contents, offset, offset + 3, "Foo", false);
     }
 
     @Test // other (invariant) members of Closure
-    public void testClosure11() {
+    public void testClosure12() {
         String contents =
             "def x = {\n" +
             "  thisObject\n" +
@@ -424,7 +447,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // other members of Closure (within static scope wrt owner)
-    public void testClosure12() {
+    public void testClosure13() {
         String contents =
             "class A { static void main(args) { def x = {\n" +
             "  thisObject\n" +
@@ -451,7 +474,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure13() {
+    public void testClosure14() {
         String contents =
             "class A {\n" +
             "  Number b\n" +
@@ -466,7 +489,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure14() {
+    public void testClosure15() {
         String contents =
             "class A {\n" +
             "  Number b\n" +
@@ -481,7 +504,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/360
-    public void testClosure15() {
+    public void testClosure16() {
         String contents =
             "class A {\n" +
             "  public C xxx\n" +
@@ -502,7 +525,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test // closure is part of method call expression
-    public void testClosure16() {
+    public void testClosure17() {
         String contents =
             "class A {\n" +
             "  def m() { }\n" +
@@ -524,7 +547,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure17() {
+    public void testClosure18() {
         assumeTrue(isAtLeastGroovy(20));
 
         String contents =
@@ -553,7 +576,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure18() {
+    public void testClosure19() {
         assumeTrue(isAtLeastGroovy(20));
 
         String contents =
@@ -575,7 +598,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure19() {
+    public void testClosure20() {
         String contents =
             "''.foo {\n" +
             "  substring" +
@@ -586,7 +609,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure20() {
+    public void testClosure21() {
         String contents =
             "''.foo {\n" +
             "  delegate.substring()" +
@@ -597,7 +620,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure21() {
+    public void testClosure22() {
         String contents =
             "''.foo {\n" +
             "  this.substring" +
@@ -608,7 +631,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure22() {
+    public void testClosure23() {
         String contents =
             "''.foo {\n" +
             "  this\n" +
@@ -619,7 +642,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure23() {
+    public void testClosure24() {
         String contents =
             "new Date().with {\n" +
             "  def t = time\n" +
@@ -630,7 +653,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure24() {
+    public void testClosure25() {
         String contents =
             "new Date().with {\n" +
             "  time = 0L\n" +
@@ -641,7 +664,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testClosure25() {
+    public void testClosure26() {
         String contents =
             "new Date().with {\n" +
             "  time = 0L\n" +
@@ -1154,9 +1177,8 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "java.lang.Class<java.util.Map$Entry>");
     }
 
-    @Test
+    @Test // GRECLIPSE-1229: constructors with map parameters
     public void testConstructor1() {
-        // GRECLIPSE-1229 constructors with map parameters
         String contents =
             "class O {\n" +
             "  boolean aa\n" +
@@ -1328,8 +1350,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, contents.indexOf(expr), contents.indexOf(expr)+expr.length(), "java.lang.String");
     }
 
-    // GRECLISPE-1244
-    @Test
+    @Test // GRECLISPE-1244
     public void testStaticMethodCall5() {
         String contents =
             "class Parent {\n" +
@@ -1344,8 +1365,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertDeclaringType(contents, contents.lastIndexOf(expr), contents.lastIndexOf(expr)+expr.length(), "Parent");
     }
 
-    // GRECLISPE-1244
-    @Test
+    @Test // GRECLISPE-1244
     public void testStaticMethodCall6() {
         createUnit("Parent",
             "class Parent {\n" +
@@ -1404,6 +1424,33 @@ public final class InferencingTests extends InferencingTestSuite {
         String staticCall = "meth(compile('abc'))";
         String contents = "import static foo.Bar.*; import static java.util.regex.Pattern.*; " + staticCall;
         assertType(contents, contents.indexOf(staticCall), contents.indexOf(staticCall) + staticCall.length(), "java.util.regex.Pattern");
+    }
+
+    @Test
+    public void testStaticThisAndSuper() {
+        String contents =
+            "class A {\n" +
+            "  static main(args) {\n" +
+            "    this\n" +
+            "    super\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "this", "java.lang.Class<A>");
+        assertExprType(contents, "super", "java.lang.Object");
+    }
+
+    @Test
+    public void testStaticThisAndSuper2() {
+        String contents =
+            "class A { }\n" +
+            "class B extends A {\n" +
+            "  static main(args) {\n" +
+            "    this\n" +
+            "    super\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "this", "java.lang.Class<B>");
+        assertExprType(contents, "super", "java.lang.Class<A>");
     }
 
     @Test
@@ -1723,9 +1770,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
-    // the declaring type of things inside of a closure should be the declaring
-    // type of the method that calls the closure
-    @Test
+    @Test // the declaring type of things inside of a closure should be the declaring type of the method that calls the closure
     public void testInClosureDeclaringType1() {
         String contents =
             "class Baz {\n" +
@@ -1744,8 +1789,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertDeclaringType(contents, start, end, "Baz");
     }
 
-    // Unknown references should have the declaring type of the closure
-    @Test
+    @Test // unknown references should have the declaring type of the closure
     public void testInClosureDeclaringType2() {
         String contents =
             "class Baz {\n" +
@@ -1761,8 +1805,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertDeclaringType(contents, start, end, "Search", false, true);
     }
 
-    // Unknown references should have the delegate type of the closure
-    @Test
+    @Test // unknown references should have the delegate type of the closure
     public void testInClosureDeclaringType3() {
         String contents =
             "class Baz {\n" +
@@ -1780,8 +1823,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertDeclaringType(contents, start, end, "Bar", false, true);
     }
 
-    // 'this' is always the enclosing type
-    @Test
+    @Test // 'this' is always the enclosing type
     public void testInClosureDeclaringType4() {
         String contents =
             "class Bar {\n" +
@@ -1795,8 +1837,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertDeclaringType(contents, start, end, "Search", false);
     }
 
-    // 'delegate' always has declaring type of closure
-    @Test
+    @Test // 'delegate' always has declaring type of closure
     public void testInClosureDeclaringType5() {
         String contents =
             "class Bar {\n" +
@@ -1810,8 +1851,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertDeclaringType(contents, start, end, "groovy.lang.Closure<V extends java.lang.Object>", false);
     }
 
-    // Unknown references should have the declaring type of the enclosing method
-    @Test
+    @Test // unknown references should have the declaring type of the enclosing method
     public void testInClassDeclaringType1() {
         String contents =
             "class Baz {\n" +
@@ -1824,8 +1864,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertDeclaringType(contents, start, end, "Baz", false, true);
     }
 
-    // Unknown references should have the declaring type of the enclosing closure
-    @Test
+    @Test // unknown references should have the declaring type of the enclosing closure
     public void testInClassDeclaringType2() {
         String contents =
             "class Baz {\n" +
@@ -1838,8 +1877,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertDeclaringType(contents, start, end, "Baz", false, true);
     }
 
-    // Unknown references should have the declaring type of the enclosing closure
-    @Test
+    @Test // unknown references should have the declaring type of the enclosing closure
     public void testInScriptDeclaringType() {
         String contents = "other\n";
         int start = contents.lastIndexOf("other");
@@ -1957,8 +1995,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertDeclaringType(CONTENTS_GETAT2, start, end, "GetAt", false, true);
     }
 
-    // GRECLIPSE-743
-    @Test
+    @Test // GRECLIPSE-743
     public void testGetAt5() {
         String contents = "class A { }\n new A().getAt() ";
         int start = contents.lastIndexOf("getAt");
@@ -2012,8 +2049,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertDeclaringType(contents, start, end, jdkListSort ? "java.util.List<java.lang.Object>" : "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 
-    // GRECLIPSE-1013
-    @Test
+    @Test // GRECLIPSE-1013
     public void testCategoryMethodAsProperty() {
         String contents = "''.toURL().text";
         int start = contents.indexOf("text");
@@ -2244,24 +2280,21 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, yStart, yStart+1, "java.lang.Float");
     }
 
-    // GRECLIPSE-1174 groovy casting
-    @Test
+    @Test // GRECLIPSE-1174 groovy casting
     public void testAsExpression1() {
         String contents = "(1 as int).intValue()";
         int start = contents.lastIndexOf("intValue");
         assertType(contents, start, start+"intValue".length(), "java.lang.Integer");
     }
 
-    // GRECLIPSE-1174 groovy casting
-    @Test
+    @Test // GRECLIPSE-1174 groovy casting
     public void testAsExpression2() {
         String contents = "class Flar { int x\n }\n(null as Flar).x";
         int start = contents.lastIndexOf("x");
         assertType(contents, start, start+"x".length(), "java.lang.Integer");
     }
 
-    // GRECLIPSE-1264
-    @Test
+    @Test // GRECLIPSE-1264
     public void testImplicitVar1() {
         String contents = "class SettingUndeclaredProperty {\n" +
             "    public void mymethod() {\n" +
@@ -2272,8 +2305,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertUnknownConfidence(contents, start, start+"doesNotExist".length(), "SettingUndeclaredProperty", false);
     }
 
-    // GRECLIPSE-1264
-    @Test
+    @Test // GRECLIPSE-1264
     public void testImplicitVar2() {
         String contents = "class SettingUndeclaredProperty {\n" +
             "     def r = {\n" +
@@ -2284,8 +2316,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertUnknownConfidence(contents, start, start+"doesNotExist".length(), "SettingUndeclaredProperty", false);
     }
 
-    // GRECLIPSE-1264
-    @Test
+    @Test // GRECLIPSE-1264
     public void testImplicitVar3() {
         String contents =
             "doesNotExist";
@@ -2293,16 +2324,14 @@ public final class InferencingTests extends InferencingTestSuite {
         assertUnknownConfidence(contents, start, start+"doesNotExist".length(), "Search", false);
     }
 
-    // GRECLIPSE-1264
-    @Test
+    @Test // GRECLIPSE-1264
     public void testImplicitVar4() {
         String contents = "doesNotExist = 9";
         int start = contents.lastIndexOf("doesNotExist");
         assertDeclaringType(contents, start, start+"doesNotExist".length(), "Search", false);
     }
 
-    // GRECLIPSE-1264
-    @Test
+    @Test // GRECLIPSE-1264
     public void testImplicitVar5() {
         String contents =
             "doesNotExist = 9\n" +
@@ -2311,8 +2340,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertDeclaringType(contents, start, start+"doesNotExist".length(), "Search", false);
     }
 
-    // GRECLIPSE-1264
-    @Test
+    @Test // GRECLIPSE-1264
     public void testImplicitVar6() {
         String contents =
             "def x = {\n" +
@@ -2322,8 +2350,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertDeclaringType(contents, start, start+"doesNotExist".length(), "Search", false);
     }
 
-    // GRECLIPSE-1264
-    @Test
+    @Test // GRECLIPSE-1264
     public void testImplicitVar7() {
         String contents =
             "def z() {\n" +
@@ -2333,32 +2360,28 @@ public final class InferencingTests extends InferencingTestSuite {
         assertUnknownConfidence(contents, start, start+"doesNotExist".length(), "Search", false);
     }
 
-    // nested expressions of various forms
-    @Test
+    @Test // nested expressions of various forms
     public void testNested1() {
         String contents =
             "(true ? 2 : 7) + 9";
         assertType(contents, "java.lang.Integer");
     }
 
-    // nested expressions of various forms
-    @Test
+    @Test // nested expressions of various forms
     public void testNested2() {
         String contents =
             "(true ? 2 : 7) + (true ? 2 : 7)";
         assertType(contents, "java.lang.Integer");
     }
 
-    // nested expressions of various forms
-    @Test
+    @Test // nested expressions of various forms
     public void testNested3() {
         String contents =
             "(8 ?: 7) + (8 ?: 7)";
         assertType(contents, "java.lang.Integer");
     }
 
-    // nested expressions of various forms
-    @Test
+    @Test // nested expressions of various forms
     public void testNested4() {
         createUnit("Foo", "class Foo { int prop }");
         String contents = "(new Foo().@prop) + (8 ?: 7)";

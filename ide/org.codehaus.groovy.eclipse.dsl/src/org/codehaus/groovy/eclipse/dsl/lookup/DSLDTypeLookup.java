@@ -75,12 +75,12 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
         store = store.createSubStore(pattern);
     }
 
-    // FIXADE Should shortcut if we find a solution earlier.
+    // FIXADE: Should shortcut if we find a solution earlier.
     @Override
     protected TypeAndDeclaration lookupTypeAndDeclaration(ClassNode declaringType, String name, VariableScope scope) {
+        pattern.setStatic(isStatic());
         pattern.setCurrentScope(scope);
         pattern.setTargetType(declaringType);
-        pattern.setStatic(isStatic());
         List<IContributionElement> elts = store.findContributions(pattern, disabledScriptsAsSet);
         declaringType = pattern.getCurrentType(); // may have changed via a setDelegateType
         for (IContributionElement elt : elts) {
@@ -97,14 +97,15 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
      */
     @Override
     public void lookupInBlock(BlockStatement node, VariableScope scope) {
+        pattern.setPrimaryNode(true);
+        pattern.setStatic(isStatic());
         pattern.setCurrentScope(scope);
         ClassNode delegateOrThis = scope.getDelegateOrThis();
         if (delegateOrThis != null) {
             pattern.setTargetType(delegateOrThis);
-            pattern.setStatic(isStatic());
             store.findContributions(pattern, disabledScriptsAsSet);
         }
-        // no need to return anything.  setDelegateType is called and evaluated implicitly
+        // no need to return anything; setDelegateType is called and evaluated implicitly
     }
 
     @Override
