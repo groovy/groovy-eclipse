@@ -25,6 +25,7 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.expr.AttributeExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
@@ -41,8 +42,7 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 public class CategoryTypeLookup implements ITypeLookup {
 
     public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
-        if (node instanceof VariableExpression || (node instanceof ConstantExpression &&
-                ClassHelper.STRING_TYPE.equals(node.getType()) && node.getLength() <= node.getText().length())) {
+        if (node instanceof VariableExpression || isCompatibleConstantExpression(node, scope)) {
             String simpleName = node.getText();
             ClassNode expectedType = objectExpressionType;
             if (expectedType == null) expectedType = scope.getDelegateOrThis();
@@ -92,6 +92,13 @@ public class CategoryTypeLookup implements ITypeLookup {
             }
         }
         return null;
+    }
+
+    protected final boolean isCompatibleConstantExpression(Expression node, VariableScope scope) {
+        if (node instanceof ConstantExpression && !(scope.getEnclosingNode() instanceof AttributeExpression)) {
+            return ClassHelper.STRING_TYPE.equals(node.getType()) && node.getLength() <= node.getText().length();
+        }
+        return false;
     }
 
     protected boolean isCompatibleCategoryMethod(MethodNode method, ClassNode firstArgumentType) {

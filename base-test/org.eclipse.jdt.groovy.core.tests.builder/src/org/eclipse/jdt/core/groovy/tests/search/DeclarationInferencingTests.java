@@ -23,6 +23,20 @@ import org.junit.Test;
 public final class DeclarationInferencingTests extends InferencingTestSuite {
 
     @Test
+    public void testCategoryMethod0() {
+        String contents = "new Object().@with";
+        int start = contents.indexOf("with"), end = start + "with".length();
+        assertUnknownConfidence(contents, start, end, "java.lang.Object", false);
+    }
+
+    @Test
+    public void testCategoryMethod1() {
+        String contents = "new Object().with";
+        int start = contents.indexOf("with"), end = start + "with".length();
+        assertDeclaration(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods", "with", DeclarationKind.METHOD);
+    }
+
+    @Test
     public void testGetterAndField1() {
         createUnit("Other",
             "class Other {\n" +
@@ -33,6 +47,19 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         String contents = "new Other().xxx";
         int start = contents.indexOf("xxx"), end = start + "xxx".length();
         assertDeclaration(contents, start, end, "Other", "getXxx", DeclarationKind.METHOD);
+    }
+
+    @Test
+    public void testGetterAndField1a() {
+        createUnit("Other",
+            "class Other {\n" +
+            "  String xxx\n" +
+            "  String getXxx() { xxx }\n" +
+            "}");
+
+        String contents = "new Other().@xxx";
+        int start = contents.indexOf("xxx"), end = start + "xxx".length();
+        assertDeclaration(contents, start, end, "Other", "xxx", DeclarationKind.FIELD);
     }
 
     @Test
@@ -49,6 +76,19 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testGetterAndField2a() {
+        createUnit("Other",
+            "class Other {\n" +
+            "  String xxx\n" +
+            "  String getXxx() { xxx }\n" +
+            "}");
+
+        String contents = "new Other().@getXxx";
+        int start = contents.indexOf("getXxx"), end = start + "getXxx".length();
+        assertUnknownConfidence(contents, start, end, "Other", false);
+    }
+
+    @Test
     public void testGetterAndField3() {
         createUnit("Other",
             "class Other {\n" +
@@ -61,6 +101,18 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testGetterAndField3a() {
+        createUnit("Other",
+            "class Other {\n" +
+            "  String xxx\n" +
+            "}");
+
+        String contents = "new Other().@getXxx";
+        int start = contents.indexOf("getXxx"), end = start + "getXxx".length();
+        assertUnknownConfidence(contents, start, end, "Other", false);
+    }
+
+    @Test
     public void testGetterAndField4() {
         createUnit("Other",
             "class Other {\n" +
@@ -70,6 +122,18 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         String contents = "new Other().xxx";
         int start = contents.indexOf("xxx"), end = start + "xxx".length();
         assertDeclaration(contents, start, end, "Other", "getXxx", DeclarationKind.METHOD);
+    }
+
+    @Test
+    public void testGetterAndField4a() {
+        createUnit("Other",
+            "class Other {\n" +
+            "  String getXxx() { null }\n" +
+            "}");
+
+        String contents = "new Other().@xxx";
+        int start = contents.indexOf("xxx"), end = start + "xxx".length();
+        assertUnknownConfidence(contents, start, end, "Other", false);
     }
 
     @Test
@@ -86,6 +150,19 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testGetterAndField5a() {
+        createUnit("Other",
+            "class Other {\n" +
+            "  String xxx\n" +
+            "  String getXxx() { xxx }\n" +
+            "}");
+
+        String contents = "def o = new Other(); o.@xxx";
+        int start = contents.indexOf("xxx"), end = start + "xxx".length();
+        assertDeclaration(contents, start, end, "Other", "xxx", DeclarationKind.FIELD);
+    }
+
+    @Test
     public void testGetterAndField6() {
         createUnit("Other",
             "class Other {\n" +
@@ -97,6 +174,20 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         String contents = "Other.instance().xxx";
         int start = contents.indexOf("xxx"), end = start + "xxx".length();
         assertDeclaration(contents, start, end, "Other", "getXxx", DeclarationKind.METHOD);
+    }
+
+    @Test
+    public void testGetterAndField6a() {
+        createUnit("Other",
+            "class Other {\n" +
+            "  String xxx\n" +
+            "  String getXxx() { xxx }\n" +
+            "  static Other instance() { new O() }\n" +
+            "}");
+
+        String contents = "Other.instance().@xxx";
+        int start = contents.indexOf("xxx"), end = start + "xxx".length();
+        assertDeclaration(contents, start, end, "Other", "xxx", DeclarationKind.FIELD);
     }
 
     @Test
@@ -128,6 +219,28 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testGetterAndField7a() {
+        int start, end;
+        String contents =
+            "class Other {\n" +
+            "  private String xxx\n" +
+            "  String getXxx() { xxx }\n" +
+            "  void setXxx(String xxx) { this.@xxx = xxx }\n" +
+            "  public Other(String xxx) { /**/this.@xxx = xxx }\n" +
+            "  private def method() { def xyz = xxx; this.@xxx }\n" +
+            "}";
+
+        start = contents.indexOf("this.@xxx") + 6; end = start + "xxx".length();
+        assertDeclaration(contents, start, end, "Other", "xxx", DeclarationKind.FIELD);
+
+        start = contents.indexOf("/**/this.@xxx") + 10; end = start + "xxx".length();
+        assertDeclaration(contents, start, end, "Other", "xxx", DeclarationKind.FIELD);
+
+        start = contents.lastIndexOf("this.@xxx") + 6; end = start + "xxx".length();
+        assertDeclaration(contents, start, end, "Other", "xxx", DeclarationKind.FIELD);
+    }
+
+    @Test
     public void testGetterAndField8() {
         int start, end;
         String contents =
@@ -140,8 +253,22 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         start = contents.indexOf("xxx;"); end = start + "xxx".length();
         assertDeclaration(contents, start, end, "Other", "getXxx", DeclarationKind.METHOD);
 
-        start = contents.indexOf("this.xxx") + 5; end = start + "xxx".length();
+        start = contents.lastIndexOf("xxx"); end = start + "xxx".length();
         assertDeclaration(contents, start, end, "Other", "getXxx", DeclarationKind.METHOD);
+    }
+
+    @Test
+    public void testGetterAndField8a() {
+        int start, end;
+        String contents =
+            "class Other {\n" +
+            "  String xxx\n" +
+            "  String getXxx() { xxx }\n" +
+            "  void meth() { def closure = { this.@xxx } }\n" +
+            "}";
+
+        start = contents.lastIndexOf("xxx"); end = start + "xxx".length();
+        assertDeclaration(contents, start, end, "Other", "xxx", DeclarationKind.FIELD);
     }
 
     @Test
@@ -159,6 +286,23 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
 
         start = contents.indexOf("that.xxx") + 5; end = start + "xxx".length();
         assertDeclaration(contents, start, end, "Other", "getXxx", DeclarationKind.METHOD);
+    }
+
+    @Test
+    public void testGetterAndField9a() {
+        int start, end;
+        String contents =
+            "class Other {\n" +
+            "  String xxx\n" +
+            "  String getXxx() { xxx }\n" +
+            "  int compareTo(Other that) { this.@xxx <=> that.@xxx }\n" +
+            "}";
+
+        start = contents.indexOf("this.@xxx") + 6; end = start + "xxx".length();
+        assertDeclaration(contents, start, end, "Other", "xxx", DeclarationKind.FIELD);
+
+        start = contents.indexOf("that.@xxx") + 6; end = start + "xxx".length();
+        assertDeclaration(contents, start, end, "Other", "xxx", DeclarationKind.FIELD);
     }
 
     @Test
@@ -185,11 +329,59 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
         start = contents.indexOf("xxx"); end = start + "xxx".length();
         assertDeclaration(contents, start, end, "Foo", "getXxx", DeclarationKind.METHOD);
 
-        start = contents.indexOf("this.yyy") + 5; end = start + "yyy".length();
+        start = contents.lastIndexOf("yyy"); end = start + "yyy".length();
         assertDeclaration(contents, start, end, "Bar", "yyy", DeclarationKind.PROPERTY);
 
-        start = contents.indexOf("this.xxx") + 5; end = start + "xxx".length();
+        start = contents.lastIndexOf("xxx"); end = start + "xxx".length();
         assertDeclaration(contents, start, end, "Foo", "getXxx", DeclarationKind.METHOD);
+    }
+
+    @Test
+    public void testGetterAndField10a() {
+        createUnit("Foo",
+            "class Foo {\n" +
+            "  String xxx\n" +
+            "  String getXxx() { xxx }\n" +
+            "}");
+
+        int start, end;
+        String contents =
+            "class Bar extends Foo {\n" +
+            "  String yyy\n" +
+            "  def meth() {\n" +
+            "    this.@yyy = this.@xxx\n" +
+            "  }\n" +
+            "}";
+
+        start = contents.lastIndexOf("yyy"); end = start + "yyy".length();
+        assertDeclaration(contents, start, end, "Bar", "yyy", DeclarationKind.FIELD);
+
+        start = contents.lastIndexOf("xxx"); end = start + "xxx".length();
+        assertUnknownConfidence(contents, start, end, "Foo", false);
+    }
+
+    @Test
+    public void testGetterAndField10b() {
+        createUnit("Foo",
+            "class Foo {\n" +
+            "  String xxx\n" +
+            "  String getXxx() { xxx }\n" +
+            "}");
+
+        int start, end;
+        String contents =
+            "class Bar extends Foo {\n" +
+            "  String yyy\n" +
+            "  def meth() {\n" +
+            "    this.@yyy = super.@xxx\n" +
+            "  }\n" +
+            "}";
+
+        start = contents.lastIndexOf("yyy"); end = start + "yyy".length();
+        assertDeclaration(contents, start, end, "Bar", "yyy", DeclarationKind.FIELD);
+
+        start = contents.lastIndexOf("xxx"); end = start + "xxx".length();
+        assertDeclaration(contents, start, end, "Foo", "xxx", DeclarationKind.FIELD);
     }
 
     @Test
@@ -205,6 +397,73 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
 
         int start = contents.lastIndexOf("xxx"), end = start + "xxx".length();
         assertDeclaration(contents, start, end, "Foo", "getXxx", DeclarationKind.METHOD);
+    }
+
+    @Test
+    public void testGetterAndField11a() {
+        String contents =
+            "class Foo {\n" +
+            "  String xxx\n" +
+            "  String getXxx() { xxx }\n" +
+            "  def yyy = new Object() {\n" +
+            "    def meth() { Foo.this.@xxx }\n" +
+            "  }\n" +
+            "}";
+
+        int start = contents.lastIndexOf("xxx"), end = start + "xxx".length();
+        assertDeclaration(contents, start, end, "Foo", "xxx", DeclarationKind.FIELD);
+    }
+
+    @Test
+    public void testGetterAndField12() {
+        createUnit("Other",
+            "class Other {\n" +
+            "  private static String xxx\n" +
+            "  static String getXxx() { xxx }\n" +
+            "}");
+
+        String contents = "Other.xxx";
+        int start = contents.indexOf("xxx"), end = start + "xxx".length();
+        assertDeclaration(contents, start, end, "Other", "getXxx", DeclarationKind.METHOD);
+    }
+
+    @Test
+    public void testGetterAndField12a() {
+        createUnit("Other",
+            "class Other {\n" +
+            "  private static String xxx\n" +
+            "  static String getXxx() { xxx }\n" +
+            "}");
+
+        String contents = "Other.@xxx";
+        int start = contents.indexOf("xxx"), end = start + "xxx".length();
+        assertDeclaration(contents, start, end, "Other", "xxx", DeclarationKind.FIELD);
+    }
+
+    @Test
+    public void testGetterAndField13() {
+        createUnit("Other",
+            "class Other {\n" +
+            "  private String xxx\n" +
+            "  static String getXxx() { null }\n" +
+            "}");
+
+        String contents = "Other.xxx";
+        int start = contents.indexOf("xxx"), end = start + "xxx".length();
+        assertDeclaration(contents, start, end, "Other", "getXxx", DeclarationKind.METHOD);
+    }
+
+    @Test
+    public void testGetterAndField13a() {
+        createUnit("Other",
+            "class Other {\n" +
+            "  private String xxx\n" +
+            "  static String getXxx() { null }\n" +
+            "}");
+
+        String contents = "Other.@xxx";
+        int start = contents.indexOf("xxx"), end = start + "xxx".length();
+        assertUnknownConfidence(contents, start, end, "Other", false);
     }
 
     @Test

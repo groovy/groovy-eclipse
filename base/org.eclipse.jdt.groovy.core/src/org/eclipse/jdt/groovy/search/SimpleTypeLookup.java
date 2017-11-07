@@ -39,6 +39,7 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
+import org.codehaus.groovy.ast.expr.AttributeExpression;
 import org.codehaus.groovy.ast.expr.BitwiseNegationExpression;
 import org.codehaus.groovy.ast.expr.BooleanExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
@@ -217,6 +218,17 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         if (node instanceof VariableExpression) {
             return findTypeForVariable((VariableExpression) node, scope, confidence, declaringType);
+        }
+
+        // short-circuit if object expression is part of direct field access (aka AttributeExpression)
+        if (!isPrimaryExpression && node instanceof ConstantExpression && scope.getEnclosingNode() instanceof AttributeExpression) {
+            ClassNode clazz = !isStaticObjectExpression ? declaringType : declaringType.getGenericsTypes()[0].getType();
+            FieldNode field = clazz.getDeclaredField(node.getText()); // don't search super types (see GROOVY-8167)
+            if (isCompatible(field, isStaticObjectExpression)) {
+                return new TypeLookupResult(field.getType(), clazz, field, TypeConfidence.EXACT, scope);
+            } else {
+                return new TypeLookupResult(VariableScope.VOID_CLASS_NODE, clazz, null, TypeConfidence.UNKNOWN, scope);
+            }
         }
 
         // NOTE: method calls with no object expression go here instead of findTypeForVariable
@@ -529,7 +541,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         // look for canonical accessor method
         MethodNode accessor = AccessorSupport.findAccessorMethodForPropertyName(name, declaringType, false, !isLhsExpression ? READER : WRITER);
         if (accessor != null && !isSynthetic(accessor) && (accessor.isStatic() == isStaticExpression) &&
-                (!directFieldAccess || !declaringType.equals(accessor.getDeclaringClass()))) {
+                !(directFieldAccess && declaringType.equals(accessor.getDeclaringClass()))) {
             return accessor;
         }
 
