@@ -1438,6 +1438,8 @@ assert primaryExprType != null && dependentExprType != null;
             visitGenericTypes(node.getGenericsTypes(), null);
         }
 
+        // visit method before arguments to provide @ClosureParams, @DeleagtesTo, etc. to closures
+        // NOTE: this makes choosing from overloads imprecise since argument types aren't complete
         node.getMethod().visit(this);
 
         // this is the inferred return type of this method
@@ -2058,7 +2060,15 @@ assert primaryExprType != null && dependentExprType != null;
                             types.add(VariableScope.NULL_TYPE); // sentinel value
                         } else {
                             scopes.getLast().setMethodCallArgumentTypes(getMethodCallArgumentTypes(expression));
-                            TypeLookupResult tlr = lookupExpressionType(expression, null, false, scopes.getLast());
+
+                            TypeLookupResult tlr;
+                            if (!(expression instanceof MethodCallExpression)) {
+                                tlr = lookupExpressionType(expression, null, false, scopes.getLast());
+                            } else {
+                                MethodCallExpression call = (MethodCallExpression) expression;
+                                tlr = lookupExpressionType(call.getObjectExpression(), null, false, scopes.getLast());
+                                tlr = lookupExpressionType(call.getMethod(), tlr.type, call.getObjectExpression() instanceof ClassExpression, scopes.getLast());
+                            }
 
                             types.add(tlr.type);
                         }

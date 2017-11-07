@@ -16,6 +16,7 @@
 package org.eclipse.jdt.core.groovy.tests.search;
 
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -23,6 +24,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
@@ -2047,6 +2049,25 @@ public final class InferencingTests extends InferencingTestSuite {
         int end = start + "sort".length();
         assertType(contents, start, end, jdkListSort ? "java.lang.Void" : "java.util.List<java.lang.Object>");
         assertDeclaringType(contents, start, end, jdkListSort ? "java.util.List<java.lang.Object>" : "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/368
+    public void testListRemove() {
+        String contents =
+            "class Util {\n" +
+            "  static int remove(List<?> list, Object item) {\n" +
+            "    //...\n" +
+            "  }\n" +
+            "  void doSomething() {\n" +
+            "    List a = []\n" +
+            "    List b = []\n" +
+            "    // List.remove(int) or List.remove(Object)\n" +
+            "    a.remove(Util.remove(b, ''))\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.indexOf("a.remove") + 2;
+        MethodNode m = assertDeclaration(contents, offset, offset + "remove".length(), "java.util.List", "remove", DeclarationKind.METHOD);
+        assertEquals("Should resolve to remove(int) due to return type of inner call", "int", printTypeName(m.getParameters()[0].getType()));
     }
 
     @Test // GRECLIPSE-1013
