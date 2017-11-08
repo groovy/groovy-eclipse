@@ -231,7 +231,7 @@ public class CompilerUtils {
         List<IPath> jarPaths = new ArrayList<IPath>();
         Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
         for (URL jarUrl : Collections.list(groovyBundle.findEntries("lib", "*.jar", false))) {
-            if (!jarUrl.getFile().startsWith("groovy-all") && (!jarUrl.getFile().startsWith("servlet") || includeServlet) &&
+            if (!jarUrl.getFile().contains("groovy-all-") && (!jarUrl.getFile().contains("servlet-") || includeServlet) &&
                     !jarUrl.getFile().endsWith("-javadoc.jar") && !jarUrl.getFile().endsWith("-sources.jar")) {
                 jarPaths.add(toFilePath(jarUrl));
             }
