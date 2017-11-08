@@ -20,9 +20,8 @@ import org.eclipse.jface.text.Position;
 public class HighlightedTypedPosition extends Position implements Comparable<Position> {
 
     public static enum HighlightKind {
-        NUMBER, REGEXP, MAP_KEY, TAG_KEY, FIELD, STATIC_FIELD, STATIC_VALUE, PARAMETER, VARIABLE,
-        CTOR, METHOD, STATIC_METHOD, CTOR_CALL, GROOVY_CALL, METHOD_CALL, STATIC_CALL,
-        DEPRECATED, UNKNOWN
+        NUMBER, REGEXP, MAP_KEY, TAG_KEY, FIELD, STATIC_FIELD, STATIC_VALUE, PARAMETER, VARIABLE, KEYWORD,
+        CTOR, METHOD, STATIC_METHOD, CTOR_CALL, GROOVY_CALL, METHOD_CALL, STATIC_CALL, DEPRECATED, UNKNOWN
     }
 
     public final HighlightKind kind;

@@ -297,8 +297,14 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         boolean isSuperOrThis = "super".equals(expr.getName()) || "this".equals(expr.getName());
 
         // free vars and loop vars are okay as long as they are not reserved words (this, super); params must refer to "real" declarations
-        if (!isSuperOrThis && (!isParam || isIt || (((Parameter) expr.getAccessedVariable()).getLineNumber() > 0) || source instanceof SourceType)) {
-            HighlightKind kind = isParam ? (isIt ? HighlightKind.GROOVY_CALL : HighlightKind.PARAMETER) : HighlightKind.VARIABLE;
+        if (!(isSuperOrThis && !lastGString.includes(expr.getStart())) &&
+                (!isParam || isIt || (((Parameter) expr.getAccessedVariable()).getLineNumber() > 0) || source instanceof SourceType)) {
+            HighlightKind kind;
+            if (isParam) {
+                kind = isIt ? HighlightKind.GROOVY_CALL : HighlightKind.PARAMETER;
+            } else {
+                kind = isSuperOrThis ? HighlightKind.KEYWORD : HighlightKind.VARIABLE;
+            }
             return new HighlightedTypedPosition(expr.getStart(), expr.getLength(), kind);
         }
         return null;

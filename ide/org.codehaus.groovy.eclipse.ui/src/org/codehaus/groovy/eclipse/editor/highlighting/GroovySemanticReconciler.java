@@ -61,6 +61,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     private static final String GROOVY_HIGHLIGHT_PREFERENCE             = PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR.replaceFirst("\\.color$", "");
     private static final String STRING_HIGHLIGHT_PREFERENCE             = PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR.replaceFirst("\\.color$", "");
     private static final String NUMBER_HIGHLIGHT_PREFERENCE             = "semanticHighlighting.number";
+    private static final String KEYWORD_HIGHLIGHT_PREFERENCE            = PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR.replaceFirst("\\.color$", "");
     private static final String VARIABLE_HIGHLIGHT_PREFERENCE           = "semanticHighlighting.localVariable";
     private static final String PARAMETER_HIGHLIGHT_PREFERENCE          = "semanticHighlighting.parameterVariable";
     private static final String ANNOTATION_HIGHLIGHT_PREFERENCE         = "semanticHighlighting.annotationElementReference";
@@ -104,6 +105,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     private Object tagKeyHighlighting;
     private Object numberRefHighlighting;
     private Object regexpRefHighlighting;
+    private Object keywordRefHighlighting;
     private Object undefinedRefHighlighting;
     private Object deprecatedRefHighlighting;
 
@@ -129,8 +131,9 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         Color numberColor      = loadColorFrom(prefs, NUMBER_HIGHLIGHT_PREFERENCE);
         Color stringColor      = loadColorFrom(prefs, STRING_HIGHLIGHT_PREFERENCE);
         Color tagKeyColor      = loadColorFrom(prefs, ANNOTATION_HIGHLIGHT_PREFERENCE);
-        Color parameterColor   = loadColorFrom(prefs, PARAMETER_HIGHLIGHT_PREFERENCE);
+        Color keywordColor     = loadColorFrom(prefs, KEYWORD_HIGHLIGHT_PREFERENCE);
         Color variableColor    = loadColorFrom(prefs, VARIABLE_HIGHLIGHT_PREFERENCE);
+        Color parameterColor   = loadColorFrom(prefs, PARAMETER_HIGHLIGHT_PREFERENCE);
         Color objectFieldColor = loadColorFrom(prefs, OBJECT_FIELD_HIGHLIGHT_PREFERENCE);
         Color staticFieldColor = loadColorFrom(prefs, STATIC_FIELD_HIGHLIGHT_PREFERENCE);
         Color staticValueColor = loadColorFrom(prefs, STATIC_VALUE_HIGHLIGHT_PREFERENCE);
@@ -142,6 +145,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         tagKeyHighlighting = newHighlightingStyle(tagKeyColor, loadStyleFrom(prefs, ANNOTATION_HIGHLIGHT_PREFERENCE));
         numberRefHighlighting = newHighlightingStyle(numberColor, loadStyleFrom(prefs, NUMBER_HIGHLIGHT_PREFERENCE));
         regexpRefHighlighting = newHighlightingStyle(stringColor, SWT.ITALIC | loadStyleFrom(prefs, STRING_HIGHLIGHT_PREFERENCE));
+        keywordRefHighlighting = newHighlightingStyle(keywordColor, loadStyleFrom(prefs, KEYWORD_HIGHLIGHT_PREFERENCE));
         deprecatedRefHighlighting = newHighlightingStyle(null, loadStyleFrom(prefs, DEPRECATED_HIGHLIGHT_PREFERENCE));
         undefinedRefHighlighting = newHighlightingStyle(null, TextAttribute.UNDERLINE);
 
@@ -306,54 +310,57 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     private Position newHighlightedPosition(HighlightedTypedPosition pos) {
         Object style = null;
         switch (pos.kind) {
-            case DEPRECATED:
-                style = deprecatedRefHighlighting;
-                break;
-            case UNKNOWN:
-                style = undefinedRefHighlighting;
-                break;
-            case NUMBER:
-                style = numberRefHighlighting;
-                break;
-            case REGEXP:
-                style = regexpRefHighlighting;
-                break;
-            case MAP_KEY:
-                style = mapKeyHighlighting;
-                break;
-            case TAG_KEY:
-                style = tagKeyHighlighting;
-                break;
-            case VARIABLE:
-                style = localHighlighting;
-                break;
-            case PARAMETER:
-                style = paramHighlighting;
-                break;
-            case FIELD:
-                style = objectFieldHighlighting;
-                break;
-            case STATIC_FIELD:
-                style = staticFieldHighlighting;
-                break;
-            case STATIC_VALUE:
-                style = staticValueHighlighting;
-                break;
-            case CTOR:
-            case METHOD:
-            case STATIC_METHOD:
-                style = methodDefHighlighting;
-                break;
-            case CTOR_CALL:
-            case METHOD_CALL:
-                style = methodUseHighlighting;
-                break;
-            case GROOVY_CALL:
-                style = groovyMethodUseHighlighting;
-                break;
-            case STATIC_CALL:
-                style = staticMethodUseHighlighting;
-                break;
+        case DEPRECATED:
+            style = deprecatedRefHighlighting;
+            break;
+        case UNKNOWN:
+            style = undefinedRefHighlighting;
+            break;
+        case KEYWORD:
+            style = keywordRefHighlighting;
+            break;
+        case NUMBER:
+            style = numberRefHighlighting;
+            break;
+        case REGEXP:
+            style = regexpRefHighlighting;
+            break;
+        case MAP_KEY:
+            style = mapKeyHighlighting;
+            break;
+        case TAG_KEY:
+            style = tagKeyHighlighting;
+            break;
+        case VARIABLE:
+            style = localHighlighting;
+            break;
+        case PARAMETER:
+            style = paramHighlighting;
+            break;
+        case FIELD:
+            style = objectFieldHighlighting;
+            break;
+        case STATIC_FIELD:
+            style = staticFieldHighlighting;
+            break;
+        case STATIC_VALUE:
+            style = staticValueHighlighting;
+            break;
+        case CTOR:
+        case METHOD:
+        case STATIC_METHOD:
+            style = methodDefHighlighting;
+            break;
+        case CTOR_CALL:
+        case METHOD_CALL:
+            style = methodUseHighlighting;
+            break;
+        case GROOVY_CALL:
+            style = groovyMethodUseHighlighting;
+            break;
+        case STATIC_CALL:
+            style = staticMethodUseHighlighting;
+            break;
         }
         //return new HighlightedPosition(pos.offset, pos.length, style, this);
         return (Position) ReflectionUtils.invokeConstructor(HIGHLIGHTED_POSITION, pos.offset, pos.length, style, this);

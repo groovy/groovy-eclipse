@@ -466,7 +466,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testNamedParams1() {
+    void testNamedParams() {
         String contents = '''\
             class Person { String firstName, lastName }
             def p = new Person(firstName: 'John', lastName: 'Doe')
@@ -484,7 +484,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testNamedParams1a() {
+    void testNamedParams2() {
         String contents = '''\
             class Person {
               String firstName, lastName
@@ -508,7 +508,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testNamedParams2() {
+    void testNamedParams3() {
         String contents = '''\
             def map = Collections.singletonMap(key: 'k', value: 'v')
             '''.stripIndent()
@@ -625,7 +625,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testChainAssign4a() {
+    void testChainAssign5() {
         assumeTrue(isAtLeastGroovy(20))
 
         // property notation that maps to setter; this kind of chain assignment does work
@@ -801,6 +801,26 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             //new HighlightedTypedPosition(contents.indexOf('this'), 4, ???),
             //new HighlightedTypedPosition(contents.indexOf('super'), 5, ???),
             new HighlightedTypedPosition(contents.indexOf('f ='), 1, VARIABLE))
+    }
+
+    @Test
+    void testGStringThisAndSuper() {
+        // except when appearing within a GString
+        String contents = '''\
+            "this: $this, super: $super"
+            "this: ${this}, super: ${super}"
+            "${this.hashCode()}, ${super.hashCode()}"
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('$this') + 1, 4, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('$super') + 1, 5, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('${this}') + 2, 4, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('${super}') + 2, 5, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('${this.') + 2, 4, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('${super.') + 2, 5, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('hashCode'), 'hashCode'.length(), METHOD_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('hashCode'), 'hashCode'.length(), METHOD_CALL))
     }
 
     @Test
@@ -1312,7 +1332,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test // GRECLIPSE-878
-    void testMapKey1() {
+    void testMapKey() {
         String contents = 'def map = [key: "value"]'
 
         assertHighlighting(contents,
@@ -1511,7 +1531,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testLazyInitExpr1() {
+    void testLazyInitExpr() {
         String contents = '''\
             class X {
               String x
@@ -1792,7 +1812,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testTraits1() {
+    void testTraits() {
         assumeTrue(isAtLeastGroovy(23))
 
         String contents = '''\
