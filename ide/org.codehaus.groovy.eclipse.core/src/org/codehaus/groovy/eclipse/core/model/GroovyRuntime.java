@@ -114,7 +114,7 @@ public class GroovyRuntime {
     }
 
     public static boolean hasClasspathContainer(final IJavaProject javaProject, final IPath libraryPath) throws CoreException {
-        if (javaProject == null || !javaProject.getProject().isAccessible()) {
+        if (javaProject != null && javaProject.getProject().isAccessible()) {
             IClasspathEntry[] entries = javaProject.getRawClasspath();
             for (IClasspathEntry entry : entries) {
                 if (entry.getEntryKind() == IClasspathEntry.CPE_CONTAINER) {
