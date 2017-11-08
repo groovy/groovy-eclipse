@@ -421,6 +421,33 @@ public final class InferencingTests extends InferencingTestSuite {
         assertUnknownConfidence(contents, offset, offset + 3, "Foo", false);
     }
 
+    @Test // static object expression for delegate
+    public void testClosure11a() {
+        String contents =
+            "class Boo { }\n" +
+            "class Foo {\n" +
+            "  Number bar\n" +
+            "  static main(args) {\n" +
+            "    Boo.with {\n" +
+            "      delegate.bar\n" +
+            "      owner.bar\n" +
+            "      bar\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "delegate", "java.lang.Class<Boo>");
+        assertExprType(contents, "owner", "java.lang.Class<Foo>");
+
+        int offset = contents.indexOf("delegate.bar") + "delegate.".length();
+        assertUnknownConfidence(contents, offset, offset + 3, "Foo", false);
+
+        offset = contents.indexOf("owner.bar") + "owner.".length();
+        assertUnknownConfidence(contents, offset, offset + 3, "Foo", false);
+
+        offset = contents.lastIndexOf("bar");
+        assertUnknownConfidence(contents, offset, offset + 3, "Foo", false);
+    }
+
     @Test // other (invariant) members of Closure
     public void testClosure12() {
         String contents =

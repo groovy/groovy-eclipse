@@ -2054,10 +2054,25 @@ assert primaryExprType != null && dependentExprType != null;
                 if (!expressions.isEmpty()) {
                     List<ClassNode> types = new ArrayList<ClassNode>(expressions.size());
                     for (Expression expression : expressions) {
-                        if (expression instanceof ConstantExpression &&
-                            ((ConstantExpression) expression).isNullExpression()) {
-
-                            types.add(VariableScope.NULL_TYPE); // sentinel value
+                        ClassNode exprType = expression.getType();
+                        /*if (expression instanceof ClosureExpression) {
+                            types.add(VariableScope.CLOSURE_CLASS_NODE);
+                        } else if (expression instanceof MapExpression) {
+                            types.add(VariableScope.MAP_CLASS_NODE);
+                        } else if (expression instanceof ListExpression) {
+                             types.add(VariableScope.LIST_CLASS_NODE);
+                        } else*/ if (expression instanceof ClassExpression) {
+                            types.add(VariableScope.newClassClassNode(exprType));
+                        } else if (expression instanceof CastExpression || expression instanceof ConstructorCallExpression) {
+                            types.add(exprType);
+                        } else if (expression instanceof ConstantExpression && ((ConstantExpression) expression).isNullExpression()) {
+                            types.add(VariableScope.NULL_TYPE); // sentinel for wildcard matching
+                        } else if (ClassHelper.isNumberType(exprType) || VariableScope.BIG_DECIMAL_CLASS.equals(exprType) || VariableScope.BIG_INTEGER_CLASS.equals(exprType)) {
+                            types.add(ClassHelper.isPrimitiveType(exprType) ? ClassHelper.getWrapper(exprType) : exprType);
+                        } else if (expression instanceof GStringExpression || (expression instanceof ConstantExpression && ((ConstantExpression) expression).isEmptyStringExpression())) {
+                            types.add(VariableScope.STRING_CLASS_NODE);
+                        } else if (expression instanceof BooleanExpression || (expression instanceof ConstantExpression && (((ConstantExpression) expression).isTrueExpression() || ((ConstantExpression) expression).isFalseExpression()))) {
+                            types.add(VariableScope.BOOLEAN_CLASS_NODE);
                         } else {
                             scopes.getLast().setMethodCallArgumentTypes(getMethodCallArgumentTypes(expression));
 
