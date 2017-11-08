@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,37 +28,26 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 
-public class GroovyClasspathContainerInitializer extends
-        ClasspathContainerInitializer {
+public class GroovyClasspathContainerInitializer extends ClasspathContainerInitializer {
 
     @Override
-    public void initialize(IPath containerPath, IJavaProject project)
-            throws CoreException {
-        IClasspathContainer container = new GroovyClasspathContainer(project.getProject());
-        JavaCore.setClasspathContainer(containerPath,
-                new IJavaProject[] {project},
-                new IClasspathContainer[] {container}, null);
+    public void initialize(IPath containerPath, IJavaProject project) throws CoreException {
+        IClasspathContainer container = new GroovyClasspathContainer(project);
+        JavaCore.setClasspathContainer(containerPath, new IJavaProject[] {project}, new IClasspathContainer[] {container}, null);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean canUpdateClasspathContainer(IPath containerPath, IJavaProject project) {
         // always ok to return classpath container
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void requestClasspathContainerUpdate(IPath containerPath, IJavaProject javaProject,
-            IClasspathContainer containerSuggestion) throws CoreException {
+    public void requestClasspathContainerUpdate(IPath containerPath, IJavaProject project, IClasspathContainer containerSuggestion) throws CoreException {
         if (containerSuggestion instanceof GroovyClasspathContainer) {
             ((GroovyClasspathContainer) containerSuggestion).reset();
         }
-        IClasspathContainer gcc = JavaCore.getClasspathContainer(GroovyClasspathContainer.CONTAINER_ID, javaProject);
+        IClasspathContainer gcc = JavaCore.getClasspathContainer(GroovyClasspathContainer.CONTAINER_ID, project);
         if (gcc instanceof GroovyClasspathContainer) {
             ((GroovyClasspathContainer) gcc).reset();
         }
@@ -66,7 +55,6 @@ public class GroovyClasspathContainerInitializer extends
 
     /**
      * Refresh all classpath containers.  Should do this if the ~/.groovy/lib directory has changed.
-     * @throws JavaModelException
      */
     public static void updateAllGroovyClasspathContainers() throws JavaModelException {
         IJavaProject[] projects = JavaModelManager.getJavaModelManager().getJavaModel().getJavaProjects();
@@ -74,11 +62,10 @@ public class GroovyClasspathContainerInitializer extends
     }
 
     public static void updateGroovyClasspathContainer(IJavaProject project) throws JavaModelException {
-        updateSomeGroovyClasspathContainers(new IJavaProject[] { project });
+        updateSomeGroovyClasspathContainers(project);
     }
 
-    private static void updateSomeGroovyClasspathContainers(
-            IJavaProject[] projects) throws JavaModelException {
+    private static void updateSomeGroovyClasspathContainers(IJavaProject... projects) throws JavaModelException {
         List<IJavaProject> affectedProjects = new ArrayList<IJavaProject>(projects.length);
         List<IClasspathContainer> affectedContainers = new ArrayList<IClasspathContainer>(projects.length);
         for (IJavaProject elt : projects) {
@@ -90,7 +77,6 @@ public class GroovyClasspathContainerInitializer extends
                 affectedContainers.add(null);
             }
         }
-        JavaCore.setClasspathContainer(GroovyClasspathContainer.CONTAINER_ID, affectedProjects.toArray(new IJavaProject[0]),
-                affectedContainers.toArray(new IClasspathContainer[0]), new NullProgressMonitor());
+        JavaCore.setClasspathContainer(GroovyClasspathContainer.CONTAINER_ID, affectedProjects.toArray(new IJavaProject[0]), affectedContainers.toArray(new IClasspathContainer[0]), new NullProgressMonitor());
     }
 }

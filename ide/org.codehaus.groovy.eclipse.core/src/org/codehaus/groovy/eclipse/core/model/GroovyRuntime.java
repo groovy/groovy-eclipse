@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.core.model;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
+import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainerInitializer;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
@@ -39,12 +40,11 @@ import org.eclipse.jdt.internal.core.ClasspathEntry;
  */
 public class GroovyRuntime {
 
-    public static void removeGroovyNature(final IProject project)
-            throws CoreException {
+    public static void removeGroovyNature(final IProject project) throws CoreException {
         GroovyCore.trace("GroovyRuntime.removeGroovyNature()");
         final IProjectDescription description = project.getDescription();
         final String[] ids = description.getNatureIds();
-        for (int i = 0; i < ids.length; ++i) {
+        for (int i = 0; i < ids.length; i++) {
             if (ids[i].equals(GroovyNature.GROOVY_NATURE)) {
                 final String[] newIds = (String[]) ArrayUtils.remove(ids, i);
                 description.setNatureIds(newIds);
@@ -54,23 +54,19 @@ public class GroovyRuntime {
         }
     }
 
-
-    public static void removeLibraryFromClasspath(
-            final IJavaProject javaProject, final IPath libraryPath)
-            throws JavaModelException {
+    public static void removeLibraryFromClasspath(final IJavaProject javaProject, final IPath libraryPath) throws JavaModelException {
         final IClasspathEntry[] oldEntries = javaProject.getRawClasspath();
         for (int i = 0; i < oldEntries.length; i++) {
             final IClasspathEntry entry = oldEntries[i];
             if (entry.getPath().equals(libraryPath)) {
-                final IClasspathEntry[] newEntries = (IClasspathEntry[]) ArrayUtils
-                        .remove(oldEntries, i);
+                final IClasspathEntry[] newEntries = (IClasspathEntry[]) ArrayUtils.remove(oldEntries, i);
                 javaProject.setRawClasspath(newEntries, null);
                 return;
             }
         }
     }
 
-    // Breaking encapsu;ation here. I don't want to specify this classpath
+    // Breaking encapsulation here. I don't want to specify this classpath
     // container here
     // because it is defined in a different plugin, but this is the least
     // complicated way pf doing it.
@@ -88,8 +84,8 @@ public class GroovyRuntime {
             final IJavaProject javaProject = JavaCore.create(project);
             addGroovyClasspathContainer(javaProject);
 
-            // this breaks encapsulation, but it is the most logical place to
-            // put it
+            // this breaks encapsulation, but it is the most logical place to put it:
+
             // add the DSLD classpath container
             addLibraryToClasspath(javaProject, DSLD_CONTAINER_ID, true);
 
@@ -98,21 +94,19 @@ public class GroovyRuntime {
         }
     }
 
-    public static boolean hasGroovyClasspathContainer(
-            final IJavaProject javaProject) throws CoreException {
+    public static boolean hasGroovyClasspathContainer(final IJavaProject javaProject) throws CoreException {
         return hasClasspathContainer(javaProject, GroovyClasspathContainer.CONTAINER_ID);
     }
 
     public static IClasspathEntry getGroovyClasspathEntry(IJavaProject javaProject) throws JavaModelException {
-        if (javaProject == null || !javaProject.getProject().isAccessible())
-            return null;
-        final IClasspathEntry[] entries = javaProject.getRawClasspath();
-        for (int i = 0; i < entries.length; i++) {
-            final IClasspathEntry entry = entries[i];
-            if (entry.getEntryKind() == IClasspathEntry.CPE_CONTAINER) {
-                if (GroovyClasspathContainer.CONTAINER_ID.equals(entry.getPath())
-                        || GroovyClasspathContainer.CONTAINER_ID.isPrefixOf(entry.getPath())) {
-                    return entry;
+        if (javaProject != null && javaProject.getProject().isAccessible()) {
+            IClasspathEntry[] entries = javaProject.getRawClasspath();
+            for (IClasspathEntry entry : entries) {
+                if (entry.getEntryKind() == IClasspathEntry.CPE_CONTAINER) {
+                    if (GroovyClasspathContainer.CONTAINER_ID.equals(entry.getPath()) ||
+                            GroovyClasspathContainer.CONTAINER_ID.isPrefixOf(entry.getPath())) {
+                        return entry;
+                    }
                 }
             }
         }
@@ -120,22 +114,21 @@ public class GroovyRuntime {
     }
 
     public static boolean hasClasspathContainer(final IJavaProject javaProject, final IPath libraryPath) throws CoreException {
-        if (javaProject == null || !javaProject.getProject().isAccessible())
-            return false;
-        final IClasspathEntry[] entries = javaProject.getRawClasspath();
-        for (int i = 0; i < entries.length; i++) {
-            final IClasspathEntry entry = entries[i];
-            if (entry.getEntryKind() == IClasspathEntry.CPE_CONTAINER) {
-                if (libraryPath.equals(entry.getPath()) || libraryPath.isPrefixOf(entry.getPath())) {
-                    return true;
+        if (javaProject == null || !javaProject.getProject().isAccessible()) {
+            IClasspathEntry[] entries = javaProject.getRawClasspath();
+            for (IClasspathEntry entry : entries) {
+                if (entry.getEntryKind() == IClasspathEntry.CPE_CONTAINER) {
+                    if (libraryPath.equals(entry.getPath()) || libraryPath.isPrefixOf(entry.getPath())) {
+                        return true;
+                    }
                 }
             }
         }
         return false;
     }
+
 //    /**
 //     * Not used, but could be used to exclude all groovy files from compilation
-//     * @param javaProject
 //     */
 //    public static void excludeGroovyFilesFromOutput(
 //            final IJavaProject javaProject) {
@@ -153,7 +146,6 @@ public class GroovyRuntime {
 //
 //    /**
 //     * Not used, but could be used to include all groovy files for compilation
-//     * @param javaProject
 //     */
 //    public static void includeGroovyFilesInOutput(final IJavaProject javaProject) {
 //        // make sure .groovy files are not copied to the output dir
@@ -177,7 +169,6 @@ public class GroovyRuntime {
             if (javaProject == null) {
                 return;
             }
-
             if (hasGroovyClasspathContainer(javaProject)) {
                 removeGroovyClasspathContainer(javaProject);
             }
@@ -210,7 +201,7 @@ public class GroovyRuntime {
             IClasspathEntry[] rawClasspath = javaProject.getRawClasspath();
             boolean found = false;
             boolean workDone = false;
-            for (int i = 0; i < rawClasspath.length; i++) {
+            for (int i = 0, n = rawClasspath.length; i < n; i += 1) {
                 if (rawClasspath[i].getPath().equals(GroovyClasspathContainer.CONTAINER_ID)) {
                     found = true;
                     if (isMinimal) {
@@ -238,9 +229,10 @@ public class GroovyRuntime {
                 rawClasspath = newClasspath;
                 workDone = true;
             }
-
             if (workDone) {
                 javaProject.setRawClasspath(rawClasspath, null);
+                // must be called after classpath is set so minimal attribute is available
+                GroovyClasspathContainerInitializer.updateGroovyClasspathContainer(javaProject);
             }
         } catch (JavaModelException e) {
             GroovyCore.logException("Problem setting groovy classpath container", e);

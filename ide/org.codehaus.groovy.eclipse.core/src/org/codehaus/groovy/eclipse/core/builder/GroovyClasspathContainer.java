@@ -29,7 +29,6 @@ import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
@@ -38,7 +37,7 @@ import org.eclipse.core.runtime.preferences.IScopeContext;
 import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
-import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.ClasspathAttribute;
 
@@ -52,9 +51,9 @@ public class GroovyClasspathContainer implements IClasspathContainer {
 
     private IClasspathEntry[] entries;
 
-    private IProject project;
+    private IJavaProject project;
 
-    public GroovyClasspathContainer(IProject project) {
+    public GroovyClasspathContainer(IJavaProject project) {
         this.project = project;
     }
 
@@ -71,7 +70,7 @@ public class GroovyClasspathContainer implements IClasspathContainer {
 
     private void updateEntries() {
         try {
-            boolean minimalLibraries = hasMinimalAttribute(GroovyRuntime.getGroovyClasspathEntry(JavaCore.create(project)));
+            boolean minimalLibraries = hasMinimalAttribute(GroovyRuntime.getGroovyClasspathEntry(project));
 
             Set<IPath> libraries = new LinkedHashSet<IPath>();
             libraries.add(CompilerUtils.getExportedGroovyAllJar());
@@ -107,20 +106,19 @@ public class GroovyClasspathContainer implements IClasspathContainer {
     }
 
     public static boolean hasMinimalAttribute(IClasspathEntry entry) throws JavaModelException {
-        if (entry == null) {
-            return false;
-        }
-        IClasspathAttribute[] extraAttributes = entry.getExtraAttributes();
-        for (IClasspathAttribute attribute : extraAttributes) {
-            if (attribute.getName().equals(MINIMAL_ATTRIBUTE.getName()) && Boolean.valueOf(attribute.getValue())) {
-                return true;
+        if (entry != null) {
+            IClasspathAttribute[] extraAttributes = entry.getExtraAttributes();
+            for (IClasspathAttribute attribute : extraAttributes) {
+                if (attribute.getName().equals(MINIMAL_ATTRIBUTE.getName())) {
+                    return Boolean.parseBoolean(attribute.getValue());
+                }
             }
         }
         return false;
     }
 
     private boolean useGroovyLibs() {
-        IScopeContext projectScope = new ProjectScope(project);
+        IScopeContext projectScope = new ProjectScope(project.getProject());
         IEclipsePreferences projectNode = projectScope.getNode(GroovyCoreActivator.PLUGIN_ID);
         String val = projectNode.get(PreferenceConstants.GROOVY_CLASSPATH_USE_GROOVY_LIB, "default");
         if (val.equals(Boolean.TRUE.toString())) {

@@ -52,8 +52,8 @@ public class CompilerUtils {
         return GroovySystem.getVersion();
     }
 
-    public static boolean isGroovyVersionDisabledOrMissing(SpecifiedVersion version) {
-        return getActiveGroovyVersion() == version;
+    public static Bundle getActiveGroovyBundle() {
+        return CompilerChooser.getInstance().getActiveBundle();
     }
 
     public static SpecifiedVersion getActiveGroovyVersion() {
@@ -64,8 +64,18 @@ public class CompilerUtils {
         return CompilerChooser.getInstance().getAssociatedVersion(version);
     }
 
-    public static Bundle getActiveGroovyBundle() {
-        return CompilerChooser.getInstance().getActiveBundle();
+    public static boolean isGroovyVersionDisabledOrMissing(SpecifiedVersion version) {
+        return getActiveGroovyVersion() == version;
+    }
+
+    public static SortedSet<SpecifiedVersion> getAllGroovyVersions() {
+        SpecifiedVersion[] versions = CompilerChooser.getInstance().getAllSpecifiedVersions();
+        // remove dups and sort
+        SortedSet<SpecifiedVersion> allVersions = new TreeSet<SpecifiedVersion>();
+        for (SpecifiedVersion version : versions) {
+            allVersions.add(version);
+        }
+        return allVersions;
     }
 
     /**
@@ -83,16 +93,6 @@ public class CompilerUtils {
             GroovyCore.logException(e.getMessage(), e);
             return new Status(IStatus.ERROR, GroovyCoreActivator.PLUGIN_ID, e.getMessage() + "\n\nSee the error log for more information.", e);
         }
-    }
-
-    public static SortedSet<SpecifiedVersion> getAllGroovyVersions() {
-        SpecifiedVersion[] versions = CompilerChooser.getInstance().getAllSpecifiedVersions();
-        // remove dups and sort
-        SortedSet<SpecifiedVersion> allVersions = new TreeSet<SpecifiedVersion>();
-        for (SpecifiedVersion version : versions) {
-            allVersions.add(version);
-        }
-        return allVersions;
     }
 
     /**
@@ -213,17 +213,6 @@ public class CompilerUtils {
         throw new RuntimeException("Could not find groovy-all jar");
     }
 
-    private static boolean includeServlet = true;
-    static {
-        try {
-            if (System.getProperty("greclipse.includeServletInClasspathContainer", "true").equalsIgnoreCase("false")) {
-                includeServlet = false;
-            }
-        } catch (Exception e) {
-            // likely security related
-        }
-    }
-
     /**
      * Returns the extra jars that belong inside the Groovy Classpath Container.
      */
@@ -231,12 +220,22 @@ public class CompilerUtils {
         List<IPath> jarPaths = new ArrayList<IPath>();
         Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
         for (URL jarUrl : Collections.list(groovyBundle.findEntries("lib", "*.jar", false))) {
-            if (!jarUrl.getFile().startsWith("groovy-all") && (!jarUrl.getFile().startsWith("servlet") || includeServlet) &&
+            if (!jarUrl.getFile().contains("/groovy-all-") && (!jarUrl.getFile().contains("/servlet-") || includeServlet()) &&
                     !jarUrl.getFile().endsWith("-javadoc.jar") && !jarUrl.getFile().endsWith("-sources.jar")) {
                 jarPaths.add(toFilePath(jarUrl));
             }
         }
         return jarPaths;
+    }
+
+    private static boolean includeServlet() {
+        try {
+            String value = System.getProperty("greclipse.includeServletInClasspathContainer", "true");
+            return !value.equalsIgnoreCase("false");
+        } catch (Exception e) {
+            // likely security related?
+            return true;
+        }
     }
 
     /**
