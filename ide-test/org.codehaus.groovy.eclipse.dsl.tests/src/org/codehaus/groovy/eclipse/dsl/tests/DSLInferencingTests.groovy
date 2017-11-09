@@ -27,32 +27,36 @@ import org.junit.Test
  */
 final class DSLInferencingTests extends DSLInferencingTestSuite {
 
-    private static final String SET_DELEGATE_TYPE_SCRIPT =
-        'public interface Obj {\n' +
-        '  String getFoo();\n' +
-        '  int FOO1 = 9;\n' +
-        '  int FOO2 = 9;\n' +
-        '  int OTHER = 9;\n' +
-        '  int BAR = 9;\n' +
-        '  int BAZ1 = 9;\n' +
-        '  int BAZ2 = 9;\n' +
-        '  int BAZ3 = 9;\n' +
-        '}\n' +
-        '"".l { delegate }\n' +
-        '"".l { this }\n' +
-        '"".l { getFoo() }\n' +
-        '"".l { FOO1 }\n' +
-        '"".l { delegate.FOO2 }\n' +
-        '"".l { "".OTHER }\n' +
-        '"".l { delegate.l { BAR } }\n' +
-        '"".l { 1.BAZ1 }\n' +
-        '"".l { 1.l { BAZ2 } }\n' +
-        '"".l { this.BAZ3 }\n' +
-        ''
-    private static final String SET_DELEGATE_TYPE_DSLD =
-        'contribute(inClosure() & currentType(String)) {\n' +
-        '  setDelegateType "Obj"\n' +
-        '}'
+    private static final String SET_DELEGATE_TYPE_SCRIPT = '''\
+        public interface Obj {
+          String getFoo()
+          int FOO1 = 9
+          int FOO2 = 9
+          int BAR  = 9
+          int BAZ1 = 9
+          int BAZ2 = 9
+          int BAZ3 = 9
+          int OTHER = 9
+        }
+        void meth(@DelegatesTo(String) Closure cl) {
+        }
+        meth { delegate }
+        meth { this }
+        meth { getFoo() }
+        meth { FOO1 }
+        meth { delegate.FOO2 }
+        meth { "".OTHER }
+        meth { delegate.with { BAR } }
+        meth { 1.BAZ1 }
+        meth { 1.with { BAZ2 } }
+        meth { this.BAZ3 }
+        '''.stripIndent()
+
+    private static final String SET_DELEGATE_TYPE_DSLD = '''\
+        contribute(inClosure() & currentType(String)) {
+          setDelegateType('Obj')
+        }
+        '''.stripIndent()
 
     @Before
     void setUp() {
@@ -92,10 +96,13 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
     @Test
     void testDelegatesTo1() {
         createDsls('contribute(currentType("Foo")) { delegatesTo "Other" }')
-        String contents =
-            'class Foo { }\n' +
-            'class Other { Class<String> blar() { } }\n' +
-            'new Foo().blar()'
+        String contents = '''\
+            class Foo { }
+            class Other {
+              Class<String> blar() { }
+            }
+            new Foo().blar()
+            '''.stripIndent()
         int start = contents.lastIndexOf('blar')
         int end = start + 'blar'.length()
         assertType(contents, start, end, 'java.lang.Class<java.lang.String>')
@@ -650,7 +657,7 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
         createDsls('contribute(currentTypeIsEnclosingType()) { property name:"hi", type:int }')
         String contents =
             'class Foo {\n' +
-            '  def meth(Closure c) { }\n' +
+            '  def meth(@DelegatesTo(Foo) Closure c) { }\n' +
             '}\n' +
             'new Foo().meth { hi }'
         int start = contents.lastIndexOf('hi')
@@ -662,14 +669,15 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
     void testEnclosingCallName1() {
         createDsls(
             'contribute(~ enclosingCallName("foo")) {\n' +
-            '    property name:"hi"\n' +
+            '  property name:"hi"\n' +
             '}')
-        String contents =
-            'foo {\n' +
-            '    bar {\n' +
-            '        hi\n' +
-            '    }\n' +
-            '}'
+        String contents = '''\
+            foo {
+              bar {
+                hi
+              }
+            }
+            '''.stripIndent()
         int start = contents.lastIndexOf('hi')
         int end = start + 'hi'.length()
         assertUnknownConfidence(contents, start, end, 'Search')

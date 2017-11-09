@@ -278,7 +278,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                                             //ClassNode[] resolved = org.codehaus.groovy.ast.tools.GenericsUtils.parseClassNodesFromString(delegatesToType.getText(), enclosingModule.getContext(), an org.codehaus.groovy.control.CompilationUnit, methodNode, delegatesToType);
                                             //addDelegatesToClosure(closure, resolved[0], strategy);
 
-                                        } else if (delegatesToValue instanceof ClassExpression && delegatesToValue.getType().getName().equals("groovy.lang.DelegatesTo$Target")) {
+                                        } else if (delegatesToValue == null || (delegatesToValue instanceof ClassExpression && delegatesToValue.getType().getName().equals("groovy.lang.DelegatesTo$Target"))) {
                                             int j = indexOfDelegatesToTarget(parameters, delegatesToTarget.getText());
                                             if (j >= 0 && j < arguments.size()) {
                                                 Expression target = arguments.get(j);
@@ -291,6 +291,11 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                                         }
                                     }
                                 }
+                            }
+                        }
+                        if (delegatesTo == null && methodNode.getDeclaringClass().getName().equals("groovy.swing.SwingBuilder") && methodNode.getName().matches("build|doLater|doOutside|edt(Builder)?")) {
+                            if (!arguments.isEmpty() && arguments.get(0) instanceof ClosureExpression) {
+                                addDelegatesToClosure((ClosureExpression) arguments.get(0), methodNode.getDeclaringClass(), Closure.OWNER_FIRST);
                             }
                         }
                     }
@@ -315,7 +320,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
 
         public ClassNode getDelegateType(ClosureExpression closure) {
             Object[] tuple = delegatesTo.get(closure);
-            return (tuple != null ? (ClassNode) tuple[0] : declaringType/* TODO: handle closure within closure */);
+            return (tuple != null ? (ClassNode) tuple[0] : null);
         }
 
         public int getResolveStrategy(ClosureExpression closure) {
@@ -534,9 +539,6 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                     }
                 }
 
-                if (superType == null) {
-                    superType = VariableScope.OBJECT_CLASS_NODE;
-                }
                 return new VariableInfo(name, superType, superType);
             }
         }

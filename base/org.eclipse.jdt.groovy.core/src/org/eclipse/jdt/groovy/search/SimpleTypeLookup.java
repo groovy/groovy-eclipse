@@ -158,51 +158,22 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         } else if (node instanceof StaticMethodCallExpression) {
             return ((StaticMethodCallExpression) node).getOwnerType();
 
-        } else if (node instanceof ConstantExpression) {
-            if (scope.isMethodCall()) {
-                // method call with an implicit this
-                return scope.getDelegateOrThis();
-            }
+        } else if (node instanceof ConstantExpression && scope.isMethodCall()) {
+            // method call without an object expression; TODO: requires same handling as a free variable
+            return scope.getDelegateOrThis();
+
         } else if (node instanceof VariableExpression) {
             Variable var = ((VariableExpression) node).getAccessedVariable();
-            if (var instanceof DynamicVariable) {
-                // search type hierarchy for declaration
-                // first look in delegate and hierarchy and then go for this
-                ASTNode declaration = null;
-
-                ClassNode delegate = scope.getDelegate();
-                if (delegate != null) {
-                    declaration = findDeclaration(var.getName(), delegate, (scope.getWormhole().get("lhs") == node), false, scope.isFieldAccessDirect(), scope.getMethodCallArgumentTypes());
-                }
-
-                ClassNode thiz = scope.getThis();
-                if (declaration == null && thiz != null && (delegate == null || !thiz.equals(delegate))) {
-                    declaration = findDeclaration(var.getName(), thiz, (scope.getWormhole().get("lhs") == node), false, scope.isFieldAccessDirect(), scope.getMethodCallArgumentTypes());
-                }
-
-                ClassNode type;
-                if (declaration == null) {
-                    // this is a dynamic variable that doesn't seem to have a declaration
-                    // it might be an unknown and a mistake, but it could also be declared by 'this'
-                    type = thiz != null ? thiz : VariableScope.OBJECT_CLASS_NODE;
-                } else {
-                    type = getDeclaringTypeFromDeclaration(declaration, var.getType());
-                }
-                confidence[0] = TypeConfidence.findLessPrecise(confidence[0], TypeConfidence.INFERRED);
-                return type;
-
-            // using the declaring class resulted in supertypes being treated as "owner" for closures wrt var
-            }/* else if (var instanceof FieldNode) {
-                return ((FieldNode) var).getDeclaringClass();
-            } else if (var instanceof PropertyNode) {
-                return ((PropertyNode) var).getDeclaringClass();
-            } else if (VariableScope.isThisOrSuper((VariableExpression) node)) { // use 'node' because 'var' may be null
-                // this or super expression, but it is not bound, probably because concrete ast was requested
-                return scope.lookupName(((VariableExpression) node).getName()).declaringType;
-            }*/ else if (var != null && !(var instanceof Parameter || var instanceof VariableExpression)) {
-                return scope.getEnclosingTypeDeclaration();
+            if (var != null && !(var instanceof Parameter || var instanceof VariableExpression)) {
+                ClassNode ownerType;
+                /*if (scope.getEnclosingClosure() != null) {
+                    ownerType = scope.lookupName("getOwner").type;
+                } else {*/
+                    ownerType = scope.getEnclosingTypeDeclaration();
+                /*}*/
+                return ownerType;
             }
-            // else local variable, no declaring type
+            // else local variable
         }
         return VariableScope.OBJECT_CLASS_NODE;
     }

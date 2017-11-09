@@ -69,9 +69,9 @@ import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 
 /**
  * Groovy can use these to ask questions of JDT bindings. They are only built as
- * required (as groovy references to java files are resolved). They remain
- * uninitialized until groovy starts digging into them - at that time the details
- * are filled in (eg. members).
+ * required (as Groovy references to Java files are resolved). They remain unset
+ * until Groovy starts digging into them. At that time the details are filled in
+ * (eg. members).
  */
 public class JDTClassNode extends ClassNode implements JDTNode {
 
@@ -353,6 +353,20 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             ClassNode returnType = resolver.convertToClassNode(methodBinding.returnType);
 
             Parameter[] parameters = makeParameters(methodBinding.parameters);
+
+            // initialize parameter annotations
+            AnnotationBinding[][] parameterAnnotations = methodBinding.getParameterAnnotations();
+            if (parameterAnnotations != null) {
+                for (int i = 0, n = parameters.length; i < n; i += 1) {
+                    Parameter parameter = parameters[i];
+                    AnnotationBinding[] annotations = parameterAnnotations[i];
+                    if (annotations != null && annotations.length > 0) {
+                        for (AnnotationBinding annotation : annotations) {
+                            parameter.addAnnotation(new JDTAnnotationNode(annotation, resolver));
+                        }
+                    }
+                }
+            }
 
             int nExceptions; ClassNode[] exceptions = ClassNode.EMPTY_ARRAY;
             if (methodBinding.thrownExceptions != null && (nExceptions = methodBinding.thrownExceptions.length) > 0) {

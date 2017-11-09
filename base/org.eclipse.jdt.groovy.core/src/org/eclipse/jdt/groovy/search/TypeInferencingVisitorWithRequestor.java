@@ -84,6 +84,7 @@ import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.IfStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.ast.tools.WideningCategories;
 import org.codehaus.groovy.classgen.BytecodeExpression;
 import org.codehaus.groovy.runtime.MetaClassHelper;
@@ -1027,26 +1028,11 @@ assert primaryExprType != null && dependentExprType != null;
                 inferItType(node, scope);
             }
 
-            // Delegate is the declaring type of the enclosing call, if one exists, or it is 'this'
-            VariableScope.CallAndType cat = scope.getEnclosingMethodCallExpression();
-            if (cat != null) {
-                ClassNode delegateType = cat.getDelegateType(node);
-                scope.addVariable("delegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
-                scope.addVariable("getDelegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
-            } else {
-                ClassNode delegateType = scope.getThis();
-                // GRECLIPSE-1348: if someone is silly enough to have a variable named "delegate"; don't override it
-                VariableScope.VariableInfo inf = scope.lookupName("delegate");
-                if (inf == null || inf.scopeNode instanceof ClosureExpression) {
-                    scope.addVariable("delegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
-                }
-                scope.addVariable("getDelegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
-            }
-
-            // Owner is 'this' if no enclosing closure, or 'Closure' if there is
+            // if enclosing closure, owner type is 'Closure', otherwise it's 'typeof(this)'
             if (parent.getEnclosingClosure() != null) {
-                scope.addVariable("owner", VariableScope.CLOSURE_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
-                scope.addVariable("getOwner", VariableScope.CLOSURE_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
+                ClassNode closureType = GenericsUtils.nonGeneric(VariableScope.CLOSURE_CLASS_NODE);
+                scope.addVariable("owner", closureType, VariableScope.CLOSURE_CLASS_NODE);
+                scope.addVariable("getOwner", closureType, VariableScope.CLOSURE_CLASS_NODE);
             } else {
                 ClassNode ownerType = scope.getThis();
                 // GRECLIPSE-1348: if someone is silly enough to have a variable named "owner"; don't override it
@@ -1067,6 +1053,22 @@ assert primaryExprType != null && dependentExprType != null;
                 scope.addVariable("getParameterTypes", VariableScope.CLASS_ARRAY_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
                 scope.addVariable("maximumNumberOfParameters", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
                 scope.addVariable("getMaximumNumberOfParameters", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
+            }
+
+            // if enclosing method call, delegate type can be specified by the method, otherwise it's 'typeof(owner)'
+            VariableScope.CallAndType cat = scope.getEnclosingMethodCallExpression();
+            if (cat != null && cat.getDelegateType(node) != null) {
+                ClassNode delegateType = cat.getDelegateType(node);
+                scope.addVariable("delegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
+                scope.addVariable("getDelegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
+            } else {
+                ClassNode delegateType = scope.lookupName("getOwner").type;
+                // GRECLIPSE-1348: if someone is silly enough to have a variable named "delegate"; don't override it
+                VariableScope.VariableInfo inf = scope.lookupName("delegate");
+                if (inf == null || inf.scopeNode instanceof ClosureExpression) {
+                    scope.addVariable("delegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
+                }
+                scope.addVariable("getDelegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
             }
 
             super.visitClosureExpression(node);

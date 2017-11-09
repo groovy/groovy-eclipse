@@ -1678,6 +1678,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     pos = toPos(parameter.getStart(), parameter.getEnd() - 1);
                 }
                 arguments[i] = new Argument(parameter.getName().toCharArray(), pos, parameterTypeReference, Flags.AccPublic);
+                arguments[i].annotations = createAnnotations(parameter.getAnnotations());
                 arguments[i].declarationSourceStart = pstart;
             }
             if (isVargs(ps)) {

@@ -147,6 +147,20 @@ public class GenericsUtils {
 
     }
 
+    public static ClassNode nonGeneric(ClassNode type) {
+        if (type.isUsingGenerics()) {
+            final ClassNode nonGen = ClassHelper.makeWithoutCaching(type.getName());
+            nonGen.setRedirect(type);
+            nonGen.setGenericsTypes(null);
+            nonGen.setUsingGenerics(false);
+            return nonGen;
+        }
+        if (type.isArray() && type.getComponentType().isUsingGenerics()) {
+            return type.getComponentType().getPlainNodeReference().makeArray();
+        }
+        return type;
+    }
+
     public static ClassNode newClass(ClassNode type) {
         return type.getPlainNodeReference();
     }

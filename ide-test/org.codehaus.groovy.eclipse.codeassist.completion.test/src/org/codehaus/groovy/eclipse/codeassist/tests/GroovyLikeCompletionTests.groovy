@@ -50,7 +50,7 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
         " \n" +
         "class MyOtherClass extends Other {\n" +
         "    def meth() {\n" +
-        "        \"\".foo {\n" +
+        "        ''.with {\n" +
         "            substring(0)\n" +  // should find
         "            first\n" +  // should find
         "            second2()\n" +  // should find

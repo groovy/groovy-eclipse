@@ -56,6 +56,7 @@ import org.junit.runners.Suite
     org.eclipse.jdt.core.groovy.tests.search.ArrayInferencingTests,
     org.eclipse.jdt.core.groovy.tests.search.BinarySearchTests,
     org.eclipse.jdt.core.groovy.tests.search.CategorySearchTests,
+    org.eclipse.jdt.core.groovy.tests.search.ClosureInferencingTests,
     org.eclipse.jdt.core.groovy.tests.search.DGMInferencingTests,
     org.eclipse.jdt.core.groovy.tests.search.DeclarationInferencingTests,
     org.eclipse.jdt.core.groovy.tests.search.FieldReferenceSearchTests,

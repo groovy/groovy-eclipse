@@ -15,13 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests
 
-import static org.eclipse.jdt.core.groovy.tests.search.InferencingTestSuite.doVisit
-import static org.junit.Assert.assertEquals
+import static org.eclipse.jdt.core.JavaCore.createCompilationUnitFrom
 
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
-import org.eclipse.core.resources.IFile
-import org.eclipse.jdt.core.ICompilationUnit
-import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.groovy.tests.search.InferencingTestSuite
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence
 import org.junit.Before
@@ -31,27 +27,25 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
 
     @Before
     void setUp() {
-        addJavaSource('public interface IPointcut { Object accept(groovy.lang.Closure<?> c); }', 'IPointcut', 'p')
+        addJavaSource('public interface IPointcut { Object accept(@groovy.lang.DelegatesTo(IPointcut.class) groovy.lang.Closure<?> c); }', 'IPointcut', 'p')
         addPlainText(getTestResourceContents('DSLD_meta_script.dsld'), 'DSLD_meta_script.dsld')
         buildProject()
     }
 
     private GroovyCompilationUnit addDsldSource(String contents) {
-        IFile file = addPlainText(contents, 'test.dsld')
-        ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file)
-        return (GroovyCompilationUnit) unit
+        createCompilationUnitFrom(addPlainText(contents, 'test.dsld'))
     }
 
     private void assertDsldType(GroovyCompilationUnit unit, String expr) {
         int start = unit.getSource().lastIndexOf(expr), until = start + expr.length()
-        String declType = doVisit(start, until, unit, false).getDeclaringTypeName()
-        assertEquals('p.IPointcut', declType)
+        String declType = InferencingTestSuite.doVisit(start, until, unit, false).getDeclaringTypeName()
+        assert declType == 'p.IPointcut'
     }
 
     private void assertDsldUnknown(GroovyCompilationUnit unit, String expr) {
         int start = unit.getSource().lastIndexOf(expr), until = start + expr.length()
-        TypeConfidence exprCnf = doVisit(start, until, unit, false).result.confidence
-        assertEquals(TypeConfidence.UNKNOWN, exprCnf)
+        TypeConfidence exprCnf = InferencingTestSuite.doVisit(start, until, unit, false).result.confidence
+        assert exprCnf == TypeConfidence.UNKNOWN
     }
 
     private void assertUnknown(String contents, String expr) {
@@ -146,12 +140,12 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
 
     @Test
     void testBindings() {
-        String contents = '''\
+        GroovyCompilationUnit unit = addDsldSource('''\
             bind(b: currentType()).accept {
               b
             }
-            '''.stripIndent()
+            '''.stripIndent())
 
-        assertDsldType(addDsldSource(contents), 'b')
+        assertDsldType(unit, 'b')
     }
 }

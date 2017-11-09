@@ -37,8 +37,8 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
         assumeTrue(isAtLeastGroovy(21));
     }
 
-    @Test // tests CompareToNullExpression
-    public void testDelegatesTo1() throws Exception {
+    @Test
+    public void testDelegatesToValue1() {
         String contents =
             "class Other { }\n" +
                 "def meth(@DelegatesTo(Other) Closure c) { }\n" +
@@ -51,7 +51,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDelegatesTo1a() throws Exception {
+    public void testDelegatesToValue2() {
         String contents =
             "class Other { }\n" +
                 "def meth(@DelegatesTo(Other) c) { }\n" +
@@ -64,7 +64,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDelegatesTo2() throws Exception {
+    public void testDelegatesToValue3() {
         String contents =
             "class Other { int xxx }\n" +
                 "def meth(@DelegatesTo(Other) Closure c) { }\n" +
@@ -77,7 +77,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDelegatesTo3() throws Exception {
+    public void testDelegatesToValue4() {
         String contents =
             "def meth(@DelegatesTo(List) Closure c) { }\n" +
                 "meth { delegate }";
@@ -89,7 +89,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDelegatesTo4() throws Exception {
+    public void testDelegatesToValue5() {
         String contents =
             "def meth(int x, int y, @DelegatesTo(List) Closure c) { }\n" +
                 "meth 1, 2, { delegate }";
@@ -100,8 +100,8 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "java.util.List");
     }
 
-    @Test // expected to be broken
-    public void testDelegatesTo5() throws Exception {
+    @Test // expected to be broken (due to missing closing angle bracket on type)
+    public void testDelegatesToValue6() {
         String contents =
             "def meth(int x, int y, @DelegatesTo(List<String) Closure c) { }\n" +
                 "meth { delegate }";
@@ -113,7 +113,120 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticCompile1() throws Exception {
+    public void testDelegatesToTarget1() {
+        createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
+            "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.DELEGATE_FIRST) Closure code) { } }");
+
+        String contents = "class A { def x }\n" +
+            "class B { def x, y\n" +
+            "  def m(A a) {\n" +
+            "    use (C) {\n" +
+            "      a.cat {" + // delegate is A, owner is B
+            "        x\n" +
+            "        y\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf('x');
+        assertDeclaringType(contents, offset, offset + 1, "A");
+        offset = contents.lastIndexOf('y');
+        assertDeclaringType(contents, offset, offset + 1, "B");
+    }
+
+    @Test
+    public void testDelegatesToTarget2() {
+        createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
+            "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.DELEGATE_ONLY) Closure code) { } }");
+
+        String contents = "class A { def x }\n" +
+            "class B { def x, y\n" +
+            "  def m(A a) {\n" +
+            "    use (C) {\n" +
+            "      a.cat {" + // delegate is A, owner is B
+            "        x\n" +
+            "        y\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf('x');
+        assertDeclaringType(contents, offset, offset + 1, "A");
+        offset = contents.lastIndexOf('y');
+        assertUnknownConfidence(contents, offset, offset + 1, "B", false);
+    }
+
+    @Test
+    public void testDelegatesToTarget3() {
+        createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
+            "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.OWNER_FIRST) Closure code) { } }");
+
+        String contents = "class A { def x, z }\n" +
+            "class B { def x, y\n" +
+            "  def m(A a) {\n" +
+            "    use (C) {\n" +
+            "      a.cat {" + // delegate is A, owner is B
+            "        x\n" +
+            "        y\n" +
+            "        z\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf('x');
+        assertDeclaringType(contents, offset, offset + 1, "B");
+        offset = contents.lastIndexOf('y');
+        assertDeclaringType(contents, offset, offset + 1, "B");
+        offset = contents.lastIndexOf('z');
+        assertDeclaringType(contents, offset, offset + 1, "A");
+    }
+
+    @Test
+    public void testDelegatesToTarget4() {
+        createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
+            "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.OWNER_ONLY) Closure code) { } }");
+
+        String contents = "class A { def x }\n" +
+            "class B { def x, y\n" +
+            "  def m(A a) {\n" +
+            "    use (C) {\n" +
+            "      a.cat {" + // delegate is A, owner is B
+            "        x\n" +
+            "        y\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf('x');
+        assertDeclaringType(contents, offset, offset + 1, "B");
+        offset = contents.lastIndexOf('y');
+        assertDeclaringType(contents, offset, offset + 1, "B");
+    }
+
+    @Test // seemingly invalid combination
+    public void testDelegatesToTarget5() {
+        createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
+            "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.TO_SELF) Closure code) { } }");
+
+        String contents = "class A { def x }\n" +
+            "class B { def x, y\n" +
+            "  def m(A a) {\n" +
+            "    use (C) {\n" +
+            "      a.cat {" + // delegate is A, owner is B
+            "        x\n" +
+            "        y\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf('x');
+        assertUnknownConfidence(contents, offset, offset + 1, "B", false);
+        offset = contents.lastIndexOf('y');
+        assertUnknownConfidence(contents, offset, offset + 1, "B", false);
+    }
+
+    @Test
+    public void testStaticCompile1() {
         Activator.getInstancePreferences().getBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, Activator.DEFAULT_SCRIPT_FILTERS_ENABLED);
         Activator.getInstancePreferences().get(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
         try {

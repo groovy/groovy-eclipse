@@ -91,7 +91,9 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     void testEmptyClosure1() {
         createDsls(SET_DELEGATE_ON_INT)
         String contents = '''\
-            1.foo {
+            def foo(@DelegatesTo(Integer) Closure cl) {
+            }
+            foo {
               // here
             }
             '''.stripIndent()
@@ -108,7 +110,9 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     void testEmptyClosure2() {
         createDsls(SET_DELEGATE_ON_INT)
         String contents = '''\
-            1.foo {
+            def foo(@DelegatesTo(Integer) Closure cl) {
+            }
+            foo {
               to
             }
             '''.stripIndent()
@@ -365,7 +369,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     void testSwingBuilder1() {
         String contents = '''\
             import groovy.swing.SwingBuilder
-              new SwingBuilder().edt {
+            new SwingBuilder().edt {
               delegate.f
             }
             '''.stripIndent()
@@ -391,7 +395,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     void testSwingBuilder3() {
         String contents = '''\
             import groovy.swing.SwingBuilder
-              new SwingBuilder().edt {
+            new SwingBuilder().edt {
               this.x
             }
             '''.stripIndent()
