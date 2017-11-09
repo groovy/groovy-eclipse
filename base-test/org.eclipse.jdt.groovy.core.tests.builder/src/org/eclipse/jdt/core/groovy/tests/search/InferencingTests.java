@@ -1490,11 +1490,24 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testSuperClassMethod() {
+        String contents = "class A { void m() { } }\n" + "class B extends A { }\n" + "new B().m()";
+        int offset = contents.lastIndexOf('m');
+        assertDeclaringType(contents, offset, offset + 1, "A");
+    }
+
+    @Test
+    public void testSuperClassMethod2() {
+        String contents = "class A { void m(Runnable r) { } }\n" + "class B extends A { }\n" + "new B().m() { -> }";
+        int offset = contents.lastIndexOf('m');
+        assertDeclaringType(contents, offset, offset + 1, "A");
+    }
+
+    @Test
     public void testFieldWithInitializer1() {
         String contents = "class A {\ndef x = 9\n}\n new A().x";
-        int start = contents.lastIndexOf('x');
-        int end = start + "x".length();
-        assertType(contents, start, end, "java.lang.Integer");
+        int offset = contents.lastIndexOf('x');
+        assertType(contents, offset, offset + 1, "java.lang.Integer");
     }
 
     @Test

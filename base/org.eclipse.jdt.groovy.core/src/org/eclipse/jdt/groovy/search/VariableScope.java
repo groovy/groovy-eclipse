@@ -212,14 +212,19 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     public static class CallAndType {
 
         public final ASTNode declaration;
-        public final ClassNode objExprType;
+        public final ClassNode declaringType;
         public final MethodCallExpression call;
         private Map<ClosureExpression, Object[]> delegatesTo;
 
-        public CallAndType(MethodCallExpression call, ASTNode declaration, ClassNode objExprType, ModuleNode enclosingModule) {
+        /**
+         * @param declaringType type that declares {@code declaration} in most cases;
+         *        if {@code call} is a category method it's likely the calling object
+         *        type; if {@code call} is an implicit-this call in a closure, then...
+         */
+        public CallAndType(MethodCallExpression call, ASTNode declaration, ClassNode declaringType, ModuleNode enclosingModule) {
             this.call = call;
             this.declaration = declaration;
-            this.objExprType = objExprType;
+            this.declaringType = declaringType;
 
             // handle the Groovy 2.1+ @DelegatesTo annotation; see also org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor#checkClosureWithDelegatesTo
             if (DELEGATES_TO != null && declaration instanceof MethodNode) {
@@ -233,7 +238,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                     if (arguments != null && !arguments.isEmpty()) {
                         if (!methodNode.getDeclaringClass().equals(getPerceivedDeclaringType())) {
                             List<Expression> categoryMethodArguments = new ArrayList<Expression>(arguments.size() + 1);
-                            categoryMethodArguments.add(new ClassExpression(objExprType));
+                            categoryMethodArguments.add(new ClassExpression(declaringType));
                             categoryMethodArguments.addAll(arguments);
                             arguments = categoryMethodArguments;
                         }
@@ -301,16 +306,16 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
          * from the actual declaring class in case of class/category methods.
          */
         public ClassNode getPerceivedDeclaringType() {
-            if (objExprType.equals(CLASS_CLASS_NODE)) { // TODO: What if a class instance is the object expression?
-                assert objExprType.isUsingGenerics();
-                return objExprType.getGenericsTypes()[0].getType();
+            if (declaringType.equals(CLASS_CLASS_NODE)) {
+                assert declaringType.isUsingGenerics();
+                return declaringType.getGenericsTypes()[0].getType();
             }
-            return objExprType;
+            return declaringType;
         }
 
         public ClassNode getDelegateType(ClosureExpression closure) {
             Object[] tuple = delegatesTo.get(closure);
-            return (tuple != null ? (ClassNode) tuple[0] : objExprType);
+            return (tuple != null ? (ClassNode) tuple[0] : declaringType/* TODO: handle closure within closure */);
         }
 
         public int getResolveStrategy(ClosureExpression closure) {

@@ -2667,12 +2667,12 @@ assert primaryExprType != null && dependentExprType != null;
 
         VariableScope.CallAndType cat = scope.getEnclosingMethodCallExpression();
         if (cat != null) {
-            ClassNode delegateType = cat.objExprType;
+            ClassNode fauxDeclaringType = cat.declaringType; // will not be true declaring type for category methods
             String methodName = cat.call.getMethodAsString();
 
             ClassNode inferredParamType;
             if (dgmClosureDelegateMethods.contains(methodName)) {
-                inferredParamType = VariableScope.extractElementType(delegateType);
+                inferredParamType = VariableScope.extractElementType(fauxDeclaringType);
             } else {
                 inferredParamType = dgmClosureFixedTypeMethods.get(methodName);
             }
@@ -2684,7 +2684,7 @@ assert primaryExprType != null && dependentExprType != null;
                     inferredTypes[inferredTypes.length - 1] = VariableScope.INTEGER_CLASS_NODE;
                 }
                 // if declaring type is a map and
-                if (delegateType.getName().equals(VariableScope.MAP_CLASS_NODE.getName())) {
+                if (fauxDeclaringType.getName().equals(VariableScope.MAP_CLASS_NODE.getName())) {
                     if ((dgmClosureMaybeMap.contains(methodName) && paramCount == 2) ||
                             (methodName.equals("eachWithIndex") && paramCount == 3)) {
                         GenericsType[] typeParams = inferredParamType.getGenericsTypes();
