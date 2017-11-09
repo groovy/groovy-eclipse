@@ -159,18 +159,24 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             return ((StaticMethodCallExpression) node).getOwnerType();
 
         } else if (node instanceof ConstantExpression && scope.isMethodCall()) {
-            // method call without an object expression; TODO: requires same handling as a free variable
-            return scope.getDelegateOrThis();
+            // method call without an object expression; requires same handling as a free variable
+            ClassNode ownerType;
+            if (scope.getEnclosingClosure() != null) {
+                ownerType = scope.getOwner();
+            } else {
+                ownerType = scope.getEnclosingTypeDeclaration();
+            }
+            return ownerType;
 
         } else if (node instanceof VariableExpression) {
             Variable var = ((VariableExpression) node).getAccessedVariable();
             if (var != null && !(var instanceof Parameter || var instanceof VariableExpression)) {
                 ClassNode ownerType;
-                /*if (scope.getEnclosingClosure() != null) {
-                    ownerType = scope.lookupName("getOwner").type;
-                } else {*/
+                if (scope.getEnclosingClosure() != null) {
+                    ownerType = scope.getOwner();
+                } else {
                     ownerType = scope.getEnclosingTypeDeclaration();
-                /*}*/
+                }
                 return ownerType;
             }
             // else local variable
@@ -188,27 +194,33 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         if (node instanceof VariableExpression) {
             return findTypeForVariable((VariableExpression) node, scope, confidence, declaringType);
-        }
-
-        // short-circuit if object expression is part of direct field access (aka AttributeExpression)
-        if (!isPrimaryExpression && node instanceof ConstantExpression && scope.getEnclosingNode() instanceof AttributeExpression) {
-            ClassNode clazz = !isStaticObjectExpression ? declaringType : declaringType.getGenericsTypes()[0].getType();
-            FieldNode field = clazz.getDeclaredField(node.getText()); // don't search super types (see GROOVY-8167)
-            if (isCompatible(field, isStaticObjectExpression)) {
-                return new TypeLookupResult(field.getType(), clazz, field, TypeConfidence.EXACT, scope);
-            } else {
-                return new TypeLookupResult(VariableScope.VOID_CLASS_NODE, clazz, null, TypeConfidence.UNKNOWN, scope);
+        } else if (node instanceof ConstantExpression && isPrimaryExpression && scope.isMethodCall()) {
+            VariableExpression expr = new VariableExpression(new DynamicVariable(node.getText(), false));
+            TypeLookupResult result = findTypeForVariable(expr, scope, confidence, declaringType);
+            if (isCompatible((AnnotatedNode) result.declaration, isStaticObjectExpression)) {
+                return result;
             }
         }
 
-        // NOTE: method calls with no object expression go here instead of findTypeForVariable
         ClassNode nodeType = node.getType();
-        if ((!isPrimaryExpression || scope.isMethodCall()) && node instanceof ConstantExpression) {
-            return findTypeForNameWithKnownObjectExpression(node.getText(), nodeType, declaringType, scope, confidence,
-                isStaticObjectExpression, isPrimaryExpression, /*isLhsExpression:*/(scope.getWormhole().remove("lhs") == node));
-        }
-
         if (node instanceof ConstantExpression) {
+            if (!isPrimaryExpression) {
+                // short-circuit if object expression is part of direct field access (aka AttributeExpression)
+                if (scope.getEnclosingNode() instanceof AttributeExpression) {
+                    ClassNode clazz = !isStaticObjectExpression ? declaringType : declaringType.getGenericsTypes()[0].getType();
+                    FieldNode field = clazz.getDeclaredField(node.getText()); // don't search super types (see GROOVY-8167)
+                    if (isCompatible(field, isStaticObjectExpression)) {
+                        return new TypeLookupResult(field.getType(), clazz, field, TypeConfidence.EXACT, scope);
+                    } else {
+                        return new TypeLookupResult(VariableScope.VOID_CLASS_NODE, clazz, null, TypeConfidence.UNKNOWN, scope);
+                    }
+                }
+            }
+            if (!isPrimaryExpression || scope.isMethodCall()) {
+                return findTypeForNameWithKnownObjectExpression(node.getText(), nodeType, declaringType, scope, confidence,
+                    isStaticObjectExpression, isPrimaryExpression, /*isLhsExpression:*/(scope.getWormhole().remove("lhs") == node));
+            }
+
             ConstantExpression cexp = (ConstantExpression) node;
             if (cexp.isNullExpression()) {
                 return new TypeLookupResult(VariableScope.VOID_CLASS_NODE, null, null, confidence, scope);
@@ -462,11 +474,19 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         boolean isLhsExpr = (scope.getWormhole().remove("lhs") == var);
 
         if (resolveStrategy == Closure.DELEGATE_FIRST || resolveStrategy == Closure.DELEGATE_ONLY) {
+            // TODO: If strategy is DELEGATE_ONLY and delegate is enclosing closure, do outer search.
             candidate = findDeclaration(var.getName(), scope.getDelegate(), isLhsExpr, false, false, callArgs);
         }
         if (candidate == null && resolveStrategy < Closure.DELEGATE_ONLY) {
-            candidate = findDeclaration(var.getName(), owner, isLhsExpr, scope.isOwnerStatic(), scope.isFieldAccessDirect(), callArgs);
-
+            VariableScope outer = owner.getNodeMetaData("outer.scope");
+            if (outer != null) { // owner is an enclosing closure
+                if (isLhsExpr) scope.getWormhole().put("lhs", var);
+                VariableScope.CallAndType cat = outer.getEnclosingMethodCallExpression();
+                int enclosingResolveStrategy = (cat == null ? 0 : cat.getResolveStrategy(outer.getEnclosingClosure()));
+                candidate = findDeclarationForDynamicVariable(var, outer.getOwner(), outer, enclosingResolveStrategy);
+            } else {
+                candidate = findDeclaration(var.getName(), owner, isLhsExpr, scope.isOwnerStatic(), scope.isFieldAccessDirect(), callArgs);
+            }
             if (candidate == null && resolveStrategy < Closure.DELEGATE_FIRST && scope.getEnclosingClosure() != null) {
                 candidate = findDeclaration(var.getName(), scope.getDelegate(), isLhsExpr, false, false, callArgs);
             }
@@ -754,7 +774,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             } else if (declaration instanceof PropertyNode) {
                 isStatic = ((PropertyNode) declaration).isStatic();
             }
-            if (!isStaticExpression || isStatic || declaration.getDeclaringClass().equals(VariableScope.CLASS_CLASS_NODE)) {
+            if (!isStaticExpression || isStatic || VariableScope.CLASS_CLASS_NODE.equals(declaration.getDeclaringClass())) {
                 return true;
             }
         }

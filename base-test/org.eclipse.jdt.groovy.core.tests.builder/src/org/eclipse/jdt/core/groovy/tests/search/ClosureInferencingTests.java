@@ -109,18 +109,14 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "      this\n" +
             "      super\n" +
             "      owner\n" +
-            "      getOwner()\n" +
             "      delegate\n" +
-            "      getDelegate()\n" +
             "    }\n" +
             "  }\n" +
             "}";
         assertExprType(contents, "this",        "Bar");
         assertExprType(contents, "super",       "Foo");
         assertExprType(contents, "owner",       "Bar");
-        assertExprType(contents, "getOwner",    "Bar");
         assertExprType(contents, "delegate",    "Bar");
-        assertExprType(contents, "getDelegate", "Bar");
     }
 
     @Test // closure with non-default resolve strategy
@@ -133,18 +129,14 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "      this\n" +
             "      super\n" +
             "      owner\n" +
-            "      getOwner()\n" +
             "      delegate\n" +
-            "      getDelegate()\n" +
             "    }\n" +
             "  }\n" +
             "}";
         assertExprType(contents, "this",        "Bar");
         assertExprType(contents, "super",       "java.lang.Object");
         assertExprType(contents, "owner",       "Bar");
-        assertExprType(contents, "getOwner",    "Bar");
         assertExprType(contents, "delegate",    "Foo");
-        assertExprType(contents, "getDelegate", "Foo");
     }
 
     @Test // closure within static scope wrt owner
@@ -155,16 +147,12 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "  static void main(args) {\n" +
             "    def closure = {\n" +
             "      owner\n" +
-            "      getOwner()\n" +
             "      delegate\n" +
-            "      getDelegate()\n" +
             "    }\n" +
             "  }\n" +
             "}";
         assertExprType(contents, "owner",       "java.lang.Class<Bar>");
-        assertExprType(contents, "getOwner",    "java.lang.Class<Bar>");
         assertExprType(contents, "delegate",    "java.lang.Class<Bar>");
-        assertExprType(contents, "getDelegate", "java.lang.Class<Bar>");
     }
 
     @Test
@@ -594,6 +582,50 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "  }" +
             "}";
         assertExprType(contents, "this", "Search");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/377
+    public void testDoubleClosure10() {
+        String contents =
+            "import java.beans.*\n" +
+            "class B extends PropertyChangeSupport {\n" +
+            "  Number info\n" +
+            "}\n" +
+            "class C {\n" +
+            "  B bean\n" +
+            "  void init() {\n" +
+            "    bean.with {\n" +
+            "      addPropertyChangeListener('name') { PropertyChangeEvent event ->\n" +
+            "        info\n" + // from outer delegate
+            "      }" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf("info");
+        assertType(contents, offset, offset + 4, "java.lang.Number");
+        assertDeclaringType(contents, offset, offset + 4, "B"); // outer delegate
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/377
+    public void testDoubleClosure11() {
+        String contents =
+            "import java.beans.*\n" +
+            "class B extends PropertyChangeSupport {\n" +
+            "  boolean meth(args) { }\n" +
+            "}\n" +
+            "class C {\n" +
+            "  B bean\n" +
+            "  void init() {\n" +
+            "    bean.with {\n" +
+            "      addPropertyChangeListener('name') { PropertyChangeEvent event ->\n" +
+            "        meth(1, '2', ~/3/)\n" + // from outer delegate
+            "      }" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf("meth");
+        assertType(contents, offset, offset + 4, "java.lang.Boolean");
+        assertDeclaringType(contents, offset, offset + 4, "B"); // outer delegate
     }
 
     @Test // Closure type inference without @CompileStatic

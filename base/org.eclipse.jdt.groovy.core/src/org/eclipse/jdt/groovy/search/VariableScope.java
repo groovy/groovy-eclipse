@@ -562,17 +562,17 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     }
 
     public ClassNode getThis() {
-        VariableInfo thiz = lookupName("this");
-        return thiz != null ? thiz.type : null;
+        VariableInfo info = lookupName("this");
+        return info != null ? info.type : null;
+    }
+
+    public ClassNode getOwner() {
+        VariableInfo info = lookupName("getOwner");
+        return info != null ? info.type : null;
     }
 
     public ClassNode getDelegate() {
-        VariableInfo delegate = lookupName("delegate");
-        return delegate != null ? delegate.type : null;
-    }
-
-    public ClassNode getDelegateOrThis() {
-        VariableInfo info = getDelegateOrThisInfo();
+        VariableInfo info = lookupName("getDelegate");
         return info != null ? info.type : null;
     }
 
@@ -580,12 +580,12 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
      * @return the current delegate type if exists, or this type if exists.
      *       Returns null if in top level scope (i.e. in import statement).
      */
-    public VariableInfo getDelegateOrThisInfo() {
-        VariableInfo info = lookupName("delegate");
-        if (info == null) {
-            info = lookupName("this");
+    public ClassNode getDelegateOrThis() {
+        ClassNode type = getDelegate();
+        if (type == null) {
+            type = getThis();
         }
-        return info; // might be null if in imports
+        return type;
     }
 
     /**
@@ -674,7 +674,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         return resolveStrategy;
     }
 
-    private VariableScope getEnclosingClosureScope() {
+    /*package*/ VariableScope getEnclosingClosureScope() {
         VariableScope scope = this;
         do {
             if (scope.scopeNode instanceof ClosureExpression) {

@@ -83,8 +83,8 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
         ContentAssistContext context = getContext();
         if (context.currentScope != null && context.currentScope.getEnclosingClosure() != null) {
             org.eclipse.jdt.groovy.search.VariableScope scope = context.currentScope;
-            org.eclipse.jdt.groovy.search.VariableScope.VariableInfo ownerInfo = scope.lookupName("owner");
-            org.eclipse.jdt.groovy.search.VariableScope.VariableInfo delegateInfo = scope.lookupName("delegate");
+            org.eclipse.jdt.groovy.search.VariableScope.VariableInfo ownerInfo = scope.lookupName("getOwner");
+            org.eclipse.jdt.groovy.search.VariableScope.VariableInfo delegateInfo = scope.lookupName("getDelegate");
 
             List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
             maybeAddClosureProperty(proposals, "owner", ownerInfo.declaringType, ownerInfo.type, false);

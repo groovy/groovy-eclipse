@@ -1031,6 +1031,8 @@ assert primaryExprType != null && dependentExprType != null;
             // if enclosing closure, owner type is 'Closure', otherwise it's 'typeof(this)'
             if (parent.getEnclosingClosure() != null) {
                 ClassNode closureType = GenericsUtils.nonGeneric(VariableScope.CLOSURE_CLASS_NODE);
+                closureType.putNodeMetaData("outer.scope", parent.getEnclosingClosureScope());
+
                 scope.addVariable("owner", closureType, VariableScope.CLOSURE_CLASS_NODE);
                 scope.addVariable("getOwner", closureType, VariableScope.CLOSURE_CLASS_NODE);
             } else {
@@ -1062,7 +1064,7 @@ assert primaryExprType != null && dependentExprType != null;
                 scope.addVariable("delegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
                 scope.addVariable("getDelegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
             } else {
-                ClassNode delegateType = scope.lookupName("getOwner").type;
+                ClassNode delegateType = scope.getOwner();
                 // GRECLIPSE-1348: if someone is silly enough to have a variable named "delegate"; don't override it
                 VariableScope.VariableInfo inf = scope.lookupName("delegate");
                 if (inf == null || inf.scopeNode instanceof ClosureExpression) {
