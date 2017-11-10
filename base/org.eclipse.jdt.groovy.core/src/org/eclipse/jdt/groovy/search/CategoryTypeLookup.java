@@ -104,15 +104,35 @@ public class CategoryTypeLookup implements ITypeLookup {
     protected boolean isCompatibleCategoryMethod(MethodNode method, ClassNode firstArgumentType) {
         if (method.isStatic()) {
             Parameter[] paramters = method.getParameters();
-            if (paramters != null && paramters.length > 0 &&
-                    SimpleTypeLookup.isTypeCompatible(firstArgumentType, paramters[0].getType()) != Boolean.FALSE) {
-                return true;
+            if (paramters != null && paramters.length > 0) {
+                ClassNode parameterType = paramters[0].getType();
+                if (VariableScope.DGSM_CLASS_NODE.equals(method.getDeclaringClass())) {
+                    parameterType = VariableScope.newClassClassNode(parameterType);
+                }
+                if (isTypeCompatible(firstArgumentType, parameterType)) {
+                    return true;
+                }
             }
         }
         return false;
     }
 
-    protected boolean isDefaultGroovyMethod(MethodNode method) {
+    protected final boolean isTypeCompatible(ClassNode source, ClassNode target) {
+        if (SimpleTypeLookup.isTypeCompatible(source, target) != Boolean.FALSE) {
+            if (!VariableScope.CLASS_CLASS_NODE.equals(source) || VariableScope.OBJECT_CLASS_NODE.equals(target) || !target.isUsingGenerics()) {
+                return true;
+            } else {
+                source = source.getGenericsTypes()[0].getType();
+                target = target.getGenericsTypes()[0].getType();
+                if (SimpleTypeLookup.isTypeCompatible(source, target) != Boolean.FALSE) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    protected final boolean isDefaultGroovyMethod(MethodNode method) {
         return VariableScope.ALL_DEFAULT_CATEGORIES.contains(method.getDeclaringClass());
     }
 

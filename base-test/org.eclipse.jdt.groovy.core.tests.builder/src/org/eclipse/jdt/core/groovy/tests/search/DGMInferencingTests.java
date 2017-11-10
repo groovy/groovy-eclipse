@@ -538,7 +538,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGMDeclaring1() {
+    public void testDGMDeclaring() {
         // With groovy 2.0, there are some new DGM classes.  Need to ensure that we are using those classes as the declaring type, but only for 2.0 or later.
         String contents = "\"\".eachLine";
         String str = "eachLine";
@@ -575,5 +575,48 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         } else {
             assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
         }
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/372
+    public void testDGSMDeclaring() {
+        String contents = "Date.parse('format', 'value')";
+        String target = "parse";
+        int start = contents.lastIndexOf(target), until = start + target.length();
+        assertDeclaringType(contents, start, until, "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
+    }
+
+    @Test
+    public void testDGSMDeclaring2() {
+        String contents = "Date.sleep(42)";
+        String target = "sleep";
+        int start = contents.lastIndexOf(target), until = start + target.length();
+        assertDeclaringType(contents, start, until, "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
+    }
+
+    @Test
+    public void testDGSMDeclaring3() {
+        String contents = "Date.getLastMatcher()";
+        String target = "getLastMatcher";
+        int start = contents.lastIndexOf(target), until = start + target.length();
+        assertUnknownConfidence(contents, start, until, "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods", false);
+    }
+
+    @Test
+    public void testStaticMixinDGM() {
+        String contents = "class Parrot { static void echo(String self) { println \"Parrot says: $self\" } }\nString.mixin(Parrot)\n'sqwak'.echo()";
+        String target = "mixin";
+        int start = contents.lastIndexOf(target), until = start + target.length();
+        assertDeclaringType(contents, start, until, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+        target = "echo";
+        start = contents.lastIndexOf(target); until = start + target.length();
+        //assertDeclaringType(contents, start, until, "Parrot"); // added to String usinf DGM.mixin(Class)
+    }
+
+    @Test
+    public void testStaticWithDGM() {
+        String contents = "Date.with { delegate }"; // type of delegate checked in ClosureInferencingTests
+        String target = "with";
+        int start = contents.lastIndexOf(target), until = start + target.length();
+        assertDeclaringType(contents, start, until, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 }
