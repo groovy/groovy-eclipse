@@ -22,7 +22,6 @@ import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
 import org.eclipse.core.resources.IResource
 import org.eclipse.jdt.core.IClasspathContainer
 import org.eclipse.jdt.core.IClasspathEntry
-import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.core.IPackageFragmentRoot
 import org.eclipse.jdt.core.JavaCore
@@ -58,7 +57,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             def items = [frag.toString()]
             if (frag.children) {
                 items << '  ['
-                for (IJavaElement child : frag.getChildren()) {
+                for (child in frag.children) {
                     items << ('    ' + child.elementName)
                 }
                 items << '  ]'
