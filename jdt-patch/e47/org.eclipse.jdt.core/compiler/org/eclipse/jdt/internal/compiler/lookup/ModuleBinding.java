@@ -110,7 +110,7 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 	boolean isAuto = false;
 	private boolean[] isComplete = new boolean[UpdateKind.values().length];
 	private Set<ModuleBinding> transitiveRequires;
-	private boolean isPackageLookupActive = false; // to prevent cyclic lookup caused by synthetic reads edges on behalf of auto-modules.
+	boolean isPackageLookupActive = false; // to prevent cyclic lookup caused by synthetic reads edges on behalf of auto-modules.
 
 	/**
 	 * Packages declared in this module (indexed by qualified name).

@@ -19,7 +19,7 @@
   </parent>
   <groupId>eclipse.jdt.core</groupId>
   <artifactId>tests-pom</artifactId>
-  <version>4.7.1-SNAPSHOT</version>
+  <version>4.7.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <build>

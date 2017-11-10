@@ -8438,4 +8438,106 @@ public void testBug508834_comment0() {
 			"ArrayList is a raw type. References to generic type ArrayList<E> should be parameterized\n" + 
 			"----------\n");
 	}
+	public void testBug525576() {
+		this.runNegativeTest(
+			new String[] {
+				"test/Action.java",
+				"package test;\n" + 
+				"\n" + 
+				"public class Action<S2 extends Service> {\n" + 
+				"    void setService(S2 s) {\n" + 
+				"    }\n" + 
+				"}\n" + 
+				"",
+				"test/Device.java",
+				"package test;\n" + 
+				"\n" + 
+				"public abstract class Device<DI, S1 extends Service> {\n" + 
+				"    private DI identity;\n" + 
+				"\n" + 
+				"    protected void find(Service service) {\n" + 
+				"        service.getDevice();\n" + 
+				"    }\n" + 
+				"\n" + 
+				"    public Object equals(Device obj) {\n" + 
+				"        return obj.identity;\n" + 
+				"    }\n" + 
+				"}\n" + 
+				"",
+				"test/Service.java",
+				"package test;\n" + 
+				"\n" + 
+				"import java.util.Collection;\n" + 
+				"\n" + 
+				"public abstract class Service<D1 extends Device, S2 extends Service> {\n" + 
+				"    public Service(Action<S2>[] actionArr) {\n" + 
+				"        for (Action action : actionArr) {\n" + 
+				"            action.setService(this);\n" + 
+				"        }\n" + 
+				"    }\n" + 
+				"\n" + 
+				"    public Action<S2>[] getActions(Collection<Action> actions) {\n" + 
+				"        return actions.toArray(new Action[actions.size()]);\n" + 
+				"    }\n" + 
+				"\n" + 
+				"    public D1 getDevice() {\n" + 
+				"    		return null;\n" + 
+				"    }\n" + 
+				"}\n" + 
+				""
+			},
+			"----------\n" + 
+			"1. WARNING in test\\Action.java (at line 3)\n" + 
+			"	public class Action<S2 extends Service> {\n" + 
+			"	                               ^^^^^^^\n" + 
+			"Service is a raw type. References to generic type Service<D1,S2> should be parameterized\n" + 
+			"----------\n" + 
+			"----------\n" + 
+			"1. WARNING in test\\Device.java (at line 3)\n" + 
+			"	public abstract class Device<DI, S1 extends Service> {\n" + 
+			"	                                            ^^^^^^^\n" + 
+			"Service is a raw type. References to generic type Service<D1,S2> should be parameterized\n" + 
+			"----------\n" + 
+			"2. WARNING in test\\Device.java (at line 6)\n" + 
+			"	protected void find(Service service) {\n" + 
+			"	                    ^^^^^^^\n" + 
+			"Service is a raw type. References to generic type Service<D1,S2> should be parameterized\n" + 
+			"----------\n" + 
+			"3. WARNING in test\\Device.java (at line 10)\n" + 
+			"	public Object equals(Device obj) {\n" + 
+			"	                     ^^^^^^\n" + 
+			"Device is a raw type. References to generic type Device<DI,S1> should be parameterized\n" + 
+			"----------\n" + 
+			"----------\n" + 
+			"1. WARNING in test\\Service.java (at line 5)\n" + 
+			"	public abstract class Service<D1 extends Device, S2 extends Service> {\n" + 
+			"	                                         ^^^^^^\n" + 
+			"Device is a raw type. References to generic type Device<DI,S1> should be parameterized\n" + 
+			"----------\n" + 
+			"2. WARNING in test\\Service.java (at line 5)\n" + 
+			"	public abstract class Service<D1 extends Device, S2 extends Service> {\n" + 
+			"	                                                            ^^^^^^^\n" + 
+			"Service is a raw type. References to generic type Service<D1,S2> should be parameterized\n" + 
+			"----------\n" + 
+			"3. WARNING in test\\Service.java (at line 7)\n" + 
+			"	for (Action action : actionArr) {\n" + 
+			"	     ^^^^^^\n" + 
+			"Action is a raw type. References to generic type Action<S2> should be parameterized\n" + 
+			"----------\n" + 
+			"4. WARNING in test\\Service.java (at line 8)\n" + 
+			"	action.setService(this);\n" + 
+			"	^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+			"Type safety: The method setService(Service) belongs to the raw type Action. References to generic type Action<S2> should be parameterized\n" + 
+			"----------\n" + 
+			"5. WARNING in test\\Service.java (at line 12)\n" + 
+			"	public Action<S2>[] getActions(Collection<Action> actions) {\n" + 
+			"	                                          ^^^^^^\n" + 
+			"Action is a raw type. References to generic type Action<S2> should be parameterized\n" + 
+			"----------\n" + 
+			"6. WARNING in test\\Service.java (at line 13)\n" + 
+			"	return actions.toArray(new Action[actions.size()]);\n" + 
+			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+			"Type safety: The expression of type Action[] needs unchecked conversion to conform to Action<S2>[]\n" + 
+			"----------\n");
+	}
 }

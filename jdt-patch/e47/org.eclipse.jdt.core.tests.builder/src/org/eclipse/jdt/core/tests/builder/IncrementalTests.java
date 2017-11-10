@@ -1255,4 +1255,31 @@ public class IncrementalTests extends BuilderTests {
 		env.removeProject(projectPath2);
 		env.removeProject(projectPath1);
 	}
+	
+	public void testBug526376() throws JavaModelException {
+		IPath projectPath = env.addProject("Project");
+		env.addExternalJars(projectPath, Util.getJavaClassLibs());
+
+		// remove old package fragment root so that names don't collide
+		env.removePackageFragmentRoot(projectPath, "");
+
+		IPath root = env.addPackageFragmentRoot(projectPath, "src");
+		env.setOutputFolder(projectPath, "bin");
+
+		env.addClass(root, "p", "A",
+			"package p;	\n"+
+			"public class A extends B {}	\n");
+
+		fullBuild(projectPath);
+
+		env.addClass(root, "p", "B",
+			"package p;	\n"+
+			"public class B {}\n");
+
+		incrementalBuild(projectPath);
+		expectingCompilingOrder(new String[] { "/Project/src/p/B.java", "/Project/src/p/A.java" });
+		expectingNoProblems();
+		env.removeProject(projectPath);
+	}
+
 }

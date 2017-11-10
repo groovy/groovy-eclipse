@@ -66,6 +66,8 @@ import org.eclipse.jdt.internal.core.util.Util;
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class NameLookup implements SuffixConstants {
 
+	private static IModuleDescription NO_MODULE = new AbstractModule(null, "Not a module") { /* empty */ }; //$NON-NLS-1$
+
 	public static class Answer {
 		public IType type;
 		public IModuleDescription module;
@@ -870,13 +872,14 @@ public class NameLookup implements SuffixConstants {
 	static IModuleDescription getModuleDescription(IPackageFragmentRoot root, Map<IPackageFragmentRoot,IModuleDescription> cache, Function<IPackageFragmentRoot,IClasspathEntry> rootToEntry) {
 		IModuleDescription module = cache.get(root);
 		if (module != null)
-			return module;
+			return module != NO_MODULE ? module : null;
 		try {
 			if (root.getKind() == IPackageFragmentRoot.K_SOURCE)
 				module = root.getJavaProject().getModuleDescription(); // from any root in this project
 			else
 				module = root.getModuleDescription();
 		} catch (JavaModelException e) {
+			cache.put(root, NO_MODULE);
 			return null;
 		}
 		if (module == null) {
@@ -889,8 +892,7 @@ public class NameLookup implements SuffixConstants {
 				}
 			}
 		}
-		if (module != null)
-			cache.put(root, module);
+		cache.put(root, module != null ? module : NO_MODULE);
 		return module;
 	}
 

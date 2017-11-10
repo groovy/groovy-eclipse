@@ -47,6 +47,8 @@ private String externalAnnotationPath;
 private ZipFile annotationZipFile;
 String zipFilename; // keep for equals
 
+static final Set<String> NO_LIMIT_MODULES = new HashSet<>();
+
 public ClasspathJrt(String zipFilename, IPath externalAnnotationPath) {
 	this.zipFilename = zipFilename;
 	if (externalAnnotationPath != null)
@@ -266,7 +268,9 @@ public Collection<String> getModuleNames(Collection<String> limitModules) {
 
 private Collection<String> selectModules(Set<String> keySet, Collection<String> limitModules) {
 	Collection<String> rootModules;
-	if (limitModules != null) {
+	if (limitModules == NO_LIMIT_MODULES) {
+		rootModules = new HashSet<>(keySet);
+	} else if (limitModules != null) {
 		Set<String> result = new HashSet<>(keySet);
 		result.retainAll(limitModules);
 		rootModules = result;

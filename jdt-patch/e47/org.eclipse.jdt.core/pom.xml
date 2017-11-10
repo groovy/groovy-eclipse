@@ -20,7 +20,7 @@
   </parent>
   <groupId>org.codehaus.groovy.eclipse</groupId>
   <artifactId>org.eclipse.jdt.core</artifactId>
-  <version>3.13.50-SNAPSHOT</version>
+  <version>3.13.100-SNAPSHOT</version>
   <packaging>eclipse-plugin</packaging>
 
   <properties>

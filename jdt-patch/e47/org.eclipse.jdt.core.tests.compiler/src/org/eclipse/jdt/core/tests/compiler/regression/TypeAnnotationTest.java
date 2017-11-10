@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011, 2016 IBM Corporation and others.
+ * Copyright (c) 2011, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -6675,7 +6675,7 @@ public class TypeAnnotationTest extends AbstractRegressionTest {
 		Compiler compiler = new Compiler(getNameEnvironment(new String[0], null), getErrorHandlingPolicy(),
 				new CompilerOptions(customOptions), requestor, getProblemFactory());
 		char [][] compoundName = new char [][] { "test1".toCharArray(), "Base".toCharArray()};
-		ReferenceBinding type = compiler.lookupEnvironment.askForType(compoundName);		
+		ReferenceBinding type = compiler.lookupEnvironment.askForType(compoundName, compiler.lookupEnvironment.UnNamedModule);
 		assertNotNull(type);
 		MethodBinding[] methods1 = type.getMethods("method1".toCharArray());
 		assertEquals("Base.@A2 Static.@A3 Middle1.@A4 Middle2<Object>.@A5 Middle3.@A6 GenericInner<String>",
@@ -6745,7 +6745,7 @@ public class TypeAnnotationTest extends AbstractRegressionTest {
 		Compiler compiler = new Compiler(getNameEnvironment(new String[0], null), getErrorHandlingPolicy(),
 				new CompilerOptions(customOptions), requestor, getProblemFactory());
 		char [][] compoundName = new char [][] { "test1".toCharArray(), "Base".toCharArray()};
-		ReferenceBinding type = compiler.lookupEnvironment.askForType(compoundName);		
+		ReferenceBinding type = compiler.lookupEnvironment.askForType(compoundName, compiler.lookupEnvironment.UnNamedModule);
 		assertNotNull(type);
 		MethodBinding[] methods1 = type.getMethods("method1".toCharArray());
 		assertEquals("Base.@A2 Static.@A3 Middle1.@A4 Middle2<Object>.@A5 Middle3.@A6 GenericInner<String>",
@@ -6818,7 +6818,7 @@ public class TypeAnnotationTest extends AbstractRegressionTest {
 			Compiler compiler = new Compiler(getNameEnvironment(new String[0], paths), getErrorHandlingPolicy(),
 					new CompilerOptions(customOptions), requestor, getProblemFactory());
 			char [][] compoundName = new char [][] { "test1".toCharArray(), "Base".toCharArray()};
-			ReferenceBinding type = compiler.lookupEnvironment.askForType(compoundName);		
+			ReferenceBinding type = compiler.lookupEnvironment.askForType(compoundName, compiler.lookupEnvironment.UnNamedModule);
 			assertNotNull(type);
 			MethodBinding[] methods1 = type.getMethods("method1".toCharArray());
 			assertEquals("Base.Static.@A2 Static2<Exception>.@A3 Middle1.@A4 Middle2<Object>.@A5 Middle3.@A6 GenericInner<String>",

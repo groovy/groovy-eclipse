@@ -102,14 +102,20 @@ public class SplitPackageBinding extends PackageBinding {
 	PackageBinding combineWithSiblings(PackageBinding childPackage, char[] name, ModuleBinding module) {
 		ModuleBinding primaryModule = childPackage != null ? childPackage.enclosingModule : this.enclosingModule;
 		// see if other incarnations contribute to the child package, too:
-		for (PackageBinding incarnation :  this.incarnations) {
-			ModuleBinding moduleBinding = incarnation.enclosingModule;
-			if (moduleBinding == module)
-				continue;
-			PackageBinding next = moduleBinding.getVisiblePackage(incarnation, name); // TODO(SHMOD): reduce split-package work during this invocation?
-			childPackage = combine(next, childPackage, primaryModule);
+		boolean activeSave = primaryModule.isPackageLookupActive;
+		primaryModule.isPackageLookupActive = true;
+		try {
+			for (PackageBinding incarnation :  this.incarnations) {
+				ModuleBinding moduleBinding = incarnation.enclosingModule;
+				if (moduleBinding == module)
+					continue;
+				PackageBinding next = moduleBinding.getVisiblePackage(incarnation, name); // TODO(SHMOD): reduce split-package work during this invocation?
+				childPackage = combine(next, childPackage, primaryModule);
+			}
+			return childPackage;
+		} finally {
+			primaryModule.isPackageLookupActive = activeSave;
 		}
-		return childPackage;
 	}
 	
 	@Override

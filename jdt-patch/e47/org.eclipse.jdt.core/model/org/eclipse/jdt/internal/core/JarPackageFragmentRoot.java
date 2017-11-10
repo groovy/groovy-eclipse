@@ -25,6 +25,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IModuleDescription;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -59,6 +60,8 @@ public class JarPackageFragmentRoot extends PackageFragmentRoot {
 	 * or an OS path if the jar is external)
 	 */
 	protected final IPath jarPath;
+
+	boolean knownToBeModuleLess;
 
 	/**
 	 * Constructs a package fragment root which is the root of the Java package directory hierarchy
@@ -243,6 +246,17 @@ public class JarPackageFragmentRoot extends PackageFragmentRoot {
 	public PackageFragment getPackageFragment(String[] pkgName, String mod) {
 		return new JarPackageFragment(this, pkgName); // Overridden in JImageModuleFragmentBridge
 	}
+
+	@Override
+	public IModuleDescription getModuleDescription() {
+		if (this.knownToBeModuleLess)
+			return null;
+		IModuleDescription module = super.getModuleDescription();
+		if (module == null)
+			this.knownToBeModuleLess = true;
+		return module;
+	}
+
 	public IPath internalPath() {
 		if (isExternal()) {
 			return this.jarPath;

@@ -514,13 +514,9 @@ public class CompilerOptions {
 	/** Should the compiler tolerate illegal ambiguous varargs invocation in compliance < 1.7 
 	 * to be bug compatible with javac? (bug 383780) */
 	public static boolean tolerateIllegalAmbiguousVarargsInvocation;
-	/** Should the compiler use performance optimization during type inference (bug 476718) */
-	public static boolean useunspecdtypeinferenceperformanceoptimization;
 	{
 		String tolerateIllegalAmbiguousVarargs = System.getProperty("tolerateIllegalAmbiguousVarargsInvocation"); //$NON-NLS-1$
 		tolerateIllegalAmbiguousVarargsInvocation = tolerateIllegalAmbiguousVarargs != null && tolerateIllegalAmbiguousVarargs.equalsIgnoreCase("true"); //$NON-NLS-1$
-		String useunspecdtypeinferenceoptimization = System.getProperty("useunspecdtypeinferenceperformanceoptimization"); //$NON-NLS-1$
-		useunspecdtypeinferenceperformanceoptimization = useunspecdtypeinferenceoptimization != null && useunspecdtypeinferenceoptimization.equalsIgnoreCase("true"); //$NON-NLS-1$
 	}
 	/** Should null annotations of overridden methods be inherited? */
 	public boolean inheritNullAnnotations;
