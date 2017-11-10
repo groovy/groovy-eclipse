@@ -862,6 +862,111 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testInnerClass7() {
+        String contents = "class A {\n" +
+            "  protected def f\n" +
+            "  protected def m() { }\n" +
+            "}\n" +
+            "class AA extends A {\n" +
+            "  class AAA {\n" +
+            "    def something() {\n" +
+            "      f  \n" +
+            "      m()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf('f');
+        assertDeclaringType(contents, offset, offset + 1, "A");
+            offset = contents.lastIndexOf('m');
+        assertDeclaringType(contents, offset, offset + 1, "A");
+    }
+
+    @Test
+    public void testInnerClass8() {
+        String contents = "class A {\n" +
+            "  protected def f\n" +
+            "  protected def m() { }\n" +
+            "}\n" +
+            "class AA extends A {\n" +
+            "  static class AAA {\n" +
+            "    def something() {\n" +
+            "      f  \n" +
+            "      m()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf('f');
+        assertUnknownConfidence(contents, offset, offset + 1, "A", false);
+            offset = contents.lastIndexOf('m');
+        assertUnknownConfidence(contents, offset, offset + 1, "A", false);
+    }
+
+    @Test
+    public void testAnonInner1() {
+        String contents = "def foo = new Runnable() { void run() {} }";
+        int start = contents.lastIndexOf("Runnable");
+        int end = start + "Runnable".length();
+        assertType(contents, start, end, "java.lang.Runnable");
+    }
+
+    @Test
+    public void testAnonInner2() {
+        String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) {} }";
+        int start = contents.lastIndexOf("Comparable");
+        int end = start + "Comparable".length();
+        assertType(contents, start, end, "java.lang.Comparable<java.lang.String>");
+    }
+
+    @Test
+    public void testAnonInner3() {
+        String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) { compareTo()} }";
+        int start = contents.lastIndexOf("compareTo");
+        int end = start + "compareTo".length();
+        assertDeclaringType(contents, start, end, "Search$1");
+    }
+
+    @Test
+    public void testAnonInner4() {
+        String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) {} }\n" +
+            "foo.compareTo";
+        int start = contents.lastIndexOf("compareTo");
+        int end = start + "compareTo".length();
+        assertDeclaringType(contents, start, end, "Search$1");
+    }
+
+    @Test
+    public void testAnonInner5() {
+        String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) {} }\n" +
+            "foo = new Comparable<String>() { int compareTo(String a, String b) {} }\n" +
+            "foo.compareTo";
+        int start = contents.lastIndexOf("compareTo");
+        int end = start + "compareTo".length();
+        assertDeclaringType(contents, start, end, "Search$2");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/378
+    public void testAnonInner6() {
+        String contents = "class A {\n" +
+            "  protected def f\n" +
+            "  protected def m() { }\n" +
+            "}\n" +
+            "class AA extends A {\n" +
+            "  void init() {\n" +
+            "    def whatever = new Object() {\n" +
+            "      def something() {\n" +
+            "      f  \n" +
+            "      m()\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf('f');
+        assertDeclaringType(contents, offset, offset + 1, "A");
+            offset = contents.lastIndexOf('m');
+        assertDeclaringType(contents, offset, offset + 1, "A");
+    }
+
+    @Test
     public void testConstantFromSuper() {
         String contents =
             "public interface Constants {\n" +
@@ -1637,49 +1742,6 @@ public final class InferencingTests extends InferencingTestSuite {
         int start = contents.lastIndexOf("substring");
         int end = start + "substring".length();
         assertType(contents, start, end, "java.lang.String");
-    }
-
-    @Test
-    public void testAnonInner1() {
-        String contents = "def foo = new Runnable() { void run() {} }";
-        int start = contents.lastIndexOf("Runnable");
-        int end = start + "Runnable".length();
-        assertType(contents, start, end, "java.lang.Runnable");
-    }
-
-    @Test
-    public void testAnonInner2() {
-        String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) {} }";
-        int start = contents.lastIndexOf("Comparable");
-        int end = start + "Comparable".length();
-        assertType(contents, start, end, "java.lang.Comparable<java.lang.String>");
-    }
-
-    @Test
-    public void testAnonInner3() {
-        String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) { compareTo()} }";
-        int start = contents.lastIndexOf("compareTo");
-        int end = start + "compareTo".length();
-        assertDeclaringType(contents, start, end, "Search$1");
-    }
-
-    @Test
-    public void testAnonInner4() {
-        String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) {} }\n" +
-            "foo.compareTo";
-        int start = contents.lastIndexOf("compareTo");
-        int end = start + "compareTo".length();
-        assertDeclaringType(contents, start, end, "Search$1");
-    }
-
-    @Test
-    public void testAnonInner5() {
-        String contents = "def foo = new Comparable<String>() { int compareTo(String a, String b) {} }\n" +
-            "foo = new Comparable<String>() { int compareTo(String a, String b) {} }\n" +
-            "foo.compareTo";
-        int start = contents.lastIndexOf("compareTo");
-        int end = start + "compareTo".length();
-        assertDeclaringType(contents, start, end, "Search$2");
     }
 
     @Test // GRECLIPSE-1638

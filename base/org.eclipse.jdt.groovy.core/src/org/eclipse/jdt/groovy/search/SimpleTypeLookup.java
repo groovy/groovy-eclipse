@@ -559,6 +559,13 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             return accessor;
         }
 
+        if (declaringType instanceof InnerClassNode && (declaringType.getModifiers() & ClassNode.ACC_STATIC) == 0) {
+            ASTNode declaration = findDeclaration(name, ((InnerClassNode) declaringType).getOuterClass(), isLhsExpression, isStaticExpression, directFieldAccess, methodCallArgumentTypes);
+            if (declaration != null) {
+                return declaration;
+            }
+        }
+
         if (methodCallArgumentTypes == null) {
             // reference may be in method pointer or static import; look for method as last resort
             return findMethodDeclaration(name, declaringType, null);
