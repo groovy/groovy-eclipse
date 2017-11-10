@@ -228,11 +228,22 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
 
     @Test
     void testCodeSelectStaticMethodInSuperClass() {
-        String contents = 'class PlantController {\ndef redirect(controller, action)  { }\n' +
-            'static def checkUser() {\nredirect(controller:\"user\",action:\"login\")\n}}\n'
-        String contents2 =
-            'class Other extends PlantController {\nstatic def doNothing() {\nredirect(controller:\"user\",action:\"login\")\n}}'
-
+        String contents = '''\
+            class PlantController {
+              static def redirect(controller, action) {
+              }
+              static def checkUser() {
+                redirect(controller:'user', action:'login')
+              }
+            }
+            '''.stripIndent()
+        String contents2 = '''\
+            class Other extends PlantController {
+              static def doNothing() {
+                redirect(controller:'user', action:'login')
+              }
+            }
+            '''.stripIndent()
         assertCodeSelect([contents, contents2], 'redirect')
     }
 

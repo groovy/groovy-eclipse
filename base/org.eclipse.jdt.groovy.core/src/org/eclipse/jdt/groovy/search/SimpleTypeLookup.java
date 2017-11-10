@@ -200,6 +200,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             if (isCompatible((AnnotatedNode) result.declaration, isStaticObjectExpression)) {
                 return result;
             }
+            if (isStaticObjectExpression) { // might be reference to a method defined on java.lang.Class
+                return findTypeForVariable(expr, scope, confidence, VariableScope.newClassClassNode(declaringType));
+            }
         }
 
         ClassNode nodeType = node.getType();
@@ -215,8 +218,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                         return new TypeLookupResult(VariableScope.VOID_CLASS_NODE, clazz, null, TypeConfidence.UNKNOWN, scope);
                     }
                 }
-            }
-            if (!isPrimaryExpression || scope.isMethodCall()) {
+
                 return findTypeForNameWithKnownObjectExpression(node.getText(), nodeType, declaringType, scope, confidence,
                     isStaticObjectExpression, isPrimaryExpression, /*isLhsExpression:*/(scope.getWormhole().remove("lhs") == node));
             }
@@ -337,22 +339,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             VariableScope scope, TypeConfidence confidence, boolean isStaticObjectExpression, boolean isPrimaryExpression, boolean isLhsExpression) {
 
         TypeConfidence confidence0 = confidence;
-
         boolean isFieldAccessDirect = (isThisObjectExpression(scope) ? scope.isFieldAccessDirect() : false);
         ASTNode declaration = findDeclaration(name, declaringType, isLhsExpression, isStaticObjectExpression, isFieldAccessDirect, scope.getMethodCallArgumentTypes());
-
-        if (declaration == null && isPrimaryExpression) {
-            if (!isStaticObjectExpression) {
-                ClassNode thiz = scope.getThis();
-                if (thiz != null && !thiz.equals(declaringType)) {
-                    // probably in a closure where the delegate has changed
-                    declaration = findDeclaration(name, thiz, isLhsExpression, isStaticObjectExpression, false, scope.getMethodCallArgumentTypes());
-                }
-            } else {
-                // might be reference to a method/property defined on java.lang.Class
-                declaration = findDeclaration(name, VariableScope.newClassClassNode(declaringType), isLhsExpression, isStaticObjectExpression, false, scope.getMethodCallArgumentTypes());
-            }
-        }
 
         ClassNode realDeclaringType;
         VariableInfo variableInfo;
