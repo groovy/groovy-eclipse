@@ -51,6 +51,7 @@ import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.TaskEntry;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
+import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
@@ -1183,10 +1184,18 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     if ((innerTypeDeclaration.bits & ASTNode.IsAnonymousType) != 0) {
                         iterator.remove();
 
-                        // set enclosing scope of anon. inner
+                        // bootstrap unit and type scopes
+                        if (unitDeclaration.scope == null) {
+                            CompilerOptions opts = unitDeclaration.compilerOptions != null
+                                ? unitDeclaration.compilerOptions : new CompilerOptions();
+                            unitDeclaration.scope = unitDeclaration.buildCompilationUnitScope(
+                                new LookupEnvironment(null, opts, unitDeclaration.problemReporter, null));
+                        }
                         if (outerTypeDeclaration.scope == null) {
                             outerTypeDeclaration.scope = new ClassScope(unitDeclaration.scope, outerTypeDeclaration);
                         }
+
+                        // set enclosing scope of anon. inner
                         Object location = anonymousLocations.get(innerTypeDeclaration.getClassNode());
                         if (location instanceof AbstractMethodDeclaration) {
                             AbstractMethodDeclaration methodDeclaration = (AbstractMethodDeclaration) location;
@@ -1606,6 +1615,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             } else if (expr instanceof ClosureExpression) {
                 // annotation is something like "@Tag(value = { some computation })" return "Closure.class" to appease JDT
                 return new ClassLiteralAccess(expr.getEnd(), new SingleTypeReference("Closure".toCharArray(), toPos(expr.getStart(), expr.getEnd())));
+
+            } else if (expr instanceof BinaryExpression) {
+                // annotation is something like "@Tag(value = List<String)" (incomplete generics specification)
 
             } else {
                 Util.log(IStatus.WARNING, "Unhandled annotation value type: " + expr.getClass().getSimpleName());

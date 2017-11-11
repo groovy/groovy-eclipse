@@ -123,9 +123,16 @@ final class RenameMethodTests extends RefactoringTestSuite {
         runTest('o.Other', 'FOO', 'BAR', [], true, false)
     }
 
+    @Test
+    void testAnonOverrides() {
+        // rename I.run() to I.sam() and anon. inners in A should change
+        runTest('I', 'run', 'sam', [], true, false);
+    }
+
     @Test // GRECLIPSE-1538
-    void test11() {
+    void testEnumOverrides() {
         assumeTrue(isAtLeastGroovy(21))
+        // rename A.getFoo() to A.foo() and enum constant overrides should change
         runTest('A', 'getFoo', 'foo', [], true, false)
     }
 

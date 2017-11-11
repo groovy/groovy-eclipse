@@ -94,6 +94,7 @@ import org.codehaus.groovy.transform.sc.ListOfExpressionsExpression;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.codehaus.jdt.groovy.model.GroovyProjectFacade;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IStatus;
@@ -1111,23 +1112,31 @@ assert primaryExprType != null && dependentExprType != null;
             // visit anonymous inner class body
             if (node.isUsingAnonymousInnerClass()) {
                 scopes.add(new VariableScope(scopes.getLast(), type, false));
-                ASTNode enclosingDeclaration0 = enclosingDeclarationNode;
+                ASTNode  enclosingDeclaration0 = enclosingDeclarationNode;
+                IJavaElement enclosingElement0 = enclosingElement;
                 enclosingDeclarationNode = type;
                 try {
                     for (ClassNode face : type.getInterfaces()) {
                         if (face.getEnd() > 0) visitClassReference(face);
                     }
-                    for (FieldNode field : type.getFields()) {
-                        if (field.getEnd() > 0) visitField(field);
-                    }
-                    for (MethodNode method : type.getMethods()) {
-                        if (method.getEnd() > 0) visitMethodInternal(method, false);
-                    }
                     for (Statement stmt : type.getObjectInitializerStatements()) {
                         stmt.visit(this);
                     }
+                    for (FieldNode field : type.getFields()) {
+                        if (field.getEnd() > 0) {
+                            //enclosingElement = findAnonType(type).getField(field.getName());
+                            visitField(field);
+                        }
+                    }
+                    for (MethodNode method : type.getMethods()) {
+                        if (method.getEnd() > 0) {
+                            //enclosingElement = findAnonType(type).getMethod(method.getName(), getParameterTypeSignatures(method.getParameters()));
+                            visitMethodInternal(method, false);
+                        }
+                    }
                 } finally {
                     scopes.removeLast();
+                    enclosingElement = enclosingElement0;
                     enclosingDeclarationNode = enclosingDeclaration0;
                 }
             }
@@ -1685,7 +1694,7 @@ assert primaryExprType != null && dependentExprType != null;
                     try {
                         for (MethodNode method : type.getMethods()) {
                             if (method.getEnd() > 0) {
-                                enclosingElement = ((SourceType) enclosingElement0).getMethod(method.getName(), getParameterTypeSignatures(method.getParameters()));
+                                //enclosingElement = ((SourceType) enclosingElement0).getMethod(method.getName(), getParameterTypeSignatures(method.getParameters()));
                                 visitMethodInternal(method, false);
                             }
                         }
@@ -1942,6 +1951,10 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     //
+
+    private IType findAnonType(ClassNode node) {
+        return new GroovyProjectFacade(enclosingElement).groovyClassToJavaType(node);
+    }
 
     private ClassNode findClassNode(String name) {
         for (ClassNode clazz : findModuleNode().getClasses()) {
