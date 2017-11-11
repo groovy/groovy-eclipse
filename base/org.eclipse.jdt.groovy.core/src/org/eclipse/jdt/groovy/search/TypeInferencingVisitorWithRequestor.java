@@ -514,13 +514,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         enclosingElement = method;
         try {
             visitConstructorOrMethod(methodNode, method.isConstructor());
-
-            // check for anonymous inner types
-            for (IJavaElement child : method.getChildren()) {
-                if (child.getElementType() == IJavaElement.TYPE) {
-                    visitJDT((IType) child, requestor);
-                }
-            }
         } catch (VisitCompleted vc) {
             if (vc.status == VisitStatus.STOP_VISIT) {
                 throw vc;
@@ -674,25 +667,24 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             }
         }
 
-        // visit <clinit> body because this is where static field initializers are placed
-        // only visit field initializers here.
-        // it is important here to get the right variable scope for the initializer.
-        // need to ensure that the field is one of the enclosing nodes
+        // visit <clinit> body because this is where static field initializers
+        // are placed; only visit field initializers here -- it's important to
+        // get the right variable scope for the initializer to ensure that the
+        // field is one of the enclosing nodes
         MethodNode clinit = node.getMethod("<clinit>", NO_PARAMETERS);
         if (clinit != null && clinit.getCode() instanceof BlockStatement) {
-            for (Statement element : (Iterable<Statement>) ((BlockStatement) clinit.getCode()).getStatements()) {
+            for (Statement element : ((BlockStatement) clinit.getCode()).getStatements()) {
                 // only visit the static initialization of a field
-                if (element instanceof ExpressionStatement
-                        && ((ExpressionStatement) element).getExpression() instanceof BinaryExpression) {
-                    BinaryExpression bexpr = (BinaryExpression) ((ExpressionStatement) element).getExpression();
-                    if (bexpr.getLeftExpression() instanceof FieldExpression) {
-                        FieldNode f = ((FieldExpression) bexpr.getLeftExpression()).getField();
-                        if (f != null && f.isStatic() && bexpr.getRightExpression() != null) {
+                if (element instanceof ExpressionStatement && ((ExpressionStatement) element).getExpression() instanceof BinaryExpression) {
+                    BinaryExpression expr = (BinaryExpression) ((ExpressionStatement) element).getExpression();
+                    if (expr.getLeftExpression() instanceof FieldExpression) {
+                        FieldNode fieldNode = ((FieldExpression) expr.getLeftExpression()).getField();
+                        if (fieldNode != null && fieldNode.isStatic() && !fieldNode.getName().matches("(MAX|MIN)_VALUE|\\$VALUES") && expr.getRightExpression() != null) {
                             // create the field scope so that it looks like we are visiting within the context of the field
-                            VariableScope fieldScope = new VariableScope(scope, f, true);
+                            VariableScope fieldScope = new VariableScope(scope, fieldNode, true);
                             scopes.add(fieldScope);
                             try {
-                                bexpr.getRightExpression().visit(this);
+                                expr.getRightExpression().visit(this);
                             } finally {
                                 scopes.removeLast();
                             }
@@ -1102,7 +1094,8 @@ assert primaryExprType != null && dependentExprType != null;
     public void visitConstructorCallExpression(ConstructorCallExpression node) {
         boolean shouldContinue = handleSimpleExpression(node);
         if (shouldContinue) {
-            visitClassReference(node.getType());
+            ClassNode type = node.getType();
+            visitClassReference(node.isUsingAnonymousInnerClass() ? type.getUnresolvedSuperClass() : type);
             if (node.getArguments() instanceof TupleExpression) {
                 TupleExpression tuple = (TupleExpression) node.getArguments();
                 if (isNotEmpty(tuple.getExpressions())) {
@@ -1114,6 +1107,30 @@ assert primaryExprType != null && dependentExprType != null;
                 }
             }
             super.visitConstructorCallExpression(node);
+
+            // visit anonymous inner class body
+            if (node.isUsingAnonymousInnerClass()) {
+                scopes.add(new VariableScope(scopes.getLast(), type, false));
+                ASTNode enclosingDeclaration0 = enclosingDeclarationNode;
+                enclosingDeclarationNode = type;
+                try {
+                    for (ClassNode face : type.getInterfaces()) {
+                        if (face.getEnd() > 0) visitClassReference(face);
+                    }
+                    for (FieldNode field : type.getFields()) {
+                        if (field.getEnd() > 0) visitField(field);
+                    }
+                    for (MethodNode method : type.getMethods()) {
+                        if (method.getEnd() > 0) visitMethodInternal(method, false);
+                    }
+                    for (Statement stmt : type.getObjectInitializerStatements()) {
+                        stmt.visit(this);
+                    }
+                } finally {
+                    scopes.removeLast();
+                    enclosingDeclarationNode = enclosingDeclaration0;
+                }
+            }
         }
     }
 
@@ -1646,15 +1663,39 @@ assert primaryExprType != null && dependentExprType != null;
 
     @Override
     public void visitStaticMethodCallExpression(StaticMethodCallExpression node) {
+        ClassNode type = node.getOwnerType();
         if (isPrimaryExpression(node)) {
-            visitMethodCallExpression(new MethodCallExpression(
-                    new ClassExpression(node.getOwnerType()), node.getMethod(), node.getArguments()));
+            visitMethodCallExpression(new MethodCallExpression(new ClassExpression(type), node.getMethod(), node.getArguments()));
         }
         boolean shouldContinue = handleSimpleExpression(node);
         if (shouldContinue) {
             boolean isPresentInSource = (node.getEnd() > 0);
-            if (isPresentInSource) visitClassReference(node.getOwnerType());
-            if (isPresentInSource || isEnumInit(node)) super.visitStaticMethodCallExpression(node);
+            if (isPresentInSource) {
+                visitClassReference(type);
+            }
+            if (isPresentInSource || isEnumInit(node)) {
+                // visit static method call arguments
+                super.visitStaticMethodCallExpression(node);
+                // visit anonymous inner class members
+                if (GroovyUtils.isAnonymous(type)) {
+                    scopes.add(new VariableScope(scopes.getLast(), type, false));
+                    ASTNode  enclosingDeclaration0 = enclosingDeclarationNode;
+                    IJavaElement enclosingElement0 = enclosingElement;
+                    enclosingDeclarationNode = type;
+                    try {
+                        for (MethodNode method : type.getMethods()) {
+                            if (method.getEnd() > 0) {
+                                enclosingElement = ((SourceType) enclosingElement0).getMethod(method.getName(), getParameterTypeSignatures(method.getParameters()));
+                                visitMethodInternal(method, false);
+                            }
+                        }
+                    } finally {
+                        scopes.removeLast();
+                        enclosingElement = enclosingElement0;
+                        enclosingDeclarationNode = enclosingDeclaration0;
+                    }
+                }
+            }
         }
     }
 
@@ -2620,6 +2661,15 @@ assert primaryExprType != null && dependentExprType != null;
         return null;
     }
 
+    private static String[] getParameterTypeSignatures(Parameter[] params) {
+        List<ClassNode> types = GroovyUtils.getParameterTypes(params);
+        String[] signatures = new String[types.size()];
+        for (int i = 0; i < types.size(); i += 1) {
+            signatures[i] = GroovyUtils.getTypeSignature(types.get(i), true, true);
+        }
+        return signatures;
+    }
+
     /**
      * Makes assumption that no one has overloaded the basic arithmetic operations on numbers.
      * These operations will bypass the mop in most situations anyway.
@@ -2707,8 +2757,7 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     private static boolean isEnumInit(StaticMethodCallExpression node) {
-        int typeModifiers = node.getOwnerType().getModifiers();
-        return ((typeModifiers & ClassNode.ACC_ENUM) > 0 && node.getMethod().equals("$INIT"));
+        return (node.getOwnerType().isEnum() && node.getMethod().equals("$INIT"));
     }
 
     private static boolean isLazy(FieldNode fieldNode) {

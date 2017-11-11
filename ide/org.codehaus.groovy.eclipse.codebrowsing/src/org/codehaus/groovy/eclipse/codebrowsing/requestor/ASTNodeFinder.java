@@ -27,7 +27,6 @@ import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
-import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.PackageNode;
@@ -383,7 +382,7 @@ public class ASTNodeFinder extends DepthFirstVisitor {
             return;
         }
         // anonymous inner classes cannot have extends or implements clauses
-        if (node instanceof InnerClassNode && ((InnerClassNode) node).isAnonymous()) {
+        if (GroovyUtils.isAnonymous(node)) {
             return;
         }
         // set offset beyond the class name and any generics

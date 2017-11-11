@@ -946,7 +946,8 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/378
     public void testAnonInner6() {
-        String contents = "class A {\n" +
+        String contents =
+            "class A {\n" +
             "  protected def f\n" +
             "  protected def m() { }\n" +
             "}\n" +
@@ -954,8 +955,8 @@ public final class InferencingTests extends InferencingTestSuite {
             "  void init() {\n" +
             "    def whatever = new Object() {\n" +
             "      def something() {\n" +
-            "      f  \n" +
-            "      m()\n" +
+            "        f  \n" +
+            "        m()\n" +
             "      }\n" +
             "    }\n" +
             "  }\n" +
@@ -963,6 +964,36 @@ public final class InferencingTests extends InferencingTestSuite {
         int offset = contents.lastIndexOf('f');
         assertDeclaringType(contents, offset, offset + 1, "A");
             offset = contents.lastIndexOf('m');
+        assertDeclaringType(contents, offset, offset + 1, "A");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/383
+    public void testAnonInner7() {
+        String contents =
+            "class A {\n" +
+            "  protected def m() { }\n" +
+            "  def p = new Object() {\n" +
+            "    def meth() {\n" +
+            "      m();\n" +
+            "      p  ;\n" +
+            "    }\n" +
+            "  }\n" +
+            "  void init() {\n" +
+            "    def whatever = new Object() {\n" +
+            "      def something() {\n" +
+            "        m()\n" +
+            "        p  \n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.indexOf("m();");
+        assertDeclaringType(contents, offset, offset + 1, "A");
+            offset = contents.indexOf("p  ;");
+        assertDeclaringType(contents, offset, offset + 1, "A");
+            offset = contents.lastIndexOf("m");
+        assertDeclaringType(contents, offset, offset + 1, "A");
+            offset = contents.lastIndexOf("p");
         assertDeclaringType(contents, offset, offset + 1, "A");
     }
 

@@ -34,6 +34,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
+import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
@@ -358,6 +359,10 @@ public class GroovyUtils {
 
     public static boolean isSynthetic(MethodNode node) {
         return (node.getModifiers() & MethodNode.ACC_SYNTHETIC) != 0;
+    }
+
+    public static boolean isAnonymous(ClassNode node) {
+        return (node instanceof InnerClassNode && ((InnerClassNode) node).isAnonymous());
     }
 
     public static void updateClosureWithInferredTypes(ClassNode closure, ClassNode returnType, Parameter[] parameters) {

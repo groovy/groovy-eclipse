@@ -5599,75 +5599,79 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     @Test
     public void testInnerClass1() throws Exception {
         runConformTest(new String[] {
-                "A.groovy",
-                "def foo = new Runnable() {\n" +
-                "	void run() {\n" +
-                "		println \"hi!\";\n" +
-                "	}\n" +
-                "}\n" +
-                "foo.run()"
+            "A.groovy",
+            "def foo = new Runnable() {\n" +
+            "	void run() {\n" +
+            "		println \"hi!\";\n" +
+            "	}\n" +
+            "}\n" +
+            "foo.run()"
         }, "hi!");
     }
+
     @Test
     public void testInnerClass2() throws Exception {
         runConformTest(new String[] {
-                "A.groovy",
-                "def foo = new Runnable() {\n" +
-                "	void run() {\n" +
-                "		println \"bye!\";\n" +
-                "	}\n" +
-                "}\n" +
-                "foo = new Runnable() {\n" +
-                "	void run() {\n" +
-                "		println \"hi!\";\n" +
-                "	}\n" +
-                "}\n" +
-                "foo.run()"
+            "A.groovy",
+            "def foo = new Runnable() {\n" +
+            "	void run() {\n" +
+            "		println \"bye!\";\n" +
+            "	}\n" +
+            "}\n" +
+            "foo = new Runnable() {\n" +
+            "	void run() {\n" +
+            "		println \"hi!\";\n" +
+            "	}\n" +
+            "}\n" +
+            "foo.run()"
         }, "hi!");
     }
+
     @Test
     public void testInnerClass3() throws Exception {
         runConformTest(new String[] {
-                "A.groovy",
-                "def foo() {\n" +
-                "	new Runnable() {\n" +
-                "		void run() {\n" +
-                "			println \"hi!\";\n" +
-                "		}\n" +
-                "	}\n" +
-                "}\n" +
-                "foo().run()"
+            "A.groovy",
+            "def foo() {\n" +
+            "	new Runnable() {\n" +
+            "		void run() {\n" +
+            "			println \"hi!\";\n" +
+            "		}\n" +
+            "	}\n" +
+            "}\n" +
+            "foo().run()"
         }, "hi!");
     }
+
     @Test
     public void testInnerClass4() throws Exception {
         runConformTest(new String[] {
-                "A.groovy",
-                "class Foo {\n" +
-                "	def foo = new Runnable() {\n" +
-                "		void run() {\n" +
-                "			println \"hi!\";\n" +
-                "		}\n" +
-                "	}\n" +
-                "}\n" +
-                "new Foo().foo.run()"
+            "A.groovy",
+            "class Foo {\n" +
+            "	def foo = new Runnable() {\n" +
+            "		void run() {\n" +
+            "			println \"hi!\";\n" +
+            "		}\n" +
+            "	}\n" +
+            "}\n" +
+            "new Foo().foo.run()"
         }, "hi!");
     }
+
     @Test
     public void testInnerClass5() throws Exception {
         runNegativeTest(new String[] {
-                "A.groovy",
-                "def foo = new Runnable() {\n" +
-                "	void bad() {\n" +
-                "		println \"hi!\";\n" +
-                "	}\n" +
-                "}"
+            "A.groovy",
+            "def foo = new Runnable() {\n" +
+            "	void bad() {\n" +
+            "		println \"hi!\";\n" +
+            "	}\n" +
+            "}"
         }, "----------\n" +
-              "1. ERROR in A.groovy (at line 1)\n" +
-               "	def foo = new Runnable() {\n" +
-               "	              ^^^^^^^^\n" +
-               "Groovy:Can't have an abstract method in a non-abstract class. The class 'A$1' must be declared abstract or the method 'void run()' must be implemented.\n" +
-               "----------\n");
+          "1. ERROR in A.groovy (at line 1)\n" +
+           "	def foo = new Runnable() {\n" +
+           "	              ^^^^^^^^\n" +
+           "Groovy:Can't have an abstract method in a non-abstract class. The class 'A$1' must be declared abstract or the method 'void run()' must be implemented.\n" +
+           "----------\n");
     }
 
     @Test
@@ -5692,18 +5696,19 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(new String[] {
             "GroovyDemo.groovy",
             "package demo\n"+
-                "class GroovyDemo {\n" +
-                "    static <T> List someMethod(Class<T> factoryClass, ClassLoader classLoader = GroovyDemo.class.classLoader) {}\n" +
-                "}",
-                "JavaDemo.java",
-                "package demo;\n"+
-                    "public class JavaDemo {\n" +
-                    "    public static void someMethod() {\n" +
-                    "        GroovyDemo.someMethod(JavaDemo.class);\n" +
-                    "    }\n" +
-                    "}\n",
+            "class GroovyDemo {\n" +
+            "    static <T> List someMethod(Class<T> factoryClass, ClassLoader classLoader = GroovyDemo.class.classLoader) {}\n" +
+            "}",
+
+            "JavaDemo.java",
+            "package demo;\n"+
+            "public class JavaDemo {\n" +
+            "    public static void someMethod() {\n" +
+            "        GroovyDemo.someMethod(JavaDemo.class);\n" +
+            "    }\n" +
+            "}\n",
         },
-            "");
+        "");
     }
 
     @Test @Ignore("FIXASC testcase for this. infinite loops (B extends B<String>")
@@ -5711,18 +5716,18 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         runConformTest(new String[] {
             "p/B.groovy",
             "package p;\n" +
-                "class B extends B<String> {\n" +
-                "  public static void main(String[] argv) {\n"+
-                "    new B();\n"+
-                "    print \"success\"\n"+
-                "  }\n"+
-                "}\n",
+            "class B extends B<String> {\n" +
+            "  public static void main(String[] argv) {\n"+
+            "    new B();\n"+
+            "    print \"success\"\n"+
+            "  }\n"+
+            "}\n",
 
-                "p/A.java",
-                "package p;\n" +
-                    "public class A<T> {}\n"
+            "p/A.java",
+            "package p;\n" +
+            "public class A<T> {}\n"
         },
-            "");
+        "");
     }
 
     //--------------------------------------------------------------------------

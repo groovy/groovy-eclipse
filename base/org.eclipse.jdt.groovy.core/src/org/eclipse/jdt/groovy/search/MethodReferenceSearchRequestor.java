@@ -29,7 +29,6 @@ import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyTypeDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.codehaus.jdt.groovy.model.GroovyClassFileWorkingCopy;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
@@ -178,7 +177,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
                         try {
                             requestor.acceptSearchMatch(match);
                             acceptedPositions.add(position);
-                        } catch (CoreException e) {
+                        } catch (Exception e) {
                             Util.log(e, "Error reporting search match inside of " + enclosingElement + " in resource " + enclosingElement.getResource());
                         }
                     }

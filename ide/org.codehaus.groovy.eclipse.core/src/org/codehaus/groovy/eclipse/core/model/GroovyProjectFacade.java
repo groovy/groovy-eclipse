@@ -22,9 +22,7 @@ import java.util.List;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.InnerClassNode;
-import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -44,96 +42,94 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.LocalVariable;
+import org.eclipse.jdt.internal.core.ResolvedSourceType;
 import org.eclipse.jdt.internal.core.SourceType;
+
 /**
- * @author Andrew Eisenberg
- * @created May 29, 2009
- *
- * This class provides some useful methods for accessing Groovy state
+ * Provides some useful methods for accessing Groovy state.
  */
 public class GroovyProjectFacade {
 
     public static boolean isGroovyProject(IProject proj) {
-         try {
+        try {
             return proj.hasNature(GroovyNature.GROOVY_NATURE);
         } catch (CoreException e) {
             GroovyCore.logException("Error getting project nature: " + proj.getName(), e);
             return false;
         }
-     }
-
+    }
 
     private IJavaProject project;
 
-     public GroovyProjectFacade(IJavaProject project) {
-         this.project = project;
-     }
+    public GroovyProjectFacade(IJavaProject project) {
+        this.project = project;
+    }
 
-     public GroovyProjectFacade(IJavaElement elt) {
-         this.project = elt.getJavaProject();
-     }
+    public GroovyProjectFacade(IJavaElement element) {
+        this(element.getJavaProject());
+    }
 
-     /**
-      * best effort to map a groovy node to a JavaElement
-      * If the groovy element is not a declaration (eg- an expression or statement)
-      * returns instead the closest enclosing element that can be converted
-      * to an IJavaElement
-      *
-      * If node is a local variable declaration, then returns a LocalVariable
-      */
-     public IJavaElement groovyNodeToJavaElement(ASTNode node, IFile file) {
-         ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
-         if (! (unit instanceof GroovyCompilationUnit)) {
-             // can't go any further, just return the unit instead
-             GroovyCore.logWarning("Trying to get a groovy element from a non-groovy file: " + file.getName());
-             return unit;
-         }
+    public IJavaProject getProject() {
+        return project;
+    }
 
-         try {
-             int start = node.getStart();
-             IJavaElement elt = unit.getElementAt(start);
-             if (node instanceof DeclarationExpression) {
-                 String var = ((DeclarationExpression) node).getVariableExpression().getName();
-                 int end = start + var.length() - 1;
-                 String sig = Signature.createTypeSignature(((DeclarationExpression) node).getVariableExpression().getType().getName(), false);
+    /**
+     * best effort to map a groovy node to a JavaElement
+     * If the groovy element is not a declaration (eg- an expression or statement)
+     * returns instead the closest enclosing element that can be converted
+     * to an IJavaElement
+     *
+     * If node is a local variable declaration, then returns a LocalVariable
+     */
+    public IJavaElement groovyNodeToJavaElement(ASTNode node, IFile file) {
+        ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
+        if (!(unit instanceof GroovyCompilationUnit)) {
+            // can't go any further, just return the unit instead
+            GroovyCore.logWarning("Trying to get a groovy element from a non-groovy file: " + file.getName());
+            return unit;
+        }
+
+        try {
+            int start = node.getStart();
+            IJavaElement elt = unit.getElementAt(start);
+            if (node instanceof DeclarationExpression) {
+                String var = ((DeclarationExpression) node).getVariableExpression().getName();
+                int end = start + var.length() - 1;
+                String sig = Signature.createTypeSignature(((DeclarationExpression) node).getVariableExpression().getType().getName(), false);
 
                 return new LocalVariable((JavaElement) elt, var, start, end, start, end, sig, null, 0, false);
-             } else {
-                 return elt;
-             }
-         } catch (Exception e) {
-             GroovyCore.logException("Error converting from Groovy Element to Java Element: " + node.getText(), e);
-         }
-         return null;
-     }
+            } else {
+                return elt;
+            }
+        } catch (Exception e) {
+            GroovyCore.logException("Error converting from Groovy Element to Java Element: " + node.getText(), e);
+        }
+        return null;
+    }
 
-     public IType groovyClassToJavaType(ClassNode node) {
-         try {
-            // GRECLIPSE-1628 handle anonymous inner classes. Only go one level
-            // deep
-            // FIXADE ignore rest
+    public IType groovyClassToJavaType(ClassNode node) {
+        try {
+            // GRECLIPSE-1628: handle anonymous inner classes; only go one level deep
             ClassNode toLookFor = node;
-            if (node.getEnclosingMethod() != null) {
-                toLookFor = node.getEnclosingMethod().getDeclaringClass();
-                IType enclosing = groovyClassToJavaType(node.getEnclosingMethod().getDeclaringClass());
+            if (GroovyUtils.isAnonymous(node)) {
+                toLookFor = node.getOuterClass();
+                IType enclosing = groovyClassToJavaType(toLookFor);
                 if (enclosing != null) {
                     if (!enclosing.isBinary()) {
-                        // Throws exception enclosing is a binary type!
-                        return findAnonymousInnerClass(enclosing, (InnerClassNode) node);
+                        return fakeAnonymousInnerClass(enclosing, (InnerClassNode) node);
                     } else {
-                        // If the 'enclosing' is binary we may assume this one
-                        // is also binary and so we should
-                        // just be able to look for it with binary type name,
-                        // (including the $ etc.)
+                        // if the 'enclosing' is binary we may assume this one is also binary,
+                        // so we should just be able to look for it with binary type name (including the $ etc.)
                         return project.findType(node.getName(), new NullProgressMonitor());
                     }
                 } else {
                     return null;
                 }
             }
-            // GRECLIPSE-800 Ensure that inner class nodes are handled properly
+            // GRECLIPSE-800: ensure that inner class nodes are handled properly
             String name = toLookFor.getName().replace('$', '.');
             IType type = project.findType(name, new NullProgressMonitor());
             if (type != null && toLookFor != node) {
@@ -147,91 +143,84 @@ public class GroovyProjectFacade {
             GroovyCore.logException("Error converting from Groovy Element to Java Element: " + node.getName(), e);
             return null;
         }
-     }
-
-    private IType findAnonymousInnerClass(IType enclosing, InnerClassNode anon) throws JavaModelException {
-        IMethod[] children = enclosing.getMethods();
-        MethodNode enclosingMethod = anon.getEnclosingMethod();
-        if (enclosingMethod == null) {
-            return null;
-        }
-        Parameter[] parameters = enclosingMethod.getParameters();
-        if (parameters == null) {
-            parameters = Parameter.EMPTY_ARRAY;
-        }
-        for (IMethod child : children) {
-            if (child.getElementName().equals(enclosingMethod.getName())) {
-                String[] names = child.getParameterNames();
-                if (names.length == parameters.length) {
-                    // FIXADE for now, only look for a single inner type
-                    // check the names, not the types since we don't know the
-                    // full types of the IMethod.
-                    // This could go wrong, but it's safe enoug
-                    for (int i = 0; i < names.length; i++) {
-                        if (!names[i].equals(parameters[i].getName())) {
-                            continue;
-                        }
-                    }
-                    IType found = child.getType("", 1);
-                    if (found.exists()) {
-                        return found;
-                    } else {
-                        return null;
-                    }
-                }
-            }
-        }
-        return null;
     }
 
-     GroovyCompilationUnit groovyModuleToCompilationUnit(ModuleNode node) {
-         List<ClassNode> classes = node.getClasses();
-         ClassNode classNode = classes.size() > 0 ? (ClassNode) classes.get(0) : null;
-         if (classNode != null) {
-             IType type = groovyClassToJavaType(classNode);
-             if (type instanceof SourceType) {
-                 return (GroovyCompilationUnit) type.getCompilationUnit();
-             }
-         }
-         GroovyCore.logWarning("Trying to get GroovyCompilationUnit for non-groovy module: " + node.getDescription());
-         return null;
-     }
+    private IType fakeAnonymousInnerClass(IType outer, final InnerClassNode inner) {
+        return new ResolvedSourceType((JavaElement) outer, inner.getName(), GroovyUtils.getTypeSignature(inner, true, true)) {
+            public Object getElementInfo() throws JavaModelException {
+                try {
+                    return super.getElementInfo();
+                } catch (JavaModelException jme) {
+                    if (!jme.getJavaModelStatus().isDoesNotExist()) {
+                        throw jme;
+                    }
+                    final IType anonType = this;
+                    return new org.eclipse.jdt.internal.core.SourceTypeElementInfo() {{
+                        setHandle(anonType);
+                        setFlags(inner.getModifiers());
+
+                        ClassNode[] faces = inner.getInterfaces();
+                        char[][] names = new char[faces.length][];
+                        for (int i = 0; i < faces.length; i += 1) {
+                            names[i] = faces[i].getName().toCharArray();
+                        }
+                        setSuperInterfaceNames(names);
+                        setSuperclassName(inner.getUnresolvedSuperClass().getName().toCharArray());
+
+                        setNameSourceStart(inner.getNameStart());
+                        setNameSourceEnd(inner.getNameEnd());
+                        setSourceRangeStart(inner.getStart());
+                        setSourceRangeEnd(inner.getEnd());
+                    }};
+                }
+            }
+        };
+    }
+
+    GroovyCompilationUnit groovyModuleToCompilationUnit(ModuleNode node) {
+        List<ClassNode> classes = node.getClasses();
+        ClassNode classNode = classes.size() > 0 ? (ClassNode) classes.get(0) : null;
+        if (classNode != null) {
+            IType type = groovyClassToJavaType(classNode);
+            if (type instanceof SourceType) {
+                return (GroovyCompilationUnit) type.getCompilationUnit();
+            }
+        }
+        GroovyCore.logWarning("Trying to get GroovyCompilationUnit for non-groovy module: " + node.getDescription());
+        return null;
+    }
 
     /**
      * If this fully qualified name is in a groovy file, then return the
      * classnode
      *
      * If this is not a groovy file, then return null
-     *
-     * @param name
-     * @return
      */
-     public ClassNode getClassNodeForName(String name) {
-         try {
+    public ClassNode getClassNodeForName(String name) {
+        try {
             IType type = project.findType(name, new NullProgressMonitor());
-             if (type instanceof SourceType) {
-                 return javaTypeToGroovyClass(type);
-             }
+            if (type instanceof SourceType) {
+                return javaTypeToGroovyClass(type);
+            }
         } catch (JavaModelException e) {
             GroovyCore.logException(e.getMessage(), e);
         }
         return null;
-     }
+    }
 
     private ClassNode javaTypeToGroovyClass(IType type) {
         ICompilationUnit unit = type.getCompilationUnit();
-         if (unit instanceof GroovyCompilationUnit) {
-             ModuleNode module = ((GroovyCompilationUnit) unit).getModuleNode();
-             List<ClassNode> classes = module.getClasses();
-             for (ClassNode classNode : classes) {
+        if (unit instanceof GroovyCompilationUnit) {
+            ModuleNode module = ((GroovyCompilationUnit) unit).getModuleNode();
+            List<ClassNode> classes = module.getClasses();
+            for (ClassNode classNode : classes) {
                 if (classNode.getNameWithoutPackage().equals(type.getElementName())) {
                     return classNode;
                 }
             }
-         }
-         return null;
+        }
+        return null;
     }
-
 
     public List<IType> findAllRunnableTypes() throws JavaModelException {
         final List<IType> results = new ArrayList<IType>();
@@ -270,8 +259,7 @@ public class GroovyProjectFacade {
                 if (method.getElementName().equals("main") &&
                         Flags.isStatic(method.getFlags()) &&
                         // void or Object are valid return types
-                        (method.getReturnType().equals("V") ||
-                                method.getReturnType().endsWith("java.lang.Object;")) &&
+                        (method.getReturnType().equals("V") || method.getReturnType().endsWith("java.lang.Object;")) &&
                         hasAppropriateArrayArgsForMain(method.getParameterTypes())) {
                     return true;
                 }
@@ -282,8 +270,7 @@ public class GroovyProjectFacade {
         return false;
     }
 
-    private static boolean hasAppropriateArrayArgsForMain(
-            final String[] params) {
+    private static boolean hasAppropriateArrayArgsForMain(final String[] params) {
         if (params == null || params.length != 1) {
             return false;
         }
@@ -300,12 +287,7 @@ public class GroovyProjectFacade {
         String sigNoArray = Signature.getElementType(params[0]);
         String name = Signature.getSignatureSimpleName(sigNoArray);
         String qual = Signature.getSignatureQualifier(sigNoArray);
-        return (name.equals(typeName)) &&
-            (qual == null || qual.equals("java.lang") || qual.equals(""));
-    }
-
-    public IJavaProject getProject() {
-        return project;
+        return (name.equals(typeName)) && (qual == null || qual.equals("java.lang") || qual.equals(""));
     }
 
     public boolean isGroovyScript(IType type) {
@@ -345,7 +327,7 @@ public class GroovyProjectFacade {
         if (unit instanceof GroovyCompilationUnit) {
             GroovyCompilationUnit gunit = (GroovyCompilationUnit) unit;
             ModuleNode module = gunit.getModuleNode();
-            if (module !=  null) {
+            if (module != null) {
                 for (ClassNode clazz : (Iterable<ClassNode>) module.getClasses()) {
                     if (clazz.isScript()) {
                         return true;

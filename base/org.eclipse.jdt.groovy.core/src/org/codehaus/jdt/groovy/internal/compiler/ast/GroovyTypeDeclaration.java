@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,10 +21,10 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
-import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
+import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
@@ -62,6 +62,30 @@ public class GroovyTypeDeclaration extends TypeDeclaration {
 
     // FIXASC end
 
+    //--------------------------------------------------------------------------
+
+    public BlockScope enclosingScope;
+
+    /**
+     * Anonymous types that are declared in this type's methods
+     */
+    private GroovyTypeDeclaration[] anonymousTypes;
+
+    public GroovyTypeDeclaration[] getAnonymousTypes() {
+        return anonymousTypes;
+    }
+
+    public void addAnonymousType(GroovyTypeDeclaration anonymousType) {
+        if (anonymousTypes == null) {
+            anonymousTypes = new GroovyTypeDeclaration[] { anonymousType };
+        } else {
+            GroovyTypeDeclaration[] newTypes = new GroovyTypeDeclaration[anonymousTypes.length + 1];
+            System.arraycopy(anonymousTypes, 0, newTypes, 0, anonymousTypes.length);
+            newTypes[anonymousTypes.length] = anonymousType;
+            anonymousTypes = newTypes;
+        }
+    }
+
     /**
      * Fixes the super types of anonymous inner classes These kinds of classes are always constructed so that they extend the super
      * type, even if the super type is an interface. This is because during parse time we don't know if the super type is a class or
@@ -91,30 +115,5 @@ public class GroovyTypeDeclaration extends TypeDeclaration {
                 fixAnonymousTypeDeclarations(type.anonymousTypes, anonScope);
             }
         }
-    }
-
-    /**
-     * Anonymous types that are declared in this type's methods
-     */
-    private GroovyTypeDeclaration[] anonymousTypes = null;
-
-    /**
-     * If this type is anonymous, points to the enclosing method
-     */
-    public AbstractMethodDeclaration enclosingMethod;
-
-    public void addAnonymousType(GroovyTypeDeclaration anonymousType) {
-        if (anonymousTypes == null) {
-            anonymousTypes = new GroovyTypeDeclaration[] { anonymousType };
-        } else {
-            GroovyTypeDeclaration[] newTypes = new GroovyTypeDeclaration[anonymousTypes.length + 1];
-            System.arraycopy(anonymousTypes, 0, newTypes, 0, anonymousTypes.length);
-            newTypes[anonymousTypes.length] = anonymousType;
-            anonymousTypes = newTypes;
-        }
-    }
-
-    public GroovyTypeDeclaration[] getAnonymousTypes() {
-        return anonymousTypes;
     }
 }

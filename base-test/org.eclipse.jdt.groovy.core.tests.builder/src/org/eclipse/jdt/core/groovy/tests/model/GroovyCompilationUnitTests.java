@@ -44,6 +44,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.groovy.core.util.JavaConstants;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public final class GroovyCompilationUnitTests extends GroovyTypeRootTestSuite {
@@ -503,7 +504,7 @@ public final class GroovyCompilationUnitTests extends GroovyTypeRootTestSuite {
         assertSingleMemberAnnotation(method, "p.Target");
     }
 
-    @Test
+    @Test @Ignore("Anonymous inner types have been removed from JDT model")
     public void testAnonymousInner1() throws Exception {
         IPath root = createAnnotationGroovyProject();
         IPath path = env.addGroovyClass(root, "p", "X",
@@ -530,7 +531,7 @@ public final class GroovyCompilationUnitTests extends GroovyTypeRootTestSuite {
         }
     }
 
-    @Test
+    @Test @Ignore("Anonymous inner types have been removed from JDT model")
     public void testAnonymousInner2() throws Exception {
         IPath root = createAnnotationGroovyProject();
         IPath path = env.addGroovyClass(root, "p", "X",
@@ -564,7 +565,7 @@ public final class GroovyCompilationUnitTests extends GroovyTypeRootTestSuite {
         }
     }
 
-    @Test
+    @Test @Ignore("Anonymous inner types have been removed from JDT model")
     public void testAnonymousInner3() throws Exception {
         IPath root = createAnnotationGroovyProject();
         IPath path = env.addGroovyClass(root, "p", "X",
@@ -595,7 +596,7 @@ public final class GroovyCompilationUnitTests extends GroovyTypeRootTestSuite {
         }
     }
 
-    @Test
+    @Test @Ignore("Anonymous inner types have been removed from JDT model")
     public void testAnonymousInner4() throws Exception {
         IPath root = createAnnotationGroovyProject();
         IPath path = env.addGroovyClass(root, "p", "X",
@@ -633,7 +634,7 @@ public final class GroovyCompilationUnitTests extends GroovyTypeRootTestSuite {
         }
     }
 
-    @Test // FIXADE TODO: anon inner classes not properly structured on field initializers
+    @Test @Ignore("Anonymous inner types have been removed from JDT model")
     public void testAnonymousInner5() throws Exception {
         IPath path = env.addGroovyClass(createAnnotationGroovyProject(), "p", "X",
             "package p;\n" +
@@ -657,7 +658,8 @@ public final class GroovyCompilationUnitTests extends GroovyTypeRootTestSuite {
         }
     }
 
-    @Test // Test that classes in a script are not treated as anon inners
+    // Test that classes in a script are not treated as anon inners
+    @Test @Ignore("Anonymous inner types have been removed from JDT model")
     public void testAnonymousInner6() throws Exception {
         IPath root = createAnnotationGroovyProject();
         IPath path = env.addGroovyClass(root, "p", "X",

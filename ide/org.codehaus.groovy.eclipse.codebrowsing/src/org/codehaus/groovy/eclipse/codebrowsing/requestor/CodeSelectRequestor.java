@@ -222,16 +222,11 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 String qualifier = checkQualifiedType(result, enclosingElement);
                 ClassNode declaringType = findDeclaringType(result);
                 if (declaringType != null) {
-                    ClassNode effectiveDeclaringType = declaringType;
-                    if (declaringType.getEnclosingMethod() != null) {
-                        // inner class, assume anonymous
-                        effectiveDeclaringType = declaringType.getEnclosingMethod().getDeclaringClass();
-                    }
                     // find it in the java model
                     IType type = project.groovyClassToJavaType(declaringType);
                     if (type == null && !gunit.isOnBuildPath()) {
                         // try to find it in the current compilation unit
-                        type = gunit.getType(effectiveDeclaringType.getNameWithoutPackage());
+                        type = gunit.getType(declaringType.getNameWithoutPackage());
                         if (!type.exists()) {
                             type = null;
                         }
@@ -239,7 +234,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     if (type != null) {
                         if (qualifier == null) {
                             // find the requested java element
-                            IJavaElement maybeRequested = findRequestedElement(result.declaration, effectiveDeclaringType, type);
+                            IJavaElement maybeRequested = findRequestedElement(result.declaration, declaringType, type);
                             // try to resolve the type of the requested element; this will add the proper metadata to the hover
                             requestedElement = resolveRequestedElement(maybeRequested, result);
                         } else {
@@ -489,7 +484,8 @@ public class CodeSelectRequestor implements ITypeRequestor {
         if (node.getEnd() < 1 && !(node instanceof JDTFieldNode) && declaringType.getField(name) != null && findElement(jdtDeclaringType, name, null) == null) {
             return true;
         }
-        return false;
+
+        return GroovyUtils.isAnonymous(node.getDeclaringClass());
     }
 
     private boolean existsOnlyInGroovyModel(MethodNode node, String name, ClassNode declaringType, IType jdtDeclaringType) throws JavaModelException {
@@ -507,7 +503,8 @@ public class CodeSelectRequestor implements ITypeRequestor {
         if (node.getEnd() < 1 && !(node instanceof JDTMethodNode) && !declaringType.getMethods(name).isEmpty() && findElement(jdtDeclaringType, name, node.getParameters()) == null) {
             return true;
         }
-        return false;
+
+        return GroovyUtils.isAnonymous(node.getDeclaringClass());
     }
 
     /**

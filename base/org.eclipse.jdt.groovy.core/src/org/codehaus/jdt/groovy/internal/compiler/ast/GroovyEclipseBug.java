@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,6 @@ package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 /**
  * Indicates something unexpected has happened. Should never occur when code is running as designed.
- *
- * @author Andy Clement
  */
 public class GroovyEclipseBug extends IllegalStateException {
 
@@ -26,8 +24,5 @@ public class GroovyEclipseBug extends IllegalStateException {
 
     public GroovyEclipseBug(String message) {
         super(message);
-    }
-
-    public GroovyEclipseBug() {
     }
 }

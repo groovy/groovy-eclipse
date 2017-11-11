@@ -53,6 +53,7 @@ import org.codehaus.groovy.ast.TaskEntry;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
@@ -121,7 +122,6 @@ import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.SingleMemberAnnotation;
 import org.eclipse.jdt.internal.compiler.ast.SingleNameReference;
 import org.eclipse.jdt.internal.compiler.ast.SingleTypeReference;
-import org.eclipse.jdt.internal.compiler.ast.Statement;
 import org.eclipse.jdt.internal.compiler.ast.StringLiteral;
 import org.eclipse.jdt.internal.compiler.ast.TrueLiteral;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
@@ -130,6 +130,7 @@ import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
@@ -921,13 +922,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         private SourceUnit sourceUnit;
         private GroovyCompilationUnitDeclaration unitDeclaration;
 
-        private boolean hasAnonInners;
+        private Map<ClassNode, Object> anonymousLocations;
         private boolean checkGenerics = defaultCheckGenerics;
-        /**
-         * Keeps track of anonymous inner type outer methods.
-         * NOTE: Only used if hasAnonInners is {@code true}.
-         */
-        private Map<MethodNode, AbstractMethodDeclaration> enclosingMethodMap;
 
         void populate(GroovyCompilationUnitDeclaration target, SourceUnit source) {
             unitDeclaration = target;
@@ -1095,11 +1091,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
         private void createTypeDeclarations(ModuleNode moduleNode) {
             List<ClassNode> moduleClassNodes = moduleNode.getClasses();
-            hasAnonInners = false;
             for (ClassNode classNode : moduleClassNodes) {
-                if (isAnon(classNode)) {
-                    hasAnonInners = true;
-                    enclosingMethodMap = new HashMap<MethodNode, AbstractMethodDeclaration>();
+                if (classNode.isPrimaryClassNode() && GroovyUtils.isAnonymous(classNode)) {
+                    anonymousLocations = new HashMap<ClassNode, Object>();
                     break;
                 }
             }
@@ -1108,7 +1102,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
             CompilationResult compilationResult = unitDeclaration.compilationResult;
             char[] mainName = toMainName(compilationResult.getFileName());
-            boolean isInner;
             Map<ClassNode, List<TypeDeclaration>> innersToRecord = new HashMap<ClassNode, List<TypeDeclaration>>();
             for (ClassNode classNode : moduleClassNodes) {
                 if (!classNode.isPrimaryClassNode()) {
@@ -1116,8 +1109,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 }
 
                 GroovyTypeDeclaration typeDeclaration = new GroovyTypeDeclaration(compilationResult, classNode);
-
                 typeDeclaration.annotations = createAnnotations(classNode.getAnnotations());
+
+                boolean isInner;
                 if (classNode instanceof InnerClassNode) {
                     isInner = true;
                 } else {
@@ -1138,25 +1132,26 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 boolean isEnum = classNode.isEnum();
                 configureSuperClass(typeDeclaration, classNode.getSuperClass(), isEnum, isTrait(classNode));
                 configureSuperInterfaces(typeDeclaration, classNode);
-                typeDeclaration.methods = createMethodAndConstructorDeclarations(classNode, isEnum, typeDeclaration, compilationResult);
                 typeDeclaration.fields = createFieldDeclarations(classNode, isEnum);
+                typeDeclaration.methods = createMethodAndConstructorDeclarations(classNode, isEnum, typeDeclaration, compilationResult);
                 typeDeclaration.properties = classNode.getProperties();
+
                 if (isInner) {
                     InnerClassNode innerClassNode = (InnerClassNode) classNode;
-                    ClassNode outerClass = innerClassNode.getOuterClass();
-                    String outername = outerClass.getNameWithoutPackage();
-                    String newInner = innerClassNode.getNameWithoutPackage().substring(outername.length() + 1);
-                    typeDeclaration.name = newInner.toCharArray();
+                    ClassNode outerClassNode = innerClassNode.getOuterClass();
 
-                    // Record that we need to set the parent of this inner type later
-                    List<TypeDeclaration> inners = innersToRecord.get(outerClass);
+                    // produces a name like "1" but seems to be required to make matches
+                    typeDeclaration.name = innerClassNode.getNameWithoutPackage().substring(outerClassNode.getNameWithoutPackage().length() + 1).toCharArray();
+
+                    // record that we need to set the parent of this inner type later
+                    List<TypeDeclaration> inners = innersToRecord.get(outerClassNode);
                     if (inners == null) {
                         inners = new ArrayList<TypeDeclaration>();
-                        innersToRecord.put(outerClass, inners);
+                        innersToRecord.put(outerClassNode, inners);
                     }
                     inners.add(typeDeclaration);
 
-                    if (isAnon(classNode)) {
+                    if (GroovyUtils.isAnonymous(classNode)) {
                         typeDeclaration.bits |= (ASTNode.IsAnonymousType | ASTNode.IsLocalType);
                         typeDeclaration.allocation = new QualifiedAllocationExpression(typeDeclaration);
                         typeDeclaration.allocation.enclosingInstance = new NullLiteral(typeDeclaration.sourceStart, typeDeclaration.sourceEnd);
@@ -1184,41 +1179,45 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                 List<TypeDeclaration> newInnersList = innersToRecordEntry.getValue();
                 for (Iterator<TypeDeclaration> iterator = newInnersList.iterator(); iterator.hasNext();) {
-                    GroovyTypeDeclaration inner = (GroovyTypeDeclaration) iterator.next();
-                    if ((inner.bits & ASTNode.IsAnonymousType) > 0) {
+                    GroovyTypeDeclaration innerTypeDeclaration = (GroovyTypeDeclaration) iterator.next();
+                    if ((innerTypeDeclaration.bits & ASTNode.IsAnonymousType) != 0) {
                         iterator.remove();
-                        MethodNode enclosingMethodGroovy = inner.getClassNode().getEnclosingMethod();
-                        if (enclosingMethodGroovy == null) {
-                            // probably an anon type inside a script
-                            ClassNode outerClass = inner.getClassNode().getOuterClass();
-                            enclosingMethodGroovy = outerClass.getMethod("run", Parameter.EMPTY_ARRAY);
-                            if (enclosingMethodGroovy == null) {
-                                throw new GroovyEclipseBug("Failed to find the enclosing method for anonymous type " + inner.getClassNode().getName());
+
+                        // set enclosing scope of anon. inner
+                        if (outerTypeDeclaration.scope == null) {
+                            outerTypeDeclaration.scope = new ClassScope(unitDeclaration.scope, outerTypeDeclaration);
+                        }
+                        Object location = anonymousLocations.get(innerTypeDeclaration.getClassNode());
+                        if (location instanceof AbstractMethodDeclaration) {
+                            AbstractMethodDeclaration methodDeclaration = (AbstractMethodDeclaration) location;
+                            methodDeclaration.bits |= ASTNode.HasLocalType;
+
+                            innerTypeDeclaration.enclosingScope = new MethodScope(outerTypeDeclaration.scope, methodDeclaration, methodDeclaration.isStatic());
+                        } else if (location instanceof FieldNode) {
+                            FieldNode fieldNode = (FieldNode) location;
+                            if (!fieldNode.isStatic()) {
+                                if (outerTypeDeclaration.initializerScope == null) {
+                                    outerTypeDeclaration.initializerScope = new MethodScope(outerTypeDeclaration.scope, outerTypeDeclaration.scope.referenceContext, false);
+                                }
+                                innerTypeDeclaration.enclosingScope = outerTypeDeclaration.initializerScope;
+                            } else {
+                                if (outerTypeDeclaration.staticInitializerScope == null) {
+                                    outerTypeDeclaration.staticInitializerScope = new MethodScope(outerTypeDeclaration.scope, outerTypeDeclaration.scope.referenceContext, true);
+                                }
+                                innerTypeDeclaration.enclosingScope = outerTypeDeclaration.staticInitializerScope;
                             }
+                        } else if (!innerTypeDeclaration.getClassNode().isEnum()) {
+                            throw new GroovyEclipseBug("Enclosing scope not found for anon. inner class: " + innerTypeDeclaration.getClassNode().getName());
                         }
-                        AbstractMethodDeclaration enclosingMethodJDT = enclosingMethodMap.get(enclosingMethodGroovy);
-                        enclosingMethodJDT.bits |= ASTNode.HasLocalType;
-                        inner.enclosingMethod = enclosingMethodJDT;
 
-                        // just a dummy scope to be filled in for real later. needed for structure requesting
-                        enclosingMethodJDT.scope = new MethodScope(outerTypeDeclaration.scope, enclosingMethodJDT, enclosingMethodJDT.isStatic());
-                        if (inner.enclosingMethod.statements == null || inner.enclosingMethod.statements.length == 0) {
-                            inner.enclosingMethod.statements = new Statement[] { inner.allocation };
-                        } else {
-                            Statement[] newStatements = new Statement[inner.enclosingMethod.statements.length + 1];
-                            System.arraycopy(inner.enclosingMethod.statements, 0, newStatements, 0, inner.enclosingMethod.statements.length);
-                            newStatements[inner.enclosingMethod.statements.length] = inner.allocation;
-                            inner.enclosingMethod.statements = newStatements;
-                        }
-                        ((GroovyTypeDeclaration) outerTypeDeclaration).addAnonymousType(inner);
-
+                        ((GroovyTypeDeclaration) outerTypeDeclaration).addAnonymousType(innerTypeDeclaration);
                     }
                 }
                 outerTypeDeclaration.memberTypes = newInnersList.toArray(new TypeDeclaration[newInnersList.size()]);
             }
 
             // clean up
-            enclosingMethodMap = null;
+            anonymousLocations = null;
 
             unitDeclaration.types = typeDeclarations.toArray(new TypeDeclaration[typeDeclarations.size()]);
         }
@@ -1236,7 +1235,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             List<FieldNode> fieldNodes = classNode.getFields();
             boolean isTrait = isTrait(classNode);
             if (fieldNodes != null) {
-                for (FieldNode fieldNode : fieldNodes) {
+                for (final FieldNode fieldNode : fieldNodes) {
                     if (isTrait && !(fieldNode.isPublic() && fieldNode.isStatic() && fieldNode.isFinal())) {
                         continue;
                     }
@@ -1255,6 +1254,17 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                             if (fieldNode.isStatic() && fieldNode.isFinal() && fieldNode.getInitialExpression() instanceof ConstantExpression) {
                                 // this needs to be set for static finals to correctly determine constant status
                                 fieldDeclaration.initialization = createConstantExpression((ConstantExpression) fieldNode.getInitialExpression());
+                            }
+
+                            if (anonymousLocations != null && fieldNode.getInitialExpression() != null) {
+                                fieldNode.getInitialExpression().visit(new CodeVisitorSupport() {
+                                    public void visitConstructorCallExpression(ConstructorCallExpression call) {
+                                        if (call.isUsingAnonymousInnerClass()) {
+                                            anonymousLocations.put(call.getType(), fieldNode);
+                                        }
+                                        super.visitConstructorCallExpression(call);
+                                    }
+                                });
                             }
                         }
                         fieldDeclaration.initializer = fieldNode.getInitialExpression();
@@ -1315,7 +1325,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             }
 
             for (ConstructorNode constructorNode : constructorNodes) {
-                ConstructorDeclaration constructorDeclaration = new ConstructorDeclaration(unitDeclaration.compilationResult);
+                final ConstructorDeclaration constructorDeclaration = new ConstructorDeclaration(unitDeclaration.compilationResult);
                 fixupSourceLocationsForConstructorDeclaration(constructorDeclaration, constructorNode);
                 constructorDeclaration.annotations = createAnnotations(constructorNode.getAnnotations());
                 constructorDeclaration.modifiers = isEnum ? Flags.AccPrivate : getModifiers(constructorNode);
@@ -1328,8 +1338,15 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     accumulatedMethodDeclarations.add(constructorDeclaration);
                 }
 
-                if (hasAnonInners) {
-                    enclosingMethodMap.put(constructorNode, constructorDeclaration);
+                if (anonymousLocations != null && constructorNode.getCode() != null) {
+                    constructorNode.getCode().visit(new CodeVisitorSupport() {
+                        public void visitConstructorCallExpression(ConstructorCallExpression call) {
+                            if (call.isUsingAnonymousInnerClass()) {
+                                anonymousLocations.put(call.getType(), constructorDeclaration);
+                            }
+                            super.visitConstructorCallExpression(call);
+                        }
+                    });
                 }
             }
 
@@ -1355,16 +1372,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 if (isEnum && methodNode.isSynthetic()) {
                     // skip synthetic methods in enums
                     continue;
-                    // String name = methodNode.getName();
-                    // Parameter[] params = methodNode.getParameters();
-                    // if (name.equals("values") && params.length == 0) {
-                    // continue;
-                    // }
-                    // if (name.equals("valueOf") && params.length == 1 && params[0].getType().equals(ClassHelper.STRING_TYPE)) {
-                    // continue;
-                    // }
                 }
-                MethodDeclaration methodDeclaration = createMethodDeclaration(classNode, isEnum, methodNode, unitDeclaration.compilationResult);
+                final MethodDeclaration methodDeclaration = createMethodDeclaration(classNode, isEnum, methodNode, unitDeclaration.compilationResult);
                 if (methodNode.isAbstract()) {
                     typeDeclaration.bits |= ASTNode.HasAbstractMethods;
                 }
@@ -1373,8 +1382,16 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 } else {
                     accumulatedDeclarations.add(methodDeclaration);
                 }
-                if (hasAnonInners) {
-                    enclosingMethodMap.put(methodNode, methodDeclaration);
+
+                if (anonymousLocations != null && methodNode.getCode() != null) {
+                    methodNode.getCode().visit(new CodeVisitorSupport() {
+                        public void visitConstructorCallExpression(ConstructorCallExpression call) {
+                            if (call.isUsingAnonymousInnerClass()) {
+                                anonymousLocations.put(call.getType(), methodDeclaration);
+                            }
+                            super.visitConstructorCallExpression(call);
+                        }
+                    });
                 }
             }
         }
@@ -2236,13 +2253,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 return hasPackageScopeXform(node.getDeclaringClass(), type);
             }
             return false;
-        }
-
-        private boolean isAnon(ClassNode classNode) {
-            // FIXADE does Groovy support non-anon local types???
-            return classNode.getEnclosingMethod() != null ||
-                // check to see if anon type inside of a script
-                (classNode.getOuterClass() != null && classNode.getOuterClass().isScript());
         }
 
         private boolean isTrait(ClassNode classNode) {

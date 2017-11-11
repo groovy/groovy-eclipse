@@ -485,9 +485,8 @@ public class GroovyClassScope extends ClassScope {
         GroovyTypeDeclaration[] anonymousTypes = context.getAnonymousTypes();
         if (anonymousTypes != null) {
             for (GroovyTypeDeclaration anonType : anonymousTypes) {
-                GroovyClassScope anonScope = new GroovyClassScope(this, anonType);
-                anonType.scope = anonScope;
-                anonType.resolve(anonType.enclosingMethod.scope);
+                anonType.scope = new GroovyClassScope(this, anonType);
+                anonType.resolve(anonType.enclosingScope);
             }
         }
         // STS-3930 start
