@@ -616,7 +616,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
     @Override
     public void visitStaticMethodCallExpression(StaticMethodCallExpression expression) {
-        if (!check(expression)) {
+        if (!check(expression)) { super.visitStaticMethodCallExpression(expression);
             return;
         }
 

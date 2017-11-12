@@ -148,7 +148,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
 
         // visit "<clinit>" statements before visitContents
         MethodNode clinit = node.getMethod("<clinit>", Parameter.EMPTY_ARRAY);
-        if (clinit != null) {
+        if (clinit != null && !node.isEnum()) {
             visitIfPresent(clinit.getCode());
         }
         for (Statement stmt : node.getObjectInitializerStatements()) {
@@ -173,11 +173,11 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
             }
         }
 
-        // visit inner classes
+        // visit (non-synthetic, non-anonymous) inner classes
         for (Iterator<InnerClassNode> it = node.getInnerClasses(); it.hasNext();) {
             InnerClassNode inner = it.next();
             // closures are represented as a class like Outer$_name_closure#, where # is a number
-            if (!inner.isSynthetic() && !(inner instanceof GeneratedClosure) && (!GroovyUtils.isAnonymous(inner) || inner.isEnum())) {
+            if (!inner.isSynthetic() && !(inner instanceof GeneratedClosure) && !GroovyUtils.isAnonymous(inner)) {
                 visitClass(inner);
             }
         }
@@ -201,6 +201,21 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
             }
         }
         visitIfPresent(node.getInitialExpression());
+
+        // visit enum field initializer inline with enum field
+        if (node.isEnum() && node.isStatic() && !node.getName().matches("(MAX|MIN)_VALUE|\\$VALUES")) {
+            MethodNode clinit = node.getDeclaringClass().getMethod("<clinit>", Parameter.EMPTY_ARRAY);
+            for (Statement stmt : ((BlockStatement) clinit.getCode()).getStatements()) {
+                if (stmt instanceof ExpressionStatement && ((ExpressionStatement) stmt).getExpression() instanceof BinaryExpression) {
+                    Expression lhs = ((BinaryExpression) ((ExpressionStatement) stmt).getExpression()).getLeftExpression();
+                    Expression rhs = ((BinaryExpression) ((ExpressionStatement) stmt).getExpression()).getRightExpression();
+                    if (lhs instanceof FieldExpression && ((FieldExpression) lhs).getField() == node) {
+                        rhs.visit(this);
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     public void visitConstructor(ConstructorNode node) {
@@ -509,7 +524,11 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
 
     public void visitStaticMethodCallExpression(StaticMethodCallExpression expression) {
         visitAnnotations(expression.getAnnotations());
+        ClassNode ownerType = expression.getOwnerType();
         expression.getArguments().visit(this);
+        if (GroovyUtils.isAnonymous(ownerType)) {
+            visitClass(ownerType);
+        }
         visitExpression(expression);
     }
 

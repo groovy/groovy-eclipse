@@ -96,27 +96,7 @@ public class ASTNodeFinder extends DepthFirstVisitor {
             checkSupers(node); // extends and implements
         }
 
-        // visit <clinit> body because this is where static field initializers are placed
-        // However, there is a problem in that constant fields are seen here as well.
-        // If a match is found here, keep it for later because there may be a more appropriate match in the class body
-        VisitCompleteException vce = null;
-        try {
-            MethodNode clinit = node.getMethod("<clinit>", Parameter.EMPTY_ARRAY);
-            if (clinit != null && clinit.getCode() instanceof BlockStatement) {
-                for (Statement stmt : ((BlockStatement) clinit.getCode()).getStatements()) {
-                    stmt.visit(this);
-                }
-            }
-        } catch (VisitCompleteException e) {
-            vce = e;
-        }
-
         super.visitClass(node);
-
-        // if we have gotten here, then we have not found a more appropriate candidate
-        if (vce != null) {
-            throw vce;
-        }
     }
 
     @Override

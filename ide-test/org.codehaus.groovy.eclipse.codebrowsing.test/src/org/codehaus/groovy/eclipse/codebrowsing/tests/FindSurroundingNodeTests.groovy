@@ -363,10 +363,9 @@ final class FindSurroundingNodeTests extends BrowsingTestSuite {
         expectedRegion = new Region(contents.indexOf('X {') + 2, '{\n    def m() {\n      def i = 1\n    }\n  }'.length())
         checkRegion(contents, unit, initialRegion, expectedRegion)
 
-        // TODO: Should field node for X be the next surrounding node?
-        //initialRegion = expectedRegion
-        //expectedRegion = new Region(contents.indexOf('X {'), 'X {\n    def m() {\n      def i = 1\n    }\n  }'.length())
-        //checkRegion(contents, unit, initialRegion, expectedRegion)
+        initialRegion = expectedRegion
+        expectedRegion = new Region(contents.indexOf('X {'), 'X {\n    def m() {\n      def i = 1\n    }\n  }'.length())
+        checkRegion(contents, unit, initialRegion, expectedRegion)
 
         initialRegion = expectedRegion
         expectedRegion = new Region(0, contents.length() - 1)
