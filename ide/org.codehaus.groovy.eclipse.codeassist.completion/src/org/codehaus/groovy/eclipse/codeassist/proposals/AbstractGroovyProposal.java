@@ -79,7 +79,7 @@ public abstract class AbstractGroovyProposal implements IGroovyProposal {
             }
         }
 
-        if (this instanceof GroovyMethodProposal) {
+        if (relevance > 1 && this instanceof GroovyMethodProposal) {
             relevance *= 0.9f; // promote fields
         }
 
