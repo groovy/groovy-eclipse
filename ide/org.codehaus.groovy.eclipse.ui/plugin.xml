@@ -887,7 +887,19 @@
 
    <extension point="org.eclipse.ui.actionSetPartAssociations">
       <actionSetPartAssociation
+            targetID="org.eclipse.jdt.ui.A_OpenActionSet">
+         <part
+               id="org.codehaus.groovy.eclipse.editor.GroovyEditor">
+         </part>
+      </actionSetPartAssociation>
+      <actionSetPartAssociation
             targetID="org.eclipse.jdt.ui.CodingActionSet">
+         <part
+               id="org.codehaus.groovy.eclipse.editor.GroovyEditor">
+         </part>
+      </actionSetPartAssociation>
+      <actionSetPartAssociation
+            targetID="org.eclipse.jdt.ui.JavaActionSet">
          <part
                id="org.codehaus.groovy.eclipse.editor.GroovyEditor">
          </part>
@@ -899,7 +911,13 @@
          </part>
       </actionSetPartAssociation>
       <actionSetPartAssociation
-            targetID="org.eclipse.jdt.ui.JavaActionSet">
+            targetID="org.eclipse.jdt.ui.text.java.actionSet.presentation">
+         <part
+               id="org.codehaus.groovy.eclipse.editor.GroovyEditor">
+         </part>
+      </actionSetPartAssociation>
+      <actionSetPartAssociation
+            targetID="org.eclipse.ui.edit.text.actionSet.presentation">
          <part
                id="org.codehaus.groovy.eclipse.editor.GroovyEditor">
          </part>
