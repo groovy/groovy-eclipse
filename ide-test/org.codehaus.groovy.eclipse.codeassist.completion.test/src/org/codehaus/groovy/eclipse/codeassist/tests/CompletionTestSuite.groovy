@@ -185,7 +185,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
             for (proposal in proposals) {
                 sb.append('\n').append(proposal.replacementString)
             }
-            fail(sb)
+            fail(sb.toString())
         }
     }
 
@@ -203,7 +203,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
             for (proposal in proposals) {
                 sb.append('\n').append(proposal.replacementString)
             }
-            fail(sb)
+            fail(sb.toString())
         }
     }
 
@@ -226,7 +226,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
             for (proposal in proposals) {
                 sb.append('\n').append(proposal.replacementString)
             }
-            fail(sb)
+            fail(sb.toString())
         }
     }
 
