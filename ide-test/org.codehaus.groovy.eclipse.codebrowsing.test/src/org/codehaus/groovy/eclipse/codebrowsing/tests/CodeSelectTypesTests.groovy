@@ -448,6 +448,13 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
     void testSelectAnonymousInnerType() {
         String contents = 'class Outer { def meth() { def m = new Map() { } } }'
         assertCodeSelect([contents], 'Map')
+        assertCodeSelect([contents], '{', null)
+    }
+
+    @Test
+    void testSelectAnonymousInnerEnum() {
+        String contents = 'enum Outer { ONE() { def m() { true } } \n abstract def m(); }'
+        assertCodeSelect(contents, new SourceRange(contents.indexOf('ONE() {') + 7, 0), null)
     }
 
     @Test
@@ -457,9 +464,21 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
     }
 
     @Test
+    void testSelectInnerQualifiedType() {
+        String contents = 'for (Map.Entry e : [:].entrySet()) { }'
+        assertCodeSelect([contents], 'Entry')
+    }
+
+    @Test
     void testSelectAliasedQualifyingType() {
         String contents = 'import java.util.Map as Foo; for (Foo.Entry e : [:].entrySet()) { }'
         assertCodeSelect([contents], 'Foo', 'Map')
+    }
+
+    @Test
+    void testSelectAliasedInnerQualifiedType() {
+        String contents = 'import java.util.Map as Foo; for (Foo.Entry e : [:].entrySet()) { }'
+        assertCodeSelect([contents], 'Entry')
     }
 
     @Test

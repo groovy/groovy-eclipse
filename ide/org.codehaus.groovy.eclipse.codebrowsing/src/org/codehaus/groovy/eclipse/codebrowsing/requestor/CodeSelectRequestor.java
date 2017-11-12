@@ -32,6 +32,7 @@ import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
@@ -43,10 +44,10 @@ import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedSourceFie
 import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedSourceMethod;
 import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedSourceType;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTFieldNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.codehaus.jdt.groovy.model.GroovyProjectFacade;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
@@ -174,7 +175,15 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     GroovyUtils.getBaseType(classNode).getUnresolvedName(), enclosingElement);
                 return;
             }
+        } else if (requestedNode instanceof ConstructorNode) {
+            if (nodeToLookFor instanceof ConstructorCallExpression &&
+                    selectRegion.getOffset() >= ((ConstructorCallExpression) nodeToLookFor).getArguments().getStart()) {
+                requestedNode = null; // ignore selections beyond the type name
+            } else {
+                requestedNode = ((ConstructorNode) requestedNode).getDeclaringClass();
+            }
         }
+
         if (requestedNode != null) {
             if (result.declaration instanceof VariableExpression) {
                 VariableExpression varExp = (VariableExpression) result.declaration;

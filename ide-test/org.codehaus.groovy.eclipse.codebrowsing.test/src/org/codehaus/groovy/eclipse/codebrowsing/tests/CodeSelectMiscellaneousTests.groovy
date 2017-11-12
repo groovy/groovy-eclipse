@@ -15,8 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
-import groovy.transform.NotYetImplemented
-
 import org.junit.Test
 
 final class CodeSelectMiscellaneousTests extends BrowsingTestSuite {
@@ -69,7 +67,7 @@ final class CodeSelectMiscellaneousTests extends BrowsingTestSuite {
         assertCodeSelect([contents], 'label', null)
     }
 
-    @Test @NotYetImplemented
+    @Test
     void testSelectStatementLabel2() {
         String contents = '''\
             class C {
