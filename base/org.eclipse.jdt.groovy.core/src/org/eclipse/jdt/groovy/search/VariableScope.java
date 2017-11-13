@@ -318,8 +318,11 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
          */
         public ClassNode getPerceivedDeclaringType() {
             if (declaringType.equals(CLASS_CLASS_NODE)) {
-                assert declaringType.isUsingGenerics();
-                return declaringType.getGenericsTypes()[0].getType();
+                if (declaringType.isUsingGenerics()) {
+                    GenericsType genericsType = declaringType.getGenericsTypes()[0];
+                    return genericsType.getType();
+                }
+                return OBJECT_CLASS_NODE;
             }
             return declaringType;
         }
@@ -375,7 +378,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         /**
          * the enclosing method call is the one where there are the current node is part of an argument list
          */
-        final List<CallAndType> enclosingCallStack = new ArrayList<VariableScope.CallAndType>();
+        final List<CallAndType> enclosingCallStack = new ArrayList<CallAndType>();
         /**
          * Node currently being evaluated, or null if none
          */
@@ -537,9 +540,9 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                     if (!isStatic()) {
                         superType = type.getSuperClass();
                     } else { // type is Class<T>, so produce Class<super of T>
-                        assert type.equals(VariableScope.CLASS_CLASS_NODE) && type.isUsingGenerics();
+                        assert type.equals(CLASS_CLASS_NODE) && type.isUsingGenerics();
                         superType = type.getGenericsTypes()[0].getType().getSuperClass(); //super of T
-                        if (superType != null && !superType.equals(VariableScope.OBJECT_CLASS_NODE)) {
+                        if (superType != null && !superType.equals(OBJECT_CLASS_NODE)) {
                             superType = newClassClassNode(superType);
                         }
                     }
@@ -1172,7 +1175,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         ClassNode typeToResolve = null;
         if (iterator == null && collectionType.isInterface()) {
             // could be a type that implements List
-            if (collectionType.implementsInterface(VariableScope.LIST_CLASS_NODE) && collectionType.getGenericsTypes() != null
+            if (collectionType.implementsInterface(LIST_CLASS_NODE) && collectionType.getGenericsTypes() != null
                     && collectionType.getGenericsTypes().length == 1) {
                 typeToResolve = collectionType;
             } else if (collectionType.declaresInterface(ITERATOR_CLASS) || collectionType.equals(ITERATOR_CLASS)
