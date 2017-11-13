@@ -902,7 +902,6 @@ public abstract class Annotation extends Expression {
 				pairs[i].resolveTypeExpecting(scope, null); // resilient
 			}
 		}
-//		if (scope.compilerOptions().storeAnnotations)
 		this.compilerAnnotation = scope.environment().createAnnotation((ReferenceBinding) this.resolvedType,
 				// GROOVY add
 				isGroovyAlias ? Binding.NO_ELEMENT_VALUE_PAIRS : computeElementValuePairs());
