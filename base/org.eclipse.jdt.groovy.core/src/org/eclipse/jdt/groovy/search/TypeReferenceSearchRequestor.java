@@ -21,7 +21,6 @@ import java.util.Set;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.jdt.groovy.model.GroovyClassFileWorkingCopy;
@@ -44,42 +43,35 @@ import org.eclipse.jdt.internal.core.search.matching.TypeReferencePattern;
 import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jface.text.Position;
 
-/**
- * @author Andrew Eisenberg
- * @created Aug 29, 2009
- */
 public class TypeReferenceSearchRequestor implements ITypeRequestor {
 
-    private static final String DOT = ".";
     private final SearchRequestor requestor;
     private final SearchParticipant participant;
 
-    private final char[] qualificationPattern;
-    private final char[] namePattern;
-    private final boolean isCaseSensitive;
     private final boolean isCamelCase;
+    private final boolean isCaseSensitive;
     private final boolean findDeclaration;
 
+    private final char[] namePattern;
+    private final char[] qualificationPattern;
+
     private final Set<Position> acceptedPositions = new HashSet<Position>();
-    private char[] cachedContents;
+    private char[] cachedContents; // see cachedContentsAvailable(IJavaElement)
 
     public TypeReferenceSearchRequestor(TypeReferencePattern pattern, SearchRequestor requestor, SearchParticipant participant) {
         this.requestor = requestor;
         this.participant = participant;
-        this.isCaseSensitive = ((Boolean) ReflectionUtils.getPrivateField(JavaSearchPattern.class, "isCaseSensitive", pattern))
-                .booleanValue();
+
+        this.isCamelCase = ((Boolean) ReflectionUtils.getPrivateField(JavaSearchPattern.class, "isCamelCase", pattern)).booleanValue();
+        this.isCaseSensitive = ((Boolean) ReflectionUtils.getPrivateField(JavaSearchPattern.class, "isCaseSensitive", pattern)).booleanValue();
+        this.findDeclaration = (pattern instanceof DeclarationOfReferencedTypesPattern);
 
         this.namePattern = extractArray(pattern, "simpleName");
         this.qualificationPattern = extractArray(pattern, "qualification");
-        this.isCamelCase = ((Boolean) ReflectionUtils.getPrivateField(JavaSearchPattern.class, "isCamelCase", pattern))
-                .booleanValue();
-
-        this.findDeclaration = pattern instanceof DeclarationOfReferencedTypesPattern;
     }
 
-    protected char[] extractArray(TypeReferencePattern pattern, String fieldName) {
-        char[] arr;
-        arr = (char[]) ReflectionUtils.getPrivateField(TypeReferencePattern.class, fieldName, pattern);
+    protected final char[] extractArray(TypeReferencePattern pattern, String fieldName) {
+        char[] arr = (char[]) ReflectionUtils.getPrivateField(TypeReferencePattern.class, fieldName, pattern);
         if (!isCaseSensitive) {
             arr = CharOperation.toLowerCase(arr);
         }
@@ -87,103 +79,101 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
     }
 
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
-        // don't do constructor calls. They are found through the class node inside of it
-        if (node instanceof ClassExpression || node instanceof ClassNode || node instanceof ImportNode
-                || node instanceof AnnotationNode /* || node instanceof ConstructorNode */) {
+        if (!hasValidSourceLocation(node)) {
+            return VisitStatus.CONTINUE;
+        }
+        int start = -1, until = -1;
 
-            // the type variable may not have correct source location
-            ClassNode type;
-            if (node instanceof ConstructorNode) {
-                type = ((ConstructorNode) node).getDeclaringClass();
-            } else if (node instanceof AnnotationNode) {
-                type = ((AnnotationNode) node).getClassNode();
-            } else if (node instanceof ClassExpression) {
-                type = ((ClassExpression) node).getType();
+        if (node instanceof ImportNode && !findDeclaration && !isCamelCase) {
+            String name;
+            if (((ImportNode) node).getType() == null) {
+                name = ((ImportNode) node).getPackageName();
             } else {
-                type = result.type;
+                name = ((ImportNode) node).getType().getName();
             }
 
-            if (type != null) {
-                type = GroovyUtils.getBaseType(type);
-                if (qualifiedNameMatches(type) && hasValidSourceLocation(node)) {
-                    int start = -1;
-                    int end = -1;
+            if (qualifiedNameMatches(name) && cachedContentsAvailable(enclosingElement)) {
+                char[] pattern = CharOperation.concat(qualificationPattern, namePattern, '.');
+                start = CharOperation.indexOf(pattern, cachedContents, isCaseSensitive, node.getStart(), node.getEnd());
+                if (start != -1) { // constrain the matching range
+                    start += (qualificationPattern.length + 1);
+                    until = start + namePattern.length;
+                }
+            }
+            // else imports with type != null will have their ClassNode passed separately
 
-                    boolean startEndFound = false;
-                    if (node instanceof ImportNode) {
-                        if (((ImportNode) node).getType() == null) {
-                            // if the import node's type is not null, then the type will be visited later anyway.
-                            // so don't visit it here.
-                            end = node.getEnd();
-                            start = node.getStart();
-                        }
-                    } else if (node instanceof ClassExpression) {
-                        end = node.getEnd();
-                        start = node.getStart();
-                    } else if (node instanceof ClassNode) {
-                        ClassNode classNode = (ClassNode) node;
-                        if (classNode.getNameEnd() > 0) {
-                            // we are actually dealing with a declaration
-                            // start = classNode.getNameStart();
-                            // end = classNode.getNameEnd() + 1;
-                            // startEndFound = true;
-                        } else if (classNode.redirect() == classNode) {
-                            // this is a script declaration... ignore
-                            start = end = -1;
-                            startEndFound = true;
-                        } else {
-                            // ensure classNode has proper source location
-                            classNode = maybeGetComponentType(classNode);
-                            end = classNode.getEnd();
-                            start = classNode.getStart();
-                        }
-                    } else if (node instanceof ConstructorNode) {
-                        start = ((ConstructorNode) node).getNameStart();
-                        end = ((ConstructorNode) node).getNameEnd() + 1;
-                        if (start == 0 && end == 1) {
-                            // synthetic constructor from script
-                            start = end = -1;
-                            startEndFound = true;
-                        }
-                    } else if (node instanceof AnnotationNode) {
-                        type = ((AnnotationNode) node).getClassNode();
-                        end = type.getEnd();
-                        start = type.getStart();
+        } else if (node instanceof ClassNode || node instanceof ClassExpression || node instanceof AnnotationNode) {
+
+            ClassNode type;
+            if (node instanceof ClassExpression) {
+                type = ((ClassExpression) node).getType();
+            } else if (node instanceof AnnotationNode) {
+                type = ((AnnotationNode) node).getClassNode();
+            } else /*if (node instanceof ClassNode)*/ {
+                type = result.type;
+            }
+            type = GroovyUtils.getBaseType(type); // remove array wrapper(s)
+
+            if (qualifiedNameMatches(type.getName())) {
+                boolean rangeFound = false;
+
+                if (node instanceof ClassExpression) {
+                    start = node.getStart();
+                    until = node.getEnd();
+                } else if (node instanceof AnnotationNode) {
+                    start = type.getStart();
+                    until = type.getEnd();
+                } else /*if (node instanceof ClassNode)*/ {
+                    ClassNode classNode = (ClassNode) node;
+                    if (classNode.getNameEnd() > 0) {
+                        // we are actually dealing with a declaration
+                        //start = classNode.getNameStart();
+                        //end = classNode.getNameEnd() + 1;
+                        //startEndFound = true;
+                    } else if (classNode.redirect() == classNode) {
+                        // this is a script declaration... ignore
+                        rangeFound = true;
+                    } else {
+                        // ensure classNode has proper source location
+                        classNode = maybeGetComponentType(classNode);
+                        start = classNode.getStart();
+                        until = classNode.getEnd();
                     }
+                }
 
-                    if (!startEndFound) {
-                        // we have a little more work to do before finding the real
-                        // offset in the text
-                        StartEnd startEnd = getMatchLocation(type, enclosingElement, start, end);
-                        if (startEnd != null) {
-                            start = startEnd.start;
-                            end = startEnd.end;
-                        } else {
-                            // match really wasn't found
-                            start = end = -1;
-                        }
-                    }
-
-                    if (start >= 0 && end >= 0) {
-                        // don't want to double accept nodes. This could happen with field and object initializers can get pushed
-                        // into multiple
-                        // constructors
-                        Position position = new Position(start, end - start);
-                        if (!acceptedPositions.contains(position)) {
-                            IJavaElement realElement = enclosingElement.getOpenable() instanceof GroovyClassFileWorkingCopy ? ((GroovyClassFileWorkingCopy) enclosingElement
-                                    .getOpenable()).convertToBinary(enclosingElement) : enclosingElement;
-
-                            try {
-                                requestor.acceptSearchMatch(createMatch(result, realElement, start, end));
-                                acceptedPositions.add(position);
-                            } catch (CoreException e) {
-                                Util.log(e, "Error accepting search match for " + realElement);
-                            }
-                        }
+                if (!rangeFound) {
+                    // we have a little more work to do before finding the real offset in the text
+                    int[] range = getMatchLocation(type, enclosingElement, start, until);
+                    if (range != null) {
+                        start = range[0];
+                        until = range[1];
+                    } else {
+                        // match really wasn't found
+                        start = until = -1;
                     }
                 }
             }
         }
+
+        if (start >= 0 && until > 0) {
+            // don't double accept nodes; this could happen with field and object
+            // initializers that get pushed into multiple constructors
+            Position position = new Position(start, until - start);
+            if (!acceptedPositions.contains(position)) {
+                acceptedPositions.add(position);
+
+                IJavaElement element = enclosingElement;
+                if (enclosingElement.getOpenable() instanceof GroovyClassFileWorkingCopy) {
+                    element = ((GroovyClassFileWorkingCopy) enclosingElement.getOpenable()).convertToBinary(enclosingElement);
+                }
+                try {
+                    requestor.acceptSearchMatch(createMatch(result, element, start, until));
+                } catch (CoreException e) {
+                    Util.log(e, "Error accepting search match for " + element);
+                }
+            }
+        }
+
         return VisitStatus.CONTINUE;
     }
 
@@ -211,10 +201,6 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
                 element.getResource());
     }
 
-    /**
-     * @param node
-     * @return
-     */
     private boolean hasValidSourceLocation(ASTNode node) {
         // find the correct ast node that has source locations on it
         // sometimes array nodes do not have source locations, so get around that here.
@@ -243,44 +229,26 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
         return orig;
     }
 
-    private String[] extractNameAndQualification(ClassNode type) {
-        // qualification includes the full package name, plus all enclosing types with '.' separators
-        String qualification = type.getPackageName();
-        if (qualification == null) {
-            qualification = "";
-        }
+    private String[] splitQualifierAndSimpleName(String fullyQualifiedName) {
+        int i = fullyQualifiedName.lastIndexOf('$');
+        if (i < 0) i = fullyQualifiedName.lastIndexOf('.');
 
-        String semiQualified = type.getNameWithoutPackage();
-
-        String simple;
-        int lastDollar = semiQualified.lastIndexOf('$');
-        if (lastDollar > 0) {
-            simple = semiQualified.substring(lastDollar + 1);
-            semiQualified = semiQualified.replace('$', '.').substring(0, lastDollar);
-            if (qualification.length() == 0) {
-                qualification = semiQualified;
-            } else {
-                qualification += DOT + semiQualified;
-            }
-        } else {
-            simple = semiQualified;
-        }
-
-        return new String[] { qualification, simple };
+        return new String[] {
+            i <= 0 ? "" : fullyQualifiedName.substring(0, i).replace('$', '.'),
+            fullyQualifiedName.substring(i + 1)
+        };
     }
 
-    private boolean qualifiedNameMatches(ClassNode type) {
-        String[] nameAndQualification = extractNameAndQualification(type);
-        String name, qualification;
-        qualification = nameAndQualification[0];
-        name = nameAndQualification[1];
+    private boolean qualifiedNameMatches(String fullyQualifiedName) {
+        String[] tuple = splitQualifierAndSimpleName(fullyQualifiedName);
+        String name = tuple[1], qualifier = tuple[0];
         if (!isCaseSensitive) {
             name = name.toLowerCase();
-            qualification = qualification.toLowerCase();
+            qualifier = qualifier.toLowerCase();
         }
 
         boolean match = true;
-        if (namePattern != null) { // if pattern is null, then this means '*'
+        if (namePattern != null) { // null pattern is wildcard
             if (isCamelCase) {
                 match = CharOperation.camelCaseMatch(namePattern, name.toCharArray());
             } else {
@@ -288,77 +256,82 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
             }
         }
 
-        if (match && qualificationPattern != null) {
-            if (isCamelCase) { // if pattern is null, then this means '*'
-                match = CharOperation.camelCaseMatch(qualificationPattern, qualification.toCharArray());
+        if (match && qualificationPattern != null) { // null pattern is wildcard
+            if (isCamelCase) {
+                match = CharOperation.camelCaseMatch(qualificationPattern, qualifier.toCharArray());
             } else {
-                match = CharOperation.equals(qualificationPattern, qualification.toCharArray());
+                match = CharOperation.equals(qualificationPattern, qualifier.toCharArray());
+            }
+        }
+
+        // check for complete match within the qualifier
+        if (!match && namePattern != null && qualificationPattern != null &&
+                qualifier.length() > (namePattern.length + qualificationPattern.length)) {
+            char[] q = qualifier.toCharArray();
+            int qualEnd = qualificationPattern.length,
+                nameEnd = qualificationPattern.length + 1 + namePattern.length;
+            if ((q[qualEnd] == '.' || q[qualEnd] == '$') &&
+                    CharOperation.equals(qualificationPattern, q, 0, qualEnd) &&
+                    CharOperation.equals(namePattern, q, qualEnd + 1, nameEnd)) {
+                match = (nameEnd == q.length || q[nameEnd] == '.' || q[nameEnd] == '$');
             }
         }
 
         return match;
     }
 
-    private class StartEnd {
-
-        StartEnd(int start, int end) {
-            this.start = start;
-            this.end = end;
-        }
-
-        final int start;
-        final int end;
-    }
-
     /**
-     * THe problem that this method gets around is that we can't tell exactly what the text is and exactly where or if there is a
+     * The problem that this method gets around is that we can't tell exactly what the text is and exactly where or if there is a
      * match in the source location. For example, in the text, the type can be fully qualified, or array, or coming from an alias,
      * or a bound type parameter. On top of that, some source locations are off by one. All these will have location relative to the
      * offset provided in the start and end fields of the {@link ClassNode}.
      *
      * @param node the class node to find in the source
-     * @param elt the element used to find the text
+     * @param elem the element used to find the text
      * @return the start and end offsets of the actual match, or null if no match exists.
      */
-    private StartEnd getMatchLocation(ClassNode node, IJavaElement elt, int maybeStart, int maybeEnd) {
-        CompilationUnit unit = (CompilationUnit) elt.getAncestor(IJavaElement.COMPILATION_UNIT);
-        if (unit != null && cachedContents == null) {
-            cachedContents = unit.getContents();
-        }
-
-        if (cachedContents != null) {
+    private int[] getMatchLocation(ClassNode node, IJavaElement elem, int maybeStart, int maybeEnd) {
+        // TODO: Handle match in qualifier of fully- or partially-qualified names of non-import elements.
+        if (cachedContentsAvailable(elem)) {
             int nameLength = maybeEnd - maybeStart;
-            int start = -1;
-            int end = -1;
+            int start = -1, until = -1;
+
             String name = node.getName();
-            // handle inner types here
             int dollarIndex = name.lastIndexOf('$');
             name = name.substring(dollarIndex + 1);
             if (name.length() <= nameLength) {
                 // might be a qualified name
-                start = CharOperation.indexOf(name.toCharArray(), cachedContents, true, maybeStart, maybeEnd + 1);
-                end = start + name.length();
+                start = CharOperation.indexOf(name.toCharArray(), cachedContents, isCaseSensitive, maybeStart, maybeEnd + 1);
+                until = start + name.length();
             }
             if (start == -1) {
                 // check for simple name
                 String nameWithoutPackage = node.getNameWithoutPackage();
-                start = CharOperation.indexOf(nameWithoutPackage.toCharArray(), cachedContents, true, maybeStart, maybeEnd + 1);
-                end = start + nameWithoutPackage.length();
+                start = CharOperation.indexOf(nameWithoutPackage.toCharArray(), cachedContents, isCaseSensitive, maybeStart, maybeEnd + 1);
+                until = start + nameWithoutPackage.length();
             }
-            if (start == -1) {
-                // can be an aliased type name
-                return null;
-            } else {
-                return new StartEnd(start, end);
+
+            if (start != -1) {
+                return new int[] {start, until};
             }
         }
-        // shuoldn't happen, but may be a binary match
-        return new StartEnd(node.getStart(), node.getEnd());
+        return null;
+    }
+
+    private boolean cachedContentsAvailable(IJavaElement elem) {
+        if (cachedContents == null) {
+            CompilationUnit unit = (CompilationUnit) elem.getAncestor(IJavaElement.COMPILATION_UNIT);
+            if (unit != null) {
+                cachedContents = unit.getContents();
+            }
+        }
+        return (cachedContents != null);
     }
 
     /**
-     * check to see if this requestor has something to do with refactoring, if so, we always want an accurate match otherwise we get
-     * complaints in the refactoring wizard of "possible matches"
+     * Checks to see if this requestor has something to do with refactoring, if
+     * so, we always want an accurate match otherwise we get complaints in the
+     * refactoring wizard of "possible matches".
      */
     private boolean shouldAlwaysBeAccurate() {
         return requestor.getClass().getPackage().getName().indexOf("refactoring") != -1;
@@ -368,12 +341,11 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
         if (shouldAlwaysBeAccurate()) {
             return SearchMatch.A_ACCURATE;
         }
-
         switch (confidence) {
-            case EXACT:
-                return SearchMatch.A_ACCURATE;
-            default:
-                return SearchMatch.A_INACCURATE;
+        case EXACT:
+            return SearchMatch.A_ACCURATE;
+        default:
+            return SearchMatch.A_INACCURATE;
         }
     }
 }

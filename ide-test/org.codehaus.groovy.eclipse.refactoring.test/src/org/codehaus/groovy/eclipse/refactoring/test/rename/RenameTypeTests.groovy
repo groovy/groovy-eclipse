@@ -283,6 +283,11 @@ final class RenameTypeTests extends RefactoringTestSuite {
     }
 
     @Test
+    void testInner2() {
+        helperWithTextual('Outer', 'Outer', 'Wrapper', 'Wrapper', true, false)
+    }
+
+    @Test
     void testJavadoc1() {
         helperWithTextual('A', 'A', 'B', 'B', true, true)
     }
