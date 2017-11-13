@@ -23,9 +23,9 @@ import java.io.InputStream;
 import java.util.Arrays;
 
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
-import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.jdt.groovy.model.GroovyNature;
+import org.codehaus.jdt.groovy.model.GroovyProjectFacade;
 import org.eclipse.core.internal.events.BuildCommand;
 import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IContainer;
@@ -59,8 +59,6 @@ import org.eclipse.jdt.launching.JavaRuntime;
 
 public class TestProject {
 
-    public static final String TEST_PROJECT_NAME = "TestProject";
-
     private final IProject project;
 
     private final IJavaProject javaProject;
@@ -68,7 +66,7 @@ public class TestProject {
     private IPackageFragmentRoot sourceFolder;
 
     public TestProject() throws Exception {
-        this(TEST_PROJECT_NAME);
+        this("TestProject");
     }
 
     public TestProject(String name) throws Exception {
@@ -164,7 +162,7 @@ public class TestProject {
         if (Arrays.asList(javaProject.getRawClasspath()).contains(classpathEntry)) return;
         IClasspathEntry[] entries = (IClasspathEntry[]) ArrayUtils.add(javaProject.getRawClasspath(), classpathEntry);
 
-        SimpleProgressMonitor monitor = new SimpleProgressMonitor("Add " + classpathEntry);
+        SimpleProgressMonitor monitor = new SimpleProgressMonitor("Add to classpath: " + classpathEntry);
         javaProject.setRawClasspath(entries, monitor);
         monitor.waitForCompletion();
     }
@@ -275,15 +273,19 @@ public class TestProject {
         if (!folder.exists()) {
             ensureExists(folder);
         }
-        final IPackageFragmentRoot root = javaProject.getPackageFragmentRoot(folder);
+        IClasspathEntry sourceFolderEntry = null;
         for (IClasspathEntry entry : javaProject.getRawClasspath()) {
             if (entry.getPath().equals(folder.getFullPath())) {
-                return root;
+                sourceFolderEntry = entry;
+                break;
             }
         }
-        IPath outPathPath = outPath == null ? null : getProject().getFullPath().append(outPath).makeAbsolute();
-        addClasspathEntry(JavaCore.newSourceEntry(root.getPath(), exclusionPatterns, outPathPath));
-        return root;
+        if (sourceFolderEntry == null) {
+            IPath outPathPath = (outPath == null ? null : getProject().getFullPath().append(outPath).makeAbsolute());
+            sourceFolderEntry = JavaCore.newSourceEntry(folder.getFullPath(), exclusionPatterns, outPathPath);
+            addClasspathEntry(sourceFolderEntry);
+        }
+        return javaProject.findPackageFragmentRoots(sourceFolderEntry)[0];
     }
 
     private void ensureExists(IFolder folder) throws Exception {

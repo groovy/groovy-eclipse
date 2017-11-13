@@ -24,8 +24,8 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
+import org.codehaus.jdt.groovy.model.GroovyProjectFacade;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.WorkingCopyOwner;
@@ -42,27 +42,11 @@ import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 
 /**
- * @author Andrew Eisenberg
- * @created Aug 6, 2009
- *
- *
- *          This class is used to compile a snippet of groovy source code into a
- *          module node.
- *          The client is responsible for calling {@link #cleanup()} when all
- *          {@link ClassNode}s
- *          created by this compiler are no longer needed
+ * Compiles a snippet of groovy source code into a module node.  The client is
+ * responsible for calling {@link #cleanup()} when all {@link ClassNode}s are
+ * no longer needed.
  */
 public class GroovySnippetCompiler {
-
-    /**
-     * @author Andrew Eisenberg
-     * @created Aug 6, 2009
-     * Provide an empty requestor, no compilation results required
-     */
-    private static class Requestor implements ICompilerRequestor {
-        public void acceptResult(CompilationResult result) {
-        }
-    }
 
     private INameEnvironment nameEnvironment;
 
@@ -70,8 +54,7 @@ public class GroovySnippetCompiler {
         try {
             nameEnvironment = new SearchableEnvironment((JavaProject) project.getProject(), (WorkingCopyOwner) null);
         } catch (JavaModelException e) {
-            GroovyCore
-                    .logException("Problem initializing snippet compiler for project " + project.getProject().getElementName(), e);
+            GroovyCore.logException("Problem initializing snippet compiler for project " + project.getProject().getElementName(), e);
         }
     }
 
@@ -81,14 +64,13 @@ public class GroovySnippetCompiler {
      * and import statements.
      *
      * @param source the groovy source code to compile
-     * @param sourcePath the path including file name to compile.  Can be null
+     * @param sourcePath the path including file name to compile; may be {@code null}
      */
     public ModuleNode compile(String source, String sourcePath) {
-        GroovyCompilationUnitDeclaration decl = internalCompile(source,
-                sourcePath);
+        GroovyCompilationUnitDeclaration decl = internalCompile(source, sourcePath);
         ModuleNode node = decl.getModuleNode();
 
-        // Remove any remaining synthetic methods
+        // remove any remaining synthetic methods
         for (ClassNode classNode : (Iterable<ClassNode>) node.getClasses()) {
             for (Iterator<MethodNode> methodIter = classNode.getMethods().iterator(); methodIter.hasNext();) {
                 MethodNode method = methodIter.next();
@@ -105,32 +87,30 @@ public class GroovySnippetCompiler {
         return unit.compilationResult();
     }
 
-    private GroovyCompilationUnitDeclaration internalCompile(String source,
-            String sourcePath) {
+    private GroovyCompilationUnitDeclaration internalCompile(String source, String sourcePath) {
         if (sourcePath == null) {
             sourcePath = "Nothing.groovy";
-        } else if (! ContentTypeUtils.isGroovyLikeFileName(sourcePath)) {
+        } else if (!ContentTypeUtils.isGroovyLikeFileName(sourcePath)) {
             sourcePath = sourcePath.concat(".groovy");
         }
 
         Map<String, String> options = JavaCore.getOptions();
         options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
-        Compiler compiler = new CompilationUnitResolver(nameEnvironment, DefaultErrorHandlingPolicies.proceedWithAllProblems(),
-                new CompilerOptions(options), new Requestor(), new DefaultProblemFactory(), null, true);
-        GroovyCompilationUnitDeclaration decl =
-            (GroovyCompilationUnitDeclaration)
-            compiler.resolve(new MockCompilationUnit(source.toCharArray(), sourcePath.toCharArray()), true, false, false);
+        ICompilerRequestor requestor = new ICompilerRequestor() {
+            public void acceptResult(CompilationResult result) {
+            }
+        };
+        Compiler compiler = new CompilationUnitResolver(nameEnvironment, DefaultErrorHandlingPolicies.proceedWithAllProblems(), new CompilerOptions(options), requestor, new DefaultProblemFactory(), null, true);
+        GroovyCompilationUnitDeclaration decl = (GroovyCompilationUnitDeclaration) compiler.resolve(new MockCompilationUnit(source.toCharArray(), sourcePath.toCharArray()), true, false, false);
         return decl;
     }
-
 
     public void cleanup() {
         nameEnvironment.cleanup();
     }
 
     /**
-     * Compile source code into a module node when
-     * there is no file name
+     * Compiles source code into a module node when there is no file name.
      */
     public ModuleNode compile(String source) {
         return compile(source, null);

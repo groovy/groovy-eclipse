@@ -19,6 +19,7 @@ import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
 import static org.junit.Assume.assumeTrue
 
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
+import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
 import org.junit.Test
@@ -31,6 +32,9 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
 
     @Before
     void setUp() {
+        // filter some legacy packages
+        setJavaPreference(PreferenceConstants.TYPEFILTER_ENABLED, 'sun.*;com.sun.*;org.omg.*')
+
         GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
         GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.PARAMETER_GUESSING, true)
     }

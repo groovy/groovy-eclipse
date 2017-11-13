@@ -17,12 +17,14 @@ package org.codehaus.groovy.eclipse.test
 
 import static org.eclipse.jdt.ui.PreferenceConstants.EDITOR_MARK_OCCURRENCES
 
+import groovy.transform.stc.ClosureParams
+import groovy.transform.stc.SimpleType
+
 import org.codehaus.groovy.eclipse.GroovyPlugin
 import org.codehaus.groovy.eclipse.core.compiler.GroovySnippetCompiler
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.codehaus.jdt.groovy.model.GroovyNature
 import org.eclipse.core.resources.IFile
-import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.resources.ProjectScope
 import org.eclipse.core.runtime.FileLocator
@@ -54,8 +56,7 @@ abstract class GroovyEclipseTestSuite {
 
     @BeforeClass
     static final void setUpTestSuite() {
-        testProject = new TestProject()
-        testProject.autoBuilding = false
+        testProject = new TestProject(autoBuilding: false)
 
         new ProjectScope(testProject.project).getNode(Platform.PI_RUNTIME).put(Platform.PREF_LINE_SEPARATOR, '\n')
     }
@@ -97,7 +98,8 @@ abstract class GroovyEclipseTestSuite {
         testProject.project.build(IncrementalProjectBuilder.CLEAN_BUILD, spm)
         spm.waitForCompletion()
 
-        for (pfr in testProject.javaProject.packageFragmentRoots) {
+        // for some reason the source folder is not always present in getPackageFragmentRoots():
+        for (pfr in (testProject.javaProject.packageFragmentRoots + testProject.sourceFolder)) {
             if (pfr.elementName == testProject.sourceFolder.elementName) {
                 pfr.resource.members().each(Util.&delete)
             } else if (!pfr.isExternal()) {
@@ -105,7 +107,9 @@ abstract class GroovyEclipseTestSuite {
             }
         }
 
-        def entries = testProject.javaProject.rawClasspath.findAll {
+        String sourceFolderPath = "/${testProject.project.name}/src"
+
+        Collection<IClasspathEntry> entries = testProject.javaProject.rawClasspath.findAll {
             if (it.entryKind == IClasspathEntry.CPE_LIBRARY) {
                 return false
             }
@@ -113,10 +117,11 @@ abstract class GroovyEclipseTestSuite {
                 return false
             }
             if (it.entryKind == IClasspathEntry.CPE_SOURCE) {
-                return it.path.toString() == '/TestProject/src'
+                return it.path.toString() == sourceFolderPath
             }
             return true
         }
+
         spm = new SimpleProgressMonitor("$testProject.project.name reset classpath")
         testProject.javaProject.setRawClasspath(entries.toArray(new IClasspathEntry[0]), spm)
         spm.waitForCompletion()
@@ -141,7 +146,7 @@ abstract class GroovyEclipseTestSuite {
             prefs.setValue(key, val)
 
         } else {
-            System.err.println('Unexpected preference: ' + key)
+            System.err.println("Unexpected preference: $key")
         }
     }
 
@@ -223,7 +228,7 @@ abstract class GroovyEclipseTestSuite {
         testProject.waitForIndexer()
     }
 
-    protected final void withProject(Closure<IProject> closure) {
+    protected final void withProject(@ClosureParams(value=SimpleType, options=['org.eclipse.core.resources.IProject']) Closure closure) {
         closure(testProject.project)
     }
 }

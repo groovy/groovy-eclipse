@@ -350,7 +350,8 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                 modifiers |= Flags.AccAbstract;
             }
 
-            ClassNode returnType = resolver.convertToClassNode(methodBinding.returnType);
+            ClassNode returnType = methodBinding.returnType != null ?
+                resolver.convertToClassNode(methodBinding.returnType) : ClassHelper.VOID_TYPE;
 
             Parameter[] parameters = makeParameters(methodBinding.parameters);
 
