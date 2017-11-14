@@ -178,27 +178,20 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
     }
 
     protected TypeReferenceMatch createMatch(TypeLookupResult result, IJavaElement enclosingElement, int start, int end) {
-        IJavaElement element;
+        IJavaElement element = enclosingElement;
         if (findDeclaration) {
             // don't use the enclosing element, but rather use the declaration of the type
             try {
-                ClassNode type = result.type;
-                while (type.getComponentType() != null) {
-                    type = type.getComponentType();
-                }
-                element = enclosingElement.getJavaProject().findType(type.getName().replace('$', '.'), new NullProgressMonitor());
-                if (element == null) {
-                    element = enclosingElement;
+                ClassNode type = GroovyUtils.getBaseType(result.type);
+                IJavaElement e = enclosingElement.getJavaProject().findType(type.getName().replace('$', '.'), new NullProgressMonitor());
+                if (e != null) {
+                    element = e;
                 }
             } catch (JavaModelException e) {
                 Util.log(e);
-                element = enclosingElement;
             }
-        } else {
-            element = enclosingElement;
         }
-        return new TypeReferenceMatch(element, getAccuracy(result.confidence), start, end - start, false, participant,
-                element.getResource());
+        return new TypeReferenceMatch(element, getAccuracy(result.confidence), start, end - start, false, participant, element.getResource());
     }
 
     private boolean hasValidSourceLocation(ASTNode node) {
@@ -242,25 +235,13 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
     private boolean qualifiedNameMatches(String fullyQualifiedName) {
         String[] tuple = splitQualifierAndSimpleName(fullyQualifiedName);
         String name = tuple[1], qualifier = tuple[0];
-        if (!isCaseSensitive) {
-            name = name.toLowerCase();
-            qualifier = qualifier.toLowerCase();
-        }
+        boolean match = unqualifiedNameMatches(name);
 
-        boolean match = true;
-        if (namePattern != null) { // null pattern is wildcard
-            if (isCamelCase) {
-                match = CharOperation.camelCaseMatch(namePattern, name.toCharArray());
-            } else {
-                match = CharOperation.equals(namePattern, name.toCharArray());
-            }
-        }
-
-        if (match && qualificationPattern != null) { // null pattern is wildcard
+        if (match) {
             if (isCamelCase) {
                 match = CharOperation.camelCaseMatch(qualificationPattern, qualifier.toCharArray());
             } else {
-                match = CharOperation.equals(qualificationPattern, qualifier.toCharArray());
+                match = CharOperation.match(qualificationPattern, qualifier.toCharArray(), isCaseSensitive);
             }
         }
 
@@ -268,15 +249,24 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
         if (!match && namePattern != null && qualificationPattern != null &&
                 qualifier.length() > (namePattern.length + qualificationPattern.length)) {
             char[] q = qualifier.toCharArray();
-            int qualEnd = qualificationPattern.length,
-                nameEnd = qualificationPattern.length + 1 + namePattern.length;
-            if ((q[qualEnd] == '.' || q[qualEnd] == '$') &&
-                    CharOperation.equals(qualificationPattern, q, 0, qualEnd) &&
-                    CharOperation.equals(namePattern, q, qualEnd + 1, nameEnd)) {
-                match = (nameEnd == q.length || q[nameEnd] == '.' || q[nameEnd] == '$');
+            // TODO: This doesn't really account for '*' being present in either of the patterns.
+            int qualEnd = qualificationPattern.length, nameEnd = qualificationPattern.length + namePattern.length + 1;
+            if ((q[qualEnd] == '.' || q[qualEnd] == '$') && (q.length == nameEnd || q[nameEnd] == '.' || q[nameEnd] == '$') &&
+                    CharOperation.match(CharOperation.concat(qualificationPattern, namePattern, '?'), q, isCaseSensitive)) {
+                match = true;
             }
         }
 
+        return match;
+    }
+
+    private boolean unqualifiedNameMatches(String unqualifiedName) {
+        boolean match = true;
+        if (isCamelCase) {
+            match = CharOperation.camelCaseMatch(namePattern, unqualifiedName.toCharArray());
+        } else {
+            match = CharOperation.match(namePattern, unqualifiedName.toCharArray(), isCaseSensitive);
+        }
         return match;
     }
 
@@ -291,29 +281,34 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
      * @return the start and end offsets of the actual match, or null if no match exists.
      */
     private int[] getMatchLocation(ClassNode node, IJavaElement elem, int maybeStart, int maybeEnd) {
-        // TODO: Handle match in qualifier of fully- or partially-qualified names of non-import elements.
-        if (cachedContentsAvailable(elem)) {
-            int nameLength = maybeEnd - maybeStart;
-            int start = -1, until = -1;
+        if (maybeEnd > 0 && cachedContentsAvailable(elem)) {
+            return getMatchLocation0(node.getName(),  maybeStart, maybeEnd);
+        }
+        return null;
+    }
 
-            String name = node.getName();
-            int dollarIndex = name.lastIndexOf('$');
-            name = name.substring(dollarIndex + 1);
-            if (name.length() <= nameLength) {
-                // might be a qualified name
-                start = CharOperation.indexOf(name.toCharArray(), cachedContents, isCaseSensitive, maybeStart, maybeEnd + 1);
-                until = start + name.length();
-            }
-            if (start == -1) {
-                // check for simple name
-                String nameWithoutPackage = node.getNameWithoutPackage();
-                start = CharOperation.indexOf(nameWithoutPackage.toCharArray(), cachedContents, isCaseSensitive, maybeStart, maybeEnd + 1);
-                until = start + nameWithoutPackage.length();
+    private int[] getMatchLocation0(String possiblyQualifiedName, int maybeStart, int maybeEnd) {
+        // if here, the qualifier and name patterns matched; however it may be an outer type that was matched
+        String[] tuple = splitQualifierAndSimpleName(possiblyQualifiedName);
+
+        String simpleName = tuple[1];
+        if (simpleName.length() <= (maybeEnd - maybeStart) && unqualifiedNameMatches(simpleName)) {
+            int start, until;
+
+            start = CharOperation.indexOf(possiblyQualifiedName.toCharArray(), cachedContents, isCaseSensitive, maybeStart, maybeEnd + 1);
+            if (start != -1) {
+                until = start + possiblyQualifiedName.length();
+            } else {
+                start = CharOperation.indexOf(simpleName.toCharArray(), cachedContents, isCaseSensitive, maybeStart, maybeEnd + 1);
+                until = start + simpleName.length();
             }
 
             if (start != -1) {
                 return new int[] {start, until};
             }
+        } else if (tuple[0].length() > 0) {
+            // try again with the name's qualifier
+            return getMatchLocation0(tuple[0], maybeStart, maybeEnd);
         }
         return null;
     }
@@ -334,18 +329,10 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
      * refactoring wizard of "possible matches".
      */
     private boolean shouldAlwaysBeAccurate() {
-        return requestor.getClass().getPackage().getName().indexOf("refactoring") != -1;
+        return (requestor.getClass().getPackage().getName().indexOf("refactoring") != -1);
     }
 
     private int getAccuracy(TypeConfidence confidence) {
-        if (shouldAlwaysBeAccurate()) {
-            return SearchMatch.A_ACCURATE;
-        }
-        switch (confidence) {
-        case EXACT:
-            return SearchMatch.A_ACCURATE;
-        default:
-            return SearchMatch.A_INACCURATE;
-        }
+        return (shouldAlwaysBeAccurate() || confidence == TypeConfidence.EXACT ? SearchMatch.A_ACCURATE : SearchMatch.A_INACCURATE);
     }
 }

@@ -53,6 +53,7 @@ import org.eclipse.ltk.core.refactoring.RefactoringDescriptor
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.junit.After
 import org.junit.AfterClass
+import org.junit.Assert
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Rule
@@ -539,6 +540,6 @@ abstract class RefactoringTestSuite {
         String[] actualLines = Strings.convertIntoLines(actual)
         String expected2 = (expectedLines == null ? null : Strings.concatenate(expectedLines, '\n'))
         String actual2 = (actualLines == null ? null : Strings.concatenate(actualLines, '\n'))
-        org.junit.Assert.assertEquals(message, expected2, actual2)
+        Assert.assertEquals(message, expected2, actual2)
     }
 }

@@ -83,11 +83,11 @@ final class RenameTypeTests extends RefactoringTestSuite {
     private String[] helperWithTextual(String oldCuName, String oldName, String newName, String newCUName, boolean updateReferences, boolean updateTextualMatches) {
         ICompilationUnit cu = createCUfromTestFile(packageP, oldCuName)
         IType classA = getType(cu, oldName)
-        IJavaElement[] classAMembers = classA.getChildren()
-        IPackageFragment pack = (IPackageFragment) cu.getParent()
+        IJavaElement[] classAMembers = classA.children
+        IPackageFragment pack = (IPackageFragment) cu.parent
         String[] renameHandles = null
-        if (classA.getDeclaringType() == null && cu.getElementName().startsWith(classA.getElementName())) {
-            renameHandles = ParticipantTesting.createHandles(classA, cu, cu.getResource())
+        if (classA.declaringType == null && cu.elementName.startsWith(classA.elementName)) {
+            renameHandles = ParticipantTesting.createHandles(classA, cu, cu.resource)
         } else {
             renameHandles = ParticipantTesting.createHandles(classA)
         }
@@ -99,9 +99,9 @@ final class RenameTypeTests extends RefactoringTestSuite {
         assert result == null || result.isOK() : 'was supposed to pass'
         ICompilationUnit newcu = pack.getCompilationUnit(newCUName + '.groovy')
         assert newcu.exists() : "cu $newcu.elementName does not exist"
-        assertEqualLines('invalid renaming', getFileContents(getOutputTestFileName(newCUName)), newcu.getSource())
-        INameUpdating nameUpdating = refactoring.getAdapter(INameUpdating.class)
-        IType newElement = (IType) nameUpdating.getNewElement()
+        assertEqualLines('invalid renaming', getFileContents(getOutputTestFileName(newCUName)), newcu.source)
+        INameUpdating nameUpdating = refactoring.getAdapter(INameUpdating)
+        IType newElement = (IType) nameUpdating.newElement
         assert newElement.exists() : 'new element does not exist:\n' + newElement.toString()
         checkMappers(refactoring, classA, newCUName + '.groovy', classAMembers)
         return renameHandles
@@ -116,32 +116,32 @@ final class RenameTypeTests extends RefactoringTestSuite {
     }
 
     private void checkMappers(Refactoring refactoring, IType type, String newCUName, IJavaElement[] someClassMembers) {
-        RenameTypeProcessor rtp= (RenameTypeProcessor)((RenameRefactoring) refactoring).getProcessor()
+        RenameTypeProcessor rtp = (RenameTypeProcessor) ((RenameRefactoring) refactoring).processor
 
-        ICompilationUnit newUnit= (ICompilationUnit)rtp.getRefactoredJavaElement(type.getCompilationUnit())
+        ICompilationUnit newUnit = (ICompilationUnit)rtp.getRefactoredJavaElement(type.compilationUnit)
         assert newUnit.exists()
         assert newUnit.getElementName() == newCUName
 
-        IFile newFile = rtp.getRefactoredResource(type.getResource())
+        IFile newFile = rtp.getRefactoredResource(type.resource)
         assert newFile.exists()
-        assert newFile.getName() == newCUName
+        assert newFile.name == newCUName
 
-        if ((type.getParent().getElementType() == IJavaElement.COMPILATION_UNIT) &&
-                type.getCompilationUnit().getElementName().equals(type.getElementName() + '.groovy')) {
+        if ((type.parent.elementType == IJavaElement.COMPILATION_UNIT) &&
+                type.compilationUnit.elementName.equals(type.elementName + '.groovy')) {
             assert !type.getCompilationUnit().exists()
             assert !type.getResource().exists()
         }
 
-        IPackageFragment oldPackage = type.getCompilationUnit().getParent()
+        IPackageFragment oldPackage = type.compilationUnit.parent
         IPackageFragment newPackage = rtp.getRefactoredJavaElement(oldPackage)
         assert newPackage == oldPackage
 
         for (member in someClassMembers) {
             IJavaElement refactoredMember = rtp.getRefactoredJavaElement(member)
-            if (member instanceof IMethod && member.getElementName() == type.getElementName())
+            if (member instanceof IMethod && member.elementName == type.elementName)
                 continue // constructor
             assert refactoredMember.exists()
-            assert refactoredMember.getElementName() == member.getElementName()
+            assert refactoredMember.elementName == member.elementName
             assert !refactoredMember.equals(member)
         }
     }
@@ -237,7 +237,7 @@ final class RenameTypeTests extends RefactoringTestSuite {
 
         helper2('A', 'B')
 
-        assertEqualLines('invalid renaming in p2.A', getFileContents(getOutputTestFileName(type, folder)), cu.getSource())
+        assertEqualLines('invalid renaming in p2.A', getFileContents(getOutputTestFileName(type, folder)), cu.source)
     }
 
     @Test
@@ -249,7 +249,7 @@ final class RenameTypeTests extends RefactoringTestSuite {
 
         helper2('A', 'B')
 
-        assertEqualLines('invalid renaming in p2.A', getFileContents(getOutputTestFileName(type, folder)), cu.getSource())
+        assertEqualLines('invalid renaming in p2.A', getFileContents(getOutputTestFileName(type, folder)), cu.source)
     }
 
     @Test
@@ -279,12 +279,23 @@ final class RenameTypeTests extends RefactoringTestSuite {
 
     @Test
     void testInner1() {
-        helperWithTextual('Outer', 'A', 'B', 'Outer', true, false)
+        // rename inner class
+        helperWithTextual('Script', 'A', 'B', 'Script', true, false)
     }
 
     @Test
     void testInner2() {
+        // rename outer class
+        helperWithTextual('Script', 'Outer', 'Wrapper', 'Script', true, false)
+    }
+
+    @Test
+    void testInner3() {
+        // rename outer class with external references
+        ICompilationUnit unit = createCUfromTestFile(packageP, 'Script')
         helperWithTextual('Outer', 'Outer', 'Wrapper', 'Wrapper', true, false)
+        assert unit.exists() : "CompilationUnit ${unit.elementName} does not exist"
+        assertEqualLines(getFileContents(getOutputTestFileName('Script')), unit.source)
     }
 
     @Test
