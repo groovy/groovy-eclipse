@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,38 +30,30 @@ import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.ui.PreferenceConstants;
 import org.eclipse.jdt.ui.refactoring.RenameSupport;
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 
-/**
- * @author martin
- *         extended by Stefan Reinhard
- *         condensed by Andrew Eisenberg
- */
 public class RenameDispatcherAction extends GroovyRefactoringAction {
 
     public void run(IAction action) {
         if (initRefactoring()) {
-            ITextSelection selection = getSelection();
             GroovyCompilationUnit unit = getUnit();
+            ITextSelection selection = getSelection();
             CandidateCollector dispatcher = new CandidateCollector(unit, selection);
             try {
                 ISourceReference target = dispatcher.getRefactoringTarget();
-                IPreferenceStore store = JavaPlugin.getDefault().getPreferenceStore();
-                boolean lightweight = store.getBoolean(PreferenceConstants.REFACTOR_LIGHTWEIGHT);
-                if (runViaAdapter(target, lightweight)) {
-                    return;
-                }
-                if (target instanceof IMember || target instanceof ILocalVariable) {
-                    if (lightweight && nameMatches(((IJavaElement) target).getElementName(), unit, selection)) {
-                        new GroovyRenameLinkedMode((IJavaElement) target, getEditor()).start();
+                boolean lightweight = JavaPlugin.getDefault().getPreferenceStore().getBoolean(PreferenceConstants.REFACTOR_LIGHTWEIGHT);
+                if (!runViaAdapter(target, lightweight)) {
+                    if (target instanceof IMember || target instanceof ILocalVariable) {
+                        if (lightweight && nameMatches(((IJavaElement) target).getElementName().toCharArray(), unit, selection)) {
+                            new GroovyRenameLinkedMode((IJavaElement) target, getEditor()).start();
+                        } else {
+                            openJavaRefactoringWizard((IJavaElement) target);
+                        }
                     } else {
-                        openJavaRefactoringWizard((IJavaElement) target);
+                        displayErrorDialog("Cannot refactor on current selection. No refactoring candidates found.");
                     }
-                } else {
-                    displayErrorDialog("Cannot refactor on current selection.  No refactoring candidates found");
                 }
             } catch (CoreException e) {
                 displayErrorDialog(e.getMessage());
@@ -70,37 +62,31 @@ public class RenameDispatcherAction extends GroovyRefactoringAction {
     }
 
     /**
-     * @param elementName
-     * @param unit
-     * @param selection
-     * @return true iff the selected name matches the element name
+     * @return {@code true} iff the selected name matches the element name
      */
-    private boolean nameMatches(String elementName, GroovyCompilationUnit unit, ITextSelection selection) {
+    private boolean nameMatches(char[] elementName, GroovyCompilationUnit unit, ITextSelection selection) {
         char[] contents = unit.getContents();
         // need to expand the selection so that it covers an entire word
-        int start = selection.getOffset();
-        int end = start + selection.getLength();
-        while (start >= contents.length || (start >= 0 && Character.isJavaIdentifierPart(contents[start]))) {
-            start --;
+        int start = Math.min(selection.getOffset(), contents.length - 1);
+        int end = Math.min(start + selection.getLength(), contents.length);
+        while (start > 0 && Character.isJavaIdentifierPart(contents[start - 1])) {
+            start -= 1;
         }
-        if (start != 0 || !Character.isJavaIdentifierPart(contents[start])) {
-            start ++;
+        while (end  < contents.length && Character.isJavaIdentifierPart(contents[end])) {
+            end += 1;
         }
-        while (end < contents.length && Character.isJavaIdentifierPart(contents[end])) {
-            end ++;
-        }
-        if (end > contents.length) {
-            end --;
-        }
-        char[] selectedText = CharOperation.subarray(contents, start, end);
-        return selectedText != null && elementName.equals(String.valueOf(selectedText));
+        char[] selectedName = CharOperation.subarray(contents, start, end);
+        return (selectedName != null && CharOperation.equals(elementName, selectedName));
     }
 
-    private boolean runViaAdapter(ISourceReference _target, boolean lightweight) {
+    private boolean runViaAdapter(ISourceReference targetParam, boolean lightweight) {
         try {
-            IRenameTarget target = adapt(_target, IRenameTarget.class);
-            if (target != null) {
-                return target.performRenameAction(getShell(), getEditor(), lightweight);
+            if (targetParam instanceof IAdaptable) {
+                @SuppressWarnings("cast")
+                IRenameTarget target = (IRenameTarget) ((IAdaptable) targetParam).getAdapter(IRenameTarget.class);
+                if (target != null) {
+                    return target.performRenameAction(getShell(), getEditor(), lightweight);
+                }
             }
         } catch (Exception e) {
             GroovyCore.logException("", e);
@@ -108,20 +94,10 @@ public class RenameDispatcherAction extends GroovyRefactoringAction {
         return false;
     }
 
-    public static <T> T adapt(Object target, Class<T> clazz) {
-        if (target instanceof IAdaptable) {
-            @SuppressWarnings("cast")
-            T result = (T) ((IAdaptable) target).getAdapter(clazz);
-            return result;
-        }
-        return null;
-    }
-
     private void openJavaRefactoringWizard(IJavaElement element) throws CoreException {
         JavaRefactoringDispatcher dispatcher = new JavaRefactoringDispatcher(element);
         RenameSupport refactoring = dispatcher.dispatchJavaRenameRefactoring();
-        Shell shell = getShell();
-        refactoring.openDialog(shell);
+        refactoring.openDialog(getShell());
     }
 
     private Shell getShell() {
