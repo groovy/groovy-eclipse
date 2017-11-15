@@ -92,12 +92,12 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
                 name = ((ImportNode) node).getType().getName();
             }
 
-            if (qualifiedNameMatches(name) && cachedContentsAvailable(enclosingElement)) {
+            if (qualificationPattern != null && qualifiedNameMatches(name) && cachedContentsAvailable(enclosingElement)) {
                 char[] pattern = CharOperation.concat(qualificationPattern, namePattern, '.');
                 start = CharOperation.indexOf(pattern, cachedContents, isCaseSensitive, node.getStart(), node.getEnd());
                 if (start != -1) { // constrain the matching range
                     start += (qualificationPattern.length + 1);
-                    until = start + namePattern.length;
+                    until = (start + namePattern.length);
                 }
             }
             // else imports with type != null will have their ClassNode passed separately
