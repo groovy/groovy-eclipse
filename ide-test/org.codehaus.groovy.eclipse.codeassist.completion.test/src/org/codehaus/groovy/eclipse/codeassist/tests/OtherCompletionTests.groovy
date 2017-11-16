@@ -15,6 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
+import static org.junit.Assume.assumeTrue
+
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
@@ -316,9 +319,33 @@ final class OtherCompletionTests extends CompletionTestSuite {
     }
 
     @Test // GRECLIPSE-1388
-    void testBeforeScript() {
+    void testBeforeScriptCompletion() {
         String contents = '\n\ndef x = 9'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '\n'))
         assertProposalOrdering(proposals, 'binding')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/371
+    void testCompileStaticCompletion() {
+        assumeTrue(isAtLeastGroovy(20))
+
+        String contents = '''\
+            import groovy.transform.*
+            class Bean {
+              URL url
+            }
+            class Main {
+              @CompileStatic
+              static main(args) {
+                Bean b = new Bean()
+                b.with {
+                  url.
+                }
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, 'getProtocol', 1)
+        proposalExists(proposals, 'protocol', 1)
     }
 }

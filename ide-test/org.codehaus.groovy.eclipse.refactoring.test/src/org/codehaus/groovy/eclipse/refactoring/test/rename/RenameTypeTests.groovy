@@ -118,7 +118,7 @@ final class RenameTypeTests extends RefactoringTestSuite {
     private void checkMappers(Refactoring refactoring, IType type, String newCUName, IJavaElement[] someClassMembers) {
         RenameTypeProcessor rtp = (RenameTypeProcessor) ((RenameRefactoring) refactoring).processor
 
-        ICompilationUnit newUnit = (ICompilationUnit)rtp.getRefactoredJavaElement(type.compilationUnit)
+        ICompilationUnit newUnit = rtp.getRefactoredJavaElement(type.compilationUnit)
         assert newUnit.exists()
         assert newUnit.getElementName() == newCUName
 

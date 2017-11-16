@@ -381,7 +381,11 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
                         expression = getRightMost(expression);
                     }
                     if (expression != null) {
-                        createContextForCallContext(expression, expression, expression.getText());
+                        if (supportingNodeEnd > 0 && fullCompletionExpression.endsWith(".") && completionExpression.equals("")) {
+                            createContext(expression, blockStack.getLast(), ContentAssistLocation.EXPRESSION);
+                        } else {
+                            createContextForCallContext(expression, expression, expression.getText());
+                        }
                     }
                 }
             }
