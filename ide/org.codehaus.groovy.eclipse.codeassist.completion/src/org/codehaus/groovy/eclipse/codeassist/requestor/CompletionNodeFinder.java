@@ -556,9 +556,10 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
     @Override
     public void visitMethodCallExpression(MethodCallExpression expression) {
-        if (!check(expression)) {
+        if (!check(expression)) { super.visitMethodCallExpression(expression);
             return;
         }
+
         Expression objectExpression = expression.getObjectExpression();
         Expression methodExpression = expression.getMethod();
         Expression arguments = expression.getArguments();

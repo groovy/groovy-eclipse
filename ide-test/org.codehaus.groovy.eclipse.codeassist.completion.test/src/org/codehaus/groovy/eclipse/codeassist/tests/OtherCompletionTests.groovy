@@ -371,4 +371,27 @@ final class OtherCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.pr'))
         proposalExists(proposals, 'protocol', 1)
     }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/391
+    void testCompileStaticCompletion3() {
+        assumeTrue(isAtLeastGroovy(20))
+
+        String contents = '''\
+            import javax.swing.JFrame
+            import groovy.transform.*
+            @CompileStatic
+            enum E {
+              A() {
+                @Override
+                String method(JFrame frame) {
+                  fr
+                }
+              }
+
+              abstract String method(JFrame jf);
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'fr'))
+        proposalExists(proposals, 'frame', 1)
+    }
 }

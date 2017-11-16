@@ -765,7 +765,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         try {
             for (MethodNode method : node.getMethods()) {
                 if (method.getEnd() > 0) {
-                    //enclosingElement = ((SourceType) enclosingElement0).getMethod(method.getName(), getParameterTypeSignatures(method.getParameters()));
+                    //enclosingElement = findAnonType(node).getMethod(method.getName(), getParameterTypeSignatures(method.getParameters()));
                     visitMethodInternal(method, false);
                 }
             }

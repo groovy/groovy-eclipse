@@ -466,6 +466,12 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         // check for trait field re-written as call to helper method
         visitIfPresent(getTraitFieldExpression(expression));
 
+        ClassNode type = expression.getType(); // check for enum init body
+        if (type.isEnum() && GroovyUtils.isAnonymous(type.redirect()) &&
+                expression.getMethodAsString().equals("$INIT")) {
+            visitClass(type.redirect());
+        }
+
         visitExpression(expression);
     }
 
