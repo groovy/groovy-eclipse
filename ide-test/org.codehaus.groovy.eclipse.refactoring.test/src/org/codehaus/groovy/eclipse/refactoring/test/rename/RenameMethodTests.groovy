@@ -129,8 +129,15 @@ final class RenameMethodTests extends RefactoringTestSuite {
         runTest('I', 'run', 'sam', [], true, false);
     }
 
-    @Test // GRECLIPSE-1538
+    @Test // https://github.com/groovy/groovy-eclipse/issues/389
     void testEnumOverrides() {
+        assumeTrue(isAtLeastGroovy(21))
+        // rename A.getFoo() to A.foo() and enum constant overrides should change
+        runTest('A', 'getFoo', 'foo', [], true, false)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/390
+    void testEnumOverrides2() {
         assumeTrue(isAtLeastGroovy(21))
         // rename A.getFoo() to A.foo() and enum constant overrides should change
         runTest('A', 'getFoo', 'foo', [], true, false)

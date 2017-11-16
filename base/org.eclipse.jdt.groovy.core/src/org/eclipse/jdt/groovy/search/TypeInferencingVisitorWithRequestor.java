@@ -754,6 +754,28 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
     }
 
+    /**
+     * @param node anonymous inner class for enum constant
+     */
+    private void visitMethodOverrides(ClassNode node) {
+        scopes.add(new VariableScope(scopes.getLast(), node, false));
+        ASTNode  enclosingDeclaration0 = enclosingDeclarationNode;
+        IJavaElement enclosingElement0 = enclosingElement;
+        enclosingDeclarationNode = node;
+        try {
+            for (MethodNode method : node.getMethods()) {
+                if (method.getEnd() > 0) {
+                    //enclosingElement = ((SourceType) enclosingElement0).getMethod(method.getName(), getParameterTypeSignatures(method.getParameters()));
+                    visitMethodInternal(method, false);
+                }
+            }
+        } finally {
+            scopes.removeLast();
+            enclosingElement = enclosingElement0;
+            enclosingDeclarationNode = enclosingDeclaration0;
+        }
+    }
+
     //
 
     @Override
@@ -1493,6 +1515,11 @@ assert primaryExprType != null && dependentExprType != null;
         node.getArguments().visit(this);
         scope.forgetEnclosingMethodCall();
 
+        ClassNode type;
+        if (isEnumInit(node) && GroovyUtils.isAnonymous(type = ((Expression) node.getReceiver()).getType())) {
+            visitMethodOverrides(type);
+        }
+
         // if this method call is the primary of a larger expression, then pass the inferred type onwards
         if (node.isSpreadSafe()) {
             returnType = createParameterizedList(returnType);
@@ -1688,22 +1715,7 @@ assert primaryExprType != null && dependentExprType != null;
                 super.visitStaticMethodCallExpression(node);
                 // visit anonymous inner class members
                 if (GroovyUtils.isAnonymous(type)) {
-                    scopes.add(new VariableScope(scopes.getLast(), type, false));
-                    ASTNode  enclosingDeclaration0 = enclosingDeclarationNode;
-                    IJavaElement enclosingElement0 = enclosingElement;
-                    enclosingDeclarationNode = type;
-                    try {
-                        for (MethodNode method : type.getMethods()) {
-                            if (method.getEnd() > 0) {
-                                //enclosingElement = ((SourceType) enclosingElement0).getMethod(method.getName(), getParameterTypeSignatures(method.getParameters()));
-                                visitMethodInternal(method, false);
-                            }
-                        }
-                    } finally {
-                        scopes.removeLast();
-                        enclosingElement = enclosingElement0;
-                        enclosingDeclarationNode = enclosingDeclaration0;
-                    }
+                    visitMethodOverrides(type);
                 }
             }
         }
@@ -2754,6 +2766,10 @@ assert primaryExprType != null && dependentExprType != null;
 
         Arrays.fill(inferredTypes, VariableScope.OBJECT_CLASS_NODE);
         return inferredTypes;
+    }
+
+    private static boolean isEnumInit(MethodCallExpression node) {
+        return (node.getType().isEnum() && node.getMethodAsString().equals("$INIT"));
     }
 
     private static boolean isEnumInit(StaticMethodCallExpression node) {

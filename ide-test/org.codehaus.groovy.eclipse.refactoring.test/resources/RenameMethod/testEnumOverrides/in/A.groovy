@@ -2,12 +2,12 @@ package p;
 
 enum A {
 
-	A() {
+	ONE() {
 		@Override
 		String getFoo() {
 		}
 	},
-	B() {
+	TWO() {
 		@Override
 		String getFoo() {
 			"bar"

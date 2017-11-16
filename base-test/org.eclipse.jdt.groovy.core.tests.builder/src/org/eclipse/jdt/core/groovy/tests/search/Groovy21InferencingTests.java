@@ -38,7 +38,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDelegatesToValue1() {
+    public void testDelegatesToValue() {
         String contents =
             "class Other { }\n" +
                 "def meth(@DelegatesTo(Other) Closure c) { }\n" +
@@ -225,8 +225,41 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
         assertUnknownConfidence(contents, offset, offset + 1, "B", false);
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/389
+    public void testEnumOverrides() {
+        String contents =
+            "enum E {\n" +
+            "  ONE() {\n" +
+            "    void meth(Number param) { println param }\n" +
+            "  },\n" +
+            "  TWO() {\n" +
+            "    void meth(Number param) { null }\n" +
+            "  }\n" +
+            "  abstract void meth(Number param);\n" +
+            "}";
+        int offset = contents.indexOf("println param") + "println ".length();
+        assertType(contents, offset, offset + "param".length(), "java.lang.Number");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/390
+    public void testEnumOverrides2() {
+        String contents =
+            "@groovy.transform.CompileStatic\n" +
+            "enum E {\n" +
+            "  ONE() {\n" +
+            "    void meth(Number param) { println param }\n" +
+            "  },\n" +
+            "  TWO() {\n" +
+            "    void meth(Number param) { null }\n" +
+            "  }\n" +
+            "  abstract void meth(Number param);\n" +
+            "}";
+        int offset = contents.indexOf("println param") + "println ".length();
+        assertType(contents, offset, offset + "param".length(), "java.lang.Number");
+    }
+
     @Test
-    public void testStaticCompile1() {
+    public void testStaticCompile() {
         Activator.getInstancePreferences().getBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, Activator.DEFAULT_SCRIPT_FILTERS_ENABLED);
         Activator.getInstancePreferences().get(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
         try {
@@ -261,13 +294,13 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
 
             String contents =
                 "import groovy.transform.TypeChecked\n" +
-                    "class Robot {\n" +
-                    "    void move(String dist) { println \"Moved $dist\" }\n" +
-                    "}\n" +
-                    "@TypeChecked(extensions = 'robot/RobotMove.groovy')\n" +
-                    "void operate() {\n" +
-                    "    robot.move \"left\"\n" +
-                    "}";
+                "class Robot {\n" +
+                "    void move(String dist) { println \"Moved $dist\" }\n" +
+                "}\n" +
+                "@TypeChecked(extensions = 'robot/RobotMove.groovy')\n" +
+                "void operate() {\n" +
+                "    robot.move \"left\"\n" +
+                "}";
 
             int start = contents.lastIndexOf("move");
             int end = start + "move".length();
