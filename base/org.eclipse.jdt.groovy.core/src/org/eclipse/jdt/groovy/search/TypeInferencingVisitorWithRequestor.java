@@ -272,6 +272,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     private ITypeRequestor requestor;
     private IJavaElement enclosingElement;
     private ASTNode enclosingDeclarationNode;
+    private final ModuleNode enclosingModule;
     private BinaryExpression enclosingAssignment;
     private ConstructorCallExpression enclosingConstructorCall;
 
@@ -322,32 +323,32 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         this.lookups = lookups;
         ModuleNodeInfo info = createModuleNode(unit);
         this.resolver = info != null ? info.resolver : null;
-        this.enclosingDeclarationNode = info != null ? info.module : null;
+        this.enclosingDeclarationNode = this.enclosingModule = info != null ? info.module : null;
     }
 
     //--------------------------------------------------------------------------
 
     public void visitCompilationUnit(ITypeRequestor requestor) {
-        if (enclosingDeclarationNode == null) {
+        if (enclosingModule == null) {
             // no module node, can't do anything
             return;
         }
 
         this.requestor = requestor;
         this.enclosingElement = unit;
-        VariableScope topLevelScope = new VariableScope(null, enclosingDeclarationNode, false);
+        VariableScope topLevelScope = new VariableScope(null, enclosingModule, false);
         scopes.add(topLevelScope);
 
         for (ITypeLookup lookup : lookups) {
             if (lookup instanceof ITypeResolver) {
-                ((ITypeResolver) lookup).setResolverInformation((ModuleNode) enclosingDeclarationNode, resolver);
+                ((ITypeResolver) lookup).setResolverInformation(enclosingModule, resolver);
             }
             lookup.initialize(unit, topLevelScope);
         }
 
         try {
-            visitPackage(((ModuleNode) enclosingDeclarationNode).getPackage());
-            visitImports((ModuleNode) enclosingDeclarationNode);
+            visitPackage(enclosingModule.getPackage());
+            visitImports(enclosingModule);
             for (IType type : unit.getTypes()) {
                 visitJDT(type, requestor);
             }
@@ -481,7 +482,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
 
         if (isLazy(fieldNode)) {
-            MethodNode lazyMethod = getLazyMethod(field.getElementName());
+            MethodNode lazyMethod = findLazyMethod(field.getElementName());
             if (lazyMethod != null) {
                 scopes.add(new VariableScope(scopes.getLast(), lazyMethod, lazyMethod.isStatic()));
                 ASTNode enclosingDeclarationNode0 = enclosingDeclarationNode;
@@ -1478,7 +1479,7 @@ assert primaryExprType != null && dependentExprType != null;
 
         // this is the inferred declaring type of this method
         Tuple t = dependentDeclarationStack.removeLast();
-        VariableScope.CallAndType call = new VariableScope.CallAndType(node, t.declaration, t.declaringType, unit.getModuleNode());
+        VariableScope.CallAndType call = new VariableScope.CallAndType(node, t.declaration, t.declaringType, enclosingModule);
 
         completeExpressionStack.removeLast();
 
@@ -1953,11 +1954,12 @@ assert primaryExprType != null && dependentExprType != null;
     //
 
     private IType findAnonType(ClassNode node) {
+        assert GroovyUtils.isAnonymous(node) : node.getName() + " is not anonymous";
         return new GroovyProjectFacade(enclosingElement).groovyClassToJavaType(node);
     }
 
     private ClassNode findClassNode(String name) {
-        for (ClassNode clazz : findModuleNode().getClasses()) {
+        for (ClassNode clazz : enclosingModule.getClasses()) {
             if (clazz.getNameWithoutPackage().equals(name)) {
                 return clazz;
             }
@@ -1969,14 +1971,13 @@ assert primaryExprType != null && dependentExprType != null;
         ClassNode clazz = findClassNode(createName(field.getDeclaringType()));
         FieldNode fieldNode = clazz.getField(field.getElementName());
         if (fieldNode == null) {
-            // GRECLIPSE-578 might be @Lazy. Name is changed
+            // GRECLIPSE-578: might be @Lazy; name is changed
             fieldNode = clazz.getField("$" + field.getElementName());
         }
         return fieldNode;
     }
 
     private MethodNode findMethodNode(IMethod method) {
-        // FIXADE TODO pass this in as a parameter
         ClassNode clazz = findClassNode(createName(method.getDeclaringType()));
         try {
             if (method.isConstructor()) {
@@ -2076,21 +2077,7 @@ assert primaryExprType != null && dependentExprType != null;
         return null;
     }
 
-    private ModuleNode findModuleNode(/*declaration*/) {
-        if (enclosingDeclarationNode instanceof ModuleNode) {
-            return (ModuleNode) enclosingDeclarationNode;
-        } else if (enclosingDeclarationNode instanceof ClassNode) {
-            return ((ClassNode) enclosingDeclarationNode).getModule();
-        } else if (enclosingDeclarationNode instanceof MethodNode) {
-            return ((MethodNode) enclosingDeclarationNode).getDeclaringClass().getModule();
-        } else if (enclosingDeclarationNode instanceof FieldNode) {
-            return ((FieldNode) enclosingDeclarationNode).getDeclaringClass().getModule();
-        } else {
-            throw new IllegalArgumentException("Invalid enclosing declaration node: " + enclosingDeclarationNode);
-        }
-    }
-
-    private MethodNode getLazyMethod(String fieldName) {
+    private MethodNode findLazyMethod(String fieldName) {
         ClassNode classNode = (ClassNode) enclosingDeclarationNode;
         return classNode.getDeclaredMethod("get" + MetaClassHelper.capitalize(fieldName), NO_PARAMETERS);
     }
