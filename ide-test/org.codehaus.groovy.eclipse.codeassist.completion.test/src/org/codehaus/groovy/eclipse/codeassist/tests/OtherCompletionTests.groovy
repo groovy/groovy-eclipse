@@ -348,4 +348,27 @@ final class OtherCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'getProtocol', 1)
         proposalExists(proposals, 'protocol', 1)
     }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/371
+    void testCompileStaticCompletion2() {
+        assumeTrue(isAtLeastGroovy(20))
+
+        String contents = '''\
+            import groovy.transform.*
+            class Bean {
+              URL url
+            }
+            class Main {
+              @CompileStatic
+              static main(args) {
+                Bean b = new Bean()
+                b.with {
+                  url.pr
+                }
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.pr'))
+        proposalExists(proposals, 'protocol', 1)
+    }
 }

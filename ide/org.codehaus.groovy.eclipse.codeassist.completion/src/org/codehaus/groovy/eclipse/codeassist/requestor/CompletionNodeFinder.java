@@ -599,7 +599,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
     @Override
     public void visitPropertyExpression(PropertyExpression expression) {
-        if (!check(expression)) {
+        if (!check(expression) && !check(expression.getProperty())) {
             return;
         }
 
@@ -610,7 +610,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         checkForCommandExpression(objectExpression, propertyExpression);
 
         // expression contains completion node or supporting node; test for loose match
-        if (supportingNodeEnd > objectExpression.getEnd() && supportingNodeEnd < propertyExpression.getStart()) {
+        if (objectExpression.getEnd() > 0 && supportingNodeEnd > objectExpression.getEnd() && supportingNodeEnd < propertyExpression.getStart()) {
             // GRECLIPSE-1374: probably a completion after a parenthesized expression
             createContext(objectExpression, blockStack.getLast(), ContentAssistLocation.EXPRESSION);
         }
