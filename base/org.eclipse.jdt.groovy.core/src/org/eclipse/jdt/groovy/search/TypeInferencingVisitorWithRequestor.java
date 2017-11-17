@@ -402,7 +402,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         // visit fields created by @Field
                         for (FieldNode field : node.getFields()) {
                             if (field.getEnd() > 0) {
-                                visitField(field);
+                                visitFieldInternal(field);
                             }
                         }
                     } else {
@@ -411,7 +411,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         List<FieldNode> traitFields = (List<FieldNode>) node.getNodeMetaData("trait.fields");
                         if (traitFields != null) {
                             for (FieldNode field : traitFields) {
-                                visitField(field);
+                                visitFieldInternal(field);
                             }
                         }
                         @SuppressWarnings("unchecked")
@@ -742,12 +742,26 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
     }
 
+    private void visitFieldInternal(FieldNode node) {
+        try {
+            visitField(node);
+        } catch (VisitCompleted vc) {
+            if (vc.status == VisitStatus.STOP_VISIT) {
+                throw vc;
+            }
+        }
+    }
+
     private void visitMethodInternal(MethodNode node, boolean isCtor) {
         scopes.add(new VariableScope(scopes.getLast(), node, node.isStatic()));
         ASTNode enclosingDeclaration0 = enclosingDeclarationNode;
         enclosingDeclarationNode = node;
         try {
             visitConstructorOrMethod(node, isCtor);
+        } catch (VisitCompleted vc) {
+            if (vc.status == VisitStatus.STOP_VISIT) {
+                throw vc;
+            }
         } finally {
             scopes.removeLast();
             enclosingDeclarationNode = enclosingDeclaration0;
@@ -1148,7 +1162,7 @@ assert primaryExprType != null && dependentExprType != null;
                     for (FieldNode field : type.getFields()) {
                         if (field.getEnd() > 0) {
                             enclosingElement = findAnonType(type).getField(field.getName());
-                            visitField(field);
+                            visitFieldInternal(field);
                         }
                     }
                     for (MethodNode method : type.getMethods()) {

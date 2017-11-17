@@ -363,6 +363,23 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     }
 
     @Test
+    void testCodeSelectEnumAbstractMethod() {
+        assumeTrue(isAtLeastGroovy(21))
+
+        String contents = '''\
+            enum E {
+              X() {
+                def verb(noun) { }
+              }
+              abstract def verb(noun);
+            }
+            '''.stripIndent()
+        // Is cancel member handled properly?
+        assertCodeSelect([contents], 'verb')
+        assertCodeSelect([contents], 'noun')
+    }
+
+    @Test
     void testCodeSelectHotkeyHandling() {
         String contents = 'def list = Arrays.asList("1", "2", "3")'
         // F3 (Open Declaration) key binding selects at offset of cursor with length 0
