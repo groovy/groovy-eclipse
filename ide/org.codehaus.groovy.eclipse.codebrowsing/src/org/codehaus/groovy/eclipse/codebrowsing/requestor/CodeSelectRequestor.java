@@ -439,7 +439,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 // short-circuit if declaration exists in the Groovy model but not in the Java model
                 if (existsOnlyInGroovyModel(node, name, declaringType, jdtDeclaringType)) {
                     assert jdtDeclaringType instanceof SourceType;
-                    return jdtDeclaringType.getMethod(name, null);
+                    return jdtDeclaringType.getMethod(name, GroovyUtils.getParameterTypeSignatures(node, true));
                 }
             }
 

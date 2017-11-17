@@ -20,15 +20,20 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.InnerClassNode;
+import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMethod;
@@ -41,21 +46,29 @@ import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.LocalVariable;
+import org.eclipse.jdt.internal.core.ResolvedSourceField;
+import org.eclipse.jdt.internal.core.ResolvedSourceMethod;
 import org.eclipse.jdt.internal.core.ResolvedSourceType;
 import org.eclipse.jdt.internal.core.SourceType;
 import org.eclipse.jdt.internal.core.util.Util;
 
 public class GroovyProjectFacade {
 
+    private IType parent;
+    private IJavaProject project;
+
     public GroovyProjectFacade(IJavaElement element) {
         this(element.getJavaProject());
+        if (element instanceof IType) {
+            parent = (IType) element;
+        } else {
+            parent = (IType) element.getAncestor(IJavaElement.TYPE);
+        }
     }
 
     public GroovyProjectFacade(IJavaProject project) {
         this.project = project;
     }
-
-    private IJavaProject project;
 
     public IJavaProject getProject() {
         return project;
@@ -96,27 +109,26 @@ public class GroovyProjectFacade {
     }
 
     public IType groovyClassToJavaType(ClassNode node) {
+        if (parent != null && parent.getFullyQualifiedName().equals(node.getName())) {
+            return parent;
+        }
         try {
-            // GRECLIPSE-1628: handle anonymous inner classes; only go one level deep
             ClassNode toLookFor = node;
             if (GroovyUtils.isAnonymous(node)) {
                 toLookFor = node.getOuterClass();
                 IType enclosing = groovyClassToJavaType(toLookFor);
-                if (enclosing != null) {
-                    if (!enclosing.isBinary()) {
-                        return fakeAnonymousInnerClass(enclosing, (InnerClassNode) node);
-                    } else {
-                        // if the 'enclosing' is binary we may assume this one is also binary,
-                        // so we should just be able to look for it with binary type name (including the $ etc.)
-                        return project.findType(node.getName(), new NullProgressMonitor());
-                    }
+                if (enclosing != null && !enclosing.isBinary()) {
+                    return fakeAnonymousInnerClass(enclosing, (InnerClassNode) node);
                 } else {
-                    return null;
+                    // if the 'enclosing' is binary we may assume this one is also binary,
+                    // so we should just be able to look for it with the type name (including the $ etc.)
+                    return project.findType(node.getName(), (IProgressMonitor) null);
                 }
             }
+
             // GRECLIPSE-800: ensure that inner class nodes are handled properly
             String name = toLookFor.getName().replace('$', '.');
-            IType type = project.findType(name, new NullProgressMonitor());
+            IType type = project.findType(name, (IProgressMonitor) null);
             if (type != null && toLookFor != node) {
                 type = type.getType("", 1);
                 if (!type.exists()) {
@@ -132,6 +144,7 @@ public class GroovyProjectFacade {
 
     private IType fakeAnonymousInnerClass(IType outer, final InnerClassNode inner) {
         return new ResolvedSourceType((JavaElement) outer, inner.getName(), GroovyUtils.getTypeSignature(inner, true, true)) {
+            @Override
             public Object getElementInfo() throws JavaModelException {
                 try {
                     return super.getElementInfo();
@@ -159,6 +172,69 @@ public class GroovyProjectFacade {
                     }};
                 }
             }
+
+            @Override
+            public IField getField(String fieldName) {
+                final FieldNode fieldNode = inner.getDeclaredField(fieldName);
+                if (fieldNode == null) {
+                    return super.getField(fieldName);
+                }
+                String uniqueKey = GroovyUtils.getTypeSignature(fieldNode.getDeclaringClass(), true, true) +
+                    Signature.C_DOT + fieldName + ")" + GroovyUtils.getTypeSignature(fieldNode.getType(), true, true);
+                return new ResolvedSourceField(this, fieldName, uniqueKey) {
+                    @Override // NOTE: Copied from GroovyResolvedSourceField:
+                    public Object getElementInfo() throws JavaModelException {
+                        try {
+                            return super.getElementInfo();
+                        } catch (JavaModelException jme) {
+                            if (!jme.getJavaModelStatus().isDoesNotExist()) {
+                                throw jme;
+                            }
+                            return new org.eclipse.jdt.internal.core.SourceFieldElementInfo() {{
+                                setTypeName(fieldNode.getType().toString(false).toCharArray());
+                                setNameSourceStart(fieldNode.getNameStart());
+                                setNameSourceEnd(fieldNode.getNameEnd());
+                                setSourceRangeStart(fieldNode.getStart());
+                                setSourceRangeEnd(fieldNode.getEnd());
+                                setFlags(fieldNode.getModifiers());
+                            }};
+                        }
+                    }
+                };
+            }
+
+            @Override
+            public IMethod getMethod(String methodName, String[] parameterTypeSignatures) {
+                final MethodNode methodNode = inner.getDeclaredMethod(methodName, getParametersForTypes(parameterTypeSignatures));
+                if (methodNode == null) {
+                    return super.getMethod(methodName, parameterTypeSignatures);
+                }
+                String uniqueKey = GroovyUtils.getTypeSignature(methodNode.getDeclaringClass(), true, true) +
+                    Signature.C_DOT + methodName + Signature.C_PARAM_START /*+ type of each param*/ + Signature.C_PARAM_END +
+                    GroovyUtils.getTypeSignature(methodNode.getReturnType(), true, true); // if exceptions, Signature.C_INTERSECTION + exception type
+                return new ResolvedSourceMethod(this, methodName, parameterTypeSignatures, uniqueKey) {
+                    @Override // NOTE: Copied from GroovyResolvedSourceMethod:
+                    public Object getElementInfo() throws JavaModelException {
+                        try {
+                            return super.getElementInfo();
+                        } catch (JavaModelException jme) {
+                            if (!jme.getJavaModelStatus().isDoesNotExist()) {
+                                throw jme;
+                            }
+                            return new org.eclipse.jdt.internal.core.SourceMethodInfo() {{
+                                setReturnType(methodNode.getReturnType().getNameWithoutPackage().toCharArray());
+                                //setExceptionTypeNames(buildExceptionTypeNames(methodNode.getExceptions()));
+                                //setArgumentNames(buildArgumentNames(methodNode.getParameters()));
+                                setNameSourceStart(methodNode.getNameStart());
+                                setNameSourceEnd(methodNode.getNameEnd());
+                                setSourceRangeStart(methodNode.getStart());
+                                setSourceRangeEnd(methodNode.getEnd());
+                                setFlags(methodNode.getModifiers());
+                            }};
+                        }
+                    }
+                };
+            }
         };
     }
 
@@ -177,13 +253,13 @@ public class GroovyProjectFacade {
 
     /**
      * If this fully qualified name is in a groovy file, then return the
-     * classnode
+     * ClassNode.
      *
      * If this is not a groovy file, then return null
      */
     public ClassNode getClassNodeForName(String name) {
         try {
-            IType type = project.findType(name, new NullProgressMonitor());
+            IType type = project.findType(name, (IProgressMonitor) null);
             if (type instanceof SourceType) {
                 return javaTypeToGroovyClass(type);
             }
@@ -191,6 +267,15 @@ public class GroovyProjectFacade {
             Util.log(e);
         }
         return null;
+    }
+
+    private Parameter[] getParametersForTypes(String[] signatures) {
+        int n = signatures.length;
+        Parameter[] parameters = new Parameter[n];
+        for (int i = 0; i < n; i += 1) {
+            parameters[i] = new Parameter(ClassHelper.makeWithoutCaching(Signature.toString(signatures[i])), null);
+        }
+        return parameters;
     }
 
     private ClassNode javaTypeToGroovyClass(IType type) {

@@ -187,6 +187,15 @@ public class GroovyUtils {
         return types;
     }
 
+    public static String[] getParameterTypeSignatures(MethodNode methodNode, boolean resolved) {
+        List<ClassNode> types = getParameterTypes(methodNode.getParameters());
+        String[] signatures = new String[types.size()];
+        for (int i = 0; i < types.size(); i += 1) {
+            signatures[i] = getTypeSignatureWithoutGenerics(types.get(i), true, resolved);
+        }
+        return signatures;
+    }
+
     public static Set<ASTNode> getTransformNodes(ClassNode classNode, Class<? extends ASTTransformation> xformType) {
         CompilePhase phase = xformType.getAnnotation(GroovyASTTransformation.class).phase();
         Map<?, Set<ASTNode>> map = classNode.getTransforms(phase);

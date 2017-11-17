@@ -765,7 +765,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         try {
             for (MethodNode method : node.getMethods()) {
                 if (method.getEnd() > 0) {
-                    //enclosingElement = findAnonType(node).getMethod(method.getName(), getParameterTypeSignatures(method.getParameters()));
+                    enclosingElement = findAnonType(node).getMethod(method.getName(), GroovyUtils.getParameterTypeSignatures(method, true));
                     visitMethodInternal(method, false);
                 }
             }
@@ -1147,13 +1147,13 @@ assert primaryExprType != null && dependentExprType != null;
                     }
                     for (FieldNode field : type.getFields()) {
                         if (field.getEnd() > 0) {
-                            //enclosingElement = findAnonType(type).getField(field.getName());
+                            enclosingElement = findAnonType(type).getField(field.getName());
                             visitField(field);
                         }
                     }
                     for (MethodNode method : type.getMethods()) {
                         if (method.getEnd() > 0) {
-                            //enclosingElement = findAnonType(type).getMethod(method.getName(), getParameterTypeSignatures(method.getParameters()));
+                            enclosingElement = findAnonType(type).getMethod(method.getName(), GroovyUtils.getParameterTypeSignatures(method, true));
                             visitMethodInternal(method, false);
                         }
                     }
@@ -2671,15 +2671,6 @@ assert primaryExprType != null && dependentExprType != null;
                 return "bitwiseNegate";
         }
         return null;
-    }
-
-    private static String[] getParameterTypeSignatures(Parameter[] params) {
-        List<ClassNode> types = GroovyUtils.getParameterTypes(params);
-        String[] signatures = new String[types.size()];
-        for (int i = 0; i < types.size(); i += 1) {
-            signatures[i] = GroovyUtils.getTypeSignature(types.get(i), true, true);
-        }
-        return signatures;
     }
 
     /**
