@@ -1876,7 +1876,7 @@ public class JavaProject
 					// https://bugs.eclipse.org/bugs/show_bug.cgi?id=331821
 					if (token == MementoTokenizer.PACKAGEFRAGMENT || token == MementoTokenizer.COUNT) {
 						break;
-					} else if (token == MementoTokenizer.PACKAGEFRAGMENTROOT) {
+					} else if (token == MementoTokenizer.MODULE) {
 						if (memento.hasMoreTokens()) {
 							token = memento.nextToken();
 							if (token != null) {

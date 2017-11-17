@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011, 2016 IBM Corporation and others.
+ * Copyright (c) 2011, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10022,6 +10022,47 @@ public void testBug458332() {
 		"	private static class Data {\n" + 
 		"	                     ^^^^\n" + 
 		"The code of method $deserializeLambda$(SerializedLambda) is exceeding the 65535 bytes limit\n" + 
+		"----------\n");
+}
+public void testBug521808() {
+	runNegativeTest(
+		new String[] {
+			"Z.java",
+			"interface FI1 {\n" + 
+			"	Object m(Integer... s);\n" + 
+			"}\n" + 
+			"interface FI2<T> {\n" + 
+			"	Object m(T... arg);\n" + 
+			"}\n" + 
+			"public class Z {\n" + 
+			"	static Object m(FI1 fi, Number v1, Number v2) {\n" + 
+			"		return fi.m(v1.intValue(), v2.intValue());\n" + 
+			"	}\n" + 
+			"	static <V extends Integer> Object m(FI2<V> fi, V v1, V v2) {\n" + 
+			"		return null;// fi.m(v1, v2);\n" + 
+			"	}\n" + 
+			"	public static void main(String argv[]) {\n" + 
+			"		Object obj = m((FI1) (Integer... is) -> is[0] + is[1], 3, 4);\n" + 
+			"		obj = m((FI2<Integer>) (Integer... is) -> is[0] + is[1], 3, 4);\n" + 
+			"		obj = m((Integer... is) -> is[0] + is[1], 3, 4); // ECJ compiles, Javac won't\n" + 
+			"	}\n" + 
+			"}",
+		},
+		"----------\n" + 
+		"1. WARNING in Z.java (at line 5)\n" + 
+		"	Object m(T... arg);\n" + 
+		"	              ^^^\n" + 
+		"Type safety: Potential heap pollution via varargs parameter arg\n" + 
+		"----------\n" + 
+		"2. WARNING in Z.java (at line 11)\n" + 
+		"	static <V extends Integer> Object m(FI2<V> fi, V v1, V v2) {\n" + 
+		"	                  ^^^^^^^\n" + 
+		"The type parameter V should not be bounded by the final type Integer. Final types cannot be further extended\n" + 
+		"----------\n" + 
+		"3. ERROR in Z.java (at line 17)\n" + 
+		"	obj = m((Integer... is) -> is[0] + is[1], 3, 4); // ECJ compiles, Javac won\'t\n" + 
+		"	      ^\n" + 
+		"The method m(FI1, Number, Number) is ambiguous for the type Z\n" +  
 		"----------\n");
 }
 public static Class testClass() {

@@ -929,15 +929,28 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 		
 		if (argumentsTypeElided() || t.findSuperTypeOriginatingFrom(s) != null)
 			return false;
-		
+		TypeBinding sPrime = s; // uncaptured
 		s = s.capture(this.enclosingScope, this.sourceStart, this.sourceEnd);
 		MethodBinding sSam = s.getSingleAbstractMethod(this.enclosingScope, true);
 		if (sSam == null || !sSam.isValidBinding())
 			return false;
-		TypeBinding r1 = sSam.returnType;
 		MethodBinding tSam = t.getSingleAbstractMethod(this.enclosingScope, true);
 		if (tSam == null || !tSam.isValidBinding())
 			return true; // See ORT8.test450415a for a case that slips through isCompatibleWith.
+		MethodBinding adapted = tSam.computeSubstitutedMethod(sSam, skope.environment());
+		if (adapted == null) // not same type params
+			return false;
+		MethodBinding sSamPrime = sPrime.getSingleAbstractMethod(this.enclosingScope, true);
+		TypeBinding[] ps = adapted.parameters; // parameters of S adapted to type parameters of T
+		// parameters of S (without capture), adapted to type params of T
+		MethodBinding prime = tSam.computeSubstitutedMethod(sSamPrime, skope.environment());
+		TypeBinding[] pPrimes = prime.parameters;
+		TypeBinding[] qs = tSam.parameters;
+		for (int i = 0; i < ps.length; i++) {
+			if (!qs[i].isCompatibleWith(ps[i]) || TypeBinding.notEquals(qs[i], pPrimes[i]))
+				return false;
+		}
+		TypeBinding r1 = adapted.returnType; // return type of S adapted to type parameters of T
 		TypeBinding r2 = tSam.returnType;
 		
 		if (r2.id == TypeIds.T_void)

@@ -890,6 +890,10 @@ IModuleDescription getAutomaticModuleDescription(IClasspathEntry classpathEntry)
 	String elementName = getElementName();
 	Manifest manifest = null;
 	switch (classpathEntry.getEntryKind()) {
+		case IClasspathEntry.CPE_SOURCE:
+			manifest = ((JavaProject) getJavaProject()).getManifest();
+			elementName = getJavaProject().getElementName();
+			break;
 		case IClasspathEntry.CPE_LIBRARY:
 			manifest = getManifest();
 			break;

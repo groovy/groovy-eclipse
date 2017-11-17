@@ -6463,6 +6463,184 @@ public void testBug515473() {
 		}
 	);
 }
+public void testBug517951() {
+	runConformTest(
+		new String[] {
+			"Minimal.java",
+			"public class Minimal {\n" + 
+			"    public void iCrash() {\n" + 
+			"        try {\n" + 
+			"            System.out.println(\"Body can't be empty\");\n" + 
+			"        } finally {\n" + 
+			"            consumes(sneaky()::withVarargs);\n" + 
+			"        }\n" + 
+			"    }\n" + 
+			"    public static void main(String[] args) {\n" + 
+			"		new Minimal().iCrash();\n" + 
+			"	}\n" + 
+			"    private Minimal sneaky() { return this; }\n" + 
+			"    private void withVarargs(String... test) {}\n" + 
+			"    private void consumes(Runnable r) {}\n" + 
+			"}"
+		},
+		"Body can't be empty"
+	);
+}
+public void testBug517951a() {
+	runConformTest(
+		new String[] {
+			"Snippet.java",
+			"import java.nio.file.Files;\n" + 
+			"import java.nio.file.Paths;\n" + 
+			"import java.util.function.Consumer;\n" + 
+			"public class Snippet {\n" + 
+			"	void postError( String fmt, Object ... args ) {\n" + 
+			"	}\n" + 
+			"	public boolean test(Consumer<String> postError ) {\n" + 
+			"		return false;\n" + 
+			"	}\n" + 
+			"	void func() {\n" + 
+			"		try( java.io.InputStream istr = Files.newInputStream( Paths.get( \"\" ) )){\n" + 
+			"		} catch( Exception e ) {\n" + 
+			"		} finally {\n" + 
+			"			test( this::postError);\n" + 
+			"		}\n" + 
+			"	}\n" + 
+			"}"
+		}
+	);
+}
+public void testBug517951b() {
+	runConformTest(
+		new String[] {
+			"Element.java",
+			"public class Element\n" + 
+			"{\n" + 
+			"    Operation operation = new Operation(Element::new);\n" + 
+			"    public Element(Integer matrix)\n" + 
+			"    {\n" + 
+			"    		//...\n" + 
+			"    }\n" + 
+			"    public Element(Operation... operation)\n" + 
+			"    {\n" + 
+			"    		//...\n" + 
+			"    }\n" + 
+			"}\n" + 
+			"class Operation\n" + 
+			"{\n" + 
+			"    public Operation(Factory factory)\n" + 
+			"    {\n" + 
+			"        //...\n" + 
+			"    }\n" + 
+			"}\n" + 
+			"interface Factory\n" + 
+			"{\n" + 
+			"    Element create(Operation... operations);\n" + 
+			"}"
+		}
+	);
+}
+public void testBug517951c() {
+	runConformTest(
+		new String[] {
+			"npetest/NpeTest.java",
+			"package npetest;\n" + 
+			"public class NpeTest {\n" + 
+			"    public NpeTestScheduler scheduler;\n" + 
+			"    private void doIt(Object... params) {\n" + 
+			"        try {\n" + 
+			"            System.out.println(\"Done\");\n" + 
+			"        }\n" + 
+			"        finally {\n" + 
+			"            scheduler.schedule(this::doIt);\n" + 
+			"        }\n" + 
+			"    }\n" + 
+			"}",
+			"npetest/NpeTestIf.java",
+			"package npetest;\n" + 
+			"@FunctionalInterface\n" + 
+			"public interface NpeTestIf {\n" + 
+			"    void doSomething(Object... params);\n" + 
+			"}",
+			"npetest/NpeTestScheduler.java",
+			"package npetest;\n" + 
+			"public class NpeTestScheduler {\n" + 
+			"    public void schedule(NpeTestIf what) {\n" + 
+			"        what.doSomething();\n" + 
+			"    }\n" + 
+			"}"
+		}
+	);
+}
+public void testBug521808() {
+	runConformTest(
+		new String[] {
+			"Z.java",
+			"interface FI1 {\n" + 
+			"	Object m(Integer... s);\n" + 
+			"}\n" + 
+			"interface FI2<T> {\n" + 
+			"	Object m(T... arg);\n" + 
+			"}\n" + 
+			"public class Z {\n" + 
+			"	static Object m(FI1 fi, Integer v1, Integer v2) {\n" + 
+			"		return fi.m(v1, v2);\n" + 
+			"	}\n" + 
+			"	static <V extends Integer> Object m(FI2<V> fi, V v1, V v2) {\n" + 
+			"		return null;\n" + 
+			"	}\n" + 
+			"	public static void main(String argv[]) {\n" + 
+			"		Object obj = m((FI1) (Integer... is) -> is[0] + is[1], 3, 4);\n" + 
+			"		obj = m((Integer... is) -> is[0] + is[1], 3, 4); // Javac compiles, ECJ won't\n" + 
+			"	}\n" + 
+			"}",
+		}
+	);
+}
+public void testBug521818() {
+	runConformTest(
+		new String[] {
+			"test/Main.java",
+			"package test;\n" + 
+			"class C {}\n" + 
+			"class D {\n" + 
+			"	<T extends C & Runnable> D(int i, T t) {" +
+			"		System.out.println(\"D\");\n" +
+			"}\n" + 
+			"}\n" + 
+			"interface Goo {\n" + 
+			"    <T extends C & Runnable> String m(T p);\n" + 
+			"}\n" + 
+			"class A {\n" + 
+			"    public static <K extends Runnable> String bar(K a) {\n" +
+			"		System.out.println(\"Bar\");\n" +
+			"       return null;\n" + 
+			"    }\n" + 
+			"    public static <K extends Runnable> D baz(int i, K a) {\n" +
+			"		System.out.println(\"Baz\");\n" +
+			"       return null;\n" + 
+			"    }\n"+ 
+			"}\n" +  
+			"interface Foo<Z extends C & Runnable> {\n" + 
+			"	D get(int i, Z z);\n" + 
+			"}\n" + 
+			"public class Main  {\n" +  
+			"    public static void main(String[] args) {\n" + 
+			"    	Foo<? extends C> h = A::baz;\n" + 
+			"    	h.get(0,  null);\n" + 
+			"    	Foo<? extends C> h2 = D::new;\n" + 
+			"    	h2.get(0,  null);\n" + 
+			"    	Goo g = A::bar;\n" + 
+			"    	g.m(null);\n" + 
+			"    } \n" + 
+			"}"
+		},
+		"Baz\n" +
+		"D\n" +
+		"Bar"
+		
+	);
+}
 public static Class testClass() {
 	return LambdaExpressionsTest.class;
 }

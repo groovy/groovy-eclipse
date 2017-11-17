@@ -1237,6 +1237,14 @@ public void initialize(JavaProject project, int possibleMatchSize) throws JavaMo
 
 	this.lookupEnvironment.addResolutionListener(this.patternLocator);
 }
+private boolean skipMatch(JavaProject javaProject, PossibleMatch possibleMatch) {
+	if (this.options.sourceLevel >= ClassFileConstants.JDK9) {
+		char[] pModuleName = possibleMatch.getModuleName();
+		if (pModuleName != null && this.lookupEnvironment.getModule(pModuleName) == null)
+			return true;
+	}
+	return false;
+}
 protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMatches, int start, int length) throws CoreException {
 	initialize(javaProject, length);
 	// GROOVY add
@@ -1251,6 +1259,7 @@ protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMa
 	try {
 		for (int i = start, maxUnits = start + length; i < maxUnits; i++) {
 			PossibleMatch possibleMatch = possibleMatches[i];
+			if (skipMatch(javaProject, possibleMatch)) continue;
 			// GROOVY add
 			if (isInterestingProject && possibleMatch.isInterestingSourceFile() && LanguageSupportFactory.maybePerformDelegatedSearch(possibleMatch, this.pattern, this.requestor)) {
 				alreadyMatched.add(possibleMatch);

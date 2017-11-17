@@ -1028,6 +1028,9 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 					if (parsedUnit.isModuleInfo() && parsedUnit.moduleDeclaration != null) {
 						ModuleDeclaration module = parsedUnit.moduleDeclaration;
 						this.lookupEnvironment.buildTypeBindings(parsedUnit, null /*no access restriction*/);
+						if ((this.unitScope = parsedUnit.scope)  != null) {
+							this.lookupEnvironment.completeTypeBindings(parsedUnit, true);
+						}
 						module.resolveModuleDirectives(parsedUnit.scope);
 						module.resolvePackageDirectives(parsedUnit.scope);
 						module.resolveTypeDirectives(parsedUnit.scope);

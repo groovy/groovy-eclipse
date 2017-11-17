@@ -16,7 +16,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -888,15 +887,8 @@ public class SearchableEnvironment
 		if (this.rootToModule == null) {
 			this.rootToModule = new HashMap<>();
 		}
-		Function<IPackageFragmentRoot, IClasspathEntry> rootToEntry = r -> {
-			try {
-				return ((JavaProject) r.getJavaProject()).getClasspathEntryFor(r.getPath());
-			} catch (JavaModelException e) {
-				return null;
-			}
-		};
 		for (IPackageFragmentRoot root : roots) {
-			IModuleDescription moduleDescription = NameLookup.getModuleDescription(root, this.rootToModule, rootToEntry);
+			IModuleDescription moduleDescription = NameLookup.getModuleDescription(root, this.rootToModule, this.nameLookup.rootToResolvedEntries::get);
 			if (moduleDescription != null)
 				return moduleDescription;
 		}

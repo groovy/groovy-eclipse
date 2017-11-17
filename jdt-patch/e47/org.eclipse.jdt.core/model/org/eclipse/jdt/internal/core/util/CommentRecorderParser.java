@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -264,6 +264,7 @@ public class CommentRecorderParser extends Parser {
 	private void pushOnCommentsStack(int start, int end) {
 
 		for (int i=start; i<=end; i++) {
+			if (this.scanner.commentPtr < i) break;
 			// First see if comment hasn't been already stored
 			int scannerStart = this.scanner.commentStarts[i]<0 ? -this.scanner.commentStarts[i] : this.scanner.commentStarts[i];
 			int commentStart = this.commentPtr == -1 ? -1 : (this.commentStarts[this.commentPtr]<0 ? -this.commentStarts[this.commentPtr] : this.commentStarts[this.commentPtr]);

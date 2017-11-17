@@ -712,6 +712,7 @@ public final class CompletionEngine
 	private INameEnvironment noCacheNameEnvironment;
 	char[] source;
 	ModuleDeclaration moduleDeclaration;
+	boolean isPackageVisibilityCompletion = false;
 	char[] completionToken;
 
 	char[] qualifiedCompletionToken;
@@ -1333,6 +1334,10 @@ public final class CompletionEngine
 		if (this.knownPkgs.containsKey(packageName)) return;
 
 		if (!isValidPackageName(packageName)) return;
+		
+		if (this.isPackageVisibilityCompletion &&
+			CharOperation.equals(packageName, CharOperation.NO_CHAR))
+			return;
 
 		this.knownPkgs.put(packageName, this);
 
@@ -2340,44 +2345,49 @@ public final class CompletionEngine
 
 	private boolean completeOnPackageVisibilityStatements(boolean contextAccepted,
 			CompilationUnitDeclaration parsedUnit, PackageVisibilityStatement[] pvsStmts) {
-		for (int i = 0, l = pvsStmts.length; i < l; ++i) {
-			PackageVisibilityStatement pvs = pvsStmts[i];
-			if (pvs instanceof CompletionOnKeywordModuleInfo) { // dummy pvs statement
-				contextAccepted = true;
-				processModuleKeywordCompletion(parsedUnit, pvs, (CompletionOnKeyword) pvs);
-				return contextAccepted;
-			}
-			if (pvs.pkgRef instanceof CompletionOnPackageVisibilityReference) {
-				contextAccepted = true;
-				buildContext(pvs, null, parsedUnit, null, null);
-				if(!this.requestor.isIgnored(CompletionProposal.PACKAGE_REF)) {
-					findPackages((CompletionOnPackageVisibilityReference) pvs.pkgRef);
-				}
-				debugPrintf();
-				return contextAccepted;
-			}
-			ModuleReference[] targets = pvs.targets;
-			if (targets == null) continue;
-			HashSet<String> skipSet = new HashSet<>();
-			for (int j = 0, lj = targets.length; j < lj; j++) {
-				ModuleReference target = targets[j];
-				if (target == null) break;
-				if (target instanceof CompletionOnModuleReference) {
-					buildContext(target, null, parsedUnit, null, null);
+		try {
+			this.isPackageVisibilityCompletion = true;
+			for (int i = 0, l = pvsStmts.length; i < l; ++i) {
+				PackageVisibilityStatement pvs = pvsStmts[i];
+				if (pvs instanceof CompletionOnKeywordModuleInfo) { // dummy pvs statement
 					contextAccepted = true;
-					if(!this.requestor.isIgnored(CompletionProposal.MODULE_REF)) {
-						findTargettedModules((CompletionOnModuleReference) target, skipSet);
+					processModuleKeywordCompletion(parsedUnit, pvs, (CompletionOnKeyword) pvs);
+					return contextAccepted;
+				}
+				if (pvs.pkgRef instanceof CompletionOnPackageVisibilityReference) {
+					contextAccepted = true;
+					buildContext(pvs, null, parsedUnit, null, null);
+					if(!this.requestor.isIgnored(CompletionProposal.PACKAGE_REF)) {
+						findPackages((CompletionOnPackageVisibilityReference) pvs.pkgRef);
 					}
 					debugPrintf();
 					return contextAccepted;
-				} else if (target instanceof CompletionOnKeyword) {
-					contextAccepted = true;
-					processModuleKeywordCompletion(parsedUnit, target, (CompletionOnKeyword) target);
-				} else {
-					if (target.moduleName != null || target.moduleName.equals(CharOperation.NO_CHAR))
-						skipSet.add(new String(target.moduleName));
+				}
+				ModuleReference[] targets = pvs.targets;
+				if (targets == null) continue;
+				HashSet<String> skipSet = new HashSet<>();
+				for (int j = 0, lj = targets.length; j < lj; j++) {
+					ModuleReference target = targets[j];
+					if (target == null) break;
+					if (target instanceof CompletionOnModuleReference) {
+						buildContext(target, null, parsedUnit, null, null);
+						contextAccepted = true;
+						if(!this.requestor.isIgnored(CompletionProposal.MODULE_REF)) {
+							findTargettedModules((CompletionOnModuleReference) target, skipSet);
+						}
+						debugPrintf();
+						return contextAccepted;
+					} else if (target instanceof CompletionOnKeyword) {
+						contextAccepted = true;
+						processModuleKeywordCompletion(parsedUnit, target, (CompletionOnKeyword) target);
+					} else {
+						if (target.moduleName != null || target.moduleName.equals(CharOperation.NO_CHAR))
+							skipSet.add(new String(target.moduleName));
+					}
 				}
 			}
+		} finally {
+			this.isPackageVisibilityCompletion = false;
 		}
 		return contextAccepted;
 	}

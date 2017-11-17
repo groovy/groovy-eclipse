@@ -370,4 +370,7 @@ public abstract class FunctionalExpression extends Expression {
 	boolean requiresBridges() {
 		return getRequiredBridges() != null; 
 	}
+	public void cleanUp() {
+		// to be overridden by sub-classes
+	}
 }
