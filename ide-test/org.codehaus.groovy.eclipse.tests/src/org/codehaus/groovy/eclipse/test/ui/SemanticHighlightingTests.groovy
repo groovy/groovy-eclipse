@@ -966,6 +966,38 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testEnumInner() {
+        assumeTrue(isAtLeastGroovy(21))
+
+        String contents = '''\
+            import groovy.transform.*
+            @CompileStatic
+            enum X {
+              ONE(1) {
+                @Override
+                def meth(Number param) {
+                }
+              }
+
+              X(Number val) {
+              }
+
+              def meth() {}
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            // ensure static $INIT call from line 4 does not result in any highlighting
+            new HighlightedTypedPosition(contents.indexOf('ONE'     ), 3, STATIC_VALUE),
+            new HighlightedTypedPosition(contents.indexOf('1'       ), 1, NUMBER      ),
+            new HighlightedTypedPosition(contents.indexOf('meth'    ), 4, METHOD      ),
+            new HighlightedTypedPosition(contents.indexOf('param'   ), 5, PARAMETER   ),
+            new HighlightedTypedPosition(contents.indexOf('X('      ), 1, CTOR        ),
+            new HighlightedTypedPosition(contents.indexOf('val'     ), 3, PARAMETER   ),
+            new HighlightedTypedPosition(contents.lastIndexOf('meth'), 4, METHOD      ))
+    }
+
+    @Test
     void testAnnoElems() {
         String contents = '''\
             @Grab( module = 'something:anything' )
