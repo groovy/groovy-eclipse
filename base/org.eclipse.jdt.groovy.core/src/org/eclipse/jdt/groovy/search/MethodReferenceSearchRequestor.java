@@ -192,7 +192,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
      */
     private int findNumberOfParameters(ASTNode node, TypeLookupResult result) {
         return (node instanceof MethodNode && ((MethodNode) node).getParameters() != null)
-            ? ((MethodNode) node).getParameters().length : Math.max(0, result.scope.getMethodCallNumberOfArguments());
+            ? ((MethodNode) node).getParameters().length : result.scope.getMethodCallNumberOfArguments();
     }
 
     /**

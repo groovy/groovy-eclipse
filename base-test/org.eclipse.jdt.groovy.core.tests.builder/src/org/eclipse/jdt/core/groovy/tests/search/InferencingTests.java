@@ -1326,15 +1326,22 @@ public final class InferencingTests extends InferencingTestSuite {
     @Test
     public void testListSort1() {
         String contents = "def list = []; list.sort()";
-        int start = contents.lastIndexOf("sort");
-        int end = start + "sort".length();
-        assertType(contents, start, end, "java.util.List<java.lang.Object>");
-        assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+        int offset = contents.lastIndexOf("sort");
+        assertType(contents, offset, offset + 4, "java.util.List<java.lang.Object>");
+        assertDeclaringType(contents, offset, offset + 4, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/387
+    public void testListSort2() {
+        String contents = "def list = []; list.sort { a, b -> a <=> b }";
+        int offset = contents.lastIndexOf("sort");
+        assertType(contents, offset, offset + 4, "java.util.List<java.lang.Object>");
+        assertDeclaringType(contents, offset, offset + 4, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 
     @Test
-    public void testListSort2() {
-        // Java 8 added sort(Comparator) to the List interface
+    public void testListSort3() {
+        // Java 8 adds default method sort(Comparator) to the List interface
         boolean jdkListSort;
         try {
             List.class.getDeclaredMethod("sort", Comparator.class);
@@ -1343,11 +1350,10 @@ public final class InferencingTests extends InferencingTestSuite {
             jdkListSort = false;
         }
 
-        String contents = "def list = []; list.sort({ o1, o2 -> o1 <=> o2 } as Comparator)";
-        int start = contents.lastIndexOf("sort");
-        int end = start + "sort".length();
-        assertType(contents, start, end, jdkListSort ? "java.lang.Void" : "java.util.List<java.lang.Object>");
-        assertDeclaringType(contents, start, end, jdkListSort ? "java.util.List<java.lang.Object>" : "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+        String contents = "def list = []; list.sort({ a, b -> a <=> b } as Comparator)";
+        int offset = contents.lastIndexOf("sort");
+        assertType(contents, offset, offset + 4, jdkListSort ? "java.lang.Void" : "java.util.List<java.lang.Object>");
+        assertDeclaringType(contents, offset, offset + 4, jdkListSort ? "java.util.List<java.lang.Object>" : "org.codehaus.groovy.runtime.DefaultGroovyMethods");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/368

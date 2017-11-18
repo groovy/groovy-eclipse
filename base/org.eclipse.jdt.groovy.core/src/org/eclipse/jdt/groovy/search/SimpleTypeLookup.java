@@ -386,11 +386,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             } else if (declaration instanceof MethodNode) {
                 if (isStaticObjectExpression && !((MethodNode) declaration).isStatic()) {
                     confidence = TypeConfidence.UNKNOWN;
-                } else {
-                    // check if the arguments and parameters are mismatched; a category method may make a better match
-                    if (((MethodNode) declaration).getParameters().length != scope.getMethodCallNumberOfArguments()) {
-                        confidence = TypeConfidence.LOOSELY_INFERRED;
-                    }
+
+                } else if (isLooseMatch(scope.getMethodCallArgumentTypes(), ((MethodNode) declaration).getParameters())) {
+                    // if arguments and parameters are mismatched, a category method may make a better match
+                    confidence = TypeConfidence.LOOSELY_INFERRED;
                 }
             }
         }
@@ -787,9 +786,26 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     }
 
     /**
+     * Supplements {@link #isTypeCompatible} by supporting unequal lengths and
+     * tagging Closure -> SAM type as an inexact match.
+     */
+    protected static boolean isLooseMatch(List<ClassNode> arguments, Parameter[] parameters) {
+        final int argCount = (arguments == null ? -1 : arguments.size());
+        if (parameters.length != argCount) {
+            return true;
+        } else if (argCount > 0 && arguments.get(argCount - 1).equals(VariableScope.CLOSURE_CLASS_NODE)) {
+            ClassNode last = parameters[argCount - 1].getType();
+            if (!GroovyUtils.getBaseType(last).equals(VariableScope.CLOSURE_CLASS_NODE)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Determines if the given argument types are compatible with the declaration parameters.
      *
-     * @return {@link Boolean#TRUE true} for exact match, {@code null} for fuzzy match, and {@link Boolean#FALSE false} for not a match
+     * @return {@link Boolean#TRUE true} for exact match, {@code null} for loose match, and {@link Boolean#FALSE false} for not a match
      */
     protected static Boolean isTypeCompatible(List<ClassNode> arguments, Parameter[] parameters) {
         // TODO: Add handling for variadic methods/constructors.
@@ -799,10 +815,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         for (int i = 0, n = parameters.length; i < n; i += 1) {
             ClassNode parameter = parameters[i].getType(), argument = arguments.get(i);
 
-            // test parameter and argument for exact and fuzzy match
+            // test parameter and argument for exact and loose match
             Boolean partialResult = isTypeCompatible(argument, parameter);
             if (partialResult == null) {
-                result = null; // fuzzy
+                result = null; // loose
             } else if (!partialResult) {
                 result = Boolean.FALSE;
                 break;

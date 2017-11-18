@@ -17,6 +17,9 @@ package org.eclipse.jdt.core.groovy.tests.search;
 
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 
+import java.util.Comparator;
+import java.util.List;
+
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -429,30 +432,48 @@ public final class DGMInferencingTests extends InferencingTestSuite {
 
     @Test // GRECLIPSE-1695
     public void testDGM44() {
-        String contents = "List<String> myList = new ArrayList<String>()\n" +
-            "myList.toSorted { a, b ->\n" +
+        String contents = "List<String> list = []\n" +
+            "list.toSorted { a, b ->\n" +
             "  a.trim() <=> b.trim()\n" +
             "}.each {\n" +
             "  it\n" +
             "}\n";
-        int start = contents.lastIndexOf("it");
-        int end = start + "it".length();
-        assertType(contents, start, end, "java.lang.String");
+        int offset = contents.lastIndexOf("it");
+        assertType(contents, offset, offset + 2, "java.lang.String");
     }
 
     @Test // GRECLIPSE-1695 redux
-    public void testDGM45() throws Throwable {
-        // Java 8 adds default method sort(Comparator) to List interface...
-        // TypeInferencingVisitorWithRequestor.lookupExpressionType replaces DGM (from CategoryTypeLookup) with JDK (from SimpleTypeLookup)
-        String contents = "List<String> myList = new ArrayList<String>()\n" +
-            "myList.sort { a, b ->\n" +
+    public void testDGM45() {
+        // Java 8 adds default method sort(Comparator) to the List interface
+        String contents = "List<String> list = []\n" +
+            "list.sort { a, b ->\n" +
             "  a.trim() <=> b.trim()\n" +
             "}.each {\n" +
             "  it\n" +
             "}\n";
-        int start = contents.lastIndexOf("it");
-        int end = start + "it".length();
-        assertTypeOneOf(contents, start, end, "java.lang.Void", "java.lang.String");
+        int offset = contents.lastIndexOf("it");
+        assertType(contents, offset, offset + 2, "java.lang.String");
+    }
+
+    @Test
+    public void testDGM45a() {
+        // Java 8 adds default method sort(Comparator) to the List interface
+        boolean jdkListSort;
+        try {
+            List.class.getDeclaredMethod("sort", Comparator.class);
+            jdkListSort = true;
+        } catch (Exception e) {
+            jdkListSort = false;
+        }
+
+        String contents = "List<String> list = []\n" +
+            "list.sort({ a, b ->\n" +
+            "  a.trim() <=> b.trim()\n" +
+            "} as Comparator).each {\n" +
+            "  it\n" +
+            "}\n";
+        int offset = contents.lastIndexOf("it");
+        assertType(contents, offset, offset + 2, jdkListSort ? "java.lang.Void" : "java.lang.String");
     }
 
     @Test
