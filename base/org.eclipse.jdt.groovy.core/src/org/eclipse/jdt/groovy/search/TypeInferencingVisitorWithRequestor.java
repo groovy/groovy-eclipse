@@ -1530,7 +1530,7 @@ assert primaryExprType != null && dependentExprType != null;
         scope.forgetEnclosingMethodCall();
 
         ClassNode type;
-        if (isEnumInit(node) && GroovyUtils.isAnonymous(type = ((Expression) node.getReceiver()).getType())) {
+        if (isEnumInit(node) && GroovyUtils.isAnonymous(type = node.getType().redirect())) {
             visitMethodOverrides(type);
         }
 

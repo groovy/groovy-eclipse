@@ -465,7 +465,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             candidate = findDeclaration(var.getName(), scope.getDelegate(), isLhsExpr, false, false, callArgs);
         }
         if (candidate == null && resolveStrategy < Closure.DELEGATE_ONLY) {
-            VariableScope outer = owner.getNodeMetaData("outer.scope");
+            VariableScope outer = (VariableScope) owner.getNodeMetaData("outer.scope");
             if (outer != null) { // owner is an enclosing closure
                 if (isLhsExpr) scope.getWormhole().put("lhs", var);
                 VariableScope.CallAndType cat = outer.getEnclosingMethodCallExpression();
