@@ -129,6 +129,24 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
+    void testDGMJavadoc() {
+        String contents = '[].so', target = 'so'
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, target)))
+
+        // Java 8 adds default method sort(Comparator) to the List interface
+        boolean jdkListSort
+        try {
+            List.getDeclaredMethod('sort', Comparator)
+            jdkListSort = true
+        } catch (any) {
+            jdkListSort = false
+        }
+
+        String info = proposals[jdkListSort ? 1 : 0].proposalInfo.getInfo(null)
+        assert info ==~ /(?s)Sorts the Collection\. .*/ : 'CategoryProposalCreator.CategoryMethodProposal.createJavaProposal locates javadoc'
+    }
+
+    @Test
     void testPropertyDGM() {
         String contents = '''\
             import java.util.regex.*

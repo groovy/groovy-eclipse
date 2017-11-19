@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.creators;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,11 +33,24 @@ import org.codehaus.groovy.eclipse.codeassist.preferences.DGMProposalFilter;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
+import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
+import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IMember;
+import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
+import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
+import org.eclipse.jdt.internal.ui.text.java.MemberProposalInfo;
+import org.eclipse.jdt.internal.ui.text.java.MethodProposalInfo;
+import org.eclipse.jdt.internal.ui.text.java.ProposalInfo;
+import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
+import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 
 public class CategoryProposalCreator extends AbstractProposalCreator {
 
@@ -161,6 +175,61 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
         @Override
         protected char[][] getParameterTypeNames(Parameter[] parameters) {
             return (char[][]) ArrayUtils.remove(super.getParameterTypeNames(parameters), 0);
+        }
+
+        @Override
+        public IJavaCompletionProposal createJavaProposal(ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
+            IJavaCompletionProposal javaProposal = super.createJavaProposal(context, javaContext);
+            if (javaProposal instanceof LazyJavaCompletionProposal) {
+                //ProposalInfo proposalInfo = ((LazyJavaCompletionProposal) javaProposal).getProposalInfo();
+                ProposalInfo proposalInfo = (ProposalInfo) ReflectionUtils.executeNoArgPrivateMethod(LazyJavaCompletionProposal.class, "getProposalInfo", javaProposal);
+                //CompletionProposal proposal = ((LazyJavaCompletionProposal) javaProposal).getProposal();
+                CompletionProposal proposal = (CompletionProposal) ReflectionUtils.executeNoArgPrivateMethod(LazyJavaCompletionProposal.class, "getProposal", javaProposal);
+                // reuse existing or create one to call some private methods
+                final MethodProposalInfo methodProposalInfo = (proposalInfo instanceof MethodProposalInfo ? (MethodProposalInfo) proposalInfo : new MethodProposalInfo(javaContext.getProject(), proposal));
+
+                // replace default resolveMember, which fails due to self type being removed from parameter arrays
+                ((LazyJavaCompletionProposal) javaProposal).setProposalInfo(new MemberProposalInfo(javaContext.getProject(), proposal) {
+                    protected IMember resolveMember() throws JavaModelException {
+                        IType type = fJavaProject.findType(getMethod().getDeclaringClass().getName());
+                        if (type != null) {
+                            try {
+                                String methName = getMethod().getName();
+                                String[] paramTypes = GroovyUtils.getParameterTypeSignatures(getMethod(), false);
+                                //Map<String, char[]> typeVariables = methodProposalInfo.computeTypeVariables(type);
+                                @SuppressWarnings("unchecked") Map<String, char[]> typeVariables = (Map<String, char[]>) ReflectionUtils.
+                                    throwableExecutePrivateMethod(MethodProposalInfo.class, "computeTypeVariables", new Class[] {IType.class}, methodProposalInfo, new Object[] {type});
+
+                                IMethod[] methods = type.getMethods();
+                                for (int i = methods.length - 1; i >= 0; i -= 1) {
+                                    if (!methName.equals(methods[i].getElementName())) continue;
+                                    //boolean match = isSameMethodSignature(methName, paramTypes, false, methods[i], typeVariables, type);
+                                    Boolean match = (Boolean) ReflectionUtils.throwableExecutePrivateMethod(MethodProposalInfo.class, "isSameMethodSignature",
+                                        new Class [] {String.class, String[].class, boolean.class, IMethod.class, Map.class,     IType.class}, methodProposalInfo,
+                                        new Object[] {methName,     paramTypes,     Boolean.FALSE, methods[i],    typeVariables, type       });
+                                    if (Boolean.TRUE.equals(match)) {
+                                        return methods[i];
+                                    }
+                                }
+                            } catch (JavaModelException e) {
+                                throw e;
+                            } catch (InvocationTargetException e) {
+                                if (e.getCause() instanceof JavaModelException) {
+                                    throw (JavaModelException) e.getCause();
+                                }
+                                throw new RuntimeException(e.getCause());
+                            } catch (Exception e) {
+                                if (e instanceof RuntimeException) {
+                                    throw (RuntimeException) e;
+                                }
+                                throw new RuntimeException(e);
+                            }
+                        }
+                        return null;
+                    }
+                });
+            }
+            return javaProposal;
         }
     }
 
