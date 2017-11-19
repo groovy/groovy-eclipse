@@ -15,12 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.editor.highlighting;
 
-import java.util.List;
-
-import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -34,16 +30,12 @@ import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
-import org.codehaus.jdt.groovy.internal.compiler.ast.JDTNode;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jface.text.Position;
 
 /**
  * Assists with searching for kinds of references in Groovy files.
- *
- * @author Andrew Eisenberg
- * @created Aug 28, 2011
  */
 public abstract class SemanticReferenceRequestor implements ITypeRequestor {
 
@@ -82,60 +74,12 @@ public abstract class SemanticReferenceRequestor implements ITypeRequestor {
         return new Position(start, length);
     }
 
-    protected static boolean isDeprecated(ASTNode declaration) {
-        if (declaration instanceof ClassNode) {
-            declaration = ((ClassNode) declaration).redirect();
-        }
-
-        if (declaration instanceof PropertyNode && ((PropertyNode) declaration).getField() != null) {
-            // make sure we are using the associated field node because property nodes are never the declaration
-            declaration = ((PropertyNode) declaration).getField();
-        }
-
-        if (declaration instanceof JDTNode) {
-            return ((JDTNode) declaration).isDeprecated();
-        } else if (declaration instanceof ClassNode || declaration instanceof FieldNode || declaration instanceof MethodNode) {
-            return hasDeprecatedAnnotation((AnnotatedNode) declaration);
-        }
-
-        return false;
-    }
-
-    private static boolean hasDeprecatedAnnotation(AnnotatedNode declaration) {
-        // only DSLDs will have the deprecation flag set
-        if (isDeprecated(declaration)) {
-            return true;
-        }
-        List<AnnotationNode> anns = declaration.getAnnotations();
-        for (AnnotationNode ann : anns) {
-            if (ann.getClassNode() != null && ann.getClassNode().getName().equals("java.lang.Deprecated")) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean isDeprecated(AnnotatedNode node) {
-        int flags;
-        if (node instanceof ClassNode) {
-            flags = ((ClassNode) node).getModifiers();
-        } else if (node instanceof MethodNode) {
-            flags = ((MethodNode) node).getModifiers();
-        } else if (node instanceof FieldNode) {
-            flags = ((FieldNode) node).getModifiers();
-        } else {
-            flags = 0;
-        }
-
-        return (flags & Opcodes.ACC_DEPRECATED) != 0;
-    }
-
     protected static boolean isFinal(ASTNode node) {
         if (node instanceof FieldNode) {
             return ((FieldNode) node).isFinal();
         }
         if (node instanceof MethodNode) {
-            return (((MethodNode) node).getModifiers() & Opcodes.ACC_FINAL) != 0;
+            return ((MethodNode) node).isFinal();
         }
         return false;
     }

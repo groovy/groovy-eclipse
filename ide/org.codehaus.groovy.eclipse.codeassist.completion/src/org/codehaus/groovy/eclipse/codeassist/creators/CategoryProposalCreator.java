@@ -49,8 +49,8 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
         for (ClassNode category : categories) {
             boolean isDGMCategory = isDGM(category);
             for (MethodNode method : category.getAllDeclaredMethods()) {
-                // check for DGMs filtered by user preferences
-                if (isDGMCategory && filter.isFiltered(method)) {
+                // check for DGMs filtered by deprecation or user preference
+                if (isDGMCategory && (GroovyUtils.isDeprecated(method) || filter.isFiltered(method))) {
                     continue;
                 }
                 String methodName = method.getName();
@@ -116,8 +116,8 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
     }
 
     protected boolean isDGSM(ClassNode category) {
-        // TODO: Make this check based on the runtime configuration
-        return category.getName().equals("org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
+        // TODO: check the runtime DGM configuration
+        return VariableScope.DGSM_CLASS_NODE.equals(category);
     }
 
     @Override

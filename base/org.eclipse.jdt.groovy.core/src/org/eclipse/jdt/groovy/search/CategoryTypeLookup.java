@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
@@ -83,7 +82,7 @@ public class CategoryTypeLookup implements ITypeLookup {
                 argumentTypes.add(normalizedType); // lhs of dot or delegate type
                 if (args > 1) argumentTypes.addAll(scope.getMethodCallArgumentTypes());
 
-                MethodNode method = selectBestMatch(candidates, argumentTypes, scope);
+                MethodNode method = selectBestMatch(candidates, argumentTypes);
 
                 TypeLookupResult result = new TypeLookupResult(method.getReturnType(), method.getDeclaringClass(), method,
                         isDefaultGroovyMethod(method) ? TypeConfidence.LOOSELY_INFERRED : TypeConfidence.INFERRED, scope);
@@ -94,14 +93,14 @@ public class CategoryTypeLookup implements ITypeLookup {
         return null;
     }
 
-    protected final boolean isCompatibleConstantExpression(Expression node, VariableScope scope) {
+    protected static boolean isCompatibleConstantExpression(Expression node, VariableScope scope) {
         if (node instanceof ConstantExpression && !(scope.getEnclosingNode() instanceof AttributeExpression)) {
-            return ClassHelper.STRING_TYPE.equals(node.getType()) && node.getLength() <= node.getText().length();
+            return VariableScope.STRING_CLASS_NODE.equals(node.getType()) && node.getLength() <= node.getText().length();
         }
         return false;
     }
 
-    protected boolean isCompatibleCategoryMethod(MethodNode method, ClassNode firstArgumentType) {
+    protected static boolean isCompatibleCategoryMethod(MethodNode method, ClassNode firstArgumentType) {
         if (method.isStatic()) {
             Parameter[] paramters = method.getParameters();
             if (paramters != null && paramters.length > 0) {
@@ -110,14 +109,14 @@ public class CategoryTypeLookup implements ITypeLookup {
                     parameterType = VariableScope.newClassClassNode(parameterType);
                 }
                 if (isTypeCompatible(firstArgumentType, parameterType)) {
-                    return true;
+                    return !isDefaultGroovyMethod(method) || !GroovyUtils.isDeprecated(method);
                 }
             }
         }
         return false;
     }
 
-    protected final boolean isTypeCompatible(ClassNode source, ClassNode target) {
+    protected static boolean isTypeCompatible(ClassNode source, ClassNode target) {
         if (SimpleTypeLookup.isTypeCompatible(source, target) != Boolean.FALSE) {
             if (!VariableScope.CLASS_CLASS_NODE.equals(source) || VariableScope.OBJECT_CLASS_NODE.equals(target) || !target.isUsingGenerics()) {
                 return true;
@@ -132,14 +131,14 @@ public class CategoryTypeLookup implements ITypeLookup {
         return false;
     }
 
-    protected final boolean isDefaultGroovyMethod(MethodNode method) {
+    protected static boolean isDefaultGroovyMethod(MethodNode method) {
         return VariableScope.ALL_DEFAULT_CATEGORIES.contains(method.getDeclaringClass());
     }
 
     /**
      * Selects the candidate that most closely matches the method call arguments.
      */
-    protected MethodNode selectBestMatch(List<MethodNode> candidates, List<ClassNode> argumentTypes, VariableScope scope) {
+    protected static MethodNode selectBestMatch(List<MethodNode> candidates, List<ClassNode> argumentTypes) {
         MethodNode method = null;
         for (MethodNode candidate : candidates) {
             if (argumentTypes.size() == candidate.getParameters().length) {
@@ -163,7 +162,7 @@ public class CategoryTypeLookup implements ITypeLookup {
         return method != null ? method : candidates.get(0);
     }
 
-    private static long calculateParameterDistance(List<ClassNode> arguments, Parameter[] parameters) {
+    protected static long calculateParameterDistance(List<ClassNode> arguments, Parameter[] parameters) {
         try {
             // weight self type higher to prevent considering getAt(Map, Object)
             // and getAt(Object, String) equally for the arguments (Map, String)

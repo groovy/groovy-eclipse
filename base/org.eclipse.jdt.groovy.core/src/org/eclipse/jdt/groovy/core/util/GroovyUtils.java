@@ -27,6 +27,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -38,6 +39,7 @@ import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
@@ -45,6 +47,7 @@ import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
+import org.codehaus.jdt.groovy.internal.compiler.ast.JDTNode;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -360,6 +363,41 @@ public class GroovyUtils {
         }
 
         return result;
+    }
+
+    public static boolean isDeprecated(ASTNode node) {
+        if (node instanceof ClassNode) {
+            node = ((ClassNode) node).redirect();
+        } else if (node instanceof PropertyNode && ((PropertyNode) node).getField() != null) {
+            // use the associated field because properties are never the declaration
+            node = ((PropertyNode) node).getField();
+        }
+
+        if (node instanceof JDTNode) {
+            return ((JDTNode) node).isDeprecated();
+        }
+
+        int flags = 0;
+        if (node instanceof ClassNode) {
+            flags = ((ClassNode) node).getModifiers();
+        } else if (node instanceof MethodNode) {
+            flags = ((MethodNode) node).getModifiers();
+        } else if (node instanceof FieldNode) {
+            flags = ((FieldNode) node).getModifiers();
+        }
+        if ((flags & ClassNode.ACC_DEPRECATED) != 0) {
+            return true;
+        }
+
+        if (flags > 0 || node instanceof AnnotatedNode) {
+            for (AnnotationNode anno : ((AnnotatedNode) node).getAnnotations()) {
+                if (anno.getClassNode() != null && anno.getClassNode().getName().equals("java.lang.Deprecated")) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     public static boolean isSynthetic(FieldNode node) {

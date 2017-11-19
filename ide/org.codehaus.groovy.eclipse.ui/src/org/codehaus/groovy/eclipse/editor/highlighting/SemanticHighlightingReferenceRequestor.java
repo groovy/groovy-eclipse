@@ -112,7 +112,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
                 // don't continue past an unknown reference
                 return VisitStatus.CANCEL_BRANCH;
             }
-        } else if (isDeprecated(result.declaration)) {
+        } else if (GroovyUtils.isDeprecated(result.declaration)) {
             pos = new HighlightedTypedPosition(getPosition(node), HighlightKind.DEPRECATED);
 
         } else if (result.declaration instanceof FieldNode || result.declaration instanceof PropertyNode) {

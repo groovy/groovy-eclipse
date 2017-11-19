@@ -104,14 +104,14 @@ final class OtherCompletionTests extends CompletionTestSuite {
     void testGString1() {
         String contents = '"${new String().c}"'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.c'))
-        proposalExists(proposals, 'center', 3)
+        proposalExists(proposals, 'center', 2)
     }
 
     @Test
     void testGString2() {
         String contents = '"""${new String().c}"""'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.c'))
-        proposalExists(proposals, 'center', 3)
+        proposalExists(proposals, 'center', 2)
     }
 
     @Test // GRECLIPSE-706

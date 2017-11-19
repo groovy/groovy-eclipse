@@ -126,7 +126,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents = "def x = [] << ''; x";
         int start = contents.lastIndexOf("x");
         int end = start + "x".length();
-        assertType(contents, start, end, !isAtLeastGroovy(24) ? "java.util.Collection<java.lang.String>" : "java.util.List<java.lang.String>");
+        assertType(contents, start, end, isAtLeastGroovy(24) ? "java.util.List<java.lang.String>" : "java.util.Collection<java.lang.String>");
     }
 
     @Test // GRECLIPSE-1040

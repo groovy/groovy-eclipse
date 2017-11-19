@@ -1336,7 +1336,8 @@ public final class InferencingTests extends InferencingTestSuite {
         String contents = "def list = []; list.sort { a, b -> a <=> b }";
         int offset = contents.lastIndexOf("sort");
         assertType(contents, offset, offset + 4, "java.util.List<java.lang.Object>");
-        assertDeclaringType(contents, offset, offset + 4, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+        MethodNode m = assertDeclaration(contents, offset, offset + 4, "org.codehaus.groovy.runtime.DefaultGroovyMethods", "sort", DeclarationKind.METHOD);
+        assertEquals("Should resolve to sort(Iterable,Closure) since Collection version is deprecated", "java.lang.Iterable<java.lang.Object>", printTypeName(m.getParameters()[0].getType()));
     }
 
     @Test
