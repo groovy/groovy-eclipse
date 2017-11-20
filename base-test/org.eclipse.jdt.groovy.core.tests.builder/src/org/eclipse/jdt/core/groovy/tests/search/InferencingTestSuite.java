@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -185,26 +184,7 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
         GroovyCompilationUnit unit = createUnit("Search", contents);
         SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, false);
         assertNotNull("Did not find expected ASTNode", requestor.node);
-        assertTrue("Declaration should be deprecated: " + requestor.result.declaration, hasDeprecatedFlag((AnnotatedNode) requestor.result.declaration));
-    }
-
-    public static boolean hasDeprecatedFlag(AnnotatedNode declaration) {
-        int flags;
-
-        if (declaration instanceof PropertyNode) {
-            declaration = ((PropertyNode) declaration).getField();
-        }
-        if (declaration instanceof ClassNode) {
-            flags = ((ClassNode) declaration).getModifiers();
-        } else if (declaration instanceof MethodNode) {
-            flags = ((MethodNode) declaration).getModifiers();
-        } else if (declaration instanceof FieldNode) {
-            flags = ((FieldNode) declaration).getModifiers();
-        } else {
-            flags = 0;
-        }
-
-        return (flags & ClassNode.ACC_DEPRECATED) != 0;
+        assertTrue("Declaration should be deprecated: " + requestor.result.declaration, GroovyUtils.isDeprecated(requestor.result.declaration));
     }
 
     public static SearchRequestor doVisit(int exprStart, int exprEnd, GroovyCompilationUnit unit, boolean forceWorkingCopy) {
