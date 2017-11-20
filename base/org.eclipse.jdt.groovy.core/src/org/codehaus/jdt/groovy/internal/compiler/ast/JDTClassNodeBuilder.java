@@ -65,11 +65,14 @@ class JDTClassNodeBuilder {
      */
     public ClassNode configureType(TypeBinding type) {
         // GRECLIPSE-1639: Not all TypeBinding instances have been resolved when we get to this point.
-        // See comment on org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment.getTypeFromCompoundName(char[][], boolean, boolean)
+        // See org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment.getTypeFromCompoundName(char[][],boolean,boolean)
         if (type instanceof UnresolvedReferenceBinding) {
+            LookupEnvironment environment = resolver.getScope().environment;
             char[][] compoundName = ((UnresolvedReferenceBinding) type).compoundName;
-            type = resolver.getScope().environment.askForType(compoundName);
-            if (type == null) throw new IllegalStateException("Unable to resolve type: " + CharOperation.toString(compoundName));
+            type = environment.getType(compoundName); // TODO: Use getType(char[][],ModuleBinding)?
+            if (type == null) {
+                throw new IllegalStateException("Unable to resolve type: " + CharOperation.toString(compoundName));
+            }
         }
 
         if (type instanceof TypeVariableBinding) {
