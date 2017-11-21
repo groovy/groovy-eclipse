@@ -39,6 +39,7 @@ import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.groovy.tests.search.InferencingTestSuite
 import org.eclipse.jdt.core.tests.util.Util
+import org.eclipse.jdt.groovy.core.util.GroovyUtils
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence
 import org.junit.After
 import org.junit.Before
@@ -111,7 +112,7 @@ abstract class DSLInferencingTestSuite extends GroovyEclipseTestSuite {
         GroovyCompilationUnit unit = addGroovySource(contents, nextUnitName())
         InferencingTestSuite.SearchRequestor requestor = doVisit(exprStart, exprEnd, unit, false)
         assert requestor.node != null : 'Did not find expected ASTNode'
-        assert InferencingTestSuite.hasDeprecatedFlag(requestor.result.declaration) : 'Declaration should be deprecated: ' + requestor.result.declaration
+        assert GroovyUtils.isDeprecated(requestor.result.declaration) : 'Declaration should be deprecated: ' + requestor.result.declaration
     }
 
     protected final void assertType(String contents, int exprStart, int exprEnd, String expectedType) {
@@ -203,12 +204,12 @@ abstract class DSLInferencingTestSuite extends GroovyEclipseTestSuite {
      */
     protected static final void refreshExternalFoldersProject() {
         Workspace workspace = (Workspace) ResourcesPlugin.getWorkspace()
-        IProject externalProject = workspace.getRoot().getProject('.org.eclipse.jdt.core.external.folders')
+        IProject externalProject = workspace.root.getProject('.org.eclipse.jdt.core.external.folders')
         if (externalProject.exists()) {
             for (IResource member : externalProject.members()) {
                 if (member instanceof Folder) {
                     Folder folder = (Folder) member
-                    workspace.getAliasManager().updateAliases(folder, folder.getStore(), IResource.DEPTH_INFINITE, null)
+                    workspace.getAliasManager().updateAliases(folder, folder.store, IResource.DEPTH_INFINITE, null)
                     if (folder.exists()) {
                         folder.refreshLocal(IResource.DEPTH_INFINITE, null)
                     }
