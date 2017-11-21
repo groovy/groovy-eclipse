@@ -40,7 +40,6 @@ import org.codehaus.groovy.eclipse.refactoring.actions.GroovyExtractMethodAction
 import org.codehaus.groovy.eclipse.refactoring.actions.GroovyRenameAction;
 import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImportsAction;
 import org.codehaus.groovy.eclipse.search.GroovyOccurrencesFinder;
-import org.codehaus.groovy.eclipse.ui.decorators.GroovyImageDecorator;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
@@ -605,8 +604,6 @@ public class GroovyEditor extends CompilationUnitEditor {
         }
     }
 
-    private GroovyImageDecorator decorator = new GroovyImageDecorator();
-
     private GroovySemanticReconciler semanticReconciler;
 
     private final GroovyBracketInserter groovyBracketInserter = new GroovyBracketInserter();
@@ -678,15 +675,8 @@ public class GroovyEditor extends CompilationUnitEditor {
     }
 
     @Override
-    public Image getTitleImage() {
-        Object element = getEditorInput().getAdapter(IFile.class);
-        if (element == null) {
-            // null if coming from a code repository such as cvs, git, or svn
-            element = getEditorInput().getName();
-        }
-        Image image = decorator.decorateImage(null, element);
-        // cannot return null GRECLIPSE-257
-        return image != null ? image : super.getTitleImage();
+    protected void setTitleImage(Image titleImage) {
+        // prevent JavaEditor from replacing image set via plugin.xml
     }
 
     @Override
