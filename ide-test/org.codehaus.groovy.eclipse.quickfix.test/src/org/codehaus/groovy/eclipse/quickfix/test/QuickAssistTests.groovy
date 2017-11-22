@@ -708,6 +708,13 @@ final class QuickAssistTests extends QuickFixTestSuite {
             '"foo".indexOf("qwerty")', new AssignStatementToNewLocalProposal())
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/393
+    void testAssignStatementLocalRefactoring11() {
+        String contents = 'class Foo { def bar() { return System.out } }'
+        int offset = contents.indexOf('System.out')
+        assertProposalNotOffered(contents, offset, offset + 'System.out'.length(), new AssignStatementToNewLocalProposal())
+    }
+
     @Test
     void testExtractToLocalRefactoring_1() {
         assertConversion(

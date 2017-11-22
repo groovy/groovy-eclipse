@@ -20,6 +20,7 @@ import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.GroovyClassVisitor;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
@@ -55,23 +56,16 @@ public class AssignStatementToNewLocalRefactoring {
 
     private final GroovyCompilationUnit unit;
 
-    private final int length;
     private final int offset;
 
     // for setting new selection
     private int newLength;
-
     private int newOffset;
-
-    private boolean atExpressionStatement;
-
-    private Region region;
-
     private Expression expression;
+    private boolean atExpressionStatement;
 
     public AssignStatementToNewLocalRefactoring(GroovyCompilationUnit unit, int offset) {
         this.unit = unit;
-        length = 0;
         this.offset = offset;
     }
 
@@ -92,50 +86,14 @@ public class AssignStatementToNewLocalRefactoring {
         if (unit == null) {
             return false;
         }
-        return this.atExpressionStatement();
+        return atExpressionStatement();
     }
 
     private boolean atExpressionStatement() {
-        region = new Region(offset, length);
+
         atExpressionStatement = false;
 
-        ClassCodeVisitorSupport visitor = new ClassCodeVisitorSupport() {
 
-            private void processExpression(Expression statementExpression) {
-                if (statementExpression instanceof org.codehaus.groovy.ast.expr.BinaryExpression) {
-                    BinaryExpression bexp = (BinaryExpression) statementExpression;
-
-                    if (!bexp.getOperation().getText().equals("=")) {
-                        expression = statementExpression;
-                        atExpressionStatement = true;
-                    } else if (bexp.getRightExpression() instanceof ClosureExpression) {
-                        return;
-                    } else {
-                        throw new VisitCompleteException();
-                    }
-
-                } else {
-                    expression = statementExpression;
-                    atExpressionStatement = true;
-                }
-            }
-
-            @Override
-            public void visitExpressionStatement(ExpressionStatement statement) {
-                if (region.regionIsCoveredByNode(statement)) {
-                    processExpression(statement.getExpression());
-                }
-                super.visitExpressionStatement(statement);
-            }
-
-            @Override
-            public void visitReturnStatement(ReturnStatement statement) {
-                if (region.regionIsCoveredByNode(statement)) {
-                    processExpression(statement.getExpression());
-                }
-                super.visitReturnStatement(statement);
-            }
-        };
         ModuleNode moduleNode = unit.getModuleNode();
         List<ClassNode> classes = moduleNode.getClasses();
 
@@ -143,6 +101,7 @@ public class AssignStatementToNewLocalRefactoring {
             classes.add(moduleNode.getScriptClassDummy());
         }
 
+        GroovyClassVisitor visitor = createClassVisitor();
         for (ClassNode classNode : classes) {
             try {
                 visitor.visitClass(classNode);
@@ -152,6 +111,46 @@ public class AssignStatementToNewLocalRefactoring {
         }
 
         return atExpressionStatement;
+    }
+
+    private GroovyClassVisitor createClassVisitor() {
+        final Region region = new Region(offset, 0);
+
+        return new ClassCodeVisitorSupport() {
+            private void processExpression(Expression statementExpression) {
+                if (statementExpression instanceof BinaryExpression) {
+                    BinaryExpression bexp = (BinaryExpression) statementExpression;
+                    if (!bexp.getOperation().getText().equals("=")) {
+                        expression = statementExpression;
+                        atExpressionStatement = true;
+                    } else if (bexp.getRightExpression() instanceof ClosureExpression) {
+                        return;
+                    } else {
+                        throw new VisitCompleteException();
+                    }
+                } else {
+                    expression = statementExpression;
+                    atExpressionStatement = true;
+                }
+            }
+
+            public void visitExpressionStatement(ExpressionStatement statement) {
+                if (region.regionIsCoveredByNode(statement)) {
+                    processExpression(statement.getExpression());
+                }
+                super.visitExpressionStatement(statement);
+            }
+
+            public void visitReturnStatement(ReturnStatement statement) {
+                if (region.regionIsCoveredByNode(statement)) {
+                    String source = String.valueOf(unit.getContents(), statement.getStart(), statement.getLength());
+                    if (!source.matches("return\\b.*")) { // skip if return keyword is present
+                        processExpression(statement.getExpression());
+                    }
+                }
+                super.visitReturnStatement(statement);
+            }
+        };
     }
 
     public TextEdit createEdit(IDocument doc) {

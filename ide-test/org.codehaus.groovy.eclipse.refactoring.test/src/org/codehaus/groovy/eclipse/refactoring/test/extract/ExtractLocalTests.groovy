@@ -130,10 +130,7 @@ final class ExtractLocalTests extends RefactoringTestSuite {
         helper(getTest13In(), getTest13Out(), findLocation('a + b', 'test13'), 'a + b'.length(), true)
     }
 
-    /**
-     * @see https://github.com/groovy/groovy-eclipse/issues/157
-     */
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/157
     void test157() {
         String constant = '"value"'
 
@@ -154,5 +151,28 @@ final class ExtractLocalTests extends RefactoringTestSuite {
             """.stripIndent().replaceAll('\n', '\r\n')
 
         helper(contents, expected, contents.indexOf(constant), constant.length(), false)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/393
+    void test393() {
+        String expression = 'System.out'
+
+        String contents = """\
+            class Foo {
+              def bar() {
+                return ${expression}
+              }
+            }
+            """.stripIndent()
+        String expected = """\
+            class Foo {
+              def bar() {
+                def out = ${expression}
+                return out
+              }
+            }
+            """.stripIndent()
+
+        helper(contents, expected, contents.indexOf(expression), expression.length(), false)
     }
 }
