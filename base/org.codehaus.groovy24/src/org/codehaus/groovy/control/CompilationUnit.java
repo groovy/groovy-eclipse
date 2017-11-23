@@ -871,7 +871,7 @@ public class CompilationUnit extends ProcessingUnit {
         CompilerConfiguration config = getConfiguration();
         int computeMaxStackAndFrames = ClassWriter.COMPUTE_MAXS;
         if (CompilerConfiguration.isPostJDK7(config.getTargetBytecode())
-                || Boolean.TRUE.equals(config.getOptimizationOptions().get("indy"))) {
+                || Boolean.TRUE.equals(config.getOptimizationOptions().get(CompilerConfiguration.INVOKEDYNAMIC))) {
             computeMaxStackAndFrames += ClassWriter.COMPUTE_FRAMES;
         }
         return new ClassWriter(computeMaxStackAndFrames) {
@@ -959,7 +959,7 @@ public class CompilationUnit extends ProcessingUnit {
      */
     public void applyToSourceUnits(SourceUnitOperation body) throws CompilationFailedException {
         // GRECLIPSE edit -- prevent concurrent modification exceptions
-        for (String name : new ArrayList<String>(names)) {
+        for (String name : names.toArray(new String[names.size()])) {
             SourceUnit source = sources.get(name);
             if ((source.phase < phase) || (source.phase == phase && !source.phaseComplete)) {
                 try {

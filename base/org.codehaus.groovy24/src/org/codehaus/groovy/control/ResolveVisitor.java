@@ -1288,18 +1288,18 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 member.setValue(newValue);
                 checkAnnotationMemberValue(newValue);
             }
-            // GRECLIPSE edit -- can't do this
-            //if(annType.isResolved()) {
-            //    Class annTypeClass = annType.getTypeClass();
-            //    Retention retAnn = (Retention) annTypeClass.getAnnotation(Retention.class);
-            //    if (retAnn != null && retAnn.value().equals(RetentionPolicy.RUNTIME)) {
-            //        AnnotationNode anyPrevAnnNode = tmpAnnotations.put(annTypeClass.getName(), an);
-            //        if(anyPrevAnnNode != null) {
-            //            addError("Cannot specify duplicate annotation on the same member : " + annType.getName(), an);
-            //        }
-            //    }
-            //}
-            // GRECLIPSE end
+            /* GRECLIPSE edit -- can't do this
+            if(annType.isResolved()) {
+                Class annTypeClass = annType.getTypeClass();
+                Retention retAnn = (Retention) annTypeClass.getAnnotation(Retention.class);
+                if (retAnn != null && retAnn.value().equals(RetentionPolicy.RUNTIME)) {
+                    AnnotationNode anyPrevAnnNode = tmpAnnotations.put(annTypeClass.getName(), an);
+                    if(anyPrevAnnNode != null) {
+                        addError("Cannot specify duplicate annotation on the same member : " + annType.getName(), an);
+                    }
+                }
+            }
+            */
         }
     }
 

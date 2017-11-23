@@ -1325,10 +1325,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         MethodNode newMethod = new MethodNode(
                 oldMethod.getName(),
                 overridingMethod.getModifiers() | ACC_SYNTHETIC | ACC_BRIDGE,
-                // GRECLIPSE edit
-                //oldMethod.getReturnType().getPlainNodeReference(),
-                GenericsUtils.nonGeneric(oldMethod.getReturnType()),
-                // GRECLIPSE end
+                cleanType(oldMethod.getReturnType()),
                 cleanParameters(oldMethod.getParameters()),
                 oldMethod.getExceptions(),
                 null

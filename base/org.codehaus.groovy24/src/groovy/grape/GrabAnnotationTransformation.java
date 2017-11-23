@@ -261,11 +261,8 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
                     } else {
                         for (String s : GRABRESOLVER_REQUIRED) {
                             String mval = getMemberStringValue(node, s);
-                            if (mval != null && mval.isEmpty()) mval = null;
                             Expression member = node.getMember(s);
-                            // GRECLIPSE edit
-                            if (member == null /*|| mval == null*/) {
-                            // GRECLIPSE end
+                            if (member == null || (mval != null && mval.isEmpty())) {
                                 addError("The missing attribute \"" + s + "\" is required in @" + node.getClassNode().getNameWithoutPackage() + " annotations", node);
                                 continue grabResolverAnnotationLoop;
                             } else if (mval == null) {
@@ -380,8 +377,8 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
             if (disableChecksums != null) basicArgs.put(DISABLE_CHECKSUMS_SETTING, disableChecksums);
             if (systemProperties != null) basicArgs.put(SYSTEM_PROPERTIES_SETTING, systemProperties);
 
-            // GRECLIPSE edit
-            /*try {
+            /* GRECLIPSE edit
+            try {
                 Grape.grab(basicArgs, grabMaps.toArray(new Map[grabMaps.size()]));
                 // grab may have added more transformations through new URLs added to classpath, so do one more scan
                 if (compilationUnit!=null) {
@@ -392,7 +389,8 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
                 // The down side is we lose line number information for the offending
                 // @Grab annotation.
                 source.addException(re);
-            }*/
+            }
+            */
             // grab one thing at a time (so the errors are discovered individually)
             Map<String,Object>[] grabMapsAsMapArray = grabMaps.toArray(new Map[grabMaps.size()]);
             for (int i = 0, n = grabMapsAsMapArray.length; i < n; i += 1) {

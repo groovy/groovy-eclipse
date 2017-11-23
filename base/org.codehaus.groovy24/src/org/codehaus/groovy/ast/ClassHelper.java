@@ -351,20 +351,12 @@ public class ClassHelper {
     }
 
     public static boolean isNumberType(ClassNode cn) {
-        // GRECLIPSE edit
-        //return  cn == Byte_TYPE ||
-        //        cn == Short_TYPE ||
-        //        cn == Integer_TYPE ||
-        //        cn == Long_TYPE ||
-        //        cn == Float_TYPE ||
-        //        cn == Double_TYPE ||
-        return  Byte_TYPE.equals(cn) ||
-                Short_TYPE.equals(cn) ||
-                Integer_TYPE.equals(cn) ||
-                Long_TYPE.equals(cn) ||
-                Float_TYPE.equals(cn) ||
-                Double_TYPE.equals(cn) ||
-        // GRECLIPSE end
+        return cn == Byte_TYPE ||
+                cn == Short_TYPE ||
+                cn == Integer_TYPE ||
+                cn == Long_TYPE ||
+                cn == Float_TYPE ||
+                cn == Double_TYPE ||
                 cn == byte_TYPE ||
                 cn == short_TYPE ||
                 cn == int_TYPE ||

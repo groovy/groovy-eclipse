@@ -178,7 +178,7 @@ class GrapeIvy implements GrapeEngine {
             //if (!isValidTargetClassLoader(loader)) {
             //    loader = GrapeIvy.class.classLoader
             //}
-            // GRECLIPSE - don't check this. Removing this check will only affect our copy of GrapeIvy that is used during compilation where the classloader does not matter.
+            // GRECLIPSE - don't check this; removing this check will only affect our copy of GrapeIvy that is used during compilation where the classloader does not matter
             //if (!isValidTargetClassLoader(loader)) {
             //    throw new RuntimeException("No suitable ClassLoader found for grab")
             //}

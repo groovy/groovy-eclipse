@@ -361,7 +361,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
 
     private static void ensureGlobalTransformsAllowedInReconcileInitialized() {
         if (globalTransformsAllowedInReconcile == null) {
-            globalTransformsAllowedInReconcile = new TreeSet<String>();
+            globalTransformsAllowedInReconcile = new HashSet<String>();
             globalTransformsAllowedInReconcile.add("groovy.grape.GrabAnnotationTransformation");
             String transformNames = System.getProperty("greclipse.globalTransformsInReconcile", "");
             for (String transformName : transformNames.split(",")) {

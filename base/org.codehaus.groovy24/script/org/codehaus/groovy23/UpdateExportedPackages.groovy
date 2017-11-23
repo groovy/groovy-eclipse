@@ -49,7 +49,7 @@ String epa = manifest.getMainAttributes().getValue('Export-Package')
 Collections.addAll(packages, epa.split('\\,(\\s)*'))
 
 // read groovy-all jar's contents
-JarFile jar = new JarFile(new File('lib/groovy-all-2.4.12.jar'))
+JarFile jar = new JarFile(new File('lib/groovy-all-2.4.13.jar'))
 try {
     Enumeration<JarEntry> entries = jar.entries()
     while (entries.hasMoreElements()) {

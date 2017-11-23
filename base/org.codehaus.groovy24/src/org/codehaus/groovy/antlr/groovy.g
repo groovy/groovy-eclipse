@@ -314,16 +314,16 @@ tokens {
         return t;
     }
 
-    private AST attachLast(AST ast, Object last) {
-        if ((ast instanceof GroovySourceAST) && (last instanceof SourceInfo)) {
-            GroovySourceAST groovySourceAst = (GroovySourceAST) ast;
+    private AST attachLast(AST t, Object last) {
+        if ((t instanceof GroovySourceAST) && (last instanceof SourceInfo)) {
             SourceInfo lastInfo = (SourceInfo) last;
-            groovySourceAst.setColumnLast(lastInfo.getColumn());
-            groovySourceAst.setLineLast(lastInfo.getLine());
+            GroovySourceAST node = (GroovySourceAST)t;
+            node.setColumnLast(lastInfo.getColumn());
+            node.setLineLast(lastInfo.getLine());
             // This is a good point to call node.setSnippet(),
             // but it bulks up the AST too much for production code.
         }
-        return ast;
+        return t;
     }
 
     public AST create(int type, String txt, Token first, Token last) {
