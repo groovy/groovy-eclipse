@@ -8572,12 +8572,12 @@ public void test428177() {
 		"4. ERROR in X.java (at line 36)\n" + 
 		"	if(\"1\" == \"\") { return stream.collect(Collectors.toList()).stream(); // ERROR\n" + 
 		"	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-		"Type mismatch: cannot convert from Stream<capture#14-of ? extends String> to Stream<String>\n" + 
+		"Type mismatch: cannot convert from Stream<capture#25-of ? extends String> to Stream<String>\n" + 
 		"----------\n" + 
 		"5. ERROR in X.java (at line 38)\n" + 
 		"	return stream.collect(Collectors.toList()); // NO ERROR\n" + 
 		"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-		"Type mismatch: cannot convert from List<capture#17-of ? extends String> to Stream<String>\n" + 
+		"Type mismatch: cannot convert from List<capture#28-of ? extends String> to Stream<String>\n" + 
 		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=428795, - [1.8]Internal compiler error: java.lang.NullPointerException at org.eclipse.jdt.internal.compiler.ast.MessageSend.analyseCode
@@ -10063,6 +10063,36 @@ public void testBug521808() {
 		"	obj = m((Integer... is) -> is[0] + is[1], 3, 4); // ECJ compiles, Javac won\'t\n" + 
 		"	      ^\n" + 
 		"The method m(FI1, Number, Number) is ambiguous for the type Z\n" +  
+		"----------\n");
+}
+public void testBug525303() {
+	runNegativeTest(
+		new String[] {
+			"X.java",
+			"interface FI<A1 extends C<A2>, A2 extends A3, A3> {\n" + 
+			"	String m(A1 a, A2 b);\n" + 
+			"}\n" + 
+			"class C<T>{}\n" + 
+			"public class X  {\n" + 
+			"	static String method(C<Integer> c, Integer i) {\n" + 
+			"		return \"\";\n" + 
+			"	}\n" + 
+			"    public static void main(String argv[]) {\n" + 
+			"    	FI<?, ?, ?> i = (C<Integer> a, Integer b) -> String.valueOf(a) + String.valueOf(b); // no error here\n" + 
+			"    	FI<?, ?, ?> i2 = X::method; // error here\n" + 
+			"    }\n" + 
+			"}"
+		},
+		"----------\n" + 
+		"1. ERROR in X.java (at line 10)\n" + 
+		"	FI<?, ?, ?> i = (C<Integer> a, Integer b) -> String.valueOf(a) + String.valueOf(b); // no error here\n" + 
+		"	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+		"The target type of this expression is not a well formed parameterized type due to bound(s) mismatch\n" + 
+		"----------\n" + 
+		"2. ERROR in X.java (at line 11)\n" + 
+		"	FI<?, ?, ?> i2 = X::method; // error here\n" + 
+		"	                 ^^^^^^^^^\n" + 
+		"The target type of this expression is not a well formed parameterized type due to bound(s) mismatch\n" + 
 		"----------\n");
 }
 public static Class testClass() {

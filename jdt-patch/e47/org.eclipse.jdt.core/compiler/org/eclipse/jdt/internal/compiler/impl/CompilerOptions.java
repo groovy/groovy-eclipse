@@ -810,6 +810,23 @@ public class CompilerOptions {
 		return Util.EMPTY_STRING; // unknown version
 	}
 
+	public static long releaseToJDKLevel(String release) {
+		if (release != null && release.length() > 0) {
+			switch(release.charAt(0)) {
+				case '6':
+					return ClassFileConstants.JDK1_6;
+				case '7':
+					return ClassFileConstants.JDK1_7;
+				case '8':
+					return ClassFileConstants.JDK1_8;
+				case '9':
+					return ClassFileConstants.JDK9;
+				default:
+					return 0; // unknown
+			}
+		}
+		return 0;
+	}
 	public static long versionToJdkLevel(String versionID) {
 		String version = versionID;
 		// verification is optimized for all versions with same length and same "1." prefix

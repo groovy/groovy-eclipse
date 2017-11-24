@@ -14,6 +14,7 @@ package org.eclipse.jdt.internal.compiler.batch;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.InvalidPathException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -119,6 +120,7 @@ public class FileSystem implements IModuleAwareNameEnvironment, SuffixConstants 
 		public void acceptModule(IModule module);
 		public String getDestinationPath();
 		Collection<String> getModuleNames(Collection<String> limitModules);
+		Collection<String> getModuleNames(Collection<String> limitModules, Function<String,IModule> getModule);
 	}
 	public interface ClasspathSectionProblemReporter {
 		void invalidClasspathSection(String jarFilePath);
@@ -177,7 +179,7 @@ public FileSystem(String[] classpathNames, String[] initialFileNames, String enc
 		Classpath classpath = getClasspath(classpathNames[i], encoding, null, null);
 		try {
 			classpath.initialize();
-			for (String moduleName : classpath.getModuleNames(null)) // TODO limit-modules?
+			for (String moduleName : classpath.getModuleNames(null))
 				this.moduleLocations.put(moduleName, classpath);
 			this.classpaths[counter++] = classpath;
 		} catch (IOException e) {
@@ -189,7 +191,7 @@ public FileSystem(String[] classpathNames, String[] initialFileNames, String enc
 	}
 	initializeKnownFileNames(initialFileNames);
 }
-protected FileSystem(Classpath[] paths, String[] initialFileNames, boolean annotationsFromClasspath) {
+protected FileSystem(Classpath[] paths, String[] initialFileNames, boolean annotationsFromClasspath, Set<String> limitedModules) {
 	final int length = paths.length;
 	int counter = 0;
 	this.classpaths = new FileSystem.Classpath[length];
@@ -197,10 +199,8 @@ protected FileSystem(Classpath[] paths, String[] initialFileNames, boolean annot
 		final Classpath classpath = paths[i];
 		try {
 			classpath.initialize();
-			for (String moduleName : classpath.getModuleNames(null)) // TODO limit-modules?
-				this.moduleLocations.put(moduleName, classpath);
 			this.classpaths[counter++] = classpath;
-		} catch(IOException | IllegalArgumentException exception) {
+		} catch(IOException | InvalidPathException exception) {
 			// JRE 9 could throw an IAE if the linked JAR paths have invalid chars, such as ":"
 			// ignore
 		}
@@ -209,8 +209,36 @@ protected FileSystem(Classpath[] paths, String[] initialFileNames, boolean annot
 		// should not happen
 		System.arraycopy(this.classpaths, 0, (this.classpaths = new FileSystem.Classpath[counter]), 0, counter);
 	}
+	initializeModuleLocations(limitedModules);
 	initializeKnownFileNames(initialFileNames);
 	this.annotationsFromClasspath = annotationsFromClasspath;
+}
+private void initializeModuleLocations(Set<String> limitedModules) {
+	// First create the mapping of all module/Classpath
+	// since the second iteration of getModuleNames() can't be relied on for 
+	// to get the right origin of module
+	if (limitedModules == null) {
+		for (Classpath c : this.classpaths) {
+			for (String moduleName : c.getModuleNames(null))
+				this.moduleLocations.put(moduleName, c);
+		}
+	} else {
+		Map<String, Classpath> moduleMap = new HashMap<>();
+		for (Classpath c : this.classpaths) {
+			for (String moduleName : c.getModuleNames(null)) {
+				moduleMap.put(moduleName, c);
+			}
+		}
+		for (Classpath c : this.classpaths) {
+			for (String moduleName : c.getModuleNames(limitedModules, m -> getModuleFromEnvironment(m.toCharArray()))) {
+				Classpath classpath = moduleMap.get(moduleName);
+				this.moduleLocations.put(moduleName, classpath);
+			}
+		}
+	}
+}
+protected FileSystem(Classpath[] paths, String[] initialFileNames, boolean annotationsFromClasspath) {
+	this(paths, initialFileNames, annotationsFromClasspath, null);
 }
 public static Classpath getClasspath(String classpathName, String encoding, AccessRuleSet accessRuleSet) {
 	return getClasspath(classpathName, encoding, false, accessRuleSet, null, null);
@@ -220,6 +248,9 @@ public static Classpath getClasspath(String classpathName, String encoding, Acce
 }
 public static Classpath getJrtClasspath(String jdkHome, String encoding, AccessRuleSet accessRuleSet, Map<String, String> options) {
 	return new ClasspathJrt(new File(convertPathSeparators(jdkHome)), true, accessRuleSet, null);
+}
+public static Classpath getOlderSystemRelease(String jdkHome, String release, AccessRuleSet accessRuleSet) {
+	return new ClasspathJep247(new File(convertPathSeparators(jdkHome)), release, accessRuleSet);
 }
 public static Classpath getClasspath(String classpathName, String encoding,
 		boolean isSourceOnly, AccessRuleSet accessRuleSet,
@@ -584,6 +615,20 @@ public boolean hasCompilationUnit(char[][] qualifiedPackageName, char[] moduleNa
 
 @Override
 public IModule getModule(char[] name) {
+	if (this.module != null && CharOperation.equals(name, this.module.name())) {
+		return this.module;
+	}
+	if (this.moduleLocations.containsKey(new String(name))) {
+		for (Classpath classpath : this.classpaths) {
+			IModule mod = classpath.getModule(name);
+			if (mod != null) {
+				return mod;
+			}
+		}
+	}
+	return null;
+}
+public IModule getModuleFromEnvironment(char[] name) {
 	if (this.module != null && CharOperation.equals(name, this.module.name())) {
 		return this.module;
 	}

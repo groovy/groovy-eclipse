@@ -97,6 +97,7 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.CompilerStats;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
+import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
@@ -1364,6 +1365,8 @@ public class Main implements ProblemSeverities, SuffixConstants {
 
 	private List<String> addonExports = Collections.EMPTY_LIST;
 	private List<String> addonReads = Collections.EMPTY_LIST;
+	public Set<String> rootModules = Collections.EMPTY_SET;
+	public Set<String> limitedModules;
 
 	public Locale compilerLocale;
 	public CompilerOptions compilerOptions; // read-only
@@ -1378,6 +1381,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 	// == Main.NONE: absorbent element, do not output class files;
 	// else: use as the path of the directory into which class files must
 	//       be written.
+	protected String releaseVersion;
 	private boolean didSpecifySource;
 	private boolean didSpecifyTarget;
 	public String[] encodings;
@@ -1403,7 +1407,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 	public Logger logger;
 	public int maxProblems;
 	public Map<String, String> options;
-	long complianceLevel;
+	protected long complianceLevel;
 	public char[][] ignoreOptionalProblemsFromFolders;
 	protected PrintWriter out;
 	public boolean proceed = true;
@@ -1841,6 +1845,9 @@ public void configure(String[] argv) {
 	final int INSIDE_ADD_READS = 26;
 	final int INSIDE_SYSTEM = 27;
 	final int INSIDE_PROCESSOR_MODULE_PATH_start = 28;
+	final int INSIDE_ADD_MODULES = 29;
+	final int INSIDE_RELEASE = 30;
+	final int INSIDE_LIMIT_MODULES = 31;
 
 	final int DEFAULT = 0;
 	ArrayList<String> bootclasspaths = new ArrayList<>(DEFAULT_SIZE_CLASSPATH);
@@ -2091,6 +2098,10 @@ public void configure(String[] argv) {
 					mode = INSIDE_MAX_PROBLEMS;
 					continue;
 				}
+				if (currentArg.equals("--release")) { //$NON-NLS-1$
+					mode = INSIDE_RELEASE;
+					continue;
+				}
 				if (currentArg.equals("-source")) { //$NON-NLS-1$
 					mode = INSIDE_SOURCE;
 					continue;
@@ -2223,6 +2234,14 @@ public void configure(String[] argv) {
 				}
 				if (currentArg.equals("--add-reads")) { //$NON-NLS-1$
 					mode = INSIDE_ADD_READS;
+					continue;
+				}
+				if (currentArg.equals("--add-modules")) { //$NON-NLS-1$
+					mode = INSIDE_ADD_MODULES;
+					continue;
+				}
+				if (currentArg.equals("--limit-modules")) { //$NON-NLS-1$
+					mode = INSIDE_LIMIT_MODULES;
 					continue;
 				}
 				if (currentArg.equals("-sourcepath")) {//$NON-NLS-1$
@@ -2676,6 +2695,10 @@ public void configure(String[] argv) {
 					throw new IllegalArgumentException(
 						this.bind("configure.duplicateTarget", currentArg));//$NON-NLS-1$
 				}
+				if (this.releaseVersion != null) {
+					throw new IllegalArgumentException(
+							this.bind("configure.unsupportedWithRelease", "-target"));//$NON-NLS-1$ //$NON-NLS-2$
+				}
 				this.didSpecifyTarget = true;
 				if (currentArg.equals("1.1")) { //$NON-NLS-1$
 					this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_1);
@@ -2733,10 +2756,37 @@ public void configure(String[] argv) {
 				}
 				mode = DEFAULT;
 				continue;
+			case INSIDE_RELEASE:
+				// If release is < 9, the following are diasllowed:
+				// bootclasspath, -Xbootclasspath, -Xbootclasspath/a:, -Xbootclasspath/p:, 
+				// -endorseddirs, -Djava.endorsed.dirs, -extdirs, -Djava.ext.dirs
+
+				// If release >= 9, the following are disallowed
+				// --system and --upgrade-module-path
+
+				// -source and -target are diasllowed for any --release
+				this.releaseVersion = currentArg;
+				long releaseToJDKLevel = CompilerOptions.releaseToJDKLevel(currentArg);
+				if (releaseToJDKLevel == 0) {
+					throw new IllegalArgumentException(
+							this.bind("configure.unsupportedReleaseVersion", currentArg)); //$NON-NLS-1$
+				}
+				// Let's treat it as regular compliance mode
+				this.complianceLevel = releaseToJDKLevel;
+				String versionAsString = CompilerOptions.versionFromJdkLevel(releaseToJDKLevel);
+				this.options.put(CompilerOptions.OPTION_Compliance, versionAsString);
+				this.options.put(CompilerOptions.OPTION_Source, versionAsString);
+				this.options.put(CompilerOptions.OPTION_TargetPlatform, versionAsString);
+				mode = DEFAULT;
+				continue;
 			case INSIDE_SOURCE :
 				if (this.didSpecifySource) {
 					throw new IllegalArgumentException(
 						this.bind("configure.duplicateSource", currentArg));//$NON-NLS-1$
+				}
+				if (this.releaseVersion != null) {
+					throw new IllegalArgumentException(
+							this.bind("configure.unsupportedWithRelease", "-source"));//$NON-NLS-1$ //$NON-NLS-2$
 				}
 				this.didSpecifySource = true;
 				if (currentArg.equals("1.3")) { //$NON-NLS-1$
@@ -2822,6 +2872,26 @@ public void configure(String[] argv) {
 				}
 				this.addonReads.add(currentArg);
 				continue;
+			case INSIDE_ADD_MODULES:
+				mode = DEFAULT;
+				if (this.rootModules == Collections.EMPTY_SET) {
+					this.rootModules = new HashSet<>();
+				}
+				StringTokenizer tokenizer = new StringTokenizer(currentArg, ","); //$NON-NLS-1$
+				while (tokenizer.hasMoreTokens()) {
+					this.rootModules.add(tokenizer.nextToken().trim());
+				}
+				continue;
+			case INSIDE_LIMIT_MODULES:
+				mode = DEFAULT;
+				tokenizer = new StringTokenizer(currentArg, ","); //$NON-NLS-1$
+				while (tokenizer.hasMoreTokens()) {
+					if (this.limitedModules == null) {
+						this.limitedModules = new HashSet<>();
+					}
+					this.limitedModules.add(tokenizer.nextToken().trim());
+				}
+				continue;
 			case INSIDE_CLASSPATH_start:
 				mode = DEFAULT;
 				index += processPaths(newCommandLineArgs, index, currentArg, classpaths);
@@ -2842,7 +2912,7 @@ public void configure(String[] argv) {
 						this.bind("configure.unexpectedDestinationPathEntry", //$NON-NLS-1$
 							"-extdir")); //$NON-NLS-1$
 				}
-				StringTokenizer tokenizer = new StringTokenizer(currentArg,	File.pathSeparator, false);
+				tokenizer = new StringTokenizer(currentArg,	File.pathSeparator, false);
 				extdirsClasspaths = new ArrayList<>(DEFAULT_SIZE_CLASSPATH);
 				while (tokenizer.hasMoreTokens())
 					extdirsClasspaths.add(tokenizer.nextToken());
@@ -3405,7 +3475,8 @@ public File getJavaHome() {
 
 public FileSystem getLibraryAccess() {
 	FileSystem nameEnvironment = new FileSystem(this.checkedClasspaths, this.filenames, 
-					this.annotationsFromClasspath && CompilerOptions.ENABLED.equals(this.options.get(CompilerOptions.OPTION_AnnotationBasedNullAnalysis)));
+					this.annotationsFromClasspath && CompilerOptions.ENABLED.equals(this.options.get(CompilerOptions.OPTION_AnnotationBasedNullAnalysis)),
+					this.limitedModules);
 	nameEnvironment.module = this.module;
 	processAddonModuleOptions(nameEnvironment);
 	return nameEnvironment;
@@ -4617,6 +4688,9 @@ public void performCompilation() {
 				// report a warning
 				this.logger.logIncorrectVMVersionForAnnotationProcessing();
 			}
+			if (checkVMVersion(ClassFileConstants.JDK9)) {
+				initRootModules(this.batchCompiler.lookupEnvironment, environment);
+			}
 		}
 
 		// set the non-externally configurable options.
@@ -4660,6 +4734,33 @@ private void printUsage(String sectionID) {
 				this.bind("compiler.copyright") //$NON-NLS-1$
 			}));
 	this.logger.flush();
+}
+private void initRootModules(LookupEnvironment environment, FileSystem fileSystem) {
+	Map<String, String> map = new HashMap<>();
+	for (String m : this.rootModules) {
+		ModuleBinding mod = environment.getModule(m.toCharArray());
+		if (mod == null) {
+			throw new IllegalArgumentException(this.bind("configure.invalidModuleName", m)); //$NON-NLS-1$
+		}
+		PackageBinding[] exports = mod.getExports();
+		for (PackageBinding packageBinding : exports) {
+			String qName = CharOperation.toString(packageBinding.compoundName);
+			String existing = map.get(qName);
+			if (existing != null) {
+				throw new IllegalArgumentException(this.bind("configure.packageConflict", new String[] {qName, existing, m})); //$NON-NLS-1$
+				// report an error and bail out
+			}
+			map.put(qName, m);
+		}
+	}
+	if (this.limitedModules != null) {
+		for (String m : this.limitedModules) {
+			ModuleBinding mod = environment.getModule(m.toCharArray());
+			if (mod == null) {
+				throw new IllegalArgumentException(this.bind("configure.invalidModuleName", m)); //$NON-NLS-1$
+			}
+		}
+	}
 }
 private ReferenceBinding[] processClassNames(LookupEnvironment environment) {
 	// check for .class file presence in case of apt processing
@@ -5079,20 +5180,18 @@ protected void setPaths(ArrayList<String> bootclasspaths,
 		String version = this.options.get(CompilerOptions.OPTION_Compliance);
 		this.complianceLevel = CompilerOptions.versionToJdkLevel(version);
 	}
-
-	if (this.complianceLevel > ClassFileConstants.JDK1_8) {
-		if (bootclasspaths != null && bootclasspaths.size() > 0)
-			throw new IllegalArgumentException(
-				this.bind("configure.unsupportedOption", "-bootclasspath")); //$NON-NLS-1$ //$NON-NLS-2$
-		if (extdirsClasspaths != null && extdirsClasspaths.size() > 0)
-			throw new IllegalArgumentException(
-				this.bind("configure.unsupportedOption", "-extdirs")); //$NON-NLS-1$ //$NON-NLS-2$
-		if (endorsedDirClasspaths != null && endorsedDirClasspaths.size() > 0)
-			throw new IllegalArgumentException(
-				this.bind("configure.unsupportedOption", "-endorseddirs")); //$NON-NLS-1$ //$NON-NLS-2$
-	}
 	// process bootclasspath, classpath and sourcepaths
- 	ArrayList<Classpath> allPaths = handleBootclasspath(bootclasspaths, customEncoding);
+	ArrayList<Classpath> allPaths = null;
+	long jdkLevel = validateClasspathOptions(bootclasspaths, endorsedDirClasspaths, extdirsClasspaths);
+
+	if (this.releaseVersion != null && this.complianceLevel < jdkLevel) {
+		// TODO: Revisit for access rules
+		allPaths = new ArrayList<Classpath>();
+		allPaths.add(
+				FileSystem.getOlderSystemRelease(this.javaHomeCache.getAbsolutePath(), this.releaseVersion, null));
+	} else {
+		allPaths = handleBootclasspath(bootclasspaths, customEncoding);
+	}
 
 	List<FileSystem.Classpath> cp = handleClasspath(classpaths, customEncoding);
 
@@ -5156,9 +5255,32 @@ protected final static boolean shouldIgnoreOptionalProblems(char[][] folderNames
 	}
 	return false;
 }
+protected long validateClasspathOptions(ArrayList<String> bootclasspaths, ArrayList<String> endorsedDirClasspaths, ArrayList<String> extdirsClasspaths) {
+	if (this.complianceLevel > ClassFileConstants.JDK1_8) {
+		if (bootclasspaths != null && bootclasspaths.size() > 0)
+			throw new IllegalArgumentException(
+				this.bind("configure.unsupportedOption", "-bootclasspath")); //$NON-NLS-1$ //$NON-NLS-2$
+		if (extdirsClasspaths != null && extdirsClasspaths.size() > 0)
+			throw new IllegalArgumentException(
+				this.bind("configure.unsupportedOption", "-extdirs")); //$NON-NLS-1$ //$NON-NLS-2$
+		if (endorsedDirClasspaths != null && endorsedDirClasspaths.size() > 0)
+			throw new IllegalArgumentException(
+				this.bind("configure.unsupportedOption", "-endorseddirs")); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	long jdkLevel = Util.getJDKLevel(getJavaHome());
+	if (jdkLevel < ClassFileConstants.JDK9 && this.releaseVersion != null) {
+		throw new IllegalArgumentException(
+				this.bind("configure.unsupportedReleaseOption")); //$NON-NLS-1$
+	}
+	return jdkLevel;
+}
 protected void validateOptions(boolean didSpecifyCompliance) {
 	if (didSpecifyCompliance) {
-		Object version = this.options.get(CompilerOptions.OPTION_Compliance);
+		String version = this.options.get(CompilerOptions.OPTION_Compliance);
+		if (this.releaseVersion != null) {
+			throw new IllegalArgumentException(
+					this.bind("configure.unsupportedWithRelease", version));//$NON-NLS-1$
+		}
 		if (CompilerOptions.VERSION_1_3.equals(version)) {
 			if (!this.didSpecifySource) this.options.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_1_3);
 			if (!this.didSpecifyTarget) this.options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_1);

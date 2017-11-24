@@ -93,6 +93,7 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 import org.eclipse.jdt.internal.compiler.lookup.VariableBinding;
+import org.eclipse.jdt.internal.compiler.lookup.WildcardBinding;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilationUnit;
@@ -337,6 +338,9 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 					}
 					this.resolvedType = groundType;
 				}
+			} else {
+				reportSamProblem(blockScope, new ProblemMethodBinding(TypeConstants.ANONYMOUS_METHOD, null, ProblemReasons.NotAWellFormedParameterizedType));
+				return this.resolvedType = null;
 			}
 		}
 		boolean genericSignatureNeeded = this.requiresGenericSignature || blockScope.compilerOptions().generateGenericSignatureForLambdaExpressions;
@@ -348,8 +352,10 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 			if (argumentType != null && argumentType != TypeBinding.VOID) {
 				if (haveDescriptor && expectedParameterType != null && argumentType.isValidBinding() && TypeBinding.notEquals(argumentType, expectedParameterType)) {
 					if (expectedParameterType.isProperType(true)) {
-						this.scope.problemReporter().lambdaParameterTypeMismatched(argument, argument.type, expectedParameterType);
-						this.resolvedType = null; // continue to type check.
+						if (!isOnlyWildcardMismatch(expectedParameterType, argumentType)) {
+							this.scope.problemReporter().lambdaParameterTypeMismatched(argument, argument.type, expectedParameterType);
+							this.resolvedType = null; // continue to type check.
+						}
 					}
 				}
 				if (genericSignatureNeeded) {
@@ -442,6 +448,30 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 		return argumentsHaveErrors ? this.resolvedType = null : this.resolvedType;
 	}
 
+	// check if the given types are parameterized types and if their type arguments
+	// differ only in a wildcard
+	// ? and ? extends Object
+	private boolean isOnlyWildcardMismatch(TypeBinding expected, TypeBinding argument) {
+		boolean onlyWildcardMismatch = false;
+		if (expected.isParameterizedType() && argument.isParameterizedType()) {
+			TypeBinding[] expectedArgs = ((ParameterizedTypeBinding)expected).typeArguments();
+			TypeBinding[] args = ((ParameterizedTypeBinding)argument).typeArguments();
+			for (int j = 0; j < args.length; j++) {
+				if (TypeBinding.notEquals(expectedArgs[j], args[j])) {
+					if (expectedArgs[j].isWildcard() && args[j].isUnboundWildcard()) {
+						WildcardBinding wc = (WildcardBinding)expectedArgs[j];
+						TypeBinding bound = wc.allBounds();
+						if (bound != null && wc.boundKind == Wildcard.EXTENDS && bound.id == TypeIds.T_JavaLangObject)
+							onlyWildcardMismatch = true;
+					} else {
+						onlyWildcardMismatch = false;
+						break;
+					}
+				}
+			}
+		}
+		return onlyWildcardMismatch;
+	}
 	private ReferenceBinding findGroundTargetType(BlockScope blockScope, TypeBinding targetType, TypeBinding expectedSAMType, boolean argumentTypesElided) {
 		
 		if (expectedSAMType instanceof IntersectionTypeBinding18)

@@ -6641,6 +6641,64 @@ public void testBug521818() {
 		
 	);
 }
+public void testBug522469() {
+	runConformTest(
+		new String[] {
+			"X.java",
+			"public class X<R> {\n" + 
+			"\n" + 
+			"	public static void main(String[] args) {\n" + 
+			"		I<?> i = (X<?> x) -> \"\";\n" + 
+			"	}\n" + 
+			"}\n" + 
+			"interface I<T> {\n" + 
+			"	String m(X<? extends T> x);\n" + 
+			"}\n"
+		}
+	);
+}
+public void testBug522469a() {
+	runNegativeTest(
+		new String[] {
+			"X.java",
+			"import java.util.List;\n" + 
+			"public class X<R> {\n" + 
+			"	public static void main(String[] args) {\n" + 
+			"		I<?> i = (X<?> x) -> \"\";\n" + 
+			"		J<?, Y> j = (C<?, Y> y) -> \"\";\n" + 
+			"		J<?, Y> j2 = (C<? extends Object, Y> y) -> \"\";\n" + 
+			"		J<? extends Object, Y> j3 = (C<?, Y> y) -> \"\";\n" + 
+			"		J<? extends Object, Y> j4 = (C<? extends Object, Y> y) -> \"\";\n" + 
+			"		J<?, Y> j5 = (C<?, Z> y) -> \"\";\n" + 
+			"		K<? extends List<?>> k = (D<? extends List<?>> d) -> \"\";\n" + 
+			"	}\n" + 
+			"}\n" + 
+			"class C<T, U> {}\n" + 
+			"class D<T extends List<T>> {}\n" + 
+			"class Z {}\n" + 
+			"class Y extends Z {}\n" + 
+			"interface I<T> {\n" + 
+			"	String m(X<? extends T> x);\n" + 
+			"}\n" + 
+			"interface J<R, S extends Z> {\n" + 
+			"	String m(C<? extends R, S> ya);\n" + 
+			"}\n" + 
+			"interface K<R extends List<R>> {\n" + 
+			"	String m(D<? extends R> d);\n" + 
+			"}"
+		},
+		"----------\n" + 
+		"1. ERROR in X.java (at line 9)\n" + 
+		"	J<?, Y> j5 = (C<?, Z> y) -> \"\";\n" + 
+		"	             ^^^^^^^^^^^^^^^^^\n" + 
+		"Type mismatch: cannot convert from J<Object,Z> to J<?,Y>\n" +
+		"----------\n" + 
+		"2. ERROR in X.java (at line 10)\n" + 
+		"	K<? extends List<?>> k = (D<? extends List<?>> d) -> \"\";\n" + 
+		"	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+		"The target type of this expression is not a well formed parameterized type due to bound(s) mismatch\n" + 
+		"----------\n");
+}
 public static Class testClass() {
 	return LambdaExpressionsTest.class;
 }
