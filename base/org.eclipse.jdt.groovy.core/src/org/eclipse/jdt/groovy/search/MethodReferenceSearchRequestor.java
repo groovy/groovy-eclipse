@@ -56,16 +56,13 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
     protected final SearchRequestor requestor;
     protected final SearchParticipant participant;
 
-    protected final String name;
-    protected char[][] parameterSimpleNames;
-    protected char[][] parameterQualifications;
-    protected final int declaredParameterCount;
-    protected final String declaringQualifiedName;
+    protected final String methodName;
+    protected final String declaringTypeName;
+    protected final String[] parameterTypeNames;
 
-    protected final boolean findDeclarations;
-    protected final boolean findReferences;
-    protected static final int MAX_PARAMS = 10;
+    protected final boolean findDeclarations, findReferences;
     protected final Set<Position> acceptedPositions = new HashSet<Position>();
+    protected static final int MAX_PARAMS = 10; // indices available in each boolean array of:
     protected final Map<ClassNode, boolean[]> cachedParameterCounts = new HashMap<ClassNode, boolean[]>();
     protected final Map<ClassNode, Boolean> cachedDeclaringNameMatches = new HashMap<ClassNode, Boolean>();
 
@@ -73,11 +70,8 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
         this.requestor = requestor;
         this.participant = participant;
 
-        name = String.valueOf(pattern.selector);
-        parameterSimpleNames = pattern.parameterSimpleNames;
-        parameterQualifications = pattern.parameterQualifications;
-        declaredParameterCount = parameterSimpleNames == null ? 0 : parameterSimpleNames.length;
-
+        this.methodName = String.valueOf(pattern.selector);
+        String[] parameterTypeSignatures = getParameterTypeSignatures(pattern);
         IType declaringType = (IType) ReflectionUtils.getPrivateField(MethodPattern.class, "declaringType", pattern);
 
         char[] declaringQualifiedName = null;
@@ -87,24 +81,15 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
                 LinkedList<IMethod> methods = new LinkedList<IMethod>();
                 if (declaringType == null) declaringType = ((IMethod) pattern.focus).getDeclaringType();
                 for (IType superType : declaringType.newSupertypeHierarchy(null).getAllSupertypes(declaringType)) {
-                    next: for (IMethod superMeth : superType.getMethods()) {
-                        if (supportsOverride(superMeth) && superMeth.getElementName().equals(name)) {
-                            String[] paramTypes = superMeth.getParameterTypes();
-                            if (paramTypes.length == declaredParameterCount) {
-                                for (int i = 0; i < declaredParameterCount; i += 1) {
-                                    if (!equal(parameterSimpleNames[i], Signature.getSimpleName(Signature.toString(paramTypes[i])))) {
-                                        continue next;
-                                    }
-                                }
-                                methods.add(superMeth);
-                            }
-                        }
+                    IMethod superMeth = superType.getMethod(methodName, parameterTypeSignatures);
+                    if (superMeth.exists() && supportsOverride(superMeth)) {
+                        methods.add(superMeth);
                     }
                 }
                 if (!methods.isEmpty()) {
-                    IType decl = methods.getLast().getDeclaringType();
-                    char[] superTypeName = decl.getElementName().toCharArray();
-                    char[] packageName = decl.getPackageFragment().getElementName().toCharArray();
+                    declaringType = methods.getLast().getDeclaringType();
+                    char[] superTypeName = declaringType.getElementName().toCharArray();
+                    char[] packageName = declaringType.getPackageFragment().getElementName().toCharArray();
                     declaringQualifiedName = CharOperation.concat(packageName, superTypeName, '.');
                 }
             }
@@ -122,10 +107,75 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
                 }
             }
         }
-        this.declaringQualifiedName = String.valueOf(declaringQualifiedName);
+        declaringTypeName = String.valueOf(declaringQualifiedName);
+        parameterTypeNames = getParameterTypeNames(pattern, parameterTypeSignatures, declaringType);
 
-        findDeclarations = ((Boolean) ReflectionUtils.getPrivateField(MethodPattern.class, "findDeclarations", pattern)).booleanValue();
-        findReferences = ((Boolean) ReflectionUtils.getPrivateField(MethodPattern.class, "findReferences", pattern)).booleanValue();
+        findDeclarations = (Boolean) ReflectionUtils.getPrivateField(MethodPattern.class, "findDeclarations", pattern);
+        findReferences = (Boolean) ReflectionUtils.getPrivateField(MethodPattern.class, "findReferences", pattern);
+    }
+
+    protected static String[] getParameterTypeNames(MethodPattern pattern, String[] parameterTypeSignatures, IType declaringType) {
+        int n = parameterTypeSignatures.length;
+        String[] typeNames = new String[n];
+        for (int i = 0; i < n; i += 1) {
+            if (pattern.parameterQualifications[i] != null || isPrimitiveType(pattern.parameterSimpleNames[i])) {
+                typeNames[i] = String.valueOf(CharOperation.concat(pattern.parameterQualifications[i], pattern.parameterSimpleNames[i], '.'));
+            } else {
+                int arrayCount = Signature.getArrayCount(parameterTypeSignatures[i]);
+                try {
+                    String[][] resolved = declaringType.resolveType(String.valueOf(pattern.parameterSimpleNames[i], 0, pattern.parameterSimpleNames[i].length - (2*arrayCount)));
+                    typeNames[i] = Signature.toQualifiedName(resolved[0]);
+                    if (typeNames[i].charAt(0) == '.') { // default pkg
+                        typeNames[i] = typeNames[i].substring(1);
+                    }
+                    while (arrayCount-- > 0) {
+                        typeNames[i] += "[]";
+                    }
+                } catch (Exception e) {
+                    Util.log(e);
+                }
+            }
+        }
+        return typeNames;
+    }
+
+    protected static String[] getParameterTypeSignatures(MethodPattern pattern) {
+        char[][][] signatures = (char[][][]) ReflectionUtils.getPrivateField(MethodPattern.class, "parametersTypeSignatures", pattern);
+        int n = (signatures == null ? 0 : signatures.length);
+        String[] parameterTypeSignatures = new String[n];
+        for (int i = 0; i < n; i += 1) {
+            parameterTypeSignatures[i] = String.valueOf(signatures[i][0]);
+        }
+        return parameterTypeSignatures;
+    }
+
+    protected static boolean isPrimitiveType(char[] name) {
+        // adapted from ASTConverter
+        switch(name[0]) {
+        case 'i':
+            return (name.length >= 3 && name[1] == 'n' && name[2] == 't' && (name.length == 3 || name[3] == '['));
+        case 'l':
+            return (name.length >= 4 && name[1] == 'o' && name[2] == 'n' && name[3] == 'g' && (name.length == 4 || name[4] == '['));
+        case 'c':
+            return (name.length >= 4 && name[1] == 'h' && name[2] == 'a' && name[3] == 'r' && (name.length == 4 || name[4] == '['));
+        case 's':
+            return (name.length >= 5 && name[1] == 'h' && name[2] == 'o' && name[3] == 'r' && name[4] == 't' && (name.length == 5 || name[5] == '['));
+        case 'f':
+            return (name.length >= 5 && name[1] == 'l' && name[2] == 'o' && name[3] == 'a' && name[4] == 't' && (name.length == 5 || name[5] == '['));
+        case 'd':
+            return (name.length >= 6 && name[1] == 'o' && name[2] == 'u' && name[3] == 'b' && name[4] == 'l' && name[5] == 'e' && (name.length == 6 || name[6] == '['));
+        case 'b':
+            if (name.length >= 4 && name[1] == 'y' && name[2] == 't' && name[3] == 'e' && (name.length == 4 || name[4] == '[')) {
+                return true;
+            }
+            if (name.length >= 7 && name[1] == 'o' && name[2] == 'o' && name[3] == 'l' && name[4] == 'e' && name[5] == 'a' && name[6] == 'n' && (name.length == 7 || name[7] == '[')) {
+                return true;
+            }
+            break;
+        case 'v':
+            return (name.length == 4 && name[1] == 'o' && name[2] == 'i' && name[3] == 'd');
+        }
+        return false;
     }
 
     //--------------------------------------------------------------------------
@@ -142,16 +192,16 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
         int end = 0;
 
         if (result.declaration instanceof MethodNode) {
-            if (name.equals(((MethodNode) result.declaration).getName())) {
+            if (methodName.equals(((MethodNode) result.declaration).getName())) {
                 if (isDeclaration) {
                     start = ((MethodNode) node).getNameStart();
                     end = ((MethodNode) node).getNameEnd() + 1;
-                } else if (node.getText().equals(name)) { // guard against synthetic match like 'foo.bar' instead of 'foo.getBar()'
+                } else if (node.getText().equals(methodName)) { // guard against synthetic match like 'foo.bar' instead of 'foo.getBar()'
                     start = node.getStart();
                     end = node.getEnd();
-                } else if (node instanceof StaticMethodCallExpression && node.getText().contains("." + name + "(")) {
+                } else if (node instanceof StaticMethodCallExpression && node.getText().contains("." + methodName + "(")) {
                     start = ((StaticMethodCallExpression) node).getStart();
-                    end = start + name.length();
+                    end = start + methodName.length();
                 }
             }
         }
@@ -160,23 +210,22 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
             // don't want to double accept nodes; this could happen with field and object initializers can get pushed into multiple constructors
             Position position = new Position(start, end - start);
             if (!acceptedPositions.contains(position)) {
-                int numberOfParameters = findNumberOfParameters(node, result);
-                boolean isCompleteMatch = nameAndArgsMatch(GroovyUtils.getBaseType(result.declaringType), numberOfParameters);
-                if (isCompleteMatch) {
+                if (nameAndArgsMatch(GroovyUtils.getBaseType(result.declaringType), isDeclaration ?
+                        GroovyUtils.getParameterTypes(((MethodNode) node).getParameters()) : result.scope.getMethodCallArgumentTypes())) {
                     if (enclosingElement.getOpenable() instanceof GroovyClassFileWorkingCopy) {
                         enclosingElement = ((GroovyClassFileWorkingCopy) enclosingElement.getOpenable()).convertToBinary(enclosingElement);
                     }
 
                     SearchMatch match = null;
                     if (isDeclaration && findDeclarations) {
-                        match = new MethodDeclarationMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start, end - start, participant, enclosingElement.getResource());
+                        match = new MethodDeclarationMatch(enclosingElement, getAccuracy(result.confidence), start, end - start, participant, enclosingElement.getResource());
                     } else if (!isDeclaration && findReferences) {
-                        match = new MethodReferenceMatch(enclosingElement, getAccuracy(result.confidence, isCompleteMatch), start, end - start, isConstructorCall, false, false, false, participant, enclosingElement.getResource());
+                        match = new MethodReferenceMatch(enclosingElement, getAccuracy(result.confidence), start, end - start, isConstructorCall, false, false, false, participant, enclosingElement.getResource());
                     }
                     if (match != null) {
                         try {
-                            requestor.acceptSearchMatch(match);
                             acceptedPositions.add(position);
+                            requestor.acceptSearchMatch(match);
                         } catch (Exception e) {
                             Util.log(e, "Error reporting search match inside of " + enclosingElement + " in resource " + enclosingElement.getResource());
                         }
@@ -185,60 +234,6 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
             }
         }
         return VisitStatus.CONTINUE;
-    }
-
-    /**
-     * @return finds the number of parameters in the method reference/declaration currently being analyzed.
-     */
-    private int findNumberOfParameters(ASTNode node, TypeLookupResult result) {
-        return (node instanceof MethodNode && ((MethodNode) node).getParameters() != null)
-            ? ((MethodNode) node).getParameters().length : result.scope.getMethodCallNumberOfArguments();
-    }
-
-    /**
-     * Recursively checks the hierarchy for matching names
-     */
-    private boolean nameAndArgsMatch(ClassNode declaringType, int currentCallCount) {
-        return matchOnName(declaringType) && matchOnNumberOfParameters(declaringType, currentCallCount);
-    }
-
-    private boolean matchOnName(ClassNode declaringType) {
-        if (declaringType == null) {
-            return false;
-        }
-        String declaringTypeName = declaringType.getName();
-        if (declaringTypeName.equals("java.lang.Object") && declaringType.getDeclaredMethods(name).isEmpty()) {
-            // local variables have a declaring type of Object; don't accidentally return them as a match
-            return false;
-        }
-        if (declaringQualifiedName == null || declaringQualifiedName.equals("")) {
-            // no type specified, accept all
-            return true;
-        }
-
-        declaringTypeName = declaringTypeName.replace('$', '.');
-
-        Boolean maybeMatch = cachedDeclaringNameMatches.get(declaringType);
-        if (maybeMatch != null) {
-            return maybeMatch;
-        }
-
-        if (declaringTypeName.equals(declaringQualifiedName)) {
-            cachedDeclaringNameMatches.put(declaringType, true);
-            return true;
-        } else { // check the supers
-            maybeMatch = matchOnName(declaringType.getSuperClass());
-            if (!maybeMatch) {
-                for (ClassNode iface : declaringType.getInterfaces()) {
-                    maybeMatch = matchOnName(iface);
-                    if (maybeMatch) {
-                        break;
-                    }
-                }
-            }
-            cachedDeclaringNameMatches.put(declaringType, maybeMatch);
-            return maybeMatch;
-        }
     }
 
     /**
@@ -264,23 +259,60 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
      *  numner of parameters. false if there exists a different method with same
      *  number of arguments in current type, or true otherwise
      */
-    private boolean matchOnNumberOfParameters(ClassNode declaringType, int currentCallCount) {
-        boolean methodParamNumberMatch;
-        if (currentCallCount == declaredParameterCount) {
-            // precise match
-            methodParamNumberMatch = true;
-        } else {
-            boolean[] foundParameterNumbers = cachedParameterCounts.get(declaringType);
-            if (foundParameterNumbers == null) {
-                foundParameterNumbers = new boolean[MAX_PARAMS + 1];
-                gatherParameters(declaringType, foundParameterNumbers);
-                cachedParameterCounts.put(declaringType, foundParameterNumbers);
+    private boolean nameAndArgsMatch(ClassNode declaringType, List<ClassNode> argumentTypes) {
+        if (matchOnName(declaringType)) {
+            if (argumentTypes == null || argumentTypes.size() == parameterTypeNames.length) {
+                return true;
+            } else {
+                boolean[] foundParameterNumbers = cachedParameterCounts.get(declaringType);
+                if (foundParameterNumbers == null) {
+                    foundParameterNumbers = new boolean[MAX_PARAMS + 1];
+                    gatherParameters(declaringType, foundParameterNumbers);
+                    cachedParameterCounts.put(declaringType, foundParameterNumbers);
+                }
+                // now, if we find a method that has the same number of parameters in the call,
+                // then assume the call is for this target method (and therefore there is no match)
+                return !foundParameterNumbers[Math.min(MAX_PARAMS, argumentTypes.size())];
             }
-            // now, if we find a method that has the same number of parameters in the call,
-            // then assume the call is for this target method (and therefore there is no match)
-            methodParamNumberMatch = !foundParameterNumbers[Math.min(MAX_PARAMS, currentCallCount)];
         }
-        return methodParamNumberMatch;
+        return false;
+    }
+
+    private boolean matchOnName(ClassNode declaringType) {
+        if (declaringType == null) {
+            return false;
+        }
+        String declaringTypeName = declaringType.getName().replace('$', '.');
+        if (declaringTypeName.equals("java.lang.Object") && declaringType.getDeclaredMethods(methodName).isEmpty()) {
+            // local variables have a declaring type of Object; don't accidentally return them as a match
+            return false;
+        }
+        if (this.declaringTypeName == null || this.declaringTypeName.length() == 0) {
+            // no type specified, accept all
+            return true;
+        }
+
+        Boolean maybeMatch = cachedDeclaringNameMatches.get(declaringType);
+        if (maybeMatch != null) {
+            return maybeMatch;
+        }
+
+        if (declaringTypeName.equals(this.declaringTypeName)) {
+            cachedDeclaringNameMatches.put(declaringType, true);
+            return true;
+        } else { // check the supers
+            maybeMatch = matchOnName(declaringType.getSuperClass());
+            if (!maybeMatch) {
+                for (ClassNode iface : declaringType.getInterfaces()) {
+                    maybeMatch = matchOnName(iface);
+                    if (maybeMatch) {
+                        break;
+                    }
+                }
+            }
+            cachedDeclaringNameMatches.put(declaringType, maybeMatch);
+            return maybeMatch;
+        }
     }
 
     private void gatherParameters(ClassNode declaringType, boolean[] foundParameterNumbers) {
@@ -288,7 +320,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
             return;
         }
         declaringType = findWrappedNode(declaringType.redirect());
-        List<MethodNode> methods = declaringType.getMethods(name);
+        List<MethodNode> methods = declaringType.getMethods(methodName);
         for (MethodNode method : methods) {
             // GRECLIPSE-1233: ensure default parameters are ignored
             method = method.getOriginal();
@@ -322,19 +354,11 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
         return wrappedNode == null ? declaringType : wrappedNode;
     }
 
-    private int getAccuracy(TypeConfidence confidence, boolean isCompleteMatch) {
-        if (shouldAlwaysBeAccurate()) {
+    private int getAccuracy(TypeConfidence confidence) {
+        if (shouldAlwaysBeAccurate() || confidence == TypeConfidence.EXACT) {
             return SearchMatch.A_ACCURATE;
         }
-        if (!isCompleteMatch) {
-            return SearchMatch.A_INACCURATE;
-        }
-        switch (confidence) {
-        case EXACT:
-            return SearchMatch.A_ACCURATE;
-        default:
-            return SearchMatch.A_INACCURATE;
-        }
+        return SearchMatch.A_INACCURATE;
     }
 
     /**
@@ -343,24 +367,11 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
      * refactoring wizard of "possible matches"
      */
     private boolean shouldAlwaysBeAccurate() {
-        return requestor.getClass().getPackage().getName().indexOf("refactoring") != -1;
+        return (requestor.getClass().getPackage().getName().indexOf("refactoring") != -1);
     }
 
-    private static boolean supportsOverride(IMethod method)
-        throws JavaModelException {
+    private static boolean supportsOverride(IMethod method) throws JavaModelException {
         int flags = method.getFlags();
         return !(Flags.isPrivate(flags) || Flags.isStatic(flags));
-    }
-
-    private static boolean equal(char[] arr, CharSequence seq) {
-        if (arr.length != seq.length()) {
-            return false;
-        }
-        for (int i = 0, n = arr.length; i < n; i += 1) {
-            if (arr[i] != seq.charAt(i)) {
-                return false;
-            }
-        }
-        return true;
     }
 }
