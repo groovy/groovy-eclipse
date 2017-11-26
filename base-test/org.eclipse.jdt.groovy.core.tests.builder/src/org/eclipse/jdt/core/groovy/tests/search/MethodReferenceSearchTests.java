@@ -234,6 +234,46 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
             false, 0, "xxx");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/373
+    public void testOverloadedMethodReferences5() throws Exception {
+        doTestForTwoMethodReferences(
+            "class First {\n" +
+            "  URL doSomething(String s, URL u) { }\n" + // search for references
+            "  URL doSomething(Integer i, URL u) { }\n" +
+            "}",
+            "class Second {\n" +
+            "  First first\n" +
+            "  def other\n" +
+            "  void xxx() {\n" +
+            "    URL u = new URL('www.example.com')\n" +
+            "    first.doSomething('ciao', u)\n" + //yes
+            "    first.doSomething(1L, u)\n" + //no!
+            "    first.&doSomething\n" + //yes
+            "  }\n" +
+            "}",
+            true, 2, "doSomething"); // "true, 2" says both matches are in xxx() (aka Second.children[2])
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/373
+    public void testOverloadedMethodReferences6() throws Exception {
+        doTestForTwoMethodReferences(
+            "class First {\n" +
+            "  URL doSomething(Integer i, URL u) { }\n" + // search for references
+            "  URL doSomething(String s, URL u) { }\n" +
+            "}",
+            "class Second {\n" +
+            "  First first\n" +
+            "  def other\n" +
+            "  void xxx() {\n" +
+            "    URL u = 'www.example.com'.toURL()\n" +
+            "    first.doSomething(1, u)\n" + //yes
+            "    first.doSomething('', u)\n" + //no!
+            "    first.&doSomething\n" + //yes
+            "  }\n" +
+            "}",
+            true, 2, "doSomething");// "true, 2" says both matches are in xxx() (aka Second.children[2])
+    }
+
     @Test
     public void testMethodWithDefaultParameters1() throws Exception {
         doTestForTwoMethodReferences(

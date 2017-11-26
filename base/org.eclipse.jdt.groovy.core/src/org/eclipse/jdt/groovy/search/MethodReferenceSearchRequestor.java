@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
@@ -87,9 +88,9 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
                     }
                 }
                 if (!methods.isEmpty()) {
-                    declaringType = methods.getLast().getDeclaringType();
-                    char[] superTypeName = declaringType.getElementName().toCharArray();
-                    char[] packageName = declaringType.getPackageFragment().getElementName().toCharArray();
+                    IType type = methods.getLast().getDeclaringType();
+                    char[] superTypeName = type.getElementName().toCharArray();
+                    char[] packageName = type.getPackageFragment().getElementName().toCharArray();
                     declaringQualifiedName = CharOperation.concat(packageName, superTypeName, '.');
                 }
             }
@@ -117,24 +118,35 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
     protected static String[] getParameterTypeNames(MethodPattern pattern, String[] parameterTypeSignatures, IType declaringType) {
         int n = parameterTypeSignatures.length;
         String[] typeNames = new String[n];
-        for (int i = 0; i < n; i += 1) {
-            if (pattern.parameterQualifications[i] != null || isPrimitiveType(pattern.parameterSimpleNames[i])) {
-                typeNames[i] = String.valueOf(CharOperation.concat(pattern.parameterQualifications[i], pattern.parameterSimpleNames[i], '.'));
-            } else {
-                int arrayCount = Signature.getArrayCount(parameterTypeSignatures[i]);
-                try {
-                    String[][] resolved = declaringType.resolveType(String.valueOf(pattern.parameterSimpleNames[i], 0, pattern.parameterSimpleNames[i].length - (2*arrayCount)));
-                    typeNames[i] = Signature.toQualifiedName(resolved[0]);
-                    if (typeNames[i].charAt(0) == '.') { // default pkg
-                        typeNames[i] = typeNames[i].substring(1);
+        if (declaringType != null) // TODO: Should searches like "main(String[])", which have null declaring type, check param types?
+        try {
+            int candidates = 0;
+            if (n > 0) { // check for method overloads
+                for (IMethod m : declaringType.getMethods()) {
+                    if (equal(pattern.selector, m.getElementName()) && n == m.getNumberOfParameters()) { // TODO: What about variadic methods?
+                        candidates += 1;
                     }
-                    while (arrayCount-- > 0) {
-                        typeNames[i] += "[]";
-                    }
-                } catch (Exception e) {
-                    Util.log(e);
                 }
             }
+            if (candidates > 1) {
+                for (int i = 0; i < n; i += 1) {
+                    if (pattern.parameterQualifications[i] != null || isPrimitiveType(pattern.parameterSimpleNames[i])) {
+                        typeNames[i] = String.valueOf(CharOperation.concat(pattern.parameterQualifications[i], pattern.parameterSimpleNames[i], '.'));
+                    } else {
+                        int arrayCount = Signature.getArrayCount(parameterTypeSignatures[i]);
+                        String[][] resolved = declaringType.resolveType(String.valueOf(pattern.parameterSimpleNames[i], 0, pattern.parameterSimpleNames[i].length - (2*arrayCount)));
+                        typeNames[i] = Signature.toQualifiedName(resolved[0]);
+                        if (typeNames[i].charAt(0) == '.') { // default pkg
+                            typeNames[i] = typeNames[i].substring(1);
+                        }
+                        while (arrayCount-- > 0) {
+                            typeNames[i] += "[]";
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Util.log(e);
         }
         return typeNames;
     }
@@ -237,9 +249,10 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
     }
 
     /**
-     * When matching method references and declarations, we can't actually match
-     * on parameter types. Instead, we match on the number of parameterrs and
-     * assume that it is slightly more preceise than just matching on name.
+     * When matching method references and declarations, match on the number of
+     * parameterrs and assume that it is slightly more accurate than matching on
+     * name alone.  If parameters and arguments are equal length, check the type
+     * compatibility of each pair.
      *
      * The heuristic that is used in this method is this:
      * <ol>
@@ -254,14 +267,20 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
      *  assume that current method call is an alternative way of calling the method
      *  and return a match
      * </ol>
-     *
-     * @return true if there is a precise match between number of arguments and
-     *  numner of parameters. false if there exists a different method with same
-     *  number of arguments in current type, or true otherwise
      */
     private boolean nameAndArgsMatch(ClassNode declaringType, List<ClassNode> argumentTypes) {
         if (matchOnName(declaringType)) {
-            if (argumentTypes == null || argumentTypes.size() == parameterTypeNames.length) {
+            if (argumentTypes == null) {
+                return true;
+            }
+            if (argumentTypes.size() == parameterTypeNames.length) {
+                for (int i = 0; i < parameterTypeNames.length; i += 1) {
+                    if (parameterTypeNames[i] == null) continue; // skip check
+                    ClassNode source = argumentTypes.get(i), target = ClassHelper.makeWithoutCaching(parameterTypeNames[i]);
+                    if (Boolean.FALSE.equals(SimpleTypeLookup.isTypeCompatible(source, target))) {
+                        return false;
+                    }
+                }
                 return true;
             } else {
                 boolean[] foundParameterNumbers = cachedParameterCounts.get(declaringType);
@@ -373,5 +392,17 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
     private static boolean supportsOverride(IMethod method) throws JavaModelException {
         int flags = method.getFlags();
         return !(Flags.isPrivate(flags) || Flags.isStatic(flags));
+    }
+
+    private static boolean equal(char[] arr, CharSequence seq) {
+        if (arr.length != seq.length()) {
+            return false;
+        }
+        for (int i = 0, n = arr.length; i < n; i += 1) {
+            if (arr[i] != seq.charAt(i)) {
+                return false;
+            }
+        }
+        return true;
     }
 }
