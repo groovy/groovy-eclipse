@@ -22,6 +22,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -151,6 +152,19 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
                 pos = handleMethodReference((Expression) node, result, (enclosingElement instanceof ImportDeclaration));
             } else {
                 pos = handleConstantExpression((ConstantExpression) node);
+                try { // check for regular expression with inline comments
+                if (pos != null && pos.kind == HighlightKind.REGEXP && (Pattern.compile(node.getText()).flags() & Pattern.COMMENTS) != 0) {
+                    int idx = (contents[node.getStart()] == '$' ? 2 : 1); // start search after '/' or '$/'
+                    String pat = String.valueOf(contents, node.getStart(), node.getLength() - idx);
+                    while ((idx = pat.indexOf('#', idx)) > 0) {
+                        if (pat.charAt(idx - 1) != '\\') {
+                            int i = idx, j = (idx = pat.indexOf('\n', idx));
+                            int offset = (node.getStart() + i), length = ((j == -1 ? pat.length() : j) - i);
+                            typedPosition.add(new HighlightedTypedPosition(offset, length, HighlightKind.COMMENT));
+                        }
+                    }
+                }
+                } catch (PatternSyntaxException ignore) {}
             }
         } else if (node instanceof GStringExpression) {
             pos = handleGStringExpression((GStringExpression) node);

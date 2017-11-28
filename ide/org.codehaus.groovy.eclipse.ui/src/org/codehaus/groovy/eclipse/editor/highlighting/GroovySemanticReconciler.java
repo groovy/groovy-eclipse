@@ -61,6 +61,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     private static final String GROOVY_HIGHLIGHT_PREFERENCE             = PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR.replaceFirst("\\.color$", "");
     private static final String STRING_HIGHLIGHT_PREFERENCE             = PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR.replaceFirst("\\.color$", "");
     private static final String NUMBER_HIGHLIGHT_PREFERENCE             = "semanticHighlighting.number";
+    private static final String COMMENT_HIGHLIGHT_PREFERENCE            = "java_single_line_comment";
     private static final String KEYWORD_HIGHLIGHT_PREFERENCE            = PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR.replaceFirst("\\.color$", "");
     private static final String VARIABLE_HIGHLIGHT_PREFERENCE           = "semanticHighlighting.localVariable";
     private static final String PARAMETER_HIGHLIGHT_PREFERENCE          = "semanticHighlighting.parameterVariable";
@@ -105,6 +106,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     private Object tagKeyHighlighting;
     private Object numberRefHighlighting;
     private Object regexpRefHighlighting;
+    private Object commentRefHighlighting;
     private Object keywordRefHighlighting;
     private Object undefinedRefHighlighting;
     private Object deprecatedRefHighlighting;
@@ -131,6 +133,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         Color numberColor      = loadColorFrom(prefs, NUMBER_HIGHLIGHT_PREFERENCE);
         Color stringColor      = loadColorFrom(prefs, STRING_HIGHLIGHT_PREFERENCE);
         Color tagKeyColor      = loadColorFrom(prefs, ANNOTATION_HIGHLIGHT_PREFERENCE);
+        Color commentColor     = loadColorFrom(prefs, COMMENT_HIGHLIGHT_PREFERENCE);
         Color keywordColor     = loadColorFrom(prefs, KEYWORD_HIGHLIGHT_PREFERENCE);
         Color variableColor    = loadColorFrom(prefs, VARIABLE_HIGHLIGHT_PREFERENCE);
         Color parameterColor   = loadColorFrom(prefs, PARAMETER_HIGHLIGHT_PREFERENCE);
@@ -145,6 +148,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         tagKeyHighlighting = newHighlightingStyle(tagKeyColor, loadStyleFrom(prefs, ANNOTATION_HIGHLIGHT_PREFERENCE));
         numberRefHighlighting = newHighlightingStyle(numberColor, loadStyleFrom(prefs, NUMBER_HIGHLIGHT_PREFERENCE));
         regexpRefHighlighting = newHighlightingStyle(stringColor, SWT.ITALIC | loadStyleFrom(prefs, STRING_HIGHLIGHT_PREFERENCE));
+        commentRefHighlighting = newHighlightingStyle(commentColor);
         keywordRefHighlighting = newHighlightingStyle(keywordColor, loadStyleFrom(prefs, KEYWORD_HIGHLIGHT_PREFERENCE));
         deprecatedRefHighlighting = newHighlightingStyle(null, loadStyleFrom(prefs, DEPRECATED_HIGHLIGHT_PREFERENCE));
         undefinedRefHighlighting = newHighlightingStyle(null, TextAttribute.UNDERLINE);
@@ -165,7 +169,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     protected static Color loadColorFrom(IPreferenceStore prefs, String which) {
         RGB color;
         if (!prefs.contains(which + ".enabled") || prefs.getBoolean(which + ".enabled")) {
-            color = PreferenceConverter.getColor(prefs, which + ".color");
+            color = PreferenceConverter.getColor(prefs, which.startsWith("java_") ? which : which + ".color");
         } else {
             return null; // allow contextual default (i.e. string color)
             //color = PreferenceConverter.getColor(prefs, "java_default");
@@ -315,6 +319,9 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
             break;
         case UNKNOWN:
             style = undefinedRefHighlighting;
+            break;
+        case COMMENT:
+            style = commentRefHighlighting;
             break;
         case KEYWORD:
             style = keywordRefHighlighting;

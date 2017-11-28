@@ -1233,6 +1233,46 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testMultiLineSlashyString6() {
+        String contents = '''\
+            def regexp = $/(?x)       # enable whitespace and comments
+            ((?:19|20)\\d\\d)           # year (group 1) (non-capture alternation for century)
+            -                         # separator
+            (0[1-9]|1[012])           # month (group 2)
+            -                         # seperator
+            (0[1-9]|[12][0-9]|3[01])  # day (group 3)
+            /$
+            '''.stripIndent()
+
+        def occurrenceOf = { String str ->
+            [contents.indexOf(str), str.length()]
+        }
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('regexp'), 6, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('$/'), (contents.indexOf('/$') + 2) - contents.indexOf('$/'), REGEXP),
+            new HighlightedTypedPosition(*occurrenceOf('# enable whitespace and comments'), COMMENT),
+            new HighlightedTypedPosition(*occurrenceOf('# year (group 1) (non-capture alternation for century)'), COMMENT),
+            new HighlightedTypedPosition(*occurrenceOf('# separator'), COMMENT),
+            new HighlightedTypedPosition(*occurrenceOf('# month (group 2)'), COMMENT),
+            new HighlightedTypedPosition(*occurrenceOf('# seperator'), COMMENT),
+            new HighlightedTypedPosition(*occurrenceOf('# day (group 3)'), COMMENT))
+    }
+
+    @Test
+    void testMultiLineSlashyString7() {
+        String contents = '''\
+            def regexp = $/
+            ((?:19|20)\\d\\d) # comments are not enabled
+            /$
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('regexp'), 6, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('$/'), (contents.indexOf('/$') + 2) - contents.indexOf('$/'), REGEXP))
+    }
+
+    @Test
     void testUnknown() {
         String contents = 'unknown'
         assertHighlighting(contents,
