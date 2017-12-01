@@ -18,7 +18,6 @@ package org.codehaus.jdt.groovy.internal.compiler.ast;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -99,67 +98,6 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
         // and specific imports for BigDecimal and BigInteger
         importBindings.add(new ImportBinding(javaMathBigDecimal, false, createTypeRef(javaMathBigDecimal), null));
         importBindings.add(new ImportBinding(javaMathBigInteger, false, createTypeRef(javaMathBigInteger), null));
-
-        // TODO support static imports
-        // TODO need to refactor (code is copied in JDTResolver)
-        String extraImports = compilerOptions().groovyExtraImports;
-        if (extraImports != null) {
-            try {
-                String filename = new String(referenceContext.getFileName());
-                // may be something to do
-                StringTokenizer st = new StringTokenizer(extraImports, ";");
-                // Form would be 'com.foo.*,com.bar.MyType;.gradle=com.this.*,com.foo.Type"
-                // If there is no qualifying suffix it applies to all types
-
-                while (st.hasMoreTokens()) {
-                    String onesuffix = st.nextToken();
-                    int equals = onesuffix.indexOf('=');
-                    @SuppressWarnings("unused")
-                    boolean shouldApply = false;
-                    String imports = null;
-                    if (equals == -1) {
-                        // definetly applies
-                        shouldApply = true;
-                        imports = onesuffix;
-                    } else {
-                        // need to check the suffix
-                        String suffix = onesuffix.substring(0, equals);
-                        shouldApply = filename.endsWith(suffix);
-                        imports = onesuffix.substring(equals + 1);
-                    }
-                    StringTokenizer st2 = new StringTokenizer(imports, ",");
-                    while (st2.hasMoreTokens()) {
-                        String nextElement = st2.nextToken();
-                        // One of two forms: a.b.c.* or a.b.c.Type
-                        if (nextElement.endsWith(".*")) {
-                            char[] withoutDotStar = nextElement.substring(0, nextElement.length() - 2).toCharArray();
-                            char[][] cs = CharOperation.splitOn('.', withoutDotStar);
-                            // TODO Verify binding exists!
-                            importBindings.add(new ImportBinding(cs, true, environment.createPackage(cs), null));
-                        } else {
-                            int asIndex = nextElement.indexOf(" as ");
-                            String asName = null;
-
-                            if (asIndex != -1) {
-                                asName = nextElement.substring(asIndex + 4).trim();
-                                nextElement = nextElement.substring(0, asIndex).trim();
-                            }
-                            char[] type = nextElement.toCharArray();
-                            char[][] cs = CharOperation.splitOn('.', type);
-                            importBindings.add(new ImportBinding(cs, false, createTypeRef(cs), null));
-                            if (asName != null) {
-                                char[] asNameChars = asName.toCharArray();
-                                char[][] cs2 = new char[1][];
-                                cs2[0] = asNameChars;
-                                importBindings.add(new ImportBinding(cs2, false, createTypeRef(cs), null));
-                            }
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                new RuntimeException("Problem processing extraImports: " + extraImports, e).printStackTrace();
-            }
-        }
 
         /* See https://github.com/groovy/groovy-eclipse/issues/256 and https://issues.apache.org/jira/browse/GROOVY-8063
          *

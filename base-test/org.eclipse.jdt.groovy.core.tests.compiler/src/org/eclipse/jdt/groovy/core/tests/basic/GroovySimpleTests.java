@@ -4578,20 +4578,17 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testExtraImports() throws Exception {
+    public void testExtraImports() {
         Map<String, String> options = getCompilerOptions();
         options.put(CompilerOptions.OPTIONG_GroovyExtraImports, "com.foo.*");
-        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
-        // From: http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
         runConformTest(new String[] {
             "com/bar/Runner.groovy",
             "package com.bar\n" +
-            // "import com.foo.*\n" + // this is what needs 'simulating'
             "class Runner {\n" +
-            "  public static void main(String[]argv) {\n" +
-            "		Type.m();\n" +
-            "       print 'done'\n" +
-            "	}\n" +
+            "  public static void main(args) {\n" +
+            "    Type.m()\n" + // requires extra import
+            "    print 'done'\n" +
+            "  }\n" +
             "}\n",
 
             "com/foo/Type.groovy",
@@ -4604,258 +4601,249 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testExtraImports_exactType() throws Exception {
+    public void testExtraImports_exactType() {
         Map<String, String> options = getCompilerOptions();
         options.put(CompilerOptions.OPTIONG_GroovyExtraImports, "com.foo.Type");
-        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
-        // From: http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
         runConformTest(new String[] {
             "com/bar/Runner.groovy",
             "package com.bar\n" +
-            // "import com.foo.*\n" + // this is what needs 'simulating'
             "class Runner {\n" +
-            "  public static void main(String[]argv) {\n" +
-            "		Type.m();\n" + "       print 'done'\n" + "	}\n" +
+            "  public static void main(args) {\n" +
+            "    Type.m()\n" + // requires extra import
+            "    print 'done'\n" +
+            "  }\n" +
             "}\n",
 
             "com/foo/Type.groovy",
             "package com.foo\n" +
             "class Type {\n" +
-            "  public static void m() {}\n" + "}\n",
+            "  public static void m() {}\n" +
+            "}\n",
         },
         "done", options);
     }
 
     @Test
-    public void testExtraImports_withSuffixDotStar() throws Exception {
+    public void testExtraImports_withSuffixDotStar() {
         Map<String, String> options = getCompilerOptions();
-        options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
-                ".groovy=com.foo.*");
-        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
-        // From:
-        // http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
+        options.put(CompilerOptions.OPTIONG_GroovyExtraImports, ".groovy=com.foo.*");
         runConformTest(new String[] {
-                // @formatter:off
-                "com/bar/Runner.groovy",
-                "package com.bar\n"
-                        +
-                        // "import com.foo.*\n" + // this is what needs
-                        // 'simulating'
-                        "class Runner {\n"
-                        + "  public static void main(String[]argv) {\n"
-                        + "		Type.m();\n" + "       print 'done'\n" + "	}\n"
-                        + "}\n",
+            "com/bar/Runner.groovy",
+            "package com.bar\n" +
+            "class Runner {\n" +
+            "  public static void main(args) {\n" +
+            "    Type.m()\n" + // requires extra import
+            "    print 'done'\n" +
+            "  }\n" +
+            "}\n",
 
-                "com/foo/Type.groovy",
-                "package com.foo\n" + "class Type {\n"
-                        + "  public static void m() {}\n" + "}\n",
-        // @formatter:on
-                }, "done", options);
+            "com/foo/Type.groovy",
+            "package com.foo\n" + "class Type {\n" +
+            "  public static void m() {}\n" +
+            "}\n",
+        },
+        "done", options);
     }
 
     @Test
-    public void testExtraImports_withSuffixExactType() throws Exception {
+    public void testExtraImports_withSuffixExactType() {
         Map<String, String> options = getCompilerOptions();
         options.put(CompilerOptions.OPTIONG_GroovyExtraImports, ".groovy=com.foo.Type");
-        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
-        // From:
-        // http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
         runConformTest(new String[] {
-                // @formatter:off
-                "com/bar/Runner.groovy",
-                "package com.bar\n"
-                        +
-                        // "import com.foo.*\n" + // this is what needs
-                        // 'simulating'
-                        "class Runner {\n"
-                        + "  public static void main(String[]argv) {\n"
-                        + "		Type.m();\n" + "       print 'done'\n" + "	}\n"
-                        + "}\n",
+            "com/bar/Runner.groovy",
+            "package com.bar\n" +
+            "class Runner {\n" +
+            "  public static void main(args) {\n" +
+            "    Type.m()\n" + // requires extra import
+            "       print 'done'\n" +
+            "  }\n" +
+            "}\n",
 
-                "com/foo/Type.groovy",
-                "package com.foo\n" + "class Type {\n"
-                        + "  public static void m() {}\n" + "}\n",
-        // @formatter:on
-                }, "done", options);
+            "com/foo/Type.groovy",
+            "package com.foo\n" + "class Type {\n" +
+            "  public static void m() {}\n" +
+            "}\n",
+        },
+        "done", options);
     }
 
     @Test
-    public void testExtraImports_withSuffixExactType2() throws Exception {
+    public void testExtraImports_withSuffixExactType2() {
         Map<String, String> options = getCompilerOptions();
         options.put(CompilerOptions.OPTIONG_GroovyExtraImports, ".groovy=com.foo.Type;.groovy=com.foo.TypeB");
-        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
-        // From:
-        // http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
         runConformTest(new String[] {
-                // @formatter:off
-                "com/bar/Runner.groovy",
-                "package com.bar\n"
-                        +
-                        // "import com.foo.*\n" + // this is what needs
-                        // 'simulating'
-                        "class Runner {\n"
-                        + "  public static void main(String[]argv) {\n"
-                        + "		Type.m();\n" + "		TypeB.m();\n"
-                        + "       print 'done'\n" + "	}\n" + "}\n",
+            "com/bar/Runner.groovy",
+            "package com.bar\n" +
+            "class Runner {\n" +
+            "  public static void main(args) {\n" +
+            "    Type.m()\n" + // requires extra import
+            "    TypeB.m()\n" + // requires extra import
+            "    print 'done'\n" +
+            "  }\n" +
+            "}\n",
 
-                "com/foo/Type.groovy",
-                "package com.foo\n" + "class Type {\n"
-                        + "  public static void m() {}\n" + "}\n",
+            "com/foo/Type.groovy",
+            "package com.foo\n" + "class Type {\n" +
+            "  public static void m() {}\n" +
+            "}\n",
 
-                "com/foo/TypeB.groovy",
-                "package com.foo\n" + "class TypeB {\n"
-                        + "  public static void m() {}\n" + "}\n",
-        // @formatter:on
-                }, "done", options);
+            "com/foo/TypeB.groovy",
+            "package com.foo\n" +
+            "class TypeB {\n" +
+            "  public static void m() {}\n" +
+            "}\n",
+        },
+        "done", options);
     }
 
     @Test
-    public void testExtraImports_noneMatchingSuffix() throws Exception {
+    public void testExtraImports_nonMatchingSuffix() {
         Map<String, String> options = getCompilerOptions();
         options.put(CompilerOptions.OPTIONG_GroovyExtraImports, ".gradle=com.foo.Type");
-        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
-        // From:
-        // http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
-        runConformTest(new String[] {
-                // @formatter:off
-                "com/bar/Runner.groovy",
-                "package com.bar\n"
-                        +
-                        // "import com.foo.*\n" + // this is what needs
-                        // 'simulating'
-                        "class Runner {\n"
-                        + "  public static void main(String[]argv) {\n"
-                        + "		Type.m();\n" + "       print 'done'\n" + "	}\n"
-                        + "}\n",
+        runNegativeTest(new String[] {
+            "com/bar/Runner.groovy",
+            "package com.bar\n" +
+            "class Runner {\n" +
+            "  public static void main(args) {\n" +
+            "    Type.m()\n" + // requires extra import
+            "    print 'done'\n" +
+            "  }\n" +
+            "}\n",
 
-                "com/foo/Type.groovy",
-                "package com.foo\n" + "class Type {\n"
-                        + "  public static void m() {}\n" + "}\n",
-        // @formatter:on
-                }, "done", options);
+            "com/foo/Type.groovy",
+            "package com.foo\n" + "class Type {\n" +
+            "  public static void m() {}\n" +
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in com\\bar\\Runner.groovy (at line 4)\n" +
+        "\tType.m()\n" +
+        "\t^^^^\n" +
+        "Groovy:Apparent variable 'Type' was found in a static scope but doesn't refer to a local variable, static field or class. Possible causes:\n" +
+        "----------\n",
+        options);
     }
 
     @Test
-    public void testExtraImports_typeDoesNotExist() throws Exception {
+    public void testExtraImports_typeDoesNotExist() {
         Map<String, String> options = getCompilerOptions();
         options.put(CompilerOptions.OPTIONG_GroovyExtraImports, ".groovy=com.foo.Type2");
-        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
-        // From:
-        // http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
         runNegativeTest(new String[] {
-                // @formatter:off
-                "com/bar/Runner.groovy",
-                "package com.bar\n"
-                        +
-                        // "import com.foo.*\n" + // this is what needs
-                        // 'simulating'
-                        "class Runner {\n"
-                        + "  public static void main(String[]argv) {\n"
-                        + "		Type.m();\n" + "       print 'done'\n" + "	}\n"
-                        + "}\n",
+            "com/bar/Runner.groovy",
+            "package com.bar\n" +
+            "class Runner {\n" +
+            "  public static void main(args) {\n" +
+            "    Type.m()\n" + // requires extra import
+            "    print 'done'\n" +
+            "  }\n" +
+            "}\n",
 
-                "com/foo/Type.groovy",
-                "package com.foo\n" + "class Type {\n"
-                        + "  public static void m() {}\n" + "}\n",
-        // @formatter:on
-                },
-                "----------\n"
-                        + "1. ERROR in com\\bar\\Runner.groovy (at line 4)\n"
-                        + "\tType.m();\n"
-                        + "\t^^^^\n"
-                        + "Groovy:Apparent variable \'Type\' was found in a static scope but doesn\'t refer to a local variable, static field or class. Possible causes:\n"
-                        + "----------\n", options);
+            "com/foo/Type.groovy",
+            "package com.foo\n" +
+            "class Type {\n" +
+            "  public static void m() {}\n" +
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in com\\bar\\Runner.groovy (at line 1)\n" +
+        "\tpackage com.bar\n" +
+        "\t^\n" +
+        "Groovy:unable to resolve class com.foo.Type2\n" +
+        "----------\n" +
+        "2. ERROR in com\\bar\\Runner.groovy (at line 4)\n" +
+        "\tType.m()\n" +
+        "\t^^^^\n" +
+        "Groovy:Apparent variable \'Type\' was found in a static scope but doesn\'t refer to a local variable, static field or class. Possible causes:\n" +
+        "----------\n" +
+        "----------\n" +
+        "1. ERROR in com\\foo\\Type.groovy (at line 1)\n" +
+        "\tpackage com.foo\n" +
+        "\t^\n" +
+        "Groovy:unable to resolve class com.foo.Type2\n" +
+        "----------\n",
+        options);
     }
 
     @Test
-    public void testExtraImports_packageDoesNotExist() throws Exception {
+    public void testExtraImports_packageDoesNotExist() {
         Map<String, String> options = getCompilerOptions();
-        options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
-                ".groovy=com.madeup.*");
-        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
-        // From:
-        // http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
+        options.put(CompilerOptions.OPTIONG_GroovyExtraImports, ".groovy=com.madeup.*");
         runNegativeTest(new String[] {
-                // @formatter:off
-                "com/bar/Runner.groovy",
-                "package com.bar\n"
-                        +
-                        // "import com.foo.*\n" + // this is what needs
-                        // 'simulating'
-                        "class Runner {\n"
-                        + "  public static void main(String[]argv) {\n"
-                        + "		Type.m();\n" + "       print 'done'\n" + "	}\n"
-                        + "}\n",
+            "com/bar/Runner.groovy",
+            "package com.bar\n" +
+            "class Runner {\n" +
+            "  public static void main(args) {\n" +
+            "    Type.m()\n" + // requires extra import
+            "    print 'done'\n" +
+            "  }\n" +
+            "}\n",
 
-                "com/foo/Type.groovy",
-                "package com.foo\n" + "class Type {\n"
-                        + "  public static void m() {}\n" + "}\n",
-        // @formatter:on
-                },
-                "----------\n"
-                        + "1. ERROR in com\\bar\\Runner.groovy (at line 4)\n"
-                        + "\tType.m();\n"
-                        + "\t^^^^\n"
-                        + "Groovy:Apparent variable \'Type\' was found in a static scope but doesn\'t refer to a local variable, static field or class. Possible causes:\n"
-                        + "----------\n", options);
+            "com/foo/Type.groovy",
+            "package com.foo\n" +
+            "class Type {\n" +
+            "  public static void m() {}\n" +
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in com\\bar\\Runner.groovy (at line 4)\n" +
+        "\tType.m()\n" +
+        "\t^^^^\n" +
+        "Groovy:Apparent variable \'Type\' was found in a static scope but doesn\'t refer to a local variable, static field or class. Possible causes:\n" +
+        "----------\n",
+        options);
     }
 
     @Test
-    public void testExtraImports_multiple() throws Exception {
+    public void testExtraImports_multiple() {
         Map<String, String> options = getCompilerOptions();
-        options.put(CompilerOptions.OPTIONG_GroovyExtraImports,
-                ".groovy=com.foo.Type,com.foo.Type2");
-        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
-        // From:
-        // http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
+        options.put(CompilerOptions.OPTIONG_GroovyExtraImports, ".groovy=com.foo.Type,com.foo.Type2");
         runConformTest(new String[] {
-                // @formatter:off
-                "com/bar/Runner.groovy",
-                "package com.bar\n"
-                        +
-                        // "import com.foo.*\n" + // this is what needs
-                        // 'simulating'
-                        "class Runner {\n"
-                        + "  public static void main(String[]argv) {\n"
-                        + "		Type.m();\n" + "		Type2.m();\n"
-                        + "       print 'done'\n" + "	}\n"
-                        + "}\n",
+            "com/bar/Runner.groovy",
+            "package com.bar\n" +
+            "class Runner {\n" +
+            "  public static void main(args) {\n" +
+            "    Type.m()\n" + // requires extra import
+            "    Type2.m()\n" + // requires extra import
+            "    print 'done'\n" +
+            "  }\n" +
+            "}\n",
 
-                "com/foo/Type.groovy",
-                "package com.foo\n" + "class Type {\n"
-                        + "  public static void m() {}\n" + "}\n",
-                "com/foo/Type2.groovy",
-                "package com.foo\n" + "class Type2 {\n"
-                        + "  public static void m() {}\n" + "}\n",
-        // @formatter:on
-                }, "done", options);
+            "com/foo/Type.groovy",
+            "package com.foo\n" +
+            "class Type {\n" +
+                "  public static void m() {}\n" +
+            "}\n",
+
+            "com/foo/Type2.groovy",
+            "package com.foo\n" +
+            "class Type2 {\n" +
+            "  public static void m() {}\n" +
+            "}\n",
+        },
+        "done", options);
     }
 
     @Test
-    public void testExtraImports_multipleSuffixes() throws Exception {
+    public void testExtraImports_multipleSuffixes() {
         Map<String, String> options = getCompilerOptions();
         options.put(CompilerOptions.OPTIONG_GroovyExtraImports, "com.madeup.*;.groovy=com.foo.Type");
-        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
-        // From:
-        // http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
         runConformTest(new String[] {
-                // @formatter:off
-                "com/bar/Runner.groovy",
-                "package com.bar\n"
-                        +
-                        // "import com.foo.*\n" + // this is what needs
-                        // 'simulating'
-                        "class Runner {\n"
-                        + "  public static void main(String[]argv) {\n"
-                        + "		Type.m();\n"
-                        + "       print 'done'\n" + "	}\n" + "}\n",
+            "com/bar/Runner.groovy",
+            "package com.bar\n" +
+            "class Runner {\n" +
+            "  public static void main(args) {\n" +
+            "    Type.m()\n" + // requires extra import
+            "    print 'done'\n" +
+            "  }\n" +
+            "}\n",
 
-                "com/foo/Type.groovy",
-                "package com.foo\n" + "class Type {\n"
-                        + "  public static void m() {}\n" + "}\n",
-
-        // @formatter:on
-                }, "done", options);
+            "com/foo/Type.groovy",
+            "package com.foo\n" +
+            "class Type {\n" +
+                "  public static void m() {}\n" +
+            "}\n",
+        },
+        "done", options);
     }
 
     @Test // Variable arguments

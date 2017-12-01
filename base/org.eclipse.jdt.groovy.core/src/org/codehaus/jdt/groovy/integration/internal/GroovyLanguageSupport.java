@@ -28,6 +28,8 @@ import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.customizers.CompilationCustomizer;
+import org.codehaus.groovy.control.customizers.ImportCustomizer;
+import org.codehaus.groovy.control.customizers.SourceAwareCustomizer;
 import org.codehaus.jdt.groovy.integration.EventHandler;
 import org.codehaus.jdt.groovy.integration.ISupplementalIndexer;
 import org.codehaus.jdt.groovy.integration.LanguageSupport;
@@ -180,6 +182,36 @@ public class GroovyLanguageSupport implements LanguageSupport {
                 }
             } finally {
                 Thread.currentThread().setContextClassLoader(loader);
+            }
+        }
+
+        if (options.groovyExtraImports != null) {
+            // parse "com.foo.*;com.foo.Bar;.groovy=com.foo.*,com.foo.Bar"
+            for (String extraImports : options.groovyExtraImports.split(";")) {
+                ImportCustomizer customizer = new ImportCustomizer();
+                String[] parts = extraImports.split("=");
+                if (parts.length > 1) {
+                    extraImports = parts[1];
+                    final String extension = parts[0].trim().substring(1);
+                    SourceAwareCustomizer sac = new SourceAwareCustomizer(customizer);
+                    sac.setExtensionValidator(new groovy.lang.Closure<Boolean>(config) {
+                        @Override public Boolean call(Object... args) {
+                            return Boolean.valueOf(extension.equals(args[0].toString()));
+                        }
+                    });
+                    config.addCompilationCustomizers(sac);
+                } else {
+                    config.addCompilationCustomizers(customizer);
+                }
+
+                for (String extraImport : extraImports.split(",")) {
+                    extraImport = extraImport.trim();
+                    if (!extraImport.endsWith(".*")) {
+                        customizer.addImports(extraImport);
+                    } else {
+                        customizer.addStarImports(extraImport.substring(0, extraImport.length() - 2));
+                    }
+                }
             }
         }
 
