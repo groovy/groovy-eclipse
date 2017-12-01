@@ -88,31 +88,22 @@
   <setupTask
       xsi:type="setup.p2:P2Task">
     <requirement
-        name="org.codehaus.groovy18.feature.feature.group"/>
-    <requirement
-        name="org.codehaus.groovy20.feature.feature.group"/>
-    <requirement
         name="org.codehaus.groovy21.feature.feature.group"/>
     <requirement
-        name="org.codehaus.groovy22.feature.feature.group"/>
-    <requirement
-        name="org.codehaus.groovy23.feature.feature.group"/>
-    <requirement
-        name="org.codehaus.groovy24.feature.feature.group"/>
-    <requirement
-        name="org.codehaus.groovy25.feature.feature.group"/>
+        name="org.codehaus.groovy.jdt.patch.feature.group"/>
     <requirement
         name="org.codehaus.groovy.eclipse.feature.feature.group"/>
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <requirement
-        name="org.codehaus.groovy.jdt.patch.feature.group"/>
-    <requirement
         name="org.eclipse.pde.api.tools.ee.feature.feature.group"/>
     <requirement
-        name="org.eclipse.test.feature.feature.group"/>
+        name="org.eclipse.test.feature.group"/>
+    <!-- TODO: URLs must vary by target platform! -->
     <repository
-        url="http://dist.springsource.org/snapshot/GRECLIPSE/e4.7/"/><!-- TODO: URL must vary by target platform! -->
+        url="http://download.eclipse.org/eclipse/updates/4.7"/>
+    <repository
+        url="http://dist.springsource.org/snapshot/GRECLIPSE/e4.7"/>
     <description>Install the tools needed in the IDE to work with the source code for ${scope.project.label}</description>
   </setupTask>
   <setupTask
