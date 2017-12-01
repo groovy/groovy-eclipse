@@ -21,10 +21,13 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import groovy.lang.GroovyClassLoader;
+
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.control.customizers.CompilationCustomizer;
 import org.codehaus.jdt.groovy.integration.EventHandler;
 import org.codehaus.jdt.groovy.integration.ISupplementalIndexer;
 import org.codehaus.jdt.groovy.integration.LanguageSupport;
@@ -86,28 +89,22 @@ import org.eclipse.jdt.internal.core.util.Util;
  */
 public class GroovyLanguageSupport implements LanguageSupport {
 
-    public Parser getParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter,
-            boolean parseLiteralExpressionsAsConstants, int variant) {
+    public Parser getParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean parseLiteralExpressionsAsConstants, int variant) {
         if (variant == 1) {
             return new MultiplexingParser(requestor, compilerOptions, problemReporter, parseLiteralExpressionsAsConstants);
         } else if (variant == 2) {
-            return new MultiplexingCommentRecorderParser(requestor, compilerOptions, problemReporter,
-                    parseLiteralExpressionsAsConstants);
+            return new MultiplexingCommentRecorderParser(requestor, compilerOptions, problemReporter, parseLiteralExpressionsAsConstants);
         } else { // (variant == 3) { similar to '2' but does not allow transforms
-            return new MultiplexingCommentRecorderParser(requestor, compilerOptions, problemReporter,
-                    parseLiteralExpressionsAsConstants, false);
+            return new MultiplexingCommentRecorderParser(requestor, compilerOptions, problemReporter, parseLiteralExpressionsAsConstants, false);
         }
     }
 
-    public CompletionParser getCompletionParser(CompilerOptions compilerOptions, ProblemReporter problemReposrter,
-            boolean storeExtraSourceEnds, IProgressMonitor monitor) {
+    public CompletionParser getCompletionParser(CompilerOptions compilerOptions, ProblemReporter problemReposrter, boolean storeExtraSourceEnds, IProgressMonitor monitor) {
         return new MultiplexingCompletionParser(compilerOptions, problemReposrter, storeExtraSourceEnds, monitor);
     }
 
-    public IndexingParser getIndexingParser(ISourceElementRequestor requestor, IProblemFactory problemFactory,
-            CompilerOptions options, boolean reportLocalDeclarations, boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
-        return new MultiplexingIndexingParser(requestor, problemFactory, options, reportLocalDeclarations, optimizeStringLiterals,
-                useSourceJavadocParser);
+    public IndexingParser getIndexingParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations, boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
+        return new MultiplexingIndexingParser(requestor, problemFactory, options, reportLocalDeclarations, optimizeStringLiterals, useSourceJavadocParser);
     }
 
     public MatchLocatorParser getMatchLocatorParserParser(ProblemReporter problemReporter, MatchLocator locator) {
@@ -118,16 +115,12 @@ public class GroovyLanguageSupport implements LanguageSupport {
         return new MultiplexingImportMatchLocatorParser(problemReporter, locator);
     }
 
-    public SourceElementParser getSourceElementParser(ISourceElementRequestor requestor, IProblemFactory problemFactory,
-            CompilerOptions options, boolean reportLocalDeclarations, boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
-        ProblemReporter problemReporter = new ProblemReporter(DefaultErrorHandlingPolicies.proceedWithAllProblems(), options,
-                new DefaultProblemFactory());
-        return new MultiplexingSourceElementRequestorParser(problemReporter, requestor, problemFactory, options,
-                reportLocalDeclarations, optimizeStringLiterals);
+    public SourceElementParser getSourceElementParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations, boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
+        ProblemReporter problemReporter = new ProblemReporter(DefaultErrorHandlingPolicies.proceedWithAllProblems(), options, new DefaultProblemFactory());
+        return new MultiplexingSourceElementRequestorParser(problemReporter, requestor, problemFactory, options, reportLocalDeclarations, optimizeStringLiterals);
     }
 
     public CompilationUnit newCompilationUnit(PackageFragment parent, String name, WorkingCopyOwner owner) {
-        // should use a content type here
         if (ContentTypeUtils.isGroovyLikeFileName(name)) {
             return new GroovyCompilationUnit(parent, name, owner);
         } else {
@@ -137,16 +130,12 @@ public class GroovyLanguageSupport implements LanguageSupport {
 
     public CompilationUnitDeclaration newCompilationUnitDeclaration(ICompilationUnit unit, ProblemReporter problemReporter, CompilationResult compilationResult, int sourceLength) {
         if (ContentTypeUtils.isGroovyLikeFileName(compilationResult.getFileName())) {
-            CompilerConfiguration groovyCompilerConfig = new CompilerConfiguration();
-            if ((problemReporter.options.groovyFlags & CompilerUtils.InvokeDynamic) != 0) {
-                groovyCompilerConfig.getOptimizationOptions().put(/*CompilerConfiguration.INVOKEDYNAMIC*/"indy", Boolean.TRUE);
-            }
+            GroovyClassLoader classLoader = null; // TODO: missing the classloader configuration (eg. to include transformers)
+            CompilerConfiguration compilerConfig = newCompilerConfiguration(problemReporter.options, classLoader);
+            ErrorCollector errorCollector = new GroovyErrorCollectorForJDT(compilerConfig);
+            SourceUnit groovySourceUnit = new SourceUnit(String.valueOf(compilationResult.getFileName()), String.valueOf(unit.getContents()), compilerConfig, classLoader, errorCollector);
 
-            ErrorCollector errorCollector = new GroovyErrorCollectorForJDT(groovyCompilerConfig);
-            SourceUnit groovySourceUnit = new SourceUnit(new String(compilationResult.getFileName()), new String(unit.getContents()), groovyCompilerConfig, null, errorCollector);
-
-            // FIXASC missing the classloader configuration (eg. to include transformers)
-            org.codehaus.groovy.control.CompilationUnit groovyCU = new org.codehaus.groovy.control.CompilationUnit(groovyCompilerConfig);
+            org.codehaus.groovy.control.CompilationUnit groovyCU = new org.codehaus.groovy.control.CompilationUnit(compilerConfig);
             JDTResolver resolver = new JDTResolver(groovyCU);
             groovyCU.setResolveVisitor(resolver);
 
@@ -170,6 +159,35 @@ public class GroovyLanguageSupport implements LanguageSupport {
         } else {
             return new CompilationUnitDeclaration(problemReporter, compilationResult, sourceLength);
         }
+    }
+
+    public static CompilerConfiguration newCompilerConfiguration(CompilerOptions options, GroovyClassLoader transformLoader) {
+        CompilerConfiguration config = new CompilerConfiguration();
+
+        if (options.groovyCustomizerClassesList != null && transformLoader != null) {
+            ClassLoader loader = Thread.currentThread().getContextClassLoader();
+            try { Thread.currentThread().setContextClassLoader(transformLoader);
+
+                for (String className : options.groovyCustomizerClassesList.split(",")) {
+                    try {
+                        Class<?> classInst = transformLoader.loadClass(className);
+                        CompilationCustomizer cc = (CompilationCustomizer) classInst.newInstance();
+
+                        config.addCompilationCustomizers(cc);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            } finally {
+                Thread.currentThread().setContextClassLoader(loader);
+            }
+        }
+
+        if ((options.groovyFlags & CompilerUtils.InvokeDynamic) != 0) {
+            config.getOptimizationOptions().put(/*CompilerConfiguration.INVOKEDYNAMIC*/"indy", Boolean.TRUE);
+        }
+
+        return config;
     }
 
     public boolean isInterestingProject(IProject project) {

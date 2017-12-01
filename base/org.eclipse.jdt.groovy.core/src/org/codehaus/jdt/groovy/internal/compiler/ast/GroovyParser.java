@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarFile;
 
@@ -38,10 +37,10 @@ import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.SourceUnit;
-import org.codehaus.groovy.control.customizers.CompilationCustomizer;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
+import org.codehaus.jdt.groovy.integration.internal.GroovyLanguageSupport;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
@@ -463,35 +462,7 @@ public class GroovyParser {
     }
 
     private CompilationUnit makeCompilationUnit(GroovyClassLoader loader, GroovyClassLoader transformLoader, boolean isReconcile, boolean allowTransforms) {
-        CompilerConfiguration compilerConfiguration = new CompilerConfiguration();
-
-        if ((compilerOptions.groovyFlags & CompilerUtils.InvokeDynamic) != 0) {
-            compilerConfiguration.getOptimizationOptions().put(/*CompilerConfiguration.INVOKEDYNAMIC*/"indy", Boolean.TRUE);
-        }
-
-        if (compilerOptions.groovyCustomizerClassesList != null && transformLoader != null) {
-            List<CompilationCustomizer> customizers = new ArrayList<CompilationCustomizer>();
-            if (loader != null) {
-                StringTokenizer tokenizer = new StringTokenizer(compilerOptions.groovyCustomizerClassesList, ",");
-                ClassLoader savedLoader = Thread.currentThread().getContextClassLoader();
-                try {
-                    Thread.currentThread().setContextClassLoader(transformLoader);
-                    while (tokenizer.hasMoreTokens()) {
-                        String classname = tokenizer.nextToken();
-                        try {
-                            Class<?> clazz = transformLoader.loadClass(classname);
-                            CompilationCustomizer cc = (CompilationCustomizer) clazz.newInstance();
-                            customizers.add(cc);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                } finally {
-                    Thread.currentThread().setContextClassLoader(savedLoader);
-                }
-                compilerConfiguration.addCompilationCustomizers(customizers.toArray(new CompilationCustomizer[customizers.size()]));
-            }
-        }
+        CompilerConfiguration compilerConfiguration = GroovyLanguageSupport.newCompilerConfiguration(compilerOptions, transformLoader);
 
         CompilationUnit cu = new CompilationUnit(
             compilerConfiguration,
@@ -505,7 +476,7 @@ public class GroovyParser {
         cu.setResolveVisitor(resolver);
         cu.tweak(isReconcile);
 
-        // Grails add
+        // GRAILS add
         if (allowTransforms && transformLoader != null && compilerOptions != null && (compilerOptions.groovyFlags & CompilerUtils.IsGrails) != 0) {
             cu.addPhaseOperation(new GrailsInjector(transformLoader), Phases.CANONICALIZATION);
             new Grails20TestSupport(compilerOptions, transformLoader).addGrailsTestCompilerCustomizers(cu);
@@ -527,7 +498,7 @@ public class GroovyParser {
                 // Ignore... probably means its not grails 1.4 project
             }
         }
-        // Grails end
+        // GRAILS end
 
         return cu;
     }
