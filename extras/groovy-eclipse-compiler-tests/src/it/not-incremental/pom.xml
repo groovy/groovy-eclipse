@@ -23,26 +23,21 @@
       <version>@groovy.all.version@</version>
     </dependency>
     <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <version>1.2.16</version>
-      <scope>runtime</scope>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.12</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
   <build>
     <plugins>
       <plugin>
-        <groupId>org.codehaus.groovy</groupId>
-        <artifactId>groovy-eclipse-compiler</artifactId>
-        <version>@project.version@</version>
-        <extensions>true</extensions>
-      </plugin>
-      <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>@maven-compiler-plugin.version@</version>
         <configuration>
           <compilerId>groovy-eclipse-compiler</compilerId>
+          <useIncrementalCompilation>false</useIncrementalCompilation>
         </configuration>
         <dependencies>
           <dependency>

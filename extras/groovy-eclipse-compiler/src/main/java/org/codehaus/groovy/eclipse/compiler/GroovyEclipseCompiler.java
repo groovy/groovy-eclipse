@@ -31,7 +31,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
@@ -51,8 +50,6 @@ import org.codehaus.plexus.compiler.util.scan.mapping.SuffixMapping;
 import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.Os;
-import org.codehaus.plexus.util.StringUtils;
-import org.codehaus.plexus.util.cli.CommandLineException;
 import org.codehaus.plexus.util.cli.CommandLineUtils;
 import org.codehaus.plexus.util.cli.Commandline;
 
@@ -68,16 +65,22 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
 
     private static final String PROB_SEPARATOR = "----------\n";
 
-    private static final String JAVA_AGENT_CLASS_PARAM_NAME = "-javaAgentClass";
-
-    private String javaAgentClass = "";
-
-    boolean verbose;
-
     public GroovyEclipseCompiler() {
         // here is a bit of a hack. maven only wants a single file extension
         // for sources, so we pass it "". Later, we must recalculate for real.
         super(CompilerOutputStyle.ONE_OUTPUT_FILE_PER_INPUT_FILE, "", ".class", null);
+    }
+
+    private boolean verbose;
+
+    private String javaAgentClass = "";
+
+    public String getJavaAgentClass() {
+        return javaAgentClass;
+    }
+
+    public void setJavaAgentClass(String javaAgentClass) {
+        this.javaAgentClass = javaAgentClass;
     }
 
     @Override
@@ -109,8 +112,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         boolean success;
         if (config.isFork()) {
             String executable = config.getExecutable();
-
-            if (StringUtils.isEmpty(executable)) {
+            if (isBlank(executable)) {
                 try {
                     executable = getJavaExecutable();
                 } catch (IOException e) {
@@ -181,10 +183,6 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         return staleSources;
     }
 
-    private static boolean startsWithHyphen(Object key) {
-        return null != key && String.class.isInstance(key) && ((String) key).startsWith("-");
-    }
-
     private CompilerMessage formatResult(boolean result, int globalErrorsCount, int globalWarningsCount) {
         if (result) {
             return new CompilerMessage("Success!", Kind.NOTE);
@@ -205,24 +203,22 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
     }
 
     private Map<String,String> composeSourceFiles(File[] sourceFiles) {
-        Map<String,String> sources = new DeduplicatingHashMap<String,String>(getLogger(), sourceFiles.length);
-        for (int i = 0; i < sourceFiles.length; i++) {
-            sources.put(sourceFiles[i].getPath(), null);
+        Map<String, String> sources = new DeduplicatingHashMap<String, String>(getLogger(), sourceFiles.length);
+        for (File sourceFile : sourceFiles) {
+            sources.put(sourceFile.getPath(), null);
         }
         return sources;
     }
 
     public String[] createCommandLine(CompilerConfiguration config) throws CompilerException {
         File destinationDir = new File(config.getOutputLocation());
-
         if (!destinationDir.exists()) {
             destinationDir.mkdirs();
         }
 
         // adds src/main/groovy and src/test/groovy if exksts not already added
         File workingDirectory = config.getWorkingDirectory();
-        // assume dest dir for main is in target/classes and for test is in
-        // target/test-classes
+        // assume dest dir for main is in target/classes and for test is in target/test-classes
         // There must be a more robust way of doing this.
         if (destinationDir.getName().equals("classes")) {
             File srcMainGroovy = new File(workingDirectory, "src/main/groovy");
@@ -237,37 +233,35 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                 config.addSourceLocation(srcTestGroovy.getAbsolutePath());
             }
         }
-        // recalculate stale files since they were not properly calculated in
-        // super
-        File[] sourceFiles = recalculateStaleFiles(config);
 
+        // recalculate stale files since they were not properly calculated in super
+        File[] sourceFiles = recalculateStaleFiles(config);
         if (sourceFiles.length == 0) {
             return new String[0];
         }
 
         getLogger().info("Using Groovy-Eclipse compiler to compile both Java and Groovy files");
-        getLogger().debug("Compiling " + sourceFiles.length + " " + "source file" + (sourceFiles.length == 1 ? "" : "s") + " to " + destinationDir.getAbsolutePath());
+        getLogger().debug(String.format("Compiling %d source file%s to %s", sourceFiles.length, (sourceFiles.length == 1 ? "" : "s"), destinationDir.getAbsolutePath()));
 
-        // intentionally using DeduplicatingHashMap to preserve order and Map to deduplicate values
-        // See https://jira.codehaus.org/browse/GRECLIPSE-1659
-        Map<String,String> args = new DeduplicatingHashMap<String,String>(getLogger());
 
-        String cp = super.getPathString(config.getClasspathEntries());
+        Map<String, String> args = new DeduplicatingHashMap<String, String>(getLogger());
+
+        String cp = getPathString(config.getClasspathEntries());
         verbose = config.isVerbose();
         if (verbose) {
             getLogger().info("Classpath: " + cp);
         }
-        if (cp.length() > 0) {
-            args.put("-cp", cp);
+        if (isNotBlank(cp)) {
+            args.put("-cp", cp.trim());
         }
 
-        if (config.getOutputLocation() != null && config.getOutputLocation().length() > 0) {
-            args.put("-d", config.getOutputLocation());
+        if (isNotBlank(config.getOutputLocation())) {
+            args.put("-d", config.getOutputLocation().trim());
         }
 
         if (config.isDebug()) {
-            if (config.getDebugLevel() != null && config.getDebugLevel().trim().length() > 0) {
-                args.put("-g:" + config.getDebugLevel(), null);
+            if (isNotBlank(config.getDebugLevel())) {
+                args.put("-g:" + config.getDebugLevel().trim(), null);
             } else {
                 args.put("-g", null);
             }
@@ -283,16 +277,15 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             args.put("-s", config.getGeneratedSourcesDirectory().getAbsolutePath());
         }
 
-        // change default to 1.5
         String source = config.getSourceVersion();
-        if (source != null && source.length() > 0) {
-            args.put("-source", source);
+        if (isNotBlank(source)) {
+            args.put("-source", source.trim());
         } else {
             args.put("-source", "1.5");
         }
         String target = config.getTargetVersion();
-        if (target != null && target.length() > 0) {
-            args.put("-target", target);
+        if (isNotBlank(target)) {
+            args.put("-target", target.trim());
         } else {
             args.put("-target", "1.5");
         }
@@ -307,8 +300,8 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         if (config.getAnnotationProcessors() != null) {
             StringBuilder procArg = new StringBuilder();
             for (String proc : config.getAnnotationProcessors()) {
-                if (proc != null && proc.trim().length() > 0) {
-                    procArg.append(proc);
+                if (isNotBlank(proc)) {
+                    procArg.append(proc.trim());
                     procArg.append(",");
                 }
             }
@@ -323,35 +316,21 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             args.put("-verbose", null);
         }
 
-        if (config.getSourceEncoding() != null) {
-            args.put("-encoding", config.getSourceEncoding());
+        if (isNotBlank(config.getSourceEncoding())) {
+            args.put("-encoding", config.getSourceEncoding().trim());
         }
 
-        for (Entry<String, String> entry : config.getCustomCompilerArgumentsAsMap().entrySet()) {
-
+        for (Map.Entry<String, String> entry : config.getCustomCompilerArgumentsAsMap().entrySet()) {
             String key = entry.getKey();
             if (startsWithHyphen(key)) {
-                if (JAVA_AGENT_CLASS_PARAM_NAME.equals(key)) {
+                if ("-javaAgentClass".equals(key)) {
                     setJavaAgentClass(entry.getValue());
-                    // do not add the custom java agent arg because it is not
-                    // expected by groovy-eclipse compiler
-                    continue;
                 } else {
-                    // don't add a "-" if the arg
-                    // already has one
                     args.put(key, entry.getValue());
                 }
-            } else if (key != null && !key.equals("org.osgi.framework.system.packages")) {
-                // See https://jira.codehaus.org/browse/GRECLIPSE-1418 ignore
-                // the system packages option
-                /*
-                 * Not sure what the possible range of usage looks like but I
-                 * don't think this should allow for null keys? "-null" probably
-                 * isn't going to play nicely with any compiler?
-                 */
+            } else if (!"org.osgi.framework.system.packages".equals(key)) { // See https://jira.codehaus.org/browse/GRECLIPSE-1418 ignore the system packages option
                 args.put("-" + key, entry.getValue());
             }
-
         }
 
         args.putAll(composeSourceFiles(sourceFiles));
@@ -364,24 +343,14 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         return argsList;
     }
 
-    /**
-     * Compile the java sources in a external process, calling an external
-     * executable, like javac.
-     *
-     * @param config compiler configuration
-     * @param executable name of the executable to launch
-     * @param args arguments for the executable launched
-     * @return List of CompilerError objects with the errors encountered.
-     */
-    private boolean compileOutOfProcess(CompilerConfiguration config, String executable, String groovyEclipseLocation, String[] args, List<CompilerMessage> messages)
-            throws CompilerException {
+    private boolean compileOutOfProcess(CompilerConfiguration config, String executable, String groovyEclipseLocation, String[] args, List<CompilerMessage> messages) throws CompilerException {
         Commandline cli = new Commandline();
         cli.setWorkingDirectory(config.getWorkingDirectory().getAbsolutePath());
         cli.setExecutable(executable);
 
         try {
-            // we need to setup any javaagent before the -jar flag
-            if (!StringUtils.isEmpty(javaAgentClass)) {
+            // set any javaagent before the -jar flag
+            if (isNotBlank(javaAgentClass)) {
                 cli.addArguments(new String[] {"-javaagent:" + getAdditionnalJavaAgentLocation()});
             } else {
                 getLogger().debug("No javaAgentClass seems to be set");
@@ -392,22 +361,19 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             File argumentsFile = createFileWithArguments(args, config.getOutputLocation());
             cli.addArguments(new String[] {"@" + argumentsFile.getCanonicalPath().replace(File.separatorChar, '/')});
 
-            if (!StringUtils.isEmpty(config.getMaxmem())) {
+            if (isNotBlank(config.getMaxmem())) {
                 cli.addArguments(new String[] {"-J-Xmx" + config.getMaxmem()});
             }
 
-            if (!StringUtils.isEmpty(config.getMeminitial())) {
+            if (isNotBlank(config.getMeminitial())) {
                 cli.addArguments(new String[] {"-J-Xms" + config.getMeminitial()});
             }
-
         } catch (IOException e) {
             throw new CompilerException("Error creating file with javac arguments", e);
         }
 
         CommandLineUtils.StringStreamConsumer out = new CommandLineUtils.StringStreamConsumer();
         CommandLineUtils.StringStreamConsumer err = new CommandLineUtils.StringStreamConsumer();
-
-        int returnCode;
 
         if (getLogger().isDebugEnabled()) {
             File commandLineFile = new File(config.getOutputLocation(), "greclipse." + (Os.isFamily(Os.FAMILY_WINDOWS) ? "bat" : "sh"));
@@ -417,31 +383,30 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                     Runtime.getRuntime().exec(new String[] {"chmod", "a+x", commandLineFile.getAbsolutePath()});
                 }
             } catch (IOException e) {
-                if (getLogger().isWarnEnabled()) {
-                    getLogger().warn("Unable to write '" + commandLineFile.getName() + "' debug script file", e);
-                }
+                getLogger().warn("Unable to write '" + commandLineFile.getName() + "' debug script file", e);
             }
         }
 
+        getLogger().info("Compiling in a forked process using " + groovyEclipseLocation);
+        int returnCode;
         try {
-            getLogger().info("Compiling in a forked process using " + groovyEclipseLocation);
             returnCode = CommandLineUtils.executeCommandLine(cli, out, err);
             messages.addAll(parseMessages(returnCode, out.getOutput(), config.isShowWarnings()));
-        } catch (CommandLineException e) {
-            throw new CompilerException("Error while executing the external compiler.", e);
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new CompilerException("Error while executing the external compiler.", e);
         }
 
         if (returnCode != 0 && messages.isEmpty()) {
-            if (err.getOutput().length() == 0) {
+            if (isBlank(err.getOutput())) {
                 throw new CompilerException("Unknown error trying to execute the external compiler: " + EOL + cli.toString());
             } else {
                 messages.add(new CompilerMessage("Failure executing groovy-eclipse compiler:" + EOL + err.getOutput(), Kind.ERROR));
             }
+        } else if (isNotBlank(err.getOutput())) {
+            getLogger().warn("Error output from groovy-eclipse compiler:" + EOL + err.getOutput());
         }
 
-        return returnCode == 0;
+        return (returnCode == 0);
     }
 
     /**
@@ -452,15 +417,12 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
      * @param input
      *            The output of the compiler
      * @return List of CompilerError objects
-     * @throws IOException
      */
-   private List<CompilerMessage> parseMessages(int exitCode, String input, boolean showWarnings) throws IOException {
+    private List<CompilerMessage> parseMessages(int exitCode, String input, boolean showWarnings) throws IOException {
         List<CompilerMessage> parsedMessages = new ArrayList<CompilerMessage>();
 
-        String[] msgs = input.split(PROB_SEPARATOR);
-        for (String msg : msgs) {
-            if (msg.length() > 1) {
-                // add the error bean
+        for (String msg : input.split(PROB_SEPARATOR)) {
+            if (isNotBlank(msg)) {
                 CompilerMessage message = parseMessage(msg, showWarnings, false);
                 if (message != null) {
                     if (showWarnings || message.getKind() == Kind.ERROR) {
@@ -485,11 +447,11 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                 }
             }
         }
+
         return parsedMessages;
     }
 
-    private void handleCurrentMessage(final boolean showWarnings, final List<CompilerMessage> parsedMessages, final StringBuilder sb)
-    {
+    private void handleCurrentMessage(boolean showWarnings, List<CompilerMessage> parsedMessages, StringBuilder sb) {
         final CompilerMessage message;
         if (sb.length() > 0) {
             message = parseMessage(sb.toString(), showWarnings, true);
@@ -500,13 +462,9 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
     }
 
     /**
-     * Construct a CompilerError object from a line of the compiler output
-     *
-     * @param msgText
-     *            output line from the compiler
-     * @return the CompilerError object
+     * Constructs a CompilerError object from a line of the compiler output.
      */
-   private CompilerMessage parseMessage(String msgText, boolean showWarning, boolean force) {
+    private CompilerMessage parseMessage(String msgText, boolean showWarning, boolean force) {
         // message should look like this:
 //        1. WARNING in /Users/andrew/git-repos/foo/src/main/java/packAction.java (at line 47)
 //            public abstract class AbstractScmTagAction extends TaskAction implements BuildBadgeAction {
@@ -534,7 +492,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
 
         int firstNewline = msgText.indexOf('\n');
         String firstLine = firstNewline > 0 ? msgText.substring(0, firstNewline) : msgText;
-        String rest = firstNewline > 0 ? msgText.substring(firstNewline+1) : "";
+        String rest = firstNewline > 0 ? msgText.substring(firstNewline + 1) : "";
 
         if (isNormal) {
             try {
@@ -542,8 +500,8 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
                 String file = firstLine.substring(dotIndex, parenIndex);
                 int line = Integer.parseInt(firstLine.substring(parenIndex + " (at line ".length(), firstLine.indexOf(')')));
                 int lastLineIndex = rest.lastIndexOf("\n\t");
-                int startColumn = rest.indexOf('^', lastLineIndex) -1 - lastLineIndex; // -1 because starts with tab
-                int endColumn = rest.lastIndexOf('^') -1 - lastLineIndex;
+                int startColumn = rest.indexOf('^', lastLineIndex) - 1 - lastLineIndex; // -1 because starts with tab
+                int endColumn = rest.lastIndexOf('^') - 1 - lastLineIndex;
                 return new CompilerMessage(file, kind, line, startColumn, line, endColumn, msgText);
             } catch (RuntimeException e) {
                 // lots of things could go wrong
@@ -580,15 +538,11 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             }
 
             writer = new PrintWriter(new FileWriter(tempFile));
-
-            for (int i = 0; i < args.length; i++) {
-                String argValue = args[i].replace(File.separatorChar, '/');
-
+            for (String arg : args) {
+                String argValue = arg.replace(File.separatorChar, '/');
                 writer.write("\"" + argValue + "\"");
-
                 writer.println();
             }
-
             writer.flush();
 
             return tempFile;
@@ -663,20 +617,18 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         if (!javaExe.isFile()) {
             Properties env = CommandLineUtils.getSystemEnvVars();
             javaHome = env.getProperty("JAVA_HOME");
-            if (StringUtils.isEmpty(javaHome)) {
+            if (isBlank(javaHome)) {
                 throw new IOException("The environment variable JAVA_HOME is not correctly set.");
             }
             if (!new File(javaHome).isDirectory()) {
-                throw new IOException("The environment variable JAVA_HOME=" + javaHome
-                        + " doesn't exist or is not a valid directory.");
+                throw new IOException("The environment variable JAVA_HOME=" + javaHome + " doesn't exist or is not a valid directory.");
             }
 
             javaExe = new File(env.getProperty("JAVA_HOME") + File.separator + "bin", javaCommand);
         }
 
         if (!javaExe.isFile()) {
-            throw new IOException("The javadoc executable '" + javaExe
-                    + "' doesn't exist or is not a file. Verify the JAVA_HOME environment variable.");
+            throw new IOException("The javadoc executable '" + javaExe + "' doesn't exist or is not a file. Verify the JAVA_HOME environment variable.");
         }
 
         return javaExe.getAbsolutePath();
@@ -688,16 +640,16 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
      * @param args Map to be converted
      * @return Array with {@code args} converted to an array
      */
-    private String[] flattenArgumentsMap(Map<String,String> args) {
-        List<String> argsList = new ArrayList<String>(args.size()*2);
+    private String[] flattenArgumentsMap(Map<String, String> args) {
+        List<String> argsList = new ArrayList<String>(args.size() * 2);
 
-        for(Map.Entry<String, String> entry: args.entrySet()) {
+        for (Map.Entry<String, String> entry : args.entrySet()) {
             String key = entry.getKey();
             String value = entry.getValue();
-            if(key!=null && key.length()>0) {
+            if (key != null && key.length() > 0) {
                 argsList.add(key);
                 // adds value only if key is actually defined
-                if(value!=null && value.length()>0) {
+                if (isNotBlank(value)) {
                     argsList.add(value);
                 }
             }
@@ -706,12 +658,16 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         return argsList.toArray(new String[0]);
     }
 
-    public String getJavaAgentClass() {
-        return javaAgentClass;
+    private static boolean isBlank(String str) {
+        return str == null || str.trim().length() == 0;
     }
 
-    public void setJavaAgentClass(String className) {
-        this.javaAgentClass = className;
+    private static boolean isNotBlank(String str) {
+        return !isBlank(str);
+    }
+
+    private static boolean startsWithHyphen(Object key) {
+        return (key instanceof CharSequence && ((CharSequence) key).charAt(0) == '-');
     }
 
     /**
@@ -723,29 +679,28 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
 
         private Logger logger;
 
-        public DeduplicatingHashMap(Logger logger, int initialCapacity) {
-            super(initialCapacity);
-            this.logger = logger;
-        }
-
         public DeduplicatingHashMap(Logger logger) {
             super();
             this.logger = logger;
         }
 
-        @Override
-        public V put(K key, V value) {
-            if(this.containsKey(key) && logger.isDebugEnabled()) {
-                logger.debug("Replacing compiler argument \"" +key + "\" old value: " + this.get(key) + " with: " + value);
-            }
+        public DeduplicatingHashMap(Logger logger, int initialCapacity) {
+            super(initialCapacity);
+            this.logger = logger;
+        }
 
-            return super.put(key, value);
+        @Override
+        public V put(K k, V v) {
+            if (this.containsKey(k) && logger.isDebugEnabled()) {
+                logger.debug("Replacing compiler argument \"" + k + "\" old value: " + get(k) + " with: " + v);
+            }
+            return super.put(k, v);
         }
 
         @Override
         public void putAll(Map<? extends K, ? extends V> m) {
-            for(Map.Entry<? extends K, ? extends V> entry: m.entrySet()) {
-                this.put(entry.getKey(), entry.getValue());
+            for (Map.Entry<? extends K, ? extends V> e : m.entrySet()) {
+                put(e.getKey(), e.getValue());
             }
         }
     }
