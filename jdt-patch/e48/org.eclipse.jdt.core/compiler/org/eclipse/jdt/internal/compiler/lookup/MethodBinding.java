@@ -409,7 +409,7 @@ public List<TypeBinding> collectMissingTypes(List<TypeBinding> missingTypes) {
 	return missingTypes;
 }
 
-MethodBinding computeSubstitutedMethod(MethodBinding method, LookupEnvironment env) {
+public MethodBinding computeSubstitutedMethod(MethodBinding method, LookupEnvironment env) {
 	int length = this.typeVariables.length;
 	TypeVariableBinding[] vars = method.typeVariables;
 	if (length != vars.length)

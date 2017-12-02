@@ -10,19 +10,21 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.builder;
 
-import java.util.Vector;
+import java.util.ArrayList;
 import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.IDebugRequestor;
 import org.eclipse.jdt.internal.core.util.Util;
 
-@SuppressWarnings({"rawtypes", "unchecked"})
 public class EfficiencyCompilerRequestor implements IDebugRequestor {
 	private boolean isActive = false;
 
-	private Vector compiledClasses = new Vector(10);
+	private ArrayList<String> compiledClasses = new ArrayList<>();
+	private ArrayList<String> compiledFiles = new ArrayList<>();
+
 
 	public void acceptDebugResult(CompilationResult result){
+		this.compiledFiles.add(new String(result.fileName));
 		ClassFile[] classFiles = result.getClassFiles();
 		Util.sort(classFiles, new Util.Comparer() {
 			public int compare(Object a, Object b) {
@@ -33,16 +35,21 @@ public class EfficiencyCompilerRequestor implements IDebugRequestor {
 		});
 		for (int i = 0; i < classFiles.length; i++) {
 			String className = new String(classFiles[i].fileName());
-			this.compiledClasses.addElement(className.replace('/', '.'));
+			this.compiledClasses.add(className.replace('/', '.'));
 		}
 	}
 
 	String[] getCompiledClasses(){
-		return (String [])this.compiledClasses.toArray(new String[0]);
+		return this.compiledClasses.toArray(new String[0]);
+	}
+
+	String[] getCompiledFiles(){
+		return this.compiledFiles.toArray(new String[0]);
 	}
 
 	public void clearResult(){
 		this.compiledClasses.clear();
+		this.compiledFiles.clear();
 	}
 
 	public void reset() {

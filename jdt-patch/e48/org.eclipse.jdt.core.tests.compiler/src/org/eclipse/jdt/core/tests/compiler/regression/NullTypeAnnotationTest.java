@@ -5810,6 +5810,11 @@ public void testTypeVariable15a() {
 		"	public <T> T foo(List<@org.eclipse.jdt.annotation.NonNull T> arg) {\n" + 
 		"	                 ^^^^\n" + 
 		"Illegal redefinition of parameter arg, inherited method from ITest declares this parameter as \'List<T>\' (mismatching null constraints)\n" + 
+		"----------\n" + 
+		"2. INFO in Test.java (at line 5)\n" + 
+		"	return arg.get(0);\n" + 
+		"	       ^^^^^^^^^^\n" + 
+		"Unsafe interpretation of method return type as \'@NonNull\' based on the receiver type \'List<@NonNull T>\'. Type \'List<E>\' doesn\'t seem to be designed with null type annotations in mind\n" + 
 		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=434602
@@ -7422,7 +7427,12 @@ public void testBug446442_6b() {
 		"	                                     ^^^^^^^^^\n" + 
 		"Illegal redefinition of parameter i, inherited method from Foo<Integer,ArrayList<Integer>,ArrayList<Integer>> declares this parameter as \'ArrayList<@NonNull Integer>\' (mismatching null constraints)\n" + 
 		"----------\n" + 
-		"3. ERROR in Test.java (at line 16)\n" + 
+		"3. ERROR in Test.java (at line 12)\n" + 
+		"	public ArrayList<@NonNull Integer> m(ArrayList<@Nullable Integer> i) { return i; }\n" + 
+		"	                                                                              ^\n" + 
+		"Null type mismatch (type annotations): required \'ArrayList<@NonNull Integer>\' but this expression has type \'ArrayList<@Nullable Integer>\'\n" + 
+		"----------\n" + 
+		"4. ERROR in Test.java (at line 16)\n" + 
 		"	Baz baz= x -> {\n" + 
 		"		x.add(null);\n" + 
 		"		x.get(0);\n" + 
@@ -7431,12 +7441,12 @@ public void testBug446442_6b() {
 		"	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
 		"Contradictory null annotations: function type was inferred as \'ArrayList<@NonNull @Nullable Integer> (ArrayList<@Nullable @NonNull Integer>)\', but only one of \'@NonNull\' and \'@Nullable\' can be effective at any location\n" + 
 		"----------\n" + 
-		"4. ERROR in Test.java (at line 17)\n" + 
+		"5. ERROR in Test.java (at line 17)\n" + 
 		"	x.add(null);\n" + 
 		"	^^^^^^^^^^^\n" + 
 		"Contradictory null annotations: method was inferred as \'boolean add(@Nullable @NonNull Integer)\', but only one of \'@NonNull\' and \'@Nullable\' can be effective at any location\n" + 
 		"----------\n" + 
-		"5. ERROR in Test.java (at line 18)\n" + 
+		"6. ERROR in Test.java (at line 18)\n" + 
 		"	x.get(0);\n" + 
 		"	^^^^^^^^\n" + 
 		"Contradictory null annotations: method was inferred as \'@Nullable @NonNull Integer get(int)\', but only one of \'@NonNull\' and \'@Nullable\' can be effective at any location\n" + 
@@ -15381,6 +15391,46 @@ public void testBug515292() {
 		}, 
 		getCompilerOptions(),
 		""
+	);
+}
+public void testBug526555() {
+	Map customOptions = getCompilerOptions();
+	customOptions.put(JavaCore.COMPILER_PB_NULL_SPECIFICATION_VIOLATION, JavaCore.WARNING);
+	
+	runNegativeTestWithLibs(
+		new String[] {
+			"ztest/OverrideTest.java",
+			"package ztest;\n" + 
+			"\n" + 
+			"import static org.eclipse.jdt.annotation.DefaultLocation.ARRAY_CONTENTS;\n" + 
+			"import static org.eclipse.jdt.annotation.DefaultLocation.FIELD;\n" + 
+			"import static org.eclipse.jdt.annotation.DefaultLocation.PARAMETER;\n" + 
+			"import static org.eclipse.jdt.annotation.DefaultLocation.RETURN_TYPE;\n" + 
+			"import static org.eclipse.jdt.annotation.DefaultLocation.TYPE_ARGUMENT;\n" + 
+			"import static org.eclipse.jdt.annotation.DefaultLocation.TYPE_BOUND;\n" + 
+			"\n" + 
+			"import org.eclipse.jdt.annotation.NonNullByDefault;\n" + 
+			"import org.eclipse.jdt.annotation.Nullable;\n" + 
+			"\n" + 
+			"interface X509TrustManager {\n" + 
+			"	void checkClientTrusted(String[] arg0, String arg1);\n" + 
+			"\n" + 
+			"}\n" + 
+			"\n" + 
+			"@NonNullByDefault({ PARAMETER, RETURN_TYPE, FIELD, TYPE_BOUND, TYPE_ARGUMENT, ARRAY_CONTENTS })\n" + 
+			"public class OverrideTest implements X509TrustManager {\n" + 
+			"	@Override\n" + 
+			"	public void checkClientTrusted(String @Nullable [] arg0, @Nullable String arg1) {\n" + 
+			"	}\n" + 
+			"}",
+		}, 
+		customOptions,
+		"----------\n" + 
+		"1. WARNING in ztest\\OverrideTest.java (at line 21)\n" + 
+		"	public void checkClientTrusted(String @Nullable [] arg0, @Nullable String arg1) {\n" + 
+		"	                               ^^^^^^^^^^^^^^^^^^^\n" + 
+		"Illegal redefinition of parameter arg0, inherited method from X509TrustManager declares this parameter as \'String[]\' (mismatching null constraints)\n" + 
+		"----------\n"
 	);
 }
 }

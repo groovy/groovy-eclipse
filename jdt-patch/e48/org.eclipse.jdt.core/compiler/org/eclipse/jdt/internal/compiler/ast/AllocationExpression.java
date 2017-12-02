@@ -603,7 +603,7 @@ public static MethodBinding inferDiamondConstructor(Scope scope, InvocationSite 
 			ParameterizedTypeBinding parameterizedType = (ParameterizedTypeBinding) factory.returnType;
 			return new ParameterizedMethodBinding(parameterizedType, sfmb.getConstructor());
 		}
-		return sfmb.applyTypeArgumentsOnConstructor(((ParameterizedTypeBinding)factory.returnType).arguments, constructorTypeArguments, genericFactory.inferredWithUncheckedConversion);
+		return sfmb.applyTypeArgumentsOnConstructor(((ParameterizedTypeBinding)factory.returnType).arguments, constructorTypeArguments, genericFactory.inferredWithUncheckedConversion, site.invocationTargetType());
 	}
 	return null;
 }

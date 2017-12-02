@@ -708,6 +708,54 @@ public void testBug520874i() {
 		"Cycle detected: a cycle exists in the type hierarchy between A and C\n" + 
 		"----------\n");
 }
+public void testBug526681() {
+	runNegativeTest(
+		new String[] {
+			"p/A.java",
+			"package p;\n" +
+			"import p.B;\n" +
+			"public class A extends B {\n" +
+			"	public static abstract class C {}\n" +
+			"}\n",
+			"p/B.java",
+			"package p;\n" +
+			"import p.A.C;\n" +
+			"public abstract class B extends C {}"
+		},
+		"----------\n" + 
+		"1. ERROR in p\\A.java (at line 3)\n" + 
+		"	public class A extends B {\n" + 
+		"	             ^\n" + 
+		"The hierarchy of the type A is inconsistent\n" + 
+		"----------\n" + 
+		"----------\n" + 
+		"1. ERROR in p\\B.java (at line 3)\n" + 
+		"	public abstract class B extends C {}\n" + 
+		"	                                ^\n" + 
+		"Cycle detected: a cycle exists in the type hierarchy between B and A\n" + 
+		"----------\n");
+}
+public void testBug527731() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_8) return; // uses diamond, 1.7-inference fails, only 1.8 is good
+	runConformTest(
+		new String[] {
+			"OuterClass.java",
+			"import java.util.ArrayList;\n" + 
+			"\n" + 
+			"public class OuterClass<T> extends ArrayList<OuterClass.InnerTypedClass<T>> {\n" + 
+			"	\n" + 
+			"	public static interface InnerInterface {}\n" + 
+			"	\n" + 
+			"	public static class InnerTypedClass<T> implements InnerInterface {}\n" + 
+			"	\n" + 
+			"	public static void main(String[] args) {\n" + 
+			"		OuterClass<String> outerClass = new OuterClass<>();\n" + 
+			"		outerClass.add(new InnerTypedClass<>());\n" + 
+			"		System.out.println(outerClass);\n" + 
+			"	}\n" + 
+			"}\n"
+		});
+}
 public static Class<InnerClass15Test> testClass() {
 	return InnerClass15Test.class;
 }

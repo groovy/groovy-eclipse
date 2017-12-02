@@ -31,7 +31,7 @@ public class ModuleReferenceImpl implements IModule.IModuleReference {
 	}
 	@Override
 	public int hashCode() {
-		return this.name.hashCode();
+		return CharOperation.hashCode(this.name);
 	}
 	@Override
 	public int getModifiers() {

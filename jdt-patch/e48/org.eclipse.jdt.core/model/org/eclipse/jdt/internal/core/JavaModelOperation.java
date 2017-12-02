@@ -318,6 +318,9 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 						forceFlag ? IResource.FORCE | IResource.KEEP_HISTORY : IResource.KEEP_HISTORY,
 						getSubProgressMonitor(1));
 					setAttribute(HAS_MODIFIED_RESOURCE_ATTR, TRUE);
+				} else {
+					// we didn't delete the package, so its parent packages cannot be empty
+					break;
 				}
 			}
 		} catch (CoreException e) {

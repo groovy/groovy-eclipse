@@ -4708,6 +4708,52 @@ public void testStream1() {
 		options
 		);
 }
+// normal java.util.stream.IntStream doesn't hold on to any resources
+public void testStream1_Int() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_8)
+		return; // uses JRE 8 API
+	Map options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
+	runConformTest(
+		new String[] {
+			"A.java",
+			"import java.util.stream.*;\n" + 
+			"class A {\n" + 
+			"    public void f(Stream<Object> s) {\n" + 
+			"        IntStream n = s.mapToInt(Object::hashCode);\n" + 
+			"        IntStream n2 = IntStream.range(23, 42);\n" + 
+			"        n.forEach(i -> System.out.println(i));\n" + 
+			"        n2.forEach(i -> System.out.println(i));\n" + 
+			"    }\n" + 
+			"}"
+		},
+		options
+		);
+}
+// normal java.util.stream.{Double,Long}Stream doesn't hold on to any resources
+public void testStream1_Double_Long() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_8)
+		return; // uses JRE 8 API
+	Map options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
+	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
+	runConformTest(
+		new String[] {
+			"A.java",
+			"import java.util.stream.*;\n" + 
+			"class A {\n" + 
+			"    public void f(Stream<Object> s) {\n" + 
+			"        DoubleStream n = s.mapToDouble(o -> 0.2);\n" + 
+			"        LongStream n2 = LongStream.range(23, 42);\n" + 
+			"        n.forEach(i -> System.out.println(i));\n" + 
+			"        n2.forEach(i -> System.out.println(i));\n" + 
+			"    }\n" + 
+			"}"
+		},
+		options
+		);
+}
 // Functions java.nio.file.Files.x() returning *Stream* do produce a resource needing closing
 public void testStream2() {
 	if (this.complianceLevel < ClassFileConstants.JDK1_8)

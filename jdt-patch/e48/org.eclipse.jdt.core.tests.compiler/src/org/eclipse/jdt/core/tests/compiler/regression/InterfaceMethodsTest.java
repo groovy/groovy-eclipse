@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2016 GK Software AG, IBM Corporation and others.
+ * Copyright (c) 2013, 2017 GK Software AG, IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -3052,4 +3052,60 @@ public class InterfaceMethodsTest extends AbstractComparableTest {
 				"The default method spliterator() inherited from Y<E> conflicts with another method inherited from X<E>\n" +
 				"----------\n");
 		}
+	public void test458547_comment0_a() throws Exception {
+		this.runNegativeTest(
+			new String[] {
+				"JavaTest.java",
+				"public class JavaTest {\n" + 
+				"	interface A {\n" + 
+				"		default void foo() { }\n" + 
+				"	}\n" + 
+				"	interface B {\n" + 
+				"		void foo();\n" + 
+				"	}\n" + 
+				"	interface C {\n" + 
+				"		void foo();\n" + 
+				"	}\n" + 
+				"	interface D extends A, B {\n" + 
+				"		@Override default void foo() { }\n" + 
+				"	}\n" + 
+				"	class E implements A, B, C, D {\n" + 
+				"	}\n" + 
+				"}" 
+			},
+			"----------\n" +
+			"1. ERROR in JavaTest.java (at line 14)\n" +
+			"	class E implements A, B, C, D {\n" +
+			"	      ^\n" +
+			"The default method foo() inherited from JavaTest.D conflicts with another method inherited from JavaTest.C\n" +
+			"----------\n");
+	}
+	public void test458547_comment0_b() throws Exception {
+		this.runNegativeTest(
+			new String[] {
+				"JavaTest.java",
+				"public class JavaTest {\n" + 
+				"	interface A {\n" + 
+				"		default void foo() { }\n" + 
+				"	}\n" + 
+				"	interface B {\n" + 
+				"		void foo();\n" + 
+				"	}\n" + 
+				"	interface C {\n" + 
+				"		void foo();\n" + 
+				"	}\n" + 
+				"	interface D extends A, B {\n" + 
+				"		@Override default void foo() { }\n" + 
+				"	}\n" + 
+				"	class E implements B, C, A, D {\n" + 
+				"	}\n" + 
+				"}" 
+			},
+			"----------\n" +
+			"1. ERROR in JavaTest.java (at line 14)\n" +
+			"	class E implements B, C, A, D {\n" +
+			"	      ^\n" +
+			"The default method foo() inherited from JavaTest.D conflicts with another method inherited from JavaTest.C\n" +
+			"----------\n");
+	}
 }

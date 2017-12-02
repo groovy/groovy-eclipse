@@ -54,7 +54,7 @@ public class StackMapFrameCodeStream extends CodeStream {
 			return false;
 		}
 		public int hashCode() {
-			return this.pc + this.constantPoolName.hashCode();
+			return this.pc + CharOperation.hashCode(this.constantPoolName);
 		}
 		public String toString() {
 			StringBuffer buffer = new StringBuffer();

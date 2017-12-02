@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2007, 2015 IBM Corporation and others.
+ * Copyright (c) 2007, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,6 +20,7 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
+import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 import org.eclipse.jdt.internal.compiler.util.Util;
@@ -247,6 +248,28 @@ class RecoveredTypeBinding implements ITypeBinding {
 			return new String(referenceBinding.compoundName[referenceBinding.compoundName.length - 1]);
 		}
 		return getTypeNameFrom(getType());
+	}
+
+	@Override
+	public IModuleBinding getModule() {
+		if (this.binding != null) {
+			switch (this.binding.kind()) {
+				case Binding.BASE_TYPE :
+				case Binding.ARRAY_TYPE :
+				case Binding.TYPE_PARAMETER : // includes capture scenario
+				case Binding.WILDCARD_TYPE :
+				case Binding.INTERSECTION_TYPE:
+					return null;
+			}
+			return getModule(this.binding.getPackage());
+		}
+		CompilationUnitScope scope = this.resolver.scope();
+		return scope != null ? getModule(scope.getCurrentPackage()) : null;
+	}
+
+	private IModuleBinding getModule(PackageBinding pBinding) {
+		IPackageBinding packageBinding = this.resolver.getPackageBinding(pBinding);
+		return packageBinding != null ? packageBinding.getModule() : null;
 	}
 
 	/* (non-Javadoc)

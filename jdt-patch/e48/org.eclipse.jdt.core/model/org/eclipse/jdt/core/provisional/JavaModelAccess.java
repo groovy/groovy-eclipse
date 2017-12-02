@@ -11,7 +11,10 @@
 package org.eclipse.jdt.core.provisional;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -30,6 +33,12 @@ import org.eclipse.jdt.internal.core.PackageFragmentRoot;
  * See <a href="https://bugs.eclipse.org/522391">Bug 522391</a>. 
  */
 public class JavaModelAccess {
+
+	private static final String BLANK = " "; //$NON-NLS-1$
+	private static final String COMMA = ","; //$NON-NLS-1$
+	private static final String OPTION_START  = "--"; //$NON-NLS-1$
+	private static final String ADD_MODULES   = "--add-modules "; //$NON-NLS-1$
+	private static final String LIMIT_MODULES = "--limit-modules "; //$NON-NLS-1$
 
 	/**
 	 * In a Java 9 project, a classpath entry can be filtered using a {@link IClasspathAttribute#LIMIT_MODULES} attribute,
@@ -97,5 +106,75 @@ public class JavaModelAccess {
 			default:
 				throw new IllegalArgumentException("Illegal kind of java element: "+element.getElementType()); //$NON-NLS-1$
 		}
+	}
+
+	/**
+	 * Returns the module-related command line options that are needed at runtime as equivalents
+	 * of those options specified by {@link IClasspathAttribute}s of the following names:
+	 * <ul>
+	 * <li>{@link IClasspathAttribute#ADD_EXPORTS}</li>
+	 * <li>{@link IClasspathAttribute#ADD_READS}</li>
+	 * <li>{@link IClasspathAttribute#LIMIT_MODULES}</li>
+	 * <li>{@link IClasspathAttribute#PATCH_MODULE}</li>
+	 * </ul>
+	 * <p>Note that the {@link IClasspathAttribute#LIMIT_MODULES} value may be split into
+	 * an {@code --add-modules} part and a {@code --limit-modules} part.</p>
+	 *
+	 * @param project the project holding the main class to be launched
+	 * @param systemLibrary the classpath entry of the given project which represents the JRE System Library
+	 * @return module-related command line options suitable for running the application.
+	 * @throws JavaModelException when access to the classpath or module description of the given project fails.
+	 */
+	public static String getModuleCLIOptions(IJavaProject project, IClasspathEntry systemLibrary) throws JavaModelException {
+		StringBuilder buf = new StringBuilder();
+		for (IClasspathEntry classpathEntry : project.getRawClasspath()) {
+			for (IClasspathAttribute classpathAttribute : classpathEntry.getExtraAttributes()) {
+				String optName = classpathAttribute.getName();
+				switch (optName) {
+					case IClasspathAttribute.PATCH_MODULE:
+					case IClasspathAttribute.ADD_EXPORTS:
+					case IClasspathAttribute.ADD_READS:
+						buf.append(OPTION_START).append(optName).append(BLANK).append(classpathAttribute.getValue()).append(BLANK);
+						break;
+					case IClasspathAttribute.LIMIT_MODULES:
+						addLimitModules(buf, project, systemLibrary, classpathAttribute.getValue());
+						break;
+				}
+			}
+		}
+		return buf.toString().trim();
+	}
+
+	private static void addLimitModules(StringBuilder buf, IJavaProject prj, IClasspathEntry systemLibrary, String value) throws JavaModelException {
+		String[] modules = value.split(COMMA);
+		boolean isUnnamed = prj.getModuleDescription() == null;
+		if (isUnnamed) {
+			Set<String> selected = new HashSet<>(Arrays.asList(modules));
+			List<IPackageFragmentRoot> allSystemRoots = Arrays.asList(getUnfilteredPackageFragmentRoots(prj, systemLibrary));
+			Set<String> defaultModules = new HashSet<>(JavaProject.defaultRootModules(allSystemRoots));
+
+			Set<String> limit = new HashSet<>(defaultModules);
+			if (limit.retainAll(selected)) { // limit = selected ∩ default  -- only add the option, if limit ⊂ default
+				if (limit.isEmpty()) {
+					throw new IllegalArgumentException("Cannot hide all modules, at least java.base is required"); //$NON-NLS-1$
+				}
+				buf.append(LIMIT_MODULES).append(joinedSortedList(limit)).append(BLANK);
+			}
+			
+			Set<String> add = new HashSet<>(selected);
+			add.removeAll(defaultModules);
+			if (!add.isEmpty()) { // add = selected \ default
+				buf.append(ADD_MODULES).append(joinedSortedList(add)).append(BLANK);
+			}
+		} else {
+			Arrays.sort(modules);
+			buf.append(LIMIT_MODULES).append(String.join(COMMA, modules)).append(BLANK);
+		}
+	}
+
+	private static String joinedSortedList(Collection<String> list) {
+		String[] limitArray = list.toArray(new String[list.size()]);
+		Arrays.sort(limitArray);
+		return String.join(COMMA, limitArray);
 	}
 }

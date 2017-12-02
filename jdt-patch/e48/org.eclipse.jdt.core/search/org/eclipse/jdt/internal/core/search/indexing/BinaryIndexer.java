@@ -888,23 +888,23 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 			for (IPackageExport pack : exportedPackages) {
 				addModuleExportedPackages(pack.name());
 				char[][] tgts = pack.targets();
-				if (tgts == null || tgts.equals(CharOperation.NO_CHAR_CHAR)) continue;
+				if (tgts == null || tgts == CharOperation.NO_CHAR_CHAR) continue;
 				for (char[] tgt : tgts) {
-					if (tgt != null && !tgt.equals(CharOperation.NO_CHAR)) 
+					if (tgt != null && tgt != CharOperation.NO_CHAR)
 						addModuleReference(tgt);
 				}
 			}
 		}
 	}
 	private void indexTypeReferences(char[][] ref) {
-		if (ref == null || ref.equals(CharOperation.NO_CHAR))
+		if (ref == null || ref == CharOperation.NO_CHAR_CHAR)
 			return;
 		for (int i = 0; i < ref.length; i++) {
 			addTypeReference(ref[i]);
 		}
 	}
 	private void indexTypeReference(char[] ref) {
-		if (ref == null || ref.equals(CharOperation.NO_CHAR))
+		if (ref == null || ref == CharOperation.NO_CHAR)
 			return;
 		addTypeReference(ref);
 	}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011, 2016 IBM Corporation and others.
+ * Copyright (c) 2011, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8572,12 +8572,12 @@ public void test428177() {
 		"4. ERROR in X.java (at line 36)\n" + 
 		"	if(\"1\" == \"\") { return stream.collect(Collectors.toList()).stream(); // ERROR\n" + 
 		"	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-		"Type mismatch: cannot convert from Stream<capture#14-of ? extends String> to Stream<String>\n" + 
+		"Type mismatch: cannot convert from Stream<capture#25-of ? extends String> to Stream<String>\n" + 
 		"----------\n" + 
 		"5. ERROR in X.java (at line 38)\n" + 
 		"	return stream.collect(Collectors.toList()); // NO ERROR\n" + 
 		"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-		"Type mismatch: cannot convert from List<capture#17-of ? extends String> to Stream<String>\n" + 
+		"Type mismatch: cannot convert from List<capture#28-of ? extends String> to Stream<String>\n" + 
 		"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=428795, - [1.8]Internal compiler error: java.lang.NullPointerException at org.eclipse.jdt.internal.compiler.ast.MessageSend.analyseCode
@@ -10022,6 +10022,77 @@ public void testBug458332() {
 		"	private static class Data {\n" + 
 		"	                     ^^^^\n" + 
 		"The code of method $deserializeLambda$(SerializedLambda) is exceeding the 65535 bytes limit\n" + 
+		"----------\n");
+}
+public void testBug521808() {
+	runNegativeTest(
+		new String[] {
+			"Z.java",
+			"interface FI1 {\n" + 
+			"	Object m(Integer... s);\n" + 
+			"}\n" + 
+			"interface FI2<T> {\n" + 
+			"	Object m(T... arg);\n" + 
+			"}\n" + 
+			"public class Z {\n" + 
+			"	static Object m(FI1 fi, Number v1, Number v2) {\n" + 
+			"		return fi.m(v1.intValue(), v2.intValue());\n" + 
+			"	}\n" + 
+			"	static <V extends Integer> Object m(FI2<V> fi, V v1, V v2) {\n" + 
+			"		return null;// fi.m(v1, v2);\n" + 
+			"	}\n" + 
+			"	public static void main(String argv[]) {\n" + 
+			"		Object obj = m((FI1) (Integer... is) -> is[0] + is[1], 3, 4);\n" + 
+			"		obj = m((FI2<Integer>) (Integer... is) -> is[0] + is[1], 3, 4);\n" + 
+			"		obj = m((Integer... is) -> is[0] + is[1], 3, 4); // ECJ compiles, Javac won't\n" + 
+			"	}\n" + 
+			"}",
+		},
+		"----------\n" + 
+		"1. WARNING in Z.java (at line 5)\n" + 
+		"	Object m(T... arg);\n" + 
+		"	              ^^^\n" + 
+		"Type safety: Potential heap pollution via varargs parameter arg\n" + 
+		"----------\n" + 
+		"2. WARNING in Z.java (at line 11)\n" + 
+		"	static <V extends Integer> Object m(FI2<V> fi, V v1, V v2) {\n" + 
+		"	                  ^^^^^^^\n" + 
+		"The type parameter V should not be bounded by the final type Integer. Final types cannot be further extended\n" + 
+		"----------\n" + 
+		"3. ERROR in Z.java (at line 17)\n" + 
+		"	obj = m((Integer... is) -> is[0] + is[1], 3, 4); // ECJ compiles, Javac won\'t\n" + 
+		"	      ^\n" + 
+		"The method m(FI1, Number, Number) is ambiguous for the type Z\n" +  
+		"----------\n");
+}
+public void testBug525303() {
+	runNegativeTest(
+		new String[] {
+			"X.java",
+			"interface FI<A1 extends C<A2>, A2 extends A3, A3> {\n" + 
+			"	String m(A1 a, A2 b);\n" + 
+			"}\n" + 
+			"class C<T>{}\n" + 
+			"public class X  {\n" + 
+			"	static String method(C<Integer> c, Integer i) {\n" + 
+			"		return \"\";\n" + 
+			"	}\n" + 
+			"    public static void main(String argv[]) {\n" + 
+			"    	FI<?, ?, ?> i = (C<Integer> a, Integer b) -> String.valueOf(a) + String.valueOf(b); // no error here\n" + 
+			"    	FI<?, ?, ?> i2 = X::method; // error here\n" + 
+			"    }\n" + 
+			"}"
+		},
+		"----------\n" + 
+		"1. ERROR in X.java (at line 10)\n" + 
+		"	FI<?, ?, ?> i = (C<Integer> a, Integer b) -> String.valueOf(a) + String.valueOf(b); // no error here\n" + 
+		"	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+		"The target type of this expression is not a well formed parameterized type due to bound(s) mismatch\n" + 
+		"----------\n" + 
+		"2. ERROR in X.java (at line 11)\n" + 
+		"	FI<?, ?, ?> i2 = X::method; // error here\n" + 
+		"	                 ^^^^^^^^^\n" + 
+		"The target type of this expression is not a well formed parameterized type due to bound(s) mismatch\n" + 
 		"----------\n");
 }
 public static Class testClass() {

@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -716,6 +716,22 @@ private void internalAnalyseCode(FlowContext flowContext, FlowInfo flowInfo) {
 			} else {
 				this.memberTypes[i].analyseCode(this.scope);
 			}
+		}
+	}
+	if (this.scope.compilerOptions().complianceLevel >= ClassFileConstants.JDK9) {
+		// synthesize <clinit> if one is not present. Required to initialize
+		// synthetic final fields as modifying final fields outside of a <clinit>
+		// is disallowed in Java 9
+		if (this.methods == null || !this.methods[0].isClinit()) {
+			Clinit clinit = new Clinit(this.compilationResult);
+			clinit.declarationSourceStart = clinit.sourceStart = this.sourceStart;
+			clinit.declarationSourceEnd = clinit.sourceEnd = this.sourceEnd;
+			clinit.bodyEnd = this.sourceEnd;
+			int length = this.methods == null ? 0 : this.methods.length;
+			AbstractMethodDeclaration[] methodDeclarations = new AbstractMethodDeclaration[length + 1];
+			methodDeclarations[0] = clinit;
+			if (this.methods != null)
+				System.arraycopy(this.methods, 0, methodDeclarations, 1, length);
 		}
 	}
 	if (this.methods != null) {

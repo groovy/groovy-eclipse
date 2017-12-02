@@ -292,8 +292,12 @@ public interface TypeConstants {
 		"CharArrayWriter".toCharArray(), //$NON-NLS-1$
 		"StringBufferInputStream".toCharArray(), //$NON-NLS-1$
 	};
-	char[][] RESOURCE_FREE_CLOSEABLE_STREAM = new char[][] {
-		JAVA, UTIL, "stream".toCharArray(), "Stream".toCharArray() //$NON-NLS-1$ //$NON-NLS-2$
+	char[][] JAVA_UTIL_STREAM = { JAVA, UTIL, "stream".toCharArray() }; //$NON-NLS-1$
+	char[][] RESOURCE_FREE_CLOSEABLE_J_U_STREAMS = {
+		"Stream".toCharArray(), //$NON-NLS-1$
+		"DoubleStream".toCharArray(), //$NON-NLS-1$
+		"LongStream".toCharArray(), //$NON-NLS-1$
+		"IntStream".toCharArray() //$NON-NLS-1$
 	};
 	
 	// different assertion utilities:

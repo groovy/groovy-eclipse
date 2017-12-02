@@ -160,7 +160,7 @@ private NameEnvironmentAnswer findClassInternal(char[] typeName, String qualifie
 }
 public NameEnvironmentAnswer findSecondaryInClass(char[] typeName, String qualifiedPackageName, String qualifiedBinaryFileName) {
 	//"package-info" is a reserved class name and can never be a secondary type (it is much faster to stop the search here).
-	if(TypeConstants.PACKAGE_INFO_NAME.equals(typeName)) {
+	if(CharOperation.equals(TypeConstants.PACKAGE_INFO_NAME, typeName)) {
 		return null;
 	}
 

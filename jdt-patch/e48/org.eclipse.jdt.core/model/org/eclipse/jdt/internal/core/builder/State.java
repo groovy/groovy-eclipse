@@ -136,7 +136,7 @@ public boolean isDuplicateLocator(String qualifiedTypeName, String typeLocator) 
 
 public boolean isKnownPackage(String qualifiedPackageName) {
 	if (this.knownPackageNames == null) {
-		ArrayList names = new ArrayList(this.typeLocators.elementSize);
+		LinkedHashSet<String> names = new LinkedHashSet<>(this.typeLocators.elementSize);
 		Object[] keyTable = this.typeLocators.keyTable;
 		for (int i = 0, l = keyTable.length; i < l; i++) {
 			if (keyTable[i] != null) {

@@ -335,6 +335,9 @@ public class TypeSystem {
 	   they may and we need to materialize the unannotated versions and work on them.
 	*/ 
 	public RawTypeBinding getRawType(ReferenceBinding genericType, ReferenceBinding enclosingType) {
+		if (genericType.isStatic() && enclosingType != null) {
+			enclosingType = (ReferenceBinding) enclosingType.original();
+		}
 		ReferenceBinding unannotatedGenericType = (ReferenceBinding) getUnannotatedType(genericType);
 		ReferenceBinding unannotatedEnclosingType = enclosingType == null ? null : (ReferenceBinding) getUnannotatedType(enclosingType);
 	

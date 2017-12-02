@@ -531,6 +531,13 @@ private org.eclipse.jdt.internal.core.ModuleDescriptionInfo createModuleInfo(Mod
 	info.setFlags(modInfo.modifiers);
 	info.setNameSourceStart(modInfo.nameSourceStart);
 	info.setNameSourceEnd(modInfo.nameSourceEnd);
+	if (modInfo.annotations != null) {
+		int length = modInfo.annotations.length;
+		for (int i = 0; i < length; i++) {
+			org.eclipse.jdt.internal.compiler.ast.Annotation annotation = modInfo.annotations[i];
+			acceptAnnotation(annotation, info, handle);
+		}
+	}
 	this.newElements.put(handle, info);
 
 	return info;

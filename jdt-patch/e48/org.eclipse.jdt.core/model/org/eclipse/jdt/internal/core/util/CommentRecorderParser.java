@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -152,7 +152,7 @@ public class CommentRecorderParser extends Parser {
 	 */
 	public int flushCommentsDefinedPriorTo(int position) {
 
-		int lastCommentIndex = this.scanner.commentPtr;
+		int lastCommentIndex = getCommentPtr();
 		if (lastCommentIndex < 0) return position; // no comment
 
 		// compute the index of the first obsolete comment
@@ -212,6 +212,34 @@ public class CommentRecorderParser extends Parser {
 		return position;
 	}
 
+	protected int getCommentPtr() {
+		int lastComment = this.scanner.commentPtr;
+		if (lastComment == -1 && this.currentElement != null) {
+			// during recovery reuse comments from initial scan ...
+			lastComment = this.commentPtr;
+			if (lastComment >= 0) {
+				// ... but ignore if not suitable ...
+				if (lastComment >= this.scanner.commentStarts.length) {
+					return -1;
+				} else {
+					int start = this.scanner.commentStarts[lastComment];
+					// ... unsuitable if:
+					//     - unknown to the scanner (start == 0)
+					//     - line comment (start < 0)
+					if (start <= 0)
+						return -1;
+					//     - past the current position, or start of previous recovered element
+					int currentStart = this.currentElement.getLastStart();
+					if (currentStart == -1)
+						currentStart = this.scanner.currentPosition;
+					if (start > currentStart)
+						return -1;
+				}
+			}
+		}
+		return lastComment;
+	}
+
 	/*
 	 * Build a n*2 matrix of comments positions.
 	 * For each position, 0 is for start position and 1 for end position of the comment.
@@ -264,6 +292,7 @@ public class CommentRecorderParser extends Parser {
 	private void pushOnCommentsStack(int start, int end) {
 
 		for (int i=start; i<=end; i++) {
+			if (this.scanner.commentPtr < i) break;
 			// First see if comment hasn't been already stored
 			int scannerStart = this.scanner.commentStarts[i]<0 ? -this.scanner.commentStarts[i] : this.scanner.commentStarts[i];
 			int commentStart = this.commentPtr == -1 ? -1 : (this.commentStarts[this.commentPtr]<0 ? -this.commentStarts[this.commentPtr] : this.commentStarts[this.commentPtr]);

@@ -8540,4 +8540,69 @@ public void testBug508834_comment0() {
 			"Type safety: The expression of type Action[] needs unchecked conversion to conform to Action<S2>[]\n" + 
 			"----------\n");
 	}
+	public void testBug515600() {
+		runConformTest(
+			new String[] {
+				"test/Test.java",
+				"package test;\n" +
+				"\n" +
+				"interface Publisher<P> {\n" +
+				"	void subscribe(Subscriber<? super P> s);\n" +
+				"}\n" +
+				"\n" +
+				"interface Subscriber<S> {\n" +
+				"}\n" +
+				"\n" +
+				"class Flux {\n" +
+				"	public static <F> void from(Publisher<? extends F> source) {\n" +
+				"	}\n" +
+				"}\n" +
+				"\n" +
+				"public abstract class Test {\n" +
+				"	abstract void assertThat2(Boolean actual);\n" +
+				"\n" +
+				"	abstract void assertThat2(String actual);\n" +
+				"\n" +
+				"	abstract <S> S scan(Class<S> type);\n" +
+				"\n" +
+				"	public void test() {\n" +
+				"		Flux.from(s -> {\n" +
+				"			assertThat2(scan(Boolean.class));\n" +
+				"		});\n" +
+				"	}\n" +
+				"}\n" +
+				"",
+			}
+		);
+	}
+	public void testBug527742() {
+		runConformTest(new String[] {
+				"test/Test.java",
+				"package test;\n" +
+				"import java.util.stream.*;\n" + 
+				"import java.util.*;\n" + 
+				"\n" + 
+				"class Test {\n" + 
+				"\n" + 
+				"    public void f() {\n" + 
+				"\n" + 
+				"        Map<Integer, String> map = new HashMap<>();\n" + 
+				"        map.put(1, \"x\");\n" + 
+				"        map.put(2, \"y\");\n" + 
+				"        map.put(3, \"x\");\n" + 
+				"        map.put(4, \"z\");\n" + 
+				"\n" + 
+				"  //the following line has error\n" + 
+				"        Map<String, ArrayList<Integer>> reverseMap = new java.util.HashMap<>(map.entrySet().stream()\n" + 
+				"                .collect(Collectors.groupingBy(Map.Entry::getValue)).values().stream()\n" + 
+				"                .collect(Collectors.toMap(item -> item.get(0).getValue(),\n" + 
+				"                        item -> new ArrayList<>(item.stream().map(Map.Entry::getKey).collect(Collectors.toList()))))); \n" + 
+				"        System.out.println(reverseMap);\n" + 
+				"\n" + 
+				"    }\n" + 
+				"\n" + 
+				"}",
+				
+		});
+	}
 }

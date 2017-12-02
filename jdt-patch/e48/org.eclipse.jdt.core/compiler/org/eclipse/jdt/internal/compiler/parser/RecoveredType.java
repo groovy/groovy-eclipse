@@ -386,6 +386,33 @@ public int lastMemberEnd() {
 
 	return lastMemberEnd;
 }
+@Override
+public int getLastStart() {
+	int lastMemberStart = this.typeDeclaration.bodyStart;
+
+	if (this.fieldCount > 0) {
+		FieldDeclaration lastField = this.fields[this.fieldCount - 1].fieldDeclaration;
+		if (lastMemberStart < lastField.declarationSourceStart && lastField.declarationSourceStart != 0) {
+			lastMemberStart = lastField.declarationSourceStart;
+		}
+	}
+
+	if (this.methodCount > 0) {
+		AbstractMethodDeclaration lastMethod = this.methods[this.methodCount - 1].methodDeclaration;
+		if (lastMemberStart < lastMethod.declarationSourceStart && lastMethod.declarationSourceStart != 0) {
+			lastMemberStart = lastMethod.declarationSourceStart;
+		}
+	}
+
+	if (this.memberTypeCount > 0) {
+		TypeDeclaration lastType = this.memberTypes[this.memberTypeCount - 1].typeDeclaration;
+		if (lastMemberStart < lastType.declarationSourceStart && lastType.declarationSourceStart != 0) {
+			lastMemberStart = lastType.declarationSourceStart;
+		}
+	}
+
+	return lastMemberStart;
+}
 public char[] name(){
 	return this.typeDeclaration.name;
 }

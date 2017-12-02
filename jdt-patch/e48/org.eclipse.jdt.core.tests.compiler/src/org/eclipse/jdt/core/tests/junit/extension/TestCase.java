@@ -76,7 +76,7 @@ public class TestCase extends PerformanceTestCase {
 	 */
 	public static final long ORDERING;
 	static {
-		long ordering = NO_ORDER; // default is no order
+		long ordering = ALPHABETICAL_SORT; // default is alphabetical order
 		try {
 			long seed = Long.parseLong(System.getProperty("ordering", "0"));
 			try {

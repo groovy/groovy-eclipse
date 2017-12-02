@@ -19,6 +19,7 @@ import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameC
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.eclipse.jdt.internal.compiler.parser.ScannerHelper;
@@ -464,7 +465,7 @@ public class WrapExecutor {
 				depthLimit = currentDepth;
 		}
 		// optimization: turns out there's no point checking multiple wraps with the same policy 
-		ArrayList<WrapPolicy> policiesTried = new ArrayList<>();
+		LinkedHashSet<WrapPolicy> policiesTried = new LinkedHashSet<>();
 
 		for (int i = lastIndex; firstPotentialWrap >= 0 && i >= firstPotentialWrap; i--) {
 			token = this.tm.get(i);
@@ -640,6 +641,8 @@ public class WrapExecutor {
 		WrapPolicy policy = token.getWrapPolicy();
 		if (policy == null)
 			return token.getIndent();
+		if (policy == WrapPolicy.FORCE_FIRST_COLUMN)
+			return 0;
 
 		Token wrapParent = this.tm.get(policy.wrapParentIndex);
 		int wrapIndent = wrapParent.getIndent();

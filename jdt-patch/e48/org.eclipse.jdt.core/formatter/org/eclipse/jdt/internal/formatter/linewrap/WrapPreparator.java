@@ -397,7 +397,7 @@ public class WrapPreparator extends ASTVisitor {
 			Collections.reverse(this.wrapIndexes);
 			this.wrapParentIndex = (expression != null) ? this.tm.lastIndexIn(expression, -1)
 					: this.tm.lastIndexIn(invocation, -1);
-			this.wrapGroupEnd = this.tm.firstIndexIn(node.getName(), -1);
+			this.wrapGroupEnd = this.tm.lastIndexIn(node, -1);
 			handleWrap(this.options.alignment_for_selector_in_method_invocation);
 		}
 		return true;
@@ -940,11 +940,7 @@ public class WrapPreparator extends ASTVisitor {
 				Token previous = this.tm.get(i);
 				if (!previous.isComment())
 					break;
-				if (this.options.never_indent_line_comments_on_first_column
-						&& previous.tokenType == TokenNameCOMMENT_LINE && previous.getIndent() == 0)
-					break;
-				if (this.options.never_indent_block_comments_on_first_column
-						&& previous.tokenType == TokenNameCOMMENT_BLOCK && previous.getIndent() == 0)
+				if (previous.getWrapPolicy() == WrapPolicy.FORCE_FIRST_COLUMN)
 					break;
 				if (previous.getLineBreaksAfter() == 0 && i == index - 1)
 					index = i;

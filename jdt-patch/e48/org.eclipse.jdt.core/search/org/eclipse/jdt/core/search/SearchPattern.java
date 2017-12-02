@@ -1440,6 +1440,28 @@ private static SearchPattern createPackagePattern(String patternString, int limi
  * 			<li>'?' is treated as a wildcard when it is inside &lt;&gt; (i.e. it must be put on first position of the type argument)</li>
  * 		</ul>
  * 		</div>
+ * 		Since 3.14 for Java 9, Type Declaration Patterns can have module names also embedded with the following syntax
+ * 		<p><b><code>[moduleName1[,moduleName2,..]]/[qualification '.']typeName ['&lt;' typeArguments '&gt;']</code></b>
+ *      </p>
+ *      <p>
+ *      Unnamed modules can also be included and are represented either by an absence of module name implicitly
+ *      or explicitly by specifying ALL-UNNAMED for module name.
+ * 		Module graph search is also supported with the limitTo option set to <code>IJavaSearchConstants.MODULE_GRAPH</code>.
+ *      In the module graph case, the given type is searched in all the modules required directly as well 
+ *      as indirectly by the given module(s).
+ *      </p>
+ *      <p>
+ *      Note that whitespaces are ignored in between module names. It is an error to give multiple module separators - in such
+ *      cases a null pattern will be returned.
+ *      </p>
+ *			<p>Examples:</p>
+ *			<ul>
+ * 				<li><code>java.base/java.lang.Object</code></li>
+ *				<li><code>mod.one, mod.two/pack.X</code> find declaration in the list of given modules.</li>
+ *				<li><code>/pack.X</code> find in the unnamed module.</li>
+ *				<li><code>ALL-UNNAMED/pack.X</code> find in the unnamed module.</li> 
+ *			</ul>
+ *			<p>
  * 	</li>
  * 	<li>Method patterns have the following syntax:
  * 		<p><b><code>[declaringType '.'] ['&lt;' typeArguments '&gt;'] methodName ['(' parameterTypes ')'] [returnType]</code></b></p>
@@ -1493,6 +1515,7 @@ private static SearchPattern createPackagePattern(String patternString, int limi
  *	<li>{@link IJavaSearchConstants#METHOD}: look for methods</li>
  *	<li>{@link IJavaSearchConstants#CONSTRUCTOR}: look for constructors</li>
  *	<li>{@link IJavaSearchConstants#PACKAGE}: look for packages</li>
+ *	<li>{@link IJavaSearchConstants#MODULE}: look for modules</li>
  *	</ul>
  * @param limitTo determines the nature of the expected matches
  *	<ul>
@@ -1511,6 +1534,10 @@ private static SearchPattern createPackagePattern(String patternString, int limi
  *				which directly implement/extend a given interface.
  *				Note that types may be only classes or only interfaces if {@link IJavaSearchConstants#CLASS CLASS} or
  *				{@link IJavaSearchConstants#INTERFACE INTERFACE} is respectively used instead of {@link IJavaSearchConstants#TYPE TYPE}.
+ *		</li>
+ *		 <li>{@link IJavaSearchConstants#MODULE_GRAPH MODULE_GRAPH}: for types with a module prefix, 
+ *             will find all types present in required modules (directly or indirectly required) ie
+ *             in any module present in the module graph of the given module.
  *		</li>
  *		 <li>All other fine grain constants defined in the <b>limitTo</b> category
  *				of the {@link IJavaSearchConstants} are also accepted nature: 
@@ -2188,8 +2215,14 @@ private static SearchPattern createTypePattern(char[] simpleName, char[] package
 	}
 	return null;
 }
-
 private static SearchPattern createTypePattern(String patternString, int limitTo, int matchRule, char indexSuffix) {
+	String[] arr = patternString.split(String.valueOf(IIndexConstants.SEPARATOR));
+	String moduleName = null;
+	if (arr.length == 2) {
+		moduleName = arr[0];
+		patternString = arr[1];
+	}
+	char[] patModName = moduleName != null ? moduleName.toCharArray() : null;
 	// use 1.7 as the source level as there are more valid tokens in 1.7 mode
 	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=376673
 	Scanner scanner = new Scanner(false /*comment*/, true /*whitespace*/, false /*nls*/, ClassFileConstants.JDK1_7/*sourceLevel*/, null /*taskTags*/, null/*taskPriorities*/, true/*taskCaseSensitive*/);
@@ -2268,16 +2301,22 @@ private static SearchPattern createTypePattern(String patternString, int limitTo
 	if (typeChars.length == 1 && typeChars[0] == '*') {
 		typeChars = null;
 	}
+	boolean modGraph = false;
 	switch (limitTo) {
+		case IJavaSearchConstants.MODULE_GRAPH :
+			modGraph = true;
+			//$FALL-THROUGH$
 		case IJavaSearchConstants.DECLARATIONS : // cannot search for explicit member types
-			return new QualifiedTypeDeclarationPattern(qualificationChars, typeChars, indexSuffix, matchRule);
+			TypeDeclarationPattern typeDeclarationPattern = new QualifiedTypeDeclarationPattern(patModName, qualificationChars, typeChars, indexSuffix, matchRule);
+			typeDeclarationPattern.moduleGraph = modGraph;
+			return typeDeclarationPattern;
 		case IJavaSearchConstants.REFERENCES :
 			return new TypeReferencePattern(qualificationChars, typeChars, typeSignature, indexSuffix, matchRule);
 		case IJavaSearchConstants.IMPLEMENTORS :
 			return new SuperTypeReferencePattern(qualificationChars, typeChars, SuperTypeReferencePattern.ONLY_SUPER_INTERFACES, indexSuffix, matchRule);
 		case IJavaSearchConstants.ALL_OCCURRENCES :
 			return new OrPattern(
-				new QualifiedTypeDeclarationPattern(qualificationChars, typeChars, indexSuffix, matchRule),// cannot search for explicit member types
+				new QualifiedTypeDeclarationPattern(patModName, qualificationChars, typeChars, indexSuffix, matchRule),// cannot search for explicit member types
 				new TypeReferencePattern(qualificationChars, typeChars, typeSignature, indexSuffix, matchRule));
 		default:
 			return new TypeReferencePattern(qualificationChars, typeChars, typeSignature, limitTo, indexSuffix, matchRule);

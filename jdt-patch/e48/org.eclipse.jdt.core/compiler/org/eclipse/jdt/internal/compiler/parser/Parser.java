@@ -207,6 +207,8 @@ public class Parser implements TerminalTokens, ParserBasicInformation, Conflicte
 						compliance = ClassFileConstants.JDK1_7;
 					} else if("1.8".equals(token)) { //$NON-NLS-1$
 						compliance = ClassFileConstants.JDK1_8;
+					}  else if("9".equals(token)) { //$NON-NLS-1$
+						compliance = ClassFileConstants.JDK9;
 					} else if("recovery".equals(token)) { //$NON-NLS-1$
 						compliance = ClassFileConstants.JDK_DEFERRED;
 					}
@@ -5984,6 +5986,8 @@ protected void consumePackageDeclaration() {
 	// flush comments defined prior to import statements
 	impt.declarationEnd = this.endStatementPosition;
 	impt.declarationSourceEnd = flushCommentsDefinedPriorTo(impt.declarationSourceEnd);
+	if (this.firstToken == TokenNameQUESTION)
+		this.unstackedAct = ACCEPT_ACTION; // force termination at goal
 }
 protected void consumePackageDeclarationName() {
 	// PackageDeclarationName ::= PackageComment 'package' Name RejectTypeAnnotations
@@ -11668,6 +11672,10 @@ try {
 			this.unstackedAct = ntAction(this.stack[this.stateStackTop], lhs[act]);
 			consumeRule(act);
 			act = this.unstackedAct;
+
+			if (act == ACCEPT_ACTION) {
+				break ProcessTerminals;
+			}
 
 			if (DEBUG_AUTOMATON) {
 				if (act <= NUM_RULES) {

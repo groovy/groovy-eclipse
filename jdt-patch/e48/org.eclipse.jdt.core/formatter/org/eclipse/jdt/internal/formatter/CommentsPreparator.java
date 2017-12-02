@@ -143,12 +143,12 @@ public class CommentsPreparator extends ASTVisitor {
 					&& !this.options.comment_format_line_comment_starting_on_first_column) {
 				this.lastLineComment = null;
 				commentToken.setIndent(0);
-				commentToken.setWrapPolicy(null);
+				commentToken.setWrapPolicy(WrapPolicy.FORCE_FIRST_COLUMN);
 				return;
 			}
 			if (this.options.never_indent_line_comments_on_first_column) {
 				commentToken.setIndent(0);
-				commentToken.setWrapPolicy(null);
+				commentToken.setWrapPolicy(WrapPolicy.FORCE_FIRST_COLUMN);
 			}
 		}
 
@@ -391,7 +391,7 @@ public class CommentsPreparator extends ASTVisitor {
 
 		if (this.options.never_indent_block_comments_on_first_column && isFirstColumn) {
 			commentToken.setIndent(0);
-			commentToken.setWrapPolicy(null);
+			commentToken.setWrapPolicy(WrapPolicy.FORCE_FIRST_COLUMN);
 		}
 	}
 
@@ -426,7 +426,8 @@ public class CommentsPreparator extends ASTVisitor {
 
 		if (existingBreaksBefore <= 1
 				&& (previous.tokenType == TokenNameCOMMENT_LINE || previous.tokenType == TokenNameCOMMENT_BLOCK)) {
-			commentToken.setWrapPolicy(previous.getWrapPolicy());
+			if (previous.getWrapPolicy() != WrapPolicy.FORCE_FIRST_COLUMN)
+				commentToken.setWrapPolicy(previous.getWrapPolicy());
 		} else {
 			int i = commentIndex + 2;
 			while (existingBreaksAfter <= 1 && i < this.tm.size()

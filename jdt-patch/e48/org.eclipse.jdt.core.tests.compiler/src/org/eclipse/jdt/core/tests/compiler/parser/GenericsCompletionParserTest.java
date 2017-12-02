@@ -11088,7 +11088,7 @@ public void test0219_Diet() {
 	String completeBehind = "value=\"";
 	int cursorLocation = str.lastIndexOf("value=\"") + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompletionOnString:\"\">";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "@Annot(value = <CompletionOnString:\"\">)";
 	String completionIdentifier = "";
 	String expectedReplacedSource = "\"\"";
 	String expectedUnitDisplayString =
@@ -11121,7 +11121,7 @@ public void test0220_Diet() {
 	String completeBehind = "@Annot(\"";
 	int cursorLocation = str.lastIndexOf("@Annot(\"") + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompletionOnString:\"\">";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "@Annot(value = <CompletionOnString:\"\">)";
 	String completionIdentifier = "";
 	String expectedReplacedSource = "\"\"";
 	String expectedUnitDisplayString =

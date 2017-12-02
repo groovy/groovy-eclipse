@@ -30,6 +30,7 @@ import org.eclipse.jdt.internal.compiler.ast.Invocation;
 import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
 import org.eclipse.jdt.internal.compiler.ast.ReferenceExpression;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants.BoundCheckStatus;
 import org.eclipse.jdt.internal.compiler.util.Sorting;
 
 /**
@@ -734,8 +735,15 @@ public class InferenceContext18 {
 				ReferenceBinding genericType = targetTypeWithWildCards.genericType();
 				TypeBinding[] a = targetTypeWithWildCards.arguments; // a is not-null by construction of parameterizedWithWildcard()
 				TypeBinding[] aprime = getFunctionInterfaceArgumentSolutions(a);
-				// TODO If F<A'1, ..., A'm> is a well-formed type, ...
-				return blockScope.environment().createParameterizedType(genericType, aprime, targetTypeWithWildCards.enclosingType());
+				// If F<A'1, ..., A'm> is a well-formed type, ...
+				ParameterizedTypeBinding ptb = blockScope.environment().createParameterizedType(genericType, aprime, targetTypeWithWildCards.enclosingType());
+				TypeVariableBinding[] vars = ptb.genericType().typeVariables();
+				ParameterizedTypeBinding captured = ptb.capture(blockScope, lambda.sourceStart, lambda.sourceEnd);
+				for (int i = 0; i < vars.length; i++) {
+					if (vars[i].boundCheck(captured, aprime[i], blockScope, lambda) == BoundCheckStatus.MISMATCH)
+						return null;
+				}
+				return ptb;
 			}
 		}
 		return targetTypeWithWildCards;

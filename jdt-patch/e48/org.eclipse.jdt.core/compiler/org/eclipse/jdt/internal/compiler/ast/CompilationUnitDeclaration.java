@@ -150,6 +150,11 @@ public void cleanUp() {
 			localType.enclosingCase = null;
 		}
 	}
+	if (this.functionalExpressionsCount > 0) {
+		for (int i = 0, max = this.functionalExpressionsCount; i < max; i++) {
+			this.functionalExpressions[i].cleanUp();
+		}
+	}
 
 	this.compilationResult.recoveryScannerData = null; // recovery is already done
 

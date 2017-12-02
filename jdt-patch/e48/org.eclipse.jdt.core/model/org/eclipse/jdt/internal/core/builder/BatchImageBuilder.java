@@ -49,7 +49,7 @@ public void build() {
 		this.notifier.updateProgressDelta(0.05f);
 
 		this.notifier.subTask(Messages.build_analyzingSources);
-		ArrayList sourceFiles = new ArrayList(33);
+		LinkedHashSet<SourceFile> sourceFiles = new LinkedHashSet<>(33);
 		addAllSourceFiles(sourceFiles);
 		this.notifier.updateProgressDelta(0.10f);
 
@@ -92,7 +92,7 @@ protected void cleanOutputFolders(boolean copyBack) throws CoreException {
 			for (int i = 0, l = this.javaBuilder.participants.length; i < l; i++)
 				this.javaBuilder.participants[i].cleanStarting(this.javaBuilder.javaProject);
 
-		ArrayList visited = new ArrayList(this.sourceLocations.length);
+		Set<IContainer> visited = new LinkedHashSet<>(this.sourceLocations.length);
 		for (int i = 0, l = this.sourceLocations.length; i < l; i++) {
 			this.notifier.subTask(Messages.bind(Messages.build_cleaningOutput, this.javaBuilder.currentProject.getName()));
 			ClasspathMultiDirectory sourceLocation = this.sourceLocations[i];

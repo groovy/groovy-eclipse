@@ -21,6 +21,10 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class AnnotationCompletionParserTest extends AbstractCompletionTest {
+static {
+	//TESTS_NAMES= new String[]{"test0087"};
+}
+
 public AnnotationCompletionParserTest(String testName) {
 	super(testName);
 }
@@ -3003,11 +3007,12 @@ public void test0076(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "<AssistNodeParentAnnotationArrayInitializer:@Annot(zzz)>";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
-		"public @Annot(zzz = {<CompleteOnName:foo>}) class X {\n" +
+		"@Annot(zzz = {<CompleteOnName:foo>})\n" +
+		"public class X {\n" +
 		"  public X() {\n" +
 		"  }\n" +
 		"}\n";
@@ -3032,11 +3037,12 @@ public void test0078(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "<AssistNodeParentAnnotationArrayInitializer:@Annot(zzz)>";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
-		"public @Annot(zzz = {yyy, <CompleteOnName:foo>}) class X {\n" +
+		"@Annot(zzz = {<CompleteOnName:foo>})\n" +
+		"public class X {\n" +
 		"  public X() {\n" +
 		"  }\n" +
 		"}\n";
@@ -3121,11 +3127,11 @@ public void test0081(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "{yyy, <CompleteOnName:foo>}";
+	String expectedParentNodeToString = "<AssistNodeParentAnnotationArrayInitializer:@Annot(zzz)>";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
-		"@Annot(zzz = {yyy, <CompleteOnName:foo>})\n" +
+		"@Annot(zzz = {<CompleteOnName:foo>})\n" +
 		"public class X {\n" +
 		"  public X() {\n" +
 		"  }\n" +
@@ -3151,11 +3157,11 @@ public void test0082(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "<AssistNodeParentAnnotationArrayInitializer:@Annot(zzz)>";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
-		"@Annot(zzz = <CompleteOnName:foo>)\n" +
+		"@Annot(zzz = {<CompleteOnName:foo>})\n" +
 		"public class X {\n" +
 		"  public X() {\n" +
 		"  }\n" +
@@ -3210,7 +3216,7 @@ public void test0084(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "@Annot(zzz = <CompleteOnName:foo>)";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
@@ -3308,14 +3314,15 @@ public void test0087(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "<AssistNodeParentAnnotationArrayInitializer:@Annot(zzz)>";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
 		"public class X {\n" +
+		"  @Annot(zzz = {<CompleteOnName:foo>})\n" + 
 		"  public X() {\n" +
 		"  }\n" +
-		"  @Annot(zzz = {<CompleteOnName:foo>}) void bar() {\n" +
+		"  void bar() {\n" +
 		"  }\n" +
 		"}\n";
 
@@ -3341,14 +3348,15 @@ public void test0088(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "<AssistNodeParentAnnotationArrayInitializer:@Annot(zzz)>";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
 		"public class X {\n" +
+		"  @Annot(zzz = {<CompleteOnName:foo>})\n"+
 		"  public X() {\n" +
 		"  }\n" +
-		"  @Annot(zzz = {yyy, <CompleteOnName:foo>}) void bar() {\n" +
+		"  void bar() {\n" +
 		"  }\n" +
 		"}\n";
 
@@ -3442,12 +3450,12 @@ public void test0091(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "{yyy, <CompleteOnName:foo>}";
+	String expectedParentNodeToString = "<AssistNodeParentAnnotationArrayInitializer:@Annot(zzz)>";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
 		"public class X {\n" +
-		"  @Annot(zzz = {yyy, <CompleteOnName:foo>})\n" +
+		"  @Annot(zzz = {<CompleteOnName:foo>})\n" +
 		"  public X() {\n" +
 		"  }\n" +
 		"  void bar() {\n" +
@@ -3476,12 +3484,12 @@ public void test0092(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "<AssistNodeParentAnnotationArrayInitializer:@Annot(zzz)>";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
 		"public class X {\n" +
-		"  @Annot(zzz = <CompleteOnName:foo>)\n" +
+		"  @Annot(zzz = {<CompleteOnName:foo>})\n" +
 		"  public X() {\n" +
 		"  }\n" +
 		"  void bar() {\n" +
@@ -3543,7 +3551,7 @@ public void test0094(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "@Annot(zzz = <CompleteOnName:foo>)";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
@@ -3638,12 +3646,13 @@ public void test0097(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "<AssistNodeParentAnnotationArrayInitializer:@Annot(zzz)>";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
 		"public class X {\n" +
-		"  @Annot(zzz = {<CompleteOnName:foo>}) int bar;\n" +
+		"  @Annot(zzz = {<CompleteOnName:foo>})\n" +
+		"  int bar;\n" +
 		"  public X() {\n" +
 		"  }\n" +
 		"}\n";
@@ -3669,12 +3678,13 @@ public void test0098(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "<AssistNodeParentAnnotationArrayInitializer:@Annot(zzz)>";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
 		"public class X {\n" +
-		"  @Annot(zzz = {yyy, <CompleteOnName:foo>}) int bar;\n" +
+		"  @Annot(zzz = {<CompleteOnName:foo>})\n" +
+		"  int bar;\n" +
 		"  public X() {\n" +
 		"  }\n" +
 		"}\n";
@@ -3764,12 +3774,12 @@ public void test0101(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "{yyy, <CompleteOnName:foo>}";
+	String expectedParentNodeToString = "<AssistNodeParentAnnotationArrayInitializer:@Annot(zzz)>";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
 		"public class X {\n" +
-		"  @Annot(zzz = {yyy, <CompleteOnName:foo>})\n" +
+		"  @Annot(zzz = {<CompleteOnName:foo>})\n" +
 		"  int bar;\n" +
 		"  public X() {\n" +
 		"  }\n" +
@@ -3796,12 +3806,12 @@ public void test0102(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "<AssistNodeParentAnnotationArrayInitializer:@Annot(zzz)>";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
 		"public class X {\n" +
-		"  @Annot(zzz = <CompleteOnName:foo>)\n" +
+		"  @Annot(zzz = {<CompleteOnName:foo>})\n" +
 		"  int bar;\n" +
 		"  public X() {\n" +
 		"  }\n" +
@@ -3859,7 +3869,7 @@ public void test0104(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "@Annot(zzz = <CompleteOnName:foo>)";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
@@ -4065,7 +4075,7 @@ public void test0107_Method(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "<AssistNodeParentAnnotationArrayInitializer:@Annot(zzz)>";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
@@ -4073,7 +4083,7 @@ public void test0107_Method(){
 			"  public X() {\n" +
 			"  }\n" +
 			"  void bar() {\n" +
-			"    @Annot(zzz = <CompleteOnName:foo>)\n" +
+			"    @Annot(zzz = {<CompleteOnName:foo>})\n" +
 			"  }\n" +
 			"}\n";
 
@@ -4134,7 +4144,7 @@ public void test0108_Method(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "<AssistNodeParentAnnotationArrayInitializer:@Annot(zzz)>";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
@@ -4142,7 +4152,7 @@ public void test0108_Method(){
 			"  public X() {\n" +
 			"  }\n" +
 			"  void bar() {\n" +
-			"    @Annot(zzz = <CompleteOnName:foo>)\n" +
+			"    @Annot(zzz = {<CompleteOnName:foo>})\n" +
 			"  }\n" +
 			"}\n";
 
@@ -4342,7 +4352,7 @@ public void test0111_Method(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "<AssistNodeParentAnnotationArrayInitializer:@Annot(zzz)>";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
@@ -4350,7 +4360,7 @@ public void test0111_Method(){
 			"  public X() {\n" +
 			"  }\n" +
 			"  void bar() {\n" +
-			"    @Annot(zzz = <CompleteOnName:foo>)\n" +
+			"    @Annot(zzz = {<CompleteOnName:foo>})\n" +
 			"  }\n" +
 			"}\n";
 
@@ -4377,7 +4387,7 @@ public void test0112_Diet(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "<AssistNodeParentAnnotationArrayInitializer:@Annot(zzz)>";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
@@ -4411,7 +4421,7 @@ public void test0112_Method(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "<AssistNodeParentAnnotationArrayInitializer:@Annot(zzz)>";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
@@ -4419,7 +4429,7 @@ public void test0112_Method(){
 			"  public X() {\n" +
 			"  }\n" +
 			"  void bar() {\n" +
-			"    @Annot(zzz = <CompleteOnName:foo>)\n" +
+			"    @Annot(zzz = {<CompleteOnName:foo>})\n" +
 			"  }\n" +
 			"}\n";
 
@@ -4480,7 +4490,7 @@ public void test0113_Method(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "@Annot(zzz = <CompleteOnName:foo>)";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
@@ -4549,7 +4559,7 @@ public void test0114_Method(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "@Annot(zzz = <CompleteOnName:foo>)";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
@@ -4646,14 +4656,14 @@ public void test0117(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "<AssistNodeParentAnnotationArrayInitializer:@Annot(zzz)>";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
 		"public class X {\n" +
 		"  public X() {\n" +
 		"  }\n" +
-		"  void bar(@Annot(zzz = {<CompleteOnName:foo>}) int var) {\n" +
+		"  void bar() {\n" +
 		"  }\n" +
 		"}\n";
 
@@ -4678,14 +4688,14 @@ public void test0118(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "<AssistNodeParentAnnotationArrayInitializer:@Annot(zzz)>";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
 		"public class X {\n" +
 		"  public X() {\n" +
 		"  }\n" +
-		"  void bar(@Annot(zzz = {yyy, <CompleteOnName:foo>}) int var) {\n" +
+		"  void bar() {\n" +
 		"  }\n" +
 		"}\n";
 
@@ -4840,15 +4850,11 @@ public void test0121(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "{yyy, <CompleteOnName:foo>}";
+	String expectedParentNodeToString = "<AssistNodeParentAnnotationArrayInitializer:@Annot(zzz)>";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
 		"public class X {\n" +
-		"  @Annot(zzz = {yyy, <CompleteOnName:foo>})\n" +
-		"  int var;\n" +
-		"  {\n" +
-		"  }\n" +
 		"  public X() {\n" +
 		"  }\n" +
 		"  void bar() {\n" +
@@ -4876,7 +4882,7 @@ public void test0122(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "<AssistNodeParentAnnotationArrayInitializer:@Annot(zzz)>";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
@@ -4940,7 +4946,7 @@ public void test0124(){
 	String completeBehind = "foo";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:foo>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "@Annot(zzz = <CompleteOnName:foo>)";
 	String completionIdentifier = "foo";
 	String expectedReplacedSource = "foo";
 	String expectedUnitDisplayString =
@@ -5037,17 +5043,18 @@ public void test0127(){
 	String completeBehind = "{ZZ";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:ZZ>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "<AssistNodeParentAnnotationArrayInitializer:@ZZAnnotation(value)>";
 	String completionIdentifier = "ZZ";
 	String expectedReplacedSource = "ZZ";
 	String expectedUnitDisplayString =
 		"public class Test {\n" +
+		"  @ZZAnnotation(value = {<CompleteOnName:ZZ>})\n" +
 		"  public static final int zzint;\n" +
-		"  <clinit>() {\n" +
-		"  }\n" +
 		"  public Test() {\n" +
 		"  }\n" +
-		"  @ZZAnnotation({<CompleteOnName:ZZ>}) void bar() {\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
+		"  void bar() {\n" +
 		"  }\n" +
 		"}\n";
 
@@ -5074,17 +5081,18 @@ public void test0128(){
 	String completeBehind = "{ZZ";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:ZZ>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "<AssistNodeParentAnnotationArrayInitializer:@ZZAnnotation(value)>";
 	String completionIdentifier = "ZZ";
 	String expectedReplacedSource = "ZZ";
 	String expectedUnitDisplayString =
 		"public class Test {\n" +
+		"  @ZZAnnotation(value = {<CompleteOnName:ZZ>})\n" +
 		"  public static final int zzint;\n" +
-		"  <clinit>() {\n" +
-		"  }\n" +
 		"  public Test() {\n" +
 		"  }\n" +
-		"  @ZZAnnotation(value = {<CompleteOnName:ZZ>}) void bar() {\n" +
+		"  <clinit>() {\n" +
+		"  }\n" +
+		"  void bar() {\n" +
 		"  }\n" +
 		"}\n";
 
@@ -5109,7 +5117,7 @@ public void test0129(){
 	String completeBehind = "{ZZ";
 	int cursorLocation = str.indexOf(completeBehind) + completeBehind.length() - 1;
 	String expectedCompletionNodeToString = "<CompleteOnName:ZZ>";
-	String expectedParentNodeToString = "<NONE>";
+	String expectedParentNodeToString = "<AssistNodeParentAnnotationArrayInitializer:@ZZAnnotation(value)>";
 	String completionIdentifier = "ZZ";
 	String expectedReplacedSource = "ZZ";
 	String expectedUnitDisplayString =

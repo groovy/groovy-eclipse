@@ -11,8 +11,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -35,9 +35,9 @@ public class ExternalFolderChange {
 	 * Update external folders
 	 */
 	public void updateExternalFoldersIfNecessary(boolean refreshIfExistAlready, IProgressMonitor monitor) throws JavaModelException {
-		HashSet oldFolders = ExternalFoldersManager.getExternalFolders(this.oldResolvedClasspath);
+		Set oldFolders = ExternalFoldersManager.getExternalFolders(this.oldResolvedClasspath);
 		IClasspathEntry[] newResolvedClasspath = this.project.getResolvedClasspath();
-		HashSet newFolders = ExternalFoldersManager.getExternalFolders(newResolvedClasspath);
+		Set newFolders = ExternalFoldersManager.getExternalFolders(newResolvedClasspath);
 		if (newFolders == null)
 			return;
 		ExternalFoldersManager foldersManager = JavaModelManager.getExternalManager();

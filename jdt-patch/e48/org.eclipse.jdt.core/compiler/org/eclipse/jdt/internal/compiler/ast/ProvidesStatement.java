@@ -63,8 +63,6 @@ public class ProvidesStatement extends ModuleStatement {
 				problemId = IProblem.InvalidServiceImplType;
 			} else if (impl.isNestedType() && !impl.isStatic()) {
 				problemId = IProblem.NestedServiceImpl;
-			} else if (impl.isAbstract()) {
-				problemId = IProblem.AbstractServiceImplementation;
 			} else {
 				MethodBinding provider = impl.getExactMethod(TypeConstants.PROVIDER, Binding.NO_PARAMETERS, scope.compilationUnitScope());
 				if (provider != null && (!provider.isValidBinding() || !(provider.isPublic() && provider.isStatic()))) {
@@ -80,11 +78,15 @@ public class ProvidesStatement extends ModuleStatement {
 						hasErrors = true;
 					}
 				} else {
-					MethodBinding defaultConstructor = impl.getExactConstructor(Binding.NO_PARAMETERS);
-					if (defaultConstructor == null || !defaultConstructor.isValidBinding()) {
-						problemId = IProblem.ProviderMethodOrConstructorRequiredForServiceImpl;
-					} else if (!defaultConstructor.isPublic()) {
-						problemId = IProblem.ServiceImplDefaultConstructorNotPublic;
+					if (impl.isAbstract()) {
+						problemId = IProblem.AbstractServiceImplementation;
+					} else {
+						MethodBinding defaultConstructor = impl.getExactConstructor(Binding.NO_PARAMETERS);
+						if (defaultConstructor == null || !defaultConstructor.isValidBinding()) {
+							problemId = IProblem.ProviderMethodOrConstructorRequiredForServiceImpl;
+						} else if (!defaultConstructor.isPublic()) {
+							problemId = IProblem.ServiceImplDefaultConstructorNotPublic;
+						}
 					}
 				}
 				if (implType.findSuperTypeOriginatingFrom(intf) == null) {

@@ -16,3 +16,4 @@ Require-Bundle: org.junit;bundle-version="3.8.1",
  org.eclipse.jdt.annotation;bundle-version="[2.0.0,3.0.0)";resolution:=optional
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Eclipse-BundleShape: dir
+Automatic-Module-Name: org.eclipse.jdt.core.tests.builder

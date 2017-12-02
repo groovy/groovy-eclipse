@@ -198,6 +198,16 @@ public interface IJavaSearchConstants {
 	int WRITE_ACCESSES = 5;
 
 	/**
+	 * When searching for Type Declaration matches, and if a module is given, this
+	 * will find type declaration matches in this module as well as the dependent
+	 * module graph of the given module.
+	 *
+	 * @since 3.14
+	 * @category limitTo
+	 */
+	int MODULE_GRAPH = 6;
+
+	/**
 	 * Ignore declaring type while searching result.
 	 * Can be used in conjunction with any of the nature of match.
 	 *
@@ -550,5 +560,13 @@ public interface IJavaSearchConstants {
 	 */
 	int WAIT_UNTIL_READY_TO_SEARCH = IJob.WaitUntilReady;
 
+	/* Special Constant for module search */
+
+	/**
+	 * The unnamed module is represented by this constant for making the intent explicit
+	 * in searches involving modules
+	 * @since 3.14
+	 */
+	char[] ALL_UNNAMED = "ALL-UNNAMED".toCharArray(); ////$NON-NLS-1$
 
 }

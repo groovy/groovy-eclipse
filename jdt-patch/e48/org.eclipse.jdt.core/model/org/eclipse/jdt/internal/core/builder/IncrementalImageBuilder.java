@@ -36,8 +36,8 @@ import java.util.*;
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class IncrementalImageBuilder extends AbstractImageBuilder {
 
-protected ArrayList sourceFiles;
-protected ArrayList previousSourceFiles;
+protected LinkedHashSet<SourceFile> sourceFiles;
+protected LinkedHashSet<SourceFile> previousSourceFiles;
 protected StringSet qualifiedStrings;
 protected StringSet simpleStrings;
 protected StringSet rootStrings;
@@ -791,7 +791,7 @@ protected void removeSecondaryTypes() throws CoreException {
 
 protected void resetCollections() {
 	if (this.sourceFiles == null) {
-		this.sourceFiles = new ArrayList(33);
+		this.sourceFiles = new LinkedHashSet<>(33);
 		this.previousSourceFiles = null;
 		this.qualifiedStrings = new StringSet(3);
 		this.simpleStrings = new StringSet(3);
@@ -799,7 +799,7 @@ protected void resetCollections() {
 		this.hasStructuralChanges = false;
 		this.compileLoop = 0;
 	} else {
-		this.previousSourceFiles = this.sourceFiles.isEmpty() ? null : (ArrayList) this.sourceFiles.clone();
+		this.previousSourceFiles = this.sourceFiles.isEmpty() ? null : (LinkedHashSet) this.sourceFiles.clone();
 
 		this.sourceFiles.clear();
 		this.qualifiedStrings.clear();

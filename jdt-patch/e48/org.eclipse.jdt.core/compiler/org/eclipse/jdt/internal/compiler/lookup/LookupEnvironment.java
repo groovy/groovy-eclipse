@@ -212,10 +212,6 @@ public ModuleBinding getModule(char[] name) {
 	return moduleBinding;
 }
 
-@Deprecated
-public ReferenceBinding askForType(char[][] compoundName) {
-	return askForType(compoundName, this.UnNamedModule);
-}
 /**
  * Ask the name environment for a type which corresponds to the compoundName.
  * Answer null if the name cannot be found.
@@ -855,20 +851,24 @@ public TypeBinding convertToRawType(TypeBinding type, boolean forceRawEnclosingT
 		convertedType = needToConvert ? createRawType((ReferenceBinding)originalType.erasure(), null) : originalType;
 	} else {
 		ReferenceBinding convertedEnclosing;
-		if (originalEnclosing.kind() == Binding.RAW_TYPE) {
-			needToConvert |= !((ReferenceBinding)originalType).isStatic();
-			convertedEnclosing = originalEnclosing;
-		} else if (forceRawEnclosingType && !needToConvert/*stop recursion when conversion occurs*/) {
-			convertedEnclosing = (ReferenceBinding) convertToRawType(originalEnclosing, forceRawEnclosingType);
-			needToConvert = TypeBinding.notEquals(originalEnclosing, convertedEnclosing); // only convert generic or parameterized types
-		} else if (needToConvert || ((ReferenceBinding)originalType).isStatic()) {
-			convertedEnclosing = (ReferenceBinding) convertToRawType(originalEnclosing, false);
+		if(((ReferenceBinding)originalType).isStatic()) {
+			convertedEnclosing = (ReferenceBinding) originalEnclosing.original();
 		} else {
-			convertedEnclosing = convertToParameterizedType(originalEnclosing);
+			if (originalEnclosing.kind() == Binding.RAW_TYPE) {			
+				convertedEnclosing = originalEnclosing;
+				needToConvert = true;
+			} else if (forceRawEnclosingType && !needToConvert/*stop recursion when conversion occurs*/) {
+				convertedEnclosing = (ReferenceBinding) convertToRawType(originalEnclosing, forceRawEnclosingType);
+				needToConvert = TypeBinding.notEquals(originalEnclosing, convertedEnclosing); // only convert generic or parameterized types
+			} else if (needToConvert) {
+				convertedEnclosing = (ReferenceBinding) convertToRawType(originalEnclosing, false);
+			} else {
+				convertedEnclosing = convertToParameterizedType(originalEnclosing);
+			}
 		}
 		if (needToConvert) {
 			convertedType = createRawType((ReferenceBinding) originalType.erasure(), convertedEnclosing);
-		} else if (TypeBinding.notEquals(originalEnclosing, convertedEnclosing) && !originalType.isStatic()) {
+		} else if (TypeBinding.notEquals(originalEnclosing, convertedEnclosing)) {
 			convertedType = createParameterizedType((ReferenceBinding) originalType.erasure(), null, convertedEnclosing);
 		} else {
 			convertedType = originalType;
@@ -1152,10 +1152,13 @@ public ParameterizedGenericMethodBinding createParameterizedGenericMethod(Method
 }
 
 public ParameterizedGenericMethodBinding createParameterizedGenericMethod(MethodBinding genericMethod, TypeBinding[] typeArguments) {
-	return createParameterizedGenericMethod(genericMethod, typeArguments, false, false);
+	return createParameterizedGenericMethod(genericMethod, typeArguments, null);
+}
+public ParameterizedGenericMethodBinding createParameterizedGenericMethod(MethodBinding genericMethod, TypeBinding[] typeArguments, TypeBinding targetType) {
+	return createParameterizedGenericMethod(genericMethod, typeArguments, false, false, targetType);
 }
 public ParameterizedGenericMethodBinding createParameterizedGenericMethod(MethodBinding genericMethod, TypeBinding[] typeArguments,
-																			boolean inferredWithUncheckedConversion, boolean hasReturnProblem)
+																			boolean inferredWithUncheckedConversion, boolean hasReturnProblem, TypeBinding targetType)
 {
 	// cached info is array of already created parameterized types for this type
 	ParameterizedGenericMethodBinding[] cachedInfo = (ParameterizedGenericMethodBinding[])this.uniqueParameterizedGenericMethodBindings.get(genericMethod);
@@ -1169,6 +1172,7 @@ public ParameterizedGenericMethodBinding createParameterizedGenericMethod(Method
 				ParameterizedGenericMethodBinding cachedMethod = cachedInfo[index];
 				if (cachedMethod == null) break nextCachedMethod;
 				if (cachedMethod.isRaw) continue nextCachedMethod;
+				if (cachedMethod.targetType != targetType) continue nextCachedMethod; //$IDENTITY-COMPARISON$
 				if (cachedMethod.inferredWithUncheckedConversion != inferredWithUncheckedConversion) continue nextCachedMethod;
 				TypeBinding[] cachedArguments = cachedMethod.typeArguments;
 				int cachedArgLength = cachedArguments == null ? 0 : cachedArguments.length;
@@ -1198,7 +1202,7 @@ public ParameterizedGenericMethodBinding createParameterizedGenericMethod(Method
 	}
 	// add new binding
 	ParameterizedGenericMethodBinding parameterizedGenericMethod =
-			new ParameterizedGenericMethodBinding(genericMethod, typeArguments, this, inferredWithUncheckedConversion, hasReturnProblem);
+			new ParameterizedGenericMethodBinding(genericMethod, typeArguments, this, inferredWithUncheckedConversion, hasReturnProblem, targetType);
 	cachedInfo[index] = parameterizedGenericMethod;
 	return parameterizedGenericMethod;
 }

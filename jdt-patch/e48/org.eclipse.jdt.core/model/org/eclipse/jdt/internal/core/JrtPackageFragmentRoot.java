@@ -133,7 +133,7 @@ public class JrtPackageFragmentRoot extends JarPackageFragmentRoot implements IM
 			try {
 				return (ModuleDescriptionInfo)((JavaElement) desc).getElementInfo();
 			} catch (JavaModelException e) {
-				e.printStackTrace();
+				Util.log(e);
 			}
 		}
 		return null;

@@ -288,7 +288,7 @@ public class ModuleInfo extends ClassFileStruct implements IBinaryModule {
 		}
 		@Override
 		public int hashCode() {
-			return this.refName.hashCode();
+			return CharOperation.hashCode(this.refName);
 		}
 		@Override
 		public int getModifiers() {
@@ -352,7 +352,7 @@ public class ModuleInfo extends ClassFileStruct implements IBinaryModule {
 	@Override
 	public int hashCode() {
 		int result = 17;
-		int c = this.name.hashCode();
+		int c = CharOperation.hashCode(this.name);
 		result = 31 * result + c;
 		c =  Arrays.hashCode(this.requires);
 		result = 31 * result + c;

@@ -506,13 +506,14 @@ public class CompilationUnitResolver extends Compiler {
 		compilerOptions.performMethodsFullRecovery = statementsRecovery;
 		compilerOptions.performStatementsRecovery = statementsRecovery;
 		compilerOptions.ignoreMethodBodies = (flags & ICompilationUnit.IGNORE_METHOD_BODIES) != 0;
-		// GROOVY edit
-		/*Parser parser = new CommentRecorderParser(
+		/* GROOVY edit
+		Parser parser = new CommentRecorderParser(
 			new ProblemReporter(
 					DefaultErrorHandlingPolicies.proceedWithAllProblems(),
 					compilerOptions,
 					new DefaultProblemFactory()),
-			false);*/
+			false);
+		*/
 		Parser parser = LanguageSupportFactory.getParser(
 				null,
 				compilerOptions,

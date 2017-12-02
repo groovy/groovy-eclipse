@@ -41,7 +41,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -2103,7 +2103,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		if(perProjectInfo == null) 
 			return referencedEntries;
 		
-		List pathToReferencedEntries = new ArrayList(referencedEntries.length);
+		LinkedHashSet<IPath> pathToReferencedEntries = new LinkedHashSet<>(referencedEntries.length);
 		for (int index = 0; index < referencedEntries.length; index++) {
 
 			if (pathToReferencedEntries.contains(referencedEntries[index].getPath()))

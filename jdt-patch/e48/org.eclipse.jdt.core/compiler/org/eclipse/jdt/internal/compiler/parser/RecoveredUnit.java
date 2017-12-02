@@ -224,6 +224,18 @@ public void resetPendingModifiers() {
 public int sourceEnd(){
 	return this.unitDeclaration.sourceEnd;
 }
+@Override
+public int getLastStart() {
+	int lastTypeStart = -1;
+
+	if (this.typeCount > 0) {
+		TypeDeclaration lastType = this.types[this.typeCount - 1].typeDeclaration;
+		if (lastTypeStart < lastType.declarationSourceStart && lastType.declarationSourceStart != 0) {
+			lastTypeStart = lastType.declarationSourceStart;
+		}
+	}
+	return lastTypeStart;
+}
 public String toString(int tab) {
 	StringBuffer result = new StringBuffer(tabString(tab));
 	result.append("Recovered unit: [\n"); //$NON-NLS-1$

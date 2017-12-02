@@ -2178,7 +2178,7 @@ public abstract class ASTNode {
 		Class childClass = newChild.getClass();
 		if (nodeType != null && !nodeType.isAssignableFrom(childClass)) {
 			// new child is not of the right type
-			throw new ClassCastException();
+			throw new ClassCastException(childClass + " is not an instance of " + nodeType); //$NON-NLS-1$
 		}
 		if ((newChild.typeAndFlags & PROTECT) != 0) {
 			// new child node is protected => cannot be parented

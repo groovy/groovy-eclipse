@@ -27,3 +27,4 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Eclipse-BundleShape: dir
 Bundle-Activator: org.eclipse.jdt.core.tests.compiler.Activator
 Bundle-ActivationPolicy: lazy
+Automatic-Module-Name: org.eclipse.jdt.core.tests.compiler

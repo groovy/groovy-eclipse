@@ -282,6 +282,10 @@ public int previousAvailableLineEnd(int position){
 public int sourceEnd(){
 	return 0;
 }
+public int getLastStart() {
+	ASTNode parseTree = parseTree();
+	return parseTree == null ? -1 : parseTree.sourceStart;
+}
 protected String tabString(int tab) {
 	StringBuffer result = new StringBuffer();
 	for (int i = tab; i > 0; i--) {

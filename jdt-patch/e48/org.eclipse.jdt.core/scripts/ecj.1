@@ -19,7 +19,7 @@ Here is a summary of all the options, grouped by type.  Explanations are in the 
 .ul
 Module Options
 .sp
-.B -p|--module-path \--module-source-path \--system
+.B --add-exports \--add-modules \--add-reads \--limit-modules \-p|--module-path \--module-source-path \ --processor-module-path \--system
 .sp
 .ul
 ClassPath Options
@@ -29,7 +29,7 @@ ClassPath Options
 .ul
 Compliance Options
 .sp
-.B \-target \-1.3 \-1.4 \-1.5 \-1.6 \-1.7 \-1.8 \1.9 \-source 
+.B \-target \-1.3 \-1.4 \-1.5 \-1.6 \-1.7 \-1.8 \1.9 \-source \ --release
 .sp
 .ul
 Warning Options
@@ -67,6 +67,22 @@ Helping Options
 Module Options (Supported from 9 onwards)
 
 .B
+.IP  "--add-exports <source-module>/<package>=<target-module>(,<target-module>)*"
+A command line form of exports statement which exports the package in source-module to the comma separated list of target modules.
+
+.B
+.IP  "--add-modules <module 1>,<module 2>,...,<module P>" 
+Extend the default set of root modules with a list of comma separated modules.
+
+.B
+.IP  "--add-reads <source-module>=<target-module>
+A command line form of a requires clause equivalent to adding requires source-module in target modules module-info file.
+
+.B
+.IP  "--limit-modules <module 1>,<module 2>,...,<module P>" 
+Limit the observable modules to the list of comma separated modules.
+
+.B
 .IP  "-p|--module-path <dir 1>;<dir 2>;...;<dir P>" 
 This is a list of directories where application modules can be found. Entries are separated by the platform path separator.
 
@@ -74,6 +90,9 @@ This is a list of directories where application modules can be found. Entries ar
 .IP  "--module-source-path <dir 1>;<dir 2>;...;<dir P>" 
 This is a list of directories where source files for modules can be found. Entries are separated by the platform path separator.
 
+.B
+.IP  "--processor-module-path <path>"
+ module path where annotation processors can be found.
 
 .B
 .IP  "--system <jdk>"
@@ -246,6 +265,10 @@ Defaults are:
 1.9 in \-1.9 mode
 .br
 In 1.4, assert is treated as a keyword. In 1.5 and 1.6, enum and assert are treated as keywords.
+
+.B
+.IP  "--release N" 
+Compile for a specific VM version. Used for compiling against older APIs.
 
 .P
 .ul

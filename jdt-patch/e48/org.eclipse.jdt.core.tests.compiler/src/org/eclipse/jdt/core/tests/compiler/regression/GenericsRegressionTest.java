@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -6122,6 +6122,43 @@ public void testBug515614() {
 		}
 	);
 }
+public void testBug518157A() {
+	runConformTest(
+		new String[] {
+			"RawClassParameterizationBug.java",
+			"class RawClassParameterizationBug<Oops> {\n" +
+			"\n" +
+			"    public interface Example<K,V> {\n" +
+			"    }\n" +
+			"    \n" +
+			"    public static class DefaultExample<K,V> implements Example<K,V> {\n" +
+			"    }\n" +
+			"    @SuppressWarnings(\"rawtypes\")\n" +
+			"    static final Class<? extends Example> fails = DefaultExample.class;\n" +
+			"}\n" +
+			"",
+		}
+	);
+}
+public void testBug518157B() {
+	runConformTest(
+		new String[] {
+			"AlternateRawClassParameterizationBug.java",
+			"import java.util.Map;\n" +
+			"\n" +
+			"class AlternateRawClassParameterizationBug {\n" +
+			"\n" +
+			"    abstract static class MapEntry<K,V> implements Map.Entry<K, V> {\n" +
+			"    }\n" +
+			"\n" +
+			"    @SuppressWarnings(\"rawtypes\")\n" +
+			"    static final Class<? extends Map.Entry> mapFails = MapEntry.class;\n" +
+			"\n" +
+			"}\n" +
+			"",
+		}
+	);
+}
 public void testBug521212() {
 	runNegativeTest(
 		new String[] {
@@ -6163,6 +6200,64 @@ public void testBug526423() {
 			"}"
 		}
 	);
+}
+public void testBug526132() {
+	Map customOptions = getCompilerOptions();
+	customOptions.put(CompilerOptions.OPTION_ReportUnavoidableGenericTypeProblems, CompilerOptions.DISABLED);
+	runNegativeTest(
+		new String[] {
+			"Test.java",
+			"import java.util.HashMap;\n" + 
+			"import java.util.Map;\n" + 
+			"public class Test {\n" + 
+			"	private Map field = new HashMap();\n" + 
+			"	private void method() {\n" + 
+			"		field.put(\"key\", \"value\");\n" + 
+			"	}\n" +
+			"	private void method() {\n" + 
+			"		field.put(\"key\", \"value\");\n" + 
+			"	}\n" +
+			"}\n"
+		},
+		"----------\n" + 
+		"1. WARNING in Test.java (at line 4)\n" + 
+		"	private Map field = new HashMap();\n" + 
+		"	        ^^^\n" + 
+		"Map is a raw type. References to generic type Map<K,V> should be parameterized\n" + 
+		"----------\n" + 
+		"2. WARNING in Test.java (at line 4)\n" + 
+		"	private Map field = new HashMap();\n" + 
+		"	                        ^^^^^^^\n" + 
+		"HashMap is a raw type. References to generic type HashMap<K,V> should be parameterized\n" + 
+		"----------\n" + 
+		"3. ERROR in Test.java (at line 5)\n" + 
+		"	private void method() {\n" + 
+		"	             ^^^^^^^^\n" + 
+		"Duplicate method method() in type Test\n" + 
+		"----------\n" + 
+		"4. WARNING in Test.java (at line 5)\n" + 
+		"	private void method() {\n" + 
+		"	             ^^^^^^^^\n" + 
+		"The method method() from the type Test is never used locally\n" + 
+		"----------\n" + 
+		"5. WARNING in Test.java (at line 6)\n" + 
+		"	field.put(\"key\", \"value\");\n" + 
+		"	^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+		"Type safety: The method put(Object, Object) belongs to the raw type Map. References to generic type Map<K,V> should be parameterized\n" + 
+		"----------\n" + 
+		"6. ERROR in Test.java (at line 8)\n" + 
+		"	private void method() {\n" + 
+		"	             ^^^^^^^^\n" + 
+		"Duplicate method method() in type Test\n" + 
+		"----------\n" + 
+		"7. WARNING in Test.java (at line 9)\n" + 
+		"	field.put(\"key\", \"value\");\n" + 
+		"	^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+		"Type safety: The method put(Object, Object) belongs to the raw type Map. References to generic type Map<K,V> should be parameterized\n" + 
+		"----------\n",
+	null,
+	true,
+	customOptions);
 }
 }
 

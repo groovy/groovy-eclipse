@@ -94,7 +94,7 @@ public class EfficiencyTests extends BuilderTests {
 		incrementalBuild(projectPath);
 
 		expectingCompiledClasses(new String[]{"p2.Collaborator", "p1.Indicted"}); //$NON-NLS-1$ //$NON-NLS-2$
-		expectingCompilingOrder(new String[]{"p1.Indicted", "p2.Collaborator"}); //$NON-NLS-1$ //$NON-NLS-2$
+		expectingCompilingOrder(new String[] { "/Project/src/p1/Indicted.java", "/Project/src/p2/Collaborator.java" });
 	}
 
 	public void testMethodAddition() throws JavaModelException {
@@ -146,7 +146,7 @@ public class EfficiencyTests extends BuilderTests {
 		incrementalBuild(projectPath);
 
 		expectingCompiledClasses(new String[]{"p1.X", "p2.Y"}); //$NON-NLS-1$ //$NON-NLS-2$
-		expectingCompilingOrder(new String[]{"p1.X", "p2.Y" }); //$NON-NLS-1$ //$NON-NLS-2$
+		expectingCompilingOrder(new String[] { "/Project/src/p1/X.java", "/Project/src/p2/Y.java" });
 	}
 
 	public void testLocalTypeAddition() throws JavaModelException {
@@ -198,7 +198,7 @@ public class EfficiencyTests extends BuilderTests {
 		incrementalBuild(projectPath);
 
 		expectingCompiledClasses(new String[]{"p1.X", "p1.X$1"}); //$NON-NLS-1$ //$NON-NLS-2$
-		expectingCompilingOrder(new String[]{"p1.X", "p1.X$1" }); //$NON-NLS-1$ //$NON-NLS-2$
+		expectingCompilingOrder(new String[] { "/Project/src/p1/X.java" });
 	}
 
 	public void testLocalTypeAddition2() throws JavaModelException {
@@ -256,7 +256,7 @@ public class EfficiencyTests extends BuilderTests {
 		incrementalBuild(projectPath);
 
 		expectingCompiledClasses(new String[]{"p1.X", "p1.X$1", "p1.X$2"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		expectingCompilingOrder(new String[]{"p1.X", "p1.X$1", "p1.X$2" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		expectingCompilingOrder(new String[] { "/Project/src/p1/X.java" });
 	}
 
 	public void testLocalTypeRemoval() throws JavaModelException {
@@ -308,7 +308,7 @@ public class EfficiencyTests extends BuilderTests {
 		incrementalBuild(projectPath);
 
 		expectingCompiledClasses(new String[]{"p1.X"}); //$NON-NLS-1$
-		expectingCompilingOrder(new String[]{"p1.X" }); //$NON-NLS-1$
+		expectingCompilingOrder(new String[] { "/Project/src/p1/X.java" });
 	}
 
 	public void testLocalTypeRemoval2() throws JavaModelException {
@@ -366,7 +366,7 @@ public class EfficiencyTests extends BuilderTests {
 		incrementalBuild(projectPath);
 
 		expectingCompiledClasses(new String[]{"p1.X", "p1.X$1"}); //$NON-NLS-1$ //$NON-NLS-2$
-		expectingCompilingOrder(new String[]{"p1.X", "p1.X$1" }); //$NON-NLS-1$ //$NON-NLS-2$
+		expectingCompilingOrder(new String[] { "/Project/src/p1/X.java" });
 	}
 	// http://dev.eclipse.org/bugs/show_bug.cgi?id=196200 - variation
 	public void testMissingType001() throws JavaModelException {
@@ -406,6 +406,7 @@ public class EfficiencyTests extends BuilderTests {
 		incrementalBuild(projectPath);
 
 		expectingCompiledClasses(new String[]{"p1.X", "p2.Y","p2.Z"}); //$NON-NLS-1$ //$NON-NLS-2$
-		expectingCompilingOrder(new String[]{"p2.Z", "p2.Y", "p1.X" }); //$NON-NLS-1$ //$NON-NLS-2$
+		expectingCompilingOrder(
+				new String[] { "/Project/src/p2/Z.java", "/Project/src/p2/Y.java", "/Project/src/p1/X.java" });
 	}
 }

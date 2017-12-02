@@ -304,7 +304,7 @@ public void enterModule(ModuleInfo moduleInfo) {
 	this.indexer.addModuleDeclaration(moduleInfo.moduleName);
 	if (moduleInfo.requires != null) {
 		for (ISourceElementRequestor.RequiresInfo req : moduleInfo.requires) {
-			if (req == null || req.moduleName == null || req.moduleName.equals(CharOperation.NO_CHAR)) continue;
+			if (req == null || req.moduleName == null || req.moduleName == CharOperation.NO_CHAR) continue;
 			this.indexer.addModuleReference(req.moduleName);
 		}
 	}
@@ -316,15 +316,15 @@ private void enterPackageVisibilityInfo(ISourceElementRequestor.PackageExportInf
 	if (packInfos == null)
 		return;
 	for (ISourceElementRequestor.PackageExportInfo packInfo : packInfos) {
-		if (packInfo == null || packInfo.pkgName == null || packInfo.pkgName.equals(CharOperation.NO_CHAR)) continue;
+		if (packInfo == null || packInfo.pkgName == null || packInfo.pkgName == CharOperation.NO_CHAR) continue;
 		this.indexer.addModuleExportedPackages(packInfo.pkgName);
 		char[][] tgts = packInfo.targets;
-		if (tgts == null || tgts.equals(CharOperation.NO_CHAR_CHAR)) continue;
+		if (tgts == null || tgts == CharOperation.NO_CHAR_CHAR) continue;
 		for (char[] tgt : tgts) {
-			if (tgt != null && !tgt.equals(CharOperation.NO_CHAR)) 
+			if (tgt != null && tgt != CharOperation.NO_CHAR)
 				this.indexer.addModuleReference(tgt);
 		}
-	}
+}
 }
 /**
  * @see ISourceElementRequestor#enterMethod(ISourceElementRequestor.MethodInfo)

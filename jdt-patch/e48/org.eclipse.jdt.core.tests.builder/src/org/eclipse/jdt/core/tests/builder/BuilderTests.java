@@ -189,7 +189,7 @@ public class BuilderTests extends TestCase {
 	/** Verifies that given classes have been compiled in the specified order.
 	 */
 	protected void expectingCompilingOrder(String[] expected) {
-		expectingCompiling(this.debugRequestor.getCompiledClasses(), expected, "unexpected compiling order"); //$NON-NLS-1$
+		expectingCompiling(this.debugRequestor.getCompiledFiles(), expected, "unexpected compiling order"); //$NON-NLS-1$
 	}
 
 	private void expectingCompiling(String[] actual, String[] expected, String message) {
@@ -197,20 +197,24 @@ public class BuilderTests extends TestCase {
 			for (int i = 0; i < actual.length; i++)
 				System.out.println(actual[i]);
 
-		StringBuffer actualBuffer = new StringBuffer("{"); //$NON-NLS-1$
+		StringBuffer actualBuffer = new StringBuffer("{ "); //$NON-NLS-1$
 		for (int i = 0; i < actual.length; i++) {
 			if (i > 0)
-				actualBuffer.append(","); //$NON-NLS-1$
+				actualBuffer.append(", "); //$NON-NLS-1$
+			actualBuffer.append("\"");
 			actualBuffer.append(actual[i]);
+			actualBuffer.append("\"");
 		}
-		actualBuffer.append('}');
-		StringBuffer expectedBuffer = new StringBuffer("{"); //$NON-NLS-1$
+		actualBuffer.append(" }");
+		StringBuffer expectedBuffer = new StringBuffer("{ "); //$NON-NLS-1$
 		for (int i = 0; i < expected.length; i++) {
 			if (i > 0)
-				expectedBuffer.append(","); //$NON-NLS-1$
+				expectedBuffer.append(", "); //$NON-NLS-1$
+			expectedBuffer.append("\"");
 			expectedBuffer.append(expected[i]);
+			expectedBuffer.append("\"");
 		}
-		expectedBuffer.append('}');
+		expectedBuffer.append(" }");
 		assertEquals(message, expectedBuffer.toString(), actualBuffer.toString());
 	}
 

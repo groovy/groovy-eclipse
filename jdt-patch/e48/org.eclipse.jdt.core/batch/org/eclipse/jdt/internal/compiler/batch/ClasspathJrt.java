@@ -21,7 +21,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 import java.util.zip.ZipFile;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -33,6 +33,7 @@ import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.env.IMultiModuleEntry;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
+import org.eclipse.jdt.internal.compiler.env.IModule.IPackageExport;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding.ExternalAnnotationStatus;
 import org.eclipse.jdt.internal.compiler.util.JRTUtil;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
@@ -250,11 +251,41 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 	}
 	
 	@Override
-	public Collection<String> getModuleNames(Collection<String> limitModule) {
-		return ModulesCache.values().stream()
-				.flatMap(entryMap -> entryMap.keySet().stream())
-				.filter(m -> limitModule == null || limitModule.contains(m)) // TODO: implement algo from JEP 261 (root selection & transitive closure)
-				.collect(Collectors.toList());
+	public Collection<String> getModuleNames(Collection<String> limitModule, Function<String, IModule> getModule) {
+		Map<String, IModule> cache = ModulesCache.get(this.file.getPath());
+		return selectModules(cache.keySet(), limitModule, getModule);
+	}
+	protected <T> List<String> allModules(Iterable<T> allSystemModules, Function<T,String> getModuleName, Function<T,IModule> getModule) {
+		List<String> result = new ArrayList<>();
+		boolean hasJavaDotSE = false;
+		for (T mod : allSystemModules) {
+			String moduleName = getModuleName.apply(mod);
+			if ("java.se".equals(moduleName)) { //$NON-NLS-1$
+				result.add(moduleName);
+				hasJavaDotSE = true;
+				break;
+			}
+		}
+		for (T mod : allSystemModules) {
+			String moduleName = getModuleName.apply(mod);
+			boolean isJavaDotStart = moduleName.startsWith("java."); //$NON-NLS-1$
+			boolean isPotentialRoot = !isJavaDotStart;	// always include non-java.*
+			if (!hasJavaDotSE)
+				isPotentialRoot |= isJavaDotStart;		// no java.se => add all java.*
+			
+			if (isPotentialRoot) {
+				IModule m = getModule.apply(mod);
+				if (m != null) {
+					for (IPackageExport packageExport : m.exports()) {
+						if (!packageExport.isQualified()) {
+							result.add(moduleName);
+							break;
+						}
+					}
+				}
+			}
+		}
+		return result;
 	}
 //	protected void addToPackageCache(String fileName, boolean endsWithSep) {
 //		int last = endsWithSep ? fileName.length() : fileName.lastIndexOf('/');

@@ -199,11 +199,15 @@ public void addClassFolder(IPath projectPath, IPath classFolderPath, boolean isE
 			requiredComplianceFlag = AbstractCompilerTest.F_1_8;
 			compilerVersion = CompilerOptions.VERSION_1_8;
 		}
+		else if ("9".equals(compliance)) {
+			requiredComplianceFlag = AbstractCompilerTest.F_9;
+			compilerVersion = CompilerOptions.VERSION_9;
+		}
 		else if (!"1.4".equals(compliance) && !"1.3".equals(compliance)) {
 			throw new UnsupportedOperationException("Test framework doesn't support compliance level: " + compliance);
 		}
 		if (requiredComplianceFlag != 0) {
-			if ((AbstractCompilerTest.getPossibleComplianceLevels() & requiredComplianceFlag) == 0)
+			if (CompilerOptions.versionToJdkLevel(System.getProperty("java.specification.version")) < requiredComplianceFlag)
 				throw new RuntimeException("This test requires a " + compliance + " JRE");
 			IJavaProject javaProject = JavaCore.create(project);
 			Map options = new HashMap();

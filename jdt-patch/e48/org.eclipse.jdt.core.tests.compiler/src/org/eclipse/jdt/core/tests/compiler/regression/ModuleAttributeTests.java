@@ -209,4 +209,13 @@ public class ModuleAttributeTests extends AbstractRegressionTest9 {
 		};
 		this.runConformTest(contents);
 	}
+	public void testBug519330() throws Exception {
+		String[] contents =  {
+			"module-info.java",
+			"module java.base {\n" +
+			"}\n",
+			};
+		IModuleAttribute moduleAttribute = getModuleAttribute(contents);
+		assertTrue("module java.base should not require any other modules", moduleAttribute.getRequiresCount() == 0);
+	}
 }

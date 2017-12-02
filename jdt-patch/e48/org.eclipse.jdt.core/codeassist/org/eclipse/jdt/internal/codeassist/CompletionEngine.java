@@ -19,6 +19,7 @@ package org.eclipse.jdt.internal.codeassist;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -56,6 +57,7 @@ import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionNodeDetector;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionNodeFound;
+import org.eclipse.jdt.internal.codeassist.complete.AssistNodeParentAnnotationArrayInitializer;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionOnAnnotationOfType;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionOnArgumentName;
 import org.eclipse.jdt.internal.codeassist.complete.CompletionOnBranchStatementLabel;
@@ -155,12 +157,12 @@ import org.eclipse.jdt.internal.compiler.ast.OperatorIds;
 import org.eclipse.jdt.internal.compiler.ast.PackageVisibilityStatement;
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ParameterizedSingleTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.ProvidesStatement;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedNameReference;
 import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ReferenceExpression;
 import org.eclipse.jdt.internal.compiler.ast.RequiresStatement;
 import org.eclipse.jdt.internal.compiler.ast.ReturnStatement;
-import org.eclipse.jdt.internal.compiler.ast.ProvidesStatement;
 import org.eclipse.jdt.internal.compiler.ast.SingleNameReference;
 import org.eclipse.jdt.internal.compiler.ast.SingleTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.SuperReference;
@@ -232,10 +234,10 @@ import org.eclipse.jdt.internal.core.InternalNamingConventions;
 import org.eclipse.jdt.internal.core.JavaElementRequestor;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.ModuleSourcePathManager;
+import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.internal.core.SourceMethod;
 import org.eclipse.jdt.internal.core.SourceMethodElementInfo;
 import org.eclipse.jdt.internal.core.SourceType;
-import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.internal.core.SourceTypeElementInfo;
 import org.eclipse.jdt.internal.core.search.BasicSearchEngine;
 import org.eclipse.jdt.internal.core.search.matching.IndexBasedJavaSearchEnvironment;
@@ -712,6 +714,7 @@ public final class CompletionEngine
 	private INameEnvironment noCacheNameEnvironment;
 	char[] source;
 	ModuleDeclaration moduleDeclaration;
+	boolean isPackageVisibilityCompletion = false;
 	char[] completionToken;
 
 	char[] qualifiedCompletionToken;
@@ -1333,6 +1336,10 @@ public final class CompletionEngine
 		if (this.knownPkgs.containsKey(packageName)) return;
 
 		if (!isValidPackageName(packageName)) return;
+		
+		if (this.isPackageVisibilityCompletion &&
+			CharOperation.equals(packageName, CharOperation.NO_CHAR))
+			return;
 
 		this.knownPkgs.put(packageName, this);
 
@@ -2340,44 +2347,49 @@ public final class CompletionEngine
 
 	private boolean completeOnPackageVisibilityStatements(boolean contextAccepted,
 			CompilationUnitDeclaration parsedUnit, PackageVisibilityStatement[] pvsStmts) {
-		for (int i = 0, l = pvsStmts.length; i < l; ++i) {
-			PackageVisibilityStatement pvs = pvsStmts[i];
-			if (pvs instanceof CompletionOnKeywordModuleInfo) { // dummy pvs statement
-				contextAccepted = true;
-				processModuleKeywordCompletion(parsedUnit, pvs, (CompletionOnKeyword) pvs);
-				return contextAccepted;
-			}
-			if (pvs.pkgRef instanceof CompletionOnPackageVisibilityReference) {
-				contextAccepted = true;
-				buildContext(pvs, null, parsedUnit, null, null);
-				if(!this.requestor.isIgnored(CompletionProposal.PACKAGE_REF)) {
-					findPackages((CompletionOnPackageVisibilityReference) pvs.pkgRef);
-				}
-				debugPrintf();
-				return contextAccepted;
-			}
-			ModuleReference[] targets = pvs.targets;
-			if (targets == null) continue;
-			HashSet<String> skipSet = new HashSet<>();
-			for (int j = 0, lj = targets.length; j < lj; j++) {
-				ModuleReference target = targets[j];
-				if (target == null) break;
-				if (target instanceof CompletionOnModuleReference) {
-					buildContext(target, null, parsedUnit, null, null);
+		try {
+			this.isPackageVisibilityCompletion = true;
+			for (int i = 0, l = pvsStmts.length; i < l; ++i) {
+				PackageVisibilityStatement pvs = pvsStmts[i];
+				if (pvs instanceof CompletionOnKeywordModuleInfo) { // dummy pvs statement
 					contextAccepted = true;
-					if(!this.requestor.isIgnored(CompletionProposal.MODULE_REF)) {
-						findTargettedModules((CompletionOnModuleReference) target, skipSet);
+					processModuleKeywordCompletion(parsedUnit, pvs, (CompletionOnKeyword) pvs);
+					return contextAccepted;
+				}
+				if (pvs.pkgRef instanceof CompletionOnPackageVisibilityReference) {
+					contextAccepted = true;
+					buildContext(pvs, null, parsedUnit, null, null);
+					if(!this.requestor.isIgnored(CompletionProposal.PACKAGE_REF)) {
+						findPackages((CompletionOnPackageVisibilityReference) pvs.pkgRef);
 					}
 					debugPrintf();
 					return contextAccepted;
-				} else if (target instanceof CompletionOnKeyword) {
-					contextAccepted = true;
-					processModuleKeywordCompletion(parsedUnit, target, (CompletionOnKeyword) target);
-				} else {
-					if (target.moduleName != null || target.moduleName.equals(CharOperation.NO_CHAR))
-						skipSet.add(new String(target.moduleName));
+				}
+				ModuleReference[] targets = pvs.targets;
+				if (targets == null) continue;
+				HashSet<String> skipSet = new HashSet<>();
+				for (int j = 0, lj = targets.length; j < lj; j++) {
+					ModuleReference target = targets[j];
+					if (target == null) break;
+					if (target instanceof CompletionOnModuleReference) {
+						buildContext(target, null, parsedUnit, null, null);
+						contextAccepted = true;
+						if(!this.requestor.isIgnored(CompletionProposal.MODULE_REF)) {
+							findTargettedModules((CompletionOnModuleReference) target, skipSet);
+						}
+						debugPrintf();
+						return contextAccepted;
+					} else if (target instanceof CompletionOnKeyword) {
+						contextAccepted = true;
+						processModuleKeywordCompletion(parsedUnit, target, (CompletionOnKeyword) target);
+					} else {
+					if (target.moduleName != null || target.moduleName == CharOperation.NO_CHAR)
+							skipSet.add(new String(target.moduleName));
+					}
 				}
 			}
+		} finally {
+			this.isPackageVisibilityCompletion = false;
 		}
 		return contextAccepted;
 	}
@@ -4189,7 +4201,7 @@ public final class CompletionEngine
 		} else if(parent instanceof MemberValuePair) {
 			MemberValuePair memberValuePair = (MemberValuePair) parent;
 			if(memberValuePair.binding != null) {
-				addExpectedType(memberValuePair.binding.returnType, scope);
+				addExpectedType(memberValuePair.binding.returnType.leafComponentType(), scope);
 			}
 		} else if (parent instanceof NormalAnnotation) {
 			NormalAnnotation annotation = (NormalAnnotation) parent;
@@ -4210,7 +4222,21 @@ public final class CompletionEngine
 						}
 						if (canBeSingleMemberAnnotation) {
 							this.assistNodeCanBeSingleMemberAnnotation = canBeSingleMemberAnnotation;
-							addExpectedType(methodBindings[0].returnType, scope);
+							addExpectedType(methodBindings[0].returnType.leafComponentType(), scope);
+						}
+					}
+				}
+			}
+		} else if (parent instanceof AssistNodeParentAnnotationArrayInitializer) {
+			AssistNodeParentAnnotationArrayInitializer parent1 = (AssistNodeParentAnnotationArrayInitializer) parent;
+			if(parent1.type.resolvedType instanceof ReferenceBinding) {
+				MethodBinding[] methodBindings =
+					((ReferenceBinding)parent1.type.resolvedType).availableMethods();
+				if (methodBindings != null) {
+					for (MethodBinding methodBinding : methodBindings) {
+						if(CharOperation.equals(methodBinding.selector, parent1.name)) {
+							addExpectedType(methodBinding.returnType.leafComponentType(), scope);
+							break;
 						}
 					}
 				}
@@ -11931,9 +11957,9 @@ public final class CompletionEngine
 		IJavaSearchScope searchScope = BasicSearchEngine.createJavaSearchScope(new IJavaElement[] {this.javaProject});
 		class ImplSearchRequestor extends SearchRequestor {
 			String prefix;
-			List<String> filter;
+			LinkedHashSet<String> filter;
 			public List<IType> types = new ArrayList<>();
-			public ImplSearchRequestor(char[] prefixToken, List<String> filter) {
+			public ImplSearchRequestor(char[] prefixToken, LinkedHashSet<String> filter) {
 				this.prefix = (prefixToken == CharOperation.ALL_PREFIX) ? null : new String(prefixToken);
 				this.filter = filter;
 			}
@@ -11959,7 +11985,7 @@ public final class CompletionEngine
 			}
 		}
 		try {
-			List<String> existingImpl = new ArrayList<>();
+			LinkedHashSet<String> existingImpl = new LinkedHashSet<>();
 			char[][] theInterfaceName = theInterface.getTypeName();
 			// filter out existing implementations of the same interfaces
 			for (int i = 0, l = this.moduleDeclaration.servicesCount; i < l; ++i) {
@@ -11969,7 +11995,7 @@ public final class CompletionEngine
 				TypeReference[] prevImpls = prevProvides.implementations;
 				for (TypeReference prevImpl : prevImpls) {
 					char[][] typeName = prevImpl.getTypeName();
-					if (typeName.equals(CharOperation.NO_CHAR_CHAR)) continue;
+					if (typeName == CharOperation.NO_CHAR_CHAR) continue;
 					existingImpl.add(CharOperation.toString(typeName));
 				}
 			}

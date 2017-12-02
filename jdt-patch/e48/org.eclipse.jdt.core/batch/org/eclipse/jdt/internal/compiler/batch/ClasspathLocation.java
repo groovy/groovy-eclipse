@@ -11,13 +11,19 @@
 package org.eclipse.jdt.internal.compiler.batch;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
 import org.eclipse.jdt.internal.compiler.env.IModule;
+import org.eclipse.jdt.internal.compiler.env.IModule.IModuleReference;
 import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 
@@ -120,9 +126,51 @@ public abstract class ClasspathLocation implements FileSystem.Classpath,
 	}
 	@Override
 	public Collection<String> getModuleNames(Collection<String> limitModules) {
-		if (this.module != null)
-			return Collections.singletonList(String.valueOf(this.module.name()));
+		return getModuleNames(limitModules, m -> getModule(m.toCharArray()));
+	}
+	@Override
+	public Collection<String> getModuleNames(Collection<String> limitModules, Function<String,IModule> getModule) {
+		if (this.module != null) {
+			String name = String.valueOf(this.module.name());
+			return selectModules(Collections.singleton(name), limitModules, getModule);
+		}
 		return Collections.emptyList();
+	}
+	protected Collection<String> selectModules(Set<String> modules, Collection<String> limitModules, Function<String,IModule> getModule) {
+		Collection<String> rootModules;
+		if (limitModules != null) {
+			Set<String> result = new HashSet<>(modules);
+			result.retainAll(limitModules);
+			rootModules = result;
+		} else {
+			rootModules = allModules(modules, s -> s, m -> getModule(m.toCharArray()));
+		}
+		Set<String> allModules = new HashSet<>(rootModules);
+		for (String mod : rootModules)
+			addRequired(mod, allModules, getModule);
+		return allModules;
+	}
+
+	private void addRequired(String mod, Set<String> allModules, Function<String,IModule> getModule) {
+		IModule iMod = getModule(mod.toCharArray());
+		if (iMod != null) {
+			for (IModuleReference requiredRef : iMod.requires()) {
+				IModule reqMod = getModule.apply(new String(requiredRef.name()));
+				if (reqMod != null) {
+					String reqModName = String.valueOf(reqMod.name());
+					if (allModules.add(reqModName))
+						addRequired(reqModName, allModules, getModule);
+				}
+			}
+		}
+	}
+	protected <T> List<String> allModules(Iterable<T> allSystemModules, Function<T,String> getModuleName, Function<T,IModule> getModule) {
+		List<String> result = new ArrayList<>();
+		for (T mod : allSystemModules) {
+			String moduleName = getModuleName.apply(mod);
+			result.add(moduleName);
+		}
+		return result;
 	}
 
 	public boolean isPackage(String qualifiedPackageName, String moduleName) {

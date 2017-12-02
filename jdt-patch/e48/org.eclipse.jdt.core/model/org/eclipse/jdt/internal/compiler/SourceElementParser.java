@@ -128,15 +128,15 @@ public void addUnknownRef(NameReference nameRef) {
 	}
 }
 public void checkComment() {
+	int lastComment = getCommentPtr();
 	// discard obsolete comments while inside methods or fields initializer (see bug 74369)
-	if (!(this.diet && this.dietInt==0) && this.scanner.commentPtr >= 0) {
+	if (!(this.diet && this.dietInt==0) && lastComment >= 0) {
 		flushCommentsDefinedPriorTo(this.endStatementPosition);
+		lastComment = getCommentPtr();
 	}
 
-	int lastComment = this.scanner.commentPtr;
-
 	if (this.modifiersSourceStart >= 0) {
-		// eliminate comments located after modifierSourceStart if positionned
+		// eliminate comments located after modifierSourceStart if positioned
 		while (lastComment >= 0) {
 			int commentSourceStart = this.scanner.commentStarts[lastComment];
 			if (commentSourceStart < 0) commentSourceStart = -commentSourceStart;

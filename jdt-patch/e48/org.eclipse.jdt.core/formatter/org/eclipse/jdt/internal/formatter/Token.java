@@ -55,6 +55,9 @@ public class Token {
 		 */
 		public final static WrapPolicy SUBSTITUTE_ONLY = new WrapPolicy(WrapMode.DISABLED, 0, 0);
 
+		/** Policy used to mark comments on first column that should not be indented. */
+		public final static WrapPolicy FORCE_FIRST_COLUMN = new WrapPolicy(WrapMode.DISABLED, 0, 0);
+
 		public final WrapMode wrapMode;
 		public final int wrapParentIndex;
 		public final int groupEndIndex;
@@ -222,6 +225,7 @@ public class Token {
 	}
 
 	public void setIndent(int indent) {
+		assert indent >= 0;
 		this.indent = indent;
 	}
 

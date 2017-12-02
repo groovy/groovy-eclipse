@@ -134,9 +134,11 @@ public class AnnotatableTypeSystem extends TypeSystem {
 	}
 
 	public RawTypeBinding getRawType(ReferenceBinding genericType, ReferenceBinding enclosingType, AnnotationBinding [] annotations) {
-		
 		if (genericType.hasTypeAnnotations())
 			throw new IllegalStateException();
+		if (genericType.isStatic() && enclosingType != null) {
+			enclosingType = (ReferenceBinding) enclosingType.original();
+		}
 		
 		RawTypeBinding nakedType = null;
 		TypeBinding[] derivedTypes = getDerivedTypes(genericType);

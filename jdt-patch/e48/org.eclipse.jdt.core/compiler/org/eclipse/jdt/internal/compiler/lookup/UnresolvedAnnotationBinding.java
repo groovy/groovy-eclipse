@@ -55,6 +55,13 @@ public ElementValuePair[] getElementValuePairs() {
 				pair.setValue(((UnresolvedReferenceBinding) value).
 						resolve(this.env, false));
 							// no parameterized types in annotation values
+			} else if (value instanceof Object[]) {
+				Object[] values = (Object[]) value;
+				for (int j = 0; j < values.length; j++) {
+					if (values[j] instanceof UnresolvedReferenceBinding) {
+						values[j] = ((UnresolvedReferenceBinding) values[j]).resolve(this.env, false);
+					}
+				}
 			} // do nothing for UnresolvedAnnotationBinding-s, since their
 			  // content is only accessed through get* methods
 		}

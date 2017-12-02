@@ -49,6 +49,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -69,6 +70,8 @@ import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference.AnnotationPosition;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.classfmt.ExternalAnnotationProvider;
+import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
+import org.eclipse.jdt.internal.compiler.codegen.Opcodes;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.Constant;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
@@ -1289,6 +1292,20 @@ public MethodBinding[] getMethods(char[] selector) {
 		}
 	}
 	return result;
+}
+public void generateSyntheticFinalFieldInitialization(CodeStream codeStream) {
+	if (this.synthetics == null || this.synthetics[SourceTypeBinding.FIELD_EMUL] == null)
+		return;
+	Collection<FieldBinding> syntheticFields = this.synthetics[SourceTypeBinding.FIELD_EMUL].values();
+	for (FieldBinding field : syntheticFields) {
+		if (CharOperation.prefixEquals(TypeConstants.SYNTHETIC_SWITCH_ENUM_TABLE, field.name)) {
+			MethodBinding[] accessors = (MethodBinding[]) this.synthetics[SourceTypeBinding.METHOD_EMUL].get(new String(field.name));
+			if (accessors == null || accessors[0] == null) // not a field for switch enum
+				continue;
+			codeStream.invoke(Opcodes.OPC_invokestatic, accessors[0], null /* default declaringClass */);
+			codeStream.fieldAccess(Opcodes.OPC_putstatic, field, null /* default declaringClass */);
+		}
+	}
 }
 /* Answer the synthetic field for <actualOuterLocalVariable>
 *	or null if one does not exist.

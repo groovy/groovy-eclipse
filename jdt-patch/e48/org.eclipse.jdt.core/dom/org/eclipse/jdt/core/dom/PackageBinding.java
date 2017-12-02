@@ -29,6 +29,7 @@ import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.util.Util;
 import org.eclipse.jdt.internal.core.NameLookup;
@@ -128,6 +129,11 @@ class PackageBinding implements IPackageBinding {
 		return AnnotationBinding.NoAnnotations;
 	}
 
+	@Override
+	public IModuleBinding getModule() {
+		ModuleBinding moduleBinding = this.binding.enclosingModule;
+		return moduleBinding != null ? this.resolver.getModuleBinding(moduleBinding) : null;
+	}
 	/*
 	 * @see IBinding#getName()
 	 */

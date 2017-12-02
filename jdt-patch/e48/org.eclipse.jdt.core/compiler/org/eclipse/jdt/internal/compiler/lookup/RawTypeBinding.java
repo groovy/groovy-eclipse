@@ -57,7 +57,7 @@ public class RawTypeBinding extends ParameterizedTypeBinding {
 				}
 			}
 		}
-		if (enclosingType == null || (enclosingType.modifiers & ExtraCompilerModifiers.AccGenericSignature) == 0) {
+		if (enclosingType == null || this.isStatic() || (enclosingType.modifiers & ExtraCompilerModifiers.AccGenericSignature) == 0) {
 			this.modifiers &= ~ExtraCompilerModifiers.AccGenericSignature; // only need signature if enclosing needs one
 		}
 	}
@@ -145,7 +145,7 @@ public class RawTypeBinding extends ParameterizedTypeBinding {
 		    	this.genericTypeSignature = genericType().signature();
 			} else {
 			    StringBuffer sig = new StringBuffer(10);
-			    if (isMemberType()) {
+			    if (isMemberType() && !isStatic()) {
 			    	ReferenceBinding enclosing = enclosingType();
 					char[] typeSig = enclosing.genericTypeSignature();
 					sig.append(typeSig, 0, typeSig.length-1);// copy all but trailing semicolon

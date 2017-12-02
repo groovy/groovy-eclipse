@@ -93,6 +93,7 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 import org.eclipse.jdt.internal.compiler.lookup.VariableBinding;
+import org.eclipse.jdt.internal.compiler.lookup.WildcardBinding;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilationUnit;
@@ -337,6 +338,9 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 					}
 					this.resolvedType = groundType;
 				}
+			} else {
+				reportSamProblem(blockScope, new ProblemMethodBinding(TypeConstants.ANONYMOUS_METHOD, null, ProblemReasons.NotAWellFormedParameterizedType));
+				return this.resolvedType = null;
 			}
 		}
 		boolean genericSignatureNeeded = this.requiresGenericSignature || blockScope.compilerOptions().generateGenericSignatureForLambdaExpressions;
@@ -346,10 +350,12 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 			final TypeBinding expectedParameterType = haveDescriptor && i < this.descriptor.parameters.length ? this.descriptor.parameters[i] : null;
 			argumentType = argumentsTypeElided ? expectedParameterType : this.argumentTypes[i];
 			if (argumentType != null && argumentType != TypeBinding.VOID) {
-				if (haveDescriptor && expectedParameterType != null && argumentType.isValidBinding() && TypeBinding.notEquals(argumentType, expectedParameterType)) {
+				if (haveDescriptor && expectedParameterType != null && argumentType.isValidBinding() && (expectedParameterType.kind() != argumentType.kind() || !argumentType.isEquivalentTo(expectedParameterType))) {
 					if (expectedParameterType.isProperType(true)) {
-						this.scope.problemReporter().lambdaParameterTypeMismatched(argument, argument.type, expectedParameterType);
-						this.resolvedType = null; // continue to type check.
+						if (!isOnlyWildcardMismatch(expectedParameterType, argumentType)) {
+							this.scope.problemReporter().lambdaParameterTypeMismatched(argument, argument.type, expectedParameterType);
+							this.resolvedType = null; // continue to type check.
+						}
 					}
 				}
 				if (genericSignatureNeeded) {
@@ -442,6 +448,30 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 		return argumentsHaveErrors ? this.resolvedType = null : this.resolvedType;
 	}
 
+	// check if the given types are parameterized types and if their type arguments
+	// differ only in a wildcard
+	// ? and ? extends Object
+	private boolean isOnlyWildcardMismatch(TypeBinding expected, TypeBinding argument) {
+		boolean onlyWildcardMismatch = false;
+		if (expected.isParameterizedType() && argument.isParameterizedType()) {
+			TypeBinding[] expectedArgs = ((ParameterizedTypeBinding)expected).typeArguments();
+			TypeBinding[] args = ((ParameterizedTypeBinding)argument).typeArguments();
+			for (int j = 0; j < args.length; j++) {
+				if (TypeBinding.notEquals(expectedArgs[j], args[j])) {
+					if (expectedArgs[j].isWildcard() && args[j].isUnboundWildcard()) {
+						WildcardBinding wc = (WildcardBinding)expectedArgs[j];
+						TypeBinding bound = wc.allBounds();
+						if (bound != null && wc.boundKind == Wildcard.EXTENDS && bound.id == TypeIds.T_JavaLangObject)
+							onlyWildcardMismatch = true;
+					} else {
+						onlyWildcardMismatch = false;
+						break;
+					}
+				}
+			}
+		}
+		return onlyWildcardMismatch;
+	}
 	private ReferenceBinding findGroundTargetType(BlockScope blockScope, TypeBinding targetType, TypeBinding expectedSAMType, boolean argumentTypesElided) {
 		
 		if (expectedSAMType instanceof IntersectionTypeBinding18)
@@ -929,15 +959,28 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 		
 		if (argumentsTypeElided() || t.findSuperTypeOriginatingFrom(s) != null)
 			return false;
-		
+		TypeBinding sPrime = s; // uncaptured
 		s = s.capture(this.enclosingScope, this.sourceStart, this.sourceEnd);
 		MethodBinding sSam = s.getSingleAbstractMethod(this.enclosingScope, true);
 		if (sSam == null || !sSam.isValidBinding())
 			return false;
-		TypeBinding r1 = sSam.returnType;
 		MethodBinding tSam = t.getSingleAbstractMethod(this.enclosingScope, true);
 		if (tSam == null || !tSam.isValidBinding())
 			return true; // See ORT8.test450415a for a case that slips through isCompatibleWith.
+		MethodBinding adapted = tSam.computeSubstitutedMethod(sSam, skope.environment());
+		if (adapted == null) // not same type params
+			return false;
+		MethodBinding sSamPrime = sPrime.getSingleAbstractMethod(this.enclosingScope, true);
+		TypeBinding[] ps = adapted.parameters; // parameters of S adapted to type parameters of T
+		// parameters of S (without capture), adapted to type params of T
+		MethodBinding prime = tSam.computeSubstitutedMethod(sSamPrime, skope.environment());
+		TypeBinding[] pPrimes = prime.parameters;
+		TypeBinding[] qs = tSam.parameters;
+		for (int i = 0; i < ps.length; i++) {
+			if (!qs[i].isCompatibleWith(ps[i]) || TypeBinding.notEquals(qs[i], pPrimes[i]))
+				return false;
+		}
+		TypeBinding r1 = adapted.returnType; // return type of S adapted to type parameters of T
 		TypeBinding r2 = tSam.returnType;
 		
 		if (r2.id == TypeIds.T_void)

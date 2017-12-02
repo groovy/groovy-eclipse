@@ -228,7 +228,7 @@ public class BasicModule implements IModule {
 	@Override
 	public int hashCode() {
 		int result = 17;
-		int c = this.name.hashCode();
+		int c = CharOperation.hashCode(this.name);
 		result = 31 * result + c;
 		c =  Arrays.hashCode(this.requires);
 		result = 31 * result + c;

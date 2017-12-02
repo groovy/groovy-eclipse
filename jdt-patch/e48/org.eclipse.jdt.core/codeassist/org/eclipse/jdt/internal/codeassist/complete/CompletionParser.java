@@ -402,10 +402,32 @@ protected void attachOrphanCompletionNode(){
 				if (this.topKnownElementKind(COMPLETION_OR_ASSIST_PARSER) == K_MEMBER_VALUE_ARRAY_INITIALIZER ) {
 					ArrayInitializer arrayInitializer = new ArrayInitializer();
 					arrayInitializer.expressions = new Expression[]{expression};
+					char[] memberValueName = VALUE;
+					if (topKnownElementKind(COMPLETION_OR_ASSIST_PARSER, 1) == K_ATTRIBUTE_VALUE_DELIMITER) {
+						if (this.identifierLengthPtr > 0) {
+							memberValueName = this.identifierStack[this.identifierPtr];
+							int length = this.identifierLengthStack[this.identifierLengthPtr--];
+							this.identifierPtr -= length;
+						}
+					}
+					MemberValuePair memberValuePair = new MemberValuePair(memberValueName, expression.sourceStart,
+							expression.sourceEnd, arrayInitializer);
+					// The following if-statement is the result of inlining a call of buildMoreAnnotationCompletionContext
+					// that was previously here. It might not be needed.
+					if (this.astLengthPtr > -1) {
+						this.astLengthPtr--;
+					}
+					TypeReference typeReference = getAnnotationType();
 
-					MemberValuePair valuePair =
-							new MemberValuePair(VALUE, expression.sourceStart, expression.sourceEnd, arrayInitializer);
-						buildMoreAnnotationCompletionContext(valuePair);
+					NormalAnnotation annotation = new NormalAnnotation(typeReference, this.intStack[this.intPtr--]);
+					annotation.memberValuePairs = new MemberValuePair[] { memberValuePair };
+
+					CompletionOnAnnotationOfType fakeType = new CompletionOnAnnotationOfType(FAKE_TYPE_NAME,
+							this.compilationUnit.compilationResult(), annotation);
+
+					this.currentElement.add(fakeType, 0);
+					this.pendingAnnotation = fakeType;
+					this.assistNodeParent = new AssistNodeParentAnnotationArrayInitializer(typeReference, memberValueName);
 				} else if(this.topKnownElementKind(COMPLETION_OR_ASSIST_PARSER) == K_BETWEEN_ANNOTATION_NAME_AND_RPAREN) {
 					if (expression instanceof SingleNameReference) {
 						SingleNameReference nameReference = (SingleNameReference) expression;
@@ -545,6 +567,9 @@ protected void attachOrphanCompletionNode(){
 
 	// the following code applies only in methods, constructors or initializers
 	if ((!isInsideMethod() && !isInsideFieldInitialization() && !isInsideAttributeValue())) {
+		return;
+	}
+	if(this.assistNodeParent instanceof AssistNodeParentAnnotationArrayInitializer) {
 		return;
 	}
 
@@ -700,6 +725,7 @@ private void buildMoreAnnotationCompletionContext(MemberValuePair memberValuePai
 					typeReference,
 					this.intStack[this.intPtr--]);
 		annotation.memberValuePairs = memberValuePairs;
+		this.assistNodeParent = annotation;
 
 	}
 	CompletionOnAnnotationOfType fakeType =
@@ -3422,7 +3448,8 @@ protected void consumeMemberValueAsName() {
 		super.consumeMemberValueAsName();
 	} else {
 		super.consumeMemberValueAsName();
-		if(this.topKnownElementKind(COMPLETION_OR_ASSIST_PARSER) == K_BETWEEN_ANNOTATION_NAME_AND_RPAREN) {
+		final int topKnownElementKind = this.topKnownElementKind(COMPLETION_OR_ASSIST_PARSER);
+		if(topKnownElementKind == K_BETWEEN_ANNOTATION_NAME_AND_RPAREN || topKnownElementKind == K_MEMBER_VALUE_ARRAY_INITIALIZER) {
 			this.restartRecovery = true;
 		}
 	}
@@ -3848,7 +3875,7 @@ protected void consumeToken(int token) {
 					|| kind == K_LOCAL_INITIALIZER_DELIMITER
 					|| kind == K_ARRAY_CREATION) {
 					pushOnElementStack(K_ARRAY_INITIALIZER, this.endPosition);
-				} else if (kind == K_BETWEEN_ANNOTATION_NAME_AND_RPAREN) {
+				} else if (kind == K_BETWEEN_ANNOTATION_NAME_AND_RPAREN || kind == K_ATTRIBUTE_VALUE_DELIMITER) {
 					pushOnElementStack(K_MEMBER_VALUE_ARRAY_INITIALIZER, this.endPosition);
 				} else {
 					if (kind == K_CONTROL_STATEMENT_DELIMITER) {

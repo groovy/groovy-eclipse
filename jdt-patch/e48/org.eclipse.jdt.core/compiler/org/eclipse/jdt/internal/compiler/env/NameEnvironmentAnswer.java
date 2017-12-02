@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.env;
 
+import java.util.Arrays;
+
 import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 
@@ -70,13 +72,16 @@ public class NameEnvironmentAnswer {
 			baseString = "ICompilationUnit " + this.compilationUnit.toString(); //$NON-NLS-1$
 		}
 		if (this.sourceTypes != null) {
-			baseString = this.sourceTypes.toString();
+			baseString = Arrays.toString(this.sourceTypes);
 		}
 		if (this.accessRestriction != null) {
 			baseString += " " + this.accessRestriction.toString(); //$NON-NLS-1$
 		}
 		if (this.externalAnnotationPath != null) {
 			baseString += " extPath=" + this.externalAnnotationPath.toString(); //$NON-NLS-1$
+		}
+		if (this.moduleName != null) {
+			baseString += " module=" + String.valueOf(this.moduleName); //$NON-NLS-1$
 		}
 		return baseString;
 	}

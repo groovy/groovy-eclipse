@@ -47,7 +47,7 @@ public ProblemMethodBinding(MethodBinding closestMatch, char[] selector, TypeBin
 	}
 }
 @Override
-MethodBinding computeSubstitutedMethod(MethodBinding method, LookupEnvironment env) {
+public MethodBinding computeSubstitutedMethod(MethodBinding method, LookupEnvironment env) {
 	return this.closestMatch == null ? this : this.closestMatch.computeSubstitutedMethod(method, env);
 }
 @Override

@@ -1952,8 +1952,12 @@ protected int applyCloseableClassWhitelists() {
 protected int applyCloseableInterfaceWhitelists() {
 	switch (this.compoundName.length) {
 		case 4:
-			if (CharOperation.equals(this.compoundName, TypeConstants.RESOURCE_FREE_CLOSEABLE_STREAM))
-				return TypeIds.BitResourceFreeCloseable;
+			for (int i=0; i<2; i++)
+				if (!CharOperation.equals(this.compoundName[i], TypeConstants.JAVA_UTIL_STREAM[i]))
+					return 0;
+			for (char[] streamName : TypeConstants.RESOURCE_FREE_CLOSEABLE_J_U_STREAMS)
+				if (CharOperation.equals(this.compoundName[3], streamName))
+					return TypeIds.BitResourceFreeCloseable;
 			break;
 	}
 	return 0;

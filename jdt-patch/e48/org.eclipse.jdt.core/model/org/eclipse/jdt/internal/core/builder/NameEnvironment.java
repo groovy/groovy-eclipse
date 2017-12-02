@@ -113,8 +113,8 @@ private void computeClasspathLocations(
 		moduleEntries = new HashMap<>(classpathEntries.length);
 		this.moduleUpdater = new ModuleUpdater(javaProject);
 	}
-	IModuleDescription mod = null;
-	
+	IModuleDescription projectModule = javaProject.getModuleDescription();
+
 	String patchedModuleName = ModuleEntryProcessor.pushPatchToFront(classpathEntries);
 	IModule patchedModule = null;
 
@@ -209,6 +209,7 @@ private void computeClasspathLocations(
 				if (moduleEntries != null && isOnModulePath && projectLocations.size() > 0) {
 					IModule info = null;
 					try {
+						IModuleDescription mod;
 						if ((mod = prereqJavaProject.getModuleDescription()) != null) {
 							SourceModule sourceModule = (SourceModule) mod;
 							info = (ModuleDescriptionInfo) sourceModule.getElementInfo();
@@ -276,8 +277,9 @@ private void computeClasspathLocations(
 					ClasspathLocation bLocation = ClasspathLocation.forLibrary(path.toOSString(), accessRuleSet, externalAnnotationPath, isOnModulePath);
 					bLocations.add(bLocation);
 					if (moduleEntries != null) {
+						Set<String> libraryLimitModules = (limitModules == null && projectModule != null) ? ClasspathJrt.NO_LIMIT_MODULES : limitModules;
 						patchedModule = collectModuleEntries(bLocation, path, isOnModulePath,
-											limitModules, patchedModuleName, patchedModule, moduleEntries);
+											libraryLimitModules, patchedModuleName, patchedModule, moduleEntries);
 					}
 				}
 				continue nextEntry;
@@ -289,9 +291,9 @@ private void computeClasspathLocations(
 	this.sourceLocations = new ClasspathMultiDirectory[sLocations.size()];
 	if (!sLocations.isEmpty()) {
 		sLocations.toArray(this.sourceLocations);
-		if (moduleEntries != null && (mod = javaProject.getModuleDescription()) != null) {
+		if (moduleEntries != null && projectModule != null) {
 			try {
-				AbstractModule sourceModule = (AbstractModule)mod;
+				AbstractModule sourceModule = (AbstractModule)projectModule;
 				ModuleDescriptionInfo info = (ModuleDescriptionInfo) sourceModule.getElementInfo();
 				ModulePathEntry projectEntry = new ModulePathEntry(javaProject.getPath(), info, this.sourceLocations);
 				if (!moduleEntries.containsKey(sourceModule.getElementName())) { // can be registered already, if patching
@@ -352,7 +354,7 @@ IModule collectModuleEntries(ClasspathLocation bLocation, IPath path, boolean is
 		IModule module = binaryModulePathEntry.getModule();
 		if (module != null) {
 			String moduleName = String.valueOf(module.name());
-			if (limitModules == null || limitModules.contains(moduleName)) {
+			if (limitModules == null || limitModules == ClasspathJrt.NO_LIMIT_MODULES || limitModules.contains(moduleName)) {
 				moduleEntries.put(moduleName, binaryModulePathEntry);
 				if (patchedModuleName != null) {
 					if (moduleName.equals(patchedModuleName))

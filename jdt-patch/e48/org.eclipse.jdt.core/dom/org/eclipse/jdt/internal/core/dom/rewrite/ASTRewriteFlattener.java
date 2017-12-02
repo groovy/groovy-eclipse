@@ -439,9 +439,11 @@ public class ASTRewriteFlattener extends ASTVisitor {
 
 	@Override
 	public boolean visit(CompilationUnit node) {
-		ASTNode module= getChildNode(node, CompilationUnit.MODULE_PROPERTY);
-		if (module != null) {
-			module.accept(this);
+		if (node.getAST().apiLevel() >= JLS9_INTERNAL) {
+			ASTNode module= getChildNode(node, CompilationUnit.MODULE_PROPERTY);
+			if (module != null) {
+				module.accept(this);
+			}
 		}
 
 		ASTNode pack= getChildNode(node, CompilationUnit.PACKAGE_PROPERTY);

@@ -537,8 +537,17 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 					// visible but foreign (when current is unnamed or auto):
 					for (char[] declaringModuleName : declaringModuleNames) {
 						ModuleBinding declaringModule = this.environment.root.getModule(declaringModuleName);
-						if (declaringModule != null && !declaringModule.isPackageLookupActive)
-							binding = SplitPackageBinding.combine(declaringModule.getDeclaredPackage(parentName, name), binding, this);
+						if (declaringModule != null && !declaringModule.isPackageLookupActive) {
+							PackageBinding declaredPackage = declaringModule.getDeclaredPackage(parentName, name);
+							if (declaredPackage != null) {
+								// don't add foreign package to 'parent' (below), but to its own parent:
+								if (declaredPackage.parent != null)
+									declaredPackage.parent.addPackage(declaredPackage, declaringModule, true);
+								parent = null;
+								//
+								binding = SplitPackageBinding.combine(declaredPackage, binding, this);
+							}
+						}
 					}
 				}
 			}
@@ -556,7 +565,7 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 		// remember
 		if (parentName.length == 0)
 			binding.environment.knownPackages.put(name, binding);
-		else
+		else if (parent != null)
 			binding = parent.addPackage(binding, this, false);
 		return addPackage(binding, false);
 	}

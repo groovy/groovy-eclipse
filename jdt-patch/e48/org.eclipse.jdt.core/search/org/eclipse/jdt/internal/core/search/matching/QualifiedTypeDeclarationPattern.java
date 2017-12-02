@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -19,14 +19,17 @@ public char[] qualification;
 PackageDeclarationPattern packagePattern;
 public int packageIndex = -1;
 
-public QualifiedTypeDeclarationPattern(char[] qualification, char[] simpleName, char typeSuffix, int matchRule) {
+public QualifiedTypeDeclarationPattern(char[] moduleNames, char[] qualification, char[] simpleName, char typeSuffix, int matchRule) {
 	this(matchRule);
-
+	addModuleNames(moduleNames);
 	this.qualification = this.isCaseSensitive ? qualification : CharOperation.toLowerCase(qualification);
 	this.simpleName = (this.isCaseSensitive || this.isCamelCase) ? simpleName : CharOperation.toLowerCase(simpleName);
 	this.typeSuffix = typeSuffix;
 
 	this.mustResolve = this.qualification != null || typeSuffix != TYPE_SUFFIX;
+}
+public QualifiedTypeDeclarationPattern(char[] qualification, char[] simpleName, char typeSuffix, int matchRule) {
+	this(null, qualification, simpleName, typeSuffix, matchRule);
 }
 public QualifiedTypeDeclarationPattern(char[] qualification, int qualificationMatchRule, char[] simpleName, char typeSuffix, int matchRule) {
 	this(qualification, simpleName, typeSuffix, matchRule);

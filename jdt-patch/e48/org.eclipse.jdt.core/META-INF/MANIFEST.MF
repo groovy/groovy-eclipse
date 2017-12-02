@@ -20,7 +20,7 @@ Export-Package: org.codehaus.jdt.groovy.integration,
  org.eclipse.jdt.core.jdom,
  org.eclipse.jdt.core.search,
  org.eclipse.jdt.core.util,
- org.eclipse.jdt.core.provisional;x-friends:="org.eclipse.jdt.ui",
+ org.eclipse.jdt.core.provisional;x-friends:="org.eclipse.jdt.ui,org.eclipse.jdt.debug.ui",
  org.eclipse.jdt.internal.codeassist;x-internal:=true,
  org.eclipse.jdt.internal.codeassist.complete;x-internal:=true,
  org.eclipse.jdt.internal.codeassist.impl;x-internal:=true,
@@ -42,7 +42,7 @@ Export-Package: org.codehaus.jdt.groovy.integration,
    org.eclipse.jdt.compiler.tool,
    org.eclipse.pde.api.tools,
    org.eclipse.jdt.apt.core",
- org.eclipse.jdt.internal.core;x-friends:="org.eclipse.jdt.apt.pluggable.core,org.eclipse.pde.api.tools",
+ org.eclipse.jdt.internal.core;x-friends:="org.eclipse.jdt.apt.pluggable.core,org.eclipse.pde.api.tools,org.eclipse.jdt.launching",
  org.eclipse.jdt.internal.core.builder;x-friends:="org.eclipse.jdt.apt.pluggable.core,org.eclipse.pde.api.tools",
  org.eclipse.jdt.internal.core.dom;x-internal:=true,
  org.eclipse.jdt.internal.core.dom.rewrite;x-internal:=true,
@@ -72,6 +72,7 @@ Require-Bundle: org.eclipse.core.resources;bundle-version="[3.12.0,4.0.0)",
  org.eclipse.text;bundle-version="[3.6.0,4.0.0)",
  org.eclipse.team.core;bundle-version="[3.1.0,4.0.0)";resolution:=optional
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Eclipse-BuddyPolicy: registered
 Eclipse-ExtensibleAPI: true
 Bundle-ActivationPolicy: lazy
-Eclipse-BuddyPolicy: registered
+Automatic-Module-Name: org.eclipse.jdt.core

@@ -47,7 +47,7 @@ public static boolean SHOW_STATS = false;
  * This list is used to reset the JavaModel.existingExternalFiles cache when a build cycle begins
  * so that deleted external jars are discovered.
  */
-static ArrayList builtProjects = null;
+static LinkedHashSet<String> builtProjects;
 
 public static IMarker[] getProblemsFor(IResource resource) {
 	try {
@@ -431,7 +431,7 @@ public State getLastState(IProject project) {
 private IProject[] getRequiredProjects(boolean includeBinaryPrerequisites) {
 	if (this.javaProject == null || this.workspaceRoot == null) return new IProject[0];
 
-	ArrayList projects = new ArrayList();
+	LinkedHashSet<IProject> projects = new LinkedHashSet<>();
 	ExternalFoldersManager externalFoldersManager = JavaModelManager.getExternalManager();
 	try {
 		IClasspathEntry[] entries = this.javaProject.getExpandedClasspath();
@@ -595,7 +595,7 @@ private int initializeBuilder(int kind, boolean forBuild) throws CoreException {
 		// Flush the existing external files cache if this is the beginning of a build cycle
 		String projectName = this.currentProject.getName();
 		if (builtProjects == null || builtProjects.contains(projectName)) {
-			builtProjects = new ArrayList();
+			builtProjects = new LinkedHashSet();
 		}
 		builtProjects.add(projectName);
 	}

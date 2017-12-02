@@ -3070,8 +3070,11 @@ public void generateSyntheticBodyForSwitchTable(SyntheticMethodBinding methodBin
 		}
 	}
 	aload_0();
-	dup();
-	fieldAccess(Opcodes.OPC_putstatic, syntheticFieldBinding, null /* default declaringClass */);
+	if (scope.compilerOptions().complianceLevel < ClassFileConstants.JDK9) {
+		// Modifying a final field outside of the <clinit> method is not allowed in 9
+		dup();
+		fieldAccess(Opcodes.OPC_putstatic, syntheticFieldBinding, null /* default declaringClass */);
+	}
 	areturn();
 	removeVariable(localVariableBinding);
 }

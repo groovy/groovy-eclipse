@@ -44,6 +44,8 @@ import java.text.MessageFormat;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.lang.model.SourceVersion;
+
 import junit.framework.Test;
 
 import org.eclipse.jdt.core.JavaCore;
@@ -630,7 +632,24 @@ public void test012(){
         "                       specify where to find source files for multiple modules\n" +
         "    -p --module-path <directories separated by " + File.pathSeparator + ">\n" +
         "                       specify where to find application modules\n" +
-        "    --system <jdk>      Override location of system modules \n" +
+        "    --processor-module-path <directories separated by " + File.pathSeparator + ">\n" +
+        "                       specify module path where annotation processors\n" + 
+        "                       can be found\n" +
+        "    --system <jdk>      Override location of system modules\n" +
+        "    --add-exports <module>/<package>=<other-module>(,<other-module>)*\n" +
+        "                       specify additional package exports clauses to the\n" +
+        "                       given modules\n" +
+        "    --add-reads <module>=<other-module>(,<other-module>)*\n" +
+        "                       specify additional modules to be considered as required\n" +
+        "                       by given modules\n" +
+        "    --add-modules  <module>(,<module>)*\n" +
+        "                       specify the additional module names that should be\n" +
+        "                       resolved to be root modules\n" +
+        "    --limit-modules <module>(,<module>)*\n" +
+        "                       specify the observable module names\n" +
+        "    --release <release>\n" +
+        "                       compile for a specific VM version\n" +
+        " \n" +
         " Compliance options:\n" +
         "    -1.3               use 1.3 compliance (-source 1.3 -target 1.1)\n" +
         "    -1.4             + use 1.4 compliance (-source 1.3 -target 1.2)\n" +
@@ -996,7 +1015,6 @@ public void test012b(){
 			"		<option key=\"org.eclipse.jdt.core.compiler.emulateJavacBug8031744\" value=\"enabled\"/>\n" +
 			"		<option key=\"org.eclipse.jdt.core.compiler.generateClassFiles\" value=\"enabled\"/>\n" + 
 			"		<option key=\"org.eclipse.jdt.core.compiler.groovy.buildGroovyFiles\" value=\"disabled\"/>\n" + 
-			"		<option key=\"org.eclipse.jdt.core.compiler.groovy.groovyTransformsToRunOnReconcile\" value=\"\"/>\n" + 
 			"		<option key=\"org.eclipse.jdt.core.compiler.maxProblemPerUnit\" value=\"100\"/>\n" +
 			"		<option key=\"org.eclipse.jdt.core.compiler.problem.APILeak\" value=\"warning\"/>\n" + 
 			"		<option key=\"org.eclipse.jdt.core.compiler.problem.annotationSuperInterface\" value=\"warning\"/>\n" + 
@@ -13041,5 +13059,26 @@ public void test496137f(){
 		"",
 		"",
 		true);
+}
+public void testReleaseOption() throws Exception {
+	try {
+		SourceVersion valueOf = SourceVersion.valueOf("RELEASE_9");
+		if (valueOf != null)
+			return;
+	} catch(IllegalArgumentException iae) {
+		// Ignore
+	}
+	this.runNegativeTest(
+			new String[] {
+				"X.java",
+				"/** */\n" +
+				"public class X {\n" +
+				"}",
+			},
+	     "\"" + OUTPUT_DIR +  File.separator + "X.java\""
+	     + " --release 8 -d \"" + OUTPUT_DIR + "\"",
+	     "",
+	     "option --release is supported only when run with JDK 9 or above\n",
+	     true);
 }
 }

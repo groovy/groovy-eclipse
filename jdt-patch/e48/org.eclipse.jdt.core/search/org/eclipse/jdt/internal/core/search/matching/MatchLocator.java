@@ -147,6 +147,7 @@ public int numberOfMatches; // (numberOfMatches - 1) is the last unit in matches
 public PossibleMatch[] matchesToProcess;
 public PossibleMatch currentPossibleMatch;
 
+/* package */HashMap<SearchMatch, Binding> matchBinding = new HashMap<>();
 /*
  * Time spent in the IJavaSearchResultCollector
  */
@@ -1237,6 +1238,14 @@ public void initialize(JavaProject project, int possibleMatchSize) throws JavaMo
 
 	this.lookupEnvironment.addResolutionListener(this.patternLocator);
 }
+private boolean skipMatch(JavaProject javaProject, PossibleMatch possibleMatch) {
+	if (this.options.sourceLevel >= ClassFileConstants.JDK9) {
+		char[] pModuleName = possibleMatch.getModuleName();
+		if (pModuleName != null && this.lookupEnvironment.getModule(pModuleName) == null)
+			return true;
+	}
+	return false;
+}
 protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMatches, int start, int length) throws CoreException {
 	initialize(javaProject, length);
 	// GROOVY add
@@ -1251,6 +1260,7 @@ protected void locateMatches(JavaProject javaProject, PossibleMatch[] possibleMa
 	try {
 		for (int i = start, maxUnits = start + length; i < maxUnits; i++) {
 			PossibleMatch possibleMatch = possibleMatches[i];
+			if (skipMatch(javaProject, possibleMatch)) continue;
 			// GROOVY add
 			if (isInterestingProject && possibleMatch.isInterestingSourceFile() && LanguageSupportFactory.maybePerformDelegatedSearch(possibleMatch, this.pattern, this.requestor)) {
 				alreadyMatched.add(possibleMatch);
@@ -1684,7 +1694,9 @@ public SearchMatch newDeclarationMatch(
 		case IJavaElement.TYPE_PARAMETER:
 			return new TypeParameterDeclarationMatch(element, accuracy, offset, length, participant, resource);
 		case IJavaElement.JAVA_MODULE:
-			return new ModuleDeclarationMatch(binding == null ? element : ((JavaElement) element).resolved(binding), accuracy, offset, length, participant, resource);
+			ModuleDeclarationMatch match = new ModuleDeclarationMatch(binding == null ? element : ((JavaElement) element).resolved(binding), accuracy, offset, length, participant, resource);
+			this.matchBinding.put(match, binding);
+			return match;
 		default:
 			return null;
 	}
@@ -2969,6 +2981,7 @@ protected void reportMatching(ModuleDeclaration module, IJavaElement parent, int
 	}
 	if (moduleDesc == null) // could theoretically happen if openable is ICompilationUnit, but logically having a module should prevent this from happening
 		return;
+	reportMatching(module.annotations, moduleDesc, null, module.binding, nodeSet, true, true);
 	if (accuracy > -1) { // report module declaration
 		SearchMatch match = this.patternLocator.newDeclarationMatch(module, moduleDesc, module.binding, accuracy, module.moduleName.length, this);
 		report(match);
