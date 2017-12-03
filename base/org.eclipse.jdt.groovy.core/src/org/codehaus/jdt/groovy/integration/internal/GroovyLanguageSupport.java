@@ -175,7 +175,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
             binding.setVariable("configuration", config);
 
             CompilerConfiguration configuratorConfig = new CompilerConfiguration();
-            Version v = new Version(GroovySystem.getVersion());
+            Version v = new Version(GroovySystem.getVersion().split("-")[0]);
             if ((v.getMajor() == 2 && v.getMinor() >= 1) || v.getMajor() > 2) {
                 ImportCustomizer customizer = new ImportCustomizer();
                 customizer.addStaticStars("org.codehaus.groovy.control.customizers.builder.CompilerCustomizationBuilder");
