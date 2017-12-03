@@ -68,6 +68,7 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.CompilationProgress;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.compiler.batch.BatchCompiler;
+import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.internal.compiler.AbstractAnnotationProcessorManager;
 import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
@@ -1938,8 +1939,8 @@ public void configure(String[] argv) {
 				// old code:{
 				if (currentArg.endsWith(SuffixConstants.SUFFIX_STRING_java)) {
 				}new code: */
-				if (currentArg.endsWith(SuffixConstants.SUFFIX_STRING_java) 
-					|| currentArg.endsWith(".groovy")) {				 //$NON-NLS-1$
+				if (currentArg.endsWith(SuffixConstants.SUFFIX_STRING_java)
+					|| currentArg.endsWith(".groovy")) { //$NON-NLS-1$
 				
 					if (currentArg.endsWith(".groovy")) { //$NON-NLS-1$
 						encounteredGroovySourceFile = true;
@@ -1983,7 +1984,7 @@ public void configure(String[] argv) {
 					continue;
 				}
 				if (currentArg.equals("-indy")) { //$NON-NLS-1$
-					String str = this.options.get(CompilerOptions.OPTIONG_GroovyFlags);
+					String str = (String) this.options.get(CompilerOptions.OPTIONG_GroovyFlags);
 					int val = str == null ? 0 : Integer.parseInt(str);
 					this.options.put(CompilerOptions.OPTIONG_GroovyFlags,
 							String.valueOf(CompilerUtils.InvokeDynamic | val));
