@@ -2648,7 +2648,7 @@ public void configure(String[] argv) {
 			// GROOVY add
 			case INSIDE_CONFIG_SCRIPT:
 				if (currentArg.isEmpty() || currentArg.charAt(0) == '-')
-					throw new IllegalArgumentException(String.format("Missing argument to -configScript at ''%s''", currentArg)); //$NON-NLS-1$
+					throw new IllegalArgumentException("Missing argument to -configScript at ''" + currentArg + "''");
 				this.options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, currentArg);
 				mode = DEFAULT;
 				continue;
