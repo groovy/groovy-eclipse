@@ -63,7 +63,7 @@ public class GroovyImageDecorator extends BaseLabelProvider implements ILabelDec
             return null;
         }
 
-        if (element instanceof GroovyCompilationUnit) {
+        if (element instanceof GroovyCompilationUnit && image.getBounds().width <= 16) {
             // JavaElementImageProvider has overridden the icon tied to the GroovyEditor; need to replace image
             image = getJavaElementImage(((GroovyCompilationUnit) element).getResource(), getImageSize(image));
 
