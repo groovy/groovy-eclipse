@@ -1854,8 +1854,8 @@ public class CompilerOptions {
 			if (ENABLED.equals(optionValue)) {
 				this.buildGroovyFiles = 2;
 				this.storeAnnotations = true; // force it on
-				String s = optionsMap.get(OPTIONG_GroovyFlags);
-				if (s != null && !s.trim().isEmpty()) {
+				String s = (String) optionsMap.get(OPTIONG_GroovyFlags);
+				if (s != null && s.trim().length() > 0) {
 					this.groovyFlags = Integer.parseInt(s);
 				} else {
 					this.groovyFlags = 0;
@@ -1866,21 +1866,21 @@ public class CompilerOptions {
 			}
 		}
 		if ((optionValue = optionsMap.get(OPTIONG_GroovyProjectName)) != null) {
-			this.groovyProjectName = optionValue;
+			this.groovyProjectName = (String) optionValue;
 		}
 		if ((optionValue = optionsMap.get(OPTIONG_GroovyClassLoaderPath)) != null) {
-			this.groovyClassLoaderPath = optionValue;
+			this.groovyClassLoaderPath = (String) optionValue;
 		}
 		if ((optionValue = optionsMap.get(OPTIONG_GroovyCompilerConfigScript)) != null) {
-			this.groovyCompilerConfigScript = optionValue;
+			this.groovyCompilerConfigScript = (String) optionValue;
 		}
 		if ((optionValue = optionsMap.get(OPTIONG_GroovyExcludeGlobalASTScan)) != null) {
-			this.groovyExcludeGlobalASTScan = optionValue;
+			this.groovyExcludeGlobalASTScan = (String) optionValue;
 		}
-		if ((optionValue = optionsMap.get(OPTIONG_GroovyTransformsToRunOnReconcile)) != null && !optionValue.trim().isEmpty()) {
-			this.groovyTransformsToRunOnReconcile = optionValue;
+		if ((optionValue = optionsMap.get(OPTIONG_GroovyTransformsToRunOnReconcile)) != null && ((String) optionValue).trim().length() > 0) {
+			this.groovyTransformsToRunOnReconcile = (String) optionValue;
 		} else if ((optionValue = System.getProperty("greclipse.transformsDuringReconcile")) != null) { //$NON-NLS-1$
-			this.groovyTransformsToRunOnReconcile = optionValue;
+			this.groovyTransformsToRunOnReconcile = (String) optionValue;
 		}
 		// GROOVY end
 	}
