@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2015 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -72,7 +73,7 @@
  *                              bug 386692 - Missing "unused" warning on "autowired" fields
  ********************************************************************************/
 package org.eclipse.jdt.internal.compiler.problem;
-// GROOVY PATCHED
+
 import java.io.CharConversionException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -8613,6 +8614,11 @@ public void unusedDeclaredThrownException(ReferenceBinding exceptionType, Abstra
 	}
 }
 public void unusedImport(ImportReference importRef) {
+	// GROOVY add
+	if ((importRef.sourceEnd() - importRef.sourceStart()) < 1) {
+		return; // don't warn for import added by AST transform
+	}
+	// GROOVY end
 	int severity = computeSeverity(IProblem.UnusedImport);
 	if (severity == ProblemSeverities.Ignore) return;
 	String[] arguments = new String[] { CharOperation.toString(importRef.tokens) };

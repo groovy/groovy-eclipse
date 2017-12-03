@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2014 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -10,7 +11,7 @@
  *     Harry Terkelsen (het@google.com) - Bug 449262 - Allow the use of third-party Java formatters
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
-//GROOVY PATCHED
+
 import java.util.*;
 
 import org.eclipse.core.runtime.preferences.*;
@@ -99,7 +100,7 @@ public class JavaCorePreferenceInitializer extends AbstractPreferenceInitializer
 		defaultOptionsMap.put(JavaCore.TIMEOUT_FOR_PARAMETER_NAME_FROM_ATTACHED_JAVADOC, "50"); //$NON-NLS-1$
 
 		// Store default values to default preferences
-	 	IEclipsePreferences defaultPreferences = DefaultScope.INSTANCE.getNode(JavaCore.PLUGIN_ID);
+		IEclipsePreferences defaultPreferences = DefaultScope.INSTANCE.getNode(JavaCore.PLUGIN_ID);
 		for (Iterator iter = defaultOptionsMap.entrySet().iterator(); iter.hasNext();) {
 			Map.Entry entry = (Map.Entry) iter.next();
 			String optionName = (String) entry.getKey();
@@ -107,19 +108,13 @@ public class JavaCorePreferenceInitializer extends AbstractPreferenceInitializer
 			optionNames.add(optionName);
 		}
 
-		// GROOVY start
-		// add groovy-specific options
-		optionNames.add(CompilerOptions.OPTIONG_GroovyExtraImports);
-		optionNames.add(CompilerOptions.OPTIONG_GroovyTransformsToRunOnReconcile);
-		optionNames.add(CompilerOptions.OPTIONG_GroovyClassLoaderPath);
-
-		// these three may not be necessary
+		// GROOVY add
 		optionNames.add(CompilerOptions.OPTIONG_GroovyFlags);
 		optionNames.add(CompilerOptions.OPTIONG_BuildGroovyFiles);
 		optionNames.add(CompilerOptions.OPTIONG_GroovyProjectName);
-		
-
-		optionNames.add(CompilerOptions.OPTIONG_GroovyCustomizerClassesList);
+		optionNames.add(CompilerOptions.OPTIONG_GroovyClassLoaderPath);
+		optionNames.add(CompilerOptions.OPTIONG_GroovyCompilerConfigScript);
+		optionNames.add(CompilerOptions.OPTIONG_GroovyTransformsToRunOnReconcile);
 		// GROOVY end
 
 		// Initialize deprecated options

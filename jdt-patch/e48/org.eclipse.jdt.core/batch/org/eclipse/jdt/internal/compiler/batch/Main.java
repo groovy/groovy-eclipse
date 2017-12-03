@@ -1847,6 +1847,9 @@ public void configure(String[] argv) {
 	final int INSIDE_ADD_MODULES = 29;
 	final int INSIDE_RELEASE = 30;
 	final int INSIDE_LIMIT_MODULES = 31;
+	// GROOVY add
+	final int INSIDE_CONFIG_SCRIPT = 100;
+	// GROOVY end
 
 	final int DEFAULT = 0;
 	ArrayList<String> bootclasspaths = new ArrayList<>(DEFAULT_SIZE_CLASSPATH);
@@ -2069,6 +2072,10 @@ public void configure(String[] argv) {
 					continue;
 				}
 				// GROOVY add
+				if (currentArg.equals("-configScript")) { //$NON-NLS-1$
+					mode = INSIDE_CONFIG_SCRIPT;
+					continue;
+				}
 				if (currentArg.equals("-indy")) { //$NON-NLS-1$
 					this.options.merge(CompilerOptions.OPTIONG_GroovyFlags, String.valueOf(CompilerUtils.InvokeDynamic), (String one, String two) -> {
 						return String.valueOf(Integer.parseInt(one) | Integer.parseInt(two));
@@ -2990,6 +2997,14 @@ public void configure(String[] argv) {
 						this.annotationPaths.add(tokens.nextToken());
 				}
 				continue;
+			// GROOVY add
+			case INSIDE_CONFIG_SCRIPT:
+				if (currentArg.isEmpty() || currentArg.charAt(0) == '-')
+					throw new IllegalArgumentException(String.format("Missing argument to -configScript at ''%s''", currentArg)); //$NON-NLS-1$
+				this.options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, currentArg);
+				mode = DEFAULT;
+				continue;
+			// GROOVY end
 		}
 
 		// default is input directory, if no custom destination path exists

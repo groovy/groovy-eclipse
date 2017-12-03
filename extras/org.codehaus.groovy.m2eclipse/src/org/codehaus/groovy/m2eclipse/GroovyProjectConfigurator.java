@@ -15,6 +15,9 @@
  */
 package org.codehaus.groovy.m2eclipse;
 
+import java.util.Map;
+
+import org.apache.maven.plugin.MojoExecution;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IFolder;
@@ -82,6 +85,30 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
 
             classpath.removeEntry(project.getFullPath().append("target/generated-sources/groovy-stubs/main"));
         }
+    }
+
+    protected void addJavaProjectOptions(Map<String, String> options, ProjectConfigurationRequest request, IProgressMonitor monitor) throws CoreException {
+        String configScript = null;
+
+        for (MojoExecution me : getCompilerMojoExecutions(request, monitor)) {
+            Map<String, String> m = maven.getMojoParameterValue(request.getMavenProject(), me, "compilerArguments", Map.class, monitor);
+            if (m != null && m.get("configScript") != null) {
+                configScript = m.get("configScript").trim();
+            } else {
+                String s = maven.getMojoParameterValue(request.getMavenProject(), me, "compilerArgument", String.class, monitor);
+                if (s != null && s.contains("configScript")) {
+                    String[] tokens = s.split("=");
+                    if (tokens.length == 2 && tokens[0].trim().matches("-?configScript")) {
+                        configScript = tokens[1].trim();
+                    }
+                }
+            }
+        }
+
+        // see org.eclipse.jdt.internal.compiler.impl.CompilerOptions.OPTIONG_GroovyCompilerConfigScript
+        options.put("org.eclipse.jdt.core.compiler.groovy.groovyCompilerConfigScript", configScript);
+
+        super.addJavaProjectOptions(options, request, monitor);
     }
 
     //--------------------------------------------------------------------------

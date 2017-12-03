@@ -7458,6 +7458,11 @@ public void unusedDeclaredThrownException(ReferenceBinding exceptionType, Abstra
 	}
 }
 public void unusedImport(ImportReference importRef) {
+	// GROOVY add
+	if ((importRef.sourceEnd() - importRef.sourceStart()) < 1) {
+		return; // don't warn for import added by AST transform
+	}
+	// GROOVY end
 	int severity = computeSeverity(IProblem.UnusedImport);
 	if (severity == ProblemSeverities.Ignore) return;
 	String[] arguments = new String[] { CharOperation.toString(importRef.tokens) };

@@ -673,11 +673,14 @@ public class OrganizeGroovyImports {
      * Checks to see if this import statment is a default import.
      */
     private static boolean isDefaultImport(ImportNode imp) {
-        // not really correct since I think Math.* is a default import. but OK for now
+        if (imp.getEnd() < 1) {
+            return true;
+        }
+
         if (imp.isStatic()) {
             return false;
         }
-        // aliased imports are not considered default
+
         if (imp.getType() != null && !imp.getType().getNameWithoutPackage().equals(imp.getAlias())) {
             return false;
         }

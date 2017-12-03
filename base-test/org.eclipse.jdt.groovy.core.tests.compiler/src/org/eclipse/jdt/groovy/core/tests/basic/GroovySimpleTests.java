@@ -39,6 +39,7 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
+import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
@@ -4578,9 +4579,16 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testExtraImports() {
+    public void testExtraImports1() {
         Map<String, String> options = getCompilerOptions();
-        options.put(CompilerOptions.OPTIONG_GroovyExtraImports, "com.foo.*");
+        // use the pre-2.1 verbose syntax for one test case to ensure it works as a fallback
+        options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
+            "import org.codehaus.groovy.control.customizers.ImportCustomizer\n" +
+            "def ic = new ImportCustomizer()\n" +
+            "ic.addStarImports 'com.foo'\n" +
+            "configuration.addCompilationCustomizers(ic)\n"
+        ).getAbsolutePath());
+
         runConformTest(new String[] {
             "com/bar/Runner.groovy",
             "package com.bar\n" +
@@ -4601,9 +4609,18 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testExtraImports_exactType() {
+    public void testExtraImports2() {
+        assumeTrue(isAtLeastGroovy(21));
+
         Map<String, String> options = getCompilerOptions();
-        options.put(CompilerOptions.OPTIONG_GroovyExtraImports, "com.foo.Type");
+        options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
+            "withConfig(configuration) {\n" +
+            "  imports {\n" +
+            "    star 'com.foo'\n" +
+            "  }\n" +
+            "}\n"
+        ).getAbsolutePath());
+
         runConformTest(new String[] {
             "com/bar/Runner.groovy",
             "package com.bar\n" +
@@ -4624,9 +4641,92 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testExtraImports_withSuffixDotStar() {
+    public void testExtraImports3() {
+        assumeTrue(isAtLeastGroovy(21));
+
         Map<String, String> options = getCompilerOptions();
-        options.put(CompilerOptions.OPTIONG_GroovyExtraImports, ".groovy=com.foo.*");
+        options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
+            "withConfig(configuration) {\n" +
+            "  imports {\n" +
+            "    normal 'com.foo.Type'\n" +
+            "  }\n" +
+            "}\n"
+        ).getAbsolutePath());
+
+        runConformTest(new String[] {
+            "com/bar/Runner.groovy",
+            "package com.bar\n" +
+            "class Runner {\n" +
+            "  public static void main(args) {\n" +
+            "    Type.m()\n" + // requires extra import
+            "    print 'done'\n" +
+            "  }\n" +
+            "}\n",
+
+            "com/foo/Type.groovy",
+            "package com.foo\n" +
+            "class Type {\n" +
+            "  public static void m() {}\n" +
+            "}\n",
+        },
+        "done", options);
+    }
+
+    @Test
+    public void testExtraImports4() {
+        assumeTrue(isAtLeastGroovy(21));
+
+        Map<String, String> options = getCompilerOptions();
+        options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
+            "withConfig(configuration) {\n" +
+            "  imports {\n" +
+            "    normal 'com.foo.Type'\n" +
+            "    normal 'com.foo.Type2'\n" +
+            "  }\n" +
+            "}\n"
+        ).getAbsolutePath());
+
+        runConformTest(new String[] {
+            "com/bar/Runner.groovy",
+            "package com.bar\n" +
+            "class Runner {\n" +
+            "  public static void main(args) {\n" +
+            "    Type.m()\n" + // requires extra import
+            "    Type2.m()\n" + // requires extra import
+            "    print 'done'\n" +
+            "  }\n" +
+            "}\n",
+
+            "com/foo/Type.groovy",
+            "package com.foo\n" +
+            "class Type {\n" +
+                "  public static void m() {}\n" +
+            "}\n",
+
+            "com/foo/Type2.groovy",
+            "package com.foo\n" +
+            "class Type2 {\n" +
+            "  public static void m() {}\n" +
+            "}\n",
+        },
+        "done", options);
+    }
+
+    @Test
+    public void testExtraImports_extensionFilter1() {
+        assumeTrue(isAtLeastGroovy(21));
+
+        Map<String, String> options = getCompilerOptions();
+        options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
+            "withConfig(configuration) {\n" +
+            "  source(extension: 'groovy') {\n" +
+            "    imports {\n" +
+            "      star 'com.foo'\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n"
+        ).getAbsolutePath());
+
         runConformTest(new String[] {
             "com/bar/Runner.groovy",
             "package com.bar\n" +
@@ -4646,9 +4746,20 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testExtraImports_withSuffixExactType() {
+    public void testExtraImports_extensionFilter2() {
+        assumeTrue(isAtLeastGroovy(21));
+
         Map<String, String> options = getCompilerOptions();
-        options.put(CompilerOptions.OPTIONG_GroovyExtraImports, ".groovy=com.foo.Type");
+        options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
+            "withConfig(configuration) {\n" +
+            "  source(extension: 'groovy') {\n" +
+            "    imports {\n" +
+            "      normal 'com.foo.Type'\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n"
+        ).getAbsolutePath());
+
         runConformTest(new String[] {
             "com/bar/Runner.groovy",
             "package com.bar\n" +
@@ -4668,9 +4779,21 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testExtraImports_withSuffixExactType2() {
+    public void testExtraImports_extensionFilter3() {
+        assumeTrue(isAtLeastGroovy(21));
+
         Map<String, String> options = getCompilerOptions();
-        options.put(CompilerOptions.OPTIONG_GroovyExtraImports, ".groovy=com.foo.Type;.groovy=com.foo.TypeB");
+        options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
+            "withConfig(configuration) {\n" +
+            "  source(extension: 'groovy') {\n" +
+            "    imports {\n" +
+            "      normal 'com.foo.Type'\n" +
+            "      normal 'com.foo.TypeB'\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n"
+        ).getAbsolutePath());
+
         runConformTest(new String[] {
             "com/bar/Runner.groovy",
             "package com.bar\n" +
@@ -4698,8 +4821,19 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testExtraImports_nonMatchingSuffix() {
+        assumeTrue(isAtLeastGroovy(21));
+
         Map<String, String> options = getCompilerOptions();
-        options.put(CompilerOptions.OPTIONG_GroovyExtraImports, ".gradle=com.foo.Type");
+        options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
+            "withConfig(configuration) {\n" +
+            "  source(extension: 'gradle') {\n" +
+            "    imports {\n" +
+            "      normal 'com.foo.Type'\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n"
+        ).getAbsolutePath());
+
         runNegativeTest(new String[] {
             "com/bar/Runner.groovy",
             "package com.bar\n" +
@@ -4726,8 +4860,17 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testExtraImports_typeDoesNotExist() {
+        assumeTrue(isAtLeastGroovy(21));
+
         Map<String, String> options = getCompilerOptions();
-        options.put(CompilerOptions.OPTIONG_GroovyExtraImports, ".groovy=com.foo.Type2");
+        options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
+            "withConfig(configuration) {\n" +
+            "  imports {\n" +
+            "    normal 'com.foo.Type2'\n" +
+            "  }\n" +
+            "}\n"
+        ).getAbsolutePath());
+
         runNegativeTest(new String[] {
             "com/bar/Runner.groovy",
             "package com.bar\n" +
@@ -4766,8 +4909,17 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testExtraImports_packageDoesNotExist() {
+        assumeTrue(isAtLeastGroovy(21));
+
         Map<String, String> options = getCompilerOptions();
-        options.put(CompilerOptions.OPTIONG_GroovyExtraImports, ".groovy=com.madeup.*");
+        options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
+            "withConfig(configuration) {\n" +
+            "  imports {\n" +
+            "    star 'com.whatever'\n" +
+            "  }\n" +
+            "}\n"
+        ).getAbsolutePath());
+
         runNegativeTest(new String[] {
             "com/bar/Runner.groovy",
             "package com.bar\n" +
@@ -4794,39 +4946,23 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testExtraImports_multiple() {
+    public void testExtraImports_mixedAdditions() {
+        assumeTrue(isAtLeastGroovy(21));
+
         Map<String, String> options = getCompilerOptions();
-        options.put(CompilerOptions.OPTIONG_GroovyExtraImports, ".groovy=com.foo.Type,com.foo.Type2");
-        runConformTest(new String[] {
-            "com/bar/Runner.groovy",
-            "package com.bar\n" +
-            "class Runner {\n" +
-            "  public static void main(args) {\n" +
-            "    Type.m()\n" + // requires extra import
-            "    Type2.m()\n" + // requires extra import
-            "    print 'done'\n" +
+        options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
+            "withConfig(configuration) {\n" +
+            "  imports {\n" +
+            "    star 'com.whatever'\n" +
             "  }\n" +
-            "}\n",
+            "  source(extension: 'groovy') {\n" +
+            "    imports {\n" +
+            "      normal 'com.foo.Type'\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n"
+        ).getAbsolutePath());
 
-            "com/foo/Type.groovy",
-            "package com.foo\n" +
-            "class Type {\n" +
-                "  public static void m() {}\n" +
-            "}\n",
-
-            "com/foo/Type2.groovy",
-            "package com.foo\n" +
-            "class Type2 {\n" +
-            "  public static void m() {}\n" +
-            "}\n",
-        },
-        "done", options);
-    }
-
-    @Test
-    public void testExtraImports_multipleSuffixes() {
-        Map<String, String> options = getCompilerOptions();
-        options.put(CompilerOptions.OPTIONG_GroovyExtraImports, "com.madeup.*;.groovy=com.foo.Type");
         runConformTest(new String[] {
             "com/bar/Runner.groovy",
             "package com.bar\n" +
@@ -5739,6 +5875,12 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         if (!found) {
             fail("Expected event '"+eventText+"'\nEvents:\n"+listener.toString());
         }
+    }
+
+    public File createScript(CharSequence name, CharSequence contents) {
+        String folder = Util.getOutputDirectory() + File.separator + "resources" + File.separator;
+        new File(folder).mkdirs(); Util.writeToFile(contents.toString(), folder + name);
+        return new File(folder + name);
     }
 
     /**

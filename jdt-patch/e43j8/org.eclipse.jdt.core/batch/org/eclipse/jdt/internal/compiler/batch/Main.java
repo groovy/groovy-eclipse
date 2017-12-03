@@ -1532,7 +1532,7 @@ protected void addNewEntry(ArrayList paths, String currentClasspathName,
 			}
 		}
 		if (rulesOK) {
-    		accessRuleSet = new AccessRuleSet(accessRules, AccessRestriction.COMMAND_LINE, currentClasspathName);
+			accessRuleSet = new AccessRuleSet(accessRules, AccessRestriction.COMMAND_LINE, currentClasspathName);
 		} else {
 			if (currentClasspathName.length() != 0) {
 				// we go on anyway
@@ -1759,6 +1759,9 @@ public void configure(String[] argv) {
 	final int INSIDE_S_start = 19;
 	final int INSIDE_CLASS_NAMES = 20;
 	final int INSIDE_WARNINGS_PROPERTIES = 21;
+	// GROOVY add
+	final int INSIDE_CONFIG_SCRIPT = 100;
+	// GROOVY end
 
 	final int DEFAULT = 0;
 	ArrayList bootclasspaths = new ArrayList(DEFAULT_SIZE_CLASSPATH);
@@ -1963,6 +1966,19 @@ public void configure(String[] argv) {
 					mode = DEFAULT;
 					continue;
 				}
+				// GROOVY add
+				if (currentArg.equals("-configScript")) { //$NON-NLS-1$
+					mode = INSIDE_CONFIG_SCRIPT;
+					continue;
+				}
+				if (currentArg.equals("-indy")) { //$NON-NLS-1$
+					String str = this.options.get(CompilerOptions.OPTIONG_GroovyFlags);
+					int val = str == null ? 0 : Integer.parseInt(str);
+					this.options.put(CompilerOptions.OPTIONG_GroovyFlags,
+							String.valueOf(CompilerUtils.InvokeDynamic | val));
+					continue;
+				}
+				// GROOVY end
 				if (currentArg.equals("-log")) { //$NON-NLS-1$
 					if (this.log != null)
 						throw new IllegalArgumentException(
@@ -2658,6 +2674,14 @@ public void configure(String[] argv) {
 				initializeWarnings(currentArg);
 				mode = DEFAULT;
 				continue;
+			// GROOVY add
+			case INSIDE_CONFIG_SCRIPT:
+				if (currentArg.isEmpty() || currentArg.charAt(0) == '-')
+					throw new IllegalArgumentException(String.format("Missing argument to -configScript at ''%s''", currentArg)); //$NON-NLS-1$
+				this.options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, currentArg);
+				mode = DEFAULT;
+				continue;
+			// GROOVY end
 		}
 
 		// default is input directory, if no custom destination path exists

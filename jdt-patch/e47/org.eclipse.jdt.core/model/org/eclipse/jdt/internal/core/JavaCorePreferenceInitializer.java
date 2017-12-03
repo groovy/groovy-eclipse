@@ -9,7 +9,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Harry Terkelsen (het@google.com) - Bug 449262 - Allow the use of third-party Java formatters
- *     GÃ¡bor KÃ¶vesdÃ¡n - Contribution for Bug 350000 - [content assist] Include non-prefix matches in auto-complete suggestions
+ *     Gábor Kövesdán - Contribution for Bug 350000 - [content assist] Include non-prefix matches in auto-complete suggestions
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
@@ -116,7 +116,7 @@ public class JavaCorePreferenceInitializer extends AbstractPreferenceInitializer
 		defaultOptionsMap.put(JavaCore.TIMEOUT_FOR_PARAMETER_NAME_FROM_ATTACHED_JAVADOC, "50"); //$NON-NLS-1$
 
 		// Store default values to default preferences
-	 	IEclipsePreferences defaultPreferences = DefaultScope.INSTANCE.getNode(JavaCore.PLUGIN_ID);
+		IEclipsePreferences defaultPreferences = DefaultScope.INSTANCE.getNode(JavaCore.PLUGIN_ID);
 		for (Iterator iter = defaultOptionsMap.entrySet().iterator(); iter.hasNext();) {
 			Map.Entry entry = (Map.Entry) iter.next();
 			String optionName = (String) entry.getKey();
@@ -125,14 +125,11 @@ public class JavaCorePreferenceInitializer extends AbstractPreferenceInitializer
 		}
 
 		// GROOVY add
-		// these three may not be necessary:
 		optionNames.add(CompilerOptions.OPTIONG_GroovyFlags);
 		optionNames.add(CompilerOptions.OPTIONG_BuildGroovyFiles);
 		optionNames.add(CompilerOptions.OPTIONG_GroovyProjectName);
-
-		optionNames.add(CompilerOptions.OPTIONG_GroovyExtraImports);
 		optionNames.add(CompilerOptions.OPTIONG_GroovyClassLoaderPath);
-		optionNames.add(CompilerOptions.OPTIONG_GroovyCustomizerClassesList);
+		optionNames.add(CompilerOptions.OPTIONG_GroovyCompilerConfigScript);
 		optionNames.add(CompilerOptions.OPTIONG_GroovyTransformsToRunOnReconcile);
 		// GROOVY end
 

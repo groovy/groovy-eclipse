@@ -15,21 +15,23 @@
  */
 package org.codehaus.jdt.groovy.integration.internal;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import groovy.lang.Binding;
 import groovy.lang.GroovyClassLoader;
+import groovy.lang.GroovyShell;
+import groovy.lang.GroovySystem;
 
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.SourceUnit;
-import org.codehaus.groovy.control.customizers.CompilationCustomizer;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
-import org.codehaus.groovy.control.customizers.SourceAwareCustomizer;
 import org.codehaus.jdt.groovy.integration.EventHandler;
 import org.codehaus.jdt.groovy.integration.ISupplementalIndexer;
 import org.codehaus.jdt.groovy.integration.LanguageSupport;
@@ -41,6 +43,7 @@ import org.codehaus.jdt.groovy.model.GroovyClassFileWorkingCopy;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ISourceRange;
@@ -84,6 +87,7 @@ import org.eclipse.jdt.internal.core.search.matching.MatchLocator;
 import org.eclipse.jdt.internal.core.search.matching.MatchLocatorParser;
 import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 import org.eclipse.jdt.internal.core.util.Util;
+import org.osgi.framework.Version;
 
 /**
  * The groovy implementation of LanguageSupport. This class is dynamically loaded by jdt.core (so referenced by name from jdt.core)
@@ -166,52 +170,28 @@ public class GroovyLanguageSupport implements LanguageSupport {
     public static CompilerConfiguration newCompilerConfiguration(CompilerOptions options, GroovyClassLoader transformLoader) {
         CompilerConfiguration config = new CompilerConfiguration();
 
-        if (options.groovyCustomizerClassesList != null && transformLoader != null) {
-            ClassLoader loader = Thread.currentThread().getContextClassLoader();
-            try { Thread.currentThread().setContextClassLoader(transformLoader);
+        if (options.buildGroovyFiles > 1 && options.groovyCompilerConfigScript != null) {
+            Binding binding = new Binding();
+            binding.setVariable("configuration", config);
 
-                for (String className : options.groovyCustomizerClassesList.split(",")) {
-                    try {
-                        Class<?> classInst = transformLoader.loadClass(className);
-                        CompilationCustomizer cc = (CompilationCustomizer) classInst.newInstance();
-
-                        config.addCompilationCustomizers(cc);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            } finally {
-                Thread.currentThread().setContextClassLoader(loader);
-            }
-        }
-
-        if (options.groovyExtraImports != null) {
-            // parse "com.foo.*;com.foo.Bar;.groovy=com.foo.*,com.foo.Bar"
-            for (String extraImports : options.groovyExtraImports.split(";")) {
+            CompilerConfiguration configuratorConfig = new CompilerConfiguration();
+            Version v = new Version(GroovySystem.getVersion());
+            if ((v.getMajor() == 2 && v.getMinor() >= 1) || v.getMajor() > 2) {
                 ImportCustomizer customizer = new ImportCustomizer();
-                String[] parts = extraImports.split("=");
-                if (parts.length > 1) {
-                    extraImports = parts[1];
-                    final String extension = parts[0].trim().substring(1);
-                    SourceAwareCustomizer sac = new SourceAwareCustomizer(customizer);
-                    sac.setExtensionValidator(new groovy.lang.Closure<Boolean>(config) {
-                        @Override public Boolean call(Object... args) {
-                            return Boolean.valueOf(extension.equals(args[0].toString()));
-                        }
-                    });
-                    config.addCompilationCustomizers(sac);
-                } else {
-                    config.addCompilationCustomizers(customizer);
-                }
+                customizer.addStaticStars("org.codehaus.groovy.control.customizers.builder.CompilerCustomizationBuilder");
+                configuratorConfig.addCompilationCustomizers(customizer);
+            }
 
-                for (String extraImport : extraImports.split(",")) {
-                    extraImport = extraImport.trim();
-                    if (!extraImport.endsWith(".*")) {
-                        customizer.addImports(extraImport);
-                    } else {
-                        customizer.addStarImports(extraImport.substring(0, extraImport.length() - 2));
-                    }
+            GroovyShell shell = new GroovyShell(binding, configuratorConfig);
+            try {
+                File configScript = new File(options.groovyCompilerConfigScript);
+                if (!configScript.isAbsolute() && options.groovyProjectName != null) {
+                    IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(options.groovyProjectName);
+                    configScript = new File(project.getLocation().append(configScript.getPath()).toOSString());
                 }
+                shell.evaluate(configScript);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to process Groovy config script: " + options.groovyCompilerConfigScript, e);
             }
         }
 
