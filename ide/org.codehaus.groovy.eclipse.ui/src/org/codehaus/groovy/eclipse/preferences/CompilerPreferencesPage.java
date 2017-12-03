@@ -194,7 +194,7 @@ public class CompilerPreferencesPage extends PropertyAndPreferencePage implement
                     try {
                         ((IPersistentPreferenceStore) store).save();
                     } catch (IOException e) {
-                        String message = JFaceResources.format("PreferenceDialog.saveErrorMessage", "Groovy Compiler", e.getMessage());
+                        String message = JFaceResources.format("PreferenceDialog.saveErrorMessage", new Object[] {"Groovy Compiler", e.getMessage()});
                         Policy.getStatusHandler().show(new Status(IStatus.ERROR, Policy.JFACE, message, e), JFaceResources.getString("PreferenceDialog.saveErrorTitle"));
                     }
                 }
