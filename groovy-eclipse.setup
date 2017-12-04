@@ -109,8 +109,6 @@
         name="org.codehaus.groovy.jdt.patch.feature.group"/>
     <requirement
         name="org.eclipse.pde.api.tools.ee.feature.feature.group"/>
-    <requirement
-        name="org.eclipse.test.feature.feature.group"/>
     <repository
         url="http://dist.springsource.org/snapshot/GRECLIPSE/e4.7/"/><!-- TODO: URL must vary by target platform! -->
     <description>Install the tools needed in the IDE to work with the source code for ${scope.project.label}</description>
@@ -188,26 +186,36 @@
           name="Photon">
         <repository
             url="http://download.eclipse.org/releases/photon"/>
+        <repository
+            url="http://download.eclipse.org/eclipse/updates/4.8-I-builds"/>
       </repositoryList>
       <repositoryList
           name="Oxygen">
         <repository
             url="http://download.eclipse.org/releases/oxygen"/>
+        <repository
+            url="http://download.eclipse.org/eclipse/updates/4.7"/>
       </repositoryList>
       <repositoryList
           name="Neon">
         <repository
             url="http://download.eclipse.org/releases/neon"/>
+        <repository
+            url="http://download.eclipse.org/eclipse/updates/4.6"/>
       </repositoryList>
       <repositoryList
           name="Mars">
         <repository
             url="http://download.eclipse.org/releases/mars"/>
+        <repository
+            url="http://download.eclipse.org/eclipse/updates/4.5"/>
       </repositoryList>
       <repositoryList
           name="Luna">
         <repository
             url="http://download.eclipse.org/releases/luna"/>
+        <repository
+            url="http://download.eclipse.org/eclipse/updates/4.4"/>
       </repositoryList>
     </targlet>
   </setupTask>
@@ -299,8 +307,7 @@
             xsi:type="predicates:RepositoryPredicate"
             project="org.codehaus.groovy.eclipse"/>
         <operand
-            xsi:type="workingsets:ExclusionPredicate"
-            excludedWorkingSet="//@setupTasks.13/@workingSets.4 //@setupTasks.13/@workingSets.1 //@setupTasks.13/@workingSets.3"/>
+            xsi:type="workingsets:ExclusionPredicate"/>
         <operand
             xsi:type="predicates:OrPredicate">
           <operand
@@ -323,8 +330,7 @@
             xsi:type="predicates:LocationPredicate"
             pattern="^.*/ide-test/.*$"/>
         <operand
-            xsi:type="workingsets:ExclusionPredicate"
-            excludedWorkingSet="//@setupTasks.13/@workingSets.4"/>
+            xsi:type="workingsets:ExclusionPredicate"/>
       </predicate>
     </workingSet>
     <workingSet
