@@ -91,11 +91,13 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
         String configScript = null;
 
         for (MojoExecution me : getCompilerMojoExecutions(request, monitor)) {
-            Map<String, String> m = maven.getMojoParameterValue(request.getMavenProject(), me, "compilerArguments", Map.class, monitor);
+          //Map<String, String> m = maven.getMojoParameterValue(request.getMavenProject(), me, "compilerArguments", Map.class, monitor);
+            Map<String, String> m = maven.getMojoParameterValue(request.getMavenSession(), me, "compilerArguments", Map.class);
             if (m != null && m.get("configScript") != null) {
                 configScript = m.get("configScript").trim();
             } else {
-                String s = maven.getMojoParameterValue(request.getMavenProject(), me, "compilerArgument", String.class, monitor);
+              //String s = maven.getMojoParameterValue(request.getMavenProject(), me, "compilerArgument", String.class, monitor);
+                String s = maven.getMojoParameterValue(request.getMavenSession(), me, "compilerArgument", String.class);
                 if (s != null && s.contains("configScript")) {
                     String[] tokens = s.split("=");
                     if (tokens.length == 2 && tokens[0].trim().matches("-?configScript")) {
