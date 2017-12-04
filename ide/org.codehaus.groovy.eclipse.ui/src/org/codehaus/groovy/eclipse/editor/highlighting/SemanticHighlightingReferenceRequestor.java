@@ -216,7 +216,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             String source = unit.getSource().substring(start, until);
 
             // search for the element label in the source since no AST node exists for it
-            Matcher m = Pattern.compile("\\b\\Q" + elem.getName() + "\\E\\b").matcher(source);
+            Matcher m = Pattern.compile("\\b" + Pattern.quote(elem.getName()) + "\\b").matcher(source);
             if (m.find()) {
                 return new HighlightedTypedPosition(start + m.start(), elem.getName().length(), HighlightKind.TAG_KEY);
             }

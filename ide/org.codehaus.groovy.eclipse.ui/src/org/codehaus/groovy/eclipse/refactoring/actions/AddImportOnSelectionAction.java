@@ -171,7 +171,7 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
 
                             if (prefix.length() > 0) {
                                 // check for selection in fully-qualified name like 'java.lang.String' or 'java.util.Map.Entry'
-                                pattern = Pattern.compile("^\\Q" + prefix + "\\E\\p{javaJavaIdentifierPart}*");
+                                pattern = Pattern.compile("^" + Pattern.quote(prefix) + "\\p{javaJavaIdentifierPart}*");
                                 matcher = pattern.matcher(qualifier);
                                 if (matcher.find()) {
                                     IType it = compilationUnit.getJavaProject().findType(matcher.group());
@@ -187,7 +187,7 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
                             prefix = compilationUnit.getSource().substring(typeStart, endOffsetPlus(selectRegion.getEnd()));
 
                             // check for selection in partially-qualified name like 'Map.Entry'
-                            pattern = Pattern.compile("\\b\\Q" + prefix + "\\E$");
+                            pattern = Pattern.compile("\\b" + Pattern.quote(prefix) + "$");
                             matcher = pattern.matcher(qualifier);
                             if (matcher.find()) {
                                 importRewrite.addImport(qualifier);

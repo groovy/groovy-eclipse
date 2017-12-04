@@ -345,7 +345,7 @@ public class OrganizeGroovyImports {
                 while ((innerIndex = name.lastIndexOf('$', innerIndex - 1)) > -1) {
                     // 'java.util.Map.Entry' -> 'java.util.Map' as well as
                     // 'java.util.Map.Entry as Foo.Entry' -> 'java.util.Map as Foo'
-                    partialName = name.replaceAll("\\Q" + name.substring(innerIndex) + "\\E(\\b|$)", "").replace('$', '.');
+                    partialName = name.replaceAll(Pattern.quote(name.substring(innerIndex)) + "(?:\\b|$)", "").replace('$', '.');
                     doNotRemoveImport(partialName);
                 }
 

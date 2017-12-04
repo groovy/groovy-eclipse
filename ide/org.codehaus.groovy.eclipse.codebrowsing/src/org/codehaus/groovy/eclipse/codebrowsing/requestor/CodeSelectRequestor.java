@@ -314,13 +314,13 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     String qualifier = GroovyUtils.splitName(type)[0].replace('$', '.');
 
                     // check for selection in fully-qualified name like 'java.lang.String'
-                    Pattern pattern = Pattern.compile("^\\Q" + selected + "\\E\\p{javaJavaIdentifierPart}*");
+                    Pattern pattern = Pattern.compile("^" + Pattern.quote(selected) + "\\p{javaJavaIdentifierPart}*");
                     Matcher matcher = pattern.matcher(qualifier);
                     if (matcher.find()) {
                         return matcher.group();
                     }
                     // check for selection in qualified name like 'Map.Entry'
-                    pattern = Pattern.compile("\\b\\Q" + selected + "\\E(\\b|$)");
+                    pattern = Pattern.compile("\\b" + Pattern.quote(selected) + "(?:\\b|$)");
                     matcher = pattern.matcher(qualifier);
                     if (matcher.find()) {
                         return qualifier.substring(0, matcher.end());
@@ -330,7 +330,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     if (alias != null) {
                         // decode 'Foo' to 'Map' and try again, because qualifier could be 'java.util.Map'
                         selected = selected.replace(alias.getAlias(), alias.getType().getNameWithoutPackage());
-                        pattern = Pattern.compile("\\b\\Q" + selected + "\\E(\\b|$)");
+                        pattern = Pattern.compile("\\b" + Pattern.quote(selected) + "(?:\\b|$)");
                         matcher = pattern.matcher(qualifier);
                         if (matcher.find()) {
                             return qualifier.substring(0, matcher.end());
