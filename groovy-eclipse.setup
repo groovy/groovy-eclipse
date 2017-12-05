@@ -307,7 +307,8 @@
             xsi:type="predicates:RepositoryPredicate"
             project="org.codehaus.groovy.eclipse"/>
         <operand
-            xsi:type="workingsets:ExclusionPredicate"/>
+            xsi:type="workingsets:ExclusionPredicate"
+            excludedWorkingSet="//@setupTasks.14/@workingSets.4 //@setupTasks.14/@workingSets.1 //@setupTasks.14/@workingSets.3"/>
         <operand
             xsi:type="predicates:OrPredicate">
           <operand
@@ -330,7 +331,8 @@
             xsi:type="predicates:LocationPredicate"
             pattern="^.*/ide-test/.*$"/>
         <operand
-            xsi:type="workingsets:ExclusionPredicate"/>
+            xsi:type="workingsets:ExclusionPredicate"
+            excludedWorkingSet="//@setupTasks.14/@workingSets.4"/>
       </predicate>
     </workingSet>
     <workingSet
