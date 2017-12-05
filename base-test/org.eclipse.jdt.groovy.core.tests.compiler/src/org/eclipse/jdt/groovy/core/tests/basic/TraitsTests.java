@@ -35,6 +35,10 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     public void setUp() {
         assumeTrue(isAtLeastJava(JDK6));
         assumeTrue(isAtLeastGroovy(23));
+
+        if (Float.parseFloat(System.getProperty("java.specification.version")) > 8) {
+            vmArguments = new String[] {"--add-modules=java.xml.bind"};
+        }
     }
 
     @Test
@@ -311,6 +315,11 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     @Test // Multiple Inheritance
     public void testTraits13() {
         String[] sources = {
+            "Main.groovy",
+            "class Pogo implements Identified { }\n" +
+            "def obj = new Pogo(name: 'Frank Grimes')\n" +
+            "print obj.getName()",
+
             "Identified.groovy",
             "trait WithId {\n" +
             "  Long id\n" +
@@ -322,7 +331,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "}",
         };
 
-        runConformTest(sources);
+        runConformTest(sources, "Frank Grimes");
     }
 
     @Test // Dynamic code
@@ -462,7 +471,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "print c.methodFromB()",
         };
 
-        runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of method: C.methodFromA() is applicable for argument types: () values: []");
+        runConformTest(sources, "", "Exception in thread \"main\" groovy.lang.MissingMethodException: No signature of method: C.methodFromA() is applicable for argument types: () values: []");
     }
 
     @Test // Implementing multiple traits at once - positive
@@ -473,7 +482,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "trait B { String methodFromB() { 'B' } }\n" +
             "class C {}\n" +
             "def c = new C()\n" +
-            "def d = c.withTraits A, B\n" +
+            "def d = c.withTraits(A, B)\n" +
             "print d.methodFromA()\n" +
             "print d.methodFromB()",
         };
