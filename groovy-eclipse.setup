@@ -88,22 +88,29 @@
   <setupTask
       xsi:type="setup.p2:P2Task">
     <requirement
+        name="org.codehaus.groovy18.feature.feature.group"/>
+    <requirement
+        name="org.codehaus.groovy20.feature.feature.group"/>
+    <requirement
         name="org.codehaus.groovy21.feature.feature.group"/>
     <requirement
-        name="org.codehaus.groovy.jdt.patch.feature.group"/>
+        name="org.codehaus.groovy22.feature.feature.group"/>
+    <requirement
+        name="org.codehaus.groovy23.feature.feature.group"/>
+    <requirement
+        name="org.codehaus.groovy24.feature.feature.group"/>
+    <requirement
+        name="org.codehaus.groovy25.feature.feature.group"/>
     <requirement
         name="org.codehaus.groovy.eclipse.feature.feature.group"/>
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <requirement
-        name="org.eclipse.pde.api.tools.ee.feature.feature.group"/>
+        name="org.codehaus.groovy.jdt.patch.feature.group"/>
     <requirement
-        name="org.eclipse.test.feature.group"/>
-    <!-- TODO: URLs must vary by target platform! -->
+        name="org.eclipse.pde.api.tools.ee.feature.feature.group"/>
     <repository
-        url="http://download.eclipse.org/eclipse/updates/4.7"/>
-    <repository
-        url="http://dist.springsource.org/snapshot/GRECLIPSE/e4.7"/>
+        url="http://dist.springsource.org/snapshot/GRECLIPSE/e4.7/"/><!-- TODO: URL must vary by target platform! -->
     <description>Install the tools needed in the IDE to work with the source code for ${scope.project.label}</description>
   </setupTask>
   <setupTask
@@ -179,26 +186,36 @@
           name="Photon">
         <repository
             url="http://download.eclipse.org/releases/photon"/>
+        <repository
+            url="http://download.eclipse.org/eclipse/updates/4.8-I-builds"/>
       </repositoryList>
       <repositoryList
           name="Oxygen">
         <repository
             url="http://download.eclipse.org/releases/oxygen"/>
+        <repository
+            url="http://download.eclipse.org/eclipse/updates/4.7"/>
       </repositoryList>
       <repositoryList
           name="Neon">
         <repository
             url="http://download.eclipse.org/releases/neon"/>
+        <repository
+            url="http://download.eclipse.org/eclipse/updates/4.6"/>
       </repositoryList>
       <repositoryList
           name="Mars">
         <repository
             url="http://download.eclipse.org/releases/mars"/>
+        <repository
+            url="http://download.eclipse.org/eclipse/updates/4.5"/>
       </repositoryList>
       <repositoryList
           name="Luna">
         <repository
             url="http://download.eclipse.org/releases/luna"/>
+        <repository
+            url="http://download.eclipse.org/eclipse/updates/4.4"/>
       </repositoryList>
     </targlet>
   </setupTask>
@@ -291,7 +308,7 @@
             project="org.codehaus.groovy.eclipse"/>
         <operand
             xsi:type="workingsets:ExclusionPredicate"
-            excludedWorkingSet="//@setupTasks.13/@workingSets.4 //@setupTasks.13/@workingSets.1 //@setupTasks.13/@workingSets.3"/>
+            excludedWorkingSet="//@setupTasks.14/@workingSets.4 //@setupTasks.14/@workingSets.1 //@setupTasks.14/@workingSets.3"/>
         <operand
             xsi:type="predicates:OrPredicate">
           <operand
@@ -315,7 +332,7 @@
             pattern="^.*/ide-test/.*$"/>
         <operand
             xsi:type="workingsets:ExclusionPredicate"
-            excludedWorkingSet="//@setupTasks.13/@workingSets.4"/>
+            excludedWorkingSet="//@setupTasks.14/@workingSets.4"/>
       </predicate>
     </workingSet>
     <workingSet
