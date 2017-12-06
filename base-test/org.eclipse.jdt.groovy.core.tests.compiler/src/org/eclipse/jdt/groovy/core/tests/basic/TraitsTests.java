@@ -471,7 +471,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "print c.methodFromB()",
         };
 
-        runConformTest(sources, "", "Exception in thread \"main\" groovy.lang.MissingMethodException: No signature of method: C.methodFromA() is applicable for argument types: () values: []");
+        runConformTest(sources, "", "groovy.lang.MissingMethodException: No signature of method: C.methodFromA() is applicable for argument types: () values: []");
     }
 
     @Test // Implementing multiple traits at once - positive

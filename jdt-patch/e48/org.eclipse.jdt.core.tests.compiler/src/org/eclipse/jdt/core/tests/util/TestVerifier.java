@@ -50,7 +50,7 @@ private boolean checkBuffers(String outputString, String errorString,
 			didMatchExpectation = false;
 		}
 	}
-	String trimmedErrorString = errorString.trim();
+	String trimmedErrorString = errorString.trim().replaceFirst("^Exception in thread \"main\" ", "");
 	if (expectedErrorStringStart != null) {
 		platformIndependantString = Util.convertToIndependantLineDelimiter(trimmedErrorString);
 		if (expectedErrorStringStart.length() == 0 && platformIndependantString.length() > 0 ||
