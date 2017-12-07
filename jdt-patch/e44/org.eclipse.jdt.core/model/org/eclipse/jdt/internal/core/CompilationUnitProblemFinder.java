@@ -187,6 +187,9 @@ public class CompilationUnitProblemFinder extends Compiler {
 			// GROOVY start
 			// options fetched prior to building problem finder then configured based on project
 			CompilerUtils.configureOptionsBasedOnNature(compilerOptions, project);
+			if (!creatingAST) {
+				compilerOptions.groovyCompilerConfigScript = null;
+			}
 			if (compilerOptions.buildGroovyFiles == 2) {
 				reset = false;
 			}
@@ -288,11 +291,11 @@ public class CompilationUnitProblemFinder extends Compiler {
 	 */
 	public void initializeParser() {
 		// GROOVY start
-        /* old {
+		/* old {
 		this.parser = new CommentRecorderParser(this.problemReporter, this.options.parseLiteralExpressionsAsConstants);
-        } new */
-        this.parser = LanguageSupportFactory.getParser(this, this.lookupEnvironment==null?null:this.lookupEnvironment.globalOptions,this.problemReporter, this.options.parseLiteralExpressionsAsConstants, 3 /*CommentRecorderParserVariant with no transforms */);
-        // GROOVY end
+		} new */
+		this.parser = LanguageSupportFactory.getParser(this, this.lookupEnvironment==null?null:this.lookupEnvironment.globalOptions,this.problemReporter, this.options.parseLiteralExpressionsAsConstants, 3 /*CommentRecorderParserVariant with no transforms */);
+		// GROOVY end
 	}
 }
 

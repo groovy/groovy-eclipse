@@ -189,6 +189,9 @@ public class CompilationUnitProblemFinder extends Compiler {
 			// GROOVY add
 			// options fetched prior to building problem finder then configured based on project
 			CompilerUtils.configureOptionsBasedOnNature(compilerOptions, project);
+			if (!creatingAST) {
+				compilerOptions.groovyCompilerConfigScript = null;
+			}
 			if (compilerOptions.buildGroovyFiles == 2) {
 				reset = false;
 			}
