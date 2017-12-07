@@ -127,7 +127,7 @@ public class CompilerUtils {
     }
 
     public static SpecifiedVersion getWorkspaceCompilerLevel() {
-        String groovyVersion = GroovySystem.getVersion();
+        String groovyVersion = getGroovyVersion();
         // convert from major.minor.micro to major.minor
         int dotIndex = groovyVersion.lastIndexOf('.');
         if (dotIndex > 0) {

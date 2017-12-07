@@ -25,7 +25,6 @@ import java.util.List;
 import groovy.lang.Binding;
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyShell;
-import groovy.lang.GroovySystem;
 
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
@@ -87,7 +86,6 @@ import org.eclipse.jdt.internal.core.search.matching.MatchLocator;
 import org.eclipse.jdt.internal.core.search.matching.MatchLocatorParser;
 import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 import org.eclipse.jdt.internal.core.util.Util;
-import org.osgi.framework.Version;
 
 /**
  * The groovy implementation of LanguageSupport. This class is dynamically loaded by jdt.core (so referenced by name from jdt.core)
@@ -136,8 +134,8 @@ public class GroovyLanguageSupport implements LanguageSupport {
 
     public CompilationUnitDeclaration newCompilationUnitDeclaration(ICompilationUnit unit, ProblemReporter problemReporter, CompilationResult compilationResult, int sourceLength) {
         if (ContentTypeUtils.isGroovyLikeFileName(compilationResult.getFileName())) {
-            GroovyClassLoader classLoader = null; // TODO: missing the classloader configuration (eg. to include transformers)
-            CompilerConfiguration compilerConfig = newCompilerConfiguration(problemReporter.options, classLoader);
+            CompilerConfiguration compilerConfig = newCompilerConfiguration(problemReporter.options, problemReporter);
+            GroovyClassLoader classLoader = null; // TODO: missing the GroovyClassLoader configuration
             ErrorCollector errorCollector = new GroovyErrorCollectorForJDT(compilerConfig);
             SourceUnit groovySourceUnit = new SourceUnit(String.valueOf(compilationResult.getFileName()), String.valueOf(unit.getContents()), compilerConfig, classLoader, errorCollector);
 
@@ -167,15 +165,15 @@ public class GroovyLanguageSupport implements LanguageSupport {
         }
     }
 
-    public static CompilerConfiguration newCompilerConfiguration(CompilerOptions options, GroovyClassLoader transformLoader) {
+    public static CompilerConfiguration newCompilerConfiguration(CompilerOptions compilerOptions, ProblemReporter problemReporter) {
         CompilerConfiguration config = new CompilerConfiguration();
 
-        if (options.buildGroovyFiles > 1 && options.groovyCompilerConfigScript != null) {
+        if (compilerOptions.buildGroovyFiles > 1 && compilerOptions.groovyCompilerConfigScript != null) {
             Binding binding = new Binding();
             binding.setVariable("configuration", config);
 
             CompilerConfiguration configuratorConfig = new CompilerConfiguration();
-            Version v = new Version(GroovySystem.getVersion().split("-")[0]);
+            org.osgi.framework.Version v = GroovyUtils.getGroovyVersion();
             if ((v.getMajor() == 2 && v.getMinor() >= 1) || v.getMajor() > 2) {
                 ImportCustomizer customizer = new ImportCustomizer();
                 customizer.addStaticStars("org.codehaus.groovy.control.customizers.builder.CompilerCustomizationBuilder");
@@ -184,18 +182,18 @@ public class GroovyLanguageSupport implements LanguageSupport {
 
             GroovyShell shell = new GroovyShell(binding, configuratorConfig);
             try {
-                File configScript = new File(options.groovyCompilerConfigScript);
-                if (!configScript.isAbsolute() && options.groovyProjectName != null) {
-                    IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(options.groovyProjectName);
+                File configScript = new File(compilerOptions.groovyCompilerConfigScript);
+                if (!configScript.isAbsolute() && compilerOptions.groovyProjectName != null) {
+                    IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(compilerOptions.groovyProjectName);
                     configScript = new File(project.getLocation().append(configScript.getPath()).toOSString());
                 }
                 shell.evaluate(configScript);
             } catch (Exception e) {
-                throw new RuntimeException("Failed to process Groovy config script: " + options.groovyCompilerConfigScript, e);
+                throw new RuntimeException("Failed to process Groovy config script: " + compilerOptions.groovyCompilerConfigScript, e);
             }
         }
 
-        if ((options.groovyFlags & CompilerUtils.InvokeDynamic) != 0) {
+        if ((compilerOptions.groovyFlags & CompilerUtils.InvokeDynamic) != 0) {
             config.getOptimizationOptions().put(/*CompilerConfiguration.INVOKEDYNAMIC*/"indy", Boolean.TRUE);
         }
 

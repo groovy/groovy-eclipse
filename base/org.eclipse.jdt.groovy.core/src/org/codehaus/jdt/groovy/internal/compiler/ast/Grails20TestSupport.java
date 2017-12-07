@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import groovy.lang.GroovyClassLoader;
-import groovy.lang.GroovySystem;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.classgen.GeneratorContext;
@@ -42,6 +41,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 /**
@@ -159,8 +159,8 @@ public class Grails20TestSupport {
      * org.codehaus.groovy.grails.test.compiler.GrailsTestCompiler and the _TestApp.groovy script.
      */
     public void addGrailsTestCompilerCustomizers(CompilationUnit groovyCompilationUnit) {
-        String groovyVersion = GroovySystem.getVersion();
-        if (groovyVersion.startsWith("1.8") || groovyVersion.startsWith("2.")) {
+        org.osgi.framework.Version v = GroovyUtils.getGroovyVersion();
+        if ((v.getMajor() == 1 && v.getMinor() >= 8) || v.getMajor() > 1) {
             // The assumption is that only Grails 2.0 projects will be affected, because 1.3.7 projects require 1.7 compiler.
             ImportCustomizer importCustomizer = new ImportCustomizer() {
                 @Override

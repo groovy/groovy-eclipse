@@ -231,7 +231,7 @@ public class GroovyParser {
 
         GroovyClassLoader gcl = getLoaderFor(gclClasspath);
         // ---
-        // Status of transforms and reconciling: Oct-18-2011
+        // 2011-10-18: Status of transforms and reconciling
         // Prior to 2.6.0 all transforms were turned OFF for reconciling, and by turned off that meant no phase
         // processing for them was done at all. With 2.6.0 this phase processing is now active during reconciling
         // but it is currently limited to only allowing the Grab (global) transform to run. (Not sure why Grab
@@ -291,7 +291,7 @@ public class GroovyParser {
 
     private static URLClassLoader createConfigureLoader(String path) {
         // GRECLIPSE-1090
-        ClassLoader pcl = GroovyParser.class.getClassLoader();// Thread.currentThread().getContextClassLoader();
+        ClassLoader pcl = GroovyParser.class.getClassLoader();
         if (path == null) {
             return createLoader(null, pcl);
         }
@@ -462,7 +462,7 @@ public class GroovyParser {
     }
 
     private CompilationUnit makeCompilationUnit(GroovyClassLoader loader, GroovyClassLoader transformLoader, boolean isReconcile, boolean allowTransforms) {
-        CompilerConfiguration compilerConfiguration = GroovyLanguageSupport.newCompilerConfiguration(compilerOptions, transformLoader);
+        CompilerConfiguration compilerConfiguration = GroovyLanguageSupport.newCompilerConfiguration(compilerOptions, problemReporter);
 
         CompilationUnit cu = new CompilationUnit(
             compilerConfiguration,

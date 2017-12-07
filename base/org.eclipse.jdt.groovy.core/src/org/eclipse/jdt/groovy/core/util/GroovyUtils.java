@@ -26,6 +26,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import groovy.lang.GroovySystem;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -50,6 +52,7 @@ import org.codehaus.groovy.transform.GroovyASTTransformation;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTNode;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.internal.core.util.Util;
+import org.osgi.framework.Version;
 
 /**
  * Helper methods - can be made more eclipse friendly or replaced if the groovy infrastructure provides the information.
@@ -57,6 +60,13 @@ import org.eclipse.jdt.internal.core.util.Util;
 public class GroovyUtils {
 
     private GroovyUtils() {}
+
+    public static Version getGroovyVersion() {
+        String version = GroovySystem.getVersion();
+        // convert "2.5.0-beta-2" -> "2.5.0.beta-2"
+        version = version.replaceFirst("-", ".");
+        return new Version(version);
+    }
 
     public static char[] readSourceRange(SourceUnit unit, int offset, int length) {
         Reader reader = null;
