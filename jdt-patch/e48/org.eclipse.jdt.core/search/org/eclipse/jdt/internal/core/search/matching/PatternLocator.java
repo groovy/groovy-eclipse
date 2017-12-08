@@ -11,6 +11,8 @@
 package org.eclipse.jdt.internal.core.search.matching;
 
 
+import java.util.regex.Pattern;
+
 import org.eclipse.core.runtime.*;
 import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.compiler.*;
@@ -327,7 +329,9 @@ protected int matchNameValue(char[] pattern, char[] name) {
 			break;
 
 		case SearchPattern.R_REGEXP_MATCH :
-			// TODO (frederic) implement regular expression match
+			if (Pattern.matches(new String(pattern), new String(name))) {
+				return POSSIBLE_MATCH;
+			}
 			break;
 
 		case SearchPattern.R_CAMELCASE_MATCH:

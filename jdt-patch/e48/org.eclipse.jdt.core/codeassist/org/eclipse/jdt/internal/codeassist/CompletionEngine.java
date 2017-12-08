@@ -714,7 +714,7 @@ public final class CompletionEngine
 	private INameEnvironment noCacheNameEnvironment;
 	char[] source;
 	ModuleDeclaration moduleDeclaration;
-	boolean isPackageVisibilityCompletion = false;
+	boolean skipDefaultPackage = false;
 	char[] completionToken;
 
 	char[] qualifiedCompletionToken;
@@ -1337,7 +1337,7 @@ public final class CompletionEngine
 
 		if (!isValidPackageName(packageName)) return;
 		
-		if (this.isPackageVisibilityCompletion &&
+		if (this.skipDefaultPackage &&
 			CharOperation.equals(packageName, CharOperation.NO_CHAR))
 			return;
 
@@ -2116,6 +2116,7 @@ public final class CompletionEngine
 								TypeReference implementation = implementations[j];
 								if (implementation instanceof CompletionOnProvidesImplementationsSingleTypeReference ||
 										implementation instanceof CompletionOnProvidesImplementationsQualifiedTypeReference) {
+									this.skipDefaultPackage = true;
 									contextAccepted = checkForCNF(implementation, parsedUnit, false);
 									return;
 								} else if (implementation instanceof CompletionOnKeyword) {
@@ -2147,6 +2148,8 @@ public final class CompletionEngine
 											e.scope,
 											e.insideTypeAnnotation);
 						}
+					} finally {
+						this.skipDefaultPackage = false;
 					}
 				}
 				// scan the package & import statements first
@@ -2348,7 +2351,7 @@ public final class CompletionEngine
 	private boolean completeOnPackageVisibilityStatements(boolean contextAccepted,
 			CompilationUnitDeclaration parsedUnit, PackageVisibilityStatement[] pvsStmts) {
 		try {
-			this.isPackageVisibilityCompletion = true;
+			this.skipDefaultPackage = true;
 			for (int i = 0, l = pvsStmts.length; i < l; ++i) {
 				PackageVisibilityStatement pvs = pvsStmts[i];
 				if (pvs instanceof CompletionOnKeywordModuleInfo) { // dummy pvs statement
@@ -2389,7 +2392,7 @@ public final class CompletionEngine
 				}
 			}
 		} finally {
-			this.isPackageVisibilityCompletion = false;
+			this.skipDefaultPackage = false;
 		}
 		return contextAccepted;
 	}

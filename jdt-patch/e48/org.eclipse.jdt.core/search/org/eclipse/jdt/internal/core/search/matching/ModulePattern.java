@@ -88,7 +88,7 @@ public class ModulePattern extends JavaSearchPattern {
 				// else do a pattern query with just the selector
 				break;
 			case R_REGEXP_MATCH :
-				// TODO implement regular expression match
+				// nothing to do here for the regex match
 				break;
 			case R_CAMELCASE_MATCH:
 			case R_CAMELCASE_SAME_PART_COUNT_MATCH:

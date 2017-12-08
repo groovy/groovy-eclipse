@@ -6259,5 +6259,43 @@ public void testBug526132() {
 	true,
 	customOptions);
 }
+public void testBug520482() {
+	Map customOptions = getCompilerOptions();
+	customOptions.put(JavaCore.COMPILER_PB_UNAVOIDABLE_GENERIC_TYPE_PROBLEMS, JavaCore.DISABLED);
+	runConformTest(
+		new String[] {
+			"test/A.java",
+			"package test;\n" +
+			"\n" +
+			"import java.util.List;\n" +
+			"\n" +
+			"public class A {\n" +
+			"    static List f;\n" +
+			"}\n",
+		},
+		customOptions
+	);
+	runNegativeTest(false,
+		new String[] {
+			"test/B.java",
+			"package test;\n" +
+			"\n" +
+			"public class B extends A {\n" +
+			"   public static test() {\n" + 
+			"		f.add(new B());\n" + 
+			"	}\n" +
+			"}\n"
+		},
+		null,
+		customOptions,
+		"----------\n" + 
+		"1. ERROR in test\\B.java (at line 4)\n" + 
+		"	public static test() {\n" + 
+		"	              ^^^^^^\n" + 
+		"Return type for the method is missing\n" + 
+		"----------\n",
+		"", "", null
+	);
+}
 }
 

@@ -26,7 +26,7 @@ public QualifiedTypeDeclarationPattern(char[] moduleNames, char[] qualification,
 	this.simpleName = (this.isCaseSensitive || this.isCamelCase) ? simpleName : CharOperation.toLowerCase(simpleName);
 	this.typeSuffix = typeSuffix;
 
-	this.mustResolve = this.qualification != null || typeSuffix != TYPE_SUFFIX;
+	this.mustResolve = this.qualification != null || typeSuffix != TYPE_SUFFIX || moduleNames != null;
 }
 public QualifiedTypeDeclarationPattern(char[] qualification, char[] simpleName, char typeSuffix, int matchRule) {
 	this(null, qualification, simpleName, typeSuffix, matchRule);

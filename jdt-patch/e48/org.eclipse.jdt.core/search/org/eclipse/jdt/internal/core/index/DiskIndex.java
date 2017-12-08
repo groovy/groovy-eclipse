@@ -11,6 +11,7 @@
 package org.eclipse.jdt.internal.core.index;
 
 import java.io.*;
+import java.util.regex.Pattern;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.search.*;
@@ -204,6 +205,22 @@ HashtableOfObject addQueryResults(char[][] categories, char[] key, int matchRule
 						for (int j = 0, m = words.length; j < m; j++) {
 							char[] word = words[j];
 							if (word != null && key[0] == word[0] && CharOperation.prefixEquals(key, word))
+								results = addQueryResult(results, word, values[j], memoryIndex, prevResults);
+						}
+					}
+					prevResults = results != null;
+				}
+				break;
+			case SearchPattern.R_REGEXP_MATCH:
+				Pattern pattern = Pattern.compile(new String(key));
+				for (int i = 0, l = categories.length; i < l; i++) {
+					HashtableOfObject wordsToDocNumbers = readCategoryTable(categories[i], false);
+					if (wordsToDocNumbers != null) {
+						char[][] words = wordsToDocNumbers.keyTable;
+						Object[] values = wordsToDocNumbers.valueTable;
+						for (int j = 0, m = words.length; j < m; j++) {
+							char[] word = words[j];
+							if (word != null && pattern.matcher(new String(word)).matches())
 								results = addQueryResult(results, word, values[j], memoryIndex, prevResults);
 						}
 					}

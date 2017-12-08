@@ -1149,6 +1149,7 @@ public class ReferenceExpression extends FunctionalExpression implements IPolyEx
 
         	System.arraycopy(descriptorParameters, 1, descriptorParameters = new TypeBinding[parametersLength - 1], 0, parametersLength - 1);
         	this.freeParameters = descriptorParameters;
+        	this.potentialMethods = Binding.NO_METHODS;
         	compileTimeDeclaration = getCompileTimeDeclaration(scope, false, descriptorParameters);
         
         	if (compileTimeDeclaration != null && compileTimeDeclaration.isValidBinding()) // we have the mSMB.
@@ -1159,7 +1160,7 @@ public class ReferenceExpression extends FunctionalExpression implements IPolyEx
         		*/
         	}
         	for (int i = 0, length = this.potentialMethods.length; i < length; i++) {
-        		if (!this.potentialMethods[i].isStatic()) {
+			if (!this.potentialMethods[i].isStatic() && !this.potentialMethods[i].isConstructor()) {
         			return true;
         		}
         	}

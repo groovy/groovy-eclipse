@@ -8605,4 +8605,104 @@ public void testBug508834_comment0() {
 				
 		});
 	}
+	public void testBug528045() {
+		runConformTest(new String[] {
+				"test/Test.java",
+				"package test;\n" + 
+				"\n" + 
+				"interface List<A0> {\n" + 
+				"	List<A0> append(List<A0> other);\n" + 
+				"}\n" + 
+				"\n" + 
+				"interface Function<A1, B1> {\n" + 
+				"	B1 f(A1 a);\n" + 
+				"}\n" + 
+				"\n" + 
+				"interface BiFunction<A2, B2, C2> {\n" + 
+				"	C2 f(A2 a, B2 b);\n" + 
+				"}\n" + 
+				"\n" + 
+				"interface Stream<A3> {\n" + 
+				"	<B3> B3 foldLeft(Function<B3, Function<A3, B3>> f, B3 b);\n" + 
+				"\n" + 
+				"	<C3> C3 foldLeft(BiFunction<C3, A3, C3> f, C3 b);\n" + 
+				"}\n" + 
+				"\n" + 
+				"public class Test {\n" + 
+				"	<A> List<A> f(Stream<List<A>> map, List<A> nil) {\n" + 
+				"		return map.foldLeft(List::append, nil);\n" + 
+				"	}\n" + 
+				"}\n" + 
+				""
+		});
+	}
+	public void testBug528046() {
+		runConformTest(new String[] {
+				"test2/Test.java",
+				"package test2;\n" + 
+				"\n" + 
+				"interface Supplier<A0> {\n" + 
+				"	A0 f();\n" + 
+				"}\n" + 
+				"\n" + 
+				"interface Function<A1, B2> {\n" + 
+				"	B2 f(A1 a);\n" + 
+				"}\n" + 
+				"\n" + 
+				"interface P {\n" + 
+				"	<A3> void lazy(Supplier<A3> f);\n" + 
+				"\n" + 
+				"	<A4> void lazy(Function<Object, A4> f);\n" + 
+				"}\n" + 
+				"\n" + 
+				"class Nil<A5> {\n" + 
+				"}\n" + 
+				"\n" + 
+				"class Test {\n" + 
+				"	static void test(P p) {\n" + 
+				"		p.lazy(Nil::new);\n" + 
+				"	}\n" + 
+				"}\n" + 
+				""
+		});
+	}
+	public void testBug519380() {
+		runConformTest(
+			new String[] {
+				"TestLambda.java",
+				"import java.util.*;\n" +
+				"import java.util.function.*;\n" +
+				"public class TestLambda {\n" + 
+				"\n" + 
+				"    protected static <K, V> Map<K, V> newMap(final Function<K, V> loader) {\n" + 
+				"        return new HashMap<>();\n" + 
+				"    }\n" + 
+				"\n" + 
+				"    private final Map<Integer, Integer> working = newMap(key -> {\n" + 
+				"\n" + 
+				"        final List<String> strings = new ArrayList<>();\n" + 
+				"\n" + 
+				"        final String[] array = strings.toArray(new String[strings.size()]);\n" + 
+				"        foo(array);\n" + 
+				"\n" + 
+				"        return null;\n" + 
+				"    });\n" + 
+				"\n" + 
+				"    private final Map<Void, Void> notWorking = newMap(key -> {\n" + 
+				"\n" + 
+				"        final List<String> strings = new ArrayList<>();\n" + 
+				"\n" + 
+				"        // This line seems to be the root of all evils\n" + 
+				"        foo(strings.toArray(new String[strings.size()]));\n" + 
+				"\n" + 
+				"        return null;\n" + 
+				"    });\n" + 
+				"\n" + 
+				"    private void foo(final String[] x) {}\n" + 
+				"\n" + 
+				"    private void foo(final Integer[] x) {}\n" + 
+				"\n" + 
+				"}\n"
+			});
+	}
 }

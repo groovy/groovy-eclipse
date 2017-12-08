@@ -897,18 +897,17 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 		}
 	}
 	private void indexTypeReferences(char[][] ref) {
-		if (ref == null || ref.equals(CharOperation.NO_CHAR))
+		if (ref == null || ref.length == 0)
 			return;
 		for (int i = 0; i < ref.length; i++) {
 			addTypeReference(ref[i]);
 		}
 	}
 	private void indexTypeReference(char[] ref) {
-		if (ref == null || ref.equals(CharOperation.NO_CHAR))
+		if (ref == null || ref.length == 0)
 			return;
 		addTypeReference(ref);
 	}
-	
 	private char[] removeFirstSyntheticParameter(char[] descriptor) {
 		if (descriptor == null) return null;
 		if (descriptor.length < 3) return descriptor;

@@ -11,6 +11,7 @@
 package org.eclipse.jdt.core.search;
 
 import java.io.IOException;
+import java.util.regex.Pattern;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
@@ -1632,6 +1633,10 @@ private static SearchPattern createPackagePattern(String patternString, int limi
  *		</ul>
  * 	<p>Note that {@link #R_ERASURE_MATCH} or {@link #R_EQUIVALENT_MATCH} has no effect
  * 	on non-generic types/methods search.</p>
+ *
+ * 	<p>Note that {@link #R_REGEXP_MATCH} is supported since 3.14  for the special case of
+ * {@link IJavaSearchConstants#DECLARATIONS DECLARATIONS} search of 
+ * {@link IJavaSearchConstants#MODULE MODULE}</p>
  * 	<p>
  * 	Note also that the default behavior for generic types/methods search is to find exact matches.</p>
  * @return a search pattern on the given string pattern, or <code>null</code> if the string pattern is ill-formed
@@ -1639,7 +1644,7 @@ private static SearchPattern createPackagePattern(String patternString, int limi
 public static SearchPattern createPattern(String stringPattern, int searchFor, int limitTo, int matchRule) {
 	if (stringPattern == null || stringPattern.length() == 0) return null;
 
-	if ((matchRule = validateMatchRule(stringPattern, matchRule)) == -1) {
+	if ((matchRule = validateMatchRule(stringPattern, searchFor, limitTo, matchRule)) == -1) {
 		return null;
 	}
 
@@ -2528,8 +2533,7 @@ public boolean matchesName(char[] pattern, char[] name) {
 				return matchFirstChar && CharOperation.camelCaseMatch(pattern, name, true);
 
 			case R_REGEXP_MATCH :
-				// TODO implement regular expression match
-				return true;
+				return Pattern.matches(new String(pattern), new String(name));
 		}
 	}
 	return false;
@@ -2589,7 +2593,7 @@ public static int validateMatchRule(String stringPattern, int matchRule) {
 	// Verify Regexp match rule
 	if ((matchRule & R_REGEXP_MATCH) != 0) {
 		// regexp is not supported yet
-		return -1;
+		return -1; // need to enable for module declaration
 	}
 
 	// Verify Pattern match rule
@@ -2640,6 +2644,15 @@ public static int validateMatchRule(String stringPattern, int matchRule) {
 
 	// Return the validated match rule (modified if necessary)
 	return matchRule;
+}
+
+// enabling special cases (read regular expressions) based on searchFor and limitTo
+private static int validateMatchRule(String stringPattern, int searchFor, int limitTo, int matchRule) {
+	if (searchFor == IJavaSearchConstants.MODULE && 
+			limitTo == IJavaSearchConstants.DECLARATIONS &&
+			matchRule == SearchPattern.R_REGEXP_MATCH)
+		return matchRule;
+	return validateMatchRule(stringPattern, matchRule);
 }
 
 /*

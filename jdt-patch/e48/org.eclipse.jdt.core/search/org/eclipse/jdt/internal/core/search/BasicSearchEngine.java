@@ -12,6 +12,7 @@
 package org.eclipse.jdt.internal.core.search;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.*;
@@ -491,8 +492,7 @@ public class BasicSearchEngine {
 				case SearchPattern.R_PATTERN_MATCH :
 					return CharOperation.match(patternTypeName, typeName, isCaseSensitive);
 				case SearchPattern.R_REGEXP_MATCH :
-					// TODO (frederic) implement regular expression match
-					break;
+					return Pattern.matches(new String(patternTypeName), new String(typeName));
 				case SearchPattern.R_CAMELCASE_MATCH:
 					if (matchFirstChar && CharOperation.camelCaseMatch(patternTypeName, typeName, false)) {
 						return true;
@@ -523,8 +523,7 @@ public class BasicSearchEngine {
 				case SearchPattern.R_PATTERN_MATCH :
 					return CharOperation.match(patternName, name, isCaseSensitive);
 				case SearchPattern.R_REGEXP_MATCH :
-					// TODO implement regular expression match
-					break;
+					return Pattern.matches(new String(patternName), new String(name));
 				case SearchPattern.R_CAMELCASE_MATCH:
 					if (matchFirstChar && CharOperation.camelCaseMatch(patternName, name, false)) {
 						return true;
