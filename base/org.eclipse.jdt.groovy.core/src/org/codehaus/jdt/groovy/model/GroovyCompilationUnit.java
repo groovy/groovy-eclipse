@@ -242,17 +242,17 @@ public class GroovyCompilationUnit extends CompilationUnit {
                 problems = null;
             }
 
-            boolean computeProblems = perWorkingCopyInfo != null && perWorkingCopyInfo.isActive() && project != null && JavaProject.hasJavaNature(project.getProject());
+            boolean computeProblems = (perWorkingCopyInfo != null && perWorkingCopyInfo.isActive() && project != null && JavaProject.hasJavaNature(project.getProject()));
 
             // compiler options
             Map<String, String> options = (project == null ? JavaCore.getOptions() : project.getOptions(true));
-            if (!computeProblems) {
-                // disable task tags checking to speed up parsing
-                options.put(JavaCore.COMPILER_TASK_TAGS, "");
-            }
-
             options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
-
+            if (!computeProblems) {
+                // disable compiler config script processing to streamline parsing
+                options.remove(CompilerOptions.OPTIONG_GroovyCompilerConfigScript);
+                // disable task tags processing to streamline parsing
+                options.remove(CompilerOptions.OPTION_TaskTags);
+            }
             CompilerOptions compilerOptions = new CompilerOptions(options);
             if (project != null) {
                 CompilerUtils.setGroovyClasspath(compilerOptions, project);
