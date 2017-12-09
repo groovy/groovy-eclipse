@@ -864,12 +864,12 @@ public final class InferencingTests extends InferencingTestSuite {
     @Test
     public void testInnerClass7() {
         String contents = "class A {\n" +
-            "  protected def f\n" +
-            "  protected def m() { }\n" +
+            "  protected Number f\n" +
+            "  protected Number m() { }\n" +
             "}\n" +
             "class AA extends A {\n" +
             "  class AAA {\n" +
-            "    def something() {\n" +
+            "    def x() {\n" +
             "      f  \n" +
             "      m()\n" +
             "    }\n" +
@@ -877,28 +877,68 @@ public final class InferencingTests extends InferencingTestSuite {
             "}";
         int offset = contents.lastIndexOf('f');
         assertDeclaringType(contents, offset, offset + 1, "A");
+        assertType(contents, offset, offset + 1, "java.lang.Number");
             offset = contents.lastIndexOf('m');
         assertDeclaringType(contents, offset, offset + 1, "A");
+        assertType(contents, offset, offset + 1, "java.lang.Number");
     }
 
     @Test
     public void testInnerClass8() {
         String contents = "class A {\n" +
-            "  protected def f\n" +
-            "  protected def m() { }\n" +
+            "  protected Number f\n" +
+            "  protected Number m() { }\n" +
             "}\n" +
             "class AA extends A {\n" +
             "  static class AAA {\n" +
-            "    def something() {\n" +
+            "    def x() {\n" +
             "      f  \n" +
             "      m()\n" +
             "    }\n" +
             "  }\n" +
             "}";
         int offset = contents.lastIndexOf('f');
+        assertType(contents, offset, offset + 1, "java.lang.Object");
         assertUnknownConfidence(contents, offset, offset + 1, "A", false);
             offset = contents.lastIndexOf('m');
+        assertType(contents, offset, offset + 1, "java.lang.Object");
         assertUnknownConfidence(contents, offset, offset + 1, "A", false);
+    }
+
+    @Test
+    public void testInnerClass9() {
+        String contents = "class A {\n" +
+            "  public static final Number N = 1\n" +
+            "}\n" +
+            "class AA extends A {\n" +
+            "  static class AAA {\n" +
+            "    def x() {\n" +
+            "      N\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf('N');
+        assertDeclaringType(contents, offset, offset + 1, "A");
+        assertType(contents, offset, offset + 1, "java.lang.Number");
+    }
+
+    @Test
+    public void testInnerClass10() {
+        String contents = "class A {\n" +
+            "  public static final Number N = 1\n" +
+            "}\n" +
+            "class AA extends A {\n" +
+            "  static class AAA {\n" +
+            "    def x() {\n" +
+            "      def cl = { ->\n" +
+            "        N\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf('N');
+        assertDeclaringType(contents, offset, offset + 1, "A");
+        assertType(contents, offset, offset + 1, "java.lang.Number");
     }
 
     @Test

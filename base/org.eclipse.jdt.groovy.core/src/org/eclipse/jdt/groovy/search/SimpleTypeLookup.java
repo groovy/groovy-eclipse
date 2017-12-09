@@ -437,12 +437,13 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             if (candidate != null) {
                 decl = candidate;
                 declaringType = getDeclaringTypeFromDeclaration(decl, variableInfo != null ? variableInfo.declaringType : VariableScope.OBJECT_CLASS_NODE);
+                type = getTypeFromDeclaration(decl, declaringType);
             } else {
                 newConfidence = TypeConfidence.UNKNOWN;
+                type = VariableScope.OBJECT_CLASS_NODE;
                 // dynamic variables are not allowed outside of script mainline
                 if (variableInfo != null && !scope.inScriptRunMethod()) variableInfo = null;
             }
-            type = getTypeFromDeclaration(decl, declaringType);
         }
 
         if (variableInfo != null && !(decl instanceof MethodNode)) {
@@ -508,8 +509,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
 
         if (methodCallArgumentTypes != null) {
-            ASTNode method = findMethodDeclaration(name, declaringType, methodCallArgumentTypes);
-            if (method != null) {
+            MethodNode method = findMethodDeclaration(name, declaringType, methodCallArgumentTypes);
+            if (isCompatible(method, isStaticExpression)) {
                 return method;
             }
             // name may still map to something that is callable; keep looking
@@ -558,8 +559,11 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             return accessor;
         }
 
-        if (declaringType instanceof InnerClassNode && (declaringType.getModifiers() & ClassNode.ACC_STATIC) == 0) {
-            ASTNode declaration = findDeclaration(name, ((InnerClassNode) declaringType).getOuterClass(), isLhsExpression, isStaticExpression, directFieldAccess, methodCallArgumentTypes);
+        // look for member in outer classes
+        if (declaringType.getOuterClass() != null) {
+            // search only for static declarations if inner class is static
+            isStaticExpression |= ((declaringType.getModifiers() & ClassNode.ACC_STATIC) != 0);
+            ASTNode declaration = findDeclaration(name, declaringType.getOuterClass(), isLhsExpression, isStaticExpression, directFieldAccess, methodCallArgumentTypes);
             if (declaration != null) {
                 return declaration;
             }
@@ -768,7 +772,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             } else if (declaration instanceof PropertyNode) {
                 isStatic = ((PropertyNode) declaration).isStatic();
             }
-            if (!isStaticExpression || isStatic || VariableScope.CLASS_CLASS_NODE.equals(declaration.getDeclaringClass())) {
+            if (!isStaticExpression || isStatic ||
+                    VariableScope.CLASS_CLASS_NODE.equals(declaration.getDeclaringClass()) ||
+                    VariableScope.OBJECT_CLASS_NODE.equals(declaration.getDeclaringClass())) {
                 return true;
             }
         }
