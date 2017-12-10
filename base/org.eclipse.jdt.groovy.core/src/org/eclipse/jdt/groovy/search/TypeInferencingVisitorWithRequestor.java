@@ -91,6 +91,7 @@ import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.FieldASTTransformation;
 import org.codehaus.groovy.transform.sc.ListOfExpressionsExpression;
+import org.codehaus.groovy.transform.sc.transformers.CompareToNullExpression;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -1036,7 +1037,7 @@ assert primaryExprType != null && dependentExprType != null;
         VariableScope scope = new VariableScope(parent, node, false);
         scopes.add(scope);
 
-            ClassNode[] inferredParamTypes = inferClosureParamTypes(scope, node);
+            ClassNode[] inferredParamTypes = inferClosureParamTypes(node, scope);
             Parameter[] parameters = node.getParameters(); final int n;
             if (parameters != null && (n = parameters.length) > 0) {
                 handleParameterList(parameters);
@@ -1350,31 +1351,28 @@ assert primaryExprType != null && dependentExprType != null;
 
     @Override
     public void visitIfElse(IfStatement node) {
-        BooleanExpression expr = node.getBooleanExpression();
-        expr.visit(this);
+        node.getBooleanExpression().visit(this);
 
-        VariableScope s = null; // check for "if (x instanceof y) { ... }" flow typing
-        if (!(expr instanceof NotExpression) && expr.getExpression() instanceof BinaryExpression) {
-            BinaryExpression b = (BinaryExpression) expr.getExpression();
-            if (b.getOperation().getType() == Types.KEYWORD_INSTANCEOF &&
-                    b.getLeftExpression() instanceof VariableExpression) {
-                VariableExpression v = (VariableExpression) b.getLeftExpression();
-                VariableScope.VariableInfo i = scopes.getLast().lookupName(v.getName());
-                if (i != null && GroovyUtils.isAssignable(b.getRightExpression().getType(), i.type)) {
-                    s = new VariableScope(scopes.getLast(), i.scopeNode /* use the same node */, false);
-                    s.addVariable(v.getName(), b.getRightExpression().getType(), v.getDeclaringClass());
-                    scopes.add(s);
-                }
+            VariableScope[] scopes = inferInstanceOfType(node.getBooleanExpression(), this.scopes.getLast());
+            if (scopes.length > 0 && scopes[0] != null) {
+                this.scopes.add(scopes[0]);
             }
-        }
-        // TODO: else, check for "if (x == null || x instanceof y) { .. }" flow typing
 
         node.getIfBlock().visit(this);
 
-        if (s != null) scopes.removeLast();
-        // TODO: else, check for "if (!(x instanceof y)) { ... } else { ... }" and adjust scope of else block
+            if (scopes.length > 0) {
+                if (scopes[0] != null)
+                    this.scopes.removeLast();
+                if (scopes.length > 1 && scopes[1] != null) {
+                    this.scopes.add(scopes[1]);
+                }
+            }
 
         node.getElseBlock().visit(this);
+
+            if (scopes.length > 1 && scopes[1] != null) {
+                this.scopes.removeLast();
+            }
     }
 
     @Override
@@ -1519,7 +1517,7 @@ assert primaryExprType != null && dependentExprType != null;
 
         completeExpressionStack.removeLast();
 
-        ClassNode catNode = isCategoryDeclaration(node);
+        ClassNode catNode = isCategoryDeclaration(node, scope);
         if (catNode != null) {
             scope.setCategoryBeingDeclared(catNode);
         }
@@ -1744,16 +1742,30 @@ assert primaryExprType != null && dependentExprType != null;
 
         node.getBooleanExpression().visit(this);
 
-        // arbitrarily, we choose the if clause to be the type of this expression
-        node.getTrueExpression().visit(this);
+            VariableScope[] scopes = inferInstanceOfType(node.getBooleanExpression(), this.scopes.getLast());
+            if (scopes.length > 0 && scopes[0] != null) {
+                this.scopes.add(scopes[0]);
+            }
 
-        // arbirtrarily choose the 'true' expression
+        node.getTrueExpression().visit(this);
+        // arbitrarily choose the 'true' expression
         // to hold the type of the ternary expression
         ClassNode exprType = primaryTypeStack.removeLast();
 
-        node.getFalseExpression().visit(this);
+            if (scopes.length > 0) {
+                if (scopes[0] != null)
+                    this.scopes.removeLast();
+                if (scopes.length > 1 && scopes[1] != null) {
+                    this.scopes.add(scopes[1]);
+                }
+            }
 
+        node.getFalseExpression().visit(this);
         completeExpressionStack.removeLast();
+
+            if (scopes.length > 1 && scopes[1] != null) {
+                this.scopes.removeLast();
+            }
 
         // if the ternary expression is a primary expression
         // of a larger expression, use the exprType as the
@@ -2204,7 +2216,7 @@ assert primaryExprType != null && dependentExprType != null;
         }
     }
 
-    private ClassNode isCategoryDeclaration(MethodCallExpression node) {
+    private ClassNode isCategoryDeclaration(MethodCallExpression node, VariableScope scope) {
         String methodAsString = node.getMethodAsString();
         if (methodAsString != null && methodAsString.equals("use")) {
             Expression exprs = node.getArguments();
@@ -2217,7 +2229,7 @@ assert primaryExprType != null && dependentExprType != null;
                     if (expr instanceof ClassExpression) {
                         return expr.getType();
                     } else if (expr instanceof VariableExpression && expr.getText() != null) {
-                        VariableScope.VariableInfo info = scopes.getLast().lookupName(expr.getText());
+                        VariableScope.VariableInfo info = scope.lookupName(expr.getText());
                         if (info != null) {
                             // info.type should be Class<Category>
                             return info.type.getGenericsTypes()[0].getType();
@@ -2725,7 +2737,7 @@ assert primaryExprType != null && dependentExprType != null;
      *
      * @return array of {@link ClassNode}s specifying the inferred types of the closure's parameters
      */
-    private static ClassNode[] inferClosureParamTypes(VariableScope scope, ClosureExpression closure) {
+    private static ClassNode[] inferClosureParamTypes(ClosureExpression closure, VariableScope scope) {
         int paramCount = closure.getParameters() == null ? 0 : closure.getParameters().length;
         if (paramCount == 0) {
             // implicit parameter
@@ -2773,6 +2785,36 @@ assert primaryExprType != null && dependentExprType != null;
         return inferredTypes;
     }
 
+    private static VariableScope[] inferInstanceOfType(BooleanExpression node, VariableScope scope) {
+        // check for "if (x instanceof y) { ... }" flow typing
+        if (node.getExpression() instanceof BinaryExpression) {
+            BinaryExpression be = (BinaryExpression) node.getExpression();
+            // check for "if (x == null || x instanceof y) { .. }" or
+            //  "if (x != null && x instanceof y) { .. }" flow typing
+            BinaryExpression nsbe = nullSafeBinaryExpression(be);
+            if (nsbe != null) {
+                be = nsbe;
+            }
+            if (be.getOperation().getType() == Types.KEYWORD_INSTANCEOF &&
+                    be.getLeftExpression() instanceof VariableExpression) {
+                VariableExpression ve = (VariableExpression) be.getLeftExpression();
+                VariableScope.VariableInfo vi = scope.lookupName(ve.getName());
+                if (vi != null && GroovyUtils.isAssignable(be.getRightExpression().getType(), vi.type)) {
+                    VariableScope vs = new VariableScope(scope, vi.scopeNode /*use the same node*/, false);
+                    vs.addVariable(ve.getName(), be.getRightExpression().getType(), ve.getDeclaringClass());
+                    return new VariableScope[] {vs, null};
+                }
+            }
+        }/* else if (node.getExpression() instanceof NotExpression) {
+            // check for "if (!(x instanceof y)) { ... } else { ... }"
+            VariableScope[] scopes = inferInstanceOfType((NotExpression) node.getExpression(), scope);
+            if (scopes.length > 0) {
+                return new VariableScope[] {scopes[1], scopes[0]};
+            }
+        }*/
+        return VariableScope.EMPTY_ARRAY;
+    }
+
     private static boolean isEnumInit(MethodCallExpression node) {
         return (node.getType().isEnum() && node.getMethodAsString().equals("$INIT"));
     }
@@ -2803,6 +2845,94 @@ assert primaryExprType != null && dependentExprType != null;
 
     private static boolean isNotEmpty(List<?> list) {
         return list != null && !list.isEmpty();
+    }
+
+    private static VariableExpression isNotNullTest(Expression node) {
+        if (node instanceof CompareToNullExpression) {
+            CompareToNullExpression expr = (CompareToNullExpression) node;
+            if (expr.getOperation().getText().equals("!=") &&
+                    expr.getObjectExpression() instanceof VariableExpression) {
+                return (VariableExpression) expr.getObjectExpression();
+            }
+        } else if (node instanceof BinaryExpression) {
+            BinaryExpression expr = (BinaryExpression) node;
+            if (expr.getOperation().getType() == Types.COMPARE_NOT_EQUAL) {
+                if (expr.getLeftExpression() instanceof VariableExpression &&
+                        expr.getRightExpression() instanceof ConstantExpression &&
+                        ((ConstantExpression) expr.getRightExpression()).isNullExpression()) {
+                    return (VariableExpression) expr.getLeftExpression();
+                } else if (expr.getRightExpression() instanceof VariableExpression &&
+                        expr.getLeftExpression() instanceof ConstantExpression &&
+                        ((ConstantExpression) expr.getLeftExpression()).isNullExpression()) {
+                    return (VariableExpression) expr.getRightExpression();
+                }
+            }
+        }
+        return null;
+    }
+
+    private static VariableExpression isNullTest(Expression node) {
+        if (node instanceof CompareToNullExpression) {
+            CompareToNullExpression expr = (CompareToNullExpression) node;
+            if (expr.getOperation().getText().equals("==") &&
+                    expr.getObjectExpression() instanceof VariableExpression) {
+                return (VariableExpression) expr.getObjectExpression();
+            }
+        } else if (node instanceof BinaryExpression) {
+            BinaryExpression expr = (BinaryExpression) node;
+            if (expr.getOperation().getType() == Types.COMPARE_EQUAL) {
+                if (expr.getLeftExpression() instanceof VariableExpression &&
+                        expr.getRightExpression() instanceof ConstantExpression &&
+                        ((ConstantExpression) expr.getRightExpression()).isNullExpression()) {
+                    return (VariableExpression) expr.getLeftExpression();
+                } else if (expr.getRightExpression() instanceof VariableExpression &&
+                        expr.getLeftExpression() instanceof ConstantExpression &&
+                        ((ConstantExpression) expr.getLeftExpression()).isNullExpression()) {
+                    return (VariableExpression) expr.getRightExpression();
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Checks for "x == null || x ..." or "x != null && x ..."
+     */
+    private static BinaryExpression nullSafeBinaryExpression(BinaryExpression node) {
+        Expression left = node.getLeftExpression();
+        Expression rght = node.getRightExpression();
+        if (node.getOperation().getType() == Types.LOGICAL_OR) {
+            VariableExpression ve;
+            if ((ve = isNullTest(left)) != null && rght instanceof BinaryExpression) {
+                BinaryExpression be = (BinaryExpression) rght;
+                if (be.getLeftExpression() instanceof VariableExpression &&
+                        ve.getName().equals(((VariableExpression) be.getLeftExpression()).getName())) {
+                    return be;
+                }
+            } else if (ve == null && (ve = isNullTest(rght)) != null && left instanceof BinaryExpression) {
+                BinaryExpression be = (BinaryExpression) left;
+                if (be.getLeftExpression() instanceof VariableExpression &&
+                        ve.getName().equals(((VariableExpression) be.getLeftExpression()).getName())) {
+                    return be;
+                }
+            }
+        } else if (node.getOperation().getType() == Types.LOGICAL_AND) {
+            VariableExpression ve;
+            if ((ve = isNotNullTest(left)) != null && rght instanceof BinaryExpression) {
+                BinaryExpression be = (BinaryExpression) rght;
+                if (be.getLeftExpression() instanceof VariableExpression &&
+                        ve.getName().equals(((VariableExpression) be.getLeftExpression()).getName())) {
+                    return be;
+                }
+            } else if (ve == null && (ve = isNotNullTest(rght)) != null && left instanceof BinaryExpression) {
+                BinaryExpression be = (BinaryExpression) left;
+                if (be.getLeftExpression() instanceof VariableExpression &&
+                        ve.getName().equals(((VariableExpression) be.getLeftExpression()).getName())) {
+                    return be;
+                }
+            }
+        }
+        return null;
     }
 
     private static List<IMember> membersOf(IType type, boolean isScript) throws JavaModelException {

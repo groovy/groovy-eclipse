@@ -15,9 +15,11 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -366,6 +368,8 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testConstructorWithDefaultArgsInCompileStatic() throws Exception {
+        assumeTrue(isAtLeastGroovy(20));
+
         String firstContents =
                 "package p\n" +
                 "class First {\n" +

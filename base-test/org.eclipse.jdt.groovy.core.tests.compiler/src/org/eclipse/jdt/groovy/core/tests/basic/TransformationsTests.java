@@ -1082,7 +1082,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
         runNegativeTest(sources, "");
     }
 
-    @Test
+    @Test // GROOVY-8337
     public void testCompileStatic6() {
         assumeTrue(isAtLeastGroovy(20));
 

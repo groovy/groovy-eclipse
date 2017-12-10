@@ -75,6 +75,8 @@ import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
  */
 public class VariableScope implements Iterable<VariableScope.VariableInfo> {
 
+    public static final VariableScope[] EMPTY_ARRAY = new VariableScope[0];
+
     public static final ClassNode NULL_TYPE = new ImmutableClassNode(Object.class);
     public static final ClassNode VOID_CLASS_NODE = ClassHelper.make(void.class);
     public static final ClassNode VOID_WRAPPER_CLASS_NODE = ClassHelper.void_WRAPPER_TYPE;
@@ -402,7 +404,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     /**
      * AST node for this scope, typically, a block, closure, or body declaration
      */
-    private ASTNode scopeNode;
+    /*package*/ ASTNode scopeNode;
 
     /**
      * number of parameters of current method call or -1 if not a method call

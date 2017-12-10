@@ -41,8 +41,8 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     public void testDelegatesToValue() {
         String contents =
             "class Other { }\n" +
-                "def meth(@DelegatesTo(Other) Closure c) { }\n" +
-                "meth { delegate }";
+            "def meth(@DelegatesTo(Other) Closure c) { }\n" +
+            "meth { delegate }";
 
         String toFind = "delegate";
         int start = contents.lastIndexOf(toFind);
@@ -54,8 +54,8 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     public void testDelegatesToValue2() {
         String contents =
             "class Other { }\n" +
-                "def meth(@DelegatesTo(Other) c) { }\n" +
-                "meth { delegate }";
+            "def meth(@DelegatesTo(Other) c) { }\n" +
+            "meth { delegate }";
 
         String toFind = "delegate";
         int start = contents.lastIndexOf(toFind);
@@ -67,8 +67,8 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     public void testDelegatesToValue3() {
         String contents =
             "class Other { int xxx }\n" +
-                "def meth(@DelegatesTo(Other) Closure c) { }\n" +
-                "meth { xxx }";
+            "def meth(@DelegatesTo(Other) Closure c) { }\n" +
+            "meth { xxx }";
 
         String toFind = "xxx";
         int start = contents.lastIndexOf(toFind);
@@ -80,7 +80,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     public void testDelegatesToValue4() {
         String contents =
             "def meth(@DelegatesTo(List) Closure c) { }\n" +
-                "meth { delegate }";
+            "meth { delegate }";
 
         String toFind = "delegate";
         int start = contents.lastIndexOf(toFind);
@@ -92,7 +92,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     public void testDelegatesToValue5() {
         String contents =
             "def meth(int x, int y, @DelegatesTo(List) Closure c) { }\n" +
-                "meth 1, 2, { delegate }";
+            "meth 1, 2, { delegate }";
 
         String toFind = "delegate";
         int start = contents.lastIndexOf(toFind);
@@ -104,7 +104,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     public void testDelegatesToValue6() {
         String contents =
             "def meth(int x, int y, @DelegatesTo(List<String) Closure c) { }\n" +
-                "meth { delegate }";
+            "meth { delegate }";
 
         String toFind = "delegate";
         int start = contents.lastIndexOf(toFind);
@@ -259,7 +259,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testStaticCompile() {
+    public void testTypeCheckingExtension() {
         Activator.getInstancePreferences().getBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, Activator.DEFAULT_SCRIPT_FILTERS_ENABLED);
         Activator.getInstancePreferences().get(Activator.GROOVY_SCRIPT_FILTERS, Activator.DEFAULT_GROOVY_SCRIPT_FILTER);
         try {

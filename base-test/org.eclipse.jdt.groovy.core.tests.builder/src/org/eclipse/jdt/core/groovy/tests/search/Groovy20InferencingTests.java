@@ -29,162 +29,227 @@ public final class Groovy20InferencingTests extends InferencingTestSuite {
     }
 
     @Test // tests CompareToNullExpression
-    public void testCompileStatic1() throws Exception {
-        String contents =
-            "import groovy.transform.CompileStatic;\n" +
-                "class CompilingStatic {\n" +
-                "\n" +
-                "    @CompileStatic\n" +
-                "    def foo(String args) {\n" +
-                "        args!= null\n" +
-                "    }\n" +
-                "}";
-        int start = contents.lastIndexOf("args");
-        int end = start + "args".length();
-        assertType(contents, start, end, "java.lang.String");
+    public void testCompileStatic1() {
+        String contents = "import groovy.transform.CompileStatic\n" +
+            "class Groovy20 {\n" +
+            "  @CompileStatic\n" +
+            "  def meth(String args) {\n" +
+            "    args != null\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "args", "java.lang.String");
     }
 
     @Test // tests CompareToNullExpression
-    public void testCompileStatic2() throws Exception {
-        String contents =
-            "import groovy.transform.CompileStatic;\n" +
-                "class CompilingStatic {\n" +
-                "\n" +
-                "    @CompileStatic\n" +
-                "    def foo(String args) {\n" +
-                "        args== null\n" +
-                "    }\n" +
-                "}";
-        int start = contents.lastIndexOf("args");
-        int end = start + "args".length();
-        assertType(contents, start, end, "java.lang.String");
+    public void testCompileStatic2() {
+        String contents = "import groovy.transform.CompileStatic\n" +
+            "class Groovy20 {\n" +
+            "  @CompileStatic\n" +
+            "  def meth(String args) {\n" +
+            "    args == null\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "args", "java.lang.String");
+    }
+
+    @Test // tests CompareToNullExpression
+    public void testCompileStatic3() {
+        String contents = "import groovy.transform.CompileStatic\n" +
+            "class Groovy20 {\n" +
+            "  @CompileStatic\n" +
+            "  def meth(String args) {\n" +
+            "    null == args\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "args", "java.lang.String");
     }
 
     @Test // tests CompareIdentityExpression
-    public void testCompileStatic3() throws Exception {
-        String contents =
-            "import groovy.transform.CompileStatic;\n" +
-                "class CompilingStatic {\n" +
-                "\n" +
-                "    @CompileStatic\n" +
-                "    def foo(String args) {\n" +
-                "        args== 9\n" +
-                "    }\n" +
-                "}";
-        int start = contents.lastIndexOf("args");
-        int end = start + "args".length();
-        assertType(contents, start, end, "java.lang.String");
+    public void testCompileStatic4() {
+        String contents = "import groovy.transform.CompileStatic\n" +
+            "class Groovy20 {\n" +
+            "  @CompileStatic\n" +
+            "  def meth(String args) {\n" +
+            "    args == 9\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "args", "java.lang.String");
     }
 
     @Test // tests CompareIdentityExpression
-    public void testCompileStatic4() throws Exception {
-        String contents =
-            "import groovy.transform.CompileStatic;\n" +
-                "class CompilingStatic {\n" +
-                "\n" +
-                "    @CompileStatic\n" +
-                "    def foo(String args) {\n" +
-                "        9 == args\n" +
-                "    }\n" +
-                "}";
-        int start = contents.lastIndexOf("args");
-        int end = start + "args".length();
-        assertType(contents, start, end, "java.lang.String");
+    public void testCompileStatic5() {
+        String contents = "import groovy.transform.CompileStatic\n" +
+            "class Groovy20 {\n" +
+            "  @CompileStatic\n" +
+            "  def meth(String args) {\n" +
+            "    9 == args\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "args", "java.lang.String");
+    }
+
+    @Test // tests instanceof flow typing
+    public void testCompileStatic6() {
+        String contents = "@groovy.transform.CompileStatic\n" +
+            "class Groovy20 {\n" +
+            "  def meth(def x) {\n" +
+            "    if (x instanceof Number) {\n" +
+            "      x.intValue()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "x", "java.lang.Number");
+    }
+
+    @Test // tests instanceof flow typing
+    public void testCompileStatic7() {
+        String contents = "@groovy.transform.CompileStatic\n" +
+            "class Groovy20 {\n" +
+            "  def meth(def x) {\n" +
+            "    if (!(x instanceof Number)) {\n" +
+            "      x.toString()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "x", "java.lang.Object");
+    }
+
+    @Test // tests instanceof flow typing
+    public void testCompileStatic8() {
+        String contents = "@groovy.transform.CompileStatic\n" +
+            "class Groovy20 {\n" +
+            "  def meth(def x) {\n" +
+            "    x instanceof Number ? x.intValue() : null\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "x", "java.lang.Number");
+    }
+
+    @Test // tests instanceof flow typing
+    public void testCompileStatic9() {
+        String contents = "@groovy.transform.CompileStatic\n" +
+            "class Groovy20 {\n" +
+            "  def meth(def x) {\n" +
+            "    !(x instanceof Number) ? x.toString() : null\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "x", "java.lang.Object");
+    }
+
+    @Test // GRECLIPSE-1720
+    public void testCompileStatic10() {
+        String contents = "@groovy.transform.CompileStatic\n" +
+            "public class Groovy20 {\n" +
+            "  enum Letter { A,B,C }\n" +
+            "  boolean bug(Letter l) {\n" +
+            "    boolean isEarly = l in [Letter.A, Letter.B]\n" +
+            "    isEarly\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "isEarly", "java.lang.Boolean");
     }
 
     @Test // tests CompareToNullExpression
-    public void testCompileStatic5() throws Exception {
-        String contents =
-            "import groovy.transform.CompileStatic;\n" +
-                "class CompilingStatic {\n" +
-                "\n" +
-                "    @CompileStatic\n" +
-                "    def foo(String args) {\n" +
-                "        null== args\n" +
-                "    }\n" +
-                "}";
-        int start = contents.lastIndexOf("args");
-        int end = start + "args".length();
-        assertType(contents, start, end, "java.lang.String");
+    public void testTypeChecked1() {
+        String contents = "import groovy.transform.TypeChecked\n" +
+            "class Groovy20 {\n" +
+            "  @TypeChecked\n" +
+            "  def meth(String args) {\n" +
+            "    args != null\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "args", "java.lang.String");
     }
 
     @Test // tests CompareToNullExpression
-    public void testTypeChecked1() throws Exception {
-        String contents =
-            "import groovy.transform.TypeChecked;\n" +
-                "class CompilingStatic {\n" +
-                "\n" +
-                "    @TypeChecked\n" +
-                "    def foo(String args) {\n" +
-                "        args!= null\n" +
-                "    }\n" +
-                "}";
-        int start = contents.lastIndexOf("args");
-        int end = start + "args".length();
-        assertType(contents, start, end, "java.lang.String");
+    public void testTypeChecked2() {
+        String contents = "import groovy.transform.TypeChecked\n" +
+            "class Groovy20 {\n" +
+            "  @TypeChecked\n" +
+            "  def meth(String args) {\n" +
+            "    args == null\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "args", "java.lang.String");
     }
 
     @Test // tests CompareToNullExpression
-    public void testTypeChecked2() throws Exception {
-        String contents =
-            "import groovy.transform.TypeChecked;\n" +
-                "class CompilingStatic {\n" +
-                "\n" +
-                "    @TypeChecked\n" +
-                "    def foo(String args) {\n" +
-                "        args== null\n" +
-                "    }\n" +
-                "}";
-        int start = contents.lastIndexOf("args");
-        int end = start + "args".length();
-        assertType(contents, start, end, "java.lang.String");
+    public void testTypeChecked3() {
+        String contents = "import groovy.transform.TypeChecked\n" +
+            "class Groovy20 {\n" +
+            "  @TypeChecked\n" +
+            "  def meth(String args) {\n" +
+            "    null == args\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "args", "java.lang.String");
     }
 
     @Test // tests CompareIdentityExpression
-    public void testTypeChecked3() throws Exception {
-        String contents =
-            "import groovy.transform.TypeChecked;\n" +
-                "class CompilingStatic {\n" +
-                "\n" +
-                "    @TypeChecked\n" +
-                "    def foo(String args) {\n" +
-                "        args== 9\n" +
-                "    }\n" +
-                "}";
-        int start = contents.lastIndexOf("args");
-        int end = start + "args".length();
-        assertType(contents, start, end, "java.lang.String");
+    public void testTypeChecked4() {
+        String contents = "import groovy.transform.TypeChecked\n" +
+            "class Groovy20 {\n" +
+            "  @TypeChecked\n" +
+            "  def meth(String args) {\n" +
+            "    args== 9\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "args", "java.lang.String");
     }
 
     @Test // tests CompareIdentityExpression
-    public void testTypeChecked4() throws Exception {
-        String contents =
-            "import groovy.transform.TypeChecked;\n" +
-                "class CompilingStatic {\n" +
-                "\n" +
-                "    @TypeChecked\n" +
-                "    def foo(String args) {\n" +
-                "        9 == args\n" +
-                "    }\n" +
-                "}";
-        int start = contents.lastIndexOf("args");
-        int end = start + "args".length();
-        assertType(contents, start, end, "java.lang.String");
+    public void testTypeChecked5() {
+        String contents = "import groovy.transform.TypeChecked\n" +
+            "class Groovy20 {\n" +
+            "  @TypeChecked\n" +
+            "  def meth(String args) {\n" +
+            "    9 == args\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "args", "java.lang.String");
     }
 
-    @Test // tests CompareToNullExpression
-    public void testTypeChecked5() throws Exception {
-        String contents =
-            "import groovy.transform.TypeChecked;\n" +
-                "class CompilingStatic {\n" +
-                "\n" +
-                "    @TypeChecked\n" +
-                "    def foo(String args) {\n" +
-                "        null== args\n" +
-                "    }\n" +
-                "}";
-        int start = contents.lastIndexOf("args");
-        int end = start + "args".length();
-        assertType(contents, start, end, "java.lang.String");
+    @Test // tests instanceof flow typing
+    public void testTypeChecked6() {
+        String contents = "@groovy.transform.TypeChecked\n" +
+            "class Groovy20 {\n" +
+            "  def meth(def x) {\n" +
+            "    if (x instanceof Number) {\n" +
+            "      x.intValue()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "x", "java.lang.Number");
+    }
+
+    @Test // tests instanceof flow typing
+    public void testTypeChecked7() {
+        String contents = "@groovy.transform.TypeChecked\n" +
+            "class Groovy20 {\n" +
+            "  def meth(def x) {\n" +
+            "    if (!(x instanceof Number)) {\n" +
+            "      x.toString()\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "x", "java.lang.Object");
+    }
+
+    @Test // tests instanceof flow typing
+    public void testTypeChecked8() {
+        String contents = "@groovy.transform.TypeChecked\n" +
+            "class Groovy20 {\n" +
+            "  def meth(def x) {\n" +
+            "    x instanceof Number ? x.intValue() : ''\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "x", "java.lang.Number");
+    }
+
+    //--------------------------------------------------------------------------
+
+    private void assertExprType(String source, String target, String type) {
+        int offset = source.lastIndexOf(target);
+        assertType(source, offset, offset + target.length(), type);
     }
 }
