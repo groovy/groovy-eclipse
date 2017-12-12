@@ -344,15 +344,14 @@ public class JDTResolver extends ResolveVisitor {
             return existingNode;
         }
         if (DEBUG) {
-            if (jdtBinding.id != TypeIds.T_void && !jdtBinding.isPrimitiveOrBoxedPrimitiveType()) {
-                log("Building new JDTClassNode for binding " + toString(jdtBinding));
-            }
+            log("Building new JDTClassNode for binding " + toString(jdtBinding));
         }
         return createJDTClassNode(jdtBinding);
     }
 
     private ClassNode checkForExisting(TypeBinding jdtBinding) {
-        if (jdtBinding.id == TypeIds.T_void || jdtBinding.isPrimitiveOrBoxedPrimitiveType() || (jdtBinding.readableName()[0] == 'j' && !jdtBinding.isArrayType())) {
+        if (jdtBinding.id > TypeIds.T_undefined && (jdtBinding.id <= TypeIds.T_JavaLangString ||
+                (jdtBinding.id <= TypeIds.T_JavaLangVoid && jdtBinding.id >= TypeIds.T_JavaLangByte))) {
             ClassNode existing = COMMON_TYPES.get(String.valueOf(jdtBinding.readableName()));
             if (existing != null) {
                 return existing;
