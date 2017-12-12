@@ -57,26 +57,15 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
  */
 public class JDTResolver extends ResolveVisitor {
 
-    /** Any type name that is equal to or shorter than this is likely to be a primitive type. */
+    private static final boolean DEBUG = false;
+
+    /** Any type name that is equal to or shorter than this could be a primitive type. */
     private static final int BOOLEAN_LENGTH = "boolean".length();
 
     /** Arbitrary selection of common types. */
     private static final Map<String, ClassNode> COMMON_TYPES;
     static {
         Map<String, ClassNode> commonTypes = new HashMap<String, ClassNode>();
-
-        commonTypes.put("java.lang.Class", ClassHelper.CLASS_Type);
-        commonTypes.put("java.lang.Object", ClassHelper.OBJECT_TYPE);
-        commonTypes.put("java.lang.String", ClassHelper.STRING_TYPE);
-
-        commonTypes.put("java.lang.Boolean", ClassHelper.Boolean_TYPE);
-        commonTypes.put("java.lang.Byte", ClassHelper.Byte_TYPE);
-        commonTypes.put("java.lang.Character", ClassHelper.Character_TYPE);
-        commonTypes.put("java.lang.Double", ClassHelper.Double_TYPE);
-        commonTypes.put("java.lang.Float", ClassHelper.Float_TYPE);
-        commonTypes.put("java.lang.Integer", ClassHelper.Integer_TYPE);
-        commonTypes.put("java.lang.Long", ClassHelper.Long_TYPE);
-        commonTypes.put("java.lang.Short", ClassHelper.Short_TYPE);
 
         commonTypes.put("boolean", ClassHelper.boolean_TYPE);
         commonTypes.put("byte", ClassHelper.byte_TYPE);
@@ -86,11 +75,23 @@ public class JDTResolver extends ResolveVisitor {
         commonTypes.put("int", ClassHelper.int_TYPE);
         commonTypes.put("long", ClassHelper.long_TYPE);
         commonTypes.put("short", ClassHelper.short_TYPE);
+        commonTypes.put("void", ClassHelper.VOID_TYPE);
+
+        commonTypes.put("java.lang.Boolean", ClassHelper.Boolean_TYPE);
+        commonTypes.put("java.lang.Byte", ClassHelper.Byte_TYPE);
+        commonTypes.put("java.lang.Character", ClassHelper.Character_TYPE);
+        commonTypes.put("java.lang.Double", ClassHelper.Double_TYPE);
+        commonTypes.put("java.lang.Float", ClassHelper.Float_TYPE);
+        commonTypes.put("java.lang.Integer", ClassHelper.Integer_TYPE);
+        commonTypes.put("java.lang.Long", ClassHelper.Long_TYPE);
+        commonTypes.put("java.lang.Short", ClassHelper.Short_TYPE);
+        commonTypes.put("java.lang.Void", ClassHelper.void_WRAPPER_TYPE);
+
+        commonTypes.put("java.lang.Object", ClassHelper.OBJECT_TYPE);
+        commonTypes.put("java.lang.String", ClassHelper.STRING_TYPE);
 
         COMMON_TYPES = Collections.unmodifiableMap(commonTypes);
     }
-
-    private static final boolean DEBUG = false;
 
     private void log(String string) {
         System.err.printf("JDTResolver@%x[%d]: %s%n", System.identityHashCode(this), Thread.currentThread().getId(), string);
@@ -118,6 +119,10 @@ public class JDTResolver extends ResolveVisitor {
         return null;
     }
 
+    public GroovyCompilationUnitScope getScope() {
+        return activeScope;
+    }
+
     // Type references are resolved through the 'activeScope'. This ensures visibility rules are obeyed - just because a
     // type exists does not mean it is visible to some other type and scope lookups verify this.
     protected GroovyCompilationUnitScope activeScope = null;
@@ -133,6 +138,15 @@ public class JDTResolver extends ResolveVisitor {
 
     private Set<ClassNode> resolvedClassNodes = new HashSet<ClassNode>();
 
+    /**
+     * Records the type names that aren't resolvable for the current resolution
+     * (cleared in finishedResolution()). This means we won't constantly attempt
+     * to lookup something that is not found through the same routes repeatedly.
+     */
+    private Set<String> unresolvables = new HashSet<String>();
+
+    //--------------------------------------------------------------------------
+
     public JDTResolver(CompilationUnit groovyCompilationUnit) {
         super(groovyCompilationUnit);
         if (recordInstances) {
@@ -146,6 +160,49 @@ public class JDTResolver extends ResolveVisitor {
     public void cleanUp() {
         inProgress.clear();
         //nodeCache.clear();
+    }
+
+    public ClassNode resolve(String name) {
+        if (name.charAt(0) == 'j' || name.length() <= BOOLEAN_LENGTH) {
+            ClassNode commonRedirect = COMMON_TYPES.get(name);
+            if (commonRedirect != null) {
+                return commonRedirect;
+            }
+        }
+
+        if (unresolvables.contains(name)) {
+            return ClassHelper.DYNAMIC_TYPE;
+        }
+
+        ClassNode type = ClassHelper.makeWithoutCaching(name);
+        if (super.resolve(type, true, true, true)) {
+            return type.redirect();
+        } else {
+            unresolvables.add(name);
+            return ClassHelper.DYNAMIC_TYPE;
+        }
+    }
+
+    @Override
+    protected boolean resolve(ClassNode type, boolean testModuleImports, boolean testDefaultImports, boolean testStaticInnerClasses) {
+        String name = type.getName();
+        if (name.charAt(0) == 'j' || name.length() <= BOOLEAN_LENGTH) {
+            ClassNode commonRedirect = COMMON_TYPES.get(name);
+            if (commonRedirect != null) {
+                type.setRedirect(commonRedirect);
+                return true;
+            }
+        }
+
+        if (unresolvables.contains(name)) {
+            return false;
+        }
+
+        boolean b = super.resolve(type, testModuleImports, testDefaultImports, testStaticInnerClasses);
+        if (!b) {
+            unresolvables.add(name);
+        }
+        return b;
     }
 
     @Override
@@ -213,20 +270,12 @@ public class JDTResolver extends ResolveVisitor {
     }
 
     @Override
-    protected boolean resolveFromClassCache(ClassNode type) {
-        return false;
-    }
-
     protected boolean resolveToOuter(ClassNode type) {
-        return resolveToClass(type);
-    }
-
-    protected boolean resolveToClass(ClassNode type) {
         ClassNode node;
         if (activeScope != null) {
             node = activeScope.lookupClassNodeForBinary(type.getName(), this);
             if (DEBUG) {
-                log("resolveToClass (jdt)", type, node != null);
+                log("resolveToOuter (jdt)", type, node != null);
             }
             if (node != null) {
                 type.setRedirect(node);
@@ -237,8 +286,8 @@ public class JDTResolver extends ResolveVisitor {
         // grab has occurred, try and find the class through it
         GroovyClassLoader loader = compilationUnit.getClassLoader();
         if (loader instanceof GrapeAwareGroovyClassLoader) {
-            GrapeAwareGroovyClassLoader gagc = (GrapeAwareGroovyClassLoader) loader;
-            if (gagc.grabbed) {
+            GrapeAwareGroovyClassLoader gagcl = (GrapeAwareGroovyClassLoader) loader;
+            if (gagcl.grabbed) {
                 Class<?> cls;
                 try {
                     cls = loader.loadClass(type.getName(), false, true);
@@ -258,61 +307,10 @@ public class JDTResolver extends ResolveVisitor {
         return false;
     }
 
-    @Override
-    protected boolean resolveToScript(ClassNode type) {
-        return false;
-    }
-
-    // Records a list of type names that aren't resolvable for the current resolution (unresolvables is cleared in
-    // finishedResolution()). This means we won't constantly attempt to lookup something that is not found through the same routes
-    // over and over (GRECLIPSE-870)
-    private Set<String> unresolvables = new HashSet<String>();
-
-    @Override
-    protected boolean resolve(ClassNode type, boolean testModuleImports, boolean testDefaultImports, boolean testStaticInnerClasses) {
-        String name = type.getName();
-        // save time by being selective about whether to consult the commonRedirectMap
-        if (name.charAt(0) == 'j' || name.length() <= BOOLEAN_LENGTH) {
-            ClassNode commonRedirect = COMMON_TYPES.get(type.getName());
-            if (commonRedirect != null) {
-                type.setRedirect(commonRedirect);
-                return true;
-            }
-        }
-        if (unresolvables.contains(name)) {
-            return false;
-        } else {
-            boolean b = super.resolve(type, testModuleImports, testDefaultImports, testStaticInnerClasses);
-            if (!b) {
-                unresolvables.add(name);
-            }
-            return b;
-        }
-    }
-
-    public ClassNode resolve(String qualifiedName) {
-        ClassNode type = ClassHelper.makeWithoutCaching(qualifiedName);
-        if (super.resolve(type)) {
-            return type.redirect();
-        } else {
-            return ClassHelper.DYNAMIC_TYPE;
-        }
-    }
-
-    // avoiding an inner resolve is dangerous.
+    // avoiding an inner resolve is dangerous
     // leave a back door here to turn it back on
     // if no one complains, then safe to remove
     private static boolean doInnerResolve = Boolean.getBoolean("greclipse.doInnerResolve");
-
-    @Override
-    protected boolean resolveToInnerEnum(ClassNode type) {
-        if (doInnerResolve) {
-            return super.resolveToInnerEnum(type);
-        }
-        // inner classes are resolved by JDT, so
-        // if we get here then the inner class does not exist
-        return false;
-    }
 
     @Override
     protected boolean resolveToInner(ClassNode type) {
@@ -324,38 +322,43 @@ public class JDTResolver extends ResolveVisitor {
         return false;
     }
 
-    // FIXASC callers could check if it is a 'funky' type before always recording a depedency
-    // by 'funky' I mean that the type was constructed just to try something (org.foo.bar.java$lang$Wibble doesn't want recording!)
-    private void recordDependency(String typename) {
-        if (activeScope != null) {
-            if (typename.indexOf('.') != -1) {
-                activeScope.recordQualifiedReference(CharOperation.splitOn('.', typename.toCharArray()));
-            } else {
-                activeScope.recordSimpleReference(typename.toCharArray());
-            }
+    @Override
+    protected boolean resolveToInnerEnum(ClassNode type) {
+        if (doInnerResolve) {
+            return super.resolveToInnerEnum(type);
         }
+        // inner classes are resolved by JDT, so
+        // if we get here then the inner class does not exist
+        return false;
     }
 
     /**
      * Converts a JDT TypeBinding to a Groovy ClassNode.
      */
     protected ClassNode convertToClassNode(TypeBinding jdtBinding) {
-        JDTClassNode existingNode = checkForExisting(jdtBinding);
+        ClassNode existingNode = checkForExisting(jdtBinding);
         if (existingNode != null) {
             if (DEBUG) {
-                log("Using cached JDTClassNode for binding " + toString(jdtBinding));
+                log("Using cached ClassNode for binding " + toString(jdtBinding));
             }
             return existingNode;
         }
         if (DEBUG) {
-            if (jdtBinding.id != TypeIds.T_void /*&& !jdtBinding.isPrimitiveOrBoxedPrimitiveType()*/) {
-                log("createJDTClassNode: Building new JDTClassNode for binding " + toString(jdtBinding));
+            if (jdtBinding.id != TypeIds.T_void && !jdtBinding.isPrimitiveOrBoxedPrimitiveType()) {
+                log("Building new JDTClassNode for binding " + toString(jdtBinding));
             }
         }
         return createJDTClassNode(jdtBinding);
     }
 
-    private JDTClassNode checkForExisting(TypeBinding jdtBinding) {
+    private ClassNode checkForExisting(TypeBinding jdtBinding) {
+        if (jdtBinding.id == TypeIds.T_void || jdtBinding.isPrimitiveOrBoxedPrimitiveType() || (jdtBinding.readableName()[0] == 'j' && !jdtBinding.isArrayType())) {
+            ClassNode existing = COMMON_TYPES.get(String.valueOf(jdtBinding.readableName()));
+            if (existing != null) {
+                return existing;
+            }
+        }
+
         JDTClassNode node = inProgress.get(jdtBinding);
         if (node == null) {
             node = nodeCache.get(jdtBinding);
@@ -372,7 +375,6 @@ public class JDTResolver extends ResolveVisitor {
      * continuing with initialization. This allows self-referential generics.
      *
      * @param jdtBinding the JDT binding for which to create a ClassNode
-     * @return a {@link JDTClassNode}
      */
     private ClassNode createJDTClassNode(TypeBinding jdtBinding) {
         JDTClassNodeBuilder cnb = new JDTClassNodeBuilder(this);
@@ -432,10 +434,6 @@ public class JDTResolver extends ResolveVisitor {
         unresolvables.clear();
     }
 
-    public GroovyCompilationUnitScope getScope() {
-        return activeScope;
-    }
-
     /**
      * When recorded, the jdt resolver will be able to (later on) navigate from the classnode back to the JDT scope that should be
      * used.
@@ -453,6 +451,18 @@ public class JDTResolver extends ResolveVisitor {
         if (anonymousTypes != null) {
             for (int m = 0; m < anonymousTypes.length; m++) {
                 record(anonymousTypes[m]);
+            }
+        }
+    }
+
+    // FIXASC callers could check if it is a 'funky' type before always recording a depedency
+    // by 'funky' I mean that the type was constructed just to try something (org.foo.bar.java$lang$Wibble doesn't want recording!)
+    private void recordDependency(String typename) {
+        if (activeScope != null) {
+            if (typename.indexOf('.') != -1) {
+                activeScope.recordQualifiedReference(CharOperation.splitOn('.', typename.toCharArray()));
+            } else {
+                activeScope.recordSimpleReference(typename.toCharArray());
             }
         }
     }

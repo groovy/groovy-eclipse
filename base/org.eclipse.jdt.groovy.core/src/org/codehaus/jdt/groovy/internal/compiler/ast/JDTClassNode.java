@@ -351,7 +351,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             }
 
             ClassNode returnType = methodBinding.returnType != null ?
-                resolver.convertToClassNode(methodBinding.returnType) : ClassHelper.VOID_TYPE;
+                resolver.convertToClassNode(methodBinding.returnType) : ClassHelper.DYNAMIC_TYPE;
 
             Parameter[] parameters = makeParameters(methodBinding.parameters);
 
@@ -418,7 +418,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     private ClassNode makeClassNode(TypeBinding t, TypeBinding c) {
         ClassNode back = resolver.convertToClassNode(c);
         if (!((t instanceof BinaryTypeBinding) || (t instanceof SourceTypeBinding))) {
-            ClassNode front = JDTClassNodeBuilder.build(this.resolver, t);
+            ClassNode front = new JDTClassNodeBuilder(resolver).configureType(t);
             front.setRedirect(back);
             return front;
         }

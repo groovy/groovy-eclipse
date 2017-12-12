@@ -1605,31 +1605,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         this.classNodeResolver = classNodeResolver;
     }
 
-    /// GRECLIPSE add
-    // although some of it may have been changed by us and then gotten deleted or moved in core.   
-
-    protected boolean resolveFromClassCache(ClassNode type) {
-        String name = type.getName();
-        Object val = cachedClasses.get(name);
-        if (val == null || val == NO_CLASS) {
-            return false;
-        } else {
-            type.setRedirect((ClassNode)val);
-            return true;
-        }
-    }
-
-    protected boolean resolveToScript(ClassNode type) {
-        String name = type.getName();
-        if (name.startsWith("java.")) return type.isResolved();
-        // TODO: don't ignore inner static classes completely
-        if (name.indexOf('$') != -1) return type.isResolved();
-        ModuleNode module = currentClass.getModule();
-        if (module.hasPackageName() && name.indexOf('.') == -1) return type.isResolved();
-        // type may be resolved through the classloader before
-        return type.isResolved();
-    }
-
+    // GRECLIPSE add
     /**
      * @return {@code true} if resolution should continue, {@code false} otherwise (because, for example, it previously succeeded for this unit)
      */

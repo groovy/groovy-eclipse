@@ -18,20 +18,63 @@
  */
 package org.codehaus.groovy.control;
 
-import org.codehaus.groovy.ast.*;
-import org.codehaus.groovy.ast.expr.*;
+import org.codehaus.groovy.GroovyBugError;
+import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
+import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassCodeExpressionTransformer;
+import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
+import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.CompileUnit;
+import org.codehaus.groovy.ast.DynamicVariable;
+import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GenericsType;
+import org.codehaus.groovy.ast.ImportNode;
+import org.codehaus.groovy.ast.InnerClassNode;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.VariableScope;
+import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
+import org.codehaus.groovy.ast.expr.BinaryExpression;
+import org.codehaus.groovy.ast.expr.CastExpression;
+import org.codehaus.groovy.ast.expr.ClassExpression;
+import org.codehaus.groovy.ast.expr.ClosureExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
+import org.codehaus.groovy.ast.expr.DeclarationExpression;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.ListExpression;
+import org.codehaus.groovy.ast.expr.MapEntryExpression;
+import org.codehaus.groovy.ast.expr.MapExpression;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.PropertyExpression;
+import org.codehaus.groovy.ast.expr.SpreadMapExpression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.ClassNodeResolver.LookupResult;
 import org.codehaus.groovy.syntax.Types;
-import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.transform.trait.Traits;
 import groovyjarjarasm.asm.Opcodes;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.codehaus.groovy.ast.tools.GeneralUtils.inSamePackage;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.isDefaultVisibility;
@@ -1289,18 +1332,18 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 member.setValue(newValue);
                 checkAnnotationMemberValue(newValue);
             }
-            // GRECLIPSE edit -- can't do this
-            //if(annType.isResolved()) {
-            //    Class annTypeClass = annType.getTypeClass();
-            //    Retention retAnn = (Retention) annTypeClass.getAnnotation(Retention.class);
-            //    if (retAnn != null && retAnn.value().equals(RetentionPolicy.RUNTIME)) {
-            //        AnnotationNode anyPrevAnnNode = tmpAnnotations.put(annTypeClass.getName(), an);
-            //        if(anyPrevAnnNode != null) {
-            //            addError("Cannot specify duplicate annotation on the same member : " + annType.getName(), an);
-            //        }
-            //    }
-            //}
-            // GRECLIPSE end
+            /* GRECLIPSE edit -- can't do this
+            if(annType.isResolved()) {
+                Class annTypeClass = annType.getTypeClass();
+                Retention retAnn = (Retention) annTypeClass.getAnnotation(Retention.class);
+                if (retAnn != null && retAnn.value().equals(RetentionPolicy.RUNTIME)) {
+                    AnnotationNode anyPrevAnnNode = tmpAnnotations.put(annTypeClass.getName(), an);
+                    if(anyPrevAnnNode != null) {
+                        addError("Cannot specify duplicate annotation on the same member : " + annType.getName(), an);
+                    }
+                }
+            }
+            */
         }
     }
 
@@ -1606,31 +1649,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         this.classNodeResolver = classNodeResolver;
     }
 
-    /// GRECLIPSE add
-    // although some of it may have been changed by us and then gotten deleted or moved in core.   
-
-    protected boolean resolveFromClassCache(ClassNode type) {
-        String name = type.getName();
-        Object val = cachedClasses.get(name);
-        if (val == null || val == NO_CLASS) {
-            return false;
-        } else {
-            type.setRedirect((ClassNode)val);
-            return true;
-        }
-    }
-
-    protected boolean resolveToScript(ClassNode type) {
-        String name = type.getName();
-        if (name.startsWith("java.")) return type.isResolved();
-        // TODO: don't ignore inner static classes completely
-        if (name.indexOf('$') != -1) return type.isResolved();
-        ModuleNode module = currentClass.getModule();
-        if (module.hasPackageName() && name.indexOf('.') == -1) return type.isResolved();
-        // type may be resolved through the classloader before
-        return type.isResolved();
-    }
-
+    // GRECLIPSE add
     /**
      * @return {@code true} if resolution should continue, {@code false} otherwise (because, for example, it previously succeeded for this unit)
      */

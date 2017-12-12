@@ -49,21 +49,16 @@ import org.eclipse.jdt.internal.compiler.lookup.WildcardBinding;
  */
 class JDTClassNodeBuilder {
 
-    private JDTResolver resolver;
+    private final JDTResolver resolver;
 
     JDTClassNodeBuilder(JDTResolver resolver) {
         this.resolver = resolver;
     }
 
-    public static ClassNode build(JDTResolver resolver, TypeBinding typeBinding) {
-        JDTClassNodeBuilder builder = new JDTClassNodeBuilder(resolver);
-        return builder.configureType(typeBinding);
-    }
-
     /**
      * Based on Java5.configureType()
      */
-    public ClassNode configureType(TypeBinding type) {
+    protected ClassNode configureType(TypeBinding type) {
         // GRECLIPSE-1639: Not all TypeBinding instances have been resolved when we get to this point.
         // See org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment.getTypeFromCompoundName(char[][],boolean,boolean)
         if (type instanceof UnresolvedReferenceBinding) {
@@ -75,43 +70,43 @@ class JDTClassNodeBuilder {
             }
         }
 
-        if (type instanceof TypeVariableBinding) {
+        if (type instanceof BaseTypeBinding) {
+            return configureBaseTypeBinding((BaseTypeBinding) type);
+        } else if (type instanceof BinaryTypeBinding) {
+            return configureBinaryType((BinaryTypeBinding) type);
+        } else if (type instanceof SourceTypeBinding) {
+            return configureSourceType((SourceTypeBinding) type);
+        } else if (type instanceof ArrayBinding) {
+            return configureGenericArray((ArrayBinding) type);
+        } else if (type instanceof WildcardBinding) {
+            return configureWildcardType((WildcardBinding) type);
+        } else if (type instanceof TypeVariableBinding) {
             return configureTypeVariableReference((TypeVariableBinding) type);
         } else if (type instanceof ParameterizedTypeBinding) {
             return configureParameterizedType((ParameterizedTypeBinding) type);
-        } else if (type instanceof BinaryTypeBinding) {
-            return configureClass((BinaryTypeBinding) type);
-        } else if (type instanceof WildcardBinding) {
-            return configureWildcardType((WildcardBinding) type);
-        } else if (type instanceof ArrayBinding) {
-            return configureGenericArray((ArrayBinding) type);
-        } else if (type instanceof BaseTypeBinding) {
-            return configureBaseTypeBinding((BaseTypeBinding) type);
-        } else if (type instanceof SourceTypeBinding) {
-            return configureSourceType((SourceTypeBinding) type);
         }
         throw new IllegalStateException("'type' was null or an unhandled type: " + (type == null ? "null" : type.getClass().getName()));
     }
 
     /**
-     * Based on Java5.configureTypeVariable()
+     * Based on Java5.configureTypes()
      */
-    GenericsType[] configureTypeVariables(TypeVariableBinding[] bindings) {
+    protected ClassNode[] configureTypes(TypeBinding[] bindings) {
         int n;
         if (bindings == null || (n = bindings.length) == 0) {
             return null;
         }
-        GenericsType[] gts = new GenericsType[n];
+        ClassNode[] nodes = new ClassNode[n];
         for (int i = 0; i < n; i += 1) {
-            gts[i] = configureTypeVariableDefinition(bindings[i]);
+            nodes[i] = configureType(bindings[i]);
         }
-        return gts;
+        return nodes;
     }
 
     /**
      * Based on Java5.configureTypeArguments()
      */
-    GenericsType[] configureTypeArguments(TypeBinding[] bindings) {
+    protected GenericsType[] configureTypeArguments(TypeBinding[] bindings) {
         int n;
         if (bindings == null || (n = bindings.length) == 0) {
             return null;
@@ -129,8 +124,23 @@ class JDTClassNodeBuilder {
         return gts;
     }
 
+    /**
+     * Based on Java5.configureTypeVariable()
+     */
+    protected GenericsType[] configureTypeVariables(TypeVariableBinding[] bindings) {
+        int n;
+        if (bindings == null || (n = bindings.length) == 0) {
+            return null;
+        }
+        GenericsType[] gts = new GenericsType[n];
+        for (int i = 0; i < n; i += 1) {
+            gts[i] = configureTypeVariableDefinition(bindings[i]);
+        }
+        return gts;
+    }
+
     // TODO still not 100% confident that the callers of this are doing the right thing or have the right expectations
-    TypeBinding toRawType(TypeBinding tb) {
+    protected TypeBinding toRawType(TypeBinding tb) {
         if (tb instanceof RawTypeBinding) {
             return tb;
         } else if (tb instanceof ParameterizedTypeBinding) {
@@ -163,54 +173,11 @@ class JDTClassNodeBuilder {
     }
 
     /**
-     * Based on Java5.configureTypes()
-     */
-    private ClassNode[] configureTypes(TypeBinding[] bindings) {
-        int n;
-        if (bindings == null || (n = bindings.length) == 0) {
-            return null;
-        }
-        ClassNode[] nodes = new ClassNode[n];
-        for (int i = 0; i < n; i += 1) {
-            nodes[i] = configureType(bindings[i]);
-        }
-        return nodes;
-    }
-
-    /**
-     * Return the groovy ClassNode for an Eclipse BaseTypeBinding.
-     */
-    private ClassNode configureBaseTypeBinding(BaseTypeBinding type) {
-        switch (type.id) {
-        case TypeIds.T_boolean:
-            return ClassHelper.boolean_TYPE;
-        case TypeIds.T_char:
-            return ClassHelper.char_TYPE;
-        case TypeIds.T_byte:
-            return ClassHelper.byte_TYPE;
-        case TypeIds.T_short:
-            return ClassHelper.short_TYPE;
-        case TypeIds.T_int:
-            return ClassHelper.int_TYPE;
-        case TypeIds.T_long:
-            return ClassHelper.long_TYPE;
-        case TypeIds.T_double:
-            return ClassHelper.double_TYPE;
-        case TypeIds.T_float:
-            return ClassHelper.float_TYPE;
-        case TypeIds.T_void:
-            return ClassHelper.VOID_TYPE;
-        default:
-            throw new GroovyEclipseBug("Unexpected BaseTypeBinding: " + type + "(type.id=" + type.id + ")");
-        }
-    }
-
-    /**
      * Loosely based on Java5.configureGenericArray()
      */
     private ClassNode configureGenericArray(ArrayBinding genericArrayType) {
         TypeBinding component = genericArrayType.leafComponentType;
-        ClassNode node = configureType(component);
+        ClassNode node = resolver.convertToClassNode(component);
         int dims = genericArrayType.dimensions;
         ClassNode result = node;
         for (int d = 0; d < dims; d += 1) {
@@ -331,9 +298,7 @@ class JDTClassNodeBuilder {
     private ClassNode configureParameterizedType(ParameterizedTypeBinding parameterizedType) {
         if (parameterizedType instanceof RawTypeBinding) {
             TypeBinding rt = toRawType(parameterizedType);
-            if (!(rt instanceof RawTypeBinding)) {
-                System.out.println("yikes");
-            }
+            assert rt instanceof RawTypeBinding : "yikes";
             return new JDTClassNode((RawTypeBinding) rt, resolver); // doesn't need generics initializing
         }
         TypeBinding rt = toRawType(parameterizedType);
@@ -358,46 +323,45 @@ class JDTClassNodeBuilder {
         return base;
     }
 
-    private ClassNode configureClass(BinaryTypeBinding type) {
-        // support identity checks in ClassHelper
+    private ClassNode configureBaseTypeBinding(BaseTypeBinding type) {
         switch (type.id) {
         case TypeIds.T_boolean:
             return ClassHelper.boolean_TYPE;
-        case TypeIds.T_JavaLangBoolean:
-            return ClassHelper.Boolean_TYPE;
-
         case TypeIds.T_byte:
             return ClassHelper.byte_TYPE;
-        case TypeIds.T_JavaLangByte:
-            return ClassHelper.Byte_TYPE;
-
         case TypeIds.T_char:
             return ClassHelper.char_TYPE;
-        case TypeIds.T_JavaLangCharacter:
-            return ClassHelper.Character_TYPE;
-
         case TypeIds.T_double:
             return ClassHelper.double_TYPE;
-        case TypeIds.T_JavaLangDouble:
-            return ClassHelper.Double_TYPE;
-
         case TypeIds.T_float:
             return ClassHelper.float_TYPE;
-        case TypeIds.T_JavaLangFloat:
-            return ClassHelper.Float_TYPE;
-
         case TypeIds.T_int:
             return ClassHelper.int_TYPE;
-        case TypeIds.T_JavaLangInteger:
-            return ClassHelper.Integer_TYPE;
-
         case TypeIds.T_long:
             return ClassHelper.long_TYPE;
-        case TypeIds.T_JavaLangLong:
-            return ClassHelper.Long_TYPE;
-
         case TypeIds.T_short:
             return ClassHelper.short_TYPE;
+        default:
+            throw new GroovyEclipseBug("Unexpected BaseTypeBinding: " + type + "(type.id=" + type.id + ")");
+        }
+    }
+
+    private ClassNode configureBinaryType(BinaryTypeBinding type) {
+        switch (type.id) {
+        case TypeIds.T_JavaLangBoolean:
+            return ClassHelper.Boolean_TYPE;
+        case TypeIds.T_JavaLangByte:
+            return ClassHelper.Byte_TYPE;
+        case TypeIds.T_JavaLangCharacter:
+            return ClassHelper.Character_TYPE;
+        case TypeIds.T_JavaLangDouble:
+            return ClassHelper.Double_TYPE;
+        case TypeIds.T_JavaLangFloat:
+            return ClassHelper.Float_TYPE;
+        case TypeIds.T_JavaLangInteger:
+            return ClassHelper.Integer_TYPE;
+        case TypeIds.T_JavaLangLong:
+            return ClassHelper.Long_TYPE;
         case TypeIds.T_JavaLangShort:
             return ClassHelper.Short_TYPE;
 
@@ -410,8 +374,6 @@ class JDTClassNodeBuilder {
             return ClassHelper.OBJECT_TYPE;
         case TypeIds.T_JavaLangString:
             return ClassHelper.STRING_TYPE;
-        case TypeIds.T_JavaLangClass:
-            return ClassHelper.CLASS_Type;
 
         default:
             return new JDTClassNode(type, resolver);
@@ -419,7 +381,6 @@ class JDTClassNodeBuilder {
     }
 
     private ClassNode configureSourceType(SourceTypeBinding type) {
-        // TODO: Not being cached -- should it be?
         return new JDTClassNode(type, resolver);
     }
 }
