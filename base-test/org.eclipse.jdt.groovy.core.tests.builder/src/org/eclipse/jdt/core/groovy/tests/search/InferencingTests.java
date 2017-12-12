@@ -941,6 +941,25 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testInnerClass11() {
+        String contents = "class A {\n" +
+            "  public static final Number N = 1\n" +
+            "}\n" +
+            "class AA extends A {\n" +
+            "  static class AAA {\n" +
+            "    static def x() {\n" +
+            "      def cl = { ->\n" +
+            "        N\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf('N');
+        assertDeclaringType(contents, offset, offset + 1, "A");
+        assertType(contents, offset, offset + 1, "java.lang.Number");
+    }
+
+    @Test
     public void testAnonInner1() {
         String contents = "def foo = new Runnable() { void run() {} }";
         int start = contents.lastIndexOf("Runnable");

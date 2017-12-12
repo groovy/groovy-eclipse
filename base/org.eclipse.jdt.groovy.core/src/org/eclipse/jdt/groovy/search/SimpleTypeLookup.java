@@ -560,10 +560,10 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
 
         // look for member in outer classes
-        if (declaringType.getOuterClass() != null) {
+        if (getBaseDeclaringType(declaringType).getOuterClass() != null) {
             // search only for static declarations if inner class is static
             isStaticExpression |= ((declaringType.getModifiers() & ClassNode.ACC_STATIC) != 0);
-            ASTNode declaration = findDeclaration(name, declaringType.getOuterClass(), isLhsExpression, isStaticExpression, directFieldAccess, methodCallArgumentTypes);
+            ASTNode declaration = findDeclaration(name, getBaseDeclaringType(declaringType).getOuterClass(), isLhsExpression, isStaticExpression, directFieldAccess, methodCallArgumentTypes);
             if (declaration != null) {
                 return declaration;
             }
@@ -670,6 +670,22 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         lengthField.setType(VariableScope.INTEGER_CLASS_NODE);
         lengthField.setDeclaringClass(declaringType);
         return lengthField;
+    }
+
+    /**
+     * Given {@code Class<T>} and {@code T} is not {@code ?}, {@code Class}, or
+     * {@code Object} returns {@code T}; otherwise returns {@code declaringType}.
+     */
+    protected static ClassNode getBaseDeclaringType(ClassNode declaringType) {
+        if (VariableScope.CLASS_CLASS_NODE.equals(declaringType)) {
+            ClassNode typeParam = declaringType.getGenericsTypes()[0].getType();
+            if (!VariableScope.CLASS_CLASS_NODE.equals(typeParam) &&
+                !VariableScope.OBJECT_CLASS_NODE.equals(typeParam)) {
+
+                declaringType = typeParam;
+            }
+        }
+        return declaringType;
     }
 
     /**
