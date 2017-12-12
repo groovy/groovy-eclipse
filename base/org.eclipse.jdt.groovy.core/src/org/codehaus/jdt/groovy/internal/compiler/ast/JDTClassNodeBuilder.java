@@ -271,7 +271,7 @@ class JDTClassNodeBuilder {
         t.setWildcard(true);
 
         ClassNode ref = ClassHelper.makeWithoutCaching(Object.class, false);
-        ref.setGenericsTypes(new GenericsType[] { t });
+        ref.setGenericsTypes(new GenericsType[] {t});
         return ref;
     }
 
@@ -287,7 +287,8 @@ class JDTClassNodeBuilder {
             int nBounds = (wildcardType.otherBounds == null) ? 1 : 1 + wildcardType.otherBounds.length;
             TypeBinding[] bounds = new TypeBinding[nBounds];
             bounds[0] = wildcardType.bound;
-            if (--nBounds > 0) {
+            nBounds -= 1;
+            if (nBounds > 0) {
                 System.arraycopy(wildcardType.otherBounds, 0, bounds, 1, nBounds);
             }
             return bounds;
