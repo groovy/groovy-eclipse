@@ -19,8 +19,29 @@
 package org.codehaus.groovy.classgen;
 
 import org.codehaus.groovy.GroovyBugError;
-import org.codehaus.groovy.ast.*;
-import org.codehaus.groovy.ast.expr.*;
+import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
+import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.DynamicVariable;
+import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.InnerClassNode;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.VariableScope;
+import org.codehaus.groovy.ast.expr.BinaryExpression;
+import org.codehaus.groovy.ast.expr.ClosureExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
+import org.codehaus.groovy.ast.expr.DeclarationExpression;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.FieldExpression;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.PropertyExpression;
+import org.codehaus.groovy.ast.expr.TupleExpression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
@@ -31,8 +52,6 @@ import org.codehaus.groovy.syntax.Types;
 
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 import static java.lang.reflect.Modifier.isFinal;
 
@@ -345,9 +364,7 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
     }
 
     public void visitDeclarationExpression(DeclarationExpression expression) {
-        // GRECLIPSE add
         visitAnnotations(expression);
-        // GRECLIPSE end
         // visit right side first to avoid the usage of a
         // variable before its declaration
         expression.getRightExpression().visit(this);
@@ -608,8 +625,8 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         popState();
     }
 
-    // GRECLIPSE edit
-    /*public void visitAnnotations(AnnotatedNode node) {
+    /* GRECLIPSE edit
+    public void visitAnnotations(AnnotatedNode node) {
         List<AnnotationNode> annotations = node.getAnnotations();
         if (annotations.isEmpty()) return;
         for (AnnotationNode an : annotations) {
@@ -620,5 +637,6 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
                 annMemberValue.visit(this);
             }
         }
-    }*/
+    }
+    */
 }

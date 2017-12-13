@@ -179,19 +179,18 @@ public class AnnotationVisitor {
 
     private boolean checkIfMandatoryAnnotationValuesPassed(AnnotationNode node) {
         boolean ok = true;
-        // GRECLIPSE edit
-        // temp hack; can't rely on getCode()
-        //Map attributes = node.getMembers();
-        //ClassNode classNode = node.getClassNode();
-        //for (MethodNode mn : classNode.getMethods()) {
-        //    String methodName = mn.getName();
-        //    // if the annotation attribute has a default, getCode() returns a ReturnStatement with the default value
-        //    if (mn.getCode() == null && !attributes.containsKey(methodName)) {
-        //        addError("No explicit/default value found for annotation attribute '" + methodName + "'", node);
-        //        ok = false;
-        //    }
-        //}
-        // GRECLIPSE end
+        /* GRECLIPSE edit -- temp hack; can't rely on getCode()
+        Map attributes = node.getMembers();
+        ClassNode classNode = node.getClassNode();
+        for (MethodNode mn : classNode.getMethods()) {
+            String methodName = mn.getName();
+            // if the annotation attribute has a default, getCode() returns a ReturnStatement with the default value
+            if (mn.getCode() == null && !attributes.containsKey(methodName)) {
+                addError("No explicit/default value found for annotation attribute '" + methodName + "'", node);
+                ok = false;
+            }
+        }
+        */
         return ok;
     }
 
