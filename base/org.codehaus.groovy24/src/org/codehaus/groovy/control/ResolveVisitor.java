@@ -63,8 +63,6 @@ import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.trait.Traits;
 import groovyjarjarasm.asm.Opcodes;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.HashMap;

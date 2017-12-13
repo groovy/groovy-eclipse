@@ -18,9 +18,6 @@
  */
 package org.codehaus.groovy.classgen.asm;
 
-import java.util.Iterator;
-import java.util.List;
-
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.Parameter;
@@ -53,7 +50,18 @@ import org.codehaus.groovy.classgen.asm.CompileStack.BlockRecorder;
 import groovyjarjarasm.asm.Label;
 import groovyjarjarasm.asm.MethodVisitor;
 
-import static groovyjarjarasm.asm.Opcodes.*;
+import java.util.Iterator;
+import java.util.List;
+
+import static groovyjarjarasm.asm.Opcodes.ALOAD;
+import static groovyjarjarasm.asm.Opcodes.ATHROW;
+import static groovyjarjarasm.asm.Opcodes.CHECKCAST;
+import static groovyjarjarasm.asm.Opcodes.GOTO;
+import static groovyjarjarasm.asm.Opcodes.IFEQ;
+import static groovyjarjarasm.asm.Opcodes.MONITORENTER;
+import static groovyjarjarasm.asm.Opcodes.MONITOREXIT;
+import static groovyjarjarasm.asm.Opcodes.NOP;
+import static groovyjarjarasm.asm.Opcodes.RETURN;
 
 public class StatementWriter {
     // iterator
@@ -160,7 +168,7 @@ public class StatementWriter {
         ClosureListExpression clExpr = (ClosureListExpression) loop.getCollectionExpression();
         controller.getCompileStack().pushVariableScope(clExpr.getVariableScope());
 
-        List expressions = clExpr.getExpressions();
+        List<Expression> expressions = clExpr.getExpressions();
         int size = expressions.size();
 
         // middle element is condition, lower half is init, higher half is increment
@@ -178,7 +186,7 @@ public class StatementWriter {
         mv.visitLabel(cond);
         // visit condition leave boolean on stack
         {
-            Expression condExpr = (Expression) expressions.get(condIndex);
+            Expression condExpr = expressions.get(condIndex);
             int mark = controller.getOperandStack().getStackLength();
             condExpr.visit(controller.getAcg());
             controller.getOperandStack().castToBool(mark,true);

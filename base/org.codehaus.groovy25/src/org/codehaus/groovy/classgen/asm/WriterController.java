@@ -18,10 +18,6 @@
  */
 package org.codehaus.groovy.classgen.asm;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -40,6 +36,10 @@ import org.codehaus.groovy.control.SourceUnit;
 import groovyjarjarasm.asm.ClassVisitor;
 import groovyjarjarasm.asm.MethodVisitor;
 import groovyjarjarasm.asm.Opcodes;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class WriterController {
     private static final String GROOVY_LOG_CLASSGEN = "groovy.log.classgen";

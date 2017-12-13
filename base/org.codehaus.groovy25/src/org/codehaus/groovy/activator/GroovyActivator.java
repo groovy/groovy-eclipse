@@ -15,9 +15,6 @@
  */
 package org.codehaus.groovy.activator;
 
-import java.io.IOException;
-import java.net.URL;
-
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
@@ -25,6 +22,9 @@ import org.eclipse.core.runtime.Plugin;
 import org.eclipse.core.runtime.Status;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+
+import java.io.IOException;
+import java.net.URL;
 
 public class GroovyActivator extends Plugin {
 

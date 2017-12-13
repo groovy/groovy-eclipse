@@ -19,10 +19,7 @@ import java.util.Iterator;
 
 /**
  * Some static methods that access values on ASTNodes available
- * in the 1.7 stream, but not in the 1.6 stream
- *
- * @author andrew
- * @created Jun 17, 2010
+ * in the 1.7 stream, but not in the 1.6 stream.
  */
 public class ASTNodeCompatibilityWrapper {
 

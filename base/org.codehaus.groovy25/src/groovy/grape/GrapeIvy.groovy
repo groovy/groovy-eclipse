@@ -20,8 +20,6 @@ package groovy.grape
 
 import org.apache.groovy.plugin.GroovyRunner
 import org.apache.groovy.plugin.GroovyRunnerRegistry
-
-import java.util.regex.Pattern
 import org.apache.ivy.Ivy
 import org.apache.ivy.core.cache.ResolutionCacheManager
 import org.apache.ivy.core.event.IvyListener
@@ -45,16 +43,17 @@ import org.apache.ivy.plugins.resolver.ChainResolver
 import org.apache.ivy.plugins.resolver.IBiblioResolver
 import org.apache.ivy.util.DefaultMessageLogger
 import org.apache.ivy.util.Message
-import org.codehaus.groovy.reflection.ReflectionUtils
-import java.util.zip.ZipFile
-import java.util.zip.ZipEntry
-import java.util.zip.ZipException
-import javax.xml.parsers.DocumentBuilderFactory
-import org.codehaus.groovy.runtime.metaclass.MetaClassRegistryImpl
-import java.util.jar.JarFile
-
 import org.codehaus.groovy.reflection.CachedClass
 import org.codehaus.groovy.reflection.ClassInfo
+import org.codehaus.groovy.reflection.ReflectionUtils
+import org.codehaus.groovy.runtime.metaclass.MetaClassRegistryImpl
+
+import javax.xml.parsers.DocumentBuilderFactory
+import java.util.jar.JarFile
+import java.util.regex.Pattern
+import java.util.zip.ZipEntry
+import java.util.zip.ZipException
+import java.util.zip.ZipFile
 
 /**
  * @author Danno Ferrin
@@ -185,11 +184,11 @@ class GrapeIvy implements GrapeEngine {
             //if (!isValidTargetClassLoader(loader)) {
             //    loader = GrapeIvy.class.classLoader
             //}
-            // GRECLIPSE edit -- don't check this. Removing this check will only affect our copy of GrapeIvy that is used during compilation where the classloader does not matter.
-            //if (!isValidTargetClassLoader(loader)) {
-            //    throw new RuntimeException("No suitable ClassLoader found for grab")
-            //}
-            // GRECLIPSE end
+            /* GRECLIPSE edit -- don't check this. Removing this check will only affect our copy of GrapeIvy that is used during compilation where the classloader does not matter.
+            if (!isValidTargetClassLoader(loader)) {
+                throw new RuntimeException("No suitable ClassLoader found for grab")
+            }
+            */
         }
         return loader
     }
