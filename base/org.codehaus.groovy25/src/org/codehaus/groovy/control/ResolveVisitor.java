@@ -106,8 +106,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     private final Set<FieldNode> fieldTypesChecked = new HashSet<FieldNode>();
     // GRECLIPSE add
     private final Set<String> resolutionFailedCache = new HashSet<>(32);
-    private final Map<String, Object> cachedClasses = new HashMap<>();
-    private static final Object NO_CLASS = new Object();
     // GRECLIPSE end
     private boolean checkingVariableTypeInDeclaration = false;
     private ImportNode currImportNode = null;
@@ -1649,7 +1647,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         this.classNodeResolver = classNodeResolver;
     }
 
-    // GRECLIPSE add
+  // GRECLIPSE add
     /**
      * @return {@code true} if resolution should continue, {@code false} otherwise (because, for example, it previously succeeded for this unit)
      */
@@ -1661,5 +1659,5 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     protected void finishedResolution() {
         // template method
     }
-    // GRECLIPSE end
+  // GRECLIPSE end
 }
