@@ -76,46 +76,52 @@ import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 public class JDTClassNode extends ClassNode implements JDTNode {
 
     // arbitrary choice of first eight; maintaining these as a constant array prevents 10000 strings called 'arg0' consuming memory
-    private final static String[] argNames = { "arg0", "arg1", "arg2", "arg3", "arg4", "arg5", "arg6", "arg7" };
+    private static final String[] argNames = {"arg0", "arg1", "arg2", "arg3", "arg4", "arg5", "arg6", "arg7"};
 
-    // The binding which this JDTClassNode represents
-    ReferenceBinding jdtBinding;
-
-    private boolean beingInitialized = false;
-
-    private boolean anyGenericsInitialized = false;
-
-    // The resolver instance involved at the moment
-    JDTResolver resolver;
-
-    // Configuration flags
-    private int bits = 0;
-    private static final int ANNOTATIONS_INITIALIZED = 0x0001;
-    private static final int PROPERTIES_INITIALIZED = 0x0002;
-    private TypeDeclaration groovyDecl = null;
-
-    static final ClassNode unboundWildcard; // represents plain old '?'
-
-    static final GenericsType genericsTypeUnboundWildcard;
-
+    private static final ClassNode unboundWildcard; // represents plain old '?'
     static {
-        ClassNode base = ClassHelper.makeWithoutCaching("?");
-        base.setRedirect(ClassHelper.OBJECT_TYPE);
-        // ClassNode[] allUppers = new ClassNode[] { ClassHelper.OBJECT_TYPE };
-        GenericsType t = new GenericsType(base, null, null);
-        t.setName("?");
-        t.setWildcard(true);
-        // Can't use the constant ClassHelper.OBJECT_TYPE here as we are about to setGenericTypes on it.
         unboundWildcard = ClassHelper.makeWithoutCaching("?");
         unboundWildcard.setRedirect(ClassHelper.OBJECT_TYPE);
+    }
 
-        genericsTypeUnboundWildcard = t;
+    //--------------------------------------------------------------------------
+
+    /** Configuration flags */
+    private int bits;
+
+    private boolean beingInitialized;
+    private boolean anyGenericsInitialized;
+
+    private GroovyTypeDeclaration groovyTypeDecl;
+
+    /** The binding which this JDTClassNode represents */
+    private ReferenceBinding jdtBinding;
+
+    public ReferenceBinding getJdtBinding() {
+        return jdtBinding;
     }
 
     /**
-     * Create a new JDT ClassNode. Minimal setup is done initially (the superclass and superinterfaces are setup) and the rest of
-     * the initialization is done later when required.
+     * When working with parameterized types, groovy will create a simple ClassNode for the raw type and then initialize the
+     * generics structure behind it. This setter is used to ensure that these 'simple' ClassNodes that are created for raw types
+     * but are intended to represent parameterized types will have their generics info available (from the parameterized
+     * jdt binding).
      */
+    public void setJdtBinding(ReferenceBinding jdtBinding) {
+        this.jdtBinding = jdtBinding;
+    }
+
+    /** The resolver instance involved at the moment */
+    private final JDTResolver resolver;
+
+    public JDTResolver getResolver() {
+        return resolver;
+    }
+
+    private boolean unfindable;
+
+    //--------------------------------------------------------------------------
+
     public JDTClassNode(ReferenceBinding jdtReferenceBinding, JDTResolver resolver) {
         super(getName(jdtReferenceBinding), getMods(jdtReferenceBinding), null);
         this.jdtBinding = jdtReferenceBinding;
@@ -161,7 +167,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         }
     }
 
-    public void setupGenerics() {
+    public void setUpGenerics() {
         if (anyGenericsInitialized) {
             return;
         }
@@ -196,8 +202,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     }
 
     /**
-     * Basic initialization of the node - try and do most resolution lazily but some elements are worth getting correct up front:
-     * superclass, superinterfaces
+     * Basic initialization of the node - try and do most resolution lazily but some elements are worth getting correct up front: superclass, superinterfaces
      */
     // FIXASC confusing (and problematic?) that the superclass is setup after the generics information
     void initialize() {
@@ -215,14 +220,15 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             }
 
             ReferenceBinding[] superInterfaceBindings = jdtBinding.superInterfaces();
-            if (superInterfaceBindings == null) superInterfaceBindings = Binding.NO_SUPERINTERFACES;
-
+            if (superInterfaceBindings == null)
+                superInterfaceBindings = Binding.NO_SUPERINTERFACES;
             int n = superInterfaceBindings.length;
             ClassNode[] interfaces = new ClassNode[n];
             for (int i = 0; i < n; i += 1) {
                 interfaces[i] = resolver.convertToClassNode(superInterfaceBindings[i]);
             }
             setInterfaces(interfaces);
+
             initializeMembers();
         } finally {
             beingInitialized = false;
@@ -231,11 +237,11 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
     private void initializeMembers() {
         if (jdtBinding instanceof SourceTypeBinding) {
-            SourceTypeBinding sourceType = (SourceTypeBinding) jdtBinding;
-            if (sourceType.scope != null) {
-                TypeDeclaration typeDecl = sourceType.scope.referenceContext;
+            SourceTypeBinding sourceTypeBinding = (SourceTypeBinding) jdtBinding;
+            if (sourceTypeBinding.scope != null) {
+                TypeDeclaration typeDecl = sourceTypeBinding.scope.referenceContext;
                 if (typeDecl instanceof GroovyTypeDeclaration) {
-                    groovyDecl = typeDecl;
+                    groovyTypeDecl = (GroovyTypeDeclaration) typeDecl;
                 }
             }
         }
@@ -321,7 +327,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             }
             if (fieldBindings != null) {
                 for (FieldBinding fieldBinding : fieldBindings) {
-                    FieldNode fNode = fieldBindingToFieldNode(fieldBinding, groovyDecl);
+                    FieldNode fNode = fieldBindingToFieldNode(fieldBinding, groovyTypeDecl);
                     addField(fNode);
                 }
             }
@@ -438,15 +444,11 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
     private void ensureGenericsInitialized() {
         if (!anyGenericsInitialized) {
-            setupGenerics();
+            setUpGenerics();
         }
     }
 
     private ConstructorNode constructorBindingToConstructorNode(MethodBinding methodBinding) {
-        TypeVariableBinding[] typeVariables = methodBinding.typeVariables();
-        GenericsType[] generics = new JDTClassNodeBuilder(resolver).configureTypeVariables(typeVariables);
-        ConstructorNode ctorNode = null;
-
         int modifiers = methodBinding.modifiers;
         Parameter[] parameters = makeParameters(methodBinding.parameters);
         ClassNode[] thrownExceptions = ClassNode.EMPTY_ARRAY;
@@ -456,8 +458,9 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                 thrownExceptions[i] = resolver.convertToClassNode(methodBinding.thrownExceptions[i]);
             }
         }
-        ctorNode = new ConstructorNode(modifiers, parameters, thrownExceptions, null);
-        ctorNode.setGenericsTypes(generics);
+        ConstructorNode ctorNode = new ConstructorNode(modifiers, parameters, thrownExceptions, null);
+        ctorNode.setGenericsTypes(
+            new JDTClassNodeBuilder(resolver).configureTypeVariables(methodBinding.typeVariables()));
         return ctorNode;
     }
 
@@ -561,7 +564,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             lazyClassInit();
             // getX methods
             // make it behave like groovy - no property nodes unless it is groovy source
-            if (groovyDecl != null) {
+            if (groovyTypeDecl != null) {
                 Set<String> existing = new HashSet<String>();
                 for (MethodNode methodNode : getMethods()) {
                     if (isGetter(methodNode)) {
@@ -676,19 +679,9 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         return null;
     }
 
-    public ReferenceBinding getJdtBinding() {
-        return jdtBinding;
-    }
-
-    public JDTResolver getResolver() {
-        return resolver;
-    }
-
     public boolean isDeprecated() {
         return jdtBinding.isDeprecated();
     }
-
-    private boolean unfindable = false;
 
     /**
      * Some AST transforms are written such that they refer to typeClass on a ClassNode.
@@ -711,14 +704,5 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             }
         }
         throw new GroovyBugError("JDTClassNode.getTypeClass() cannot locate class for " + getName() + " using transform loader " + transformLoader);
-    }
-
-    // When working with parameterized types, groovy will create a simple ClassNode for the raw type and then initialize the
-    // generics structure behind it. This setter is used to ensure that these 'simple' ClassNodes that are created for raw types
-    // but are intended to represent parameterized types will have their generics info available (from the parameterized
-    // jdt binding).
-
-    public void setJdtBinding(ReferenceBinding parameterizedType) {
-        this.jdtBinding = parameterizedType;
     }
 }

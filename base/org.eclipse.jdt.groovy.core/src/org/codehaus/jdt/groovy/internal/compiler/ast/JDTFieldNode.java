@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,13 +34,12 @@ public class JDTFieldNode extends FieldNode implements JDTNode {
 
     private FieldBinding fieldBinding;
     private JDTResolver resolver;
-    private int bits = 0;
+    private int bits;
 
-    public JDTFieldNode(FieldBinding fieldBinding, JDTResolver resolver, String name, int modifiers, ClassNode type,
-            JDTClassNode declaringType, Expression initializerExpression) {
+    public JDTFieldNode(FieldBinding fieldBinding, JDTResolver resolver, String name, int modifiers, ClassNode type, JDTClassNode declaringType, Expression initializerExpression) {
         super(name, modifiers, type, declaringType, initializerExpression);
-        this.resolver = resolver;
         this.fieldBinding = fieldBinding;
+        this.resolver = resolver;
     }
 
     @Override
@@ -51,18 +50,6 @@ public class JDTFieldNode extends FieldNode implements JDTNode {
     @Override
     public void addAnnotations(List<AnnotationNode> annotations) {
         throw new IllegalStateException("JDTFieldNode is immutable");
-    }
-
-    @Override
-    public List<AnnotationNode> getAnnotations() {
-        ensureAnnotationsInitialized();
-        return super.getAnnotations();
-    }
-
-    @Override
-    public List<AnnotationNode> getAnnotations(ClassNode type) {
-        ensureAnnotationsInitialized();
-        return super.getAnnotations(type);
     }
 
     private void ensureAnnotationsInitialized() {
@@ -77,16 +64,28 @@ public class JDTFieldNode extends FieldNode implements JDTNode {
         }
     }
 
+    @Override
+    public List<AnnotationNode> getAnnotations() {
+        ensureAnnotationsInitialized();
+        return super.getAnnotations();
+    }
+
+    @Override
+    public List<AnnotationNode> getAnnotations(ClassNode type) {
+        ensureAnnotationsInitialized();
+        return super.getAnnotations(type);
+    }
+
     public FieldBinding getFieldBinding() {
+        return fieldBinding;
+    }
+
+    public Binding getJdtBinding() {
         return fieldBinding;
     }
 
     public JDTResolver getResolver() {
         return resolver;
-    }
-
-    public Binding getJdtBinding() {
-        return fieldBinding;
     }
 
     public boolean isDeprecated() {

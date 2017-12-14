@@ -112,7 +112,7 @@ public class JDTResolver extends ResolveVisitor {
     }
     public static JDTClassNode getCachedNode(JDTResolver instance, String name) {
         for (JDTClassNode nodeFromCache : instance.nodeCache.values()) {
-            if (name.equals(String.valueOf(nodeFromCache.jdtBinding.readableName()))) {
+            if (name.equals(String.valueOf(nodeFromCache.getJdtBinding().readableName()))) {
                 return nodeFromCache;
             }
         }
@@ -363,7 +363,7 @@ public class JDTResolver extends ResolveVisitor {
             node = nodeCache.get(jdtBinding);
         }
         if (node != null) {
-            assert Arrays.equals(jdtBinding.readableName(), node.jdtBinding.readableName());
+            assert Arrays.equals(jdtBinding.readableName(), node.getJdtBinding().readableName());
         }
         return node;
     }
@@ -384,7 +384,7 @@ public class JDTResolver extends ResolveVisitor {
             inProgress.put(jdtBinding, jdtNode);
 
             // fix up generics for BinaryTypeBinding
-            jdtNode.setupGenerics();
+            jdtNode.setUpGenerics();
 
             assert nodeCache.get(jdtBinding) == null : "not unique";
             nodeCache.put(jdtBinding, jdtNode);

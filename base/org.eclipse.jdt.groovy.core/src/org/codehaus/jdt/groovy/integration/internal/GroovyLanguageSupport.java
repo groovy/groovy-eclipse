@@ -132,34 +132,34 @@ public class GroovyLanguageSupport implements LanguageSupport {
         }
     }
 
-    public CompilationUnitDeclaration newCompilationUnitDeclaration(ICompilationUnit unit, ProblemReporter problemReporter, CompilationResult compilationResult, int sourceLength) {
+    public CompilationUnitDeclaration newCompilationUnitDeclaration(ICompilationUnit icu, ProblemReporter problemReporter, CompilationResult compilationResult, int sourceLength) {
         if (ContentTypeUtils.isGroovyLikeFileName(compilationResult.getFileName())) {
             CompilerConfiguration compilerConfig = newCompilerConfiguration(problemReporter.options, problemReporter);
             GroovyClassLoader classLoader = null; // TODO: missing the GroovyClassLoader configuration
             ErrorCollector errorCollector = new GroovyErrorCollectorForJDT(compilerConfig);
-            SourceUnit groovySourceUnit = new SourceUnit(String.valueOf(compilationResult.getFileName()), String.valueOf(unit.getContents()), compilerConfig, classLoader, errorCollector);
+            SourceUnit groovySourceUnit = new SourceUnit(String.valueOf(compilationResult.getFileName()), String.valueOf(icu.getContents()), compilerConfig, classLoader, errorCollector);
 
-            org.codehaus.groovy.control.CompilationUnit groovyCU = new org.codehaus.groovy.control.CompilationUnit(compilerConfig);
-            JDTResolver resolver = new JDTResolver(groovyCU);
-            groovyCU.setResolveVisitor(resolver);
+            org.codehaus.groovy.control.CompilationUnit gcu = new org.codehaus.groovy.control.CompilationUnit(compilerConfig);
+            JDTResolver resolver = new JDTResolver(gcu);
+            gcu.setResolveVisitor(resolver);
 
             // TODO groovy get this from the Antlr parser
-            compilationResult.lineSeparatorPositions = GroovyUtils.getSourceLineSeparatorsIn(unit.getContents());
+            compilationResult.lineSeparatorPositions = GroovyUtils.getSourceLineSeparatorsIn(icu.getContents());
 
-            groovyCU.addSource(groovySourceUnit);
-            GroovyCompilationUnitDeclaration gcuDeclaration = new GroovyCompilationUnitDeclaration(problemReporter, compilationResult, sourceLength, groovyCU, groovySourceUnit, null);
+            gcu.addSource(groovySourceUnit);
+            GroovyCompilationUnitDeclaration decl = new GroovyCompilationUnitDeclaration(problemReporter, compilationResult, sourceLength, gcu, groovySourceUnit, null);
 
-            gcuDeclaration.processToPhase(Phases.CONVERSION);
+            decl.processToPhase(Phases.CONVERSION);
 
-            if (gcuDeclaration.getModuleNode() != null) {
-                // Regardless of a successful outcome, build what is possible in the face of any errors
-                gcuDeclaration.populateCompilationUnitDeclaration();
-                for (TypeDeclaration decl : gcuDeclaration.types) {
-                    resolver.record((GroovyTypeDeclaration) decl);
+            // regardless of a successful outcome, build what is possible in the face of any errors
+            if (decl.getModuleNode() != null) {
+                decl.populateCompilationUnitDeclaration();
+                for (TypeDeclaration type : decl.types) {
+                    resolver.record((GroovyTypeDeclaration) type);
                 }
             }
 
-            return gcuDeclaration;
+            return decl;
         } else {
             return new CompilationUnitDeclaration(problemReporter, compilationResult, sourceLength);
         }

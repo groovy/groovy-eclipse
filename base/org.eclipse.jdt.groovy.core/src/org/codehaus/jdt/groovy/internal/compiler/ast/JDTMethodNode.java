@@ -35,37 +35,22 @@ public class JDTMethodNode extends MethodNode implements JDTNode {
 
     private MethodBinding methodBinding;
     private JDTResolver resolver;
-    private int bits = 0;
+    private int bits;
 
-    public JDTMethodNode(MethodBinding methodBinding, JDTResolver resolver, String name, int modifiers, ClassNode returnType,
-            Parameter[] gParameters, ClassNode[] thrownExceptions, Statement object) {
+    public JDTMethodNode(MethodBinding methodBinding, JDTResolver resolver, String name, int modifiers, ClassNode returnType, Parameter[] gParameters, ClassNode[] thrownExceptions, Statement object) {
         super(name, modifiers, returnType, gParameters, thrownExceptions, object);
-        this.resolver = resolver;
         this.methodBinding = methodBinding;
+        this.resolver = resolver;
     }
 
     @Override
     public void addAnnotation(AnnotationNode value) {
-        // The grails TestMixinTransformation.autoAnnotateSetupTeardown likes to add annotations to immutable objects... (it gets the setup method from a junit class sometimes)
-        System.err.println("Unexpected: Trying to add an annotation " + value.getClassNode().getName() + " to an immutable method node " + toString());
-        // throwImmutableException();
+        throw new IllegalStateException("JDTMethodNode is immutable");
     }
 
     @Override
     public void addAnnotations(List<AnnotationNode> annotations) {
-        throwImmutableException();
-    }
-
-    @Override
-    public List<AnnotationNode> getAnnotations() {
-        ensureAnnotationsInitialized();
-        return super.getAnnotations();
-    }
-
-    @Override
-    public List<AnnotationNode> getAnnotations(ClassNode type) {
-        ensureAnnotationsInitialized();
-        return super.getAnnotations(type);
+        throw new IllegalStateException("JDTMethodNode is immutable");
     }
 
     private void ensureAnnotationsInitialized() {
@@ -80,20 +65,28 @@ public class JDTMethodNode extends MethodNode implements JDTNode {
         }
     }
 
-    private void throwImmutableException() {
-        throw new IllegalStateException("JDTMethodNode is immutable");
+    @Override
+    public List<AnnotationNode> getAnnotations() {
+        ensureAnnotationsInitialized();
+        return super.getAnnotations();
     }
 
-    public JDTResolver getResolver() {
-        return resolver;
+    @Override
+    public List<AnnotationNode> getAnnotations(ClassNode type) {
+        ensureAnnotationsInitialized();
+        return super.getAnnotations(type);
+    }
+
+    public Binding getJdtBinding() {
+        return methodBinding;
     }
 
     public MethodBinding getMethodBinding() {
         return methodBinding;
     }
 
-    public Binding getJdtBinding() {
-        return methodBinding;
+    public JDTResolver getResolver() {
+        return resolver;
     }
 
     public boolean isDeprecated() {
