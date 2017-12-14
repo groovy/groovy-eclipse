@@ -405,9 +405,7 @@ public class JDTResolver extends ResolveVisitor {
                 // already resolved!
                 return false;
             }
-            GroovyEclipseBug geb = new GroovyEclipseBug("commencingResolution failed: no declaration found for class " + currentClass);
-            geb.printStackTrace();
-            throw geb;
+            throw new GroovyEclipseBug("commencingResolution failed: no declaration found for class " + currentClass);
         }
         activeScope = null;
         if (gtDeclaration.scope == null) {
@@ -415,9 +413,7 @@ public class JDTResolver extends ResolveVisitor {
             if (gtDeclaration.hasErrors()) {
                 return false;
             }
-            GroovyEclipseBug geb = new GroovyEclipseBug("commencingResolution failed: declaration found, but unexpectedly found no scope for " + currentClass.getName());
-            geb.printStackTrace();
-            throw geb;
+            throw new GroovyEclipseBug("commencingResolution failed: declaration found, but unexpectedly found no scope for " + currentClass.getName());
         }
         activeScope = (GroovyCompilationUnitScope) gtDeclaration.scope.compilationUnitScope();
         if (DEBUG) {
