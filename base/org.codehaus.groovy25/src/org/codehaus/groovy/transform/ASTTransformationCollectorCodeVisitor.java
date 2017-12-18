@@ -456,7 +456,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
     }
     */
 
-    // GRECLIPSE add
+  // GRECLIPSE add
     private static final String[] NONE = new String[0];
     private static final Class[] NO_CLASSES = new Class[0];
 
@@ -587,5 +587,5 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
         }
         return false;
     }
-    // GRECLIPSE end
+  // GRECLIPSE end
 }

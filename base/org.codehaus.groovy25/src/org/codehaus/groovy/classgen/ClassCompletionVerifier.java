@@ -18,17 +18,12 @@
  */
 package org.codehaus.groovy.classgen;
 
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
-import org.codehaus.groovy.ast.ClassHelper;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.ConstructorNode;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.InnerClassNode;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.PropertyNode;
-import org.codehaus.groovy.ast.Variable;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+
+import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
@@ -47,34 +42,9 @@ import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.trait.Traits;
 
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-
-import static java.lang.reflect.Modifier.isAbstract;
-import static java.lang.reflect.Modifier.isFinal;
-import static java.lang.reflect.Modifier.isInterface;
-import static java.lang.reflect.Modifier.isNative;
-import static java.lang.reflect.Modifier.isPrivate;
-import static java.lang.reflect.Modifier.isStatic;
-import static java.lang.reflect.Modifier.isStrict;
-import static java.lang.reflect.Modifier.isSynchronized;
-import static java.lang.reflect.Modifier.isTransient;
-import static java.lang.reflect.Modifier.isVolatile;
+import static java.lang.reflect.Modifier.*;
 import static org.codehaus.groovy.ast.ClassHelper.VOID_TYPE;
-import static groovyjarjarasm.asm.Opcodes.ACC_ABSTRACT;
-import static groovyjarjarasm.asm.Opcodes.ACC_FINAL;
-import static groovyjarjarasm.asm.Opcodes.ACC_INTERFACE;
-import static groovyjarjarasm.asm.Opcodes.ACC_NATIVE;
-import static groovyjarjarasm.asm.Opcodes.ACC_PRIVATE;
-import static groovyjarjarasm.asm.Opcodes.ACC_PROTECTED;
-import static groovyjarjarasm.asm.Opcodes.ACC_PUBLIC;
-import static groovyjarjarasm.asm.Opcodes.ACC_STATIC;
-import static groovyjarjarasm.asm.Opcodes.ACC_STRICT;
-import static groovyjarjarasm.asm.Opcodes.ACC_SYNCHRONIZED;
-import static groovyjarjarasm.asm.Opcodes.ACC_TRANSIENT;
-import static groovyjarjarasm.asm.Opcodes.ACC_VOLATILE;
+import static groovyjarjarasm.asm.Opcodes.*;
 /**
  * Checks that a class satisfies various conditions including:
  * <ul>

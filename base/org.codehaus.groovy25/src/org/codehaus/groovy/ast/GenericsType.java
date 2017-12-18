@@ -18,6 +18,8 @@
  */
 package org.codehaus.groovy.ast;
 
+import static org.codehaus.groovy.ast.ClassHelper.GROOVY_OBJECT_TYPE;
+
 import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.ast.tools.WideningCategories;
 
@@ -25,8 +27,6 @@ import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import static org.codehaus.groovy.ast.ClassHelper.GROOVY_OBJECT_TYPE;
 
 /**
  * This class is used to describe generic type signatures for ClassNodes.
@@ -100,21 +100,21 @@ public class GenericsType extends ASTNode {
 
     private String toString(Set<String> visited) {
         if (placeholder) visited.add(name);
-        StringBuilder ret = new StringBuilder(wildcard ? "?" : ((type == null || placeholder) ? name : genericsBounds(type, visited)));
+        String ret = wildcard?"?":((type == null || placeholder) ? name : genericsBounds(type, visited));
         if (upperBounds != null) {
             if (placeholder && upperBounds.length==1 && !upperBounds[0].isGenericsPlaceHolder() && upperBounds[0].getName().equals("java.lang.Object")) {
                 // T extends Object should just be printed as T
             } else {
-                ret.append(" extends ");
+                ret += " extends ";
                 for (int i = 0; i < upperBounds.length; i++) {
-                    ret.append(genericsBounds(upperBounds[i], visited));
-                    if (i + 1 < upperBounds.length) ret.append(" & ");
+                    ret += genericsBounds(upperBounds[i], visited);
+                    if (i + 1 < upperBounds.length) ret += " & ";
                 }
             }
         } else if (lowerBound != null) {
-            ret.append(" super ").append(genericsBounds(lowerBound, visited));
+            ret += " super " + genericsBounds(lowerBound, visited);
         }
-        return ret.toString();
+        return ret;
     }
 
     private String nameOf(ClassNode theType) {
@@ -494,7 +494,8 @@ public class GenericsType extends ASTNode {
                     }
                 }
             }
-            return match;
+            if (!match) return false;
+            return true;
         }
     }
 

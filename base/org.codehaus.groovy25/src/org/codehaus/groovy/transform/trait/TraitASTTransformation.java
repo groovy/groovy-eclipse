@@ -69,6 +69,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.codehaus.groovy.ast.tools.GeneralUtils.returnS;
+
 import static org.codehaus.groovy.transform.trait.SuperCallTraitTransformer.UNRESOLVED_HELPER_CLASS;
 
 /**

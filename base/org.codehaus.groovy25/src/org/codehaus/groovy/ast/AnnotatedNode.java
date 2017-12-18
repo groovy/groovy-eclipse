@@ -18,9 +18,7 @@
  */
 package org.codehaus.groovy.ast;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * Base class for any AST node which is capable of being annotated
@@ -114,7 +112,7 @@ public class AnnotatedNode extends ASTNode {
         this.hasNoRealSourcePositionFlag = value;
     }
 
-    // GRECLIPSE add
+  // GRECLIPSE add
     public int getNameStart() {
         return nameStart;
     }
@@ -140,5 +138,5 @@ public class AnnotatedNode extends ASTNode {
             setNameEnd(aNode.getNameEnd());
         }
     }
-    // GRECLIPSE end
+  // GRECLIPSE end
 }

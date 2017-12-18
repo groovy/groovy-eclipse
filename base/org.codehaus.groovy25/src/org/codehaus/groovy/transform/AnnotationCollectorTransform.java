@@ -49,13 +49,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
-import static groovyjarjarasm.asm.Opcodes.ACC_ABSTRACT;
-import static groovyjarjarasm.asm.Opcodes.ACC_ANNOTATION;
-import static groovyjarjarasm.asm.Opcodes.ACC_ENUM;
-import static groovyjarjarasm.asm.Opcodes.ACC_FINAL;
-import static groovyjarjarasm.asm.Opcodes.ACC_INTERFACE;
-import static groovyjarjarasm.asm.Opcodes.ACC_PUBLIC;
-import static groovyjarjarasm.asm.Opcodes.ACC_STATIC;
+import static groovyjarjarasm.asm.Opcodes.*;
 
 /**
  * This class is the base for any annotation alias processor. 
