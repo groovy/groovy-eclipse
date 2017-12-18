@@ -18,9 +18,7 @@
  */
 package org.codehaus.groovy.ast;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * Base class for any AST node which is capable of being annotated

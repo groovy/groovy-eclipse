@@ -103,8 +103,8 @@ public abstract class ProcessingUnit {
      */
 
     public void setClassLoader(GroovyClassLoader loader) {
-                ClassLoader parent = Thread.currentThread().getContextClassLoader();
-                if (parent == null) parent = ProcessingUnit.class.getClassLoader();
+        ClassLoader parent = Thread.currentThread().getContextClassLoader();
+        if (parent == null) parent = ProcessingUnit.class.getClassLoader();
         this.classLoader = (loader == null ? new GroovyClassLoader(parent, configuration) : loader);
     }
 

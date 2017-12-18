@@ -18,11 +18,7 @@
  */
 package org.codehaus.groovy.ast.expr;
 
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.ClassHelper;
-import org.codehaus.groovy.ast.GenericsType;
-import org.codehaus.groovy.ast.GroovyCodeVisitor;
-import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.*;
 
 /**
  * A method call on an object or class
