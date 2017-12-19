@@ -405,7 +405,10 @@ protected Parser basicParser() {
 				DefaultErrorHandlingPolicies.proceedWithAllProblems(),
 				this.options,
 				new DefaultProblemFactory());
-		this.basicParser = new Parser(problemReporter, false);
+		// GROOVY edit
+		//this.basicParser = new Parser(problemReporter, false);
+		this.basicParser = LanguageSupportFactory.getParser(this, this.options, problemReporter, false, 1);
+		// GROOVY end
 		this.basicParser.reportOnlyOneSyntaxError = true;
 	}
 	return this.basicParser;
@@ -1915,12 +1918,6 @@ protected boolean parseAndBuildBindings(PossibleMatch possibleMatch, boolean mus
 protected void process(PossibleMatch possibleMatch, boolean bindingsWereCreated) throws CoreException {
 	// GROOVY add -- skip non-Java files; they use a separate delegated search
 	if (possibleMatch.isInterestingSourceFile()) {
-		try {
-			this.lookupEnvironment.buildTypeBindings(possibleMatch.parsedUnit, null /*no access restriction*/);
-		} catch (Throwable t) {
-			t.printStackTrace();
-		}
-		possibleMatch.parsedUnit.resolve();
 		return;
 	}
 	// GROOVY end

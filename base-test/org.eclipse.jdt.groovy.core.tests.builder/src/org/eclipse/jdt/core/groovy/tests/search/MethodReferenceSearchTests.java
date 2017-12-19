@@ -21,10 +21,10 @@ import java.util.List;
 
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.groovy.tests.MockPossibleMatch;
-import org.eclipse.jdt.core.groovy.tests.MockSearchRequestor;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchMatch;
@@ -345,13 +345,13 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
         createUnit("", "Other", otherContents);
 
         IMethod constructor = first.getType("Foo").getMethods()[0];
-        MockSearchRequestor requestor = new MockSearchRequestor();
-        SearchEngine engine = new SearchEngine();
-        engine.search(SearchPattern.createPattern(constructor, IJavaSearchConstants.REFERENCES),
+        new SearchEngine().search(
+            SearchPattern.createPattern(constructor, IJavaSearchConstants.REFERENCES),
             new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
-            SearchEngine.createJavaSearchScope(new IJavaElement[] {first.getPackageFragmentRoot()}, false), requestor,
-            new NullProgressMonitor());
-        List<SearchMatch> matches = requestor.getMatches();
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {first.getPackageFragmentRoot()}, false),
+            searchRequestor, new NullProgressMonitor());
+
+        List<SearchMatch> matches = searchRequestor.getMatches();
         assertEquals("Incorrect number of matches:\n" + matches, 6, matches.size());
 
         // two from Foo and two from other
@@ -370,7 +370,7 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
     }
 
     @Test
-    public void testStaticMethodMethodReferenceSearch() throws Exception {
+    public void testStaticMethodReferenceSearch() throws Exception {
         String contents =
             "class Foo {\n" +
             "  static def bar() {}\n" +
@@ -387,6 +387,40 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
 
         assertEquals(1, searchRequestor.getMatches().size());
         assertLocation(searchRequestor.getMatch(0), contents.lastIndexOf("bar"), "bar".length());
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/402
+    public void testGenericsMethodReferenceSearch() throws Exception {
+        GroovyCompilationUnit groovyUnit = createUnit("foo", "Bar",
+            "package foo\n" +
+            "abstract class Bar {\n" +
+            "  String xxx(Number number, Date date) {\n" +
+            "    'Hello'\n" +
+            "  }\n" +
+            "}");
+        @SuppressWarnings("unused")
+        ICompilationUnit javaUnit = createJavaUnit("foo", "Baz",
+            "package foo\n" +
+            "import java.util.Date;\n" +
+            "public class Baz<T extends Bar> {\n" +
+            "  private T test;\n" +
+            "  void testCase() {\n" +
+            "    test.xxx(1, new Date());\n" +
+            "  }\n" +
+            "}");
+
+        IMethod method = groovyUnit.getType("Bar").getMethods()[0];
+        new SearchEngine().search(
+            SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
+            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {groovyUnit.getPackageFragmentRoot()}, false),
+            searchRequestor, new NullProgressMonitor());
+
+        List<SearchMatch> matches = searchRequestor.getMatches();
+
+        assertEquals(1, matches.size());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertEquals("Baz.java", ((IJavaElement) matches.get(0).getElement()).getResource().getName());
     }
 
     //--------------------------------------------------------------------------

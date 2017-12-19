@@ -30,14 +30,14 @@ public class MatchLocatorParser extends Parser {
 	final int patternFineGrain;
 
 public static MatchLocatorParser createParser(ProblemReporter problemReporter, MatchLocator locator) {
-	// GROOVY edit
-	/*if ((locator.matchContainer & PatternLocator.COMPILATION_UNIT_CONTAINER) != 0) {
-		return new ImportMatchLocatorParser(problemReporter, locator);
-	}
-	return new MatchLocatorParser(problemReporter, locator);*/
 	if ((locator.matchContainer & PatternLocator.COMPILATION_UNIT_CONTAINER) != 0) {
+		// GROOVY edit
+		//return new ImportMatchLocatorParser(problemReporter, locator);
 		return LanguageSupportFactory.getImportMatchLocatorParser(problemReporter, locator);
+		// GROOVY end
 	}
+	// GROOVY edit
+	//return new MatchLocatorParser(problemReporter, locator);
 	return LanguageSupportFactory.getMatchLocatorParser(problemReporter, locator);
 	// GROOVY end
 }

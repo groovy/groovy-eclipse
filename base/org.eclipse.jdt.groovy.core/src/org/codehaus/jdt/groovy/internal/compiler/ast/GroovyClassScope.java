@@ -481,8 +481,7 @@ public class GroovyClassScope extends ClassScope {
     @Override
     public void buildFieldsAndMethods() {
         super.buildFieldsAndMethods();
-        GroovyTypeDeclaration context = (GroovyTypeDeclaration) referenceContext;
-        GroovyTypeDeclaration[] anonymousTypes = context.getAnonymousTypes();
+        GroovyTypeDeclaration[] anonymousTypes = ((GroovyTypeDeclaration) referenceContext).getAnonymousTypes();
         if (anonymousTypes != null) {
             for (GroovyTypeDeclaration anonType : anonymousTypes) {
                 anonType.scope = new GroovyClassScope(this, anonType);

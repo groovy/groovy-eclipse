@@ -13,8 +13,6 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search.matching;
 
-import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipFile;
 
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.*;
 import org.eclipse.jdt.core.Flags;
@@ -399,7 +398,10 @@ protected Parser basicParser() {
 				DefaultErrorHandlingPolicies.proceedWithAllProblems(),
 				this.options,
 				new DefaultProblemFactory());
-		this.basicParser = new Parser(problemReporter, false);
+		// GROOVY edit
+		//this.basicParser = new Parser(problemReporter, false);
+		this.basicParser = LanguageSupportFactory.getParser(this, this.options, problemReporter, false, 1);
+		// GROOVY end
 		this.basicParser.reportOnlyOneSyntaxError = true;
 	}
 	return this.basicParser;
