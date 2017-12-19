@@ -138,7 +138,7 @@ public class GroovyDSLDContext {
      * Called by type lookup, not by the pointcuts.
      */
     public void setTargetType(ClassNode targetType) {
-        if (VariableScope.CLASS_CLASS_NODE.equals(targetType) && currentScope.isPrimaryNode()) {
+        if (currentScope.isPrimaryNode() && VariableScope.CLASS_CLASS_NODE.equals(targetType) && targetType.isUsingGenerics()) {
             targetType = targetType.getGenericsTypes()[0].getType();
         }
         this.targetType = targetType;

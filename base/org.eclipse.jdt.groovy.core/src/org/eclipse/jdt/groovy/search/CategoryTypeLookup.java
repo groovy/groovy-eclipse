@@ -118,7 +118,8 @@ public class CategoryTypeLookup implements ITypeLookup {
 
     protected static boolean isTypeCompatible(ClassNode source, ClassNode target) {
         if (SimpleTypeLookup.isTypeCompatible(source, target) != Boolean.FALSE) {
-            if (!VariableScope.CLASS_CLASS_NODE.equals(source) || VariableScope.OBJECT_CLASS_NODE.equals(target) || !target.isUsingGenerics()) {
+            if (!(VariableScope.CLASS_CLASS_NODE.equals(source) && source.isUsingGenerics()) ||
+                    VariableScope.OBJECT_CLASS_NODE.equals(target) || !target.isUsingGenerics()) {
                 return true;
             } else {
                 source = source.getGenericsTypes()[0].getType();
