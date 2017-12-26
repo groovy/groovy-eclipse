@@ -15,19 +15,15 @@
  */
 package org.codehaus.groovy.eclipse.quickassist;
 
-import static org.eclipse.jdt.groovy.core.util.ReflectionUtils.invokeConstructor;
-
 import org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.contentassist.ICompletionProposalExtension5;
 import org.eclipse.ltk.core.refactoring.TextChange;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.text.edits.MalformedTreeException;
 import org.eclipse.text.edits.TextEdit;
 
@@ -45,31 +41,10 @@ public abstract class GroovyQuickAssistProposal2 extends GroovyQuickAssistPropos
         return null;
     }
 
-    @SuppressWarnings("unchecked")
     public Object getAdditionalProposalInfo(IProgressMonitor monitor) {
         StringBuffer buf = new StringBuffer();
         try {
             TextChange change = getTextChange(monitor);
-
-            // for Eclipse Indigo (3.7) backwards compatibility
-            Class<? extends ICompletionProposalExtension5> cup;
-            try {
-                cup = (Class<? extends ICompletionProposalExtension5>)
-                    Class.forName("org.eclipse.jdt.ui.text.java.correction.CUCorrectionProposal");
-            } catch (ClassNotFoundException e) {
-                try {
-                    cup = (Class<? extends ICompletionProposalExtension5>)
-                        Class.forName("org.eclipse.jdt.internal.ui.text.correction.proposals.CUCorrectionProposal");
-                } catch (ClassNotFoundException e1) {
-                    throw new IllegalStateException(e1);
-                }
-            }
-            return invokeConstructor(cup,
-                    new Class[]  {String.class, ICompilationUnit.class,       TextChange.class, int.class, Image.class},
-                    new Object[] {"",           context.getCompilationUnit(), change,           0,         null       })
-                .getAdditionalProposalInfo(monitor);
-
-            /*
             change.setKeepPreviewEdits(true);
             IDocument previewDocument = change.getPreviewDocument(monitor);
             TextEdit rootEdit = change.getPreviewEdit(change.getEdit());
@@ -77,7 +52,7 @@ public abstract class GroovyQuickAssistProposal2 extends GroovyQuickAssistPropos
                 new org.eclipse.jdt.internal.ui.text.correction.proposals.EditAnnotator(buf, previewDocument);
             rootEdit.accept(ea);
             ea.unchangedUntil(previewDocument.getLength());
-            */
+
         } catch (CoreException e) {
             GroovyQuickFixPlugin.log(e);
         } catch (BadLocationException e) {

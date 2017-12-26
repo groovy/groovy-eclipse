@@ -15,8 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.editor;
 
-import static java.lang.reflect.Array.getLength;
-
 import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
@@ -58,6 +56,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.core.CompilationUnit;
+import org.eclipse.jdt.internal.core.manipulation.search.IOccurrencesFinder.OccurrenceLocation;
 import org.eclipse.jdt.internal.debug.ui.BreakpointMarkerUpdater;
 import org.eclipse.jdt.internal.ui.IJavaHelpContextIds;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
@@ -1314,10 +1313,9 @@ public class GroovyEditor extends CompilationUnitEditor {
             fMarkOccurrenceModificationStamp_set(currentModificationStamp);
         }
 
-        Object locations = GroovyOccurrencesFinder.findOccurrences(
-                astRoot, selection.getOffset(), selection.getLength());
+        OccurrenceLocation[] locations = GroovyOccurrencesFinder.findOccurrences(astRoot, selection.getOffset(), selection.getLength());
 
-        if (locations == null || getLength(locations) == 0) {
+        if (locations == null || locations.length == 0) {
             if (!fStickyOccurrenceAnnotations_get())
                 removeOccurrenceAnnotations_call();
             else if (hasChanged) // check consistency of current annotations

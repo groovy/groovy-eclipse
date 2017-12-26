@@ -4,15 +4,15 @@ These are old instructions for setting up a Groovy-Eclipse development environme
 
 ### Get the Base Eclipse Package
 
-Groovy-Eclipse is intended to be developed using Eclipse. Download and install [the "Eclipse IDE for Eclipse Committers" package (4.6 Neon)](http://www.eclipse.org/downloads/packages/eclipse-ide-eclipse-committers/neonr) for your operating system.
+Groovy-Eclipse is intended to be developed using Eclipse. Download and install [the "Eclipse IDE for Eclipse Committers" package (4.7 Oxygen)](http://www.eclipse.org/downloads/packages/eclipse-ide-eclipse-committers/oxygen2) for your operating system.
 
 ### Install Groovy-Eclipse
 
-On the Eclipse menu bar, select *Help -> Install New Software...*.  In the *Install* window, paste the Groovy-Eclipse update site `http://dist.springsource.org/snapshot/GRECLIPSE/e4.6/` into the *Work with:* field and press enter. Check the boxes next to "Groovy-Eclipse" and "Extra Groovy compilers", then click the *Next* button a couple of times, accept the license agreement, and let Eclipse restart.
+On the Eclipse menu bar, select *Help -> Install New Software...*.  In the *Install* window, paste the Groovy-Eclipse update site `http://dist.springsource.org/snapshot/GRECLIPSE/e4.7` into the *Work with:* field and press enter. Check the boxes next to "Groovy-Eclipse" and "Extra Groovy compilers", then click the *Next* button a couple of times, accept the license agreement, and let Eclipse restart.
 
 ### Setup Groovy-Eclipse Compiler
 
-On the Eclipse menu bar, select *Window -> Preferences*.  In the *Preferences* window, go to *Groovy -> Compiler*. Click the *Switch to 2.1.9* button, and let Eclipse restart.
+On the Eclipse menu bar, select *Window -> Preferences*.  In the *Preferences* window, go to *Groovy -> Compiler*. Click the *Switch to 2.4.13* button, and let Eclipse restart.
 
 ### Install Execution Environment Descriptions
 

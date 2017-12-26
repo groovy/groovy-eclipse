@@ -2506,8 +2506,7 @@ assert primaryExprType != null && dependentExprType != null;
                 try {
                     count = (Integer) ReflectionUtils.throwableGetPrivateField(SourceType.class, "localOccurrenceCount", (SourceType) type);
                 } catch (Exception e) {
-                    // localOccurrenceCount does not exist in 3.7
-                    count = type.getOccurrenceCount();
+                    throw new RuntimeException(e);
                 }
                 sb.insert(0, count);
             } else {

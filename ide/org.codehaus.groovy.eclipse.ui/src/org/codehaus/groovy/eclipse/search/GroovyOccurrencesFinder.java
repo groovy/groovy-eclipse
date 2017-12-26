@@ -15,11 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.search;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -46,12 +41,12 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.SourceRange;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
+import org.eclipse.jdt.internal.core.manipulation.search.IOccurrencesFinder;
 import org.eclipse.jdt.internal.ui.search.FindOccurrencesEngine;
 
-public class GroovyOccurrencesFinder {
+public class GroovyOccurrencesFinder implements IOccurrencesFinder {
 
     private AnnotatedNode nodeToLookFor;
     private GroovyCompilationUnit gunit;
@@ -78,6 +73,10 @@ public class GroovyOccurrencesFinder {
 
     public ASTNode getNodeToLookFor() {
         return nodeToLookFor;
+    }
+
+    public CompilationUnit getASTRoot() {
+        return cunit;
     }
 
     public OccurrenceLocation[] getOccurrences() {
@@ -204,132 +203,33 @@ public class GroovyOccurrencesFinder {
     }
 
     // for GroovyEditor only!
-    public static Object findOccurrences(CompilationUnit cunit, int offset, int length) {
+    public static OccurrenceLocation[] findOccurrences(CompilationUnit cunit, int offset, int length) {
         GroovyOccurrencesFinder finder = new GroovyOccurrencesFinder();
         finder.initialize(cunit, offset, length);
-        OccurrenceLocation[] occurrences = finder.getOccurrences();
-
-        // convert to required types reflectively
-        try {
-            if (OCCURRENCE_LOCATION == null) {
-                try {
-                    OCCURRENCE_LOCATION = Class.forName("org.eclipse.jdt.internal.ui.search.IOccurrencesFinder$OccurrenceLocation");
-                } catch (ClassNotFoundException e) {
-                    OCCURRENCE_LOCATION = Class.forName("org.eclipse.jdt.internal.core.manipulation.search.IOccurrencesFinder$OccurrenceLocation");
-                }
-                OCCURRENCE_LOCATION_CTOR = OCCURRENCE_LOCATION.getConstructor(int.class, int.class, int.class, String.class);
-            }
-
-            Object arr = Array.newInstance(OCCURRENCE_LOCATION, occurrences.length);
-            for (int idx = 0; idx < occurrences.length; idx += 1) {
-                OccurrenceLocation loc = occurrences[idx];
-                Array.set(arr, idx, OCCURRENCE_LOCATION_CTOR.newInstance(
-                    loc.getOffset(), loc.getLength(), loc.getFlags(), loc.getDescription()));
-            }
-
-            return arr;
-
-        } catch (Throwable t) {
-            t.printStackTrace();
-            throw new RuntimeException(t);
-        }
+        return finder.getOccurrences();
     }
 
-    /**
-     * FindOccurrencesEngine expects an instance of IOccurrencesFinder, which
-     * has been relocated sometime between Eclipse 4.7m4 and 4.7m5. In order
-     * to support both interfaces, a dynamic proxy is supplied to the engine.
-     */
     public static FindOccurrencesEngine newFinderEngine() {
-        try {
-            if (I_OCCURRENCES_FINDER == null) {
-                // load the interface
-                try {
-                    I_OCCURRENCES_FINDER = new Class[] {Class.forName("org.eclipse.jdt.internal.ui.search.IOccurrencesFinder")};
-                } catch (ClassNotFoundException e) {
-                    I_OCCURRENCES_FINDER = new Class[] {Class.forName("org.eclipse.jdt.internal.core.manipulation.search.IOccurrencesFinder")};
-                }
-            }
-            final GroovyOccurrencesFinder finder = new GroovyOccurrencesFinder();
-
-            // create invocation handler
-            InvocationHandler handler = new InvocationHandler() {
-                public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                    String methodName = method.getName();
-
-                    if ("getASTRoot".equals(methodName)) {
-                        return finder.cunit;
-                    }
-                    if ("getID".equals(methodName)) {
-                        return "GroovyOccurrencesFinder";
-                    }
-                    if ("getJobLabel".equals(methodName)) {
-                        return "Search for Occurrences in File (Groovy)";
-                    }
-                    if ("getSearchKind".equals(methodName)) {
-                        return 5; //IOccurrencesFinder.K_OCCURRENCE
-                    }
-                    if ("getUnformattedPluralLabel".equals(methodName)) {
-                        return "''{0}'' - {1} occurrences in ''{2}''";
-                    }
-                    if ("getUnformattedSingularLabel".equals(methodName)) {
-                        return "''{0}'' - 1 occurrence in ''{1}''";
-                    }
-
-                    return GroovyOccurrencesFinder.class.getMethod(methodName, method.getParameterTypes()).invoke(finder, args);
-                }
-            };
-
-            // create dynamic proxy to connect IOccurrencesFinder with GroovyOccurrencesFinder
-            Object proxy = Proxy.newProxyInstance(GroovyOccurrencesFinder.class.getClassLoader(), I_OCCURRENCES_FINDER, handler);
-
-            //return FindOccurrencesEngine.create(proxy of IOccurrencesFinder);
-            return (FindOccurrencesEngine) ReflectionUtils.throwableExecutePrivateMethod(
-                FindOccurrencesEngine.class, "create", I_OCCURRENCES_FINDER, FindOccurrencesEngine.class, new Object[] {proxy});
-
-        } catch (Throwable t) {
-            t.printStackTrace();
-            throw new RuntimeException(t);
-        }
+        return FindOccurrencesEngine.create(new GroovyOccurrencesFinder());
     }
 
-    // copied from IOccurrencesFinder
-    public static class OccurrenceLocation {
-        private final int fOffset;
-        private final int fLength;
-        private final int fFlags;
-        private final String fDescription;
-
-        public OccurrenceLocation(int offset, int length, int flags, String description) {
-            fOffset= offset;
-            fLength= length;
-            fFlags= flags;
-            fDescription= description;
-        }
-
-        public int getOffset() {
-            return fOffset;
-        }
-
-        public int getLength() {
-            return fLength;
-        }
-
-        public int getFlags() {
-            return fFlags;
-        }
-
-        public String getDescription() {
-            return fDescription;
-        }
-
-        @Override
-        public String toString() {
-            return "[" + fOffset + " / " + fLength + "] " + fDescription;
-        }
+    public String getID() {
+        return "GroovyOccurrencesFinder";
     }
 
-    private static Class<?> OCCURRENCE_LOCATION;
-    private static Class<?>[] I_OCCURRENCES_FINDER;
-    private static Constructor<?> OCCURRENCE_LOCATION_CTOR;
+    public String getJobLabel() {
+        return "Search for Occurrences in File (Groovy)";
+    }
+
+    public int getSearchKind() {
+        return K_OCCURRENCE;
+    }
+
+    public String getUnformattedSingularLabel() {
+        return "''{0}'' - 1 occurrence in ''{1}''";
+    }
+
+    public String getUnformattedPluralLabel() {
+        return "''{0}'' - {1} occurrences in ''{2}''";
+    }
 }

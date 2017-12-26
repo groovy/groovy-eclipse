@@ -51,12 +51,6 @@ final class SanityTests {
         println "JDT Core version: ${Platform.getBundle('org.eclipse.jdt.core').getVersion()}"
         println "Groovy version: $groovyVersion"
 
-        // Ideally:
-        // JDT 3.7 test against Groovy 2.1
-        // JDT 3.8 test against Groovy 2.1
-        // JDT 3.9 test against Groovy 2.2
-        // JDT 3.10 test against Groovy 2.3
-
         int major = groovyVersion.major,
             minor = groovyVersion.minor
         assert "${major}.${minor}" == '2.5'

@@ -100,7 +100,7 @@ public class GroovyImageDecorator extends BaseLabelProvider implements ILabelDec
             if (isGroovyProject(rsrc.getProject())) {
                 if (isRuntimeCompiled(rsrc)) {
                     // display "circle slash" in lower left corner
-                    flags |= 0x8000/*JavaElementImageDescriptor.IGNORE_OPTIONAL_PROBLEMS*/; // TODO: Restore when e37 is no longer supported.
+                    flags |= JavaElementImageDescriptor.IGNORE_OPTIONAL_PROBLEMS;
                 }
             } else {
                 // display "red exclamation" in lower left corner

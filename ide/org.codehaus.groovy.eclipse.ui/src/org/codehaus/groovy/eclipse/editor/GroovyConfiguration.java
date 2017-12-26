@@ -26,6 +26,7 @@ import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightingExtenderRegistry;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.ui.text.AbstractJavaScanner;
 import org.eclipse.jdt.internal.ui.text.SingleTokenJavaScanner;
@@ -33,10 +34,8 @@ import org.eclipse.jdt.internal.ui.text.java.CompletionProposalCategory;
 import org.eclipse.jdt.internal.ui.text.java.ContentAssistProcessor;
 import org.eclipse.jdt.internal.ui.text.java.JavaAutoIndentStrategy;
 import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProcessor;
-import org.eclipse.jdt.internal.ui.text.java.hover.JavaInformationProvider;
 import org.eclipse.jdt.ui.text.IJavaPartitions;
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration;
-import org.eclipse.jdt.ui.text.java.hover.IJavaEditorTextHover;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.IAutoEditStrategy;
 import org.eclipse.jface.text.IDocument;
@@ -140,43 +139,11 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
     }
     private static final Pattern GROOVY_CONTENT_ASSIST = Pattern.compile("org.codehaus.groovy.+|org.eclipse.jdt.ui.(default|text)ProposalCategory");
 
-    /*
-     * Type parameters have changed between 3.7 and 4.2.  So just remove them
-     * Otherwise compile errors
-     */
     @Override
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    protected Map getHyperlinkDetectorTargets(ISourceViewer sourceViewer) {
-        Map targets = super.getHyperlinkDetectorTargets(sourceViewer);
+    protected Map<String, IAdaptable> getHyperlinkDetectorTargets(ISourceViewer sourceViewer) {
+        Map<String, IAdaptable> targets = super.getHyperlinkDetectorTargets(sourceViewer);
         targets.put("org.codehaus.groovy.eclipse.groovyCode", getEditor()); //$NON-NLS-1$
         return targets;
-    }
-
-    /**
-     * Use our {@link GroovyExtraInformationHover} instead of a
-     * {@link JavadocHover}. Shows extra information provided
-     * by DSLs
-     */
-    @Override
-    public IInformationPresenter getInformationPresenter(ISourceViewer sourceViewer) {
-        IInformationPresenter informationPresenter = super.getInformationPresenter(sourceViewer);
-        // the org.eclipse.jdt.internal.ui.text.java.hover.JavaTypeHover was removed in 4.2.M7
-        // if this class doesn't exist then we don't need to do anything with it.
-        try {
-            Class<?> clazz = Class.forName("org.eclipse.jdt.internal.ui.text.java.hover.JavaTypeHover");
-            JavaInformationProvider provider = (JavaInformationProvider) informationPresenter.getInformationProvider(IDocument.DEFAULT_CONTENT_TYPE);
-            IJavaEditorTextHover implementation = (IJavaEditorTextHover) ReflectionUtils.getPrivateField(JavaInformationProvider.class, "fImplementation", provider);
-            // when the extra information is invoked from this way, always return
-            // some information since there is no BestMatchHover to fall back on
-            // This hover is typically invoked when pressing F2.
-            // Hovers that are invoked through a mouse, use a BestMatchHover.
-            GroovyExtraInformationHover hover = new GroovyExtraInformationHover(true);
-            hover.setEditor(this.getEditor());
-            ReflectionUtils.setPrivateField(clazz, "fJavadocHover", implementation, hover);
-        } catch (ClassNotFoundException e) {
-            // can ignore.  Will happen if on 4.2 or later
-        }
-        return informationPresenter;
     }
 
     @Override

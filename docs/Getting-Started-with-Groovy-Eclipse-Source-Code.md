@@ -158,7 +158,7 @@ This minimal project set should be open in your workspace:
 * org.codehaus.groovy.eclipse.tests
 * org.codehaus.groovy.eclipse.ui
 * org.codehaus.groovyXX (where XX is the Groovy version you are working with; you should only have one of these open in your workspace at a time)
-* org.eclipse.jdt.core (There are multiple projects with this name, so they cannot all be imported into the workspace at once. Import only the one in the folder corresponding to the Eclipse version you are working with; for example, the patch in the /e46 folder is for Eclipse 4.6 Neon)
+* org.eclipse.jdt.core (There are multiple projects with this name, so they cannot all be imported into the workspace at once. Import only the one in the folder corresponding to the Eclipse version you are working with; for example, the patch in the /e47 folder is for Eclipse 4.7 Oxygen)
 * org.eclipse.jdt.groovy.core
 * org.eclipse.jdt.groovy.core.tests.builder
 * org.eclipse.jdt.groovy.core.tests.compiler
@@ -179,20 +179,16 @@ For manual testing and debugging, right-click on the org.codehaus.groovy.eclipse
 
 [Download and install Maven](https://maven.apache.org/).
 
-From the root directory of the repository, execute the following command to build Groovy-Eclipse for Eclipse 4.6 (Neon).
+From the root directory of the repository, execute the following command to build Groovy-Eclipse for Eclipse 4.7 (Oxygen).
 
 ```
-mvn -Pe46  clean install
+mvn -Pe47  clean install
 ```
 
-Replace e46 with a different option to build it for an older Eclipse version:
+Replace e47 with a different option to build it for an older Eclipse version:
 
-* e45
-* e44
-* e43j8
-* e43
-* e42
-* e37
+* e48
+* e47
 
 Tests will be executed as part of the build.  To skip them, append this option to the command: `-Dmaven.test.skip=true`.
 

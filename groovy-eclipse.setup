@@ -48,15 +48,6 @@
     <choice
         value="Oxygen"
         label="Eclipse Oxygen - 4.7"/>
-    <choice
-        value="Neon"
-        label="Eclipse Neon - 4.6"/>
-    <choice
-        value="Mars"
-        label="Eclipse Mars - 4.5"/>
-    <choice
-        value="Luna"
-        label="Eclipse Luna - 4.4"/>
     <description>Choose the compatibility level of the target platform</description>
   </setupTask>
   <setupTask
@@ -174,27 +165,6 @@
         <repository
             url="http://download.eclipse.org/eclipse/updates/4.7"/>
       </repositoryList>
-      <repositoryList
-          name="Neon">
-        <repository
-            url="http://download.eclipse.org/releases/neon"/>
-        <repository
-            url="http://download.eclipse.org/eclipse/updates/4.6"/>
-      </repositoryList>
-      <repositoryList
-          name="Mars">
-        <repository
-            url="http://download.eclipse.org/releases/mars"/>
-        <repository
-            url="http://download.eclipse.org/eclipse/updates/4.5"/>
-      </repositoryList>
-      <repositoryList
-          name="Luna">
-        <repository
-            url="http://download.eclipse.org/releases/luna"/>
-        <repository
-            url="http://download.eclipse.org/eclipse/updates/4.4"/>
-      </repositoryList>
     </targlet>
   </setupTask>
   <setupTask
@@ -224,45 +194,6 @@
     </targlet>
   </setupTask>
   <setupTask
-      xsi:type="setup.targlets:TargletTask"
-      filter="(eclipse.target.platform=Neon)">
-    <targlet
-        name="JDT Feature Patch for Neon">
-      <requirement
-          name="org.codehaus.groovy.jdt.patch.feature.group"
-          greedy="false"/>
-      <sourceLocator
-          rootFolder="${git.clone.Groovy-Eclipse.location}/jdt-patch/e46"
-          locateNestedProjects="true"/>
-    </targlet>
-  </setupTask>
-  <setupTask
-      xsi:type="setup.targlets:TargletTask"
-      filter="(eclipse.target.platform=Mars)">
-    <targlet
-        name="JDT Feature Patch for Mars">
-      <requirement
-          name="org.codehaus.groovy.jdt.patch.feature.group"
-          greedy="false"/>
-      <sourceLocator
-          rootFolder="${git.clone.Groovy-Eclipse.location}/jdt-patch/e45"
-          locateNestedProjects="true"/>
-    </targlet>
-  </setupTask>
-  <setupTask
-      xsi:type="setup.targlets:TargletTask"
-      filter="(eclipse.target.platform=Luna)">
-    <targlet
-        name="JDT Feature Patch for Luna">
-      <requirement
-          name="org.codehaus.groovy.jdt.patch.feature.group"
-          greedy="false"/>
-      <sourceLocator
-          rootFolder="${git.clone.Groovy-Eclipse.location}/jdt-patch/e44"
-          locateNestedProjects="true"/>
-    </targlet>
-  </setupTask>
-  <setupTask
       xsi:type="setup.workingsets:WorkingSetTask">
     <workingSet
         name="RT">
@@ -286,7 +217,7 @@
             project="org.codehaus.groovy.eclipse"/>
         <operand
             xsi:type="workingsets:ExclusionPredicate"
-            excludedWorkingSet="//@setupTasks.14/@workingSets.4 //@setupTasks.14/@workingSets.1 //@setupTasks.14/@workingSets.3"/>
+            excludedWorkingSet="//@setupTasks.11/@workingSets.4 //@setupTasks.11/@workingSets.1 //@setupTasks.11/@workingSets.3"/>
         <operand
             xsi:type="predicates:OrPredicate">
           <operand
@@ -310,7 +241,7 @@
             pattern="^.*/ide-test/.*$"/>
         <operand
             xsi:type="workingsets:ExclusionPredicate"
-            excludedWorkingSet="//@setupTasks.14/@workingSets.4"/>
+            excludedWorkingSet="//@setupTasks.11/@workingSets.4"/>
       </predicate>
     </workingSet>
     <workingSet
