@@ -15,10 +15,8 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 
 import java.util.Set;
 
@@ -126,7 +124,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         String contents = "def x = [] << ''; x";
         int start = contents.lastIndexOf("x");
         int end = start + "x".length();
-        assertType(contents, start, end, isAtLeastGroovy(24) ? "java.util.List<java.lang.String>" : "java.util.Collection<java.lang.String>");
+        assertType(contents, start, end, "java.util.List<java.lang.String>");
     }
 
     @Test // GRECLIPSE-1040
@@ -463,8 +461,6 @@ public final class GenericInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testDGMClosure3() {
-        assumeTrue(isAtLeastGroovy(21));
-
         String contents = "(1..4).find { it }";
         String toFind = "it";
         int start = contents.lastIndexOf(toFind);
@@ -913,8 +909,6 @@ public final class GenericInferencingTests extends InferencingTestSuite {
 
     @Test // GRECLIPSE-1696: Generic method type inference with @CompileStatic
     public void testMethod1() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String contents =
             "import groovy.transform.CompileStatic\n" +
             "class A {\n" +
@@ -936,8 +930,6 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     // Generic method type inference without @CompileStatic
     @Test
     public void testMethod2() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String contents =
             "class A {\n" +
             "    public <T> T myMethod(Class<T> claz) {\n" +
@@ -957,8 +949,6 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     // Generic method without object type inference with @CompileStatic
     @Test
     public void testMethod3() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String contents =
             "import groovy.transform.CompileStatic\n" +
             "class A {\n" +
@@ -979,8 +969,6 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     // Generic method type without object inference without @CompileStatic
     @Test
     public void testMethod4() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String contents =
             "class A {\n" +
             "    public <T> T myMethod(Class<T> claz) {\n" +
@@ -1000,8 +988,6 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     // Static generic method type inference with @CompileStatic
     @Test
     public void testStaticMethod1() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String contents =
             "class A {\n" +
             "    static <T> T myMethod(Class<T> claz) {\n" +
@@ -1021,8 +1007,6 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     // Static generic method type inference without @CompileStatic
     @Test
     public void testStaticMethod2() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String contents =
             "class A {\n" +
             "    static <T> T myMethod(Class<T> claz) {\n" +
@@ -1041,8 +1025,6 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     // Static generic method without class type inference with @CompileStatic
     @Test
     public void testStaticMethod3() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String contents =
             "class A {\n" +
             "    static <T> T myMethod(Class<T> claz) {\n" +
@@ -1062,8 +1044,6 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     // Static generic method without class type inference without @CompileStatic
     @Test
     public void testStaticMethod4() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String contents =
             "class A {\n" +
             "    static <T> T myMethod(Class<T> claz) {\n" +
@@ -1082,8 +1062,6 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     // Test according GRECLIPSE-1129 description
     @Test
     public void testStaticMethod5() {
-        assumeTrue(isAtLeastGroovy(23));
-
         String contents =
             "class A {}\n" +
             "class B extends A {}\n" +

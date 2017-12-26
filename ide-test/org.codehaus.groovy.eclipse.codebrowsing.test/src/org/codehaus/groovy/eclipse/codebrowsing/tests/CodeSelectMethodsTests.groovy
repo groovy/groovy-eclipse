@@ -15,9 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
-import static org.junit.Assume.assumeTrue
-
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedBinaryMethod
 import org.eclipse.jdt.core.ICompilationUnit
@@ -289,7 +286,6 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
 
     @Test
     void testCodeSelectStaticMethod5() {
-        assumeTrue(isAtLeastGroovy(20))
         String contents = '''\
             import static java.util.Collections.singletonList
             @groovy.transform.TypeChecked
@@ -302,7 +298,6 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
 
     @Test
     void testCodeSelectStaticMethod6() {
-        assumeTrue(isAtLeastGroovy(23))
         String contents = '''\
             @groovy.transform.Sortable
             class Foo {
@@ -364,8 +359,6 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
 
     @Test
     void testCodeSelectEnumAbstractMethod() {
-        assumeTrue(isAtLeastGroovy(21))
-
         String contents = '''\
             enum E {
               X() {

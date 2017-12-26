@@ -15,7 +15,6 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assume.assumeTrue;
 
 import org.junit.Before;
@@ -30,7 +29,6 @@ public final class GroovySimpleTests_Compliance_1_8 extends GroovyCompilerTestSu
     @Before
     public void setUp() {
         assumeTrue(isAtLeastJava(JDK8));
-        assumeTrue(isAtLeastGroovy(23));
     }
 
     @Test

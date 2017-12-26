@@ -15,18 +15,9 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
-import static org.junit.Assume.assumeTrue;
-
-import org.junit.Before;
 import org.junit.Test;
 
 public final class Groovy20InferencingTests extends InferencingTestSuite {
-
-    @Before
-    public void setUp() {
-        assumeTrue(isAtLeastGroovy(20));
-    }
 
     @Test // tests CompareToNullExpression
     public void testCompileStatic1() {

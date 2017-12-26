@@ -16,7 +16,7 @@
 
    <category-def name="org.codehaus.groovy.compilers" label="Groovy Compilers (Optional)">
       <description>
-         The Groovy 2.3 and 2.4 compilers are installed automatically, but you may install any other Groovy compiler as well.
+         The Groovy 2.4 compiler is installed automatically, but you may install any other Groovy compiler as well.
       </description>
    </category-def>
 
@@ -40,26 +40,6 @@
 
    <feature id="org.codehaus.groovy.jdt.patch.source" url="features/org.codehaus.groovy.jdt.patch.source_2.9.2.qualifier.jar" version="2.9.2.qualifier">
       <category name="org.codehaus.groovy.eclipse.sdk"/>
-   </feature>
-
-   <feature id="org.codehaus.groovy18.feature" url="features/org.codehaus.groovy18.feature_2.9.2.qualifier.jar" version="2.9.2.qualifier">
-      <category name="org.codehaus.groovy.compilers"/>
-   </feature>
-
-   <feature id="org.codehaus.groovy20.feature" url="features/org.codehaus.groovy20.feature_2.9.2.qualifier.jar" version="2.9.2.qualifier">
-      <category name="org.codehaus.groovy.compilers"/>
-   </feature>
-
-   <feature id="org.codehaus.groovy21.feature" url="features/org.codehaus.groovy21.feature_2.9.2.qualifier.jar" version="2.9.2.qualifier">
-      <category name="org.codehaus.groovy.compilers"/>
-   </feature>
-
-   <feature id="org.codehaus.groovy22.feature" url="features/org.codehaus.groovy22.feature_2.9.2.qualifier.jar" version="2.9.2.qualifier">
-      <category name="org.codehaus.groovy.compilers"/>
-   </feature>
-
-   <feature id="org.codehaus.groovy23.feature" url="features/org.codehaus.groovy23.feature_2.9.2.qualifier.jar" version="2.9.2.qualifier">
-      <category name="org.codehaus.groovy.compilers"/>
    </feature>
 
    <feature id="org.codehaus.groovy24.feature" url="features/org.codehaus.groovy24.feature_2.9.2.qualifier.jar" version="2.9.2.qualifier">

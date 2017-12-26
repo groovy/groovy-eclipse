@@ -15,7 +15,6 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -34,7 +33,6 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     @Before
     public void setUp() {
         assumeTrue(isAtLeastJava(JDK6));
-        assumeTrue(isAtLeastGroovy(23));
 
         if (Float.parseFloat(System.getProperty("java.specification.version")) > 8) {
             vmArguments = new String[] {"--add-modules=java.xml.bind"};

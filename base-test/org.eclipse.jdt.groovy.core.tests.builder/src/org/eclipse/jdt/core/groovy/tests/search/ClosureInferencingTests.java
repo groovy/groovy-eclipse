@@ -15,9 +15,6 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
-import static org.junit.Assume.assumeTrue;
-
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.junit.Test;
 import org.osgi.framework.Version;
@@ -351,8 +348,6 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testClosure18() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String contents =
             "class A {\n" +
             "  def m() { }\n" +
@@ -380,8 +375,6 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testClosure19() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String contents =
             "class A {\n" +
             "  def m() { }\n" +
@@ -630,8 +623,6 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test // Closure type inference without @CompileStatic
     public void testCompileStaticClosure0() {
-        assumeTrue(isAtLeastGroovy(22));
-
         String contents =
             "import groovy.beans.Bindable\n" +
             "class A {\n" +
@@ -654,8 +645,6 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
     @Test // GRECLIPSE-1748: Closure type inference with @CompileStatic
     public void testCompileStaticClosure1() {
-        assumeTrue(isAtLeastGroovy(22));
-
         String contents =
             "import groovy.beans.Bindable\n" +
             "import groovy.transform.CompileStatic\n" +

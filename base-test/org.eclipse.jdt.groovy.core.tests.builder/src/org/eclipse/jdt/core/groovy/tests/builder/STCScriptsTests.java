@@ -15,9 +15,7 @@
  */
 package org.eclipse.jdt.core.groovy.tests.builder;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeTrue;
 
 import java.util.Arrays;
 
@@ -26,18 +24,12 @@ import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.groovy.core.Activator;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 /**
  * Tests that the Static Type cheking DSL is working as expected.
  */
 public final class STCScriptsTests extends BuilderTestSuite {
-
-    @Before
-    public void setUp() throws Exception {
-        assumeTrue(isAtLeastGroovy(21));
-    }
 
     @After
     public void tearDown() throws Exception {

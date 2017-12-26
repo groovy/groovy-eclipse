@@ -15,9 +15,7 @@
  */
 package org.eclipse.jdt.core.groovy.tests.builder;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
 
 import java.util.HashMap;
 import java.util.List;
@@ -123,8 +121,6 @@ public final class FullProjectTests extends BuilderTestSuite {
 
     @Test
     public void testReconcilingWithTransforms_singletonallowed() throws Exception {
-        assumeTrue(isAtLeastGroovy(20));
-
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -155,8 +151,6 @@ public final class FullProjectTests extends BuilderTestSuite {
 
     @Test
     public void testReconcilingWithTransforms_singletonallowedspecialchar() throws Exception {
-        assumeTrue(isAtLeastGroovy(20));
-
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -257,8 +251,6 @@ public final class FullProjectTests extends BuilderTestSuite {
 
     @Test
     public void testReconcilingWithTransforms_compileStatic() throws Exception {
-        assumeTrue(isAtLeastGroovy(20));
-
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -285,8 +277,6 @@ public final class FullProjectTests extends BuilderTestSuite {
 
     @Test
     public void testReconcilingWithTransforms_typeChecked() throws Exception {
-        assumeTrue(isAtLeastGroovy(20));
-
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);

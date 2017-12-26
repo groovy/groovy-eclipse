@@ -15,9 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
-import static org.junit.Assume.assumeTrue
-
 import org.junit.Test
 
 final class CodeSelectPropertiesTests extends BrowsingTestSuite {
@@ -38,8 +35,6 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
 
     @Test
     void testGetProperty1a() {
-        assumeTrue(isAtLeastGroovy(20))
-
         String contents = '''\
             @groovy.transform.TypeChecked
             class C {
@@ -55,8 +50,6 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
 
     @Test
     void testGetProperty1b() {
-        assumeTrue(isAtLeastGroovy(20))
-
         String contents = '''\
             @groovy.transform.CompileStatic
             class C {
@@ -86,8 +79,6 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
 
     @Test
     void testSetProperty1a() {
-        assumeTrue(isAtLeastGroovy(20))
-
         String contents = '''\
             @groovy.transform.TypeChecked
             class C {
@@ -103,8 +94,6 @@ final class CodeSelectPropertiesTests extends BrowsingTestSuite {
 
     @Test
     void testSetProperty1b() {
-        assumeTrue(isAtLeastGroovy(20))
-
         String contents = '''\
             @groovy.transform.CompileStatic
             class C {

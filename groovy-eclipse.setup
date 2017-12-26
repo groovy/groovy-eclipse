@@ -90,8 +90,6 @@
     <requirement
         name="org.codehaus.groovy.jdt.patch.feature.group"/>
     <requirement
-        name="org.codehaus.groovy21.feature.feature.group"/>
-    <requirement
         name="org.codehaus.groovy.eclipse.feature.feature.group"/>
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
@@ -137,16 +135,6 @@
           name="org.eclipse.sdk.feature.group"/>
       <requirement
           name="org.eclipse.test.feature.group"/>
-      <requirement
-          name="org.codehaus.groovy18.feature.feature.group"/>
-      <requirement
-          name="org.codehaus.groovy20.feature.feature.group"/>
-      <requirement
-          name="org.codehaus.groovy21.feature.feature.group"/>
-      <requirement
-          name="org.codehaus.groovy22.feature.feature.group"/>
-      <requirement
-          name="org.codehaus.groovy23.feature.feature.group"/>
       <requirement
           name="org.codehaus.groovy24.feature.feature.group"/>
       <requirement
@@ -341,7 +329,7 @@
   <setupTask
       xsi:type="setup:ResourceCreationTask"
       excludedTriggers="STARTUP MANUAL"
-      content="eclipse.preferences.version=1&#xA;groovy.compiler.level=21&#xA;"
+      content="eclipse.preferences.version=1&#xA;groovy.compiler.level=24&#xA;"
       targetURL="${workspace.location|uri}/.metadata/.plugins/org.eclipse.core.runtime/.settings/org.codehaus.groovy.eclipse.compilerResolver.prefs"
       encoding="UTF-8"/>
   <stream name="master"

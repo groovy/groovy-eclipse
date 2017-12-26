@@ -15,9 +15,6 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
-import static org.junit.Assume.assumeTrue;
-
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -100,7 +97,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in Main.groovy (at line 2)\n" +
             "\t@Min(0G)\n" +
-            "\t     ^" + (isAtLeastGroovy(20) ? "^" : "") + "\n" +
+            "\t     ^^\n" +
             "Groovy:Attribute 'value' should have type 'java.lang.Long'; but found type 'java.math.BigInteger' in @Min\n" +
             "----------\n");
     }
@@ -127,7 +124,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in Main.groovy (at line 2)\n" +
             "\t@Min(1.1G)\n" +
-            "\t     ^" + (isAtLeastGroovy(20) ? "^^^" : "") + "\n" +
+            "\t     ^^^^\n" +
             "Groovy:Attribute 'value' should have type 'java.lang.Double'; but found type 'java.math.BigDecimal' in @Min\n" +
             "----------\n");
     }
@@ -241,7 +238,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in AnnotationDoubleTest.groovy (at line 3)\n" +
             "\t@AnnotationDouble(value='test', width=1.0) double value\n" +
-            "\t                                      ^" + (isAtLeastGroovy(20) ? "^^" : "") + "\n" +
+            "\t                                      ^^^\n" +
             "Groovy:Attribute 'width' should have type 'java.lang.Double'; but found type 'java.math.BigDecimal' in @AnnotationDouble\n" +
             "----------\n");
     }
@@ -1004,15 +1001,13 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "2. ERROR in p\\X.groovy (at line 3)\n" +
             "\t@Anno(IDontExist.class)\n" +
-            "\t      ^"+(isAtLeastGroovy(20)?"^^^^^^^^^^^^^^^":"")+"\n" +
+            "\t      ^^^^^^^^^^^^^^^^\n" +
             "Groovy:Only classes and closures can be used for attribute 'value' in @p.Anno\n" +
             "----------\n");
     }
 
     @Test
     public void testAnnotationCollector1() {
-        assumeTrue(isAtLeastGroovy(21));
-
         String[] sources = {
             "Type.groovy",
             "@Alias(includes='id')\n"+
@@ -1038,8 +1033,6 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testAnnotationCollector2() {
-        assumeTrue(isAtLeastGroovy(21));
-
         String[] sources = {
             "Type.groovy",
             "@Alias(includes='id')\n"+

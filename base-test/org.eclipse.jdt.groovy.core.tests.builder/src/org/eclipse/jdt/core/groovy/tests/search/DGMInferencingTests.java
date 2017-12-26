@@ -15,8 +15,6 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
-
 import java.util.Comparator;
 import java.util.List;
 
@@ -565,11 +563,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         String str = "eachLine";
         int start = contents.lastIndexOf(str);
         int end = start + str.length();
-        if (isAtLeastGroovy(20)) {
-            assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.StringGroovyMethods");
-        } else {
-            assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
-        }
+        assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.StringGroovyMethods");
     }
 
     @Test
@@ -578,11 +572,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         String str = "eachLine";
         int start = contents.lastIndexOf(str);
         int end = start + str.length();
-        if (isAtLeastGroovy(20)) {
-            assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.ResourceGroovyMethods");
-        } else {
-            assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
-        }
+        assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.ResourceGroovyMethods");
     }
 
     @Test
@@ -591,11 +581,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         String str = "leftShift";
         int start = contents.lastIndexOf(str);
         int end = start + str.length();
-        if (isAtLeastGroovy(20)) {
-            assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.IOGroovyMethods");
-        } else {
-            assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
-        }
+        assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.IOGroovyMethods");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/372

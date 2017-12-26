@@ -15,9 +15,6 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
-import static org.junit.Assume.assumeTrue;
-
 import org.junit.Test;
 
 public final class StaticInferencingTests extends InferencingTestSuite {
@@ -86,7 +83,7 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     public void testClassReference10() {
         String contents = "String.getClass()"; // same as "(String.class).getClass()"
         int start = contents.indexOf("getClass"), until = start + "getClass".length();
-        assertType(contents, start, until, isAtLeastGroovy(21) ? "java.lang.Class<?>" : "java.lang.Class<? extends java.lang.Object>");
+        assertType(contents, start, until, "java.lang.Class<?>");
     }
 
     //
@@ -292,8 +289,6 @@ public final class StaticInferencingTests extends InferencingTestSuite {
 
     @Test // GRECLIPSE-1544
     public void testSTCAndClassInstance() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String contents = "package pkg0\n" +
             "@groovy.transform.TypeChecked\n" +
             "public class BugClass {\n" +

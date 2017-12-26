@@ -15,9 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
-import static org.junit.Assume.assumeTrue
-
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.contentassist.ICompletionProposal
@@ -76,7 +73,6 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
 
     @Test
     void testContructorCompletionWithinEnumDeclaration1() {
-        assumeTrue(isAtLeastGroovy(21))
         String contents = 'class YYY { YYY() { } }\nenum F {\n' +
             '	Aaa() {\n@Override int foo() {\nnew YY\n}\n}\nint foo() {\n	}\n}'
         String expected = 'class YYY { YYY() { } }\nenum F {\n' +

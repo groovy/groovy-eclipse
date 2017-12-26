@@ -15,9 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
-import static org.junit.Assume.assumeTrue
-
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.ui.PreferenceConstants
@@ -410,7 +407,6 @@ final class TypeCompletionTests2 extends CompletionTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/177
     void testTypeCompletionForClassAnnotation() {
-        assumeTrue(isAtLeastGroovy(20))
         IPreferenceStore prefs = JavaPlugin.getDefault().getPreferenceStore()
         String originalOrder = prefs.getString(PreferenceConstants.ORGIMPORTS_IMPORTORDER)
         prefs.setValue(PreferenceConstants.ORGIMPORTS_IMPORTORDER, '\\#;java;javax;groovy;groovyx;;')

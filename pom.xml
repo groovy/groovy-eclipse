@@ -31,10 +31,10 @@
 			mostly test related, have groovy code that can't be compiled with standard
 			tycho jdt compiler. These two properties define what compiler will be used
 			for those bundles. -->
-		<groovy-eclipse-compiler-version>2.9.2-03</groovy-eclipse-compiler-version>
+		<groovy-eclipse-compiler-version>2.9.2-04</groovy-eclipse-compiler-version>
 
 		<!-- This should be the oldest version of groovy we support. -->
-		<groovy-eclipse-batch-version>2.1.9-01</groovy-eclipse-batch-version>
+		<groovy-eclipse-batch-version>2.4.13-02</groovy-eclipse-batch-version>
 
 		<!-- Properties that define where stuff gets uploaded and how jar is named etc. -->
 		<dist.bucket>dist.springsource.org</dist.bucket>
@@ -57,11 +57,6 @@
 	</properties>
 
 	<modules>
-		<module>base/org.codehaus.groovy18</module>
-		<module>base/org.codehaus.groovy20</module>
-		<module>base/org.codehaus.groovy21</module>
-		<module>base/org.codehaus.groovy22</module>
-		<module>base/org.codehaus.groovy23</module>
 		<module>base/org.codehaus.groovy24</module>
 		<module>base/org.codehaus.groovy25</module>
 
@@ -79,11 +74,6 @@
 		<module>ide/org.codehaus.groovy.eclipse.refactoring</module>
 		<module>ide/org.codehaus.groovy.eclipse.ui</module>
 
-		<module>ide/Feature-org.codehaus.groovy18.feature</module>
-		<module>ide/Feature-org.codehaus.groovy20.feature</module>
-		<module>ide/Feature-org.codehaus.groovy21.feature</module>
-		<module>ide/Feature-org.codehaus.groovy22.feature</module>
-		<module>ide/Feature-org.codehaus.groovy23.feature</module>
 		<module>ide/Feature-org.codehaus.groovy24.feature</module>
 		<module>ide/Feature-org.codehaus.groovy25.feature</module>
 		<module>ide/Feature-org.codehaus.groovy.compilerless.feature</module>
@@ -104,7 +94,6 @@
 		<module>ide-test/org.codehaus.groovy.eclipse.tests</module>
 
 		<module>ide-test/org.codehaus.groovy.alltests</module>
-		<module>ide-test/Feature-org.codehaus.groovy.alltests.feature</module>
 
 		<!-- m2e integration -->
 		<module>extras/Feature-org.codehaus.groovy.m2eclipse</module>

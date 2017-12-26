@@ -15,9 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
 import static org.junit.Assert.fail
-import static org.junit.Assume.assumeTrue
 
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
@@ -289,8 +287,6 @@ final class MethodCompletionTests extends CompletionTestSuite {
 
     @Test
     void testStatic2() {
-        assumeTrue(isAtLeastGroovy(20))
-
         String contents = '''\
             @groovy.transform.CompileStatic
             class A {
@@ -320,8 +316,6 @@ final class MethodCompletionTests extends CompletionTestSuite {
 
     @Test
     void testClass2() {
-        assumeTrue(isAtLeastGroovy(20))
-
         String contents = '''\
             @groovy.transform.CompileStatic
             class A {

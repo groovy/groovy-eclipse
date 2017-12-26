@@ -15,9 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
-import static org.junit.Assume.assumeTrue
-
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.IASTFragment
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.Region
 import org.codehaus.groovy.eclipse.codebrowsing.selection.FindSurroundingNode
@@ -326,8 +323,6 @@ final class FindSurroundingNodeTests extends BrowsingTestSuite {
 
     @Test
     void testFindSurrounding13() {
-        assumeTrue(isAtLeastGroovy(22))
-
         String contents = '''\
             enum E {
               X {

@@ -15,7 +15,6 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
@@ -913,8 +912,6 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testGreclipse1563() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String[] sources = {
             "ab/Inter.java",
             "package ab;\n"+
@@ -940,8 +937,6 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testGreclipse1563_2() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String[] sources = {
             "ab/Clazz.java",
             "package ab;\n"+
@@ -1340,8 +1335,6 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
      */
     @Test
     public void testExtendingGenerics_GroovyExtendsJava12() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String[] sources = {
             "Template.java",
             "public interface Template<S> {\n" +
@@ -1407,8 +1400,6 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
      */
     @Test
     public void testExtendingGenerics_GroovyExtendsJava14() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String[] sources = {
             "Main.groovy",
             "@groovy.transform.CompileStatic class Main {\n" +
@@ -1443,8 +1434,6 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/221
     public void testExtendingGenerics_GroovyExtendsJava15() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String[] sources = {
             "AttributeConverter.java",
             "interface AttributeConverter<X,Y> {\n" +
