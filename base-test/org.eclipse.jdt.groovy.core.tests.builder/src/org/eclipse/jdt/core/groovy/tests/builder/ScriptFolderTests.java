@@ -21,7 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
+import org.codehaus.groovy.runtime.ResourceGroovyMethods;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
@@ -499,11 +499,11 @@ public final class ScriptFolderTests extends BuilderTestSuite {
      * Copy file from src (path to the original file) to dest (path to the destination file).
      */
     public static void copy(File src, File dest) throws Exception {
-        String text = DefaultGroovyMethods.getText(src);
+        String text = ResourceGroovyMethods.getText(src);
         if (convertToIndependantLineDelimiter(src)) {
             text = convertToIndependantLineDelimiter(text);
         }
-        DefaultGroovyMethods.write(dest, text);
+        ResourceGroovyMethods.write(dest, text);
     }
 
     private static boolean convertToIndependantLineDelimiter(File file) {

@@ -283,7 +283,7 @@ public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
         }
 
         // get ancestors to type root
-        List<IJavaElement> srcAncestors = new ArrayList<IJavaElement>(3);
+        List<IJavaElement> srcAncestors = new ArrayList<>(3);
         IJavaElement srcCandidate = source;
         while (srcCandidate != null && srcCandidate != this) {
             srcAncestors.add(srcCandidate);

@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.refactoring.test.internal;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.net.URL;
@@ -436,16 +435,10 @@ public class JavaProjectHelper {
      * @throws CoreException
      */
     public static IPackageFragmentRoot addLibraryWithImport(IJavaProject jproject, IPath jarPath, IPath sourceAttachPath, IPath sourceAttachRoot) throws Exception {
-        IProject project= jproject.getProject();
-        IFile newFile= project.getFile(jarPath.lastSegment());
-        InputStream inputStream= null;
-        try {
-            inputStream= new FileInputStream(jarPath.toFile());
+        IProject project = jproject.getProject();
+        IFile newFile = project.getFile(jarPath.lastSegment());
+        try (InputStream inputStream = new FileInputStream(jarPath.toFile())) {
             newFile.create(inputStream, true, null);
-        } finally {
-            if (inputStream != null) {
-                try { inputStream.close(); } catch (IOException e) { }
-            }
         }
         return addLibrary(jproject, newFile.getFullPath(), sourceAttachPath, sourceAttachRoot);
     }
@@ -610,7 +603,7 @@ public class JavaProjectHelper {
     public static void removeFromClasspath(IJavaProject jproject, IPath path) throws Exception {
         IClasspathEntry[] oldEntries= jproject.getRawClasspath();
         int nEntries= oldEntries.length;
-        List<IClasspathEntry> list= new ArrayList<IClasspathEntry>(nEntries);
+        List<IClasspathEntry> list= new ArrayList<>(nEntries);
         for (int i= 0 ; i < nEntries ; i++) {
             IClasspathEntry curr= oldEntries[i];
             if (!path.equals(curr.getPath())) {

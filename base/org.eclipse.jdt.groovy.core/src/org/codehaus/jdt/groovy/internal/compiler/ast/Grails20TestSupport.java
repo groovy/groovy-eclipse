@@ -95,7 +95,7 @@ public class Grails20TestSupport {
         }
 
         private Set<ThreadLocal<?>> currentThreadLocals() throws Exception {
-            Set<ThreadLocal<?>> initialSet = new HashSet<ThreadLocal<?>>();
+            Set<ThreadLocal<?>> initialSet = new HashSet<>();
 
             Object threadLocalMap = getField(Thread.currentThread(), "threadLocals");
             if (threadLocalMap != null) {

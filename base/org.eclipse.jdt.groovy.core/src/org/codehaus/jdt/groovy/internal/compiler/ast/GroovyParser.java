@@ -93,8 +93,8 @@ public class GroovyParser {
      * instances associated with the project.
      */
 
-    private static Map<String, PathLoaderPair> projectToLoaderCache = new ConcurrentHashMap<String, PathLoaderPair>();
-    private static Map<String, ScriptFolderSelector> scriptFolderSelectorCache = new ConcurrentHashMap<String, ScriptFolderSelector>();
+    private static Map<String, PathLoaderPair> projectToLoaderCache = new ConcurrentHashMap<>();
+    private static Map<String, ScriptFolderSelector> scriptFolderSelectorCache = new ConcurrentHashMap<>();
 
     static class PathLoaderPair {
         String classpath;
@@ -295,7 +295,7 @@ public class GroovyParser {
         if (path == null) {
             return createLoader(null, pcl);
         }
-        List<URL> urls = new ArrayList<URL>();
+        List<URL> urls = new ArrayList<>();
         if (path.indexOf(File.pathSeparator) != -1) {
             int pos = 0;
             while (pos != -1) {

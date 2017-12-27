@@ -73,7 +73,7 @@ public class OutlineExtender2 extends OutlineExtender1 {
     public static class Finder extends ASTNodeFinder {
 
         private ModuleNode moduleNode;
-        private Stack<TType> methodStack = new Stack<TType>();
+        private Stack<TType> methodStack = new Stack<>();
 
         public Finder(ModuleNode moduleNode, TType rootType) {
             super(new Region(moduleNode));

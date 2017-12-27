@@ -42,7 +42,7 @@ public class ReconcilerUtils {
     private ReconcilerUtils() {}
 
     public static class SimpleWorkingCopyOwner extends WorkingCopyOwner {
-        public final Set<IProblem> problems = new LinkedHashSet<IProblem>();
+        public final Set<IProblem> problems = new LinkedHashSet<>();
         @Override
         public IProblemRequestor getProblemRequestor(ICompilationUnit workingCopy) {
             return new IProblemRequestor() {
@@ -61,7 +61,7 @@ public class ReconcilerUtils {
     }
 
     public static class ReconcileResults {
-        public final Map<ICompilationUnit, Long> reconcileTimes = new LinkedHashMap<ICompilationUnit, Long>();
+        public final Map<ICompilationUnit, Long> reconcileTimes = new LinkedHashMap<>();
 
         public long getReconcileTime(ICompilationUnit unit) {
             return reconcileTimes.get(unit);
@@ -119,7 +119,7 @@ public class ReconcilerUtils {
 
     private static List<ICompilationUnit> findAllUnits(IJavaProject project, boolean onlyGroovy) throws JavaModelException {
         IPackageFragmentRoot[] roots = project.getAllPackageFragmentRoots();
-        List<ICompilationUnit> units = new ArrayList<ICompilationUnit>();
+        List<ICompilationUnit> units = new ArrayList<>();
         for (IPackageFragmentRoot root : roots) {
             if (!root.isReadOnly()) {
                 for (IJavaElement child : root.getChildren()) {

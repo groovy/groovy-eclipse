@@ -61,7 +61,7 @@ public class GenericsMapper {
             GenericsType[] ugts = GroovyUtils.getGenericsTypes(uCandidate);
 
             int n = Math.min(rgts.length, ugts.length);
-            Map<String, ClassNode> resolved = (n <= 0) ? Collections.EMPTY_MAP : new TreeMap<String, ClassNode>();
+            Map<String, ClassNode> resolved = (n <= 0) ? Collections.EMPTY_MAP : new TreeMap<>();
             for (int i = 0; i < n; i += 1) {
                 // now try to resolve the parameter in the context of the
                 // most recently visited type. If it doesn't exist, then
@@ -90,7 +90,7 @@ public class GenericsMapper {
             Map<String, ClassNode> resolved;
             // add method generics to the end of the chain
             if (mapper.allGenerics.isEmpty() || (resolved = mapper.allGenerics.removeLast()).isEmpty()) {
-                resolved = new TreeMap<String, ClassNode>();
+                resolved = new TreeMap<>();
             }
             mapper.allGenerics.add(resolved);
 
@@ -185,7 +185,7 @@ public class GenericsMapper {
     //--------------------------------------------------------------------------
 
     /** Keeps track of all type parameterization up the type hierarchy. */
-    private final LinkedList<Map<String, ClassNode>> allGenerics = new LinkedList<Map<String, ClassNode>>();
+    private final LinkedList<Map<String, ClassNode>> allGenerics = new LinkedList<>();
 
     protected boolean hasGenerics() {
         return !allGenerics.isEmpty() && !allGenerics.getLast().isEmpty();
@@ -208,7 +208,7 @@ public class GenericsMapper {
     }
 
     protected static Iterator<ClassNode> getTypeHierarchy(ClassNode type, boolean useResolved) {
-        LinkedHashSet<ClassNode> hierarchy = new LinkedHashSet<ClassNode>();
+        LinkedHashSet<ClassNode> hierarchy = new LinkedHashSet<>();
         VariableScope.createTypeHierarchy(type, hierarchy, useResolved);
         hierarchy.remove(VariableScope.GROOVY_OBJECT_CLASS_NODE);
         hierarchy.remove(VariableScope.OBJECT_CLASS_NODE);

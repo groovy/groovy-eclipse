@@ -72,7 +72,7 @@ public final class ASTNodeSourceLocationsTests extends BuilderTestSuite {
     }
 
     private static abstract class AbstractSLocTester extends ClassCodeVisitorSupport {
-        List<ASTNode> allCollectedNodes = new ArrayList<ASTNode>();
+        List<ASTNode> allCollectedNodes = new ArrayList<>();
 
         void doTest(ModuleNode module, StartAndEnd...sae) {
             for (ClassNode c : (Iterable<ClassNode>) module.getClasses()) {
@@ -84,7 +84,7 @@ public final class ASTNodeSourceLocationsTests extends BuilderTestSuite {
         void assertStartAndEnds(StartAndEnd...sae) {
             assertEquals("Wrong number expressions found", sae.length, allCollectedNodes.size());
             ASTNode[] bexprs = allCollectedNodes.toArray(new ASTNode[0]);
-            List<Integer> problemIndices = new ArrayList<Integer>();
+            List<Integer> problemIndices = new ArrayList<>();
             for (int i = 0; i < bexprs.length; i++) {
                 if (! sae[i].isOK(bexprs[i])) {
                     problemIndices.add(i);

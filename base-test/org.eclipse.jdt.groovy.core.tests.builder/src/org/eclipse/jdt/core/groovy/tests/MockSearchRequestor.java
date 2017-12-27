@@ -28,7 +28,7 @@ import org.eclipse.jdt.core.search.SearchRequestor;
 
 public class MockSearchRequestor extends SearchRequestor {
 
-    private final List<SearchMatch> matches = new ArrayList<SearchMatch>();
+    private final List<SearchMatch> matches = new ArrayList<>();
 
     @Override
     public void acceptSearchMatch(SearchMatch match) throws CoreException {

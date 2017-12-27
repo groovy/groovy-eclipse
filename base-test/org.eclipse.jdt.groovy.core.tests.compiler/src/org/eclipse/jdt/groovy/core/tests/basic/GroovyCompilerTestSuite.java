@@ -73,7 +73,7 @@ public abstract class GroovyCompilerTestSuite {
     @Parameterized.Parameters
     public static Iterable<Object[]> params() {
         long javaSpec = CompilerOptions.versionToJdkLevel(System.getProperty("java.specification.version"));
-        List<Object[]> params = new ArrayList<Object[]>();
+        List<Object[]> params = new ArrayList<>();
         for (long jdk : JDKs) {
             if (jdk <= javaSpec) {
                 params.add(new Object[] {jdk});

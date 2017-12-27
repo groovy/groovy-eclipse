@@ -32,4 +32,4 @@ Require-Bundle: org.codehaus.groovy;bundle-version="1.8.9",
  org.eclipse.ui.ide
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8

@@ -565,7 +565,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             // getX methods
             // make it behave like groovy - no property nodes unless it is groovy source
             if (groovyTypeDecl != null) {
-                Set<String> existing = new HashSet<String>();
+                Set<String> existing = new HashSet<>();
                 for (MethodNode methodNode : getMethods()) {
                     if (isGetter(methodNode)) {
                         // STS-2628 be careful not to double-add properties if there is a getter and an isser variant

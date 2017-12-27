@@ -40,7 +40,7 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
     private static final String BEG_MARK_END = "!*/" ;
     private static final String END_MARK = "/*!*/" ;
 
-    private static final Map<String, String> DEFAULT_ALIASES = new HashMap<String, String>();
+    private static final Map<String, String> DEFAULT_ALIASES = new HashMap<>();
     static {
        DEFAULT_ALIASES.put("B", "java.lang.Byte");
        DEFAULT_ALIASES.put("C", "java.lang.Character");
@@ -111,14 +111,14 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
      * So, the length of extraAliases must be even.
      */
     public InferencerWorkload(String workloadDefinition, String ... extraAliases) {
-        aliases = new HashMap<String, String>(DEFAULT_ALIASES);
+        aliases = new HashMap<>(DEFAULT_ALIASES);
         for (int i = 0; i < extraAliases.length; i++) {
             defAlias(extraAliases[i++], extraAliases[i]);
         }
 
         aliasesLocked = true; // Should allow changing aliases anymore from here onward.
         StringBuilder stripped = new StringBuilder(); // The contents of the file minus the tags.
-        tasks = new ArrayList<InferencerWorkload.InferencerTask>();
+        tasks = new ArrayList<>();
         int readPos = 0; //Boundary between processed and unprocessed input in workloadDefinition
         while (readPos >= 0 && readPos < workloadDefinition.length() ) {
             int headStart = workloadDefinition.indexOf(BEG_MARK_START, readPos);

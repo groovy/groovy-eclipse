@@ -85,7 +85,7 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
     @Override
     protected ImportBinding[] getDefaultImports() {
         if (defaultGroovyImports != null) return defaultGroovyImports;
-        List<ImportBinding> importBindings = new ArrayList<ImportBinding>();
+        List<ImportBinding> importBindings = new ArrayList<>();
         Collections.addAll(importBindings, super.getDefaultImports()); // picks up 'java.lang'
 
         // augment with the Groovy on-demand imports

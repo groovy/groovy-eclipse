@@ -239,8 +239,8 @@ public class GroovyLanguageSupport implements LanguageSupport {
     public void filterNonSourceMembers(BinaryType binaryType) {
         try {
             IJavaElement[] childrenArr = binaryType.getChildren();
-            List<IJavaElement> children = new ArrayList<IJavaElement>(Arrays.asList(childrenArr));
-            List<JavaElement> removedChildren = new LinkedList<JavaElement>();
+            List<IJavaElement> children = new ArrayList<>(Arrays.asList(childrenArr));
+            List<JavaElement> removedChildren = new LinkedList<>();
             for (Iterator<IJavaElement> childIter = children.iterator(); childIter.hasNext();) {
                 IJavaElement child = childIter.next();
                 if (child instanceof BinaryMember) {

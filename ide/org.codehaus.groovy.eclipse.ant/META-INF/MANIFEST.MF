@@ -7,4 +7,4 @@ Bundle-Version: 2.9.2.qualifier
 Require-Bundle: org.apache.ant,
  org.eclipse.ant.core,
  org.eclipse.jdt.core;bundle-version="3.6.0"
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8

@@ -38,7 +38,7 @@ public final class LocationSupportTests {
 
     @Test
     public void testLocationSupport() throws Exception {
-        List<StringBuffer> sbuffers = new LinkedList<StringBuffer>();
+        List<StringBuffer> sbuffers = new LinkedList<>();
         sbuffers.add(new StringBuffer("123\n"));
         sbuffers.add(new StringBuffer("567\n"));
         sbuffers.add(new StringBuffer("90\n"));

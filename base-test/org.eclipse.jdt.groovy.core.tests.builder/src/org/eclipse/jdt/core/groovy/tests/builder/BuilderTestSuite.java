@@ -24,7 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.codehaus.groovy.activator.GroovyActivator;
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
+import org.codehaus.groovy.runtime.StringGroovyMethods;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper;
 import org.eclipse.core.resources.IFile;
@@ -139,7 +139,7 @@ public abstract class BuilderTestSuite {
     }
 
     protected void executeClass(IPath projectPath, String className, String expectingOutput, String expectedError) {
-        List<String> classpath = new ArrayList<String>();
+        List<String> classpath = new ArrayList<>();
         IPath workspacePath = env.getWorkspaceRootPath();
         classpath.add(workspacePath.append(env.getOutputLocation(projectPath)).toOSString());
         IClasspathEntry[] cp = env.getClasspath(projectPath);
@@ -158,7 +158,7 @@ public abstract class BuilderTestSuite {
         TestVerifier verifier = new TestVerifier(false);
         verifier.execute(className, classpath.toArray(new String[classpath.size()]));
 
-        String actualError = DefaultGroovyMethods.normalize(verifier.getExecutionError());
+        String actualError = StringGroovyMethods.normalize((CharSequence) verifier.getExecutionError());
         if (expectedError == null && actualError.length() != 0) {
             if (actualError.trim().endsWith(
                 "WARNING: Module [groovy-all] - Unable to load extension class [org.codehaus.groovy.runtime.NioGroovyMethods]")) {
@@ -179,7 +179,7 @@ public abstract class BuilderTestSuite {
             System.out.println("OUTPUT\n");
             System.out.println(org.eclipse.jdt.core.tests.util.Util.displayString(actualOutput));
         }
-        actualOutput = DefaultGroovyMethods.normalize(actualOutput);
+        actualOutput = StringGroovyMethods.normalize((CharSequence) actualOutput);
         Assert.assertTrue("unexpected output.\nExpected:\n" + expectingOutput + "\nActual:\n" + actualOutput, actualOutput.indexOf(expectingOutput) != -1);
     }
 
@@ -433,16 +433,11 @@ public abstract class BuilderTestSuite {
 
         public String readTextFile(IPath path) {
             IFile file = getWorkspace().getRoot().getFile(path);
-            try {
-                BufferedReader br = new BufferedReader(new InputStreamReader(file.getContents(), file.getCharset()));
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getContents(), file.getCharset()))) {
                 StringBuilder sb = new StringBuilder(300);
-                try {
-                    int read = 0;
-                    while ((read = br.read()) != -1)
-                        sb.append((char) read);
-                } finally {
-                    br.close();
-                }
+                int read = 0;
+                while ((read = br.read()) != -1)
+                    sb.append((char) read);
                 return sb.toString();
             } catch (Exception ex) {
                 handle(ex);

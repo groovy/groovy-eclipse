@@ -306,7 +306,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
                 if (computeProblems || depth.intValue() < 2) {
                     if (problems == null) {
                         // report problems to the problem requestor
-                        problems = new HashMap<String, CategorizedProblem[]>();
+                        problems = new HashMap<>();
                         compilationUnitDeclaration =
                             (GroovyCompilationUnitDeclaration) CompilationUnitProblemFinder.process(
                                 source,

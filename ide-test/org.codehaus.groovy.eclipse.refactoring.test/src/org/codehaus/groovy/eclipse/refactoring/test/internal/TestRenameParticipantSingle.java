@@ -32,7 +32,7 @@ import org.junit.Assert;
 
 public final class TestRenameParticipantSingle extends RenameParticipant {
 
-    private static List<RenameParticipant> fgInstances= new ArrayList<RenameParticipant>();
+    private static List<RenameParticipant> fgInstances= new ArrayList<>();
 
     private Object fElement;
     private String fHandle;
@@ -84,7 +84,7 @@ public final class TestRenameParticipantSingle extends RenameParticipant {
     }
 
     public static void reset() {
-        fgInstances= new ArrayList<RenameParticipant>();
+        fgInstances= new ArrayList<>();
     }
 
     private static TestRenameParticipantSingle getInstance(int i) {

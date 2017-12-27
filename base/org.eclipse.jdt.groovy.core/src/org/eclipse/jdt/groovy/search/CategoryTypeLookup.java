@@ -48,7 +48,7 @@ public class CategoryTypeLookup implements ITypeLookup {
             ClassNode normalizedType = GroovyUtils.getWrapperTypeIfPrimitive(expectedType);
 
             //
-            List<MethodNode> candidates = new ArrayList<MethodNode>();
+            List<MethodNode> candidates = new ArrayList<>();
 
             for (ClassNode category : scope.getCategoryNames()) {
                 for (MethodNode method : category.getMethods(simpleName)) {
@@ -78,7 +78,7 @@ public class CategoryTypeLookup implements ITypeLookup {
 
             if (!candidates.isEmpty()) {
                 int args = 1 + scope.getMethodCallNumberOfArguments();
-                List<ClassNode> argumentTypes = new ArrayList<ClassNode>(args);
+                List<ClassNode> argumentTypes = new ArrayList<>(args);
                 argumentTypes.add(normalizedType); // lhs of dot or delegate type
                 if (args > 1) argumentTypes.addAll(scope.getMethodCallArgumentTypes());
 

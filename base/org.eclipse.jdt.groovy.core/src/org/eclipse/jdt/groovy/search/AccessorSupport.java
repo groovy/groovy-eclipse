@@ -86,7 +86,7 @@ public enum AccessorSupport {
                 }
                 // abstract types do not track undeclared super interface methods
                 if (declaringType.isInterface() || declaringType.isAbstract()) {
-                    LinkedHashSet<ClassNode> faces = new LinkedHashSet<ClassNode>();
+                    LinkedHashSet<ClassNode> faces = new LinkedHashSet<>();
                     VariableScope.findAllInterfaces(declaringType, faces, true);
                     faces.remove(declaringType); // checked already
                     for (ClassNode face : faces) {

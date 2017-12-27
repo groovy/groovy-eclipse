@@ -79,7 +79,7 @@ public final class FullProjectTests extends BuilderTestSuite {
     }
 
     private static void setTransformsOption(IJavaProject javaproject, String transformsSpec) {
-        Map<String, String> m = new HashMap<String, String>();
+        Map<String, String> m = new HashMap<>();
         m.put(CompilerOptions.OPTIONG_GroovyTransformsToRunOnReconcile, transformsSpec);
         javaproject.setOptions(m);
     }

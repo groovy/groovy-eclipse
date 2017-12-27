@@ -354,7 +354,7 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
     }
 
     public static class UnknownTypeRequestor implements ITypeRequestor {
-        private List<ASTNode> unknownNodes = new ArrayList<ASTNode>();
+        private List<ASTNode> unknownNodes = new ArrayList<>();
 
         public List<ASTNode> getUnknownNodes() {
             return unknownNodes;
@@ -377,7 +377,7 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
         public TypeLookupResult result;
         public ASTNode node;
 
-        public final List<ASTNode> unknowns = new ArrayList<ASTNode>();
+        public final List<ASTNode> unknowns = new ArrayList<>();
 
         public SearchRequestor(int start, int end) {
             this.start = start;

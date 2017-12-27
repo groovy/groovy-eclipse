@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -111,7 +111,7 @@ public class GroovyNature implements IProjectNature {
      */
     public static List<IProject> getAllAccessibleGroovyProjects() {
         IProject[] projects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
-        List<IProject> groovyProjects = new ArrayList<IProject>();
+        List<IProject> groovyProjects = new ArrayList<>();
         if (projects != null) {
             for (IProject project : projects) {
                 if (project.isAccessible() && hasGroovyNature(project)) {

@@ -62,10 +62,10 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
     protected final String[] parameterTypeNames;
 
     protected final boolean findDeclarations, findReferences;
-    protected final Set<Position> acceptedPositions = new HashSet<Position>();
+    protected final Set<Position> acceptedPositions = new HashSet<>();
     protected static final int MAX_PARAMS = 10; // indices available in each boolean array of:
-    protected final Map<ClassNode, boolean[]> cachedParameterCounts = new HashMap<ClassNode, boolean[]>();
-    protected final Map<ClassNode, Boolean> cachedDeclaringNameMatches = new HashMap<ClassNode, Boolean>();
+    protected final Map<ClassNode, boolean[]> cachedParameterCounts = new HashMap<>();
+    protected final Map<ClassNode, Boolean> cachedDeclaringNameMatches = new HashMap<>();
 
     public MethodReferenceSearchRequestor(MethodPattern pattern, SearchRequestor requestor, SearchParticipant participant) {
         this.requestor = requestor;
@@ -79,7 +79,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 
         try { // search super types for original declaration of the method -- TODO: Is there a service/utility to perform this search? MethodOverrideTester.findOverriddenMethod(IMethod, boolean)?
             if (pattern.focus instanceof IMethod && supportsOverride((IMethod) pattern.focus)) {
-                LinkedList<IMethod> methods = new LinkedList<IMethod>();
+                LinkedList<IMethod> methods = new LinkedList<>();
                 if (declaringType == null) declaringType = ((IMethod) pattern.focus).getDeclaringType();
                 for (IType superType : declaringType.newSupertypeHierarchy(null).getAllSupertypes(declaringType)) {
                     IMethod superMeth = superType.getMethod(methodName, parameterTypeSignatures);

@@ -26,4 +26,4 @@ Require-Bundle: org.codehaus.groovy;bundle-version="1.8.9",
  org.eclipse.ui.workbench.texteditor
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8

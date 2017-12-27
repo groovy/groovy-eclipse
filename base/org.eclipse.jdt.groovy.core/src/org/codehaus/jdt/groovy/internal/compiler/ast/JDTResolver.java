@@ -65,7 +65,7 @@ public class JDTResolver extends ResolveVisitor {
     /** Arbitrary selection of common types. */
     private static final Map<String, ClassNode> COMMON_TYPES;
     static {
-        Map<String, ClassNode> commonTypes = new HashMap<String, ClassNode>();
+        Map<String, ClassNode> commonTypes = new HashMap<>();
 
         commonTypes.put("boolean", ClassHelper.boolean_TYPE);
         commonTypes.put("byte", ClassHelper.byte_TYPE);
@@ -128,22 +128,22 @@ public class JDTResolver extends ResolveVisitor {
     protected GroovyCompilationUnitScope activeScope = null;
 
     // map of scopes in which resolution can happen
-    private Map<ClassNode, GroovyTypeDeclaration> scopes = new HashMap<ClassNode, GroovyTypeDeclaration>();
+    private Map<ClassNode, GroovyTypeDeclaration> scopes = new HashMap<>();
 
     // By recording what is currently in progress in terms of creation, we avoid recursive problems (like Enum<E extends Enum<E>>)
-    private Map<TypeBinding, JDTClassNode> inProgress = new IdentityHashMap<TypeBinding, JDTClassNode>();
+    private Map<TypeBinding, JDTClassNode> inProgress = new IdentityHashMap<>();
 
     // Cache from bindings to JDTClassNodes to avoid unnecessary JDTClassNode creation
-    private Map<TypeBinding, JDTClassNode> nodeCache = new IdentityHashMap<TypeBinding, JDTClassNode>();
+    private Map<TypeBinding, JDTClassNode> nodeCache = new IdentityHashMap<>();
 
-    private Set<ClassNode> resolvedClassNodes = new HashSet<ClassNode>();
+    private Set<ClassNode> resolvedClassNodes = new HashSet<>();
 
     /**
      * Records the type names that aren't resolvable for the current resolution
      * (cleared in finishedResolution()). This means we won't constantly attempt
      * to lookup something that is not found through the same routes repeatedly.
      */
-    private Set<String> unresolvables = new HashSet<String>();
+    private Set<String> unresolvables = new HashSet<>();
 
     //--------------------------------------------------------------------------
 
@@ -151,7 +151,7 @@ public class JDTResolver extends ResolveVisitor {
         super(groovyCompilationUnit);
         if (recordInstances) {
             if (instances == null) {
-                instances = new ArrayList<JDTResolver>();
+                instances = new ArrayList<>();
             }
             instances.add(this);
         }

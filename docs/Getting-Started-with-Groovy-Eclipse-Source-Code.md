@@ -35,7 +35,7 @@ The installer will now ask you to make a few choices:
 * Where do you want the workspace?
 * How do you access the Groovy-Eclipse git repository on github? **Unless you have write access to the Groovy-Eclipse repository on github, select 'HTTPS (Read-only, Anonymous)' from the dropdown.** 
 * Where do you want to clone the git repository?
-* Which target platform do you want? Use Neon or Oxygen. Older targets are supported, but I don't see a good reason why you'd want that.
+* Which target platform do you want? Use Oxygen or Photon.
 
 Select *Next* when you have set all values to your likings.
 

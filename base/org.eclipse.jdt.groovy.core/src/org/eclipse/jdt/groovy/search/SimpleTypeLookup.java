@@ -274,7 +274,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             // try to find best match if there is more than one constructor to choose from
             List<ConstructorNode> declaredConstructors = declaringType.getDeclaredConstructors();
             if (constructorCall.getArguments() instanceof ArgumentListExpression && declaredConstructors.size() > 1) {
-                List<ConstructorNode> looseMatches = new ArrayList<ConstructorNode>();
+                List<ConstructorNode> looseMatches = new ArrayList<>();
                 List<ClassNode> callTypes = scope.getMethodCallArgumentTypes();
                 for (ConstructorNode ctor : declaredConstructors) {
                     if (callTypes.size() == ctor.getParameters().length) {
@@ -297,11 +297,11 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             String methodName = ((StaticMethodCallExpression) node).getMethod();
             ClassNode ownerType = ((StaticMethodCallExpression) node).getOwnerType();
 
-            List<MethodNode> candidates = new LinkedList<MethodNode>();
+            List<MethodNode> candidates = new LinkedList<>();
             if (!ownerType.isInterface()) {
                 candidates.addAll(ownerType.getMethods(methodName));
             } else {
-                LinkedHashSet<ClassNode> faces = new LinkedHashSet<ClassNode>();
+                LinkedHashSet<ClassNode> faces = new LinkedHashSet<>();
                 VariableScope.findAllInterfaces(ownerType, faces, false);
                 for (ClassNode face : faces) {
                     candidates.addAll(face.getMethods(methodName));
@@ -523,7 +523,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             return accessor;
         }
 
-        LinkedHashSet<ClassNode> typeHierarchy = new LinkedHashSet<ClassNode>();
+        LinkedHashSet<ClassNode> typeHierarchy = new LinkedHashSet<>();
         VariableScope.createTypeHierarchy(declaringType, typeHierarchy, true);
 
         // look for property
@@ -593,7 +593,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
 
         // abstract types may not return all methods from getMethods(String)
-        LinkedHashSet<ClassNode> types = new LinkedHashSet<ClassNode>();
+        LinkedHashSet<ClassNode> types = new LinkedHashSet<>();
         if (!declaringType.isInterface()) types.add(declaringType);
         VariableScope.findAllInterfaces(declaringType, types, true);
         types.add(VariableScope.OBJECT_CLASS_NODE); // implicit super type

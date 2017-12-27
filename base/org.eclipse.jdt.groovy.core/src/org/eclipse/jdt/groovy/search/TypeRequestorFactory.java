@@ -64,7 +64,7 @@ public class TypeRequestorFactory {
             return new LocalVariableReferenceRequestor(localVar.getElementName(), localVar.getParent(), requestor, possibleMatch.document.getParticipant(), start);
         } else if (pattern instanceof OrPattern) {
             SearchPattern[] patterns = (SearchPattern[]) ReflectionUtils.getPrivateField(OrPattern.class, "patterns", pattern);
-            List<ITypeRequestor> requestors = new ArrayList<ITypeRequestor>(patterns.length);
+            List<ITypeRequestor> requestors = new ArrayList<>(patterns.length);
             for (SearchPattern orPattern : patterns) {
                 if (orPattern != null) {
                     ITypeRequestor maybeRequestor = createRequestor(possibleMatch, orPattern, requestor);

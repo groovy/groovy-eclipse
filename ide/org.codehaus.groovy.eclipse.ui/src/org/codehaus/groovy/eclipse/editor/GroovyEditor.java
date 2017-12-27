@@ -1381,7 +1381,7 @@ public class GroovyEditor extends CompilationUnitEditor {
         java.lang.reflect.Constructor ctor = ReflectionUtils.getConstructor(
             Class.forName("org.eclipse.jdt.internal.ui.javaeditor.JavaEditor$OccurrencesFinderJob"),
             new Class[] {JavaEditor.class, IDocument.class, locations.getClass(), ISelection.class});
-        Job ofj = ReflectionUtils.invokeConstructor(ctor, new Object[] {this, document, locations, selection});
+        Job ofj = (Job) ReflectionUtils.invokeConstructor(ctor, new Object[] {this, document, locations, selection});
         //fOccurrencesFinderJob = ofj;
         ReflectionUtils.setPrivateField(JavaEditor.class, "fOccurrencesFinderJob", this, ofj);
         //ofj.run(new NullProgressMonitor());

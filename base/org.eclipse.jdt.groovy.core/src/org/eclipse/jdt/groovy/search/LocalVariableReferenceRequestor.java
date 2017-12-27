@@ -34,7 +34,7 @@ import org.eclipse.jface.text.Region;
 
 public class LocalVariableReferenceRequestor implements ITypeRequestor {
 
-    private final List<IRegion> references = new ArrayList<IRegion>();
+    private final List<IRegion> references = new ArrayList<>();
 
     private Variable variable;
     private String variableName;

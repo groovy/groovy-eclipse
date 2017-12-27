@@ -24,7 +24,7 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.IGroovyDebugRequestor;
 
 class DebugRequestor implements IGroovyDebugRequestor {
 
-    Map<String, GroovyCompilationUnitDeclaration> declarations = new HashMap<String, GroovyCompilationUnitDeclaration>();
+    Map<String, GroovyCompilationUnitDeclaration> declarations = new HashMap<>();
 
     public void acceptCompilationUnitDeclaration(GroovyCompilationUnitDeclaration gcuDeclaration) {
         String filename = String.valueOf(gcuDeclaration.getFileName());

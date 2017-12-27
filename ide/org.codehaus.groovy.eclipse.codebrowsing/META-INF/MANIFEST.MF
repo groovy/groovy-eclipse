@@ -17,4 +17,4 @@ Require-Bundle: org.codehaus.groovy;bundle-version="1.8.9",
  org.eclipse.jdt.groovy.core;bundle-version="2.9.2"
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.eclipse.codebrowsing.GroovyBrowsingPlugin
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8

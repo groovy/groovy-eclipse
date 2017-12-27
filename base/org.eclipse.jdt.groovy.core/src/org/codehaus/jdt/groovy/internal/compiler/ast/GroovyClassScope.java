@@ -103,7 +103,7 @@ public class GroovyClassScope extends ClassScope {
             }
         }
 
-        List<MethodBinding> groovyMethods = new ArrayList<MethodBinding>();
+        List<MethodBinding> groovyMethods = new ArrayList<>();
 
         // If we don't then a supertype did and these methods do not have to be added here
         if (implementsGroovyLangObject) {
@@ -181,7 +181,7 @@ public class GroovyClassScope extends ClassScope {
             }
         }
 
-        Map<String, MethodBinding> methodsMap = new HashMap<String, MethodBinding>();
+        Map<String, MethodBinding> methodsMap = new HashMap<>();
         for (ReferenceBinding i : superInterfaces) {
             if (traitHelper.isTrait(i)) {
                 ReferenceBinding helperBinding = traitHelper.getHelperBinding(i);
@@ -196,7 +196,7 @@ public class GroovyClassScope extends ClassScope {
             }
         }
         if (!methodsMap.isEmpty()) {
-            Set<String> canBeOverridden = new HashSet<String>();
+            Set<String> canBeOverridden = new HashSet<>();
             ReferenceBinding superclass = binding.superclass();
             while (superclass != null) {
                 for (MethodBinding method : superclass.availableMethods()) {
@@ -508,7 +508,7 @@ public class GroovyClassScope extends ClassScope {
         if (method.parameters == null || method.parameters.length == 0) {
             return;
         }
-        Map<String, TypeBinding> bindings = new HashMap<String, TypeBinding>();
+        Map<String, TypeBinding> bindings = new HashMap<>();
         for (TypeVariableBinding v : method.typeVariables) {
             bindings.put(new String(v.sourceName), v);
         }

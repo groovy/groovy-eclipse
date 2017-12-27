@@ -41,11 +41,11 @@ import org.junit.Assert;
 public final class TestRenameParticipantShared extends RenameParticipant implements ISharableParticipant {
 
     static TestRenameParticipantShared fgInstance;
-    List<Object> fElements = new ArrayList<Object>(3);
-    List<String> fHandles = new ArrayList<String>(3);
-    List<RenameArguments> fArguments = new ArrayList<RenameArguments>(3);
-    Map<String, String> fSimilarToHandle = new HashMap<String, String>();
-    Map<String, String> fSimilarToNewName = new HashMap<String, String>();
+    List<Object> fElements = new ArrayList<>(3);
+    List<String> fHandles = new ArrayList<>(3);
+    List<RenameArguments> fArguments = new ArrayList<>(3);
+    Map<String, String> fSimilarToHandle = new HashMap<>();
+    Map<String, String> fSimilarToNewName = new HashMap<>();
 
     public boolean initialize(Object element) {
         fgInstance = this;

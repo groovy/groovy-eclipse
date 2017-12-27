@@ -53,7 +53,7 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
     private final boolean findDeclarations;
     private final boolean findReferences;
 
-    private final Set<Position> acceptedPositions = new HashSet<Position>();
+    private final Set<Position> acceptedPositions = new HashSet<>();
 
     public FieldReferenceSearchRequestor(FieldPattern pattern, SearchRequestor requestor, SearchParticipant participant) {
         this.requestor = requestor;

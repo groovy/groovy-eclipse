@@ -96,25 +96,14 @@ final class DSLStoreTests extends DSLInferencingTestSuite {
         }
     }
 
-    private Map<String, List<String>> createExpectedPointcuts(List<String>... pointcuts) {
-        Map<String, List<String>> map = [:]
+    @SafeVarargs
+    private final Map<String, List<String>> createExpectedPointcuts(List<String>... pointcuts) {
         int i = 0
-        for (strings in pointcuts) {
-            String name = DSLDStore.toUniqueString(project.getFile('dsl' + i++ + '.dsld'))
-            map.put(name, strings)
+        pointcuts.collectEntries { List<String> values ->
+            String key = DSLDStore.toUniqueString(project.getFile("dsl${i++}.dsld"))
+            [key, values]
         }
-        return map
     }
-
-    /*private Map<String, List<String>> createExpectedPointcuts(IStorage[] storages, String[]... pointcuts) {
-        Map<String, List<String>> map = [:]
-        int i = 0
-        for (String[] strings : pointcuts) {
-            String name = DSLDStore.toUniqueString(storages[i++])
-            map.put(name, Arrays.asList(strings))
-        }
-        return map
-    }*/
 
     private String createSemiUniqueName(IPointcut pc) {
         return pc.class.name + ':' + pc.containerIdentifier.fullPath.lastSegment()

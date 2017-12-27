@@ -293,7 +293,7 @@ public class GroovyProjectFacade {
     }
 
     public List<IType> findAllRunnableTypes() throws JavaModelException {
-        final List<IType> results = new ArrayList<IType>();
+        final List<IType> results = new ArrayList<>();
         IPackageFragmentRoot[] roots = project.getAllPackageFragmentRoots();
         for (IPackageFragmentRoot root : roots) {
             if (!root.isReadOnly()) {
@@ -312,7 +312,7 @@ public class GroovyProjectFacade {
     }
 
     public static List<IType> findAllRunnableTypes(ICompilationUnit unit) throws JavaModelException {
-        List<IType> results = new LinkedList<IType>();
+        List<IType> results = new LinkedList<>();
         IType[] types = unit.getAllTypes();
         for (IType type : types) {
             if (hasRunnableMain(type)) {
@@ -369,7 +369,7 @@ public class GroovyProjectFacade {
     }
 
     public List<IType> findAllScripts() throws JavaModelException {
-        final List<IType> results = new ArrayList<IType>();
+        final List<IType> results = new ArrayList<>();
         IPackageFragmentRoot[] roots = project.getAllPackageFragmentRoots();
         for (IPackageFragmentRoot root : roots) {
             if (!root.isReadOnly()) {

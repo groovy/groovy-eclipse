@@ -152,7 +152,7 @@ public class TypeLookupResult {
             } else {
                 List<ClassNode> argumentTypes = scope.getMethodCallArgumentTypes();
                 if (isGroovy) {
-                    argumentTypes = new ArrayList<ClassNode>();
+                    argumentTypes = new ArrayList<>();
                     argumentTypes.add(targetType);
                     if (scope.getMethodCallArgumentTypes() != null)
                         argumentTypes.addAll(scope.getMethodCallArgumentTypes());

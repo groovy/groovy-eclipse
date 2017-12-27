@@ -51,7 +51,7 @@ public final class ParticipantTesting {
     }
 
     public static String[] createHandles(Object[] elements) {
-        List<String> result = new ArrayList<String>();
+        List<String> result = new ArrayList<>();
         for (int i = 0; i < elements.length; i++) {
             Object element = elements[i];
             if (element instanceof IJavaElement) {

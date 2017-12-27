@@ -186,7 +186,7 @@ class JDTClassNodeBuilder {
         return result;
     }
 
-    private Map<TypeVariableBinding, ClassNode> typeVariableConfigurationInProgress = new HashMap<TypeVariableBinding, ClassNode>();
+    private Map<TypeVariableBinding, ClassNode> typeVariableConfigurationInProgress = new HashMap<>();
 
     /**
      * Based on Java5.configureTypeVariableReference()
@@ -236,7 +236,7 @@ class JDTClassNodeBuilder {
     }
 
     private TypeBinding[] getBounds(TypeVariableBinding tv) {
-        List<TypeBinding> bounds = new ArrayList<TypeBinding>();
+        List<TypeBinding> bounds = new ArrayList<>();
         if (tv.firstBound == null) {
             TypeBinding erasure = tv.erasure();
             if (erasure == null) {

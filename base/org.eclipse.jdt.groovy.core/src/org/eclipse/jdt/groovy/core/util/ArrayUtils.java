@@ -51,7 +51,7 @@ public class ArrayUtils {
         Assert.isNotNull(arr);
         Assert.isTrue(arr.length > i);
 
-        List<Object> l = new ArrayList<Object>();
+        List<Object> l = new ArrayList<>();
         for (int j = 0; j < arr.length; j++) {
             if (j != i) {
                 l.add(arr[j]);

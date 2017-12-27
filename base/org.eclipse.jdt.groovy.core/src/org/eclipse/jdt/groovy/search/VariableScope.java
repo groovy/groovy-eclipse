@@ -149,7 +149,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     static {
         // add all of the known DGM classes. Order counts since we look up earlier in the list before later and need to
         // ensure we don't accidentally place deprecated elements early in the list
-        List<ClassNode> dgm_classes = new ArrayList<ClassNode>(10);
+        List<ClassNode> dgm_classes = new ArrayList<>(10);
         if (STRING_GROOVY_METHODS != null) {
             dgm_classes.add(STRING_GROOVY_METHODS);
         }
@@ -166,7 +166,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         dgm_classes.add(DATE_GM_CLASS_NODE);
         dgm_classes.add(DGSM_CLASS_NODE);
         dgm_classes.add(DGM_CLASS_NODE);
-        ALL_DEFAULT_CATEGORIES = Collections.unmodifiableSet(new LinkedHashSet<ClassNode>(dgm_classes));
+        ALL_DEFAULT_CATEGORIES = Collections.unmodifiableSet(new LinkedHashSet<>(dgm_classes));
     }
 
     // don't cache because we have to add properties
@@ -239,7 +239,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                     }
                     if (arguments != null && !arguments.isEmpty()) {
                         if (!methodNode.getDeclaringClass().equals(getPerceivedDeclaringType())) {
-                            List<Expression> categoryMethodArguments = new ArrayList<Expression>(arguments.size() + 1);
+                            List<Expression> categoryMethodArguments = new ArrayList<>(arguments.size() + 1);
                             categoryMethodArguments.add(new ClassExpression(declaringType));
                             categoryMethodArguments.addAll(arguments);
                             arguments = categoryMethodArguments;
@@ -341,7 +341,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
 
         private void addDelegatesToClosure(ClosureExpression closure, ClassNode delegateType, Integer resolveStrategy) {
             if (delegatesTo == null) {
-                delegatesTo = new HashMap<ClosureExpression, Object[]>();
+                delegatesTo = new HashMap<>();
             }
             delegatesTo.put(closure, new Object[] {delegateType, resolveStrategy});
         }
@@ -376,15 +376,15 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         /**
          * this field stores values that need to get passed between parts of the file to another
          */
-        final Map<String, Object> wormhole = new HashMap<String, Object>();
+        final Map<String, Object> wormhole = new HashMap<>();
         /**
          * the enclosing method call is the one where there are the current node is part of an argument list
          */
-        final List<CallAndType> enclosingCallStack = new ArrayList<CallAndType>();
+        final List<CallAndType> enclosingCallStack = new ArrayList<>();
         /**
          * Node currently being evaluated, or null if none
          */
-        final LinkedList<ASTNode> nodeStack = new LinkedList<ASTNode>();
+        final LinkedList<ASTNode> nodeStack = new LinkedList<>();
         /**
          * true iff current scope is implicit run method of script
          */
@@ -421,7 +421,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     private int enclosingCallStackDepth;
     private List<ClassNode> methodCallArgumentTypes;
     private GenericsType[]  methodCallGenericsTypes;
-    private final Map<String, VariableInfo> nameVariableMap = new HashMap<String, VariableInfo>();
+    private final Map<String, VariableInfo> nameVariableMap = new HashMap<>();
 
     //--------------------------------------------------------------------------
 
@@ -511,7 +511,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
             }
             return categories;
         } else {
-            return new LinkedHashSet<ClassNode>(ALL_DEFAULT_CATEGORIES);
+            return new LinkedHashSet<>(ALL_DEFAULT_CATEGORIES);
         }
     }
 
