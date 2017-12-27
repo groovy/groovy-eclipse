@@ -23,7 +23,7 @@ Export-Package: org.codehaus.groovy.eclipse,
  org.codehaus.groovy.eclipse.ui.decorators,
  org.codehaus.groovy.eclipse.ui.utils,
  org.codehaus.groovy.eclipse.wizards
-Require-Bundle: org.codehaus.groovy;bundle-version="1.8.9",
+Require-Bundle: org.codehaus.groovy;bundle-version="2.1.9",
  org.codehaus.groovy.eclipse.core;bundle-version="2.9.2",
  org.codehaus.groovy.eclipse.codebrowsing;bundle-version="2.9.2",
  org.codehaus.groovy.eclipse.compilerResolver;bundle-version="2.9.2",

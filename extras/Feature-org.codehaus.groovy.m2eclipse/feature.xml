@@ -19,7 +19,7 @@
    </license>
 
    <requires>
-      <import plugin="org.codehaus.groovy" version="1.8.9" match="greaterOrEqual"/>
+      <import plugin="org.codehaus.groovy" version="2.1.9" match="greaterOrEqual"/>
       <import plugin="org.eclipse.jdt.core" version="3.7.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.jdt.groovy.core" version="2.9.2" match="greaterOrEqual"/>
       <import plugin="org.codehaus.groovy.eclipse.core" version="2.9.2" match="greaterOrEqual"/>
