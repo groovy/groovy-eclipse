@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IField;
@@ -56,8 +57,7 @@ public final class TestRenameParticipantShared extends RenameParticipant impleme
         } else {
             fHandles.add(((IResource) element).getFullPath().toString());
         }
-        @SuppressWarnings("cast")
-        IJavaElementMapper updating = (IJavaElementMapper) getProcessor().getAdapter(IJavaElementMapper.class);
+        IJavaElementMapper updating = Adapters.adapt(getProcessor(), IJavaElementMapper.class);
         if ((updating != null) && getArguments() instanceof RenameTypeArguments) {
             RenameTypeArguments arguments = (RenameTypeArguments) getArguments();
             if (arguments.getUpdateSimilarDeclarations()) {

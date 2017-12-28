@@ -21,6 +21,7 @@ import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.jdt.core.ElementChangedEvent;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IElementChangedListener;
@@ -114,6 +115,7 @@ public class ASTView extends ViewPart {
      */
     public void createPartControl(Composite parent) {
         viewer = new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+        @SuppressWarnings("unused")
         DrillDownAdapter drillDownAdapter = new DrillDownAdapter(viewer);
         viewer.setContentProvider(new ViewContentProvider());
         viewer.setLabelProvider(new ViewLabelProvider());
@@ -139,8 +141,7 @@ public class ASTView extends ViewPart {
             public void partBroughtToTop(IWorkbenchPart part) {
                 try {
                     if (part instanceof IEditorPart) {
-                        @SuppressWarnings("cast")
-                        IFile file = (IFile) ((IEditorPart) part).getEditorInput().getAdapter(IFile.class);
+                        IFile file = Adapters.adapt(((IEditorPart) part).getEditorInput(), IFile.class);
                         if (file != null && ContentTypeUtils.isGroovyLikeFileName(file.getName())) {
                             ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
                             if (unit instanceof GroovyCompilationUnit) {
@@ -191,8 +192,7 @@ public class ASTView extends ViewPart {
                     return;
                 }
                 IJavaElementDelta delta = event.getDelta();
-                @SuppressWarnings("cast")
-                IFile file = (IFile) editor.getEditorInput().getAdapter(IFile.class);
+                IFile file = Adapters.adapt(editor.getEditorInput(), IFile.class);
                 final GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
 
                 // determine if the delta contains the ICompUnit under question

@@ -28,6 +28,7 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclar
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -433,13 +434,13 @@ public class GroovyCompilationUnit extends CompilationUnit {
         return op.ast;
     }
 
-    @Override @SuppressWarnings({"rawtypes", "unchecked"})
-    public Object getAdapter(Class adapter) {
-        if (adapter == GroovyCompilationUnit.class) {
-            return this;
+    @Override @SuppressWarnings("unchecked")
+    public <T> T getAdapter(Class<T> adapter) {
+        if (GroovyCompilationUnit.class.equals(adapter)) {
+            return (T) this;
         }
-        if (adapter == ModuleNode.class) {
-            return getModuleNode();
+        if (ModuleNode.class.equals(adapter)) {
+            return (T) getModuleNode();
         }
         return super.getAdapter(adapter);
     }
@@ -584,7 +585,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
 
         // allow a delegate to perform completion if required
         // this is used by the grails plugin when editing in gsp editor
-        ICodeCompletionDelegate delegate = (ICodeCompletionDelegate) getAdapter(ICodeCompletionDelegate.class);
+        ICodeCompletionDelegate delegate = Adapters.adapt(this, ICodeCompletionDelegate.class);
         if (delegate != null && delegate.shouldCodeComplete(requestor, typeRoot)) {
             delegate.codeComplete(cu, unitToSkip, position, requestor, owner, typeRoot, monitor);
         } else {

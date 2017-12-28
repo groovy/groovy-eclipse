@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,9 +26,6 @@ import org.eclipse.jdt.internal.debug.ui.JavaDetailFormattersManager;
 /**
  * Forces {@link groovy.lang.Reference} to have a custom format in the
  * details formatter page.
- *
- * @author Andrew Eisenberg
- * @created Mar 16, 2010
  */
 public class ForceDetailFormatter {
 
@@ -39,28 +36,33 @@ public class ForceDetailFormatter {
             this.name = name;
         }
 
+        @Override
         public String getName() throws DebugException {
             return name;
         }
 
+        @Override
         public String getSignature() throws DebugException {
             return Signature.createTypeSignature(name, true);
         }
 
+        @Override
         public IDebugTarget getDebugTarget() {
             return null;
         }
 
+        @Override
         public ILaunch getLaunch() {
             return null;
         }
 
+        @Override
         public String getModelIdentifier() {
             return null;
         }
 
-        @SuppressWarnings({"rawtypes", "unchecked"})
-        public Object getAdapter(Class adapter) {
+        @Override
+        public <T> T getAdapter(Class<T> adapter) {
             return null;
         }
     }

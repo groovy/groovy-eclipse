@@ -41,6 +41,7 @@ import org.codehaus.groovy.eclipse.search.GroovyOccurrencesFinder;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -281,8 +282,8 @@ public class GroovyEditor extends CompilationUnitEditor {
         private boolean fCloseStrings= true;
         private boolean fCloseAngularBrackets= true;
         private final String CATEGORY= toString();
+        private final Stack<GroovyBracketLevel> fBracketLevelStack= new Stack<>();
         private final IPositionUpdater fUpdater= new GroovyExclusivePositionUpdater(CATEGORY);
-        private final Stack<GroovyBracketLevel> fBracketLevelStack= new Stack<GroovyBracketLevel>();
 
         public void setCloseBracketsEnabled(boolean enabled) {
             fCloseBrackets= enabled;
@@ -761,25 +762,26 @@ public class GroovyEditor extends CompilationUnitEditor {
         }
     }
 
-    @Override @SuppressWarnings({"rawtypes", "unchecked"})
-    public Object getAdapter(Class required) {
-        if (IResource.class == required || IFile.class == required) {
-            return this.getFile();
+    @Override @SuppressWarnings("unchecked")
+    public <T> T getAdapter(Class<T> required) {
+        if (IResource.class.equals(required) || IFile.class.equals(required)) {
+            return (T) this.getFile();
         }
 
-        if (GroovyCompilationUnit.class == required || ICompilationUnit.class == required || CompilationUnit.class == required) {
-            return super.getInputJavaElement();
+        if (GroovyCompilationUnit.class.equals(required) || ICompilationUnit.class.equals(required) || CompilationUnit.class.equals(required)) {
+            return (T) super.getInputJavaElement();
         }
 
-        if (ModuleNode.class == required) {
-            return this.getModuleNode();
+        if (ModuleNode.class.equals(required)) {
+            return (T) this.getModuleNode();
         }
+
         // new variant test in e43 which addresses bug 391253 means groovy doesn't get an outline
         // (it must fail the isCalledByOutline() test but I haven't investigated deeply)
         if (IContentOutlinePage.class.equals(required)) {
             if (fOutlinePage == null && getSourceViewer() != null)
-                fOutlinePage= createOutlinePage();
-            return fOutlinePage;
+                fOutlinePage = createOutlinePage();
+            return (T) fOutlinePage;
         }
         return super.getAdapter(required);
     }
@@ -984,13 +986,11 @@ public class GroovyEditor extends CompilationUnitEditor {
      * Gets the outline page for this editor only if the outline page is an
      * augmented {@link GroovyOutlinePage}.
      *
-     * Otherwise returns null
-     *
      * @return the {@link GroovyOutlinePage} or null
      */
     public GroovyOutlinePage getOutlinePage() {
         if (page == null) {
-            IContentOutlinePage outlinePage = (IContentOutlinePage) getAdapter(IContentOutlinePage.class);
+            IContentOutlinePage outlinePage = Adapters.adapt(this, IContentOutlinePage.class);
             if (outlinePage instanceof GroovyOutlinePage) {
                 page = (GroovyOutlinePage) outlinePage;
             }

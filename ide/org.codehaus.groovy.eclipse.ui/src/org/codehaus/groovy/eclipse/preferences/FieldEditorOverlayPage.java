@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ProjectScope;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
@@ -42,7 +43,7 @@ import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 public abstract class FieldEditorOverlayPage extends FieldEditorPreferencePage implements IWorkbenchPropertyPage {
     // Stores all created field editors
-    private final List<FieldEditor> editors = new ArrayList<FieldEditor>();
+    private final List<FieldEditor> editors = new ArrayList<>();
 
     // Stores owning element of properties
     private IAdaptable element;
@@ -140,8 +141,7 @@ public abstract class FieldEditorOverlayPage extends FieldEditorPreferencePage i
     }
 
     private IPreferenceStore createPreferenceStore() {
-        @SuppressWarnings("cast")
-        IProject proj = (IProject) getElement().getAdapter(IProject.class);
+        IProject proj = Adapters.adapt(getElement(), IProject.class);
         return preferenceStore(proj);
     }
 

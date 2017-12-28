@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.codeassist.completions;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.jdt.core.CompletionContext;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
@@ -168,8 +169,7 @@ public class NamedParameterProposal extends JavaCompletionProposal {
 
         // refresh so the AST is ready for subsequent named argument content assists
         try {
-            @SuppressWarnings("cast")
-            ICompilationUnit unit = (ICompilationUnit) getJavaEditor().getAdapter(ICompilationUnit.class);
+            ICompilationUnit unit = Adapters.adapt(getJavaEditor(), ICompilationUnit.class);
             unit.reconcile(0, 0, null, null);
         } catch (JavaModelException e) {
             GroovyPlugin.getDefault().logError("Failed to reconcile after application of named argument proposal", e);

@@ -18,16 +18,17 @@ package org.codehaus.groovy.eclipse.quickfix.templates;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.eclipse.core.runtime.IAdapterFactory;
 
-@SuppressWarnings({"rawtypes", "unchecked"})
 public class SurroundWithAdapterFactory implements IAdapterFactory {
 
-    public Class[] getAdapterList() {
+    @Override
+    public Class<?>[] getAdapterList() {
         return new Class[] {SurroundWithFactory.class};
     }
 
-    public Object getAdapter(Object adaptable, Class adapterType) {
+    @Override @SuppressWarnings("unchecked")
+    public <T> T getAdapter(Object adaptable, Class<T> adapterType) {
         if (adaptable instanceof GroovyEditor && adapterType.equals(SurroundWithFactory.class)) {
-            return new SurroundWithFactory();
+            return (T) new SurroundWithFactory();
         }
         return null;
     }

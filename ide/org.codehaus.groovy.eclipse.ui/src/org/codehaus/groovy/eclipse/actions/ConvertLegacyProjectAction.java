@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
 import org.codehaus.groovy.eclipse.core.builder.ConvertLegacyProject;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IStatus;
@@ -38,9 +39,8 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 
 /**
- * This Action converts a Project that uses the old Groovy 1.x Nature to a project that uses the 2.x nature.
- *
- * @author Andrew
+ * This Action converts a Project that uses the old Groovy 1.x Nature to a project
+ * that uses the 2.x nature.
  */
 public class ConvertLegacyProjectAction implements IObjectActionDelegate {
     private IProject[] projects;
@@ -79,15 +79,14 @@ public class ConvertLegacyProjectAction implements IObjectActionDelegate {
      * @see IEditorActionDelegate#selectionChanged
      */
     public void selectionChanged(final IAction action, final ISelection selection) {
-        List<IProject> newSelected = new LinkedList<IProject>();
+        List<IProject> newSelected = new LinkedList<>();
         boolean enabled = true;
         if (selection instanceof IStructuredSelection) {
             IStructuredSelection newSelection = (IStructuredSelection) selection;
             for (Iterator<?> iter = newSelection.iterator(); iter.hasNext();) {
                 Object object = iter.next();
                 if (object instanceof IAdaptable) {
-                    @SuppressWarnings("cast")
-                    IProject project = (IProject) ((IAdaptable)object).getAdapter(IProject.class);
+                    IProject project = Adapters.adapt(object, IProject.class);
                     try {
                         if(project != null  && project.hasNature(ConvertLegacyProject.OLD_NATURE)) {
                             newSelected.add(project);

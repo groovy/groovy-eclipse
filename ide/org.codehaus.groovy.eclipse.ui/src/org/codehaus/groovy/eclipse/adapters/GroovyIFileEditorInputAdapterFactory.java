@@ -17,22 +17,24 @@ package org.codehaus.groovy.eclipse.adapters;
 
 import org.codehaus.groovy.eclipse.core.adapters.GroovyFileAdapterFactory;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.IAdapterFactory;
 import org.eclipse.ui.IFileEditorInput;
 
-@SuppressWarnings({"rawtypes", "unchecked"})
 public class GroovyIFileEditorInputAdapterFactory implements IAdapterFactory {
 
-    public Class[] getAdapterList() {
+    @Override
+    public Class<?>[] getAdapterList() {
         return new GroovyFileAdapterFactory().getAdapterList();
     }
 
-    public Object getAdapter(Object adaptable, Class adapterType) {
-        Object result = null;
+    @Override
+    public <T> T getAdapter(Object adaptable, Class<T> adapterType) {
+        T result = null;
         if (adaptable instanceof IFileEditorInput) {
             IFile file = ((IFileEditorInput) adaptable).getFile();
             // delegate to GroovyFileAdapterFactory
-            result = file.getAdapter(adapterType);
+            result = Adapters.adapt(file, adapterType);
         }
         return result;
     }

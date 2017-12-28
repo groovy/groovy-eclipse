@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.codehaus.groovy.eclipse.ui.utils.GroovyResourceUtil;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
@@ -51,15 +52,12 @@ public abstract class RenameToGroovyOrJavaAction implements IWorkbenchWindowActi
      * @return non-null list of resources in the context selection. May be empty
      */
     protected List<IResource> getResources(IStructuredSelection selection) {
-        List<IResource> resources = new ArrayList<IResource>();
+        List<IResource> resources = new ArrayList<>();
         if (selection != null) {
             for (Iterator<?> iter = selection.iterator(); iter.hasNext();) {
                 Object object = iter.next();
                 if (object instanceof IAdaptable) {
-
-                    @SuppressWarnings("cast")
-                    IResource file = (IResource) ((IAdaptable) object).getAdapter(IResource.class);
-
+                    IResource file = Adapters.adapt(object, IResource.class);
                     if (file != null) {
                         if (file.getType() != IResource.FILE) {
                             continue;

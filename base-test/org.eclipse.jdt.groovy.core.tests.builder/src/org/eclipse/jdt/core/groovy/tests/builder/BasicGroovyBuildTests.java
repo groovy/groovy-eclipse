@@ -2315,13 +2315,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         expectingCompiledClasses("p1.Hello");
         expectingNoProblems();
         executeClass(projectPath, "p1.Hello", "Hello Groovy world", null);
-        // IJavaProject javaProject = env.getJavaProject(projectPath);
-        // IJavaElement pkgFragmentRoot = javaProject.findElement(new
-        // Path("p1/Hello.groovy"));
-        // System.out.println("A>"+pkgFragmentRoot);
-        // IJavaElement cu = find(pkgFragmentRoot,
-        // "Hello");cu.getAdapter(adapter)
-        // System.out.println(cu);
     }
 
     @Test

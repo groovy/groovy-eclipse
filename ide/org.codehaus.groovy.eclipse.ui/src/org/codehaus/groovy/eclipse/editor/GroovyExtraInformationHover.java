@@ -25,6 +25,7 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.eclipse.codebrowsing.elements.IGroovyResolvedElement;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.ITypeRoot;
@@ -76,8 +77,7 @@ public class GroovyExtraInformationHover extends JavadocHover {
         if (editor == null) {
             return null;
         }
-        @SuppressWarnings("cast")
-        IFile file = (IFile) editor.getEditorInput().getAdapter(IFile.class);
+        IFile file = Adapters.adapt(editor.getEditorInput(), IFile.class);
         if (file == null) {
             return null;
         }

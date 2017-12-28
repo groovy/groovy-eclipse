@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.util.List;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
@@ -30,13 +31,11 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 
 /**
- * AddGroovyNatureAction is responsible for managing the addition of the Groovy nature to a java
- * project.
- *
- * @author Andrew
+ * AddGroovyNatureAction is responsible for managing the addition of the Groovy
+ * nature to a java project.
  */
 public class AddGroovyNatureAction implements IObjectActionDelegate {
-    private List<IProject> currSelected = new LinkedList<IProject>();
+    private List<IProject> currSelected = new LinkedList<>();
 
     public void run(final IAction action) {
 
@@ -55,15 +54,14 @@ public class AddGroovyNatureAction implements IObjectActionDelegate {
      */
     public void selectionChanged(final IAction action, final ISelection selection) {
         currSelected.clear();
-        List<IProject> newSelected = new LinkedList<IProject>();
+        List<IProject> newSelected = new LinkedList<>();
         boolean enabled = true;
         if (selection instanceof IStructuredSelection) {
             IStructuredSelection newSelection = (IStructuredSelection) selection;
             for (Iterator<?> iter = newSelection.iterator(); iter.hasNext();) {
                 Object object = iter.next();
                 if (object instanceof IAdaptable) {
-                    @SuppressWarnings("cast")
-                    IProject project = (IProject) ((IAdaptable)object).getAdapter(IProject.class);
+                    IProject project = Adapters.adapt(object, IProject.class);
                     if(project != null) {
                         newSelected.add(project);
                     } else {

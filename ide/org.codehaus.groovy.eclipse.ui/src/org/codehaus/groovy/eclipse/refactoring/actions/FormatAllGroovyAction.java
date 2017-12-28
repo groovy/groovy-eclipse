@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -131,8 +132,7 @@ public class FormatAllGroovyAction extends FormatAllAction {
         if (getSite() instanceof IEditorSite) {
             IWorkbenchPart part = ((IEditorSite) getSite()).getPart();
             if (part instanceof GroovyEditor) {
-                @SuppressWarnings("cast")
-                GroovyCompilationUnit unit = (GroovyCompilationUnit) part.getAdapter(GroovyCompilationUnit.class);
+                GroovyCompilationUnit unit = Adapters.adapt(part, GroovyCompilationUnit.class);
                 if (unit != null) {
                     super.run(new StructuredSelection(unit));
                 }

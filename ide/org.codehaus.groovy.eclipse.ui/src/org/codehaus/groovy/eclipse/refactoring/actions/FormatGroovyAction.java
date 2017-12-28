@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.groovy.eclipse.refactoring.formatter.DefaultGroovyFormatter;
 import org.codehaus.groovy.eclipse.refactoring.formatter.FormatterPreferences;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.ui.actions.SelectionDispatchAction;
@@ -66,8 +67,7 @@ public class FormatGroovyAction extends SelectionDispatchAction {
         }
 
         GroovyEditor groovyEditor = (GroovyEditor) part;
-        @SuppressWarnings("cast")
-        GroovyCompilationUnit unit = (GroovyCompilationUnit) part.getAdapter(GroovyCompilationUnit.class);
+        GroovyCompilationUnit unit = Adapters.adapt(part, GroovyCompilationUnit.class);
         IDocument doc = groovyEditor.getDocumentProvider().getDocument(groovyEditor.getEditorInput());
 
         if (doc != null && unit != null) {
