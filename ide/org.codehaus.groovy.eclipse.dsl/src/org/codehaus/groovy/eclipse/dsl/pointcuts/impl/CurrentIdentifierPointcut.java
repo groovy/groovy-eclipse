@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,8 +27,6 @@ import org.eclipse.core.resources.IStorage;
  * the match returns true if the pattern passed in is an identifier expression
  * (either a {@link ConstantExpression} or a {@link VariableExpression} whose text
  * that matches the contained argument
- * @author andrew
- * @created Feb 11, 2011
  */
 public class CurrentIdentifierPointcut extends FilteringPointcut<Expression> {
 
@@ -36,7 +34,7 @@ public class CurrentIdentifierPointcut extends FilteringPointcut<Expression> {
         super(containerIdentifier, pointcutName, Expression.class);
     }
 
-    
+
     /**
      * Ignore toMatch and use the current node instead
      */

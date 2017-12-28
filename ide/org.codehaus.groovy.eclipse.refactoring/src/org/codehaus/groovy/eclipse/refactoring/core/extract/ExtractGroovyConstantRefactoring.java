@@ -330,7 +330,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
     }
 
     private ExtractConstantDescriptor createRefactoringDescriptor() {
-        final Map<String, String> arguments = new HashMap<String, String>();
+        final Map<String, String> arguments = new HashMap<>();
         String project = null;
         IJavaProject javaProject = getCu().getJavaProject();
         if (javaProject != null)
@@ -535,7 +535,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
 
     private String[] getExcludedVariableNames() {
         if (fExcludedVariableNames == null) {
-            HashSet<String> usedNames = new HashSet<String>();
+            HashSet<String> usedNames = new HashSet<>();
             for (ClassNode classNode : unit.getModuleNode().getClasses()) {
                 for (FieldNode fieldNode : classNode.getFields()) {
                     usedNames.add(fieldNode.getName());

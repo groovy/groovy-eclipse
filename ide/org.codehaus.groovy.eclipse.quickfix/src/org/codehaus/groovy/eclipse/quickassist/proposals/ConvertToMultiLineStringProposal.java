@@ -69,7 +69,7 @@ public class ConvertToMultiLineStringProposal extends GroovyQuickAssistProposal2
                 TypeLookupResult result = context.getNodeType(node);
                 if (VariableScope.STRING_CLASS_NODE.equals(result.type)) {
                     BinaryExpression expr = (BinaryExpression) node;
-                    LinkedList<Expression> stack = new LinkedList<Expression>();
+                    LinkedList<Expression> stack = new LinkedList<>();
                     for (;;) { // accumulate left expressions
                         stack.addFirst(expr.getRightExpression());
                         if (expr.getLeftExpression() instanceof BinaryExpression) {

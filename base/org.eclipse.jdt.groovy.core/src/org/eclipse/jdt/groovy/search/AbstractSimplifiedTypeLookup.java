@@ -101,10 +101,12 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
     }
 
     // not called, but must be implemented
+    @Override
     public final TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
         return lookupType(node, scope, objectExpressionType, false);
     }
 
+    @Override
     public final TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType, boolean isStaticObjectExpression) {
         ClassNode declaringType;
         if (objectExpressionType != null) {
@@ -150,30 +152,37 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
         return TypeConfidence.LOOSELY_INFERRED;
     }
 
+    @Override
     public final TypeLookupResult lookupType(FieldNode node, VariableScope scope) {
         return null;
     }
 
+    @Override
     public final TypeLookupResult lookupType(MethodNode node, VariableScope scope) {
         return null;
     }
 
+    @Override
     public final TypeLookupResult lookupType(AnnotationNode node, VariableScope scope) {
         return null;
     }
 
+    @Override
     public final TypeLookupResult lookupType(ImportNode node, VariableScope scope) {
         return null;
     }
 
+    @Override
     public final TypeLookupResult lookupType(ClassNode node, VariableScope scope) {
         return null;
     }
 
+    @Override
     public final TypeLookupResult lookupType(Parameter node, VariableScope scope) {
         return null;
     }
 
+    @Override
     public void lookupInBlock(BlockStatement node, VariableScope scope) {
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,6 @@ import java.util.List;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovyMethodSuggestion;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.MethodParameter;
 
-/**
- * 
- * @author Nieraj Singh
- * @created 2011-04-20
- */
 public class MethodSuggestionLabel extends AbstractSuggestionLabel {
 
     private GroovyMethodSuggestion suggestion;
@@ -33,6 +28,7 @@ public class MethodSuggestionLabel extends AbstractSuggestionLabel {
         this.suggestion = suggestion;
     }
 
+    @Override
     protected String constructName() {
         if (suggestion == null) {
             return null;
@@ -75,7 +71,5 @@ public class MethodSuggestionLabel extends AbstractSuggestionLabel {
             buffer.append(CLOSE_PAR);
         }
         return buffer.toString();
-
     }
-
 }

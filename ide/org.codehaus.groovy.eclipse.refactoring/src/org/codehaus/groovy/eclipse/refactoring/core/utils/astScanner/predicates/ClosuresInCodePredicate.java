@@ -1,8 +1,5 @@
-/* 
- * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
- *
- * IFS Institute for Software, HSR Rapperswil, Switzerland
- * http://ifs.hsr.ch/
+/*
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,12 +21,13 @@ import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
 
 public class ClosuresInCodePredicate implements IASTNodePredicate {
 
-	public ASTNode evaluate(ASTNode input) {
-		if (input instanceof ClosureExpression) {
-			ClosureExpression cl = (ClosureExpression) input;
-			if (ASTTools.hasValidPosition(cl))
-				return cl;
-		}
-		return null;
-	}
+    @Override
+    public ASTNode evaluate(ASTNode input) {
+        if (input instanceof ClosureExpression) {
+            ClosureExpression cl = (ClosureExpression) input;
+            if (ASTTools.hasValidPosition(cl))
+                return cl;
+        }
+        return null;
+    }
 }

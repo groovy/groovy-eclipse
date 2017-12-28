@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,11 +29,6 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 
-/**
- * 
- * @author Nieraj Singh
- * @created 2011-05-09
- */
 public class InferencingSuggestionsManager {
 
     private Map<IProject, ProjectSuggestions> perProjectSuggestions;
@@ -55,7 +50,7 @@ public class InferencingSuggestionsManager {
 
     /**
      * For now support per project commits
-     * 
+     *
      * @return true if changes for given project are successfully committed.
      *         False otherwise
      */
@@ -88,7 +83,7 @@ public class InferencingSuggestionsManager {
      * If the project is not accessible, it removes all the suggestions from the
      * model, as the model
      * should reflect whether the suggestions in the file can be read or not.
-     * 
+     *
      * @param project
      * @return true if suggestions are restored or if project is not accessible,
      *         suggestions in memory are cleared. False if no restoration took
@@ -117,9 +112,9 @@ public class InferencingSuggestionsManager {
     }
 
     /**
-     * 
+     *
      * FIXNS: Hook to a resource change listener in the future.
-     * 
+     *
      * @return gets the last project that had suggestion commits. It may be null
      *         including if the last modified project is no longer accessible.
      */
@@ -145,7 +140,7 @@ public class InferencingSuggestionsManager {
     /**
      * Not null, unless it is not an accessible Groovy project. may be empty.
      * Original copy.
-     * 
+     *
      * @param project
      * @return Non-null suggestions for any accessible Groovy project. Null
      *         otherwise
@@ -157,7 +152,7 @@ public class InferencingSuggestionsManager {
             return null;
         }
         if (perProjectSuggestions == null) {
-            perProjectSuggestions = new HashMap<IProject, ProjectSuggestions>();
+            perProjectSuggestions = new HashMap<>();
         }
 
         ProjectSuggestions projectSuggestions = perProjectSuggestions.get(project);
@@ -174,12 +169,12 @@ public class InferencingSuggestionsManager {
         private IProject project;
 
         protected ProjectSuggestions(IProject project) {
-            suggestions = new HashMap<String, GroovySuggestionDeclaringType>();
+            suggestions = new HashMap<>();
             this.project = project;
         }
 
         /**
-         * 
+         *
          * @return a new, clean project suggestion, registered in the
          *         suggestions manager, for the project associated with the
          *         current project selection. All
@@ -197,7 +192,7 @@ public class InferencingSuggestionsManager {
          * declaring
          * type before. Declaring types cannot exist
          * by them selves without at least one suggestion
-         * 
+         *
          * @param declaringTypeName
          * @return
          */
@@ -207,7 +202,7 @@ public class InferencingSuggestionsManager {
 
         /**
          * Creates a declaring type or returns an existing one.
-         * 
+         *
          * @param declaringTypeName
          * @return
          */
@@ -241,7 +236,7 @@ public class InferencingSuggestionsManager {
         }
 
         /**
-         * 
+         *
          * @return all the declaring types. Never null, but may be empty
          */
         public Collection<GroovySuggestionDeclaringType> getDeclaringTypes() {

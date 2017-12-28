@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,26 +32,19 @@ import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.viewers.StyledString;
 
-/**
- * @author Andrew Eisenberg
- * @created Nov 10, 2009
- *
- */
 public class ModifiersCompletionProcessor extends AbstractGroovyCompletionProcessor {
-
 
     /* Others.  Not used
         "extends",
         "implements",
         "import",
         "interface",
+        "strictfp",
         "throws",
-
      */
 
     // just the keywords that may be available in a class body
-    private static String[] keywords =
-    {
+    private static String[] keywords = {
         "abstract",
         "def",
         "final",
@@ -64,16 +57,17 @@ public class ModifiersCompletionProcessor extends AbstractGroovyCompletionProces
         "synchronized",
         "transient",
         "volatile",
-        "void"
+        "void",
     };
 
     public ModifiersCompletionProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
         super(context, javaContext, nameEnvironment);
     }
 
+    @Override
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
         String completionExpression = getContext().completionExpression;
-        List<ICompletionProposal> proposals = new LinkedList<ICompletionProposal>();
+        List<ICompletionProposal> proposals = new LinkedList<>();
         for (String keyword : keywords) {
             if (keyword.startsWith(completionExpression)) {
                 proposals.add(createProposal(keyword, getContext()));
@@ -82,25 +76,18 @@ public class ModifiersCompletionProcessor extends AbstractGroovyCompletionProces
         return proposals;
     }
 
-    /**
-     * @param keyword
-     * @param context
-     * @return
-     */
-    private ICompletionProposal createProposal(String keyword,
-            ContentAssistContext context) {
-        InternalCompletionProposal proposal =  createProposal(CompletionProposal.KEYWORD, context.completionLocation);
+    private ICompletionProposal createProposal(String keyword, ContentAssistContext context) {
+        InternalCompletionProposal proposal = createProposal(CompletionProposal.KEYWORD, context.completionLocation);
         proposal.setName(keyword.toCharArray());
         proposal.setCompletion(keyword.toCharArray());
-        proposal.setReplaceRange(context.completionLocation
-                - context.completionExpression.length(), context.completionEnd);
+        proposal.setReplaceRange(context.completionLocation - context.completionExpression.length(), context.completionEnd);
 
-        String completion= String.valueOf(proposal.getCompletion());
-        int start= proposal.getReplaceStart();
-        int length= context.completionExpression.length();
-        StyledString label= createDisplayString(proposal);
+        int start = proposal.getReplaceStart();
+        int length = context.completionExpression.length();
+        StyledString label = createDisplayString(proposal);
         int relevance = Relevance.LOWEST.getRelevance(5);
-        JavaCompletionProposal jcp = new JavaCompletionProposal(completion, start, length, null, label, relevance);
+
+        JavaCompletionProposal jcp = new JavaCompletionProposal(String.valueOf(proposal.getCompletion()), start, length, null, label, relevance);
         jcp.setImage(getImage(proposal));
         return jcp;
     }

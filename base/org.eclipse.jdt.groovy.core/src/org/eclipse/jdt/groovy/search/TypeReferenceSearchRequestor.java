@@ -78,6 +78,7 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
         return arr;
     }
 
+    @Override
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
         if (!hasValidSourceLocation(node)) {
             return VisitStatus.CONTINUE;

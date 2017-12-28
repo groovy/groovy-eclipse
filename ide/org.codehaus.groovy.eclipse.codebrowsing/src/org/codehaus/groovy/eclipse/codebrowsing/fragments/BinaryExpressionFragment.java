@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,10 +23,7 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.Assert;
 
 /**
- * An {@link IASTFragment} that is a part of a binary expression
- *
- * @author andrew
- * @created Jun 4, 2010
+ * An {@link IASTFragment} that is a part of a binary expression.
  */
 public class BinaryExpressionFragment implements IASTFragment {
 
@@ -57,30 +54,37 @@ public class BinaryExpressionFragment implements IASTFragment {
         this.actualStartPosition = actualStartPosition;
     }
 
+    @Override
     public Expression getAssociatedExpression() {
         return expression;
     }
 
+    @Override
     public ASTNode getAssociatedNode() {
         return expression;
     }
 
+    @Override
     public int getEnd() {
         return getNext().getEnd();
     }
 
+    @Override
     public int getStart() {
         return actualStartPosition;
     }
 
+    @Override
     public int getLength() {
         return getEnd() - getStart();
     }
 
+    @Override
     public int getTrimmedEnd(GroovyCompilationUnit unit) {
         return getNext().getTrimmedEnd(unit);
     }
 
+    @Override
     public int getTrimmedLength(GroovyCompilationUnit unit) {
         return getTrimmedEnd(unit) - getStart();
     }
@@ -96,6 +100,7 @@ public class BinaryExpressionFragment implements IASTFragment {
     /**
      * @return true iff this fragment completely matches other
      */
+    @Override
     public boolean matches(IASTFragment other) {
         if (!(other instanceof BinaryExpressionFragment)) {
             return false;
@@ -112,20 +117,24 @@ public class BinaryExpressionFragment implements IASTFragment {
         return print(0);
     }
 
+    @Override
     public String print(int indentLvl) {
         return ASTFragmentFactory.spaces(indentLvl) + "(B) " + expression.toString() + "\n" + next.print(indentLvl + 1);
     }
 
+    @Override
     public int fragmentLength() {
         return 1 + next.fragmentLength();
     }
 
+    @Override
     public void accept(FragmentVisitor visitor) {
         if (visitor.previsit(this) && visitor.visit(this)) {
             next.accept(visitor);
         }
     }
 
+    @Override
     public ASTFragmentKind kind() {
         return ASTFragmentKind.BINARY;
     }
@@ -134,10 +143,10 @@ public class BinaryExpressionFragment implements IASTFragment {
      * Finds a subfragment starting at this fragment that matches other.
      * Returns an empty fragment if no match.
      *
-     * There may be further matches inside this one, but this method only loos
-     * for fragments
-     * that start at the beginning
+     * There may be further matches inside this one, but this method only looks
+     * for fragments that start at the beginning.
      */
+    @Override
     public IASTFragment findMatchingSubFragment(IASTFragment other) {
         if (this.fragmentLength() < other.fragmentLength()) {
             return new EmptyASTFragment();

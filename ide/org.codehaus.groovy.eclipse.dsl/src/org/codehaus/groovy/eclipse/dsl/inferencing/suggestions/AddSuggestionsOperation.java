@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,27 +18,19 @@ package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.InferencingSuggestionsManager.ProjectSuggestions;
 import org.eclipse.core.resources.IProject;
 
-/**
- * 
- * @author Nieraj Singh
- * @created 2011-09-15
- */
 public class AddSuggestionsOperation extends AbstractCreateOperation {
 
     public AddSuggestionsOperation(IProject project, IBaseGroovySuggestion suggestionContext) {
         super(project, suggestionContext);
     }
 
+    @Override
     protected ValueStatus run(SuggestionDescriptor descriptor) {
-
         ProjectSuggestions suggestions = InferencingSuggestionsManager.getInstance().getSuggestions(getProject());
         if (suggestions != null) {
             IGroovySuggestion suggestion = suggestions.addSuggestion(descriptor);
             return ValueStatus.getValidStatus(suggestion);
         }
-
         return ValueStatus.getErrorStatus(descriptor, "Project does not appear to be an accessible Groovy project");
-
     }
-
 }

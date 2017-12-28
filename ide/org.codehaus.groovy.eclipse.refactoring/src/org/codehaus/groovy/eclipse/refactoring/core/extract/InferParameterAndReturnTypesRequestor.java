@@ -34,21 +34,14 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.core.util.Util;
 
-/**
- *
- * @author andrew
- * @created May 18, 2010
- */
 public class InferParameterAndReturnTypesRequestor implements ITypeRequestor {
-
 
     private Map<Variable, ClassNode> inferredTypes;
 
     private final Region selectedText;
 
-    public InferParameterAndReturnTypesRequestor(List<Variable> actualParameters, Set<Variable> returnParameters,
-            Region selectedText) {
-        inferredTypes = new HashMap<Variable, ClassNode>();
+    public InferParameterAndReturnTypesRequestor(List<Variable> actualParameters, Set<Variable> returnParameters, Region selectedText) {
+        inferredTypes = new HashMap<>();
         for (Variable variable : actualParameters) {
             inferredTypes.put(variable, null);
         }
@@ -58,6 +51,7 @@ public class InferParameterAndReturnTypesRequestor implements ITypeRequestor {
         this.selectedText = selectedText;
     }
 
+    @Override
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
         // check to see if the enclosing element does not enclose the
         // nodeToLookFor

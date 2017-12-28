@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,10 +29,8 @@ import org.eclipse.core.resources.IStorage;
  * Tests that the type being analyzed matches.  The match can
  * either be a string match (ie - the type name),
  * or it can pass the current type to a containing pointcut.
- * 
+ *
  * Only looks at the current type, not the current type's hierarchy
- * @author andrew
- * @created Feb 10, 2011
  */
 public class CurrentTypePointcut extends AbstractPointcut {
 
@@ -45,8 +43,8 @@ public class CurrentTypePointcut extends AbstractPointcut {
      */
     @Override
     public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
-        // toMatch is ignored 
-        
+        // toMatch is ignored
+
         Object firstArgument = getFirstArgument();
         ClassNode currentType = pattern.getCurrentType();
         if (firstArgument instanceof String) {
@@ -77,7 +75,7 @@ public class CurrentTypePointcut extends AbstractPointcut {
     public void verify() throws PointcutVerificationException {
         String oneStringOrOnePointcutArg = oneStringOrOnePointcutOrOneClassArg();
         String argNumber = hasOneOrNoArgs();
-        
+
         if (oneStringOrOnePointcutArg == null || argNumber == null) {
             super.verify();
             return;

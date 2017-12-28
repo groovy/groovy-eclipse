@@ -18,6 +18,7 @@ Export-Package: org.codehaus.groovy.eclipse.dsl,
  org.codehaus.groovy.eclipse.dsl.proposals,
  org.codehaus.groovy.eclipse.dsl.script,
  org.codehaus.groovy.eclipse.dsl.ui
+Import-Package: org.eclipse.jdt.annotation
 Require-Bundle: org.codehaus.groovy;bundle-version="2.1.9",
  org.codehaus.groovy.eclipse.codeassist.completion;bundle-version="3.0.0",
  org.codehaus.groovy.eclipse.codebrowsing;bundle-version="3.0.0",

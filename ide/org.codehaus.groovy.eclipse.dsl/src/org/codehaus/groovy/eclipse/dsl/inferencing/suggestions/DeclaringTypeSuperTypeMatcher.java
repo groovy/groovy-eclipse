@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,11 +22,6 @@ import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.InferencingSugges
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.eclipse.core.resources.IProject;
 
-/**
- * 
- * @author Nieraj Singh
- * @created 2011-09-08
- */
 public class DeclaringTypeSuperTypeMatcher {
 
     private IProject project;
@@ -40,13 +35,10 @@ public class DeclaringTypeSuperTypeMatcher {
      * types that
      * are registered in the given project and contain at least one suggestion.
      * May be empty, but not null
-     * 
-     * @param context
-     * @return
      */
     public List<GroovySuggestionDeclaringType> getAllSuperTypes(GroovyDSLDContext context) {
         ProjectSuggestions suggestions = InferencingSuggestionsManager.getInstance().getSuggestions(project);
-        List<GroovySuggestionDeclaringType> superTypes = new ArrayList<GroovySuggestionDeclaringType>();
+        List<GroovySuggestionDeclaringType> superTypes = new ArrayList<>();
         if (suggestions != null) {
             for (GroovySuggestionDeclaringType declaringType : suggestions.getDeclaringTypes()) {
                 if (context.matchesType(declaringType.getName())) {

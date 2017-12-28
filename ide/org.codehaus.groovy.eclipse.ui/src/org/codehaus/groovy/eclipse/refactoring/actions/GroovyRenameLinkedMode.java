@@ -54,14 +54,11 @@ import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
 
-/**
- * @author andrew
- * @created Jan 7, 2011
- */
 public class GroovyRenameLinkedMode extends RenameLinkedMode {
 
     // copy from super
     private class EditorSynchronizer implements ILinkedModeListener {
+        @Override
         public void left(LinkedModeModel model, int flags) {
             doLinkedModeLeft();
             // don't actually do the refactorings for local variables
@@ -74,8 +71,10 @@ public class GroovyRenameLinkedMode extends RenameLinkedMode {
             }
         }
 
+        @Override
         public void resume(LinkedModeModel model, int flags) {}
 
+        @Override
         public void suspend(LinkedModeModel model) {}
     }
 
@@ -142,7 +141,8 @@ public class GroovyRenameLinkedMode extends RenameLinkedMode {
             }
 
             // convert from array of OccurrenceLocation to ordered collection of Position
-            Set<Position> positions = new TreeSet<Position>(new Comparator<Position>() {
+            Set<Position> positions = new TreeSet<>(new Comparator<Position>() {
+                @Override
                 public int compare(Position p1, Position p2) {
                     return rank(p1) - rank(p2);
                 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,13 +34,11 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.progress.UIJob;
 
 /**
- * Performs a static type check on all selected groovy files
- * @author andrew
- * @created May 24, 2011
+ * Performs a static type check on all selected groovy files.
  */
 public class StaticTypeCheckAction extends AbstractCheckerAction implements IObjectActionDelegate {
 
-    
+    @Override
     public void run(IAction action) {
         final List<IResource> selectionList = findSelection();
         if (selectionList != null) {
@@ -72,6 +70,4 @@ public class StaticTypeCheckAction extends AbstractCheckerAction implements IObj
             GroovyCore.logException("Exception when performing static type checking", e);
         }
     }
-
-    
 }

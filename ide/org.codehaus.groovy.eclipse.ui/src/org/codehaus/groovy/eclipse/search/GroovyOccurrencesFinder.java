@@ -53,6 +53,7 @@ public class GroovyOccurrencesFinder implements IOccurrencesFinder {
     private CompilationUnit cunit;
     private String elementName;
 
+    @Override
     public String getElementName() {
         if (elementName == null) {
             if (nodeToLookFor instanceof ClassNode) {
@@ -75,10 +76,12 @@ public class GroovyOccurrencesFinder implements IOccurrencesFinder {
         return nodeToLookFor;
     }
 
+    @Override
     public CompilationUnit getASTRoot() {
         return cunit;
     }
 
+    @Override
     public OccurrenceLocation[] getOccurrences() {
         Map<ASTNode, Integer> occurences = internalFindOccurences();
         OccurrenceLocation[] locations = new OccurrenceLocation[occurences.size()];
@@ -162,6 +165,7 @@ public class GroovyOccurrencesFinder implements IOccurrencesFinder {
     /**
      * Finds the {@link ASTNode} to look for.
      */
+    @Override
     public String initialize(CompilationUnit root, int offset, int length) {
         cunit = root;
         if (gunit == null) {
@@ -191,6 +195,7 @@ public class GroovyOccurrencesFinder implements IOccurrencesFinder {
         return null;
     }
 
+    @Override
     public String initialize(CompilationUnit root, org.eclipse.jdt.core.dom.ASTNode node) {
         return initialize(root, node.getStartPosition(), node.getLength());
     }
@@ -213,22 +218,27 @@ public class GroovyOccurrencesFinder implements IOccurrencesFinder {
         return FindOccurrencesEngine.create(new GroovyOccurrencesFinder());
     }
 
+    @Override
     public String getID() {
         return "GroovyOccurrencesFinder";
     }
 
+    @Override
     public String getJobLabel() {
         return "Search for Occurrences in File (Groovy)";
     }
 
+    @Override
     public int getSearchKind() {
         return K_OCCURRENCE;
     }
 
+    @Override
     public String getUnformattedSingularLabel() {
         return "''{0}'' - 1 occurrence in ''{1}''";
     }
 
+    @Override
     public String getUnformattedPluralLabel() {
         return "''{0}'' - {1} occurrences in ''{2}''";
     }

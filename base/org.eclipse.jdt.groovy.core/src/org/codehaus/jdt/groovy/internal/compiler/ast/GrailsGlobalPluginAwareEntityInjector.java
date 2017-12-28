@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,8 +36,6 @@ import org.eclipse.core.runtime.IPath;
  * transform doesn't execute when compiler is called from within STS/Eclipse because it requires plugin information inside of
  * GrailsBuildSettings to be intialized and present in BuildSettingsHolder. All of this is finicky and fragile to setup. So instead,
  * this somewhat hacky workaround in the Groovy Eclipse compiler does the same thing as the tranforms.
- *
- * @author Kris De Volder
  */
 public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOperation {
 

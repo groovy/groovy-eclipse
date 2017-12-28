@@ -46,6 +46,7 @@ public class OrganizeGroovyImportsAction extends OrganizeImportsAction {
         super(editor);
     }
 
+    @Override
     public void run(ICompilationUnit unit) {
         if (!(unit instanceof GroovyCompilationUnit)) {
             super.run(unit);
@@ -76,6 +77,7 @@ public class OrganizeGroovyImportsAction extends OrganizeImportsAction {
         }
     }
 
+    @Override
     public void run(IStructuredSelection selection) {
         MultiOrganizeImportAction delegate = getDelegate();
         ICompilationUnit[] units = delegate.getCompilationUnits(selection);
@@ -94,6 +96,7 @@ public class OrganizeGroovyImportsAction extends OrganizeImportsAction {
         MultiOrganizeImportAction delegate = (MultiOrganizeImportAction) ReflectionUtils.getPrivateField(OrganizeImportsAction.class, "fCleanUpDelegate", this);
         // override the final field's MultiOrganizeImportAction with our import clean-up
         MultiOrganizeImportAction override = new MultiOrganizeImportAction(getSite()) {
+            @Override
             protected ICleanUp[] getCleanUps(ICompilationUnit[] units) {
                 return new ICleanUp[] {new GroovyImportsCleanUp()};
             }

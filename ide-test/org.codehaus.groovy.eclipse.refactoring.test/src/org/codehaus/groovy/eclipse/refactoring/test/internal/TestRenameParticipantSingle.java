@@ -37,6 +37,7 @@ public final class TestRenameParticipantSingle extends RenameParticipant {
     private Object fElement;
     private String fHandle;
 
+    @Override
     public boolean initialize(Object element) {
         fgInstances.add(this);
         fElement= element;
@@ -49,14 +50,17 @@ public final class TestRenameParticipantSingle extends RenameParticipant {
         return true;
     }
 
+    @Override
     public String getName() {
         return getClass().getName();
     }
 
+    @Override
     public RefactoringStatus checkConditions(IProgressMonitor pm, CheckConditionsContext context) {
         return new RefactoringStatus();
     }
 
+    @Override
     public Change createChange(IProgressMonitor pm) throws CoreException {
         return null;
     }
@@ -91,6 +95,6 @@ public final class TestRenameParticipantSingle extends RenameParticipant {
         return ((TestRenameParticipantSingle)fgInstances.get(i));
     }
 
-    /* package */ void ref(Object element) {
+    void ref(Object element) {
     }
 }

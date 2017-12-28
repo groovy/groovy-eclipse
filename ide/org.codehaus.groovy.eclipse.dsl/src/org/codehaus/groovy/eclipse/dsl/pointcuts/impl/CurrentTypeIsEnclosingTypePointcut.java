@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,8 +28,6 @@ import org.eclipse.core.resources.IStorage;
  * Matches when the current type is the same as the lexically enclosing type.  Generally, this matches true
  * for references to 'this', or when a new expression is being started.  However, this pointuct
  * may not match on 'this' when inside of a closure.  This pointcut takes no arguments
- * @author andrew
- * @created Apr 1, 2011
  */
 public class CurrentTypeIsEnclosingTypePointcut extends AbstractPointcut {
 
@@ -51,7 +49,7 @@ public class CurrentTypeIsEnclosingTypePointcut extends AbstractPointcut {
         }
         return null;
     }
-    
+
     @Override
     public void verify() throws PointcutVerificationException {
         String noArgs = hasNoArgs();

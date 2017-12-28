@@ -80,13 +80,8 @@ public class GroovyTagScanner extends AbstractJavaScanner {
             return false;
         }
 
-        /*
-         * @see
-         * org.eclipse.jface.text.rules.IRule#evaluate(org.eclipse.jface.text
-         * .rules.ICharacterScanner)
-         */
+        @Override
         public IToken evaluate(ICharacterScanner scanner) {
-
             int character = scanner.read();
             if (isOperator((char) character)) {
                 do {
@@ -139,13 +134,8 @@ public class GroovyTagScanner extends AbstractJavaScanner {
             return false;
         }
 
-        /*
-         * @see
-         * org.eclipse.jface.text.rules.IRule#evaluate(org.eclipse.jface.text
-         * .rules.ICharacterScanner)
-         */
+        @Override
         public IToken evaluate(ICharacterScanner scanner) {
-
             int character = scanner.read();
             if (isBracket((char) character)) {
                 do {
@@ -191,25 +181,17 @@ public class GroovyTagScanner extends AbstractJavaScanner {
                 mark();
             }
 
-            /*
-             * @see org.eclipse.jface.text.rules.ICharacterScanner#getColumn()
-             */
+            @Override
             public int getColumn() {
                 return fDelegate.getColumn();
             }
 
-            /*
-             * @see
-             * org.eclipse.jface.text.rules.ICharacterScanner#getLegalLineDelimiters
-             * ()
-             */
+            @Override
             public char[][] getLegalLineDelimiters() {
                 return fDelegate.getLegalLineDelimiters();
             }
 
-            /*
-             * @see org.eclipse.jface.text.rules.ICharacterScanner#read()
-             */
+            @Override
             public int read() {
                 int ch = fDelegate.read();
                 if (ch != ICharacterScanner.EOF)
@@ -217,9 +199,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
                 return ch;
             }
 
-            /*
-             * @see org.eclipse.jface.text.rules.ICharacterScanner#unread()
-             */
+            @Override
             public void unread() {
                 if (fReadCount > 0)
                     fReadCount--;
@@ -251,6 +231,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
          * and the modifier of a method or field is highlighted as an annotation.
          */
         private final IWhitespaceDetector fWhitespaceDetector = new IWhitespaceDetector() {
+            @Override
             public boolean isWhitespace(char ch) {
                 return Character.isWhitespace(ch) && ch != '\n' && ch != '\r';
             }
@@ -275,11 +256,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
             fAnnotationToken = annotationToken;
         }
 
-        /*
-         * @see
-         * org.eclipse.jface.text.rules.IRule#evaluate(org.eclipse.jface.text
-         * .rules.ICharacterScanner)
-         */
+        @Override
         public IToken evaluate(ICharacterScanner scanner) {
 
             ResettableScanner resettable = new ResettableScanner(scanner);
@@ -478,7 +455,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
 
     @Override
     protected List<IRule> createRules() {
-        List<IRule> rules = new ArrayList<IRule>();
+        List<IRule> rules = new ArrayList<>();
 
         // initial additional rules
         if (initialAdditionalRules != null) {

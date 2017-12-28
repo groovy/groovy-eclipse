@@ -29,11 +29,12 @@ public class AddUnimplementedResolver extends AbstractQuickFixResolver {
         super(problem);
     }
 
+    @Override
     public List<IJavaCompletionProposal> getQuickFixProposals() {
-        Collection<ICommandAccess> proposals = new ArrayList<ICommandAccess>(2);
+        Collection<ICommandAccess> proposals = new ArrayList<>(2);
         LocalCorrectionsSubProcessor.addUnimplementedMethodsProposals(
             getQuickFixProblem().getContext(), getQuickFixProblem().getLocation(), proposals);
-        List<IJavaCompletionProposal> newProposals = new ArrayList<IJavaCompletionProposal>();
+        List<IJavaCompletionProposal> newProposals = new ArrayList<>();
         for (ICommandAccess command : proposals) {
             if (command instanceof IJavaCompletionProposal) {
                 newProposals.add((IJavaCompletionProposal) command);

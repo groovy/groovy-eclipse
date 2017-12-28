@@ -24,11 +24,13 @@ public class CharArraySourceBuffer extends CharArraySequence implements ISourceB
         super(chars);
     }
 
+    @Override
     public int[] toLineColumn(int offset) {
         // not yet implemented
         return null;
     }
 
+    @Override
     public int toOffset(int line, int column) {
         // not yet implemented
         return 0;

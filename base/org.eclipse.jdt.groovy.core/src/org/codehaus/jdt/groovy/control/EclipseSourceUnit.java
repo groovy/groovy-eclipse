@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,10 +25,9 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.eclipse.core.resources.IFile;
 
 /**
- * Eclipse specific subclass of SourceUnit, attaches extra information to a SourceUnit that is specific to compilation in an Eclipse
- * context.
+ * Eclipse specific subclass of SourceUnit, attaches extra information to a
+ * SourceUnit that is specific to compilation in an Eclipse context.
  *
- * @author Kris De Volder
  * @since 2.5.2
  */
 public class EclipseSourceUnit extends SourceUnit {

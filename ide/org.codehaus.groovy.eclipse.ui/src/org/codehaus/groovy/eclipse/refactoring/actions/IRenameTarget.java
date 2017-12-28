@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,6 @@ import org.eclipse.ui.texteditor.AbstractTextEditor;
 /**
  * Things that want to be treated as rename targets that provide special renaming behavior, overriding
  * the default JDT / Greclipse renaming behaviour can do so by addapting to IRenameTarget.
- *
- * @author Kris De Volder
  */
 public interface IRenameTarget {
 

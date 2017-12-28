@@ -360,8 +360,8 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
             return unknownNodes;
         }
 
-        public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result,
-                IJavaElement enclosingElement) {
+        @Override
+        public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
             if (result.confidence == TypeConfidence.UNKNOWN && node.getEnd() > 0) {
                 unknownNodes.add(node);
             }
@@ -384,6 +384,7 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
             this.end = end;
         }
 
+        @Override
         public VisitStatus acceptASTNode(ASTNode visitorNode, TypeLookupResult visitorResult, IJavaElement enclosingElement) {
             // might have AST nodes with overlapping locations, so result may not be null
             if (this.result == null &&

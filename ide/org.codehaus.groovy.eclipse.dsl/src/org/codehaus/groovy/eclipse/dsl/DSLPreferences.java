@@ -20,9 +20,6 @@ import java.util.Set;
 
 /**
  * Manipulator of all preferences for DSLD settings.
- *
- * @author andrew
- * @created Feb 27, 2011
  */
 public class DSLPreferences {
 
@@ -51,7 +48,7 @@ public class DSLPreferences {
 
     public static Set<String> getDisabledScriptsAsSet() {
         String[] disabled = getDisabledScripts();
-        Set<String> set = new HashSet<String>(disabled.length*2);
+        Set<String> set = new HashSet<>(disabled.length*2);
         for (String dis : disabled) {
             set.add(dis);
         }
@@ -59,11 +56,10 @@ public class DSLPreferences {
     }
 
     /**
-     * persists the set of all the disabled scripts
-     * @param disabled
+     * Persists the set of all the disabled scripts,
+     * <p>
+     * NOTE: filters on the set, not on the get since the filtering will take extra time and a get is more time sensitive.
      */
-    // note that we filter on the set, not on the get since the filtering will take extra time
-    // and a get is more time sensitive.
     public static void setDisabledScripts(String[] disabled) {
         String[] filtered = filter(disabled);
         GroovyDSLCoreActivator.getDefault().getPreferenceStore().putValue(DISABLED_SCRIPTS, join(filtered));

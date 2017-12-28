@@ -35,6 +35,7 @@ import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
+import org.codehaus.groovy.runtime.IOGroovyMethods;
 import org.eclipse.core.internal.resources.ResourceException;
 import org.eclipse.core.resources.IResourceStatus;
 import org.eclipse.core.resources.IStorage;
@@ -272,9 +273,8 @@ public class DSLDScriptExecutor {
     }
 
     public String getContents(IStorage file) throws IOException, CoreException {
-        BufferedReader br;
-        try {
-            br = new BufferedReader(new InputStreamReader(file.getContents()));
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getContents()))) {
+            return IOGroovyMethods.getText(br);
         } catch (ResourceException e) {
             if (e.getStatus().getCode() == IResourceStatus.RESOURCE_NOT_FOUND) {
                 // ignore...probably not able to access an external file
@@ -283,16 +283,6 @@ public class DSLDScriptExecutor {
             }
             return "";
         }
-
-        StringBuffer sb= new StringBuffer(300);
-        try {
-            int read= 0;
-            while ((read= br.read()) != -1)
-                sb.append((char) read);
-        } finally {
-            br.close();
-        }
-        return sb.toString();
     }
 
     protected Object tryRegister(Object args) {

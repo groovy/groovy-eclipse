@@ -37,6 +37,7 @@ import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator implements IJavaProjectConfigurator {
 
+    @Override
     public void configure(ProjectConfigurationRequest request, IProgressMonitor monitor) throws CoreException {
         super.configure(request, monitor); // drives calls to configureClasspath and configureRawClasspath
         ProjectSourceType sourceType = ProjectSourceType.getSourceType(request.getMavenProjectFacade());
@@ -47,10 +48,12 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
         }
     }
 
+    @Override
     public void configureClasspath(IMavenProjectFacade facade, IClasspathDescriptor classpath, IProgressMonitor monitor) throws CoreException {
         // nothing to add to the Maven Dependencies container
     }
 
+    @Override
     public void configureRawClasspath(ProjectConfigurationRequest request, IClasspathDescriptor classpath, IProgressMonitor monitor) throws CoreException {
         ProjectSourceType sourceType = ProjectSourceType.getSourceType(request.getMavenProjectFacade());
         if (sourceType != null) {
@@ -87,6 +90,7 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
         }
     }
 
+    @Override
     protected void addJavaProjectOptions(Map<String, String> options, ProjectConfigurationRequest request, IProgressMonitor monitor) throws CoreException {
         String configScript = null;
 

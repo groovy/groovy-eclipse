@@ -59,6 +59,7 @@ public class EventListener {
         events.clear();
     }
 
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         for (String event : events) {

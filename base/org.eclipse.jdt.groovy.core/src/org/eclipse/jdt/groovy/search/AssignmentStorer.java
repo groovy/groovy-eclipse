@@ -43,8 +43,6 @@ import org.codehaus.groovy.syntax.Types;
  *     expression, use the type of the object expression; add to VariableScope, don't replace</li>
  * <li>If {@link BinaryExpression}, use the type of the objectExpression; replace in VariableScope, don't add</li>
  * </ul>
- *
- * @author Andrew Eisenberg
  */
 public class AssignmentStorer {
 

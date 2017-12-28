@@ -26,8 +26,6 @@ import java.util.Map;
  * For a given problem, this registry will look up potential resolvers that can
  * provide a quick fix solution for the problem. There may be more than one
  * resolver that can handle the problem </br>
- *
- * @author Nieraj Singh
  */
 public class GroovyQuickFixResolverRegistry {
 
@@ -69,14 +67,14 @@ public class GroovyQuickFixResolverRegistry {
      */
     protected Map<ProblemType, List<IQuickFixResolver>> getRegistry() {
         if (registry == null) {
-            registry = new EnumMap<ProblemType, List<IQuickFixResolver>>(ProblemType.class);
+            registry = new EnumMap<>(ProblemType.class);
             IQuickFixResolver[] registeredResolvers = getRegisteredResolvers(getQuickFixProblem());
             for (IQuickFixResolver resolver : registeredResolvers) {
                 List<ProblemType> types = resolver.getProblemTypes();
                 for (ProblemType type : types) {
                     List<IQuickFixResolver> resolvers = registry.get(type);
                     if (resolvers == null) {
-                        resolvers = new ArrayList<IQuickFixResolver>(registeredResolvers.length);
+                        resolvers = new ArrayList<>(registeredResolvers.length);
                         registry.put(type, resolvers);
                     }
                     resolvers.add(resolver);

@@ -98,7 +98,7 @@ public class NewGroovyTestTypeWizardPage extends NewTestCaseWizardPageOne {
     @Override
     protected IStatus superClassChanged() {
         // replaces the super class validation of of the normal type wizard
-        if (isJUnit4()) {
+        if (getJUnitVersion() == JUnitVersion.VERSION_4) {
             return super.superClassChanged();
         }
 
@@ -143,7 +143,7 @@ public class NewGroovyTestTypeWizardPage extends NewTestCaseWizardPageOne {
         // GRECLIPSE-322
         if (pack == null) pack = getPackageFragmentRoot().getPackageFragment("");
         // if JUnit 3 and default package, calling super.creatType will be an error
-        if (!isJUnit4() && getPackageFragment().getElementName().equals("")) {
+        if (getJUnitVersion() == JUnitVersion.VERSION_3 && getPackageFragment().getElementName().equals("")) {
             String newline = StubUtility.getLineDelimiterUsed(pack.getJavaProject());
             StringBuilder source = new StringBuilder();
             String superClass = getSuperClass();

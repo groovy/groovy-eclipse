@@ -1,5 +1,5 @@
- /*
- * Copyright 2003-2009 the original author or authors.
+/*
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,69 +26,41 @@ import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
-public class OpenGroovyProjectWizardAction extends AbstractOpenWizardAction
-		implements IWorkbenchWindowActionDelegate {
+public class OpenGroovyProjectWizardAction extends AbstractOpenWizardAction implements IWorkbenchWindowActionDelegate {
 
-	public OpenGroovyProjectWizardAction() {
-		// WorkbenchHelp.setHelp(this,
-		// IJavaHelpContextIds.OPEN_PROJECT_WIZARD_ACTION);
-	}
+    public OpenGroovyProjectWizardAction() {
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.jdt.ui.actions.AbstractOpenWizardAction#createWizard()
-	 */
-	protected final INewWizard createWizard() throws CoreException {
-		return new GroovyProjectWizard();
-	}
+    @Override
+    protected final INewWizard createWizard() throws CoreException {
+        return new GroovyProjectWizard();
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.jdt.ui.actions.AbstractOpenWizardAction#doCreateProjectFirstOnEmptyWorkspace(Shell)
-	 */
-	protected boolean doCreateProjectFirstOnEmptyWorkspace(Shell shell) {
-		return true; // can work on an empty workspace
-	}
+    @Override
+    protected boolean doCreateProjectFirstOnEmptyWorkspace(Shell shell) {
+        return true; // can work on an empty workspace
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.IWorkbenchWindowActionDelegate#dispose()
-	 */
-	public void dispose() {
-	}
+    @Override
+    public void dispose() {
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.IWorkbenchWindowActionDelegate#init(org.eclipse.ui.IWorkbenchWindow)
-	 */
-	public void init(IWorkbenchWindow window) {
-		setShell(window.getShell());
-	}
+    @Override
+    public void init(IWorkbenchWindow window) {
+        setShell(window.getShell());
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
-	 */
-	public void run(IAction action) {
-		super.run();
-	}
+    @Override
+    public void run(IAction action) {
+        super.run();
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.IActionDelegate#selectionChanged(org.eclipse.jface.action.IAction,
-	 *      org.eclipse.jface.viewers.ISelection)
-	 */
-	public void selectionChanged(IAction action, ISelection selection) {
-		if (selection instanceof IStructuredSelection) {
-			setSelection((IStructuredSelection) selection);
-		} else {
-			setSelection(StructuredSelection.EMPTY);
-		}
-	}
+    @Override
+    public void selectionChanged(IAction action, ISelection selection) {
+        if (selection instanceof IStructuredSelection) {
+            setSelection((IStructuredSelection) selection);
+        } else {
+            setSelection(StructuredSelection.EMPTY);
+        }
+    }
 }

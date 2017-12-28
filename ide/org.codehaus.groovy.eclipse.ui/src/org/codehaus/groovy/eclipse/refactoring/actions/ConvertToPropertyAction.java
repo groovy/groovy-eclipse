@@ -58,6 +58,7 @@ public class ConvertToPropertyAction extends Action {
         setActionDefinitionId("org.codehaus.groovy.eclipse.ui.convertToProperty");
     }
 
+    @Override
     public void run() {
         if (!ActionUtil.isEditable(editor))
             return;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,13 +30,10 @@ import org.eclipse.core.resources.IStorage;
  * Converts the object toMatch into a type and then sees if it is a subtype.
  * If there is an inner pointcut, then all super types are passed on to the inner pointcut.
  * Think of it this way..."Is the current type a subtype of something that has these characteristics"?
- *
- * @author andrew
- * @created Apr 20, 2011
  */
 public class SubTypePointcut extends FilteringPointcut<ClassNode> {
 
-    private Map<ClassNode, Set<ClassNode>> cachedHierarchies = new HashMap<ClassNode, Set<ClassNode>>();
+    private Map<ClassNode, Set<ClassNode>> cachedHierarchies = new HashMap<>();
 
     public SubTypePointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName, ClassNode.class);
@@ -50,7 +47,7 @@ public class SubTypePointcut extends FilteringPointcut<ClassNode> {
     @Override
     protected Collection<ClassNode> explodeObject(Object toMatch) {
         if (toMatch instanceof Collection) {
-            Collection<ClassNode> classes = new LinkedHashSet<ClassNode>();
+            Collection<ClassNode> classes = new LinkedHashSet<>();
             for (Object obj : (Collection<?>) toMatch) {
                 if (obj instanceof ClassNode) {
                     classes.addAll(getAllSupers((ClassNode) obj));
@@ -58,7 +55,7 @@ public class SubTypePointcut extends FilteringPointcut<ClassNode> {
             }
             return classes;
         } else if (toMatch instanceof ClassNode) {
-            return new LinkedHashSet<ClassNode>(getAllSupers(((ClassNode) toMatch)));
+            return new LinkedHashSet<>(getAllSupers(((ClassNode) toMatch)));
         }
         return null;
     }
@@ -75,7 +72,7 @@ public class SubTypePointcut extends FilteringPointcut<ClassNode> {
     private Set<ClassNode> getAllSupers(ClassNode type) {
         Set<ClassNode> cached = cachedHierarchies.get(type);
         if (cached == null) {
-            cached = new HashSet<ClassNode>();
+            cached = new HashSet<>();
             internalGetAllSupers(type, cached);
             cachedHierarchies.put(type, cached);
         }

@@ -36,24 +36,24 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
-/**
- *
- * @author Andrew Eisenberg
- * @since 3.0.0
- */
 public class ListMessageDialog extends MessageDialog {
 
-    class TableContentProvider implements IStructuredContentProvider {
+    static class TableContentProvider implements IStructuredContentProvider {
+        @Override
         public Object[] getElements(Object inputElement) {
             if (inputElement instanceof IProject[]) {
                 return (IProject[]) inputElement;
             }
             return null;
         }
-
-        public void dispose() { }
-        public void inputChanged(Viewer viewer2, Object oldInput, Object newInput) { }
+        @Override
+        public void dispose() {
+        }
+        @Override
+        public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
+        }
     }
+
     private static final String TITLE = "Fix compiler level mismatches"; //$NON-NLS-1$
 
     private final IProject[] mismatchedProjects;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,13 +29,11 @@ import org.eclipse.core.resources.IStorage;
 import org.eclipse.jdt.core.compiler.CharOperation;
 
 /**
- * Tests that the file of the current type of expression being analyzed is in 
+ * Tests that the file of the current type of expression being analyzed is in
  * the given source folder
- * 
+ *
  * Argument should be the workspace relative path to the source folder, using '/'
  * as a path separator.
- * @author andrew
- * @created Feb 10, 2011
  */
 public class SourceFolderOfTypePointcut extends AbstractPointcut {
 
@@ -52,7 +50,7 @@ public class SourceFolderOfTypePointcut extends AbstractPointcut {
             return null;
         }
     }
-    
+
 
     private ClassNode toType(Object toMatch) {
         if (toMatch instanceof ClassNode) {
@@ -84,13 +82,13 @@ public class SourceFolderOfTypePointcut extends AbstractPointcut {
                 }
             }
         } else {
-            // check if this type is in the current file 
+            // check if this type is in the current file
             ModuleNode module = pattern.getCurrentScope().getEnclosingTypeDeclaration().getModule();
             if (module != null && module.getClasses().contains(redirect)) {
                 return pattern.fullPathName;
             }
         }
-        
+
         // will be "" for primitive and other core types loaded by ClassHelper.
         return "";
     }

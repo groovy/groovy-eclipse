@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,9 +25,6 @@ import org.eclipse.core.resources.IStorage;
 
 /**
  * Matches based on the declaring type of a declaration.
- *
- * @author andrew
- * @created Jul 22, 2011
  */
 public class DeclaringTypePointcut extends FilteringPointcut<ClassNode>  {
 

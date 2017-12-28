@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.core.compiler;
 
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 
 class MockCompilationUnit implements ICompilationUnit {
@@ -27,24 +28,28 @@ class MockCompilationUnit implements ICompilationUnit {
         this.fileName = fileName;
     }
 
+    @Override
     public char[] getContents() {
         return contents;
     }
 
+    @Override
     public char[] getMainTypeName() {
-        return new char[0];
+        return CharOperation.NO_CHAR;
     }
 
+    @Override
     public char[][] getPackageName() {
-        return new char[0][];
+        return CharOperation.NO_CHAR_CHAR;
     }
 
+    @Override
     public char[] getFileName() {
         return fileName;
     }
 
+    @Override
     public boolean ignoreOptionalProblems() {
         return false;
     }
-
 }

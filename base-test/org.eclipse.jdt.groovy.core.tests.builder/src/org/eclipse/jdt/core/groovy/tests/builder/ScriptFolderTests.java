@@ -25,12 +25,9 @@ import org.codehaus.groovy.runtime.ResourceGroovyMethods;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.resources.IWorkspaceRunnable;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
@@ -386,12 +383,7 @@ public final class ScriptFolderTests extends BuilderTestSuite {
         final IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
         if (!project.exists()) {
             SimpleProgressMonitor spm = new SimpleProgressMonitor("creation of project "+projectName);
-            IWorkspaceRunnable populate = new IWorkspaceRunnable() {
-                public void run(IProgressMonitor monitor) throws CoreException {
-                    project.create(monitor);
-                }
-            };
-            ResourcesPlugin.getWorkspace().run(populate, spm);
+            ResourcesPlugin.getWorkspace().run(monitor -> project.create(monitor), spm);
             spm.waitForCompletion();
         }
 

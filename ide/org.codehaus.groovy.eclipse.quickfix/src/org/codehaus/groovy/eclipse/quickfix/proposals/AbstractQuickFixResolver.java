@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,75 +29,59 @@ import org.eclipse.jdt.core.JavaModelException;
  * This resolver is passed an actual quick fix problem context representing the
  * problem encountered in the resource which the quick fix proposals can then
  * reference when resolving the problem
- * </p>
- * 
- * @author Nieraj Singh
- * 
  */
 public abstract class AbstractQuickFixResolver implements IQuickFixResolver {
-	private List<ProblemType> problemTypes;
-	private QuickFixProblemContext problem;
+    private List<ProblemType> problemTypes;
+    private QuickFixProblemContext problem;
 
-	/**
-	 * 
-	 * @param problem
-	 *            the actual quick fix problem that this resolver should
-	 *            resolve.
-	 */
-	protected AbstractQuickFixResolver(QuickFixProblemContext problem) {
-		this.problem = problem;
-	}
+    /**
+     * @param problem the actual quick fix problem that this resolver should resolve
+     */
+    protected AbstractQuickFixResolver(QuickFixProblemContext problem) {
+        this.problem = problem;
+    }
 
-	/**
-	 * 
-	 * @return non-null quick fix problem representing the actual Groovy or Java
-	 *         problem that has been encountered in the resource
-	 */
-	protected QuickFixProblemContext getQuickFixProblem() {
-		return problem;
-	}
+    /**
+     * @return non-null quick fix problem representing the actual Groovy or Java
+     *         problem that has been encountered in the resource
+     */
+    protected QuickFixProblemContext getQuickFixProblem() {
+        return problem;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixResolver#
-	 * getProblemTypes()
-	 */
-	public List<ProblemType> getProblemTypes() {
-		if (problemTypes == null) {
-			problemTypes = new ArrayList<ProblemType>();
-			ProblemType[] types = getTypes();
-			if (types != null) {
-				for (ProblemType type : types) {
-					if (type != null && !problemTypes.contains(type)) {
-						problemTypes.add(type);
-					}
-				}
-			}
-		}
-		return problemTypes;
-	}
+    @Override
+    public List<ProblemType> getProblemTypes() {
+        if (problemTypes == null) {
+            problemTypes = new ArrayList<>();
+            ProblemType[] types = getTypes();
+            if (types != null) {
+                for (ProblemType type : types) {
+                    if (type != null && !problemTypes.contains(type)) {
+                        problemTypes.add(type);
+                    }
+                }
+            }
+        }
+        return problemTypes;
+    }
 
-	protected IType[] getContextTypes() {
-		QuickFixProblemContext context = getQuickFixProblem();
-		if (context != null) {
-			ICompilationUnit unit = context.getCompilationUnit();
-			if (unit != null) {
-				try {
-					return unit.getAllTypes();
-				} catch (JavaModelException e) {
-					// do nothing
-				}
-			}
-		}
-		return null;
-	}
+    protected IType[] getContextTypes() {
+        QuickFixProblemContext context = getQuickFixProblem();
+        if (context != null) {
+            ICompilationUnit unit = context.getCompilationUnit();
+            if (unit != null) {
+                try {
+                    return unit.getAllTypes();
+                } catch (JavaModelException e) {
+                    // do nothing
+                }
+            }
+        }
+        return null;
+    }
 
-	/**
-	 * 
-	 * @return non null, non empty array of problem types that this resolver can
-	 *         handle
-	 */
-	protected abstract ProblemType[] getTypes();
-
+    /**
+     * @return non null, non empty array of problem types that this resolver can handle
+     */
+    protected abstract ProblemType[] getTypes();
 }

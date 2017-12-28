@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,9 +28,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.eclipse.core.resources.IStorage;
 
 /**
- * Matches based on attributes in {@link AnnotationNode}s
- * @author andrew
- * @created Jul 22, 2011
+ * Matches based on attributes in {@link AnnotationNode}s.
  */
 public class HasAttributesPointcut extends FilteringPointcut<Expression>  {
 
@@ -46,7 +44,7 @@ public class HasAttributesPointcut extends FilteringPointcut<Expression>  {
         if (toMatch instanceof AnnotationNode) {
             Map<String, Expression> members = ((AnnotationNode) toMatch).getMembers();
             // wrap the member value pairs in a collection of MapEntrys
-            Collection<Expression> expressions = new ArrayList<Expression>(members.size());
+            Collection<Expression> expressions = new ArrayList<>(members.size());
             for (Entry<String, Expression> entry : members.entrySet()) {
                 expressions.add(new MapEntryExpression(new ConstantExpression(entry.getKey()), entry.getValue()));
             }

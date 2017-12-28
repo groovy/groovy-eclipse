@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,25 +16,14 @@
 package org.codehaus.groovy.eclipse.codeassist.factories;
 
 import org.codehaus.groovy.eclipse.codeassist.processors.IGroovyCompletionProcessor;
+import org.codehaus.groovy.eclipse.codeassist.processors.NewVariableCompletionProcessor;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 
-/**
- *
- * @author andrew
- * @created Apr 29, 2011
- */
 public class NewVariableCompletionProcessorFactory implements IGroovyCompletionProcessorFactory {
-
-    public IGroovyCompletionProcessor createProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext,
-            SearchableEnvironment nameEnvironment) {
-
-        // first thing is to look backwards and see if the previous word on the
-        // line looks like a type reference.
-        // get its name
-        // (should also handle generics)
-
-        return null;
+    @Override
+    public IGroovyCompletionProcessor createProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
+        return new NewVariableCompletionProcessor(context, javaContext, nameEnvironment);
     }
 }

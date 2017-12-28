@@ -25,6 +25,7 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 
 public class BinaryGroovySupplementalIndexer implements ISupplementalIndexer {
 
+    @Override
     public List<char[]> extractNamedReferences(byte[] contents, ClassFileReader reader) {
         int[] constantPoolOffsets = reader.getConstantPoolOffsets();
         int constantPoolCount = constantPoolOffsets.length;

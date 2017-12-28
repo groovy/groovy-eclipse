@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,10 +24,6 @@ import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.SourceField;
 import org.eclipse.jdt.internal.core.SourceFieldElementInfo;
 
-/**
- * @author maxime hamm
- * @created 11 avr. 2011
- */
 public abstract class OField extends SourceField implements IOJavaElement {
 
     protected ASTNode node;
@@ -39,6 +35,7 @@ public abstract class OField extends SourceField implements IOJavaElement {
         this.node = node;
     }
 
+    @Override
     public ASTNode getNode() {
         return node;
     }
@@ -47,8 +44,6 @@ public abstract class OField extends SourceField implements IOJavaElement {
      * The element name node.
      * i.e the node that will be highlighted int the editor when you will select
      * the field in the outline view
-     *
-     * @return
      */
     public ASTNode getElementNameNode() {
         return node;
@@ -83,17 +78,9 @@ public abstract class OField extends SourceField implements IOJavaElement {
 
     @Override
     public String[] getCategories() throws JavaModelException {
-        // categories not supported
-        //        if (exists()) {
-        //            return super.getCategories();
-        //        }
         return NO_CATEGORIES;
     }
 
-    /****************************************************************************
-     * @author maxime hamm
-     * @created 11 avr. 2011
-     */
     public class OFieldInfo extends SourceFieldElementInfo {
 
         @Override
@@ -130,5 +117,4 @@ public abstract class OField extends SourceField implements IOJavaElement {
             return OField.this.getTypeSignature();
         }
     }
-
 }

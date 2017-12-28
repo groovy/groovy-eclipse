@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,16 +24,8 @@ import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner;
 import org.eclipse.jdt.internal.core.JavaProject;
 import org.eclipse.jdt.internal.core.NameLookup;
 
-/**
- * 
- * @author Nieraj Singh
- * @created 2011-09-14
- */
 public abstract class AbstractJavaTypeVerifiedRule implements IValueCheckingRule {
 
-    /**
-     * 
-     */
     public static final String THE_SPECIFIED_JAVA_TYPES_DO_NOT_EXIST = "The specified Java type(s) does not exist: ";
 
     public static final String INVALID_JAVA = "Invalid Java type.";

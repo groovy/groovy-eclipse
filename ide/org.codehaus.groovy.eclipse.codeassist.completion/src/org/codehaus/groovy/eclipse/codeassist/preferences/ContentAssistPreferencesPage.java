@@ -44,6 +44,7 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 public class ContentAssistPreferencesPage extends FieldEditorOverlayPage implements IWorkbenchPreferencePage {
 
     private static class DGMValidator implements IInputValidator {
+        @Override
         public String isValid(String newText) {
             if (newText.trim().length() == 0) {
                 return "";
@@ -186,6 +187,7 @@ public class ContentAssistPreferencesPage extends FieldEditorOverlayPage impleme
         setPreferenceStore(GroovyContentAssist.getDefault().getPreferenceStore());
     }
 
+    @Override
     public void init(IWorkbench workbench) {
     }
 

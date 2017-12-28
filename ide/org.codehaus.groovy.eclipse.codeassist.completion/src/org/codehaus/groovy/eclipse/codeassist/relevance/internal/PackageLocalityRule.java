@@ -22,10 +22,12 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 
 public class PackageLocalityRule implements IRelevanceRule {
 
+    @Override
     public int getRelevance(IType type, IType[] contextTypes) {
         return getRelevance(type.getFullyQualifiedName().toCharArray(), contextTypes, 0, 0);
     }
 
+    @Override
     public int getRelevance(char[] fullyQualifiedName, IType[] contextTypes, int accessibility, int modifiers) {
         int relevance = 0;
 

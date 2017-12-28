@@ -29,9 +29,6 @@ import org.eclipse.jface.text.IDocument;
  * DefaultIndentLineAutoEditStrategy. This should be reasonable since that
  * strategy is meant for editing text, which is mostly what should be inside a
  * String.
- *
- * @author kdvolder
- * @created 2010-05-19
  */
 public class GroovyMultilineStringAutoEditStrategy extends AbstractAutoEditStrategy {
     // FIXKDV: This class should be renamed. It now handles both multiline and
@@ -45,6 +42,7 @@ public class GroovyMultilineStringAutoEditStrategy extends AbstractAutoEditStrat
     public GroovyMultilineStringAutoEditStrategy(String contentType) {
     }
 
+    @Override
     public void customizeDocumentCommand(IDocument d, DocumentCommand c) {
         if (true)
             return;

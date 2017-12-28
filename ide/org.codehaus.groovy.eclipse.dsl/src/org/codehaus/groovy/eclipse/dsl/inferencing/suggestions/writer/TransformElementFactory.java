@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,11 +22,6 @@ import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovySuggestionD
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.IGroovySuggestion;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.MethodParameter;
 
-/**
- * 
- * @author Nieraj Singh
- * @created 2011-08-09
- */
 public class TransformElementFactory {
 
     public TransformElement getSuggestionsElement(IGroovySuggestion suggestion) {
@@ -94,5 +89,5 @@ public class TransformElementFactory {
 
         return declaringTypeElement;
 
-    } 
+    }
 }

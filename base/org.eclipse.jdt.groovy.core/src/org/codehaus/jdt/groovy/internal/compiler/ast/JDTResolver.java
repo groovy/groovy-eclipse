@@ -52,8 +52,6 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
  * lifetime as the JDTResolver. The resolver does type lookups through the currently active scope - the active scope is set when the
  * method 'commencingResolution()' is called. This is called by the superclass (ResolveVisitor) when it is about to start resolving
  * every reference in a type.
- *
- * @author Andy Clement
  */
 public class JDTResolver extends ResolveVisitor {
 
@@ -462,6 +460,7 @@ public class JDTResolver extends ResolveVisitor {
         }
     }
 
+    @Override
     public void startResolving(ClassNode node, SourceUnit source) {
         try {
             super.startResolving(node, source);

@@ -1046,11 +1046,13 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         return methodCallArgumentTypes != null;
     }
 
+    @Override
     public Iterator<VariableInfo> iterator() {
         return new Iterator<VariableInfo>() {
             VariableScope currentScope = VariableScope.this;
             Iterator<VariableInfo> currentIter = currentScope.nameVariableMap.values().iterator();
 
+            @Override
             public boolean hasNext() {
                 if (currentIter == null) {
                     return false;
@@ -1062,10 +1064,12 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                 return currentIter != null && currentIter.hasNext();
             }
 
+            @Override
             public VariableInfo next() {
                 return new VariableInfo(currentIter.next(), currentScope.scopeNode);
             }
 
+            @Override
             public void remove() {
                 throw new UnsupportedOperationException();
             }

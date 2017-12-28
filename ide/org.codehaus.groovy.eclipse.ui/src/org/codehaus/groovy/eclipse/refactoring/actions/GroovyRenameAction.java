@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,6 @@ import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 
 /**
- * @author Andrew Eisenberg
- * @created Aug 26, 2009
  * Replaces JDT's rename action with Groovy's
  */
 public class GroovyRenameAction extends RenameAction {

@@ -47,9 +47,8 @@ public class RemoveGroovyNatureAction implements IObjectActionDelegate {
 
     private boolean shouldAskToRemoveJars = true;
 
-
+    @Override
     public void run(final IAction action) {
-
         if (currSelected != null && currSelected.size() > 0) {
             GroovyCore.trace("RemoveGroovySupportAction.run()");
 
@@ -78,16 +77,11 @@ public class RemoveGroovyNatureAction implements IObjectActionDelegate {
         }
     }
 
-    /**
-     * @return
-     */
     private Shell getShell() {
         return targetPart != null ? targetPart.getSite().getShell() : Display.getDefault().getActiveShell();
     }
 
-    /**
-     * @see IEditorActionDelegate#selectionChanged
-     */
+    @Override
     public void selectionChanged(final IAction action, final ISelection selection) {
         currSelected.clear();
         List<IProject> newSelected = new LinkedList<>();
@@ -119,9 +113,7 @@ public class RemoveGroovyNatureAction implements IObjectActionDelegate {
         }
     }
 
-    /**
-     * @see IEditorActionDelegate#setActivePart
-     */
+    @Override
     public void setActivePart(final IAction action, final IWorkbenchPart targetPart) {
         this.targetPart = targetPart;
     }

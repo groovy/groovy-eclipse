@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,15 +31,11 @@ import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.SourceType;
 import org.eclipse.jdt.internal.core.SourceTypeElementInfo;
 
-/**
- * @author maxime
- * @created 1 avr. 2011
- */
 public class OType extends SourceType implements IOJavaElement {
 
     protected ASTNode node;
 
-    private List<IMember> children = new LinkedList<IMember>();
+    private List<IMember> children = new LinkedList<>();
 
     private OTypeInfo cachedInfo;
 
@@ -84,6 +80,7 @@ public class OType extends SourceType implements IOJavaElement {
         }
     }
 
+    @Override
     public ASTNode getNode() {
         return node;
     }
@@ -142,10 +139,6 @@ public class OType extends SourceType implements IOJavaElement {
         return NO_CATEGORIES;
     }
 
-    /****************************************************************************
-     * @author maxime
-     * @created 3 avr. 2011
-     */
     public class OTypeInfo extends SourceTypeElementInfo {
 
         @Override

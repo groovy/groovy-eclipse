@@ -714,8 +714,6 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "\n"+
             "/**\n"+
             " * Demonstrates how a local transformation works. \n"+
-            " * \n"+
-            " * @author Hamlet D'Arcy\n"+
             " */ \n"+
             "\n"+
             "def greet() {\n"+

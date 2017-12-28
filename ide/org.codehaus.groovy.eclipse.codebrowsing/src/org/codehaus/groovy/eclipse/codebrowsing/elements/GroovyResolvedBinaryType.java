@@ -40,19 +40,23 @@ public class GroovyResolvedBinaryType extends ResolvedBinaryType implements IGro
         this.inferredElement = inferredElement;
     }
 
+    @Override
     public String getExtraDoc() {
         return extraDoc;
     }
 
+    @Override
     public int getFlags() throws JavaModelException {
         // a compiled collector (aka BinaryType) is actually a final class; adjust flags so it appears as an annotation
         return super.getFlags() ^ (isAnnotationCollector() ? 0x00002010 /*aka Modifier.ANNOTATION and Modifier.FINAL*/ : 0);
     }
 
+    @Override
     public ASTNode getInferredElement() {
         return inferredElement;
     }
 
+    @Override
     public String getInferredElementName() {
         if (inferredElement instanceof Variable) {
             return ((Variable) inferredElement).getName();

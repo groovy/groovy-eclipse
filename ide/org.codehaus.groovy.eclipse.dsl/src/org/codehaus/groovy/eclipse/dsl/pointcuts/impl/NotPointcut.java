@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,9 +26,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 import org.eclipse.core.resources.IStorage;
 
 /**
- * Negates the pointcut that this one encloses
- * @author andrew
- * @created Feb 10, 2011
+ * Negates the pointcut that this one encloses.
  */
 public class NotPointcut extends AbstractPointcut {
 
@@ -38,11 +36,11 @@ public class NotPointcut extends AbstractPointcut {
         super(containerIdentifier, pointcutName);
     }
 
+    @Override
     public boolean fastMatch(GroovyDSLDContext pattern) {
         return matches(pattern, EMPTY_MATCH) != null;
     }
 
-    
     @Override
     public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
         Collection<?> collection;
@@ -58,7 +56,7 @@ public class NotPointcut extends AbstractPointcut {
             return EMPTY_MATCH;
         }
     }
-    
+
     @Override
     public void verify() throws PointcutVerificationException {
         super.verify();
@@ -66,7 +64,8 @@ public class NotPointcut extends AbstractPointcut {
         if (arg instanceof IPointcut) {
             ((IPointcut) arg).verify();
         } else {
-            throw new PointcutVerificationException("A pointcut is required as the single argument to the 'not' pointcut", this);
+            throw new PointcutVerificationException(
+                "A pointcut is required as the single argument to the 'not' pointcut", this);
         }
     }
 }

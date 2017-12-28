@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,9 +27,6 @@ import org.eclipse.core.resources.IStorage;
 /**
  * the match returns true if the pattern passed in has a method with the
  * supplied characteristics (either a name, or another pointcut such as hasAnnotation).
- *
- * @author andrew
- * @created Feb 11, 2011
  */
 public class FindMethodPointcut extends FilteringPointcut<MethodNode> {
 
@@ -45,7 +42,7 @@ public class FindMethodPointcut extends FilteringPointcut<MethodNode> {
     @Override
     protected Collection<MethodNode> explodeObject(Object toMatch) {
         if (toMatch instanceof Collection) {
-            Collection<MethodNode> methods = new ArrayList<MethodNode>();
+            Collection<MethodNode> methods = new ArrayList<>();
             for (Object obj : (Collection<?>) toMatch) {
                 if (obj instanceof MethodNode) {
                     methods.add((MethodNode) obj);
@@ -57,7 +54,7 @@ public class FindMethodPointcut extends FilteringPointcut<MethodNode> {
         } else if (toMatch instanceof MethodNode) {
             return Collections.singleton((MethodNode) toMatch);
         } else if (toMatch instanceof ClassNode) {
-            return new ArrayList<MethodNode>(((ClassNode) toMatch).getMethods());
+            return new ArrayList<>(((ClassNode) toMatch).getMethods());
         }
         return null;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,11 +27,6 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.OpenableElementInfo;
 import org.eclipse.jdt.internal.core.PackageFragment;
 
-/**
- *
- * @author maxime
- * @created 1 avr. 2011
- */
 public abstract class OCompilationUnit extends GroovyCompilationUnit implements IOJavaElement {
 
     private GroovyCompilationUnit unit;
@@ -47,8 +42,6 @@ public abstract class OCompilationUnit extends GroovyCompilationUnit implements 
 
     /**
      * refresh children list
-     *
-     * @return
      */
     public abstract IJavaElement[] refreshChildren();
 
@@ -57,19 +50,13 @@ public abstract class OCompilationUnit extends GroovyCompilationUnit implements 
      * {@link #getElementAt(int)}
      *
      * Can override to provide domain specific information here
-     *
-     * @param caretOffset
-     * @return
      */
     public ISourceReference getOutlineElementAt(int caretOffset) {
         try {
             IJavaElement elementAt = getElementAt(caretOffset);
             return (elementAt instanceof ISourceReference) ? (ISourceReference) elementAt : this;
         } catch (JavaModelException e) {
-            // ignore this. seems that this happens when there is a parsing
-            // error
-            // GroovyCore.logException("Exception when finding child elements",
-            // e);
+            // ignore this; seems that this happens when there is a parsing error
             return this;
         }
     }
@@ -77,6 +64,7 @@ public abstract class OCompilationUnit extends GroovyCompilationUnit implements 
     /**
      * get groovy node linked to this elemen
      */
+    @Override
     public ASTNode getNode() {
         return unit.getModuleNode();
     }

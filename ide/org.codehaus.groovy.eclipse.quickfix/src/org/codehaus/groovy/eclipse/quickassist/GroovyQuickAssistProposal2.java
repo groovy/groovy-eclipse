@@ -41,6 +41,7 @@ public abstract class GroovyQuickAssistProposal2 extends GroovyQuickAssistPropos
         return null;
     }
 
+    @Override
     public Object getAdditionalProposalInfo(IProgressMonitor monitor) {
         StringBuffer buf = new StringBuffer();
         try {

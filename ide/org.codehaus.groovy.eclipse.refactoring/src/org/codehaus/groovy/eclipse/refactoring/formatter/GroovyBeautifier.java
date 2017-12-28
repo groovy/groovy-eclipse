@@ -50,7 +50,7 @@ public class GroovyBeautifier {
 
     public DefaultGroovyFormatter formatter;
     private final IFormatterPreferences preferences;
-    private final Set<Token> ignoreToken = new HashSet<Token>();
+    private final Set<Token> ignoreToken = new HashSet<>();
 
     public GroovyBeautifier(DefaultGroovyFormatter formatter, IFormatterPreferences preferences) {
         this.formatter = formatter;

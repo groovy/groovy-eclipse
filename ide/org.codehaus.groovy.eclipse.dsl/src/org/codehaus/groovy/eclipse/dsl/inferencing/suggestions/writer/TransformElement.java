@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,20 +19,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * 
- * @author Nieraj Singh
- * @created 2011-08-09
- */
 public class TransformElement {
 
     private String elementName;
 
     private String value;
 
-    private List<TransformElementProperty> properties = new ArrayList<TransformElementProperty>();
+    private List<TransformElementProperty> properties = new ArrayList<>();
 
-    private List<TransformElement> children = new ArrayList<TransformElement>();
+    private List<TransformElement> children = new ArrayList<>();
 
     public TransformElement(String name, String value) {
         this.elementName = name;
@@ -62,8 +57,6 @@ public class TransformElement {
 
     /**
      * Returns an unmodifiable copy of the current list
-     * 
-     * @return
      */
     public List<TransformElementProperty> getProperties() {
         return Collections.unmodifiableList(properties);
@@ -71,11 +64,8 @@ public class TransformElement {
 
     /**
      * Returns an unmodifiable copy of the current list
-     * 
-     * @return
      */
     public List<TransformElement> getChildren() {
         return Collections.unmodifiableList(children);
     }
-
 }

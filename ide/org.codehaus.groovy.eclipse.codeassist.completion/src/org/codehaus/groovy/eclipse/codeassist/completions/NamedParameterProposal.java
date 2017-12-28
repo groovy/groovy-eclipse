@@ -261,13 +261,18 @@ public class NamedParameterProposal extends JavaCompletionProposal {
             document.addPositionUpdater(updater);
 
             model.addLinkingListener(new ILinkedModeListener() {
+                @Override
                 public void left(LinkedModeModel environment, int flags) {
                     ensurePositionCategoryRemoved(document);
                 }
 
-                public void suspend(LinkedModeModel environment) {}
+                @Override
+                public void suspend(LinkedModeModel environment) {
+                }
 
-                public void resume(LinkedModeModel environment, int flags) {}
+                @Override
+                public void resume(LinkedModeModel environment, int flags) {
+                }
             });
         }
     }

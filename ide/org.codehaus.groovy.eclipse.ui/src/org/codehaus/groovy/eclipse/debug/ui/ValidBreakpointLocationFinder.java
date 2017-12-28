@@ -1,5 +1,5 @@
  /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,13 +26,9 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.eclipse.core.search.LexicalClassVisitor;
 
 /**
- * @author Andrew Eisenberg
- * @created Aug 4, 2009
- *
  * Compute a valid location where to put a breakpoint from a ModuleNode.
  * The result is the first valid location with a line number greater or equals than the given position.
  * A valid location is considered to be the last expression or statement on a given line
- *
  */
 public class ValidBreakpointLocationFinder {
 

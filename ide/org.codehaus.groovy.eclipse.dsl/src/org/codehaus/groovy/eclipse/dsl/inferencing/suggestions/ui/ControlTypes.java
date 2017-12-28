@@ -15,13 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui;
 
-/**
- *
- *
- * @author Nieraj Singh
- * @created 2011-08-05
- */
 public enum ControlTypes implements IDialogueControlDescriptor {
+
     NAME("Name", "Enter a type name"),
 
     DECLARING_TYPE("Declaring Type", "Enter or browse for a declaring type"),
@@ -58,10 +53,12 @@ public enum ControlTypes implements IDialogueControlDescriptor {
         this.toolTipText = toolTipText;
     }
 
+    @Override
     public String getLabel() {
         return label;
     }
 
+    @Override
     public String getToolTipText() {
         return toolTipText;
     }

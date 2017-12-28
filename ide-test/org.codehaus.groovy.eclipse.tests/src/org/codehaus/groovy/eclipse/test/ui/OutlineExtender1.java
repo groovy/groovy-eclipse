@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,35 +31,37 @@ import org.eclipse.core.resources.IProjectNature;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IMember;
 
-/**
- * @author Maxime Hamm
- * @created April 11, 2011
- */
 public class OutlineExtender1 implements IOutlineExtender, IProjectNature {
 
     public static final String NATURE = "org.codehaus.groovy.eclipse.tests.testNature1";
 
+    @Override
     public void configure() throws CoreException {
     }
 
+    @Override
     public void deconfigure() throws CoreException {
     }
 
     IProject p;
 
+    @Override
     public IProject getProject() {
         return p;
     }
 
+    @Override
     public void setProject(IProject project) {
         this.p = project;
     }
 
+    @Override
     public GroovyOutlinePage getGroovyOutlinePageForEditor(String contextMenuID, GroovyEditor editor) {
         TCompilationUnit ounit = new TCompilationUnit(this, editor.getGroovyCompilationUnit());
         return new TGroovyOutlinePage(null, editor, ounit);
     }
 
+    @Override
     public boolean appliesTo(GroovyCompilationUnit unit) {
         return new String(unit.getFileName()).contains("X");
     }

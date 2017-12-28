@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,12 @@
  */
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
-import groovy.lang.Closure;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import groovy.lang.Closure;
 
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
@@ -30,12 +30,8 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.IPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 import org.eclipse.core.resources.IStorage;
 
-/**
- * 
- * @author andrew
- * @created Feb 11, 2011
- */
 public class UserExtensiblePointcut extends AbstractPointcut {
+
     @SuppressWarnings("rawtypes")
     private Closure closure;
 
@@ -53,7 +49,7 @@ public class UserExtensiblePointcut extends AbstractPointcut {
         this.closure = closure;
         closure.setResolveStrategy(Closure.DELEGATE_FIRST);
     }
-    
+
     @Override
     public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
         if (closure == null) {
@@ -64,10 +60,10 @@ public class UserExtensiblePointcut extends AbstractPointcut {
             // non-named arguments are not
             // named arguments assigned to pointcuts are also added to the binding
             Map<String, Object> args = namedArgumentsAsMap();
-            Map<String,Object> newMap = new HashMap<String, Object>(args.size(), 1.0f);
+            Map<String,Object> newMap = new HashMap<>(args.size(), 1.0f);
             for (Entry<String, Object> entry : args.entrySet()) {
                 String key = entry.getKey();
-                if (entry.getValue() instanceof IPointcut) { 
+                if (entry.getValue() instanceof IPointcut) {
                     Collection<?> matches = matchOnPointcutArgument((IPointcut) entry.getValue(), pattern, ensureCollection(toMatch));
                     if (matches != null && matches.size() > 0) {
                         newMap.put(key, pattern.getCurrentBinding().getBinding(key));
@@ -92,9 +88,8 @@ public class UserExtensiblePointcut extends AbstractPointcut {
             return null;
         }
     }
-    
+
     @Override
     public void verify() throws PointcutVerificationException {
-        
     }
 }

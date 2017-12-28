@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,9 +34,6 @@ import org.eclipse.jface.preference.IPreferenceStore;
  * Step filtering,
  * Logical structure
  * Grey-out stack frames
- *
- * @author andrew
- * @created Jul 15, 2010
  */
 public class GroovyDebugOptionsEnforcer {
 
@@ -82,7 +79,7 @@ public class GroovyDebugOptionsEnforcer {
     private void forceGroovyStepFilters() {
         String active = preferenceStore.getString(IJDIPreferencesConstants.PREF_ACTIVE_FILTERS_LIST);
         String[] activeArr = JavaDebugOptionsManager.parseList(active);
-        List<String> activeList = new ArrayList<String>(Arrays.asList(activeArr));
+        List<String> activeList = new ArrayList<>(Arrays.asList(activeArr));
         for (String filter : DEFAULT_GROOVY_STEP_FILTERS) {
             if (!activeList.contains(filter)) {
                 activeList.add(filter);
@@ -94,7 +91,7 @@ public class GroovyDebugOptionsEnforcer {
 
         String inactive = preferenceStore.getString(IJDIPreferencesConstants.PREF_INACTIVE_FILTERS_LIST);
         String[] inactiveArr = JavaDebugOptionsManager.parseList(inactive);
-        List<String> inactiveList = new ArrayList<String>(Arrays.asList(inactiveArr));
+        List<String> inactiveList = new ArrayList<>(Arrays.asList(inactiveArr));
         for (String filter : DEFAULT_GROOVY_STEP_FILTERS) {
             // remove all dups
             while (inactiveList.remove(filter)) {}

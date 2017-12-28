@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,9 @@ package org.codehaus.groovy.eclipse.core.util;
 
 /**
  * Exception thrown by the TokenStream when an unexpected character is encountered.
- * @author empovazan
  */
 public class TokenStreamException extends Exception {
+
     private static final long serialVersionUID = -582979413678809543L;
 
     TokenStreamException(char ch) {

@@ -97,6 +97,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     /** The binding which this JDTClassNode represents */
     private ReferenceBinding jdtBinding;
 
+    @Override
     public ReferenceBinding getJdtBinding() {
         return jdtBinding;
     }
@@ -114,6 +115,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     /** The resolver instance involved at the moment */
     private final JDTResolver resolver;
 
+    @Override
     public JDTResolver getResolver() {
         return resolver;
     }
@@ -196,6 +198,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         return true;
     }
 
+    @Override
     public void setGenericsTypes(GenericsType[] genericsTypes) {
         this.anyGenericsInitialized = true;
         super.setGenericsTypes(genericsTypes);
@@ -431,6 +434,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         return back;
     }
 
+    @Override
     public GenericsType[] getGenericsTypes() {
         ensureGenericsInitialized();
         return genericsTypes;
@@ -553,6 +557,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         }
     }
 
+    @Override
     protected void ensurePropertiesInitialized() {
         if ((bits & PROPERTIES_INITIALIZED) == 0) {
             initializeProperties();
@@ -679,6 +684,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         return null;
     }
 
+    @Override
     public boolean isDeprecated() {
         return jdtBinding.isDeprecated();
     }
@@ -689,6 +695,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
      * fashion by attempting a class load for the class using the transform loader (if
      * available).
      */
+    @Override
     public Class getTypeClass() {
         if (clazz != null || unfindable) {
             return clazz;

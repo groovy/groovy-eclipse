@@ -43,10 +43,6 @@ import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchSite;
 
-/**
- * @author Andrew Eisenberg
- * @created Aug 18, 2009
- */
 public class FormatAllGroovyAction extends FormatAllAction {
 
     public static class GroovyMultiFormatAction extends MultiFormatAction {

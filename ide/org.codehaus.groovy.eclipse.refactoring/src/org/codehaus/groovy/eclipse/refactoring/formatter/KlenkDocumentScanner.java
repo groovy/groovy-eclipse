@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,15 +15,14 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
-import groovyjarjarantlr.Token;
-import groovyjarjarantlr.TokenStream;
-import groovyjarjarantlr.TokenStreamException;
-
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Vector;
+import java.util.List;
 
+import groovyjarjarantlr.Token;
+import groovyjarjarantlr.TokenStream;
+import groovyjarjarantlr.TokenStreamException;
 import org.codehaus.greclipse.GroovyTokenTypeBridge;
 import org.codehaus.groovy.antlr.parser.GroovyLexer;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
@@ -41,14 +40,13 @@ import org.eclipse.jface.text.IDocument;
  * This allows us to make use of the nice operations of GroovyDocumentScanner, without
  * storing two copies of all the tokens, and without having to port all Mike's
  * code all at once.
- *
- * @author kdvolder
- * @created 2010-06-06
  */
 public class KlenkDocumentScanner extends GroovyDocumentScanner {
 
     /** Tokens split up into lines */
-    private Vector<Vector<Token>> tokenLines; // FIXKDV:
+    private List<List<Token>> tokenLines;
+
+    // FIXKDV:
     // If we must have something like this, it could be much cheaper (memory
     // wise) represented
     // by only keeping an array of indexes that give the position of the first
@@ -81,9 +79,9 @@ public class KlenkDocumentScanner extends GroovyDocumentScanner {
         TokenStream stream = lexer.plumb();
 
         Token token = null;
-        tokens = new ArrayList<Token>();
-        tokenLines = new Vector<Vector<Token>>();
-        Vector<Token> line = new Vector<Token>();
+        tokens = new ArrayList<>();
+        tokenLines = new ArrayList<>();
+        List<Token> line = new ArrayList<>();
         try {
             while ((token = stream.nextToken()).getType() != GroovyTokenTypeBridge.EOF) {
                 if (token.getType() != GroovyTokenTypeBridge.WS) {
@@ -91,7 +89,8 @@ public class KlenkDocumentScanner extends GroovyDocumentScanner {
                     if (token.getType() == GroovyTokenTypeBridge.STRING_CTOR_START) {
                         tokens.add(token);
                         Token prevToken = token;
-                        inner: while ((token = stream.nextToken()).getType() != GroovyTokenTypeBridge.STRING_CTOR_END) {
+                        inner:
+                        while ((token = stream.nextToken()).getType() != GroovyTokenTypeBridge.STRING_CTOR_END) {
                             if (equalTokens(prevToken, token)) {
                                 break inner;
                             }
@@ -102,7 +101,7 @@ public class KlenkDocumentScanner extends GroovyDocumentScanner {
                     line.add(token);
                     if (token.getType() == GroovyTokenTypeBridge.NLS) {
                         tokenLines.add(line);
-                        line = new Vector<Token>();
+                        line = new ArrayList<>();
                     }
                 }
             }
@@ -116,8 +115,11 @@ public class KlenkDocumentScanner extends GroovyDocumentScanner {
     }
 
     private boolean equalTokens(Token t1, Token t2) {
-        return t1.getType() == t2.getType() && t1.getColumn() == t2.getColumn() && t1.getLine() == t2.getLine()
-                && nullEquals(t1.getFilename(), t2.getFilename()) && nullEquals(t1.getText(), t2.getText());
+        return t1.getType() == t2.getType() &&
+            t1.getColumn() == t2.getColumn() &&
+            t1.getLine() == t2.getLine() &&
+            nullEquals(t1.getFilename(), t2.getFilename()) &&
+            nullEquals(t1.getText(), t2.getText());
     }
 
     private boolean nullEquals(String s1, String s2) {
@@ -130,7 +132,7 @@ public class KlenkDocumentScanner extends GroovyDocumentScanner {
     }
 
     @Deprecated
-    public Vector<Vector<Token>> getLineTokensVector() {
+    public List<List<Token>> getLineTokensVector() {
         ensureScanned(Integer.MAX_VALUE);
         return tokenLines;
     }
@@ -192,10 +194,6 @@ public class KlenkDocumentScanner extends GroovyDocumentScanner {
      * This method is deprecated. It is provided for the more easy porting of
      * Mike Klenk's code, which keeps a vector of tokens to operate on. It uses
      * this to
-     *
-     * @param token
-     * @return
-     * @throws BadLocationException
      */
     @Deprecated
     public int indexOf(Token token) throws BadLocationException {

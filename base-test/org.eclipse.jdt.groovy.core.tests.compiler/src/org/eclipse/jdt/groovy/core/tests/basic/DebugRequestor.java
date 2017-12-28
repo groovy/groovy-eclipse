@@ -26,6 +26,7 @@ class DebugRequestor implements IGroovyDebugRequestor {
 
     Map<String, GroovyCompilationUnitDeclaration> declarations = new HashMap<>();
 
+    @Override
     public void acceptCompilationUnitDeclaration(GroovyCompilationUnitDeclaration gcuDeclaration) {
         String filename = String.valueOf(gcuDeclaration.getFileName());
         filename = filename.substring(filename.lastIndexOf(File.separator) + 1); // Filename now being just Foo.groovy or Bar.java

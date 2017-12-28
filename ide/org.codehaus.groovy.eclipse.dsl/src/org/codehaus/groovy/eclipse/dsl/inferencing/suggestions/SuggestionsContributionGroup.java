@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,11 +27,6 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.eclipse.core.resources.IFile;
 
-/**
- * 
- * @author Nieraj Singh
- * @created 2011-05-31
- */
 public class SuggestionsContributionGroup extends ContributionGroup {
 
     private IFile file;
@@ -40,10 +35,11 @@ public class SuggestionsContributionGroup extends ContributionGroup {
         this.file = file;
     }
 
+    @Override
     public List<IContributionElement> getContributions(GroovyDSLDContext pattern, BindingSet matches) {
 
         // only need to match on current type.
-        List<IContributionElement> currentContributions = new ArrayList<IContributionElement>();
+        List<IContributionElement> currentContributions = new ArrayList<>();
 
         // FIXNS: May not be optimal. To improve performance per
         // inferencing run (i.e. AST walk)
@@ -59,8 +55,8 @@ public class SuggestionsContributionGroup extends ContributionGroup {
         // at the end of the AST walk. An AST walk happens every time a
         // change is made to a Groovy file.
 
-        List<GroovySuggestionDeclaringType> superTypes = new DeclaringTypeSuperTypeMatcher(file.getProject())
-                .getAllSuperTypes(pattern);
+        List<GroovySuggestionDeclaringType> superTypes =
+            new DeclaringTypeSuperTypeMatcher(file.getProject()).getAllSuperTypes(pattern);
         if (superTypes != null) {
             for (GroovySuggestionDeclaringType declaringType : superTypes) {
 
@@ -71,9 +67,9 @@ public class SuggestionsContributionGroup extends ContributionGroup {
                             if (suggestion instanceof GroovyPropertySuggestion) {
                                 GroovyPropertySuggestion prop = (GroovyPropertySuggestion) suggestion;
 
-                                currentContributions.add(new PropertyContributionElement(prop.getName(), prop.getType(), prop
-                                        .getDeclaringType().getName(), prop.isStatic(), DEFAULT_PROVIDER, prop.getJavaDoc(), false,
-                                        DEFAULT_RELEVANCE_MULTIPLIER));
+                                currentContributions.add(new PropertyContributionElement(prop.getName(), prop.getType(),
+                                    prop.getDeclaringType().getName(), prop.isStatic(), DEFAULT_PROVIDER,
+                                    prop.getJavaDoc(), false, DEFAULT_RELEVANCE_MULTIPLIER));
 
                             } else if (suggestion instanceof GroovyMethodSuggestion) {
 
@@ -87,26 +83,22 @@ public class SuggestionsContributionGroup extends ContributionGroup {
                                     int i = 0;
                                     for (MethodParameter parameter : parameters) {
                                         if (i < paramContribution.length) {
-                                            paramContribution[i++] = new ParameterContribution(parameter.getName(),
-                                                    parameter.getType());
+                                            paramContribution[i++] =
+                                                new ParameterContribution(parameter.getName(), parameter.getType());
                                         }
                                     }
-
                                 }
-                                currentContributions.add(new MethodContributionElement(method.getName(), paramContribution, method
-                                        .getType(), method.getDeclaringType().getName(), method.isStatic(), DEFAULT_PROVIDER,
-                                        method.getJavaDoc(), method.useNamedArguments(), false, DEFAULT_RELEVANCE_MULTIPLIER));
+                                currentContributions.add(new MethodContributionElement(method.getName(),
+                                    paramContribution, method.getType(), method.getDeclaringType().getName(),
+                                    method.isStatic(), DEFAULT_PROVIDER, method.getJavaDoc(),
+                                    method.useNamedArguments(), false, DEFAULT_RELEVANCE_MULTIPLIER));
                             }
                         }
-
                     }
                 }
-
             }
             return currentContributions;
         }
-
         return null;
-
     }
 }

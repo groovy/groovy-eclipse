@@ -67,8 +67,6 @@ import org.eclipse.jdt.internal.core.builder.BuildNotifier;
 /**
  * The mapping layer between the groovy parser and the JDT. This class communicates with the groovy parser and translates results
  * back for JDT to consume.
- *
- * @author Andy Clement
  */
 public class GroovyParser {
 
@@ -426,6 +424,7 @@ public class GroovyParser {
             this.notifier = notifier;
         }
 
+        @Override
         public void parseComplete(int phase, String sourceUnitName) {
             try {
                 // Chop it down to the containing package folder
@@ -445,6 +444,7 @@ public class GroovyParser {
             notifier.checkCancel();
         }
 
+        @Override
         public void generateComplete(int phase, ClassNode classNode) {
             try {
                 String pkgName = classNode.getPackageName();

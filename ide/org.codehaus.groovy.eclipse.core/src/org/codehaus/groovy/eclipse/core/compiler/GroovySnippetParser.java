@@ -33,6 +33,7 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclar
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
@@ -123,22 +124,27 @@ public class GroovySnippetParser {
             this.fileName = fileName;
         }
 
+        @Override
         public char[] getContents() {
             return contents;
         }
 
+        @Override
         public char[] getFileName() {
             return fileName;
         }
 
+        @Override
         public char[] getMainTypeName() {
-            return new char[0];
+            return CharOperation.NO_CHAR;
         }
 
+        @Override
         public char[][] getPackageName() {
-            return new char[0][];
+            return CharOperation.NO_CHAR_CHAR;
         }
 
+        @Override
         public boolean ignoreOptionalProblems() {
             return false;
         }

@@ -35,15 +35,15 @@ import org.eclipse.jdt.ui.text.java.IQuickFixProcessor;
 
 /**
  * Integrates Groovy proposals into JDT quick fix framework.
- *
- * @author Nieraj Singh
  */
 public class GroovyQuickFixProcessor implements IQuickFixProcessor {
 
+    @Override
     public boolean hasCorrections(ICompilationUnit unit, int problemId) {
         return isProblemInGroovyProject(unit) && ProblemType.isRecognizedProblemId(problemId);
     }
 
+    @Override
     public IJavaCompletionProposal[] getCorrections(IInvocationContext context, IProblemLocation[] locations) throws CoreException {
         // The problem must be in a Groovy project. Otherwise do not handle it
         // as the proposals should not appear if the problem is in any other
@@ -53,7 +53,7 @@ public class GroovyQuickFixProcessor implements IQuickFixProcessor {
             if (problemContext != null) {
                 List<IQuickFixResolver> resolvers = new GroovyQuickFixResolverRegistry(problemContext).getQuickFixResolvers();
                 if (resolvers != null) {
-                    List<IJavaCompletionProposal> proposals = new ArrayList<IJavaCompletionProposal>();
+                    List<IJavaCompletionProposal> proposals = new ArrayList<>();
                     for (IQuickFixResolver resolver : resolvers) {
                         List<IJavaCompletionProposal> foundProposals = resolver.getQuickFixProposals();
                         if (foundProposals != null) {

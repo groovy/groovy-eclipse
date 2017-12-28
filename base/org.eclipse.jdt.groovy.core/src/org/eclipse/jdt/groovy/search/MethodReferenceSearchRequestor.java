@@ -192,6 +192,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 
     //--------------------------------------------------------------------------
 
+    @Override
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
         if (result.declaringType == null) {
             // GRECLIPSE-1180: probably a literal of some kind

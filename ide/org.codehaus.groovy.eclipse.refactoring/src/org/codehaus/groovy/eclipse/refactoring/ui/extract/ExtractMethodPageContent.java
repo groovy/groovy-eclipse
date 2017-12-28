@@ -82,7 +82,7 @@ public class ExtractMethodPageContent extends Composite implements Observer {
 
     private TableEditor editor;
 
-    private final Map<String, String> renameVariablesMap = new HashMap<String, String>();
+    private final Map<String, String> renameVariablesMap = new HashMap<>();
     private boolean firstPreviewEver = true;
 
     public ExtractMethodPageContent(Composite parent, ExtractGroovyMethodRefactoring refactoring, ExtractMethodPage extractMethodPage) {
@@ -167,7 +167,7 @@ public class ExtractMethodPageContent extends Composite implements Observer {
     }
 
     private void checkForDuplicateVariableNames(RefactoringStatus status) {
-        HashSet<String> uniquenessTestSet = new HashSet<String>();
+        HashSet<String> uniquenessTestSet = new HashSet<>();
         for (Parameter p : extractMethodRefactoring.getCallAndMethHeadParameters()){
             if(!uniquenessTestSet.add(p.getName())){
                 String errorMsg = MessageFormat.format(GroovyRefactoringMessages.ExtractMethodWizard_DuplicateVariableName, p.getName());
@@ -185,7 +185,7 @@ public class ExtractMethodPageContent extends Composite implements Observer {
     }
 
     private RefactoringStatus validateGroovyIdentifiers() {
-        List<String> variablesToCheck = new LinkedList<String>();
+        List<String> variablesToCheck = new LinkedList<>();
         variablesToCheck.add(txtNewMethodName.getText());
 
         for(Parameter p : extractMethodRefactoring.getCallAndMethHeadParameters()){
@@ -215,6 +215,7 @@ public class ExtractMethodPageContent extends Composite implements Observer {
         }
     }
 
+    @Override
     public void update(Observable o, Object arg) {
         updateView();
     }
@@ -352,26 +353,22 @@ public class ExtractMethodPageContent extends Composite implements Observer {
             }
 
             private void addListenerToEditor(final int EDITABLECOLUMN, Text newEditor) {
-
-                newEditor.addModifyListener(new ModifyListener(){
-
+                newEditor.addModifyListener(new ModifyListener() {
+                    @Override
                     public void modifyText(ModifyEvent e) {
-                         saveRenamedVariable(EDITABLECOLUMN);
+                        saveRenamedVariable(EDITABLECOLUMN);
                     }
-
                     private void saveRenamedVariable(final int EDITABLECOLUMN) {
                         Text text = (Text) editor.getEditor();
-                         int selectionIndex = tblParameters.getSelectionIndex();
-                         String before = extractMethodRefactoring.getOriginalParameterName(selectionIndex);
-                         editor.getItem().setText(EDITABLECOLUMN, text.getText());
-                         String after = editor.getItem().getText(EDITABLECOLUMN);
-                         renameVariablesMap.put(before, after);
-                         extractMethodRefactoring.setParameterRename(renameVariablesMap);
+                        int selectionIndex = tblParameters.getSelectionIndex();
+                        String before = extractMethodRefactoring.getOriginalParameterName(selectionIndex);
+                        editor.getItem().setText(EDITABLECOLUMN, text.getText());
+                        String after = editor.getItem().getText(EDITABLECOLUMN);
+                        renameVariablesMap.put(before, after);
+                        extractMethodRefactoring.setParameterRename(renameVariablesMap);
                     }
-
                 });
             }
-
         });
     }
 

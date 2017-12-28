@@ -39,6 +39,7 @@ public final class ConsoleLineTracker implements IConsoleLineTrackerExtension {
         fConsole = null;
     }
 
+    @Override
     public void dispose() {
         if (fDelegate != null) {
             fDelegate.dispose();
@@ -46,6 +47,7 @@ public final class ConsoleLineTracker implements IConsoleLineTrackerExtension {
         fConsole = null;
     }
 
+    @Override
     public synchronized void init(IConsole console) {
         fConsole= console;
         if (fDelegate != null) {
@@ -60,12 +62,14 @@ public final class ConsoleLineTracker implements IConsoleLineTrackerExtension {
         return fConsole.getDocument();
     }
 
+    @Override
     public void lineAppended(IRegion line) {
         if (fDelegate != null) {
             fDelegate.lineAppended(line);
         }
     }
 
+    @Override
     public void consoleClosed() {
         if (fDelegate != null && fConsole != null) {
             fDelegate.consoleClosed();

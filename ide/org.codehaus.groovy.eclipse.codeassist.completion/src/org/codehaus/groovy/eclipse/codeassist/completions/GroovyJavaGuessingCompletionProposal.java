@@ -496,19 +496,18 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
             document.addPositionUpdater(fUpdater);
 
             model.addLinkingListener(new ILinkedModeListener() {
-
-                /*
-                 * @see
-                 * org.eclipse.jface.text.link.ILinkedModeListener#left(org.
-                 * eclipse.jface.text.link.LinkedModeModel, int)
-                 */
+                @Override
                 public void left(LinkedModeModel environment, int flags) {
                     ensurePositionCategoryRemoved(document);
                 }
 
-                public void suspend(LinkedModeModel environment) {}
+                @Override
+                public void suspend(LinkedModeModel environment) {
+                }
 
-                public void resume(LinkedModeModel environment, int flags) {}
+                @Override
+                public void resume(LinkedModeModel environment, int flags) {
+                }
             });
         }
     }

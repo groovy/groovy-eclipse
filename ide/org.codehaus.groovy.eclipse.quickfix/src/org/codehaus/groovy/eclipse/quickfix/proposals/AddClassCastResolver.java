@@ -24,6 +24,7 @@ import org.codehaus.groovy.eclipse.quickfix.GroovyQuickFixPlugin;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IImportDeclaration;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.text.edits.InsertEdit;
@@ -34,24 +35,25 @@ import org.eclipse.text.edits.InsertEdit;
  */
 public class AddClassCastResolver extends AbstractQuickFixResolver {
 
-    private static final Set<String> DEFAULT_IMPORTS = new HashSet<String>();
+    private static final Set<String> DEFAULT_IMPORTS = new HashSet<>();
     static {
         DEFAULT_IMPORTS.add("java.io.*");
         DEFAULT_IMPORTS.add("java.lang.*");
-        DEFAULT_IMPORTS.add("java.math.BigDecimal");
-        DEFAULT_IMPORTS.add("java.math.BigInteger");
         DEFAULT_IMPORTS.add("java.net.*");
         DEFAULT_IMPORTS.add("java.util.*");
         DEFAULT_IMPORTS.add("groovy.lang.*");
         DEFAULT_IMPORTS.add("groovy.util.*");
+        DEFAULT_IMPORTS.add("java.math.BigDecimal");
+        DEFAULT_IMPORTS.add("java.math.BigInteger");
     }
 
     protected AddClassCastResolver(QuickFixProblemContext problem) {
         super(problem);
     }
 
+    @Override
     public List<IJavaCompletionProposal> getQuickFixProposals() {
-        List<IJavaCompletionProposal> proposals = new ArrayList<IJavaCompletionProposal>();
+        List<IJavaCompletionProposal> proposals = new ArrayList<>();
         proposals.add(new AddClassCastProposal(getQuickFixProblem(),
                 (GroovyCompilationUnit) getQuickFixProblem().getCompilationUnit()));
         return proposals;
@@ -73,6 +75,7 @@ public class AddClassCastResolver extends AbstractQuickFixResolver {
             typeName = calculateTypeName();
         }
 
+        @Override
         public void apply(IDocument document) {
             QuickFixProblemContext problemContext = getQuickFixProblemContext();
             int offset = problemContext.getOffset();
@@ -84,13 +87,14 @@ public class AddClassCastResolver extends AbstractQuickFixResolver {
             }
         }
 
+        @Override
         public String getDisplayString() {
             return "Add cast to " + typeName;
         }
 
         @Override
         protected String getImageBundleLocation() {
-            return org.eclipse.jdt.internal.ui.JavaPluginImages.IMG_CORRECTION_CAST;
+            return JavaPluginImages.IMG_CORRECTION_CAST;
         }
 
         private String calculateTypeName() {

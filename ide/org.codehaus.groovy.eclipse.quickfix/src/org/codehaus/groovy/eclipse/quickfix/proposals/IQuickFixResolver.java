@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,25 +31,19 @@ import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
  * which the solution is the same. Therefore, for each problem type, the
  * list of Java completion proposals should be the same. If they are different,
  * then different resolvers should be implemented.
- * 
- * </p>
- * 
- * @author Nieraj Singh
- * 
  */
 public interface IQuickFixResolver {
 
-	/**
-	 * 
-	 * @return non null list of problem type that this resolver can handle
-	 */
-	public List<ProblemType> getProblemTypes();
+    /**
+     *
+     * @return non null list of problem type that this resolver can handle
+     */
+    List<ProblemType> getProblemTypes();
 
-	/**
-	 * 
-	 * @return non null list of Java completion proposals that can handle each
-	 *         of the problem descriptors associated with this resolver
-	 */
-	public List<IJavaCompletionProposal> getQuickFixProposals();
-
+    /**
+     *
+     * @return non null list of Java completion proposals that can handle each
+     *         of the problem descriptors associated with this resolver
+     */
+    List<IJavaCompletionProposal> getQuickFixProposals();
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,17 +27,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 
-/**
- * 
- * @author Nieraj Singh
- * @created 2011-05-13
- */
 public abstract class AbstractLabeledDialogueControl extends AbstractControlManager {
 
-    private Point offsetLabelLocation;
-
     private Label parameterNameLabel;
-
+    private Point offsetLabelLocation;
     private IDialogueControlDescriptor labelDescriptor;
 
     protected AbstractLabeledDialogueControl(IDialogueControlDescriptor labelDescriptor, Point offsetLabelLocation) {
@@ -53,9 +46,9 @@ public abstract class AbstractLabeledDialogueControl extends AbstractControlMana
         return 2;
     }
 
+    @Override
     protected Map<Control, IDialogueControlDescriptor> createManagedControls(Composite parent) {
-
-        Map<Control, IDialogueControlDescriptor> controls = new HashMap<Control, IDialogueControlDescriptor>();
+        Map<Control, IDialogueControlDescriptor> controls = new HashMap<>();
         if (labelDescriptor != null) {
             Composite labelArea = new Composite(parent, SWT.NONE);
             GridLayoutFactory.fillDefaults().numColumns(numberofColumns()).margins(0, 0).equalWidth(false).applyTo(labelArea);
@@ -98,9 +91,6 @@ public abstract class AbstractLabeledDialogueControl extends AbstractControlMana
      * layout. Implementors of this method will automatically get
      * their control placed in the second column of the parent composite in the
      * same row.
-     * 
-     * @param parent
-     * @return
      */
     abstract protected Control getManagedControl(Composite parent);
 

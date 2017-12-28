@@ -18,10 +18,6 @@ package org.eclipse.jdt.groovy.search;
 import org.codehaus.groovy.ast.ASTNode;
 import org.eclipse.jdt.core.IJavaElement;
 
-/**
- * @author Andrew Eisenberg
- * @created Aug 29, 2009
- */
 public interface ITypeRequestor {
 
     /**

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,19 +17,21 @@ package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 
 import java.util.List;
 
-/**
- * 
- * @author Nieraj Singh
- * @created Apr 19, 2011
- */
 public class GroovyMethodSuggestion extends GroovySuggestion {
 
     private List<MethodParameter> parameters;
 
     private boolean useNamedArgument;
 
-    public GroovyMethodSuggestion(GroovySuggestionDeclaringType declaringType, List<MethodParameter> arguments,
-            boolean useNameArguments, String name, String type, boolean isStatic, String javaDoc, boolean isActive) {
+    public GroovyMethodSuggestion(
+            GroovySuggestionDeclaringType declaringType,
+            List<MethodParameter> arguments,
+            boolean useNameArguments,
+            String name,
+            String type,
+            boolean isStatic,
+            String javaDoc,
+            boolean isActive) {
         super(declaringType, name, type, isStatic, javaDoc, isActive);
         this.useNamedArgument = useNameArguments;
         this.parameters = arguments;
@@ -43,6 +45,7 @@ public class GroovyMethodSuggestion extends GroovySuggestion {
         return useNamedArgument;
     }
 
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
@@ -51,6 +54,7 @@ public class GroovyMethodSuggestion extends GroovySuggestion {
         return result;
     }
 
+    @Override
     public boolean equals(Object obj) {
         if (this == obj)
             return true;

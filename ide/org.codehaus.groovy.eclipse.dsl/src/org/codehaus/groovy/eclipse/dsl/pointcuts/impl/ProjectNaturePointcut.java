@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,9 +31,6 @@ import org.eclipse.jdt.core.JavaCore;
  * Tests that the {@link IProject} that contains the current pattern has a nature of the specified type.
  * This pointcut should be optimized so that it runs before any others in an 'and' or 'or' clause.  Also, its result should be cached in the
  * pattern providing a fail/succeed fast strategy.
- *
- * @author andrew
- * @created Feb 10, 2011
  */
 public class ProjectNaturePointcut extends AbstractPointcut {
 
@@ -74,13 +71,11 @@ public class ProjectNaturePointcut extends AbstractPointcut {
     /**
      * In order to remove Eclipse-specific identifiers in scripts,
      * common project natures can use a shortcut instead of the full nature string
-     * @param shortcut
-     * @return
      */
-    private static final Map<String, String> SHORTCUTS = new HashMap<String, String>();
+    private static final Map<String, String> SHORTCUTS = new HashMap<>();
     static {
-        SHORTCUTS.put("groovy", GroovyNature.GROOVY_NATURE);
         SHORTCUTS.put("java", JavaCore.NATURE_ID);
+        SHORTCUTS.put("groovy", GroovyNature.GROOVY_NATURE);
         SHORTCUTS.put("grails", "com.springsource.sts.grails.core.nature");
         SHORTCUTS.put("gradle", "com.springsource.sts.gradle.core.nature");
     }

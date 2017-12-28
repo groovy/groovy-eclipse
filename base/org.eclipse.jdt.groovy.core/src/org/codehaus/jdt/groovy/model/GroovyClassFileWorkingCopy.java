@@ -55,10 +55,6 @@ import org.eclipse.jdt.internal.core.util.Util;
 /**
  * Working copy for groovy class files. Allows access to the ModuleNode for class files if the source is available. Copied from
  * {@link ClassFileWorkingCopy} Groovy changes marked
- *
- * @author Andrew Eisenberg
- * @author Christian Dupuis
- * @created Dec 11, 2009
  */
 public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
 
@@ -69,7 +65,6 @@ public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
     private CompilationUnitElementInfo elementInfo;
     private ModuleNode moduleNode;
     private ModuleNodeInfo moduleNodeInfo;
-
     // GROOVY End
 
     public GroovyClassFileWorkingCopy(ClassFile classFile, WorkingCopyOwner owner) {
@@ -84,10 +79,12 @@ public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
         // GROOVY End
     }
 
+    @Override
     public void commitWorkingCopy(boolean force, IProgressMonitor monitor) throws JavaModelException {
         throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.INVALID_ELEMENT_TYPES, this));
     }
 
+    @Override
     public IBuffer getBuffer() throws JavaModelException {
         // GROOVY Always use the classFile's buffer
         // old
@@ -98,6 +95,7 @@ public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
         return this.classFile.getBuffer();
     }
 
+    @Override
     public char[] getContents() {
         try {
             IBuffer buffer = getBuffer();
@@ -112,16 +110,19 @@ public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
         }
     }
 
+    @Override
     public IPath getPath() {
         return this.classFile.getPath();
     }
 
+    @Override
     public IJavaElement getPrimaryElement(boolean checkOwner) {
         if (checkOwner && isPrimary())
             return this;
         return new ClassFileWorkingCopy(this.classFile, DefaultWorkingCopyOwner.PRIMARY);
     }
 
+    @Override
     public IResource resource(PackageFragmentRoot root) {
         if (root.isArchive())
             return root.resource(root);
@@ -131,6 +132,7 @@ public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
     /**
      * @see Openable#openBuffer(IProgressMonitor, Object)
      */
+    @Override
     protected IBuffer openBuffer(IProgressMonitor pm, Object info) throws JavaModelException {
 
         // create buffer
@@ -172,6 +174,7 @@ public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
         return buffer;
     }
 
+    @Override
     protected void toStringName(StringBuffer buffer) {
         buffer.append(this.classFile.getElementName());
     }

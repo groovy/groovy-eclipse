@@ -29,9 +29,6 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
  * When there is a method context completion, there are some values that are
  * changed. But, we also need to remember the original values so tha we can
  * propose named arguments as part of the completion.
- *
- * @author andrew
- * @created Sep 2, 2011
  */
 public class MethodInfoContentAssistContext extends ContentAssistContext {
 

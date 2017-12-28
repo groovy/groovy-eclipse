@@ -110,6 +110,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             }
         }
 
+        @Override
         public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
             // check to see if the enclosing element does not enclose the nodeToLookFor
             if (!interestingElement(enclosingElement)) {
@@ -340,6 +341,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         this.lhsNode = context.lhsNode;
     }
 
+    @Override
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
         ContentAssistContext context = getContext();
         TypeInferencingVisitorWithRequestor visitor =
@@ -351,7 +353,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             visitor.visitCompilationUnit(requestor);
         }
 
-        List<IGroovyProposal> groovyProposals = new ArrayList<IGroovyProposal>();
+        List<IGroovyProposal> groovyProposals = new ArrayList<>();
         boolean isPrimary = (context.location == ContentAssistLocation.STATEMENT);
         boolean isStatic; ClassNode completionType;
 
@@ -467,7 +469,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             GroovyContentAssist.logError("Exception accessing proposal provider registry", e);
         }
 
-        List<ICompletionProposal> javaProposals = new ArrayList<ICompletionProposal>(groovyProposals.size());
+        List<ICompletionProposal> javaProposals = new ArrayList<>(groovyProposals.size());
         JavaContentAssistInvocationContext javaContext = getJavaContext();
         for (IGroovyProposal groovyProposal : groovyProposals) {
             try {

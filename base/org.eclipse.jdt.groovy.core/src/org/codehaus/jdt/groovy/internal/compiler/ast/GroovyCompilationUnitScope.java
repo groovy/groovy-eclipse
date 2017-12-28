@@ -309,6 +309,7 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
      * @param isDeclaredImport indicates if the 'temp' binding was found using a real import from the source code (rather than an
      *        'injected' one)
      */
+    @Override
     public ReferenceBinding selectBinding(ReferenceBinding newlyFound, ReferenceBinding originallyFound, boolean isDeclaredImport) {
         if (isDeclaredImport) {
             // This means 'temp' is found via a real import reference in the source code, let's take a closer look at 'type'

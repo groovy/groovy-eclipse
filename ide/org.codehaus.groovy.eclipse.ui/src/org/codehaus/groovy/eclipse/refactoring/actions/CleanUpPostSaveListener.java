@@ -1,13 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2000, 2012 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2017 the original author or authors.
  *
- * Contributors:
- *     IBM Corporation - initial API and implementation
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
 import java.util.ArrayList;
@@ -18,19 +23,13 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.TextLayout;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Link;
-import org.eclipse.swt.widgets.Shell;
-
+import org.eclipse.core.filebuffers.FileBuffers;
+import org.eclipse.core.filebuffers.ITextFileBuffer;
+import org.eclipse.core.filebuffers.ITextFileBufferManager;
+import org.eclipse.core.filebuffers.LocationKind;
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -42,20 +41,31 @@ import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
-
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.ProjectScope;
-
-import org.eclipse.core.filebuffers.FileBuffers;
-import org.eclipse.core.filebuffers.ITextFileBuffer;
-import org.eclipse.core.filebuffers.ITextFileBufferManager;
-import org.eclipse.core.filebuffers.LocationKind;
-
-import org.eclipse.text.edits.MalformedTreeException;
-import org.eclipse.text.edits.TextEdit;
-import org.eclipse.text.edits.UndoEdit;
-
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.internal.corext.fix.CleanUpConstants;
+import org.eclipse.jdt.internal.corext.fix.CleanUpPreferenceUtil;
+import org.eclipse.jdt.internal.corext.fix.CleanUpRefactoring;
+import org.eclipse.jdt.internal.corext.fix.CleanUpRefactoring.CleanUpChange;
+import org.eclipse.jdt.internal.corext.fix.FixMessages;
+import org.eclipse.jdt.internal.corext.refactoring.util.RefactoringASTParser;
+import org.eclipse.jdt.internal.corext.util.Messages;
+import org.eclipse.jdt.internal.ui.JavaPlugin;
+import org.eclipse.jdt.internal.ui.actions.ActionUtil;
+import org.eclipse.jdt.internal.ui.dialogs.OptionalMessageDialog;
+import org.eclipse.jdt.internal.ui.fix.IMultiLineCleanUp.MultiLineCleanUpContext;
+import org.eclipse.jdt.internal.ui.fix.MapCleanUpOptions;
+import org.eclipse.jdt.internal.ui.javaeditor.saveparticipant.IPostSaveListener;
+import org.eclipse.jdt.internal.ui.preferences.BulletListBlock;
+import org.eclipse.jdt.internal.ui.preferences.SaveParticipantPreferencePage;
+import org.eclipse.jdt.ui.JavaUI;
+import org.eclipse.jdt.ui.SharedASTProvider;
+import org.eclipse.jdt.ui.cleanup.CleanUpContext;
+import org.eclipse.jdt.ui.cleanup.CleanUpOptions;
+import org.eclipse.jdt.ui.cleanup.CleanUpRequirements;
+import org.eclipse.jdt.ui.cleanup.ICleanUp;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -68,10 +78,6 @@ import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.Region;
 import org.eclipse.jface.window.Window;
-
-import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.dialogs.PreferencesUtil;
-
 import org.eclipse.ltk.core.refactoring.Change;
 import org.eclipse.ltk.core.refactoring.CompositeChange;
 import org.eclipse.ltk.core.refactoring.IRefactoringCoreStatusCodes;
@@ -82,31 +88,23 @@ import org.eclipse.ltk.core.refactoring.RefactoringCore;
 import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 import org.eclipse.ltk.core.refactoring.TextFileChange;
 import org.eclipse.ltk.ui.refactoring.RefactoringUI;
-
-import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.dom.ASTParser;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.internal.corext.fix.*;
-import org.eclipse.jdt.internal.corext.fix.CleanUpRefactoring.CleanUpChange;
-import org.eclipse.jdt.internal.corext.refactoring.util.RefactoringASTParser;
-import org.eclipse.jdt.internal.corext.util.Messages;
-
-import org.eclipse.jdt.ui.JavaUI;
-import org.eclipse.jdt.ui.SharedASTProvider;
-import org.eclipse.jdt.ui.cleanup.CleanUpContext;
-import org.eclipse.jdt.ui.cleanup.CleanUpOptions;
-import org.eclipse.jdt.ui.cleanup.CleanUpRequirements;
-import org.eclipse.jdt.ui.cleanup.ICleanUp;
-
-import org.eclipse.jdt.internal.ui.JavaPlugin;
-import org.eclipse.jdt.internal.ui.actions.ActionUtil;
-import org.eclipse.jdt.internal.ui.dialogs.OptionalMessageDialog;
-import org.eclipse.jdt.internal.ui.fix.IMultiLineCleanUp.MultiLineCleanUpContext;
-import org.eclipse.jdt.internal.ui.fix.MapCleanUpOptions;
-import org.eclipse.jdt.internal.ui.javaeditor.saveparticipant.IPostSaveListener;
-import org.eclipse.jdt.internal.ui.preferences.BulletListBlock;
-import org.eclipse.jdt.internal.ui.preferences.SaveParticipantPreferencePage;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.TextLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Link;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.text.edits.MalformedTreeException;
+import org.eclipse.text.edits.TextEdit;
+import org.eclipse.text.edits.UndoEdit;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.dialogs.PreferencesUtil;
 
 /**
  * This is the original {@link org.eclipse.jdt.internal.corext.fix.CleanUpPostSaveListener} from JDT with minor edits.
@@ -152,7 +150,7 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
 
                 final IDocument document= buffer.getDocument();
                 final long oldFileValue= fFile.getModificationStamp();
-                final LinkedList<UndoEdit> undoEditCollector= new LinkedList<UndoEdit>();
+                final LinkedList<UndoEdit> undoEditCollector= new LinkedList<>();
                 final long[] oldDocValue= new long[1];
                 final boolean[] setContentStampSuccess= { false };
 
@@ -166,6 +164,7 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
                         public boolean fDone;
                         public Exception fException;
 
+                        @Override
                         public void run() {
                             synchronized (this) {
                                 try {
@@ -315,11 +314,13 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
     private static boolean FIRST_CALL= false;
     private static boolean FIRST_CALL_DONE= false;
 
+    @Override
     public boolean needsChangedRegions(ICompilationUnit unit) throws CoreException {
         ICleanUp[] cleanUps= getCleanUps(unit.getJavaProject().getProject());
         return requiresChangedRegions(cleanUps);
     }
 
+    @Override
     public void saved(ICompilationUnit unit, IRegion[] changedRegions, IProgressMonitor monitor) throws CoreException {
         if (monitor == null)
             monitor= new NullProgressMonitor();
@@ -344,7 +345,7 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
             long oldDocValue= getDocumentStamp((IFile)unit.getResource(), new SubProgressMonitor(monitor, 2));
 
             CompositeChange result= new CompositeChange(FixMessages.CleanUpPostSaveListener_SaveAction_ChangeName);
-            LinkedList<UndoEdit> undoEdits= new LinkedList<UndoEdit>();
+            LinkedList<UndoEdit> undoEdits= new LinkedList<>();
 
             if (FIRST_CALL && !FIRST_CALL_DONE) {
                 FIRST_CALL= false;
@@ -354,7 +355,7 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
             }
             HashSet<ICleanUp> slowCleanUps;
             if (FIRST_CALL_DONE) {
-                slowCleanUps= new HashSet<ICleanUp>();
+                slowCleanUps= new HashSet<>();
             } else {
                 slowCleanUps= null;
             }
@@ -373,7 +374,7 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
                     if (showStatus(preCondition) != Window.OK)
                         return;
 
-                    Map<String, String> options= new HashMap<String, String>();
+                    Map<String, String> options= new HashMap<>();
                     for (int i= 0; i < cleanUps.length; i++) {
                         Map<String, String> map= cleanUps[i].getRequirements().getCompilerOptions();
                         if (map != null) {
@@ -393,7 +394,7 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
                         context= new MultiLineCleanUpContext(unit, ast, changedRegions);
                     }
 
-                    ArrayList<ICleanUp> undoneCleanUps= new ArrayList<ICleanUp>();
+                    ArrayList<ICleanUp> undoneCleanUps= new ArrayList<>();
                     CleanUpChange change= CleanUpRefactoring.calculateChange(context, cleanUps, undoneCleanUps, slowCleanUps);
 
                     RefactoringStatus postCondition= new RefactoringStatus();
@@ -459,12 +460,12 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
         if (CleanUpOptions.TRUE.equals(settings.get(CleanUpConstants.CLEANUP_ON_SAVE_ADDITIONAL_OPTIONS))) {
             cleanUps= getCleanUps(settings, null);
         } else {
-            HashMap<String, String> filteredSettins= new HashMap<String, String>();
+            HashMap<String, String> filteredSettins= new HashMap<>();
             filteredSettins.put(CleanUpConstants.FORMAT_SOURCE_CODE, settings.get(CleanUpConstants.FORMAT_SOURCE_CODE));
             filteredSettins.put(CleanUpConstants.FORMAT_SOURCE_CODE_CHANGES_ONLY, settings.get(CleanUpConstants.FORMAT_SOURCE_CODE_CHANGES_ONLY));
             filteredSettins.put(CleanUpConstants.ORGANIZE_IMPORTS, settings.get(CleanUpConstants.ORGANIZE_IMPORTS));
 
-            Set<String> ids= new HashSet<String>(2);
+            Set<String> ids= new HashSet<>(2);
             ids.add("org.eclipse.jdt.ui.cleanup.format"); //$NON-NLS-1$
             ids.add("org.eclipse.jdt.ui.cleanup.imports"); //$NON-NLS-1$
             cleanUps= getCleanUps(filteredSettins, ids);
@@ -555,7 +556,7 @@ public class CleanUpPostSaveListener implements IPostSaveListener {
 
                 performChangeOperation.run(new SubProgressMonitor(monitor, 5));
 
-                ArrayList<Region> result= new ArrayList<Region>();
+                ArrayList<Region> result= new ArrayList<>();
                 for (int i= 0; i < positions.length; i++) {
                     Position position= positions[i];
                     if (!position.isDeleted())

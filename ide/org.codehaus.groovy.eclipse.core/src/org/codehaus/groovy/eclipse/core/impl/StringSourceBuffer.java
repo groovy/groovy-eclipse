@@ -22,8 +22,6 @@ import org.codehaus.groovy.eclipse.core.ISourceBuffer;
 
 /**
  * Implementation of ISourceBuffer for String instances.
- *
- * @author empovazan
  */
 public class StringSourceBuffer implements ISourceBuffer {
     private final char[] sourceCode;
@@ -38,14 +36,14 @@ public class StringSourceBuffer implements ISourceBuffer {
     }
 
     private List<Integer> createLineLookup(char[] sourceCode) {
-        List<Integer> offsets = new ArrayList<Integer>();
+        List<Integer> offsets = new ArrayList<>();
         if (sourceCode.length == 0) {
             return offsets;
         }
         offsets.add(new Integer(0));
 
         int ch;
-        for (int i = 0; i < sourceCode.length; ++i) {
+        for (int i = 0; i < sourceCode.length; i += 1) {
             ch = sourceCode[i];
             if (ch == '\r') {
                 if (i + 1 < sourceCode.length) {
@@ -66,6 +64,7 @@ public class StringSourceBuffer implements ISourceBuffer {
         return offsets;
     }
 
+    @Override
     public char charAt(int offset) {
         try {
             return sourceCode[offset];
@@ -74,14 +73,17 @@ public class StringSourceBuffer implements ISourceBuffer {
         }
     }
 
+    @Override
     public int length() {
         return sourceCode.length;
     }
 
+    @Override
     public CharSequence subSequence(int start, int end) {
         return new String(sourceCode, start, end - start);
     }
 
+    @Override
     public int[] toLineColumn(int offset) {
         try {
             for (int i = 0; i < lineOffsets.size(); ++i) {
@@ -99,6 +101,7 @@ public class StringSourceBuffer implements ISourceBuffer {
         }
     }
 
+    @Override
     public int toOffset(int line, int column) {
         int offset = lineOffsets.get(line - 1).intValue();
         return offset + column - 1;

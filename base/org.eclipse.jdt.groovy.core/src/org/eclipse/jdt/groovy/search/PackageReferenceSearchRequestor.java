@@ -44,6 +44,7 @@ public class PackageReferenceSearchRequestor implements ITypeRequestor {
         this.packageName = String.valueOf((char[]) ReflectionUtils.getPrivateField(PackageReferencePattern.class, "pkgName", pattern)) + '.';
     }
 
+    @Override
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
         try {
             if (node instanceof PackageNode) {

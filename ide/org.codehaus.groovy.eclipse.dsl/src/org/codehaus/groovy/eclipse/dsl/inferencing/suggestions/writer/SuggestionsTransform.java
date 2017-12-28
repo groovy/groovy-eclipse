@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,11 +38,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
-/**
- * 
- * @author Nieraj Singh
- * @created 2011-08-09
- */
 public class SuggestionsTransform {
 
     private ProjectSuggestions suggestions;
@@ -52,7 +47,7 @@ public class SuggestionsTransform {
     }
 
     /**
-     * 
+     *
      * @return transformed suggestions model into a XML serialisation, or null
      *         if serialisation failed. Partial serialisation is supported.
      */
@@ -135,5 +130,5 @@ public class SuggestionsTransform {
         }
     }
 
- 
+
 }

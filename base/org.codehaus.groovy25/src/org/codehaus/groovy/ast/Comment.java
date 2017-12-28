@@ -23,8 +23,6 @@ import java.util.List;
  * Represents a comment in groovy source. Subtypes are single line or multi line.
  * Contains factory methods called from the parser (GroovyRecognizer) that build the
  * comment subtypes.
- *
- * @author Andy Clement
  */
 public abstract class Comment {
 

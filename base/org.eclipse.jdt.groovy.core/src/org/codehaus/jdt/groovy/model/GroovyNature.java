@@ -75,10 +75,12 @@ public class GroovyNature implements IProjectNature {
     /**
      * @see IProjectNature#configure
      */
+    @Override
     public void configure() throws CoreException {
         configure(getProject());
     }
 
+    @Override
     public void deconfigure() throws CoreException {
         deconfigure(getProject());
     }
@@ -86,6 +88,7 @@ public class GroovyNature implements IProjectNature {
     /**
      * @see IProjectNature#getProject
      */
+    @Override
     public IProject getProject() {
         return project;
     }
@@ -93,6 +96,7 @@ public class GroovyNature implements IProjectNature {
     /**
      * @see IProjectNature#setProject
      */
+    @Override
     public void setProject(IProject project) {
         this.project = project;
     }

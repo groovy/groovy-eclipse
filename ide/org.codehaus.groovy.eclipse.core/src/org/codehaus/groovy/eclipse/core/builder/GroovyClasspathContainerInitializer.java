@@ -66,8 +66,8 @@ public class GroovyClasspathContainerInitializer extends ClasspathContainerIniti
     }
 
     private static void updateSomeGroovyClasspathContainers(IJavaProject... projects) throws JavaModelException {
-        List<IJavaProject> affectedProjects = new ArrayList<IJavaProject>(projects.length);
-        List<IClasspathContainer> affectedContainers = new ArrayList<IClasspathContainer>(projects.length);
+        List<IJavaProject> affectedProjects = new ArrayList<>(projects.length);
+        List<IClasspathContainer> affectedContainers = new ArrayList<>(projects.length);
         for (IJavaProject elt : projects) {
             IJavaProject project = elt;
             IClasspathContainer gcc = JavaCore.getClasspathContainer(GroovyClasspathContainer.CONTAINER_ID, project);

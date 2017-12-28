@@ -202,6 +202,7 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
         return contents;
     }
 
+    @Override
     public Iterator<InferencerTask> iterator() {
         return tasks.iterator();
     }

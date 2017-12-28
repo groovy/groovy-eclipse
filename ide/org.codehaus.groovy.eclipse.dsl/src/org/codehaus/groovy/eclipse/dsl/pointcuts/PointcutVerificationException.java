@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,13 @@ package org.codehaus.groovy.eclipse.dsl.pointcuts;
 
 /**
  * Thrown when an invalid pointcut is found during the pointcut verification phase.
- * 
+ *
  * FIXADE It would be nice if I could somehow get the line number in here.
- * @author andrew
- * @created Mar 9, 2011
  */
 public class PointcutVerificationException extends Exception {
 
     private static final long serialVersionUID = 1L;
-    
+
     private final IPointcut pointcut;
 
     public PointcutVerificationException(String message, IPointcut pointcut) {
@@ -42,8 +40,8 @@ public class PointcutVerificationException extends Exception {
      * @return
      */
     public String getPointcutMessage() {
-        return "Invalid Pointcut: " + pointcut.getPointcutDebugName() + 
-               "\nin: " + pointcut.getContainerIdentifier() + 
+        return "Invalid Pointcut: " + pointcut.getPointcutDebugName() +
+               "\nin: " + pointcut.getContainerIdentifier() +
                "\nreason: " + getMessage();
     }
 }

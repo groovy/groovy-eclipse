@@ -36,34 +36,42 @@ import org.eclipse.jdt.groovy.search.VariableScope;
  */
 public class TestTypeLookup implements ITypeLookup {
 
+    @Override
     public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
         return new TypeLookupResult(ClassHelper.make(HTML.class), VariableScope.VOID_CLASS_NODE, VariableScope.STRING_CLASS_NODE.getMethod("toString", Parameter.EMPTY_ARRAY), TypeConfidence.LOOSELY_INFERRED, scope);
     }
 
+    @Override
     public TypeLookupResult lookupType(FieldNode node, VariableScope scope) {
         return null;
     }
 
+    @Override
     public TypeLookupResult lookupType(MethodNode node, VariableScope scope) {
         return null;
     }
 
+    @Override
     public TypeLookupResult lookupType(AnnotationNode node, VariableScope scope) {
         return null;
     }
 
+    @Override
     public TypeLookupResult lookupType(ImportNode node, VariableScope scope) {
         return null;
     }
 
+    @Override
     public TypeLookupResult lookupType(ClassNode node, VariableScope scope) {
         return null;
     }
 
+    @Override
     public TypeLookupResult lookupType(Parameter node, VariableScope scope) {
         return null;
     }
 
+    @Override
     public void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {
         // do nothing
     }

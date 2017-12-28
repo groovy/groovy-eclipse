@@ -134,6 +134,7 @@ public class AssignStatementToNewLocalRefactoring {
                 }
             }
 
+            @Override
             public void visitExpressionStatement(ExpressionStatement statement) {
                 if (region.regionIsCoveredByNode(statement)) {
                     processExpression(statement.getExpression());
@@ -141,6 +142,7 @@ public class AssignStatementToNewLocalRefactoring {
                 super.visitExpressionStatement(statement);
             }
 
+            @Override
             public void visitReturnStatement(ReturnStatement statement) {
                 if (region.regionIsCoveredByNode(statement)) {
                     String source = String.valueOf(unit.getContents(), statement.getStart(), statement.getLength());

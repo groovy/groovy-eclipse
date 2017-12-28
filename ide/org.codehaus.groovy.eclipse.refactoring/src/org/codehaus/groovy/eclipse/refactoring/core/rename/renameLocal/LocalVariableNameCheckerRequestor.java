@@ -56,6 +56,7 @@ public class LocalVariableNameCheckerRequestor implements ITypeRequestor {
         return shadowing;
     }
 
+    @Override
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
         // check to see if the enclosing element does not enclose the nodeToLookFor
         if (!interestingElement(enclosingElement)) {

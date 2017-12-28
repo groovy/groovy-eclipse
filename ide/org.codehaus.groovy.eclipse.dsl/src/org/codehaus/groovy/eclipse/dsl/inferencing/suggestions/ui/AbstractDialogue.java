@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
@@ -36,11 +37,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 
-/**
- * 
- * @author Nieraj Singh
- * @created 2011-05-13
- */
 public abstract class AbstractDialogue extends TitleAreaDialog {
 
     private Map<IDialogueControlDescriptor, SetValue> invalidValues;
@@ -51,13 +47,9 @@ public abstract class AbstractDialogue extends TitleAreaDialog {
         super(parentShell);
     }
 
-    /**
-     * Must not be null
-     * 
-     * @return
-     */
-    abstract protected DialogueDescriptor getDialogueDescriptor();
+    abstract protected @NonNull DialogueDescriptor getDialogueDescriptor();
 
+    @Override
     protected boolean isResizable() {
         return true;
     }
@@ -66,8 +58,9 @@ public abstract class AbstractDialogue extends TitleAreaDialog {
         return null;
     }
 
+    @Override
     protected Control createDialogArea(Composite parent) {
-        invalidValues = new HashMap<IDialogueControlDescriptor, SetValue>();
+        invalidValues = new HashMap<>();
         DialogueDescriptor descriptor = getDialogueDescriptor();
         setTitle(descriptor.getTitle());
         setMessage(descriptor.getMessage());
@@ -92,8 +85,8 @@ public abstract class AbstractDialogue extends TitleAreaDialog {
         return composite;
     }
 
+    @Override
     protected Control createContents(Composite parent) {
-
         Control control = super.createContents(parent);
         // Set "OK" button state after all dialogue contents are created to
         // ensure the
@@ -159,9 +152,6 @@ public abstract class AbstractDialogue extends TitleAreaDialog {
      * once a value is set, it needs
      * to be verified before enabling the OK button
      * 2. The value is required, and an empty or null value is not acceptable.
-     * 
-     * @author Nieraj Singh
-     * @created 2011-08-06
      */
     abstract protected class ValidatedValueSelectionListener implements IControlSelectionListener {
 
@@ -170,7 +160,6 @@ public abstract class AbstractDialogue extends TitleAreaDialog {
          * until a value is actually set
          */
         public ValidatedValueSelectionListener() {
-
         }
 
         public ValidatedValueSelectionListener(IDialogueControlDescriptor descriptor, Object initialValue) {
@@ -182,11 +171,13 @@ public abstract class AbstractDialogue extends TitleAreaDialog {
             }
         }
 
+        @Override
         public void handleSelection(ControlSelectionEvent event) {
             handleValidatedValue(event);
             notifyValidValueSet(event.getControlDescriptor(), event.getSelectionData());
         }
 
+        @Override
         public void handleInvalidSelection(ControlSelectionEvent event) {
             IDialogueControlDescriptor descriptor = event.getControlDescriptor();
             invalidValues.put(descriptor, new SetValue(event.getSelectionData(), event.getErrorMessage()));
@@ -243,7 +234,7 @@ public abstract class AbstractDialogue extends TitleAreaDialog {
     /**
      * Should only be called once the button bars have been created for the
      * dialogue
-     * 
+     *
      * @param enable
      */
     protected void enableOKButton(boolean enable) {

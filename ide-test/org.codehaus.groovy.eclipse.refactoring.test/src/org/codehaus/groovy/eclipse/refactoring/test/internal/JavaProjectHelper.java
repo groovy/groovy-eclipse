@@ -35,7 +35,6 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.resources.IWorkspaceRunnable;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
@@ -239,17 +238,14 @@ public class JavaProjectHelper {
      * @see #ASSERT_NO_MIXED_LINE_DELIMIERS
      */
     public static void delete(final IJavaElement elem) throws Exception {
-        IWorkspaceRunnable runnable= new IWorkspaceRunnable() {
-            public void run(IProgressMonitor monitor) throws CoreException {
-                performDummySearch();
-                if (elem instanceof IJavaProject) {
-                    IJavaProject jproject= (IJavaProject) elem;
-                    jproject.setRawClasspath(new IClasspathEntry[0], jproject.getProject().getFullPath(), null);
-                }
-                delete(elem.getResource());
+        ResourcesPlugin.getWorkspace().run(monitor -> {
+            performDummySearch();
+            if (elem instanceof IJavaProject) {
+                IJavaProject jproject = (IJavaProject) elem;
+                jproject.setRawClasspath(new IClasspathEntry[0], jproject.getProject().getFullPath(), null);
             }
-        };
-        ResourcesPlugin.getWorkspace().run(runnable, null);
+            delete(elem.getResource());
+        }, null);
         emptyDisplayLoop();
     }
 
@@ -279,19 +275,16 @@ public class JavaProjectHelper {
      */
     public static void clear(final IJavaProject jproject, final IClasspathEntry[] entries) throws Exception {
         performDummySearch();
-        IWorkspaceRunnable runnable= new IWorkspaceRunnable() {
-            public void run(IProgressMonitor monitor) throws CoreException {
-                jproject.setRawClasspath(entries, null);
+        ResourcesPlugin.getWorkspace().run(monitor -> {
+            jproject.setRawClasspath(entries, null);
 
-                IResource[] resources= jproject.getProject().members();
-                for (int i= 0; i < resources.length; i++) {
-                    if (!resources[i].getName().startsWith(".")) {
-                        delete(resources[i]);
-                    }
+            IResource[] resources= jproject.getProject().members();
+            for (int i= 0; i < resources.length; i++) {
+                if (!resources[i].getName().startsWith(".")) {
+                    delete(resources[i]);
                 }
             }
-        };
-        ResourcesPlugin.getWorkspace().run(runnable, null);
+        }, null);
 
         JavaProjectHelper.emptyDisplayLoop();
     }

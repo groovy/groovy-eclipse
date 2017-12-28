@@ -48,6 +48,7 @@ public final class TestRenameParticipantShared extends RenameParticipant impleme
     Map<String, String> fSimilarToHandle = new HashMap<>();
     Map<String, String> fSimilarToNewName = new HashMap<>();
 
+    @Override
     public boolean initialize(Object element) {
         fgInstance = this;
         fElements.add(element);
@@ -85,6 +86,7 @@ public final class TestRenameParticipantShared extends RenameParticipant impleme
         return "";
     }
 
+    @Override
     public void addElement(Object element, RefactoringArguments args) {
         fElements.add(element);
         fArguments.add((RenameArguments) args);
@@ -94,14 +96,17 @@ public final class TestRenameParticipantShared extends RenameParticipant impleme
             fHandles.add(((IResource) element).getFullPath().toString());
     }
 
+    @Override
     public String getName() {
         return getClass().getName();
     }
 
+    @Override
     public RefactoringStatus checkConditions(IProgressMonitor pm, CheckConditionsContext context) {
         return new RefactoringStatus();
     }
 
+    @Override
     public Change createChange(IProgressMonitor pm) throws CoreException {
         return null;
     }

@@ -44,6 +44,7 @@ public class GroovyAutoIndentStrategy extends AbstractAutoEditStrategy {
         this.indentService = GroovyIndentationService.get((IJavaProject) ReflectionUtils.getPrivateField(JavaAutoIndentStrategy.class, "fProject", javaStrategy));
     }
 
+    @Override
     public void customizeDocumentCommand(IDocument d, DocumentCommand c) {
         if (c.doit)
         try {

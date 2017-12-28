@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -84,9 +84,6 @@ import org.codehaus.groovy.classgen.BytecodeExpression;
  * the entire module node is walked.
  *
  * {@link PackageNode}s and {@link ImportNode}s are ignored.
- *
- * @author andrew
- * @created Jan 21, 2011
  */
 public class LexicalClassVisitor {
 
@@ -459,6 +456,7 @@ public class LexicalClassVisitor {
             this.thisNode = thisNode;
         }
 
+        @Override
         public int compareTo(ComparableNode o) {
             if (thisNode.getStart() != o.thisNode.getStart()) {
                 return thisNode.getStart() - o.thisNode.getStart();
@@ -482,8 +480,7 @@ public class LexicalClassVisitor {
     }
 
     /**
-     * @return the next lexical ASTNode to visit, or null if the visit is
-     *         complete
+     * @return the next lexical ASTNode to visit, or null if the visit is complete
      */
     public ASTNode getNextNode() {
         if (!hasNextNode()) {
@@ -493,7 +490,7 @@ public class LexicalClassVisitor {
     }
 
     private void initialize() {
-        nodeList = new PriorityQueue<ComparableNode>();
+        nodeList = new PriorityQueue<>();
         LexicalPrevisitor visitor = new LexicalPrevisitor();
         visitor.doVisit(module);
     }

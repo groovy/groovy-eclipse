@@ -37,6 +37,7 @@ import org.eclipse.ui.PlatformUI;
 
 public class RenameDispatcherAction extends GroovyRefactoringAction {
 
+    @Override
     public void run(IAction action) {
         if (initRefactoring()) {
             GroovyCompilationUnit unit = getUnit();

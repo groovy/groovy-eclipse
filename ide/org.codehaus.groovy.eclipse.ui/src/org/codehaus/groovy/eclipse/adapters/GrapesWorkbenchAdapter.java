@@ -46,6 +46,7 @@ public class GrapesWorkbenchAdapter implements IAdapterFactory {
 
             if (imageDescriptor != null) {
                 return (T) new WorkbenchAdapter() {
+                    @Override
                     public ImageDescriptor getImageDescriptor(Object object) {
                         return imageDescriptor;
                     };

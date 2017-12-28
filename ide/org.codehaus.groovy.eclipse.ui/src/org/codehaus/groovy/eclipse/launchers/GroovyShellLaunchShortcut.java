@@ -70,9 +70,8 @@ public class GroovyShellLaunchShortcut implements ILaunchShortcut {
 
     /**
      * Launches from the package explorer.
-     *
-     * @see ILaunchShortcut#launch
      */
+    @Override
     public void launch(ISelection selection, String mode)  {
         if (selection instanceof IStructuredSelection && ((IStructuredSelection) selection).getFirstElement() instanceof IJavaElement) {
             IStructuredSelection structredSelection = (IStructuredSelection) selection;
@@ -83,9 +82,8 @@ public class GroovyShellLaunchShortcut implements ILaunchShortcut {
 
     /**
      * Launches from the source file.
-     *
-     * @see ILaunchShortcut#launch
      */
+    @Override
     public void launch(IEditorPart editor, String mode) {
         // make sure we are saved as we run groovy from the file
         editor.getEditorSite().getPage().saveEditor(editor, false);

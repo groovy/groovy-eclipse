@@ -28,8 +28,6 @@ import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 
 /**
  * Wraps a JDT MethodBinding, representing it to groovy as a MethodNode. Translates annotations only when required.
- *
- * @author Andy Clement
  */
 public class JDTMethodNode extends MethodNode implements JDTNode {
 
@@ -77,6 +75,7 @@ public class JDTMethodNode extends MethodNode implements JDTNode {
         return super.getAnnotations(type);
     }
 
+    @Override
     public Binding getJdtBinding() {
         return methodBinding;
     }
@@ -85,10 +84,12 @@ public class JDTMethodNode extends MethodNode implements JDTNode {
         return methodBinding;
     }
 
+    @Override
     public JDTResolver getResolver() {
         return resolver;
     }
 
+    @Override
     public boolean isDeprecated() {
         return methodBinding.isDeprecated();
     }

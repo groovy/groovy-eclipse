@@ -54,11 +54,13 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
     private ModuleNode module;
     private JDTResolver resolver;
 
+    @Override
     public void setResolverInformation(ModuleNode module, JDTResolver resolver) {
         this.module = module;
         this.resolver = resolver;
     }
 
+    @Override
     public void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {
         if (!GroovyDSLCoreActivator.getDefault().isDSLDDisabled()) {
             // run referesh dependencies synchronously if DSLD store doesn't exist yet

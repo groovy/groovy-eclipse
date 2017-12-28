@@ -42,10 +42,12 @@ public class PackageCompletionProcessor extends AbstractGroovyCompletionProcesso
         super(context, javaContext, nameEnvironment);
     }
 
+    @Override
     public void setResolverInformation(ModuleNode module, JDTResolver resolver) {
         this.resolver = resolver;
     }
 
+    @Override
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
         ContentAssistContext context = getContext();
 
@@ -108,7 +110,7 @@ public class PackageCompletionProcessor extends AbstractGroovyCompletionProcesso
      * removes whitespace and does a fail-fast if a non-java identifier is found
      */
     private char[] getPackageCompletionText(String fullCompletionExpression) {
-        List<Character> chars = new LinkedList<Character>();
+        List<Character> chars = new LinkedList<>();
         if (fullCompletionExpression == null) {
             return CharOperation.NO_CHAR;
         }

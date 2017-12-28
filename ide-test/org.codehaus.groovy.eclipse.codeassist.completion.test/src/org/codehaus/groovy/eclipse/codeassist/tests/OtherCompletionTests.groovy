@@ -76,7 +76,7 @@ final class OtherCompletionTests extends CompletionTestSuite {
         proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this.collect'))
         Arrays.sort(proposals, { ICompletionProposal o1, ICompletionProposal o2 ->
             o2.displayString <=> o1.displayString
-        } as Comparator<ICompletionProposal>)
+        })
         proposalExists(proposals, 'collect', 3)
         assert proposals[0].displayString ==~ /collect\(Collection \p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*, Closure \p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*\) : Collection - DefaultGroovyMethods \(Groovy\)/ : printProposals(proposals)
         assert proposals[1].displayString ==~ /collect\(Closure \p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*\) : List - DefaultGroovyMethods \(Groovy\)/ : printProposals(proposals)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,18 +30,16 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 
-/**
- * 
- * @author Nieraj Singh
- * @created 2011-05-13
- */
 public class DocumentDialogueControl extends AbstractControlManager {
 
     private String initialValue;
 
     private IDialogueControlDescriptor descriptor;
 
-    public DocumentDialogueControl(IDialogueControlDescriptor descriptor, Point offsetLabelLocation, String initialValue) {
+    public DocumentDialogueControl(
+        IDialogueControlDescriptor descriptor,
+        Point offsetLabelLocation,
+        String initialValue) {
         this.descriptor = descriptor;
         this.initialValue = initialValue;
     }
@@ -61,12 +59,13 @@ public class DocumentDialogueControl extends AbstractControlManager {
         return 100;
     }
 
+    @Override
     protected Map<Control, IDialogueControlDescriptor> createManagedControls(Composite parent) {
-
-        Map<Control, IDialogueControlDescriptor> controls = new HashMap<Control, IDialogueControlDescriptor>();
+        Map<Control, IDialogueControlDescriptor> controls = new HashMap<>();
         if (descriptor != null) {
             Composite labelArea = new Composite(parent, SWT.NONE);
-            GridLayoutFactory.fillDefaults().numColumns(numberofColumns()).margins(0, 0).equalWidth(false).applyTo(labelArea);
+            GridLayoutFactory.fillDefaults().numColumns(numberofColumns()).margins(0, 0).equalWidth(false)
+                .applyTo(labelArea);
             GridDataFactory.fillDefaults().grab(true, true).applyTo(labelArea);
 
             Label parameterNameLabel = new Label(labelArea, SWT.READ_ONLY);
@@ -83,10 +82,12 @@ public class DocumentDialogueControl extends AbstractControlManager {
 
             styledText.addKeyListener(new KeyListener() {
 
+                @Override
                 public void keyReleased(KeyEvent e) {
                     notifyControlChange(styledText.getText(), styledText);
                 }
 
+                @Override
                 public void keyPressed(KeyEvent e) {
                     // nothing.
                 }
@@ -99,5 +100,4 @@ public class DocumentDialogueControl extends AbstractControlManager {
         }
         return controls;
     }
-
 }

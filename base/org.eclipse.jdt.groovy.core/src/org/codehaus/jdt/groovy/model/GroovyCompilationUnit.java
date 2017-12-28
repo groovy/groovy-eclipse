@@ -77,14 +77,17 @@ public class GroovyCompilationUnit extends CompilationUnit {
             this.stopOnFirst = stopOnFirst;
         }
 
+        @Override
         public boolean proceedOnErrors() {
             return !stopOnFirst;
         }
 
+        @Override
         public boolean stopOnFirstError() {
             return stopOnFirst;
         }
 
+        @Override
         public boolean ignoreAllErrors() {
             // TODO is this the right decision here? New method with java8 support
             return false;
@@ -579,6 +582,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
         }
     }
 
+    @Override
     protected void codeComplete(org.eclipse.jdt.internal.compiler.env.ICompilationUnit cu,
             org.eclipse.jdt.internal.compiler.env.ICompilationUnit unitToSkip, int position, CompletionRequestor requestor,
             WorkingCopyOwner owner, ITypeRoot typeRoot, IProgressMonitor monitor) throws JavaModelException {

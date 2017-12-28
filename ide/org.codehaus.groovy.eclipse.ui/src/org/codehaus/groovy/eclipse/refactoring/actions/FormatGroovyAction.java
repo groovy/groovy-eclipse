@@ -32,10 +32,6 @@ import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchSite;
 
-/**
- * @author Andrew Eisenberg
- * @created Sep 24, 2010
- */
 public class FormatGroovyAction extends SelectionDispatchAction {
 
     private final FormatKind kind;

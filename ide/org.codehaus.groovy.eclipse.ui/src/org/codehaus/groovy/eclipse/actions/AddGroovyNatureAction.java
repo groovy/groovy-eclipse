@@ -37,8 +37,8 @@ import org.eclipse.ui.IWorkbenchPart;
 public class AddGroovyNatureAction implements IObjectActionDelegate {
     private List<IProject> currSelected = new LinkedList<>();
 
+    @Override
     public void run(final IAction action) {
-
         if (currSelected != null && currSelected.size() > 0) {
             GroovyCore.trace("AddGroovySupportAction.run()");
 
@@ -49,9 +49,7 @@ public class AddGroovyNatureAction implements IObjectActionDelegate {
         }
     }
 
-    /**
-     * @see IObjectActionDelegate#selectionChanged
-     */
+    @Override
     public void selectionChanged(final IAction action, final ISelection selection) {
         currSelected.clear();
         List<IProject> newSelected = new LinkedList<>();
@@ -62,7 +60,7 @@ public class AddGroovyNatureAction implements IObjectActionDelegate {
                 Object object = iter.next();
                 if (object instanceof IAdaptable) {
                     IProject project = Adapters.adapt(object, IProject.class);
-                    if(project != null) {
+                    if (project != null) {
                         newSelected.add(project);
                     } else {
                         enabled = false;
@@ -83,9 +81,7 @@ public class AddGroovyNatureAction implements IObjectActionDelegate {
         }
     }
 
-    /**
-     * @see IObjectActionDelegate#setActivePart
-     */
+    @Override
     public void setActivePart(final IAction action, final IWorkbenchPart targetPart) {
     }
 }

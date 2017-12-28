@@ -43,10 +43,7 @@ import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
- * @author Andrew Eisenberg
- * @created Aug 27, 2009
- *
- *          Visits a ModuleNode and passes it to an indexing element requestor, thus adding this class to the Java indexes
+ * Visits a ModuleNode and passes it to an indexing element requestor, thus adding this class to the Java indexes
  */
 public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
 
@@ -78,6 +75,7 @@ public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
         }
     }
 
+    @Override
     public void visitImports(ModuleNode node) {
         if (node != null) {
             for (ImportNode importNode : GroovyUtils.getAllImportNodes(node)) {

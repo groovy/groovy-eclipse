@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,6 @@ import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.IValueCheckingRul
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.JavaValidIdentifierRule;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ValueStatus;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
@@ -30,9 +28,6 @@ import org.eclipse.swt.widgets.Text;
 /**
  * Validation rules for Java are typically cached as it they may use name
  * lookups which may be expensive to create frequently.
- * 
- * @author Nieraj Singh
- * @created 2011-05-13
  */
 public class JavaTextControl extends AbstractLabeledDialogueControl {
 
@@ -47,19 +42,14 @@ public class JavaTextControl extends AbstractLabeledDialogueControl {
         this.initialValue = initialValue;
     }
 
+    @Override
     protected Control getManagedControl(Composite parent) {
         textControl = new Text(parent, SWT.BORDER);
         if (initialValue != null) {
             textControl.setText(initialValue);
         }
-
         textControl.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-
-        textControl.addModifyListener(new ModifyListener() {
-            public void modifyText(ModifyEvent e) {
-                notifyControlChange(textControl.getText(), textControl);
-            }
-        });
+        textControl.addModifyListener(e -> notifyControlChange(textControl.getText(), textControl));
 
         return textControl;
     }
@@ -68,6 +58,7 @@ public class JavaTextControl extends AbstractLabeledDialogueControl {
         return textControl;
     }
 
+    @Override
     protected ValueStatus isControlValueValid(Control control) {
         if (control == textControl) {
             String stringVal = textControl.getText();
@@ -79,9 +70,6 @@ public class JavaTextControl extends AbstractLabeledDialogueControl {
 
     /**
      * If not explicitly checked, it will be default assume the value is valid
-     * 
-     * @param value
-     * @return
      */
     protected ValueStatus isControlValueValid(String value) {
         if (cachedValueCheckingRule == null) {
@@ -101,12 +89,11 @@ public class JavaTextControl extends AbstractLabeledDialogueControl {
      * a Java type). If null, no validation will be performed on a control
      * value,
      * and the control value will be assumed to be valid by default.
-     * 
+     *
      * @return validation rule to cache, or null if no cached validation is
      *         required.
      */
     protected IValueCheckingRule getCachedValidationRule() {
         return new JavaValidIdentifierRule();
     }
-
 }

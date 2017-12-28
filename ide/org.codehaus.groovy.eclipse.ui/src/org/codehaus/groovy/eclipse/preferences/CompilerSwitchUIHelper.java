@@ -34,10 +34,8 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -51,9 +49,6 @@ import org.osgi.framework.Version;
 
 /**
  * Shared functionality to provide a UI for compiler switching.
- *
- * @author andrew
- * @created 2013-01-04
  */
 public class CompilerSwitchUIHelper {
     static final String PROP_VM = "eclipse.vm"; //$NON-NLS-1$
@@ -102,11 +97,7 @@ public class CompilerSwitchUIHelper {
         Link moreInfoLink = new Link(compilerPage, 0);
         moreInfoLink.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
         moreInfoLink.setText("<a href=\"https://github.com/groovy/groovy-eclipse/wiki\">See here</a> for more information (opens a browser window).");
-        moreInfoLink.addListener (SWT.Selection, new Listener() {
-            public void handleEvent(Event event) {
-                openUrl(event.text);
-            }
-        });
+        moreInfoLink.addListener (SWT.Selection, event -> openUrl(event.text));
 
         return compilerPage;
     }
@@ -125,7 +116,7 @@ public class CompilerSwitchUIHelper {
         Button switchTo = new Button(compilerPage, SWT.PUSH);
         switchTo.setText("Switch to " + toVersion);
         switchTo.addSelectionListener(new SelectionListener() {
-
+            @Override
             public void widgetSelected(SelectionEvent e) {
                 Shell shell = compilerPage.getShell();
                 boolean result = MessageDialog.openQuestion(shell, "Change compiler and restart?",
@@ -149,7 +140,9 @@ public class CompilerSwitchUIHelper {
                 }
             }
 
-            public void widgetDefaultSelected(SelectionEvent e) {}
+            @Override
+            public void widgetDefaultSelected(SelectionEvent e) {
+            }
         });
     }
 

@@ -29,18 +29,13 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
- * Manages type lookups
- *
- * @author Andrew Eisenberg
- * @created Nov 17, 2009
+ * Manages type lookups.
  */
 public class TypeLookupRegistry {
+
     private static final String APPLIES_TO = "appliesTo";
-
     private static final String NATURE = "projectNature";
-
     private static final String LOOKUP = "lookup";
-
     private static final String TYPE_LOOKUP_EXTENSION = "org.eclipse.jdt.groovy.core.typeLookup";
 
     private final static TypeLookupRegistry DEFAULT = new TypeLookupRegistry();

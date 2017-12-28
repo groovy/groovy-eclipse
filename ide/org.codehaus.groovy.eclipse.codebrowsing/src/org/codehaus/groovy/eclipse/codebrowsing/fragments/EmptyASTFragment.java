@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,64 +22,74 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 
 /**
  * FIXADE convert to singleton
- *
- * @author andrew
- * @created Jun 6, 2010
  */
 public class EmptyASTFragment implements IASTFragment {
 
     // all empty expressions are really the same
     private static final EmptyExpression emptyExpression = new EmptyExpression();
 
+    @Override
     public void accept(FragmentVisitor visitor) {
         visitor.previsit(this);
         visitor.visit(this);
     }
 
+    @Override
     public int fragmentLength() {
         return 0;
     }
 
+    @Override
     public Expression getAssociatedExpression() {
         return emptyExpression;
     }
 
+    @Override
     public ASTNode getAssociatedNode() {
         return emptyExpression;
     }
 
+    @Override
     public int getEnd() {
         return 0;
     }
 
+    @Override
     public int getStart() {
         return 0;
     }
 
+    @Override
     public int getLength() {
         return 0;
     }
 
+    @Override
     public int getTrimmedEnd(GroovyCompilationUnit unit) {
         return 0;
     }
 
+    @Override
     public int getTrimmedLength(GroovyCompilationUnit unit) {
         return getTrimmedEnd(unit) - getStart();
     }
 
+    @Override
     public ASTFragmentKind kind() {
         return ASTFragmentKind.EMPTY;
     }
 
+    @Override
     public boolean matches(IASTFragment other) {
         return other.kind() == ASTFragmentKind.EMPTY;
     }
 
+    @Override
     public String print(int indentLvl) {
         return ASTFragmentFactory.spaces(indentLvl) + "(E) empty";
     }
 
+    @Override
     public IASTFragment findMatchingSubFragment(IASTFragment other) {
         return this;
     }
@@ -88,5 +98,4 @@ public class EmptyASTFragment implements IASTFragment {
     public String toString() {
         return print(0);
     }
-
 }

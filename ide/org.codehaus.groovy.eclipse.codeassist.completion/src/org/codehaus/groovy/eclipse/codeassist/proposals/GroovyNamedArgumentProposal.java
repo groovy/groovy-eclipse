@@ -47,6 +47,7 @@ public class GroovyNamedArgumentProposal implements IGroovyProposal {
         this(paramName, ProposalUtils.createTypeSignatureStr(paramType), ownerMethod, contributor);
     }
 
+    @Override
     public IJavaCompletionProposal createJavaProposal(ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
         if (context.location != ContentAssistLocation.METHOD_CONTEXT) {
             return null;

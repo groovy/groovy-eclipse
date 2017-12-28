@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,11 +25,9 @@ import org.eclipse.core.resources.IStorage;
 
 /**
  * The bind() pointcut takes a named argument where the argument is another pointcut.
- * @author andrew
- * @created Feb 10, 2011
  */
 public class BindPointcut extends AbstractPointcut {
-    
+
     public BindPointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName);
     }
@@ -40,11 +38,6 @@ public class BindPointcut extends AbstractPointcut {
         return matchOnPointcutArgumentReturnInner((IPointcut) getFirstArgument(), pattern, ensureCollection(toMatch));
     }
 
-    
-    public IPointcut normalize() {
-        return super.normalize();
-    }
-    
     @Override
     public void verify() throws PointcutVerificationException {
         super.verify();
@@ -53,11 +46,10 @@ public class BindPointcut extends AbstractPointcut {
             String name = getFirstArgumentName();
             if (name == null) {
                 throw new PointcutVerificationException("bind requires a named argument", this);
-            }                
+            }
             ((IPointcut) arg).verify();
         } else {
             throw new PointcutVerificationException("A pointcut is required as the single argument to bind", this);
         }
     }
-
 }

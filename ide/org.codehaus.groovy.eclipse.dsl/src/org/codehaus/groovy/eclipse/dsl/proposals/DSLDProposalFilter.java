@@ -31,12 +31,14 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 public class DSLDProposalFilter implements IProposalFilterExtension {
 
+    @Override
     public List<IGroovyProposal> filterProposals(List<IGroovyProposal> proposals, ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
         return null;
     }
 
+    @Override
     public List<ICompletionProposal> filterExtendedProposals(List<ICompletionProposal> proposals, ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
-        Map<String, ICompletionProposal> map = new LinkedHashMap<String, ICompletionProposal>();
+        Map<String, ICompletionProposal> map = new LinkedHashMap<>();
 
         for (ICompletionProposal proposal : proposals) {
             String key = getKeyString(proposal);
@@ -51,7 +53,7 @@ public class DSLDProposalFilter implements IProposalFilterExtension {
         }
 
         if (map.size() != proposals.size()) {
-            return new ArrayList<ICompletionProposal>(map.values());
+            return new ArrayList<>(map.values());
         }
         return null;
     }

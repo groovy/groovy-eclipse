@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,24 +41,22 @@ import org.eclipse.ui.texteditor.IMarkerUpdater;
 import org.eclipse.ui.texteditor.MarkerUtilities;
 
 /**
- * Largely borrowed from {@link BreakpointMarkerUpdater}
- *
- * @author Andrew Eisenberg
- * @created Oct 6, 2009
- *
+ * Largely borrowed from {@link BreakpointMarkerUpdater}.
  */
 public class BreakpointUpdater implements IMarkerUpdater {
 
+    @Override
     public String[] getAttribute() {
         return new String[] {IMarker.LINE_NUMBER};
     }
 
+    @Override
     public String getMarkerType() {
         return "org.eclipse.debug.core.breakpointMarker"; //$NON-NLS-1$
     }
 
-    public boolean updateMarker(IMarker marker, IDocument document,
-            Position position) {
+    @Override
+    public boolean updateMarker(IMarker marker, IDocument document, Position position) {
         GroovyCompilationUnit unit = getCompilationUnit(marker);
         if (unit == null) {
             // ignore non-GroovyCompilationUnits
@@ -187,6 +185,4 @@ public class BreakpointUpdater implements IMarkerUpdater {
         }
         return null;
     }
-
-
 }

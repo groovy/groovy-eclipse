@@ -22,6 +22,7 @@ public class GrapesContainerInfo extends ImportDeclarationElementInfo {
 
     protected IJavaElement[] children;
 
+    @Override
     public IJavaElement[] getChildren() {
         return children;
     }

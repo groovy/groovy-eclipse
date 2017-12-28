@@ -71,11 +71,14 @@ public class GroovyDocumentScanner implements IDocumentListener {
         reset();
     }
 
+    @Override
     public void documentChanged(DocumentEvent event) {
         reset();
     }
 
-    public void documentAboutToBeChanged(DocumentEvent event) {}
+    @Override
+    public void documentAboutToBeChanged(DocumentEvent event) {
+    }
 
     /**
      * This method must be called internally before operating on the list of
@@ -96,7 +99,7 @@ public class GroovyDocumentScanner implements IDocumentListener {
     }
 
     private List<Token> getTokensIncludingEOF() {
-        List<Token> result = new ArrayList<Token>();
+        List<Token> result = new ArrayList<>();
         Token token;
         try {
             do {
@@ -228,15 +231,15 @@ public class GroovyDocumentScanner implements IDocumentListener {
      */
     public List<Token> getTokens(int start, int end) {
         if (start >= end)
-            return new ArrayList<Token>();
+            return new ArrayList<>();
 
         try {
             int startTokenIndex = findTokenFrom(start);
             if (startTokenIndex == NOT_FOUND)
-                return new ArrayList<Token>();
+                return new ArrayList<>();
 
             if (getOffset(tokens.get(startTokenIndex)) >= end)
-                return new ArrayList<Token>();
+                return new ArrayList<>();
 
             int endTokenIndex = findTokenFrom(end);
             if (endTokenIndex == NOT_FOUND) {
@@ -271,7 +274,7 @@ public class GroovyDocumentScanner implements IDocumentListener {
             int start = document.getLineOffset(document.getLineOfOffset(offset));
             return getTokens(start, offset);
         } catch (BadLocationException e) {
-            return new ArrayList<Token>();
+            return new ArrayList<>();
         }
     }
 
@@ -290,7 +293,7 @@ public class GroovyDocumentScanner implements IDocumentListener {
             return getTokens(offset, lineEnd);
         } catch (BadLocationException e) {
             GroovyCore.logException("Recoverable internal error", e);
-            return new ArrayList<Token>();
+            return new ArrayList<>();
         }
     }
 

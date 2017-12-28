@@ -65,18 +65,16 @@ public class ReplaceDefWithStaticTypeProposal extends GroovyQuickAssistProposal2
                     // find variable declaration that contains this occurrence of the 'def' keyword
                     final IRegion r = JavaWordFinder.findWord(d, sloc.getOffset() + sloc.getLength() + 1);
                     if (r != null) {
-                        context.visitCompilationUnit(new ITypeRequestor() {
-                            public ITypeRequestor.VisitStatus acceptASTNode(ASTNode n, TypeLookupResult tlr, IJavaElement e) {
-                                if (n instanceof DeclarationExpression && !((DeclarationExpression) n).isMultipleAssignmentDeclaration()) {
-                                    VariableExpression v = ((DeclarationExpression) n).getVariableExpression();
-                                    if (v.getStart() == r.getOffset() && v.getLength() == r.getLength()) {
-                                        type = tlr.type;
+                        context.visitCompilationUnit((ASTNode n, TypeLookupResult tlr, IJavaElement e) -> {
+                            if (n instanceof DeclarationExpression && !((DeclarationExpression) n).isMultipleAssignmentDeclaration()) {
+                                VariableExpression v = ((DeclarationExpression) n).getVariableExpression();
+                                if (v.getStart() == r.getOffset() && v.getLength() == r.getLength()) {
+                                    type = tlr.type;
 
-                                        return ITypeRequestor.VisitStatus.STOP_VISIT;
-                                    }
+                                    return ITypeRequestor.VisitStatus.STOP_VISIT;
                                 }
-                                return ITypeRequestor.VisitStatus.CONTINUE;
                             }
+                            return ITypeRequestor.VisitStatus.CONTINUE;
                         });
                     }
                 }

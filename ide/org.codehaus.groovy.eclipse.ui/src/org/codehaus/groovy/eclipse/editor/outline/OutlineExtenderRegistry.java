@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,8 +33,6 @@ import org.eclipse.ui.internal.WorkbenchPlugin;
 /**
  * Manages the OutlineExtenderRegistry
  * This class is a singleton and is managed by {@link GroovyTextTools}
- * @author Maxime Hamm
- * @created April 4, 2011
  */
 public class OutlineExtenderRegistry {
 
@@ -47,7 +45,7 @@ public class OutlineExtenderRegistry {
     GroovyScriptOutlineExtender groovyScriptExtender;
 
     public void initialize() throws CoreException {
-        natureToExtenderMap = new HashMap<String, List<IOutlineExtender>>();
+        natureToExtenderMap = new HashMap<>();
         IExtensionRegistry registry = Platform.getExtensionRegistry();
         IExtensionPoint extensionPoint = registry.getExtensionPoint(EXTENSION_POINT);
         IExtension[] extensions = extensionPoint.getExtensions();
@@ -59,7 +57,7 @@ public class OutlineExtenderRegistry {
                 if (object instanceof IOutlineExtender) {
                     List<IOutlineExtender> extenders = natureToExtenderMap.get(natureID);
                     if (extenders == null) {
-                        extenders = new ArrayList<IOutlineExtender>(1);
+                        extenders = new ArrayList<>(1);
                         natureToExtenderMap.put(natureID, extenders);
                     }
                     extenders.add((IOutlineExtender) object);

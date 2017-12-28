@@ -34,6 +34,7 @@ public class FindOccurrencesAction implements IEditorActionDelegate {
 
     private TextSelection sel;
 
+    @Override
     public void run(IAction action) {
         if (editor == null || sel == null) {
             return;
@@ -63,6 +64,7 @@ public class FindOccurrencesAction implements IEditorActionDelegate {
         return editor.getSite().getShell();
     }
 
+    @Override
     public void selectionChanged(IAction action, ISelection selection) {
         if (selection instanceof TextSelection) {
             sel = (TextSelection) selection;
@@ -71,6 +73,7 @@ public class FindOccurrencesAction implements IEditorActionDelegate {
         }
     }
 
+    @Override
     public void setActiveEditor(IAction action, IEditorPart targetEditor) {
         if (targetEditor instanceof GroovyEditor) {
             editor = (GroovyEditor) targetEditor;

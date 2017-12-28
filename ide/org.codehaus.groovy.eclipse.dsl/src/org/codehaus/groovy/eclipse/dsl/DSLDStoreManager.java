@@ -32,19 +32,12 @@ import org.eclipse.jdt.core.IJavaProject;
 
 /**
  * Singleton class that holds the {@link DSLDStore}s for all Groovy projects.
- *
- * @author andrew
- * @created Nov 17, 2010
  */
 public class DSLDStoreManager {
 
-    private final Map<String, DSLDStore> projectDSLDMap;
+    private final Map<String, DSLDStore> projectDsldMap = new HashMap<>();
 
-    private final Set<String> inProgress = new HashSet<String>();
-
-    public DSLDStoreManager() {
-        projectDSLDMap = new HashMap<String, DSLDStore>();
-    }
+    private final Set<String> inProgress = new HashSet<>();
 
     public DSLDStore getDSLDStore(IJavaProject project) {
         return getDSLDStore(project.getElementName());
@@ -54,32 +47,32 @@ public class DSLDStoreManager {
     }
 
     public DSLDStore getDSLDStore(String projectName) {
-        DSLDStore contextStore = projectDSLDMap.get(projectName);
+        DSLDStore contextStore = projectDsldMap.get(projectName);
         if (contextStore == null) {
             contextStore = new DSLDStore();
-            projectDSLDMap.put(projectName, contextStore);
+            projectDsldMap.put(projectName, contextStore);
         }
         return contextStore;
     }
 
     public void clearDSLDStore(IProject project) {
-        projectDSLDMap.remove(project.getName());
+        projectDsldMap.remove(project.getName());
     }
 
     public void clearDSLDStore(IJavaProject project) {
-        projectDSLDMap.remove(project.getElementName());
+        projectDsldMap.remove(project.getElementName());
     }
 
     public void reset() {
-        projectDSLDMap.clear();
+        projectDsldMap.clear();
     }
 
     public boolean hasDSLDStoreFor(IProject project) {
-        return projectDSLDMap.containsKey(project.getName());
+        return projectDsldMap.containsKey(project.getName());
     }
 
     public List<String> getAllStores() {
-        return new ArrayList<String>(projectDSLDMap.keySet());
+        return new ArrayList<>(projectDsldMap.keySet());
     }
 
     public void initializeAll(boolean synchronous) {
@@ -99,7 +92,7 @@ public class DSLDStoreManager {
     }
 
     public void initialize(List<IProject> projects, boolean synchronous) {
-        List<IProject> groovyProjects = new ArrayList<IProject>(projects.size());
+        List<IProject> groovyProjects = new ArrayList<>(projects.size());
         for (IProject project : projects) {
             if (GroovyNature.hasGroovyNature(project)) {
                 groovyProjects.add(project);
@@ -143,7 +136,7 @@ public class DSLDStoreManager {
         return inProgress.add(project.getName());
     }
     synchronized List<IProject> addInProgress(List<IProject> projects) {
-        List<IProject> addedProjects = new ArrayList<IProject>(projects.size());
+        List<IProject> addedProjects = new ArrayList<>(projects.size());
         for (IProject project : projects) {
             if (addInProgress(project)) {
                 addedProjects.add(project);

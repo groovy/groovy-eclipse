@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,22 +21,20 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 
-/**
- * @author Michael Klenk mklenk@hsr.ch
- */
 public class ExtractMethodPage extends UserInputWizardPage {
 
     private ExtractGroovyMethodRefactoring extractMethodRefactoring;
 
     public ExtractMethodPage(String name, ExtractGroovyMethodRefactoring refactoring) {
         super(name);
+
         this.extractMethodRefactoring = refactoring;
-        setTitle(name);
         setMessage("Extract Method");
+        setTitle(name);
     }
 
+    @Override
     public void createControl(Composite parent) {
-
         Composite control = new Composite(parent, SWT.NONE);
         GridLayout baseLayout = new GridLayout();
         baseLayout.numColumns = 1;

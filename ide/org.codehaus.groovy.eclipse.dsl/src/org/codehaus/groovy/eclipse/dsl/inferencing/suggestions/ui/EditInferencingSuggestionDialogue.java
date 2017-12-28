@@ -32,6 +32,7 @@ public class EditInferencingSuggestionDialogue extends AddInferencingSuggestionD
         setSuggestion(suggestion);
     }
 
+    @Override
     protected DialogueDescriptor getDialogueDescriptor() {
         return EDIT_DIALOGUE_DESCRIPTOR;
     }

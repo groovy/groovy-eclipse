@@ -428,8 +428,8 @@ public class OrganizeGroovyImports {
             return null;
         }
 
-        missingTypes = new HashMap<String, UnresolvedTypeData>();
-        importsSlatedForRemoval = new HashMap<String, ImportNode>();
+        missingTypes = new HashMap<>();
+        importsSlatedForRemoval = new HashMap<>();
 
         try {
             // Configure the import rewriter to keep all existing imports. This is different from how
@@ -552,8 +552,8 @@ public class OrganizeGroovyImports {
      * types that have not been identified correctly as annotations.
      */
     private void pruneMissingTypes(Iterable<ImportNode> imports) throws JavaModelException {
-        Set<String> starImports = new LinkedHashSet<String>();
-        Set<String> typeImports = new LinkedHashSet<String>();
+        Set<String> starImports = new LinkedHashSet<>();
+        Set<String> typeImports = new LinkedHashSet<>();
 
         if (unit.getModuleNode().getPackageName() != null) {
             starImports.add(unit.getModuleNode().getPackageName());
@@ -600,9 +600,9 @@ public class OrganizeGroovyImports {
         // fill in all the potential matches
         new TypeSearch().searchForTypes(unit, missingTypes, monitor);
 
-        List<TypeNameMatch> missingTypesNoChoiceRequired = new ArrayList<TypeNameMatch>();
-        List<TypeNameMatch[]> missingTypesChoiceRequired = new ArrayList<TypeNameMatch[]>();
-        List<ISourceRange> ranges = new ArrayList<ISourceRange>();
+        List<TypeNameMatch> missingTypesNoChoiceRequired = new ArrayList<>();
+        List<TypeNameMatch[]> missingTypesChoiceRequired = new ArrayList<>();
+        List<ISourceRange> ranges = new ArrayList<>();
 
         // go through all the resovled matches and look for ambiguous matches
         for (UnresolvedTypeData data : missingTypes.values()) {
@@ -657,7 +657,7 @@ public class OrganizeGroovyImports {
         return true;
     }
 
-    private static final Set<String> DEFAULT_IMPORTS = new LinkedHashSet<String>();
+    private static final Set<String> DEFAULT_IMPORTS = new LinkedHashSet<>();
     static {
         DEFAULT_IMPORTS.add("java.lang.");
         DEFAULT_IMPORTS.add("java.util.");

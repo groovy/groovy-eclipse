@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,9 +42,6 @@ import org.eclipse.ui.internal.Workbench;
  * <li>Whenever the JUnit view becomes visible
  * <li>Whenever the force monospace preference changes
  * </ol>
- *
- * @author Andrew Eisenberg
- * @created Aug 7, 2009
  */
 public class EnsureJUnitFont implements IPartListener2, IPropertyChangeListener {
 
@@ -63,7 +60,7 @@ public class EnsureJUnitFont implements IPartListener2, IPropertyChangeListener 
             }
             TestRunnerViewPart view = (TestRunnerViewPart) page.findView(JUNIT_RESULT_VIEW);
             if (view == null) {
-                // not open---can ignore
+                // not open -- can ignore
                 return;
             }
             internalSetMonospaceFont(isMonospace, view);
@@ -100,30 +97,43 @@ public class EnsureJUnitFont implements IPartListener2, IPropertyChangeListener 
         }
     }
 
+    @Override
     public void partActivated(IWorkbenchPartReference partRef) {
         internalForceMonospaceFont(partRef);
     }
 
+    @Override
     public void partBroughtToTop(IWorkbenchPartReference partRef) {
         internalForceMonospaceFont(partRef);
     }
 
+    @Override
     public void partOpened(IWorkbenchPartReference partRef) {
         internalForceMonospaceFont(partRef);
     }
 
+    @Override
     public void partVisible(IWorkbenchPartReference partRef) {
         internalForceMonospaceFont(partRef);
     }
 
-    public void partClosed(IWorkbenchPartReference partRef) { }
+    @Override
+    public void partClosed(IWorkbenchPartReference partRef) {
+    }
 
-    public void partDeactivated(IWorkbenchPartReference partRef) { }
+    @Override
+    public void partDeactivated(IWorkbenchPartReference partRef) {
+    }
 
-    public void partHidden(IWorkbenchPartReference partRef) { }
+    @Override
+    public void partHidden(IWorkbenchPartReference partRef) {
+    }
 
-    public void partInputChanged(IWorkbenchPartReference partRef) { }
+    @Override
+    public void partInputChanged(IWorkbenchPartReference partRef) {
+    }
 
+    @Override
     public void propertyChange(PropertyChangeEvent event) {
         if (event.getProperty().equals(PreferenceConstants.GROOVY_JUNIT_MONOSPACE_FONT) ||
                 event.getProperty().equals(JFaceResources.TEXT_FONT) ||

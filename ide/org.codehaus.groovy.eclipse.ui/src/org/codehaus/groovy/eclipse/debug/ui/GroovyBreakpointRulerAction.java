@@ -67,6 +67,7 @@ public class GroovyBreakpointRulerAction extends Action {
         fRuler = null;
     }
 
+    @Override
     public void run() {
         try {
             List<IMarker> list = getMarkers();
@@ -163,14 +164,12 @@ public class GroovyBreakpointRulerAction extends Action {
     }
 
     protected void report(final String message) {
-        JDIDebugUIPlugin.getStandardDisplay().asyncExec(new Runnable() {
-            public void run() {
-                if (fStatusLine != null) {
-                    fStatusLine.setMessage(true, message, null);
-                }
-                if (message != null && JDIDebugUIPlugin.getActiveWorkbenchShell() != null) {
-                    Display.getCurrent().beep();
-                }
+        JDIDebugUIPlugin.getStandardDisplay().asyncExec(() -> {
+            if (fStatusLine != null) {
+                fStatusLine.setMessage(true, message, null);
+            }
+            if (message != null && JDIDebugUIPlugin.getActiveWorkbenchShell() != null) {
+                Display.getCurrent().beep();
             }
         });
     }

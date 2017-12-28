@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,9 +25,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 import org.eclipse.core.resources.IStorage;
 
 /**
- * Takes two or more elements and 
- * @author andrew
- * @created Feb 10, 2011
+ * Takes two or more elements and
  */
 public class AndPointcut extends AbstractPointcut {
 
@@ -38,7 +36,7 @@ public class AndPointcut extends AbstractPointcut {
     @Override
     public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
         Object[] args = getArgumentValues();
-        Collection<Object> result = new HashSet<Object>();
+        Collection<Object> result = new HashSet<>();
         for (Object arg : args) {
             Collection<?> intermediate = matchOnPointcutArgumentReturnInner((IPointcut) arg, pattern, ensureCollection(toMatch));
             if (intermediate == null) {
@@ -50,11 +48,12 @@ public class AndPointcut extends AbstractPointcut {
     }
 
     /**
-     * Flatten all contained 'and' pointcuts into the top level (but only if they are unnamed) 
+     * Flatten all contained 'and' pointcuts into the top level (but only if they are unnamed)
      */
+    @Override
     public IPointcut normalize() {
         IPointcut newPointcut = super.normalize();
-        
+
         if (newPointcut instanceof AndPointcut) {
         	AndPointcut newAnd = (AndPointcut) newPointcut;
         	AndPointcut newNewAnd = new AndPointcut(getContainerIdentifier(), "and");
@@ -69,7 +68,7 @@ public class AndPointcut extends AbstractPointcut {
                 	int argCount = argumentNames.length;
                 	for (int j = 0; j < argCount; j++) {
                 		newNewAnd.addArgument(argumentNames[j], argumentValues[j]);
-                	} 
+                	}
                 } else {
                 	newNewAnd.addArgument(name, argument);
                 }
@@ -88,7 +87,7 @@ public class AndPointcut extends AbstractPointcut {
             throw new PointcutVerificationException(allArgsArePointcuts, this);
         }
     }
-    
+
 //    @Override
 //    protected IPointcut and(IPointcut other) {
 //        if (other instanceof AndPointcut) {

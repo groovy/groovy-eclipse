@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,9 +31,6 @@ import org.eclipse.core.resources.IStorage;
  * opposed to {@link CurrentTypeIsEnclosingTypePointcut}, this pointcut always
  * matches, regardless of whether or not in a closure. This pointcut
  * takes no arguments
- * 
- * @author andrew
- * @created Apr 1, 2011
  */
 public class IsThisTypePointcut extends AbstractPointcut {
 
@@ -54,7 +51,7 @@ public class IsThisTypePointcut extends AbstractPointcut {
         }
         return null;
     }
-    
+
     @Override
     public void verify() throws PointcutVerificationException {
         String noArgs = hasNoArgs();

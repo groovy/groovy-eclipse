@@ -1,8 +1,5 @@
-/* 
- * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
- *
- * IFS Institute for Software, HSR Rapperswil, Switzerland
- * http://ifs.hsr.ch/
+/*
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,24 +17,19 @@ package org.codehaus.groovy.eclipse.refactoring.core.utils;
 
 import org.codehaus.groovy.ast.CodeVisitorSupport;
 
-/**
- * @author mklenk
- *
- */
 public abstract class ASTVisitorDecorator<Container> extends CodeVisitorSupport {
 
-	protected Container container;
-	
-	public ASTVisitorDecorator(Container container) {
-		this.container = container;
-	}
+    protected Container container;
 
-	public Container getContainer() {
-		return container;
-	}
+    public ASTVisitorDecorator(Container container) {
+        this.container = container;
+    }
 
-	public void setContainer(Container container) {
-		this.container = container;
-	}
-	
+    public Container getContainer() {
+        return container;
+    }
+
+    public void setContainer(Container container) {
+        this.container = container;
+    }
 }

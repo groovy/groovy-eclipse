@@ -52,16 +52,16 @@ public class ProposalProviderRegistry {
     /**
      * maps from project nature to lists of type lookup classes
      */
-    private Map<String, List<IConfigurationElement>> natureLookupMap = new HashMap<String, List<IConfigurationElement>>();
+    private Map<String, List<IConfigurationElement>> natureLookupMap = new HashMap<>();
 
     /**
      * maps from project nature to lists of filter classes
      */
-    private Map<String, List<IConfigurationElement>> filterLookupMap = new HashMap<String, List<IConfigurationElement>>();
+    private Map<String, List<IConfigurationElement>> filterLookupMap = new HashMap<>();
 
     List<IProposalProvider> getProvidersFor(IProject project) throws CoreException {
         String[] natures = project.getDescription().getNatureIds();
-        List<IProposalProvider> lookups = new ArrayList<IProposalProvider>();
+        List<IProposalProvider> lookups = new ArrayList<>();
         for (String nature : natures) {
             List<IConfigurationElement> configs = natureLookupMap.get(nature);
             if (configs != null) {
@@ -84,7 +84,7 @@ public class ProposalProviderRegistry {
 
     List<IProposalFilter> getFiltersFor(IProject project) throws CoreException {
         String[] natures = project.getDescription().getNatureIds();
-        List<IProposalFilter> filters = new ArrayList<IProposalFilter>();
+        List<IProposalFilter> filters = new ArrayList<>();
         for (String nature : natures) {
             List<IConfigurationElement> configs = filterLookupMap.get(nature);
             if (configs != null) {
@@ -142,7 +142,7 @@ public class ProposalProviderRegistry {
                         if (natureLookupMap.containsKey(nature)) {
                             elts = natureLookupMap.get(nature);
                         } else {
-                            elts = new ArrayList<IConfigurationElement>(3);
+                            elts = new ArrayList<>(3);
                             natureLookupMap.put(nature, elts);
                         }
                         elts.add(config);
@@ -168,7 +168,7 @@ public class ProposalProviderRegistry {
                         if (filterLookupMap.containsKey(nature)) {
                             elts = filterLookupMap.get(nature);
                         } else {
-                            elts = new ArrayList<IConfigurationElement>(3);
+                            elts = new ArrayList<>(3);
                             filterLookupMap.put(nature, elts);
                         }
                         elts.add(config);

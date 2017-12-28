@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,15 +29,13 @@ import org.eclipse.core.resources.IStorage;
 
 /**
  * the matches on the name of the object
- * @author andrew
- * @created Feb 11, 2011
  */
 public class NamePointcut extends FilteringPointcut<Object> {
 
     public NamePointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName, Object.class);
     }
-    
+
     @Override
     protected Object filterObject(Object result, GroovyDSLDContext context, String firstArgAsString) {
         String toCompare;
@@ -63,7 +61,7 @@ public class NamePointcut extends FilteringPointcut<Object> {
         } else {
             toCompare = String.valueOf(result.toString());
         }
-        
+
         if (firstArgAsString == null) {
             // always match
             return toCompare;

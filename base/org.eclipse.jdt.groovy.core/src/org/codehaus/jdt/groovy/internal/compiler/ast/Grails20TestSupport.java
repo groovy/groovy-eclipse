@@ -47,8 +47,6 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 /**
  * Utility class, containing methods related to Grails 2.0 test support. This code should really be part of Grails support, but
  * lives here for now.
- *
- * @author Kris De Volder
  */
 public class Grails20TestSupport {
 

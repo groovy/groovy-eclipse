@@ -41,6 +41,7 @@ public class GroovyResourcePropertyTester extends PropertyTester {
     public static final String hasMain = "hasMain";
     public static final String isScript = "isScript";
 
+    @Override
     public boolean test(Object receiver, String property, Object[] args, Object expectedValue) {
         boolean result = false;
 

@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2017 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.dsl.checker;
 
 import java.io.File;
@@ -27,7 +42,7 @@ import org.eclipse.ui.application.WorkbenchAdvisor;
 import org.eclipse.ui.internal.Workbench;
 
 public class StaticCheckerApplication implements IApplication {
-    
+
     class CheckerJob extends Job {
 
         public CheckerJob() {
@@ -43,7 +58,6 @@ public class StaticCheckerApplication implements IApplication {
                 e.printStackTrace();
             }
 
-            
             // create the project if required
             try {
                 createProject();
@@ -52,7 +66,7 @@ public class StaticCheckerApplication implements IApplication {
                 e.printStackTrace();
                 return e.getStatus();
             }
-            
+
             // ensure project is open
             IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
             try {
@@ -62,56 +76,50 @@ public class StaticCheckerApplication implements IApplication {
                 e.printStackTrace();
                 return e.getStatus();
             }
-            
+
             // Add the extra dslds to the workspace inside of the target project
             addExtraDslds();
-            
+
             // Ensure that dslds are all available
             GroovyDSLCoreActivator.getDefault().getContextStoreManager().initialize(project, true);
-            
+
             System.out.println("Performing static type checking on project " + projectName);
             boolean success = false;
             try {
-                IStaticCheckerHandler handler = new SysoutStaticCheckerHandler(resultFile == null ? System.out : createOutStream(resultFile));
-                ResourceTypeChecker checker = new ResourceTypeChecker(handler, projectName, inclusionFilters, exclusionFilters, assertionsOnly);
+                IStaticCheckerHandler handler =
+                    new SysoutStaticCheckerHandler(resultFile == null ? System.out : createOutStream(resultFile));
+                ResourceTypeChecker checker =
+                    new ResourceTypeChecker(handler, projectName, inclusionFilters, exclusionFilters, assertionsOnly);
                 success = checker.doCheck(null);
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
                 removeExtraDslds();
             }
-            display.asyncExec(new Runnable() {
-                public void run() {
-                    Workbench.getInstance().close();
-                }
-            });
-            
+
+            display.asyncExec(() -> Workbench.getInstance().close());
+
             // FIXADE Is this OK to do?
             System.exit(success ? 0 : -1);
-            
+
             // won't get here
             return Status.OK_STATUS;
         }
-        
     }
-    /**
-     * 
-     * @author andrew
-     * @created Aug 31, 2011
-     */
+
     public class CheckerWorkbenchAdvisor extends WorkbenchAdvisor {
-    
+
         @Override
         public String getInitialWindowPerspectiveId() {
             return null;
         }
-        
+
         @Override
         public void postStartup() {
             CheckerJob checkerJob = new CheckerJob();
             checkerJob.schedule();
-         }
-        
+        }
+
         @Override
         public void postShutdown() {
             super.postShutdown();
@@ -127,7 +135,8 @@ public class StaticCheckerApplication implements IApplication {
     private String projectFolderPath;
     Display display;
     private String resultFile;
-    
+
+    @Override
     public Object start(IApplicationContext context) throws Exception {
         processCommandLine((String[]) context.getArguments().get(IApplicationContext.APPLICATION_ARGS));
         try {
@@ -144,6 +153,7 @@ public class StaticCheckerApplication implements IApplication {
         return new PrintStream(new File(fileName));
     }
 
+    @Override
     public void stop() {
         removeExtraDslds();
     }
@@ -154,7 +164,8 @@ public class StaticCheckerApplication implements IApplication {
             for (int i = 0; i < extraDslds.length; i++) {
                 File file = new File(extraDslds[i]);
                 if (file.exists()) {
-                    IFile linkedFile = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName).getFile(file.getName());
+                    IFile linkedFile =
+                        ResourcesPlugin.getWorkspace().getRoot().getProject(projectName).getFile(file.getName());
                     if (linkedFile.exists() && linkedFile.isLinked()) {
                         try {
                             linkedFile.delete(true, null);
@@ -177,25 +188,24 @@ public class StaticCheckerApplication implements IApplication {
             }
         }
     }
-    
-    
+
     private void createProject() throws CoreException {
         if (projectFolderPath == null) {
             // nothing to do
             return;
         }
-        
+
         IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
         if (project.exists()) {
             if (project.getLocation().toOSString().equals(projectFolderPath)) {
                 // project already exists do nothing
                 return;
             } else {
-                // delete existing project from workspace, but not the filesystem 
+                // delete existing project from workspace, but not the filesystem
                 project.delete(IResource.NEVER_DELETE_PROJECT_CONTENT | IResource.FORCE, null);
             }
         }
-        
+
         IPath dotProjectPath = new Path(projectFolderPath).append(".project");
         IProjectDescription description = ResourcesPlugin.getWorkspace().loadProjectDescription(dotProjectPath);
         description.setName(projectName);
@@ -221,35 +231,35 @@ public class StaticCheckerApplication implements IApplication {
             } else if (arg.equals("--assertions_only")) {
                 assertionsOnly = true;
             } else if (arg.equals("--excludes")) {
-                if (i == args.length-1) {
+                if (i == args.length - 1) {
                     System.err.println("Missing --excludes argument");
                     doHelp = true;
                     break;
                 }
                 excludes = args[++i];
             } else if (arg.equals("--includes")) {
-                if (i == args.length-1) {
+                if (i == args.length - 1) {
                     System.err.println("Missing --includes argument");
                     doHelp = true;
                     break;
                 }
                 includes = args[++i];
             } else if (arg.equals("--extra_dslds")) {
-                if (i == args.length-1) {
+                if (i == args.length - 1) {
                     System.err.println("Missing --extraDslds argument");
                     doHelp = true;
                     break;
                 }
                 extraDslds = args[++i].split("\\|");
             } else if (arg.equals("--project_path")) {
-                if (i == args.length-1) {
+                if (i == args.length - 1) {
                     System.err.println("Missing --project_path argument");
                     doHelp = true;
                     break;
                 }
                 projectFolderPath = args[++i];
             } else if (arg.equals("--result_file")) {
-                if (i == args.length-1) {
+                if (i == args.length - 1) {
                     System.err.println("Missing --result_file argument");
                     doHelp = true;
                     break;
@@ -257,16 +267,16 @@ public class StaticCheckerApplication implements IApplication {
                 resultFile = args[++i];
             }
         }
-        
+
         inclusionFilters = convertToCharChar(includes);
         exclusionFilters = convertToCharChar(excludes);
-        
+
         if (doHelp) {
             printUsage(false);
             Workbench.getInstance().close();
         }
     }
-    
+
     private char[][] convertToCharChar(String str) {
         if (str == null) {
             return null;
@@ -283,20 +293,26 @@ public class StaticCheckerApplication implements IApplication {
         if (isInvalid) {
             System.out.println("Invalid command line.");
         }
-        
+
         System.out.println("Usage:");
-        System.out.println("eclipse -application org.codehause.groovy.eclipse.staticCheck [--help] [-h] [--extra_dslds <FILES>] [--assertions_only] [--excludes <PATH>] [--includes <PATH>] [--project_path <PATH>] <PROJECT_NAME>");
+        System.out.println(
+            "eclipse -application org.codehause.groovy.eclipse.staticCheck [--help] [-h] [--extra_dslds <FILES>] [--assertions_only] [--excludes <PATH>] [--includes <PATH>] [--project_path <PATH>] <PROJECT_NAME>");
         System.out.println("where:");
         System.out.println("\t--help OR -h  Print this message and exit.");
-        System.out.println("\t--extra_dslds  list of extra dsld files to be included in this check.  Use '|' as a file separator.");
+        System.out.println(
+            "\t--extra_dslds  list of extra dsld files to be included in this check.  Use '|' as a file separator.");
         System.out.println("\t--assertions_only  Don't report unknown types.  Only look for type assertions");
         System.out.println("\t--excludes  Project-relative exclusion filters.");
         System.out.println("\t--includes  Project-relative inclusion filters.");
-        System.out.println("\t--project_path  File system path to the project to check (only required if project is not already in workspace).");
-        System.out.println("\t--result_file  File to send static checking results to.  If not specified, then results sent to sysout.");
-        System.out.println("\t<PROJECT_NAME>  Name of a project to type check.  If not already in workspace, then must also use '--project_path'.");
+        System.out.println(
+            "\t--project_path  File system path to the project to check (only required if project is not already in workspace).");
+        System.out.println(
+            "\t--result_file  File to send static checking results to.  If not specified, then results sent to sysout.");
+        System.out.println(
+            "\t<PROJECT_NAME>  Name of a project to type check.  If not already in workspace, then must also use '--project_path'.");
         System.out.println();
-        System.out.println("Ant style filters are allowed.  Eg, src/org/codehaus/groovy/**/*.groovy means all files with groovy extensions in the org.codehaus.groovy package or below will be ex/included   Filters can be concentenated using '|'.");
+        System.out.println(
+            "Ant style filters are allowed.  Eg, src/org/codehaus/groovy/**/*.groovy means all files with groovy extensions in the org.codehaus.groovy package or below will be ex/included   Filters can be concentenated using '|'.");
     }
 
     private void removeExtraDslds() {
@@ -316,7 +332,7 @@ public class StaticCheckerApplication implements IApplication {
 
     /**
      * Creates the display used by the application.
-     * 
+     *
      * @return the display used by the application
      */
     protected Display createDisplay() {

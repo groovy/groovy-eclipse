@@ -36,14 +36,17 @@ public class GroovyResolvedBinaryField extends ResolvedBinaryField implements IG
         this.inferredElement = inferredElement;
     }
 
+    @Override
     public String getExtraDoc() {
         return extraDoc;
     }
 
+    @Override
     public ASTNode getInferredElement() {
         return inferredElement;
     }
 
+    @Override
     public String getInferredElementName() {
         if (inferredElement instanceof Variable) {
             return ((Variable) inferredElement).getName();

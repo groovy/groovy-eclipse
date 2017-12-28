@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -183,6 +183,7 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage implemen
 
         javaColorButton.setText(Messages.getString("GroovyEditorPreferencesPage.Copy_Java_Color_Preferences"));
         javaColorButton.addSelectionListener(new SelectionListener() {
+            @Override
             public void widgetSelected(SelectionEvent event) {
                 IPreferenceStore store = JavaPlugin.getDefault().getPreferenceStore();
                 RGB rgb = PreferenceConverter.getColor(store, IJavaColorConstants.JAVA_KEYWORD);
@@ -210,7 +211,9 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage implemen
                 defaultEditor.getColorSelector().setColorValue(rgb);
             }
 
-            public void widgetDefaultSelected(SelectionEvent event) {}
+            @Override
+            public void widgetDefaultSelected(SelectionEvent event) {
+            }
         });
     }
 
@@ -226,6 +229,7 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage implemen
         return colorFieldEditor;
     }
 
+    @Override
     public void init(IWorkbench workbench) {
     }
 

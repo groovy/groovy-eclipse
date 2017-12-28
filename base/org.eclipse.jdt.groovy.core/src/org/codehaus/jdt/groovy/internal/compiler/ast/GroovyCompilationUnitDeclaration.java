@@ -146,8 +146,6 @@ import org.eclipse.jdt.internal.core.util.Util;
 /**
  * A subtype of JDT CompilationUnitDeclaration that represents a groovy source file. It overrides methods as appropriate, delegating
  * to the groovy infrastructure.
- *
- * @author Andy Clement
  */
 public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration {
 
@@ -1073,11 +1071,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 // ensure proper lexical order
                 if (!importReferences.isEmpty()) {
                     ImportReference[] refs = importReferences.toArray(new ImportReference[importReferences.size()]);
-                    Arrays.sort(refs, new Comparator<ImportReference>() {
-                        public int compare(ImportReference left, ImportReference right) {
-                            return left.sourceStart - right.sourceStart;
-                        }
-                    });
+                    Arrays.sort(refs, Comparator.comparing(ref -> ref.sourceStart));
                     for (ImportReference ref : refs) {
                         if (ref.declarationSourceStart > 0 && (ref.declarationEnd - ref.declarationSourceStart + 1) < 0) {
                             throw new IllegalStateException("Import reference alongside class " + moduleNode.getClasses().get(0)
@@ -1267,6 +1261,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                             if (anonymousLocations != null && fieldNode.getInitialExpression() != null) {
                                 fieldNode.getInitialExpression().visit(new CodeVisitorSupport() {
+                                    @Override
                                     public void visitConstructorCallExpression(ConstructorCallExpression call) {
                                         if (call.isUsingAnonymousInnerClass()) {
                                             anonymousLocations.put(call.getType(), fieldNode);
@@ -1349,6 +1344,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                 if (anonymousLocations != null && constructorNode.getCode() != null) {
                     constructorNode.getCode().visit(new CodeVisitorSupport() {
+                        @Override
                         public void visitConstructorCallExpression(ConstructorCallExpression call) {
                             if (call.isUsingAnonymousInnerClass()) {
                                 anonymousLocations.put(call.getType(), constructorDeclaration);
@@ -1394,6 +1390,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                 if (anonymousLocations != null && methodNode.getCode() != null) {
                     methodNode.getCode().visit(new CodeVisitorSupport() {
+                        @Override
                         public void visitConstructorCallExpression(ConstructorCallExpression call) {
                             if (call.isUsingAnonymousInnerClass()) {
                                 anonymousLocations.put(call.getType(), methodDeclaration);

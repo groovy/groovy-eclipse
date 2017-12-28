@@ -46,13 +46,17 @@ public class ReconcilerUtils {
         @Override
         public IProblemRequestor getProblemRequestor(ICompilationUnit workingCopy) {
             return new IProblemRequestor() {
+                @Override
                 public void acceptProblem(IProblem problem) {
                     problems.add(problem);
                 }
+                @Override
                 public void beginReporting() {
                 }
+                @Override
                 public void endReporting() {
                 }
+                @Override
                 public boolean isActive() {
                     return true;
                 }
@@ -67,6 +71,7 @@ public class ReconcilerUtils {
             return reconcileTimes.get(unit);
         }
 
+        @Override
         public String toString() {
             StringBuilder s = new StringBuilder();
             s.append("Reconcile times for " + reconcileTimes.size() + " units\n");

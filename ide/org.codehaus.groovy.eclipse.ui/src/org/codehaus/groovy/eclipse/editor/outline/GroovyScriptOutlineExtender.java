@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.editor.outline;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
@@ -50,10 +49,12 @@ import org.eclipse.jdt.internal.core.JavaElement;
 
 public class GroovyScriptOutlineExtender implements IOutlineExtender {
 
+    @Override
     public GroovyOutlinePage getGroovyOutlinePageForEditor(String contextMenuID, GroovyEditor editor) {
         return new GroovyOutlinePage(contextMenuID, editor, new GroovyScriptOCompilationUnit(editor.getGroovyCompilationUnit()));
     }
 
+    @Override
     public boolean appliesTo(GroovyCompilationUnit unit) {
         ModuleNode moduleNode = unit.getModuleNode();
         return moduleNode != null && !moduleNode.getClasses().isEmpty() && moduleNode.getClasses().get(0).isScript();
@@ -67,6 +68,7 @@ public class GroovyScriptOutlineExtender implements IOutlineExtender {
             super(unit);
         }
 
+        @Override
         public IJavaElement[] refreshChildren() {
             ModuleNode module = (ModuleNode) getNode();
             ClassNode scriptClassDummy = null;
@@ -90,7 +92,7 @@ public class GroovyScriptOutlineExtender implements IOutlineExtender {
             }
 
             try {
-                final List<IJavaElement> outlineElements = new ArrayList<IJavaElement>();
+                final List<IJavaElement> outlineElements = new ArrayList<>();
 
                 // add top-level types except for the script itself
                 IType candidate = null;
@@ -120,9 +122,11 @@ public class GroovyScriptOutlineExtender implements IOutlineExtender {
 
                     // add all of the variable declarations
                     ClassCodeVisitorSupport visitor = new ClassCodeVisitorSupport() {
+                        @Override
                         public void visitClosureExpression(ClosureExpression expression) {
                             // prevent finding variables within closures
                         }
+                        @Override
                         public void visitDeclarationExpression(DeclarationExpression expression) {
                             outlineElements.add(new GroovyScriptVariable((JavaElement) scriptType, expression));
                             super.visitDeclarationExpression(expression);
@@ -169,17 +173,15 @@ public class GroovyScriptOutlineExtender implements IOutlineExtender {
          * Sorts array of IJavaElements by their start position.
          */
         private static IJavaElement[] sort(IJavaElement[] scriptElems) {
-            Arrays.sort(scriptElems, new Comparator<IJavaElement>() {
-                public int compare(IJavaElement e1, IJavaElement e2) {
-                    try {
-                        // really we should only be getting source refs elements here
-                        Assert.isTrue(e1 instanceof ISourceReference, "Expecting a ISourceReference, but found " + e1);
-                        Assert.isTrue(e2 instanceof ISourceReference, "Expecting a ISourceReference, but found " + e2);
-                        return ((ISourceReference) e1).getSourceRange().getOffset() - ((ISourceReference) e2).getSourceRange().getOffset();
-                    } catch (JavaModelException e) {
-                        GroovyCore.logException("Exception when comparing " + e1 + " and " + e2, e);
-                        return 0;
-                    }
+            Arrays.sort(scriptElems, (e1, e2) -> {
+                try {
+                    // really we should only be getting source refs elements here
+                    Assert.isTrue(e1 instanceof ISourceReference, "Expecting a ISourceReference, but found " + e1);
+                    Assert.isTrue(e2 instanceof ISourceReference, "Expecting a ISourceReference, but found " + e2);
+                    return ((ISourceReference) e1).getSourceRange().getOffset() - ((ISourceReference) e2).getSourceRange().getOffset();
+                } catch (JavaModelException e) {
+                    GroovyCore.logException("Exception when comparing " + e1 + " and " + e2, e);
+                    return 0;
                 }
             });
             return scriptElems;
@@ -228,11 +230,13 @@ public class GroovyScriptOutlineExtender implements IOutlineExtender {
             return "no name";
         }
 
+        @Override
         public ASTNode getElementNameNode() {
             DeclarationExpression decl = (DeclarationExpression) getNode();
             return decl.getLeftExpression();
         }
 
+        @Override
         public ISourceRange getSourceRange() throws JavaModelException {
             ISourceRange range = super.getSourceRange();
             if (range.getLength() < 1) {
@@ -242,6 +246,7 @@ public class GroovyScriptOutlineExtender implements IOutlineExtender {
             return range;
         }
 
+        @Override
         public String getTypeSignature() {
             return typeSignature;
         }

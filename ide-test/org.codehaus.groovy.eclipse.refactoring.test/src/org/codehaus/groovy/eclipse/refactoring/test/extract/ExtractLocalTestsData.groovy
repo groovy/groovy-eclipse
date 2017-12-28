@@ -15,11 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.extract
 
-/**
- * 
- * @author andrew
- * @created Jun 9, 2010
- */
 class ExtractLocalTestsData {
     
     static int findLocation(toFind, test) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,7 @@ import java.util.List;
 
 /**
  * Checks if a parameter name is already present in a list of existing
- * parameters
- * 
- * @author Nieraj Singh
- * @created 2011-09-12
+ * parameters.
  */
 public class DuplicateParameterRule implements IValueCheckingRule {
 
@@ -34,6 +31,7 @@ public class DuplicateParameterRule implements IValueCheckingRule {
         this.existingParameters = existingParameters;
     }
 
+    @Override
     public ValueStatus checkValidity(Object value) {
         if (!(value instanceof String) || existingParameters == null) {
             return ValueStatus.getErrorStatus(value);

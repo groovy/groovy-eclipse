@@ -93,6 +93,7 @@ import org.eclipse.jdt.internal.core.util.Util;
  */
 public class GroovyLanguageSupport implements LanguageSupport {
 
+    @Override
     public Parser getParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean parseLiteralExpressionsAsConstants, int variant) {
         if (variant == 1) {
             return new MultiplexingParser(requestor, compilerOptions, problemReporter, parseLiteralExpressionsAsConstants);
@@ -103,27 +104,33 @@ public class GroovyLanguageSupport implements LanguageSupport {
         }
     }
 
+    @Override
     public CompletionParser getCompletionParser(CompilerOptions compilerOptions, ProblemReporter problemReposrter, boolean storeExtraSourceEnds, IProgressMonitor monitor) {
         return new MultiplexingCompletionParser(compilerOptions, problemReposrter, storeExtraSourceEnds, monitor);
     }
 
+    @Override
     public IndexingParser getIndexingParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations, boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
         return new MultiplexingIndexingParser(requestor, problemFactory, options, reportLocalDeclarations, optimizeStringLiterals, useSourceJavadocParser);
     }
 
+    @Override
     public MatchLocatorParser getMatchLocatorParserParser(ProblemReporter problemReporter, MatchLocator locator) {
         return new MultiplexingMatchLocatorParser(problemReporter, locator);
     }
 
+    @Override
     public ImportMatchLocatorParser getImportMatchLocatorParserParser(ProblemReporter problemReporter, MatchLocator locator) {
         return new MultiplexingImportMatchLocatorParser(problemReporter, locator);
     }
 
+    @Override
     public SourceElementParser getSourceElementParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations, boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
         ProblemReporter problemReporter = new ProblemReporter(DefaultErrorHandlingPolicies.proceedWithAllProblems(), options, new DefaultProblemFactory());
         return new MultiplexingSourceElementRequestorParser(problemReporter, requestor, problemFactory, options, reportLocalDeclarations, optimizeStringLiterals);
     }
 
+    @Override
     public CompilationUnit newCompilationUnit(PackageFragment parent, String name, WorkingCopyOwner owner) {
         if (ContentTypeUtils.isGroovyLikeFileName(name)) {
             return new GroovyCompilationUnit(parent, name, owner);
@@ -132,6 +139,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
         }
     }
 
+    @Override
     public CompilationUnitDeclaration newCompilationUnitDeclaration(ICompilationUnit icu, ProblemReporter problemReporter, CompilationResult compilationResult, int sourceLength) {
         if (ContentTypeUtils.isGroovyLikeFileName(compilationResult.getFileName())) {
             CompilerConfiguration compilerConfig = newCompilerConfiguration(problemReporter.options, problemReporter);
@@ -200,10 +208,12 @@ public class GroovyLanguageSupport implements LanguageSupport {
         return config;
     }
 
+    @Override
     public boolean isInterestingProject(IProject project) {
         return GroovyNature.hasGroovyNature(project);
     }
 
+    @Override
     public boolean isSourceFile(String fileName, boolean isInterestingProject) {
         if (isInterestingProject) {
             return Util.isJavaLikeFileName(fileName);
@@ -212,10 +222,12 @@ public class GroovyLanguageSupport implements LanguageSupport {
         }
     }
 
+    @Override
     public boolean isInterestingSourceFile(String fileName) {
         return ContentTypeUtils.isGroovyLikeFileName(fileName);
     }
 
+    @Override
     public boolean maybePerformDelegatedSearch(PossibleMatch possibleMatch, SearchPattern pattern, SearchRequestor requestor) {
         if (possibleMatch.openable != null && possibleMatch.openable.exists()) {
             ITypeRequestor typeRequestor = new TypeRequestorFactory().createRequestor(possibleMatch, pattern, requestor);
@@ -228,6 +240,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
         return false;
     }
 
+    @Override
     public EventHandler getEventHandler() {
         // FIXASC could be une singleton?
         return new GroovyEventHandler();
@@ -236,6 +249,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
     /**
      * Go through the bunary children and remove all children that do not have a real source location
      */
+    @Override
     public void filterNonSourceMembers(BinaryType binaryType) {
         try {
             IJavaElement[] childrenArr = binaryType.getChildren();
@@ -283,6 +297,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
      * Expand the search scope iff the focus is a private member inside of a {@link GroovyCompilationUnit}. And the search requestor
      * is CollectingSearchRequestor.
      */
+    @Override
     public IJavaSearchScope expandSearchScope(IJavaSearchScope scope, SearchPattern pattern, SearchRequestor requestor) {
         // delegate to something that can see the org.eclise.jdt.coreext classes
         if (searchScopeExpander != null) {
@@ -291,16 +306,19 @@ public class GroovyLanguageSupport implements LanguageSupport {
         return scope;
     }
 
+    @Override
     public boolean isInterestingBinary(BinaryType type, IBinaryType typeInfo) {
         return isInterestingProject(type.getJavaProject().getProject()) && ContentTypeUtils.isGroovyLikeFileName(type.sourceFileName(typeInfo));
     }
 
+    @Override
     public IJavaElement[] binaryCodeSelect(ClassFile classFile, int offset, int length, WorkingCopyOwner owner)
             throws JavaModelException {
         GroovyCompilationUnit binaryUnit = new GroovyClassFileWorkingCopy(classFile, owner);
         return binaryUnit.codeSelect(offset, length, owner);
     }
 
+    @Override
     public ISupplementalIndexer getSupplementalIndexer() {
         return new BinaryGroovySupplementalIndexer();
     }

@@ -46,6 +46,7 @@ public class ConvertLegacyProjectAction implements IObjectActionDelegate {
     private IProject[] projects;
     private Shell currentShell;
 
+    @Override
     public void run(final IAction action) {
         if (projects != null && projects.length > 0) {
             ConvertLegacyProject convert = new ConvertLegacyProject();
@@ -75,9 +76,7 @@ public class ConvertLegacyProjectAction implements IObjectActionDelegate {
         }
     }
 
-    /**
-     * @see IEditorActionDelegate#selectionChanged
-     */
+    @Override
     public void selectionChanged(final IAction action, final ISelection selection) {
         List<IProject> newSelected = new LinkedList<>();
         boolean enabled = true;
@@ -114,9 +113,7 @@ public class ConvertLegacyProjectAction implements IObjectActionDelegate {
         }
     }
 
-    /**
-     * @see IEditorActionDelegate#setActivePart
-     */
+    @Override
     public void setActivePart(final IAction action, final IWorkbenchPart targetPart) {
         try {
             currentShell = targetPart.getSite().getShell();

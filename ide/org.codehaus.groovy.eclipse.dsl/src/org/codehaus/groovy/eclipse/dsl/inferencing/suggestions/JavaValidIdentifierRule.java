@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,15 +19,11 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jdt.core.JavaConventions;
 import org.eclipse.jdt.core.JavaCore;
 
-/**
- * 
- * @author Nieraj Singh
- * @created 2011-09-12
- */
 public class JavaValidIdentifierRule implements IValueCheckingRule {
 
     protected static final String INVALID_JAVA_IDENTIFIER = "Invalid value";
 
+    @Override
     public ValueStatus checkValidity(Object value) {
         if (value instanceof String) {
             String text = (String) value;

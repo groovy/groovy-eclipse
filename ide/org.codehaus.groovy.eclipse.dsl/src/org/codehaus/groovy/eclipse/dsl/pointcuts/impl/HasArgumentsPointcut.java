@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,9 +34,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.eclipse.core.resources.IStorage;
 
 /**
- * Matches based on arguments to method calls
- * @author andrew
- * @created Jul 22, 2011
+ * Matches based on arguments to method calls.
  */
 public class HasArgumentsPointcut extends FilteringPointcut<AnnotatedNode>  {
 
@@ -53,7 +51,7 @@ public class HasArgumentsPointcut extends FilteringPointcut<AnnotatedNode>  {
             Expression arguments = ((MethodCallExpression) toMatch).getArguments();
             if (arguments instanceof TupleExpression) {
                 Collection<Expression> innerArgs = ((TupleExpression) arguments).getExpressions();
-                Collection<AnnotatedNode> actualArgs = new ArrayList<AnnotatedNode>(innerArgs.size());
+                Collection<AnnotatedNode> actualArgs = new ArrayList<>(innerArgs.size());
                 for (Expression innerArg : innerArgs) {
                     if (innerArg instanceof MapExpression) {
                         actualArgs.addAll(((MapExpression) innerArg).getMapEntryExpressions());
@@ -63,16 +61,16 @@ public class HasArgumentsPointcut extends FilteringPointcut<AnnotatedNode>  {
                 }
                 return actualArgs;
             } else if (arguments instanceof ListExpression) {
-                return new ArrayList<AnnotatedNode>(((ListExpression) arguments).getExpressions());
+                return new ArrayList<>(((ListExpression) arguments).getExpressions());
             } else if (arguments instanceof MapExpression) {
-                return new ArrayList<AnnotatedNode>(((MapExpression) arguments).getMapEntryExpressions());
+                return new ArrayList<>(((MapExpression) arguments).getMapEntryExpressions());
             } else {
                 return Collections.<AnnotatedNode>singleton(arguments);
             }
         } else if (toMatch instanceof MethodNode) {
             Parameter[] parameters = ((MethodNode) toMatch).getParameters();
             if (parameters != null) {
-                return new ArrayList<AnnotatedNode>(Arrays.asList(parameters));
+                return new ArrayList<>(Arrays.asList(parameters));
             }
         }
         return null;

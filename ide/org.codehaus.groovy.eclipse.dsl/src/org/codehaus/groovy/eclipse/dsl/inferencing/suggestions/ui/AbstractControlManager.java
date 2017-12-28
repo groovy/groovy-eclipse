@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,11 +23,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 
-/**
- * 
- * @author Nieraj Singh
- * @created 2011-05-13
- */
 public abstract class AbstractControlManager implements IDialogueControlManager {
 
     private IControlSelectionListener listener;
@@ -44,7 +39,7 @@ public abstract class AbstractControlManager implements IDialogueControlManager 
      * By default, control values are assumed to be valid, unless this method is
      * overridden by subclasses and the subclasses
      * explicitly return a non-null ValueStatus with an invalid state.
-     * 
+     *
      * @param control
      * @param descriptor
      * @return non-null ValueStatus with an invalid state if the control value
@@ -68,7 +63,7 @@ public abstract class AbstractControlManager implements IDialogueControlManager 
      * is invalid. If the control does not indicate that the value is invalid,
      * it will
      * be assumed valid
-     * 
+     *
      * @param descriptor
      * @return
      */
@@ -86,9 +81,9 @@ public abstract class AbstractControlManager implements IDialogueControlManager 
         return true;
     }
 
+    @Override
     public Composite createControlArea(Composite parent) {
-
-        controls = new HashMap<Control, IDialogueControlDescriptor>();
+        controls = new HashMap<>();
         Map<Control, IDialogueControlDescriptor> createdControls = createManagedControls(parent);
         if (createdControls != null) {
             controls.putAll(createdControls);
@@ -99,13 +94,12 @@ public abstract class AbstractControlManager implements IDialogueControlManager 
 
     /**
      * Shell where controls are shown.
-     * 
-     * @return
      */
     protected Shell getShell() {
         return shell;
     }
 
+    @Override
     public void setEnabled(boolean enable) {
         if (controls != null) {
             for (Control control : controls.keySet()) {
@@ -116,6 +110,7 @@ public abstract class AbstractControlManager implements IDialogueControlManager 
         }
     }
 
+    @Override
     public void addSelectionListener(IControlSelectionListener listener) {
         this.listener = listener;
     }
@@ -124,7 +119,7 @@ public abstract class AbstractControlManager implements IDialogueControlManager 
      * Widgets added to this map are managed in terms of disabling, and enabling
      * based on events generated outside of the
      * control manager.
-     * 
+     *
      * @param parent
      * @return
      */

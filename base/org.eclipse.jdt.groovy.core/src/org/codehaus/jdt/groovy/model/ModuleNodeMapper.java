@@ -43,9 +43,6 @@ import org.eclipse.jdt.internal.core.util.Util;
  * Stores module nodes for groovy compilation units This class is not meant to be accessed externally.
  * <p>
  * One module node is stored per working copy of a unit.
- *
- * @author Andrew Eisenberg
- * @created Jun 11, 2009
  */
 public class ModuleNodeMapper {
 

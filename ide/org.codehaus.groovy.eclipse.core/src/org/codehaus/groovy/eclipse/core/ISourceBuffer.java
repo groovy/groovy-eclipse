@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,23 +24,24 @@ package org.codehaus.groovy.eclipse.core;
  * <p>
  * Specific implementations are used in the following ways: In editors, it wraps an editor document. In tests, it wraps
  * a String. In an expression evaluator, it wraps a text fields buffer. And so on.
- *
- * @author empovazan
  */
 public interface ISourceBuffer extends CharSequence {
     /**
      * @see CharSequence#charAt(int)
      */
+    @Override
     public char charAt(int offset);
 
     /**
      * @see CharSequence#length()
      */
+    @Override
     public int length();
 
     /**
      * @see CharSequence#subSequence(int, int)
      */
+    @Override
     public CharSequence subSequence(int start, int end);
 
     /**

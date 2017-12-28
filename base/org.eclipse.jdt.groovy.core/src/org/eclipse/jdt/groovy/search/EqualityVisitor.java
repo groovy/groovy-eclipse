@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,9 +24,6 @@ import org.codehaus.groovy.ast.expr.VariableExpression;
 
 /**
  * Tests to see if {@link #nodeToLookFor} exists as a sub node in the {@link ASTNode} that is passed in to {@link #doVisit(ASTNode)}
- *
- * @author Andrew Eisenberg
- * @created Apr 26, 2011
  */
 public class EqualityVisitor extends ClassCodeVisitorSupport {
     private final ASTNode nodeToLookFor;

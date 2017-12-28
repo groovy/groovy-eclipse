@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +22,7 @@ import org.eclipse.core.runtime.Assert;
 
 /**
  * This {@link IASTFragment} is any old ASTNode that is encapsulated as a
- * fragment
- *
- * @author andrew
- * @created Jun 7, 2010
+ * fragment.
  */
 public class EnclosingASTNodeFragment implements IASTFragment {
 
@@ -35,40 +32,49 @@ public class EnclosingASTNodeFragment implements IASTFragment {
         this.node = node;
     }
 
+    @Override
     public void accept(FragmentVisitor visitor) {
         visitor.previsit(this);
         visitor.visit(this);
     }
 
+    @Override
     public IASTFragment findMatchingSubFragment(IASTFragment other) {
         return null;
     }
 
+    @Override
     public int fragmentLength() {
         return 1;
     }
 
+    @Override
     public Expression getAssociatedExpression() {
         Assert.isLegal(false, "EnclosingASTNodeFragment has no associated expression");
         return null;
     }
 
+    @Override
     public ASTNode getAssociatedNode() {
         return node;
     }
 
+    @Override
     public int getEnd() {
         return node.getEnd();
     }
 
+    @Override
     public int getStart() {
         return node.getStart();
     }
 
+    @Override
     public int getLength() {
         return getEnd() - getStart();
     }
 
+    @Override
     public int getTrimmedEnd(GroovyCompilationUnit unit) {
         char[] contents = unit.getContents();
         int end = getEnd();
@@ -79,10 +85,12 @@ public class EnclosingASTNodeFragment implements IASTFragment {
         return end;
     }
 
+    @Override
     public int getTrimmedLength(GroovyCompilationUnit unit) {
         return getTrimmedEnd(unit) - getStart();
     }
 
+    @Override
     public ASTFragmentKind kind() {
         return ASTFragmentKind.ENCLOSING;
     }
@@ -92,10 +100,12 @@ public class EnclosingASTNodeFragment implements IASTFragment {
      * this is because we do not yet have IsSame working on
      * anything except for expressions
      */
+    @Override
     public boolean matches(IASTFragment other) {
         return this.kind() == other.kind() && this.node == ((EnclosingASTNodeFragment) other).getAssociatedNode();
     }
 
+    @Override
     public String print(int indentLvl) {
         return "(E) " + node.toString();
     }

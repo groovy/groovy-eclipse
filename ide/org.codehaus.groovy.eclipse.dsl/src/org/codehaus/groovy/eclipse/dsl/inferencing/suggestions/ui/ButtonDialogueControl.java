@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,11 +28,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
-/**
- * 
- * @author Nieraj Singh
- * @created 2011-05-13
- */
 public class ButtonDialogueControl extends AbstractControlManager {
 
     private Button boolButton;
@@ -52,6 +47,7 @@ public class ButtonDialogueControl extends AbstractControlManager {
         this.initialValue = initialValue;
     }
 
+    @Override
     protected Map<Control, IDialogueControlDescriptor> createManagedControls(Composite parent) {
         Composite baseCommandArea = new Composite(parent, SWT.NONE);
         GridLayoutFactory.fillDefaults().numColumns(1).applyTo(baseCommandArea);
@@ -63,21 +59,16 @@ public class ButtonDialogueControl extends AbstractControlManager {
         boolButton.setSelection(initialValue);
         boolButton.setToolTipText(descriptor.getToolTipText());
 
-        GridData gd = new GridData();
-        gd.horizontalAlignment = GridData.FILL;
-        gd.grabExcessHorizontalSpace = false;
-        gd.horizontalSpan = 1;
-        boolButton.setLayoutData(gd);
-        boolButton.addSelectionListener(new SelectionAdapter() {
+        GridDataFactory.fillDefaults().align(GridData.FILL, GridData.CENTER).applyTo(boolButton);
 
+        boolButton.addSelectionListener(new SelectionAdapter() {
+            @Override
             public void widgetSelected(SelectionEvent e) {
                 notifyControlChange(new Boolean(boolButton.getSelection()), boolButton);
             }
-
         });
-        Map<Control, IDialogueControlDescriptor> controls = new HashMap<Control, IDialogueControlDescriptor>();
+        Map<Control, IDialogueControlDescriptor> controls = new HashMap<>();
         controls.put(boolButton, descriptor);
         return controls;
     }
-
 }

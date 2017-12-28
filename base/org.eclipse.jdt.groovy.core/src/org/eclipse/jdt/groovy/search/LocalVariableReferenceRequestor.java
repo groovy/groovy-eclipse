@@ -63,6 +63,7 @@ public class LocalVariableReferenceRequestor implements ITypeRequestor {
         return references;
     }
 
+    @Override
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
         if (enclosingElement.equals(this.enclosingElement)) {
             foundEnclosingElement = true;

@@ -127,7 +127,7 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
         IContentAssistProcessor processor = assistant.getContentAssistProcessor(IDocument.DEFAULT_CONTENT_TYPE);
         List<CompletionProposalCategory> categories = (List<CompletionProposalCategory>)
             ReflectionUtils.getPrivateField(ContentAssistProcessor.class, "fCategories", processor);
-        List<CompletionProposalCategory> newCategories = new ArrayList<CompletionProposalCategory>();
+        List<CompletionProposalCategory> newCategories = new ArrayList<>();
         for (CompletionProposalCategory category : categories) {
             if (GROOVY_CONTENT_ASSIST.matcher(category.getId()).matches()) {
                 newCategories.add(category);

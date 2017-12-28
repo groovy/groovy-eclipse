@@ -39,14 +39,17 @@ public class GrabDeclaration extends SourceRefElement {
         elementName = group + ':' + module + ':' + version;
     }
 
+    @Override
     public Object getElementInfo() throws JavaModelException {
         return elementInfo;
     }
 
+    @Override
     public String getElementName() {
         return elementName;
     }
 
+    @Override
     public int getElementType() {
         return 0;
     }
@@ -56,6 +59,7 @@ public class GrabDeclaration extends SourceRefElement {
         return 0;
     }
 
+    @Override
     public ISourceRange getNameRange() throws JavaModelException {
         return (ISourceRange) ReflectionUtils.executeNoArgPrivateMethod(ImportDeclarationElementInfo.class, "getNameRange", getElementInfo());
     }

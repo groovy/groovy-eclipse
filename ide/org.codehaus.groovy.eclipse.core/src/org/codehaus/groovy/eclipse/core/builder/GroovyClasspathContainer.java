@@ -57,6 +57,7 @@ public class GroovyClasspathContainer implements IClasspathContainer {
         this.project = project;
     }
 
+    @Override
     public synchronized IClasspathEntry[] getClasspathEntries() {
         if (entries == null) {
             updateEntries();
@@ -72,13 +73,13 @@ public class GroovyClasspathContainer implements IClasspathContainer {
         try {
             boolean minimalLibraries = hasMinimalAttribute(GroovyRuntime.getGroovyClasspathEntry(project));
 
-            Set<IPath> libraries = new LinkedHashSet<IPath>();
+            Set<IPath> libraries = new LinkedHashSet<>();
             libraries.add(CompilerUtils.getExportedGroovyAllJar());
             if (!minimalLibraries) {
                 libraries.addAll(CompilerUtils.getExtraJarsForClasspath());
             }
 
-            final List<IClasspathEntry> cpEntries = new ArrayList<IClasspathEntry>(libraries.size());
+            final List<IClasspathEntry> cpEntries = new ArrayList<>(libraries.size());
 
             for (IPath jarPath : libraries) {
                 // check for sources
@@ -88,7 +89,7 @@ public class GroovyClasspathContainer implements IClasspathContainer {
                 IPath docPath = CompilerUtils.getJarInGroovyLib(jarPath.removeFileExtension().lastSegment().replace("-indy", "") + "-javadoc.jar");
 
                 cpEntries.add(newLibraryEntry(jarPath, srcPath, null, null, (docPath == null) ? null : new IClasspathAttribute[] {
-                    new ClasspathAttribute(IClasspathAttribute.JAVADOC_LOCATION_ATTRIBUTE_NAME, docPath.toFile().toURL().toString())
+                    new ClasspathAttribute(IClasspathAttribute.JAVADOC_LOCATION_ATTRIBUTE_NAME, docPath.toFile().toURI().toURL().toString())
                 }, true));
             }
 
@@ -135,7 +136,7 @@ public class GroovyClasspathContainer implements IClasspathContainer {
      */
     private Collection<IClasspathEntry> getGroovyJarsInDotGroovyLib() {
         File[] files = CompilerUtils.findJarsInDotGroovyLocation();
-        final List<IClasspathEntry> newEntries = new ArrayList<IClasspathEntry>(files.length);
+        final List<IClasspathEntry> newEntries = new ArrayList<>(files.length);
         for (File file : files) {
             IClasspathEntry entry = newLibraryEntry(new Path(file.getAbsolutePath()), null, null, null, null, true);
             newEntries.add(entry);
@@ -143,14 +144,17 @@ public class GroovyClasspathContainer implements IClasspathContainer {
         return newEntries;
     }
 
+    @Override
     public String getDescription() {
         return DESC;
     }
 
+    @Override
     public int getKind() {
         return K_APPLICATION;
     }
 
+    @Override
     public IPath getPath() {
         return CONTAINER_ID;
     }

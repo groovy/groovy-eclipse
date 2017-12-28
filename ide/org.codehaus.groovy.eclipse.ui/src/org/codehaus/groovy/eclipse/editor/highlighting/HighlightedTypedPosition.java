@@ -41,6 +41,7 @@ public class HighlightedTypedPosition extends Position implements Comparable<Pos
         this.kind = kind;
     }
 
+    @Override
     public int compareTo(Position that) {
         return (that == null ? 1 : this.offset - that.offset);
     }

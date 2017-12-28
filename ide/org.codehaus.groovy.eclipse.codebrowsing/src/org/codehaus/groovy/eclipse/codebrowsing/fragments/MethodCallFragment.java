@@ -48,6 +48,7 @@ public class MethodCallFragment implements IASTFragment {
         this(methodExpression, arguments, null, actualEndPosition);
     }
 
+    @Override
     public ASTFragmentKind kind() {
         return ASTFragmentKind.METHOD_CALL;
     }
@@ -60,18 +61,22 @@ public class MethodCallFragment implements IASTFragment {
         return next;
     }
 
+    @Override
     public int getStart() {
         return getAssociatedExpression().getStart();
     }
 
+    @Override
     public int getEnd() {
         return hasNext() ? getNext().getEnd() : actualEndPosition;
     }
 
+    @Override
     public int getLength() {
         return getEnd() - getStart();
     }
 
+    @Override
     public int getTrimmedEnd(GroovyCompilationUnit unit) {
         if (hasNext()) {
             return getNext().getTrimmedEnd(unit);
@@ -85,14 +90,17 @@ public class MethodCallFragment implements IASTFragment {
         }
     }
 
+    @Override
     public int getTrimmedLength(GroovyCompilationUnit unit) {
         return getTrimmedEnd(unit) - getStart();
     }
 
+    @Override
     public MethodCallExpression getAssociatedNode() {
         return callExpression;
     }
 
+    @Override
     public Expression getAssociatedExpression() {
         return methodExpression;
     }
@@ -101,20 +109,24 @@ public class MethodCallFragment implements IASTFragment {
         return arguments;
     }
 
+    @Override
     public int fragmentLength() {
         return hasNext() ? 1 + getNext().fragmentLength() : 1;
     }
 
+    @Override
     public void accept(FragmentVisitor visitor) {
         if (visitor.previsit(this) && visitor.visit(this) && hasNext()) {
             getNext().accept(visitor);
         }
     }
 
+    @Override
     public String print(int indentLvl) {
         return ASTFragmentFactory.spaces(indentLvl) + "(M) " + getAssociatedExpression() + '.' + getArguments() + (hasNext() ? '\n' + getNext().print(indentLvl + 1) : "");
     }
 
+    @Override
     public IASTFragment findMatchingSubFragment(IASTFragment that) {
         if (that.kind() == this.kind() && that.fragmentLength() <= this.fragmentLength() && similar((MethodCallFragment) that)) {
             IASTFragment frag = ((MethodCallFragment) that).next;
@@ -131,6 +143,7 @@ public class MethodCallFragment implements IASTFragment {
         return new EmptyASTFragment();
     }
 
+    @Override
     public boolean matches(IASTFragment that) {
         if (that instanceof MethodCallFragment && ((MethodCallFragment) that).hasNext() == this.hasNext()) {
             return similar((MethodCallFragment) that);

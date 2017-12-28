@@ -35,7 +35,6 @@ import org.eclipse.core.resources.IResourceStatus;
 import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.resources.IStorage;
 import org.eclipse.core.resources.IWorkspace;
-import org.eclipse.core.resources.IWorkspaceRunnable;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -66,10 +65,11 @@ public class RefreshDSLDJob extends Job {
 
         public DSLDResourceVisitor(IProject project) {
             this.project = project;
-            dsldFiles = new HashSet<IStorage>();
-            alreadyAdded = new HashSet<String>();
+            dsldFiles = new HashSet<>();
+            alreadyAdded = new HashSet<>();
         }
 
+        @Override
         public boolean visit(IResource resource) throws CoreException {
             // don't visit the output folders
             if (resource.isDerived()) {
@@ -187,10 +187,8 @@ public class RefreshDSLDJob extends Job {
         private IPackageFragmentRoot[] getFragmentRoots(final IJavaProject javaProject, IProgressMonitor monitor) throws JavaModelException {
             final IPackageFragmentRoot[][] roots = new IPackageFragmentRoot[1][];
             try {
-                ResourcesPlugin.getWorkspace().run(new IWorkspaceRunnable() {
-                    public void run(IProgressMonitor monitor) throws CoreException {
-                        roots[0] = javaProject.getAllPackageFragmentRoots();
-                    }
+                ResourcesPlugin.getWorkspace().run(pm -> {
+                    roots[0] = javaProject.getAllPackageFragmentRoots();
                 }, getSchedulingRule(), IWorkspace.AVOID_UPDATE, monitor);
             } catch (CoreException e) {
                 if (e.getStatus().getCode()  == IJavaModelStatusConstants.ELEMENT_DOES_NOT_EXIST) {
@@ -221,9 +219,7 @@ public class RefreshDSLDJob extends Job {
     private DSLDStoreManager contextStoreManager = GroovyDSLCoreActivator.getDefault().getContextStoreManager();
 
     /**
-     * Deprecated.  Use {@link DSLDStoreManager#initialize(IProject, boolean)}
-     * instead.  This new method allows for the initialization of a store synchronously
-     * or asynchronously.
+     * @deprecated Use {@link DSLDStoreManager#initialize(IProject, boolean)} instead.
      */
     @Deprecated
     public RefreshDSLDJob(IProject project) {
@@ -231,9 +227,7 @@ public class RefreshDSLDJob extends Job {
     }
 
     /**
-     * Deprecated.  Use {@link DSLDStoreManager#initialize(List, boolean)}
-     * instead.  This new method allows for the initialization of a store synchronously
-     * or asynchronously.
+     * @deprecated Use {@link DSLDStoreManager#initialize(List, boolean)} instead.
      */
     @Deprecated
     public RefreshDSLDJob(List<IProject> projects) {
@@ -272,7 +266,7 @@ public class RefreshDSLDJob extends Job {
             SubMonitor submon = SubMonitor.convert(monitor);
             submon.beginTask("Refresh DSLD scripts", projects.size() * 9);
 
-            List<IStatus> errorStatuses = new ArrayList<IStatus>();
+            List<IStatus> errorStatuses = new ArrayList<>();
             for (IProject project : projects) {
                 IStatus res = Status.OK_STATUS;
                 try {

@@ -49,18 +49,22 @@ public class DSLDContainerInitializer extends ClasspathContainerInitializer {
     private static final class DSLDClasspathContainer implements IClasspathContainer {
         private IClasspathEntry[] entries;
 
+        @Override
         public IPath getPath() {
             return GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID;
         }
 
+        @Override
         public int getKind() {
             return K_APPLICATION;
         }
 
+        @Override
         public String getDescription() {
             return "Groovy DSL Support";
         }
 
+        @Override
         public IClasspathEntry[] getClasspathEntries() {
             if (entries == null) {
                 entries = calculateEntries();
@@ -79,7 +83,7 @@ public class DSLDContainerInitializer extends ClasspathContainerInitializer {
             if (GroovyDSLCoreActivator.getDefault().isDSLDDisabled()) {
                 return NO_ENTRIES;
             }
-            List<IClasspathEntry> newEntries = new ArrayList<IClasspathEntry>();
+            List<IClasspathEntry> newEntries = new ArrayList<>();
             if (globalDsldLocation != null && globalDsldLocation.exists()) {
                 IPath dsldPath = new Path(globalDsldLocation.getAbsolutePath());
                 newEntries.add(newLibraryEntry(dsldPath, null, null, false));

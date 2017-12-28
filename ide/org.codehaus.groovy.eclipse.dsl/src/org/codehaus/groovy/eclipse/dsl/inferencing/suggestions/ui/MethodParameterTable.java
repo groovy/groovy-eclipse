@@ -44,11 +44,6 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-/**
- *
- * @author Nieraj Singh
- * @created 2011-05-13
- */
 public class MethodParameterTable extends AbstractControlManager {
 
     enum ColumnTypes {
@@ -85,7 +80,7 @@ public class MethodParameterTable extends AbstractControlManager {
     public MethodParameterTable(IJavaProject project, List<MethodParameter> parameters, boolean useNamedArguments) {
         this.parameters = parameters;
         if (parameters == null) {
-            this.parameters = new ArrayList<MethodParameter>();
+            this.parameters = new ArrayList<>();
         }
         this.project = project;
         this.useNamedArguments = useNamedArguments;
@@ -96,8 +91,7 @@ public class MethodParameterTable extends AbstractControlManager {
     }
 
     protected IDialogueControlDescriptor[] getTableButtonDescriptors() {
-        return new IDialogueControlDescriptor[] { ControlTypes.ADD, ControlTypes.REMOVE, ControlTypes.EDIT, ControlTypes.UP,
-                ControlTypes.DOWN };
+        return new IDialogueControlDescriptor[] {ControlTypes.ADD, ControlTypes.REMOVE, ControlTypes.EDIT, ControlTypes.UP, ControlTypes.DOWN};
     }
 
     protected Map<Control, IDialogueControlDescriptor> createOperationButtonArea(Composite parent) {
@@ -108,7 +102,7 @@ public class MethodParameterTable extends AbstractControlManager {
         GridLayoutFactory.fillDefaults().applyTo(buttons);
 
         IDialogueControlDescriptor[] types = getTableButtonDescriptors();
-        Map<Control, IDialogueControlDescriptor> opButtons = new HashMap<Control, IDialogueControlDescriptor>();
+        Map<Control, IDialogueControlDescriptor> opButtons = new HashMap<>();
         for (IDialogueControlDescriptor type : types) {
             Button button = createSelectionButton(buttons, type);
             if (button != null) {
@@ -133,7 +127,7 @@ public class MethodParameterTable extends AbstractControlManager {
         GridDataFactory.fillDefaults().hint(Math.max(widthHint, minSize.x), SWT.DEFAULT).applyTo(button);
 
         button.addSelectionListener(new SelectionAdapter() {
-
+            @Override
             public void widgetSelected(SelectionEvent e) {
                 Object obj = e.getSource();
                 if (obj instanceof Button) {
@@ -152,37 +146,44 @@ public class MethodParameterTable extends AbstractControlManager {
         }
         ControlTypes controlType = (ControlTypes) type;
         switch (controlType) {
-            case ADD:
-                addElement();
-                break;
-            case REMOVE:
-                removeElement();
-                break;
-            case EDIT:
-                editElement();
-                break;
-            case UP:
-                int selectionIndex = viewer.getTable().getSelectionIndex();
-                // can only move selection if it is not already at the top
-                if (selectionIndex > 0) {
-                    MethodParameter element = parameters.remove(selectionIndex);
-                    // selectionIndex will never be less than zero
-                    parameters.add(selectionIndex - 1, element);
-                    refreshTable();
-                }
-                break;
-            case DOWN:
-                selectionIndex = viewer.getTable().getSelectionIndex();
-                // Can only move down if the selection is second to last
-                if (selectionIndex >= 0 && selectionIndex < parameters.size() - 1) {
-                    MethodParameter element = parameters.remove(selectionIndex);
-                    parameters.add(selectionIndex + 1, element);
-                    refreshTable();
-                }
-                break;
-
+        case ADD:
+            addElement();
+            break;
+        case REMOVE:
+            removeElement();
+            break;
+        case EDIT:
+            editElement();
+            break;
+        case UP:
+            int selectionIndex = viewer.getTable().getSelectionIndex();
+            // can only move selection if it is not already at the top
+            if (selectionIndex > 0) {
+                MethodParameter element = parameters.remove(selectionIndex);
+                // selectionIndex will never be less than zero
+                parameters.add(selectionIndex - 1, element);
+                refreshTable();
+            }
+            break;
+        case DOWN:
+            selectionIndex = viewer.getTable().getSelectionIndex();
+            // Can only move down if the selection is second to last
+            if (selectionIndex >= 0 && selectionIndex < parameters.size() - 1) {
+                MethodParameter element = parameters.remove(selectionIndex);
+                parameters.add(selectionIndex + 1, element);
+                refreshTable();
+            }
+            break;
+        case DECLARING_TYPE:
+        case DOC:
+        case IS_STATIC:
+        case METHOD:
+        case NAME:
+        case PARAMETERS:
+        case PROPERTY:
+        case TYPE:
+        case USE_NAMED_ARGUMENTS:
         }
-
     }
 
     protected int getViewerConfiguration() {
@@ -226,15 +227,13 @@ public class MethodParameterTable extends AbstractControlManager {
     protected void setTableProviders(final TableViewer viewer) {
 
         viewer.setContentProvider(new IStructuredContentProvider() {
-
+            @Override
             public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-
             }
-
+            @Override
             public void dispose() {
-
             }
-
+            @Override
             public Object[] getElements(Object inputElement) {
                 if (inputElement instanceof List) {
                     return ((List<?>) inputElement).toArray();
@@ -244,9 +243,8 @@ public class MethodParameterTable extends AbstractControlManager {
         });
 
         viewer.setLabelProvider(new ColumnLabelProvider() {
-
+            @Override
             public void update(ViewerCell cell) {
-
                 Object element = cell.getElement();
                 int index = cell.getColumnIndex();
                 cell.setText(getColumnText(element, index));
@@ -261,19 +259,18 @@ public class MethodParameterTable extends AbstractControlManager {
                         MethodParameter arg = (MethodParameter) element;
 
                         switch (type) {
-                            case NAME:
-                                text = arg.getName();
-                                break;
-                            case TYPE:
-                                text = arg.getType();
-                                break;
+                        case NAME:
+                            text = arg.getName();
+                            break;
+                        case TYPE:
+                            text = arg.getType();
+                            break;
 
                         }
                     }
                 }
                 return text;
             }
-
         });
 
         viewer.setInput(parameters);
@@ -396,7 +393,7 @@ public class MethodParameterTable extends AbstractControlManager {
         GridDataFactory.fillDefaults().hint(Math.max(widthHint, minSize.x), SWT.DEFAULT).applyTo(button);
 
         button.addSelectionListener(new SelectionAdapter() {
-
+            @Override
             public void widgetSelected(SelectionEvent e) {
                 Object obj = e.getSource();
                 if (obj instanceof Button) {
@@ -408,13 +405,13 @@ public class MethodParameterTable extends AbstractControlManager {
         return button;
     }
 
+    @Override
     protected Map<Control, IDialogueControlDescriptor> createManagedControls(Composite parent) {
-
         Composite viewerArea = new Composite(parent, SWT.NONE);
         GridLayoutFactory.fillDefaults().numColumns(2).equalWidth(false).applyTo(viewerArea);
         GridDataFactory.fillDefaults().grab(true, true).applyTo(viewerArea);
 
-        Map<Control, IDialogueControlDescriptor> allControls = new HashMap<Control, IDialogueControlDescriptor>();
+        Map<Control, IDialogueControlDescriptor> allControls = new HashMap<>();
 
         TableViewer viewer = createTableViewer(viewerArea);
         if (viewer != null) {
@@ -439,5 +436,4 @@ public class MethodParameterTable extends AbstractControlManager {
     public List<MethodParameter> getMethodParameter() {
         return parameters;
     }
-
 }

@@ -40,6 +40,7 @@ import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 
 public class CodeSelectHelper implements ICodeSelectHelper {
 
+    @Override
     public IJavaElement[] select(GroovyCompilationUnit unit, int start, int length) {
         char[] contents = unit.getContents();
         // expand zero-length selection to include adjacent identifier characters

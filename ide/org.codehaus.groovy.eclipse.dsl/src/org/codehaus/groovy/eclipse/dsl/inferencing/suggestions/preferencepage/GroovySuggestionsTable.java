@@ -37,15 +37,11 @@ import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui.ProjectDropDow
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
-import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
-import org.eclipse.jface.viewers.ICheckStateListener;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreePathContentProvider;
 import org.eclipse.jface.viewers.ITreeViewerListener;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TreeExpansionEvent;
 import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.viewers.TreeViewer;
@@ -66,10 +62,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 
-/**
- * @author Nieraj Singh
- * @created Apr 19, 2011
- */
 public class GroovySuggestionsTable {
 
     private static final String DEACTIVATE_REMOVE_EDIT_OR_ADD_A_TYPE_SUGGESTION = "Deactivate, remove, edit, or add a type suggestion:";
@@ -120,17 +112,19 @@ public class GroovySuggestionsTable {
             this.weight = weight;
         }
 
+        @Override
         public String getName() {
             return label;
         }
 
+        @Override
         public int getWidth() {
             return weight;
         }
     }
 
     public GroovySuggestionsTable(List<IProject> projects) {
-        this.projects = projects != null ? projects : new ArrayList<IProject>();
+        this.projects = projects != null ? projects : new ArrayList<>();
     }
 
     public Composite createTable(Composite parent) {
@@ -146,11 +140,7 @@ public class GroovySuggestionsTable {
         Composite subparent = new Composite(parent, SWT.NONE);
         GridLayoutFactory.fillDefaults().numColumns(1).equalWidth(false).applyTo(subparent);
         GridDataFactory.fillDefaults().grab(false, false).applyTo(parent);
-        ISelectionHandler handler = new ISelectionHandler() {
-            public void selectionChanged(IProject project) {
-                setViewerInput(project);
-            }
-        };
+        ISelectionHandler handler = project -> setViewerInput(project);
         selector = ProjectDropDownControl.getProjectSelectionControl(projects, parent.getShell(), subparent, handler);
         if (selector != null) {
             selector.createControls();
@@ -234,18 +224,18 @@ public class GroovySuggestionsTable {
         viewer.createControls(parent);
         final CheckboxTreeViewer treeViewer = viewer.getTreeViewer();
 
-        treeViewer.addCheckStateListener(new ICheckStateListener() {
-            public void checkStateChanged(CheckStateChangedEvent event) {
-                Object obj = event.getElement();
-                setActiveState(obj, event.getChecked());
-            }
+        treeViewer.addCheckStateListener(event -> {
+            Object obj = event.getElement();
+            setActiveState(obj, event.getChecked());
         });
 
         treeViewer.addTreeListener(new ITreeViewerListener() {
+            @Override
             public void treeExpanded(TreeExpansionEvent event) {
                 setCheckState(event.getElement());
             }
 
+            @Override
             public void treeCollapsed(TreeExpansionEvent event) {
                 // do nothing
             }
@@ -297,12 +287,10 @@ public class GroovySuggestionsTable {
     }
 
     protected void setViewerListeners(TreeViewer tree) {
-        tree.addSelectionChangedListener(new ISelectionChangedListener() {
-            public void selectionChanged(SelectionChangedEvent event) {
-                if (event.getSelection() instanceof IStructuredSelection) {
-                    IStructuredSelection selection = (IStructuredSelection) event.getSelection();
-                    handleSelectionButtonEnablement(selection.toList());
-                }
+        tree.addSelectionChangedListener(event -> {
+            if (event.getSelection() instanceof IStructuredSelection) {
+                IStructuredSelection selection = (IStructuredSelection) event.getSelection();
+                handleSelectionButtonEnablement(selection.toList());
             }
         });
     }
@@ -416,7 +404,7 @@ public class GroovySuggestionsTable {
 
     protected void handleRemove() {
         List<Object> selections = getSelections();
-        List<IBaseGroovySuggestion> suggestionsToRemove = new ArrayList<IBaseGroovySuggestion>(selections.size());
+        List<IBaseGroovySuggestion> suggestionsToRemove = new ArrayList<>(selections.size());
         for (Object selection : selections) {
             if (selection instanceof IBaseGroovySuggestion) {
                 suggestionsToRemove.add((IBaseGroovySuggestion) selection);
@@ -467,9 +455,10 @@ public class GroovySuggestionsTable {
     }
 
     protected static class ViewerContentProvider implements ITreePathContentProvider {
+        @Override
         public Object[] getElements(Object inputElement) {
             if (inputElement instanceof Collection) {
-                List<Object> suggestedTypes = new ArrayList<Object>();
+                List<Object> suggestedTypes = new ArrayList<>();
                 Collection<?> topLevel = (Collection<?>) inputElement;
                 for (Object possibleTypeSuggestion : topLevel) {
                     if (possibleTypeSuggestion instanceof GroovySuggestionDeclaringType) {
@@ -481,6 +470,7 @@ public class GroovySuggestionsTable {
             return null;
         }
 
+        @Override
         public Object[] getChildren(TreePath path) {
             Object lastElement = path.getLastSegment();
             if (lastElement instanceof GroovySuggestionDeclaringType) {
@@ -495,18 +485,22 @@ public class GroovySuggestionsTable {
             return null;
         }
 
+        @Override
         public TreePath[] getParents(Object element) {
             return new TreePath[] {};
         }
 
+        @Override
         public boolean hasChildren(TreePath path) {
             return getChildren(path) != null;
         }
 
+        @Override
         public void dispose() {
             // nothing for now
         }
 
+        @Override
         public void inputChanged(Viewer viewer, Object e1, Object e2) {
             // nothing for now
         }
@@ -524,6 +518,7 @@ public class GroovySuggestionsTable {
     }
 
     protected static class ViewerLabelProvider extends ColumnLabelProvider {
+        @Override
         public void update(ViewerCell cell) {
             Object element = cell.getElement();
             int index = cell.getColumnIndex();
@@ -537,6 +532,7 @@ public class GroovySuggestionsTable {
             return null;
         }
 
+        @Override
         public Font getFont(Object element) {
             return super.getFont(element);
         }
@@ -580,7 +576,7 @@ public class GroovySuggestionsTable {
 
         ButtonTypes[] types = ButtonTypes.values();
 
-        selectionButtons = new HashMap<GroovySuggestionsTable.ButtonTypes, Button>();
+        selectionButtons = new HashMap<>();
         for (ButtonTypes type : types) {
             Button button = createSelectionButton(buttons, type);
             if (button != null) {
@@ -606,6 +602,7 @@ public class GroovySuggestionsTable {
         GridDataFactory.fillDefaults().hint(Math.max(widthHint, minSize.x), SWT.DEFAULT).applyTo(button);
 
         button.addSelectionListener(new SelectionAdapter() {
+            @Override
             public void widgetSelected(SelectionEvent e) {
                 super.widgetSelected(e);
                 Object item = e.getSource();
@@ -621,6 +618,7 @@ public class GroovySuggestionsTable {
     }
 
     public static class SuggestionViewerSorter extends TreeViewerSorter {
+        @Override
         protected String getCompareString(TreeColumn column, Object rowItem) {
             ColumnTypes type = getColumnType(column);
             String text = null;
@@ -634,6 +632,7 @@ public class GroovySuggestionsTable {
             return text;
         }
 
+        @Override
         public int compare(Viewer viewer, Object e1, Object e2) {
             Tree tree = ((TreeViewer) viewer).getTree();
             TreeColumn sortColumn = tree.getSortColumn();
@@ -677,6 +676,7 @@ public class GroovySuggestionsTable {
     }
 
     public abstract static class TreeViewerSorter extends ViewerComparator {
+        @Override
         public int compare(Viewer viewer, Object e1, Object e2) {
             if (viewer instanceof TreeViewer) {
                 Tree tree = ((TreeViewer) viewer).getTree();

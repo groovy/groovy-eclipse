@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,17 +15,16 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 
-/**
- * 
- * @author Nieraj Singh
- * @created Apr 19, 2011
- */
 public class GroovyPropertySuggestion extends GroovySuggestion {
-    public GroovyPropertySuggestion(GroovySuggestionDeclaringType declaringType, String name, String type, boolean isStatic,
-            String javaDoc, boolean isActive) {
-        
+
+    public GroovyPropertySuggestion(
+        GroovySuggestionDeclaringType declaringType,
+        String name,
+        String type,
+        boolean isStatic,
+        String javaDoc,
+        boolean isActive) {
+
         super(declaringType, name, type, isStatic, javaDoc, isActive);
-
     }
-
 }

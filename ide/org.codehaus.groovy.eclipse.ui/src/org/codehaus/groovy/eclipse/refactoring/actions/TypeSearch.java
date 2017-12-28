@@ -42,7 +42,7 @@ public class TypeSearch {
         final String ref;
         final boolean isAnnotation;
         final ISourceRange range;
-        final List<TypeNameMatch> foundInfos = new LinkedList<TypeNameMatch>();
+        final List<TypeNameMatch> foundInfos = new LinkedList<>();
 
         public UnresolvedTypeData(String ref, boolean annotation, ISourceRange range) {
             this.ref = ref;
@@ -78,7 +78,7 @@ public class TypeSearch {
         for (String simpleName : missingTypes.keySet()) {
             allTypes[i++] = simpleName.toCharArray();
         }
-        final List<TypeNameMatch> typesFound = new ArrayList<TypeNameMatch>();
+        final List<TypeNameMatch> typesFound = new ArrayList<>();
         TypeNameMatchCollector collector = new TypeNameMatchCollector(typesFound);
         IJavaSearchScope scope = SearchEngine.createJavaSearchScope(new IJavaElement[] {unit.getJavaProject()});
         int policy = (monitor == null ? IJavaSearchConstants.CANCEL_IF_NOT_READY_TO_SEARCH : IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH);

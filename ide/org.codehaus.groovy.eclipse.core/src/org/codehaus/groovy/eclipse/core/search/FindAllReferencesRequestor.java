@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,10 +37,7 @@ import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 
 /**
- * Finds all references to a particular Declaration in a file
- *
- * @author andrew
- * @created Dec 31, 2010
+ * Finds all references to a particular Declaration in a file.
  */
 public class FindAllReferencesRequestor implements ITypeRequestor {
 
@@ -50,13 +47,10 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
 
     public FindAllReferencesRequestor(AnnotatedNode declaration) {
         this.declaration = declaration;
-        this.references = new TreeMap<ASTNode, Integer>(new Comparator<ASTNode>() {
-            public int compare(ASTNode o1, ASTNode o2) {
-                return o1.getStart() - o2.getStart();
-            }
-        });
+        this.references = new TreeMap<>(Comparator.comparing(ASTNode::getStart));
     }
 
+    @Override
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
         if (node.getLength() == 0) {
             return VisitStatus.CONTINUE;

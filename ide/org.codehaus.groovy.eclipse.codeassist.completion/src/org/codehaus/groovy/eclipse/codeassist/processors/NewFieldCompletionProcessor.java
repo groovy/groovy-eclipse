@@ -122,10 +122,11 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
         super(context, javaContext, nameEnvironment);
     }
 
+    @Override
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
         ContentAssistContext context = getContext();
         List<String> unimplementedFieldNames = getAllSuggestedFieldNames(context);
-        List<ICompletionProposal> proposals = new LinkedList<ICompletionProposal>();
+        List<ICompletionProposal> proposals = new LinkedList<>();
         IType enclosingType = context.getEnclosingType();
         if (enclosingType != null) {
             for (String fieldName : unimplementedFieldNames) {
@@ -167,7 +168,7 @@ public class NewFieldCompletionProcessor extends AbstractGroovyCompletionProcess
     }
 
     private List<String> getAllSuggestedFieldNames(ContentAssistContext context) {
-        List<String> allNewFieldNames = new LinkedList<String>();
+        List<String> allNewFieldNames = new LinkedList<>();
         try {
             List<IProposalProvider> providers = ProposalProviderRegistry.getRegistry().getProvidersFor(context.unit);
             for (IProposalProvider provider : providers) {

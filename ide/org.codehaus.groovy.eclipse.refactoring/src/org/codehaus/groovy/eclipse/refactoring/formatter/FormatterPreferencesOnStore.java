@@ -1,8 +1,5 @@
 /*
- * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
- *
- * IFS Institute for Software, HSR Rapperswil, Switzerland
- * http://ifs.hsr.ch/
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,19 +48,12 @@ import org.eclipse.jface.preference.PreferenceStore;
  * Directly instantiating this class is only advisable in a testing context
  * where you explicitly want to create a preferences store with testing
  * preferences.
- *
- * @author Mike Klenk mklenk@hsr.ch
- * @author Kris De Volder <kris.de.volder@gmail.com>
  */
 public class FormatterPreferencesOnStore implements IFormatterPreferences {
-
-
 
     ///////////////////////////////////////////////////////////////////////
     //// Default values used for preferences if there are problems getting
     //// proper values from a preferences store.
-
-
 
     // //// preferences cached in fields below //////////
 
@@ -79,7 +69,7 @@ public class FormatterPreferencesOnStore implements IFormatterPreferences {
     private boolean removeUnnecessarySemicolons;
     private int longListLength;
 
-	////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////
 
     /**
      * Create Formatter Preferences for a given GroovyCompilationUnit.
@@ -91,7 +81,7 @@ public class FormatterPreferencesOnStore implements IFormatterPreferences {
         if (preferences == null)
             preferences = new PreferenceStore();
         refresh(preferences);
-	}
+    }
 
     /**
      * Refresh cached values from the preferences store.
@@ -172,46 +162,57 @@ public class FormatterPreferencesOnStore implements IFormatterPreferences {
         }
     }
 
+    @Override
     public int getIndentationMultiline() {
         return indentationMultiline;
     }
 
+    @Override
     public int getBracesStart() {
         return bracesStart;
     }
 
+    @Override
     public boolean useTabs() {
         return useTabs;
     }
 
+    @Override
     public int getBracesEnd() {
         return bracesEnd;
     }
 
+    @Override
     public int getMaxLineLength() {
         return maxLineLength;
     }
 
+    @Override
     public boolean isSmartPaste() {
         return smartPaste;
     }
 
+    @Override
     public boolean isIndentEmptyLines() {
         return indentEmptyLines;
     }
 
+    @Override
     public int getIndentationSize() {
         return indentSize;
     }
 
+    @Override
     public int getTabSize() {
         return tabSize;
     }
 
+    @Override
     public boolean isRemoveUnnecessarySemicolons() {
         return removeUnnecessarySemicolons;
     }
 
+    @Override
     public int getLongListLength() {
         return longListLength;
     }

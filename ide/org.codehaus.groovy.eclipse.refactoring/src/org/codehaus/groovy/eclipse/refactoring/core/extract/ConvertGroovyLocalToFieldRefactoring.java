@@ -386,7 +386,7 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
     private TextEditGroup renameVariableReferencesTextEditGroup(RefactoringStatus status) {
         TextEditGroup group = new TextEditGroup("Update local variables to reference field.");
         if (!getContainingMethodNode().isScriptBody() || getContainingClosureExpression() != null) {
-            final Set<VariableExpression> references = new HashSet<VariableExpression>();
+            final Set<VariableExpression> references = new HashSet<>();
             GroovyClassVisitor referencesVisitor = new DepthFirstVisitor() {
                 @Override
                 public void visitVariableExpression(VariableExpression variableExpression) {
@@ -483,10 +483,10 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
     private Set<String> getUsedVariableAndFieldNames(VariableExpression variableExpression) {
         FindSurroundingNode find = new FindSurroundingNode(new Region(variableExpression), VisitKind.PARENT_STACK);
         find.doVisitSurroundingNode(moduleNode);
-        List<IASTFragment> parentStack = new ArrayList<IASTFragment>(find.getParentStack());
+        List<IASTFragment> parentStack = new ArrayList<>(find.getParentStack());
         Collections.reverse(parentStack);
 
-        Set<String> result = new HashSet<String>();
+        Set<String> result = new HashSet<>();
         for (IASTFragment fragment : parentStack) {
             ASTNode astNode = fragment.getAssociatedNode();
             VariableScope scope = null;

@@ -42,14 +42,15 @@ import org.eclipse.jdt.groovy.search.VariableScope;
  */
 public class MethodProposalCreator extends AbstractProposalCreator {
 
-    private Set<ClassNode> alreadySeen = new HashSet<ClassNode>();
+    private Set<ClassNode> alreadySeen = new HashSet<>();
 
+    @Override
     public List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic, boolean isPrimary) {
-        List<IGroovyProposal> proposals = new LinkedList<IGroovyProposal>();
+        List<IGroovyProposal> proposals = new LinkedList<>();
 
         boolean firstTime = alreadySeen.isEmpty();
         List<MethodNode> allMethods = getAllMethods(type, alreadySeen);
-        Set<String> alreadySeenFields = new HashSet<String>();
+        Set<String> alreadySeenFields = new HashSet<>();
         if (isStatic) {
             // "class" is added by FieldProposalCreator
             alreadySeenFields.add("class");

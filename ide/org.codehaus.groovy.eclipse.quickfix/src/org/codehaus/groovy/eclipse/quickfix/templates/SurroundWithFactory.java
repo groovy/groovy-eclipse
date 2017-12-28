@@ -1,7 +1,5 @@
 /*
- * Copyright 2011 SpringSource, a division of VMware, Inc
- *
- * andrew - Initial API and implementation
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,11 +22,9 @@ import org.eclipse.ui.actions.ActionGroup;
 /**
  * TODO convert this to using an adapter or a plugin
  * TODO don't use early startup
- *
- * @author Andrew Eisenberg
- * @created 2013-04-01
  */
 public class SurroundWithFactory implements ISurroundWithFactory {
+    @Override
     public ActionGroup createSurrundWithGroup(GroovyEditor editor, String group) {
         return new SurroundWithActionGroup(editor, group);
     }

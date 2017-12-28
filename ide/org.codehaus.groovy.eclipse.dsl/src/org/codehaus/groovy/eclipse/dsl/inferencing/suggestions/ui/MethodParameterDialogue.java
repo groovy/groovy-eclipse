@@ -56,6 +56,7 @@ public class MethodParameterDialogue extends AbstractDialogue {
         return new MethodParameter(name, type);
     }
 
+    @Override
     protected DialogueDescriptor getDialogueDescriptor() {
         return DIALOGUE_DESCRIPTOR;
     }
@@ -74,9 +75,10 @@ public class MethodParameterDialogue extends AbstractDialogue {
         return labelOffset;
     }
 
+    @Override
     protected void createCommandArea(Composite parent) {
         JavaTextControl nameControl = new JavaTextControl(ControlTypes.NAME, getOffsetLabelLocation(), name) {
-
+            @Override
             protected ValueStatus isControlValueValid(Control control) {
                 ValueStatus status = super.isControlValueValid(control);
                 // If status is OK, do a further check to see if there are any
@@ -90,7 +92,7 @@ public class MethodParameterDialogue extends AbstractDialogue {
         };
         nameControl.createControlArea(parent);
         nameControl.addSelectionListener(new ValidatedValueSelectionListener(ControlTypes.NAME, name) {
-
+            @Override
             protected void handleValidatedValue(ControlSelectionEvent event) {
                 Object selection = event.getSelectionData();
                 if (selection instanceof String) {
@@ -104,9 +106,8 @@ public class MethodParameterDialogue extends AbstractDialogue {
         // as to not allow invalid types. Therefore, in addition to checking the
         // validity of the type, also
         // also include empty or null type values as "valid".
-        JavaTypeBrowsingControl typeControl = new JavaTypeBrowsingControl(ControlTypes.TYPE, getOffsetLabelLocation(), type,
-                javaProject) {
-
+        JavaTypeBrowsingControl typeControl = new JavaTypeBrowsingControl(ControlTypes.TYPE, getOffsetLabelLocation(), type, javaProject) {
+            @Override
             protected ValueStatus isControlValueValid(String value) {
                 if (value == null || value.length() == 0) {
                     return ValueStatus.getValidStatus(value);
@@ -118,7 +119,7 @@ public class MethodParameterDialogue extends AbstractDialogue {
         typeControl.createControlArea(parent);
 
         typeControl.addSelectionListener(new ValidatedValueSelectionListener() {
-
+            @Override
             protected void handleValidatedValue(ControlSelectionEvent event) {
                 Object selection = event.getSelectionData();
                 if (selection instanceof String) {
@@ -126,6 +127,5 @@ public class MethodParameterDialogue extends AbstractDialogue {
                 }
             }
         });
-
     }
 }

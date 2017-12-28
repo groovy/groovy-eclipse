@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,8 +39,6 @@ import org.eclipse.ui.texteditor.templates.TemplatePreferencePage;
 
 /**
  * Allows editing of the preferences for groovy files.
- * @author Andrew Eisenberg
- * @created 2013-04-01
  */
 public class GroovyTemplatesPreferencesPage extends TemplatePreferencePage {
 
@@ -52,12 +50,14 @@ public class GroovyTemplatesPreferencesPage extends TemplatePreferencePage {
         setContextTypeRegistry(quickFixPlugin.getTemplateContextRegistry());
     }
 
+    @Override
     public boolean performOk() {
         boolean ok = super.performOk();
         GroovyQuickFixPlugin.getDefault().savePreferences();
         return ok;
     }
 
+    @Override
     protected boolean isShowFormatterSetting() {
         // template formatting has not been implemented
         return false;
@@ -74,7 +74,7 @@ public class GroovyTemplatesPreferencesPage extends TemplatePreferencePage {
         return null;
     }
 
-    @Override 
+    @Override
     protected SourceViewer createViewer(Composite parent) {
         IDocument document = new Document();
         JavaTextTools tools = JavaPlugin.getDefault().getJavaTextTools();

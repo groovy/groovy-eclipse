@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,10 +26,8 @@ import org.eclipse.core.resources.IStorage;
 /**
  * Tests that the file currently being checked ends in the given extension.
  * Do not include the dot in the pointcut, but the dot must exist before the extension
- * This pointcut should be optimized so that it runs before any others in an 'and' or 'or' clause.  Also, its result should be cached in the 
+ * This pointcut should be optimized so that it runs before any others in an 'and' or 'or' clause.  Also, its result should be cached in the
  * pattern providing a fail/succeed fast strategy.
- * @author andrew
- * @created Feb 10, 2011
  */
 public class FileExtensionPointcut extends AbstractPointcut {
 
@@ -45,7 +43,7 @@ public class FileExtensionPointcut extends AbstractPointcut {
             return null;
         }
     }
-    
+
     @Override
     public boolean fastMatch(GroovyDSLDContext pattern) {
         return matches(pattern, null) != null;

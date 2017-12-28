@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,14 +22,12 @@ import org.eclipse.jface.viewers.ISelection;
 
 /**
  * Action to convert a method to a closure.
- * 
- * @author Geoff Denning
- * @created Nov 15, 2011
  */
 public class ConvertToClosureAction extends GroovyRefactoringAction {
 
     private ConvertToClosureRefactoring convertToClosureRefactoring;
 
+    @Override
     public void run(IAction action) {
         if (initRefactoring() && convertToClosureRefactoring.isApplicable()) {
             convertToClosureRefactoring.applyRefactoring(getDocument());

@@ -42,6 +42,7 @@ public abstract class RenameToGroovyOrJavaAction implements IWorkbenchWindowActi
         this.javaOrGroovy = javaOrGroovy;
     }
 
+    @Override
     public void run(IAction action) {
         if (selection instanceof IStructuredSelection) {
             GroovyResourceUtil.renameFile(javaOrGroovy, getResources((IStructuredSelection) selection));
@@ -70,14 +71,17 @@ public abstract class RenameToGroovyOrJavaAction implements IWorkbenchWindowActi
         return resources;
     }
 
+    @Override
     public void selectionChanged(IAction action, ISelection selection) {
         this.selection = selection;
     }
 
+    @Override
     public void dispose() {
         selection = null;
     }
 
+    @Override
     public void init(IWorkbenchWindow window) {
     }
 }

@@ -32,26 +32,32 @@ public class EmptyContributionElement implements IContributionElement {
         this.declaringType = declaringType;
     }
 
+    @Override
     public IGroovyProposal toProposal(ClassNode declaringType, ResolverCache resolver) {
         return null;
     }
 
+    @Override
     public List<IGroovyProposal> extraProposals(ClassNode declaringType, ResolverCache resolver, Expression enclosingExpression) {
         return Collections.emptyList();
     }
 
+    @Override
     public TypeAndDeclaration lookupType(String name, ClassNode declaringType, ResolverCache resolver) {
         return null;
     }
 
+    @Override
     public String contributionName() {
         return "";
     }
 
+    @Override
     public String description() {
         return "Empty contribution";
     }
 
+    @Override
     public String getDeclaringTypeName() {
         return declaringType.getName();
     }

@@ -41,73 +41,64 @@ public final class GroovyContentTypeTests extends BuilderTestSuite {
 
     @Test
     public void testContentTypes() throws Exception {
-        Runnable runner = new Runnable() {
-            public void run() {
-                char[][] groovyLikeExtensions = ContentTypeUtils.getGroovyLikeExtensions();
-                char[][] javaLikeExtensions = Util.getJavaLikeExtensions();
-                char[][] javaButNotGroovyExtensions = ContentTypeUtils.getJavaButNotGroovyLikeExtensions();
+        runMultipleTimes(() -> {
+            char[][] groovyLikeExtensions = ContentTypeUtils.getGroovyLikeExtensions();
+            char[][] javaLikeExtensions = Util.getJavaLikeExtensions();
+            char[][] javaButNotGroovyExtensions = ContentTypeUtils.getJavaButNotGroovyLikeExtensions();
 
-                assertEquals("Invalid number of extensions found:\njavaLike: " +
-                        charCharToString(javaLikeExtensions) + "\ngroovyLike: " +
-                        charCharToString(groovyLikeExtensions) + "\njavaNotGroovyLike: " +
-                        charCharToString(javaButNotGroovyExtensions), javaLikeExtensions.length,
-                        groovyLikeExtensions.length + javaButNotGroovyExtensions.length);
+            assertEquals("Invalid number of extensions found:\njavaLike: " +
+                    charCharToString(javaLikeExtensions) + "\ngroovyLike: " +
+                    charCharToString(groovyLikeExtensions) + "\njavaNotGroovyLike: " +
+                    charCharToString(javaButNotGroovyExtensions), javaLikeExtensions.length,
+                    groovyLikeExtensions.length + javaButNotGroovyExtensions.length);
 
-                charCharContains(groovyLikeExtensions, "groovy");
-                charCharContains(groovyLikeExtensions, "groovytest");
+            charCharContains(groovyLikeExtensions, "groovy");
+            charCharContains(groovyLikeExtensions, "groovytest");
 
-                charCharContains(javaButNotGroovyExtensions, "java");
-                charCharContains(javaButNotGroovyExtensions, "javatest");
+            charCharContains(javaButNotGroovyExtensions, "java");
+            charCharContains(javaButNotGroovyExtensions, "javatest");
 
-                charCharContains(javaLikeExtensions, "groovy");
-                charCharContains(javaLikeExtensions, "groovytest");
-                charCharContains(javaLikeExtensions, "java");
-                charCharContains(javaLikeExtensions, "javatest");
+            charCharContains(javaLikeExtensions, "groovy");
+            charCharContains(javaLikeExtensions, "groovytest");
+            charCharContains(javaLikeExtensions, "java");
+            charCharContains(javaLikeExtensions, "javatest");
 
-                charCharNoContains(groovyLikeExtensions, "java");
-                charCharNoContains(groovyLikeExtensions, "javatest");
+            charCharNoContains(groovyLikeExtensions, "java");
+            charCharNoContains(groovyLikeExtensions, "javatest");
 
-                charCharNoContains(javaButNotGroovyExtensions, "groovy");
-                charCharNoContains(javaButNotGroovyExtensions, "groovytest");
-            }
-        };
-        runMultipleTimes(runner);
+            charCharNoContains(javaButNotGroovyExtensions, "groovy");
+            charCharNoContains(javaButNotGroovyExtensions, "groovytest");
+        });
     }
 
     @Test
     public void testJavaOnlyProject() throws Exception {
         final IProject proj = createProject();
-        Runnable runner = new Runnable() {
-            public void run() {
-                try {
-                    env.removeGroovyNature("Project");
-                    env.fullBuild();
+        runMultipleTimes(() -> {
+            try {
+                env.removeGroovyNature("Project");
+                env.fullBuild();
 
-                    checkJavaProject(proj);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
+                checkJavaProject(proj);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
-        };
-        runMultipleTimes(runner);
+        });
     }
 
     @Test
     public void testGroovyProject() throws Exception {
         final IProject proj = createProject();
-        Runnable runner = new Runnable() {
-            public void run() {
-                try {
-                    env.addGroovyJars(proj.getFullPath());
-                    env.fullBuild();
+        runMultipleTimes(() -> {
+            try {
+                env.addGroovyJars(proj.getFullPath());
+                env.fullBuild();
 
-                    checkGroovyProject(proj);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
+                checkGroovyProject(proj);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
-        };
-        runMultipleTimes(runner);
+        });
     }
 
     @Test // a groovy project that is converted back to a plain java project will not have its groovy files compiled
@@ -115,41 +106,35 @@ public final class GroovyContentTypeTests extends BuilderTestSuite {
         final IProject proj = createProject();
         env.addGroovyJars(proj.getFullPath());
         env.fullBuild();
-        Runnable runner = new Runnable() {
-            public void run() {
-                try {
-                    checkGroovyProject(proj);
-                    env.removeGroovyNature(proj.getName());
-                    fullBuild();
-                    checkJavaProject(proj);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
+        runMultipleTimes(() -> {
+            try {
+                checkGroovyProject(proj);
+                env.removeGroovyNature(proj.getName());
+                fullBuild();
+                checkJavaProject(proj);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
-        };
-        runMultipleTimes(runner);
+        });
     }
 
     @Test // a groovy project that is converted back to a plain java project will not have its groovy files compiled
     public void testJavaThenGroovyProject() throws Exception {
         final IProject proj = createProject();
-        Runnable runner = new Runnable() {
-            public void run() {
-                try {
-                    env.removeGroovyNature(proj.getName());
-                    env.fullBuild();
-                    checkJavaProject(proj);
+        runMultipleTimes(() -> {
+            try {
+                env.removeGroovyNature(proj.getName());
+                env.fullBuild();
+                checkJavaProject(proj);
 
-                    env.addGroovyNature(proj.getName());
-                    env.addGroovyJars(proj.getFullPath());
-                    fullBuild();
-                    checkGroovyProject(proj);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
+                env.addGroovyNature(proj.getName());
+                env.addGroovyJars(proj.getFullPath());
+                fullBuild();
+                checkGroovyProject(proj);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
-        };
-        runMultipleTimes(runner);
+        });
     }
 
     //--------------------------------------------------------------------------

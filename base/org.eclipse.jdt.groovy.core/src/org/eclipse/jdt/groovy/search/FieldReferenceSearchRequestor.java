@@ -71,6 +71,7 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
         findReferences = (Boolean) ReflectionUtils.getPrivateField(VariablePattern.class, "findReferences", pattern);
     }
 
+    @Override
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
         boolean doCheck = false;
         boolean isAssignment = false;

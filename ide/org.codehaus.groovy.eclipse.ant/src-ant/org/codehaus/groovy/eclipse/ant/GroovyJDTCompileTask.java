@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,12 +25,10 @@ import org.apache.tools.ant.util.SourceFileScanner;
  * The Ant task that calls the JDT Compiler for groovy.
  * <p>
  * This task takes the same arguments as the Javac task.
- *
- * @author Andrew Eisenberg
- * @created Jul 6, 2009
  */
 public class GroovyJDTCompileTask extends Javac {
 
+    @Override
     protected void scanDir(File srcDir, File destDir, String[] files) {
         GlobPatternMapper m = new GlobPatternMapper();
         m.setFrom("*.java");

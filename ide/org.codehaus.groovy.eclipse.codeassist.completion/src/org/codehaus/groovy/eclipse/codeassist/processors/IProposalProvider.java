@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,39 +26,33 @@ import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 /**
  * Use this class along with the completionProposalProvider extension point
  * to plug into Groovy-Eclipse's completion proposal support
- * @author Andrew Eisenberg
- * @created Nov 23, 2009
  */
 public interface IProposalProvider {
-    /**
-     * Provider should add all of the extra proposals available at the particular context
-     * @param context never null.
-     * @param completionType  might be null if the type requestor turned up no answer
-     * @param isStatic defaults to false if type requestor turned up no answer
-     * @param categories null if type requestor turned up no answer, otherwise always contains DGM, and will also contain all other declared categories
-     * @return
-     */
-	List<IGroovyProposal> getStatementAndExpressionProposals(ContentAssistContext context, ClassNode completionType, boolean isStatic, Set<ClassNode> categories);
-
-	/**
-	 * Respond with all new methods possible at this context.  Will only be called when the
-	 * location is {@link ContentAssistLocation#SCRIPT} or {@link ContentAssistLocation#CLASS_BODY}
-	 * @param context
-	 * @return
-	 */
-	List<MethodNode> getNewMethodProposals(ContentAssistContext context);
-    /**
-     * Respond with all new fields possible at this context (only their names).  Will only be called when the
-     * location is {@link ContentAssistLocation#SCRIPT} or {@link ContentAssistLocation#CLASS_BODY}
-     * @param context
-     * @return
-     */
-	List<String> getNewFieldProposals(ContentAssistContext context);
-
     /**
      * Append this to a field name when returning values in
      * {@link #getNewFieldProposals(ContentAssistContext)} so that the field declaration will be
      * invoked as non-static with a 'def' keyword.
      */
     String NONSTATIC_FIELD = "NONSTATIC ";
+
+    /**
+     * Respond with all new fields possible at this context (only their names).  Will only be called when the
+     * location is {@link ContentAssistLocation#SCRIPT} or {@link ContentAssistLocation#CLASS_BODY}
+     */
+    List<String> getNewFieldProposals(ContentAssistContext context);
+
+    /**
+     * Respond with all new methods possible at this context.  Will only be called when the
+     * location is {@link ContentAssistLocation#SCRIPT} or {@link ContentAssistLocation#CLASS_BODY}
+     */
+    List<MethodNode> getNewMethodProposals(ContentAssistContext context);
+
+    /**
+     * Provider should add all of the extra proposals available at the particular context
+     * @param context never null.
+     * @param completionType  might be null if the type requestor turned up no answer
+     * @param isStatic defaults to false if type requestor turned up no answer
+     * @param categories null if type requestor turned up no answer, otherwise always contains DGM, and will also contain all other declared categories
+     */
+    List<IGroovyProposal> getStatementAndExpressionProposals(ContentAssistContext context, ClassNode completionType, boolean isStatic, Set<ClassNode> categories);
 }

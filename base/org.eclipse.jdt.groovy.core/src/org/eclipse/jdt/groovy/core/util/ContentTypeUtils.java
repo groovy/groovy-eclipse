@@ -28,7 +28,6 @@ import java.util.TreeSet;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.content.IContentType;
 import org.eclipse.core.runtime.content.IContentTypeManager;
-import org.eclipse.core.runtime.content.IContentTypeManager.ContentTypeChangeEvent;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
@@ -221,15 +220,13 @@ public class ContentTypeUtils {
     static {
         IContentTypeManager contentTypeManager = Platform.getContentTypeManager();
         if (contentTypeManager != null) {
-            contentTypeManager.addContentTypeChangeListener(new IContentTypeManager.IContentTypeChangeListener() {
-                public void contentTypeChanged(ContentTypeChangeEvent event) {
-                    // we can be more specific here, but content types change so rarely, that
-                    // I am not concerned about being overly eager to invalidate the cache
-                    GROOVY_FILE_NAMES = null;
-                    GROOVY_LIKE_EXTENSIONS = null;
-                    GRADLE_LIKE_EXTENSIONS = null;
-                    JAVA_LIKE_BUT_NOT_GROOVY_LIKE_EXTENSIONS = null;
-                }
+            contentTypeManager.addContentTypeChangeListener(event -> {
+                // we can be more specific here, but content types change so rarely, that
+                // I am not concerned about being overly eager to invalidate the cache
+                GROOVY_FILE_NAMES = null;
+                GROOVY_LIKE_EXTENSIONS = null;
+                GRADLE_LIKE_EXTENSIONS = null;
+                JAVA_LIKE_BUT_NOT_GROOVY_LIKE_EXTENSIONS = null;
             });
         }
     }

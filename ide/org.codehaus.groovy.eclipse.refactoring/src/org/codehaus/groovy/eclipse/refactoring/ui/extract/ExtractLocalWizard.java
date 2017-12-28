@@ -38,9 +38,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
 
-/**
- * @author andrew
- */
 public class ExtractLocalWizard extends RefactoringWizard {
 
     static final String DIALOG_SETTING_SECTION = "ExtractLocalWizard";
@@ -64,6 +61,7 @@ public class ExtractLocalWizard extends RefactoringWizard {
             fInitialValid = tempNameProposals.length > 0;
         }
 
+        @Override
         public void createControl(Composite parent) {
             loadSettings();
             Composite result = new Composite(parent, SWT.NONE);

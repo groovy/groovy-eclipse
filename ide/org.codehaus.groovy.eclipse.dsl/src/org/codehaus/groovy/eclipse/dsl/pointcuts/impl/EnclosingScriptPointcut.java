@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,24 +29,22 @@ import org.eclipse.core.resources.IStorage;
  * Tests that the type being analyzed matches.  The match can
  * either be a string match (ie - the type name),
  * or it can pass the current type to a containing pointcut
- * @author andrew
- * @created Feb 10, 2011
  */
 public class EnclosingScriptPointcut extends AbstractPointcut {
 
     public EnclosingScriptPointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName);
     }
-    
+
     @Override
     public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
         ClassNode enclosing = pattern.getCurrentScope().getEnclosingTypeDeclaration();
         if (enclosing == null || !enclosing.isScript()) {
             return null;
         }
-        
+
         Collection<ClassNode> enclosingCollection = Collections.singleton(enclosing);
-        
+
         Object firstArgument = getFirstArgument();
         if (firstArgument instanceof String) {
             if (enclosing.getName().equals(firstArgument)) {
@@ -74,7 +72,7 @@ public class EnclosingScriptPointcut extends AbstractPointcut {
     public void verify() throws PointcutVerificationException {
         String hasOneOrNoArgs = hasOneOrNoArgs();
         if (hasOneOrNoArgs != null) {
-            
+
             throw new PointcutVerificationException(hasOneOrNoArgs, this);
         }
         super.verify();

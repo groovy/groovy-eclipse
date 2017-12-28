@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,9 @@ import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.predicates.IASTNodePredicate;
 
-/**
- *
- * @author kdvolder
- * @created 2010-07-05
- */
 public class ListInCodePredicate implements IASTNodePredicate {
 
+    @Override
     public ASTNode evaluate(ASTNode input) {
         if (input.getClass() == ListExpression.class) {
             if (ASTTools.hasValidPosition(input))

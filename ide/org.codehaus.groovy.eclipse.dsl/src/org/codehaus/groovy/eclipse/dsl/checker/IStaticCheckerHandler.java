@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,18 +22,18 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.text.Position;
 import org.eclipse.swt.widgets.Shell;
 
-/**
- * 
- * @author andrew
- * @created Aug 28, 2011
- */
 public interface IStaticCheckerHandler {
+
     void handleUnknownReference(ASTNode node, Position position, int line);
+
     void handleTypeAssertionFailed(ASTNode node, String expectedType, String actualType, Position position, int line);
+
     void setResource(IFile resource);
+
     int numProblemsFound();
+
     void handleResourceStart(IResource resource) throws CoreException;
-    
+
     /**
      * Finish the type checking and display any messages to user
      * @param shell Useful for openning a message dialog.  May be null if running headless

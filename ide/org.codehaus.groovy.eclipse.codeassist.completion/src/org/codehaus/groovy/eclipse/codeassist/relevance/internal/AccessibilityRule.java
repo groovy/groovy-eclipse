@@ -24,6 +24,7 @@ import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 
 public class AccessibilityRule implements IRelevanceRule {
 
+    @Override
     public int getRelevance(IType type, IType[] contextTypes) {
         int accessibility = IAccessRule.K_ACCESSIBLE;
 
@@ -42,6 +43,7 @@ public class AccessibilityRule implements IRelevanceRule {
         return getRelevance(null, null, accessibility, 0);
     }
 
+    @Override
     public int getRelevance(char[] fullyQualifiedName, IType[] contextTypes, int accessibility, int modifiers) {
         switch (accessibility & ~IAccessRule.IGNORE_IF_BETTER) {
         case IAccessRule.K_ACCESSIBLE:

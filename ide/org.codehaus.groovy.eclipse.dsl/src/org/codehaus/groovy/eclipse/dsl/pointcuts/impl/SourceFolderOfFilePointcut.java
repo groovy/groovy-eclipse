@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,11 +26,9 @@ import org.eclipse.core.resources.IStorage;
 /**
  * Tests that the file currently being checked is in the given source folder
  * The result is cached in the pattern providing a fail/succeed fast strategy.
- * 
+ *
  * Argument should be the workspace relative path to the source folder, using '/'
  * as a path separator.
- * @author andrew
- * @created Feb 10, 2011
  */
 public class SourceFolderOfFilePointcut extends AbstractPointcut {
 
@@ -47,7 +45,7 @@ public class SourceFolderOfFilePointcut extends AbstractPointcut {
         }
     }
 
-    
+
     @Override
     public boolean fastMatch(GroovyDSLDContext pattern) {
         return matches(pattern, null) != null;

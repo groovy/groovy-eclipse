@@ -29,7 +29,7 @@ public class ContributionGroup extends GroovyObjectSupport implements IContribut
 
     protected final static int DEFAULT_RELEVANCE_MULTIPLIER = 11;
 
-    protected List<IContributionElement> contributions = new ArrayList<IContributionElement>();
+    protected List<IContributionElement> contributions = new ArrayList<>();
 
     // alternative way to add a method contribution
     public void addMethodContribution(String name, ParameterContribution[] params, String returnType, String declaringType, boolean isStatic, boolean useNamedArgs) {
@@ -41,9 +41,10 @@ public class ContributionGroup extends GroovyObjectSupport implements IContribut
         contributions.add(new PropertyContributionElement(name, type, declaringType, isStatic, DEFAULT_PROVIDER, null, false, DEFAULT_RELEVANCE_MULTIPLIER));
     }
 
+    @Override
     public List<IContributionElement> getContributions(GroovyDSLDContext pattern, BindingSet matches) {
         // only need to match on current type.
-        List<IContributionElement> currentContributions = new ArrayList<IContributionElement>();
+        List<IContributionElement> currentContributions = new ArrayList<>();
         for (IContributionElement element : contributions) {
             if (pattern.matchesType(element.getDeclaringTypeName())) {
                 currentContributions.add(element);

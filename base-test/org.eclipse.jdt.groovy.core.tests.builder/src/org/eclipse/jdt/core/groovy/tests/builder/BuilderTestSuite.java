@@ -294,6 +294,7 @@ public abstract class BuilderTestSuite {
 
     protected static class TestingEnvironment extends org.eclipse.jdt.core.tests.builder.TestingEnvironment {
 
+        @Override
         public IPath addProject(String projectName, String compliance) {
             IPath projectPath = super.addProject(projectName, compliance);
             addGroovyNature(projectName);
@@ -331,6 +332,7 @@ public abstract class BuilderTestSuite {
             addExternalJar(projectPath, FileLocator.resolve(jar).getFile());
         }
 
+        @Override
         public void addEntry(IPath projectPath, IClasspathEntry entryPath) throws JavaModelException {
             IClasspathEntry[] classpath = getClasspath(projectPath);
             // first look to see if the entry already exists

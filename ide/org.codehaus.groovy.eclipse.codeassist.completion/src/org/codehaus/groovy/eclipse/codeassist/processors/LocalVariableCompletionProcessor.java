@@ -68,6 +68,7 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
         this.replaceLength = context.completionExpression.length();
     }
 
+    @Override
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
         if (replaceLength < 1 && getContext().location == ContentAssistLocation.METHOD_CONTEXT) {
             return Collections.emptyList();
@@ -86,7 +87,7 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
             org.eclipse.jdt.groovy.search.VariableScope.VariableInfo ownerInfo = scope.lookupName("getOwner");
             org.eclipse.jdt.groovy.search.VariableScope.VariableInfo delegateInfo = scope.lookupName("getDelegate");
 
-            List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
+            List<ICompletionProposal> proposals = new ArrayList<>();
             maybeAddClosureProperty(proposals, "owner", ownerInfo.declaringType, ownerInfo.type, false);
             maybeAddClosureProperty(proposals, "getOwner", ownerInfo.declaringType, ownerInfo.type, true);
             maybeAddClosureProperty(proposals, "delegate", delegateInfo.declaringType, delegateInfo.type, false);
@@ -155,7 +156,7 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
             return Collections.emptyMap();
         }
 
-        final Map<String, ClassNode> nameTypeMap = new HashMap<String, ClassNode>();
+        final Map<String, ClassNode> nameTypeMap = new HashMap<>();
 
         VariableScope scope = block.getVariableScope();
         while (scope != null) {
@@ -178,6 +179,7 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
 
         // if completion location is within declaration expression, exclude declared variable
         GroovyCodeVisitor visitor = new CodeVisitorSupport() {
+            @Override
             public void visitDeclarationExpression(DeclarationExpression expression) {
                 if (expression.getStart() <= offset && offset <= expression.getEnd()) {
                     nameTypeMap.remove(expression.getVariableExpression().getName());
@@ -206,7 +208,7 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
     }
 
     private List<ICompletionProposal> createProposals(Map<String, ClassNode> nameTypes) {
-        List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
+        List<ICompletionProposal> proposals = new ArrayList<>();
         for (Entry<String, ClassNode> nameType : nameTypes.entrySet()) {
             proposals.add(createProposal(nameType.getKey(), nameType.getValue()));
         }

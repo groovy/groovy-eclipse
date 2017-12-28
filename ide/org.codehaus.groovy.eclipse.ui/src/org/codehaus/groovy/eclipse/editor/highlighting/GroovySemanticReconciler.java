@@ -217,9 +217,11 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         editor = null;
     }
 
+    @Override
     public void aboutToBeReconciled() {
     }
 
+    @Override
     public void reconciled(CompilationUnit ast, boolean forced, IProgressMonitor monitor) {
         if (ast != null && synchronize())
         try {
@@ -234,8 +236,8 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
                 Collection<HighlightedTypedPosition> semanticReferences = finder.findSemanticHighlightingReferences();
                 if (update(monitor, 5)) return;
 
-                List<Position> newPositions = new ArrayList<Position>(semanticReferences.size());
-                List<Position> oldPositions = new LinkedList<Position>(getHighlightedPositions());
+                List<Position> newPositions = new ArrayList<>(semanticReferences.size());
+                List<Position> oldPositions = new LinkedList<>(getHighlightedPositions());
                 if (update(monitor, 1)) return;
 
                 HighlightedTypedPosition last = null; Position x = null;

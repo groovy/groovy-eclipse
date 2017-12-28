@@ -168,8 +168,8 @@ public class GroovyRenameLocalVariableProcessor extends JavaRenameProcessor {
         return RefactoringSaveHelper.SAVE_NOTHING;
     }
 
-    public RefactoringStatus checkNewElementName(String newName)
-            throws CoreException {
+    @Override
+    public RefactoringStatus checkNewElementName(String newName) throws CoreException {
         if (localVariable.getElementName().equals(newName)) {
             return RefactoringStatus.createErrorStatus("New name must be different from old name");
         } else {
@@ -179,10 +179,12 @@ public class GroovyRenameLocalVariableProcessor extends JavaRenameProcessor {
         }
     }
 
+    @Override
     public String getCurrentElementName() {
         return localVariable.getElementName();
     }
 
+    @Override
     public Object getNewElement() throws CoreException {
         int start = localVariable.getNameRange().getOffset(), until = localVariable.getNameRange().getOffset() + getNewElementName().length() - 1;
         return new LocalVariable((JavaElement) localVariable.getParent(), getNewElementName(), start, until, start, until, localVariable.getTypeSignature(), null, 0, false);

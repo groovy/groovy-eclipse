@@ -51,6 +51,7 @@ public class GroovyReconcileWorkingCopyOperation extends ReconcileWorkingCopyOpe
      * Makes the given working copy consistent, computes the delta and computes an AST if needed.
      * Returns the AST.
      */
+    @Override
     public org.eclipse.jdt.core.dom.CompilationUnit makeConsistent(CompilationUnit workingCopy)
             throws JavaModelException {
         if (!workingCopy.isConsistent()) {

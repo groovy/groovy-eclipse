@@ -81,6 +81,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         this.options = options;
     }
 
+    @Override
     public IJavaCompletionProposal createJavaProposal(ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
         int kind = (context.location == ContentAssistLocation.ANNOTATION_BODY ? CompletionProposal.ANNOTATION_ATTRIBUTE_REF : CompletionProposal.METHOD_REF);
         GroovyCompletionProposal proposal = new GroovyCompletionProposal(kind, context.completionLocation);

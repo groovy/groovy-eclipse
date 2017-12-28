@@ -299,11 +299,7 @@ public class GroovyUtils {
         importNodes.addAll(moduleNode.getStaticStarImports().values());
 
         // order imports by source position
-        Collections.sort(importNodes, new Comparator<ImportNode>() {
-            public int compare(ImportNode in1, ImportNode in2) {
-                return in1.getEnd() - in2.getEnd();
-            }
-        });
+        Collections.sort(importNodes, Comparator.comparing(ImportNode::getEnd));
 
         return importNodes;
     }

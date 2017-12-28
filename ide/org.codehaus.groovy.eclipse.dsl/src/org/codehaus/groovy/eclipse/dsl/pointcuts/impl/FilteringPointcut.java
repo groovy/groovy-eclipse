@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,9 +33,6 @@ import org.eclipse.core.resources.IStorage;
  * You can think of the filter pointcut as taking a set of things from the outer pointcut, and
  * either sending it to the inner pointcut, which will do its own filter, or performing a filter
  * using its argument.
- *
- * @author andrew
- * @created Feb 11, 2011
  */
 public abstract class FilteringPointcut<T> extends AbstractPointcut {
 
@@ -67,7 +64,7 @@ public abstract class FilteringPointcut<T> extends AbstractPointcut {
     protected Collection<?> filterResult(Collection<T> results, GroovyDSLDContext context) {
         Object o = getFirstArgument();
         String firstArg = asString(o);
-        Collection<T> filtered = new ArrayList<T>(results.size());
+        Collection<T> filtered = new ArrayList<>(results.size());
         for (T obj : results) {
             T maybe = filterObject(obj, context, firstArg);
             if (maybe != null) {
@@ -109,7 +106,7 @@ public abstract class FilteringPointcut<T> extends AbstractPointcut {
     @SuppressWarnings("unchecked")
     protected Collection<T> explodeObject(Object toMatch) {
         if (toMatch instanceof Collection) {
-            Collection<T> objs = new ArrayList<T>();
+            Collection<T> objs = new ArrayList<>();
             for (Object obj : (Collection<?>) toMatch) {
                 if (filterBy.isInstance(obj)) {
                     objs.add((T) obj);

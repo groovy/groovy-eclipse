@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +22,9 @@ import org.eclipse.jdt.internal.core.JavaProject;
 public class GroovyEventHandler implements EventHandler {
 
     // Recognized events:
-    //
-    //
     // "cleanOutputFolders" - called when a clean occurs (either when forced or when part of a full build)
     // "close" - called when a java project is closed
+    @Override
     public void handle(JavaProject javaProject, String event) {
         if (event.equals("cleanOutputFolders")) {
             if (javaProject != null) {

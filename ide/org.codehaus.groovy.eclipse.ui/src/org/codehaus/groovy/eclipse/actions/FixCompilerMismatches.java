@@ -1,13 +1,18 @@
-/*******************************************************************************
- *  Copyright (c) 2012 VMware, Inc.
- *  All rights reserved. This program and the accompanying materials
- *  are made available under the terms of the Eclipse Public License v1.0
- *  which accompanies this distribution, and is available at
- *  http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2017 the original author or authors.
  *
- *  Contributors:
- *      VMware, Inc. - initial API and implementation
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.actions;
 
 import java.util.ArrayList;
@@ -30,16 +35,15 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 
 /**
- * Brings up a dialog to fix workspace compiler mismatches
- * @author Andrew Eisenberg
- * @created 2012-12-31
+ * Brings up a dialog to fix workspace compiler mismatches.
  */
 public class FixCompilerMismatches implements IObjectActionDelegate {
     Shell activeShell = null;
 
+    @Override
     public void run(IAction action) {
         IProject[] allProjects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
-        List<IProject> mismatchedProjects = new ArrayList<IProject>(allProjects.length);
+        List<IProject> mismatchedProjects = new ArrayList<>(allProjects.length);
         for (IProject project : allProjects) {
             if (hasMismatch(project)) {
                 mismatchedProjects.add(project);
@@ -72,10 +76,12 @@ public class FixCompilerMismatches implements IObjectActionDelegate {
         }
     }
 
+    @Override
     public void selectionChanged(IAction action, ISelection selection) {
         // noop
     }
 
+    @Override
     public void setActivePart(IAction action, IWorkbenchPart targetPart) {
         if (targetPart != null) {
             activeShell = targetPart.getSite().getShell();
@@ -83,5 +89,4 @@ public class FixCompilerMismatches implements IObjectActionDelegate {
             activeShell = null;
         }
     }
-
 }

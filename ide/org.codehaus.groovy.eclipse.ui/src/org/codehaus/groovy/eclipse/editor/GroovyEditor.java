@@ -151,9 +151,7 @@ public class GroovyEditor extends CompilationUnitEditor {
             fCategory= category;
         }
 
-        /*
-         * @see org.eclipse.jface.text.IPositionUpdater#update(org.eclipse.jface.text.DocumentEvent)
-         */
+        @Override
         public void update(DocumentEvent event) {
             int eventOffset= event.getOffset();
             int eventOldLength= event.getLength();
@@ -222,11 +220,8 @@ public class GroovyEditor extends CompilationUnitEditor {
             fSize= fStack.size();
         }
 
-        /*
-         * @see org.eclipse.jdt.internal.ui.text.link.LinkedPositionUI.ExitPolicy#doExit(org.eclipse.jdt.internal.ui.text.link.LinkedPositionManager, org.eclipse.swt.events.VerifyEvent, int, int)
-         */
+        @Override
         public ExitFlags doExit(LinkedModeModel model, VerifyEvent event, int offset, int length) {
-
             if (fSize == fStack.size() && !isMasked(offset)) {
                 if (event.character == fExitCharacter) {
                     GroovyBracketLevel level= fStack.peek();
@@ -320,11 +315,8 @@ public class GroovyEditor extends CompilationUnitEditor {
             return false;
         }
 
-        /*
-         * @see org.eclipse.swt.custom.VerifyKeyListener#verifyKey(org.eclipse.swt.events.VerifyEvent)
-         */
+        @Override
         public void verifyKey(VerifyEvent event) {
-
             // early pruning to slow down normal typing as little as possible
             if (!event.doit || getInsertMode() != SMART_INSERT || isBlockSelectionModeEnabled() && isMultilineSelection())
                 return;
@@ -553,53 +545,45 @@ public class GroovyEditor extends CompilationUnitEditor {
             return maybequotes.equals(Character.toString(quote)+quote+quote);
         }
 
-        /*
-         * @see org.eclipse.jface.text.link.ILinkedModeListener#left(org.eclipse.jface.text.link.LinkedModeModel, int)
-         */
+        @Override
         public void left(LinkedModeModel environment, int flags) {
-
-            final GroovyBracketLevel level= fBracketLevelStack.pop();
+            final GroovyBracketLevel level = fBracketLevelStack.pop();
 
             if (flags != ILinkedModeListener.EXTERNAL_MODIFICATION)
                 return;
 
             // remove brackets
-            final ISourceViewer sourceViewer= getSourceViewer();
-            final IDocument document= sourceViewer.getDocument();
+            final ISourceViewer sourceViewer = getSourceViewer();
+            final IDocument document = sourceViewer.getDocument();
             if (document instanceof IDocumentExtension) {
-                IDocumentExtension extension= (IDocumentExtension) document;
-                extension.registerPostNotificationReplace(null, new IDocumentExtension.IReplace() {
-
-                    public void perform(IDocument d, IDocumentListener owner) {
-                        if ((level.fFirstPosition.isDeleted || level.fFirstPosition.length == 0)
-                                && !level.fSecondPosition.isDeleted
-                                && level.fSecondPosition.offset == level.fFirstPosition.offset)
-                        {
-                            try {
-                                document.replace(level.fSecondPosition.offset,
-                                        level.fSecondPosition.length,
-                                        "");
-                            } catch (BadLocationException e) {
-                                JavaPlugin.log(e);
-                            }
+                IDocumentExtension extension = (IDocumentExtension) document;
+                extension.registerPostNotificationReplace(null, (IDocument d, IDocumentListener owner) -> {
+                    if ((level.fFirstPosition.isDeleted || level.fFirstPosition.length == 0) &&
+                            !level.fSecondPosition.isDeleted &&
+                            level.fSecondPosition.offset == level.fFirstPosition.offset) {
+                        try {
+                            document.replace(level.fSecondPosition.offset, level.fSecondPosition.length, "");
+                        } catch (BadLocationException e1) {
+                            JavaPlugin.log(e1);
                         }
-
-                        if (fBracketLevelStack.size() == 0) {
-                            document.removePositionUpdater(fUpdater);
-                            try {
-                                document.removePositionCategory(CATEGORY);
-                            } catch (BadPositionCategoryException e) {
-                                JavaPlugin.log(e);
-                            }
+                    }
+                    if (fBracketLevelStack.isEmpty()) {
+                        document.removePositionUpdater(fUpdater);
+                        try {
+                            document.removePositionCategory(CATEGORY);
+                        } catch (BadPositionCategoryException e2) {
+                            JavaPlugin.log(e2);
                         }
                     }
                 });
             }
         }
 
+        @Override
         public void suspend(LinkedModeModel environment) {
         }
 
+        @Override
         public void resume(LinkedModeModel environment, int flags) {
         }
     }

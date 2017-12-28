@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,13 @@ import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
 
 /**
- * This class is a hook for the refactoring support to install an object that can expand the search scope of a refactoring if the
- * target is a private element of a {@link org.codehaus.jdt.groovy.model.GroovyCompilationUnit}. We could use an adapter here, but that seems heavyweight for this
- * use.
- *
- * @author Andrew Eisenberg
- * @created Jun 9, 2011
+ * This class is a hook for the refactoring support to install an object that
+ * can expand the search scope of a refactoring if the target is a private
+ * element of a {@link org.codehaus.jdt.groovy.model.GroovyCompilationUnit}.
+ * We could use an adapter here, but that seems heavyweight for this use.
  */
+@FunctionalInterface
 public interface ISearchScopeExpander {
+
     IJavaSearchScope expandSearchScope(IJavaSearchScope scope, SearchPattern pattern, SearchRequestor requestor);
 }
