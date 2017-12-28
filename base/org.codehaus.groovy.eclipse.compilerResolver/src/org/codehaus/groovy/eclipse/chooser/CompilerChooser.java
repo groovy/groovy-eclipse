@@ -162,6 +162,7 @@ public class CompilerChooser implements BundleActivator {
     private volatile boolean initialized;
     private ServiceListener serviceListener;
 
+    @Override
     public void start(BundleContext bundleContext) throws Exception {
         this.bundleContext = bundleContext;
 
@@ -183,6 +184,7 @@ public class CompilerChooser implements BundleActivator {
         bundleContext.addServiceListener(serviceListener, filter);
     }
 
+    @Override
     public void stop(BundleContext bundleContext) throws Exception {
         if (serviceListener != null) {
             bundleContext.removeServiceListener(serviceListener);
