@@ -41,10 +41,6 @@ import org.osgi.framework.Version;
 
 public final class TransformationsTests extends GroovyCompilerTestSuite {
 
-    public TransformationsTests(long level) {
-        super(level);
-    }
-
     private String getJarPath(String entry) {
         try {
             URL url = Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry(entry);

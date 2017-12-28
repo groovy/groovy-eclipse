@@ -32,10 +32,6 @@ import org.junit.Test;
  */
 public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
 
-    public ErrorRecoveryTests(long level) {
-        super(level);
-    }
-
     @Test
     public void testBasicBlockParsingRecovery() {
         // syntax error in one method should not impact outer class structure

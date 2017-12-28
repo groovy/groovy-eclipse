@@ -30,10 +30,6 @@ import org.osgi.framework.Version;
 
 public final class GenericsTests extends GroovyCompilerTestSuite {
 
-    public GenericsTests(long level) {
-        super(level);
-    }
-
     private void runWarningFreeTest(String[] sources) {
         runNegativeTest(sources, ""); // expect no compiler output (warnings or errors)
     }
