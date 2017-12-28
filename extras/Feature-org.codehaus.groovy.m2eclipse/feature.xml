@@ -2,7 +2,7 @@
 
 <feature
       label="%featureName"
-      version="2.9.2.qualifier"
+      version="3.0.0.qualifier"
       provider-name="%providerName"
       id="org.codehaus.groovy.m2eclipse.feature">
 
@@ -20,10 +20,10 @@
 
    <requires>
       <import plugin="org.codehaus.groovy" version="2.1.9" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.jdt.core" version="3.7.0" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.jdt.groovy.core" version="2.9.2" match="greaterOrEqual"/>
-      <import plugin="org.codehaus.groovy.eclipse.core" version="2.9.2" match="greaterOrEqual"/>
-      <import feature="org.codehaus.groovy.eclipse.feature" version="2.9.2" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.jdt.core" version="3.13.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.jdt.groovy.core" version="3.0.0" match="greaterOrEqual"/>
+      <import plugin="org.codehaus.groovy.eclipse.core" version="3.0.0" match="greaterOrEqual"/>
+      <import feature="org.codehaus.groovy.eclipse.feature" version="3.0.0" match="greaterOrEqual"/>
    </requires>
 
    <plugin

@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.codehaus.groovy.m2eclipse;singleton:=true
 Bundle-Name: Groovy m2e integration
 Bundle-Vendor: Codehaus.org
-Bundle-Version: 2.9.2.qualifier
+Bundle-Version: 3.0.0.qualifier
 Import-Package: org.codehaus.groovy.eclipse.core.model,
  org.codehaus.jdt.groovy.model,
  org.eclipse.jdt.core,
