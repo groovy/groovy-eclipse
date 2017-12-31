@@ -62,7 +62,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
@@ -160,7 +160,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
     @Override
     public RefactoringStatus checkInitialConditions(IProgressMonitor monitor) throws CoreException {
         try {
-            monitor.beginTask("", 6);
+            monitor = SubMonitor.convert(monitor, "", 6);
 
             IASTFragment expr = getSelectedFragment();
             if (expr == null) {
@@ -190,7 +190,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
                 result.addFatalError("Illegal expression selected");
             }
 
-            result.merge(checkSelection(new SubProgressMonitor(monitor, 3)));
+            result.merge(checkSelection(((SubMonitor) monitor).split(3)));
             /*if (!result.hasFatalError() && isLiteralNodeSelected()) {
                 replaceAllOccurrences = false;
             }*/
@@ -204,10 +204,10 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
     @Override
     public RefactoringStatus checkFinalConditions(IProgressMonitor monitor) throws CoreException {
         try {
-            monitor.beginTask(RefactoringCoreMessages.ExtractTempRefactoring_checking_preconditions, 4);
+            monitor = SubMonitor.convert(monitor, RefactoringCoreMessages.ExtractTempRefactoring_checking_preconditions, 4);
 
             RefactoringStatus result = new RefactoringStatus();
-            change = doCreateChange(result, new SubProgressMonitor(monitor, 2));
+            change = doCreateChange(result, ((SubMonitor) monitor).split(2));
 
             if (getExcludedVariableNames().contains(getLocalName())) {
                 result.addWarning(Messages.format(RefactoringCoreMessages.ExtractTempRefactoring_another_variable, BasicElementLabels.getJavaElementName(getLocalName())));

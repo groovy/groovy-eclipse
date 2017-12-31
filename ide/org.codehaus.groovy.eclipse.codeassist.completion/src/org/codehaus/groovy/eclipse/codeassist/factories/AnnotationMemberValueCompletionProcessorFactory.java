@@ -137,7 +137,7 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
                     if (processor instanceof ITypeResolver) {
                         ((ITypeResolver) processor).setResolverInformation(moduleInfo.module, moduleInfo.resolver);
                     }
-                    proposals.addAll(processor.generateProposals(submon.newChild(1)));
+                    proposals.addAll(processor.generateProposals(submon.split(1)));
                 }
 
                 // generate field proposals from the current scope and (if applicable) enum constants

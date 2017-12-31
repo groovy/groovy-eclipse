@@ -134,12 +134,12 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
             }
         }
 
-        super.createType(submon.newChild(1));
+        super.createType(submon.split(1));
 
         GroovyCompilationUnit unit = (GroovyCompilationUnit) pack.getCompilationUnit(getCompilationUnitName(getTypeName()));
         try {
             char[] contents = unit.getContents();
-            unit.becomeWorkingCopy(submon.newChild(1));
+            unit.becomeWorkingCopy(submon.split(1));
             MultiTextEdit textEdit = new MultiTextEdit();
 
             // remove ';' from package and import declarations
@@ -163,12 +163,12 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
 
                 ImportRewrite importRewrite = CodeStyleConfiguration.createImportRewrite(unit, true);
                 importRewrite.addImport("groovy.transform.PackageScope");
-                textEdit.addChild(importRewrite.rewriteImports(submon.newChild(1)));
+                textEdit.addChild(importRewrite.rewriteImports(submon.split(1)));
             }
 
             if (textEdit.hasChildren()) {
-                unit.applyTextEdit(textEdit, submon.newChild(1));
-                unit.commitWorkingCopy(true, submon.newChild(1));
+                unit.applyTextEdit(textEdit, submon.split(1));
+                unit.commitWorkingCopy(true, submon.split(1));
             }
         } finally {
             if (unit != null) {

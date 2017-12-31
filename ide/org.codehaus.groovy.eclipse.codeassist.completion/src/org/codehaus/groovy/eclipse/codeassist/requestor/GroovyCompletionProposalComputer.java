@@ -211,7 +211,7 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
                             if (processor instanceof ITypeResolver) {
                                 ((ITypeResolver) processor).setResolverInformation(moduleInfo.module, moduleInfo.resolver);
                             }
-                            proposals.addAll(processor.generateProposals(submon.newChild(1)));
+                            proposals.addAll(processor.generateProposals(submon.split(1)));
                         }
                     }
                 } finally {

@@ -102,15 +102,15 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
                     submon.worked(1);
 
                     ImportRewrite importRewrite = CodeStyleConfiguration.createImportRewrite(compilationUnit, true);
-                    TextEdit edit = evaluateEdits(info.module, importRewrite, submon.newChild(1));
+                    TextEdit edit = evaluateEdits(info.module, importRewrite, submon.split(1));
                     if (edit == null) {
                         return;
                     }
 
                     MultiTextEdit result = new MultiTextEdit();
                     result.addChild(edit);
-                    result.addChild(importRewrite.rewriteImports(submon.newChild(1)));
-                    applyEdit(compilationUnit, result, true, submon.newChild(1));
+                    result.addChild(importRewrite.rewriteImports(submon.split(1)));
+                    applyEdit(compilationUnit, result, true, submon.split(1));
                 } catch (OperationCanceledException cancel) {
                     if (fStatus == Status.OK_STATUS)
                         fStatus = Status.CANCEL_STATUS;
@@ -331,14 +331,14 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
         SubMonitor subMonitor = SubMonitor.convert(monitor, CorextMessages.JavaModelUtil_applyedit_operation, 2);
         IFile file = (IFile) cu.getResource();
         if (!save || !file.exists()) {
-            cu.applyTextEdit(edit, subMonitor.newChild(2));
+            cu.applyTextEdit(edit, subMonitor.split(2));
         } else {
             IStatus status = Resources.makeCommittable(file, null);
             if (!status.isOK()) {
                 throw new ValidateEditException(status);
             }
-            cu.applyTextEdit(edit, subMonitor.newChild(1));
-            cu.save(subMonitor.newChild(1), true);
+            cu.applyTextEdit(edit, subMonitor.split(1));
+            cu.save(subMonitor.split(1), true);
         }
     }
 }
