@@ -33,6 +33,7 @@ public class InferenceSubstitution extends Scope.Substitutor implements Substitu
 	public InferenceSubstitution addContext(InferenceContext18 otherContext) {
 		InferenceSubstitution subst = new InferenceSubstitution(this.environment, null, null) {
 
+			@Override
 			protected boolean isSameParameter(TypeBinding p1, TypeBinding originalType) {
 				if (TypeBinding.equalsEquals(p1, originalType))
 					return true;
@@ -73,6 +74,7 @@ public class InferenceSubstitution extends Scope.Substitutor implements Substitu
 	 * Override method {@link Scope.Substitutor#substitute(Substitution, TypeBinding)}, 
 	 * to add substitution of types other than type variables.
 	 */
+	@Override
 	public TypeBinding substitute(Substitution substitution, TypeBinding originalType) {
 		for (int i = 0; i < this.variables.length; i++) {
 			InferenceVariable variable = this.variables[i];
@@ -106,6 +108,7 @@ public class InferenceSubstitution extends Scope.Substitutor implements Substitu
 		return this.variables[i].typeParameter;
 	}
 
+	@Override
 	public TypeBinding substitute(TypeVariableBinding typeVariable) {
 		ReferenceBinding superclass = typeVariable.superclass;
 		ReferenceBinding[] superInterfaces = typeVariable.superInterfaces;
@@ -144,10 +147,12 @@ public class InferenceSubstitution extends Scope.Substitutor implements Substitu
 		return typeVariable;
 	}
 
+	@Override
 	public LookupEnvironment environment() {
 		return this.environment;
 	}
 
+	@Override
 	public boolean isRawSubstitution() {
 		// FIXME Auto-generated method stub
 		return false;

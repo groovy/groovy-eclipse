@@ -23,9 +23,7 @@ public class CompletionOnJavadocSingleTypeReference extends JavadocSingleTypeRef
 		super(typeRef.token, (((long)typeRef.sourceStart)<<32)+typeRef.sourceEnd, typeRef.tagSourceStart, typeRef.tagSourceStart);
 	}
 
-	/**
-	 * @param flags The completionFlags to set.
-	 */
+	@Override
 	public void addCompletionFlags(int flags) {
 		this.completionFlags |= flags;
 	}
@@ -46,18 +44,12 @@ public class CompletionOnJavadocSingleTypeReference extends JavadocSingleTypeRef
 		return (this.completionFlags & FORMAL_REFERENCE) != 0;
 	}
 
-	/**
-	 * Get completion node flags.
-	 *
-	 * @return int Flags of the javadoc completion node.
-	 */
+	@Override
 	public int getCompletionFlags() {
 		return this.completionFlags;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.internal.compiler.ast.SingleTypeReference#printExpression(int, java.lang.StringBuffer)
-	 */
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 		output.append("<CompletionOnJavadocSingleTypeReference:"); //$NON-NLS-1$
 		super.printExpression(indent, output);

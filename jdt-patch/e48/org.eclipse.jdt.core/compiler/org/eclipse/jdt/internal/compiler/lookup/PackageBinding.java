@@ -130,6 +130,7 @@ void clearMissingTagBit() {
  * slash separated name
  * org.eclipse.jdt.core --> org/eclipse/jdt/core
  */
+@Override
 public char[] computeUniqueKey(boolean isLeaf) {
 	return CharOperation.concatWith(this.compoundName, '/');
 }
@@ -301,10 +302,12 @@ public final boolean isViewedAsDeprecated() {
 /* API
 * Answer the receiver's binding type from Binding.BindingID.
 */
+@Override
 public final int kind() {
 	return Binding.PACKAGE;
 }
 
+@Override
 public int problemId() {
 	if ((this.tagBits & TagBits.HasMissingType) != 0)
 		return ProblemReasons.NotFound;
@@ -356,9 +359,11 @@ void checkIfNullAnnotationType(ReferenceBinding type) {
 	}
 }
 
+@Override
 public char[] readableName() /*java.lang*/ {
 	return CharOperation.concatWith(this.compoundName, '.');
 }
+@Override
 public String toString() {
 	String str;
 	if (this.compoundName == CharOperation.NO_CHAR_CHAR) {

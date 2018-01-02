@@ -61,6 +61,7 @@ public void removeAll() {
 		this.elements[i] = null;
 	this.size = 0;
 }
+@Override
 public String toString() {
 	StringBuffer buffer = new StringBuffer();
 	for (int i = 0; i < this.size; i++) {

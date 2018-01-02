@@ -42,6 +42,7 @@ public class CompletionOnPackageVisibilityReference extends CompletionOnImportRe
 		this.pkgName = new String(CharOperation.concatWith(ident, '.'));
 	}
 
+	@Override
 	public StringBuffer print(int indent, StringBuffer output) {
 		printIndent(indent, output).append("<CompleteOnPackageVisibilityReference:"); //$NON-NLS-1$
 		output.append(this.pkgName);

@@ -61,6 +61,7 @@ public class LocalVariableTypeTableEntry extends ClassFileStruct implements ILoc
 	/**
 	 * @see ILocalVariableTypeTableEntry#getStartPC()
 	 */
+	@Override
 	public int getStartPC() {
 		return this.startPC;
 	}
@@ -68,6 +69,7 @@ public class LocalVariableTypeTableEntry extends ClassFileStruct implements ILoc
 	/**
 	 * @see ILocalVariableTypeTableEntry#getLength()
 	 */
+	@Override
 	public int getLength() {
 		return this.length;
 	}
@@ -75,6 +77,7 @@ public class LocalVariableTypeTableEntry extends ClassFileStruct implements ILoc
 	/**
 	 * @see ILocalVariableTypeTableEntry#getNameIndex()
 	 */
+	@Override
 	public int getNameIndex() {
 		return this.nameIndex;
 	}
@@ -82,6 +85,7 @@ public class LocalVariableTypeTableEntry extends ClassFileStruct implements ILoc
 	/**
 	 * @see ILocalVariableTypeTableEntry#getSignatureIndex()
 	 */
+	@Override
 	public int getSignatureIndex() {
 		return this.signatureIndex;
 	}
@@ -89,6 +93,7 @@ public class LocalVariableTypeTableEntry extends ClassFileStruct implements ILoc
 	/**
 	 * @see ILocalVariableTypeTableEntry#getIndex()
 	 */
+	@Override
 	public int getIndex() {
 		return this.index;
 	}
@@ -96,6 +101,7 @@ public class LocalVariableTypeTableEntry extends ClassFileStruct implements ILoc
 	/**
 	 * @see ILocalVariableTypeTableEntry#getName()
 	 */
+	@Override
 	public char[] getName() {
 		return this.name;
 	}
@@ -103,6 +109,7 @@ public class LocalVariableTypeTableEntry extends ClassFileStruct implements ILoc
 	/**
 	 * @see ILocalVariableTypeTableEntry#getSignature()
 	 */
+	@Override
 	public char[] getSignature() {
 		return this.signature;
 	}

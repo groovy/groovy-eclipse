@@ -11,6 +11,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.util;
 
+import java.util.Arrays;
+
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -42,6 +44,7 @@ public class CommentRecorderParser extends Parser {
 
 	// old javadoc style check which doesn't include all leading comments into declaration
 	// for backward compatibility with 2.1 DOM
+	@Override
 	public void checkComment() {
 
 		// discard obsolete comments while inside methods or fields initializer (see bug 74369)
@@ -89,54 +92,43 @@ public class CommentRecorderParser extends Parser {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.internal.compiler.parser.Parser#consumeAnnotationTypeDeclarationHeader()
-	 */
+	@Override
 	protected void consumeAnnotationTypeDeclarationHeader() {
 		pushOnCommentsStack(0, this.scanner.commentPtr);
 		super.consumeAnnotationTypeDeclarationHeader();
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.internal.compiler.parser.Parser#consumeClassHeader()
-	 */
+
+	@Override
 	protected void consumeClassHeader() {
 		pushOnCommentsStack(0, this.scanner.commentPtr);
 		super.consumeClassHeader();
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.internal.compiler.parser.Parser#consumeEmptyTypeDeclaration()
-	 */
+
+	@Override
 	protected void consumeEmptyTypeDeclaration() {
 		pushOnCommentsStack(0, this.scanner.commentPtr);
 		super.consumeEmptyTypeDeclaration();
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.internal.compiler.parser.Parser#consumeEnterAnonymousClassBody(boolean)
-	 */
+
 	@Override
 	protected void consumeEnterAnonymousClassBody(boolean qualified) {
 		pushOnCommentsStack(0, this.scanner.commentPtr);
 		super.consumeEnterAnonymousClassBody(qualified);
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.internal.compiler.parser.Parser#consumeEnumHeader()
-	 */
+
+	@Override
 	protected void consumeEnumHeader() {
 		pushOnCommentsStack(0, this.scanner.commentPtr);
 		super.consumeEnumHeader();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.internal.compiler.parser.Parser#consumeInterfaceHeader()
-	 */
+	@Override
 	protected void consumeInterfaceHeader() {
 		pushOnCommentsStack(0, this.scanner.commentPtr);
 		super.consumeInterfaceHeader();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.internal.compiler.parser.Parser#endParse(int)
-	 */
+	@Override
 	protected CompilationUnitDeclaration endParse(int act) {
 		CompilationUnitDeclaration unit = super.endParse(act);
 		if (unit.comments == null) {
@@ -150,6 +142,7 @@ public class CommentRecorderParser extends Parser {
 	 * Save all source comments currently stored before flushing them.
 	 * @see org.eclipse.jdt.internal.compiler.parser.Parser#flushCommentsDefinedPriorTo(int)
 	 */
+	@Override
 	public int flushCommentsDefinedPriorTo(int position) {
 
 		int lastCommentIndex = getCommentPtr();
@@ -253,16 +246,13 @@ public class CommentRecorderParser extends Parser {
 		return positions;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.internal.compiler.parser.Parser#initialize()
-	 */
+	@Override
 	public void initialize(boolean parsingCompilationUnit) {
 		super.initialize(parsingCompilationUnit);
 		this.commentPtr = -1;
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.internal.compiler.parser.Parser#initialize()
-	 */
+
+	@Override
 	public void initialize() {
 		super.initialize();
 		this.commentPtr = -1;
@@ -272,6 +262,7 @@ public class CommentRecorderParser extends Parser {
 	 * Create and store a specific comment recorder scanner.
 	 * @see org.eclipse.jdt.internal.compiler.parser.Parser#initializeScanner()
 	 */
+	@Override
 	public void initializeScanner() {
 		this.scanner = new Scanner(
 				false /*comment*/,
@@ -318,8 +309,19 @@ public class CommentRecorderParser extends Parser {
 	 * this.scanner.commentPtr is expected *not* yet being reset before calling this method.
 	 * @see org.eclipse.jdt.internal.compiler.parser.Parser#resetModifiers()
 	 */
+	@Override
 	protected void resetModifiers() {
 		pushOnCommentsStack(0, this.scanner.commentPtr);
 		super.resetModifiers();
+	}
+	public void resetComments() {
+		this.commentPtr = -1;
+		Arrays.fill(this.commentStarts, 0);
+		Arrays.fill(this.commentStops, 0);
+		Arrays.fill(this.scanner.commentStops, 0);
+		Arrays.fill(this.scanner.commentStarts, 0);
+		Arrays.fill(this.scanner.commentTagStarts, 0);
+		this.scanner.commentPtr = -1; // no comment test with commentPtr value -1
+		this.scanner.lastCommentLinePosition = -1;
 	}
 }

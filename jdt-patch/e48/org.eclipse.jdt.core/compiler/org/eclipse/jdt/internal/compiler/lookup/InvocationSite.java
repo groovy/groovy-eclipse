@@ -45,21 +45,35 @@ public interface InvocationSite {
 		public EmptyWithAstNode(ASTNode node) {
 			this.node = node;
 		}
+		@Override
 		public TypeBinding[] genericTypeArguments() { return null;}
+		@Override
 		public boolean isSuperAccess() {return false;}
+		@Override
 		public boolean isTypeAccess() {return false;}
+		@Override
 		public void setActualReceiverType(ReferenceBinding receiverType) {/* empty */}
+		@Override
 		public void setDepth(int depth) {/* empty */ }
+		@Override
 		public void setFieldIndex(int depth) {/* empty */ }
+		@Override
 		public int sourceEnd() {return this.node.sourceEnd; }
+		@Override
 		public int sourceStart() {return this.node.sourceStart; }
+		@Override
 		public TypeBinding invocationTargetType() { return null; }
+		@Override
 		public boolean receiverIsImplicitThis() { return false; }
+		@Override
 		public InferenceContext18 freshInferenceContext(Scope scope) { return null; }
+		@Override
 		public ExpressionContext getExpressionContext() { return ExpressionContext.VANILLA_CONTEXT; }
 		@Override
 		public boolean isQualifiedSuper() { return false; }
+		@Override
 		public boolean checkingPotentialCompatibility() { return false; }
+		@Override
 		public void acceptPotentiallyCompatibleMethods(MethodBinding[] methods) { /* ignore */ }
 	}
 }

@@ -55,6 +55,7 @@ CodeSnippetEvaluator(char[] codeSnippet, EvaluationContext context, INameEnviron
 /**
  * @see org.eclipse.jdt.internal.eval.Evaluator
  */
+@Override
 protected void addEvaluationResultForCompilationProblem(Map<char[], EvaluationResult> resultsByIDs, CategorizedProblem problem, char[] cuSource) {
 	CodeSnippetToCuMapper sourceMapper = getMapper();
 	int pbLineNumber = problem.getSourceLineNumber();
@@ -104,12 +105,14 @@ protected void addEvaluationResultForCompilationProblem(Map<char[], EvaluationRe
 /**
  * @see org.eclipse.jdt.internal.eval.Evaluator
  */
+@Override
 protected char[] getClassName() {
 	return CharOperation.concat(CODE_SNIPPET_CLASS_NAME_PREFIX, Integer.toString(EvaluationContext.CODE_SNIPPET_COUNTER + 1).toCharArray());
 }
 /**
  * @see Evaluator
  */
+@Override
 Compiler getCompiler(ICompilerRequestor compilerRequestor) {
 	Compiler compiler = null;
 	if (!DEVELOPMENT_MODE) {
@@ -199,6 +202,7 @@ private CodeSnippetToCuMapper getMapper() {
 /**
  * @see org.eclipse.jdt.internal.eval.Evaluator
  */
+@Override
 protected char[] getSource() {
 	return getMapper().cuSource;
 }

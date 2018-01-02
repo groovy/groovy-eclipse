@@ -444,10 +444,12 @@ public void complainOnDeferredNullChecks(BlockScope scope, FlowInfo callerFlowIn
 	}
 }
 
+	@Override
 	public BranchLabel continueLabel() {
 		return this.continueLabel;
 	}
 
+	@Override
 	public String individualToString() {
 		StringBuffer buffer = new StringBuffer("Looping flow context"); //$NON-NLS-1$
 		buffer.append("[initsOnBreak - ").append(this.initsOnBreak.toString()).append(']'); //$NON-NLS-1$
@@ -457,6 +459,7 @@ public void complainOnDeferredNullChecks(BlockScope scope, FlowInfo callerFlowIn
 		return buffer.toString();
 	}
 
+	@Override
 	public boolean isContinuable() {
 		return true;
 	}
@@ -465,6 +468,7 @@ public void complainOnDeferredNullChecks(BlockScope scope, FlowInfo callerFlowIn
 		return this.initsOnContinue != FlowInfo.DEAD_END;
 	}
 
+@Override
 public void recordBreakTo(FlowContext targetContext) {
 	if (targetContext instanceof LabelFlowContext) {
 		int current;
@@ -477,6 +481,7 @@ public void recordBreakTo(FlowContext targetContext) {
 	}
 }
 
+@Override
 public void recordContinueFrom(FlowContext innerFlowContext, FlowInfo flowInfo) {
 	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) == 0)	{
 		if ((this.initsOnContinue.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) == 0) {
@@ -518,6 +523,7 @@ public void recordContinueFrom(FlowContext innerFlowContext, FlowInfo flowInfo) 
 	}
 }
 
+	@Override
 	protected boolean recordFinalAssignment(
 		VariableBinding binding,
 		Reference finalAssignment) {
@@ -553,6 +559,7 @@ public void recordContinueFrom(FlowContext innerFlowContext, FlowInfo flowInfo) 
 		return true;
 	}
 
+@Override
 protected void recordNullReference(LocalVariableBinding local,
 	ASTNode expression, int checkType, FlowInfo nullInfo) {
 	if (this.nullCount == 0) {
@@ -576,6 +583,7 @@ protected void recordNullReference(LocalVariableBinding local,
 	this.nullCheckTypes[this.nullCount] = checkType;
 	this.nullInfos[this.nullCount++] = nullInfo != null ? nullInfo.unconditionalCopy() : null;
 }
+@Override
 public void recordUnboxing(Scope scope, Expression expression, int nullStatus, FlowInfo flowInfo) {
 	if (nullStatus == FlowInfo.NULL)
 		super.recordUnboxing(scope, expression, nullStatus, flowInfo);
@@ -584,6 +592,7 @@ public void recordUnboxing(Scope scope, Expression expression, int nullStatus, F
 }
 
 /** Record the fact that we see an early exit (in 'reference') while 'trackingVar' is in scope and may be unclosed. */
+@Override
 public boolean recordExitAgainstResource(BlockScope scope, FlowInfo flowInfo, FakedTrackingVariable trackingVar, ASTNode reference) {
 	LocalVariableBinding local = trackingVar.binding;
 	if (flowInfo.isDefinitelyNonNull(local)) {
@@ -601,6 +610,7 @@ public boolean recordExitAgainstResource(BlockScope scope, FlowInfo flowInfo, Fa
 	return true; // handled
 }
 
+@Override
 public void recordUsingNullReference(Scope scope, LocalVariableBinding local,
 		ASTNode location, int checkType, FlowInfo flowInfo) {
 	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) != 0 ||
@@ -729,6 +739,7 @@ public void recordUsingNullReference(Scope scope, LocalVariableBinding local,
 	}
 }
 
+	@Override
 	void removeFinalAssignmentIfAny(Reference reference) {
 		for (int i = 0; i < this.assignCount; i++) {
 			if (this.finalAssignments[i] == reference) {
@@ -766,6 +777,7 @@ public void recordUsingNullReference(Scope scope, LocalVariableBinding local,
 		return this.escapingExceptionCatchSites != null;
 	}
 
+	@Override
 	protected boolean internalRecordNullityMismatch(Expression expression, TypeBinding providedType, FlowInfo flowInfo, int nullStatus, TypeBinding expectedType, int checkType) {
 		recordProvidedExpectedTypes(providedType, expectedType, this.nullCount);
 		recordNullReference(expression.localVariableBinding(), expression, checkType, flowInfo);

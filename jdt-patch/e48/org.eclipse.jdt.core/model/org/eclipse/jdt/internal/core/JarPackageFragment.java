@@ -46,6 +46,7 @@ protected JarPackageFragment(PackageFragmentRoot root, String[] names) {
 /**
  * @see Openable
  */
+@Override
 protected boolean buildStructure(OpenableElementInfo info, IProgressMonitor pm, Map newElements, IResource underlyingResource) throws JavaModelException {
 	JarPackageFragmentRoot root = (JarPackageFragmentRoot) getParent();
 	JarPackageFragmentRootInfo parentInfo = (JarPackageFragmentRootInfo) root.getElementInfo();
@@ -159,24 +160,28 @@ private Object[] computeNonJavaResources(ArrayList entryNames) {
  * Returns true if this fragment contains at least one java resource.
  * Returns false otherwise.
  */
+@Override
 public boolean containsJavaResources() throws JavaModelException {
 	return ((JarPackageFragmentInfo) getElementInfo()).containsJavaResources();
 }
 /**
  * @see org.eclipse.jdt.core.IPackageFragment
  */
+@Override
 public ICompilationUnit createCompilationUnit(String cuName, String contents, boolean force, IProgressMonitor monitor) throws JavaModelException {
 	throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.READ_ONLY, this));
 }
 /**
  * @see JavaElement
  */
+@Override
 protected Object createElementInfo() {
 	return new JarPackageFragmentInfo();
 }
 /**
  * @see org.eclipse.jdt.core.IPackageFragment
  */
+@Override
 public IClassFile[] getAllClassFiles() throws JavaModelException {
 	ArrayList list = getChildrenOfType(CLASS_FILE);
 	IClassFile[] array= new IClassFile[list.size()];
@@ -187,6 +192,7 @@ public IClassFile[] getAllClassFiles() throws JavaModelException {
  * A jar package fragment never contains compilation units.
  * @see org.eclipse.jdt.core.IPackageFragment
  */
+@Override
 public ICompilationUnit[] getCompilationUnits() {
 	return NO_COMPILATION_UNITS;
 }
@@ -195,12 +201,14 @@ public ICompilationUnit[] getCompilationUnits() {
  *
  * @see IJavaElement
  */
+@Override
 public IResource getCorrespondingResource() {
 	return null;
 }
 /**
  * Returns an array of non-java resources contained in the receiver.
  */
+@Override
 public Object[] getNonJavaResources() throws JavaModelException {
 	if (isDefaultPackage()) {
 		// We don't want to show non java resources of the default package (see PR #1G58NB8)
@@ -209,12 +217,14 @@ public Object[] getNonJavaResources() throws JavaModelException {
 		return storedNonJavaResources();
 	}
 }
+@Override
 protected boolean internalIsValidPackageName() {
 	return true;
 }
 /**
  * Jars and jar entries are all read only
  */
+@Override
 public boolean isReadOnly() {
 	return true;
 }

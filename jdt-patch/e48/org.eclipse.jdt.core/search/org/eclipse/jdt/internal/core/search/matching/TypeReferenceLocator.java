@@ -53,12 +53,15 @@ protected IJavaElement findElement(IJavaElement element, int accuracy) {
 		element = element.getParent();
 	return element;
 }
+@Override
 protected int fineGrain() {
 	return this.fineGrain;
 }
+@Override
 public int match(Annotation node, MatchingNodeSet nodeSet) {
 	return match(node.type, nodeSet);
 }
+@Override
 public int match(ASTNode node, MatchingNodeSet nodeSet) { // interested in ImportReference
 	if (!(node instanceof ImportReference)) return IMPOSSIBLE_MATCH;
 
@@ -69,6 +72,7 @@ public int match(ASTNode node, MatchingNodeSet nodeSet) { // interested in Impor
 //public int match(FieldDeclaration node, MatchingNodeSet nodeSet) - SKIP IT
 //public int match(MethodDeclaration node, MatchingNodeSet nodeSet) - SKIP IT
 //public int match(MessageSend node, MatchingNodeSet nodeSet) - SKIP IT
+@Override
 public int match(Reference node, MatchingNodeSet nodeSet) { // interested in NameReference & its subtypes
 	if (!(node instanceof NameReference)) return IMPOSSIBLE_MATCH;
 
@@ -88,6 +92,7 @@ public int match(Reference node, MatchingNodeSet nodeSet) { // interested in Nam
 	return IMPOSSIBLE_MATCH;
 }
 //public int match(TypeDeclaration node, MatchingNodeSet nodeSet) - SKIP IT
+@Override
 public int match(TypeReference node, MatchingNodeSet nodeSet) {
 	if (this.pattern.simpleName == null)
 		return nodeSet.addMatch(node, this.pattern.mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH);
@@ -105,6 +110,7 @@ public int match(TypeReference node, MatchingNodeSet nodeSet) {
 	return IMPOSSIBLE_MATCH;
 }
 
+@Override
 protected int matchLevel(ImportReference importRef) {
 	if (this.pattern.qualification == null) {
 		if (this.pattern.simpleName == null) return ACCURATE_MATCH;
@@ -173,9 +179,8 @@ protected int matchLevel(ImportReference importRef) {
 	}
 	return IMPOSSIBLE_MATCH;
 }
-/* (non-Javadoc)
- * @see org.eclipse.jdt.internal.core.search.matching.PatternLocator#matchLevelAndReportImportRef(org.eclipse.jdt.internal.compiler.ast.ImportReference, org.eclipse.jdt.internal.compiler.lookup.Binding, org.eclipse.jdt.internal.core.search.matching.MatchLocator)
- */
+
+@Override
 protected void matchLevelAndReportImportRef(ImportReference importRef, Binding binding, MatchLocator locator) throws CoreException {
 	Binding refBinding = binding;
 	if (importRef.isStatic()) {
@@ -209,6 +214,7 @@ protected void matchLevelAndReportImportRef(ImportReference importRef, Binding b
 	}
 	super.matchLevelAndReportImportRef(importRef, refBinding, locator);
 }
+@Override
 protected void matchReportImportRef(ImportReference importRef, Binding binding, IJavaElement element, int accuracy, MatchLocator locator) throws CoreException {
 	if (this.isDeclarationOfReferencedTypesPattern) {
 		if ((element = findElement(element, accuracy)) != null) {
@@ -317,12 +323,14 @@ protected void matchReportReference(ArrayTypeReference arrayRef, IJavaElement el
 /**
  * Reports the match of the given reference.
  */
+@Override
 protected void matchReportReference(ASTNode reference, IJavaElement element, Binding elementBinding, int accuracy, MatchLocator locator) throws CoreException {
 	matchReportReference(reference, element, null, null, elementBinding, accuracy, locator);
 }
 /**
  * Reports the match of the given reference. Also provide a local and other elements to eventually report in match.
  */
+@Override
 protected void matchReportReference(ASTNode reference, IJavaElement element, IJavaElement localElement, IJavaElement[] otherElements, Binding elementBinding, int accuracy, MatchLocator locator) throws CoreException {
 	if (this.isDeclarationOfReferencedTypesPattern) {
 		if ((element = findElement(element, accuracy)) != null)
@@ -519,6 +527,7 @@ void matchReportReference(Expression expr, int lastIndex, TypeBinding refBinding
 	}
 	locator.report(this.match);
 }
+@Override
 protected int referenceType() {
 	return IJavaElement.TYPE;
 }
@@ -610,6 +619,7 @@ protected void reportDeclaration(ReferenceBinding typeBinding, int maxType, Matc
 		maxType--;
 	}
 }
+@Override
 public int resolveLevel(ASTNode node) {
 	if (node instanceof TypeReference)
 		return resolveLevel((TypeReference) node);
@@ -618,6 +628,7 @@ public int resolveLevel(ASTNode node) {
 //	if (node instanceof ImportReference) - Not called when resolve is true, see MatchingNodeSet.reportMatching(unit)
 	return IMPOSSIBLE_MATCH;
 }
+@Override
 public int resolveLevel(Binding binding) {
 	if (binding == null) return INACCURATE_MATCH;
 	if (!(binding instanceof TypeBinding)) return IMPOSSIBLE_MATCH;
@@ -762,6 +773,7 @@ int resolveLevelForTypeOrQualifyingTypes(TypeReference typeRef, TypeBinding type
 	}
 	return IMPOSSIBLE_MATCH;
 }
+@Override
 public void recordResolution(QualifiedTypeReference typeReference, TypeBinding resolution) {
 	List/*<TypeBinding>*/ resolutionsForTypeReference = (List) this.recordedResolutions.get(typeReference);
 	if (resolutionsForTypeReference == null) {
@@ -770,6 +782,7 @@ public void recordResolution(QualifiedTypeReference typeReference, TypeBinding r
 	resolutionsForTypeReference.add(resolution);
 	this.recordedResolutions.put(typeReference, resolutionsForTypeReference);
 }
+@Override
 public String toString() {
 	return "Locator for " + this.pattern.toString(); //$NON-NLS-1$
 }

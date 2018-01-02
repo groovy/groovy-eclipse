@@ -39,6 +39,7 @@ public class Wildcard extends SingleTypeReference {
 		this.kind = kind;
 	}
 
+	@Override
 	public char [][] getParameterizedTypeName() {
 		switch (this.kind) {
 			case Wildcard.UNBOUND :
@@ -50,6 +51,7 @@ public class Wildcard extends SingleTypeReference {
 		}
 	}
 
+	@Override
 	public char [][] getTypeName() {
 		switch (this.kind) {
 			case Wildcard.UNBOUND :
@@ -82,6 +84,7 @@ public class Wildcard extends SingleTypeReference {
 		return this.resolvedType;
 	}
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output){
 		if (this.annotations != null && this.annotations[0] != null) {
 			printAnnotations(this.annotations[0], output);
@@ -104,6 +107,7 @@ public class Wildcard extends SingleTypeReference {
 	}
 
 	// only invoked for improving resilience when unable to bind generic type from parameterized reference
+	@Override
 	public TypeBinding resolveType(BlockScope scope, boolean checkBounds, int location) {
 		if (this.bound != null) {
 			this.bound.resolveType(scope, checkBounds, Binding.DefaultLocationTypeBound);
@@ -112,6 +116,7 @@ public class Wildcard extends SingleTypeReference {
 		return null;
 	}
 	// only invoked for improving resilience when unable to bind generic type from parameterized reference
+	@Override
 	public TypeBinding resolveType(ClassScope scope, int location) {
 		if (this.bound != null) {
 			this.bound.resolveType(scope, Binding.DefaultLocationTypeBound);
@@ -119,14 +124,17 @@ public class Wildcard extends SingleTypeReference {
 		}
 		return null;
 	}
+	@Override
 	public TypeBinding resolveTypeArgument(BlockScope blockScope, ReferenceBinding genericType, int rank) {
 	    return internalResolveType(blockScope, genericType, rank); // no defaultNullness for wildcards
 	}
 
+	@Override
 	public TypeBinding resolveTypeArgument(ClassScope classScope, ReferenceBinding genericType, int rank) {
 	    return internalResolveType(classScope, genericType, rank); // no defaultNullness for wildcards
 	}
 
+	@Override
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		if (visitor.visit(this, scope)) {
 			if (this.annotations != null) {
@@ -142,6 +150,7 @@ public class Wildcard extends SingleTypeReference {
 		visitor.endVisit(this, scope);
 	}
 
+	@Override
 	public void traverse(ASTVisitor visitor, ClassScope scope) {
 		if (visitor.visit(this, scope)) {
 			if (this.annotations != null) {
@@ -156,6 +165,7 @@ public class Wildcard extends SingleTypeReference {
 		}
 		visitor.endVisit(this, scope);
 	}
+	@Override
 	public boolean isWildcard() {
 		return true;
 	}

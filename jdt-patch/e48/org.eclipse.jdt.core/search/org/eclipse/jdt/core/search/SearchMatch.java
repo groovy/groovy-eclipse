@@ -344,9 +344,7 @@ public class SearchMatch {
 		this.raw = raw;
 	}
 
-	/* (non-javadoc)
-	 * @see java.lang.Object#toString()
-	 */
+	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
 		buffer.append("Search match"); //$NON-NLS-1$

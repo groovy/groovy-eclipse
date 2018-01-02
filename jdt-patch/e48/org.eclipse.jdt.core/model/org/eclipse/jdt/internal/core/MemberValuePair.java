@@ -29,6 +29,7 @@ public class MemberValuePair implements IMemberValuePair {
 		this.valueKind = valueKind;
 	}
 
+	@Override
 	public boolean equals(Object obj) {
 		if (!(obj instanceof MemberValuePair)) {
 			return false;
@@ -42,18 +43,22 @@ public class MemberValuePair implements IMemberValuePair {
 				|| (this.value instanceof Object[] && other.value instanceof Object[] && Util.equalArraysOrNull((Object[])this.value, (Object[]) other.value)));
 	}
 
+	@Override
 	public String getMemberName() {
 		return this.memberName;
 	}
 
+	@Override
 	public Object getValue() {
 		return this.value;
 	}
 
+	@Override
 	public int getValueKind() {
 		return this.valueKind;
 	}
 
+	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;

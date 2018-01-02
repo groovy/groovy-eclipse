@@ -161,6 +161,7 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 			this.importReferences = importReferences;
 		}
 		
+		@Override
 		public void acceptType(int modifiers, char[] packageName, char[] simpleTypeName, char[][] enclosingTypeNames, String path, AccessRestriction access) {
 			if (enclosingTypeNames != null && enclosingTypeNames.length > 0) return;
 			
@@ -303,6 +304,7 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 				this.compilerOptions,
 				new DefaultProblemFactory(Locale.getDefault())) {
 
+			@Override
 			public CategorizedProblem createProblem(
 				char[] fileName,
 				int problemId,
@@ -336,6 +338,7 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 		this.owner = owner;
 	}
 	
+	@Override
 	public void acceptConstructor(
 			int modifiers,
 			char[] simpleTypeName,
@@ -351,6 +354,7 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 		// constructors aren't searched
 	}
 
+	@Override
 	public void acceptType(char[] packageName, char[] simpleTypeName, char[][] enclosingTypeNames, int modifiers, AccessRestriction accessRestriction) {
 		char[] typeName = enclosingTypeNames == null ?
 				simpleTypeName :
@@ -461,14 +465,7 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 		}
 	}
 
-	/**
-	 * One result of the search consists of a new package.
-	 * @param packageName char[]
-	 *
-	 * NOTE - All package names are presented in their readable form:
-	 *    Package names are in the form "a.b.c".
-	 *    The default package is represented by an empty array.
-	 */
+	@Override
 	public void acceptPackage(char[] packageName) {
 		// implementation of interface method
 	}
@@ -835,33 +832,42 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 		try {
 			IProgressMonitor progressMonitor = new IProgressMonitor() {
 				boolean isCanceled = false;
+				@Override
 				public void beginTask(String name, int totalWork) {
 					// implements interface method
 				}
+				@Override
 				public void done() {
 					// implements interface method
 				}
+				@Override
 				public void internalWorked(double work) {
 					// implements interface method
 				}
+				@Override
 				public boolean isCanceled() {
 					return this.isCanceled;
 				}
+				@Override
 				public void setCanceled(boolean value) {
 					this.isCanceled = value;
 				}
+				@Override
 				public void setTaskName(String name) {
 					// implements interface method
 				}
+				@Override
 				public void subTask(String name) {
 					// implements interface method
 				}
+				@Override
 				public void worked(int work) {
 					// implements interface method
 				}
 			};
 			
 			TypeNameMatchRequestor typeNameMatchRequestor = new TypeNameMatchRequestor() {
+				@Override
 				public void acceptTypeNameMatch(TypeNameMatch match) {
 					if (SelectionEngine.this.requestor instanceof SelectionRequestor) {
 						SelectionEngine.this.noProposal = false;
@@ -900,6 +906,7 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 		}
 	}
 
+	@Override
 	public AssistParser getParser() {
 		return this.parser;
 	}
@@ -1399,6 +1406,7 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 		if (assistIdentifier == null) return;
 
 		class Visitor extends ASTVisitor {
+			@Override
 			public boolean visit(ConstructorDeclaration constructorDeclaration, ClassScope scope) {
 				if (constructorDeclaration.selector == assistIdentifier){
 					if (constructorDeclaration.binding != null) {
@@ -1411,24 +1419,28 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 				}
 				return true;
 			}
+			@Override
 			public boolean visit(FieldDeclaration fieldDeclaration, MethodScope scope) {
 				if (fieldDeclaration.name == assistIdentifier){
 					throw new SelectionNodeFound(fieldDeclaration.binding);
 				}
 				return true;
 			}
+			@Override
 			public boolean visit(TypeDeclaration localTypeDeclaration, BlockScope scope) {
 				if (localTypeDeclaration.name == assistIdentifier) {
 					throw new SelectionNodeFound(localTypeDeclaration.binding);
 				}
 				return true;
 			}
+			@Override
 			public boolean visit(TypeDeclaration memberTypeDeclaration, ClassScope scope) {
 				if (memberTypeDeclaration.name == assistIdentifier) {
 					throw new SelectionNodeFound(memberTypeDeclaration.binding);
 				}
 				return true;
 			}
+			@Override
 			public boolean visit(MethodDeclaration methodDeclaration, ClassScope scope) {
 				if (methodDeclaration.selector == assistIdentifier){
 					if (methodDeclaration.binding != null) {
@@ -1441,18 +1453,21 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 				}
 				return true;
 			}
+			@Override
 			public boolean visit(TypeDeclaration typeDeclaration, CompilationUnitScope scope) {
 				if (typeDeclaration.name == assistIdentifier) {
 					throw new SelectionNodeFound(typeDeclaration.binding);
 				}
 				return true;
 			}
+			@Override
 			public boolean visit(TypeParameter typeParameter, BlockScope scope) {
 				if (typeParameter.name == assistIdentifier) {
 					throw new SelectionNodeFound(typeParameter.binding);
 				}
 				return true;
 			}
+			@Override
 			public boolean visit(TypeParameter typeParameter, ClassScope scope) {
 				if (typeParameter.name == assistIdentifier) {
 					throw new SelectionNodeFound(typeParameter.binding);
@@ -1808,6 +1823,7 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 		ReferenceBinding type= method.declaringClass;
 		final SelectionRequestor requestor1 = (SelectionRequestor) this.requestor;
 		return new InheritDocVisitor() {
+			@Override
 			public Object visit(ReferenceBinding currType) throws JavaModelException {
 				MethodBinding overridden =  findOverriddenMethodInType(currType, method);
 				if (overridden == null)
@@ -1860,9 +1876,11 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 	 */
 	static abstract class InheritDocVisitor {
 		public static final Object STOP_BRANCH= new Object() {
+			@Override
 			public String toString() { return "STOP_BRANCH"; } //$NON-NLS-1$
 		};
 		public static final Object CONTINUE= new Object() {
+			@Override
 			public String toString() { return "CONTINUE"; } //$NON-NLS-1$
 		};
 

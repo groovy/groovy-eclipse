@@ -472,6 +472,7 @@ public class JavaProject
 	/**
 	 * @see Openable
 	 */
+	@Override
 	protected boolean buildStructure(OpenableElementInfo info, IProgressMonitor pm, Map newElements, IResource underlyingResource) throws JavaModelException {
 		// cannot refresh cp markers on opening (emulate cp check on startup) since can create deadlocks (see bug 37274)
 		IClasspathEntry[] resolvedClasspath = getResolvedClasspath();
@@ -499,9 +500,7 @@ public class JavaProject
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.internal.core.JavaElement#close()
-	 */
+	@Override
 	public void close() throws JavaModelException {
 		if (JavaProject.hasJavaNature(this.project)) {
 			// Get cached preferences if exist
@@ -858,15 +857,18 @@ public class JavaProject
 		protected JImageModuleFragmentBridge(IPath externalJarPath) {
 			super(externalJarPath, JavaProject.this);
 		}
+		@Override
 		public PackageFragment getPackageFragment(String[] pkgName) {
 			return getPackageFragment(pkgName, null);
 		}
+		@Override
 		public PackageFragment getPackageFragment(String[] pkgName, String mod) {
 			PackageFragmentRoot realRoot = new JrtPackageFragmentRoot(this.jarPath,
 												mod == null ?  JRTUtil.JAVA_BASE : mod,
 														JavaProject.this);
 			return new JarPackageFragment(realRoot, pkgName);
 		}
+		@Override
 		protected boolean computeChildren(OpenableElementInfo info, IResource underlyingResource) throws JavaModelException {
 			// Do nothing, idea is to avoid this being read in JarPackageFragmentRoot as a Jar.
 			return true;
@@ -989,6 +991,7 @@ public class JavaProject
 	/**
 	 * Configure the project with Java nature.
 	 */
+	@Override
 	public void configure() throws CoreException {
 
 		// register Java builder
@@ -1155,6 +1158,7 @@ public class JavaProject
 	/**
 	 * Returns a new element info for this element.
 	 */
+	@Override
 	protected Object createElementInfo() {
 		return new JavaProjectElementInfo();
 	}
@@ -1226,6 +1230,7 @@ public class JavaProject
 		return entries;
 	}
 
+	@Override
 	public IClasspathEntry decodeClasspathEntry(String encodedEntry) {
 
 		try {
@@ -1260,6 +1265,7 @@ public class JavaProject
 	/**
 	 * Removes the Java nature from the project.
 	 */
+	@Override
 	public void deconfigure() throws CoreException {
 
 		// deregister Java builder
@@ -1325,6 +1331,7 @@ public class JavaProject
 		}
 	}
 
+	@Override
 	public String encodeClasspathEntry(IClasspathEntry classpathEntry) {
 		try {
 			ByteArrayOutputStream s = new ByteArrayOutputStream();
@@ -1349,6 +1356,7 @@ public class JavaProject
 	 *
 	 * @see JavaElement#equals(Object)
 	 */
+	@Override
 	public boolean equals(Object o) {
 
 		if (this == o)
@@ -1364,6 +1372,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject#findElement(IPath)
 	 */
+	@Override
 	public IJavaElement findElement(IPath path) throws JavaModelException {
 		return findElement(path, DefaultWorkingCopyOwner.PRIMARY);
 	}
@@ -1371,6 +1380,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject#findElement(IPath, WorkingCopyOwner)
 	 */
+	@Override
 	public IJavaElement findElement(IPath path, WorkingCopyOwner owner) throws JavaModelException {
 
 		if (path == null || path.isAbsolute()) {
@@ -1447,6 +1457,7 @@ public class JavaProject
 		}
 	}
 
+	@Override
 	public IJavaElement findElement(String bindingKey, WorkingCopyOwner owner) throws JavaModelException {
 		JavaElementFinder elementFinder = new JavaElementFinder(bindingKey, this, owner);
 		elementFinder.parse();
@@ -1458,6 +1469,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject
 	 */
+	@Override
 	public IPackageFragment findPackageFragment(IPath path)
 		throws JavaModelException {
 
@@ -1476,6 +1488,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject
 	 */
+	@Override
 	public IPackageFragmentRoot findPackageFragmentRoot(IPath path)
 		throws JavaModelException {
 
@@ -1502,6 +1515,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject
 	 */
+	@Override
 	public IPackageFragmentRoot[] findPackageFragmentRoots(IClasspathEntry entry) {
 		try {
 			IClasspathEntry[] classpath = getRawClasspath();
@@ -1523,12 +1537,14 @@ public class JavaProject
 	/**
 	 * @see IJavaProject#findType(String)
 	 */
+	@Override
 	public IType findType(String fullyQualifiedName) throws JavaModelException {
 		return findType(fullyQualifiedName, DefaultWorkingCopyOwner.PRIMARY);
 	}
 	/**
 	 * @see IJavaProject#findType(String, IProgressMonitor)
 	 */
+	@Override
 	public IType findType(String fullyQualifiedName, IProgressMonitor progressMonitor) throws JavaModelException {
 		return findType(fullyQualifiedName, DefaultWorkingCopyOwner.PRIMARY, progressMonitor);
 	}
@@ -1563,12 +1579,14 @@ public class JavaProject
 	/**
 	 * @see IJavaProject#findType(String, String)
 	 */
+	@Override
 	public IType findType(String packageName, String typeQualifiedName) throws JavaModelException {
 		return findType(packageName, typeQualifiedName, DefaultWorkingCopyOwner.PRIMARY);
 	}
 	/**
 	 * @see IJavaProject#findType(String, String, IProgressMonitor)
 	 */
+	@Override
 	public IType findType(String packageName, String typeQualifiedName, IProgressMonitor progressMonitor) throws JavaModelException {
 		return findType(packageName, typeQualifiedName, DefaultWorkingCopyOwner.PRIMARY, progressMonitor);
 	}
@@ -1590,6 +1608,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject#findType(String, String, WorkingCopyOwner)
 	 */
+	@Override
 	public IType findType(String packageName, String typeQualifiedName, WorkingCopyOwner owner) throws JavaModelException {
 		NameLookup lookup = newNameLookup(owner);
 		return findType(
@@ -1603,6 +1622,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject#findType(String, String, WorkingCopyOwner, IProgressMonitor)
 	 */
+	@Override
 	public IType findType(String packageName, String typeQualifiedName, WorkingCopyOwner owner, IProgressMonitor progressMonitor) throws JavaModelException {
 		NameLookup lookup = newNameLookup(owner);
 		return findType(
@@ -1616,6 +1636,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject#findType(String, WorkingCopyOwner)
 	 */
+	@Override
 	public IType findType(String fullyQualifiedName, WorkingCopyOwner owner) throws JavaModelException {
 		NameLookup lookup = newNameLookup(owner);
 		return findType(fullyQualifiedName, lookup, false, null);
@@ -1624,11 +1645,13 @@ public class JavaProject
 	/**
 	 * @see IJavaProject#findType(String, WorkingCopyOwner, IProgressMonitor)
 	 */
+	@Override
 	public IType findType(String fullyQualifiedName, WorkingCopyOwner owner, IProgressMonitor progressMonitor) throws JavaModelException {
 		NameLookup lookup = newNameLookup(owner);
 		return findType(fullyQualifiedName, lookup, true, progressMonitor);
 	}
 
+	@Override
 	public IModuleDescription findModule(String moduleName, WorkingCopyOwner owner) throws JavaModelException {
 		NameLookup lookup = newNameLookup(owner);
 		return findModule(moduleName, lookup);
@@ -1697,6 +1720,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject
 	 */
+	@Override
 	public IPackageFragmentRoot[] getAllPackageFragmentRoots()
 		throws JavaModelException {
 
@@ -1776,9 +1800,11 @@ public class JavaProject
 				eclipseParentPreferences.removeNodeChangeListener(this.preferencesNodeListener);
 			}
 			this.preferencesNodeListener = new IEclipsePreferences.INodeChangeListener() {
+				@Override
 				public void added(IEclipsePreferences.NodeChangeEvent event) {
 					// do nothing
 				}
+				@Override
 				public void removed(IEclipsePreferences.NodeChangeEvent event) {
 					if (event.getChild() == eclipsePreferences) {
 						JavaModelManager.getJavaModelManager().resetProjectPreferences(JavaProject.this);
@@ -1793,6 +1819,7 @@ public class JavaProject
 			eclipsePreferences.removePreferenceChangeListener(this.preferencesChangeListener);
 		}
 		this.preferencesChangeListener = new IEclipsePreferences.IPreferenceChangeListener() {
+			@Override
 			public void preferenceChange(IEclipsePreferences.PreferenceChangeEvent event) {
 				String propertyName = event.getKey();
 				JavaModelManager manager = JavaModelManager.getJavaModelManager();
@@ -1821,6 +1848,7 @@ public class JavaProject
 		return eclipsePreferences;
 	}
 
+	@Override
 	public String getElementName() {
 		return this.project.getName();
 	}
@@ -1828,6 +1856,7 @@ public class JavaProject
 	/**
 	 * @see IJavaElement
 	 */
+	@Override
 	public int getElementType() {
 		return JAVA_PROJECT;
 	}
@@ -1865,6 +1894,7 @@ public class JavaProject
 	/*
 	 * @see JavaElement
 	 */
+	@Override
 	public IJavaElement getHandleFromMemento(String token, MementoTokenizer memento, WorkingCopyOwner owner) {
 		String mod = null;
 		switch (token.charAt(0)) {
@@ -1904,6 +1934,7 @@ public class JavaProject
 	 * Returns the <code>char</code> that marks the start of this handles
 	 * contribution to a memento.
 	 */
+	@Override
 	protected char getHandleMementoDelimiter() {
 
 		return JEM_JAVAPROJECT;
@@ -1935,6 +1966,7 @@ public class JavaProject
 	/**
 	 * Returns an array of non-java resources contained in the receiver.
 	 */
+	@Override
 	public Object[] getNonJavaResources() throws JavaModelException {
 
 		return ((JavaProjectElementInfo) getElementInfo()).getNonJavaResources(this);
@@ -1943,6 +1975,7 @@ public class JavaProject
 	/**
 	 * @see org.eclipse.jdt.core.IJavaProject#getOption(String, boolean)
 	 */
+	@Override
 	public String getOption(String optionName, boolean inheritJavaCoreOptions) {
 		return JavaModelManager.getJavaModelManager().getOption(optionName, inheritJavaCoreOptions, getEclipsePreferences());
 	}
@@ -1950,6 +1983,7 @@ public class JavaProject
 	/**
 	 * @see org.eclipse.jdt.core.IJavaProject#getOptions(boolean)
 	 */
+	@Override
 	public Map<String, String> getOptions(boolean inheritJavaCoreOptions) {
 
 		// initialize to the defaults from JavaCore options pool
@@ -2021,6 +2055,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject
 	 */
+	@Override
 	public IPath getOutputLocation() throws JavaModelException {
 		// Do not create marker while getting output location
 		JavaModelManager.PerProjectInfo perProjectInfo = getPerProjectInfo();
@@ -2090,6 +2125,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject
 	 */
+	@Override
 	public IPackageFragmentRoot getPackageFragmentRoot(IResource resource) {
 		return getPackageFragmentRoot(resource, null/*no entry path*/);
 	}
@@ -2112,6 +2148,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject
 	 */
+	@Override
 	public IPackageFragmentRoot getPackageFragmentRoot(String externalLibraryPath) {
 		return getPackageFragmentRoot0(JavaProject.canonicalizedPath(new Path(externalLibraryPath)));
 	}
@@ -2138,6 +2175,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject
 	 */
+	@Override
 	public IPackageFragmentRoot[] getPackageFragmentRoots()
 		throws JavaModelException {
 
@@ -2159,6 +2197,7 @@ public class JavaProject
 	 * @see IJavaProject
 	 * @deprecated
 	 */
+	@Override
 	public IPackageFragmentRoot[] getPackageFragmentRoots(IClasspathEntry entry) {
 		return findPackageFragmentRoots(entry);
 	}
@@ -2166,6 +2205,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject
 	 */
+	@Override
 	public IPackageFragment[] getPackageFragments() throws JavaModelException {
 
 		IPackageFragmentRoot[] roots = getPackageFragmentRoots();
@@ -2200,6 +2240,7 @@ public class JavaProject
 	/**
 	 * @see IJavaElement
 	 */
+	@Override
 	public IPath getPath() {
 		return this.project.getFullPath();
 	}
@@ -2215,6 +2256,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject#getProject()
 	 */
+	@Override
 	public IProject getProject() {
 		return this.project;
 	}
@@ -2226,6 +2268,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject
 	 */
+	@Override
 	public IClasspathEntry[] getRawClasspath() throws JavaModelException {
 		JavaModelManager.PerProjectInfo perProjectInfo = getPerProjectInfo();
 		IClasspathEntry[] classpath = perProjectInfo.rawClasspath;
@@ -2242,6 +2285,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject
 	 */
+	@Override
 	public IClasspathEntry[] getReferencedClasspathEntries() throws JavaModelException {
 		return getPerProjectInfo().referencedEntries;
 	}
@@ -2249,6 +2293,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject#getRequiredProjectNames()
 	 */
+	@Override
 	public String[] getRequiredProjectNames() throws JavaModelException {
 
 		return projectPrerequisites(getResolvedClasspath());
@@ -2273,6 +2318,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject
 	 */
+	@Override
 	public IClasspathEntry[] getResolvedClasspath(boolean ignoreUnresolvedEntry) throws JavaModelException {
 		if  (JavaModelManager.getJavaModelManager().isClasspathBeingResolved(this)) {
 			if (JavaModelManager.CP_RESOLVE_VERBOSE_ADVANCED)
@@ -2320,6 +2366,7 @@ public class JavaProject
 	/**
 	 * @see IJavaElement
 	 */
+	@Override
 	public IResource resource(PackageFragmentRoot root) {
 		return this.project;
 	}
@@ -2378,6 +2425,7 @@ public class JavaProject
 	/**
 	 * @see JavaElement
 	 */
+	@Override
 	public SourceMapper getSourceMapper() {
 
 		return null;
@@ -2386,6 +2434,7 @@ public class JavaProject
 	/**
 	 * @see IJavaElement
 	 */
+	@Override
 	public IResource getUnderlyingResource() throws JavaModelException {
 		if (!exists()) throw newNotPresentException();
 		return this.project;
@@ -2394,6 +2443,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject
 	 */
+	@Override
 	public boolean hasBuildState() {
 
 		return JavaModelManager.getJavaModelManager().getLastBuiltState(this.project, null) != null;
@@ -2402,6 +2452,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject
 	 */
+	@Override
 	public boolean hasClasspathCycle(IClasspathEntry[] preferredClasspath) {
 		LinkedHashSet cycleParticipants = new LinkedHashSet();
 		HashMap preferredClasspaths = new HashMap(1);
@@ -2414,6 +2465,7 @@ public class JavaProject
 		return getCycleMarker() != null;
 	}
 
+	@Override
 	public int hashCode() {
 		return this.project.hashCode();
 	}
@@ -2456,6 +2508,7 @@ public class JavaProject
 	/*
 	 * @see IJavaProject
 	 */
+	@Override
 	public boolean isOnClasspath(IJavaElement element) {
 		IClasspathEntry[] rawClasspath;
 		try {
@@ -2526,6 +2579,7 @@ public class JavaProject
 	/*
 	 * @see IJavaProject
 	 */
+	@Override
 	public boolean isOnClasspath(IResource resource) {
 		IPath exactPath = resource.getFullPath();
 		IPath path = exactPath;
@@ -2615,6 +2669,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject#newEvaluationContext()
 	 */
+	@Override
 	public IEvaluationContext newEvaluationContext() {
 		EvaluationContext context = new EvaluationContext();
 		context.setLineSeparator(Util.getLineSeparator(null/*no existing source*/, this));
@@ -2660,6 +2715,7 @@ public class JavaProject
 	public PerProjectInfo newTemporaryInfo() {
 		return 
 			new PerProjectInfo(this.project.getProject()) {
+				@Override
 				protected ClasspathChange addClasspathChange() {
 					return null;
 				}
@@ -2669,6 +2725,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject
 	 */
+	@Override
 	public ITypeHierarchy newTypeHierarchy(
 		IRegion region,
 		IProgressMonitor monitor)
@@ -2680,6 +2737,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject
 	 */
+	@Override
 	public ITypeHierarchy newTypeHierarchy(
 		IRegion region,
 		WorkingCopyOwner owner,
@@ -2699,6 +2757,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject
 	 */
+	@Override
 	public ITypeHierarchy newTypeHierarchy(
 		IType type,
 		IRegion region,
@@ -2711,6 +2770,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject
 	 */
+	@Override
 	public ITypeHierarchy newTypeHierarchy(
 		IType type,
 		IRegion region,
@@ -2820,6 +2880,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject
 	 */
+	@Override
 	public IPath readOutputLocation() {
 		// Read classpath file without creating markers nor logging problems
 		IClasspathEntry[][] classpath = readFileEntries(null/*not interested in unknown elements*/);
@@ -2840,6 +2901,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject
 	 */
+	@Override
 	public IClasspathEntry[] readRawClasspath() {
 		// Read classpath file without creating markers nor logging problems
 		IClasspathEntry[][] classpath = readFileEntries(null/*not interested in unknown elements*/);
@@ -3243,6 +3305,7 @@ public class JavaProject
 	/**
 	 * @see org.eclipse.jdt.core.IJavaProject#setOption(java.lang.String, java.lang.String)
 	 */
+	@Override
 	public void setOption(String optionName, String optionValue) {
 		// Store option value
 		IEclipsePreferences projectPreferences = getEclipsePreferences();
@@ -3261,6 +3324,7 @@ public class JavaProject
 	/**
 	 * @see org.eclipse.jdt.core.IJavaProject#setOptions(Map)
 	 */
+	@Override
 	public void setOptions(Map<String, String> newOptions) {
 
 		IEclipsePreferences projectPreferences = getEclipsePreferences();
@@ -3307,6 +3371,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject
 	 */
+	@Override
 	public void setOutputLocation(IPath path, IProgressMonitor monitor) throws JavaModelException {
 		if (path == null) {
 			throw new IllegalArgumentException(Messages.path_nullPath);
@@ -3324,6 +3389,7 @@ public class JavaProject
 	 *
 	 * @see IProjectNature#setProject(IProject)
 	 */
+	@Override
 	public void setProject(IProject project) {
 
 		this.project = project;
@@ -3333,6 +3399,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject#setRawClasspath(IClasspathEntry[],boolean,IProgressMonitor)
 	 */
+	@Override
 	public void setRawClasspath(
 		IClasspathEntry[] entries,
 		boolean canModifyResources,
@@ -3349,6 +3416,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject#setRawClasspath(IClasspathEntry[],IPath,boolean,IProgressMonitor)
 	 */
+	@Override
 	public void setRawClasspath(
 			IClasspathEntry[] newRawClasspath,
 			IPath newOutputLocation,
@@ -3361,6 +3429,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject#setRawClasspath(IClasspathEntry[],IPath,IProgressMonitor)
 	 */
+	@Override
 	public void setRawClasspath(
 		IClasspathEntry[] entries,
 		IPath outputLocation,
@@ -3374,6 +3443,7 @@ public class JavaProject
 			monitor);
 	}
 	
+	@Override
 	public void setRawClasspath(IClasspathEntry[] entries, IClasspathEntry[] referencedEntries, IPath outputLocation,
 			IProgressMonitor monitor) throws JavaModelException {
 		setRawClasspath(entries, referencedEntries, outputLocation, true, monitor);
@@ -3403,6 +3473,7 @@ public class JavaProject
 	/**
 	 * @see IJavaProject
 	 */
+	@Override
 	public void setRawClasspath(
 		IClasspathEntry[] entries,
 		IProgressMonitor monitor)
@@ -3527,6 +3598,7 @@ public class JavaProject
 		}
 	 }
 
+	@Override
 	protected IStatus validateExistence(IResource underlyingResource) {
 		// check whether the java project can be opened
 		try {

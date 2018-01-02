@@ -256,6 +256,7 @@ public final boolean canBeSeenByForCodeSnippet(ReferenceBinding referenceBinding
 	return receiverType.fPackage == referenceBinding.fPackage;
 }
 // Internal use only
+@Override
 public MethodBinding findExactMethod(ReferenceBinding receiverType, char[] selector, TypeBinding[] argumentTypes, InvocationSite invocationSite) {
 	MethodBinding exactMethod = receiverType.getExactMethod(selector, argumentTypes, null);
 	if (exactMethod != null){
@@ -371,6 +372,7 @@ public FieldBinding findFieldForCodeSnippet(TypeBinding receiverType, char[] fie
 	return null;
 }
 // Internal use only
+@Override
 public MethodBinding findMethod(ReferenceBinding receiverType, char[] selector, TypeBinding[] argumentTypes, InvocationSite invocationSite, boolean inStaticContext) {
 	MethodBinding methodBinding = super.findMethod(receiverType, selector, argumentTypes, invocationSite, inStaticContext);
 	if (methodBinding != null && methodBinding.isValidBinding())
@@ -380,6 +382,7 @@ public MethodBinding findMethod(ReferenceBinding receiverType, char[] selector, 
 }
 
 // Internal use only
+@Override
 public MethodBinding findMethodForArray(ArrayBinding receiverType, char[] selector, TypeBinding[] argumentTypes, InvocationSite invocationSite) {
 	ReferenceBinding object = getJavaLangObject();
 	MethodBinding methodBinding = object.getExactMethod(selector, argumentTypes, null);
@@ -528,6 +531,7 @@ public Binding getBinding(char[][] compoundName, int mask, InvocationSite invoca
 	If no visible constructor is discovered, an error binding is answered.
 */
 
+@Override
 public MethodBinding getConstructor(ReferenceBinding receiverType, TypeBinding[] argumentTypes, InvocationSite invocationSite) {
 	MethodBinding methodBinding = receiverType.getExactConstructor(argumentTypes);
 	if (methodBinding != null) {

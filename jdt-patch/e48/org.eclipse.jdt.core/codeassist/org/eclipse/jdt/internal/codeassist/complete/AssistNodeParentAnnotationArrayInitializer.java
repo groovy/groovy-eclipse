@@ -21,6 +21,7 @@ public class AssistNodeParentAnnotationArrayInitializer extends ASTNode {
 		this.name = name;
 	}
 
+	@Override
 	public StringBuffer print(int indent, StringBuffer output) {
 		output.append("<AssistNodeParentAnnotationArrayInitializer:"); //$NON-NLS-1$
 		output.append('@');

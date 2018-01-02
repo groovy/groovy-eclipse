@@ -24,35 +24,39 @@ protected PackageDeclaration(CompilationUnit parent, String name) {
 	super(parent);
 	this.name = name;
 }
+@Override
 public boolean equals(Object o) {
 	if (!(o instanceof PackageDeclaration)) return false;
 	return super.equals(o);
 }
+@Override
 public String getElementName() {
 	return this.name;
 }
 /**
  * @see IJavaElement
  */
+@Override
 public int getElementType() {
 	return PACKAGE_DECLARATION;
 }
 /**
  * @see JavaElement#getHandleMemento()
  */
+@Override
 protected char getHandleMementoDelimiter() {
 	return JavaElement.JEM_PACKAGEDECLARATION;
 }
 /**
  * @see IPackageDeclaration#getNameRange()
  */
+@Override
 public ISourceRange getNameRange() throws JavaModelException {
 	AnnotatableInfo info = (AnnotatableInfo) getElementInfo();
 	return info.getNameRange();
 }
-/*
- * @see JavaElement#getPrimaryElement(boolean)
- */
+
+@Override
 public IJavaElement getPrimaryElement(boolean checkOwner) {
 	CompilationUnit cu = (CompilationUnit)getAncestor(COMPILATION_UNIT);
 	if (checkOwner && cu.isPrimary()) return this;
@@ -61,6 +65,7 @@ public IJavaElement getPrimaryElement(boolean checkOwner) {
 /**
  * @private Debugging purposes
  */
+@Override
 protected void toStringInfo(int tab, StringBuffer buffer, Object info, boolean showResolvedInfo) {
 	buffer.append(tabString(tab));
 	buffer.append("package "); //$NON-NLS-1$

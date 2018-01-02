@@ -23,12 +23,14 @@ public class BatchInitializationMonitor implements IProgressMonitor {
 		return (IProgressMonitor) this.initializeAfterLoadMonitor.get();
 	}
 
+	@Override
 	public void beginTask(String name, int totalWork) {
 		IProgressMonitor monitor = getMonitor();
 		if (monitor != null)
 			monitor.beginTask(name, totalWork);
 	}
 
+	@Override
 	public void done() {
 		IProgressMonitor monitor = getMonitor();
 		if (monitor != null)
@@ -37,12 +39,14 @@ public class BatchInitializationMonitor implements IProgressMonitor {
 		this.subTaskName = ""; //$NON-NLS-1$
 	}
 
+	@Override
 	public void internalWorked(double work) {
 		IProgressMonitor monitor = getMonitor();
 		if (monitor != null)
 			monitor.internalWorked(work);
 	}
 
+	@Override
 	public boolean isCanceled() {
 		IProgressMonitor monitor = getMonitor();
 		if (monitor != null)
@@ -50,18 +54,21 @@ public class BatchInitializationMonitor implements IProgressMonitor {
 		return false;
 	}
 
+	@Override
 	public void setCanceled(boolean value) {
 		IProgressMonitor monitor = getMonitor();
 		if (monitor != null)
 			monitor.setCanceled(value);
 	}
 
+	@Override
 	public void setTaskName(String name) {
 		IProgressMonitor monitor = getMonitor();
 		if (monitor != null)
 			monitor.setTaskName(name);
 	}
 
+	@Override
 	public void subTask(String name) {
 		IProgressMonitor monitor = getMonitor();
 		if (monitor != null)
@@ -69,6 +76,7 @@ public class BatchInitializationMonitor implements IProgressMonitor {
 		this.subTaskName = name;
 	}
 
+	@Override
 	public void worked(int work) {
 		IProgressMonitor monitor = getMonitor();
 		if (monitor != null)

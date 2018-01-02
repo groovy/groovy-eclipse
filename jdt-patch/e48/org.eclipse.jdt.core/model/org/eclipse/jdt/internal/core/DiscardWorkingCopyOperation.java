@@ -27,6 +27,7 @@ public class DiscardWorkingCopyOperation extends JavaModelOperation {
 	public DiscardWorkingCopyOperation(IJavaElement workingCopy) {
 		super(new IJavaElement[] {workingCopy});
 	}
+	@Override
 	protected void executeOperation() throws JavaModelException {
 		CompilationUnit workingCopy = getWorkingCopy();
 
@@ -71,6 +72,7 @@ public class DiscardWorkingCopyOperation extends JavaModelOperation {
 	/**
 	 * @see JavaModelOperation#isReadOnly
 	 */
+	@Override
 	public boolean isReadOnly() {
 		return true;
 	}

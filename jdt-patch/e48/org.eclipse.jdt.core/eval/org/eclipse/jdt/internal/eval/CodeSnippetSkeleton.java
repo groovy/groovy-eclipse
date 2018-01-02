@@ -49,45 +49,59 @@ public class CodeSnippetSkeleton implements IBinaryType, EvaluationConstants {
 			this.exceptionTypeNames = exceptionTypeNames;
 			this.isConstructor = isConstructor;
 		}
+		@Override
 		public IBinaryAnnotation[] getAnnotations() {
 			return null;
 		}
+		@Override
 		public char[][] getArgumentNames() {
 			return null;
 		}
+		@Override
 		public Object getDefaultValue() {
 			return null;
 		}
+		@Override
 		public char[][] getExceptionTypeNames() {
 			return this.exceptionTypeNames;
 		}
+		@Override
 		public char[] getGenericSignature() {
 			return null;
 		}
+		@Override
 		public char[] getMethodDescriptor() {
 			return this.methodDescriptor;
 		}
+		@Override
 		public int getModifiers() {
 			return ClassFileConstants.AccPublic;
 		}
+		@Override
 		public IBinaryAnnotation[] getParameterAnnotations(int index, char[] classFileName) {
 			return null;
 		}
+		@Override
 		public int getAnnotatedParametersCount() {
 			return 0;
 		}
+		@Override
 		public IBinaryTypeAnnotation[] getTypeAnnotations() {
 			return null; 
 		}
+		@Override
 		public char[] getSelector() {
 			return this.selector;
 		}
+		@Override
 		public long getTagBits() {
 			return 0;
 		}
+		@Override
 		public boolean isClinit() {
 			return false;
 		}
+		@Override
 		public boolean isConstructor() {
 			return this.isConstructor;
 		}
@@ -120,30 +134,38 @@ public class CodeSnippetSkeleton implements IBinaryType, EvaluationConstants {
 public CodeSnippetSkeleton() {
 	super();
 }
+@Override
 public IBinaryAnnotation[] getAnnotations() {
 	return null;
 }
+@Override
 public IBinaryTypeAnnotation[] getTypeAnnotations() {
 	return null; 
 }
+@Override
 public char[] getEnclosingMethod() {
 	return null;
 }
+@Override
 public char[] getEnclosingTypeName() {
 	return null;
 }
+@Override
 public IBinaryField[] getFields() {
 	return null;
 }
 /**
  * @see org.eclipse.jdt.internal.compiler.env.IDependent#getFileName()
  */
+@Override
 public char[] getFileName() {
 	return CharOperation.concat(CODE_SNIPPET_NAME, Util.defaultJavaExtension().toCharArray());
 }
+@Override
 public char[] getGenericSignature() {
 	return null;
 }
+@Override
 public char[][] getInterfaceNames() {
 	return null;
 }
@@ -153,48 +175,62 @@ public String getJavadocContents() {
 public String getJavadocContents(IProgressMonitor monitor, String defaultEncoding) throws JavaModelException {
 	return null;
 }
+@Override
 public IBinaryNestedType[] getMemberTypes() {
 	return null;
 }
+@Override
 public IBinaryMethod[] getMethods() {
 	return this.methods;
 }
+@Override
 public int getModifiers() {
 	return ClassFileConstants.AccPublic;
 }
+@Override
 public char[][][] getMissingTypeNames() {
 	return null;
 }
+@Override
 public char[] getName() {
 	return CODE_SNIPPET_NAME;
 }
+@Override
 public char[] getSourceName() {
 	return ROOT_CLASS_NAME;
 }
+@Override
 public char[] getSuperclassName() {
 	return null;
 }
+@Override
 public long getTagBits() {
 	return 0;
 }
 public String getURLContents(String docUrlValue, String defaultEncoding) {
 	return null;
 }
+@Override
 public boolean isAnonymous() {
 	return false;
 }
+@Override
 public boolean isBinaryType() {
 	return true;
 }
+@Override
 public boolean isLocal() {
 	return false;
 }
+@Override
 public boolean isMember() {
 	return false;
 }
+@Override
 public char[] sourceFileName() {
 	return null;
 }
+@Override
 public ITypeAnnotationWalker enrichWithExternalAnnotationsFor(ITypeAnnotationWalker walker, Object member, LookupEnvironment environment) {
 	return walker;
 }

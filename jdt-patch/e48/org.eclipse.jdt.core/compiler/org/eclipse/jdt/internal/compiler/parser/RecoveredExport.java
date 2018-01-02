@@ -51,15 +51,18 @@ public class RecoveredExport extends RecoveredElement {
 	/*
 	 * Answer the associated parsed structure
 	 */
+	@Override
 	public ASTNode parseTree(){
 		return this.exportReference;
 	}
 	/*
 	 * Answer the very source end of the corresponding parse node
 	 */
+	@Override
 	public int sourceEnd(){
 		return this.exportReference.declarationSourceEnd;
 	}
+	@Override
 	public String toString(int tab) {
 		return tabString(tab) + "Recovered export: " + this.exportReference.toString(); //$NON-NLS-1$
 	}
@@ -78,12 +81,14 @@ public class RecoveredExport extends RecoveredElement {
 		}
 		return this.exportReference;
 	}
+	@Override
 	public void updateParseTree(){
 		updatedExportReference();
 	}
 	/*
 	 * Update the declarationSourceEnd of the corresponding parse node
 	 */
+	@Override
 	public void updateSourceEndIfNecessary(int bodyStart, int bodyEnd){
 		if (this.exportReference.declarationSourceEnd == 0) {
 			this.exportReference.declarationSourceEnd = bodyEnd;

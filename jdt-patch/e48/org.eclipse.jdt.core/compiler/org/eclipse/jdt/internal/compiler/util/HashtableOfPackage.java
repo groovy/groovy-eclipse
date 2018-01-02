@@ -94,6 +94,7 @@ private void rehash() {
 public int size() {
 	return this.elementSize;
 }
+@Override
 public String toString() {
 	String s = ""; //$NON-NLS-1$
 	PackageBinding pkg;

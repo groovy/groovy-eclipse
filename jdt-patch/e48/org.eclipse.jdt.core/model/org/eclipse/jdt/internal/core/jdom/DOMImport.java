@@ -94,6 +94,7 @@ DOMImport(char[] document, int[] sourceRange, String name, boolean onDemand, int
 /**
  * @see DOMNode#appendFragmentedContents(CharArrayBuffer)
  */
+@Override
 protected void appendFragmentedContents(CharArrayBuffer buffer) {
 	if (this.fNameRange[0] < 0) {
 		buffer
@@ -111,6 +112,7 @@ protected void appendFragmentedContents(CharArrayBuffer buffer) {
 /**
  * @see IDOMNode#getContents()
  */
+@Override
 public String getContents() {
 	if (this.fName == null) {
 		return null;
@@ -121,12 +123,14 @@ public String getContents() {
 /**
  * @see DOMNode#getDetailedNode()
  */
+@Override
 protected DOMNode getDetailedNode() {
 	return (DOMNode)getFactory().createImport(getContents());
 }
 /**
  * @see IDOMNode#getJavaElement
  */
+@Override
 public IJavaElement getJavaElement(IJavaElement parent) throws IllegalArgumentException {
 	if (parent.getElementType() == IJavaElement.COMPILATION_UNIT) {
 		return ((ICompilationUnit)parent).getImport(getName());
@@ -137,24 +141,28 @@ public IJavaElement getJavaElement(IJavaElement parent) throws IllegalArgumentEx
 /**
  * @see IDOMNode#getNodeType()
  */
+@Override
 public int getNodeType() {
 	return IDOMNode.IMPORT;
 }
 /**
  * @see IDOMImport#isOnDemand()
  */
+@Override
 public boolean isOnDemand() {
 	return this.fOnDemand;
 }
 /**
  * @see DOMNode
  */
+@Override
 protected DOMNode newDOMNode() {
 	return new DOMImport();
 }
 /**
  * @see IDOMNode#setName(String)
  */
+@Override
 public void setName(String name) {
 	if (name == null) {
 		throw new IllegalArgumentException(Messages.element_nullName);
@@ -166,6 +174,7 @@ public void setName(String name) {
 /**
  * @see IDOMNode#toString()
  */
+@Override
 public String toString() {
 	return "IMPORT: " + getName(); //$NON-NLS-1$
 }
@@ -174,6 +183,7 @@ public String toString() {
  * @see IDOMImport#getFlags()
  * @since 3.0
  */
+@Override
 public int getFlags() {
 	return this.fFlags;
 }
@@ -182,6 +192,7 @@ public int getFlags() {
  * @see IDOMImport#setFlags(int)
  * @since 3.0
  */
+@Override
 public void setFlags(int flags) {
 	this.fFlags = flags;
 }

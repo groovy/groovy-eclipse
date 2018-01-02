@@ -37,22 +37,27 @@ class DefaultValuePairBinding extends MemberValuePairBinding {
 		}
 	}
 
+	@Override
 	public IMethodBinding getMethodBinding() {
 		return this.bindingResolver.getMethodBinding(this.method);
 	}
 
+	@Override
 	public String getName() {
 		return new String(this.method.selector);
 	}
 
+	@Override
 	public Object getValue() {
 		return this.value;
 	}
 
+	@Override
 	public boolean isDefault() {
 		return true;
 	}
 
+	@Override
 	public boolean isDeprecated() {
 		return this.method.isDeprecated();
 	}

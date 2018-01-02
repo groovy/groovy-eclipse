@@ -231,6 +231,7 @@ import org.eclipse.jdt.internal.core.BasicCompilationUnit;
 import org.eclipse.jdt.internal.core.BinaryTypeConverter;
 import org.eclipse.jdt.internal.core.INamingRequestor;
 import org.eclipse.jdt.internal.core.InternalNamingConventions;
+import org.eclipse.jdt.internal.core.JarPackageFragmentRoot;
 import org.eclipse.jdt.internal.core.JavaElementRequestor;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.ModuleSourcePathManager;
@@ -294,6 +295,7 @@ public final class CompletionEngine
 			this.accessibility = accessibility;
 		}
 
+		@Override
 		public String toString() {
 			StringBuffer buffer = new StringBuffer();
 			buffer.append('{');
@@ -328,6 +330,7 @@ public final class CompletionEngine
 			this.accessibility = accessibility;
 		}
 
+		@Override
 		public String toString() {
 			StringBuffer buffer = new StringBuffer();
 			buffer.append('{');
@@ -396,6 +399,7 @@ public final class CompletionEngine
 			return pb;
 		}
 
+		@Override
 		public CategorizedProblem createProblem(
 				char[] originatingFileName,
 				int problemId,
@@ -421,6 +425,7 @@ public final class CompletionEngine
 						columnNumber), originatingFileName, severity, start);
 		}
 
+		@Override
 		public CategorizedProblem createProblem(
 				char[] originatingFileName,
 				int problemId,
@@ -791,20 +796,35 @@ public final class CompletionEngine
 	static final char[] THROWS = "throws".toCharArray();  //$NON-NLS-1$
 
 	static InvocationSite FakeInvocationSite = new InvocationSite(){
+		@Override
 		public TypeBinding[] genericTypeArguments() { return null; }
+		@Override
 		public boolean isSuperAccess(){ return false; }
+		@Override
 		public boolean isTypeAccess(){ return false; }
+		@Override
 		public void setActualReceiverType(ReferenceBinding receiverType) {/* empty */}
+		@Override
 		public void setDepth(int depth){/* empty */}
+		@Override
 		public void setFieldIndex(int depth){/* empty */}
+		@Override
 		public int sourceEnd() { return 0; 	}
+		@Override
 		public int sourceStart() { return 0; 	}
+		@Override
 		public TypeBinding invocationTargetType() { return null; }
+		@Override
 		public boolean receiverIsImplicitThis() { return false; }
+		@Override
 		public InferenceContext18 freshInferenceContext(Scope scope) { return null; }
+		@Override
 		public ExpressionContext getExpressionContext() { return ExpressionContext.VANILLA_CONTEXT; }
+		@Override
 		public boolean isQualifiedSuper() { return false; }
+		@Override
 		public boolean checkingPotentialCompatibility() { return false; }
+		@Override
 		public void acceptPotentiallyCompatibleMethods(MethodBinding[] methods) {/* ignore */}
 	};
 
@@ -863,6 +883,7 @@ public final class CompletionEngine
 		this.monitor = monitor;
 	}
 	
+	@Override
 	public void accept(ICompilationUnit sourceUnit, AccessRestriction accessRestriction) {
 		if (!CharOperation.equals(sourceUnit.getMainTypeName(), TypeConstants.PACKAGE_INFO_NAME)) {
 			// do not accept package-info.java as a type for completion engine
@@ -874,6 +895,7 @@ public final class CompletionEngine
 		}
 	}
 	
+	@Override
 	public void acceptConstructor(
 			int modifiers,
 			char[] simpleTypeName,
@@ -1295,6 +1317,7 @@ public final class CompletionEngine
 	 *    Module names are in the form "a.b.c".
 	 *    The default module is represented by an empty array.
 	 */
+	@Override
 	public void acceptModule(char[] moduleName) {
 		if (this.knownModules.containsKey(moduleName)) return;
 		if (CharOperation.equals(moduleName, this.moduleDeclaration.moduleName)) return;
@@ -1324,13 +1347,7 @@ public final class CompletionEngine
 		
 	}
 
-	/**
-	 * One result of the search consists of a new package.
-	 *
-	 * NOTE - All package names are presented in their readable form:
-	 *    Package names are in the form "a.b.c".
-	 *    The default package is represented by an empty array.
-	 */
+	@Override
 	public void acceptPackage(char[] packageName) {
 
 		if (this.knownPkgs.containsKey(packageName)) return;
@@ -1379,14 +1396,7 @@ public final class CompletionEngine
 		}
 	}
 
-	/**
-	 * One result of the search consists of a new type.
-	 *
-	 * NOTE - All package and type names are presented in their readable form:
-	 *    Package names are in the form "a.b.c".
-	 *    Nested type names are in the qualified form "A.I".
-	 *    The default package is represented by an empty array.
-	 */
+	@Override
 	public void acceptType(
 		char[] packageName,
 		char[] simpleTypeName,
@@ -5603,6 +5613,7 @@ public final class CompletionEngine
 		MissingTypesGuesser missingTypesConverter = new MissingTypesGuesser(this);
 		MissingTypesGuesser.GuessedTypeRequestor substitutionRequestor =
 			new MissingTypesGuesser.GuessedTypeRequestor() {
+				@Override
 				public void accept(
 						TypeBinding guessedType,
 						Binding[] missingElements,
@@ -6749,7 +6760,7 @@ public final class CompletionEngine
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=195346
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=343342
 			if (this.assistNodeIsInsideCase) {
-				if (field.isFinal() && field.isStatic()) {
+				if (field.isFinal()) {
 					if (this.assistNodeIsString){
 						if (field.type == null || field.type.id != TypeIds.T_JavaLangString)
 							continue next;
@@ -7814,6 +7825,7 @@ public final class CompletionEngine
 		MissingTypesGuesser missingTypesConverter = new MissingTypesGuesser(this);
 		MissingTypesGuesser.GuessedTypeRequestor substitutionRequestor =
 			new MissingTypesGuesser.GuessedTypeRequestor() {
+				@Override
 				public void accept(
 						TypeBinding guessedType,
 						Binding[] missingElements,
@@ -9836,6 +9848,7 @@ public final class CompletionEngine
 		MissingTypesGuesser missingTypesConverter = new MissingTypesGuesser(this);
 		MissingTypesGuesser.GuessedTypeRequestor substitutionRequestor =
 			new MissingTypesGuesser.GuessedTypeRequestor() {
+				@Override
 				public void accept(
 						TypeBinding guessedType,
 						Binding[] missingElements,
@@ -10203,6 +10216,7 @@ public final class CompletionEngine
 		MissingTypesGuesser missingTypesConverter = new MissingTypesGuesser(this);
 		MissingTypesGuesser.GuessedTypeRequestor substitutionRequestor =
 			new MissingTypesGuesser.GuessedTypeRequestor() {
+				@Override
 				public void accept(
 						TypeBinding guessedType,
 						Binding[] missingElements,
@@ -10237,6 +10251,7 @@ public final class CompletionEngine
 		MissingTypesGuesser missingTypesConverter = new MissingTypesGuesser(this);
 		MissingTypesGuesser.GuessedTypeRequestor substitutionRequestor =
 			new MissingTypesGuesser.GuessedTypeRequestor() {
+				@Override
 				public void accept(
 						TypeBinding guessedType,
 						Binding[] missingElements,
@@ -10704,7 +10719,25 @@ public final class CompletionEngine
 		}
 	}
 
+	private HashSet<String> getAllJarModuleNames(IJavaProject javaProject2) {
+		HashSet<String> modules = new HashSet<>();
+		try {
+			for (IPackageFragmentRoot root : javaProject2.getAllPackageFragmentRoots()) {
+				if (root instanceof JarPackageFragmentRoot) {
+					IModuleDescription desc = root.getModuleDescription();
+					desc = desc == null ? ((JarPackageFragmentRoot) root).getAutomaticModuleDescription() : desc;
+					String name = desc != null ? desc.getElementName() : null;
+					if (name != null && name.length() > 0)
+						modules.add(name);
+				}
+			}
+		} catch (JavaModelException e) {
+			// do nothing
+		}
+		return modules;
+	}
 	private void findTargettedModules(char[] prefix, HashSet<String> skipSet) {
+		HashSet<String> probableModules = new HashSet<>();
 		ModuleSourcePathManager mManager = JavaModelManager.getModulePathManager();
 		JavaElementRequestor javaElementRequestor = new JavaElementRequestor();
 		try {
@@ -10712,12 +10745,20 @@ public final class CompletionEngine
 			IModuleDescription[] modules = javaElementRequestor.getModules();
 			for (IModuleDescription module : modules) {
 				String name = module.getElementName();
-				if (name == null || name.equals("") || skipSet.contains(name)) //$NON-NLS-1$
+				if (name == null || name.equals("")) //$NON-NLS-1$
 					continue;
-				this.acceptModule(name.toCharArray());
+				probableModules.add(name);
 			}
 		} catch (JavaModelException e) {
 			// TODO ignore for now
+		}
+		probableModules.addAll(getAllJarModuleNames(this.javaProject));
+		if (prefix != CharOperation.ALL_PREFIX && prefix != null && prefix.length > 0) {
+			probableModules.removeIf(e -> isFailedMatch(prefix, e.toCharArray()));
+		}
+		for (String s : probableModules) {
+			if (!skipSet.contains(s))
+				this.acceptModule(s.toCharArray());
 		}
 	}
 	private void findTargettedModules(CompletionOnModuleReference moduleReference, HashSet<String> skipSet) {
@@ -11780,6 +11821,7 @@ public final class CompletionEngine
 
 		UnresolvedReferenceNameFinder.UnresolvedReferenceNameRequestor nameRequestor =
 			new UnresolvedReferenceNameFinder.UnresolvedReferenceNameRequestor() {
+				@Override
 				public void acceptName(char[] name) {
 					CompletionEngine.this.acceptUnresolvedName(name);
 					proposedNames.add(name);
@@ -11848,6 +11890,7 @@ public final class CompletionEngine
 
 		UnresolvedReferenceNameFinder.UnresolvedReferenceNameRequestor nameRequestor =
 			new UnresolvedReferenceNameFinder.UnresolvedReferenceNameRequestor() {
+				@Override
 				public void acceptName(char[] name) {
 					CompletionEngine.this.acceptUnresolvedName(name);
 					proposedNames.add(name);
@@ -12037,6 +12080,7 @@ public final class CompletionEngine
 
 			UnresolvedReferenceNameFinder.UnresolvedReferenceNameRequestor nameRequestor =
 				new UnresolvedReferenceNameFinder.UnresolvedReferenceNameRequestor() {
+					@Override
 					public void acceptName(char[] name) {
 						int relevance = computeBaseRelevance();
 						relevance += computeRelevanceForInterestingProposal();
@@ -12183,20 +12227,24 @@ public final class CompletionEngine
 				}
 			}
 
+			@Override
 			public void acceptNameWithoutPrefixAndSuffix(char[] name,int reusedCharacters) {
 				accept(name, 0, reusedCharacters);
 			}
 
+			@Override
 			public void acceptNameWithPrefix(char[] name, boolean isFirstPrefix, int reusedCharacters) {
 				accept(name, isFirstPrefix ? R_NAME_FIRST_PREFIX :  R_NAME_PREFIX, reusedCharacters);
 			}
 
+			@Override
 			public void acceptNameWithPrefixAndSuffix(char[] name, boolean isFirstPrefix, boolean isFirstSuffix, int reusedCharacters) {
 				accept(
 						name,
 						(isFirstPrefix ? R_NAME_FIRST_PREFIX : R_NAME_PREFIX) + (isFirstSuffix ? R_NAME_FIRST_SUFFIX : R_NAME_SUFFIX),
 						reusedCharacters);
 			}
+			@Override
 			public void acceptNameWithSuffix(char[] name, boolean isFirstSuffix, int reusedCharacters) {
 				accept(name, isFirstSuffix ? R_NAME_FIRST_SUFFIX : R_NAME_SUFFIX, reusedCharacters);
 			}
@@ -12690,6 +12738,7 @@ public final class CompletionEngine
 		return this.noCacheNameEnvironment;
 	}
 
+	@Override
 	public AssistParser getParser() {
 
 		return this.parser;

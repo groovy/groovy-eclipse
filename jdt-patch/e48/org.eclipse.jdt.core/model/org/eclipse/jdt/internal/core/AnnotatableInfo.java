@@ -38,6 +38,7 @@ public class AnnotatableInfo extends MemberElementInfo {
 	 * @see org.eclipse.jdt.internal.compiler.env.ISourceMethod#getNameSourceEnd()
 	 * @see org.eclipse.jdt.internal.compiler.env.ISourceField#getNameSourceEnd()
 	 */
+	@Override
 	public int getNameSourceEnd() {
 		return this.nameEnd;
 	}
@@ -46,6 +47,7 @@ public class AnnotatableInfo extends MemberElementInfo {
 	 * @see org.eclipse.jdt.internal.compiler.env.ISourceMethod#getNameSourceStart()
 	 * @see org.eclipse.jdt.internal.compiler.env.ISourceField#getNameSourceStart()
 	 */
+	@Override
 	public int getNameSourceStart() {
 		return this.nameStart;
 	}

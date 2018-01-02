@@ -50,18 +50,22 @@ public class VerificationInfo extends ClassFileStruct implements IVerificationTy
 		}
 	}
 
+	@Override
 	public int getTag() {
 		return this.tag;
 	}
 
+	@Override
 	public int getOffset() {
 		return this.offset;
 	}
 
+	@Override
 	public int getConstantPoolIndex() {
 		return this.constantPoolIndex;
 	}
 
+	@Override
 	public char[] getClassTypeName() {
 		return this.classTypeName;
 	}

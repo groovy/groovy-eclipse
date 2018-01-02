@@ -26,6 +26,7 @@ public class WeakHashSetOfCharArray {
 			super(referent, queue);
 			this.hashCode = CharOperation.hashCode(referent);
 		}
+		@Override
 		public boolean equals(Object obj) {
 			if (!(obj instanceof HashableWeakReference)) return false;
 			char[] referent = (char[]) get();
@@ -33,9 +34,11 @@ public class WeakHashSetOfCharArray {
 			if (referent == null) return other == null;
 			return CharOperation.equals(referent, other);
 		}
+		@Override
 		public int hashCode() {
 			return this.hashCode;
 		}
+		@Override
 		public String toString() {
 			char[] referent = (char[]) get();
 			if (referent == null) return "[hashCode=" + this.hashCode + "] <referent was garbage collected>"; //$NON-NLS-1$  //$NON-NLS-2$
@@ -202,6 +205,7 @@ public class WeakHashSetOfCharArray {
 		return this.elementSize;
 	}
 
+	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer("{"); //$NON-NLS-1$
 		for (int i = 0, length = this.values.length; i < length; i++) {

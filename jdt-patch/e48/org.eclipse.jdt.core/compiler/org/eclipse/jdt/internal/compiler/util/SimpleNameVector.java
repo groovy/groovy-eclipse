@@ -86,6 +86,7 @@ public final class SimpleNameVector {
 		return this.size;
 	}
 
+	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
 		for (int i = 0; i < this.size; i++) {

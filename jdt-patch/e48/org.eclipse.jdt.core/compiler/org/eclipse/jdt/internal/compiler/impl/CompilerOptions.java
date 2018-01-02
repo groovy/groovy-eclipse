@@ -2077,6 +2077,7 @@ public class CompilerOptions {
 		return buf.toString();
 	}
 
+	@Override
 	public String toString() {
 		StringBuffer buf = new StringBuffer("CompilerOptions:"); //$NON-NLS-1$
 		// GROOVY add

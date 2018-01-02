@@ -20,6 +20,7 @@ public class SourceMethodWithChildrenInfo extends SourceMethodInfo {
 		this.children = children;
 	}
 
+	@Override
 	public IJavaElement[] getChildren() {
 		return this.children;
 	}

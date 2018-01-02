@@ -436,6 +436,7 @@ public final class ImportRewrite {
 		this.useContextToFilterImplicitImports = false;
 
 		this.defaultContext= new ImportRewriteContext() {
+			@Override
 			public int findInContext(String qualifier, String name, int kind) {
 				return findInImports(qualifier, name, kind);
 			}

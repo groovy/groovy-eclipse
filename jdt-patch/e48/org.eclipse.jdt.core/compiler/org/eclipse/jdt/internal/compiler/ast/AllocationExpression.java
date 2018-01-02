@@ -89,6 +89,7 @@ public class AllocationExpression extends Expression implements IPolyExpression,
 	public TypeBinding[] argumentTypes = Binding.NO_PARAMETERS;
 	public boolean argumentsHaveErrors = false;
 	
+@Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 	// check captured variables are initialized in current context (26134)
 	checkCapturedLocalInitializationIfNecessary((ReferenceBinding)this.binding.declaringClass.erasure(), currentScope, flowInfo);
@@ -172,6 +173,7 @@ public Expression enclosingInstance() {
 	return null;
 }
 
+@Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 	cleanUpInferenceContexts();
 	if (!valueRequired)
@@ -245,14 +247,17 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean
 /**
  * @see org.eclipse.jdt.internal.compiler.lookup.InvocationSite#genericTypeArguments()
  */
+@Override
 public TypeBinding[] genericTypeArguments() {
 	return this.genericTypeArguments;
 }
 
+@Override
 public boolean isSuperAccess() {
 	return false;
 }
 
+@Override
 public boolean isTypeAccess() {
 	return true;
 }
@@ -302,6 +307,7 @@ public void manageSyntheticAccessIfNecessary(BlockScope currentScope, FlowInfo f
 	}
 }
 
+@Override
 public StringBuffer printExpression(int indent, StringBuffer output) {
 	if (this.type != null) { // type null for enum constant initializations
 		output.append("new "); //$NON-NLS-1$
@@ -329,6 +335,7 @@ public StringBuffer printExpression(int indent, StringBuffer output) {
 	return output.append(')');
 }
 
+@Override
 public TypeBinding resolveType(BlockScope scope) {
 	// Propagate the type checking to the arguments, and check if the constructor is defined.
 	final boolean isDiamond = this.type != null && (this.type.bits & ASTNode.IsDiamond) != 0;
@@ -536,10 +543,12 @@ void checkIllegalNullAnnotation(BlockScope scope, TypeBinding allocationType) {
 }
 
 // For allocation expressions, boxing compatibility is same as vanilla compatibility, since java.lang's wrapper types are not generic.
+@Override
 public boolean isBoxingCompatibleWith(TypeBinding targetType, Scope scope) {
 	return isPolyExpression() ? false : isCompatibleWith(scope.boxing(targetType), scope);
 }
 
+@Override
 public boolean isCompatibleWith(TypeBinding targetType, final Scope scope) {
 	if (this.argumentsHaveErrors || this.binding == null || !this.binding.isValidBinding() || targetType == null || scope == null)
 		return false;
@@ -672,18 +681,22 @@ public void checkTypeArgumentRedundancy(ParameterizedTypeBinding allocationType,
 	scope.problemReporter().redundantSpecificationOfTypeArguments(this.type, allocationType.arguments);
 }
 
+@Override
 public void setActualReceiverType(ReferenceBinding receiverType) {
 	// ignored
 }
 
+@Override
 public void setDepth(int i) {
 	// ignored
 }
 
+@Override
 public void setFieldIndex(int i) {
 	// ignored
 }
 
+@Override
 public void traverse(ASTVisitor visitor, BlockScope scope) {
 	if (visitor.visit(this, scope)) {
 		if (this.typeArguments != null) {
@@ -704,17 +717,21 @@ public void traverse(ASTVisitor visitor, BlockScope scope) {
 /**
  * @see org.eclipse.jdt.internal.compiler.ast.Expression#setExpectedType(org.eclipse.jdt.internal.compiler.lookup.TypeBinding)
  */
+@Override
 public void setExpectedType(TypeBinding expectedType) {
 	this.typeExpected = expectedType;
 }
 
+@Override
 public void setExpressionContext(ExpressionContext context) {
 	this.expressionContext = context;
 }
 
+@Override
 public boolean isPolyExpression() {
 	return isPolyExpression(this.binding);
 }
+@Override
 public boolean isPolyExpression(MethodBinding method) {
 	return (this.expressionContext == ASSIGNMENT_CONTEXT || this.expressionContext == INVOCATION_CONTEXT) &&
 			this.type != null && (this.type.bits & ASTNode.IsDiamond) != 0;
@@ -723,22 +740,27 @@ public boolean isPolyExpression(MethodBinding method) {
 /**
  * @see org.eclipse.jdt.internal.compiler.lookup.InvocationSite#invocationTargetType()
  */
+@Override
 public TypeBinding invocationTargetType() {
 	return this.typeExpected;
 }
 
+@Override
 public boolean statementExpression() {
 	return ((this.bits & ASTNode.ParenthesizedMASK) == 0);
 }
 
 //-- interface Invocation: --
+@Override
 public MethodBinding binding() {
 	return this.binding;
 }
+@Override
 public Expression[] arguments() {
 	return this.arguments;
 }
 
+@Override
 public void registerInferenceContext(ParameterizedGenericMethodBinding method, InferenceContext18 infCtx18) {
 	if (this.inferenceContexts == null)
 		this.inferenceContexts = new SimpleLookupTable();
@@ -754,6 +776,7 @@ public void registerResult(TypeBinding targetType, MethodBinding method) {
 	}
 }
 
+@Override
 public InferenceContext18 getInferenceContext(ParameterizedMethodBinding method) {
 	if (this.inferenceContexts == null)
 		return null;
@@ -773,9 +796,11 @@ public void cleanUpInferenceContexts() {
 }
 
 //-- interface InvocationSite: --
+@Override
 public ExpressionContext getExpressionContext() {
 	return this.expressionContext;
 }
+@Override
 public InferenceContext18 freshInferenceContext(Scope scope) {
 	return new InferenceContext18(scope, this.arguments, this, this.outerInferenceContext);
 }

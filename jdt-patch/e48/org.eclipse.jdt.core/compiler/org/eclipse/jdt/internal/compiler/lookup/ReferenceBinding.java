@@ -86,10 +86,12 @@ abstract public class ReferenceBinding extends TypeBinding {
 
 	public static final ReferenceBinding LUB_GENERIC = new ReferenceBinding() { /* used for lub computation */
 		{ this.id = TypeIds.T_undefined; }
+		@Override
 		public boolean hasTypeBit(int bit) { return false; }
 	};
 
 	private static final Comparator<FieldBinding> FIELD_COMPARATOR = new Comparator<FieldBinding>() {
+		@Override
 		public int compare(FieldBinding o1, FieldBinding o2) {
 			char[] n1 = o1.name;
 			char[] n2 = o2.name;
@@ -97,6 +99,7 @@ abstract public class ReferenceBinding extends TypeBinding {
 		}
 	};
 	private static final Comparator<MethodBinding> METHOD_COMPARATOR = new Comparator<MethodBinding>() {
+		@Override
 		public int compare(MethodBinding o1, MethodBinding o2) {
 			MethodBinding m1 = o1;
 			MethodBinding m2 = o2;
@@ -243,6 +246,7 @@ public MethodBinding[] availableMethods() {
 /**
  * Answer true if the receiver can be instantiated
  */
+@Override
 public boolean canBeInstantiated() {
 	return (this.modifiers & (ClassFileConstants.AccAbstract | ClassFileConstants.AccInterface | ClassFileConstants.AccEnum | ClassFileConstants.AccAnnotation)) == 0;
 }
@@ -346,6 +350,7 @@ public boolean canBeSeenBy(ReferenceBinding receiverType, ReferenceBinding invoc
 /**
  * Answer true if the receiver is visible to the type provided by the scope.
  */
+@Override
 public boolean canBeSeenBy(Scope scope) {
 	// GROOVY add
 	if (scope.compilationUnitScope() != null && scope.compilationUnitScope().canSeeEverything()) return true;
@@ -906,6 +911,7 @@ public void computeId(LookupEnvironment environment) {
 /**
  * p.X<T extends Y & I, U extends Y> {} -> Lp/X<TT;TU;>;
  */
+@Override
 public char[] computeUniqueKey(boolean isLeaf) {
 	if (!isLeaf) return signature();
 	return genericTypeSignature();
@@ -916,15 +922,18 @@ public char[] computeUniqueKey(boolean isLeaf) {
  *
  * NOTE: This method should only be used during/after code gen.
  */
+@Override
 public char[] constantPoolName() /* java/lang/Object */ {
 	if (this.constantPoolName != null) return this.constantPoolName;
 	return this.constantPoolName = CharOperation.concatWith(this.compoundName, '/');
 }
 
+@Override
 public String debugName() {
 	return (this.compoundName != null) ? this.hasTypeAnnotations() ? annotatedDebugName() : new String(readableName()) : "UNNAMED TYPE"; //$NON-NLS-1$
 }
 
+@Override
 public int depth() {
 	int depth = 0;
 	ReferenceBinding current = this;
@@ -992,6 +1001,7 @@ public final int getAccessFlags() {
 /**
  * @return the JSR 175 annotations for this type.
  */
+@Override
 public AnnotationBinding[] getAnnotations() {
 	return retrieveAnnotations(this);
 }
@@ -999,6 +1009,7 @@ public AnnotationBinding[] getAnnotations() {
 /**
  * @see org.eclipse.jdt.internal.compiler.lookup.Binding#getAnnotationTagBits()
  */
+@Override
 public long getAnnotationTagBits() {
 	return this.tagBits;
 }
@@ -1036,6 +1047,7 @@ public ReferenceBinding getMemberType(char[] typeName) {
 	return null;
 }
 
+@Override
 public MethodBinding[] getMethods(char[] selector) {
 	return Binding.NO_METHODS;
 }
@@ -1053,6 +1065,7 @@ public int getOuterLocalVariablesSlotSize() {
 	return 0;
 }
 
+@Override
 public PackageBinding getPackage() {
 	return this.fPackage;
 }
@@ -1065,6 +1078,7 @@ public TypeVariableBinding getTypeVariable(char[] variableName) {
 	return null;
 }
 
+@Override
 public int hashCode() {
 	// ensure ReferenceBindings hash to the same position as UnresolvedReferenceBindings so they can be replaced without rehashing
 	// ALL ReferenceBindings are unique when created so equals() is the same as ==
@@ -1168,6 +1182,7 @@ int getNullDefault() {
 	return 0;
 }
 
+@Override
 public boolean acceptsNonNullDefault() {
 	return true;
 }
@@ -1260,6 +1275,7 @@ public final boolean isAbstract() {
 	return (this.modifiers & ClassFileConstants.AccAbstract) != 0;
 }
 
+@Override
 public boolean isAnnotationType() {
 	return (this.modifiers & ClassFileConstants.AccAnnotation) != 0;
 }
@@ -1268,10 +1284,12 @@ public final boolean isBinaryBinding() {
 	return (this.tagBits & TagBits.IsBinaryBinding) != 0;
 }
 
+@Override
 public boolean isClass() {
 	return (this.modifiers & (ClassFileConstants.AccInterface | ClassFileConstants.AccAnnotation | ClassFileConstants.AccEnum)) == 0;
 }
 
+@Override
 public boolean isProperType(boolean admitCapture18) {
 	ReferenceBinding outer = enclosingType();
 	if (outer != null && !outer.isProperType(admitCapture18))
@@ -1284,6 +1302,7 @@ public boolean isProperType(boolean admitCapture18) {
  * In addition to improving performance, caching also ensures there is no infinite regression
  * since per nature, the compatibility check is recursive through parameterized type arguments (122775)
  */
+@Override
 public boolean isCompatibleWith(TypeBinding otherType, /*@Nullable*/ Scope captureScope) {
 	if (equalsEquals(otherType, this))
 		return true;
@@ -1389,6 +1408,7 @@ private boolean isCompatibleWith0(TypeBinding otherType, /*@Nullable*/ Scope cap
 	}
 }
 
+@Override
 public boolean isSubtypeOf(TypeBinding other) {
 	if (isSubTypeOfRTL(other))
 		return true;
@@ -1451,6 +1471,7 @@ public final boolean isDeprecated() {
 	return (this.modifiers & ClassFileConstants.AccDeprecated) != 0;
 }
 
+@Override
 public boolean isEnum() {
 	return (this.modifiers & ClassFileConstants.AccEnum) != 0;
 }
@@ -1483,11 +1504,13 @@ public boolean isHierarchyConnected() {
 	return true;
 }
 
+@Override
 public boolean isInterface() {
 	// consider strict interfaces and annotation types
 	return (this.modifiers & ClassFileConstants.AccInterface) != 0;
 }
 
+@Override
 public boolean isFunctionalInterface(Scope scope) {
 	MethodBinding method;
 	return isInterface() && (method = getSingleAbstractMethod(scope, true)) != null && method.isValidBinding();
@@ -1531,6 +1554,7 @@ public final boolean isPublic() {
 /**
  * Answer true if the receiver is a static member type (or toplevel)
  */
+@Override
 public final boolean isStatic() {
 	return (this.modifiers & (ClassFileConstants.AccStatic | ClassFileConstants.AccInterface)) != 0 || (this.tagBits & TagBits.IsNestedType) == 0;
 }
@@ -1556,6 +1580,7 @@ public boolean isSuperclassOf(ReferenceBinding otherType) {
 /**
  * @see org.eclipse.jdt.internal.compiler.lookup.TypeBinding#isThrowable()
  */
+@Override
 public boolean isThrowable() {
 	ReferenceBinding current = this;
 	do {
@@ -1578,6 +1603,7 @@ public boolean isThrowable() {
  * type (i.e. Throwable or Exception).
  * @see org.eclipse.jdt.internal.compiler.lookup.TypeBinding#isUncheckedException(boolean)
  */
+@Override
 public boolean isUncheckedException(boolean includeSupertype) {
 	switch (this.id) {
 			case TypeIds.T_JavaLangError :
@@ -1643,6 +1669,7 @@ public final ReferenceBinding outermostEnclosingType() {
  * In the case of member types, as the qualified name from its top level type.
  * For example, for a member type N defined inside M & A: "A.M.N".
  */
+@Override
 public char[] qualifiedSourceName() {
 	if (isMemberType())
 		return CharOperation.concat(enclosingType().qualifiedSourceName(), sourceName(), '.');
@@ -1654,6 +1681,7 @@ public char[] qualifiedSourceName() {
  *
  * NOTE: This method should only be used during/after code gen.
  */
+@Override
 public char[] readableName() /*java.lang.Object,  p.X<T> */ {
 	return readableName(true);
 }
@@ -1715,6 +1743,7 @@ AnnotationBinding[] retrieveAnnotations(Binding binding) {
 	return holder == null ? Binding.NO_ANNOTATIONS : holder.getAnnotations();
 }
 
+@Override
 public void setAnnotations(AnnotationBinding[] annotations) {
 	storeAnnotations(this, annotations);
 }
@@ -1728,6 +1757,7 @@ public void tagAsHavingDefectiveContainerType() {
 /**
  * @see org.eclipse.jdt.internal.compiler.lookup.TypeBinding#nullAnnotatedReadableName(CompilerOptions,boolean)
  */
+@Override
 public char[] nullAnnotatedReadableName(CompilerOptions options, boolean shortNames) {
 	if (shortNames)
 		return nullAnnotatedShortReadableName(options);
@@ -1802,6 +1832,7 @@ char[] nullAnnotatedShortReadableName(CompilerOptions options) {
     return shortReadableName;
 }
 
+@Override
 public char[] shortReadableName() /*Object*/ {
 	return shortReadableName(true);
 }
@@ -1830,6 +1861,7 @@ public char[] shortReadableName(boolean showGenerics) /*Object*/ {
 	return shortReadableName;
 }
 
+@Override
 public char[] signature() /* Ljava/lang/Object; */ {
 	if (this.signature != null)
 		return this.signature;
@@ -1837,6 +1869,7 @@ public char[] signature() /* Ljava/lang/Object; */ {
 	return this.signature = CharOperation.concat('L', constantPoolName(), ';');
 }
 
+@Override
 public char[] sourceName() {
 	return this.sourceName;
 }
@@ -1874,10 +1907,12 @@ SimpleLookupTable storedAnnotations(boolean forceInitialize) {
 	return null; // overrride if interested in storing annotations for the receiver, its fields and methods
 }
 
+@Override
 public ReferenceBinding superclass() {
 	return null;
 }
 
+@Override
 public ReferenceBinding[] superInterfaces() {
 	return Binding.NO_SUPERINTERFACES;
 }
@@ -2050,6 +2085,7 @@ protected MethodBinding [] getInterfaceAbstractContracts(Scope scope, boolean re
 	}
 	return contracts;
 }
+@Override
 public MethodBinding getSingleAbstractMethod(Scope scope, boolean replaceWildcards) {
 	
 	int index = replaceWildcards ? 0 : 1;

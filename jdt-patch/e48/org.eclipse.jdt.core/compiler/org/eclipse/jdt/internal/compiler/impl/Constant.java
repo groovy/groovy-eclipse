@@ -1518,6 +1518,7 @@ public abstract class Constant implements TypeIds, OperatorIds {
 		throw new ShouldNotImplement(Messages.bind(Messages.constant_cannotConvertedTo, new String[] { typeName(), "String" })); //$NON-NLS-1$
 	}
 
+	@Override
 	public String toString(){
 		if (this == NotAConstant) return "(Constant) NotAConstant"; //$NON-NLS-1$
 		return super.toString(); }

@@ -30,6 +30,7 @@ public class CompletionOnMemberValueName extends MemberValuePair {
 		super(token, sourceStart, sourceEnd, null);
 	}
 
+	@Override
 	public StringBuffer print(int indent, StringBuffer output) {
 		output.append("<CompleteOnAttributeName:"); //$NON-NLS-1$
 		output.append(this.name);

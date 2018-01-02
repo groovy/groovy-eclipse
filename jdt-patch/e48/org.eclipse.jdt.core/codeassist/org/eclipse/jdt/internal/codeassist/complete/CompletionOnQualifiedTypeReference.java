@@ -46,15 +46,18 @@ public CompletionOnQualifiedTypeReference(char[][] previousIdentifiers, char[] c
 	this.completionIdentifier = completionIdentifier;
 	this.kind = kind;
 }
+@Override
 public void aboutToResolve(Scope scope) {
 	getTypeBinding(scope);
 }
 /*
  * No expansion of the completion reference into an array one
  */
+@Override
 public TypeReference augmentTypeWithAdditionalDimensions(int additionalDimensions, Annotation[][] additionalAnnotations, boolean isVarargs) {
 	return this;
 }
+@Override
 protected TypeBinding getTypeBinding(Scope scope) {
 	// it can be a package, type or member type
 	Binding binding = scope.parent.getTypeOrPackage(this.tokens); // step up from the ClassScope
@@ -88,6 +91,7 @@ public boolean isSuperType(){
 public void setKind(int kind) {
 	this.kind = kind;
 }
+@Override
 public StringBuffer printExpression(int indent, StringBuffer output) {
 	switch (this.kind) {
 		case K_CLASS :

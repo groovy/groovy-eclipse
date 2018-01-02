@@ -52,9 +52,11 @@ public CreatePackageDeclarationOperation(String name, ICompilationUnit parentEle
 	super(parentElement);
 	this.name= name;
 }
+@Override
 protected StructuralPropertyDescriptor getChildPropertyDescriptor(ASTNode parent) {
 	return CompilationUnit.PACKAGE_PROPERTY;
 }
+@Override
 protected ASTNode generateElementAST(ASTRewrite rewriter, ICompilationUnit cu) throws JavaModelException {
 	//look for an existing package declaration
 	IJavaElement[] children = getCompilationUnit().getChildren();
@@ -74,12 +76,14 @@ protected ASTNode generateElementAST(ASTRewrite rewriter, ICompilationUnit cu) t
 /**
  * Creates and returns the handle for the element this operation created.
  */
+@Override
 protected IJavaElement generateResultHandle() {
 	return getCompilationUnit().getPackageDeclaration(this.name);
 }
 /**
  * @see CreateElementInCUOperation#getMainTaskName()
  */
+@Override
 public String getMainTaskName(){
 	return Messages.operation_createPackageProgress;
 }
@@ -90,6 +94,7 @@ public String getMainTaskName(){
  * <li> if no type - first thing in the CU
  * <li>
  */
+@Override
 protected void initializeDefaultPosition() {
 	try {
 		ICompilationUnit cu = getCompilationUnit();
@@ -116,6 +121,7 @@ protected void initializeDefaultPosition() {
  * @see IJavaModelStatus
  * @see JavaConventions
  */
+@Override
 public IJavaModelStatus verify() {
 	IJavaModelStatus status = super.verify();
 	if (!status.isOK()) {

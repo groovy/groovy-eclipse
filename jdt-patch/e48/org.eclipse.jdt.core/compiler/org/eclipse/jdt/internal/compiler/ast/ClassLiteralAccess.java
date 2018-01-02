@@ -30,6 +30,7 @@ public class ClassLiteralAccess extends Expression {
 		this.sourceEnd = sourceEnd;
 	}
 
+	@Override
 	public FlowInfo analyseCode(
 		BlockScope currentScope,
 		FlowContext flowContext,
@@ -53,6 +54,7 @@ public class ClassLiteralAccess extends Expression {
 	 * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
 	 * @param valueRequired boolean
 	 */
+	@Override
 	public void generateCode(
 		BlockScope currentScope,
 		CodeStream codeStream,
@@ -67,11 +69,13 @@ public class ClassLiteralAccess extends Expression {
 		codeStream.recordPositionsFrom(pc, this.sourceStart);
 	}
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 
 		return this.type.print(0, output).append(".class"); //$NON-NLS-1$
 	}
 
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 
 		this.constant = Constant.NotAConstant;
@@ -120,6 +124,7 @@ public class ClassLiteralAccess extends Expression {
 		return this.resolvedType;
 	}
 
+	@Override
 	public void traverse(
 		ASTVisitor visitor,
 		BlockScope blockScope) {

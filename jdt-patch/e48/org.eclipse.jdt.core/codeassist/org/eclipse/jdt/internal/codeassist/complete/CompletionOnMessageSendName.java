@@ -24,6 +24,7 @@ public class CompletionOnMessageSendName extends MessageSend {
 		this.nameSourcePosition = end;
 	}
 
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 
 		this.constant = Constant.NotAConstant;
@@ -47,6 +48,7 @@ public class CompletionOnMessageSendName extends MessageSend {
 		throw new CompletionNodeFound(this, this.actualReceiverType, scope);
 	}
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 
 		output.append("<CompleteOnMessageSendName:"); //$NON-NLS-1$

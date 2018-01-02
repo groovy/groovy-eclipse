@@ -37,6 +37,7 @@ public class ClasspathJMod extends ClasspathJar {
 	}
 
 
+	@Override
 	public NameEnvironmentAnswer findClass(String binaryFileName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName, boolean asBinaryOnly) {
 		if (!isPackage(qualifiedPackageName, moduleName)) return null; // most common case
 
@@ -75,6 +76,7 @@ public class ClasspathJMod extends ClasspathJar {
 		}
 		return null;
 	}
+	@Override
 	protected String readJarContent(final SimpleSet packageSet) {
 		String modInfo = null;
 		for (Enumeration<? extends ZipEntry> e = this.zipFile.entries(); e.hasMoreElements(); ) {

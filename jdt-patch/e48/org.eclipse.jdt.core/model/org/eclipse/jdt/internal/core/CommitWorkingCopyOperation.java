@@ -66,6 +66,7 @@ public class CommitWorkingCopyOperation extends JavaModelOperation {
 	 * @exception JavaModelException if setting the source
 	 * 	of the original compilation unit fails
 	 */
+	@Override
 	protected void executeOperation() throws JavaModelException {
 		try {
 			beginTask(Messages.workingCopy_commit, 2);
@@ -185,6 +186,7 @@ public class CommitWorkingCopyOperation extends JavaModelOperation {
 	protected CompilationUnit getCompilationUnit() {
 		return (CompilationUnit)getElementToProcess();
 	}
+	@Override
 	protected ISchedulingRule getSchedulingRule() {
 		IResource resource = getElementToProcess().getResource();
 		if (resource == null) return null;
@@ -206,6 +208,7 @@ public class CommitWorkingCopyOperation extends JavaModelOperation {
 	 *  <li>READ_ONLY - the original compilation unit is in read-only mode
 	 *  </ul>
 	 */
+	@Override
 	public IJavaModelStatus verify() {
 		CompilationUnit cu = getCompilationUnit();
 		if (!cu.isWorkingCopy()) {

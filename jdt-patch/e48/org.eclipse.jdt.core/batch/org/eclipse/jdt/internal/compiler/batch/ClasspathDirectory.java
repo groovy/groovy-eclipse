@@ -109,6 +109,7 @@ boolean doesFileExist(String fileName, String qualifiedPackageName) {
 			return true;
 	return false;
 }
+@Override
 public List fetchLinkedJars(FileSystem.ClasspathSectionProblemReporter problemReporter) {
 	return null;
 }
@@ -179,9 +180,11 @@ public boolean hasAnnotationFileFor(String qualifiedTypeName) {
 	}
 	return false;
 }
+@Override
 public NameEnvironmentAnswer findClass(char[] typeName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName) {
 	return findClass(typeName, qualifiedPackageName, moduleName, qualifiedBinaryFileName, false);
 }
+@Override
 public NameEnvironmentAnswer findClass(char[] typeName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName, boolean asBinaryOnly) {
 	if (File.separatorChar == '/')
       return findClassInternal(typeName, qualifiedPackageName, qualifiedBinaryFileName, asBinaryOnly);
@@ -247,6 +250,7 @@ private NameEnvironmentAnswer findSourceSecondaryType(String typeName, String qu
 }
 
 
+@Override
 public char[][][] findTypeNames(String qualifiedPackageName, String moduleName) {
 	if (!isPackage(qualifiedPackageName, moduleName)) {
 		return null; // most common case
@@ -256,6 +260,7 @@ public char[][][] findTypeNames(String qualifiedPackageName, String moduleName) 
 		return null;
 	}
 	String[] listFiles = dir.list(new FilenameFilter() {
+		@Override
 		public boolean accept(File directory1, String name) {
 			String fileName = name.toLowerCase();
 			return fileName.endsWith(".class") || fileName.endsWith(".java"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -282,9 +287,11 @@ public char[][][] findTypeNames(String qualifiedPackageName, String moduleName) 
 	}
 	return result;
 }
+@Override
 public void initialize() throws IOException {
 	// nothing to do
 }
+@Override
 public char[][] getModulesDeclaringPackage(String qualifiedPackageName, /*@Nullable*/String moduleName) {
 	String qp2 = File.separatorChar == '/' ? qualifiedPackageName : qualifiedPackageName.replace('/', File.separatorChar);
 	return singletonModuleNameIf(directoryList(qp2) != null);
@@ -302,6 +309,7 @@ public boolean hasCompilationUnit(String qualifiedPackageName, String moduleName
 	}
 	return false;
 }
+@Override
 public boolean hasCUDeclaringPackage(String qualifiedPackageName, Function<CompilationUnit, String> pkgNameExtractor) {
 	String qp2 = File.separatorChar == '/' ? qualifiedPackageName : qualifiedPackageName.replace('/', File.separatorChar);
 	return Stream.of(directoryList(qp2)).anyMatch(entry -> {
@@ -320,12 +328,15 @@ public boolean hasCUDeclaringPackage(String qualifiedPackageName, Function<Compi
 		return hasDeclaration;
 	});
 }
+@Override
 public void reset() {
 	this.directoryCache = new Hashtable(11);
 }
+@Override
 public String toString() {
 	return "ClasspathDirectory " + this.path; //$NON-NLS-1$
 }
+@Override
 public char[] normalizedPath() {
 	if (this.normalizedPath == null) {
 		this.normalizedPath = this.path.toCharArray();
@@ -335,12 +346,15 @@ public char[] normalizedPath() {
 	}
 	return this.normalizedPath;
 }
+@Override
 public String getPath() {
 	return this.path;
 }
+@Override
 public int getMode() {
 	return this.mode;
 }
+@Override
 public IModule getModule() {
 	if (this.isAutoModule && this.module == null) {
 		return this.module = IModule.createAutomatic(this.path, false, null/*no manifest*/);

@@ -34,6 +34,7 @@ public class ConstantValueAttribute
 	/**
 	 * @see IConstantValueAttribute#getConstantValue()
 	 */
+	@Override
 	public IConstantPoolEntry getConstantValue() {
 		return this.constantPoolEntry;
 	}
@@ -41,6 +42,7 @@ public class ConstantValueAttribute
 	/**
 	 * @see IConstantValueAttribute#getConstantValueIndex()
 	 */
+	@Override
 	public int getConstantValueIndex() {
 		return this.constantValueIndex;
 	}

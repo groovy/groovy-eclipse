@@ -143,7 +143,7 @@ public void handle(
 	 }
 
 	// GROOVY edit -- added null check
-	if ((severity & ProblemSeverities.Optional) != 0 && problemId != IProblem.Task  && !this.options.ignoreSourceFolderWarningOption && unitResult != null) {
+	if ((severity & ProblemSeverities.Optional) != 0 && problemId != IProblem.Task && !this.options.ignoreSourceFolderWarningOption && unitResult != null) {
 		ICompilationUnit cu = unitResult.getCompilationUnit();
 		try {
 			if (cu != null && cu.ignoreOptionalProblems())

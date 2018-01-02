@@ -37,6 +37,7 @@ class AddFolderToIndex extends IndexRequest {
 		this.inclusionPatterns = inclusionPatterns;
 		this.exclusionPatterns = exclusionPatterns;
 	}
+	@Override
 	public boolean execute(IProgressMonitor progressMonitor) {
 
 		if (this.isCancelled || progressMonitor != null && progressMonitor.isCanceled()) return true;
@@ -59,6 +60,7 @@ class AddFolderToIndex extends IndexRequest {
 			if (this.exclusionPatterns == null && this.inclusionPatterns == null) {
 				folder.accept(
 					new IResourceProxyVisitor() {
+						@Override
 						public boolean visit(IResourceProxy proxy) /* throws CoreException */{
 							if (proxy.getType() == IResource.FILE) {
 								if (org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(proxy.getName()))
@@ -73,6 +75,7 @@ class AddFolderToIndex extends IndexRequest {
 			} else {
 				folder.accept(
 					new IResourceProxyVisitor() {
+						@Override
 						public boolean visit(IResourceProxy proxy) /* throws CoreException */{
 							switch(proxy.getType()) {
 								case IResource.FILE :
@@ -106,6 +109,7 @@ class AddFolderToIndex extends IndexRequest {
 		}
 		return true;
 	}
+	@Override
 	public String toString() {
 		return "adding " + this.folderPath + " to index " + this.containerPath; //$NON-NLS-1$ //$NON-NLS-2$
 	}

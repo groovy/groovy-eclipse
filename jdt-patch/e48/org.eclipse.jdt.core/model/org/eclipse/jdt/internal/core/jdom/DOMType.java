@@ -254,6 +254,7 @@ DOMType(char[] document, int[] sourceRange, String name, int[] nameRange, int fl
 /**
  * @see IDOMType#addSuperInterface(String)
  */
+@Override
 public void addSuperInterface(String name) throws IllegalArgumentException {
 	if (name == null) {
 		throw new IllegalArgumentException(Messages.dom_addNullInterface);
@@ -269,6 +270,7 @@ public void addSuperInterface(String name) throws IllegalArgumentException {
 /**
  * @see DOMMember#appendMemberBodyContents(CharArrayBuffer)
  */
+@Override
 protected void appendMemberBodyContents(CharArrayBuffer buffer) {
 	buffer.append(this.fDocument, this.fOpenBodyRange[0], this.fOpenBodyRange[1] + 1 - this.fOpenBodyRange[0]);
 	appendContentsOfChildren(buffer);
@@ -278,6 +280,7 @@ protected void appendMemberBodyContents(CharArrayBuffer buffer) {
 /**
  * @see DOMMember#appendMemberDeclarationContents(CharArrayBuffer )
  */
+@Override
 protected void appendMemberDeclarationContents(CharArrayBuffer  buffer) {
 
 	if (this.fTypeKeyword != null) {
@@ -358,6 +361,7 @@ protected void appendMemberDeclarationContents(CharArrayBuffer  buffer) {
 /**
  * @see DOMMember#appendSimpleContents(CharArrayBuffer)
  */
+@Override
 protected void appendSimpleContents(CharArrayBuffer buffer) {
 	// append eveything before my name
 	buffer.append(this.fDocument, this.fSourceRange[0], this.fNameRange[0] - this.fSourceRange[0]);
@@ -377,6 +381,7 @@ protected void appendSimpleContents(CharArrayBuffer buffer) {
 /**
  * @see IDOMNode#canHaveChildren()
  */
+@Override
 public boolean canHaveChildren() {
 	return true;
 }
@@ -391,12 +396,14 @@ int getCloseBodyPosition() {
 /**
  * @see DOMNode#getDetailedNode()
  */
+@Override
 protected DOMNode getDetailedNode() {
 	return (DOMNode)getFactory().createType(getContents());
 }
 /**
  * @see DOMNode#getInsertionPosition()
  */
+@Override
 public int getInsertionPosition() {
 	// this should return the position of the end of the last line separator before the closing brace of the type
 	// See PR 1GELSDQ: ITPJUI:WINNT - JDOM: IType.createMethod does not insert nicely for inner types
@@ -405,6 +412,7 @@ public int getInsertionPosition() {
 /**
  * @see IDOMNode#getJavaElement
  */
+@Override
 public IJavaElement getJavaElement(IJavaElement parent) throws IllegalArgumentException {
 	switch (parent.getElementType()) {
 		case IJavaElement.COMPILATION_UNIT:
@@ -419,12 +427,14 @@ public IJavaElement getJavaElement(IJavaElement parent) throws IllegalArgumentEx
 /**
  * @see DOMMember#getMemberDeclarationStartPosition()
  */
+@Override
 protected int getMemberDeclarationStartPosition() {
 	return this.fTypeRange[0];
 }
 /**
  * @see IDOMNode#getNodeType()
  */
+@Override
 public int getNodeType() {
 	return IDOMNode.TYPE;
 }
@@ -437,6 +447,7 @@ int getOpenBodyEnd() {
 /**
  * @see IDOMType#getSuperclass()
  */
+@Override
 public String getSuperclass() {
 	becomeDetailed();
 	if (getMask(MASK_TYPE_HAS_SUPERCLASS)) {
@@ -452,12 +463,14 @@ public String getSuperclass() {
 /**
  * @see IDOMType#getSuperInterfaces()
  */
+@Override
 public String[] getSuperInterfaces() {
 	return this.fSuperInterfaces;
 }
 /**
  * @see IDOMNode
  */
+@Override
 public boolean isAllowableChild(IDOMNode node) {
 	if (node != null) {
 		int type= node.getNodeType();
@@ -471,12 +484,14 @@ public boolean isAllowableChild(IDOMNode node) {
 /**
  * @see IDOMType#isClass()
  */
+@Override
 public boolean isClass() {
 	return getMask(MASK_TYPE_IS_CLASS);
 }
 /**
  * @see DOMNode
  */
+@Override
 protected DOMNode newDOMNode() {
 	return new DOMType();
 }
@@ -485,6 +500,7 @@ protected DOMNode newDOMNode() {
  * the node on the line on which the node starts, and all whitespace after the node up to
  * the next node's start
  */
+@Override
 void normalize(ILineStartFinder finder) {
 	// perform final changes to the open and close body ranges
 	int openBodyEnd, openBodyStart, closeBodyStart, closeBodyEnd;
@@ -584,6 +600,7 @@ void normalize(ILineStartFinder finder) {
 /**
  * Normalizes this <code>DOMNode</code>'s end position.
  */
+@Override
 void normalizeEndPosition(ILineStartFinder finder, DOMNode next) {
 	if (next == null) {
 		// this node's end position includes all of the characters up
@@ -605,6 +622,7 @@ void normalizeEndPosition(ILineStartFinder finder, DOMNode next) {
 /**
  * Offsets all the source indexes in this node by the given amount.
  */
+@Override
 protected void offset(int offset) {
 	super.offset(offset);
 	offsetRange(this.fCloseBodyRange, offset);
@@ -618,6 +636,7 @@ protected void offset(int offset) {
 /**
  * @see IDOMType#setClass(boolean)
  */
+@Override
 public void setClass(boolean b) {
 	becomeDetailed();
 	fragment();
@@ -650,6 +669,7 @@ void setCloseBodyRangeStart(int start) {
  *
  * @see IDOMNode#setName(String)
  */
+@Override
 public void setName(String name) throws IllegalArgumentException {
 	if (name == null) {
 		throw new IllegalArgumentException(Messages.element_nullName);
@@ -678,6 +698,7 @@ void setOpenBodyRangeStart(int start) {
 /**
  * @see IDOMType#setSuperclass(String)
  */
+@Override
 public void setSuperclass(String superclassName) {
 	becomeDetailed();
 	fragment();
@@ -687,6 +708,7 @@ public void setSuperclass(String superclassName) {
 /**
  * @see IDOMType#setSuperInterfaces(String[])
  */
+@Override
 public void setSuperInterfaces(String[] names) {
 	becomeDetailed();
 	if (names == null) {
@@ -719,6 +741,7 @@ void setTypeKeyword(String keyword) {
 /**
  * @see DOMNode#shareContents(DOMNode)
  */
+@Override
 protected void shareContents(DOMNode node) {
 	super.shareContents(node);
 	DOMType type= (DOMType)node;
@@ -737,6 +760,7 @@ protected void shareContents(DOMNode node) {
 /**
  * @see IDOMNode#toString()
  */
+@Override
 public String toString() {
 	return "TYPE: " + getName(); //$NON-NLS-1$
 }
@@ -745,6 +769,7 @@ public String toString() {
  * @see IDOMType#getTypeParameters()
  * @since 3.0
  */
+@Override
 public String[] getTypeParameters() {
 	return this.fTypeParameters;
 }
@@ -753,6 +778,7 @@ public String[] getTypeParameters() {
  * @see IDOMType#isEnum()
  * @since 3.0
  */
+@Override
 public boolean isEnum() {
 	return this.fIsEnum;
 }
@@ -761,6 +787,7 @@ public boolean isEnum() {
  * @see IDOMType#isAnnotation()
  * @since 3.0
  */
+@Override
 public boolean isAnnotation() {
 	return this.fIsAnnotation;
 }
@@ -769,6 +796,7 @@ public boolean isAnnotation() {
  * @see IDOMType#setEnum(boolean)
  * @since 3.0
  */
+@Override
 public void setEnum(boolean b) {
 	this.fIsEnum = b;
 	if (this.fIsEnum) {
@@ -782,6 +810,7 @@ public void setEnum(boolean b) {
  * @see IDOMType#setAnnotation(boolean)
  * @since 3.0
  */
+@Override
 public void setAnnotation(boolean b) {
 	this.fIsAnnotation= b;
 	if (this.fIsAnnotation) {
@@ -796,6 +825,7 @@ public void setAnnotation(boolean b) {
  * @see IDOMType#setTypeParameters(java.lang.String[])
  * @since 3.0
  */
+@Override
 public void setTypeParameters(String[] typeParameters) {
 	this.fTypeParameters = typeParameters;
 }

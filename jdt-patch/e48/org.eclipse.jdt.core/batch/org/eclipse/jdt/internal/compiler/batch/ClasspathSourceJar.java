@@ -29,6 +29,7 @@ public class ClasspathSourceJar extends ClasspathJar {
 		this.encoding = encoding;
 	}
 
+	@Override
 	public NameEnvironmentAnswer findClass(char[] typeName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName, boolean asBinaryOnly) {
 		if (!isPackage(qualifiedPackageName, moduleName))
 			return null; // most common case
@@ -61,6 +62,7 @@ public class ClasspathSourceJar extends ClasspathJar {
 		return null;
 	}
 
+	@Override
 	public int getMode() {
 		return SOURCE;
 	}

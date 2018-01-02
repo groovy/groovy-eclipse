@@ -45,12 +45,14 @@ public class CompletionOnMemberAccess extends FieldReference {
 		this.isInsideAnnotation = isInsideAnnotation;
 	}
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 
 		output.append("<CompleteOnMemberAccess:"); //$NON-NLS-1$
 		return super.printExpression(0, output).append('>');
 	}
 
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 
 		this.actualReceiverType = this.receiver.resolveType(scope);

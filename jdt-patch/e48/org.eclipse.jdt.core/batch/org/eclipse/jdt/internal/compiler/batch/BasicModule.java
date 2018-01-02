@@ -43,6 +43,7 @@ public class BasicModule implements IModule {
 		public char[][] with() {
 			return this.with;
 		}
+		@Override
 		public String toString() {
 			StringBuffer buffer = new StringBuffer();
 			buffer.append("provides"); //$NON-NLS-1$
@@ -185,6 +186,7 @@ public class BasicModule implements IModule {
 	public boolean isOpen() {
 		return this.isOpen;
 	}
+	@Override
 	public void addReads(char[] modName) {
 		Predicate<char[]> shouldAdd = m -> {
 			return Stream.of(this.requires).map(ref -> ref.name()).noneMatch(n -> CharOperation.equals(modName, n));
@@ -197,6 +199,7 @@ public class BasicModule implements IModule {
 			this.requires[len] = info;
 		}		
 	}
+	@Override
 	public void addExports(IModule.IPackageExport[] toAdd) {
 		Predicate<char[]> shouldAdd = m -> {
 			return Stream.of(this.exports).map(ref -> ((PackageExportImpl) ref).pack).noneMatch(n -> CharOperation.equals(m, n));
@@ -215,6 +218,7 @@ public class BasicModule implements IModule {
 				ArrayList::addAll);
 		this.exports = merged.toArray(new PackageExportImpl[merged.size()]);
 	}
+	@Override
 	public boolean equals(Object o) {
 		if (this == o)
 			return true;
@@ -234,6 +238,7 @@ public class BasicModule implements IModule {
 		result = 31 * result + c;
 		return result;
 	}
+	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer(getClass().getName());
 		toStringContent(buffer);

@@ -24,6 +24,7 @@ public class CompletionOnModuleReference extends ModuleReference {
 		super(tokens, sourcePositions);
 	}
 
+	@Override
 	public ModuleBinding resolve(Scope scope) {
 		super.resolve(scope);
 //		if (this.binding != null) {
@@ -32,6 +33,7 @@ public class CompletionOnModuleReference extends ModuleReference {
 			throw new CompletionNodeFound();
 		//}
 	}
+	@Override
 	public StringBuffer print(int indent, StringBuffer output) {
 
 		printIndent(indent, output).append("<CompleteOnModuleReference:"); //$NON-NLS-1$

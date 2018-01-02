@@ -65,9 +65,11 @@ public PackageReferenceLocator(PackageReferencePattern pattern) {
 
 	this.pattern = pattern;
 }
+@Override
 public int match(Annotation node, MatchingNodeSet nodeSet) {
 	return match(node.type, nodeSet);
 }
+@Override
 public int match(ASTNode node, MatchingNodeSet nodeSet) { // interested in ImportReference
 	if (!(node instanceof ImportReference)) return IMPOSSIBLE_MATCH;
 
@@ -78,12 +80,14 @@ public int match(ASTNode node, MatchingNodeSet nodeSet) { // interested in Impor
 //public int match(FieldDeclaration node, MatchingNodeSet nodeSet) - SKIP IT
 //public int match(MethodDeclaration node, MatchingNodeSet nodeSet) - SKIP IT
 //public int match(MessageSend node, MatchingNodeSet nodeSet) - SKIP IT
+@Override
 public int match(Reference node, MatchingNodeSet nodeSet) { // interested in QualifiedNameReference
 	if (!(node instanceof QualifiedNameReference)) return IMPOSSIBLE_MATCH;
 
 	return nodeSet.addMatch(node, matchLevelForTokens(((QualifiedNameReference) node).tokens));
 }
 //public int match(TypeDeclaration node, MatchingNodeSet nodeSet) - SKIP IT
+@Override
 public int match(TypeReference node, MatchingNodeSet nodeSet) { // interested in QualifiedTypeReference only
 	if (node instanceof JavadocSingleTypeReference) {
 		char[][] tokens = new char[][] { ((JavadocSingleTypeReference) node).token };
@@ -93,6 +97,7 @@ public int match(TypeReference node, MatchingNodeSet nodeSet) { // interested in
 	return nodeSet.addMatch(node, matchLevelForTokens(((QualifiedTypeReference) node).tokens));
 }
 
+@Override
 protected int matchLevel(ImportReference importRef) {
 	return matchLevelForTokens(importRef.tokens);
 }
@@ -139,9 +144,8 @@ protected int matchLevelForTokens(char[][] tokens) {
 	}
 	return IMPOSSIBLE_MATCH;
 }
-/* (non-Javadoc)
- * @see org.eclipse.jdt.internal.core.search.matching.PatternLocator#matchLevelAndReportImportRef(org.eclipse.jdt.internal.compiler.ast.ImportReference, org.eclipse.jdt.internal.compiler.lookup.Binding, org.eclipse.jdt.internal.core.search.matching.MatchLocator)
- */
+
+@Override
 protected void matchLevelAndReportImportRef(ImportReference importRef, Binding binding, MatchLocator locator) throws CoreException {
 	Binding refBinding = binding;
 	if (importRef.isStatic()) {
@@ -162,6 +166,7 @@ protected void matchLevelAndReportImportRef(ImportReference importRef, Binding b
 	}
 	super.matchLevelAndReportImportRef(importRef, refBinding, locator);
 }
+@Override
 protected void matchReportImportRef(ImportReference importRef, Binding binding, IJavaElement element, int accuracy, MatchLocator locator) throws CoreException {
 	if (binding == null) {
 		this.matchReportReference(importRef, element, null/*no binding*/, accuracy, locator);
@@ -185,9 +190,11 @@ protected void matchReportImportRef(ImportReference importRef, Binding binding, 
 		}
 	}
 }
+@Override
 protected void matchReportReference(ASTNode reference, IJavaElement element, Binding elementBinding, int accuracy, MatchLocator locator) throws CoreException {
 	matchReportReference(reference, element, null, null, elementBinding, accuracy, locator);
 }
+@Override
 protected void matchReportReference(ASTNode reference, IJavaElement element, IJavaElement localElement, IJavaElement[] otherElements, Binding elementBinding, int accuracy, MatchLocator locator) throws CoreException {
 	long[] positions = null;
 	int last = -1;
@@ -267,9 +274,11 @@ protected void matchReportReference(ASTNode reference, IJavaElement element, IJa
 	this.match = packageReferenceMatch;
 	locator.report(this.match);
 }
+@Override
 protected int referenceType() {
 	return IJavaElement.PACKAGE_FRAGMENT;
 }
+@Override
 public int resolveLevel(ASTNode node) {
 	if (node instanceof JavadocQualifiedTypeReference) {
 		JavadocQualifiedTypeReference qualifRef = (JavadocQualifiedTypeReference) node;
@@ -290,6 +299,7 @@ public int resolveLevel(ASTNode node) {
 //	if (node instanceof ImportReference) - Not called when resolve is true, see MatchingNodeSet.reportMatching(unit)
 	return IMPOSSIBLE_MATCH;
 }
+@Override
 public int resolveLevel(Binding binding) {
 	if (binding == null) return INACCURATE_MATCH;
 
@@ -358,6 +368,7 @@ protected int resolveLevel(QualifiedNameReference qNameRef) {
 	}
 	return resolveLevel(typeBinding);
 }
+@Override
 public String toString() {
 	return "Locator for " + this.pattern.toString(); //$NON-NLS-1$
 }

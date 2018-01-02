@@ -42,16 +42,20 @@ public PatternSearchJob(SearchPattern pattern, SearchParticipant participant, IJ
 	this.scope = scope;
 	this.requestor = requestor;
 }
+@Override
 public boolean belongsTo(String jobFamily) {
 	return true;
 }
+@Override
 public void cancel() {
 	// search job is cancelled through progress
 }
+@Override
 public void ensureReadyToRun() {
 	if (!this.areIndexesReady)
 		getIndexes(null/*progress*/); // may trigger some index recreation
 }
+@Override
 public boolean execute(IProgressMonitor progressMonitor) {
 	SubMonitor subMonitor = SubMonitor.convert(progressMonitor, 3);
 
@@ -95,6 +99,7 @@ public Index[] getIndexes(IProgressMonitor progressMonitor) {
 public boolean waitNeeded() {
 	return true;
 }
+@Override
 public String getJobFamily() {
 	return ""; //$NON-NLS-1$
 }
@@ -117,6 +122,7 @@ public boolean search(Index index, IProgressMonitor progressMonitor) {
 		monitor.exitRead(); // finished reading
 	}
 }
+@Override
 public String toString() {
 	return "searching " + this.pattern.toString(); //$NON-NLS-1$
 }

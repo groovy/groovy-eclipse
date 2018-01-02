@@ -42,6 +42,7 @@ public DoStatement(Expression condition, Statement action, int sourceStart, int 
 	if (action instanceof EmptyStatement) action.bits |= ASTNode.IsUsefulEmptyStatement;
 }
 
+@Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 	this.breakLabel = new BranchLabel();
 	this.continueLabel = new BranchLabel();
@@ -153,6 +154,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
  * Do statement code generation
  *
  */
+@Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	if ((this.bits & ASTNode.IsReachable) == 0) {
 		return;
@@ -207,6 +209,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	codeStream.recordPositionsFrom(pc, this.sourceStart);
 }
 
+@Override
 public StringBuffer printStatement(int indent, StringBuffer output) {
 	printIndent(indent, output).append("do"); //$NON-NLS-1$
 	if (this.action == null)
@@ -219,6 +222,7 @@ public StringBuffer printStatement(int indent, StringBuffer output) {
 	return this.condition.printExpression(0, output).append(");"); //$NON-NLS-1$
 }
 
+@Override
 public void resolve(BlockScope scope) {
 	TypeBinding type = this.condition.resolveTypeExpecting(scope, TypeBinding.BOOLEAN);
 	this.condition.computeConversion(scope, type, type);
@@ -226,6 +230,7 @@ public void resolve(BlockScope scope) {
 		this.action.resolve(scope);
 }
 
+@Override
 public void traverse(ASTVisitor visitor, BlockScope scope) {
 	if (visitor.visit(this, scope)) {
 		if (this.action != null) {

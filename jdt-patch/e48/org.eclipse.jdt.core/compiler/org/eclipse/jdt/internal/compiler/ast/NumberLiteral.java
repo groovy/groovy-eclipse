@@ -23,10 +23,12 @@ public abstract class NumberLiteral extends Literal {
 		super (s,e) ;
 	}
 
+	@Override
 	public boolean isValidJavaStatement(){
 		return false ;
 	}
 
+	@Override
 	public char[] source(){
 		return this.source;
 	}

@@ -31,10 +31,12 @@ public class JarIndexLocation extends IndexLocation {
 		this.localUrl = localUrl2;
 	}
 
+	@Override
 	public boolean createNewFile() throws IOException {
 		return false;
 	}
 
+	@Override
 	public void close() {
 		if (this.jarFile != null) {
 			try {
@@ -46,15 +48,18 @@ public class JarIndexLocation extends IndexLocation {
 		}
 	}
 
+	@Override
 	public boolean delete() {
 		return false;
 	}
 
+	@Override
 	public boolean equals(Object other) {
 		if (!(other instanceof JarIndexLocation)) return false;
 		return this.localUrl.equals(((JarIndexLocation) other).localUrl);
 	}
 
+	@Override
 	public boolean exists() {
 		try {
 			if (this.jarFile == null) {
@@ -71,14 +76,17 @@ public class JarIndexLocation extends IndexLocation {
 		return true;
 	}
 
+	@Override
 	public String fileName() {
 		return null;
 	}
 
+	@Override
 	public File getIndexFile() {
 		return null;
 	}
 
+	@Override
 	InputStream getInputStream() throws IOException {
 		if (this.jarFile == null) {
 			JarURLConnection connection = (JarURLConnection) this.localUrl.openConnection();
@@ -91,18 +99,22 @@ public class JarIndexLocation extends IndexLocation {
 		return this.jarFile.getInputStream(this.jarEntry);
 	}
 
+	@Override
 	public String getCanonicalFilePath() {
 		return null;
 	}
 
+	@Override
 	public long lastModified() {
 		return -1;
 	}
 
+	@Override
 	public long length() {
 		return -1;
 	}
 
+	@Override
 	public boolean startsWith(IPath path) {
 		return (path.isPrefixOf(new Path(this.localUrl.getPath())));
 	}

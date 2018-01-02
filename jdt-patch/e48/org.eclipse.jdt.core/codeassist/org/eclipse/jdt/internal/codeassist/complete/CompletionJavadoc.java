@@ -93,6 +93,7 @@ public class CompletionJavadoc extends Javadoc {
 	/*
 	 * @see org.eclipse.jdt.internal.compiler.ast.ASTNode#print(int, java.lang.StringBuffer)
 	 */
+	@Override
 	public StringBuffer print(int indent, StringBuffer output) {
 		printIndent(indent, output).append("/**\n"); //$NON-NLS-1$
 		boolean nodePrinted = false;
@@ -150,6 +151,7 @@ public class CompletionJavadoc extends Javadoc {
 	 *
 	 * @throws CompletionNodeFound
 	 */
+	@Override
 	public void resolve(ClassScope scope) {
 		super.resolve(scope);
 		internalResolve(scope);
@@ -161,6 +163,7 @@ public class CompletionJavadoc extends Javadoc {
 	 *
 	 * @throws CompletionNodeFound
 	 */
+	@Override
 	public void resolve(CompilationUnitScope scope) {
 		internalResolve(scope);
 	}
@@ -171,6 +174,7 @@ public class CompletionJavadoc extends Javadoc {
 	 *
 	 * @throws CompletionNodeFound
 	 */
+	@Override
 	public void resolve(MethodScope scope) {
 		super.resolve(scope);
 		internalResolve(scope);

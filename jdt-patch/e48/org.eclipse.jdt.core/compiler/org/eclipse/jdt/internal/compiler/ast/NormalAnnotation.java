@@ -26,6 +26,7 @@ public class NormalAnnotation extends Annotation {
 		this.sourceEnd = type.sourceEnd;
 	}
 
+	@Override
 	public ElementValuePair[] computeElementValuePairs() {
 		int numberOfPairs = this.memberValuePairs == null ? 0 : this.memberValuePairs.length;
 		if (numberOfPairs == 0)
@@ -40,9 +41,11 @@ public class NormalAnnotation extends Annotation {
 	/**
 	 * @see org.eclipse.jdt.internal.compiler.ast.Annotation#memberValuePairs()
 	 */
+	@Override
 	public MemberValuePair[] memberValuePairs() {
 		return this.memberValuePairs == null ? NoValuePairs : this.memberValuePairs;
 	}
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 		super.printExpression(indent, output);
 		output.append('(');
@@ -58,6 +61,7 @@ public class NormalAnnotation extends Annotation {
 		return output;
 	}
 
+	@Override
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		if (visitor.visit(this, scope)) {
 			if (this.type != null) {
@@ -71,6 +75,7 @@ public class NormalAnnotation extends Annotation {
 		}
 		visitor.endVisit(this, scope);
 	}
+	@Override
 	public void traverse(ASTVisitor visitor, ClassScope scope) {
 		if (visitor.visit(this, scope)) {
 			if (this.type != null) {

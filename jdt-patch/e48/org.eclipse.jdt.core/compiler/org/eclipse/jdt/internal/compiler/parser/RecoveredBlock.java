@@ -44,6 +44,7 @@ public RecoveredBlock(Block block, RecoveredElement parent, int bracketBalance){
 
 	this.preserveContent = parser().methodRecoveryActivated || parser().statementRecoveryActivated;
 }
+@Override
 public RecoveredElement add(AbstractMethodDeclaration methodDeclaration, int bracketBalanceValue) {
 	if (this.parent != null && this.parent instanceof RecoveredMethod) {
 		RecoveredMethod enclosingRecoveredMethod = (RecoveredMethod) this.parent;
@@ -58,6 +59,7 @@ public RecoveredElement add(AbstractMethodDeclaration methodDeclaration, int bra
 /*
  * Record a nested block declaration
  */
+@Override
 public RecoveredElement add(Block nestedBlockDeclaration, int bracketBalanceValue) {
 	resetPendingModifiers();
 
@@ -85,6 +87,7 @@ public RecoveredElement add(Block nestedBlockDeclaration, int bracketBalanceValu
 /*
  * Record a local declaration
  */
+@Override
 public RecoveredElement add(LocalDeclaration localDeclaration, int bracketBalanceValue) {
 	return this.add(localDeclaration, bracketBalanceValue, false);
 }
@@ -144,6 +147,7 @@ public RecoveredElement add(LocalDeclaration localDeclaration, int bracketBalanc
 /*
  * Record a statement declaration
  */
+@Override
 public RecoveredElement add(Statement stmt, int bracketBalanceValue) {
 	return this.add(stmt, bracketBalanceValue, false);
 }
@@ -171,6 +175,7 @@ public RecoveredElement add(Statement stmt, int bracketBalanceValue, boolean del
 /*
  * Addition of a type to an initializer (act like inside method body)
  */
+@Override
 public RecoveredElement add(TypeDeclaration typeDeclaration, int bracketBalanceValue) {
 	return this.add(typeDeclaration, bracketBalanceValue, false);
 }
@@ -201,6 +206,7 @@ public RecoveredElement add(TypeDeclaration typeDeclaration, int bracketBalanceV
 	if (typeDeclaration.declarationSourceEnd == 0) return element;
 	return this;
 }
+@Override
 public RecoveredElement addAnnotationName(int identifierPtr, int identifierLengthPtr, int annotationStart, int bracketBalanceValue) {
 	if (this.pendingAnnotations == null) {
 		this.pendingAnnotations = new RecoveredAnnotation[5];
@@ -222,6 +228,7 @@ public RecoveredElement addAnnotationName(int identifierPtr, int identifierLengt
 
 	return element;
 }
+@Override
 public void addModifier(int flag, int modifiersSourceStart) {
 	this.pendingModifiers |= flag;
 
@@ -258,15 +265,18 @@ void attachPendingModifiers(RecoveredAnnotation[] pendingAnnots, int pendingAnno
 /*
  * Answer the associated parsed structure
  */
+@Override
 public ASTNode parseTree(){
 	return this.blockDeclaration;
 }
+@Override
 public void resetPendingModifiers() {
 	this.pendingAnnotations = null;
 	this.pendingAnnotationCount = 0;
 	this.pendingModifiers = 0;
 	this.pendingModifersSourceStart = -1;
 }
+@Override
 public String toString(int tab) {
 	StringBuffer result = new StringBuffer(tabString(tab));
 	result.append("Recovered block:\n"); //$NON-NLS-1$
@@ -382,6 +392,7 @@ public Block updatedBlock(int depth, Set<TypeDeclaration> knownTypes){
 /*
  * Rebuild a statement from the nested structure which is in scope
  */
+@Override
 public Statement updatedStatement(int depth, Set<TypeDeclaration> knownTypes){
 
 	return updatedBlock(depth, knownTypes);
@@ -390,6 +401,7 @@ public Statement updatedStatement(int depth, Set<TypeDeclaration> knownTypes){
  * A closing brace got consumed, might have closed the current element,
  * in which case both the currentElement is exited
  */
+@Override
 public RecoveredElement updateOnClosingBrace(int braceStart, int braceEnd){
 	if ((--this.bracketBalance <= 0) && (this.parent != null)){
 		this.updateSourceEndIfNecessary(braceStart, braceEnd);
@@ -411,6 +423,7 @@ public RecoveredElement updateOnClosingBrace(int braceStart, int braceEnd){
  * An opening brace got consumed, might be the expected opening one of the current element,
  * in which case the bodyStart is updated.
  */
+@Override
 public RecoveredElement updateOnOpeningBrace(int braceStart, int braceEnd){
 
 	// create a nested block
@@ -421,6 +434,7 @@ public RecoveredElement updateOnOpeningBrace(int braceStart, int braceEnd){
 /*
  * Final update the corresponding parse node
  */
+@Override
 public void updateParseTree(){
 
 	updatedBlock(0, new HashSet<TypeDeclaration>());
@@ -428,6 +442,7 @@ public void updateParseTree(){
 /*
  * Record a field declaration
  */
+@Override
 public RecoveredElement add(FieldDeclaration fieldDeclaration, int bracketBalanceValue) {
 	resetPendingModifiers();
 

@@ -91,6 +91,7 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 		anonymousType.allocation = this;
 	}
 
+	@Override
 	public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 		// analyse the enclosing instance
 		if (this.enclosingInstance != null) {
@@ -167,11 +168,13 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 		return flowInfo;
 	}
 
+	@Override
 	public Expression enclosingInstance() {
 
 		return this.enclosingInstance;
 	}
 
+	@Override
 	public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 		cleanUpInferenceContexts();
 		if (!valueRequired)
@@ -244,6 +247,7 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 		}
 	}
 
+	@Override
 	public boolean isSuperAccess() {
 
 		// necessary to lookup super constructor of anonymous type
@@ -257,6 +261,7 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 	 * types, since by the time we reach them, we might not yet know their
 	 * exact need.
 	 */
+	@Override
 	public void manageEnclosingInstanceAccessIfNecessary(BlockScope currentScope, FlowInfo flowInfo) {
 		if ((flowInfo.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) == 0)	{
 		ReferenceBinding allocatedTypeErasure = (ReferenceBinding) this.binding.declaringClass.erasure();
@@ -275,6 +280,7 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 		}
 	}
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 		if (this.enclosingInstance != null)
 			this.enclosingInstance.printExpression(0, output).append('.');
@@ -285,6 +291,7 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 		return output;
 	}
 
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 		// added for code assist...cannot occur with 'normal' code
 		if (this.anonymousType == null && this.enclosingInstance == null) {
@@ -613,11 +620,13 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 				this.noErrors = true;
 			}
 
+			@Override
 			public boolean visit(IntersectionTypeBinding18 intersectionTypeBinding18) {
 				Arrays.sort(intersectionTypeBinding18.intersectingTypes, (t1, t2) -> t1.id - t2.id);
 				scope.problemReporter().anonymousDiamondWithNonDenotableTypeArguments(QualifiedAllocationExpression.this.type, allocationType);
 				return this.noErrors = false;  // stop traversal
 			}
+			@Override
 			public boolean visit(TypeVariableBinding typeVariable) {
 				if (typeVariable.isCapture()) {
 					scope.problemReporter().anonymousDiamondWithNonDenotableTypeArguments(QualifiedAllocationExpression.this.type, allocationType);
@@ -625,6 +634,7 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 				}
 				return true; // continue traversal
 			}
+			@Override
 			public boolean visit(ReferenceBinding ref) {
 				if (!ref.canBeSeenBy(scope)) {
 					scope.problemReporter().invalidType(QualifiedAllocationExpression.this.anonymousType, new ProblemReferenceBinding(ref.compoundName, ref, ProblemReasons.NotVisible));
@@ -655,6 +665,7 @@ public class QualifiedAllocationExpression extends AllocationExpression {
 		}
 		return findConstructorBinding(scope, this, anonymousSuperclass, this.argumentTypes);
 	}
+	@Override
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		if (visitor.visit(this, scope)) {
 			if (this.enclosingInstance != null)

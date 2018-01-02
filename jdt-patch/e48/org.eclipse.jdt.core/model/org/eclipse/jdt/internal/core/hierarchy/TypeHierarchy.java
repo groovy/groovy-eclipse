@@ -238,6 +238,7 @@ protected void addSubtype(IType type, IType subtype) {
 /**
  * @see ITypeHierarchy
  */
+@Override
 public synchronized void addTypeHierarchyChangedListener(ITypeHierarchyChangedListener listener) {
 	ArrayList<ITypeHierarchyChangedListener> listeners = this.changeListeners;
 	if (listeners == null) {
@@ -322,6 +323,7 @@ protected void compute() throws JavaModelException, CoreException {
 /**
  * @see ITypeHierarchy
  */
+@Override
 public boolean contains(IType type) {
 	// classes
 	if (this.classToSuperclass.get(type) != null) {
@@ -340,6 +342,7 @@ public boolean contains(IType type) {
  * Determines if the change affects this hierarchy, and fires
  * change notification if required.
  */
+@Override
 public void elementChanged(ElementChangedEvent event) {
 	// type hierarchy change has already been fired
 	if (this.needsRefresh) return;
@@ -352,6 +355,7 @@ public void elementChanged(ElementChangedEvent event) {
 /**
  * @see ITypeHierarchy
  */
+@Override
 public boolean exists() {
 	if (!this.needsRefresh) return true;
 
@@ -377,9 +381,11 @@ public void fireChange() {
 	for (int i= 0; i < listeners.size(); i++) {
 		final ITypeHierarchyChangedListener listener= listeners.get(i);
 		SafeRunner.run(new ISafeRunnable() {
+			@Override
 			public void handleException(Throwable exception) {
 				Util.log(exception, "Exception occurred in listener of Type hierarchy change notification"); //$NON-NLS-1$
 			}
+			@Override
 			public void run() throws Exception {
 				listener.typeHierarchyChanged(TypeHierarchy.this);
 			}
@@ -404,6 +410,7 @@ private static byte[] flagsToBytes(Integer flags){
 /**
  * @see ITypeHierarchy
  */
+@Override
 public IType[] getAllClasses() {
 
 	TypeVector classes = this.rootClasses.copy();
@@ -415,6 +422,7 @@ public IType[] getAllClasses() {
 /**
  * @see ITypeHierarchy
  */
+@Override
 public IType[] getAllInterfaces() {
 	IType[] collection= new IType[this.interfaces.size()];
 	this.interfaces.toArray(collection);
@@ -423,6 +431,7 @@ public IType[] getAllInterfaces() {
 /**
  * @see ITypeHierarchy
  */
+@Override
 public IType[]  getAllSubtypes(IType type) {
 	return getAllSubtypesForType(type);
 }
@@ -452,6 +461,7 @@ private void getAllSubtypesForType0(IType type, ArrayList<IType> subs) {
 /**
  * @see ITypeHierarchy
  */
+@Override
 public IType[] getAllSuperclasses(IType type) {
 	IType superclass = getSuperclass(type);
 	TypeVector supers = new TypeVector();
@@ -464,6 +474,7 @@ public IType[] getAllSuperclasses(IType type) {
 /**
  * @see ITypeHierarchy
  */
+@Override
 public IType[] getAllSuperInterfaces(IType type) {
 	ArrayList<IType> supers = getAllSuperInterfaces0(type, null);
 	if (supers == null)
@@ -495,6 +506,7 @@ private ArrayList<IType> getAllSuperInterfaces0(IType type, ArrayList<IType> sup
 /**
  * @see ITypeHierarchy
  */
+@Override
 public IType[] getAllSupertypes(IType type) {
 	ArrayList<IType> supers = getAllSupertypes0(type, null);
 	if (supers == null)
@@ -530,6 +542,7 @@ private ArrayList<IType> getAllSupertypes0(IType type, ArrayList<IType> supers) 
 /**
  * @see ITypeHierarchy
  */
+@Override
 public IType[] getAllTypes() {
 	IType[] classes = getAllClasses();
 	int classesLength = classes.length;
@@ -544,6 +557,7 @@ public IType[] getAllTypes() {
 /**
  * @see ITypeHierarchy#getCachedFlags(IType)
  */
+@Override
 public int getCachedFlags(IType type) {
 	Integer flagObject = this.typeFlags.get(type);
 	if (flagObject != null){
@@ -555,6 +569,7 @@ public int getCachedFlags(IType type) {
 /**
  * @see ITypeHierarchy
  */
+@Override
 public IType[] getExtendingInterfaces(IType type) {
 	if (!isInterface(type)) return NO_TYPE;
 	return getExtendingInterfaces0(type);
@@ -589,6 +604,7 @@ private IType[] getExtendingInterfaces0(IType extendedInterface) {
 /**
  * @see ITypeHierarchy
  */
+@Override
 public IType[] getImplementingClasses(IType type) {
 	if (!isInterface(type)) {
 		return NO_TYPE;
@@ -624,12 +640,14 @@ private IType[] getImplementingClasses0(IType interfce) {
 /**
  * @see ITypeHierarchy
  */
+@Override
 public IType[] getRootClasses() {
 	return this.rootClasses.elements();
 }
 /**
  * @see ITypeHierarchy
  */
+@Override
 public IType[] getRootInterfaces() {
 	IType[] allInterfaces = getAllInterfaces();
 	IType[] roots = new IType[allInterfaces.length];
@@ -649,6 +667,7 @@ public IType[] getRootInterfaces() {
 /**
  * @see ITypeHierarchy
  */
+@Override
 public IType[] getSubclasses(IType type) {
 	if (isInterface(type)) {
 		return NO_TYPE;
@@ -662,6 +681,7 @@ public IType[] getSubclasses(IType type) {
 /**
  * @see ITypeHierarchy
  */
+@Override
 public IType[] getSubtypes(IType type) {
 	return getSubtypesForType(type);
 }
@@ -678,6 +698,7 @@ private IType[] getSubtypesForType(IType type) {
 /**
  * @see ITypeHierarchy
  */
+@Override
 public IType getSuperclass(IType type) {
 	if (isInterface(type)) {
 		return null;
@@ -687,6 +708,7 @@ public IType getSuperclass(IType type) {
 /**
  * @see ITypeHierarchy
  */
+@Override
 public IType[] getSuperInterfaces(IType type) {
 	IType[] types = this.typeToSuperInterfaces.get(type);
 	if (types == null) {
@@ -697,6 +719,7 @@ public IType[] getSuperInterfaces(IType type) {
 /**
  * @see ITypeHierarchy
  */
+@Override
 public IType[] getSupertypes(IType type) {
 	IType superclass = getSuperclass(type);
 	if (superclass == null) {
@@ -710,6 +733,7 @@ public IType[] getSupertypes(IType type) {
 /**
  * @see ITypeHierarchy
  */
+@Override
 public IType getType() {
 	return this.focusType;
 }
@@ -1268,6 +1292,7 @@ protected boolean packageRegionContainsSamePackageFragment(PackageFragment eleme
  * TODO (jerome) should use a PerThreadObject to build the hierarchy instead of synchronizing
  * (see also isAffected(IJavaElementDelta))
  */
+@Override
 public synchronized void refresh(IProgressMonitor monitor) throws JavaModelException {
 	try {
 		this.progressMonitor = SubMonitor.convert(monitor,
@@ -1316,6 +1341,7 @@ public synchronized void refresh(IProgressMonitor monitor) throws JavaModelExcep
 /**
  * @see ITypeHierarchy
  */
+@Override
 public synchronized void removeTypeHierarchyChangedListener(ITypeHierarchyChangedListener listener) {
 	ArrayList<ITypeHierarchyChangedListener> listeners = this.changeListeners;
 	if (listeners == null) {
@@ -1331,6 +1357,7 @@ public synchronized void removeTypeHierarchyChangedListener(ITypeHierarchyChange
 /**
  * @see ITypeHierarchy
  */
+@Override
 @SuppressWarnings("unchecked")
 public void store(OutputStream output, IProgressMonitor monitor) throws JavaModelException {
 	try {
@@ -1511,6 +1538,7 @@ boolean subtypesIncludeSupertypeOf(IType type) {
 /**
  * @see ITypeHierarchy
  */
+@Override
 public String toString() {
 	StringBuffer buffer = new StringBuffer();
 	buffer.append("Focus: "); //$NON-NLS-1$

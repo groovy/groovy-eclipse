@@ -33,6 +33,7 @@ public class QualifiedThisReference extends ThisReference {
 		this.sourceStart = name.sourceStart;
 	}
 
+	@Override
 	public FlowInfo analyseCode(
 		BlockScope currentScope,
 		FlowContext flowContext,
@@ -41,6 +42,7 @@ public class QualifiedThisReference extends ThisReference {
 		return flowInfo;
 	}
 
+	@Override
 	public FlowInfo analyseCode(
 		BlockScope currentScope,
 		FlowContext flowContext,
@@ -57,6 +59,7 @@ public class QualifiedThisReference extends ThisReference {
 	 * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
 	 * @param valueRequired boolean
 	 */
+	@Override
 	public void generateCode(
 		BlockScope currentScope,
 		CodeStream codeStream,
@@ -76,6 +79,7 @@ public class QualifiedThisReference extends ThisReference {
 		codeStream.recordPositionsFrom(pc, this.sourceStart);
 	}
 
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 
 		this.constant = Constant.NotAConstant;
@@ -138,11 +142,13 @@ public class QualifiedThisReference extends ThisReference {
 		return depth;
 	}
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 
 		return this.qualification.print(0, output).append(".this"); //$NON-NLS-1$
 	}
 
+	@Override
 	public void traverse(
 		ASTVisitor visitor,
 		BlockScope blockScope) {
@@ -153,6 +159,7 @@ public class QualifiedThisReference extends ThisReference {
 		visitor.endVisit(this, blockScope);
 	}
 
+	@Override
 	public void traverse(
 			ASTVisitor visitor,
 			ClassScope blockScope) {

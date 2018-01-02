@@ -38,6 +38,7 @@ import org.eclipse.jdt.internal.compiler.ast.*;
 import org.eclipse.jdt.internal.compiler.lookup.*;
 
 public class CompletionOnQualifiedAllocationExpression extends QualifiedAllocationExpression {
+@Override
 public TypeBinding resolveType(BlockScope scope) {
 	this.argumentTypes = Binding.NO_PARAMETERS;
 	if (this.arguments != null) {
@@ -95,6 +96,7 @@ public TypeBinding resolveType(BlockScope scope) {
 
 	throw new CompletionNodeFound(this, this.resolvedType, scope);
 }
+@Override
 public StringBuffer printExpression(int indent, StringBuffer output) {
 	if (this.enclosingInstance == null)
 		output.append("<CompleteOnAllocationExpression:" );  //$NON-NLS-1$

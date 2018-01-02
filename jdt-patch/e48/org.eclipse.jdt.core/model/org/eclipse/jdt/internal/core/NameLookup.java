@@ -100,6 +100,7 @@ public class NameLookup implements SuffixConstants {
 			return otherAnswer.restriction != null
 				&& this.restriction.getProblemId() < otherAnswer.restriction.getProblemId();
 		}
+		@Override
 		public String toString() {
 			StringBuilder builder = new StringBuilder(this.type.toString());
 			builder.append("from ") //$NON-NLS-1$

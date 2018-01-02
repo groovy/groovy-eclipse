@@ -114,6 +114,7 @@ String[] getTypeParameters();
  *
  * @return the name of this method or <code>null</code> for constructors
  */
+@Override
 public String getName();
 /**
  * Returns the names of parameters in this method in the order they are declared,
@@ -207,6 +208,7 @@ void setTypeParameters(String[] typeParameters);
  * @param name the given name
  * @exception IllegalArgumentException if <code>null</code> is specified
  */
+@Override
 public void setName(String name) throws IllegalArgumentException;
 /**
  * Sets the types and names of parameters in this method in the order they are

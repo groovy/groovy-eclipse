@@ -48,6 +48,7 @@ public EvaluationContextWrapper(EvaluationContext context, JavaProject project) 
 /**
  * @see org.eclipse.jdt.core.eval.IEvaluationContext#allVariables()
  */
+@Override
 public IGlobalVariable[] allVariables() {
 	GlobalVariable[] vars = this.context.allVariables();
 	int length = vars.length;
@@ -68,6 +69,7 @@ protected void checkBuilderState() {
  * @see org.eclipse.jdt.core.eval.IEvaluationContext#codeComplete(String, int, ICompletionRequestor)
  * @deprecated
  */
+@Override
 public void codeComplete(String codeSnippet, int position, ICompletionRequestor requestor) throws JavaModelException {
 	codeComplete(codeSnippet, position, requestor, DefaultWorkingCopyOwner.PRIMARY);
 }
@@ -75,6 +77,7 @@ public void codeComplete(String codeSnippet, int position, ICompletionRequestor 
  * @see org.eclipse.jdt.core.eval.IEvaluationContext#codeComplete(String, int, ICompletionRequestor, WorkingCopyOwner)
  * @deprecated
  */
+@Override
 public void codeComplete(String codeSnippet, int position, ICompletionRequestor requestor, WorkingCopyOwner owner) throws JavaModelException {
 	if (requestor == null) {
 		throw new IllegalArgumentException("Completion requestor cannot be null"); //$NON-NLS-1$
@@ -84,24 +87,28 @@ public void codeComplete(String codeSnippet, int position, ICompletionRequestor 
 /**
  * @see org.eclipse.jdt.core.eval.IEvaluationContext#codeComplete(String, int, CompletionRequestor)
  */
+@Override
 public void codeComplete(String codeSnippet, int position, CompletionRequestor requestor) throws JavaModelException {
 	codeComplete(codeSnippet, position, requestor, DefaultWorkingCopyOwner.PRIMARY);
 }
 /**
  * @see org.eclipse.jdt.core.eval.IEvaluationContext#codeComplete(String, int, CompletionRequestor, IProgressMonitor)
  */
+@Override
 public void codeComplete(String codeSnippet, int position, CompletionRequestor requestor, IProgressMonitor monitor) throws JavaModelException {
 	codeComplete(codeSnippet, position, requestor, DefaultWorkingCopyOwner.PRIMARY, null);
 }
 /**
  * @see org.eclipse.jdt.core.eval.IEvaluationContext#codeComplete(String, int, CompletionRequestor, WorkingCopyOwner)
  */
+@Override
 public void codeComplete(String codeSnippet, int position, CompletionRequestor requestor, WorkingCopyOwner owner) throws JavaModelException {
 	codeComplete(codeSnippet, position, requestor, owner, null);
 }
 /**
  * @see org.eclipse.jdt.core.eval.IEvaluationContext#codeComplete(String, int, CompletionRequestor, WorkingCopyOwner, IProgressMonitor)
  */
+@Override
 public void codeComplete(
 		String codeSnippet,
 		int position,
@@ -123,12 +130,14 @@ public void codeComplete(
 /**
  * @see org.eclipse.jdt.core.eval.IEvaluationContext#codeSelect(String, int, int)
  */
+@Override
 public IJavaElement[] codeSelect(String codeSnippet, int offset, int length) throws JavaModelException {
 	return codeSelect(codeSnippet, offset, length, DefaultWorkingCopyOwner.PRIMARY);
 }
 /**
  * @see org.eclipse.jdt.core.eval.IEvaluationContext#codeSelect(String, int, int, WorkingCopyOwner)
  */
+@Override
 public IJavaElement[] codeSelect(String codeSnippet, int offset, int length, WorkingCopyOwner owner) throws JavaModelException {
 	SearchableEnvironment environment = this.project.newSearchableNameEnvironment(owner);
 	SelectionRequestor requestor= new SelectionRequestor(environment.nameLookup, null); // null because there is no need to look inside the code snippet itself
@@ -146,6 +155,7 @@ public IJavaElement[] codeSelect(String codeSnippet, int offset, int length, Wor
 /**
  * @see org.eclipse.jdt.core.eval.IEvaluationContext#deleteVariable(IGlobalVariable)
  */
+@Override
 public void deleteVariable(IGlobalVariable variable) {
 	if (variable instanceof GlobalVariableWrapper) {
 		GlobalVariableWrapper wrapper = (GlobalVariableWrapper)variable;
@@ -157,6 +167,7 @@ public void deleteVariable(IGlobalVariable variable) {
 /**
  * @see IEvaluationContext#evaluateCodeSnippet(String, String[], String[], int[], IType, boolean, boolean, ICodeSnippetRequestor, IProgressMonitor)
  */
+@Override
 public void evaluateCodeSnippet(
 	String codeSnippet,
 	String[] localVariableTypeNames,
@@ -237,6 +248,7 @@ public void evaluateCodeSnippet(
 /**
  * @see IEvaluationContext#evaluateCodeSnippet(String, ICodeSnippetRequestor, IProgressMonitor)
  */
+@Override
 public void evaluateCodeSnippet(String codeSnippet, ICodeSnippetRequestor requestor, IProgressMonitor progressMonitor) throws JavaModelException {
 
 	checkBuilderState();
@@ -257,6 +269,7 @@ public void evaluateCodeSnippet(String codeSnippet, ICodeSnippetRequestor reques
 /**
  * @see IEvaluationContext#evaluateVariable(IGlobalVariable, ICodeSnippetRequestor, IProgressMonitor)
  */
+@Override
 public void evaluateVariable(IGlobalVariable variable, ICodeSnippetRequestor requestor, IProgressMonitor progressMonitor) throws JavaModelException {
 
 	checkBuilderState();
@@ -287,6 +300,7 @@ public char[] getVarClassName() {
 /**
  * @see org.eclipse.jdt.core.eval.IEvaluationContext#getImports()
  */
+@Override
 public String[] getImports() {
 	char[][] imports = this.context.getImports();
 	int length = imports.length;
@@ -311,6 +325,7 @@ protected IRequestor getInfrastructureEvaluationRequestor(ICodeSnippetRequestor 
 /**
  * @see org.eclipse.jdt.core.eval.IEvaluationContext#getPackageName()
  */
+@Override
 public String getPackageName() {
 	return new String(this.context.getPackageName());
 }
@@ -323,6 +338,7 @@ protected IProblemFactory getProblemFactory() {
 /**
  * @see org.eclipse.jdt.core.eval.IEvaluationContext#getProject()
  */
+@Override
 public IJavaProject getProject() {
 	return this.project;
 }
@@ -335,6 +351,7 @@ protected void handleInstallException(InstallException e) throws JavaModelExcept
 /**
  * @see org.eclipse.jdt.core.eval.IEvaluationContext#newVariable(String, String, String)
  */
+@Override
 public IGlobalVariable newVariable(String typeName, String name, String initializer) {
 	GlobalVariable newVar =
 		this.context.newVariable(
@@ -348,6 +365,7 @@ public IGlobalVariable newVariable(String typeName, String name, String initiali
 /**
  * @see org.eclipse.jdt.core.eval.IEvaluationContext#setImports(String[])
  */
+@Override
 public void setImports(String[] imports) {
 	int length = imports.length;
 	char[][] result = new char[length][];
@@ -359,12 +377,14 @@ public void setImports(String[] imports) {
 /**
  * @see org.eclipse.jdt.core.eval.IEvaluationContext#setPackageName(String)
  */
+@Override
 public void setPackageName(String packageName) {
 	this.context.setPackageName(packageName.toCharArray());
 }
 /**
  * @see IEvaluationContext#validateImports(ICodeSnippetRequestor)
  */
+@Override
 public void validateImports(ICodeSnippetRequestor requestor) {
 
 	checkBuilderState();
@@ -382,6 +402,7 @@ public void validateImports(ICodeSnippetRequestor requestor) {
  * @see IEvaluationContext#codeComplete(String, int, ICodeCompletionRequestor)
  * @deprecated - use codeComplete(String, int, ICompletionRequestor) instead
  */
+@Override
 public void codeComplete(String codeSnippet, int position, final org.eclipse.jdt.core.ICodeCompletionRequestor requestor) throws JavaModelException {
 
 	if (requestor == null){
@@ -392,47 +413,61 @@ public void codeComplete(String codeSnippet, int position, final org.eclipse.jdt
 		codeSnippet,
 		position,
 		new ICompletionRequestor(){
+			@Override
 			public void acceptAnonymousType(char[] superTypePackageName,char[] superTypeName,char[][] parameterPackageNames,char[][] parameterTypeNames,char[][] parameterNames,char[] completionName,int modifiers,int completionStart,int completionEnd, int relevance) {
 				// implements interface method
 			}
+			@Override
 			public void acceptClass(char[] packageName, char[] className, char[] completionName, int modifiers, int completionStart, int completionEnd, int relevance) {
 				requestor.acceptClass(packageName, className, completionName, modifiers, completionStart, completionEnd);
 			}
+			@Override
 			public void acceptError(IProblem error) {
 				// was disabled in 1.0
 			}
 
+			@Override
 			public void acceptField(char[] declaringTypePackageName, char[] declaringTypeName, char[] name, char[] typePackageName, char[] typeName, char[] completionName, int modifiers, int completionStart, int completionEnd, int relevance) {
 				requestor.acceptField(declaringTypePackageName, declaringTypeName, name, typePackageName, typeName, completionName, modifiers, completionStart, completionEnd);
 			}
+			@Override
 			public void acceptInterface(char[] packageName,char[] interfaceName,char[] completionName,int modifiers,int completionStart,int completionEnd, int relevance) {
 				requestor.acceptInterface(packageName, interfaceName, completionName, modifiers, completionStart, completionEnd);
 			}
+			@Override
 			public void acceptKeyword(char[] keywordName,int completionStart,int completionEnd, int relevance){
 				requestor.acceptKeyword(keywordName, completionStart, completionEnd);
 			}
+			@Override
 			public void acceptLabel(char[] labelName,int completionStart,int completionEnd, int relevance){
 				requestor.acceptLabel(labelName, completionStart, completionEnd);
 			}
+			@Override
 			public void acceptLocalVariable(char[] name,char[] typePackageName,char[] typeName,int modifiers,int completionStart,int completionEnd, int relevance){
 				// ignore
 			}
+			@Override
 			public void acceptMethod(char[] declaringTypePackageName,char[] declaringTypeName,char[] selector,char[][] parameterPackageNames,char[][] parameterTypeNames,char[][] parameterNames,char[] returnTypePackageName,char[] returnTypeName,char[] completionName,int modifiers,int completionStart,int completionEnd, int relevance){
 				// skip parameter names
 				requestor.acceptMethod(declaringTypePackageName, declaringTypeName, selector, parameterPackageNames, parameterTypeNames, returnTypePackageName, returnTypeName, completionName, modifiers, completionStart, completionEnd);
 			}
+			@Override
 			public void acceptMethodDeclaration(char[] declaringTypePackageName,char[] declaringTypeName,char[] selector,char[][] parameterPackageNames,char[][] parameterTypeNames,char[][] parameterNames,char[] returnTypePackageName,char[] returnTypeName,char[] completionName,int modifiers,int completionStart,int completionEnd, int relevance){
 				// ignore
 			}
+			@Override
 			public void acceptModifier(char[] modifierName,int completionStart,int completionEnd, int relevance){
 				requestor.acceptModifier(modifierName, completionStart, completionEnd);
 			}
+			@Override
 			public void acceptPackage(char[] packageName,char[] completionName,int completionStart,int completionEnd, int relevance){
 				requestor.acceptPackage(packageName, completionName, completionStart, completionEnd);
 			}
+			@Override
 			public void acceptType(char[] packageName,char[] typeName,char[] completionName,int completionStart,int completionEnd, int relevance){
 				requestor.acceptType(packageName, typeName, completionName, completionStart, completionEnd);
 			}
+			@Override
 			public void acceptVariableName(char[] typePackageName,char[] typeName,char[] name,char[] completionName,int completionStart,int completionEnd, int relevance){
 				// ignore
 			}

@@ -415,6 +415,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 			ReferenceBinding[] innerClasses = new ReferenceBinding[numberOfInnerClasses];
 			this.innerClassesBindings.keySet().toArray(innerClasses);
 			Arrays.sort(innerClasses, new Comparator() {
+				@Override
 				public int compare(Object o1, Object o2) {
 					TypeBinding binding1 = (TypeBinding) o1;
 					TypeBinding binding2 = (TypeBinding) o2;
@@ -3939,6 +3940,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 		int numberOfMissingTypes = 0;
 		if (initialSize > 1) {
 			Collections.sort(this.missingTypes, new Comparator() {
+				@Override
 				public int compare(Object o1, Object o2) {
 					TypeBinding typeBinding1 = (TypeBinding) o1;
 					TypeBinding typeBinding2 = (TypeBinding) o2;
@@ -5748,6 +5750,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 			}
 		}
 		Collections.sort(result, new Comparator() {
+			@Override
 			public int compare(Object o1, Object o2) {
 				StackMapFrame frame = (StackMapFrame) o1;
 				StackMapFrame frame2 = (StackMapFrame) o2;

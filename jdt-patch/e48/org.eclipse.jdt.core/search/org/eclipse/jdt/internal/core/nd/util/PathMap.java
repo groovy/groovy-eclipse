@@ -148,6 +148,7 @@ public class PathMap<T> {
 			return super.createChild(nextSegment);
 		}
 
+		@Override
 		Node<T> getChild(String nextSegment) {
 			if (nextSegment == null) {
 				return this.noDevice;

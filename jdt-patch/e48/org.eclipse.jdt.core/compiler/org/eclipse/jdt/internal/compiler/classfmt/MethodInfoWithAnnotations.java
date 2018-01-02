@@ -28,15 +28,18 @@ MethodInfoWithAnnotations(MethodInfo methodInfo, AnnotationInfo[] annotations) {
 	this.signatureUtf8Offset = methodInfo.signatureUtf8Offset;
 	this.tagBits = methodInfo.tagBits;
 }
+@Override
 public IBinaryAnnotation[] getAnnotations() {
 	return this.annotations;
 }
+@Override
 protected void initialize() {
 	for (int i = 0, l = this.annotations == null ? 0 : this.annotations.length; i < l; i++)
 		if (this.annotations[i] != null)
 			this.annotations[i].initialize();
 	super.initialize();
 }
+@Override
 protected void reset() {
 	for (int i = 0, l = this.annotations == null ? 0 : this.annotations.length; i < l; i++)
 		if (this.annotations[i] != null)

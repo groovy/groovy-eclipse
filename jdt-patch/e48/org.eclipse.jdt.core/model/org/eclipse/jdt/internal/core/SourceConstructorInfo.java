@@ -17,19 +17,23 @@ public class SourceConstructorInfo extends SourceMethodElementInfo {
 
 	private static final char[] RETURN_TYPE_NAME = new char[]{'v', 'o','i', 'd'};
 
+	@Override
 	public boolean isAnnotationMethod() {
 		// a constructor cannot be an annotation method
 		return false;
 	}
 
+	@Override
 	public boolean isConstructor() {
 		return true;
 	}
 
+	@Override
 	public char[] getReturnTypeName() {
 		return RETURN_TYPE_NAME;
 	}
 
+	@Override
 	protected void setReturnType(char[] type) {
 		// ignore (always void)
 	}

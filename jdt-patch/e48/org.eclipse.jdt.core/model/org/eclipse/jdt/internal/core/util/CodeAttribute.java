@@ -101,6 +101,7 @@ public class CodeAttribute extends ClassFileAttribute implements ICodeAttribute 
 	/**
 	 * @see ICodeAttribute#getAttributes()
 	 */
+	@Override
 	public IClassFileAttribute[] getAttributes() {
 		return this.attributes;
 	}
@@ -108,6 +109,7 @@ public class CodeAttribute extends ClassFileAttribute implements ICodeAttribute 
 	/**
 	 * @see ICodeAttribute#getAttributesCount()
 	 */
+	@Override
 	public int getAttributesCount() {
 		return this.attributesCount;
 	}
@@ -115,6 +117,7 @@ public class CodeAttribute extends ClassFileAttribute implements ICodeAttribute 
 	/**
 	 * @see ICodeAttribute#getBytecodes()
 	 */
+	@Override
 	public byte[] getBytecodes() {
 		if (this.bytecodes == null) {
 			System.arraycopy(this.classFileBytes, this.codeOffset, (this.bytecodes = new byte[(int) this.codeLength]), 0, (int) this.codeLength);
@@ -125,6 +128,7 @@ public class CodeAttribute extends ClassFileAttribute implements ICodeAttribute 
 	/**
 	 * @see ICodeAttribute#getCodeLength()
 	 */
+	@Override
 	public long getCodeLength() {
 		return this.codeLength;
 	}
@@ -132,6 +136,7 @@ public class CodeAttribute extends ClassFileAttribute implements ICodeAttribute 
 	/**
 	 * @see ICodeAttribute#getExceptionTable()
 	 */
+	@Override
 	public IExceptionTableEntry[] getExceptionTable() {
 		return this.exceptionTableEntries;
 	}
@@ -139,6 +144,7 @@ public class CodeAttribute extends ClassFileAttribute implements ICodeAttribute 
 	/**
 	 * @see ICodeAttribute#getExceptionTableLength()
 	 */
+	@Override
 	public int getExceptionTableLength() {
 		return this.exceptionTableLength;
 	}
@@ -146,6 +152,7 @@ public class CodeAttribute extends ClassFileAttribute implements ICodeAttribute 
 	/**
 	 * @see ICodeAttribute#getLineNumberAttribute()
 	 */
+	@Override
 	public ILineNumberAttribute getLineNumberAttribute() {
 		return this.lineNumberAttribute;
 	}
@@ -153,6 +160,7 @@ public class CodeAttribute extends ClassFileAttribute implements ICodeAttribute 
 	/**
 	 * @see ICodeAttribute#getLocalVariableAttribute()
 	 */
+	@Override
 	public ILocalVariableAttribute getLocalVariableAttribute() {
 		return this.localVariableAttribute;
 	}
@@ -160,6 +168,7 @@ public class CodeAttribute extends ClassFileAttribute implements ICodeAttribute 
 	/**
 	 * @see ICodeAttribute#getMaxLocals()
 	 */
+	@Override
 	public int getMaxLocals() {
 		return this.maxLocals;
 	}
@@ -167,6 +176,7 @@ public class CodeAttribute extends ClassFileAttribute implements ICodeAttribute 
 	/**
 	 * @see ICodeAttribute#getMaxStack()
 	 */
+	@Override
 	public int getMaxStack() {
 		return this.maxStack;
 	}
@@ -174,6 +184,7 @@ public class CodeAttribute extends ClassFileAttribute implements ICodeAttribute 
 	/**
 	 * @see ICodeAttribute#traverse(IBytecodeVisitor visitor)
 	 */
+	@Override
 	public void traverse(IBytecodeVisitor visitor) throws ClassFormatException {
 		int pc = this.codeOffset;
 		int opcode, index, _const, branchOffset;

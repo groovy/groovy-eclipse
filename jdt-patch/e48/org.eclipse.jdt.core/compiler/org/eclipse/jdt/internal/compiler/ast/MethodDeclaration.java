@@ -164,6 +164,7 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 		}
 	}
 
+	@Override
 	public void getAllAnnotationContexts(int targetType, List allAnnotationContexts) {
 		AnnotationCollector collector = new AnnotationCollector(this.returnType, targetType, allAnnotationContexts);
 		for (int i = 0, max = this.annotations.length; i < max; i++) {
@@ -178,24 +179,29 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 				(this.returnType != null && this.returnType.hasNullTypeAnnotation(position)); // just in case
 	}
 
+	@Override
 	public boolean isDefaultMethod() {
 		return (this.modifiers & ExtraCompilerModifiers.AccDefaultMethod) != 0;
 	}
 
+	@Override
 	public boolean isMethod() {
 		return true;
 	}
 
+	@Override
 	public void parseStatements(Parser parser, CompilationUnitDeclaration unit) {
 		//fill up the method body with statement
 		parser.parse(this, unit);
 	}
 
+	@Override
 	public StringBuffer printReturnType(int indent, StringBuffer output) {
 		if (this.returnType == null) return output;
 		return this.returnType.printExpression(0, output).append(' ');
 	}
 
+	@Override
 	public void resolveStatements() {
 		// ========= abort on fatal error =============
 		if (this.returnType != null && this.binding != null) {
@@ -318,6 +324,7 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 		}
 	}
 
+	@Override
 	public void traverse(
 		ASTVisitor visitor,
 		ClassScope classScope) {
@@ -357,6 +364,7 @@ public class MethodDeclaration extends AbstractMethodDeclaration {
 		}
 		visitor.endVisit(this, classScope);
 	}
+	@Override
 	public TypeParameter[] typeParameters() {
 	    return this.typeParameters;
 	}

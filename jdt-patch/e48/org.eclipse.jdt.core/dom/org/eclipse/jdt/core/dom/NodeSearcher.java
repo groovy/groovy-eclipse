@@ -29,6 +29,7 @@ class NodeSearcher extends ASTVisitor {
 		this.position = position;
 	}
 
+	@Override
 	public boolean visit(
 		ConstructorDeclaration constructorDeclaration,
 		ClassScope scope) {
@@ -41,6 +42,7 @@ class NodeSearcher extends ASTVisitor {
 		return true;
 	}
 
+	@Override
 	public boolean visit(
 		FieldDeclaration fieldDeclaration,
 		MethodScope scope) {
@@ -52,6 +54,7 @@ class NodeSearcher extends ASTVisitor {
 			return true;
 	}
 
+	@Override
 	public boolean visit(Initializer initializer, MethodScope scope) {
 		if (initializer.declarationSourceStart <= this.position
 			&& this.position <= initializer.declarationSourceEnd) {
@@ -61,6 +64,7 @@ class NodeSearcher extends ASTVisitor {
 		return true;
 	}
 
+	@Override
 	public boolean visit(
 		TypeDeclaration memberTypeDeclaration,
 		ClassScope scope) {
@@ -73,6 +77,7 @@ class NodeSearcher extends ASTVisitor {
 			return false;
 	}
 
+	@Override
 	public boolean visit(
 		MethodDeclaration methodDeclaration,
 		ClassScope scope) {
@@ -85,6 +90,7 @@ class NodeSearcher extends ASTVisitor {
 		return true;
 	}
 
+	@Override
 	public boolean visit(
 		TypeDeclaration typeDeclaration,
 		CompilationUnitScope scope) {

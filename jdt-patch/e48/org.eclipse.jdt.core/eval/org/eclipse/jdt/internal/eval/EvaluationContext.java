@@ -117,10 +117,12 @@ public void complete(
 		IProgressMonitor monitor) {
 	try {
 		IRequestor variableRequestor = new IRequestor() {
+			@Override
 			public boolean acceptClassFiles(ClassFile[] classFiles, char[] codeSnippetClassName) {
 				// Do nothing
 				return true;
 			}
+			@Override
 			public void acceptProblem(CategorizedProblem problem, char[] fragmentSource, int fragmentKind) {
 				// Do nothing
 			}
@@ -145,18 +147,23 @@ public void complete(
 		complianceVersion
 	);
 	ICompilationUnit sourceUnit = new ICompilationUnit() {
+		@Override
 		public char[] getFileName() {
 			return CharOperation.concat(className, Util.defaultJavaExtension().toCharArray());
 		}
+		@Override
 		public char[] getContents() {
 			return mapper.getCUSource(EvaluationContext.this.lineSeparator);
 		}
+		@Override
 		public char[] getMainTypeName() {
 			return className;
 		}
+		@Override
 		public char[][] getPackageName() {
 			return null;
 		}
+		@Override
 		public boolean ignoreOptionalProblems() {
 			return false;
 		}
@@ -220,9 +227,11 @@ private void deployCodeSnippetClassIfNeeded(IRequestor requestor) throws Install
 		if (!requestor.acceptClassFiles(
 			new ClassFile[] {
 				new ClassFile() {
+					@Override
 					public byte[] getBytes() {
 						return getCodeSnippetBytes();
 					}
+					@Override
 					public char[][] getCompoundName() {
 						return EvaluationConstants.ROOT_COMPOUND_NAME;
 					}
@@ -263,9 +272,11 @@ public void evaluate(
 		// Install new variables if needed
 		class ForwardingRequestor implements IRequestor {
 			boolean hasErrors = false;
+			@Override
 			public boolean acceptClassFiles(ClassFile[] classFiles, char[] codeSnippetClassName) {
 				return requestor.acceptClassFiles(classFiles, codeSnippetClassName);
 			}
+			@Override
 			public void acceptProblem(CategorizedProblem problem, char[] fragmentSource, int fragmentKind) {
 				requestor.acceptProblem(problem, fragmentSource, fragmentKind);
 				if (problem.isError()) {
@@ -396,6 +407,7 @@ public void evaluateVariables(INameEnvironment environment, Map<String, String> 
 			// otherwise an AbortCompilation is thrown in 1.5 mode since the enclosing type
 			// is needed to resolve a nested type
 			Util.sort(classes, new Util.Comparer() {
+				@Override
 				public int compare(Object a, Object b) {
 					if (a == b) return 0;
 					ClassFile enclosing = ((ClassFile) a).enclosingClassFile;
@@ -597,18 +609,23 @@ public void select(
 		complianceVersion
 	);
 	ICompilationUnit sourceUnit = new ICompilationUnit() {
+		@Override
 		public char[] getFileName() {
 			return CharOperation.concat(className, Util.defaultJavaExtension().toCharArray());
 		}
+		@Override
 		public char[] getContents() {
 			return mapper.getCUSource(EvaluationContext.this.lineSeparator);
 		}
+		@Override
 		public char[] getMainTypeName() {
 			return className;
 		}
+		@Override
 		public char[][] getPackageName() {
 			return null;
 		}
+		@Override
 		public boolean ignoreOptionalProblems() {
 			return false;
 		}

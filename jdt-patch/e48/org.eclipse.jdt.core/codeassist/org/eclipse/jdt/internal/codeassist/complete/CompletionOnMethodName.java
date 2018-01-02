@@ -21,6 +21,7 @@ public class CompletionOnMethodName extends MethodDeclaration {
 		super(compilationResult);
 	}
 
+	@Override
 	public StringBuffer print(int indent, StringBuffer output) {
 
 		printIndent(indent, output);
@@ -45,6 +46,7 @@ public class CompletionOnMethodName extends MethodDeclaration {
 		return output.append('>');
 	}
 
+	@Override
 	public void resolve(ClassScope upperScope) {
 
 		super.resolve(upperScope);

@@ -34,6 +34,7 @@ public class CatchParameterBinding extends LocalVariableBinding {
 		this.preciseTypes[length] = raisedException;
 		return;
 	}
+	@Override
 	public boolean isCatchParameter() {
 		return true;
 	}

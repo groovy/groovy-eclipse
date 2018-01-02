@@ -44,6 +44,7 @@ public AssertStatement(Expression assertExpression, int startPosition) {
 	this.sourceEnd = assertExpression.sourceEnd;
 }
 
+@Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 	this.preAssertInitStateIndex = currentScope.methodScope().recordInitializationStates(flowInfo);
 
@@ -102,6 +103,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	}
 }
 
+@Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	if ((this.bits & IsReachable) == 0) {
 		return;
@@ -140,6 +142,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	codeStream.recordPositionsFrom(pc, this.sourceStart);
 }
 
+@Override
 public void resolve(BlockScope scope) {
 	this.assertExpression.resolveTypeExpecting(scope, TypeBinding.BOOLEAN);
 	if (this.exceptionArgument != null) {
@@ -168,6 +171,7 @@ public void resolve(BlockScope scope) {
 	}
 }
 
+@Override
 public void traverse(ASTVisitor visitor, BlockScope scope) {
 	if (visitor.visit(this, scope)) {
 		this.assertExpression.traverse(visitor, scope);
@@ -203,6 +207,7 @@ public void manageSyntheticAccessIfNecessary(BlockScope currentScope, FlowInfo f
 	}
 }
 
+@Override
 public StringBuffer printStatement(int tab, StringBuffer output) {
 	printIndent(tab, output);
 	output.append("assert "); //$NON-NLS-1$

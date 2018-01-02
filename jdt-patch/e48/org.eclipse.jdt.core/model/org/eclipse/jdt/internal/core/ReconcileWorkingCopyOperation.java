@@ -66,6 +66,7 @@ public class ReconcileWorkingCopyOperation extends JavaModelOperation {
 	 * @exception JavaModelException if setting the source
 	 * 	of the original compilation unit fails
 	 */
+	@Override
 	protected void executeOperation() throws JavaModelException {
 		checkCanceled();
 		try {
@@ -152,9 +153,7 @@ public class ReconcileWorkingCopyOperation extends JavaModelOperation {
 		return (CompilationUnit)getElementToProcess();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.internal.core.JavaModelOperation#isReadOnly()
-	 */
+	@Override
 	public boolean isReadOnly() {
 		return true;
 	}
@@ -243,6 +242,7 @@ public class ReconcileWorkingCopyOperation extends JavaModelOperation {
 		for (int i = 0, length = participants.length; i < length; i++) {
 			final CompilationParticipant participant = participants[i];
 			SafeRunner.run(new ISafeRunnable() {
+				@Override
 				public void handleException(Throwable exception) {
 					if (exception instanceof Error) {
 						throw (Error) exception; // errors are not supposed to be caught
@@ -254,6 +254,7 @@ public class ReconcileWorkingCopyOperation extends JavaModelOperation {
 					} else
 						Util.log(exception, "Exception occurred in reconcile participant"); //$NON-NLS-1$
 				}
+				@Override
 				public void run() throws Exception {
 					participant.reconcile(context);
 				}
@@ -261,6 +262,7 @@ public class ReconcileWorkingCopyOperation extends JavaModelOperation {
 		}
 	}
 
+	@Override
 	protected IJavaModelStatus verify() {
 		IJavaModelStatus status = super.verify();
 		if (!status.isOK()) {

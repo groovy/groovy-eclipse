@@ -93,6 +93,7 @@ private void deletePackageFragment(IPackageFragment frag)
 /**
  * @see MultiOperation
  */
+@Override
 protected String getMainTaskName() {
 	return Messages.operation_deleteResourceProgress;
 }
@@ -100,6 +101,7 @@ protected String getMainTaskName() {
  * @see MultiOperation This method delegate to <code>deleteResource</code> or
  * <code>deletePackageFragment</code> depending on the type of <code>element</code>.
  */
+@Override
 protected void processElement(IJavaElement element) throws JavaModelException {
 	switch (element.getElementType()) {
 		case IJavaElement.CLASS_FILE :
@@ -120,6 +122,7 @@ protected void processElement(IJavaElement element) throws JavaModelException {
 /**
  * @see MultiOperation
  */
+@Override
 protected void verify(IJavaElement element) throws JavaModelException {
 	if (element == null || !element.exists())
 		error(IJavaModelStatusConstants.ELEMENT_DOES_NOT_EXIST, element);

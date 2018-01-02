@@ -150,15 +150,18 @@ TypeAnnotationInfo[] decodeTypeAnnotations(int offset, boolean runtimeVisible) {
 	return null;
 }
 
+@Override
 public int compareTo(Object o) {
 	return new String(getName()).compareTo(new String(((FieldInfo) o).getName()));
 }
+@Override
 public boolean equals(Object o) {
 	if (!(o instanceof FieldInfo)) {
 		return false;
 	}
 	return CharOperation.equals(getName(), ((FieldInfo) o).getName());
 }
+@Override
 public int hashCode() {
 	return CharOperation.hashCode(getName());
 }
@@ -167,6 +170,7 @@ public int hashCode() {
  * Return org.eclipse.jdt.internal.compiler.impl.Constant.NotAConstant if there is none.
  * @return org.eclipse.jdt.internal.compiler.impl.Constant
  */
+@Override
 public Constant getConstant() {
 	if (this.constant == null) {
 		// read constant
@@ -174,6 +178,7 @@ public Constant getConstant() {
 	}
 	return this.constant;
 }
+@Override
 public char[] getGenericSignature() {
 	if (this.signatureUtf8Offset != -1) {
 		if (this.signature == null) {
@@ -190,6 +195,7 @@ public char[] getGenericSignature() {
  * Set the AccDeprecated and AccSynthetic bits if necessary
  * @return int
  */
+@Override
 public int getModifiers() {
 	if (this.accessFlags == -1) {
 		// compute the accessflag. Don't forget the deprecated attribute
@@ -202,6 +208,7 @@ public int getModifiers() {
  * Answer the name of the field.
  * @return char[]
  */
+@Override
 public char[] getName() {
 	if (this.name == null) {
 		// read the name
@@ -210,6 +217,7 @@ public char[] getName() {
 	}
 	return this.name;
 }
+@Override
 public long getTagBits() {
 	return this.tagBits;
 }
@@ -224,6 +232,7 @@ public long getTagBits() {
  *   - an array of floats is [F
  * @return char[]
  */
+@Override
 public char[] getTypeName() {
 	if (this.descriptor == null) {
 		// read the signature
@@ -235,10 +244,12 @@ public char[] getTypeName() {
 /**
  * @return the annotations or null if there is none.
  */
+@Override
 public IBinaryAnnotation[] getAnnotations() {
 	return null;
 }
 
+@Override
 public IBinaryTypeAnnotation[] getTypeAnnotations() {
 	return null;
 }
@@ -404,6 +415,7 @@ public int sizeInBytes() {
 public void throwFormatException() throws ClassFormatException {
 	throw new ClassFormatException(ClassFormatException.ErrBadFieldInfo);
 }
+@Override
 public String toString() {
 	StringBuffer buffer = new StringBuffer(getClass().getName());
 	toStringContent(buffer);

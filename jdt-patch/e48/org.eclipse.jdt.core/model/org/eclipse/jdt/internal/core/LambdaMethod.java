@@ -39,32 +39,38 @@ public class LambdaMethod extends SourceMethod {
 	/**
 	 * @see IMethod
 	 */
+	@Override
 	public String getReturnType() throws JavaModelException {
 		return this.returnTypeString;
 	}
 	/**
 	 * @see IMethod
 	 */
+	@Override
 	public String getSignature() throws JavaModelException {
 		return Signature.createMethodSignature(this.parameterTypes, this.returnTypeString);
 	}
 	/**
 	 * @see IMethod#isLambdaMethod()
 	 */
+	@Override
 	public boolean isLambdaMethod() {
 		return true;
 	}
 	
+	@Override
 	protected void closing(Object info) {
 		// nothing to do.
 	}
 	
+	@Override
 	public boolean equals(Object o) {
 		if (!(o instanceof LambdaMethod)) return false;
 		LambdaMethod that = (LambdaMethod) o;
 		return super.equals(o) && this.sourceStart == that.sourceStart;
 	}
 
+	@Override
 	public Object getElementInfo(IProgressMonitor monitor) throws JavaModelException {
 		return this.elementInfo;
 	}
@@ -93,28 +99,34 @@ public class LambdaMethod extends SourceMethod {
 			local.getHandleMemento(buff, false);
 		}
 	}
+	@Override
 	public void getHandleMemento(StringBuffer buff) {
 		getHandleMemento(buff, true);
 		// lambda method and lambda expression cannot share the same memento - add a trailing discriminator.
 		appendEscapedDelimiter(buff, getHandleMementoDelimiter());
 	}
 	
+	@Override
 	protected char getHandleMementoDelimiter() {
 		return JavaElement.JEM_LAMBDA_METHOD;
 	}
 	
+	@Override
 	public String getKey() {
 		return this.key;
 	}
 	
+	@Override
 	public int hashCode() {
 	   return Util.combineHashCodes(super.hashCode(), this.sourceStart);
 	}
 	
+	@Override
 	public boolean isResolved() {
 		return true;  // we maintain enough information so as not to need another layer of abstraction.
 	}
 	
+	@Override
 	public JavaElement resolved(Binding binding) {
 		return this;
 	}

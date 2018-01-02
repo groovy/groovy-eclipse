@@ -72,21 +72,27 @@ public class DefaultStackMapFrame extends ClassFileStruct implements IStackMapFr
 	int sizeInBytes() {
 		return this.readOffset;
 	}
+	@Override
 	public int getFrameType() {
 		return 255; // full_frame
 	}
+	@Override
 	public IVerificationTypeInfo[] getLocals() {
 		return this.locals;
 	}
+	@Override
 	public int getNumberOfLocals() {
 		return this.numberOfLocals;
 	}
+	@Override
 	public int getNumberOfStackItems() {
 		return this.numberOfStackItems;
 	}
+	@Override
 	public int getOffsetDelta() {
 		return this.offsetDelta;
 	}
+	@Override
 	public IVerificationTypeInfo[] getStackItems() {
 		return this.stackItems;
 	}

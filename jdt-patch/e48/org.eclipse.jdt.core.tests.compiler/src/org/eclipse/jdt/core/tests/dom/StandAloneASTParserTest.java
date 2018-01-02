@@ -745,7 +745,6 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 				@Override
 				public void acceptAST(String sourceFilePath, CompilationUnit ast) {
 					super.acceptAST(sourceFilePath, ast);
-					System.out.println(sourceFilePath);
 				}
 			};
 			ASTParser parser = ASTParser.newParser(AST.JLS9);
@@ -757,7 +756,6 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 		    String[] files = null;
 			try {
 				files = new String[] {file.getCanonicalPath(), fileY.getCanonicalPath()};
-				System.out.println("Building...");
 				parser.createASTs(files,
 						null,
 						new String[0],
@@ -1553,7 +1551,6 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 				@Override
 				public void acceptAST(String sourceFilePath, CompilationUnit ast) {
 					super.acceptAST(sourceFilePath, ast);
-					System.out.println(sourceFilePath);
 				}
 			};
 			ASTParser parser = ASTParser.newParser(AST.JLS9);
@@ -1565,7 +1562,6 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 		    String[] files = null;
 			try {
 				files = new String[] {file.getCanonicalPath(), fileY.getCanonicalPath()};
-				System.out.println("Building...");
 				parser.createASTs(files,
 						null,
 						new String[0],

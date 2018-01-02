@@ -29,21 +29,25 @@ FieldInfoWithAnnotation(FieldInfo info, AnnotationInfo[] annos) {
 	this.wrappedConstantValue = info.wrappedConstantValue;
 	this.annotations = annos;
 }
+@Override
 public org.eclipse.jdt.internal.compiler.env.IBinaryAnnotation[] getAnnotations() {
 	return this.annotations;
 }
+@Override
 protected void initialize() {
 	if (this.annotations != null)
 		for (int i = 0, max = this.annotations.length; i < max; i++)
 			this.annotations[i].initialize();
 	super.initialize();
 }
+@Override
 protected void reset() {
 	if (this.annotations != null)
 		for (int i = 0, max = this.annotations.length; i < max; i++)
 			this.annotations[i].reset();
 	super.reset();
 }
+@Override
 public String toString() {
 	StringBuffer buffer = new StringBuffer(getClass().getName());
 	if (this.annotations != null) {

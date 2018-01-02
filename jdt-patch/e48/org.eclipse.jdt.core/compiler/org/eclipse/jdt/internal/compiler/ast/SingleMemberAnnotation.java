@@ -33,6 +33,7 @@ public class SingleMemberAnnotation extends Annotation {
 		// for subclasses.
 	}
 
+	@Override
 	public ElementValuePair[] computeElementValuePairs() {
 		return new ElementValuePair[] {memberValuePairs()[0].compilerElementPair};
 	}
@@ -40,6 +41,7 @@ public class SingleMemberAnnotation extends Annotation {
 	/**
 	 * @see org.eclipse.jdt.internal.compiler.ast.Annotation#memberValuePairs()
 	 */
+	@Override
 	public MemberValuePair[] memberValuePairs() {
 		if (this.singlePairs == null) {
 			this.singlePairs =
@@ -50,6 +52,7 @@ public class SingleMemberAnnotation extends Annotation {
 		return this.singlePairs;
 	}
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 		super.printExpression(indent, output);
 		output.append('(');
@@ -57,6 +60,7 @@ public class SingleMemberAnnotation extends Annotation {
 		return output.append(')');
 	}
 
+	@Override
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		if (visitor.visit(this, scope)) {
 			if (this.type != null) {
@@ -69,6 +73,7 @@ public class SingleMemberAnnotation extends Annotation {
 		visitor.endVisit(this, scope);
 	}
 
+	@Override
 	public void traverse(ASTVisitor visitor, ClassScope scope) {
 		if (visitor.visit(this, scope)) {
 			if (this.type != null) {

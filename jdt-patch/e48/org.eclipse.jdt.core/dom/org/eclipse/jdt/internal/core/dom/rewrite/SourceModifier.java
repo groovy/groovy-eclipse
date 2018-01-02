@@ -33,11 +33,13 @@ public class SourceModifier implements ISourceModifier {
 		this.indentWidth= indentWidth;
 	}
 
+	@Override
 	public ISourceModifier copy() {
 		// We are state less
 		return this;
 	}
 
+	@Override
 	public ReplaceEdit[] getModifications(String source) {
 		List result= new ArrayList();
 		int destIndentLevel= IndentManipulation.measureIndentUnits(this.destinationIndent, this.tabWidth, this.indentWidth);

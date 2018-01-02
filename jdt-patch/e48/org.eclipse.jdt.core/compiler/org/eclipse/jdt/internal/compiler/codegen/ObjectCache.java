@@ -140,6 +140,7 @@ public int size() {
  *
  * @return String the ascii representation of the receiver
  */
+@Override
 public String toString() {
 	int max = size();
 	StringBuffer buf = new StringBuffer();

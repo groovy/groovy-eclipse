@@ -69,12 +69,15 @@ public class ParameterizedMethodBinding extends MethodBinding {
 
 			// need to substitute old var refs with new ones (double substitution: declaringClass + new type variables)
 			substitution = new Substitution() {
+				@Override
 				public LookupEnvironment environment() {
 					return parameterizedDeclaringClass.environment;
 				}
+				@Override
 				public boolean isRawSubstitution() {
 					return !isStatic && parameterizedDeclaringClass.isRawSubstitution();
 				}
+				@Override
 				public TypeBinding substitute(TypeVariableBinding typeVariable) {
 					// check this variable can be substituted given copied variables
 					if (typeVariable.rank < length && TypeBinding.equalsEquals(originalVariables[typeVariable.rank], typeVariable)) {
@@ -209,12 +212,15 @@ public class ParameterizedMethodBinding extends MethodBinding {
 
 			// need to substitute old var refs with new ones (double substitution: declaringClass + new type variables)
 			substitution = new Substitution() {
+				@Override
 				public LookupEnvironment environment() {
 					return environment;
 				}
+				@Override
 				public boolean isRawSubstitution() {
 					return false;
 				}
+				@Override
 				public TypeBinding substitute(TypeVariableBinding typeVariable) {
 			        // check this variable can be substituted given copied variables
 			        if (typeVariable.rank < length && TypeBinding.equalsEquals(originalVariables[typeVariable.rank], typeVariable)) {
@@ -327,6 +333,7 @@ public class ParameterizedMethodBinding extends MethodBinding {
 	/**
 	 * Returns true if some parameters got substituted.
 	 */
+	@Override
 	public boolean hasSubstitutedParameters() {
 		return this.parameters != this.originalMethod.parameters;
 	}
@@ -334,6 +341,7 @@ public class ParameterizedMethodBinding extends MethodBinding {
 	/**
 	 * Returns true if the return type got substituted.
 	 */
+	@Override
 	public boolean hasSubstitutedReturnType() {
 		return this.returnType != this.originalMethod.returnType; //$IDENTITY-COMPARISON$
 	}
@@ -341,11 +349,13 @@ public class ParameterizedMethodBinding extends MethodBinding {
 	/**
 	 * Returns the original method (as opposed to parameterized instances)
 	 */
+	@Override
 	public MethodBinding original() {
 		return this.originalMethod.original();
 	}
 	
 	
+	@Override
 	public MethodBinding shallowOriginal() {
 		return this.originalMethod;
 	}

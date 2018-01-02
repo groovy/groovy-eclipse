@@ -39,6 +39,7 @@ public Object getConstant() throws JavaModelException;
  * Returns the simple name of this field.
  * @return the simple name of this field.
  */
+@Override
 String getElementName();
 /**
  * Returns the binding key for this field only if the given field is {@link #isResolved() resolved}.

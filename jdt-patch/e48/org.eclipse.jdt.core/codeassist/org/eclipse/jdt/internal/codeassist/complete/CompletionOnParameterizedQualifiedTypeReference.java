@@ -78,16 +78,19 @@ public class CompletionOnParameterizedQualifiedTypeReference extends Parameteriz
 		return this.kind == K_CLASS || this.kind == K_INTERFACE;
 	}
 
+	@Override
 	public TypeBinding resolveType(BlockScope scope, boolean checkBounds, int location) {
 		super.resolveType(scope, checkBounds, location);
 		throw new CompletionNodeFound(this, this.resolvedType, scope);
 	}
 
+	@Override
 	public TypeBinding resolveType(ClassScope scope, int location) {
 		super.resolveType(scope, location);
 		throw new CompletionNodeFound(this, this.resolvedType, scope);
 	}
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 		switch (this.kind) {
 			case K_CLASS :

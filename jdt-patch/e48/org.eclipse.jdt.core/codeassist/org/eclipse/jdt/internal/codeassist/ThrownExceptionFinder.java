@@ -60,6 +60,7 @@ public class ThrownExceptionFinder extends ASTVisitor {
 		}
 	}
 
+	@Override
 	public void endVisit(MessageSend messageSend, BlockScope scope) {
 		if (messageSend.binding != null) {
 			endVisitMethodInvocation(messageSend.binding);
@@ -67,6 +68,7 @@ public class ThrownExceptionFinder extends ASTVisitor {
 		super.endVisit(messageSend, scope);
 	}
 
+	@Override
 	public void endVisit(AllocationExpression allocationExpression, BlockScope scope) {
 		if (allocationExpression.binding != null) {
 			endVisitMethodInvocation(allocationExpression.binding);
@@ -74,6 +76,7 @@ public class ThrownExceptionFinder extends ASTVisitor {
 		super.endVisit(allocationExpression, scope);
 	}
 
+	@Override
 	public void endVisit(ThrowStatement throwStatement, BlockScope scope) {
 		acceptException((ReferenceBinding)throwStatement.exception.resolvedType);
 		super.endVisit(throwStatement, scope);
@@ -124,14 +127,17 @@ public class ThrownExceptionFinder extends ASTVisitor {
 		this.discouragedExceptions.asArray(allDiscouragedExceptions);
 		return allDiscouragedExceptions;
 	}
+	@Override
 	public boolean visit(TypeDeclaration typeDeclaration, CompilationUnitScope scope) {
 		return visitType(typeDeclaration);
 	}
 
+	@Override
 	public boolean visit(TypeDeclaration memberTypeDeclaration, ClassScope scope) {
 		return visitType(memberTypeDeclaration);
 	}
 
+	@Override
 	public boolean visit(TypeDeclaration localTypeDeclaration, BlockScope scope) {
 		return visitType(localTypeDeclaration);
 	}
@@ -140,6 +146,7 @@ public class ThrownExceptionFinder extends ASTVisitor {
 		return false;
 	}
 
+	@Override
 	public boolean visit(TryStatement tryStatement, BlockScope scope) {
 		this.exceptionsStack.push(this.thrownExceptions);
 		SimpleSet exceptionSet = new SimpleSet();

@@ -32,10 +32,12 @@ import org.eclipse.jdt.internal.compiler.lookup.Binding;
 protected BinaryField(JavaElement parent, String name) {
 	super(parent, name);
 }
+@Override
 public boolean equals(Object o) {
 	if (!(o instanceof BinaryField)) return false;
 	return super.equals(o);
 }
+@Override
 public IAnnotation[] getAnnotations() throws JavaModelException {
 	IBinaryField info = (IBinaryField) getElementInfo();
 	IBinaryAnnotation[] binaryAnnotations = info.getAnnotations();
@@ -44,6 +46,7 @@ public IAnnotation[] getAnnotations() throws JavaModelException {
 /*
  * @see IField
  */
+@Override
 public Object getConstant() throws JavaModelException {
 	IBinaryField info = (IBinaryField) getElementInfo();
 	return convertConstant(info.getConstant());
@@ -51,6 +54,7 @@ public Object getConstant() throws JavaModelException {
 /*
  * @see IMember
  */
+@Override
 public int getFlags() throws JavaModelException {
 	IBinaryField info = (IBinaryField) getElementInfo();
 	return info.getModifiers();
@@ -58,21 +62,25 @@ public int getFlags() throws JavaModelException {
 /*
  * @see IJavaElement
  */
+@Override
 public int getElementType() {
 	return FIELD;
 }
 /*
  * @see JavaElement#getHandleMemento()
  */
+@Override
 protected char getHandleMementoDelimiter() {
 	return JavaElement.JEM_FIELD;
 }
+@Override
 public String getKey(boolean forceOpen) throws JavaModelException {
 	return getKey(this, forceOpen);
 }
 /*
  * @see IField
  */
+@Override
 public String getTypeSignature() throws JavaModelException {
 	IBinaryField info = (IBinaryField) getElementInfo();
 	char[] genericSignature = info.getGenericSignature();
@@ -83,15 +91,16 @@ public String getTypeSignature() throws JavaModelException {
 }
 /* (non-Javadoc)
  * @see org.eclipse.jdt.core.IField#isEnumConstant()
- */public boolean isEnumConstant() throws JavaModelException {
+ */@Override
+public boolean isEnumConstant() throws JavaModelException {
 	return Flags.isEnum(getFlags());
 }
-/* (non-Javadoc)
- * @see org.eclipse.jdt.core.IField#isResolved()
- */
+
+@Override
 public boolean isResolved() {
 	return false;
 }
+@Override
 public JavaElement resolved(Binding binding) {
 	SourceRefElement resolvedHandle = new ResolvedBinaryField(this.parent, this.name, new String(binding.computeUniqueKey()));
 	resolvedHandle.occurrenceCount = this.occurrenceCount;
@@ -100,6 +109,7 @@ public JavaElement resolved(Binding binding) {
 /*
  * @private Debugging purposes
  */
+@Override
 protected void toStringInfo(int tab, StringBuffer buffer, Object info, boolean showResolvedInfo) {
 	buffer.append(tabString(tab));
 	if (info == null) {
@@ -117,6 +127,7 @@ protected void toStringInfo(int tab, StringBuffer buffer, Object info, boolean s
 		}
 	}
 }
+@Override
 public String getAttachedJavadoc(IProgressMonitor monitor) throws JavaModelException {
 	JavadocContents javadocContents = ((BinaryType) this.getDeclaringType()).getJavadocContents(monitor);
 	if (javadocContents == null) return null;

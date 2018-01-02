@@ -36,6 +36,7 @@ public class SelectionOnImportReference extends ImportReference {
 public SelectionOnImportReference(char[][] tokens , long[] positions, int modifiers) {
 	super(tokens, positions, false, modifiers);
 }
+@Override
 public StringBuffer print(int indent, StringBuffer output, boolean withOnDemand) {
 
 	printIndent(indent, output).append("<SelectOnImport:"); //$NON-NLS-1$

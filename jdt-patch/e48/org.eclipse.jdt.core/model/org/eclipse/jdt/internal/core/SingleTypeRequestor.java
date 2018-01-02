@@ -29,42 +29,49 @@ import org.eclipse.jdt.core.IType;
 /**
  * @see IJavaElementRequestor
  */
+@Override
 public void acceptField(IField field) {
 	// implements interface method
 }
 /**
  * @see IJavaElementRequestor
  */
+@Override
 public void acceptInitializer(IInitializer initializer) {
 	// implements interface method
 }
 /**
  * @see IJavaElementRequestor
  */
+@Override
 public void acceptMemberType(IType type) {
 	this.element= type;
 }
 /**
  * @see IJavaElementRequestor
  */
+@Override
 public void acceptMethod(IMethod method) {
 	// implements interface method
 }
 /**
  * @see IJavaElementRequestor
  */
+@Override
 public void acceptModule(IModuleDescription module) {
 	// implements interface method	
 }
 /**
  * @see IJavaElementRequestor
  */
+@Override
 public void acceptPackageFragment(IPackageFragment packageFragment) {
 	// implements interface method
 }
 /**
  * @see IJavaElementRequestor
  */
+@Override
 public void acceptType(IType type) {
 	this.element= type;
 }
@@ -78,6 +85,7 @@ public IType getType() {
 /**
  * @see IJavaElementRequestor
  */
+@Override
 public boolean isCanceled() {
 	return this.element != null;
 }

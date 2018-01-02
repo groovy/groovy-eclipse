@@ -136,21 +136,25 @@ public class BaseTypeBinding extends TypeBinding {
 	/**
 	 * int -> I
 	 */
+	@Override
 	public char[] computeUniqueKey(boolean isLeaf) {
 		return constantPoolName();
 	}
 
 	/* Answer the receiver's constant pool name.
 	*/
+	@Override
 	public char[] constantPoolName() {
 
 		return this.constantPoolName;
 	}
 
+	@Override
 	public TypeBinding clone(TypeBinding enclosingType) {
 		return new BaseTypeBinding(this.id, this.simpleName, this.constantPoolName);
 	}
 	
+	@Override
 	public PackageBinding getPackage() {
 
 		return null;
@@ -158,6 +162,7 @@ public class BaseTypeBinding extends TypeBinding {
 	
 	/* Answer true if the receiver type can be assigned to the argument type (right)
 	*/
+	@Override
 	public final boolean isCompatibleWith(TypeBinding right, Scope captureScope) {
 		if (equalsEquals(this, right))
 			return true;
@@ -169,10 +174,12 @@ public class BaseTypeBinding extends TypeBinding {
 		return this == TypeBinding.NULL && !right.isBaseType();
 	}
 	
+	@Override
 	public void setTypeAnnotations(AnnotationBinding[] annotations, boolean evalNullAnnotations) {
 		super.setTypeAnnotations(annotations, false); // never set nullTagBits on base types
 	}
 
+	@Override
 	public TypeBinding unannotated() {
 		if (!this.hasTypeAnnotations())
 			return this;
@@ -201,6 +208,7 @@ public class BaseTypeBinding extends TypeBinding {
 	 * T_null is acting as an unchecked exception
 	 * @see org.eclipse.jdt.internal.compiler.lookup.TypeBinding#isUncheckedException(boolean)
 	 */
+	@Override
 	public boolean isUncheckedException(boolean includeSupertype) {
 		return this == TypeBinding.NULL;
 	}
@@ -208,25 +216,31 @@ public class BaseTypeBinding extends TypeBinding {
 	/**
 	 * @see org.eclipse.jdt.internal.compiler.lookup.Binding#kind()
 	 */
+	@Override
 	public int kind() {
 		return Binding.BASE_TYPE;
 	}
+	@Override
 	public char[] qualifiedSourceName() {
 		return this.simpleName;
 	}
 
+	@Override
 	public char[] readableName() {
 		return this.simpleName;
 	}
 
+	@Override
 	public char[] shortReadableName() {
 		return this.simpleName;
 	}
 
+	@Override
 	public char[] sourceName() {
 		return this.simpleName;
 	}
 
+	@Override
 	public String toString() {
 		return this.hasTypeAnnotations() ? annotatedDebugName() : new String(readableName());
 	}

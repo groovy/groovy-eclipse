@@ -234,6 +234,7 @@ public Expression() {
 	super();
 }
 
+@Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 	return flowInfo;
 }
@@ -663,7 +664,7 @@ public void computeConversion(Scope scope, TypeBinding runtimeType, TypeBinding 
 		TypeBinding boxedType = scope.environment().computeBoxingType(runtimeType);
 		if (TypeBinding.equalsEquals(boxedType, runtimeType)) // Object o = 12;
 			boxedType = compileTimeType;
-		if (boxedType.id >= TypeIds.T_LastWellKnownTypeId) {  // (Comparable & Serializable) 0
+		if (boxedType.id > TypeIds.T_JavaLangBoolean) {       // (Comparable & Serializable) 0
 			boxedType = compileTimeType;
 		}
 		this.implicitConversion = TypeIds.BOXING | (boxedType.id << 4) + compileTimeType.id;
@@ -712,6 +713,7 @@ public void computeConversion(Scope scope, TypeBinding runtimeType, TypeBinding 
  * @param currentScope org.eclipse.jdt.internal.compiler.lookup.BlockScope
  * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
  */
+@Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	if ((this.bits & ASTNode.IsReachable) == 0) {
 		return;
@@ -1010,6 +1012,7 @@ public TypeBinding postConversionType(Scope scope) {
 	return convertedType;
 }
 
+@Override
 public StringBuffer print(int indent, StringBuffer output) {
 	printIndent(indent, output);
 	return printExpression(indent, output);
@@ -1017,10 +1020,12 @@ public StringBuffer print(int indent, StringBuffer output) {
 
 public abstract StringBuffer printExpression(int indent, StringBuffer output);
 
+@Override
 public StringBuffer printStatement(int indent, StringBuffer output) {
 	return print(indent, output).append(";"); //$NON-NLS-1$
 }
 
+@Override
 public void resolve(BlockScope scope) {
 	// drops the returning expression's type whatever the type is.
 	this.resolveType(scope);
@@ -1222,6 +1227,7 @@ public Expression toTypeReference() {
  * @param visitor
  * @param scope
  */
+@Override
 public void traverse(ASTVisitor visitor, BlockScope scope) {
 	// nothing to do
 }

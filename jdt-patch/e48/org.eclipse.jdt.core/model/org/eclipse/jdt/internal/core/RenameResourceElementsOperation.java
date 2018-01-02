@@ -37,18 +37,21 @@ public RenameResourceElementsOperation(IJavaElement[] elements, IJavaElement[] d
 /**
  * @see MultiOperation
  */
+@Override
 protected String getMainTaskName() {
 	return Messages.operation_renameResourceProgress;
 }
 /**
  * @see CopyResourceElementsOperation#isRename()
  */
+@Override
 protected boolean isRename() {
 	return true;
 }
 /**
  * @see MultiOperation
  */
+@Override
 protected void verify(IJavaElement element) throws JavaModelException {
 	super.verify(element);
 

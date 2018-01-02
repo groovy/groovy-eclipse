@@ -55,6 +55,7 @@ public class AbortCompilation extends RuntimeException {
 		this.isSilent = isSilent;
 		this.silentException = silentException;
 	}
+	@Override
 	public String getMessage() {
 		String message = super.getMessage();
 		StringBuffer buffer = new StringBuffer(message == null ? Util.EMPTY_STRING : message);

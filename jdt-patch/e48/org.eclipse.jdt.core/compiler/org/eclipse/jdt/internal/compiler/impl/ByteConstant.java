@@ -22,51 +22,63 @@ public class ByteConstant extends Constant {
 		this.value = value;
 	}
 
+	@Override
 	public byte byteValue() {
 		return this.value;
 	}
 
+	@Override
 	public char charValue() {
 		return (char) this.value;
 	}
 
+	@Override
 	public double doubleValue() {
 		return this.value; // implicit cast to return type
 	}
 
+	@Override
 	public float floatValue() {
 		return this.value; // implicit cast to return type
 	}
 
+	@Override
 	public int intValue() {
 		return this.value; // implicit cast to return type
 	}
 
+	@Override
 	public long longValue() {
 		return this.value; // implicit cast to return type
 	}
 
+	@Override
 	public short shortValue() {
 		return this.value; // implicit cast to return type
 	}
 
+	@Override
 	public String stringValue() {
 		// spec 15.17.11
 		return String.valueOf(this.value);
 	}
 
+	@Override
 	public String toString() {
 		return "(byte)" + this.value; //$NON-NLS-1$
 	}
 
+	@Override
 	public int typeID() {
 		return T_byte;
 	}
 
+	@Override
 	public int hashCode() {
 		return this.value;
 	}
 
+	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
 			return true;

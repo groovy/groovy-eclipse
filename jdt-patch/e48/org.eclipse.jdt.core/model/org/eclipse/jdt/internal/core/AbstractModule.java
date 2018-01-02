@@ -38,6 +38,7 @@ public abstract class AbstractModule extends NamedMember implements IModuleDescr
 		public int getFlags() throws JavaModelException {
 			return 0;
 		}
+		@Override
 		public ITypeRoot getTypeRoot() {
 			return null; // has no real CompilationUnit nor ClassFile
 		}
@@ -118,6 +119,7 @@ public abstract class AbstractModule extends NamedMember implements IModuleDescr
 	/**
 	 * @see JavaElement#getHandleMemento()
 	 */
+	@Override
 	protected char getHandleMementoDelimiter() {
 		return JavaElement.JEM_MODULE;
 	}

@@ -48,6 +48,7 @@ public class JavaSearchMethodNameMatch extends MethodNameMatch {
 		this.accessibility = accessibility;
 	}
 	
+	@Override
 	public String toString() {
 		return this.method == null ? super.toString() : this.method.toString();
 	}

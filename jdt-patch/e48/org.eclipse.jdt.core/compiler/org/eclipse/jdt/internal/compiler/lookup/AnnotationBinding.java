@@ -228,6 +228,7 @@ public static void setMethodBindings(ReferenceBinding type, ElementValuePair[] p
 	}
 }
 
+@Override
 public String toString() {
 	StringBuffer buffer = new StringBuffer(5);
 	buffer.append('@').append(this.type.sourceName);
@@ -246,6 +247,7 @@ public String toString() {
 	return buffer.toString();
 }
 
+@Override
 public int hashCode() {
 	int result = 17;
 	int c = this.type.hashCode();
@@ -254,6 +256,7 @@ public int hashCode() {
 	result = 31 * result + c;
 	return result;
 }
+@Override
 public boolean equals(Object object) {
 	if (this == object)
 		return true;

@@ -453,6 +453,7 @@ public class ExternalFoldersManager {
 			this.externalFolders = new LinkedHashSet<>();
 		}
 
+		@Override
 		public boolean belongsTo(Object family) {
 			return family == ResourcesPlugin.FAMILY_MANUAL_REFRESH;
 		}
@@ -472,6 +473,7 @@ public class ExternalFoldersManager {
 			}
 		}
 
+		@Override
 		protected IStatus run(IProgressMonitor pm) {
 			MultiStatus errors = new MultiStatus(JavaCore.PLUGIN_ID, IStatus.OK,
 					"Exception while refreshing external folders", null); //$NON-NLS-1$

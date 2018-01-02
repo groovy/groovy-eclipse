@@ -338,6 +338,7 @@ public class ClasspathEntry implements IClasspathEntry {
 		this.isExported = isExported;
 	}
 
+	@Override
 	public boolean combineAccessRules() {
 		return this.combineAccessRules;
 	}
@@ -1131,6 +1132,7 @@ public class ClasspathEntry implements IClasspathEntry {
 	 * Returns true if the given object is a classpath entry
 	 * with equivalent attributes.
 	 */
+	@Override
 	public boolean equals(Object object) {
 		if (this == object)
 			return true;
@@ -1228,6 +1230,7 @@ public class ClasspathEntry implements IClasspathEntry {
 	/**
 	 * @see IClasspathEntry#getAccessRules()
 	 */
+	@Override
 	public IAccessRule[] getAccessRules() {
 		if (this.accessRuleSet == null) return NO_ACCESS_RULES;
 		AccessRule[] rules = this.accessRuleSet.getAccessRules();
@@ -1245,6 +1248,7 @@ public class ClasspathEntry implements IClasspathEntry {
 	/**
 	 * @see IClasspathEntry
 	 */
+	@Override
 	public int getContentKind() {
 		return this.contentKind;
 	}
@@ -1252,6 +1256,7 @@ public class ClasspathEntry implements IClasspathEntry {
 	/**
 	 * @see IClasspathEntry
 	 */
+	@Override
 	public int getEntryKind() {
 		return this.entryKind;
 	}
@@ -1259,10 +1264,12 @@ public class ClasspathEntry implements IClasspathEntry {
 	/**
 	 * @see IClasspathEntry#getExclusionPatterns()
 	 */
+	@Override
 	public IPath[] getExclusionPatterns() {
 		return this.exclusionPatterns;
 	}
 
+	@Override
 	public IClasspathAttribute[] getExtraAttributes() {
 		return this.extraAttributes;
 	}
@@ -1270,6 +1277,7 @@ public class ClasspathEntry implements IClasspathEntry {
 	/**
 	 * @see IClasspathEntry#getExclusionPatterns()
 	 */
+	@Override
 	public IPath[] getInclusionPatterns() {
 		return this.inclusionPatterns;
 	}
@@ -1277,6 +1285,7 @@ public class ClasspathEntry implements IClasspathEntry {
 	/**
 	 * @see IClasspathEntry#getOutputLocation()
 	 */
+	@Override
 	public IPath getOutputLocation() {
 		return this.specificOutputLocation;
 	}
@@ -1284,6 +1293,7 @@ public class ClasspathEntry implements IClasspathEntry {
 	/**
 	 * @see IClasspathEntry
 	 */
+	@Override
 	public IPath getPath() {
 		return this.path;
 	}
@@ -1291,6 +1301,7 @@ public class ClasspathEntry implements IClasspathEntry {
 	/**
 	 * @see IClasspathEntry
 	 */
+	@Override
 	public IPath getSourceAttachmentPath() {
 		return this.sourceAttachmentPath;
 	}
@@ -1298,6 +1309,7 @@ public class ClasspathEntry implements IClasspathEntry {
 	/**
 	 * @see IClasspathEntry
 	 */
+	@Override
 	public IPath getSourceAttachmentRootPath() {
 		return this.sourceAttachmentRootPath;
 	}
@@ -1413,6 +1425,7 @@ public class ClasspathEntry implements IClasspathEntry {
 		return null;
 	}
 
+	@Override
 	public IClasspathEntry getReferencingEntry() {
 		return this.referencingEntry;
 	}
@@ -1420,6 +1433,7 @@ public class ClasspathEntry implements IClasspathEntry {
 	/**
 	 * Returns the hash code for this classpath entry
 	 */
+	@Override
 	public int hashCode() {
 		return this.path.hashCode();
 	}
@@ -1427,6 +1441,7 @@ public class ClasspathEntry implements IClasspathEntry {
 	/**
 	 * @see IClasspathEntry#isExported()
 	 */
+	@Override
 	public boolean isExported() {
 		return this.isExported;
 	}
@@ -1521,6 +1536,7 @@ public class ClasspathEntry implements IClasspathEntry {
 	/**
 	 * Returns a printable representation of this classpath entry.
 	 */
+	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
 		Object target = JavaModel.getTarget(getPath(), true);
@@ -1708,6 +1724,7 @@ public class ClasspathEntry implements IClasspathEntry {
 	 * @see IClasspathEntry
 	 * @deprecated
 	 */
+	@Override
 	public IClasspathEntry getResolvedEntry() {
 
 		return JavaCore.getResolvedClasspathEntry(this);
@@ -2041,6 +2058,7 @@ public class ClasspathEntry implements IClasspathEntry {
 									cachedStatus = new JavaModelStatus(IStatus.OK, IJavaModelStatusConstants.OUTPUT_LOCATION_OVERLAPPING_ANOTHER_SOURCE, 
 										Messages.bind(Messages.classpath_cannotUseDistinctSourceFolderAsOutput, new String[] {
 										entryPathMsg, otherPathMsg, projectName })){
+										@Override
 										public boolean isOK() {
 											return true;
 										}

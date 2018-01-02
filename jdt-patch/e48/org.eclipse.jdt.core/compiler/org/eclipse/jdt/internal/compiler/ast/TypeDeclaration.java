@@ -77,6 +77,7 @@ public TypeDeclaration(CompilationResult compilationResult){
 /*
  *	We cause the compilation task to abort to a given extent.
  */
+@Override
 public void abort(int abortLevel, CategorizedProblem problem) {
 	switch (abortLevel) {
 		case AbortCompilation :
@@ -198,6 +199,7 @@ public MethodDeclaration addMissingAbstractMethodFor(MethodBinding methodBinding
  *	Flow analysis for a local innertype
  *
  */
+@Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 	if (this.ignoreFurtherInvestigation)
 		return flowInfo;
@@ -307,6 +309,7 @@ public boolean checkConstructors(Parser parser) {
 	return hasConstructor;
 }
 
+@Override
 public CompilationResult compilationResult() {
 	return this.compilationResult;
 }
@@ -512,6 +515,7 @@ public TypeDeclaration declarationOfType(char[][] typeName) {
 	return null;
 }
 
+@Override
 public CompilationUnitDeclaration getCompilationUnitDeclaration() {
 	if (this.scope != null) {
 		return this.scope.compilationUnitScope().referenceContext;
@@ -593,6 +597,7 @@ public void generateCode(ClassFile enclosingClassFile) {
 /**
  * Bytecode generation for a local inner type (API as a normal statement code gen)
  */
+@Override
 public void generateCode(BlockScope blockScope, CodeStream codeStream) {
 	if ((this.bits & ASTNode.IsReachable) == 0) {
 		return;
@@ -638,6 +643,7 @@ public void generateCode(CompilationUnitScope unitScope) {
 	generateCode((ClassFile) null);
 }
 
+@Override
 public boolean hasErrors() {
 	return this.ignoreFurtherInvestigation;
 }
@@ -909,6 +915,7 @@ public void parseMethods(Parser parser, CompilationUnitDeclaration unit) {
 	}
 }
 
+@Override
 public StringBuffer print(int indent, StringBuffer output) {
 	if (this.javadoc != null) {
 		this.javadoc.print(indent, output);
@@ -1003,6 +1010,7 @@ public StringBuffer printHeader(int indent, StringBuffer output) {
 	return output;
 }
 
+@Override
 public StringBuffer printStatement(int tab, StringBuffer output) {
 	return print(tab, output);
 }
@@ -1240,6 +1248,7 @@ public void resolve() {
 /**
  * Resolve a local type declaration
  */
+@Override
 public void resolve(BlockScope blockScope) {
 
 	// need to build its scope first and proceed with binding's creation
@@ -1326,10 +1335,12 @@ public void resolve(CompilationUnitScope upperScope) {
 	updateMaxFieldCount();
 }
 
+@Override
 public void tagAsHavingErrors() {
 	this.ignoreFurtherInvestigation = true;
 }
 
+@Override
 public void tagAsHavingIgnoredMandatoryErrors(int problemId) {
 	// Nothing to do for this context;
 }
@@ -1393,6 +1404,7 @@ public void traverse(ASTVisitor visitor, CompilationUnitScope unitScope) {
 /**
  *	Iteration for a local inner type
  */
+@Override
 public void traverse(ASTVisitor visitor, BlockScope blockScope) {
 	try {
 		if (visitor.visit(this, blockScope)) {

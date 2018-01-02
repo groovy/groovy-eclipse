@@ -37,6 +37,7 @@ public SimpleLookupTable(int size) {
 	this.valueTable = new Object[extraRoom];
 }
 
+@Override
 public Object clone() throws CloneNotSupportedException {
 	SimpleLookupTable result = (SimpleLookupTable) super.clone();
 	result.elementSize = this.elementSize;
@@ -156,6 +157,7 @@ private void rehash() {
 	this.threshold = newLookupTable.threshold;
 }
 
+@Override
 public String toString() {
 	String s = ""; //$NON-NLS-1$
 	Object object;

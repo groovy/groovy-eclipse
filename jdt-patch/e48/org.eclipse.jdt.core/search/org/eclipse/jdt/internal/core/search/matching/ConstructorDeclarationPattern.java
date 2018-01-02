@@ -39,6 +39,7 @@ public ConstructorDeclarationPattern(char[] declaringPackageName, char[] declari
 ConstructorDeclarationPattern(int matchRule) {
 	super(matchRule);
 }
+@Override
 public void decodeIndexKey(char[] key) {
 	int last = key.length - 1;
 	int slash = CharOperation.indexOf(SEPARATOR, key, 0);
@@ -129,12 +130,15 @@ public void decodeIndexKey(char[] key) {
 	removeInternalFlags(); // remove internal flags
 }
 
+@Override
 public SearchPattern getBlankPattern() {
 	return new ConstructorDeclarationPattern(R_EXACT_MATCH | R_CASE_SENSITIVE);
 }
+@Override
 public char[][] getIndexCategories() {
 	return DECL_CATEGORIES;
 }
+@Override
 public boolean matchesDecodedKey(SearchPattern decodedPattern) {
 	ConstructorDeclarationPattern pattern = (ConstructorDeclarationPattern) decodedPattern;
 	

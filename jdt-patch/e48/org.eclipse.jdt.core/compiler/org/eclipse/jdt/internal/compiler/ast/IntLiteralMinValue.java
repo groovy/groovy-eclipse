@@ -20,6 +20,7 @@ public IntLiteralMinValue(char[] token, char[] reducedToken, int start, int end)
 	super(token, reducedToken, start, end, Integer.MIN_VALUE, IntConstant.fromValue(Integer.MIN_VALUE));
 }
 
+@Override
 public void computeConstant(){
 	/*precomputed at creation time*/ }
 }

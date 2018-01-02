@@ -21,6 +21,7 @@ public PostfixExpression(Expression lhs, Expression expression, int operator, in
 	this.sourceStart = lhs.sourceStart;
 	this.sourceEnd = pos;
 }
+@Override
 public boolean checkCastCompatibility() {
 	return false;
 }
@@ -31,6 +32,7 @@ public boolean checkCastCompatibility() {
  * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
  * @param valueRequired boolean
  */
+@Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 	// various scenarii are possible, setting an array reference,
 	// a field reference, a blank final field reference, a field of an enclosing instance or
@@ -44,6 +46,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean
 	codeStream.recordPositionsFrom(pc, this.sourceStart);
 }
 
+@Override
 public String operatorToString() {
 	switch (this.operator) {
 		case PLUS :
@@ -54,14 +57,17 @@ public String operatorToString() {
 	return "unknown operator"; //$NON-NLS-1$
 }
 
+@Override
 public StringBuffer printExpressionNoParenthesis(int indent, StringBuffer output) {
 	return this.lhs.printExpression(indent, output).append(' ').append(operatorToString());
 }
 
+@Override
 public boolean restrainUsageToNumericTypes() {
 	return true;
 }
 
+@Override
 public void traverse(ASTVisitor visitor, BlockScope scope) {
 
 	if (visitor.visit(this, scope)) {

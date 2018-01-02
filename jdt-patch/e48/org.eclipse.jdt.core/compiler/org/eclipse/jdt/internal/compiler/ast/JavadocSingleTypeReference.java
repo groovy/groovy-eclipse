@@ -38,6 +38,7 @@ public class JavadocSingleTypeReference extends SingleTypeReference {
 	/*
 	 * We need to modify resolving behavior to handle package references
 	 */
+	@Override
 	protected TypeBinding internalResolveType(Scope scope, int location) {
 		// handle the error here
 		this.constant = Constant.NotAConstant;
@@ -89,10 +90,12 @@ public class JavadocSingleTypeReference extends SingleTypeReference {
 		}
 		return this.resolvedType;
 	}
+	@Override
 	protected void reportDeprecatedType(TypeBinding type, Scope scope) {
 		scope.problemReporter().javadocDeprecatedType(type, this, scope.getDeclarationModifiers());
 	}
 
+	@Override
 	protected void reportInvalidType(Scope scope) {
 		scope.problemReporter().javadocInvalidType(this, this.resolvedType, scope.getDeclarationModifiers());
 	}
@@ -101,11 +104,13 @@ public class JavadocSingleTypeReference extends SingleTypeReference {
 	 * Redefine to capture javadoc specific signatures
 	 * @see org.eclipse.jdt.internal.compiler.ast.ASTNode#traverse(org.eclipse.jdt.internal.compiler.ASTVisitor, org.eclipse.jdt.internal.compiler.lookup.BlockScope)
 	 */
+	@Override
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		visitor.visit(this, scope);
 		visitor.endVisit(this, scope);
 	}
 
+	@Override
 	public void traverse(ASTVisitor visitor, ClassScope scope) {
 		visitor.visit(this, scope);
 		visitor.endVisit(this, scope);

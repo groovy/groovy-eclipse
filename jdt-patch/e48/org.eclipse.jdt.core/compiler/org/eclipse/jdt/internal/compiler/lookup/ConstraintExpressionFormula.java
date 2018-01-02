@@ -53,6 +53,7 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 		this.isSoft = isSoft;
 	}
 
+	@Override
 	public Object reduce(InferenceContext18 inferenceContext) throws InferenceFailureException {
 		
 		if (this.relation == POTENTIALLY_COMPATIBLE) {
@@ -462,6 +463,7 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 		return erasedLeaf;
 	}
 
+	@Override
 	Collection<InferenceVariable> inputVariables(final InferenceContext18 context) {
 		// from 18.5.2.
 		if (this.left instanceof LambdaExpression) {
@@ -522,6 +524,7 @@ class ConstraintExpressionFormula extends ConstraintFormula {
 	}
 
 	// debugging:
+	@Override
 	public String toString() {
 		StringBuffer buf = new StringBuffer().append(LEFT_ANGLE_BRACKET);
 		this.left.printExpression(4, buf);

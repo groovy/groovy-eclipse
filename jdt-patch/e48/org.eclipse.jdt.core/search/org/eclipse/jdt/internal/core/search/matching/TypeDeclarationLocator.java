@@ -50,6 +50,7 @@ public TypeDeclarationLocator(TypeDeclarationPattern pattern) {
 //public int match(MethodDeclaration node, MatchingNodeSet nodeSet) - SKIP IT
 //public int match(MessageSend node, MatchingNodeSet nodeSet) - SKIP IT
 //public int match(Reference node, MatchingNodeSet nodeSet) - SKIP IT
+@Override
 public int match(TypeDeclaration node, MatchingNodeSet nodeSet) {
 	if (this.pattern.simpleName == null || matchesName(this.pattern.simpleName, node.name))
 		return nodeSet.addMatch(node, this.pattern.mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH);
@@ -58,11 +59,13 @@ public int match(TypeDeclaration node, MatchingNodeSet nodeSet) {
 }
 //public int match(TypeReference node, MatchingNodeSet nodeSet) - SKIP IT
 
+@Override
 public int resolveLevel(ASTNode node) {
 	if (!(node instanceof TypeDeclaration)) return IMPOSSIBLE_MATCH;
 
 	return resolveLevel(((TypeDeclaration) node).binding);
 }
+@Override
 public int resolveLevel(Binding binding) {
 	if (binding == null) return INACCURATE_MATCH;
 	if (!(binding instanceof TypeBinding)) return IMPOSSIBLE_MATCH;
@@ -132,6 +135,7 @@ private HashSet<String> getModuleGraph(String mName, TypeDeclarationPattern type
 	if (modulePattern == null) return mGraph;
 	final HashSet<String> tmpGraph = new HashSet<>();
 	final SearchParticipant participant = new JavaSearchParticipant() {
+		@Override
 		public void locateMatches(SearchDocument[] indexMatches, SearchPattern mPattern,
 				IJavaSearchScope scope, SearchRequestor requestor, IProgressMonitor monitor) throws CoreException {
 			MatchLocator matchLocator =	new MatchLocator(mPattern,	requestor,	scope,	monitor);
@@ -219,6 +223,7 @@ private int matchModule(TypeDeclarationPattern typePattern, TypeBinding type) {
 	}
 	return IMPOSSIBLE_MATCH;
 }
+@Override
 public String toString() {
 	return "Locator for " + this.pattern.toString(); //$NON-NLS-1$
 }

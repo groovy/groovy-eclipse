@@ -24,9 +24,7 @@ import org.eclipse.jdt.core.compiler.IProblem;
  */
 public class CompletionRequestorAdapter implements ICompletionRequestor {
 
-	/*
-	 * @see ICompletionRequestor#acceptAnonymousType(char[], char[], char[][], char[][], char[][], char[], int, int, int)
-	 */
+	@Override
 	public void acceptAnonymousType(
 		char[] superTypePackageName,
 		char[] superTypeName,
@@ -41,9 +39,7 @@ public class CompletionRequestorAdapter implements ICompletionRequestor {
 			// default behavior is to ignore
 	}
 
-	/*
-	 * @see ICompletionRequestor#acceptClass(char[], char[], char[], int, int, int)
-	 */
+	@Override
 	public void acceptClass(
 		char[] packageName,
 		char[] className,
@@ -55,16 +51,12 @@ public class CompletionRequestorAdapter implements ICompletionRequestor {
 			// default behavior is to ignore
 	}
 
-	/*
-	 * @see ICompletionRequestor#acceptError(IProblem)
-	 */
+	@Override
 	public void acceptError(IProblem error) {
 		// default behavior is to ignore
 	}
 
-	/*
-	 * @see ICompletionRequestor#acceptField(char[], char[], char[], char[], char[], char[], int, int, int)
-	 */
+	@Override
 	public void acceptField(
 		char[] declaringTypePackageName,
 		char[] declaringTypeName,
@@ -79,9 +71,7 @@ public class CompletionRequestorAdapter implements ICompletionRequestor {
 			// default behavior is to ignore
 	}
 
-	/*
-	 * @see ICompletionRequestor#acceptInterface(char[], char[], char[], int, int, int)
-	 */
+	@Override
 	public void acceptInterface(
 		char[] packageName,
 		char[] interfaceName,
@@ -93,9 +83,7 @@ public class CompletionRequestorAdapter implements ICompletionRequestor {
 			// default behavior is to ignore
 	}
 
-	/*
-	 * @see ICompletionRequestor#acceptKeyword(char[], int, int)
-	 */
+	@Override
 	public void acceptKeyword(
 		char[] keywordName,
 		int completionStart,
@@ -104,9 +92,7 @@ public class CompletionRequestorAdapter implements ICompletionRequestor {
 			// default behavior is to ignore
 	}
 
-	/*
-	 * @see ICompletionRequestor#acceptLabel(char[], int, int)
-	 */
+	@Override
 	public void acceptLabel(
 		char[] labelName,
 		int completionStart,
@@ -115,9 +101,7 @@ public class CompletionRequestorAdapter implements ICompletionRequestor {
 			// default behavior is to ignore
 	}
 
-	/*
-	 * @see ICompletionRequestor#acceptLocalVariable(char[], char[], char[], int, int, int)
-	 */
+	@Override
 	public void acceptLocalVariable(
 		char[] name,
 		char[] typePackageName,
@@ -129,9 +113,7 @@ public class CompletionRequestorAdapter implements ICompletionRequestor {
 			// default behavior is to ignore
 	}
 
-	/*
-	 * @see ICompletionRequestor#acceptMethod(char[], char[], char[], char[][], char[][], char[][], char[], char[], char[], int, int, int)
-	 */
+	@Override
 	public void acceptMethod(
 		char[] declaringTypePackageName,
 		char[] declaringTypeName,
@@ -149,9 +131,7 @@ public class CompletionRequestorAdapter implements ICompletionRequestor {
 			// default behavior is to ignore
 	}
 
-	/*
-	 * @see ICompletionRequestor#acceptMethodDeclaration(char[], char[], char[], char[][], char[][], char[][], char[], char[], char[], int, int, int)
-	 */
+	@Override
 	public void acceptMethodDeclaration(
 		char[] declaringTypePackageName,
 		char[] declaringTypeName,
@@ -169,9 +149,7 @@ public class CompletionRequestorAdapter implements ICompletionRequestor {
 			// default behavior is to ignore
 	}
 
-	/*
-	 * @see ICompletionRequestor#acceptModifier(char[], int, int)
-	 */
+	@Override
 	public void acceptModifier(
 		char[] modifierName,
 		int completionStart,
@@ -180,9 +158,7 @@ public class CompletionRequestorAdapter implements ICompletionRequestor {
 			// default behavior is to ignore
 	}
 
-	/*
-	 * @see ICompletionRequestor#acceptPackage(char[], char[], int, int)
-	 */
+	@Override
 	public void acceptPackage(
 		char[] packageName,
 		char[] completionName,
@@ -192,9 +168,7 @@ public class CompletionRequestorAdapter implements ICompletionRequestor {
 			// default behavior is to ignore
 	}
 
-	/*
-	 * @see ICompletionRequestor#acceptType(char[], char[], char[], int, int)
-	 */
+	@Override
 	public void acceptType(
 		char[] packageName,
 		char[] typeName,
@@ -205,9 +179,7 @@ public class CompletionRequestorAdapter implements ICompletionRequestor {
 			// default behavior is to ignore
 	}
 
-	/*
-	 * @see ICompletionRequestor#acceptVariableName(char[], char[], char[], char[], int, int)
-	 */
+	@Override
 	public void acceptVariableName(
 		char[] typePackageName,
 		char[] typeName,

@@ -40,6 +40,7 @@ public class AnnotationContext {
 		this.visibility = visibility;
 	}
 
+	@Override
 	public String toString() {
 		return "AnnotationContext [annotation=" //$NON-NLS-1$
 				+ this.annotation

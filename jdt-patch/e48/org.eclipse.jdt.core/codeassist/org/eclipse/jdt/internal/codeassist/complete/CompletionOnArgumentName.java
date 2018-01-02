@@ -32,12 +32,14 @@ public class CompletionOnArgumentName extends Argument {
 		this.realName = name;
 	}
 
+	@Override
 	public TypeBinding bind(MethodScope scope, TypeBinding typeBinding, boolean used) {
 
 		super.bind(scope, typeBinding, used);
 		throw new CompletionNodeFound(this, scope);
 	}
 
+	@Override
 	public StringBuffer print(int indent, StringBuffer output) {
 
 		printIndent(indent, output);
@@ -51,6 +53,7 @@ public class CompletionOnArgumentName extends Argument {
 		return output.append('>');
 	}
 
+	@Override
 	public void resolve(BlockScope scope) {
 
 		super.resolve(scope);

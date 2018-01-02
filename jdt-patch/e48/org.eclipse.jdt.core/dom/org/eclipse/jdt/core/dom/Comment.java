@@ -120,9 +120,7 @@ public abstract class Comment extends ASTNode {
 		this.alternateRoot = root;
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+	@Override
 	int memSize() {
 		return BASE_NODE_SIZE + 1 * 4;
 	}

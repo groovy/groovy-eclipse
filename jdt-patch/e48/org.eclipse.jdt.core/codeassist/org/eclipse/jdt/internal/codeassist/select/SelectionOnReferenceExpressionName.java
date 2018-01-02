@@ -25,6 +25,7 @@ public class SelectionOnReferenceExpressionName extends ReferenceExpression {
 		super(scanner);
 	}
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 		output.append("<SelectionOnReferenceExpressionName:"); //$NON-NLS-1$
 		super.printExpression(indent, output);
@@ -32,15 +33,18 @@ public class SelectionOnReferenceExpressionName extends ReferenceExpression {
 	}
 	
 	// See SelectionScanner#scanIdentifierOrKeyword
+	@Override
 	public boolean isConstructorReference() {
 		return CharOperation.equals(this.selector, "new".toCharArray()); //$NON-NLS-1$
 	}
 	
 	// See SelectionScanner#scanIdentifierOrKeyword
+	@Override
 	public boolean isMethodReference() {
 		return !CharOperation.equals(this.selector, "new".toCharArray()); //$NON-NLS-1$
 	}
 
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 		TypeBinding type = super.resolveType(scope);
 		if (type == null || type instanceof ProblemReferenceBinding || type instanceof PolyTypeBinding)

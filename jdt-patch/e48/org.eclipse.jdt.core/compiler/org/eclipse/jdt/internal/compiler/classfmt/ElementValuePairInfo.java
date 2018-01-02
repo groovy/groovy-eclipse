@@ -26,12 +26,15 @@ public ElementValuePairInfo(char[] name, Object value) {
 	this.name = name;
 	this.value = value;
 }
+@Override
 public char[] getName() {
 	return this.name;
 }
+@Override
 public Object getValue() {
 	return this.value;
 }
+@Override
 public String toString() {
 	StringBuffer buffer = new StringBuffer();
 	buffer.append(this.name);
@@ -50,6 +53,7 @@ public String toString() {
 	}
 	return buffer.toString();
 }
+@Override
 public int hashCode() {
 	final int prime = 31;
 	int result = 1;
@@ -57,6 +61,7 @@ public int hashCode() {
 	result = prime * result + ((this.value == null) ? 0 : this.value.hashCode());
 	return result;
 }
+@Override
 public boolean equals(Object obj) {
 	if (this == obj) {
 		return true;

@@ -30,6 +30,7 @@ public class SingleTypeReference extends TypeReference {
 
 	}
 
+	@Override
 	public TypeReference augmentTypeWithAdditionalDimensions(int additionalDimensions, Annotation[][] additionalAnnotations, boolean isVarargs) {
 		int totalDimensions = this.dimensions() + additionalDimensions;
 		Annotation [][] allAnnotations = getMergedAnnotationsOnDimensions(additionalDimensions, additionalAnnotations);
@@ -41,9 +42,11 @@ public class SingleTypeReference extends TypeReference {
 		return arrayTypeReference;
 	}
 
+	@Override
 	public char[] getLastToken() {
 		return this.token;
 	}
+	@Override
 	protected TypeBinding getTypeBinding(Scope scope) {
 		if (this.resolvedType != null)
 			return this.resolvedType;
@@ -69,6 +72,7 @@ public class SingleTypeReference extends TypeReference {
 		return this.resolvedType;
 	}
 
+	@Override
 	public char [][] getTypeName() {
 		return new char[][] { this.token };
 	}
@@ -87,6 +91,7 @@ public class SingleTypeReference extends TypeReference {
 			   this.token == VOID;	    
 	}
 	
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output){
 		if (this.annotations != null && this.annotations[0] != null) {
 			printAnnotations(this.annotations[0], output);
@@ -124,6 +129,7 @@ public class SingleTypeReference extends TypeReference {
 		return this.resolvedType = memberType;
 	}
 
+	@Override
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		if (visitor.visit(this, scope)) {
 			if (this.annotations != null) {
@@ -135,6 +141,7 @@ public class SingleTypeReference extends TypeReference {
 		visitor.endVisit(this, scope);
 	}
 
+	@Override
 	public void traverse(ASTVisitor visitor, ClassScope scope) {
 		if (visitor.visit(this, scope)) {
 			if (this.annotations != null) {

@@ -119,6 +119,7 @@ public class ASTNodeFinder {
 		class Visitor extends ASTVisitor {
 			TypeDeclaration result;
 			int count = 0;
+			@Override
 			public boolean visit(TypeDeclaration typeDeclaration, BlockScope scope) {
 				if (this.result != null) return false;
 				if ((typeDeclaration.bits & ASTNode.IsAnonymousType) != 0) {

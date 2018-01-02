@@ -372,6 +372,7 @@ public void scanForModules(Parser parser) {
 			this.moduleLocations.put(String.valueOf(iModule.name()), this.classpaths[i]);
 	}
 }
+@Override
 public void cleanup() {
 	for (int i = 0, max = this.classpaths.length; i < max; i++)
 		this.classpaths[i].reset();
@@ -472,6 +473,7 @@ private NameEnvironmentAnswer internalFindClass(String qualifiedTypeName, char[]
 	return suggestedAnswer;
 }
 
+@Override
 public NameEnvironmentAnswer findType(char[][] compoundName, char[] moduleName) {
 	if (compoundName != null)
 		return findClass(
@@ -524,6 +526,7 @@ public char[][][] findTypeNames(char[][] packageName) {
 	return result;
 }
 
+@Override
 public NameEnvironmentAnswer findType(char[] typeName, char[][] packageName, char[] moduleName) {
 	if (typeName != null)
 		return findClass(
@@ -534,6 +537,7 @@ public NameEnvironmentAnswer findType(char[] typeName, char[][] packageName, cha
 	return null;
 }
 
+@Override
 public char[][] getModulesDeclaringPackage(char[][] parentPackageName, char[] packageName, char[] moduleName) {
 	String qualifiedPackageName = new String(CharOperation.concatWith(parentPackageName, packageName, '/'));
 	String moduleNameString = String.valueOf(moduleName);

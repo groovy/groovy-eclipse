@@ -68,6 +68,7 @@ public class ConditionalExpression extends OperatorExpression implements IPolyEx
 		this.sourceEnd = valueIfFalse.sourceEnd;
 	}
 
+@Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 			FlowInfo flowInfo) {
 		int initialComplaintLevel = (flowInfo.reachMode() & FlowInfo.UNREACHABLE) != 0 ? Statement.COMPLAINED_FAKE_REACHABLE : Statement.NOT_COMPLAINED;
@@ -187,6 +188,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 		return mergedInfo;
 	}
 
+	@Override
 	public boolean checkNPE(BlockScope scope, FlowContext flowContext, FlowInfo flowInfo, int ttlForFieldCheck) {
 		if ((this.nullStatus & FlowInfo.NULL) != 0)
 			scope.problemReporter().expressionNullReference(this);
@@ -237,6 +239,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 	 * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
 	 * @param valueRequired boolean
 	*/
+	@Override
 	public void generateCode(
 		BlockScope currentScope,
 		CodeStream codeStream,
@@ -327,6 +330,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 	/**
 	 * Optimized boolean code generation for the conditional operator ?:
 	*/
+	@Override
 	public void generateOptimizedBoolean(
 		BlockScope currentScope,
 		CodeStream codeStream,
@@ -419,17 +423,20 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 		codeStream.recordPositionsFrom(pc, this.sourceEnd);
 	}
 
+	@Override
 	public int nullStatus(FlowInfo flowInfo, FlowContext flowContext) {
 		if ((this.implicitConversion & TypeIds.BOXING) != 0)
 			return FlowInfo.NON_NULL;
 		return this.nullStatus;
 	}
 
+	@Override
 	public Constant optimizedBooleanConstant() {
 
 		return this.optimizedBooleanConstant == null ? this.constant : this.optimizedBooleanConstant;
 	}
 
+	@Override
 	public StringBuffer printExpressionNoParenthesis(int indent, StringBuffer output) {
 
 		this.condition.printExpression(indent, output).append(" ? "); //$NON-NLS-1$
@@ -437,6 +444,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 		return this.valueIfFalse.printExpression(0, output);
 	}
 
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 		// JLS3 15.25
 		LookupEnvironment env = scope.environment();
@@ -707,14 +715,17 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 		return ok;
 	}
 
+	@Override
 	public void setExpectedType(TypeBinding expectedType) {
 		this.expectedType = expectedType;
 	}
 	
+	@Override
 	public void setExpressionContext(ExpressionContext context) {
 		this.expressionContext = context;
 	}
 
+	@Override
 	public ExpressionContext getExpressionContext() {
 		return this.expressionContext;
 	}
@@ -733,6 +744,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 		return allPolys;
 	}
 
+	@Override
 	public boolean isPertinentToApplicability(TypeBinding targetType, MethodBinding method) {
 		return this.valueIfTrue.isPertinentToApplicability(targetType, method) 
 				&& this.valueIfFalse.isPertinentToApplicability(targetType, method);
@@ -749,6 +761,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 		return this.valueIfTrue.isFunctionalType() || this.valueIfFalse.isFunctionalType(); // Even if only one arm is functional type, this will require a functional interface target
 	}
 	
+	@Override
 	public boolean isPolyExpression() throws UnsupportedOperationException {
 		
 		if (!this.use18specifics)
@@ -776,6 +789,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 		return this.isPolyExpression = true;
 	}
 	
+	@Override
 	public boolean isCompatibleWith(TypeBinding left, Scope scope) {
 		return isPolyExpression() ? this.valueIfTrue.isCompatibleWith(left, scope) && this.valueIfFalse.isCompatibleWith(left, scope) :
 			super.isCompatibleWith(left, scope);
@@ -791,6 +805,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 			super.isBoxingCompatibleWith(targetType, scope);
 	}	
 	
+	@Override
 	public boolean sIsMoreSpecific(TypeBinding s, TypeBinding t, Scope scope) {
 		if (super.sIsMoreSpecific(s, t, scope))
 			return true;
@@ -799,6 +814,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 				false;
 	}
 
+	@Override
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		if (visitor.visit(this, scope)) {
 			this.condition.traverse(visitor, scope);

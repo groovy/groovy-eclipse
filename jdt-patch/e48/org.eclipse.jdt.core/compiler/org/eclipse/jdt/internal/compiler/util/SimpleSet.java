@@ -78,6 +78,7 @@ public void clear() {
 	this.elementSize = 0;
 }
 
+@Override
 public Object clone() throws CloneNotSupportedException {
 	SimpleSet result = (SimpleSet) super.clone();
 	result.elementSize = this.elementSize;
@@ -130,6 +131,7 @@ private void rehash() {
 	this.threshold = newSet.threshold;
 }
 
+@Override
 public String toString() {
 	String s = ""; //$NON-NLS-1$
 	Object object;

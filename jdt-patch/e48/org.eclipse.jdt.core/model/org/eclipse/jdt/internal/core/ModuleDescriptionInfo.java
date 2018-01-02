@@ -46,9 +46,11 @@ public class ModuleDescriptionInfo extends AnnotatableInfo implements IModule {
 	static class ModuleReferenceInfo extends MemberElementInfo implements IModule.IModuleReference {
 		char[] name;
 		int modifiers;
+		@Override
 		public char[] name() {
 			return this.name;
 		}
+		@Override
 		public int getModifiers() {
 			return this.modifiers;
 		}
@@ -56,6 +58,7 @@ public class ModuleDescriptionInfo extends AnnotatableInfo implements IModule {
 	static class PackageExportInfo extends MemberElementInfo implements IModule.IPackageExport {
 		char[] pack;
 		char[][] target;
+		@Override
 		public String toString() {
 			StringBuffer buffer = new StringBuffer();
 			buffer.append(this.pack);
@@ -91,6 +94,7 @@ public class ModuleDescriptionInfo extends AnnotatableInfo implements IModule {
 		public char[][] with() {
 			return this.implNames;
 		}
+		@Override
 		public String toString() {
 			StringBuffer buffer = new StringBuffer();
 			buffer.append(this.serviceName);
@@ -302,6 +306,7 @@ public class ModuleDescriptionInfo extends AnnotatableInfo implements IModule {
 		this.handle = handle;
 	}
 
+	@Override
 	public IJavaElement[] getChildren() {
 		return this.children;
 	}
@@ -340,6 +345,7 @@ public class ModuleDescriptionInfo extends AnnotatableInfo implements IModule {
 		return this.opens;
 	}
 
+	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer(getClass().getName());
 		toStringContent(buffer);

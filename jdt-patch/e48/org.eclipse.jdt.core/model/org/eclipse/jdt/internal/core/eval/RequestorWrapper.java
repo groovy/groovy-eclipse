@@ -30,6 +30,7 @@ public RequestorWrapper(ICodeSnippetRequestor requestor) {
 /**
  * @see ICodeSnippetRequestor
  */
+@Override
 public boolean acceptClassFiles(ClassFile[] classFiles, char[] codeSnippetClassName) {
 	int length = classFiles.length;
 	byte[][] classFileBytes = new byte[length][];
@@ -50,6 +51,7 @@ public boolean acceptClassFiles(ClassFile[] classFiles, char[] codeSnippetClassN
 /**
  * @see ICodeSnippetRequestor
  */
+@Override
 public void acceptProblem(CategorizedProblem problem, char[] fragmentSource, int fragmentKind) {
 	try {
 		IMarker marker = ResourcesPlugin.getWorkspace().getRoot().createMarker(IJavaModelMarker.TRANSIENT_PROBLEM);

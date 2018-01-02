@@ -42,9 +42,7 @@ public class AnnotationDefaultAttribute extends ClassFileAttribute
 		this.memberValue = new AnnotationComponentValue(classFileBytes, constantPool, offset + 6);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IAnnotationDefaultAttribute#getMemberValue()
-	 */
+	@Override
 	public IAnnotationComponentValue getMemberValue() {
 		return this.memberValue;
 	}

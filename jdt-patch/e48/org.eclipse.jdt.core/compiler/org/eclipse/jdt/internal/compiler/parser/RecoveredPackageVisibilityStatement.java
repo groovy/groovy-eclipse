@@ -25,6 +25,7 @@ public class RecoveredPackageVisibilityStatement extends RecoveredModuleStatemen
 	public RecoveredPackageVisibilityStatement(PackageVisibilityStatement pvs, RecoveredElement parent, int bracketBalance) {
 		super(pvs, parent, bracketBalance);
 	}
+	@Override
 	public RecoveredElement add(ImportReference pkgRef1,  int bracketBalance1) {
 		this.pkgRef = new RecoveredImport(pkgRef1, this, bracketBalance1);
 		return this;
@@ -48,6 +49,7 @@ public class RecoveredPackageVisibilityStatement extends RecoveredModuleStatemen
 		return this;
 
 	}
+	@Override
 	public String toString(int tab) {
 		return super.toString();
 	}
@@ -70,6 +72,7 @@ public class RecoveredPackageVisibilityStatement extends RecoveredModuleStatemen
 		}
 		return pvs;
 	}
+	@Override
 	public void updateParseTree(){
 		updatedPackageVisibilityStatement();
 	}

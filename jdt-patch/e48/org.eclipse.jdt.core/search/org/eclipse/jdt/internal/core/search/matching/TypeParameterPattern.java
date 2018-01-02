@@ -76,6 +76,7 @@ public class TypeParameterPattern extends JavaSearchPattern {
 	/*
 	 * Same than LocalVariablePattern.
 	 */
+	@Override
 	public void findIndexMatches(Index index, IndexQueryRequestor requestor, SearchParticipant participant, IJavaSearchScope scope, IProgressMonitor progressMonitor) {
 	    IPackageFragmentRoot root = (IPackageFragmentRoot) this.typeParameter.getAncestor(IJavaElement.PACKAGE_FRAGMENT_ROOT);
 		String documentPath;
@@ -105,6 +106,7 @@ public class TypeParameterPattern extends JavaSearchPattern {
 		}
 	}
 
+	@Override
 	protected StringBuffer print(StringBuffer output) {
 		if (this.findDeclarations) {
 			output.append(this.findReferences

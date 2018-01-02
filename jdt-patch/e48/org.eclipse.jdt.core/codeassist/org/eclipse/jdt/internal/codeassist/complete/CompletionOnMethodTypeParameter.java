@@ -24,10 +24,12 @@ public class CompletionOnMethodTypeParameter extends MethodDeclaration {
 		this.sourceEnd = typeParameters[typeParameters.length - 1].sourceEnd;
 	}
 
+	@Override
 	public void resolveStatements() {
 			throw new CompletionNodeFound(this, this.scope);
 	}
 
+	@Override
 	public StringBuffer print(int tab, StringBuffer output) {
 		printIndent(tab, output);
 		output.append('<');

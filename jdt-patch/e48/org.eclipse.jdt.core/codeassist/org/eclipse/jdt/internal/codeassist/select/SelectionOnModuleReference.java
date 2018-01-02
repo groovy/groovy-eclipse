@@ -21,6 +21,7 @@ public class SelectionOnModuleReference extends ModuleReference {
 		super(tokens, sourcePositions);
 	}
 
+	@Override
 	public ModuleBinding resolve(Scope scope) {
 		ModuleBinding resolvedBinding = super.resolve(scope);
 		if (resolvedBinding != null) {
@@ -30,6 +31,7 @@ public class SelectionOnModuleReference extends ModuleReference {
 		}
 	}
 
+	@Override
 	public StringBuffer print(int tab, StringBuffer output) {
 		printIndent(tab, output).append("<SelectOnModuleReference:"); //$NON-NLS-1$
 		for (int i = 0; i < this.tokens.length; i++) {

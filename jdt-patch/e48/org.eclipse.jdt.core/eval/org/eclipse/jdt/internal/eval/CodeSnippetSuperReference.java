@@ -35,29 +35,37 @@ public CodeSnippetSuperReference(int pos, int sourceEnd) {
 /**
  * @see org.eclipse.jdt.internal.compiler.lookup.InvocationSite#genericTypeArguments()
  */
+@Override
 public TypeBinding[] genericTypeArguments() {
 	return null;
 }
 
+@Override
 public TypeBinding resolveType(BlockScope scope) {
 	scope.problemReporter().cannotUseSuperInCodeSnippet(this.sourceStart, this.sourceEnd);
 	return null;
 }
+@Override
 public InferenceContext18 freshInferenceContext(Scope scope) {
 	return null;
 }
+@Override
 public boolean isSuperAccess(){
 	return false;
 }
+@Override
 public boolean isTypeAccess(){
 	return false;
 }
+@Override
 public void setActualReceiverType(ReferenceBinding receiverType) {
 	// ignored
 }
+@Override
 public void setDepth(int depth){
 	// ignored
 }
+@Override
 public void setFieldIndex(int index){
 	// ignored
 }

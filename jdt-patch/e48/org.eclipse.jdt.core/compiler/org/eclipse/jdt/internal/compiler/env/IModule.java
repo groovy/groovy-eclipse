@@ -118,9 +118,11 @@ public interface IModule {
 				return NO_OPENS;
 			}
 			
+			@Override
 			public boolean isAutomatic() {
 				return true;
 			}
+			@Override
 			public boolean isOpen() {
 				return false;
 			}

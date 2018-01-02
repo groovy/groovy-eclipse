@@ -58,6 +58,7 @@ public DocumentElementParser(
  * Additionally, before investigating for @deprecated, retrieve the positions
  * of the JavaDoc comments so as to notify requestor with them.
  */
+@Override
 public void checkComment() {
 
 	/* persisting javadoc positions */
@@ -93,6 +94,7 @@ public void checkComment() {
  *
  * INTERNAL USE-ONLY
  */
+@Override
 protected void consumeCatchFormalParameter() {
 	// FormalParameter ::= Type VariableDeclaratorId ==> false
 	// FormalParameter ::= Modifiers Type VariableDeclaratorId ==> true
@@ -132,6 +134,7 @@ protected void consumeCatchFormalParameter() {
 	pushOnAstStack(arg);
 	this.intArrayPtr--;
 }
+@Override
 protected void consumeClassBodyDeclaration() {
 	// ClassBodyDeclaration ::= Diet Block
 	//push an Initializer
@@ -152,6 +155,7 @@ protected void consumeClassBodyDeclaration() {
  *
  * INTERNAL USE-ONLY
  */
+@Override
 protected void consumeClassDeclaration() {
 	super.consumeClassDeclaration();
 	// we know that we have a TypeDeclaration on the top of the astStack
@@ -166,6 +170,7 @@ protected void consumeClassDeclaration() {
  *
  * INTERNAL USE-ONLY
  */
+@Override
 protected void consumeClassHeader() {
 	//ClassHeader ::= $empty
 	super.consumeClassHeader();
@@ -231,6 +236,7 @@ protected void consumeClassHeader() {
 
 	}
 }
+@Override
 protected void consumeClassHeaderName1() {
 	// ClassHeaderName ::= Modifiersopt 'class' 'Identifier'
 	TypeDeclaration typeDecl = new TypeDeclaration(this.compilationUnit.compilationResult);
@@ -282,6 +288,7 @@ protected void consumeClassHeaderName1() {
  *
  * INTERNAL USE-ONLY
  */
+@Override
 protected void consumeCompilationUnit() {
 	// CompilationUnit ::= EnterCompilationUnit PackageDeclarationopt ImportDeclarationsopt
 	this.requestor.exitCompilationUnit(this.scanner.source.length - 1);
@@ -290,6 +297,7 @@ protected void consumeCompilationUnit() {
  *
  * INTERNAL USE-ONLY
  */
+@Override
 protected void consumeConstructorDeclaration() {
 	// ConstructorDeclaration ::= ConstructorHeader ConstructorBody
 	super.consumeConstructorDeclaration();
@@ -304,6 +312,7 @@ protected void consumeConstructorDeclaration() {
  *
  * INTERNAL USE-ONLY
  */
+@Override
 protected void consumeConstructorHeader() {
 	// ConstructorHeader ::= ConstructorHeaderName MethodHeaderParameters MethodHeaderThrowsClauseopt
 	super.consumeConstructorHeader();
@@ -378,6 +387,7 @@ protected void consumeConstructorHeader() {
 			exceptionTypeEnds,
 			this.scanner.currentPosition - 1);
 }
+@Override
 protected void consumeConstructorHeaderName() {
 	// ConstructorHeaderName ::=  Modifiersopt 'Identifier' '('
 	ConstructorDeclaration cd = new ConstructorDeclaration(this.compilationUnit.compilationResult);
@@ -412,6 +422,7 @@ protected void consumeConstructorHeaderName() {
 	cd.sourceEnd = this.lParenPos;
 	cd.bodyStart = this.lParenPos + 1;
 }
+@Override
 protected void consumeDefaultModifiers() {
 	checkComment(); // might update modifiers with AccDeprecated
 	pushOnIntStack(this.modifiers); // modifiers
@@ -421,6 +432,7 @@ protected void consumeDefaultModifiers() {
 	resetModifiers();
 	pushOnExpressionStackLengthStack(0);
 }
+@Override
 protected void consumeDiet() {
 	// Diet ::= $empty
 	super.consumeDiet();
@@ -433,6 +445,7 @@ protected void consumeDiet() {
  *
  * INTERNAL USE-ONLY
  */
+@Override
 protected void consumeEnterCompilationUnit() {
 	// EnterCompilationUnit ::= $empty
 	this.requestor.enterCompilationUnit();
@@ -441,6 +454,7 @@ protected void consumeEnterCompilationUnit() {
  *
  * INTERNAL USE-ONLY
  */
+@Override
 protected void consumeEnterVariable() {
 	// EnterVariable ::= $empty
 	boolean isLocalDeclaration = isLocalDeclaration();
@@ -534,6 +548,7 @@ protected void consumeEnterVariable() {
 				extendedTypeDimension == 0 ? -1 : this.endPosition);
 	}
 }
+@Override
 protected void consumeEnhancedForStatementHeaderInit(boolean hasModifiers) {
 	TypeReference type;
 
@@ -588,6 +603,7 @@ protected void consumeEnhancedForStatementHeaderInit(boolean hasModifiers) {
 
 	iteratorForStatement.sourceEnd = localDeclaration.declarationSourceEnd;
 }
+@Override
 protected void consumeMethodHeaderNameWithTypeParameters(boolean isAnnotationMethod) {
 	// MethodHeaderName ::= Modifiersopt TypeParameters Type 'Identifier' '('
 	// AnnotationMethodHeaderName ::= Modifiersopt TypeParameters Type 'Identifier' '('
@@ -661,6 +677,7 @@ protected void consumeMethodHeaderNameWithTypeParameters(boolean isAnnotationMet
  *
  * INTERNAL USE-ONLY
  */
+@Override
 protected void consumeExitVariableWithInitialization() {
 	// ExitVariableWithInitialization ::= $empty
 	// the scanner is located after the comma or the semi-colon.
@@ -670,6 +687,7 @@ protected void consumeExitVariableWithInitialization() {
 	this.lastFieldEndPosition = this.scanner.currentPosition - 1;
 	this.lastFieldBodyEndPosition = 	((AbstractVariableDeclaration) this.astStack[this.astPtr]).initialization.sourceEnd;
 }
+@Override
 protected void consumeExitVariableWithoutInitialization() {
 	// ExitVariableWithoutInitialization ::= $empty
 	// do nothing by default
@@ -682,6 +700,7 @@ protected void consumeExitVariableWithoutInitialization() {
  *
  * INTERNAL USE-ONLY
  */
+@Override
 protected void consumeFieldDeclaration() {
 	// See consumeLocalVariableDeclarationDefaultModifier() in case of change: duplicated code
 	// FieldDeclaration ::= Modifiersopt Type VariableDeclarators ';'
@@ -695,6 +714,7 @@ protected void consumeFieldDeclaration() {
 		this.requestor.exitField(this.lastFieldBodyEndPosition, this.lastFieldEndPosition);
 	}
 }
+@Override
 protected void consumeFormalParameter(boolean isVarArgs) {
 	// FormalParameter ::= Type VariableDeclaratorId ==> false
 	// FormalParameter ::= Modifiers Type VariableDeclaratorId ==> true
@@ -785,6 +805,7 @@ protected void consumeFormalParameter(boolean isVarArgs) {
  *
  * INTERNAL USE-ONLY
  */
+@Override
 protected void consumeInterfaceDeclaration() {
 	super.consumeInterfaceDeclaration();
 	// we know that we have a TypeDeclaration on the top of the astStack
@@ -799,6 +820,7 @@ protected void consumeInterfaceDeclaration() {
  *
  * INTERNAL USE-ONLY
  */
+@Override
 protected void consumeInterfaceHeader() {
 	//InterfaceHeader ::= $empty
 	super.consumeInterfaceHeader();
@@ -843,6 +865,7 @@ protected void consumeInterfaceHeader() {
 		interfacenameEnds,
 		this.scanner.currentPosition - 1);
 }
+@Override
 protected void consumeInterfaceHeaderName1() {
 	// InterfaceHeaderName ::= Modifiersopt 'interface' 'Identifier'
 	TypeDeclaration typeDecl = new TypeDeclaration(this.compilationUnit.compilationResult);
@@ -890,11 +913,13 @@ protected void consumeInterfaceHeaderName1() {
 	typeDecl.javadoc = this.javadoc;
 	this.javadoc = null;
 }
+@Override
 protected void consumeInternalCompilationUnit() {
 	// InternalCompilationUnit ::= PackageDeclaration
 	// InternalCompilationUnit ::= PackageDeclaration ImportDeclarations ReduceImports
 	// InternalCompilationUnit ::= ImportDeclarations ReduceImports
 }
+@Override
 protected void consumeInternalCompilationUnitWithTypes() {
 	// InternalCompilationUnit ::= PackageDeclaration ImportDeclarations ReduceImports TypeDeclarations
 	// InternalCompilationUnit ::= PackageDeclaration TypeDeclarations
@@ -912,6 +937,7 @@ protected void consumeInternalCompilationUnitWithTypes() {
  *
  * INTERNAL USE-ONLY
  */
+@Override
 protected void consumeLocalVariableDeclaration() {
 	// See consumeLocalVariableDeclarationDefaultModifier() in case of change: duplicated code
 	// FieldDeclaration ::= Modifiersopt Type VariableDeclarators ';'
@@ -923,6 +949,7 @@ protected void consumeLocalVariableDeclaration() {
  *
  * INTERNAL USE-ONLY
  */
+@Override
 protected void consumeMethodDeclaration(boolean isNotAbstract, boolean isDefaultMethod) {
 	// MethodDeclaration ::= MethodHeader MethodBody
 	// AbstractMethodDeclaration ::= MethodHeader ';'
@@ -938,6 +965,7 @@ protected void consumeMethodDeclaration(boolean isNotAbstract, boolean isDefault
  *
  * INTERNAL USE-ONLY
  */
+@Override
 protected void consumeMethodHeader() {
 	// MethodHeader ::= MethodHeaderName MethodHeaderParameters MethodHeaderExtendedDims ThrowsClauseopt
 	super.consumeMethodHeader();
@@ -1019,6 +1047,7 @@ protected void consumeMethodHeader() {
 			exceptionTypeEnds,
 			this.scanner.currentPosition - 1);
 }
+@Override
 protected void consumeMethodHeaderExtendedDims() {
 	// MethodHeaderExtendedDims ::= Dimsopt
 	// now we update the returnType of the method
@@ -1034,6 +1063,7 @@ protected void consumeMethodHeaderExtendedDims() {
 		}
 	}
 }
+@Override
 protected void consumeMethodHeaderName(boolean isAnnotationMethod) {
 	// MethodHeaderName ::= Modifiersopt Type 'Identifier' '('
 	MethodDeclaration md = null;
@@ -1072,6 +1102,7 @@ protected void consumeMethodHeaderName(boolean isAnnotationMethod) {
 	pushOnAstStack(md);
 	md.bodyStart = this.scanner.currentPosition-1;
 }
+@Override
 protected void consumeModifiers() {
 	checkComment(); // might update modifiers with AccDeprecated
 	pushOnIntStack(this.modifiers); // modifiers
@@ -1080,6 +1111,7 @@ protected void consumeModifiers() {
 		this.declarationSourceStart >= 0 ? this.declarationSourceStart : this.modifiersSourceStart);
 	resetModifiers();
 }
+@Override
 protected void consumePackageComment() {
 	// get possible comment for syntax since 1.5
 	if(this.options.sourceLevel >= ClassFileConstants.JDK1_5) {
@@ -1093,6 +1125,7 @@ protected void consumePackageComment() {
  *
  * INTERNAL USE-ONLY
  */
+@Override
 protected void consumePackageDeclarationName() {
 	/*
 	 * Javadoc positions are persisted in consumePackageComment
@@ -1111,6 +1144,7 @@ protected void consumePackageDeclarationName() {
 *
 * INTERNAL USE-ONLY
 */
+@Override
 protected void consumePackageDeclarationNameWithModifiers() {
 	super.consumePackageDeclarationNameWithModifiers();
 	ImportReference importReference = this.compilationUnit.currentPackage;
@@ -1122,6 +1156,7 @@ protected void consumePackageDeclarationNameWithModifiers() {
 		CharOperation.concatWith(importReference.getImportName(), '.'),
 		importReference.sourceStart);
 }
+@Override
 protected void consumePushModifiers() {
 	checkComment(); // might update modifiers with AccDeprecated
 	pushOnIntStack(this.modifiers); // modifiers
@@ -1137,6 +1172,7 @@ protected void consumePushModifiers() {
 	resetModifiers();
 	pushOnExpressionStackLengthStack(0);
 }
+@Override
 protected void consumePushRealModifiers() {
 	checkComment(); // might update modifiers with AccDeprecated
 	pushOnIntStack(this.modifiers); // modifiers
@@ -1151,6 +1187,7 @@ protected void consumePushRealModifiers() {
 	}
 	resetModifiers();
 }
+@Override
 protected void consumeSingleStaticImportDeclarationName() {
 	// SingleTypeImportDeclarationName ::= 'import' 'static' Name
 
@@ -1172,6 +1209,7 @@ protected void consumeSingleStaticImportDeclarationName() {
  *
  * INTERNAL USE-ONLY
  */
+@Override
 protected void consumeSingleTypeImportDeclarationName() {
 	// SingleTypeImportDeclarationName ::= 'import' Name
 
@@ -1189,6 +1227,7 @@ protected void consumeSingleTypeImportDeclarationName() {
 		false,
 		ClassFileConstants.AccDefault);
 }
+@Override
 protected void consumeStaticImportOnDemandDeclarationName() {
 	// SingleTypeImportDeclarationName ::= 'import' 'static' Name '.' '*'
 
@@ -1210,6 +1249,7 @@ protected void consumeStaticImportOnDemandDeclarationName() {
  *
  * INTERNAL USE-ONLY
  */
+@Override
 protected void consumeStaticInitializer() {
 	// StaticInitializer ::=  StaticOnly Block
 	//push an Initializer
@@ -1225,6 +1265,7 @@ protected void consumeStaticInitializer() {
 		initializer.block.sourceStart,
 		initializer.declarationSourceEnd);
 }
+@Override
 protected void consumeStaticOnly() {
 	// StaticOnly ::= 'static'
 	checkComment(); // might update declaration source start
@@ -1240,6 +1281,7 @@ protected void consumeStaticOnly() {
  *
  * INTERNAL USE-ONLY
  */
+@Override
 protected void consumeTypeImportOnDemandDeclarationName() {
 	// TypeImportOnDemandDeclarationName ::= 'import' Name '.' '*'
 
@@ -1270,22 +1312,26 @@ protected void consumeTypeImportOnDemandDeclarationName() {
  * } // end of method foo
  */
 
+@Override
 public int flushCommentsDefinedPriorTo(int position) {
 
 	return this.lastFieldEndPosition = super.flushCommentsDefinedPriorTo(position);
 }
+@Override
 public CompilationUnitDeclaration endParse(int act) {
 	if (this.scanner.recordLineSeparator) {
 		this.requestor.acceptLineSeparatorPositions(this.scanner.getLineEnds());
 	}
 	return super.endParse(act);
 }
+@Override
 public void initialize(boolean parsingCompilationUnit) {
 	//positionning the parser for a new compilation unit
 	//avoiding stack reallocation and all that....
 	super.initialize(parsingCompilationUnit);
 	this.intArrayPtr = -1;
 }
+@Override
 public void initialize() {
 	//positionning the parser for a new compilation unit
 	//avoiding stack reallocation and all that....
@@ -1306,6 +1352,7 @@ private boolean isLocalDeclaration() {
 	}
 	return false;
 }
+@Override
 protected void parse() {
 	this.diet = true;
 	this.dietInt = 0;
@@ -1487,6 +1534,7 @@ public void parseType(char[] regionSource) {
  *
  * @return ProblemReporter
  */
+@Override
 public ProblemReporter problemReporter() {
 	this.problemReporter.referenceContext = this.referenceContext;
 	return this.problemReporter;
@@ -1502,6 +1550,7 @@ protected void pushOnIntArrayStack(int[] positions) {
 	}
 	this.intArrayStack[this.intArrayPtr] = positions;
 }
+@Override
 protected void resetModifiers() {
 	super.resetModifiers();
 	this.declarationSourceStart = -1;
@@ -1510,6 +1559,7 @@ protected void resetModifiers() {
  * Syntax error was detected. Will attempt to perform some recovery action in order
  * to resume to the regular parse loop.
  */
+@Override
 protected int resumeOnSyntaxError() {
 	return HALT;
 }
@@ -1534,6 +1584,7 @@ private char[] returnTypeName(TypeReference type) {
 	}
 	return CharOperation.concatWith(type.getTypeName(), '.');
 }
+@Override
 public String toString() {
 	StringBuffer buffer = new StringBuffer();
 	buffer.append("intArrayPtr = " + this.intArrayPtr + "\n"); //$NON-NLS-1$ //$NON-NLS-2$

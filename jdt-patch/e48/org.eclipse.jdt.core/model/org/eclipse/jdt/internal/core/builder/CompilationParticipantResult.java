@@ -37,6 +37,7 @@ protected CompilationParticipantResult(SourceFile sourceFile) {
  *
  * @return the contents of the compilation unit
  */
+@Override
 public char[] getContents() {
 	return this.sourceFile.getContents();
 }
@@ -46,6 +47,7 @@ public char[] getContents() {
  *
  * @return the <code>IFile</code> representing the compilation unit
  */
+@Override
 public IFile getFile() {
 	return this.sourceFile.resource;
 }
@@ -57,6 +59,7 @@ public IFile getFile() {
  *
  * @return whether the compilation unit contained any annotations when it was compiled
  */
+@Override
 public boolean hasAnnotations() {
 	return this.hasAnnotations; // only set during processAnnotations
 }
@@ -66,6 +69,7 @@ public boolean hasAnnotations() {
  *
  * @param addedGeneratedFiles the added/changed files
  */
+@Override
 public void recordAddedGeneratedFiles(IFile[] addedGeneratedFiles) {
 	int length2 = addedGeneratedFiles.length;
 	if (length2 == 0) return;
@@ -83,6 +87,7 @@ public void recordAddedGeneratedFiles(IFile[] addedGeneratedFiles) {
  *
  * @param deletedGeneratedFiles the files that need to be deleted
  */
+@Override
 public void recordDeletedGeneratedFiles(IFile[] deletedGeneratedFiles) {
 	int length2 = deletedGeneratedFiles.length;
 	if (length2 == 0) return;
@@ -100,6 +105,7 @@ public void recordDeletedGeneratedFiles(IFile[] deletedGeneratedFiles) {
  *
  * @param typeNameDependencies the fully-qualified type names of new dependencies
  */
+@Override
 public void recordDependencies(String[] typeNameDependencies) {
 	int length2 = typeNameDependencies.length;
 	if (length2 == 0) return;
@@ -119,6 +125,7 @@ public void recordDependencies(String[] typeNameDependencies) {
  *
  * @param newProblems the problems to report
  */
+@Override
 public void recordNewProblems(CategorizedProblem[] newProblems) {
 	int length2 = newProblems.length;
 	if (length2 == 0) return;
@@ -140,6 +147,7 @@ void reset(boolean detectedAnnotations) {
 	this.dependencies = null;
 }
 
+@Override
 public String toString() {
 	return this.sourceFile.toString();
 }

@@ -31,6 +31,7 @@ public class SelectionOnParameterizedQualifiedTypeReference extends Parameterize
 		this.typeArguments[length] = assistTypeArguments;
 	}
 
+	@Override
 	public TypeBinding resolveType(BlockScope scope, boolean checkBounds, int location) {
 		super.resolveType(scope, checkBounds, location);
 		//// removed unnecessary code to solve bug 94653
@@ -41,6 +42,7 @@ public class SelectionOnParameterizedQualifiedTypeReference extends Parameterize
 		throw new SelectionNodeFound(this.resolvedType);
 	}
 
+	@Override
 	public TypeBinding resolveType(ClassScope scope, int location) {
 		super.resolveType(scope, location);
 		//// removed unnecessary code to solve bug 94653
@@ -51,6 +53,7 @@ public class SelectionOnParameterizedQualifiedTypeReference extends Parameterize
 		throw new SelectionNodeFound(this.resolvedType);
 	}
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 		output.append("<SelectOnType:");//$NON-NLS-1$
 		int length = this.tokens.length;

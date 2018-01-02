@@ -288,6 +288,7 @@ public class UnresolvedReferenceNameFinder extends ASTVisitor {
 		return null;
 	}
 
+	@Override
 	public boolean visit(Block block, BlockScope blockScope) {
 		ASTNode enclosingDeclaration = getEnclosingDeclaration();
 		removeLocals(block.statements, enclosingDeclaration.sourceStart, block.sourceEnd);
@@ -295,6 +296,7 @@ public class UnresolvedReferenceNameFinder extends ASTVisitor {
 		return true;
 	}
 
+	@Override
 	public boolean visit(ConstructorDeclaration constructorDeclaration, ClassScope classScope) {
 		if (((constructorDeclaration.bits & ASTNode.IsDefaultConstructor) == 0) && !constructorDeclaration.isClinit()) {
 			removeLocals(
@@ -310,16 +312,19 @@ public class UnresolvedReferenceNameFinder extends ASTVisitor {
 		return true;
 	}
 
+	@Override
 	public boolean visit(FieldDeclaration fieldDeclaration, MethodScope methodScope) {
 		pushParent(fieldDeclaration);
 		return true;
 	}
 
+	@Override
 	public boolean visit(Initializer initializer, MethodScope methodScope) {
 		pushParent(initializer);
 		return true;
 	}
 
+	@Override
 	public boolean visit(MethodDeclaration methodDeclaration, ClassScope classScope) {
 		removeLocals(
 				methodDeclaration.arguments,
@@ -333,30 +338,36 @@ public class UnresolvedReferenceNameFinder extends ASTVisitor {
 		return true;
 	}
 
+	@Override
 	public boolean visit(TypeDeclaration localTypeDeclaration, BlockScope blockScope) {
 		removeFields(localTypeDeclaration);
 		pushParent(localTypeDeclaration);
 		return true;
 	}
 
+	@Override
 	public boolean visit(TypeDeclaration memberTypeDeclaration, ClassScope classScope) {
 		removeFields(memberTypeDeclaration);
 		pushParent(memberTypeDeclaration);
 		return true;
 	}
 
+	@Override
 	public void endVisit(Block block, BlockScope blockScope) {
 		popParent();
 	}
 
+	@Override
 	public void endVisit(Argument argument, BlockScope blockScope) {
 		endVisitRemoved(argument.declarationSourceStart, argument.sourceEnd);
 	}
 
+	@Override
 	public void endVisit(Argument argument, ClassScope classScope) {
 		endVisitRemoved(argument.declarationSourceStart, argument.sourceEnd);
 	}
 
+	@Override
 	public void endVisit(ConstructorDeclaration constructorDeclaration, ClassScope classScope) {
 		if (((constructorDeclaration.bits & ASTNode.IsDefaultConstructor) == 0) && !constructorDeclaration.isClinit()) {
 			endVisitPreserved(constructorDeclaration.bodyStart, constructorDeclaration.bodyEnd);
@@ -364,21 +375,25 @@ public class UnresolvedReferenceNameFinder extends ASTVisitor {
 		popParent();
 	}
 
+	@Override
 	public void endVisit(FieldDeclaration fieldDeclaration, MethodScope methodScope) {
 		endVisitRemoved(fieldDeclaration.declarationSourceStart, fieldDeclaration.sourceEnd);
 		endVisitPreserved(fieldDeclaration.sourceEnd, fieldDeclaration.declarationEnd);
 		popParent();
 	}
 
+	@Override
 	public void endVisit(Initializer initializer, MethodScope methodScope) {
 		endVisitPreserved(initializer.bodyStart, initializer.bodyEnd);
 		popParent();
 	}
 
+	@Override
 	public void endVisit(LocalDeclaration localDeclaration, BlockScope blockScope) {
 		endVisitRemoved(localDeclaration.declarationSourceStart, localDeclaration.sourceEnd);
 	}
 
+	@Override
 	public void endVisit(MethodDeclaration methodDeclaration, ClassScope classScope) {
 		endVisitPreserved(
 				methodDeclaration.bodyStart,
@@ -386,11 +401,13 @@ public class UnresolvedReferenceNameFinder extends ASTVisitor {
 		popParent();
 	}
 
+	@Override
 	public void endVisit(TypeDeclaration typeDeclaration, BlockScope blockScope) {
 		endVisitRemoved(typeDeclaration.sourceStart, typeDeclaration.declarationSourceEnd);
 		popParent();
 	}
 
+	@Override
 	public void endVisit(TypeDeclaration typeDeclaration, ClassScope classScope) {
 		endVisitRemoved(typeDeclaration.sourceStart, typeDeclaration.declarationSourceEnd);
 		popParent();

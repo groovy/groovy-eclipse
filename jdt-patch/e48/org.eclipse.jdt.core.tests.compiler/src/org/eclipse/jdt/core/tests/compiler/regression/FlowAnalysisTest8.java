@@ -67,8 +67,7 @@ public void testLambda_01() {
 		"	ISAM printer = (p,o) -> p.concat(o.toString());\n" + 
 		"	                                 ^\n" + 
 		"Potential null pointer access: this expression has a '@Nullable' type\n" + 
-		"----------\n",
-		true /* skipJavac */);
+		"----------\n");
 }
 
 // Lambda with declared args violates null contract of super
@@ -101,8 +100,7 @@ public void testLambda_02() {
 		"	ISAM printer = (@NonNull  Object o1, @NonNull 	Object o2, @NonNull	 Object o3) -> System.out.println(2);\n" + 
 		"	                                              	           ^^^^^^^^^^^^^^^^\n" + 
 		"Illegal redefinition of parameter o3, inherited method from ISAM does not constrain this parameter\n" + 
-		"----------\n",
-		true /* skipJavac */);
+		"----------\n");
 }
 
 // Lambda with declared args inherits / modifies contract of super
@@ -149,8 +147,7 @@ public void testLambda_03() {
 		"	-> System.out.println(o1.toString()+o2.toString()+o3.toString());\n" + 
 		"	                                                  ^^\n" + 
 		"Potential null pointer access: this expression has a '@Nullable' type\n" + 
-		"----------\n",
-		true /* skipJavac */);
+		"----------\n");
 }
 
 // Lambda with declared args has illegal @NonNull an primitive argument
@@ -177,8 +174,7 @@ public void testLambda_04() {
 		"	ISAM printer1 = (@NonNull int i) \n" + 
 		"	                 ^^^^^^^^\n" + 
 		"The nullness annotation @NonNull is not applicable for the primitive type int\n" + 
-		"----------\n", 
-		true /* skipJavac */);
+		"----------\n");
 }
 
 // Lambda inherits null contract and has block with return statement 
@@ -207,13 +203,12 @@ public void testLambda_05() {
 		"	return null; // error\n" + 
 		"	       ^^^^\n" + 
 		"Null type mismatch: required \'@NonNull String\' but the provided value is null\n" + 
-		"----------\n",
-		true /* skipJavac */);
+		"----------\n");
 }
 // Lambda has no descriptor (overriding method from Object), don't bail out with NPE during analysis
 public void testLambda_05a() {
 	Map customOptions = getCompilerOptions();
-	runNegativeTestWithLibs(
+	runNegativeTest(
 		new String[] {
 			"ISAM.java",
 			"import org.eclipse.jdt.annotation.*;\n" +
@@ -229,15 +224,16 @@ public void testLambda_05a() {
 			"		};\n" +
 			"	}\n" +
 			"}\n"
-		}, 
-		customOptions,
+		},
 		"----------\n" +
 		"1. ERROR in X.java (at line 3)\n" +
 		"	ISAM printer = () -> {\n" +
 		"	               ^^^^^\n" +
 		"The target type of this expression must be a functional interface\n" +
 		"----------\n",
-		true /* skipJavac */);
+		this.LIBS,
+		true /*flush*/,
+		customOptions);
 }
 // Test flows with ReferenceExpression regarding: 
 // - definite assignment
@@ -350,7 +346,7 @@ public void testReferenceExpression_nullAnnotation_1() {
 		"----------\n");
 }
 public void testReferenceExpression_nullAnnotation_2() {
-	runNegativeTestWithLibs(
+	runWarningTestWithLibs(
 		true, /* skipJavac */
 		new String[] {
 			 "I.java",
@@ -367,6 +363,7 @@ public void testReferenceExpression_nullAnnotation_2() {
 			 "	}\n" +
 			 "}\n"
 		},
+		getCompilerOptions(),
 		"----------\n" + 
 		"1. WARNING in X.java (at line 4)\n" + 
 		"	I i = this::bar;\n" + 
@@ -375,7 +372,7 @@ public void testReferenceExpression_nullAnnotation_2() {
 		"----------\n");
 }
 public void testReferenceExpression_nullAnnotation_3() {
-	runNegativeTestWithLibs(
+	runNegativeTest(
 		new String[] {
 			 "I.java",
 			 "import org.eclipse.jdt.annotation.*;\n" +
@@ -403,6 +400,9 @@ public void testReferenceExpression_nullAnnotation_3() {
 		"	Zork zork;\n" + 
 		"	^^^^\n" + 
 		"Zork cannot be resolved to a type\n" + 
-		"----------\n");
+		"----------\n",
+		this.LIBS,
+		true /*flush*/,
+		getCompilerOptions());
 }
 }

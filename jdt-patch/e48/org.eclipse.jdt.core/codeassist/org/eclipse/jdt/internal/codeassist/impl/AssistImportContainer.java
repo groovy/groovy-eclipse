@@ -26,10 +26,12 @@ public class AssistImportContainer extends ImportContainer {
 		this.infoCache = infoCache;
 	}
 
+	@Override
 	public Object getElementInfo(IProgressMonitor monitor) throws JavaModelException {
 		return this.infoCache.get(this);
 	}
 
+	@Override
 	protected IImportDeclaration getImport(String importName, boolean isOnDemand) {
 		return new AssistImportDeclaration(this, importName, isOnDemand, this.infoCache);
 	}

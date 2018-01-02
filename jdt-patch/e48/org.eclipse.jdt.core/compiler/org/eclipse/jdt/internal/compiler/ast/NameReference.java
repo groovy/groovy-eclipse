@@ -41,40 +41,48 @@ public NameReference() {
  * a chain of several fields (QualifiedNameReference with more than one field).
  * Otherwise use {@link #lastFieldBinding()}.
  */
+@Override
 public FieldBinding fieldBinding() {
 	//this method should be sent ONLY after a check against isFieldReference()
 	//check its use doing senders.........
 	return (FieldBinding) this.binding ;
 }
 
+@Override
 public FieldBinding lastFieldBinding() {
 	if ((this.bits & ASTNode.RestrictiveFlagMASK) == Binding.FIELD)
 		return fieldBinding(); // most subclasses only refer to one field anyway
 	return null;
 }
 
+@Override
 public InferenceContext18 freshInferenceContext(Scope scope) {
 	return null;
 }
 
+@Override
 public boolean isSuperAccess() {
 	return false;
 }
 
+@Override
 public boolean isTypeAccess() {
 	// null is acceptable when we are resolving the first part of a reference
 	return this.binding == null || this.binding instanceof ReferenceBinding;
 }
 
+@Override
 public boolean isTypeReference() {
 	return this.binding instanceof ReferenceBinding;
 }
 
+@Override
 public void setActualReceiverType(ReferenceBinding receiverType) {
 	if (receiverType == null) return; // error scenario only
 	this.actualReceiverType = receiverType;
 }
 
+@Override
 public void setDepth(int depth) {
 	this.bits &= ~DepthMASK; // flush previous depth if any
 	if (depth > 0) {
@@ -82,6 +90,7 @@ public void setDepth(int depth) {
 	}
 }
 
+@Override
 public void setFieldIndex(int index){
 	// ignored
 }

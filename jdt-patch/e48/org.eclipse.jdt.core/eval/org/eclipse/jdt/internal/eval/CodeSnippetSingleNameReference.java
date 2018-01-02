@@ -55,6 +55,7 @@ public CodeSnippetSingleNameReference(char[] source, long pos, EvaluationContext
 	super(source, pos);
 	this.evaluationContext = evaluationContext;
 }
+@Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo, boolean valueRequired) {
 
 	switch (this.bits & RestrictiveFlagMASK) {
@@ -85,6 +86,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 /**
  * Check and/or redirect the field access to the delegate receiver if any
  */
+@Override
 public TypeBinding checkFieldAccess(BlockScope scope) {
 
 	if (this.delegateThis == null) {
@@ -111,6 +113,7 @@ public TypeBinding checkFieldAccess(BlockScope scope) {
 	return fieldBinding.type;
 
 }
+@Override
 public void generateAssignment(BlockScope currentScope, CodeStream codeStream, Assignment assignment, boolean valueRequired) {
 	// optimizing assignment like: i = i + 1 or i = 1 + i
 	if (assignment.expression.isCompactableOperation()) {
@@ -221,6 +224,7 @@ public void generateAssignment(BlockScope currentScope, CodeStream codeStream, A
 			}
 	}
 }
+@Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 	int pc = codeStream.position;
 	if (this.constant != Constant.NotAConstant) {
@@ -304,6 +308,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean
  * The APIs with an extra argument is used whenever there are two references to the same variable which
  * are optimized in one access: e.g "a = a + 1" optimized into "a++".
  */
+@Override
 public void generateCompoundAssignment(BlockScope currentScope, CodeStream codeStream, MethodBinding writeAccessor, Expression expression, int operator, int assignmentImplicitConversion, boolean valueRequired) {
 	switch (this.bits & RestrictiveFlagMASK) {
 		case Binding.FIELD : // assigning to a field
@@ -486,6 +491,7 @@ public void generateCompoundAssignment(BlockScope currentScope, CodeStream codeS
 			codeStream.store(localBinding, false);
 	}
 }
+@Override
 public void generatePostIncrement(BlockScope currentScope, CodeStream codeStream, CompoundAssignment postIncrement, boolean valueRequired) {
 	switch (this.bits & RestrictiveFlagMASK) {
 		case Binding.FIELD : // assigning to a field
@@ -552,6 +558,7 @@ public void generatePostIncrement(BlockScope currentScope, CodeStream codeStream
 			super.generatePostIncrement(currentScope, codeStream, postIncrement, valueRequired);
 	}
 }
+@Override
 public void generateReceiver(CodeStream codeStream) {
 	codeStream.aload_0();
 	if (this.delegateThis != null) {
@@ -572,6 +579,7 @@ public TypeBinding getReceiverType(BlockScope currentScope) {
 			}
 	}
 }
+@Override
 public void manageSyntheticAccessIfNecessary(BlockScope currentScope, FlowInfo flowInfo, boolean isReadAccess) {
 
 	if (this.delegateThis == null) {
@@ -596,6 +604,7 @@ public void manageSyntheticAccessIfNecessary(BlockScope currentScope, FlowInfo f
 /**
  * Normal field binding did not work, try to bind to a field of the delegate receiver.
  */
+@Override
 public TypeBinding reportError(BlockScope scope) {
 
 	this.constant = Constant.NotAConstant;

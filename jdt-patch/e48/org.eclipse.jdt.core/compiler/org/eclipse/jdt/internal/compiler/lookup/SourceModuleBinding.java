@@ -93,6 +93,7 @@ public class SourceModuleBinding extends ModuleBinding {
 			this.scope.referenceContext.moduleDeclaration.resolveModuleDirectives(this.scope);
 		return super.getAllRequiredModules();
 	}
+	@Override
 	public long getAnnotationTagBits() {
 		//TODO: This code is untested as we don't yet get a scope in ModuleBinding
 		if ((this.tagBits & TagBits.AnnotationResolved) == 0 && this.scope != null) {
@@ -106,6 +107,7 @@ public class SourceModuleBinding extends ModuleBinding {
 		}
 		return this.tagBits;
 	}
+	@Override
 	public AnnotationBinding[] getAnnotations() {
 		return retrieveAnnotations(this);
 	}
@@ -119,6 +121,7 @@ public class SourceModuleBinding extends ModuleBinding {
 		return holder == null ? Binding.NO_ANNOTATIONS : holder.getAnnotations();
 	}
 
+	@Override
 	public void setAnnotations(AnnotationBinding[] annotations) {
 		storeAnnotations(this, annotations);
 	}

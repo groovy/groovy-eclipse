@@ -219,6 +219,7 @@ protected MethodInfo (byte classFileBytes[], int offsets[], int offset) {
 	this.accessFlags = -1;
 	this.signatureUtf8Offset = -1;
 }
+@Override
 public int compareTo(Object o) {
 	MethodInfo otherMethod = (MethodInfo) o;
 	int result = new String(getSelector()).compareTo(new String(otherMethod.getSelector()));
@@ -238,38 +239,34 @@ public boolean equals(Object o) {
 public int hashCode() {
 	return CharOperation.hashCode(getSelector()) + CharOperation.hashCode(getMethodDescriptor());
 }
-/**
- * @return the annotations or null if there is none.
- */
+
+@Override
 public IBinaryAnnotation[] getAnnotations() {
 	return null;
 }
 /**
  * @see org.eclipse.jdt.internal.compiler.env.IGenericMethod#getArgumentNames()
  */
+@Override
 public char[][] getArgumentNames() {
 	if (this.argumentNames == null) {
 		readCodeAttribute();
 	}
 	return this.argumentNames;
 }
+@Override
 public Object getDefaultValue() {
 	return null;
 }
-/**
- * Answer the resolved names of the exception types in the
- * class file format as specified in section 4.2 of the Java 2 VM spec
- * or null if the array is empty.
- *
- * For example, java.lang.String is java/lang/String.
- * @return char[][]
- */
+
+@Override
 public char[][] getExceptionTypeNames() {
 	if (this.exceptionNames == null) {
 		readExceptionAttributes();
 	}
 	return this.exceptionNames;
 }
+@Override
 public char[] getGenericSignature() {
 	if (this.signatureUtf8Offset != -1) {
 		if (this.signature == null) {
@@ -280,15 +277,8 @@ public char[] getGenericSignature() {
 	}
 	return null;
 }
-/**
- * Answer the receiver's method descriptor which describes the parameter &
- * return types as specified in section 4.3.3 of the Java 2 VM spec.
- *
- * For example:
- *   - int foo(String) is (Ljava/lang/String;)I
- *   - void foo(Object[]) is (I)[Ljava/lang/Object;
- * @return char[]
- */
+
+@Override
 public char[] getMethodDescriptor() {
 	if (this.descriptor == null) {
 		// read the name
@@ -303,6 +293,7 @@ public char[] getMethodDescriptor() {
  * Set the AccDeprecated and AccSynthetic bits if necessary
  * @return int
  */
+@Override
 public int getModifiers() {
 	if (this.accessFlags == -1) {
 		// compute the accessflag. Don't forget the deprecated attribute
@@ -311,21 +302,20 @@ public int getModifiers() {
 	}
 	return this.accessFlags;
 }
+@Override
 public IBinaryAnnotation[] getParameterAnnotations(int index, char[] classFileName) {
 	return null;
 }
+@Override
 public int getAnnotatedParametersCount() {
 	return 0;
 }
+@Override
 public IBinaryTypeAnnotation[] getTypeAnnotations() {
 	return null;
 }
-/**
- * Answer the name of the method.
- *
- * For a constructor, answer <init> & <clinit> for a clinit method.
- * @return char[]
- */
+
+@Override
 public char[] getSelector() {
 	if (this.name == null) {
 		// read the name
@@ -334,6 +324,7 @@ public char[] getSelector() {
 	}
 	return this.name;
 }
+@Override
 public long getTagBits() {
 	return this.tagBits;
 }
@@ -354,6 +345,7 @@ protected void initialize() {
  * Answer true if the method is a class initializer, false otherwise.
  * @return boolean
  */
+@Override
 public boolean isClinit() {
 	return org.eclipse.jdt.internal.compiler.classfmt.JavaBinaryNames.isClinit(getSelector());
 }
@@ -361,6 +353,7 @@ public boolean isClinit() {
  * Answer true if the method is a constructor, false otherwise.
  * @return boolean
  */
+@Override
 public boolean isConstructor() {
 	return org.eclipse.jdt.internal.compiler.classfmt.JavaBinaryNames.isConstructor(getSelector());
 }

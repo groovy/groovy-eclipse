@@ -57,6 +57,7 @@ public class ModulePathEntry implements IModulePathEntry {
 		return this.module;
 	}
 
+	@Override
 	public boolean isAutomaticModule() {
 		return this.isAutomaticModule;
 	}

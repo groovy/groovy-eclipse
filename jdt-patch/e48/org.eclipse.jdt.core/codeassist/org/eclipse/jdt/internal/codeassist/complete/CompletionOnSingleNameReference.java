@@ -52,12 +52,14 @@ public class CompletionOnSingleNameReference extends SingleNameReference {
 		this.isInsideAnnotationAttribute = isInsideAnnotationAttribute;
 	}
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 
 		output.append("<CompleteOnName:"); //$NON-NLS-1$
 		return super.printExpression(0, output).append('>');
 	}
 
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 		if(scope instanceof MethodScope) {
 			throw new CompletionNodeFound(this, scope, ((MethodScope)scope).insideTypeAnnotation);

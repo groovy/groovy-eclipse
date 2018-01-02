@@ -315,6 +315,7 @@ public class TypeVariableBinding extends ReferenceBinding {
 	/**
 	 * @see org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding#canBeInstantiated()
 	 */
+	@Override
 	public boolean canBeInstantiated() {
 		return false;
 	}
@@ -326,6 +327,7 @@ public class TypeVariableBinding extends ReferenceBinding {
 	 *   A = F   corresponds to:      F.collectSubstitutes(..., A, ..., CONSTRAINT_EQUAL (0))
 	 *   A >> F   corresponds to:   F.collectSubstitutes(..., A, ..., CONSTRAINT_SUPER (2))
 	 */
+	@Override
 	public void collectSubstitutes(Scope scope, TypeBinding actualType, InferenceContext inferenceContext, int constraint) {
 
 		//	only infer for type params of the generic method
@@ -366,6 +368,7 @@ public class TypeVariableBinding extends ReferenceBinding {
 	 * p.X<T> { ... } --> Lp/X;:TT;
 	 * p.X { <T> void foo() {...} } --> Lp/X;.foo()V:TT;
 	 */
+	@Override
 	public char[] computeUniqueKey(boolean isLeaf) {
 		StringBuffer buffer = new StringBuffer();
 		Binding declaring = this.declaringElement;
@@ -393,6 +396,7 @@ public class TypeVariableBinding extends ReferenceBinding {
 		buffer.getChars(0, length, uniqueKey, 0);
 		return uniqueKey;
 	}
+	@Override
 	public char[] constantPoolName() { /* java/lang/Object */
 	    if (this.firstBound != null) {
 			return this.firstBound.constantPoolName();
@@ -400,9 +404,11 @@ public class TypeVariableBinding extends ReferenceBinding {
 	    return this.superclass.constantPoolName(); // java/lang/Object
 	}
 	
+	@Override
 	public TypeBinding clone(TypeBinding enclosingType) {
 		return new TypeVariableBinding(this);
 	}
+	@Override
 	public String annotatedDebugName() {
 		StringBuffer buffer = new StringBuffer(10);
 		buffer.append(super.annotatedDebugName());
@@ -432,11 +438,13 @@ public class TypeVariableBinding extends ReferenceBinding {
 	/**
 	 * @see org.eclipse.jdt.internal.compiler.lookup.TypeBinding#debugName()
 	 */
+	@Override
 	public String debugName() {
 		if (this.hasTypeAnnotations())
 			return super.annotatedDebugName();
 	    return new String(this.sourceName);
 	}
+	@Override
 	public TypeBinding erasure() {
 	    if (this.firstBound != null) {
 			return this.firstBound.erasure();
@@ -467,6 +475,7 @@ public class TypeVariableBinding extends ReferenceBinding {
 	 * T::Ljava/util/Map;:Ljava/io/Serializable;
 	 * T:LY<TT;>
 	 */
+	@Override
 	public char[] genericTypeSignature() {
 	    if (this.genericTypeSignature != null) return this.genericTypeSignature;
 		return this.genericTypeSignature = CharOperation.concat('T', this.sourceName, ';');
@@ -501,6 +510,7 @@ public class TypeVariableBinding extends ReferenceBinding {
 		return true;
 	}
 
+	@Override
 	public boolean hasTypeBit(int bit) {
 		if (this.typeBits == TypeIds.BitUninitialized) {
 			// initialize from bounds
@@ -528,6 +538,7 @@ public class TypeVariableBinding extends ReferenceBinding {
 		return false;
 	}
 
+	@Override
 	public boolean isHierarchyConnected() {
 		return (this.modifiers & ExtraCompilerModifiers.AccUnresolved) == 0;
 	}
@@ -587,6 +598,7 @@ public class TypeVariableBinding extends ReferenceBinding {
 		this.inRecursiveFunction = false;
 	}
 	
+	@Override
 	public boolean isProperType(boolean admitCapture18) {
 		// handle recursive calls:
 		if (this.inRecursiveFunction) // be optimistic, since this node is not an inference variable
@@ -608,6 +620,7 @@ public class TypeVariableBinding extends ReferenceBinding {
 		}
 	}
 
+	@Override
 	TypeBinding substituteInferenceVariable(InferenceVariable var, TypeBinding substituteType) {
 		if (this.inRecursiveFunction) return this;
 		this.inRecursiveFunction = true;
@@ -652,6 +665,7 @@ public class TypeVariableBinding extends ReferenceBinding {
 	/**
 	 * Returns true if the type was declared as a type variable
 	 */
+	@Override
 	public boolean isTypeVariable() {
 	    return true;
 	}
@@ -677,10 +691,12 @@ public class TypeVariableBinding extends ReferenceBinding {
 //		return this;
 //	}
 
+	@Override
 	public int kind() {
 		return Binding.TYPE_PARAMETER;
 	}
 	
+	@Override
 	public boolean mentionsAny(TypeBinding[] parameters, int idx) {
 		if (this.inRecursiveFunction)
 			return false; // nothing seen
@@ -701,6 +717,7 @@ public class TypeVariableBinding extends ReferenceBinding {
 		}
 	}
 
+	@Override
 	void collectInferenceVariables(Set<InferenceVariable> variables) {
 		if (this.inRecursiveFunction)
 			return; // nothing seen
@@ -734,7 +751,8 @@ public class TypeVariableBinding extends ReferenceBinding {
 	/**
      * @see org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding#readableName()
      */
-    public char[] readableName() {
+    @Override
+	public char[] readableName() {
         return this.sourceName;
     }
 	ReferenceBinding resolve() {
@@ -794,6 +812,7 @@ public class TypeVariableBinding extends ReferenceBinding {
 		return this;
 	}
 	
+	@Override
 	public void setTypeAnnotations(AnnotationBinding[] annotations, boolean evalNullAnnotations) {
 		if (getClass() == TypeVariableBinding.class) {
 			// TVB only: if the declaration itself carries type annotations,
@@ -808,13 +827,16 @@ public class TypeVariableBinding extends ReferenceBinding {
 	/**
      * @see org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding#shortReadableName()
      */
-    public char[] shortReadableName() {
+    @Override
+	public char[] shortReadableName() {
         return readableName();
     }
+	@Override
 	public ReferenceBinding superclass() {
 		return this.superclass;
 	}
 	
+	@Override
 	public ReferenceBinding[] superInterfaces() {
 		return this.superInterfaces;
 	}
@@ -822,6 +844,7 @@ public class TypeVariableBinding extends ReferenceBinding {
 	/**
 	 * @see java.lang.Object#toString()
 	 */
+	@Override
 	public String toString() {
 		if (this.hasTypeAnnotations())
 			return annotatedDebugName();
@@ -877,6 +900,7 @@ public class TypeVariableBinding extends ReferenceBinding {
 	    return readableName;
 	}
 
+	@Override
 	protected void appendNullAnnotation(StringBuffer nameBuffer, CompilerOptions options) {
 		int oldSize = nameBuffer.length();
 		super.appendNullAnnotation(nameBuffer, options);
@@ -898,6 +922,7 @@ public class TypeVariableBinding extends ReferenceBinding {
 		}
 	}
 
+	@Override
 	public TypeBinding unannotated() {
 		return this.hasTypeAnnotations() ? this.environment.getUnannotatedType(this) : this;
 	}
@@ -1064,6 +1089,7 @@ public class TypeVariableBinding extends ReferenceBinding {
 		return (currentNullBits & ~declarationNullBits) != 0;
 	}
 
+	@Override
 	public boolean acceptsNonNullDefault() {
 		return false;
 	}

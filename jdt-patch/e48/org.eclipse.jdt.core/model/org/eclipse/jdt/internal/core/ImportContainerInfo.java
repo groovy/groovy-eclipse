@@ -16,6 +16,7 @@ public class ImportContainerInfo extends JavaElementInfo {
 
 	protected IJavaElement[] children = JavaElement.NO_ELEMENTS;
 
+	@Override
 	public IJavaElement[] getChildren() {
 		return this.children;
 	}

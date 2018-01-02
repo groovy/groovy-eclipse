@@ -93,9 +93,11 @@ public class JavaElementDelta extends SimpleDelta implements IJavaElementDelta {
 		public Key(IJavaElement element) {
 			this.element = element;
 		}
+		@Override
 		public int hashCode() {
 			return this.element.hashCode();
 		}
+		@Override
 		public boolean equals(Object obj) {
 			if (!(obj instanceof Key))
 				return false;
@@ -372,12 +374,14 @@ public void fineGrained() {
 /**
  * @see IJavaElementDelta
  */
+@Override
 public IJavaElementDelta[] getAddedChildren() {
 	return getChildrenOfType(ADDED);
 }
 /**
  * @see IJavaElementDelta
  */
+@Override
 public IJavaElementDelta[] getAffectedChildren() {
 	return this.affectedChildren;
 }
@@ -403,15 +407,18 @@ private ArrayList getAncestors(IJavaElement element) {
 	parents.trimToSize();
 	return parents;
 }
+@Override
 public CompilationUnit getCompilationUnitAST() {
 	return this.ast;
 }
+@Override
 public IJavaElementDelta[] getAnnotationDeltas() {
 	return this.annotationDeltas;
 }
 /**
  * @see IJavaElementDelta
  */
+@Override
 public IJavaElementDelta[] getChangedChildren() {
 	return getChildrenOfType(CHANGED);
 }
@@ -467,30 +474,35 @@ protected JavaElementDelta getDeltaFor(IJavaElement element) {
 /**
  * @see IJavaElementDelta
  */
+@Override
 public IJavaElement getElement() {
 	return this.changedElement;
 }
 /**
  * @see IJavaElementDelta
  */
+@Override
 public IJavaElement getMovedFromElement() {
 	return this.movedFromHandle;
 }
 /**
  * @see IJavaElementDelta
  */
+@Override
 public IJavaElement getMovedToElement() {
 	return this.movedToHandle;
 }
 /**
  * @see IJavaElementDelta
  */
+@Override
 public IJavaElementDelta[] getRemovedChildren() {
 	return getChildrenOfType(REMOVED);
 }
 /**
  * Return the collection of resource deltas. Return null if none.
  */
+@Override
 public IResourceDelta[] getResourceDeltas() {
 	if (this.resourceDeltas == null) return null;
 	if (this.resourceDeltas.length != this.resourceDeltasCounter) {
@@ -689,6 +701,7 @@ public String toDebugString(int depth) {
 	}
 	return buffer.toString();
 }
+@Override
 protected boolean toDebugString(StringBuffer buffer, int flags) {
 	boolean prev = super.toDebugString(buffer, flags);
 
@@ -818,6 +831,7 @@ protected boolean toDebugString(StringBuffer buffer, int flags) {
  * Returns a string representation of this delta's
  * structure suitable for debug purposes.
  */
+@Override
 public String toString() {
 	return toDebugString(0);
 }

@@ -28,6 +28,7 @@ public class LexStream implements TerminalTokens {
 		int line;
 		int flags;
 
+		@Override
 		public String toString() {
 			StringBuffer buffer = new StringBuffer();
 			buffer.append(this.name).append('[').append(this.kind).append(']');
@@ -222,9 +223,7 @@ public class LexStream implements TerminalTokens {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
+	@Override
 	public String toString() {
 		StringBuffer res = new StringBuffer();
 

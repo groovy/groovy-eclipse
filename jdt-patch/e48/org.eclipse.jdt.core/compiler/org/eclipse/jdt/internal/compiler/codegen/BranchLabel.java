@@ -180,6 +180,7 @@ public boolean isStandardLabel(){
 /*
 * Place the label. If we have forward references resolve them.
 */
+@Override
 public void place() { // Currently lacking wide support.
 //	if ((this.tagBits & USED) == 0 && this.forwardReferenceCount == 0) {
 //		return;
@@ -241,6 +242,7 @@ public void place() { // Currently lacking wide support.
 /**
  * Print out the receiver
  */
+@Override
 public String toString() {
 	String basic = getClass().getName();
 	basic = basic.substring(basic.lastIndexOf('.')+1);

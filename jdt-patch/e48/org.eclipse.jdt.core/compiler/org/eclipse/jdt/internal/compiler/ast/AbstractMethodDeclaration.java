@@ -77,6 +77,7 @@ public abstract class AbstractMethodDeclaration
 	/*
 	 *	We cause the compilation task to abort to a given extent.
 	 */
+	@Override
 	public void abort(int abortLevel, CategorizedProblem problem) {
 
 		switch (abortLevel) {
@@ -232,6 +233,7 @@ public abstract class AbstractMethodDeclaration
 		}
 	}
 
+	@Override
 	public CompilationResult compilationResult() {
 
 		return this.compilationResult;
@@ -383,6 +385,7 @@ public abstract class AbstractMethodDeclaration
 		}
 	}
 
+	@Override
 	public CompilationUnitDeclaration getCompilationUnitDeclaration() {
 		if (this.scope != null) {
 			return this.scope.compilationUnitScope().referenceContext;
@@ -390,6 +393,7 @@ public abstract class AbstractMethodDeclaration
 		return null;
 	}
 
+	@Override
 	public boolean hasErrors() {
 		return this.ignoreFurtherInvestigation;
 	}
@@ -456,6 +460,7 @@ public abstract class AbstractMethodDeclaration
 	 */
 	public abstract void parseStatements(Parser parser, CompilationUnitDeclaration unit);
 
+	@Override
 	public StringBuffer print(int tab, StringBuffer output) {
 
 		if (this.javadoc != null) {
@@ -640,10 +645,12 @@ public abstract class AbstractMethodDeclaration
 		}
 	}
 
+	@Override
 	public void tagAsHavingErrors() {
 		this.ignoreFurtherInvestigation = true;
 	}
 	
+	@Override
 	public void tagAsHavingIgnoredMandatoryErrors(int problemId) {
 		// Nothing to do for this context;
 	}

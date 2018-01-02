@@ -31,6 +31,7 @@ public class AND_AND_Expression extends BinaryExpression {
 		super(left, right, operator);
 	}
 
+	@Override
 	public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 
 		Constant cst = this.left.optimizedBooleanConstant();
@@ -83,6 +84,7 @@ public class AND_AND_Expression extends BinaryExpression {
 	/**
 	 * Code generation for a binary operation
 	 */
+	@Override
 	public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 
 		int pc = codeStream.position;
@@ -183,6 +185,7 @@ public class AND_AND_Expression extends BinaryExpression {
 	/**
 	 * Boolean operator code generation Optimized operations are: &&
 	 */
+	@Override
 	public void generateOptimizedBoolean(BlockScope currentScope, CodeStream codeStream, BranchLabel trueLabel, BranchLabel falseLabel, boolean valueRequired) {
 
 		if (this.constant != Constant.NotAConstant) {
@@ -266,6 +269,7 @@ public class AND_AND_Expression extends BinaryExpression {
 		}
 	}
 
+	@Override
 	public boolean isCompactableOperation() {
 		return false;
 	}
@@ -273,6 +277,7 @@ public class AND_AND_Expression extends BinaryExpression {
 	/**
 	 * @see org.eclipse.jdt.internal.compiler.ast.BinaryExpression#resolveType(org.eclipse.jdt.internal.compiler.lookup.BlockScope)
 	 */
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 		TypeBinding result = super.resolveType(scope);
 		// check whether comparing identical expressions
@@ -284,6 +289,7 @@ public class AND_AND_Expression extends BinaryExpression {
 		return result;
 	}
 
+	@Override
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		if (visitor.visit(this, scope)) {
 			this.left.traverse(visitor, scope);

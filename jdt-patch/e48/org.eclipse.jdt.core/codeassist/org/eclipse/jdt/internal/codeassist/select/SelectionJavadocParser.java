@@ -39,6 +39,7 @@ public class SelectionJavadocParser extends JavadocParser {
 	/*
 	 * Do not parse comment if selection is not included.
 	 */
+	@Override
 	public boolean checkDeprecation(int commentPtr) {
 		this.selectionStart = ((SelectionParser)this.sourceParser).selectionStart;
 		this.selectionEnd = ((SelectionParser)this.sourceParser).selectionEnd;
@@ -58,6 +59,7 @@ public class SelectionJavadocParser extends JavadocParser {
 	/*
 	 * Replace stored Javadoc node with specific selection one.
 	 */
+	@Override
 	protected boolean commentParse() {
 		this.docComment = new SelectionJavadoc(this.javadocStart, this.javadocEnd);
 		return super.commentParse();
@@ -66,6 +68,7 @@ public class SelectionJavadocParser extends JavadocParser {
 	/*
 	 * Create argument expression and store it if it includes selection.
 	 */
+	@Override
 	protected Object createArgumentReference(char[] name, int dim, boolean isVarargs, Object typeRef, long[] dimPositions, long argNamePos) throws InvalidInputException {
 		// Create argument as we may need it after
 		Expression expression = (Expression) super.createArgumentReference(name, dim, isVarargs, typeRef, dimPositions, argNamePos);
@@ -87,6 +90,7 @@ public class SelectionJavadocParser extends JavadocParser {
 	 * If so, create field reference, store it and abort comment parse.
 	 * Otherwise return null as we do not need this reference.
 	 */
+	@Override
 	protected Object createFieldReference(Object receiver) throws InvalidInputException {
 		int start = (int) (this.identifierPositionStack[0] >>> 32);
 		int end = (int) this.identifierPositionStack[0];
@@ -105,6 +109,7 @@ public class SelectionJavadocParser extends JavadocParser {
 	 * If so, create field reference, store it and abort comment parse.
 	 * Otherwise return null as we do not need this reference.
 	 */
+	@Override
 	protected Object createMethodReference(Object receiver, List arguments) throws InvalidInputException {
 		int memberPtr = this.identifierLengthStack[0] - 1;	// may be > 0 for inner class constructor reference
 		int start = (int) (this.identifierPositionStack[memberPtr] >>> 32);
@@ -124,6 +129,7 @@ public class SelectionJavadocParser extends JavadocParser {
 	 * If so, store it and abort comment parse.
 	 * Otherwise return null as we do not need this reference.
 	 */
+	@Override
 	protected Object createTypeReference(int primitiveToken) {
 		// Need to create type ref in case it was needed by members
 		TypeReference typeRef = (TypeReference) super.createTypeReference(primitiveToken);
@@ -168,6 +174,7 @@ public class SelectionJavadocParser extends JavadocParser {
 	 * Push param reference and verify if it includes selection.
 	 * If so, store it and abort comment parse.
 	 */
+	@Override
 	protected boolean pushParamName(boolean isTypeParam) {
 		if (super.pushParamName(isTypeParam)) {
 			Expression expression = (Expression) this.astStack[this.astPtr--];
@@ -186,6 +193,7 @@ public class SelectionJavadocParser extends JavadocParser {
 	/*
 	 * Store selected node into doc comment.
 	 */
+	@Override
 	protected void updateDocComment() {
 		if (this.selectedNode instanceof Expression) {
 			((SelectionJavadoc) this.docComment).selectedNode = (Expression) this.selectedNode;
@@ -197,6 +205,7 @@ public class SelectionJavadocParser extends JavadocParser {
 	/*
 	 * Sets a flag to denote that selection has taken place on an inheritDoc tag
 	 */
+	@Override
 	protected void parseInheritDocTag() {
 		if (this.tagSourceStart == this.selectionStart && this.tagSourceEnd == this.selectionEnd)
 			this.inheritDocTagSelected = true;

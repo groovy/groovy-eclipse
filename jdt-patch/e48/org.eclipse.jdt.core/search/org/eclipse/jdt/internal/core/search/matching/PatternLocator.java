@@ -1002,9 +1002,11 @@ protected int resolveLevelForType (char[] simpleNamePattern,
 	}
 	return level;
 }
+@Override
 public String toString(){
 	return "SearchPattern"; //$NON-NLS-1$
 }
+@Override
 public void recordResolution(QualifiedTypeReference typeReference, TypeBinding resolution) {
 	// noop by default
 }

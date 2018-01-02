@@ -27,19 +27,33 @@ public interface ITypeAnnotationWalker {
 	 * At the end of any walk an empty array of annotations is returned.
 	 */
 	public static final ITypeAnnotationWalker EMPTY_ANNOTATION_WALKER = new ITypeAnnotationWalker() {
+		@Override
 		public ITypeAnnotationWalker toField() { return this; }
+		@Override
 		public ITypeAnnotationWalker toThrows(int rank) { return this; }
+		@Override
 		public ITypeAnnotationWalker toTypeArgument(int rank) { return this; }
+		@Override
 		public ITypeAnnotationWalker toMethodParameter(short index) { return this; }
+		@Override
 		public ITypeAnnotationWalker toSupertype(short index, char[] superTypeSignature) { return this; }
+		@Override
 		public ITypeAnnotationWalker toTypeParameterBounds(boolean isClassTypeParameter, int parameterRank) { return this; }
+		@Override
 		public ITypeAnnotationWalker toTypeBound(short boundIndex) { return this; }
+		@Override
 		public ITypeAnnotationWalker toTypeParameter(boolean isClassTypeParameter, int rank) { return this; }
+		@Override
 		public ITypeAnnotationWalker toMethodReturn() { return this; }
+		@Override
 		public ITypeAnnotationWalker toReceiver() { return this; }
+		@Override
 		public ITypeAnnotationWalker toWildcardBound() { return this; }
+		@Override
 		public ITypeAnnotationWalker toNextArrayDimension() { return this; }
+		@Override
 		public ITypeAnnotationWalker toNextNestedType() { return this; }
+		@Override
 		public IBinaryAnnotation[] getAnnotationsAtCursor(int currentTypeId, boolean mayApplyArrayContentsDefaultNullness) { return NO_ANNOTATIONS; }
 	};
 

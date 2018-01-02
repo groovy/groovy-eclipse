@@ -4477,20 +4477,35 @@ public abstract class Scope {
 			// JLS7 implementation  
 	
 			InvocationSite tieBreakInvocationSite = new InvocationSite() {
+				@Override
 				public TypeBinding[] genericTypeArguments() { return null; } // ignore genericTypeArgs
+				@Override
 				public boolean isSuperAccess() { return invocationSite.isSuperAccess(); }
+				@Override
 				public boolean isTypeAccess() { return invocationSite.isTypeAccess(); }
+				@Override
 				public void setActualReceiverType(ReferenceBinding actualReceiverType) { /* ignore */}
+				@Override
 				public void setDepth(int depth) { /* ignore */}
+				@Override
 				public void setFieldIndex(int depth) { /* ignore */}
+				@Override
 				public int sourceStart() { return invocationSite.sourceStart(); }
+				@Override
 				public int sourceEnd() { return invocationSite.sourceStart(); }
+				@Override
 				public TypeBinding invocationTargetType() { return invocationSite.invocationTargetType(); }
+				@Override
 				public boolean receiverIsImplicitThis() { return invocationSite.receiverIsImplicitThis();}
+				@Override
 				public InferenceContext18 freshInferenceContext(Scope scope) { return null; /* no inference when ignoring genericTypeArgs */ }
+				@Override
 				public ExpressionContext getExpressionContext() { return ExpressionContext.VANILLA_CONTEXT; }
+				@Override
 				public boolean isQualifiedSuper() { return invocationSite.isQualifiedSuper(); }
+				@Override
 				public boolean checkingPotentialCompatibility() { return false; }
+				@Override
 				public void acceptPotentiallyCompatibleMethods(MethodBinding[] methods) {/* ignore */}
 			};
 			int count = 0;
@@ -5053,12 +5068,15 @@ public abstract class Scope {
 			}
 			final Scope scope = this;
 			Substitution substitution = new Substitution() {
+					@Override
 					public LookupEnvironment environment() {
 						return scope.environment();
 					}
+					@Override
 					public boolean isRawSubstitution() {
 						return false;
 					}
+					@Override
 					public TypeBinding substitute(TypeVariableBinding typeVariable) {
 						TypeBinding retVal = (TypeBinding) map.get(typeVariable.unannotated());
 						return retVal == null ? typeVariable : typeVariable.hasTypeAnnotations() ? environment().createAnnotatedType(retVal, typeVariable.getTypeAnnotations()) : retVal;

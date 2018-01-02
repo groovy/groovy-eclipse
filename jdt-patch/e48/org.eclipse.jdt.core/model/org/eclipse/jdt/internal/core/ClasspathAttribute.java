@@ -23,25 +23,30 @@ public class ClasspathAttribute implements IClasspathAttribute {
 		this.value = value;
 	}
 
+	@Override
 	public boolean equals(Object obj) {
 		if (!(obj instanceof ClasspathAttribute)) return false;
 		ClasspathAttribute other = (ClasspathAttribute) obj;
 		return this.name.equals(other.name) && this.value.equals(other.value);
 	}
 
-    public String getName() {
+    @Override
+	public String getName() {
 		return this.name;
     }
 
-    public String getValue() {
+    @Override
+	public String getValue() {
 		return this.value;
     }
 
-    public int hashCode() {
+    @Override
+	public int hashCode() {
      	return Util.combineHashCodes(this.name.hashCode(), this.value.hashCode());
     }
 
-    public String toString() {
+    @Override
+	public String toString() {
     	return this.name + "=" + this.value; //$NON-NLS-1$
     }
 

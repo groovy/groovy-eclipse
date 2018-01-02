@@ -35,6 +35,7 @@ public class StringLiteralConcatenation extends StringLiteral {
 	/**
 	 *  Add the lit source to mine, just as if it was mine
 	 */
+	@Override
 	public StringLiteralConcatenation extendsWith(StringLiteral lit) {
 		this.sourceEnd = lit.sourceEnd;
 		final int literalsLength = this.literals.length;
@@ -55,6 +56,7 @@ public class StringLiteralConcatenation extends StringLiteral {
 		return this;
 	}
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 		output.append("StringLiteralConcatenation{"); //$NON-NLS-1$
 		for (int i = 0, max = this.counter; i < max; i++) {
@@ -64,10 +66,12 @@ public class StringLiteralConcatenation extends StringLiteral {
 		return output.append('}');
 	}
 
+	@Override
 	public char[] source() {
 		return this.source;
 	}
 
+	@Override
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		if (visitor.visit(this, scope)) {
 			for (int i = 0, max = this.counter; i < max; i++) {

@@ -217,7 +217,12 @@ public class ModuleCompilationTests extends AbstractBatchCompilerTest {
 	String adjustForJavac(String commandLine) {
 		String[] tokens = commandLine.split(" ");
 		StringBuffer buf = new StringBuffer();
+		boolean skipNext = false;
 		for (int i = 0; i < tokens.length; i++) {
+			if (skipNext) {
+				skipNext = false;
+				continue;
+			}
 			if (tokens[i].trim().equals("-9")) {
 				buf.append(" -source 9 ");
 				continue;
@@ -225,6 +230,10 @@ public class ModuleCompilationTests extends AbstractBatchCompilerTest {
 			if (tokens[i].startsWith("-warn") || tokens[i].startsWith("-err") || tokens[i].startsWith("-info")) {
 				if (tokens[i].contains("exports") && !tokens[i].contains("-exports"))
 					buf.append(" -Xlint:exports ");
+				continue;
+			}
+			if (tokens[i].trim().equals("-classNames")) {
+				skipNext = true;
 				continue;
 			}
 			buf.append(tokens[i]).append(' ');
@@ -2746,7 +2755,8 @@ public class ModuleCompilationTests extends AbstractBatchCompilerTest {
 				"",
 				"The package pm is accessible from more than one module: mod.y, mod.x\n",
 				false,
-				"package conflict");
+				"package conflict",
+				OUTPUT_DIR);
 	}
 	public void testPackageTypeConflict1() {
 		File outputDirectory = new File(OUTPUT_DIR);
@@ -3534,6 +3544,7 @@ public void testBug521362_emptyFile() {
 			"----------\n" + 
 			"2 problems (1 error, 1 warning)\n",
 			false,
+			"empty",
 			OUTPUT_DIR + File.separator + out);
 	}
 	public void testBug521362_mismatchingdeclaration() {
@@ -3569,6 +3580,7 @@ public void testBug521362_emptyFile() {
 			"----------\n" + 
 			"1 problem (1 error)\n",
 			false,
+			"package is empty",
 			OUTPUT_DIR + File.separator + out);
 	}
 	public void testBug521362_multiplePackages() {
@@ -3614,6 +3626,7 @@ public void testBug521362_emptyFile() {
 			"----------\n" + 
 			"2 problems (2 errors)\n",
 			false,
+			"package is empty",
 			OUTPUT_DIR + File.separator + out);
 	}
 	public void testBug521362_multiplePackages2() {
@@ -3659,6 +3672,7 @@ public void testBug521362_emptyFile() {
 			"----------\n" + 
 			"2 problems (2 errors)\n",
 			false,
+			"package is empty",
 			OUTPUT_DIR + File.separator + out);
 	}
 	/*
@@ -4118,7 +4132,7 @@ public void testBug521362_emptyFile() {
 	        "",
     		"",
 	        true,
-	        /*not tested with javac*/"");
+	        OUTPUT_DIR);
 	}
 	// Test from https://bugs.eclipse.org/bugs/show_bug.cgi?id=526997
 	public void testReleaseOption16() {

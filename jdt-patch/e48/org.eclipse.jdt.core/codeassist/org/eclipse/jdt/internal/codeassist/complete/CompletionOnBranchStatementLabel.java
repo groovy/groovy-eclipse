@@ -28,15 +28,18 @@ public class CompletionOnBranchStatementLabel extends BranchStatement {
 		this.possibleLabels = possibleLabels;
 	}
 
+	@Override
 	public FlowInfo analyseCode(BlockScope currentScope,
 			FlowContext flowContext, FlowInfo flowInfo) {
 		// Is never called
 		return null;
 	}
 
+	@Override
 	public void resolve(BlockScope scope) {
 		throw new CompletionNodeFound(this, scope);
 	}
+	@Override
 	public StringBuffer printStatement(int indent, StringBuffer output) {
 		printIndent(indent, output);
 		if(this.kind == CONTINUE) {

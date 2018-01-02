@@ -39,6 +39,7 @@ public UnresolvedReferenceBinding(UnresolvedReferenceBinding prototype) {
 	this.prototype = prototype.prototype;
 }
 
+@Override
 public TypeBinding clone(TypeBinding outerType) {
 	if (this.resolvedType != null)
 		return this.resolvedType.clone(outerType);
@@ -62,23 +63,28 @@ void addWrapper(TypeBinding wrapper, LookupEnvironment environment) {
 		this.wrappers[length] = wrapper;
 	}
 }
+@Override
 public boolean isUnresolvedType() {
 	return true;
 }
+@Override
 public String debugName() {
 	return toString();
 }
+@Override
 public int depth() {
 	// we don't yet have our enclosing types wired, but we know the nesting depth from our compoundName:
 	// (NOTE: this an upper bound, because class names may contain '$')
 	int last = this.compoundName.length-1;
 	return CharOperation.occurencesOf('$', this.compoundName[last], 1); // leading '$' must be part of the class name, so start at 1.
 }
+@Override
 public boolean hasTypeBit(int bit) {
 	// shouldn't happen since we are not called before analyseCode(), but play safe:
 	return false;
 }
 
+@Override
 public TypeBinding prototype() {
 	return this.prototype;
 }
@@ -139,6 +145,7 @@ void setResolvedType(ReferenceBinding targetType, LookupEnvironment environment)
 			this.wrappers[i].swapUnresolved(this, targetType, environment);
 }
 
+@Override
 public void swapUnresolved(UnresolvedReferenceBinding unresolvedType, ReferenceBinding unannotatedType, LookupEnvironment environment) {
 	if (this.resolvedType != null) return;
 	ReferenceBinding annotatedType = (ReferenceBinding) unannotatedType.clone(null);
@@ -151,6 +158,7 @@ public void swapUnresolved(UnresolvedReferenceBinding unresolvedType, ReferenceB
 			this.wrappers[i].swapUnresolved(this, annotatedType, environment);
 }
 
+@Override
 public String toString() {
 	if (this.hasTypeAnnotations())
 		return super.annotatedDebugName() + "(unresolved)"; //$NON-NLS-1$

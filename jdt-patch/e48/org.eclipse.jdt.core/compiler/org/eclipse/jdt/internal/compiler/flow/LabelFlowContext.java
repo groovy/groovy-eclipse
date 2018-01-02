@@ -44,10 +44,12 @@ void checkLabelValidity(BlockScope scope) {
 	}
 }
 
+@Override
 public String individualToString() {
 	return "Label flow context [label:" + String.valueOf(this.labelName) + "]"; //$NON-NLS-2$ //$NON-NLS-1$
 }
 
+@Override
 public char[] labelName() {
 	return this.labelName;
 }

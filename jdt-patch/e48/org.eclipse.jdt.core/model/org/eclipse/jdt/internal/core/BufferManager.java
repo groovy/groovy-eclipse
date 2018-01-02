@@ -22,7 +22,6 @@ import org.eclipse.jdt.core.IOpenable;
  * The buffer manager manages the set of open buffers.
  * It implements an LRU cache of buffers.
  */
-@SuppressWarnings("rawtypes")
 public class BufferManager {
 
 	protected static BufferManager DEFAULT_BUFFER_MANAGER;
@@ -32,7 +31,7 @@ public class BufferManager {
 	 * LRU cache of buffers. The key and value for an entry
 	 * in the table is the identical buffer.
 	 */
-	private BufferCache openBuffers = new BufferCache(60);
+	private BufferCache<IOpenable> openBuffers = new BufferCache<>(60);
 
 	/**
 	 * @deprecated
@@ -41,6 +40,7 @@ public class BufferManager {
 	    /**
 	     * @deprecated
 	     */
+		@Override
 		public IBuffer createBuffer(IOpenable owner) {
 			return BufferManager.createBuffer(owner);
 		}
@@ -88,7 +88,7 @@ public static IBuffer createNullBuffer(IOpenable owner) {
  */
 public IBuffer getBuffer(IOpenable owner) {
 	synchronized (this.openBuffers) {
-		return (IBuffer)this.openBuffers.get(owner);
+		return this.openBuffers.get(owner);
 	}
 }
 /**
@@ -115,8 +115,8 @@ public org.eclipse.jdt.core.IBufferFactory getDefaultBufferFactory() {
  * @see OverflowingLRUCache
  * @return Enumeration of IBuffer
  */
-public Enumeration getOpenBuffers() {
-	Enumeration result;
+public Enumeration<IBuffer> getOpenBuffers() {
+	Enumeration<IBuffer> result;
 	synchronized (this.openBuffers) {
 		this.openBuffers.shrink();
 		result = this.openBuffers.elements();

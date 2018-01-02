@@ -90,6 +90,7 @@ ClassFile[] getClasses() {
 	// The requestor collects the class definitions and problems
 	class CompilerRequestor implements ICompilerRequestor {
 		boolean hasErrors = false;
+		@Override
 		public void acceptResult(CompilationResult result) {
 			if (result.hasProblems()) {
 				EvaluationResult[] evalResults = evaluationResultsForCompilationProblems(result, source);
@@ -129,19 +130,24 @@ ClassFile[] getClasses() {
 	CompilerRequestor compilerRequestor = new CompilerRequestor();
 	Compiler compiler = getCompiler(compilerRequestor);
 	compiler.compile(new ICompilationUnit[] {new ICompilationUnit() {
+		@Override
 		public char[] getFileName() {
 			 // Name of class is name of CU
 			return CharOperation.concat(Evaluator.this.getClassName(), Util.defaultJavaExtension().toCharArray());
 		}
+		@Override
 		public char[] getContents() {
 			return source;
 		}
+		@Override
 		public char[] getMainTypeName() {
 			return Evaluator.this.getClassName();
 		}
+		@Override
 		public char[][] getPackageName() {
 			return null;
 		}
+		@Override
 		public boolean ignoreOptionalProblems() {
 			return false;
 		}

@@ -77,21 +77,25 @@ public SearchableEnvironmentRequestor(ISearchRequestor requestor, ICompilationUn
  *
  * @see IJavaElementRequestor
  */
+@Override
 public void acceptInitializer(IInitializer initializer) {
 	// implements interface method
 }
 /**
  * @see IJavaElementRequestor
  */
+@Override
 public void acceptPackageFragment(IPackageFragment packageFragment) {
 	this.requestor.acceptPackage(packageFragment.getElementName().toCharArray());
 }
+@Override
 public void acceptModule(IModuleDescription module) {
 	this.requestor.acceptModule(module.getElementName().toCharArray());
 }
 /**
  * @see IJavaElementRequestor
  */
+@Override
 public void acceptType(IType type) {
 	try {
 		if (this.unitToSkip != null && this.unitToSkip.equals(type.getCompilationUnit())){

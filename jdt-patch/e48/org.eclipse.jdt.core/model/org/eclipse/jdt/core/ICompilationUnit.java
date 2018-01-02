@@ -344,6 +344,7 @@ void discardWorkingCopy() throws JavaModelException;
  * @return the found elements in this compilation unit that correspond to the given element
  * @since 3.0
  */
+@Override
 IJavaElement[] findElements(IJavaElement element);
 /**
  * Finds the working copy for this compilation unit, given a {@link WorkingCopyOwner}.
@@ -550,6 +551,7 @@ public boolean hasResourceChanged();
  * @return true if this element is a working copy, false otherwise
  * @since 3.0
  */
+@Override
 boolean isWorkingCopy();
 
 /**
@@ -785,5 +787,6 @@ CompilationUnit reconcile(int astLevel, int reconcileFlags, WorkingCopyOwner own
  * </ul>
  * @since 3.0
  */
+@Override
 void restore() throws JavaModelException;
 }

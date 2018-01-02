@@ -28,10 +28,12 @@ public class DefaultWorkingCopyOwner extends WorkingCopyOwner {
 		// only one instance can be created
 	}
 
+	@Override
 	public IBuffer createBuffer(ICompilationUnit workingCopy) {
 		if (this.primaryBufferProvider != null) return this.primaryBufferProvider.createBuffer(workingCopy);
 		return super.createBuffer(workingCopy);
 	}
+	@Override
 	public String toString() {
 		return "Primary owner"; //$NON-NLS-1$
 	}

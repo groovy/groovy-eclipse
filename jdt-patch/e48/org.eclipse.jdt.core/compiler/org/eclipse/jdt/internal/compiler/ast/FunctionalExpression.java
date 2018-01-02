@@ -75,6 +75,7 @@ public abstract class FunctionalExpression extends Expression {
 		super();
 	}
 	
+	@Override
 	public boolean isBoxingCompatibleWith(TypeBinding targetType, Scope scope) {
 		return false;
 	}
@@ -88,21 +89,26 @@ public abstract class FunctionalExpression extends Expression {
 		return null;
 	}
 
+	@Override
 	public void setExpectedType(TypeBinding expectedType) {
 		this.expectedType = expectedType;
 	}
 	
+	@Override
 	public void setExpressionContext(ExpressionContext context) {
 		this.expressionContext = context;
 	}
 
+	@Override
 	public ExpressionContext getExpressionContext() {
 		return this.expressionContext;
 	}
 
+	@Override
 	public boolean isPolyExpression(MethodBinding candidate) {
 		return true;
 	}
+	@Override
 	public boolean isPolyExpression() {
 		return true; // always as per introduction of part D, JSR 335
 	}
@@ -112,6 +118,7 @@ public abstract class FunctionalExpression extends Expression {
 		return true;
 	}
 	
+	@Override
 	public boolean isPertinentToApplicability(TypeBinding targetType, MethodBinding method) {
 		if (targetType instanceof TypeVariableBinding) {
 			TypeVariableBinding typeVariable = (TypeVariableBinding) targetType;
@@ -128,6 +135,7 @@ public abstract class FunctionalExpression extends Expression {
 		return true;
 	}
 
+	@Override
 	public TypeBinding invocationTargetType() {
 		if (this.expectedType == null) return null;
 		// when during inference this expression mimics as an invocationSite,
@@ -143,6 +151,7 @@ public abstract class FunctionalExpression extends Expression {
 		return null;
 	}
 
+	@Override
 	public TypeBinding expectedType() {
 		return this.expectedType;
 	}
@@ -170,6 +179,7 @@ public abstract class FunctionalExpression extends Expression {
 		return 0; // not reached.
 	}
 
+	@Override
 	public TypeBinding resolveType(BlockScope blockScope) {
 		return resolveType(blockScope, false);
 	}
@@ -246,17 +256,20 @@ public abstract class FunctionalExpression extends Expression {
 			}
 		}
 		
+		@Override
 		public boolean visit(ReferenceBinding referenceBinding) {
 			checkVisibility(referenceBinding);
 			return true;
 		}
 
 		
+		@Override
 		public boolean visit(ParameterizedTypeBinding parameterizedTypeBinding) {
 			checkVisibility(parameterizedTypeBinding);
 			return true;
 		}
 		
+		@Override
 		public boolean visit(RawTypeBinding rawTypeBinding) {
 			checkVisibility(rawTypeBinding);
 			return true;

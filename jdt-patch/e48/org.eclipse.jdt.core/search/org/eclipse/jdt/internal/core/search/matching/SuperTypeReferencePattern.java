@@ -172,6 +172,7 @@ SuperTypeReferencePattern(int matchRule) {
 /*
  * superSimpleName / superQualification / simpleName / enclosingTypeName / typeParameters / pkgName / superClassOrInterface classOrInterface modifiers
  */
+@Override
 public void decodeIndexKey(char[] key) {
 	int slash = CharOperation.indexOf(SEPARATOR, key, 0);
 	this.superSimpleName = CharOperation.subarray(key, 0, slash);
@@ -222,12 +223,15 @@ public void decodeIndexKey(char[] key) {
 	this.classOrInterface = key[slash + 2];
 	this.modifiers = key[slash + 3]; // implicit cast to int type
 }
+@Override
 public SearchPattern getBlankPattern() {
 	return new SuperTypeReferencePattern(R_EXACT_MATCH | R_CASE_SENSITIVE);
 }
+@Override
 public char[][] getIndexCategories() {
 	return CATEGORIES;
 }
+@Override
 public boolean matchesDecodedKey(SearchPattern decodedPattern) {
 	SuperTypeReferencePattern pattern = (SuperTypeReferencePattern) decodedPattern;
 	if (this.superRefKind == ONLY_SUPER_CLASSES && pattern.enclosingTypeName != ONE_ZERO/*not an anonymous*/)
@@ -241,6 +245,7 @@ public boolean matchesDecodedKey(SearchPattern decodedPattern) {
 
 	return matchesName(this.superSimpleName, pattern.superSimpleName);
 }
+@Override
 public EntryResult[] queryIn(Index index) throws IOException {
 	char[] key = this.superSimpleName; // can be null
 	int matchRule = getMatchRule();
@@ -271,6 +276,7 @@ public EntryResult[] queryIn(Index index) throws IOException {
 
 	return index.query(getIndexCategories(), key, matchRule); // match rule is irrelevant when the key is null
 }
+@Override
 protected StringBuffer print(StringBuffer output) {
 	switch (this.superRefKind) {
 		case ALL_SUPER_TYPES:

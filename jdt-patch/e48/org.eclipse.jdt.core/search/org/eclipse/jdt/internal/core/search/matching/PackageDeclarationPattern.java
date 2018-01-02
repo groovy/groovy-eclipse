@@ -20,10 +20,12 @@ public PackageDeclarationPattern(char[] pkgName, int matchRule) {
 	super(PKG_DECL_PATTERN, matchRule);
 	this.pkgName = pkgName;
 }
+@Override
 public EntryResult[] queryIn(Index index) {
 	// package declarations are not indexed
 	return null;
 }
+@Override
 protected StringBuffer print(StringBuffer output) {
 	output.append("PackageDeclarationPattern: <"); //$NON-NLS-1$
 	if (this.pkgName != null)

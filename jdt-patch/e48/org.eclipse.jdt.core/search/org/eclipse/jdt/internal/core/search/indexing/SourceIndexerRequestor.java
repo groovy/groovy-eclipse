@@ -41,6 +41,7 @@ public SourceIndexerRequestor(SourceIndexer indexer) {
 /**
  * @see ISourceElementRequestor#acceptAnnotationTypeReference(char[][], int, int)
  */
+@Override
 public void acceptAnnotationTypeReference(char[][] typeName, int sourceStart, int sourceEnd) {
 	int length = typeName.length;
 	for (int i = 0; i < length - 1; i++)
@@ -50,12 +51,14 @@ public void acceptAnnotationTypeReference(char[][] typeName, int sourceStart, in
 /**
  * @see ISourceElementRequestor#acceptAnnotationTypeReference(char[], int)
  */
+@Override
 public void acceptAnnotationTypeReference(char[] simpleTypeName, int sourcePosition) {
 	this.indexer.addAnnotationTypeReference(simpleTypeName);
 }
 /**
  * @see ISourceElementRequestor#acceptConstructorReference(char[], int, int)
  */
+@Override
 public void acceptConstructorReference(char[] typeName, int argCount, int sourcePosition) {
 	if (CharOperation.indexOf(Signature.C_GENERIC_START, typeName) > 0) {
 		typeName = Signature.toCharArray(Signature.getTypeErasure(Signature.createTypeSignature(typeName, false)).toCharArray());
@@ -72,42 +75,49 @@ public void acceptConstructorReference(char[] typeName, int argCount, int source
 /**
  * @see ISourceElementRequestor#acceptFieldReference(char[], int)
  */
+@Override
 public void acceptFieldReference(char[] fieldName, int sourcePosition) {
 	this.indexer.addFieldReference(fieldName);
 }
 /**
  * @see ISourceElementRequestor#acceptImport(int, int, int, int, char[][], boolean, int)
  */
+@Override
 public void acceptImport(int declarationStart, int declarationEnd, int nameStart, int nameEnd, char[][] tokens, boolean onDemand, int modifiers) {
 	// imports have already been reported while creating the ImportRef node (see SourceElementParser#comsume*ImportDeclarationName() methods)
 }
 /**
  * @see ISourceElementRequestor#acceptLineSeparatorPositions(int[])
  */
+@Override
 public void acceptLineSeparatorPositions(int[] positions) {
 	// implements interface method
 }
 /**
  * @see ISourceElementRequestor#acceptMethodReference(char[], int, int)
  */
+@Override
 public void acceptMethodReference(char[] methodName, int argCount, int sourcePosition) {
 	this.indexer.addMethodReference(methodName, argCount);
 }
 /**
  * @see ISourceElementRequestor#acceptPackage(ImportReference)
  */
+@Override
 public void acceptPackage(ImportReference importReference) {
 	this.packageName = CharOperation.concatWith(importReference.getImportName(), '.');
 }
 /**
  * @see ISourceElementRequestor#acceptProblem(CategorizedProblem)
  */
+@Override
 public void acceptProblem(CategorizedProblem problem) {
 	// implements interface method
 }
 /**
  * @see ISourceElementRequestor#acceptTypeReference(char[][], int, int)
  */
+@Override
 public void acceptTypeReference(char[][] typeName, int sourceStart, int sourceEnd) {
 	int length = typeName.length;
 	for (int i = 0; i < length - 1; i++)
@@ -117,12 +127,14 @@ public void acceptTypeReference(char[][] typeName, int sourceStart, int sourceEn
 /**
  * @see ISourceElementRequestor#acceptTypeReference(char[], int)
  */
+@Override
 public void acceptTypeReference(char[] simpleTypeName, int sourcePosition) {
 	this.indexer.addTypeReference(simpleTypeName);
 }
 /**
  * @see ISourceElementRequestor#acceptUnknownReference(char[][], int, int)
  */
+@Override
 public void acceptUnknownReference(char[][] name, int sourceStart, int sourceEnd) {
 	for (int i = 0; i < name.length; i++) {
 		acceptUnknownReference(name[i], 0);
@@ -131,6 +143,7 @@ public void acceptUnknownReference(char[][] name, int sourceStart, int sourceEnd
 /**
  * @see ISourceElementRequestor#acceptUnknownReference(char[], int)
  */
+@Override
 public void acceptUnknownReference(char[] name, int sourcePosition) {
 	this.indexer.addNameReference(name);
 }
@@ -221,12 +234,14 @@ private void enterClass(TypeInfo typeInfo) {
 /**
  * @see ISourceElementRequestor#enterCompilationUnit()
  */
+@Override
 public void enterCompilationUnit() {
 	// implements interface method
 }
 /**
  * @see ISourceElementRequestor#enterConstructor(ISourceElementRequestor.MethodInfo)
  */
+@Override
 public void enterConstructor(MethodInfo methodInfo) {
 	int argCount = methodInfo.parameterTypes == null ? 0 : methodInfo.parameterTypes.length;
 	this.indexer.addConstructorDeclaration(
@@ -263,6 +278,7 @@ private void enterEnum(TypeInfo typeInfo) {
 /**
  * @see ISourceElementRequestor#enterField(ISourceElementRequestor.FieldInfo)
  */
+@Override
 public void enterField(FieldInfo fieldInfo) {
 	this.indexer.addFieldDeclaration(fieldInfo.type, fieldInfo.name);
 	this.methodDepth++;
@@ -270,6 +286,7 @@ public void enterField(FieldInfo fieldInfo) {
 /**
  * @see ISourceElementRequestor#enterInitializer(int, int)
  */
+@Override
 public void enterInitializer(int declarationSourceStart, int modifiers) {
 	this.methodDepth++;
 }
@@ -300,6 +317,7 @@ private void enterInterface(TypeInfo typeInfo) {
 	pushTypeName(typeInfo.name);
 }
 
+@Override
 public void enterModule(ModuleInfo moduleInfo) {
 	this.indexer.addModuleDeclaration(moduleInfo.moduleName);
 	if (moduleInfo.requires != null) {
@@ -329,6 +347,7 @@ private void enterPackageVisibilityInfo(ISourceElementRequestor.PackageExportInf
 /**
  * @see ISourceElementRequestor#enterMethod(ISourceElementRequestor.MethodInfo)
  */
+@Override
 public void enterMethod(MethodInfo methodInfo) {
 	this.indexer.addMethodDeclaration(methodInfo.name, methodInfo.parameterTypes, methodInfo.returnType, methodInfo.exceptionTypes);
 	int argCount = methodInfo.parameterTypes == null ? 0 : methodInfo.parameterTypes.length;
@@ -386,6 +405,7 @@ private static char[] getDeclaringQualification(TypeDeclaration typeDecl) {
 /**
  * @see ISourceElementRequestor#enterType(ISourceElementRequestor.TypeInfo)
  */
+@Override
 public void enterType(TypeInfo typeInfo) {
 	// TODO (jerome) might want to merge the 4 methods
 	switch (TypeDeclaration.kind(typeInfo.modifiers)) {
@@ -407,36 +427,42 @@ public void enterType(TypeInfo typeInfo) {
 /**
  * @see ISourceElementRequestor#exitCompilationUnit(int)
  */
+@Override
 public void exitCompilationUnit(int declarationEnd) {
 	// implements interface method
 }
 /**
  * @see ISourceElementRequestor#exitConstructor(int)
  */
+@Override
 public void exitConstructor(int declarationEnd) {
 	this.methodDepth--;
 }
 /**
  * @see ISourceElementRequestor#exitField(int, int, int)
  */
+@Override
 public void exitField(int initializationStart, int declarationEnd, int declarationSourceEnd) {
 	this.methodDepth--;
 }
 /**
  * @see ISourceElementRequestor#exitInitializer(int)
  */
+@Override
 public void exitInitializer(int declarationEnd) {
 	this.methodDepth--;
 }
 /**
  * @see ISourceElementRequestor#exitMethod(int, Expression)
  */
+@Override
 public void exitMethod(int declarationEnd, Expression defaultValue) {
 	this.methodDepth--;
 }
 /**
  * @see ISourceElementRequestor#exitType(int)
  */
+@Override
 public void exitType(int declarationEnd) {
 	popTypeName();
 }

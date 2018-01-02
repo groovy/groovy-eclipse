@@ -49,10 +49,12 @@ public class JModPackageFragmentRoot extends JarPackageFragmentRoot {
 	/**
 	 * @see PackageFragmentRoot#getClassFilePath(String)
 	 */
+	@Override
 	public String getClassFilePath(String entryName) {
 		char[] name = CharOperation.append(ClasspathJMod.CLASSES_FOLDER, entryName.toCharArray());
 		return new String(name);
 	}
+	@Override
 	protected void initRawPackageInfo(HashtableOfArrayToObject rawPackageInfo, String entryName, boolean isDirectory, String compliance) {
 		char[] name = entryName.toCharArray();
 		if (CharOperation.prefixEquals(ClasspathJMod.CLASSES_FOLDER, name)) {

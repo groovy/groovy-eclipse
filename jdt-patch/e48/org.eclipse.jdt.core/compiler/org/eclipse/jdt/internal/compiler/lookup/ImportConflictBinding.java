@@ -20,9 +20,11 @@ public ImportConflictBinding(char[][] compoundName, Binding methodBinding, Refer
 	super(compoundName, false, methodBinding, reference);
 	this.conflictingTypeBinding = conflictingTypeBinding;
 }
+@Override
 public char[] readableName() {
 	return CharOperation.concatWith(this.compoundName, '.');
 }
+@Override
 public String toString() {
 	return "method import : " + new String(readableName()); //$NON-NLS-1$
 }

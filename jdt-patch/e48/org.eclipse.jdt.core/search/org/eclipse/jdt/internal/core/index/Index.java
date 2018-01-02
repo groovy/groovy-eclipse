@@ -207,6 +207,7 @@ public void stopQuery() {
 	if (this.diskIndex != null)
 		this.diskIndex.stopQuery();
 }
+@Override
 public String toString() {
 	return "Index for " + this.containerPath; //$NON-NLS-1$
 }

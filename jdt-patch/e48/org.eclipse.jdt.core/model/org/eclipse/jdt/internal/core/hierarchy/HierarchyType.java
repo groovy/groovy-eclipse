@@ -45,6 +45,7 @@ public HierarchyType(
 /**
  * @see org.eclipse.jdt.internal.compiler.env.IDependent#getFileName()
  */
+@Override
 public char[] getFileName() {
 	return this.typeHandle.getCompilationUnit().getElementName().toCharArray();
 }
@@ -53,6 +54,7 @@ public char[] getFileName() {
  * Answer an int whose bits are set according the access constants
  * defined by the VM spec.
  */
+@Override
 public int getModifiers() {
 	return this.modifiers;
 }
@@ -60,6 +62,7 @@ public int getModifiers() {
  * Answer whether the receiver contains the resolved binary form
  * or the unresolved source form of the type.
  */
+@Override
 public boolean isBinaryType() {
 	return false;
 }

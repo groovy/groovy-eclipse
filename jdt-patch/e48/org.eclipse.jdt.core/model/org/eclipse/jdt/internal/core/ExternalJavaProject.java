@@ -34,15 +34,18 @@ public class ExternalJavaProject extends JavaProject {
 		}
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		return this == o;
 	}
 
+	@Override
 	public boolean exists() {
 		// external project never exists
 		return false;
 	}
 
+	@Override
 	public String getOption(String optionName, boolean inheritJavaCoreOptions) {
 		if (JavaCore.COMPILER_PB_FORBIDDEN_REFERENCE.equals(optionName)
 				|| JavaCore.COMPILER_PB_DISCOURAGED_REFERENCE.equals(optionName))
@@ -50,16 +53,19 @@ public class ExternalJavaProject extends JavaProject {
 		return super.getOption(optionName, inheritJavaCoreOptions);
 	}
 
+	@Override
 	public boolean isOnClasspath(IJavaElement element) {
 		// since project is external, no element is on classpath (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=61013#c16)
 		return false;
 	}
 
+	@Override
 	public boolean isOnClasspath(IResource resource) {
 		// since project is external, no resource is on classpath (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=61013#c16)
 		return false;
 	}
 
+	@Override
 	protected IStatus validateExistence(IResource underlyingResource) {
 		// allow opening of external project
 		return JavaModelStatus.VERIFIED_OK;

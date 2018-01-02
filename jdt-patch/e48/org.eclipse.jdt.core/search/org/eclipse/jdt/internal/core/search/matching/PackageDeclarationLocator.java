@@ -19,9 +19,11 @@ public PackageDeclarationLocator(PackageDeclarationPattern pattern) {
 
 	this.pattern = pattern;
 }
+@Override
 protected int matchContainer() {
 	return 0;
 }
+@Override
 public String toString() {
 	return "Locator for " + this.pattern.toString(); //$NON-NLS-1$
 }

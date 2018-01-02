@@ -40,12 +40,14 @@ public class StackMapFrameCodeStream extends CodeStream {
 			this.pc = pc;
 			this.constantPoolName = constantPoolName;
 		}
+		@Override
 		public int compareTo(Object o) {
 			if (o instanceof ExceptionMarker) {
 				return this.pc - ((ExceptionMarker) o).pc;
 			}
 			return 0;
 		}
+		@Override
 		public boolean equals(Object obj) {
 			if (obj instanceof ExceptionMarker) {
 				ExceptionMarker marker = (ExceptionMarker) obj;
@@ -53,9 +55,11 @@ public class StackMapFrameCodeStream extends CodeStream {
 			}
 			return false;
 		}
+		@Override
 		public int hashCode() {
 			return this.pc + CharOperation.hashCode(this.constantPoolName);
 		}
+		@Override
 		public String toString() {
 			StringBuffer buffer = new StringBuffer();
 			buffer.append('(').append(this.pc).append(',').append(this.constantPoolName).append(')');
@@ -79,6 +83,7 @@ public class StackMapFrameCodeStream extends CodeStream {
 			this.delta = delta;
 		}
 
+		@Override
 		public String toString() {
 			StringBuffer buffer = new StringBuffer();
 			buffer.append('(').append(this.pc).append(',').append(this.delta);
@@ -107,6 +112,7 @@ public class StackMapFrameCodeStream extends CodeStream {
 			this.infos = infos;
 		}
 
+		@Override
 		public String toString() {
 			StringBuffer buffer = new StringBuffer();
 			buffer
@@ -140,6 +146,7 @@ public StackMapFrameCodeStream(ClassFile givenClassFile) {
 	super(givenClassFile);
 	this.generateAttributes |= ClassFileConstants.ATTR_STACK_MAP;
 }
+@Override
 public void addDefinitelyAssignedVariables(Scope scope, int initStateIndex) {
 	// Required to fix 1PR0XVS: LFRE:WINNT - Compiler: variable table for method appears incorrect
 	loop: for (int i = 0; i < this.visibleLocalsCount; i++) {
@@ -212,6 +219,7 @@ public void addFramePosition(int pc) {
 		this.framePositions.put(newEntry, new FramePosition());
 	}
 }
+@Override
 public void optimizeBranch(int oldPosition, BranchLabel lbl) {
 	super.optimizeBranch(oldPosition, lbl);
 	removeFramePosition(oldPosition);
@@ -226,6 +234,7 @@ public void removeFramePosition(int pc) {
 		}
 	}
 }
+@Override
 public void addVariable(LocalVariableBinding localBinding) {
 	if (localBinding.initializationPCs == null) {
 		record(localBinding);
@@ -263,16 +272,19 @@ private void addStackDepthMarker(int pc, int delta, TypeBinding typeBinding) {
 		}
 	}
 }
+@Override
 public void decrStackSize(int offset) {
 	super.decrStackSize(offset);
 	addStackDepthMarker(this.position, -1, null);
 }
+@Override
 public void recordExpressionType(TypeBinding typeBinding) {
 	addStackDepthMarker(this.position, 0, typeBinding);
 }
 /**
  * Macro for building a class descriptor object
  */
+@Override
 public void generateClassLiteralAccessForType(TypeBinding accessedType, FieldBinding syntheticFieldBinding) {
 	if (accessedType.isBaseType() && accessedType != TypeBinding.NULL) {
 		getTYPE(accessedType.id);
@@ -360,6 +372,7 @@ public void generateClassLiteralAccessForType(TypeBinding accessedType, FieldBin
 		this.stackDepth = savedStackDepth;
 	}
 }
+@Override
 public void generateOuterAccess(Object[] mappingSequence, ASTNode invocationSite, Binding target, Scope scope) {
 	int currentPosition = this.position;
 	super.generateOuterAccess(mappingSequence, invocationSite, target, scope);
@@ -422,6 +435,7 @@ public StackMarker[] getStackMarkers() {
 public boolean hasFramePositions() {
 	return this.framePositions.size() != 0;
 }
+@Override
 public void init(ClassFile targetClassFile) {
 	super.init(targetClassFile);
 	this.stateIndexesCounter = 0;
@@ -439,6 +453,7 @@ public void init(ClassFile targetClassFile) {
 	}
 }
 
+@Override
 public void initializeMaxLocals(MethodBinding methodBinding) {
 	super.initializeMaxLocals(methodBinding);
 	if (this.framePositions == null) {
@@ -461,6 +476,7 @@ public void pushStateIndex(int naturalExitMergeInitStateIndex) {
 	}
 	this.stateIndexes[this.stateIndexesCounter++] = naturalExitMergeInitStateIndex;
 }
+@Override
 public void removeNotDefinitelyAssignedVariables(Scope scope, int initStateIndex) {
 	int index = this.visibleLocalsCount;
 	loop : for (int i = 0; i < index; i++) {
@@ -480,6 +496,7 @@ public void removeNotDefinitelyAssignedVariables(Scope scope, int initStateIndex
 		}
 	}
 }
+@Override
 public void reset(ClassFile givenClassFile) {
 	super.reset(givenClassFile);
 	this.stateIndexesCounter = 0;
@@ -496,70 +513,87 @@ public void reset(ClassFile givenClassFile) {
 		this.stackMarkers.clear();
 	}
 }
+@Override
 protected void writePosition(BranchLabel label) {
 	super.writePosition(label);
 	addFramePosition(label.position);
 }
+@Override
 protected void writePosition(BranchLabel label, int forwardReference) {
 	super.writePosition(label, forwardReference);
 	addFramePosition(label.position);
 }
+@Override
 protected void writeSignedWord(int pos, int value) {
 	super.writeSignedWord(pos, value);
 	addFramePosition(this.position);
 }
+@Override
 protected void writeWidePosition(BranchLabel label) {
 	super.writeWidePosition(label);
 	addFramePosition(label.position);
 }
+@Override
 public void areturn() {
 	super.areturn();
 	addFramePosition(this.position);
 }
+@Override
 public void ireturn() {
 	super.ireturn();
 	addFramePosition(this.position);
 }
+@Override
 public void lreturn() {
 	super.lreturn();
 	addFramePosition(this.position);
 }
+@Override
 public void freturn() {
 	super.freturn();
 	addFramePosition(this.position);
 }
+@Override
 public void dreturn() {
 	super.dreturn();
 	addFramePosition(this.position);
 }
+@Override
 public void return_() {
 	super.return_();
 	addFramePosition(this.position);
 }
+@Override
 public void athrow() {
 	super.athrow();
 	addFramePosition(this.position);
 }
+@Override
 public void pushOnStack(TypeBinding binding) {
 	super.pushOnStack(binding);
 	addStackDepthMarker(this.position, 1, binding);
 }
+@Override
 public void pushExceptionOnStack(TypeBinding binding) {
 	super.pushExceptionOnStack(binding);
 	addExceptionMarker(this.position, binding);
 }
+@Override
 public void goto_(BranchLabel label) {
 	super.goto_(label);
 	addFramePosition(this.position);
 }
+@Override
 public void goto_w(BranchLabel label) {
 	super.goto_w(label);
 	addFramePosition(this.position);
 }
+@Override
 public void resetInWideMode() {
 	this.resetSecretLocals();
 	super.resetInWideMode();
 }
+@Override
 public void resetForCodeGenUnusedLocals() {
 	this.resetSecretLocals();
 	super.resetForCodeGenUnusedLocals();

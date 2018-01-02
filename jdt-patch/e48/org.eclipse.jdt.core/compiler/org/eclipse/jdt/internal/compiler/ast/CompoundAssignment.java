@@ -40,6 +40,7 @@ public class CompoundAssignment extends Assignment implements OperatorIds {
 		this.operator = operator ;
 	}
 
+@Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 		FlowInfo flowInfo) {
 	// record setting a variable: various scenarii are possible, setting an array reference,
@@ -66,6 +67,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 	public boolean checkCastCompatibility() {
 		return true;
 	}
+	@Override
 	public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 
 		// various scenarii are possible, setting an array reference,
@@ -80,6 +82,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 		codeStream.recordPositionsFrom(pc, this.sourceStart);
 	}
 
+@Override
 public int nullStatus(FlowInfo flowInfo, FlowContext flowContext) {
 	return FlowInfo.NON_NULL;
 	// we may have complained on checkNPE, but we avoid duplicate error
@@ -113,12 +116,14 @@ public int nullStatus(FlowInfo flowInfo, FlowContext flowContext) {
 		return "unknown operator"; //$NON-NLS-1$
 	}
 
+	@Override
 	public StringBuffer printExpressionNoParenthesis(int indent, StringBuffer output) {
 
 		this.lhs.printExpression(indent, output).append(' ').append(operatorToString()).append(' ');
 		return this.expression.printExpression(0, output) ;
 	}
 
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 		this.constant = Constant.NotAConstant;
 		if (!(this.lhs instanceof Reference) || this.lhs.isThis()) {
@@ -210,6 +215,7 @@ public int nullStatus(FlowInfo flowInfo, FlowContext flowContext) {
 		return false ;
 	}
 
+	@Override
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		if (visitor.visit(this, scope)) {
 			this.lhs.traverse(visitor, scope);

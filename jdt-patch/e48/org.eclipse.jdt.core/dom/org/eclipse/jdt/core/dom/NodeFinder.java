@@ -40,6 +40,7 @@ public final class NodeFinder {
 			this.fEnd= offset + length;
 		}
 
+		@Override
 		public boolean preVisit2(ASTNode node) {
 			int nodeStart= node.getStartPosition();
 			int nodeEnd= nodeStart + node.getLength();

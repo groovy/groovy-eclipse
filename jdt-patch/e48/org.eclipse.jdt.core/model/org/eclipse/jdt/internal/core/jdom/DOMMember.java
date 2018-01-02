@@ -121,6 +121,7 @@ DOMMember(char[] document, int[] sourceRange, String name, int[] nameRange, int[
  *
  * @see DOMNode#appendFragmentedContents(CharArrayBuffer)
  */
+@Override
 protected void appendFragmentedContents(CharArrayBuffer buffer) {
 	if (isDetailed()) {
 		appendMemberHeaderFragment(buffer);
@@ -214,6 +215,7 @@ protected char[] generateFlags() {
 /**
  * @see IDOMMember#getComment()
  */
+@Override
 public String getComment() {
 	becomeDetailed();
 	if (hasComment()) {
@@ -229,6 +231,7 @@ public String getComment() {
 /**
  * @see IDOMMember#getFlags()
  */
+@Override
 public int getFlags() {
 	return this.fFlags;
 }
@@ -268,6 +271,7 @@ protected boolean hasComment() {
 /**
  * Offsets all the source indexes in this node by the given amount.
  */
+@Override
 protected void offset(int offset) {
 	super.offset(offset);
 	offsetRange(this.fCommentRange, offset);
@@ -276,6 +280,7 @@ protected void offset(int offset) {
 /**
  * @see IDOMMember#setComment(String)
  */
+@Override
 public void setComment(String comment) {
 	becomeDetailed();
 	this.fComment= comment;
@@ -291,6 +296,7 @@ public void setComment(String comment) {
 /**
  * @see IDOMMember#setFlags(int)
  */
+@Override
 public void setFlags(int flags) {
 	becomeDetailed();
 	if (Flags.isDeprecated(this.fFlags)) {
@@ -323,6 +329,7 @@ protected void setHasComment(boolean hasComment) {
  * Synchronize the start of the comment position with the start of the
  * node.
  */
+@Override
 protected void setStartPosition(int start) {
 	if (this.fCommentRange[0] >= 0) {
 		this.fCommentRange[0]= start;
@@ -332,6 +339,7 @@ protected void setStartPosition(int start) {
 /**
  * @see DOMNode#shareContents(DOMNode)
  */
+@Override
 protected void shareContents(DOMNode node) {
 	super.shareContents(node);
 	DOMMember member= (DOMMember)node;

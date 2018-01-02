@@ -186,6 +186,7 @@ public char[] getContents() {
  * Returns the contents of the buffer as a String, or
  * an empty string if the buffer is empty.
  */
+@Override
 public String toString() {
 	char[] contents = getContents();
 	return (contents != null) ? new String(contents) : Util.EMPTY_STRING;

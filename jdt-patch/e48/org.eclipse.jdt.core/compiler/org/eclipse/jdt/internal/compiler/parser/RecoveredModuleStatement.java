@@ -25,27 +25,32 @@ public abstract class RecoveredModuleStatement extends RecoveredElement {
 	/*
 	 * Answer the associated parsed structure
 	 */
+	@Override
 	public ASTNode parseTree(){
 		return this.moduleStatement;
 	}
 	/*
 	 * Answer the very source end of the corresponding parse node
 	 */
+	@Override
 	public int sourceEnd(){
 		return this.moduleStatement.declarationSourceEnd;
 	}
+	@Override
 	public String toString(int tab) {
 		return this.moduleStatement.toString();
 	}
 	protected ModuleStatement updatedModuleStatement(){
 		return this.moduleStatement;
 	}
+	@Override
 	public void updateParseTree(){
 		updatedModuleStatement();
 	}
 	/*
 	 * Update the declarationSourceEnd of the corresponding parse node
 	 */
+	@Override
 	public void updateSourceEndIfNecessary(int bodyStart, int bodyEnd){
 		if (this.moduleStatement.declarationSourceEnd == 0) {
 			this.moduleStatement.declarationSourceEnd = bodyEnd;

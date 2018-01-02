@@ -618,6 +618,7 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 	 * parameterizedDeclaringUniqueKey dot selector originalMethodGenericSignature percent typeArguments
 	 * p.X<U> { <T> void bar(T t, U u) { new X<String>().bar(this, "") } } --> Lp/X<Ljava/lang/String;>;.bar<T:Ljava/lang/Object;>(TT;Ljava/lang/String;)V%<Lp/X;>
 	 */
+	@Override
 	public char[] computeUniqueKey(boolean isLeaf) {
 		StringBuffer buffer = new StringBuffer();
 		buffer.append(this.originalMethod.computeUniqueKey(false/*not a leaf*/));
@@ -640,6 +641,7 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 	/**
 	 * @see org.eclipse.jdt.internal.compiler.lookup.Substitution#environment()
 	 */
+	@Override
 	public LookupEnvironment environment() {
 		return this.environment;
 	}
@@ -647,6 +649,7 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 	 * Returns true if some parameters got substituted.
 	 * NOTE: generic method invocation delegates to its declaring method (could be a parameterized one)
 	 */
+	@Override
 	public boolean hasSubstitutedParameters() {
 		// generic parameterized method can represent either an invocation or a raw generic method
 		if (this.wasInferred)
@@ -657,6 +660,7 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 	 * Returns true if the return type got substituted.
 	 * NOTE: generic method invocation delegates to its declaring method (could be a parameterized one)
 	 */
+	@Override
 	public boolean hasSubstitutedReturnType() {
 		if (this.inferredReturnType)
 			return this.originalMethod.hasSubstitutedReturnType();
@@ -782,6 +786,7 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 			this.scope = scope;
 		}
 		// With T mapping to I<T>, answer of I<?>, when given T, having eliminated the circularity/self reference.
+		@Override
 		public TypeBinding substitute(TypeVariableBinding typeVariable) {
 			if (typeVariable.rank >= this.variables.length || TypeBinding.notEquals(this.variables[typeVariable.rank], typeVariable)) {   // not kosher, don't touch.
 				return typeVariable;
@@ -793,10 +798,12 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 			return this.scope.environment().createWildcard(genericType, typeVariable.rank, null, null, Wildcard.UNBOUND, typeVariable.getTypeAnnotations());
 		}
 
+		@Override
 		public LookupEnvironment environment() {
 			return this.scope.environment();
 		}
 
+		@Override
 		public boolean isRawSubstitution() {
 			return false;
 		}
@@ -805,6 +812,7 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 	/**
 	 * @see org.eclipse.jdt.internal.compiler.lookup.Substitution#isRawSubstitution()
 	 */
+	@Override
 	public boolean isRawSubstitution() {
 		return this.isRaw;
 	}
@@ -812,6 +820,7 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 	/**
 	 * @see org.eclipse.jdt.internal.compiler.lookup.Substitution#substitute(org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding)
 	 */
+	@Override
 	public TypeBinding substitute(TypeVariableBinding originalVariable) {
         TypeVariableBinding[] variables = this.originalMethod.typeVariables;
         int length = variables.length;
@@ -825,6 +834,7 @@ public class ParameterizedGenericMethodBinding extends ParameterizedMethodBindin
 	/**
 	 * @see org.eclipse.jdt.internal.compiler.lookup.MethodBinding#tiebreakMethod()
 	 */
+	@Override
 	public MethodBinding tiebreakMethod() {
 		if (this.tiebreakMethod == null)
 			this.tiebreakMethod = this.originalMethod.asRawMethod(this.environment);

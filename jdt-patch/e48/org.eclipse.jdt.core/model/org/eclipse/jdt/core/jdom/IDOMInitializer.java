@@ -35,6 +35,7 @@ public String getBody();
  *
  * @return <code>null</code>
  */
+@Override
 public String getName();
 /**
  * Sets the body of this initializer. The syntax for a body corresponds to
@@ -51,5 +52,6 @@ public void setBody(String body);
  *
  * @param name the given name
  */
+@Override
 public void setName(String name);
 }

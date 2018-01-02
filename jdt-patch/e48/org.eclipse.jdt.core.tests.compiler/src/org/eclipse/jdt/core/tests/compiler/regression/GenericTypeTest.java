@@ -39798,24 +39798,11 @@ public void test1142() {
 			"}\n", // =================
 		},
 		// compiler results
-		this.complianceLevel < ClassFileConstants.JDK1_8 ? 
 		"----------\n" + /* expected compiler log */
 		"1. ERROR in X.java (at line 5)\n" +
 		"	return compound(asList(a, b));\n" +
 		"	       ^^^^^^^^\n" +
 		"The method compound(Iterable<? extends Comparator<? super T>>) in the type X is not applicable for the arguments (List<Comparator<? extends Object>>)\n" +
-		"----------\n"
-		// 1.8+ ATM, we generate an extra error due to inner poly expression evaluation.
-		:"----------\n" + 
-		"1. ERROR in X.java (at line 5)\n" + 
-		"	return compound(asList(a, b));\n" + 
-		"	       ^^^^^^^^\n" + 
-		"The method compound(Iterable<? extends Comparator<? super T>>) in the type X is not applicable for the arguments (List<Comparator<? extends Object>>)\n" + 
-		"----------\n" + 
-		"2. ERROR in X.java (at line 5)\n" + 
-		"	return compound(asList(a, b));\n" + 
-		"	                ^^^^^^^^^^^^\n" + 
-		"Type mismatch: cannot convert from List<Comparator<? extends Object>> to Iterable<? extends Comparator<? super T>>\n" + 
 		"----------\n",
 		// javac options
 		JavacTestOptions.JavacHasABug.JavacBug6573446 /* javac test options */);

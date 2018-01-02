@@ -40,6 +40,7 @@ public class NdMethodException extends NdStruct {
 		return EXCEPTION_TYPE.get(getNd(), this.address);
 	}
 
+	@Override
 	public String toString() {
 		try {
 			return getExceptionType().toString();

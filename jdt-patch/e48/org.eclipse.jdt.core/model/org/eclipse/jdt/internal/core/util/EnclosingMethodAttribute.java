@@ -60,45 +60,38 @@ public class EnclosingMethodAttribute extends ClassFileAttribute implements IEnc
 			this.methodName = constantPoolEntry.getUtf8Value();
 		}
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IEnclosingMethodAttribute#getEnclosingClass()
-	 */
+
+	@Override
 	public char[] getEnclosingClass() {
 		return this.enclosingClassName;
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IEnclosingMethodAttribute#getMethodDeclaringClassDescriptorIndex()
-	 */
+
+	@Override
 	public int getEnclosingClassIndex() {
 		return this.enclosingClassIndex;
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IEnclosingMethodAttribute#getMethodDescriptor()
-	 */
+
+	@Override
 	public char[] getMethodDescriptor() {
 		return this.methodDescriptor;
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IEnclosingMethodAttribute#getMethodDescriptorIndex()
-	 */
+
+	@Override
 	public int getMethodDescriptorIndex() {
 		return this.methodDescriptorIndex;
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IEnclosingMethodAttribute#getMethodName()
-	 */
+
+	@Override
 	public char[] getMethodName() {
 		return this.methodName;
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IEnclosingMethodAttribute#getMethodNameIndex()
-	 */
+
+	@Override
 	public int getMethodNameIndex() {
 		return this.methodNameIndex;
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IEnclosingMethodAttribute#getMethodNameAndTypeIndex()
-	 */
+
+	@Override
 	public int getMethodNameAndTypeIndex() {
 		return this.methodNameAndTypeIndex;
 	}

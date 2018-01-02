@@ -72,6 +72,7 @@ public FieldReference(char[] source, long pos) {
 
 }
 
+@Override
 public FlowInfo analyseAssignment(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo, Assignment assignment, boolean isCompound) {
 	// compound assignment extra work
 	if (isCompound) { // check the variable part is initialized if blank final
@@ -136,10 +137,12 @@ public FlowInfo analyseAssignment(BlockScope currentScope, FlowContext flowConte
 	return flowInfo;
 }
 
+@Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 	return analyseCode(currentScope, flowContext, flowInfo, true);
 }
 
+@Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo, boolean valueRequired) {
 	boolean nonStatic = !this.binding.isStatic();
 	this.receiver.analyseCode(currentScope, flowContext, flowInfo, nonStatic);
@@ -162,6 +165,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	return flowInfo;
 }
 
+@Override
 public boolean checkNPE(BlockScope scope, FlowContext flowContext, FlowInfo flowInfo, int ttlForFieldCheck) {
 	if (flowContext.isNullcheckedFieldAccess(this)) {
 		return true; // enough seen
@@ -172,6 +176,7 @@ public boolean checkNPE(BlockScope scope, FlowContext flowContext, FlowInfo flow
 /**
  * @see org.eclipse.jdt.internal.compiler.ast.Expression#computeConversion(org.eclipse.jdt.internal.compiler.lookup.Scope, org.eclipse.jdt.internal.compiler.lookup.TypeBinding, org.eclipse.jdt.internal.compiler.lookup.TypeBinding)
  */
+@Override
 public void computeConversion(Scope scope, TypeBinding runtimeTimeType, TypeBinding compileTimeType) {
 	if (runtimeTimeType == null || compileTimeType == null)
 		return;
@@ -200,10 +205,12 @@ public void computeConversion(Scope scope, TypeBinding runtimeTimeType, TypeBind
 	super.computeConversion(scope, runtimeTimeType, compileTimeType);
 }
 
+@Override
 public FieldBinding fieldBinding() {
 	return this.binding;
 }
 
+@Override
 public void generateAssignment(BlockScope currentScope, CodeStream codeStream, Assignment assignment, boolean valueRequired) {
 	int pc = codeStream.position;
 	FieldBinding codegenBinding = this.binding.original();
@@ -224,6 +231,7 @@ public void generateAssignment(BlockScope currentScope, CodeStream codeStream, A
  * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
  * @param valueRequired boolean
  */
+@Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 	int pc = codeStream.position;
 	if (this.constant != Constant.NotAConstant) {
@@ -330,6 +338,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean
 	codeStream.recordPositionsFrom(pc, this.sourceEnd);
 }
 
+@Override
 public void generateCompoundAssignment(BlockScope currentScope, CodeStream codeStream, Expression expression, int operator, int assignmentImplicitConversion, boolean valueRequired) {
 	boolean isStatic;
 	// check if compound assignment is the only usage of a private field
@@ -379,6 +388,7 @@ public void generateCompoundAssignment(BlockScope currentScope, CodeStream codeS
 	// no need for generic cast as value got dupped
 }
 
+@Override
 public void generatePostIncrement(BlockScope currentScope, CodeStream codeStream, CompoundAssignment postIncrement, boolean valueRequired) {
 	boolean isStatic;
 	// check if postIncrement is the only usage of a private field
@@ -444,14 +454,17 @@ public void generatePostIncrement(BlockScope currentScope, CodeStream codeStream
 /**
  * @see org.eclipse.jdt.internal.compiler.lookup.InvocationSite#genericTypeArguments()
  */
+@Override
 public TypeBinding[] genericTypeArguments() {
 	return null;
 }
 
+@Override
 public InferenceContext18 freshInferenceContext(Scope scope) {
 	return null;
 }
 
+@Override
 public boolean isEquivalent(Reference reference) {
 	// only consider field references relative to "this":
 	if (this.receiver.isThis() && !(this.receiver instanceof QualifiedThisReference)) {
@@ -503,6 +516,7 @@ private char[][] getThisFieldTokens(int nestingCount) {
 	return result;
 }
 
+@Override
 public boolean isSuperAccess() {
 	return this.receiver.isSuper();
 }
@@ -512,10 +526,12 @@ public boolean isQualifiedSuper() {
 	return this.receiver.isQualifiedSuper();
 }
 
+@Override
 public boolean isTypeAccess() {
 	return this.receiver != null && this.receiver.isTypeReference();
 }
 
+@Override
 public FieldBinding lastFieldBinding() {
 	return this.binding;
 }
@@ -565,6 +581,7 @@ public void manageSyntheticAccessIfNecessary(BlockScope currentScope, FlowInfo f
 	}
 }
 
+@Override
 public Constant optimizedBooleanConstant() {
 	if (this.resolvedType == null)
 		return Constant.NotAConstant;
@@ -580,6 +597,7 @@ public Constant optimizedBooleanConstant() {
 /**
  * @see org.eclipse.jdt.internal.compiler.ast.Expression#postConversionType(Scope)
  */
+@Override
 public TypeBinding postConversionType(Scope scope) {
 	TypeBinding convertedType = this.resolvedType;
 	if (this.genericCast != null)
@@ -618,10 +636,12 @@ public TypeBinding postConversionType(Scope scope) {
 	return convertedType;
 }
 
+@Override
 public StringBuffer printExpression(int indent, StringBuffer output) {
 	return this.receiver.printExpression(0, output).append('.').append(this.token);
 }
 
+@Override
 public TypeBinding resolveType(BlockScope scope) {
 	// Answer the signature type of the field.
 	// constants are propaged when the field is final
@@ -730,10 +750,12 @@ public TypeBinding resolveType(BlockScope scope) {
 	return fieldType;
 }
 
+@Override
 public void setActualReceiverType(ReferenceBinding receiverType) {
 	this.actualReceiverType = receiverType;
 }
 
+@Override
 public void setDepth(int depth) {
 	this.bits &= ~ASTNode.DepthMASK; // flush previous depth if any
 	if (depth > 0) {
@@ -741,10 +763,12 @@ public void setDepth(int depth) {
 	}
 }
 
+@Override
 public void setFieldIndex(int index) {
 	// ignored
 }
 
+@Override
 public void traverse(ASTVisitor visitor, BlockScope scope) {
 	if (visitor.visit(this, scope)) {
 		this.receiver.traverse(visitor, scope);
@@ -752,6 +776,7 @@ public void traverse(ASTVisitor visitor, BlockScope scope) {
 	visitor.endVisit(this, scope);
 }
 
+@Override
 public VariableBinding nullAnnotatedVariableBinding(boolean supportTypeAnnotations) {
 	if (this.binding != null) {
 		if (supportTypeAnnotations

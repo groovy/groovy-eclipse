@@ -30,6 +30,7 @@ public SuperTypeReferenceLocator(SuperTypeReferencePattern pattern) {
 //public int match(Expression node, MatchingNodeSet nodeSet) - SKIP IT
 //public int match(FieldDeclaration node, MatchingNodeSet nodeSet) - SKIP IT
 
+@Override
 public int match(LambdaExpression node, MatchingNodeSet nodeSet) {
 	if (this.pattern.superRefKind != SuperTypeReferencePattern.ONLY_SUPER_INTERFACES)
 		return IMPOSSIBLE_MATCH;
@@ -40,6 +41,7 @@ public int match(LambdaExpression node, MatchingNodeSet nodeSet) {
 //public int match(MessageSend node, MatchingNodeSet nodeSet) - SKIP IT
 //public int match(Reference node, MatchingNodeSet nodeSet) - SKIP IT
 //public int match(TypeDeclaration node, MatchingNodeSet nodeSet) - SKIP IT
+@Override
 public int match(TypeReference node, MatchingNodeSet nodeSet) {
 	if (this.flavors != SUPERTYPE_REF_FLAVOR) return IMPOSSIBLE_MATCH;
 	if (this.pattern.superSimpleName == null)
@@ -58,12 +60,12 @@ public int match(TypeReference node, MatchingNodeSet nodeSet) {
 	return IMPOSSIBLE_MATCH;
 }
 
+@Override
 protected int matchContainer() {
 	return CLASS_CONTAINER;
 }
-/* (non-Javadoc)
- * @see org.eclipse.jdt.internal.core.search.matching.PatternLocator#matchReportReference(org.eclipse.jdt.internal.compiler.ast.ASTNode, org.eclipse.jdt.core.IJavaElement, org.eclipse.jdt.internal.compiler.lookup.Binding, int, org.eclipse.jdt.internal.core.search.matching.MatchLocator)
- */
+
+@Override
 protected void matchReportReference(ASTNode reference, IJavaElement element, Binding elementBinding, int accuracy, MatchLocator locator) throws CoreException {
 	if (elementBinding instanceof ReferenceBinding) {
 		ReferenceBinding referenceBinding = (ReferenceBinding) elementBinding;
@@ -78,9 +80,11 @@ protected void matchReportReference(ASTNode reference, IJavaElement element, Bin
 	}
 	super.matchReportReference(reference, element, elementBinding, accuracy, locator);
 }
+@Override
 protected int referenceType() {
 	return IJavaElement.TYPE;
 }
+@Override
 public int resolveLevel(ASTNode node) {
 	TypeBinding typeBinding = null;
 	if (node instanceof LambdaExpression) {
@@ -100,6 +104,7 @@ public int resolveLevel(ASTNode node) {
 	if (typeBinding == null || !typeBinding.isValidBinding()) return INACCURATE_MATCH;
 	return resolveLevelForType(this.pattern.superSimpleName, this.pattern.superQualification, typeBinding);
 }
+@Override
 public int resolveLevel(Binding binding) {
 	if (binding == null) return INACCURATE_MATCH;
 	if (!(binding instanceof ReferenceBinding)) return IMPOSSIBLE_MATCH;
@@ -123,6 +128,7 @@ public int resolveLevel(Binding binding) {
 	}
 	return level;
 }
+@Override
 public String toString() {
 	return "Locator for " + this.pattern.toString(); //$NON-NLS-1$
 }

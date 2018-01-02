@@ -32,20 +32,24 @@ public SwitchFlowContext(FlowContext parent, ASTNode associatedNode, BranchLabel
 	}
 }
 
+@Override
 public BranchLabel breakLabel() {
 	return this.breakLabel;
 }
 
+@Override
 public String individualToString() {
 	StringBuffer buffer = new StringBuffer("Switch flow context"); //$NON-NLS-1$
 	buffer.append("[initsOnBreak -").append(this.initsOnBreak.toString()).append(']'); //$NON-NLS-1$
 	return buffer.toString();
 }
 
+@Override
 public boolean isBreakable() {
 	return true;
 }
 
+@Override
 public void recordBreakFrom(FlowInfo flowInfo) {
 	if ((this.initsOnBreak.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) == 0) {
 		this.initsOnBreak = this.initsOnBreak.mergedWith(flowInfo.unconditionalInits());

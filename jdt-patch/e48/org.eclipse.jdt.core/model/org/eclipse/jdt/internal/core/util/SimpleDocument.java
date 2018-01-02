@@ -31,324 +31,238 @@ public class SimpleDocument implements IDocument {
 		this.buffer = new StringBuffer(source);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#getChar(int)
-	 */
+	@Override
 	public char getChar(int offset) {
 		return 0;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#getLength()
-	 */
+	@Override
 	public int getLength() {
 		return this.buffer.length();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#get()
-	 */
+	@Override
 	public String get() {
 		return this.buffer.toString();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#get(int, int)
-	 */
+	@Override
 	public String get(int offset, int length) {
 		return this.buffer.substring(offset, offset + length);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#set(java.lang.String)
-	 */
+	@Override
 	public void set(String text) {
 		// defining interface method
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#replace(int, int, java.lang.String)
-	 */
+	@Override
 	public void replace(int offset, int length, String text) {
 
 		this.buffer.replace(offset, offset + length, text);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#addDocumentListener(org.eclipse.jface.text.IDocumentListener)
-	 */
+	@Override
 	public void addDocumentListener(IDocumentListener listener) {
 		// defining interface method
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#removeDocumentListener(org.eclipse.jface.text.IDocumentListener)
-	 */
+	@Override
 	public void removeDocumentListener(IDocumentListener listener) {
 		// defining interface method
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#addPrenotifiedDocumentListener(org.eclipse.jface.text.IDocumentListener)
-	 */
+	@Override
 	public void addPrenotifiedDocumentListener(IDocumentListener documentAdapter) {
 		// defining interface method
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#removePrenotifiedDocumentListener(org.eclipse.jface.text.IDocumentListener)
-	 */
+	@Override
 	public void removePrenotifiedDocumentListener(IDocumentListener documentAdapter) {
 		// defining interface method
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#addPositionCategory(java.lang.String)
-	 */
+	@Override
 	public void addPositionCategory(String category) {
 		// defining interface method
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#removePositionCategory(java.lang.String)
-	 */
+	@Override
 	public void removePositionCategory(String category) {
 			// defining interface method
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#getPositionCategories()
-	 */
+	@Override
 	public String[] getPositionCategories() {
 		// defining interface method
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#containsPositionCategory(java.lang.String)
-	 */
+	@Override
 	public boolean containsPositionCategory(String category) {
 		// defining interface method
 		return false;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#addPosition(org.eclipse.jface.text.Position)
-	 */
+	@Override
 	public void addPosition(Position position) {
 		// defining interface method
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#removePosition(org.eclipse.jface.text.Position)
-	 */
+	@Override
 	public void removePosition(Position position) {
 		// defining interface method
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#addPosition(java.lang.String, org.eclipse.jface.text.Position)
-	 */
+	@Override
 	public void addPosition(String category, Position position) {
 		// defining interface method
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#removePosition(java.lang.String, org.eclipse.jface.text.Position)
-	 */
+	@Override
 	public void removePosition(String category, Position position) {
 		// defining interface method
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#getPositions(java.lang.String)
-	 */
+	@Override
 	public Position[] getPositions(String category) {
 		// defining interface method
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#containsPosition(java.lang.String, int, int)
-	 */
+	@Override
 	public boolean containsPosition(String category, int offset, int length) {
 		// defining interface method
 		return false;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#computeIndexInCategory(java.lang.String, int)
-	 */
+	@Override
 	public int computeIndexInCategory(String category, int offset) {
 		// defining interface method
 		return 0;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#addPositionUpdater(org.eclipse.jface.text.IPositionUpdater)
-	 */
+	@Override
 	public void addPositionUpdater(IPositionUpdater updater) {
 		// defining interface method
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#removePositionUpdater(org.eclipse.jface.text.IPositionUpdater)
-	 */
+	@Override
 	public void removePositionUpdater(IPositionUpdater updater) {
 		// defining interface method
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#insertPositionUpdater(org.eclipse.jface.text.IPositionUpdater, int)
-	 */
+	@Override
 	public void insertPositionUpdater(IPositionUpdater updater, int index) {
 		// defining interface method
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#getPositionUpdaters()
-	 */
+	@Override
 	public IPositionUpdater[] getPositionUpdaters() {
 		// defining interface method
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#getLegalContentTypes()
-	 */
+	@Override
 	public String[] getLegalContentTypes() {
 		// defining interface method
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#getContentType(int)
-	 */
+	@Override
 	public String getContentType(int offset) {
 		// defining interface method
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#getPartition(int)
-	 */
+	@Override
 	public ITypedRegion getPartition(int offset) {
 		// defining interface method
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#computePartitioning(int, int)
-	 */
+	@Override
 	public ITypedRegion[] computePartitioning(int offset, int length) {
 		// defining interface method
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#addDocumentPartitioningListener(org.eclipse.jface.text.IDocumentPartitioningListener)
-	 */
+	@Override
 	public void addDocumentPartitioningListener(IDocumentPartitioningListener listener) {
 		// defining interface method
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#removeDocumentPartitioningListener(org.eclipse.jface.text.IDocumentPartitioningListener)
-	 */
+	@Override
 	public void removeDocumentPartitioningListener(IDocumentPartitioningListener listener) {
 		// defining interface method
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#setDocumentPartitioner(org.eclipse.jface.text.IDocumentPartitioner)
-	 */
+	@Override
 	public void setDocumentPartitioner(IDocumentPartitioner partitioner) {
 		// defining interface method
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#getDocumentPartitioner()
-	 */
+	@Override
 	public IDocumentPartitioner getDocumentPartitioner() {
 		// defining interface method
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#getLineLength(int)
-	 */
+	@Override
 	public int getLineLength(int line) {
 		// defining interface method
 		return 0;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#getLineOfOffset(int)
-	 */
+	@Override
 	public int getLineOfOffset(int offset) {
 		// defining interface method
 		return 0;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#getLineOffset(int)
-	 */
+	@Override
 	public int getLineOffset(int line) {
 		// defining interface method
 		return 0;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#getLineInformation(int)
-	 */
+	@Override
 	public IRegion getLineInformation(int line) {
 		// defining interface method
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#getLineInformationOfOffset(int)
-	 */
+	@Override
 	public IRegion getLineInformationOfOffset(int offset) {
 		// defining interface method
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#getNumberOfLines()
-	 */
+	@Override
 	public int getNumberOfLines() {
 		// defining interface method
 		return 0;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#getNumberOfLines(int, int)
-	 */
+	@Override
 	public int getNumberOfLines(int offset, int length) {
 		// defining interface method
 		return 0;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#computeNumberOfLines(java.lang.String)
-	 */
+	@Override
 	public int computeNumberOfLines(String text) {
 		// defining interface method
 		return 0;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#getLegalLineDelimiters()
-	 */
+	@Override
 	public String[] getLegalLineDelimiters() {
 		// defining interface method
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jface.text.IDocument#getLineDelimiter(int)
-	 */
+	@Override
 	public String getLineDelimiter(int line) {
 		// defining interface method
 		return null;
@@ -358,6 +272,7 @@ public class SimpleDocument implements IDocument {
 	 * @see org.eclipse.jface.text.IDocument#search(int, java.lang.String, boolean, boolean, boolean)
 	 * @deprecated
 	 */
+	@Override
 	public int search(
 		int startOffset,
 		String findString,

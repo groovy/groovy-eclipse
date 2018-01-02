@@ -762,6 +762,7 @@ public int nextCaptureID() {
 * (unit, type or method) in case the problem handler decides it is necessary
 * to abort.
 */
+@Override
 public ProblemReporter problemReporter() {
 	ProblemReporter problemReporter = this.referenceContext.problemReporter;
 	problemReporter.referenceContext = this.referenceContext;
@@ -946,6 +947,7 @@ public void storeDependencyInfo() {
 		rootRefs[i] = this.rootReferences.elementAt(i);
 	this.referenceContext.compilationResult.rootReferences = rootRefs;
 }
+@Override
 public String toString() {
 	return "--- CompilationUnit Scope : " + new String(this.referenceContext.getFileName()); //$NON-NLS-1$
 }

@@ -117,6 +117,7 @@ public CombinedBinaryExpression(CombinedBinaryExpression expression) {
 	initArity(expression.left, expression.arity);
 }
 
+@Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 		FlowInfo flowInfo) {
 	// keep implementation in sync with BinaryExpression#analyseCode
@@ -151,6 +152,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext,
 	}
 }
 
+@Override
 public void generateOptimizedStringConcatenation(BlockScope blockScope,
 		CodeStream codeStream, int typeID) {
 	// keep implementation in sync with BinaryExpression and Expression
@@ -231,6 +233,7 @@ public void generateOptimizedStringConcatenation(BlockScope blockScope,
 	}
 }
 
+@Override
 public void generateOptimizedStringConcatenationCreation(BlockScope blockScope,
 		CodeStream codeStream, int typeID) {
 	// keep implementation in sync with BinaryExpression
@@ -313,6 +316,7 @@ private void initArity(Expression expression, int value) {
 	}
 }
 
+@Override
 public StringBuffer printExpressionNoParenthesis(int indent,
 		StringBuffer output) {
 	// keep implementation in sync with
@@ -338,6 +342,7 @@ public StringBuffer printExpressionNoParenthesis(int indent,
 	return this.right.printExpression(0, output);
 }
 
+@Override
 public TypeBinding resolveType(BlockScope scope) {
 	// keep implementation in sync with BinaryExpression#resolveType
 	if (this.referencesTable == null) {
@@ -356,6 +361,7 @@ public TypeBinding resolveType(BlockScope scope) {
 	return this.resolvedType;
 }
 
+@Override
 public void traverse(ASTVisitor visitor, BlockScope scope) {
 	if (this.referencesTable == null) {
 		super.traverse(visitor, scope);

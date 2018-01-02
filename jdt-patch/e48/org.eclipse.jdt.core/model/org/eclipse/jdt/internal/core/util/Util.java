@@ -2332,6 +2332,7 @@ public class Util {
 		IJavaElement[] copy = new IJavaElement[len];
 		System.arraycopy(elements, 0, copy, 0, len);
 		sort(copy, new Comparer() {
+			@Override
 			public int compare(Object a, Object b) {
 				return ((JavaElement) a).toStringWithAncestors().compareTo(((JavaElement) b).toStringWithAncestors());
 			}

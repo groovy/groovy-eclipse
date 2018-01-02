@@ -244,6 +244,7 @@ DOMMethod(char[] document, int[] sourceRange, String name, int[] nameRange, int 
 /**
  * @see IDOMMethod#addException(String)
  */
+@Override
 public void addException(String name) throws IllegalArgumentException {
 	if (name == null) {
 		throw new IllegalArgumentException(Messages.dom_nullExceptionType);
@@ -259,6 +260,7 @@ public void addException(String name) throws IllegalArgumentException {
 /**
  * @see IDOMMethod#addParameter(String, String)
  */
+@Override
 public void addParameter(String type, String name) throws IllegalArgumentException {
 	if (type == null) {
 		throw new IllegalArgumentException(Messages.dom_nullTypeParameter);
@@ -283,6 +285,7 @@ public void addParameter(String type, String name) throws IllegalArgumentExcepti
 /**
  * @see DOMMember#appendMemberBodyContents(CharArrayBuffer)
  */
+@Override
 protected void appendMemberBodyContents(CharArrayBuffer buffer) {
 	if (this.fBody != null) {
 		buffer.append(this.fBody);
@@ -293,6 +296,7 @@ protected void appendMemberBodyContents(CharArrayBuffer buffer) {
 /**
  * @see DOMMember#appendMemberDeclarationContents(CharArrayBuffer)
  */
+@Override
 protected void appendMemberDeclarationContents(CharArrayBuffer buffer) {
 
 	if (isConstructor()) {
@@ -354,6 +358,7 @@ protected void appendMemberDeclarationContents(CharArrayBuffer buffer) {
 /**
  * @see DOMMember#appendSimpleContents(CharArrayBuffer)
  */
+@Override
 protected void appendSimpleContents(CharArrayBuffer buffer) {
 	// append eveything before my name
 	buffer.append(this.fDocument, this.fSourceRange[0], this.fNameRange[0] - this.fSourceRange[0]);
@@ -369,6 +374,7 @@ protected void appendSimpleContents(CharArrayBuffer buffer) {
 /**
  * @see IDOMMethod#getBody()
  */
+@Override
 public String getBody() {
 	becomeDetailed();
 	if (hasBody()) {
@@ -403,15 +409,18 @@ protected String getConstructorName() {
 /**
  * @see DOMNode#getDetailedNode()
  */
+@Override
 protected DOMNode getDetailedNode() {
 	return (DOMNode)getFactory().createMethod(getContents());
 }
 /**
  * @see IDOMMethod#getExceptions()
  */
+@Override
 public String[] getExceptions() {
 	return this.fExceptions;
 }
+@Override
 protected char[] generateFlags() {
 	char[] flags= Flags.toString(getFlags() & ~Flags.AccVarargs).toCharArray();
 	if (flags.length == 0) {
@@ -422,6 +431,7 @@ protected char[] generateFlags() {
 }/**
  * @see IDOMNode#getJavaElement
  */
+@Override
 public IJavaElement getJavaElement(IJavaElement parent) throws IllegalArgumentException {
 	if (parent.getElementType() == IJavaElement.TYPE) {
 		// translate parameter types to signatures
@@ -447,6 +457,7 @@ public IJavaElement getJavaElement(IJavaElement parent) throws IllegalArgumentEx
 /**
  * @see DOMMember#getMemberDeclarationStartPosition()
  */
+@Override
 protected int getMemberDeclarationStartPosition() {
 	if (this.fReturnTypeRange[0] >= 0) {
 		return this.fReturnTypeRange[0];
@@ -457,6 +468,7 @@ protected int getMemberDeclarationStartPosition() {
 /**
  * @see IDOMNode#getName()
  */
+@Override
 public String getName() {
 	if (isConstructor()) {
 		return null;
@@ -467,24 +479,28 @@ public String getName() {
 /**
  * @see IDOMNode#getNodeType()
  */
+@Override
 public int getNodeType() {
 	return IDOMNode.METHOD;
 }
 /**
  * @see IDOMMethod#getParameterNames()
  */
+@Override
 public String[] getParameterNames() {
 	return this.fParameterNames;
 }
 /**
  * @see IDOMMethod#getParameterTypes()
  */
+@Override
 public String[] getParameterTypes() {
 	return this.fParameterTypes;
 }
 /**
  * @see IDOMMethod#getReturnType()
  */
+@Override
 public String getReturnType() {
 	if (isConstructor()) {
 		return null;
@@ -517,6 +533,7 @@ protected boolean hasTrailingArrayQualifier() {
 /**
  * @see IDOMMethod#isConstructor()
  */
+@Override
 public boolean isConstructor() {
 	return getMask(MASK_IS_CONSTRUCTOR);
 }
@@ -533,6 +550,7 @@ protected boolean isReturnTypeAltered() {
  * <p>Two methods have equal signatures if there names are the same
  * and their parameter types are the same.
  */
+@Override
 public boolean isSignatureEqual(IDOMNode node) {
 	boolean ok= node.getNodeType() == getNodeType();
 	if (ok) {
@@ -578,12 +596,14 @@ public boolean isSignatureEqual(IDOMNode node) {
 /**
  * @see DOMNode
  */
+@Override
 protected DOMNode newDOMNode() {
 	return new DOMMethod();
 }
 /**
  * Offsets all the source indexes in this node by the given amount.
  */
+@Override
 protected void offset(int offset) {
 	super.offset(offset);
 	offsetRange(this.fBodyRange, offset);
@@ -594,6 +614,7 @@ protected void offset(int offset) {
 /**
  * @see IDOMMethod#setBody
  */
+@Override
 public void setBody(String body) {
 	becomeDetailed();
 	fragment();
@@ -612,6 +633,7 @@ void setBodyRangeEnd(int end) {
 /**
  * @see IDOMMethod#setConstructor(boolean)
  */
+@Override
 public void setConstructor(boolean b) {
 	becomeDetailed();
 	setMask(MASK_IS_CONSTRUCTOR, b);
@@ -620,6 +642,7 @@ public void setConstructor(boolean b) {
 /**
  * @see IDOMMethod#setExceptions(String[])
  */
+@Override
 public void setExceptions(String[] names) {
 	becomeDetailed();
 	if (names == null || names.length == 0) {
@@ -640,6 +663,7 @@ public void setExceptions(String[] names) {
 /**
  * @see IDOMMethod#setName
  */
+@Override
 public void setName(String name) {
 	if (name == null) {
 		throw new IllegalArgumentException(Messages.element_nullName);
@@ -650,6 +674,7 @@ public void setName(String name) {
 /**
  * @see IDOMMethod#setParameters(String[], String[])
  */
+@Override
 public void setParameters(String[] types, String[] names) throws IllegalArgumentException {
 	becomeDetailed();
 	if (types== null || names == null) {
@@ -687,6 +712,7 @@ public void setParameters(String[] types, String[] names) throws IllegalArgument
 /**
  * @see IDOMMethod#setReturnType(String)
  */
+@Override
 public void setReturnType(String name) throws IllegalArgumentException {
 	if (name == null) {
 		throw new IllegalArgumentException(Messages.dom_nullReturnType);
@@ -705,6 +731,7 @@ protected void setReturnTypeAltered(boolean typeAltered) {
 }
 /**
  */
+@Override
 protected void setSourceRangeEnd(int end) {
 	super.setSourceRangeEnd(end);
 	this.fBodyRange[1]= end;
@@ -712,6 +739,7 @@ protected void setSourceRangeEnd(int end) {
 /**
  * @see DOMNode#shareContents(DOMNode)
  */
+@Override
 protected void shareContents(DOMNode node) {
 	super.shareContents(node);
 	DOMMethod method= (DOMMethod)node;
@@ -730,6 +758,7 @@ protected void shareContents(DOMNode node) {
 /**
  * @see IDOMNode#toString()
  */
+@Override
 public String toString() {
 	if (isConstructor()) {
 		return "CONSTRUCTOR"; //$NON-NLS-1$
@@ -742,6 +771,7 @@ public String toString() {
  * @see IDOMMethod#setDefault(java.lang.String)
  * @since 3.0
  */
+@Override
 public void setDefault(String defaultValue) {
 	this.fDefaultValue =  defaultValue;
 }
@@ -750,6 +780,7 @@ public void setDefault(String defaultValue) {
  * @see IDOMMethod#getDefault()
  * @since 3.0
  */
+@Override
 public String getDefault() {
 	return this.fDefaultValue;
 }
@@ -758,6 +789,7 @@ public String getDefault() {
  * @see IDOMMethod#getTypeParameters()
  * @since 3.0
  */
+@Override
 public String[] getTypeParameters() {
 	return this.fTypeParameters;
 }
@@ -766,6 +798,7 @@ public String[] getTypeParameters() {
  * @see IDOMMethod#setTypeParameters(java.lang.String[])
  * @since 3.0
  */
+@Override
 public void setTypeParameters(String[] typeParameters) {
 	this.fTypeParameters = typeParameters;
 }

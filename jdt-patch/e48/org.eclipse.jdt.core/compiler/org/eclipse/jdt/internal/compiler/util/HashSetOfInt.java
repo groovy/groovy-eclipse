@@ -35,6 +35,7 @@ public final class HashSetOfInt implements Cloneable {
 		this.set = new int[extraRoom];
 	}
 
+	@Override
 	public Object clone() throws CloneNotSupportedException {
 		HashSetOfInt result = (HashSetOfInt) super.clone();
 		result.elementSize = this.elementSize;
@@ -115,6 +116,7 @@ public final class HashSetOfInt implements Cloneable {
 		return this.elementSize;
 	}
 
+	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
 		int element;

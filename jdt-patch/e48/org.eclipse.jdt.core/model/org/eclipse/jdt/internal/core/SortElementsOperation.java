@@ -95,6 +95,7 @@ public class SortElementsOperation extends JavaModelOperation {
 	/**
 	 * @see org.eclipse.jdt.internal.core.JavaModelOperation#executeOperation()
 	 */
+	@Override
 	protected void executeOperation() throws JavaModelException {
 		try {
 			beginTask(Messages.operation_sortelements, getMainAmountOfWork());
@@ -189,6 +190,7 @@ public class SortElementsOperation extends JavaModelOperation {
 
 	private ASTRewrite sortCompilationUnit(org.eclipse.jdt.core.dom.CompilationUnit ast, final TextEditGroup group) {
 		ast.accept(new ASTVisitor() {
+			@Override
 			public boolean visit(org.eclipse.jdt.core.dom.CompilationUnit compilationUnit) {
 				List types = compilationUnit.types();
 				boolean contains_malformed_nodes = false;
@@ -200,6 +202,7 @@ public class SortElementsOperation extends JavaModelOperation {
 				compilationUnit.setProperty(CONTAINS_MALFORMED_NODES, contains_malformed_nodes);
 				return true;
 			}
+			@Override
 			public boolean visit(AnnotationTypeDeclaration annotationTypeDeclaration) {
 				List bodyDeclarations = annotationTypeDeclaration.bodyDeclarations();
 				boolean contains_malformed_nodes = false;
@@ -212,6 +215,7 @@ public class SortElementsOperation extends JavaModelOperation {
 				return true;
 			}
 
+			@Override
 			public boolean visit(AnonymousClassDeclaration anonymousClassDeclaration) {
 				List bodyDeclarations = anonymousClassDeclaration.bodyDeclarations();
 				boolean contains_malformed_nodes = false;
@@ -224,6 +228,7 @@ public class SortElementsOperation extends JavaModelOperation {
 				return true;
 			}
 
+			@Override
 			public boolean visit(TypeDeclaration typeDeclaration) {
 				List bodyDeclarations = typeDeclaration.bodyDeclarations();
 				boolean contains_malformed_nodes = false;
@@ -236,6 +241,7 @@ public class SortElementsOperation extends JavaModelOperation {
 				return true;
 			}
 
+			@Override
 			public boolean visit(EnumDeclaration enumDeclaration) {
 				List bodyDeclarations = enumDeclaration.bodyDeclarations();
 				boolean contains_malformed_nodes = false;
@@ -278,6 +284,7 @@ public class SortElementsOperation extends JavaModelOperation {
 				}
 			}
 
+			@Override
 			public boolean visit(org.eclipse.jdt.core.dom.CompilationUnit compilationUnit) {
 				if (checkMalformedNodes(compilationUnit)) {
 					return true; // abort sorting of current element
@@ -287,6 +294,7 @@ public class SortElementsOperation extends JavaModelOperation {
 				return true;
 			}
 
+			@Override
 			public boolean visit(AnnotationTypeDeclaration annotationTypeDeclaration) {
 				if (checkMalformedNodes(annotationTypeDeclaration)) {
 					return true; // abort sorting of current element
@@ -296,6 +304,7 @@ public class SortElementsOperation extends JavaModelOperation {
 				return true;
 			}
 
+			@Override
 			public boolean visit(AnonymousClassDeclaration anonymousClassDeclaration) {
 				if (checkMalformedNodes(anonymousClassDeclaration)) {
 					return true; // abort sorting of current element
@@ -305,6 +314,7 @@ public class SortElementsOperation extends JavaModelOperation {
 				return true;
 			}
 
+			@Override
 			public boolean visit(TypeDeclaration typeDeclaration) {
 				if (checkMalformedNodes(typeDeclaration)) {
 					return true; // abort sorting of current element
@@ -314,6 +324,7 @@ public class SortElementsOperation extends JavaModelOperation {
 				return true;
 			}
 
+			@Override
 			public boolean visit(EnumDeclaration enumDeclaration) {
 				if (checkMalformedNodes(enumDeclaration)) {
 					return true; // abort sorting of current element
@@ -339,6 +350,7 @@ public class SortElementsOperation extends JavaModelOperation {
 	 * </ul>
 	 * @return IJavaModelStatus
 	 */
+	@Override
 	public IJavaModelStatus verify() {
 		if (this.elementsToProcess.length != 1) {
 			return new JavaModelStatus(IJavaModelStatusConstants.NO_ELEMENTS_TO_PROCESS);

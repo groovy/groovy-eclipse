@@ -48,6 +48,7 @@ public class CreateFieldOperation extends CreateTypeMemberOperation {
 public CreateFieldOperation(IType parentElement, String source, boolean force) {
 	super(parentElement, source, force);
 }
+@Override
 protected ASTNode generateElementAST(ASTRewrite rewriter, ICompilationUnit cu) throws JavaModelException {
 	ASTNode node = super.generateElementAST(rewriter, cu);
 	if (node.getNodeType() != ASTNode.FIELD_DECLARATION)
@@ -57,12 +58,14 @@ protected ASTNode generateElementAST(ASTRewrite rewriter, ICompilationUnit cu) t
 /**
  * @see CreateElementInCUOperation#generateResultHandle
  */
+@Override
 protected IJavaElement generateResultHandle() {
 	return getType().getField(getASTNodeName());
 }
 /**
  * @see CreateElementInCUOperation#getMainTaskName()
  */
+@Override
 public String getMainTaskName(){
 	return Messages.operation_createFieldProgress;
 }
@@ -87,6 +90,7 @@ private VariableDeclarationFragment getFragment(ASTNode node) {
  * declaration, or as the first member in the type if there are no
  * field declarations.
  */
+@Override
 protected void initializeDefaultPosition() {
 	IType parentElement = getType();
 	try {
@@ -114,6 +118,7 @@ protected void initializeDefaultPosition() {
 /**
  * @see CreateTypeMemberOperation#verifyNameCollision
  */
+@Override
 protected IJavaModelStatus verifyNameCollision() {
 	if (this.createdNode != null) {
 		IType type= getType();
@@ -130,6 +135,7 @@ private String getASTNodeName() {
 	if (this.alteredName != null) return this.alteredName;
 	return getFragment(this.createdNode).getName().getIdentifier();
 }
+@Override
 protected SimpleName rename(ASTNode node, SimpleName newName) {
 	VariableDeclarationFragment fragment = getFragment(node);
 	SimpleName oldName = fragment.getName();

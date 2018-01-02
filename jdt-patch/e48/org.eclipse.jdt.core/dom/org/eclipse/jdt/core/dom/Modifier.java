@@ -205,6 +205,7 @@ public final class Modifier extends ASTNode implements IExtendedModifier {
 		 * @return the keyword for the modifier
 		 * @see #toKeyword(String)
 		 */
+		@Override
 		public String toString() {
 			return this.keyword;
 		}
@@ -517,19 +518,13 @@ public final class Modifier extends ASTNode implements IExtendedModifier {
 	    unsupportedIn2();
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 * @since 3.0
-	 */
+	@Override
 	void accept0(ASTVisitor visitor) {
 		visitor.visit(this);
 		visitor.endVisit(this);
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 * @since 3.0
-	 */
+	@Override
 	ASTNode clone0(AST target) {
 		Modifier result = new Modifier(target);
 		result.setSourceRange(getStartPosition(), getLength());
@@ -547,17 +542,12 @@ public final class Modifier extends ASTNode implements IExtendedModifier {
 		return this.modifierKeyword;
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 * @since 3.0
-	 */
+	@Override
 	final int getNodeType0() {
 		return MODIFIER;
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+	@Override
 	final Object internalGetSetObjectProperty(SimplePropertyDescriptor property, boolean get, Object value) {
 		if (property == KEYWORD_PROPERTY) {
 			if (get) {
@@ -571,9 +561,7 @@ public final class Modifier extends ASTNode implements IExtendedModifier {
 		return super.internalGetSetObjectProperty(property, get, value);
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+	@Override
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
@@ -591,6 +579,7 @@ public final class Modifier extends ASTNode implements IExtendedModifier {
 	/**
 	 * @see IExtendedModifier#isAnnotation()
 	 */
+	@Override
 	public boolean isAnnotation() {
 		return false;
 	}
@@ -608,6 +597,7 @@ public final class Modifier extends ASTNode implements IExtendedModifier {
 	/**
 	 * @see IExtendedModifier#isModifier()
 	 */
+	@Override
 	public boolean isModifier() {
 		return true;
 	}
@@ -711,10 +701,7 @@ public final class Modifier extends ASTNode implements IExtendedModifier {
 		return this.modifierKeyword == ModifierKeyword.DEFAULT_KEYWORD;
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 * @since 3.0
-	 */
+	@Override
 	int memSize() {
 		// treat ModifierKeyword as free
 		return BASE_NODE_SIZE + 1 * 4;
@@ -736,19 +723,13 @@ public final class Modifier extends ASTNode implements IExtendedModifier {
 		postValueChange(KEYWORD_PROPERTY);
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 * @since 3.0
-	 */
+	@Override
 	final boolean subtreeMatch0(ASTMatcher matcher, Object other) {
 		// dispatch to correct overloaded match method
 		return matcher.match(this, other);
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 * @since 3.0
-	 */
+	@Override
 	int treeSize() {
 		return memSize();
 	}

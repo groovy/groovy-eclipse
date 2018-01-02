@@ -22,6 +22,7 @@ public class CompletionOnFieldName extends FieldDeclaration {
 		this.realName = name;
 	}
 
+	@Override
 	public StringBuffer printStatement(int tab, StringBuffer output) {
 
 		printIndent(tab, output).append("<CompleteOnFieldName:"); //$NON-NLS-1$
@@ -34,6 +35,7 @@ public class CompletionOnFieldName extends FieldDeclaration {
 		return output.append(">;"); //$NON-NLS-1$
 	}
 
+	@Override
 	public void resolve(MethodScope initializationScope) {
 		super.resolve(initializationScope);
 

@@ -41,10 +41,12 @@ public class PolymorphicMethodBinding extends MethodBinding {
 		this.tagBits = polymorphicMethod.tagBits;
 	}
 
+	@Override
 	public MethodBinding original() {
 		return this.polymorphicMethod;
 	}
 	
+	@Override
 	public boolean isPolymorphic() {
 		return true;
 	}
@@ -77,6 +79,7 @@ public class PolymorphicMethodBinding extends MethodBinding {
 	/*
 	 * Even if polymorphic methods are varargs method, we don't want them to be treated as varargs method
 	 */
+	@Override
 	public boolean isVarargs() {
 		return false;
 	}

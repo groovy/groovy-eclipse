@@ -32,10 +32,12 @@ public SelectionScanner(long sourceLevel) {
 	super(false /*comment*/, false /*whitespace*/, false /*nls*/, sourceLevel, null /*taskTags*/, null/*taskPriorities*/, true/*taskCaseSensitive*/);
 }
 
+@Override
 protected boolean isAtAssistIdentifier() {
 	return this.selectionStart == this.startPosition && this.selectionEnd == this.currentPosition - 1;
 }
 
+@Override
 public char[] getCurrentIdentifierSource() {
 
 	if (this.selectionIdentifier == null){
@@ -56,6 +58,7 @@ public char[] getCurrentIdentifierSource() {
  * In case we actually read a keyword which corresponds to the selected
  * range, we pretend we read an identifier.
  */
+@Override
 public int scanIdentifierOrKeyword() {
 
 	int id = super.scanIdentifierOrKeyword();

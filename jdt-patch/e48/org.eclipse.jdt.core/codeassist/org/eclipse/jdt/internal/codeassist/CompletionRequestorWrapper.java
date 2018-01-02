@@ -30,6 +30,7 @@ public class CompletionRequestorWrapper extends CompletionRequestor {
 		this.requestor = requestor;
 	}
 
+	@Override
 	public void accept(CompletionProposal proposal) {
 		InternalCompletionProposal internalCompletionProposal = (InternalCompletionProposal) proposal;
 		switch(internalCompletionProposal.getKind()) {
@@ -312,6 +313,7 @@ public class CompletionRequestorWrapper extends CompletionRequestor {
 		}
 	}
 
+	@Override
 	public void completionFailure(IProblem problem) {
 		this.requestor.acceptError(problem);
 	}

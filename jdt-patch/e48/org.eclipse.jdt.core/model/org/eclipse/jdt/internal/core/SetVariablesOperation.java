@@ -40,6 +40,7 @@ public class SetVariablesOperation extends ChangeClasspathOperation {
 		this.updatePreferences = updatePreferences;
 	}
 
+	@Override
 	protected void executeOperation() throws JavaModelException {
 		checkCanceled();
 		try {

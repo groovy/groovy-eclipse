@@ -102,6 +102,7 @@ DOMInitializer(char[] document, int[] sourceRange, int flags) {
 /**
  * @see DOMMember#appendMemberBodyContents(CharArrayBuffer)
  */
+@Override
 protected void appendMemberBodyContents(CharArrayBuffer buffer) {
 	if (hasBody()) {
 		buffer
@@ -114,12 +115,14 @@ protected void appendMemberBodyContents(CharArrayBuffer buffer) {
 /**
  * @see DOMMember#appendMemberDeclarationContents(CharArrayBuffer)
  */
+@Override
 protected void appendMemberDeclarationContents(CharArrayBuffer buffer) {
 	// nothing to do
 }
 /**
  * @see DOMMember#appendSimpleContents(CharArrayBuffer)
  */
+@Override
 protected void appendSimpleContents(CharArrayBuffer buffer) {
 	// append eveything before my name
 	buffer.append(this.fDocument, this.fSourceRange[0], this.fNameRange[0] - this.fSourceRange[0]);
@@ -131,6 +134,7 @@ protected void appendSimpleContents(CharArrayBuffer buffer) {
 /**
  * @see IDOMInitializer#getBody()
  */
+@Override
 public String getBody() {
 	becomeDetailed();
 	if (hasBody()) {
@@ -146,12 +150,14 @@ public String getBody() {
 /**
  * @see DOMNode#getDetailedNode()
  */
+@Override
 protected DOMNode getDetailedNode() {
 	return (DOMNode)getFactory().createInitializer(getContents());
 }
 /**
  * @see IDOMNode#getJavaElement
  */
+@Override
 public IJavaElement getJavaElement(IJavaElement parent) throws IllegalArgumentException {
 	if (parent.getElementType() == IJavaElement.TYPE) {
 		int count = 1;
@@ -170,12 +176,14 @@ public IJavaElement getJavaElement(IJavaElement parent) throws IllegalArgumentEx
 /**
  * @see DOMMember#getMemberDeclarationStartPosition()
  */
+@Override
 protected int getMemberDeclarationStartPosition() {
 	return this.fBodyRange[0];
 }
 /**
  * @see IDOMNode#getNodeType()
  */
+@Override
 public int getNodeType() {
 	return IDOMNode.INITIALIZER;
 }
@@ -185,18 +193,21 @@ public int getNodeType() {
  * <p>This method always answers false since an initializer
  * does not have a signature.
  */
+@Override
 public boolean isSignatureEqual(IDOMNode node) {
 	return false;
 }
 /**
  * @see DOMNode
  */
+@Override
 protected DOMNode newDOMNode() {
 	return new DOMInitializer();
 }
 /**
  * Offsets all the source indexes in this node by the given amount.
  */
+@Override
 protected void offset(int offset) {
 	super.offset(offset);
 	offsetRange(this.fBodyRange, offset);
@@ -204,6 +215,7 @@ protected void offset(int offset) {
 /**
  * @see IDOMInitializer#setBody(String)
  */
+@Override
 public void setBody(String body) {
 	becomeDetailed();
 	this.fBody= body;
@@ -213,12 +225,14 @@ public void setBody(String body) {
 /**
  * @see IDOMInitializer#setName(String)
  */
+@Override
 public void setName(String name) {
 	// initializers have no name
 }
 /**
  * @see DOMNode#shareContents(DOMNode)
  */
+@Override
 protected void shareContents(DOMNode node) {
 	super.shareContents(node);
 	DOMInitializer init= (DOMInitializer)node;
@@ -228,6 +242,7 @@ protected void shareContents(DOMNode node) {
 /**
  * @see IDOMNode#toString()
  */
+@Override
 public String toString() {
 	return "INITIALIZER"; //$NON-NLS-1$
 }

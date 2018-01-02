@@ -46,6 +46,7 @@ ClasspathSourceDirectory(IContainer sourceFolder, char[][] fullExclusionPatternC
 	this.fulInclusionPatternChars = fulInclusionPatternChars;
 }
 
+@Override
 public void cleanup() {
 	this.directoryCache = null;
 }
@@ -100,6 +101,7 @@ SimpleLookupTable directoryTable(String qualifiedPackageName) {
 	return null;
 }
 
+@Override
 public boolean equals(Object o) {
 	if (this == o) return true;
 	if (!(o instanceof ClasspathSourceDirectory)) return false;
@@ -107,9 +109,11 @@ public boolean equals(Object o) {
 	return this.sourceFolder.equals(((ClasspathSourceDirectory) o).sourceFolder);
 }
 
+@Override
 public NameEnvironmentAnswer findClass(String typeName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName, boolean asBinaryOnly) {
 	return findClass(typeName, qualifiedPackageName, moduleName, qualifiedBinaryFileName);
 }
+@Override
 public NameEnvironmentAnswer findClass(String sourceFileWithoutExtension, String qualifiedPackageName, String moduleName, String qualifiedSourceFileWithoutExtension) {
 	SimpleLookupTable dirTable = directoryTable(qualifiedPackageName);
 	if (dirTable != null && dirTable.elementSize > 0) {
@@ -122,14 +126,17 @@ public NameEnvironmentAnswer findClass(String sourceFileWithoutExtension, String
 	return null;
 }
 
+@Override
 public IPath getProjectRelativePath() {
 	return this.sourceFolder.getProjectRelativePath();
 }
 
+@Override
 public int hashCode() {
 	return this.sourceFolder == null ? super.hashCode() : this.sourceFolder.hashCode();
 }
 
+@Override
 public boolean isPackage(String qualifiedPackageName, String moduleName) {
 	if (moduleName != null) {
 		if (this.module == null || !moduleName.equals(String.valueOf(this.module.name())))
@@ -145,14 +152,17 @@ public boolean hasCompilationUnit(String qualifiedPackageName, String moduleName
 	return false;
 }
 
+@Override
 public void reset() {
 	this.directoryCache = new SimpleLookupTable(5);
 }
 
+@Override
 public String toString() {
 	return "Source classpath directory " + this.sourceFolder.getFullPath().toString(); //$NON-NLS-1$
 }
 
+@Override
 public String debugPathString() {
 	return this.sourceFolder.getFullPath().toString();
 }

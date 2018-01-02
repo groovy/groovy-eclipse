@@ -109,6 +109,7 @@ TypeAnnotationInfo(byte[] classFileBytes, int[] contantPoolOffsets, int offset, 
 	this.readOffset += this.annotation.readOffset;
 }
 
+@Override
 public IBinaryAnnotation getAnnotation() {
 	return this.annotation;
 }
@@ -117,48 +118,58 @@ protected void initialize() {
 	this.annotation.initialize();
 }
 
+@Override
 protected void reset() {
 	this.annotation.reset();
 	super.reset();
 }
 
+@Override
 public String toString() {
 	return BinaryTypeFormatter.annotationToString(this);
 }
 
+@Override
 public int getTargetType() {
 	return this.targetType;
 }
 
+@Override
 public int getSupertypeIndex() {
 	// assert this.targetType == 0x10
 	return this.info;
 }
 
+@Override
 public int getTypeParameterIndex() {
 	// assert this.targetType == 0x00 or 0x01
 	return this.info;
 }
 
+@Override
 public int getBoundIndex() {
 	// assert this.targetType == 0x11 or 0x12
 	return this.info2;
 }
 
+@Override
 public int getMethodFormalParameterIndex() {
 	// assert this.targetType == 0x16
 	return this.info;
 }
 
+@Override
 public int getThrowsTypeIndex() {
 	// assert this.targetType == 0x17
 	return this.info;
 }
 
+@Override
 public int[] getTypePath() {
 	return this.typePath;
 }
 
+@Override
 public int hashCode() {
 	final int prime = 31;
 	int result = 1;
@@ -173,6 +184,7 @@ public int hashCode() {
 	return result;
 }
 
+@Override
 public boolean equals(Object obj) {
 	if (this == obj) {
 		return true;

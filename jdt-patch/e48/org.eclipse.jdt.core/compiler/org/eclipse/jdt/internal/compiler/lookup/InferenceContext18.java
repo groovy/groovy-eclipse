@@ -1164,12 +1164,15 @@ public class InferenceContext18 {
 						zs[j] = freshCapture(variables[j]);
 					final BoundSet kurrentBoundSet = tmpBoundSet;
 					Substitution theta = new Substitution() {
+						@Override
 						public LookupEnvironment environment() { 
 							return InferenceContext18.this.environment;
 						}
+						@Override
 						public boolean isRawSubstitution() {
 							return false;
 						}
+						@Override
 						public TypeBinding substitute(TypeVariableBinding typeVariable) {
 							for (int j = 0; j < numVars; j++)
 								if (TypeBinding.equalsEquals(variables[j], typeVariable))
@@ -1273,6 +1276,7 @@ public class InferenceContext18 {
 
 	static void sortTypes(TypeBinding[] types) {
 		Arrays.sort(types, new Comparator<TypeBinding>() {
+			@Override
 			public int compare(TypeBinding o1, TypeBinding o2) {
 				int i1 = o1.id, i2 = o2.id; 
 				return (i1<i2 ? -1 : (i1==i2 ? 0 : 1));
@@ -1607,12 +1611,15 @@ public class InferenceContext18 {
 
 	private Substitution getResultSubstitution(final BoundSet result) {
 		return new Substitution() {
+			@Override
 			public LookupEnvironment environment() { 
 				return InferenceContext18.this.environment;
 			}
+			@Override
 			public boolean isRawSubstitution() {
 				return false;
 			}
+			@Override
 			public TypeBinding substitute(TypeVariableBinding typeVariable) {
 				if (typeVariable instanceof InferenceVariable) {
 					TypeBinding instantiation = result.getInstantiation((InferenceVariable) typeVariable, InferenceContext18.this.environment);
@@ -1648,9 +1655,12 @@ public class InferenceContext18 {
 	 * unless the given candidate is tolerable to be compatible with buggy javac.
 	 */
 	public MethodBinding getReturnProblemMethodIfNeeded(TypeBinding expectedType, MethodBinding method) {
-		if (InferenceContext18.SIMULATE_BUG_JDK_8026527 && expectedType != null 
+		if (InferenceContext18.SIMULATE_BUG_JDK_8026527 && expectedType != null
+				&& !(method.original() instanceof SyntheticFactoryMethodBinding)
 				&& (method.returnType instanceof ReferenceBinding || method.returnType instanceof ArrayBinding)) {
-			if (method.returnType.erasure().isCompatibleWith(expectedType))
+			if (!expectedType.isProperType(true))
+				return null; // not ready
+			if (this.environment.convertToRawType(method.returnType.erasure(), false).isCompatibleWith(expectedType))
 				return method; // don't count as problem.
 		}
 		/* We used to check if expected type is null and if so return method, but that is wrong - it injects an incompatible method into overload resolution.
@@ -1664,6 +1674,7 @@ public class InferenceContext18 {
 	}
 
 	// debugging:
+	@Override
 	public String toString() {
 		StringBuffer buf = new StringBuffer("Inference Context"); //$NON-NLS-1$
 		switch (this.stepCompleted) {

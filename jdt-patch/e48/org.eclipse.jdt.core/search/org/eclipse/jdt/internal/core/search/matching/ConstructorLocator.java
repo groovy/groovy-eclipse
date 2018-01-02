@@ -33,9 +33,11 @@ public ConstructorLocator(ConstructorPattern pattern) {
 
 	this.pattern = pattern;
 }
+@Override
 protected int fineGrain() {
 	return this.pattern.fineGrain;
 }
+@Override
 public int match(ASTNode node, MatchingNodeSet nodeSet) { // interested in ExplicitConstructorCall
 	if (!this.pattern.findReferences) return IMPOSSIBLE_MATCH;
 	if (!(node instanceof ExplicitConstructorCall)) return IMPOSSIBLE_MATCH;
@@ -44,6 +46,7 @@ public int match(ASTNode node, MatchingNodeSet nodeSet) { // interested in Expli
 
 	return nodeSet.addMatch(node, this.pattern.mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH);
 }
+@Override
 public int match(ConstructorDeclaration node, MatchingNodeSet nodeSet) {
 	if (this.pattern.fineGrain != 0 && !this.pattern.findDeclarations) return IMPOSSIBLE_MATCH;
 	int referencesLevel = this.pattern.findReferences ? matchLevelForReferences(node) : IMPOSSIBLE_MATCH;
@@ -51,6 +54,7 @@ public int match(ConstructorDeclaration node, MatchingNodeSet nodeSet) {
 
 	return nodeSet.addMatch(node, referencesLevel >= declarationsLevel ? referencesLevel : declarationsLevel); // use the stronger match
 }
+@Override
 public int match(Expression node, MatchingNodeSet nodeSet) { // interested in AllocationExpression
 	if (!this.pattern.findReferences) return IMPOSSIBLE_MATCH;
 	if (!(node instanceof AllocationExpression)) return IMPOSSIBLE_MATCH;
@@ -65,6 +69,7 @@ public int match(Expression node, MatchingNodeSet nodeSet) { // interested in Al
 
 	return nodeSet.addMatch(node, this.pattern.mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH);
 }
+@Override
 public int match(FieldDeclaration field, MatchingNodeSet nodeSet) {
 	if (!this.pattern.findReferences) return IMPOSSIBLE_MATCH;
 	// look only for enum constant
@@ -85,6 +90,7 @@ public int match(FieldDeclaration field, MatchingNodeSet nodeSet) {
  * Special case for message send in javadoc comment. They can be in fact bound to a constructor.
  * @see "http://bugs.eclipse.org/bugs/show_bug.cgi?id=83285"
  */
+@Override
 public int match(MessageSend msgSend, MatchingNodeSet nodeSet)  {
 	if ((msgSend.bits & ASTNode.InsideJavadoc) == 0) return IMPOSSIBLE_MATCH;
 	if (!this.pattern.findReferences) return IMPOSSIBLE_MATCH;
@@ -93,12 +99,14 @@ public int match(MessageSend msgSend, MatchingNodeSet nodeSet)  {
 	}
 	return IMPOSSIBLE_MATCH;
 }
+@Override
 public int match(ReferenceExpression node, MatchingNodeSet nodeSet) {
 	if (!this.pattern.findReferences || node.isMethodReference()) return IMPOSSIBLE_MATCH;
 	return nodeSet.addMatch(node, this.pattern.mustResolve ? POSSIBLE_MATCH : ACCURATE_MATCH);
 }
 
 //public int match(Reference node, MatchingNodeSet nodeSet) - SKIP IT
+@Override
 public int match(TypeDeclaration node, MatchingNodeSet nodeSet) {
 	if (!this.pattern.findReferences) return IMPOSSIBLE_MATCH;
 
@@ -140,6 +148,7 @@ protected int matchConstructor(MethodBinding constructor) {
 	}
 	return level;
 }
+@Override
 protected int matchContainer() {
 	if (this.pattern.findReferences) return ALL_CONTAINER; // handles both declarations + references & just references
 	// COMPILATION_UNIT_CONTAINER - implicit constructor call: case of Y extends X and Y doesn't define any constructor
@@ -193,6 +202,7 @@ boolean matchParametersCount(ASTNode node, Expression[] args) {
 	}
 	return true;
 }
+@Override
 protected void matchReportReference(ASTNode reference, IJavaElement element, Binding elementBinding, int accuracy, MatchLocator locator) throws CoreException {
 
 	MethodBinding constructorBinding = null;
@@ -277,6 +287,7 @@ protected void matchReportReference(ASTNode reference, IJavaElement element, Bin
 	}
 	locator.report(this.match);
 }
+@Override
 public SearchMatch newDeclarationMatch(ASTNode reference, IJavaElement element, Binding binding, int accuracy, int length, MatchLocator locator) {
 	this.match = null;
 	int offset = reference.sourceStart;
@@ -304,6 +315,7 @@ public SearchMatch newDeclarationMatch(ASTNode reference, IJavaElement element, 
 	// super implementation...
     return locator.newDeclarationMatch(element, binding, accuracy, reference.sourceStart, length);
 }
+@Override
 public int resolveLevel(ASTNode node) {
 	if (this.pattern.findReferences) {
 		if (node instanceof AllocationExpression)
@@ -325,6 +337,7 @@ public int resolveLevel(ASTNode node) {
 		return resolveLevel((ConstructorDeclaration) node, true);
 	return IMPOSSIBLE_MATCH;
 }
+@Override
 protected int referenceType() {
 	return IJavaElement.METHOD;
 }
@@ -345,6 +358,7 @@ protected int resolveLevel(FieldDeclaration field) {
 
 	return resolveLevel(((AllocationExpression)field.initialization).binding);
 }
+@Override
 public int resolveLevel(Binding binding) {
 	if (binding == null) return INACCURATE_MATCH;
 	if (!(binding instanceof MethodBinding)) return IMPOSSIBLE_MATCH;
@@ -391,6 +405,7 @@ protected int resolveLevel(TypeDeclaration type) {
 	}
 	return IMPOSSIBLE_MATCH;
 }
+@Override
 public String toString() {
 	return "Locator for " + this.pattern.toString(); //$NON-NLS-1$
 }

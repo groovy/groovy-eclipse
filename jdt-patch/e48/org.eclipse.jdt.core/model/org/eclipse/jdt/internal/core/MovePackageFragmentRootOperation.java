@@ -116,6 +116,7 @@ public class MovePackageFragmentRootOperation extends CopyPackageFragmentRootOpe
 			updateModelFlags,
 			sibling);
 	}
+	@Override
 	protected void executeOperation() throws JavaModelException {
 
 		IPackageFragmentRoot root = (IPackageFragmentRoot) getElementToProcess();
@@ -177,6 +178,7 @@ public class MovePackageFragmentRootOperation extends CopyPackageFragmentRootOpe
 			final IFolder destFolder = workspaceRoot.getFolder(this.destination);
 			final IPath[] nestedFolders = getNestedFolders(root);
 			IResourceProxyVisitor visitor = new IResourceProxyVisitor() {
+				@Override
 				public boolean visit(IResourceProxy proxy) throws CoreException {
 					if (proxy.getType() == IResource.FOLDER) {
 						IPath path = proxy.requestFullPath();

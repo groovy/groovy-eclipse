@@ -24,6 +24,7 @@ import junit.framework.Test;
 public class XLargeTest extends AbstractRegressionTest {
 	static {
 //		TESTS_NUMBERS = new int[] { 17 };
+//		TESTS_NAMES = new String[] { "testBug519070" };
 	}
 
 public XLargeTest(String name) {
@@ -20687,6 +20688,28 @@ public void test0019() {
 			"}"
 		},
 		"C0");
+}
+public void testBug519070() {
+	int N = 1000;
+	StringBuffer sourceCode = new StringBuffer(
+			"public class X {\n" +
+			"    public static void main(String[] args) {\n" +
+			"        System.out.println(\"SUCCESS\");\n" +
+			"    }\n");
+	for (int m = 0; m < N; m++) {
+		sourceCode.append("\tvoid test"+m+"() {\n");
+		for (int i = 0; i < N; i++)
+			sourceCode.append("\t\tSystem.out.println(\"xyz\");\n");
+		sourceCode.append("\t}\n");
+	}
+	sourceCode.append("}\n");
+	
+	this.runConformTest(
+			new String[] {
+					"X.java",
+					sourceCode.toString()
+			},
+			"SUCCESS");
 }
 public static Class testClass() {
 	return XLargeTest.class;

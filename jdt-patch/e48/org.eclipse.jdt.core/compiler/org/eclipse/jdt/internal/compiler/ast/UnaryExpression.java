@@ -30,6 +30,7 @@ public class UnaryExpression extends OperatorExpression {
 		this.bits |= operator << OperatorSHIFT; // encode operator
 	}
 
+@Override
 public FlowInfo analyseCode(
 		BlockScope currentScope,
 		FlowContext flowContext,
@@ -48,6 +49,7 @@ public FlowInfo analyseCode(
 	return flowInfo;
 }
 
+	@Override
 	public Constant optimizedBooleanConstant() {
 
 		return this.optimizedBooleanConstant == null
@@ -62,6 +64,7 @@ public FlowInfo analyseCode(
 	 * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
 	 * @param valueRequired boolean
 	 */
+	@Override
 	public void generateCode(
 		BlockScope currentScope,
 		CodeStream codeStream,
@@ -172,6 +175,7 @@ public FlowInfo analyseCode(
 	 * Boolean operator code generation
 	 *	Optimized operations are: &&, ||, <, <=, >, >=, &, |, ^
 	 */
+	@Override
 	public void generateOptimizedBoolean(
 		BlockScope currentScope,
 		CodeStream codeStream,
@@ -205,12 +209,14 @@ public FlowInfo analyseCode(
 		}
 	}
 
+	@Override
 	public StringBuffer printExpressionNoParenthesis(int indent, StringBuffer output) {
 
 		output.append(operatorToString()).append(' ');
 		return this.expression.printExpression(0, output);
 	}
 
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 		boolean expressionIsCast;
 		if ((expressionIsCast = this.expression instanceof CastExpression) == true) this.expression.bits |= DisableUnnecessaryCastCheck; // will check later on
@@ -302,6 +308,7 @@ public FlowInfo analyseCode(
 		return this.resolvedType;
 	}
 
+	@Override
 	public void traverse(
     		ASTVisitor visitor,
     		BlockScope blockScope) {

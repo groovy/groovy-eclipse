@@ -107,12 +107,14 @@ public class FieldInfo extends ClassFileStruct implements IFieldInfo {
 	/**
 	 * @see IFieldInfo#getAccessFlags()
 	 */
+	@Override
 	public int getAccessFlags() {
 		return this.accessFlags;
 	}
 	/**
 	 * @see IFieldInfo#getAttributeCount()
 	 */
+	@Override
 	public int getAttributeCount() {
 		return this.attributesCount;
 	}
@@ -120,6 +122,7 @@ public class FieldInfo extends ClassFileStruct implements IFieldInfo {
 	/**
 	 * @see IFieldInfo#getAttributes()
 	 */
+	@Override
 	public IClassFileAttribute[] getAttributes() {
 		return this.attributes;
 	}
@@ -127,6 +130,7 @@ public class FieldInfo extends ClassFileStruct implements IFieldInfo {
 	/**
 	 * @see IFieldInfo#getConstantValueAttribute()
 	 */
+	@Override
 	public IConstantValueAttribute getConstantValueAttribute() {
 		return this.constantValueAttribute;
 	}
@@ -134,6 +138,7 @@ public class FieldInfo extends ClassFileStruct implements IFieldInfo {
 	/**
 	 * @see IFieldInfo#getDescriptor()
 	 */
+	@Override
 	public char[] getDescriptor() {
 		return this.descriptor;
 	}
@@ -141,6 +146,7 @@ public class FieldInfo extends ClassFileStruct implements IFieldInfo {
 	/**
 	 * @see IFieldInfo#getDescriptorIndex()
 	 */
+	@Override
 	public int getDescriptorIndex() {
 		return this.descriptorIndex;
 	}
@@ -148,6 +154,7 @@ public class FieldInfo extends ClassFileStruct implements IFieldInfo {
 	/**
 	 * @see IFieldInfo#getName()
 	 */
+	@Override
 	public char[] getName() {
 		return this.name;
 	}
@@ -155,12 +162,14 @@ public class FieldInfo extends ClassFileStruct implements IFieldInfo {
 	/**
 	 * @see IFieldInfo#getNameIndex()
 	 */
+	@Override
 	public int getNameIndex() {
 		return this.nameIndex;
 	}
 	/**
 	 * @see IFieldInfo#hasConstantValueAttribute()
 	 */
+	@Override
 	public boolean hasConstantValueAttribute() {
 		return this.constantValueAttribute != null;
 	}
@@ -168,6 +177,7 @@ public class FieldInfo extends ClassFileStruct implements IFieldInfo {
 	/**
 	 * @see IFieldInfo#isDeprecated()
 	 */
+	@Override
 	public boolean isDeprecated() {
 		return this.isDeprecated;
 	}
@@ -175,6 +185,7 @@ public class FieldInfo extends ClassFileStruct implements IFieldInfo {
 	/**
 	 * @see IFieldInfo#isSynthetic()
 	 */
+	@Override
 	public boolean isSynthetic() {
 		return this.isSynthetic;
 	}

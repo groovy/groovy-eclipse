@@ -39,6 +39,7 @@ public AccessRuleSet(AccessRule[] accessRules, byte classpathEntryType, String c
 /**
  * @see java.lang.Object#equals(java.lang.Object)
  */
+@Override
 public boolean equals(Object object) {
 	if (this == object)
 		return true;
@@ -86,6 +87,7 @@ public AccessRestriction getViolatedRestriction(char[] targetTypeFilePath) {
 	return null;
 }
 
+@Override
 public int hashCode() {
 	final int prime = 31;
 	int result = 1;
@@ -106,6 +108,7 @@ private int hashCode(AccessRule[] rules) {
 	return result;
 }
 
+@Override
 public String toString() {
 	return toString(true/*wrap lines*/);
 }

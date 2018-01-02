@@ -63,6 +63,7 @@ public class LocalDeclaration extends AbstractVariableDeclaration {
 		this.declarationEnd = sourceEnd;
 	}
 
+@Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 	// record variable initialization if any
 	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) == 0) {
@@ -127,6 +128,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	 * Code generation for a local declaration:
 	 *	i.e.&nbsp;normal assignment to a local variable + unused variable handling
 	 */
+	@Override
 	public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 
 		// even if not reachable, variable must be added to visible if allocated (28298)
@@ -171,6 +173,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	/**
 	 * @see org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration#getKind()
 	 */
+	@Override
 	public int getKind() {
 		return LOCAL_VARIABLE;
 	}
@@ -193,6 +196,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	public boolean isReceiver() {
 		return false;
 	}
+	@Override
 	public void resolve(BlockScope scope) {
 
 		// prescan NNBD
@@ -301,6 +305,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 			this.binding.tagBits &= ~TagBits.AnnotationNullMASK;
 	}
 
+	@Override
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 
 		if (visitor.visit(this, scope)) {

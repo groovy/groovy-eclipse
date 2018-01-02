@@ -35,6 +35,7 @@ public class CopyPackageFragmentRootOperation extends JavaModelOperation {
 		this.updateModelFlags = updateModelFlags;
 		this.sibling = sibling;
 	}
+	@Override
 	protected void executeOperation() throws JavaModelException {
 
 		IPackageFragmentRoot root = (IPackageFragmentRoot)getElementToProcess();
@@ -76,6 +77,7 @@ public class CopyPackageFragmentRootOperation extends JavaModelOperation {
 			final IFolder destFolder = workspaceRoot.getFolder(this.destination);
 			final IPath[] nestedFolders = getNestedFolders(root);
 			IResourceProxyVisitor visitor = new IResourceProxyVisitor() {
+				@Override
 				public boolean visit(IResourceProxy proxy) throws CoreException {
 					if (proxy.getType() == IResource.FOLDER) {
 						IPath path = proxy.requestFullPath();
@@ -206,6 +208,7 @@ public class CopyPackageFragmentRootOperation extends JavaModelOperation {
 				throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.ELEMENT_DOES_NOT_EXIST, getElementToProcess()));
 		}
 	}
+	@Override
 	public IJavaModelStatus verify() {
 		IJavaModelStatus status = super.verify();
 		if (!status.isOK()) {

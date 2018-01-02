@@ -26,6 +26,7 @@ public FloatLiteral(char[] token, int s, int e) {
 	super(token, s, e);
 }
 
+@Override
 public void computeConstant() {
 	Float computedValue;
 	boolean containsUnderscores = CharOperation.indexOf('_', this.source) > 0;
@@ -106,6 +107,7 @@ public void computeConstant() {
  * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
  * @param valueRequired boolean
  */
+@Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 	int pc = codeStream.position;
 	if (valueRequired) {
@@ -114,10 +116,12 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean
 	codeStream.recordPositionsFrom(pc, this.sourceStart);
 }
 
+@Override
 public TypeBinding literalType(BlockScope scope) {
 	return TypeBinding.FLOAT;
 }
 
+@Override
 public void traverse(ASTVisitor visitor, BlockScope scope) {
 	visitor.visit(this, scope);
 	visitor.endVisit(this, scope);

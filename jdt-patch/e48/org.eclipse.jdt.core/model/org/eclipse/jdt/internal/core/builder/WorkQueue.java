@@ -49,6 +49,7 @@ public boolean isWaiting(SourceFile element) {
 	return this.needsCompileList.includes(element);
 }
 
+@Override
 public String toString() {
 	return "WorkQueue: " + this.needsCompileList; //$NON-NLS-1$
 }

@@ -82,6 +82,7 @@ public final class NamingConventions {
 		// for acceptNameWithoutPrefixAndSuffix
 		private char[][] otherResults = new char[SIZE][];
 		private int otherResultsCount = 0;
+		@Override
 		public void acceptNameWithoutPrefixAndSuffix(char[] name, int reusedCharacters) {
 			int length = this.otherResults.length;
 			if(length == this.otherResultsCount) {
@@ -95,6 +96,7 @@ public final class NamingConventions {
 			this.otherResults[this.otherResultsCount++] = name;
 		}
 
+		@Override
 		public void acceptNameWithPrefix(char[] name, boolean isFirstPrefix, int reusedCharacters) {
 			if(isFirstPrefix) {
 				int length = this.firstPrefixResults.length;
@@ -121,6 +123,7 @@ public final class NamingConventions {
 			}
 		}
 
+		@Override
 		public void acceptNameWithPrefixAndSuffix(char[] name, boolean isFirstPrefix, boolean isFirstSuffix, int reusedCharacters) {
 			if(isFirstPrefix && isFirstSuffix) {
 				int length = this.firstPrefixAndFirstSuffixResults.length;
@@ -169,6 +172,7 @@ public final class NamingConventions {
 			}
 		}
 
+		@Override
 		public void acceptNameWithSuffix(char[] name, boolean isFirstSuffix, int reusedCharacters) {
 			if(isFirstSuffix) {
 				int length = this.firstSuffixResults.length;

@@ -41,6 +41,7 @@ public class ResourceCompilationUnit implements ICompilationUnit {
 		this.mainTypeName = f.substring(start, end).toCharArray();
 	}
 
+	@Override
 	public char[] getContents() {
 		if (this.contents != null)
 			return this.contents;   // answer the cached source

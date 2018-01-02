@@ -46,6 +46,7 @@ public class CreateInitializerOperation extends CreateTypeMemberOperation {
 public CreateInitializerOperation(IType parentElement, String source) {
 	super(parentElement, source, false);
 }
+@Override
 protected ASTNode generateElementAST(ASTRewrite rewriter, ICompilationUnit cu) throws JavaModelException {
 	ASTNode node = super.generateElementAST(rewriter, cu);
 	if (node.getNodeType() != ASTNode.INITIALIZER)
@@ -55,6 +56,7 @@ protected ASTNode generateElementAST(ASTRewrite rewriter, ICompilationUnit cu) t
 /**
  * @see CreateElementInCUOperation#generateResultHandle
  */
+@Override
 protected IJavaElement generateResultHandle() {
 	try {
 		//update the children to be current
@@ -85,9 +87,11 @@ protected IJavaElement generateResultHandle() {
 /**
  * @see CreateElementInCUOperation#getMainTaskName()
  */
+@Override
 public String getMainTaskName(){
 	return Messages.operation_createInitializerProgress;
 }
+@Override
 protected SimpleName rename(ASTNode node, SimpleName newName) {
 	return null; // intializer cannot be renamed
 }
@@ -96,6 +100,7 @@ protected SimpleName rename(ASTNode node, SimpleName newName) {
  * declaration, or as the first member in the type if there are no
  * initializers.
  */
+@Override
 protected void initializeDefaultPosition() {
 	IType parentElement = getType();
 	try {

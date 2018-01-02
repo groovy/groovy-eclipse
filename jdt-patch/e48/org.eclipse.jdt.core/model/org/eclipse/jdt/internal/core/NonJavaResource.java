@@ -35,6 +35,7 @@ public class NonJavaResource  extends PlatformObject implements IJarEntryResourc
 		this.resource = resource;
 	}
 
+	@Override
 	public boolean equals(Object obj) {
 		if (! (obj instanceof NonJavaResource))
 			return false;
@@ -42,6 +43,7 @@ public class NonJavaResource  extends PlatformObject implements IJarEntryResourc
 		return this.parent.equals(other.parent) && this.resource.equals(other.resource);
 	}
 
+	@Override
 	public IJarEntryResource[] getChildren() {
 		if (this.resource instanceof IContainer) {
 			IResource[] members;
@@ -63,6 +65,7 @@ public class NonJavaResource  extends PlatformObject implements IJarEntryResourc
 		return NO_CHILDREN;
 	}
 
+	@Override
 	public InputStream getContents() throws CoreException {
 		if (this.resource instanceof IFile)
 			return ((IFile) this.resource).getContents();
@@ -82,14 +85,17 @@ public class NonJavaResource  extends PlatformObject implements IJarEntryResourc
 		return parentEntryName + getName();
 	}
 
+	@Override
 	public IPath getFullPath() {
 		return new Path(getEntryName()).makeAbsolute();
 	}
 
+	@Override
 	public String getName() {
 		return this.resource.getName();
 	}
 
+	@Override
 	public IPackageFragmentRoot getPackageFragmentRoot() {
 		if (this.parent instanceof IPackageFragment) {
 			return (IPackageFragmentRoot) ((IPackageFragment) this.parent).getParent();
@@ -100,22 +106,27 @@ public class NonJavaResource  extends PlatformObject implements IJarEntryResourc
 		}
 	}
 
+	@Override
 	public Object getParent() {
 		return this.parent;
 	}
 
+	@Override
 	public int hashCode() {
 		return Util.combineHashCodes(this.resource.hashCode(), this.parent.hashCode());
 	}
 
+	@Override
 	public boolean isFile() {
 		return this.resource instanceof IFile;
 	}
 
+	@Override
 	public boolean isReadOnly() {
 		return true;
 	}
 
+	@Override
 	public String toString() {
 		return "NonJavaResource["+getEntryName()+"]"; //$NON-NLS-1$ //$NON-NLS-2$
 	}

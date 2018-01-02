@@ -43,6 +43,7 @@ public class LocalVariableReferenceInfo extends ClassFileStruct implements ILoca
 	/**
 	 * @see ILocalVariableReferenceInfo#getStartPC()
 	 */
+	@Override
 	public int getStartPC() {
 		return this.startPC;
 	}
@@ -50,6 +51,7 @@ public class LocalVariableReferenceInfo extends ClassFileStruct implements ILoca
 	/**
 	 * @see ILocalVariableReferenceInfo#getLength()
 	 */
+	@Override
 	public int getLength() {
 		return this.length;
 	}
@@ -57,6 +59,7 @@ public class LocalVariableReferenceInfo extends ClassFileStruct implements ILoca
 	/**
 	 * @see ILocalVariableReferenceInfo#getIndex()
 	 */
+	@Override
 	public int getIndex() {
 		return this.index;
 	}

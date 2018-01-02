@@ -54,15 +54,13 @@ public class RuntimeVisibleTypeAnnotationsAttribute
 			this.extendedAnnotations = NO_ENTRIES;
 		}
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IRuntimeVisibleTypeAnnotationsAttribute.getExtendedAnnotations()
-	 */
+
+	@Override
 	public IExtendedAnnotation[] getExtendedAnnotations() {
 		return this.extendedAnnotations;
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IRuntimeVisibleTypeAnnotationsAttribute.getExtendedAnnotationsNumber()
-	 */
+
+	@Override
 	public int getExtendedAnnotationsNumber() {
 		return this.extendedAnnotationsNumber;
 	}

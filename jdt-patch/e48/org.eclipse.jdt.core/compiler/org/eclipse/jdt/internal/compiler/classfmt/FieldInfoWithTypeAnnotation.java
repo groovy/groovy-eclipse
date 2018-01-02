@@ -20,20 +20,24 @@ FieldInfoWithTypeAnnotation(FieldInfo info, AnnotationInfo[] annos, TypeAnnotati
 	super(info, annos);
 	this.typeAnnotations = typeAnnos;
 }
+@Override
 public IBinaryTypeAnnotation[] getTypeAnnotations() {
 	return this.typeAnnotations;
 }
+@Override
 protected void initialize() {
 	for (int i = 0, max = this.typeAnnotations.length; i < max; i++)
 		this.typeAnnotations[i].initialize();
 	super.initialize();
 }
+@Override
 protected void reset() {
 	if (this.typeAnnotations != null)
 		for (int i = 0, max = this.typeAnnotations.length; i < max; i++)
 			this.typeAnnotations[i].reset();
 	super.reset();
 }
+@Override
 public String toString() {
 	StringBuffer buffer = new StringBuffer(getClass().getName());
 	if (this.typeAnnotations != null) {

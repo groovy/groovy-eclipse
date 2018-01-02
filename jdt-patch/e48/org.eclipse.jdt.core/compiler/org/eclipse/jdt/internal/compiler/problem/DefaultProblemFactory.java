@@ -62,6 +62,7 @@ public DefaultProblemFactory(Locale loc) {
  * @param lineNumber int
  * @return CategorizedProblem
  */
+@Override
 public CategorizedProblem createProblem(
 	char[] originatingFileName,
 	int problemId,
@@ -84,6 +85,7 @@ public CategorizedProblem createProblem(
 		lineNumber,
 		columnNumber);
 }
+@Override
 public CategorizedProblem createProblem(
 	char[] originatingFileName,
 	int problemId,
@@ -113,6 +115,7 @@ private final static int keyFromID(int id) {
  * Answer the locale used to retrieve the error messages
  * @return java.util.Locale
  */
+@Override
 public Locale getLocale() {
 	return this.locale;
 }
@@ -128,9 +131,11 @@ public void setLocale(Locale locale) {
 		this.messageTemplates = loadMessageTemplates(locale);
 	}
 }
+@Override
 public final String getLocalizedMessage(int id, String[] problemArguments) {
 	return getLocalizedMessage(id, 0, problemArguments);
 }
+@Override
 public final String getLocalizedMessage(int id, int elaborationId, String[] problemArguments) {
 	String rawMessage = (String) this.messageTemplates.get(keyFromID(id & IProblem.IgnoreCategoriesMask));
 	if (rawMessage == null) {

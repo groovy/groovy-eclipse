@@ -96,15 +96,18 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 		}
 	}
 
+	@Override
 	protected void closing(Object info) {
 		// a local variable has no info
 	}
 
+	@Override
 	protected Object createElementInfo() {
 		// a local variable has no info
 		return null;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if (!(o instanceof LocalVariable)) return false;
 		LocalVariable other = (LocalVariable)o;
@@ -116,14 +119,17 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 			&& super.equals(o);
 	}
 
+	@Override
 	public boolean exists() {
 		return this.parent.exists(); // see https://bugs.eclipse.org/bugs/show_bug.cgi?id=46192
 	}
 
+	@Override
 	protected void generateInfos(Object info, HashMap newElements, IProgressMonitor pm) {
 		// a local variable has no info
 	}
 
+	@Override
 	public IAnnotation getAnnotation(String annotationName) {
 		for (int i = 0, length = this.annotations.length; i < length; i++) {
 			IAnnotation annotation = this.annotations[i];
@@ -133,6 +139,7 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 		return super.getAnnotation(annotationName);
 	}
 
+	@Override
 	public IAnnotation[] getAnnotations() throws JavaModelException {
 		return this.annotations;
 	}
@@ -158,15 +165,19 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 			public LocalVarAnnotation(JavaElement localVar, String elementName) {
 				super(localVar, elementName);
 			}
+			@Override
 			public IMemberValuePair[] getMemberValuePairs() throws JavaModelException {
 				return this.memberValuePairs;
 			}
+			@Override
 			public ISourceRange getNameRange() throws JavaModelException {
 				return new SourceRange(typeStart, typeEnd - typeStart + 1);
 			}
+			@Override
 			public ISourceRange getSourceRange() throws JavaModelException {
 				return new SourceRange(sourceStart, sourceEnd - sourceStart + 1);
 			}
+			@Override
 			public boolean exists() {
 				return this.parent.exists();
 			}
@@ -254,6 +265,7 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 		}
 	}
 
+	@Override
 	public IJavaElement getHandleFromMemento(String token, MementoTokenizer memento, WorkingCopyOwner owner) {
 		switch (token.charAt(0)) {
 			case JEM_COUNT:
@@ -262,9 +274,7 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 		return this;
 	}
 
-	/*
-	 * @see JavaElement#getHandleMemento(StringBuffer)
-	 */
+	@Override
 	protected void getHandleMemento(StringBuffer buff) {
 		getHandleMemento(buff, true);
 	}
@@ -294,10 +304,12 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 		}
 	}
 
+	@Override
 	protected char getHandleMementoDelimiter() {
 		return JavaElement.JEM_LOCALVARIABLE;
 	}
 
+	@Override
 	public IResource getCorrespondingResource() {
 		return null;
 	}
@@ -306,14 +318,17 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 	 * {@inheritDoc}
 	 * @since 3.7
 	 */
+	@Override
 	public IMember getDeclaringMember() {
 		return (IMember) this.parent;
 	}
 
+	@Override
 	public String getElementName() {
 		return this.name;
 	}
 
+	@Override
 	public int getElementType() {
 		return LOCAL_VARIABLE;
 	}
@@ -322,6 +337,7 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 	 * {@inheritDoc}
 	 * @since 3.7
 	 */
+	@Override
 	public int getFlags() {
 		if (this.flags == -1) {
 			SourceMapper mapper= getSourceMapper();
@@ -345,6 +361,7 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 	/**
 	 * @see IMember#getClassFile()
 	 */
+	@Override
 	public IClassFile getClassFile() {
 		IJavaElement element = getParent();
 		while (element instanceof IMember) {
@@ -359,6 +376,7 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 	 * {@inheritDoc}
 	 * @since 3.7
 	 */
+	@Override
 	public ISourceRange getNameRange() {
 		if (this.nameEnd == -1) {
 			SourceMapper mapper= getSourceMapper();
@@ -379,10 +397,12 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 		return new SourceRange(this.nameStart, this.nameEnd-this.nameStart+1);
 	}
 
+	@Override
 	public IPath getPath() {
 		return this.parent.getPath();
 	}
 
+	@Override
 	public IResource resource() {
 		return this.parent.resource();
 	}
@@ -390,6 +410,7 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 	/**
 	 * @see ISourceReference
 	 */
+	@Override
 	public String getSource() throws JavaModelException {
 		IOpenable openable = this.parent.getOpenableParent();
 		IBuffer buffer = openable.getBuffer();
@@ -413,6 +434,7 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 	 * {@inheritDoc}
 	 * @since 3.7
 	 */
+	@Override
 	public ISourceRange getSourceRange() throws JavaModelException {
 		if (this.declarationSourceEnd == -1) {
 			SourceMapper mapper= getSourceMapper();
@@ -433,18 +455,22 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 	 * {@inheritDoc}
 	 * @since 3.7
 	 */
+	@Override
 	public ITypeRoot getTypeRoot() {
 		return this.getDeclaringMember().getTypeRoot();
 	}
 
+	@Override
 	public String getTypeSignature() {
 		return this.typeSignature;
 	}
 
+	@Override
 	public IResource getUnderlyingResource() throws JavaModelException {
 		return this.parent.getUnderlyingResource();
 	}
 
+	@Override
 	public int hashCode() {
 		return Util.combineHashCodes(this.parent.hashCode(), this.nameStart);
 	}
@@ -453,10 +479,12 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 	 * {@inheritDoc}
 	 * @since 3.7
 	 */
+	@Override
 	public boolean isParameter() {
 		return this.isParameter;
 	}
 
+	@Override
 	public boolean isStructureKnown() throws JavaModelException {
 		return true;
 	}
@@ -487,6 +515,7 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 		return null;
 	}
 
+	@Override
 	protected void toStringInfo(int tab, StringBuffer buffer, Object info, boolean showResolvedInfo) {
 		buffer.append(tabString(tab));
 		if (info != NO_INFO) {

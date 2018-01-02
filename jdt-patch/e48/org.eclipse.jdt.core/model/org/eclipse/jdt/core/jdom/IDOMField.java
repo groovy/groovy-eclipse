@@ -40,6 +40,7 @@ public String getInitializer();
  *
  * @return the name of this field
  */
+@Override
 public String getName();
 /**
  * Returns the type name of this field. The syntax for a type name of a field
@@ -67,6 +68,7 @@ public void setInitializer(String initializer);
  * @param name the given name
  * @exception IllegalArgumentException if <code>null</code> is specified
  */
+@Override
 public void setName(String name) throws IllegalArgumentException;
 /**
  * Sets the type name of this field. The syntax for a type name of a field

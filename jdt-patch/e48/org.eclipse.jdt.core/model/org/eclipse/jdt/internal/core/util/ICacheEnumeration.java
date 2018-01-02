@@ -28,13 +28,12 @@ import java.util.Enumeration;
  *
  * @see LRUCache
  */
-@SuppressWarnings("rawtypes")
-public interface ICacheEnumeration extends Enumeration {
+public interface ICacheEnumeration<K,V> extends Enumeration<K> {
 	/**
 	 * Returns the value of the previously accessed key in the enumeration.
 	 * Must be called after a call to nextElement().
 	 *
 	 * @return Value of current cache entry
 	 */
-	public Object getValue();
+	public V getValue();
 }

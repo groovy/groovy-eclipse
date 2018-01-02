@@ -28,20 +28,24 @@ public InsideSubRoutineFlowContext(
 	this.initsOnReturn = FlowInfo.DEAD_END;
 }
 
+@Override
 public String individualToString() {
 	StringBuffer buffer = new StringBuffer("Inside SubRoutine flow context"); //$NON-NLS-1$
 	buffer.append("[initsOnReturn -").append(this.initsOnReturn.toString()).append(']'); //$NON-NLS-1$
 	return buffer.toString();
 }
 
+@Override
 public UnconditionalFlowInfo initsOnReturn(){
 	return this.initsOnReturn;
 }
 
+@Override
 public boolean isNonReturningContext() {
 	return ((SubRoutineStatement) this.associatedNode).isSubRoutineEscaping();
 }
 
+@Override
 public void recordReturnFrom(UnconditionalFlowInfo flowInfo) {
 	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) == 0)	{
 	if (this.initsOnReturn == FlowInfo.DEAD_END) {
@@ -52,6 +56,7 @@ public void recordReturnFrom(UnconditionalFlowInfo flowInfo) {
 	}
 }
 
+@Override
 public SubRoutineStatement subroutine() {
 	return (SubRoutineStatement) this.associatedNode;
 }

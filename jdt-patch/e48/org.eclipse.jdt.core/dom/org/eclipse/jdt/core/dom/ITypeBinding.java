@@ -409,6 +409,7 @@ public interface ITypeBinding extends IBinding {
 	 * if this type does not represent a class, an interface, an enum, an annotation
 	 * type or a recovered type.
 	 */
+	@Override
 	public int getModifiers();
 
 	/**
@@ -456,6 +457,7 @@ public interface ITypeBinding extends IBinding {
 	 * or the empty string if it has none
 	 * @see #getQualifiedName()
 	 */
+	@Override
 	public String getName();
 
 	/**

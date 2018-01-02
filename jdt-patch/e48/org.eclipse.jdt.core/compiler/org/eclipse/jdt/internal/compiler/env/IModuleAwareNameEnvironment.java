@@ -87,12 +87,15 @@ public interface IModuleAwareNameEnvironment extends INameEnvironment {
 		}
 	}
 	
+	@Override
 	default NameEnvironmentAnswer findType(char[][] compoundTypeName) {
 		return findType(compoundTypeName, ModuleBinding.ANY);
 	}
+	@Override
 	default NameEnvironmentAnswer findType(char[] typeName, char[][] packageName) {
 		return findType(typeName, packageName, ModuleBinding.ANY);
 	}
+	@Override
 	default boolean isPackage(char[][] parentPackageName, char[] packageName) {
 		return getModulesDeclaringPackage(parentPackageName, packageName, ModuleBinding.ANY) != null;
 	}

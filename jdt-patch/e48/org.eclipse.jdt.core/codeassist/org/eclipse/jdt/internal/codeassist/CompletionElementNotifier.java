@@ -71,6 +71,7 @@ public class CompletionElementNotifier extends SourceElementNotifier {
 		return new char[][][] {argumentTypes, argumentNames};
 	}
 
+	@Override
 	protected char[][] getInterfaceNames(TypeDeclaration typeDeclaration) {
 		char[][] interfaceNames = null;
 		int superInterfacesLength = 0;
@@ -108,6 +109,7 @@ public class CompletionElementNotifier extends SourceElementNotifier {
 		return interfaceNames;
 	}
 
+	@Override
 	protected char[] getSuperclassName(TypeDeclaration typeDeclaration) {
 		TypeReference superclass = typeDeclaration.superclass;
 
@@ -117,6 +119,7 @@ public class CompletionElementNotifier extends SourceElementNotifier {
 		return superclass != null ? CharOperation.concatWith(superclass.getParameterizedTypeName(), '.') : null;
 	}
 
+	@Override
 	protected char[][] getThrownExceptions(AbstractMethodDeclaration methodDeclaration) {
 		char[][] thrownExceptionTypes = null;
 		TypeReference[] thrownExceptions = methodDeclaration.thrownExceptions;
@@ -142,6 +145,7 @@ public class CompletionElementNotifier extends SourceElementNotifier {
 		return thrownExceptionTypes;
 	}
 
+	@Override
 	protected char[][] getTypeParameterBounds(TypeParameter typeParameter) {
 		TypeReference firstBound = typeParameter.type;
 		TypeReference[] otherBounds = typeParameter.bounds;
@@ -182,6 +186,7 @@ public class CompletionElementNotifier extends SourceElementNotifier {
 		return typeParameterBounds;
 	}
 
+	@Override
 	protected void notifySourceElementRequestor(AbstractMethodDeclaration methodDeclaration, TypeDeclaration declaringType, ImportReference currentPackage) {
 		if (methodDeclaration instanceof CompletionOnMethodReturnType) return;
 		if (methodDeclaration instanceof CompletionOnMethodTypeParameter) return;
@@ -189,16 +194,19 @@ public class CompletionElementNotifier extends SourceElementNotifier {
 		super.notifySourceElementRequestor(methodDeclaration, declaringType, currentPackage);
 	}
 
+	@Override
 	public void notifySourceElementRequestor(CompilationUnitDeclaration parsedUnit, int sourceStart, int sourceEnd, boolean reportReference, HashtableOfObjectToInt sourceEndsMap, Map nodesToCategoriesMap) {
 		super.notifySourceElementRequestor(parsedUnit, sourceStart, sourceEnd, reportReference, sourceEndsMap, nodesToCategoriesMap);
 	}
 
+	@Override
 	protected void notifySourceElementRequestor(FieldDeclaration fieldDeclaration, TypeDeclaration declaringType) {
 		if (fieldDeclaration instanceof CompletionOnFieldType) return;
 		if (fieldDeclaration instanceof CompletionOnFieldName) return;
 		super.notifySourceElementRequestor(fieldDeclaration, declaringType);
 	}
 
+	@Override
 	protected void notifySourceElementRequestor(ImportReference importReference, boolean isPackage) {
 		if (importReference instanceof CompletionOnKeyword2) return;
 		if (importReference instanceof CompletionOnImportReference ||
@@ -209,6 +217,7 @@ public class CompletionElementNotifier extends SourceElementNotifier {
 		super.notifySourceElementRequestor(importReference, isPackage);
 	}
 
+	@Override
 	protected void notifySourceElementRequestor(TypeDeclaration typeDeclaration, boolean notifyTypePresence, TypeDeclaration declaringType, ImportReference currentPackage) {
 		if (typeDeclaration instanceof CompletionOnAnnotationOfType) return;
 		super.notifySourceElementRequestor(typeDeclaration, notifyTypePresence, declaringType, currentPackage);

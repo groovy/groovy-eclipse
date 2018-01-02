@@ -56,6 +56,7 @@ public class InitializationFlowContext extends ExceptionHandlingFlowContext {
 		return this;
 	}
 	
+	@Override
 	public String individualToString() {
 
 		StringBuffer buffer = new StringBuffer("Initialization flow context"); //$NON-NLS-1$
@@ -66,6 +67,7 @@ public class InitializationFlowContext extends ExceptionHandlingFlowContext {
 		return buffer.toString();
 	}
 
+	@Override
 	public void recordHandlingException(
 		ReferenceBinding exceptionType,
 		UnconditionalFlowInfo flowInfo,

@@ -134,6 +134,7 @@ public class MethodInfo extends ClassFileStruct implements IMethodInfo {
 	/**
 	 * @see IMethodInfo#getAccessFlags()
 	 */
+	@Override
 	public int getAccessFlags() {
 		return this.accessFlags;
 	}
@@ -141,12 +142,14 @@ public class MethodInfo extends ClassFileStruct implements IMethodInfo {
 	/**
 	 * @see IMethodInfo#getAttributeCount()
 	 */
+	@Override
 	public int getAttributeCount() {
 		return this.attributesCount;
 	}
 	/**
 	 * @see IMethodInfo#getAttributes()
 	 */
+	@Override
 	public IClassFileAttribute[] getAttributes() {
 		return this.attributes;
 	}
@@ -154,6 +157,7 @@ public class MethodInfo extends ClassFileStruct implements IMethodInfo {
 	/**
 	 * @see IMethodInfo#getCodeAttribute()
 	 */
+	@Override
 	public ICodeAttribute getCodeAttribute() {
 		return this.codeAttribute;
 	}
@@ -161,6 +165,7 @@ public class MethodInfo extends ClassFileStruct implements IMethodInfo {
 	/**
 	 * @see IMethodInfo#getDescriptor()
 	 */
+	@Override
 	public char[] getDescriptor() {
 		return this.descriptor;
 	}
@@ -168,6 +173,7 @@ public class MethodInfo extends ClassFileStruct implements IMethodInfo {
 	/**
 	 * @see IMethodInfo#getDescriptorIndex()
 	 */
+	@Override
 	public int getDescriptorIndex() {
 		return this.descriptorIndex;
 	}
@@ -175,6 +181,7 @@ public class MethodInfo extends ClassFileStruct implements IMethodInfo {
 	/**
 	 * @see IMethodInfo#getExceptionAttribute()
 	 */
+	@Override
 	public IExceptionAttribute getExceptionAttribute() {
 		return this.exceptionAttribute;
 	}
@@ -182,6 +189,7 @@ public class MethodInfo extends ClassFileStruct implements IMethodInfo {
 	/**
 	 * @see IMethodInfo#getName()
 	 */
+	@Override
 	public char[] getName() {
 		return this.name;
 	}
@@ -189,6 +197,7 @@ public class MethodInfo extends ClassFileStruct implements IMethodInfo {
 	/**
 	 * @see IMethodInfo#getNameIndex()
 	 */
+	@Override
 	public int getNameIndex() {
 		return this.nameIndex;
 	}
@@ -200,6 +209,7 @@ public class MethodInfo extends ClassFileStruct implements IMethodInfo {
 	/**
 	 * @see IMethodInfo#isClinit()
 	 */
+	@Override
 	public boolean isClinit() {
 		return this.name[0] == '<' && this.name.length == 8; // Can only match <clinit>
 	}
@@ -207,6 +217,7 @@ public class MethodInfo extends ClassFileStruct implements IMethodInfo {
 	/**
 	 * @see IMethodInfo#isConstructor()
 	 */
+	@Override
 	public boolean isConstructor() {
 		return this.name[0] == '<' && this.name.length == 6; // Can only match <init>
 	}
@@ -214,6 +225,7 @@ public class MethodInfo extends ClassFileStruct implements IMethodInfo {
 	/**
 	 * @see IMethodInfo#isDeprecated()
 	 */
+	@Override
 	public boolean isDeprecated() {
 		return this.isDeprecated;
 	}
@@ -225,6 +237,7 @@ public class MethodInfo extends ClassFileStruct implements IMethodInfo {
 	/**
 	 * @see IMethodInfo#isSynthetic()
 	 */
+	@Override
 	public boolean isSynthetic() {
 		return this.isSynthetic;
 	}

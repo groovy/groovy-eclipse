@@ -59,6 +59,7 @@ public interface IVariableBinding extends IBinding {
 	 *
 	 * @return the name of this field or local variable
 	 */
+	@Override
 	public String getName();
 
 	/**

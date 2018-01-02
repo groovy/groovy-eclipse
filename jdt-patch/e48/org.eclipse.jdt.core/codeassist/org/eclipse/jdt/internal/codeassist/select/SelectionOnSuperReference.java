@@ -42,11 +42,13 @@ public class SelectionOnSuperReference extends SuperReference {
 public SelectionOnSuperReference(int pos, int sourceEnd) {
 	super(pos, sourceEnd);
 }
+@Override
 public StringBuffer printExpression(int indent, StringBuffer output){
 
 	output.append("<SelectOnSuper:"); //$NON-NLS-1$
 	return super.printExpression(0, output).append('>');
 }
+@Override
 public TypeBinding resolveType(BlockScope scope) {
 	TypeBinding binding = super.resolveType(scope);
 

@@ -54,6 +54,7 @@ public class NdWorkspaceLocation extends NdNode {
 		return RESOURCE.get(getNd(), this.address);
 	}
 
+	@Override
 	public String toString() {
 		try {
 			return getPath().toString();

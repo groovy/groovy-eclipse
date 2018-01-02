@@ -30,6 +30,7 @@ public class NoopIndexer implements ISupplementalIndexer {
 	/**
 	 * @return an empty list
 	 */
+	@Override
 	public List<char[]> extractNamedReferences(byte[] contents, ClassFileReader reader) {
 		return Collections.EMPTY_LIST;
 	}

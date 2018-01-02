@@ -33,39 +33,29 @@ public class JavaSearchParticipant extends SearchParticipant {
 	private ThreadLocal indexSelector = new ThreadLocal();
 	private SourceIndexer sourceIndexer;
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.search.SearchParticipant#beginSearching()
-	 */
+	@Override
 	public void beginSearching() {
 		super.beginSearching();
 		this.indexSelector.set(null);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.search.SearchParticipant#doneSearching()
-	 */
+	@Override
 	public void doneSearching() {
 		this.indexSelector.set(null);
 		super.doneSearching();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.search.SearchParticipant#getName()
-	 */
+	@Override
 	public String getDescription() {
 		return "Java"; //$NON-NLS-1$
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.search.SearchParticipant#getDocument(String)
-	 */
+	@Override
 	public SearchDocument getDocument(String documentPath) {
 		return new JavaSearchDocument(documentPath, this);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.search.SearchParticipant#indexDocument(SearchDocument)
-	 */
+	@Override
 	public void indexDocument(SearchDocument document, IPath indexPath) {
 		// TODO must verify that the document + indexPath match, when this is not called from scheduleDocumentIndexing
 		document.removeAllIndexEntries(); // in case the document was already indexed
@@ -79,9 +69,6 @@ public class JavaSearchParticipant extends SearchParticipant {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.search.SearchParticipant#indexResolvedDocument(SearchDocument, IPath)
-	 */
 	@Override
 	public void indexResolvedDocument(SearchDocument document, IPath indexPath) {
 		String documentPath = document.getPath();
@@ -92,9 +79,7 @@ public class JavaSearchParticipant extends SearchParticipant {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.search.SearchParticipant#resolveDocument(SearchDocument document)
-	 */
+	@Override
 	public void resolveDocument(SearchDocument document) {
 		String documentPath = document.getPath();
 		if (org.eclipse.jdt.internal.core.util.Util.isJavaLikeFileName(documentPath)) {
@@ -102,10 +87,8 @@ public class JavaSearchParticipant extends SearchParticipant {
 				this.sourceIndexer.resolveDocument();
 		}
 	}
-	
-	/* (non-Javadoc)
-	 * @see SearchParticipant#locateMatches(SearchDocument[], SearchPattern, IJavaSearchScope, SearchRequestor, IProgressMonitor)
-	 */
+
+	@Override
 	public void locateMatches(SearchDocument[] indexMatches, SearchPattern pattern,
 			IJavaSearchScope scope, SearchRequestor requestor, IProgressMonitor monitor) throws CoreException {
 
@@ -122,9 +105,7 @@ public class JavaSearchParticipant extends SearchParticipant {
 		matchLocator.locateMatches(indexMatches);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.search.SearchParticipant#selectIndexes(org.eclipse.jdt.core.search.SearchQuery, org.eclipse.jdt.core.search.SearchContext)
-	 */
+	@Override
 	public IPath[] selectIndexes(SearchPattern pattern, IJavaSearchScope scope) {
 		IndexSelector selector = (IndexSelector) this.indexSelector.get();
 		if (selector == null) {

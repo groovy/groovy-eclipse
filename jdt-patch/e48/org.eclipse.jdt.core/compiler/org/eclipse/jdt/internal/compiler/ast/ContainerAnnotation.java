@@ -51,6 +51,7 @@ public class ContainerAnnotation extends SingleMemberAnnotation {
 	}
 	
 	// Resolve the compiler synthesized container annotation.
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 
 		if (this.compilerAnnotation != null)

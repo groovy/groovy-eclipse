@@ -27,6 +27,7 @@ public class SourceAnnotationMethodInfo extends SourceMethodInfo {
 
 	public IMemberValuePair defaultValue;
 
+	@Override
 	public boolean isAnnotationMethod() {
 		return true;
 	}

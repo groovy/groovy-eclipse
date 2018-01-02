@@ -20,6 +20,7 @@ public LongLiteralMinValue(char[] token, char[] reducedForm, int start, int end)
 	super(token, reducedForm, start, end);
 	this.constant = LongConstant.fromValue(Long.MIN_VALUE);
 }
+@Override
 public void computeConstant() {
 	/*precomputed at creation time*/}
 }

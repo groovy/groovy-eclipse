@@ -33,22 +33,27 @@ public class AssistCompilationUnit extends CompilationUnit {
 		this.infoCache = infoCache;
 	}
 
+	@Override
 	public Object getElementInfo(IProgressMonitor monitor) throws JavaModelException {
 		return this.infoCache.get(this);
 	}
 
+	@Override
 	public IImportContainer getImportContainer() {
 		return new AssistImportContainer(this, this.infoCache);
 	}
 
+	@Override
 	public IPackageDeclaration getPackageDeclaration(String pkg) {
 		return new AssistPackageDeclaration(this, pkg, this.infoCache);
 	}
 
+	@Override
 	public IType getType(String typeName) {
 		return new AssistSourceType(this, typeName, this.bindingCache, this.infoCache);
 	}
 
+	@Override
 	public boolean hasChildren() throws JavaModelException {
 		JavaElementInfo info = (JavaElementInfo)this.infoCache.get(this);
 		return info.getChildren().length > 0;

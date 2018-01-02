@@ -22,6 +22,7 @@ public class StringConstant extends Constant {
 		this.value = value;
 	}
 
+	@Override
 	public String stringValue() {
 		// spec 15.17.11
 
@@ -32,14 +33,17 @@ public class StringConstant extends Constant {
 		 */
 	}
 
+	@Override
 	public String toString() {
 		return "(String)\"" + this.value + "\""; //$NON-NLS-2$ //$NON-NLS-1$
 	}
 
+	@Override
 	public int typeID() {
 		return T_JavaLangString;
 	}
 
+	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
@@ -47,6 +51,7 @@ public class StringConstant extends Constant {
 		return result;
 	}
 
+	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
 			return true;

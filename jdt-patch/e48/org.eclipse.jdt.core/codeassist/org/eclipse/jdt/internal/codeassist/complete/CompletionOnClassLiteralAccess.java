@@ -45,12 +45,14 @@ public class CompletionOnClassLiteralAccess extends ClassLiteralAccess {
 		this.classStart = (int) (pos >>> 32);
 	}
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 
 		output.append("<CompleteOnClassLiteralAccess:"); //$NON-NLS-1$
 		return this.type.print(0, output).append('.').append(this.completionIdentifier).append('>');
 	}
 
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 
 		if (super.resolveType(scope) == null)

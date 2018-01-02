@@ -149,6 +149,7 @@ protected ASTNode[] matchingNodes(int start, int end) {
 
 	// sort nodes by source starts
 	Util.Comparer comparer = new Util.Comparer() {
+		@Override
 		public int compare(Object o1, Object o2) {
 			return ((ASTNode) o1).sourceStart - ((ASTNode) o2).sourceStart;
 		}
@@ -172,6 +173,7 @@ public Object removeTrustedMatch(ASTNode node) {
 	this.matchingNodesKeys.put(key, null);
 	return this.matchingNodes.removeKey(node);
 }
+@Override
 public String toString() {
 	// TODO (jerome) should show both tables
 	StringBuffer result = new StringBuffer();

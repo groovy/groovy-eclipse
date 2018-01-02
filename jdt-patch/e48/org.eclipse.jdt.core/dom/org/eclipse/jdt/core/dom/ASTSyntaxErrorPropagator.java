@@ -82,72 +82,52 @@ class ASTSyntaxErrorPropagator extends ASTVisitor {
 		return tagWithErrors;
 	}
 
-	/*
-	 * Method declared on ASTVisitor.
-	 */
+	@Override
 	public boolean visit(FieldDeclaration node) {
 		return checkAndTagAsMalformed(node);
 	}
 
-	/*
-	 * Method declared on ASTVisitor.
-	 */
+	@Override
 	public boolean visit(MethodDeclaration node) {
 		return checkAndTagAsMalformed(node);
 	}
 
-	/*
-	 * Module declared on ASTVisitor.
-	 */
+	@Override
 	public boolean visit(ModuleDeclaration node) {
 		return checkAndTagAsMalformed(node);
 	}
 
-	/*
-	 * Method declared on ASTVisitor.
-	 */
+	@Override
 	public boolean visit(PackageDeclaration node) {
 		return checkAndTagAsMalformed(node);
 	}
 
-	/*
-	 * Method declared on ASTVisitor.
-	 */
+	@Override
 	public boolean visit(ImportDeclaration node) {
 		return checkAndTagAsMalformed(node);
 	}
 
-	/*
-	 * Method declared on ASTVisitor.
-	 */
+	@Override
 	public boolean visit(CompilationUnit node) {
 		return checkAndTagAsMalformed(node);
 	}
 
-	/*
-	 * Method declared on ASTVisitor.
-	 */
+	@Override
 	public boolean visit(AnnotationTypeDeclaration node) {
 		return checkAndTagAsMalformed(node);
 	}
 
-	/*
-	 * Method declared on ASTVisitor.
-	 */
+	@Override
 	public boolean visit(EnumDeclaration node) {
 		return checkAndTagAsMalformed(node);
 	}
 
-	/*
-	 * Method declared on ASTVisitor.
-	 */
+	@Override
 	public boolean visit(TypeDeclaration node) {
 		return checkAndTagAsMalformed(node);
 	}
 
-	/*
-	 * Method declared on ASTVisitor.
-	 */
+	@Override
 	public boolean visit(Initializer node) {
 		return checkAndTagAsMalformed(node);
 	}

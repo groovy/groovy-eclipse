@@ -34,6 +34,7 @@ public BranchStatement(char[] label, int sourceStart,int sourceEnd) {
  *
  *   generate the finallyInvocationSequence.
  */
+@Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	if ((this.bits & ASTNode.IsReachable) == 0) {
 		return;
@@ -66,6 +67,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	}
 }
 
+@Override
 public void resolve(BlockScope scope) {
 	// nothing to do during name resolution
 }

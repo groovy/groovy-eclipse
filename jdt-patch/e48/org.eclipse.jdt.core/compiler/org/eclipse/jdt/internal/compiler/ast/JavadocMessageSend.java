@@ -176,13 +176,12 @@ public class JavadocMessageSend extends MessageSend {
 		return this.resolvedType = this.binding.returnType;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.internal.compiler.lookup.InvocationSite#isSuperAccess()
-	 */
+	@Override
 	public boolean isSuperAccess() {
 		return (this.bits & ASTNode.SuperAccess) != 0;
 	}
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output){
 
 		if (this.receiver != null) {
@@ -198,10 +197,12 @@ public class JavadocMessageSend extends MessageSend {
 		return output.append(')');
 	}
 
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 		return internalResolveType(scope);
 	}
 
+	@Override
 	public TypeBinding resolveType(ClassScope scope) {
 		return internalResolveType(scope);
 	}
@@ -210,6 +211,7 @@ public class JavadocMessageSend extends MessageSend {
 	 * Redefine to capture javadoc specific signatures
 	 * @see org.eclipse.jdt.internal.compiler.ast.ASTNode#traverse(org.eclipse.jdt.internal.compiler.ASTVisitor, org.eclipse.jdt.internal.compiler.lookup.BlockScope)
 	 */
+	@Override
 	public void traverse(ASTVisitor visitor, BlockScope blockScope) {
 		if (visitor.visit(this, blockScope)) {
 			if (this.receiver != null) {
@@ -227,6 +229,7 @@ public class JavadocMessageSend extends MessageSend {
 	 * Redefine to capture javadoc specific signatures
 	 * @see org.eclipse.jdt.internal.compiler.ast.ASTNode#traverse(org.eclipse.jdt.internal.compiler.ASTVisitor, org.eclipse.jdt.internal.compiler.lookup.BlockScope)
 	 */
+	@Override
 	public void traverse(ASTVisitor visitor, ClassScope scope) {
 		if (visitor.visit(this, scope)) {
 			if (this.receiver != null) {

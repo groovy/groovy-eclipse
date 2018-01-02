@@ -45,10 +45,12 @@ private static String sourceFileName(AbstractClassFile classFile) {
 		return ((BinaryType) ((ClassFile) classFile).getType()).getSourceFileName(null/*no info available*/);
 }
 
+@Override
 public void commitWorkingCopy(boolean force, IProgressMonitor monitor) throws JavaModelException {
 	throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.INVALID_ELEMENT_TYPES, this));
 }
 
+@Override
 public IBuffer getBuffer() throws JavaModelException {
 	if (isWorkingCopy())
 		return super.getBuffer();
@@ -56,6 +58,7 @@ public IBuffer getBuffer() throws JavaModelException {
 		return this.classFile.getBuffer();
 }
 
+@Override
 public char[] getContents() {
 	try {
 		IBuffer buffer = getBuffer();
@@ -68,15 +71,18 @@ public char[] getContents() {
 	}
 }
 
+@Override
 public IPath getPath() {
 	return this.classFile.getPath();
 }
 
+@Override
 public IJavaElement getPrimaryElement(boolean checkOwner) {
 	if (checkOwner && isPrimary()) return this;
 	return new ClassFileWorkingCopy(this.classFile, DefaultWorkingCopyOwner.PRIMARY);
 }
 
+@Override
 public IResource resource(PackageFragmentRoot root) {
 	if (root.isArchive())
 		return root.resource(root);
@@ -86,6 +92,7 @@ public IResource resource(PackageFragmentRoot root) {
 /**
  * @see Openable#openBuffer(IProgressMonitor, Object)
  */
+@Override
 protected IBuffer openBuffer(IProgressMonitor pm, Object info) throws JavaModelException {
 
 	// create buffer
@@ -113,6 +120,7 @@ protected IBuffer openBuffer(IProgressMonitor pm, Object info) throws JavaModelE
 	return buffer;
 }
 
+@Override
 protected void toStringName(StringBuffer buffer) {
 	buffer.append(this.classFile.getElementName());
 }

@@ -19,16 +19,12 @@ public class BinaryLambdaMethod extends LambdaMethod {
 		super(parent, name, key, sourceStart, parameterTypes, parameterNames, returnType, elementInfo);
 	}
 
-	/*
-	 * @see JavaElement#getPrimaryElement(boolean)
-	 */
+	@Override
 	public IJavaElement getPrimaryElement(boolean checkOwner) {
 		return this;
 	}
 
-	/*
-	 * @see IMember#isBinary()
-	 */
+	@Override
 	public boolean isBinary() {
 		return true;
 	}

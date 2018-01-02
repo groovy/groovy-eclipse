@@ -29,10 +29,12 @@ public class AccessRule {
 		this.problemId = keepLooking ? problemId | IgnoreIfBetter : problemId;
 	}
 
+	@Override
 	public int hashCode() {
 		return this.problemId * 17 + CharOperation.hashCode(this.pattern);
 	}
 
+	@Override
 	public boolean equals(Object obj) {
 		if (!(obj instanceof AccessRule)) return false;
 		AccessRule other = (AccessRule) obj;
@@ -48,6 +50,7 @@ public class AccessRule {
 		return (this.problemId & IgnoreIfBetter) != 0;
 	}
 
+	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
 		buffer.append("pattern="); //$NON-NLS-1$

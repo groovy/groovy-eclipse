@@ -38,6 +38,7 @@ public class RegionBasedHierarchyBuilder extends HierarchyBuilder {
 		super(hierarchy);
 	}
 
+@Override
 public void build(boolean computeSubtypes) {
 
 	JavaModelManager manager = JavaModelManager.getJavaModelManager();

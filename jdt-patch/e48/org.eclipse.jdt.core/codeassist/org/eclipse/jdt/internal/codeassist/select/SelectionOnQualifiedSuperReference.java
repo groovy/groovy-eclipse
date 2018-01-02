@@ -42,12 +42,14 @@ public class SelectionOnQualifiedSuperReference extends QualifiedSuperReference 
 public SelectionOnQualifiedSuperReference(TypeReference name, int pos, int sourceEnd) {
 	super(name, pos, sourceEnd);
 }
+@Override
 public StringBuffer printExpression(int indent, StringBuffer output) {
 
 	output.append("<SelectOnQualifiedSuper:"); //$NON-NLS-1$
 	return super.printExpression(0, output).append('>');
 }
 
+@Override
 public TypeBinding resolveType(BlockScope scope) {
 	TypeBinding binding = super.resolveType(scope);
 

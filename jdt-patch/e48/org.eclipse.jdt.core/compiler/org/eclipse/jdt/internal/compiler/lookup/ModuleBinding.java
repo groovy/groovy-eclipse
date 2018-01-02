@@ -60,9 +60,11 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 		UnNamedModule(LookupEnvironment env) {
 			super(env);
 		}
+		@Override
 		public ModuleBinding[] getAllRequiredModules() {
 			return Binding.NO_MODULES;
 		}
+		@Override
 		public boolean canAccess(PackageBinding pkg) {
 			ModuleBinding mod = pkg.enclosingModule;
 			if (mod != null && mod != this)
@@ -405,6 +407,7 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 	}
 
 	/** Answer the name of this module. The unnamed module is identified by {@link #UNNAMED}. */
+	@Override
 	public char[] name() {
 		return this.moduleName;
 	}
@@ -709,6 +712,7 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 		return this.moduleName;
 	}
 
+	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer(30);
 		if (isOpen())

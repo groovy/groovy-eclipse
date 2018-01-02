@@ -39,6 +39,7 @@ public class CompletionOnImportReference extends ImportReference {
 public CompletionOnImportReference(char[][] tokens , long[] positions, int modifiers) {
 	super(tokens, positions, false, modifiers);
 }
+@Override
 public StringBuffer print(int indent, StringBuffer output, boolean withOnDemand) {
 
 	printIndent(indent, output).append("<CompleteOnImport:"); //$NON-NLS-1$

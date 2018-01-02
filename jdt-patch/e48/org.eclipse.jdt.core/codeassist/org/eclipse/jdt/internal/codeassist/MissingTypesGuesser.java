@@ -78,71 +78,85 @@ public class MissingTypesGuesser extends ASTVisitor {
 			this.firstCall = false;
 		}
 
+		@Override
 		public boolean visit(SingleTypeReference singleTypeReference, BlockScope scope) {
 			this.cleanUp(singleTypeReference);
 			return true;
 		}
 
+		@Override
 		public boolean visit(SingleTypeReference singleTypeReference, ClassScope scope) {
 			this.cleanUp(singleTypeReference);
 			return true;
 		}
 
+		@Override
 		public boolean visit(Wildcard wildcard, BlockScope scope) {
 			this.cleanUp(wildcard);
 			return true;
 		}
 
+		@Override
 		public boolean visit(Wildcard wildcard, ClassScope scope) {
 			this.cleanUp(wildcard);
 			return true;
 		}
 
+		@Override
 		public boolean visit(ArrayTypeReference arrayTypeReference, BlockScope scope) {
 			this.cleanUp(arrayTypeReference);
 			return true;
 		}
 
+		@Override
 		public boolean visit(ArrayTypeReference arrayTypeReference, ClassScope scope) {
 			this.cleanUp(arrayTypeReference);
 			return true;
 		}
 
+		@Override
 		public boolean visit(ParameterizedSingleTypeReference parameterizedSingleTypeReference, BlockScope scope) {
 			this.cleanUp(parameterizedSingleTypeReference);
 			return true;
 		}
 
+		@Override
 		public boolean visit(ParameterizedSingleTypeReference parameterizedSingleTypeReference, ClassScope scope) {
 			this.cleanUp(parameterizedSingleTypeReference);
 			return true;
 		}
 
+		@Override
 		public boolean visit(QualifiedTypeReference qualifiedTypeReference, BlockScope scope) {
 			this.cleanUp(qualifiedTypeReference);
 			return true;
 		}
 
+		@Override
 		public boolean visit(QualifiedTypeReference qualifiedTypeReference, ClassScope scope) {
 			this.cleanUp(qualifiedTypeReference);
 			return true;
 		}
 
+		@Override
 		public boolean visit(ArrayQualifiedTypeReference arrayQualifiedTypeReference, BlockScope scope) {
 			this.cleanUp(arrayQualifiedTypeReference);
 			return true;
 		}
 
+		@Override
 		public boolean visit(ArrayQualifiedTypeReference arrayQualifiedTypeReference, ClassScope scope) {
 			this.cleanUp(arrayQualifiedTypeReference);
 			return true;
 		}
 
+		@Override
 		public boolean visit(ParameterizedQualifiedTypeReference parameterizedQualifiedTypeReference, BlockScope scope) {
 			this.cleanUp(parameterizedQualifiedTypeReference);
 			return true;
 		}
 
+		@Override
 		public boolean visit(ParameterizedQualifiedTypeReference parameterizedQualifiedTypeReference, ClassScope scope) {
 			this.cleanUp(parameterizedQualifiedTypeReference);
 			return true;
@@ -463,6 +477,7 @@ public class MissingTypesGuesser extends ASTVisitor {
 			isQualified ? CharOperation.concatWith(missingTypeName, '.') : null;
 		final ArrayList results = new ArrayList();
 		ISearchRequestor storage = new ISearchRequestor() {
+			@Override
 			public void acceptConstructor(
 					int modifiers,
 					char[] simpleTypeName,
@@ -481,9 +496,11 @@ public class MissingTypesGuesser extends ASTVisitor {
 			public void acceptModule(char[] moduleName) {
 				// TODO Auto-generated method stub
 			}
+			@Override
 			public void acceptPackage(char[] packageName) {
 				// package aren't searched
 			}
+			@Override
 			public void acceptType(
 					char[] packageName,
 					char[] typeName,

@@ -66,6 +66,7 @@ public abstract class NamedMember extends Member {
 		buffer.append('>');
 	}
 
+	@Override
 	public String getElementName() {
 		return this.name;
 	}
@@ -275,6 +276,7 @@ public abstract class NamedMember extends Member {
 
 		class TypeResolveRequestor implements ISelectionRequestor {
 			String[][] answers = null;
+			@Override
 			public void acceptType(char[] packageName, char[] tName, int modifiers, boolean isDeclaration, char[] uniqueKey, int start, int end) {
 				String[] answer = new String[]  {new String(packageName), new String(tName) };
 				if (this.answers == null) {
@@ -286,21 +288,27 @@ public abstract class NamedMember extends Member {
 					this.answers[length] = answer;
 				}
 			}
+			@Override
 			public void acceptError(CategorizedProblem error) {
 				// ignore
 			}
+			@Override
 			public void acceptField(char[] declaringTypePackageName, char[] declaringTypeName, char[] fieldName, boolean isDeclaration, char[] uniqueKey, int start, int end) {
 				// ignore
 			}
+			@Override
 			public void acceptMethod(char[] declaringTypePackageName, char[] declaringTypeName, String enclosingDeclaringTypeSignature, char[] selector, char[][] parameterPackageNames, char[][] parameterTypeNames, String[] parameterSignatures, char[][] typeParameterNames, char[][][] typeParameterBoundNames, boolean isConstructor, boolean isDeclaration, char[] uniqueKey, int start, int end) {
 				// ignore
 			}
+			@Override
 			public void acceptPackage(char[] packageName){
 				// ignore
 			}
+			@Override
 			public void acceptTypeParameter(char[] declaringTypePackageName, char[] declaringTypeName, char[] typeParameterName, boolean isDeclaration, int start, int end) {
 				// ignore
 			}
+			@Override
 			public void acceptMethodTypeParameter(char[] declaringTypePackageName, char[] declaringTypeName, char[] selector, int selectorStart, int selcetorEnd, char[] typeParameterName, boolean isDeclaration, int start, int end) {
 				// ignore
 			}

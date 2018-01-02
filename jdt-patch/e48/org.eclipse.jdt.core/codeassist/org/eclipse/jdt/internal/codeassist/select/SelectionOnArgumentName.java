@@ -28,12 +28,14 @@ public class SelectionOnArgumentName extends Argument {
 	public SelectionOnArgumentName(char[] name , long posNom , TypeReference tr , int modifiers, boolean typeElided){
 		super(name, posNom, tr, modifiers, typeElided);
 	}
+	@Override
 	public TypeBinding bind(MethodScope scope, TypeBinding typeBinding, boolean used) {
 
 		super.bind(scope, typeBinding, used);
 		throw new SelectionNodeFound(this.binding);
 	}
 
+	@Override
 	public StringBuffer print(int indent, StringBuffer output) {
 
 		printIndent(indent, output);
@@ -47,12 +49,14 @@ public class SelectionOnArgumentName extends Argument {
 		return output.append('>');
 	}
 
+	@Override
 	public void resolve(BlockScope scope) {
 
 		super.resolve(scope);
 		throw new SelectionNodeFound(this.binding);
 	}
 	
+	@Override
 	public TypeBinding resolveForCatch(BlockScope scope) {
 		super.resolveForCatch(scope);
 		throw new SelectionNodeFound(this.binding);

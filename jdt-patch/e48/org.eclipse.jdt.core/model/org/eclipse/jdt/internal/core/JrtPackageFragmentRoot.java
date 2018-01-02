@@ -48,6 +48,7 @@ public class JrtPackageFragmentRoot extends JarPackageFragmentRoot implements IM
 		this.moduleName = moduleName;
 	}
 
+	@Override
 	protected boolean computeChildren(OpenableElementInfo info, IResource underlyingResource) throws JavaModelException {
 		final HashtableOfArrayToObject rawPackageInfo = new HashtableOfArrayToObject();
 		final String compliance = CompilerOptions.VERSION_1_8; // TODO: Java 9 Revisit
@@ -86,6 +87,7 @@ public class JrtPackageFragmentRoot extends JarPackageFragmentRoot implements IM
 		((JarPackageFragmentRootInfo) info).rawPackageInfo = rawPackageInfo;
 		return true;
 	}
+	@Override
 	SourceMapper createSourceMapper(IPath sourcePath, IPath rootPath) throws JavaModelException {
 		IClasspathEntry entry = ((JavaProject) getParent()).getClasspathEntryFor(getPath());
 		String encoding = (entry== null) ? null : ((ClasspathEntry) entry).getSourceAttachmentEncoding();
@@ -98,6 +100,7 @@ public class JrtPackageFragmentRoot extends JarPackageFragmentRoot implements IM
 			encoding);
 		return mapper;
 	}
+	@Override
 	public boolean equals(Object o) {
 		if (this == o)
 			return true;
@@ -108,16 +111,20 @@ public class JrtPackageFragmentRoot extends JarPackageFragmentRoot implements IM
 		}
 		return false;
 	}
+	@Override
 	public String getElementName() {
 		return this.moduleName;
 	}
+	@Override
 	public PackageFragment getPackageFragment(String[] pkgName) {
 		// NOTE: Do we need a different kind of package fragment?
 		return new JarPackageFragment(this, pkgName);
 	}
+	@Override
 	public int hashCode() {
 		return this.jarPath.hashCode() + this.moduleName.hashCode();
 	}
+	@Override
 	protected void toStringInfo(int tab, StringBuffer buffer, Object info, boolean showResolvedInfo) {
 		buffer.append(tabString(tab));
 		buffer.append("<module:").append(this.moduleName).append(">"); //$NON-NLS-1$ //$NON-NLS-2$

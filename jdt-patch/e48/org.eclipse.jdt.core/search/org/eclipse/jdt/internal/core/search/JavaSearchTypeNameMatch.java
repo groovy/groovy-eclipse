@@ -37,6 +37,7 @@ public JavaSearchTypeNameMatch(IType type, int modifiers) {
  * Returns whether the matched type is equals to the given object or not.
  * @see java.lang.Object#equals(java.lang.Object)
  */
+@Override
 public boolean equals(Object obj) {
 	if (obj == this) return true; // avoid unnecessary calls for identical objects
 	if (obj instanceof TypeNameMatch) {
@@ -49,16 +50,12 @@ public boolean equals(Object obj) {
 	return false;
 }
 
-/* (non-Javadoc)
- * @see org.eclipse.jdt.core.search.TypeNameMatch#getAccessibility()
- */
+@Override
 public int getAccessibility() {
 	return this.accessibility;
 }
 
-/* (non-Javadoc)
- * @see org.eclipse.jdt.core.search.TypeNameMatch#getModifiers()
- */
+@Override
 public int getModifiers() {
 	return this.modifiers;
 }
@@ -68,6 +65,7 @@ public int getModifiers() {
  * from up-to-date index file.
  * @see org.eclipse.jdt.core.search.TypeNameMatch#getType()
  */
+@Override
 public IType getType() {
 	return this.type;
 }
@@ -76,6 +74,7 @@ public IType getType() {
  * Returns the hash code of the matched type.
  * @see java.lang.Object#hashCode()
  */
+@Override
 public int hashCode() {
 	if (this.type == null) return this.modifiers;
 	return this.type.hashCode();
@@ -112,6 +111,7 @@ public void setType(IType type) {
  * Returns the string of the matched type.
  * @see java.lang.Object#toString()
  */
+@Override
 public String toString() {
 	if (this.type == null) return super.toString();
 	return this.type.toString();

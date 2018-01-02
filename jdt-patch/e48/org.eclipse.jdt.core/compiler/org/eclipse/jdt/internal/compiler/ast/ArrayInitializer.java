@@ -41,6 +41,7 @@ public class ArrayInitializer extends Expression {
 		super();
 	}
 
+	@Override
 	public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 
 		if (this.expressions != null) {
@@ -61,6 +62,7 @@ public class ArrayInitializer extends Expression {
 		return flowInfo;
 	}
 
+	@Override
 	public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 		generateCode(null, null, currentScope, codeStream, valueRequired);
 	}
@@ -136,6 +138,7 @@ public class ArrayInitializer extends Expression {
 		codeStream.recordPositionsFrom(pc, this.sourceStart);
 	}
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 
 		output.append('{');
@@ -155,6 +158,7 @@ public class ArrayInitializer extends Expression {
 		return output.append('}');
 	}
 
+	@Override
 	public TypeBinding resolveTypeExpecting(BlockScope scope, TypeBinding expectedType) {
 		// Array initializers can only occur on the right hand side of an assignment
 		// expression, therefore the expected type contains the valid information
@@ -238,6 +242,7 @@ public class ArrayInitializer extends Expression {
 		return null;
 	}
 
+	@Override
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 
 		if (visitor.visit(this, scope)) {

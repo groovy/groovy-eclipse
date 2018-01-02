@@ -51,6 +51,7 @@ public String getHeader();
  *
  * @return the name of this compilation unit, or <code>null</code> if none
  */
+@Override
 public String getName();
 /**
  * Sets the header comment for this compilation unit. The header comment
@@ -68,5 +69,6 @@ public void setHeader(String comment);
  *
  * @param name the given name
  */
+@Override
 public void setName(String name);
 }

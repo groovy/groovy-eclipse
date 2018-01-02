@@ -26,19 +26,23 @@ public class CompletionOnKeyword3 extends SingleNameReference implements Complet
 		this.possibleKeywords = possibleKeywords;
 		this.tryOrCatch = afterTryOrCatch;
 	}
+	@Override
 	public char[] getToken() {
 		return this.token;
 	}
+	@Override
 	public char[][] getPossibleKeywords() {
 		return this.possibleKeywords;
 	}
 	public boolean afterTryOrCatch() {
 		return this.tryOrCatch;
 	}
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 
 		return output.append("<CompleteOnKeyword:").append(this.token).append('>'); //$NON-NLS-1$
 	}
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 		throw new CompletionNodeFound(this, scope);
 	}

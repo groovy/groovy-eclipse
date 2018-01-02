@@ -27,6 +27,7 @@ GlobalVariableWrapper(GlobalVariable variable) {
 /**
  * @see org.eclipse.jdt.core.eval.IGlobalVariable#getInitializer
  */
+@Override
 public String getInitializer() {
 	char[] initializer = this.variable.getInitializer();
 	if (initializer != null) {
@@ -38,12 +39,14 @@ public String getInitializer() {
 /**
  * @see org.eclipse.jdt.core.eval.IGlobalVariable#getName
  */
+@Override
 public String getName() {
 	return new String(this.variable.getName());
 }
 /**
  * @see org.eclipse.jdt.core.eval.IGlobalVariable#getTypeName
  */
+@Override
 public String getTypeName() {
 	return new String(this.variable.getTypeName());
 }

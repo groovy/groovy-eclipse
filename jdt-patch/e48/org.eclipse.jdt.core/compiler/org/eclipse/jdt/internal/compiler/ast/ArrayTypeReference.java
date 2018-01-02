@@ -57,11 +57,13 @@ public class ArrayTypeReference extends SingleTypeReference {
 		this.annotationsOnDimensions = annotationsOnDimensions;
 	}
 
+	@Override
 	public int dimensions() {
 
 		return this.dimensions;
 	}
 	
+	@Override
 	public int extraDimensions() {
 		return this.extendedDimensions;
 	}
@@ -69,6 +71,7 @@ public class ArrayTypeReference extends SingleTypeReference {
 	/**
 	 @see org.eclipse.jdt.internal.compiler.ast.TypeReference#getAnnotationsOnDimensions(boolean)
 	*/
+	@Override
 	public Annotation[][] getAnnotationsOnDimensions(boolean useSourceOrder) {
 		if (useSourceOrder || this.annotationsOnDimensions == null || this.annotationsOnDimensions.length == 0 || this.extendedDimensions == 0 || this.extendedDimensions == this.dimensions)
 			return this.annotationsOnDimensions;
@@ -79,12 +82,14 @@ public class ArrayTypeReference extends SingleTypeReference {
 		return externalAnnotations;
 	}
 	
+	@Override
 	public void setAnnotationsOnDimensions(Annotation [][] annotationsOnDimensions) {
 		this.annotationsOnDimensions = annotationsOnDimensions;
 	}
 	/**
 	 * @return char[][]
 	 */
+	@Override
 	public char [][] getParameterizedTypeName(){
 		int dim = this.dimensions;
 		char[] dimChars = new char[dim*2];
@@ -95,6 +100,7 @@ public class ArrayTypeReference extends SingleTypeReference {
 		}
 		return new char[][]{ CharOperation.concat(this.token, dimChars) };
 	}
+	@Override
 	protected TypeBinding getTypeBinding(Scope scope) {
 
 		if (this.resolvedType != null) {
@@ -108,6 +114,7 @@ public class ArrayTypeReference extends SingleTypeReference {
 
 	}
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output){
 
 		super.printExpression(indent, output);
@@ -139,6 +146,7 @@ public class ArrayTypeReference extends SingleTypeReference {
 		return output;
 	}
 
+	@Override
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		if (visitor.visit(this, scope)) {
 			if (this.annotations != null) {
@@ -162,6 +170,7 @@ public class ArrayTypeReference extends SingleTypeReference {
 		visitor.endVisit(this, scope);
 	}
 
+	@Override
 	public void traverse(ASTVisitor visitor, ClassScope scope) {
 		if (visitor.visit(this, scope)) {
 			if (this.annotations != null) {
@@ -185,6 +194,7 @@ public class ArrayTypeReference extends SingleTypeReference {
 		visitor.endVisit(this, scope);
 	}
 
+	@Override
 	protected TypeBinding internalResolveType(Scope scope, int location) {
 		TypeBinding internalResolveType = super.internalResolveType(scope, location);
 		internalResolveType = maybeMarkArrayContentsNonNull(scope, internalResolveType, this.sourceStart, this.dimensions,

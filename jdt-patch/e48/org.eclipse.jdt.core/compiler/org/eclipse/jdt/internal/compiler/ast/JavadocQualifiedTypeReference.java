@@ -65,21 +65,26 @@ public class JavadocQualifiedTypeReference extends QualifiedTypeReference {
 		}
 		return this.resolvedType;
 	}
+	@Override
 	protected void reportDeprecatedType(TypeBinding type, Scope scope) {
 		scope.problemReporter().javadocDeprecatedType(type, this, scope.getDeclarationModifiers());
 	}
 	
+	@Override
 	protected void reportDeprecatedType(TypeBinding type, Scope scope, int index) {
 		scope.problemReporter().javadocDeprecatedType(type, this, scope.getDeclarationModifiers(), index);
 	}
 
+	@Override
 	protected void reportInvalidType(Scope scope) {
 		scope.problemReporter().javadocInvalidType(this, this.resolvedType, scope.getDeclarationModifiers());
 	}
+	@Override
 	public TypeBinding resolveType(BlockScope blockScope, boolean checkBounds, int location) {
 		return internalResolveType(blockScope, checkBounds);
 	}
 
+	@Override
 	public TypeBinding resolveType(ClassScope classScope, int location) {
 		return internalResolveType(classScope, false);
 	}
@@ -88,11 +93,13 @@ public class JavadocQualifiedTypeReference extends QualifiedTypeReference {
 	 * Redefine to capture javadoc specific signatures
 	 * @see org.eclipse.jdt.internal.compiler.ast.ASTNode#traverse(org.eclipse.jdt.internal.compiler.ASTVisitor, org.eclipse.jdt.internal.compiler.lookup.BlockScope)
 	 */
+	@Override
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		visitor.visit(this, scope);
 		visitor.endVisit(this, scope);
 	}
 
+	@Override
 	public void traverse(ASTVisitor visitor, ClassScope scope) {
 		visitor.visit(this, scope);
 		visitor.endVisit(this, scope);

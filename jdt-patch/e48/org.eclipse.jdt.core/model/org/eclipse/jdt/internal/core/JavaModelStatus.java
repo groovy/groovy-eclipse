@@ -171,18 +171,21 @@ public class JavaModelStatus extends Status implements IJavaModelStatus, IJavaMo
 	/**
 	 * @see IStatus
 	 */
+	@Override
 	public IStatus[] getChildren() {
 		return this.children;
 	}
 	/**
 	 * @see IJavaModelStatus
 	 */
+	@Override
 	public IJavaElement[] getElements() {
 		return this.elements;
 	}
 	/**
 	 * Returns the message that is relevant to the code of this status.
 	 */
+	@Override
 	public String getMessage() {
 		Throwable exception = getException();
 		if (exception == null) {
@@ -412,12 +415,14 @@ public class JavaModelStatus extends Status implements IJavaModelStatus, IJavaMo
 	/**
 	 * @see IJavaModelStatus#getPath()
 	 */
+	@Override
 	public IPath getPath() {
 		return this.path;
 	}
 	/**
 	 * @see IStatus#getSeverity()
 	 */
+	@Override
 	public int getSeverity() {
 		if (this.children == NO_CHILDREN) return super.getSeverity();
 		int severity = -1;
@@ -433,12 +438,14 @@ public class JavaModelStatus extends Status implements IJavaModelStatus, IJavaMo
 	 * @see IJavaModelStatus#getString()
 	 * @deprecated
 	 */
+	@Override
 	public String getString() {
 		return this.string;
 	}
 	/**
 	 * @see IJavaModelStatus#isDoesNotExist()
 	 */
+	@Override
 	public boolean isDoesNotExist() {
 		int code = getCode();
 		return code == ELEMENT_DOES_NOT_EXIST || code == ELEMENT_NOT_ON_CLASSPATH;
@@ -446,18 +453,21 @@ public class JavaModelStatus extends Status implements IJavaModelStatus, IJavaMo
 	/**
 	 * @see IStatus#isMultiStatus()
 	 */
+	@Override
 	public boolean isMultiStatus() {
 		return this.children != NO_CHILDREN;
 	}
 	/**
 	 * @see IStatus#isOK()
 	 */
+	@Override
 	public boolean isOK() {
 		return getCode() == OK;
 	}
 	/**
 	 * @see IStatus#matches(int)
 	 */
+	@Override
 	public boolean matches(int mask) {
 		if (! isMultiStatus()) {
 			return matches(this, mask);
@@ -493,6 +503,7 @@ public class JavaModelStatus extends Status implements IJavaModelStatus, IJavaMo
 	 * Returns a printable representation of this exception for debugging
 	 * purposes.
 	 */
+	@Override
 	public String toString() {
 		if (this == VERIFIED_OK){
 			return "JavaModelStatus[OK]"; //$NON-NLS-1$

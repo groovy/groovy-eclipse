@@ -68,6 +68,7 @@ public LongLiteral convertToMinValue() {
 	}
 	return this;
 }
+@Override
 public void computeConstant() {
 	char[] token = this.reducedForm != null ? this.reducedForm : this.source;
 	int tokenLength = token.length;
@@ -146,6 +147,7 @@ private void computeValue(char[] token, int tokenLength, int radix, int j) {
  * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
  * @param valueRequired boolean
  */
+@Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 	int pc = codeStream.position;
 	if (valueRequired) {
@@ -154,9 +156,11 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean
 	codeStream.recordPositionsFrom(pc, this.sourceStart);
 }
 
+@Override
 public TypeBinding literalType(BlockScope scope) {
 	return TypeBinding.LONG;
 }
+@Override
 public void traverse(ASTVisitor visitor, BlockScope scope) {
 	visitor.visit(this, scope);
 	visitor.endVisit(this, scope);

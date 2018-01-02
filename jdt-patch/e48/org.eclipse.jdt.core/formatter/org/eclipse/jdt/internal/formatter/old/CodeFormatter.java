@@ -39,6 +39,7 @@ public class CodeFormatter implements TerminalTokens, org.eclipse.jdt.core.ICode
 		}
 	}
 
+	@Override
 	public String format(String string, int indentLevel, int[] positions, String lineSeparator) {
 		// initialize the new formatter with old options
 		Map newOptions = DefaultCodeFormatterConstants.getEclipse21Settings();

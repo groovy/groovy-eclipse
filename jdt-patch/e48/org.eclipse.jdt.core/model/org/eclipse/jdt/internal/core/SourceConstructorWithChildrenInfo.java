@@ -20,6 +20,7 @@ public class SourceConstructorWithChildrenInfo extends SourceConstructorInfo {
 		this.children = children;
 	}
 
+	@Override
 	public IJavaElement[] getChildren() {
 		return this.children;
 	}

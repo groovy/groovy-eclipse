@@ -38,34 +38,42 @@ public PackageReferencePattern(char[] pkgName, int matchRule) {
 PackageReferencePattern(int matchRule) {
 	super(PKG_REF_PATTERN, matchRule);
 }
+@Override
 public void decodeIndexKey(char[] key) {
 	// Package reference keys are encoded as 'name' (where 'name' is the last segment of the package name)
 	this.pkgName = key;
 }
+@Override
 public SearchPattern getBlankPattern() {
 	return new PackageReferencePattern(R_EXACT_MATCH | R_CASE_SENSITIVE);
 }
+@Override
 public char[] getIndexKey() {
 	// Package reference keys are encoded as 'name' (where 'name' is the last segment of the package name)
 	if (this.currentSegment >= 0)
 		return this.segments[this.currentSegment];
 	return null;
 }
+@Override
 public char[][] getIndexCategories() {
 	return CATEGORIES;
 }
+@Override
 protected boolean hasNextQuery() {
 	// if package has at least 4 segments, don't look at the first 2 since they are mostly
 	// redundant (e.g. in 'org.eclipse.jdt.core.*' 'org.eclipse' is used all the time)
 	return --this.currentSegment >= (this.segments.length >= 4 ? 2 : 0);
 }
+@Override
 public boolean matchesDecodedKey(SearchPattern decodedPattern) {
 	return true; // index key is not encoded so query results all match
 }
+@Override
 protected void resetQuery() {
 	/* walk the segments from end to start as it will find less potential references using 'lang' than 'java' */
 	this.currentSegment = this.segments.length - 1;
 }
+@Override
 protected StringBuffer print(StringBuffer output) {
 	output.append("PackageReferencePattern: <"); //$NON-NLS-1$
 	if (this.pkgName != null)

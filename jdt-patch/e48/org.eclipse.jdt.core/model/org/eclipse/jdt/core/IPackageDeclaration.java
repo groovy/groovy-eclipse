@@ -23,5 +23,6 @@ public interface IPackageDeclaration extends IJavaElement, ISourceReference, IAn
  *
  * @return the name of the package the statement
  */
+@Override
 String getElementName();
 }

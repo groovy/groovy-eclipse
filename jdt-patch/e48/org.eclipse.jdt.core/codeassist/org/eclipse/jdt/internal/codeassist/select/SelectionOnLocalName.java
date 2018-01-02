@@ -20,12 +20,14 @@ public class SelectionOnLocalName extends LocalDeclaration{
 		super(name, sourceStart, sourceEnd);
 	}
 
+	@Override
 	public void resolve(BlockScope scope) {
 
 		super.resolve(scope);
 		throw new SelectionNodeFound(this.binding);
 	}
 
+	@Override
 	public StringBuffer printAsExpression(int indent, StringBuffer output) {
 		printIndent(indent, output);
 		output.append("<SelectionOnLocalName:"); //$NON-NLS-1$
@@ -38,6 +40,7 @@ public class SelectionOnLocalName extends LocalDeclaration{
 		return output.append('>');
 	}
 
+	@Override
 	public StringBuffer printStatement(int indent, StringBuffer output) {
 		printAsExpression(indent, output);
 		return output.append(';');

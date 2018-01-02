@@ -133,9 +133,11 @@ public class FakedTrackingVariable extends LocalDeclaration {
 			flowInfo.markNullStatus(this.binding, nullStatus); // mark that this flow has seen the resource
 	}
 	
+	@Override
 	public void generateCode(BlockScope currentScope, CodeStream codeStream)
 	{ /* NOP - this variable is completely dummy, ie. for analysis only. */ }
 
+	@Override
 	public void resolve (BlockScope scope) {
 		// only need the binding, which is used as reference in FlowInfo methods.
 		this.binding = new LocalVariableBinding(

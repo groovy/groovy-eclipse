@@ -25,6 +25,7 @@ public class RecoveredTypeReference extends RecoveredElement {
 	/*
 	 * Answer the associated parsed structure
 	 */
+	@Override
 	public ASTNode parseTree(){
 		return this.typeReference;
 	}
@@ -34,12 +35,14 @@ public class RecoveredTypeReference extends RecoveredElement {
 	/*
 	 * Answer the very source end of the corresponding parse node
 	 */
+	@Override
 	public String toString(int tab) {
 		return tabString(tab) + "Recovered typereference: " + this.typeReference.toString(); //$NON-NLS-1$
 	}
 	public TypeReference updatedImportReference(){
 		return this.typeReference;
 	}
+	@Override
 	public void updateParseTree(){
 		updatedImportReference();
 	}

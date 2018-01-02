@@ -48,6 +48,7 @@ public class CodeSnippetThisReference extends ThisReference implements Evaluatio
 		this.isImplicit = isImplicit;
 	}
 	
+	@Override
 	public boolean checkAccess(BlockScope scope, ReferenceBinding thisType) {
 		// this/super cannot be used in constructor call
 		MethodScope methodScope = scope.methodScope();
@@ -65,6 +66,7 @@ public class CodeSnippetThisReference extends ThisReference implements Evaluatio
 		return true;
 	}
 	
+	@Override
 	public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 		int pc = codeStream.position;
 		if (valueRequired) {
@@ -77,22 +79,27 @@ public class CodeSnippetThisReference extends ThisReference implements Evaluatio
 	/**
 	 * @see org.eclipse.jdt.internal.compiler.lookup.InvocationSite#genericTypeArguments()
 	 */
+	@Override
 	public TypeBinding[] genericTypeArguments() {
 		return null;
 	}
 	
+	@Override
 	public InferenceContext18 freshInferenceContext(Scope scope) {
 		return null;
 	}
 
+	@Override
 	public boolean isSuperAccess(){
 		return false;
 	}
 	
+	@Override
 	public boolean isTypeAccess(){
 		return false;
 	}
 	
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output){
 
 		char[] declaringType = this.evaluationContext.declaringTypeName;
@@ -104,6 +111,7 @@ public class CodeSnippetThisReference extends ThisReference implements Evaluatio
 		return output.append(")this"); //$NON-NLS-1$
 	}
 	
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 		// implicit this
 		this.constant = Constant.NotAConstant;
@@ -123,14 +131,17 @@ public class CodeSnippetThisReference extends ThisReference implements Evaluatio
 		return this.resolvedType = this.delegateThis.type;
 	}
 	
+	@Override
 	public void setActualReceiverType(ReferenceBinding receiverType) {
 		// ignored
 	}
 	
+	@Override
 	public void setDepth(int depth){
 		// ignored
 	}
 	
+	@Override
 	public void setFieldIndex(int index){
 		// ignored
 	}

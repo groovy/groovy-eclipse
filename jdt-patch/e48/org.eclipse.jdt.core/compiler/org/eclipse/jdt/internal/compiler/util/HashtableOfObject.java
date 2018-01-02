@@ -47,6 +47,7 @@ public final class HashtableOfObject implements Cloneable {
 		this.elementSize = 0;
 	}
 
+	@Override
 	public Object clone() throws CloneNotSupportedException {
 		HashtableOfObject result = (HashtableOfObject) super.clone();
 		result.elementSize = this.elementSize;
@@ -177,6 +178,7 @@ public final class HashtableOfObject implements Cloneable {
 		return this.elementSize;
 	}
 
+	@Override
 	public String toString() {
 		String s = ""; //$NON-NLS-1$
 		Object object;

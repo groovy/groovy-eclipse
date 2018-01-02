@@ -58,6 +58,7 @@ class ConstraintTypeFormula extends ConstraintFormula {
 	ConstraintTypeFormula() { }
 
 	// return: ReductionResult or ConstraintFormula[]
+	@Override
 	public Object reduce(InferenceContext18 inferenceContext) {
 		switch (this.relation) {
 		case COMPATIBLE:
@@ -390,6 +391,7 @@ class ConstraintTypeFormula extends ConstraintFormula {
 					TypeBinding.equalsEquals(this.left, that.left) && TypeBinding.equalsEquals(this.right, that.right));
 	}
 	
+	@Override
 	public boolean applySubstitution(BoundSet solutionSet, InferenceVariable[] variables) {
 		super.applySubstitution(solutionSet, variables);
 		for (int i=0; i<variables.length; i++) {
@@ -403,6 +405,7 @@ class ConstraintTypeFormula extends ConstraintFormula {
 	}
 
 	// debugging
+	@Override
 	public String toString() {
 		StringBuffer buf = new StringBuffer("Type Constraint:\n"); //$NON-NLS-1$
 		buf.append('\t').append(LEFT_ANGLE_BRACKET);

@@ -56,9 +56,11 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 		this.modulePathMap = new HashMap<>();
 	}
 
+	@Override
 	public List fetchLinkedJars(FileSystem.ClasspathSectionProblemReporter problemReporter) {
 		return null;
 	}
+	@Override
 	public char[][] getModulesDeclaringPackage(String qualifiedPackageName, String moduleName) {
 		List<String> modules = JRTUtil.getModulesDeclaringPackage(this.file, qualifiedPackageName, moduleName);
 		return CharOperation.toCharArrays(modules);
@@ -67,9 +69,11 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 	public boolean hasCompilationUnit(String qualifiedPackageName, String moduleName) {
 		return JRTUtil.hasCompilationUnit(this.file, qualifiedPackageName, moduleName);
 	}
+	@Override
 	public NameEnvironmentAnswer findClass(char[] typeName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName) {
 		return findClass(typeName, qualifiedPackageName, moduleName, qualifiedBinaryFileName, false);
 	}
+	@Override
 	public NameEnvironmentAnswer findClass(char[] typeName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName, boolean asBinaryOnly) {
 		if (!isPackage(qualifiedPackageName, moduleName))
 			return null; // most common case
@@ -114,6 +118,7 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 	public boolean hasAnnotationFileFor(String qualifiedTypeName) {
 		return false; // TODO(SHMOD): implement
 	}
+	@Override
 	public char[][][] findTypeNames(final String qualifiedPackageName, final String moduleName) {
 		if (!isPackage(qualifiedPackageName, moduleName))
 			return null; // most common case
@@ -179,6 +184,7 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 					typeName.toCharArray()));
 		}
 	}
+	@Override
 	public void initialize() throws IOException {
 		loadModules();
 	}
@@ -255,6 +261,7 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 		Map<String, IModule> cache = ModulesCache.get(this.file.getPath());
 		return selectModules(cache.keySet(), limitModule, getModule);
 	}
+	@Override
 	protected <T> List<String> allModules(Iterable<T> allSystemModules, Function<T,String> getModuleName, Function<T,IModule> getModule) {
 		List<String> result = new ArrayList<>();
 		boolean hasJavaDotSE = false;
@@ -330,6 +337,7 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 //			}
 //		return this.packageCache.contains(qualifiedPackageName);
 //	}
+	@Override
 	public void reset() {
 		if (this.closeZipFileAtEnd) {
 			if (this.annotationZipFile != null) {
@@ -346,9 +354,11 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 			this.annotationPaths = null;
 		}
 	}
+	@Override
 	public String toString() {
 		return "Classpath for JRT System " + this.file.getPath(); //$NON-NLS-1$
 	}
+	@Override
 	public char[] normalizedPath() {
 		if (this.normalizedPath == null) {
 			String path2 = this.getPath();
@@ -360,6 +370,7 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 		}
 		return this.normalizedPath;
 	}
+	@Override
 	public String getPath() {
 		if (this.path == null) {
 			try {
@@ -371,6 +382,7 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 		}
 		return this.path;
 	}
+	@Override
 	public int getMode() {
 		return BINARY;
 	}
@@ -378,6 +390,7 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 	public boolean hasModule() {
 		return true;
 	}
+	@Override
 	public IModule getModule(char[] moduleName) {
 		Map<String, IModule> modules = ModulesCache.get(this.file.getPath());
 		if (modules != null) {

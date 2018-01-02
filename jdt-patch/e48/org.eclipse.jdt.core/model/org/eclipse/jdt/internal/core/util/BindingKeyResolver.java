@@ -97,6 +97,7 @@ public class BindingKeyResolver extends BindingKeyParser {
 			return CharOperation.hashCode(computeUniqueKey());
 		}
 
+		@Override
 		public boolean equals(Object obj) {
 			if (!(obj instanceof SyntheticLocalVariableBinding))
 				return false;
@@ -160,6 +161,7 @@ public class BindingKeyResolver extends BindingKeyParser {
 		return this.moduleName;
 	}
 
+	@Override
 	public void consumeAnnotation() {
 		int size = this.types.size();
 		if (size == 0) return;
@@ -183,10 +185,12 @@ public class BindingKeyResolver extends BindingKeyParser {
 		}
 	}
 
+	@Override
 	public void consumeArrayDimension(char[] brakets) {
 		this.dimension = brakets.length;
 	}
 
+	@Override
 	public void consumeBaseType(char[] baseTypeSig) {
 		this.compoundName = new char[][] {getKey().toCharArray()};
 		TypeBinding baseTypeBinding = getBaseTypeBinding(baseTypeSig);
@@ -195,10 +199,12 @@ public class BindingKeyResolver extends BindingKeyParser {
 		}
 	}
 
+	@Override
 	public void consumeCapture18ID(int id, int position) {
 		consumeAnyCapture(id, position);
 	}
 
+	@Override
 	public void consumeCapture(final int position) {
 		consumeAnyCapture(-1, position);
 	}
@@ -251,41 +257,49 @@ public class BindingKeyResolver extends BindingKeyParser {
 				}
 				return false;
 			}
+			@Override
 			public boolean visit(SingleNameReference singleNameReference, BlockScope blockScope) {
 				if (checkType(singleNameReference.resolvedType))
 					return false;
 				return super.visit(singleNameReference, blockScope);
 			}
+			@Override
 			public boolean visit(QualifiedNameReference qualifiedNameReference, BlockScope blockScope) {
 				if (checkType(qualifiedNameReference.resolvedType))
 					return false;
 				return super.visit(qualifiedNameReference, blockScope);
 			}
+			@Override
 			public boolean visit(MessageSend messageSend, BlockScope blockScope) {
 				if (checkType(messageSend.resolvedType))
 					return false;
 				return super.visit(messageSend, blockScope);
 			}
+			@Override
 			public boolean visit(FieldReference fieldReference, BlockScope blockScope) {
 				if (checkType(fieldReference.resolvedType))
 					return false;
 				return super.visit(fieldReference, blockScope);
 			}
+			@Override
 			public boolean visit(ConditionalExpression conditionalExpression, BlockScope blockScope) {
 				if (checkType(conditionalExpression.resolvedType))
 					return false;
 				return super.visit(conditionalExpression, blockScope);
 			}
+			@Override
 			public boolean visit(CastExpression castExpression, BlockScope blockScope) {
 				if (checkType(castExpression.resolvedType))
 					return false;
 				return super.visit(castExpression, blockScope);
 			}
+			@Override
 			public boolean visit(Assignment assignment, BlockScope blockScope) {
 				if (checkType(assignment.resolvedType))
 					return false;
 				return super.visit(assignment, blockScope);
 			}
+			@Override
 			public boolean visit(ArrayReference arrayReference, BlockScope blockScope) {
 				if (checkType(arrayReference.resolvedType))
 					return false;
@@ -297,10 +311,12 @@ public class BindingKeyResolver extends BindingKeyParser {
 		this.typeBinding = captureFinder.capture;
 	}
 
+	@Override
 	public void consumeException() {
 		this.types = new ArrayList();
 	}
 
+	@Override
 	public void consumeField(char[] fieldName) {
 		if (this.typeBinding == null)
 			return;
@@ -315,6 +331,7 @@ public class BindingKeyResolver extends BindingKeyParser {
 		}
 	}
 
+	@Override
 	public void consumeParameterizedGenericMethod() {
 		if (this.methodBinding == null)
 			return;
@@ -331,6 +348,7 @@ public class BindingKeyResolver extends BindingKeyParser {
 		this.compilerBinding = this.methodBinding;
 	}
 
+	@Override
 	public void consumeLocalType(char[] uniqueKey) {
 		if (this.parsedUnit == null) {
 			this.typeBinding = null;
@@ -344,6 +362,7 @@ public class BindingKeyResolver extends BindingKeyParser {
  			}
 	}
 
+	@Override
 	public void consumeLocalVar(char[] varName, int occurrenceCount, int argumentPosition) {
 		if (this.scope == null) {
 			if (this.methodBinding == null)
@@ -385,6 +404,7 @@ public class BindingKeyResolver extends BindingKeyParser {
 		}
 	}
 
+	@Override
 	public void consumeMethod(char[] selector, char[] signature) {
 		if (this.typeBinding == null)
 			return;
@@ -469,15 +489,18 @@ public class BindingKeyResolver extends BindingKeyParser {
 		}
 		return binding;
 	}
+	@Override
 	public void consumeMemberType(char[] simpleTypeName) {
 		this.typeBinding = getTypeBinding(simpleTypeName);
 	}
 
+	@Override
 	public void consumePackage(char[] pkgName) {
 		this.compoundName = CharOperation.splitOn('/', pkgName);
 		this.compilerBinding = new PackageBinding(this.compoundName, null, this.environment, this.environment.module); //TODO(SHMOD) enclosingModule
 	}
 
+	@Override
 	public void consumeParameterizedType(char[] simpleTypeName, boolean isRaw) {
 		if (this.typeBinding == null)
 			return;
@@ -510,10 +533,12 @@ public class BindingKeyResolver extends BindingKeyParser {
 	}
 
 
+	@Override
 	public void consumeParser(BindingKeyParser parser) {
 		this.types.add(parser);
 	}
 
+	@Override
 	public void consumeScope(int scopeNumber) {
 		if (this.scope == null) {
 			if (this.methodBinding == null)
@@ -525,18 +550,22 @@ public class BindingKeyResolver extends BindingKeyParser {
 		this.scope = (BlockScope) this.scope.subscopes[scopeNumber];
 	}
 
+	@Override
 	public void consumeRawType() {
 		if (this.typeBinding == null) return;
 		this.typeBinding = this.environment.convertToRawType(this.typeBinding, false /*do not force conversion of enclosing types*/);
 	}
+	@Override
 	public void consumeSecondaryType(char[] simpleTypeName) {
 		this.secondarySimpleName = simpleTypeName;
 	}
 
+	@Override
 	public void consumeFullyQualifiedName(char[] fullyQualifiedName) {
 		this.compoundName = CharOperation.splitOn('/', fullyQualifiedName);
 	}
 
+	@Override
 	public void consumeTopLevelType() {
 		char[] fileName;
 		this.parsedUnit = getCompilationUnitDeclaration();
@@ -552,6 +581,7 @@ public class BindingKeyResolver extends BindingKeyParser {
 		}
 	}
 
+	@Override
 	public void consumeKey() {
 		if (this.typeBinding != null) {
 			this.typeBinding = getArrayBinding(this.dimension, this.typeBinding);
@@ -559,6 +589,7 @@ public class BindingKeyResolver extends BindingKeyParser {
 		}
 	}
 
+	@Override
 	public void consumeTypeVariable(char[] position, char[] typeVariableName) {
 		if (position.length > 0) {
 			if (this.typeBinding == null)
@@ -586,15 +617,18 @@ public class BindingKeyResolver extends BindingKeyParser {
 		}
 	}
 
+	@Override
 	public void consumeTypeWithCapture() {
 		BindingKeyResolver resolver = (BindingKeyResolver) this.types.get(0);
 		this.typeBinding =(TypeBinding) resolver.compilerBinding;
 	}
 
+	@Override
 	public void consumeWildcardRank(int aRank) {
 		this.wildcardRank = aRank;
 	}
 	
+	@Override
 	public void consumeWildCard(int kind) {
 		switch (kind) {
 			case Wildcard.EXTENDS:
@@ -615,6 +649,7 @@ public class BindingKeyResolver extends BindingKeyParser {
 		}
 	}
 
+	@Override
 	public void consumeModule(char[] aModuleName) {
 		this.moduleName = aModuleName;
 		this.compilerBinding = this.environment.getModule(aModuleName);
@@ -748,14 +783,17 @@ public class BindingKeyResolver extends BindingKeyParser {
 		return arguments;
 	}
 
+	@Override
 	public void malformedKey() {
 		this.compoundName = CharOperation.NO_CHAR_CHAR;
 	}
 
+	@Override
 	public BindingKeyParser newParser() {
 		return new BindingKeyResolver(this, this.compiler, this.environment, this.outerMostParsedUnit == null ? this.parsedUnit : this.outerMostParsedUnit, this.resolvedUnits);
 	}
 
+	@Override
 	public String toString() {
 		return getKey();
 	}

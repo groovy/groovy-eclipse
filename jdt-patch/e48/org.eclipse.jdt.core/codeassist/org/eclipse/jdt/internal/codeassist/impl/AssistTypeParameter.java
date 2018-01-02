@@ -25,6 +25,7 @@ public class AssistTypeParameter extends TypeParameter {
 		this.infoCache = infoCache;
 	}
 
+	@Override
 	public Object getElementInfo(IProgressMonitor monitor) throws JavaModelException {
 		return this.infoCache.get(this);
 	}

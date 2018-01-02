@@ -33,6 +33,7 @@ protected Initializer(JavaElement parent, int count) {
 		throw new IllegalArgumentException();
 	this.occurrenceCount = count;
 }
+@Override
 public boolean equals(Object o) {
 	if (!(o instanceof Initializer)) return false;
 	return super.equals(o);
@@ -40,12 +41,14 @@ public boolean equals(Object o) {
 /**
  * @see IJavaElement
  */
+@Override
 public int getElementType() {
 	return INITIALIZER;
 }
 /**
  * @see JavaElement#getHandleMemento(StringBuffer)
  */
+@Override
 protected void getHandleMemento(StringBuffer buff) {
 	((JavaElement)getParent()).getHandleMemento(buff);
 	buff.append(getHandleMementoDelimiter());
@@ -54,14 +57,17 @@ protected void getHandleMemento(StringBuffer buff) {
 /**
  * @see JavaElement#getHandleMemento()
  */
+@Override
 protected char getHandleMementoDelimiter() {
 	return JavaElement.JEM_INITIALIZER;
 }
+@Override
 public int hashCode() {
 	return Util.combineHashCodes(this.parent.hashCode(), this.occurrenceCount);
 }
 /**
  */
+@Override
 public String readableName() {
 
 	return ((JavaElement)getDeclaringType()).readableName();
@@ -69,18 +75,19 @@ public String readableName() {
 /**
  * @see ISourceManipulation
  */
+@Override
 public void rename(String newName, boolean force, IProgressMonitor monitor) throws JavaModelException {
 	throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.INVALID_ELEMENT_TYPES, this));
 }
 /**
  * @see IMember
  */
+@Override
 public ISourceRange getNameRange() {
 	return null;
 }
-/*
- * @see JavaElement#getPrimaryElement(boolean)
- */
+
+@Override
 public IJavaElement getPrimaryElement(boolean checkOwner) {
 	if (checkOwner) {
 		CompilationUnit cu = (CompilationUnit)getAncestor(COMPILATION_UNIT);
@@ -92,6 +99,7 @@ public IJavaElement getPrimaryElement(boolean checkOwner) {
 /**
  * @private Debugging purposes
  */
+@Override
 protected void toStringInfo(int tab, StringBuffer buffer, Object info, boolean showResolvedInfo) {
 	buffer.append(tabString(tab));
 	if (info == null) {

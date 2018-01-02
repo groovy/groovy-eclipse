@@ -66,10 +66,12 @@ public class StackMapAttribute
 		}
 	}
 
+	@Override
 	public int getNumberOfEntries() {
 		return this.numberOfEntries;
 	}
 
+	@Override
 	public IStackMapFrame[] getStackMapFrame() {
 		return this.frames;
 	}

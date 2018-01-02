@@ -38,6 +38,7 @@ import org.eclipse.jdt.internal.compiler.lookup.*;
 
 public class CompletionOnMessageSend extends MessageSend {
 
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 		this.constant = Constant.NotAConstant;
 		if (this.arguments != null) {
@@ -58,6 +59,7 @@ public class CompletionOnMessageSend extends MessageSend {
 		throw new CompletionNodeFound(this, this.actualReceiverType, scope);
 	}
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 
 		output.append("<CompleteOnMessageSend:"); //$NON-NLS-1$

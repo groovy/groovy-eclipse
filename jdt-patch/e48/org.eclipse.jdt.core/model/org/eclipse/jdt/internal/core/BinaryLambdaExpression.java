@@ -27,16 +27,12 @@ public class BinaryLambdaExpression extends LambdaExpression {
 		super(parent, interphase, sourceStart, sourceEnd, arrowPosition, lambdaMethod);
 	}
 
-	/*
-	 * @see JavaElement#getPrimaryElement(boolean)
-	 */
+	@Override
 	public IJavaElement getPrimaryElement(boolean checkOwner) {
 		return this;
 	}
 
-	/*
-	 * @see IMember#isBinary()
-	 */
+	@Override
 	public boolean isBinary() {
 		return true;
 	}

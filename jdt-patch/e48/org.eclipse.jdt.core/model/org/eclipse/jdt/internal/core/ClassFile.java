@@ -90,9 +90,8 @@ protected boolean buildStructure(OpenableElementInfo info, IProgressMonitor pm, 
 	((ClassFileInfo) info).readBinaryChildren(this, (HashMap) newElements, typeInfo);
 	return true;
 }
-/* (non-Javadoc)
- * @see org.eclipse.jdt.core.ICodeAssist#codeComplete(int, org.eclipse.jdt.core.CompletionRequestor, org.eclipse.jdt.core.WorkingCopyOwner, org.eclipse.core.runtime.IProgressMonitor)
- */
+
+@Override
 public void codeComplete(int offset, CompletionRequestor requestor, WorkingCopyOwner owner, IProgressMonitor monitor) throws JavaModelException {
 	String source = getSource();
 	if (source != null) {
@@ -110,11 +109,12 @@ public void codeComplete(int offset, CompletionRequestor requestor, WorkingCopyO
 /**
  * @see ICodeAssist#codeSelect(int, int, WorkingCopyOwner)
  */
+@Override
 public IJavaElement[] codeSelect(int offset, int length, WorkingCopyOwner owner) throws JavaModelException {
 	IBuffer buffer = getBuffer();
 	char[] contents;
 	if (buffer != null && (contents = buffer.getCharacters()) != null) {
-		BinaryType type = (BinaryType) getType();
+	    BinaryType type = (BinaryType) getType();
 		// GROOVY edit
 		//BasicCompilationUnit cu = new BasicCompilationUnit(contents, null, type.sourceFileName((IBinaryType) type.getElementInfo()), this);
 		// handle code select for Groovy files differently
@@ -169,6 +169,7 @@ public boolean existsUsingJarTypeCache() {
 /**
  * @see ITypeRoot#findPrimaryType()
  */
+@Override
 public IType findPrimaryType() {
 	IType primaryType= getType();
 	if (primaryType.exists()) {
@@ -357,6 +358,7 @@ public IClassFile getClassFile() {
 /**
  * @see IClassFile
  */
+@Override
 public IJavaElement getElementAt(int position) throws JavaModelException {
 	IJavaElement parentElement = getParent();
 	while (parentElement.getElementType() != IJavaElement.PACKAGE_FRAGMENT_ROOT) {
@@ -412,6 +414,7 @@ public String getTopLevelTypeName() {
 /**
  * @see IClassFile
  */
+@Override
 public IType getType() {
 	if (this.binaryType == null) {
 		this.binaryType = new BinaryType(this, getTypeName());
@@ -426,6 +429,7 @@ public String getTypeName() {
 /*
  * @see IClassFile
  */
+@Override
 public ICompilationUnit getWorkingCopy(WorkingCopyOwner owner, IProgressMonitor monitor) throws JavaModelException {
 	CompilationUnit workingCopy = new ClassFileWorkingCopy(this, owner == null ? DefaultWorkingCopyOwner.PRIMARY : owner);
 	JavaModelManager manager = JavaModelManager.getJavaModelManager();
@@ -441,12 +445,14 @@ public ICompilationUnit getWorkingCopy(WorkingCopyOwner owner, IProgressMonitor 
 /**
  * @see IClassFile
  */
+@Override
 public boolean isClass() throws JavaModelException {
 	return getType().isClass();
 }
 /**
  * @see IClassFile
  */
+@Override
 public boolean isInterface() throws JavaModelException {
 	return getType().isInterface();
 }

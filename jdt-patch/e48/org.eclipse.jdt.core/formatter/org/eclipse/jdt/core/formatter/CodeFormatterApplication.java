@@ -398,6 +398,7 @@ public class CodeFormatterApplication implements IApplication {
 	/**
 	 * Runs the Java code formatter application
 	 */
+	@Override
 	public Object start(IApplicationContext context) throws Exception {
 		File[] filesToFormat = processCommandLine((String[]) context.getArguments().get(IApplicationContext.APPLICATION_ARGS));
 
@@ -429,6 +430,7 @@ public class CodeFormatterApplication implements IApplication {
 
 		return IApplication.EXIT_OK;
 	}
+	@Override
 	public void stop() {
 		// do nothing
 	}

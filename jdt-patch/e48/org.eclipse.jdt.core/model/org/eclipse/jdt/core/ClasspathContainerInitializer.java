@@ -212,18 +212,23 @@ public abstract class ClasspathContainerInitializer {
     	final String description = getDescription(containerPath, project);
     	return
     		new IClasspathContainer() {
+				@Override
 				public IClasspathEntry[] getClasspathEntries() {
 					return new IClasspathEntry[0];
 				}
+				@Override
 				public String getDescription() {
 					return description;
 				}
+				@Override
 				public int getKind() {
 					return 0;
 				}
+				@Override
 				public IPath getPath() {
 					return containerPath;
 				}
+				@Override
 				public String toString() {
 					return getDescription();
 				}

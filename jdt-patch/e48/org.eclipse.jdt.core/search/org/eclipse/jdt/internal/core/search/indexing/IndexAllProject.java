@@ -42,6 +42,7 @@ public class IndexAllProject extends IndexRequest {
 		super(project.getFullPath(), manager);
 		this.project = project;
 	}
+	@Override
 	public boolean equals(Object o) {
 		if (o instanceof IndexAllProject)
 			return this.project.equals(((IndexAllProject) o).project);
@@ -52,6 +53,7 @@ public class IndexAllProject extends IndexRequest {
 	 * and discover resources which have either been changed, added or deleted
 	 * since the index was produced.
 	 */
+	@Override
 	public boolean execute(IProgressMonitor progressMonitor) {
 
 		if (this.isCancelled || progressMonitor != null && progressMonitor.isCanceled()) return true;
@@ -137,6 +139,7 @@ public class IndexAllProject extends IndexRequest {
 					if (max == 0) {
 						sourceFolder.accept(
 							new IResourceProxyVisitor() {
+								@Override
 								public boolean visit(IResourceProxy proxy) {
 									if (IndexAllProject.this.isCancelled) return false;
 									switch(proxy.getType()) {
@@ -166,6 +169,7 @@ public class IndexAllProject extends IndexRequest {
 					} else {
 						sourceFolder.accept(
 							new IResourceProxyVisitor() {
+								@Override
 								public boolean visit(IResourceProxy proxy) throws CoreException {
 									if (IndexAllProject.this.isCancelled) return false;
 									switch(proxy.getType()) {
@@ -241,12 +245,15 @@ public class IndexAllProject extends IndexRequest {
 		}
 		return true;
 	}
+	@Override
 	public int hashCode() {
 		return this.project.hashCode();
 	}
+	@Override
 	protected Integer updatedIndexState() {
 		return IndexManager.REBUILDING_STATE;
 	}
+	@Override
 	public String toString() {
 		return "indexing project " + this.project.getFullPath(); //$NON-NLS-1$
 	}

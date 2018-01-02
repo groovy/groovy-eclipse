@@ -61,6 +61,7 @@ public class SearchEngine {
 		/**
 		 * @see org.eclipse.jdt.core.search.SearchRequestor#acceptSearchMatch(org.eclipse.jdt.core.search.SearchMatch)
 		 */
+		@Override
 		public void acceptSearchMatch(SearchMatch match) throws CoreException {
 			this.resultCollector.accept(
 				match.getResource(),
@@ -73,12 +74,14 @@ public class SearchEngine {
 		/**
 		 * @see org.eclipse.jdt.core.search.SearchRequestor#beginReporting()
 		 */
+		@Override
 		public void beginReporting() {
 			this.resultCollector.aboutToStart();
 		}
 		/**
 		 * @see org.eclipse.jdt.core.search.SearchRequestor#endReporting()
 		 */
+		@Override
 		public void endReporting() {
 			this.resultCollector.done();
 		}
@@ -93,6 +96,7 @@ public class SearchEngine {
 		TypeNameRequestorAdapter(ITypeNameRequestor requestor) {
 			this.nameRequestor = requestor;
 		}
+		@Override
 		public void acceptType(int modifiers, char[] packageName, char[] simpleTypeName, char[][] enclosingTypeNames, String path, AccessRestriction access) {
 			if (Flags.isInterface(modifiers)) {
 				this.nameRequestor.acceptInterface(packageName, simpleTypeName, enclosingTypeNames, path);

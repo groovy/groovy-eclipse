@@ -42,6 +42,7 @@ IMemberValuePair getDefaultValue() throws JavaModelException;
  * This is a handle-only method.
  * @return the simple name of this method
  */
+@Override
 String getElementName();
 /**
  * Returns the type signatures of the exceptions this method throws,

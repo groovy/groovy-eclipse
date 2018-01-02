@@ -20,6 +20,7 @@ public class OpensStatement extends PackageVisibilityStatement {
 	public OpensStatement(ImportReference pkgRef, ModuleReference[] targets) {
 		super(pkgRef, targets);
 	}
+	@Override
 	protected int computeSeverity(int problemId) {
 		return ProblemSeverities.Warning;
 	}

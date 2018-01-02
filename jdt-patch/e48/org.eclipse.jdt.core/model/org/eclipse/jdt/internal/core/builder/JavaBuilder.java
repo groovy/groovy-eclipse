@@ -154,6 +154,7 @@ public static void writeState(Object state, DataOutputStream out) throws IOExcep
 	((State) state).write(out);
 }
 
+@Override
 protected IProject[] build(int kind, Map ignored, IProgressMonitor monitor) throws CoreException {
 	this.currentProject = getProject();
 	if (this.currentProject == null || !this.currentProject.isAccessible()) return new IProject[0];
@@ -273,6 +274,7 @@ private void buildDeltas(SimpleLookupTable deltas) {
 	}
 }
 
+@Override
 protected void clean(IProgressMonitor monitor) throws CoreException {
 	this.currentProject = getProject();
 	if (this.currentProject == null || !this.currentProject.isAccessible()) return;
@@ -775,6 +777,7 @@ private void recordNewState(State state) {
 /**
  * String representation for debugging purposes
  */
+@Override
 public String toString() {
 	return this.currentProject == null
 		? "JavaBuilder for unknown project" //$NON-NLS-1$

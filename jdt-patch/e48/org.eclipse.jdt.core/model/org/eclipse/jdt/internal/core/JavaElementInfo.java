@@ -23,6 +23,7 @@ public class JavaElementInfo implements Cloneable {
 	 */
 	static Object[] NO_NON_JAVA_RESOURCES = new Object[] {};
 
+	@Override
 	public Object clone() {
 		try {
 			return super.clone();

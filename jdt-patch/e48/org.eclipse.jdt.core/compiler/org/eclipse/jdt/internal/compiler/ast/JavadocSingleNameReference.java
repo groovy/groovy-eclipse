@@ -24,6 +24,7 @@ public class JavadocSingleNameReference extends SingleNameReference {
 		this.bits |= InsideJavadoc;
 	}
 
+	@Override
 	public void resolve(BlockScope scope) {
 		resolve(scope, true, scope.compilerOptions().reportUnusedParameterIncludeDocCommentReference);
 	}
@@ -56,6 +57,7 @@ public class JavadocSingleNameReference extends SingleNameReference {
 	 * Redefine to capture javadoc specific signatures
 	 * @see org.eclipse.jdt.internal.compiler.ast.ASTNode#traverse(org.eclipse.jdt.internal.compiler.ASTVisitor, org.eclipse.jdt.internal.compiler.lookup.BlockScope)
 	 */
+	@Override
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		visitor.visit(this, scope);
 		visitor.endVisit(this, scope);
@@ -64,6 +66,7 @@ public class JavadocSingleNameReference extends SingleNameReference {
 	 * Redefine to capture javadoc specific signatures
 	 * @see org.eclipse.jdt.internal.compiler.ast.ASTNode#traverse(org.eclipse.jdt.internal.compiler.ASTVisitor, org.eclipse.jdt.internal.compiler.lookup.BlockScope)
 	 */
+	@Override
 	public void traverse(ASTVisitor visitor, ClassScope scope) {
 		visitor.visit(this, scope);
 		visitor.endVisit(this, scope);

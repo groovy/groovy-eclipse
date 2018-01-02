@@ -147,6 +147,7 @@ public class RecoveryScanner extends Scanner {
 		this.data.removedTokenUsed[this.data.removedTokensPtr] = false;
 	}
 
+	@Override
 	protected int getNextToken0() throws InvalidInputException {
 		if(this.pendingTokensPtr > -1) {
 			int pendingToken = this.pendingTokens[this.pendingTokensPtr--];
@@ -221,16 +222,19 @@ public class RecoveryScanner extends Scanner {
 		return currentToken;
 	}
 
+	@Override
 	public char[] getCurrentIdentifierSource() {
 		if(this.fakeTokenSource != null) return this.fakeTokenSource;
 		return super.getCurrentIdentifierSource();
 	}
 
+	@Override
 	public char[] getCurrentTokenSourceString() {
 		if(this.fakeTokenSource != null) return this.fakeTokenSource;
 		return super.getCurrentTokenSourceString();
 	}
 
+	@Override
 	public char[] getCurrentTokenSource() {
 		if(this.fakeTokenSource != null) return this.fakeTokenSource;
 		return super.getCurrentTokenSource();

@@ -39,6 +39,7 @@ public interface IAnnotation extends IJavaElement, ISourceReference {
 	 *
 	 * @return the name of this annotation
 	 */
+	@Override
 	String getElementName();
 
 	/**

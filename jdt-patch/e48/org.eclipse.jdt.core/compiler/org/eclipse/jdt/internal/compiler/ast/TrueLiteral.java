@@ -24,6 +24,7 @@ public class TrueLiteral extends MagicLiteral {
 public TrueLiteral(int s , int e) {
 	super(s,e);
 }
+@Override
 public void computeConstant() {
 	this.constant = BooleanConstant.fromValue(true);
 }
@@ -34,6 +35,7 @@ public void computeConstant() {
  * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
  * @param valueRequired boolean
  */
+@Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 	int pc = codeStream.position;
 	if (valueRequired) {
@@ -41,6 +43,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean
 	}
 	codeStream.recordPositionsFrom(pc, this.sourceStart);
 }
+@Override
 public void generateOptimizedBoolean(BlockScope currentScope, CodeStream codeStream, BranchLabel trueLabel, BranchLabel falseLabel, boolean valueRequired) {
 
 	// trueLabel being not nil means that we will not fall through into the TRUE case
@@ -57,15 +60,18 @@ public void generateOptimizedBoolean(BlockScope currentScope, CodeStream codeStr
 	}
 	codeStream.recordPositionsFrom(pc, this.sourceStart);
 }
+@Override
 public TypeBinding literalType(BlockScope scope) {
 	return TypeBinding.BOOLEAN;
 }
 /**
  *
  */
+@Override
 public char[] source() {
 	return source;
 }
+@Override
 public void traverse(ASTVisitor visitor, BlockScope scope) {
 	visitor.visit(this, scope);
 	visitor.endVisit(this, scope);
