@@ -414,6 +414,13 @@
 
 		<!-- snaphshot builds are the default. Enable one of the profiles below to do a milestone or release build -->
 		<profile>
+			<id>snapshot</id>
+			<properties>
+				<dist.type>snapshot</dist.type>
+			</properties>
+		</profile>
+
+		<profile>
 			<id>milestone</id>
 			<properties>
 				<dist.type>milestone</dist.type>
