@@ -6,7 +6,6 @@ Bundle-Vendor: Codehaus.org
 Bundle-Version: 2.4.13.qualifier
 Bundle-ClassPath: eclipse-trace.jar,
  groovy-eclipse.jar,
- lib/bsf-2.4.0.jar,
  lib/ivy-2.4.0.jar,
  lib/groovy-all-2.4.13.jar
 Export-Package: groovy.beans,

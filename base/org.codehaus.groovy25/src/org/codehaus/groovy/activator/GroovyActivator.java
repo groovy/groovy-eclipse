@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,6 +44,18 @@ public class GroovyActivator extends Plugin {
         return DEFAULT;
     }
 
+    public static void initialize() throws IOException {
+        Bundle bundle = getDefault().getBundle();
+        URL entry = bundle.getEntry(GROOVY_ALL_JAR);
+        if (entry == null) {
+            throw new RuntimeException(
+                "Couldn't find '" + GROOVY_ALL_JAR + "' in bundle " + bundle.getSymbolicName() + " " + bundle.getVersion());
+        }
+        GROOVY_ALL_JAR_URL = FileLocator.resolve(entry);
+    }
+
+    //--------------------------------------------------------------------------
+
     @Override
     public void start(BundleContext context) throws Exception {
         if (Boolean.getBoolean("greclipse.debug.trace_compiler_start")) {
@@ -66,48 +78,36 @@ public class GroovyActivator extends Plugin {
         }
     }
 
-    private void printBundleState(String id) {
-        Bundle resolverBundle = Platform.getBundle(id);
-        if (resolverBundle != null) {
-            int state = resolverBundle.getState();
-            String stateString;
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        super.stop(context);
+    }
+
+    private static void printBundleState(String id) {
+        Bundle bundle = Platform.getBundle(id);
+        if (bundle != null) {
+            int state = bundle.getState();
+            String stateString = "UNKNOWN";
             switch (state) {
-                case Bundle.ACTIVE:
-                    stateString = "ACTIVE";
-                    break;
-                case Bundle.INSTALLED:
-                    stateString = "INSTALLED";
-                    break;
-                case Bundle.RESOLVED:
-                    stateString = "RESOLVED";
-                    break;
-                case Bundle.STOPPING:
-                    stateString = "STOPPING";
-                    break;
-                case Bundle.UNINSTALLED:
-                    stateString = "UNINSTALLED";
-                    break;
-                default:
-                    stateString = "UNKNOWN";
-                    break;
+            case Bundle.ACTIVE:
+                stateString = "ACTIVE";
+                break;
+            case Bundle.RESOLVED:
+                stateString = "RESOLVED";
+                break;
+            case Bundle.STOPPING:
+                stateString = "STOPPING";
+                break;
+            case Bundle.INSTALLED:
+                stateString = "INSTALLED";
+                break;
+            case Bundle.UNINSTALLED:
+                stateString = "UNINSTALLED";
+                break;
             }
             System.out.println(id + " state: " + stateString);
         } else {
             System.out.println(id + " is not installed");
         }
-    }
-
-    public static void initialize() throws IOException {
-        Bundle bundle = GroovyActivator.getDefault().getBundle();
-        URL entry = bundle.getEntry(GroovyActivator.GROOVY_ALL_JAR);
-        if (entry == null) {
-            throw new RuntimeException("Couldn't find '" + GroovyActivator.GROOVY_ALL_JAR + "' in bundle " + bundle.getSymbolicName() + " " + bundle.getVersion());
-        }
-        GROOVY_ALL_JAR_URL = FileLocator.resolve(entry);
-    }
-
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        super.stop(context);
     }
 }
