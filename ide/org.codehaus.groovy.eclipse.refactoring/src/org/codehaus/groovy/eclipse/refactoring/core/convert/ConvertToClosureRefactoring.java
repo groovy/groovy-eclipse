@@ -31,9 +31,6 @@ import org.eclipse.text.edits.TextEdit;
 /**
  * Common class to process the convert to closure refactoring.
  * Used by both the completion proposal and the refactor menu option.
- *
- * @author Geoff Denning
- * @created Nov 15, 2011
  */
 // FIXGWD: This class should be converted into a proper refactoring class which extends Refactoring.
 public class ConvertToClosureRefactoring {

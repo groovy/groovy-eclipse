@@ -107,6 +107,7 @@ public abstract class IndexLocation {
 		return this.url;
 	}
 
+	@Override
 	public int hashCode() {
 		return this.url.hashCode();
 	}
@@ -127,6 +128,7 @@ public abstract class IndexLocation {
 
 	public abstract boolean startsWith(IPath path);
 
+	@Override
 	public String toString() {
 		return this.url.toString();
 	}

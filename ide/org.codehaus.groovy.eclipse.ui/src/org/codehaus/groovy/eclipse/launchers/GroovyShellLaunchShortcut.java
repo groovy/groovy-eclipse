@@ -22,6 +22,7 @@ import java.util.List;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.tools.shell.Main;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunchConfigurationType;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
@@ -36,7 +37,6 @@ import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 
 /**
@@ -70,9 +70,8 @@ public class GroovyShellLaunchShortcut implements ILaunchShortcut {
 
     /**
      * Launches from the package explorer.
-     *
-     * @see ILaunchShortcut#launch
      */
+    @Override
     public void launch(ISelection selection, String mode)  {
         if (selection instanceof IStructuredSelection && ((IStructuredSelection) selection).getFirstElement() instanceof IJavaElement) {
             IStructuredSelection structredSelection = (IStructuredSelection) selection;
@@ -83,15 +82,12 @@ public class GroovyShellLaunchShortcut implements ILaunchShortcut {
 
     /**
      * Launches from the source file.
-     *
-     * @see ILaunchShortcut#launch
      */
+    @Override
     public void launch(IEditorPart editor, String mode) {
         // make sure we are saved as we run groovy from the file
         editor.getEditorSite().getPage().saveEditor(editor, false);
-        IEditorInput input = editor.getEditorInput();
-        @SuppressWarnings("cast")
-        IFile file = (IFile) input.getAdapter(IFile.class);
+        IFile file = Adapters.adapt(editor.getEditorInput(), IFile.class);
         ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
         if (unit.getJavaProject() != null) {
             launchGroovy(unit.getJavaProject(), mode);
@@ -106,7 +102,7 @@ public class GroovyShellLaunchShortcut implements ILaunchShortcut {
             launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, Main.class.getName());
             launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, project.getElementName());
             launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, "-Djline.terminal=jline.UnsupportedTerminal");
-            List<String> classpath = new ArrayList<String>(Arrays.asList(JavaRuntime.computeDefaultRuntimeClassPath(project)));
+            List<String> classpath = new ArrayList<>(Arrays.asList(JavaRuntime.computeDefaultRuntimeClassPath(project)));
             launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_CLASSPATH, classpath);
 
             DebugUITools.launch(launchConfig, mode);

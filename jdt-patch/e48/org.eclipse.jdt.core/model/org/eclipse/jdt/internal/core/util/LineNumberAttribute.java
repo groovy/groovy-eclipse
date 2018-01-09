@@ -56,6 +56,7 @@ public class LineNumberAttribute
 	/**
 	 * @see ILineNumberAttribute#getLineNumberTable()
 	 */
+	@Override
 	public int[][] getLineNumberTable() {
 		return this.lineNumberTable;
 	}
@@ -63,6 +64,7 @@ public class LineNumberAttribute
 	/**
 	 * @see ILineNumberAttribute#getLineNumberTableLength()
 	 */
+	@Override
 	public int getLineNumberTableLength() {
 		return this.lineNumberTableLength;
 	}

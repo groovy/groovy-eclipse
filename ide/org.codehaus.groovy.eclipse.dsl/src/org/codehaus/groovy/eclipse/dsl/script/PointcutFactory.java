@@ -73,9 +73,9 @@ import org.eclipse.core.resources.IStorage;
  */
 public class PointcutFactory {
 
-    private static final Map<String, Class<? extends IPointcut>> registry = new HashMap<String, Class<? extends IPointcut>>();
-    private static final Map<String, String> docRegistry = new HashMap<String, String>();
-    private static final Set<String> deprecatedRegistry = new HashSet<String>();
+    private static final Map<String, Class<? extends IPointcut>> registry = new HashMap<>();
+    private static final Map<String, String> docRegistry = new HashMap<>();
+    private static final Set<String> deprecatedRegistry = new HashSet<>();
     static {
         // combinatorial pointcuts
         registerGlobalPointcut("and", AndPointcut.class, createDoc(//
@@ -308,7 +308,7 @@ public class PointcutFactory {
     }
 
     @SuppressWarnings("rawtypes")
-    private final Map<String, Closure> localRegistry = new HashMap<String, Closure>();
+    private final Map<String, Closure> localRegistry = new HashMap<>();
 
     private final IStorage uniqueID;
 

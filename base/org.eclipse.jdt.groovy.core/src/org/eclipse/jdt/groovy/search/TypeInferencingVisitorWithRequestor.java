@@ -160,7 +160,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     private static final Parameter[] NO_PARAMETERS = Parameter.EMPTY_ARRAY;
 
     /** methods that take a closure and pass self or element of self to that closure */
-    private static final Set<String> dgmClosureDelegateMethods = new HashSet<String>();
+    private static final Set<String> dgmClosureDelegateMethods = new HashSet<>();
     static {
         dgmClosureDelegateMethods.add("each");
         dgmClosureDelegateMethods.add("eachByte");
@@ -219,7 +219,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     // these methods can be called with a collection or a map.
     // When called with a map and there are 2 closure arguments, then
     // the types are the key/value of the map entry
-    private static final Set<String> dgmClosureMaybeMap = new HashSet<String>();
+    private static final Set<String> dgmClosureMaybeMap = new HashSet<>();
     static {
         dgmClosureMaybeMap.add("any");
         dgmClosureMaybeMap.add("every");
@@ -236,7 +236,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     // These methods have a fixed type for the closure argument
-    private static final Map<String, ClassNode> dgmClosureFixedTypeMethods = new HashMap<String, ClassNode>();
+    private static final Map<String, ClassNode> dgmClosureFixedTypeMethods = new HashMap<>();
     static {
         dgmClosureFixedTypeMethods.put("eachLine", VariableScope.STRING_CLASS_NODE);
         dgmClosureFixedTypeMethods.put("splitEachLine", VariableScope.STRING_CLASS_NODE);
@@ -262,7 +262,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
 
     private final GroovyCompilationUnit unit;
 
-    private final LinkedList<VariableScope> scopes = new LinkedList<VariableScope>();
+    private final LinkedList<VariableScope> scopes = new LinkedList<>();
 
     // we are going to have to be very careful about the ordering of lookups
     // Simple type lookup must be last because it always returns an answer
@@ -281,29 +281,29 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
      * The head of the stack is the current property/attribute/methodcall/binary expression being visited. This stack is used so we
      * can keep track of the type of the object expressions in these property expressions
      */
-    private final LinkedList<ASTNode> completeExpressionStack = new LinkedList<ASTNode>();
+    private final LinkedList<ASTNode> completeExpressionStack = new LinkedList<>();
 
     /**
      * Keeps track of the type of the object expression corresponding to each frame of the property expression.
      */
-    private final LinkedList<ClassNode> primaryTypeStack = new LinkedList<ClassNode>();
+    private final LinkedList<ClassNode> primaryTypeStack = new LinkedList<>();
 
     /**
      * Keeps track of the declaring type of the current dependent expression. Dependent expressions are dependent on a primary
      * expression to find type information. this field is only applicable for {@link PropertyExpression}s and
      * {@link MethodCallExpression}s.
      */
-    private final LinkedList<Tuple> dependentDeclarationStack = new LinkedList<Tuple>();
+    private final LinkedList<Tuple> dependentDeclarationStack = new LinkedList<>();
 
     /**
      * Keeps track of the type of the type of the property field corresponding to each frame of the property expression.
      */
-    private final LinkedList<ClassNode> dependentTypeStack = new LinkedList<ClassNode>();
+    private final LinkedList<ClassNode> dependentTypeStack = new LinkedList<>();
 
     /**
      * Keeps track of closures types.
      */
-    private LinkedList<Map<ClosureExpression, ClassNode>> closureTypes = new LinkedList<Map<ClosureExpression, ClassNode>>();
+    private LinkedList<Map<ClosureExpression, ClassNode>> closureTypes = new LinkedList<>();
 
     private final JDTResolver resolver;
 
@@ -312,7 +312,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     /**
      * Keeps track of local map variables contexts.
      */
-    private Map<Variable, Map<String, ClassNode>> localMapProperties = new HashMap<Variable, Map<String, ClassNode>>();
+    private Map<Variable, Map<String, ClassNode>> localMapProperties = new HashMap<>();
     private Variable currentMapVariable;
 
     /**
@@ -850,7 +850,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         VariableScope.CallAndType callAndType = scopes.getLast().getEnclosingMethodCallExpression();
         boolean closureFound = false;
         if (callAndType != null && callAndType.declaration instanceof MethodNode) {
-            Map<ClosureExpression, ClassNode> map = new HashMap<ClosureExpression, ClassNode>();
+            Map<ClosureExpression, ClassNode> map = new HashMap<>();
             MethodNode methodNode = (MethodNode) callAndType.declaration;
             if (node.getExpressions().size() == methodNode.getParameters().length) {
                 for (int i = 0; i < node.getExpressions().size(); i++) {
@@ -1607,7 +1607,7 @@ assert primaryExprType != null && dependentExprType != null;
             currentMapVariable = ((VariableExpression) node.getObjectExpression()).getAccessedVariable();
             Map<String, ClassNode> map = localMapProperties.get(currentMapVariable);
             if (map == null) {
-                map = new HashMap<String, ClassNode>();
+                map = new HashMap<>();
                 localMapProperties.put(currentMapVariable, map);
             }
             if (enclosingAssignment != null) {
@@ -2135,7 +2135,7 @@ assert primaryExprType != null && dependentExprType != null;
             if (arguments instanceof ArgumentListExpression) {
                 List<Expression> expressions = ((ArgumentListExpression) arguments).getExpressions();
                 if (!expressions.isEmpty()) {
-                    List<ClassNode> types = new ArrayList<ClassNode>(expressions.size());
+                    List<ClassNode> types = new ArrayList<>(expressions.size());
                     for (Expression expression : expressions) {
                         ClassNode exprType = expression.getType();
                         /*if (expression instanceof ClosureExpression) {
@@ -2506,8 +2506,7 @@ assert primaryExprType != null && dependentExprType != null;
                 try {
                     count = (Integer) ReflectionUtils.throwableGetPrivateField(SourceType.class, "localOccurrenceCount", (SourceType) type);
                 } catch (Exception e) {
-                    // localOccurrenceCount does not exist in 3.7
-                    count = type.getOccurrenceCount();
+                    throw new RuntimeException(e);
                 }
                 sb.insert(0, count);
             } else {
@@ -2937,7 +2936,7 @@ assert primaryExprType != null && dependentExprType != null;
 
     private static List<IMember> membersOf(IType type, boolean isScript) throws JavaModelException {
         boolean isEnum = type.isEnum();
-        List<IMember> members = new ArrayList<IMember>();
+        List<IMember> members = new ArrayList<>();
 
         for (IJavaElement child : type.getChildren()) {
             String name = child.getElementName();

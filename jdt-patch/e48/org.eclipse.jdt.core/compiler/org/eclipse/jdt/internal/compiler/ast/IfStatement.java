@@ -57,6 +57,7 @@ public IfStatement(Expression condition, Statement thenStatement, Statement else
 	this.sourceEnd = sourceEnd;
 }
 
+@Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 	// process the condition
 	FlowInfo conditionFlowInfo = this.condition.analyseCode(currentScope, flowContext, flowInfo);
@@ -159,6 +160,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
  * @param currentScope org.eclipse.jdt.internal.compiler.lookup.BlockScope
  * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
  */
+@Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	if ((this.bits & IsReachable) == 0) {
 		return;
@@ -256,6 +258,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 
 
 
+@Override
 public StringBuffer printStatement(int indent, StringBuffer output) {
 	printIndent(indent, output).append("if ("); //$NON-NLS-1$
 	this.condition.printExpression(0, output).append(")\n");	//$NON-NLS-1$
@@ -269,6 +272,7 @@ public StringBuffer printStatement(int indent, StringBuffer output) {
 	return output;
 }
 
+@Override
 public void resolve(BlockScope scope) {
 	TypeBinding type = this.condition.resolveTypeExpecting(scope, TypeBinding.BOOLEAN);
 	this.condition.computeConversion(scope, type, type);
@@ -278,6 +282,7 @@ public void resolve(BlockScope scope) {
 		this.elseStatement.resolve(scope);
 }
 
+@Override
 public void traverse(ASTVisitor visitor, BlockScope blockScope) {
 	if (visitor.visit(this, blockScope)) {
 		this.condition.traverse(visitor, blockScope);

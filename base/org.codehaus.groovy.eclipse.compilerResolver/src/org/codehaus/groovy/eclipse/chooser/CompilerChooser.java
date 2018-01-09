@@ -22,7 +22,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.codehaus.groovy.frameworkadapter.util.SpecifiedVersion;
-import org.eclipse.core.runtime.ISafeRunnable;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.SafeRunner;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
@@ -33,7 +32,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
-import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.Version;
@@ -164,6 +162,7 @@ public class CompilerChooser implements BundleActivator {
     private volatile boolean initialized;
     private ServiceListener serviceListener;
 
+    @Override
     public void start(BundleContext bundleContext) throws Exception {
         this.bundleContext = bundleContext;
 
@@ -174,19 +173,18 @@ public class CompilerChooser implements BundleActivator {
 
         // the service listener is called synchronously as the resources bundle is started
         String filter = "(" + Constants.OBJECTCLASS + "=org.eclipse.core.resources.IWorkspace)";
-        serviceListener = new ServiceListener() {
-            public void serviceChanged(ServiceEvent event) {
-                if (event.getType() == ServiceEvent.REGISTERED) {
-                    CompilerChooser.this.bundleContext.
-                        removeServiceListener(serviceListener);
-                    serviceListener = null;
-                    initializeNoThrow();
-                }
+        serviceListener = event -> {
+            if (event.getType() == ServiceEvent.REGISTERED) {
+                this.bundleContext.removeServiceListener(serviceListener);
+                serviceListener = null;
+
+                SafeRunner.run(this::initialize);
             }
         };
         bundleContext.addServiceListener(serviceListener, filter);
     }
 
+    @Override
     public void stop(BundleContext bundleContext) throws Exception {
         if (serviceListener != null) {
             bundleContext.removeServiceListener(serviceListener);
@@ -198,16 +196,6 @@ public class CompilerChooser implements BundleActivator {
 
     public boolean isInitiailzed() {
         return initialized;
-    }
-
-    private void initializeNoThrow() {
-        SafeRunner.run(new ISafeRunnable() {
-            public void run() throws Exception {
-                initialize();
-            }
-            public void handleException(Throwable t) {
-            }
-        });
     }
 
     //VisibleForTesting
@@ -245,7 +233,7 @@ public class CompilerChooser implements BundleActivator {
 
             if (bundles.length > 1) {
                 int skip = Math.max(0, activeIndex);
-                Collection<Bundle> dirty = new ArrayList<Bundle>();
+                Collection<Bundle> dirty = new ArrayList<>();
                 for (int i = 0, n = bundles.length; i < n; i += 1) {
                     Bundle bundle = bundles[i];
                     if (i == skip) {
@@ -264,7 +252,7 @@ public class CompilerChooser implements BundleActivator {
 
     private void dump(Collection<Bundle> bundles) {
         for (Bundle b : bundles) {
-            System.out.println(String.format("%3d %s_%s %s", b.getBundleId(), b.getSymbolicName(), b.getVersion(), stateString(b.getState())));
+            System.out.printf("%3d %s_%s %s%n", b.getBundleId(), b.getSymbolicName(), b.getVersion(), stateString(b.getState()));
         }
     }
 
@@ -290,11 +278,9 @@ public class CompilerChooser implements BundleActivator {
         dump(wiring.getDependencyClosure(bundles));
 
         final CountDownLatch latch = new CountDownLatch(1);
-        wiring.refreshBundles(bundles, new FrameworkListener() {
-            public void frameworkEvent(FrameworkEvent event) {
-                if (event.getType() == FrameworkEvent.PACKAGES_REFRESHED) {
-                    latch.countDown();
-                }
+        wiring.refreshBundles(bundles, event -> {
+            if (event.getType() == FrameworkEvent.PACKAGES_REFRESHED) {
+                latch.countDown();
             }
         });
         try {

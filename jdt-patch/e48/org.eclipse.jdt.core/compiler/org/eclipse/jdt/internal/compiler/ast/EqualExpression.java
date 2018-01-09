@@ -127,6 +127,7 @@ public class EqualExpression extends BinaryExpression {
 		// does not preclude the variable from being null in an enclosing scope
 	}
 
+	@Override
 	public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 		FlowInfo result;
 		if (((this.bits & OperatorMASK) >> OperatorSHIFT) == EQUAL_EQUAL) {
@@ -211,6 +212,7 @@ public class EqualExpression extends BinaryExpression {
 	 * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
 	 * @param valueRequired boolean
 	 */
+	@Override
 	public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 
 		int pc = codeStream.position;
@@ -235,6 +237,7 @@ public class EqualExpression extends BinaryExpression {
 	 * Boolean operator code generation
 	 *	Optimized operations are: == and !=
 	 */
+	@Override
 	public void generateOptimizedBoolean(BlockScope currentScope, CodeStream codeStream, BranchLabel trueLabel, BranchLabel falseLabel, boolean valueRequired) {
 
 		if (this.constant != Constant.NotAConstant) {
@@ -817,9 +820,11 @@ public class EqualExpression extends BinaryExpression {
 		}
 		codeStream.recordPositionsFrom(pc, this.sourceStart);
 	}
+	@Override
 	public boolean isCompactableOperation() {
 		return false;
 	}
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 
 			boolean leftIsCast, rightIsCast;
@@ -934,6 +939,7 @@ public class EqualExpression extends BinaryExpression {
 		scope.problemReporter().notCompatibleTypesError(this, leftType, rightType);
 		return null;
 	}
+	@Override
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		if (visitor.visit(this, scope)) {
 			this.left.traverse(visitor, scope);

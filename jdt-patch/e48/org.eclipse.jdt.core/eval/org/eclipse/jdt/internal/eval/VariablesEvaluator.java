@@ -36,6 +36,7 @@ VariablesEvaluator(EvaluationContext context, INameEnvironment environment, Map<
 /**
  * @see org.eclipse.jdt.internal.eval.Evaluator
  */
+@Override
 protected void addEvaluationResultForCompilationProblem(Map<char[], EvaluationResult> resultsByIDs, CategorizedProblem problem, char[] cuSource) {
 	// set evaluation id and type to an internal problem by default
 	char[] evaluationID = cuSource;
@@ -136,12 +137,14 @@ protected void addEvaluationResultForCompilationProblem(Map<char[], EvaluationRe
 /**
  * @see org.eclipse.jdt.internal.eval.Evaluator
  */
+@Override
 protected char[] getClassName() {
 	return CharOperation.concat(EvaluationConstants.GLOBAL_VARS_CLASS_NAME_PREFIX, Integer.toString(EvaluationContext.VAR_CLASS_COUNTER + 1).toCharArray());
 }
 /**
  * Creates and returns a compiler for this evaluator.
  */
+@Override
 Compiler getCompiler(ICompilerRequestor compilerRequestor) {
 	Compiler compiler = super.getCompiler(compilerRequestor);
 
@@ -178,6 +181,7 @@ protected char[] getPackageName() {
 /**
  * @see org.eclipse.jdt.internal.eval.Evaluator
  */
+@Override
 protected char[] getSource() {
 	StringBuffer buffer = new StringBuffer();
 	int lineNumberOffset = 1;

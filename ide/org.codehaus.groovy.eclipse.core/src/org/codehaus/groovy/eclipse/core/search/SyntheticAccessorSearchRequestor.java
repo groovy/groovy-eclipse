@@ -65,6 +65,7 @@ public class SyntheticAccessorSearchRequestor {
         final boolean checkFlags = (element.getElementType() == IJavaElement.METHOD && element.getElementName().startsWith("set"));
 
         new SearchEngine().search(pattern, participants, scope, new SearchRequestor() {
+            @Override
             public void acceptSearchMatch(SearchMatch match) throws CoreException {
                 if (!checkFlags || !Flags.isFinal(((IMember) match.getElement()).getFlags())) {
                     requestor.acceptMatch(match);
@@ -151,6 +152,7 @@ public class SyntheticAccessorSearchRequestor {
     @SuppressWarnings("unchecked")
     private static <T extends IMember> T syntheticMemberProxy(Class<T> face, final IMember delegate, final String signature) {
         return (T) Proxy.newProxyInstance(delegate.getClass().getClassLoader(), new Class[] {face}, new InvocationHandler() {
+            @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                 if (method.getName().equals("getReturnType") ||
                         method.getName().equals("getTypeSignature")) {

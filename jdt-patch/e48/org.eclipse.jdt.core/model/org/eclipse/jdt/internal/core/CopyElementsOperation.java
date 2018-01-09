@@ -84,6 +84,7 @@ public CopyElementsOperation(IJavaElement[] elementsToCopy, IJavaElement destCon
  * Returns the <code>String</code> to use as the main task name
  * for progress monitoring.
  */
+@Override
 protected String getMainTaskName() {
 	return Messages.operation_copyElementProgress;
 }
@@ -158,6 +159,7 @@ protected boolean isRenamingMainType(IJavaElement element, IJavaElement dest) th
  * @exception JavaModelException if the operation is unable to
  * be completed
  */
+@Override
 protected void processElement(IJavaElement element) throws JavaModelException {
 	JavaModelOperation op = getNestedOperation(element);
 	boolean createElementInCUOperation =op instanceof CreateElementInCUOperation;
@@ -217,6 +219,7 @@ private IJavaElement resolveRenameAnchor(IJavaElement element) throws JavaModelE
  *		does not match the number of elements that were supplied.
  * </ul>
  */
+@Override
 protected IJavaModelStatus verify() {
 	IJavaModelStatus status = super.verify();
 	if (!status.isOK()) {
@@ -250,6 +253,7 @@ protected IJavaModelStatus verify() {
 
  * </ul>
  */
+@Override
 protected void verify(IJavaElement element) throws JavaModelException {
 	if (element == null || !element.exists())
 		error(IJavaModelStatusConstants.ELEMENT_DOES_NOT_EXIST, element);

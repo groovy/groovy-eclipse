@@ -32,10 +32,12 @@ protected ImportDeclaration(ImportContainer parent, String name, boolean isOnDem
 	this.name = name;
 	this.isOnDemand = isOnDemand;
 }
+@Override
 public boolean equals(Object o) {
 	if (!(o instanceof ImportDeclaration)) return false;
 	return super.equals(o);
 }
+@Override
 public String getElementName() {
 	if (this.isOnDemand)
 		return this.name + ".*"; //$NON-NLS-1$
@@ -47,12 +49,14 @@ public String getNameWithoutStar() {
 /**
  * @see IJavaElement
  */
+@Override
 public int getElementType() {
 	return IMPORT_DECLARATION;
 }
 /**
  * @see org.eclipse.jdt.core.IImportDeclaration#getFlags()
  */
+@Override
 public int getFlags() throws JavaModelException {
 	ImportDeclarationElementInfo info = (ImportDeclarationElementInfo)getElementInfo();
 	return info.getModifiers();
@@ -61,6 +65,7 @@ public int getFlags() throws JavaModelException {
  * @see JavaElement#getHandleMemento(StringBuffer)
  * For import declarations, the handle delimiter is associated to the import container already
  */
+@Override
 protected void getHandleMemento(StringBuffer buff) {
 	((JavaElement)getParent()).getHandleMemento(buff);
 	escapeMementoName(buff, getElementName());
@@ -72,18 +77,19 @@ protected void getHandleMemento(StringBuffer buff) {
 /**
  * @see JavaElement#getHandleMemento()
  */
+@Override
 protected char getHandleMementoDelimiter() {
 	// For import declarations, the handle delimiter is associated to the import container already
 	Assert.isTrue(false, "Should not be called"); //$NON-NLS-1$
 	return 0;
 }
+@Override
 public ISourceRange getNameRange() throws JavaModelException {
 	ImportDeclarationElementInfo info = (ImportDeclarationElementInfo) getElementInfo();
 	return info.getNameRange();
 }
-/*
- * @see JavaElement#getPrimaryElement(boolean)
- */
+
+@Override
 public IJavaElement getPrimaryElement(boolean checkOwner) {
 	CompilationUnit cu = (CompilationUnit)this.parent.getParent();
 	if (checkOwner && cu.isPrimary()) return this;
@@ -92,11 +98,13 @@ public IJavaElement getPrimaryElement(boolean checkOwner) {
 /**
  * Returns true if the import is on-demand (ends with ".*")
  */
+@Override
 public boolean isOnDemand() {
 	return this.isOnDemand;
 }
 /**
  */
+@Override
 public String readableName() {
 
 	return null;
@@ -104,6 +112,7 @@ public String readableName() {
 /**
  * @private Debugging purposes
  */
+@Override
 protected void toStringInfo(int tab, StringBuffer buffer, Object info, boolean showResolvedInfo) {
 	buffer.append(tabString(tab));
 	buffer.append("import "); //$NON-NLS-1$

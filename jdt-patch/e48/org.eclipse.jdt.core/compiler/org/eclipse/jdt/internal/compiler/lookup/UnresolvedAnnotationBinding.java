@@ -19,6 +19,7 @@ UnresolvedAnnotationBinding(ReferenceBinding type, ElementValuePair[] pairs, Loo
 	this.env = env;
 }
 
+@Override
 public void resolve() { // in place resolution.
 	if (this.typeUnresolved) { // the type is resolved when requested
 		boolean wasToleratingMissingTypeProcessingAnnotations = this.env.mayTolerateMissingType;
@@ -32,11 +33,13 @@ public void resolve() { // in place resolution.
 		this.typeUnresolved = false;
 	}
 }
+@Override
 public ReferenceBinding getAnnotationType() {
 	resolve();
 	return this.type;
 }
 
+@Override
 public ElementValuePair[] getElementValuePairs() {
 	if (this.env != null) {
 		if (this.typeUnresolved) {

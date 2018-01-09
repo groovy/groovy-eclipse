@@ -25,6 +25,7 @@ public class AssistAnnotation extends Annotation {
 		this.infoCache = infoCache;
 	}
 
+	@Override
 	public Object getElementInfo(IProgressMonitor monitor) throws JavaModelException {
 		return this.infoCache.get(this);
 	}

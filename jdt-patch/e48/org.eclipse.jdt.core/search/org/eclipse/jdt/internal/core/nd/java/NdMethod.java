@@ -172,6 +172,7 @@ public class NdMethod extends NdBinding {
 		return annotations.getTagBits();
 	}
 
+	@Override
 	public String toString() {
 		try {
 			CharArrayBuffer arrayBuffer = new CharArrayBuffer();

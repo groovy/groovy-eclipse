@@ -26,18 +26,16 @@ import org.eclipse.jdt.core.IJavaElementDelta;
 import org.eclipse.jdt.core.IJavaProject;
 
 /**
- * Listens for classpath changes and refreshes DSLDs accordingly.  Only look for raw classpath changes
- * all other changes are handled by the {@link DSLDResourceListener}.
- *
- * @author andrew
- * @created Oct 28, 2011
+ * Listens for classpath changes and refreshes DSLDs accordingly.  Only looks
+ * for raw classpath changes all other changes are handled by the {@link DSLDResourceListener}.
  */
 public class DSLDElementListener implements IElementChangedListener {
 
+    @Override
     public void elementChanged(ElementChangedEvent event) {
         // the root delta is always the JavaModel
         if (event.getType() == ElementChangedEvent.POST_CHANGE && event.getDelta() != null) {
-            List<IProject> projectsToRefresh = new ArrayList<IProject>();
+            List<IProject> projectsToRefresh = new ArrayList<>();
             for (IJavaElementDelta delta : event.getDelta().getChangedChildren()) {
                 // Look for resolved classpath changes for Groovy projects
                 if (delta.getElement() instanceof IJavaProject &&

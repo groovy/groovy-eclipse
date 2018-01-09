@@ -27,6 +27,7 @@ public interface IImportDeclaration extends IJavaElement, ISourceReference, ISou
  *
  * @return the name that has been imported
  */
+@Override
 String getElementName();
 /**
  * Returns the modifier flags for this import. The flags can be examined using class

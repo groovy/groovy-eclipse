@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,17 +23,13 @@ import org.eclipse.jdt.core.JavaConventions;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 
-/**
- * 
- * @author Nieraj Singh
- * @created 2011-09-13
- */
 public class JavaValidTypeRule extends AbstractJavaTypeVerifiedRule {
 
     public JavaValidTypeRule(IJavaProject project) {
         super(project);
     }
 
+    @Override
     public ValueStatus checkValidity(Object value) {
         if (value instanceof String) {
             String name = (String) value;
@@ -58,5 +54,4 @@ public class JavaValidTypeRule extends AbstractJavaTypeVerifiedRule {
         }
         return ValueStatus.getErrorStatus(value, INVALID_JAVA);
     }
-
 }

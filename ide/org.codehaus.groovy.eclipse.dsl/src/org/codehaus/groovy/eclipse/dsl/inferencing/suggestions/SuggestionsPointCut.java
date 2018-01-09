@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,11 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 
-import groovy.lang.Closure;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+
+import groovy.lang.Closure;
 
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.InferencingSuggestionsManager.ProjectSuggestions;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
@@ -29,15 +29,9 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IStorage;
 
-/**
- * 
- * @author Nieraj Singh
- * @created 2011-05-17
- */
 public class SuggestionsPointCut implements IPointcut {
 
     private IFile xdslFile;
-
     private IProject project;
 
     public SuggestionsPointCut(IFile xdslFile) {
@@ -45,8 +39,60 @@ public class SuggestionsPointCut implements IPointcut {
         this.project = xdslFile.getProject();
     }
 
-    public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
+    @Override
+    public void accept(Closure contributionGroupClosure) {
+    }
 
+    @Override
+    public void addArgument(Object argument) {
+    }
+
+    @Override
+    public void addArgument(String name, Object argument) {
+    }
+
+    @Override
+    public boolean fastMatch(GroovyDSLDContext pattern) {
+        return true;
+    }
+
+    @Override
+    public String[] getArgumentNames() {
+        return null;
+    }
+
+    @Override
+    public Object[] getArgumentValues() {
+        return null;
+    }
+
+    @Override
+    public IStorage getContainerIdentifier() {
+        return xdslFile;
+    }
+
+    @Override
+    public Object getFirstArgument() {
+        return null;
+    }
+
+    @Override
+    public String getFirstArgumentName() {
+        return null;
+    }
+
+    @Override
+    public String getPointcutDebugName() {
+        return null;
+    }
+
+    @Override
+    public String getPointcutName() {
+        return null;
+    }
+
+    @Override
+    public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
         // toMatch is the declaring type with the unresolved property or method
         ProjectSuggestions suggestions = InferencingSuggestionsManager.getInstance().getSuggestions(project);
 
@@ -78,72 +124,17 @@ public class SuggestionsPointCut implements IPointcut {
         return null;
     }
 
-    public IStorage getContainerIdentifier() {
-        return xdslFile;
-    }
-
+    @Override
     public IPointcut normalize() {
         return this;
     }
 
-    public void addArgument(String name, Object argument) {
-        // TODO Auto-generated method stub
-
-    }
-
-    public void addArgument(Object argument) {
-        // TODO Auto-generated method stub
-
-    }
-
-    public void verify() throws PointcutVerificationException {
-        // TODO Auto-generated method stub
-
-    }
-
-    public Object getFirstArgument() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    public String getFirstArgumentName() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    public Object[] getArgumentValues() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    public String[] getArgumentNames() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
+    @Override
     public void setProject(IProject project) {
         this.project = project;
     }
 
-    public void accept(Closure contributionGroupClosure) {
-        // TODO Auto-generated method stub
-
+    @Override
+    public void verify() throws PointcutVerificationException {
     }
-
-    public boolean fastMatch(GroovyDSLDContext pattern) {
-
-        return true;
-    }
-
-    // implement both of these
-    public String getPointcutName() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    public String getPointcutDebugName() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
 }

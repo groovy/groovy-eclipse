@@ -19,16 +19,19 @@ AnnotationMethodInfoWithTypeAnnotations(MethodInfo methodInfo, Object defaultVal
 	super(methodInfo, defaultValue, annotations);
 	this.typeAnnotations = typeAnnotations;
 }
+@Override
 public IBinaryTypeAnnotation[] getTypeAnnotations() {
 	return this.typeAnnotations;
 }
 
+@Override
 protected void initialize() {
 	for (int i = 0, l = this.typeAnnotations == null ? 0 : this.typeAnnotations.length; i < l; i++) {
 		this.typeAnnotations[i].initialize();
 	}
 	super.initialize();
 }
+@Override
 protected void reset() {
 	for (int i = 0, l = this.typeAnnotations == null ? 0 : this.typeAnnotations.length; i < l; i++) {
 		this.typeAnnotations[i].reset();

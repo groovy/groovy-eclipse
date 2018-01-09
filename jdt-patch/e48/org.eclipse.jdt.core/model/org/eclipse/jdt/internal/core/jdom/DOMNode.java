@@ -259,6 +259,7 @@ DOMNode(char[] document, int[] sourceRange, String name, int[] nameRange) {
  *
  * @see IDOMNode#addChild(IDOMNode)
  */
+@Override
 public void addChild(IDOMNode child) throws IllegalArgumentException, DOMException {
 	basicAddChild(child);
 
@@ -406,12 +407,14 @@ protected void becomeDetailed() throws DOMException {
  *
  * @see IDOMNode#canHaveChildren()
  */
+@Override
 public boolean canHaveChildren() {
 	return false;
 }
 /**
  * @see IDOMNode#clone()
  */
+@Override
 public Object clone() {
 
 	// create a new buffer with all my contents and children contents
@@ -492,6 +495,7 @@ protected void fragment() {
 /**
  * @see IDOMNode#getCharacters()
  */
+@Override
 public char[] getCharacters() {
 	CharArrayBuffer buffer= new CharArrayBuffer();
 	appendContents(buffer);
@@ -500,6 +504,7 @@ public char[] getCharacters() {
 /**
  * @see IDOMNode#getChild(String)
  */
+@Override
 public IDOMNode getChild(String name) {
 	DOMNode child = this.fFirstChild;
 	while (child != null) {
@@ -520,6 +525,7 @@ public IDOMNode getChild(String name) {
 /**
  * @see IDOMNode#getChildren()
  */
+@Override
 public Enumeration getChildren() {
 	return new SiblingEnumeration(this.fFirstChild);
 }
@@ -534,6 +540,7 @@ public Enumeration getChildren() {
  *
  * @see IDOMNode#getContents()
  */
+@Override
 public String getContents() {
 	CharArrayBuffer buffer= new CharArrayBuffer();
 	appendContents(buffer);
@@ -570,6 +577,7 @@ protected IDOMFactory getFactory() {
 /**
  * @see IDOMNode#getFirstChild()
  */
+@Override
 public IDOMNode getFirstChild() {
 	return this.fFirstChild;
 }
@@ -589,6 +597,7 @@ protected boolean getMask(int mask) {
 /**
  * @see IDOMNode#getName()
  */
+@Override
 public String getName() {
 	return this.fName;
 }
@@ -612,12 +621,14 @@ protected char[] getNameContents() {
 /**
  * @see IDOMNode#getNextNode()
  */
+@Override
 public IDOMNode getNextNode() {
 	return this.fNextNode;
 }
 /**
  * @see IDOMNode#getParent()
  */
+@Override
 public IDOMNode getParent() {
 	return this.fParent;
 }
@@ -640,6 +651,7 @@ protected int getParentEndDeclaration() {
 /**
  * @see IDOMNode#getPreviousNode()
  */
+@Override
 public IDOMNode getPreviousNode() {
 	return this.fPreviousNode;
 }
@@ -663,6 +675,7 @@ public int getStartPosition() {
 /**
  * @see IDOMNode#insertSibling(IDOMNode)
  */
+@Override
 public void insertSibling(IDOMNode sibling) throws IllegalArgumentException, DOMException {
 	// verify sibling may be added
 	if (sibling == null) {
@@ -714,6 +727,7 @@ public void insertSibling(IDOMNode sibling) throws IllegalArgumentException, DOM
 /**
  * @see IDOMNode
  */
+@Override
 public boolean isAllowableChild(IDOMNode node) {
 	return false;
 }
@@ -758,6 +772,7 @@ protected boolean isNameAltered() {
  * type and names are equal. Node types that have other requirements
  * for equality must override this method.
  */
+@Override
 public boolean isSignatureEqual(IDOMNode node) {
 	return getNodeType() == node.getNodeType() && getName().equals(node.getName());
 }
@@ -866,6 +881,7 @@ protected int[] rangeCopy(int[] range) {
  *
  * @see IDOMNode#remove()
  */
+@Override
 public void remove() {
 
 	if (this.fParent != null) {
@@ -907,6 +923,7 @@ protected void setMask(int mask, boolean on) {
 /**
  * @see IDOMNode#setName
  */
+@Override
 public void setName(String name) {
 	this.fName= name;
 	setNameAltered(true);
@@ -966,5 +983,6 @@ protected void shareContents(DOMNode node) {
 /**
  * Returns a <code>String</code> representing this node - for Debug purposes only.
  */
+@Override
 public abstract String toString();
 }

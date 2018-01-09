@@ -40,6 +40,7 @@ public class Annotation extends SourceRefElement implements IAnnotation {
 		this.memberValuePairName = memberValuePairName;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if (!(o instanceof Annotation)) {
 			return false;
@@ -59,18 +60,22 @@ public class Annotation extends SourceRefElement implements IAnnotation {
 		return (IMember) getParent();
 	}
 
+	@Override
 	public String getElementName() {
 		return this.name;
 	}
 
+	@Override
 	public int getElementType() {
 		return ANNOTATION;
 	}
 
+	@Override
 	protected char getHandleMementoDelimiter() {
 		return JavaElement.JEM_ANNOTATION;
 	}
 
+	@Override
 	public IMemberValuePair[] getMemberValuePairs() throws JavaModelException {
 		Object info = getElementInfo();
 		if (info instanceof AnnotationInfo)
@@ -87,6 +92,7 @@ public class Annotation extends SourceRefElement implements IAnnotation {
 		return result;
 	}
 
+	@Override
 	public ISourceRange getNameRange() throws JavaModelException {
 		SourceMapper mapper= getSourceMapper();
 		if (mapper != null) {
@@ -108,6 +114,7 @@ public class Annotation extends SourceRefElement implements IAnnotation {
 	/*
 	 * @see ISourceReference
 	 */
+	@Override
 	public ISourceRange getSourceRange() throws JavaModelException {
 		SourceMapper mapper= getSourceMapper();
 		if (mapper != null) {
@@ -121,10 +128,12 @@ public class Annotation extends SourceRefElement implements IAnnotation {
 		return super.getSourceRange();
 	}
 
+	@Override
 	public IClassFile getClassFile() {
 		return ((JavaElement)getParent()).getClassFile();
 	}
 
+	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = super.hashCode();
@@ -133,6 +142,7 @@ public class Annotation extends SourceRefElement implements IAnnotation {
 		return result;
 	}
 
+	@Override
 	protected void toStringName(StringBuffer buffer) {
 		buffer.append('@');
 		buffer.append(getElementName());

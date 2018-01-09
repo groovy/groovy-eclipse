@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,6 @@ import org.codehaus.groovy.control.SourceUnit;
  * attempts anything. This is probably likely to happen for users on Grails 1.2 since the signature of the method will have changed.
  * For M2 we should determine what level of grails a project is and created the nature.
  *
- * @author Andy Clement
  * @since 2.0
  */
 public class GrailsInjector extends PrimaryClassNodeOperation {

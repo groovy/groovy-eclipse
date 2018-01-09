@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.editor.actions;
 
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.groovy.eclipse.search.GroovyOccurrencesFinder;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jface.action.IAction;
@@ -33,6 +34,7 @@ public class FindOccurrencesAction implements IEditorActionDelegate {
 
     private TextSelection sel;
 
+    @Override
     public void run(IAction action) {
         if (editor == null || sel == null) {
             return;
@@ -62,6 +64,7 @@ public class FindOccurrencesAction implements IEditorActionDelegate {
         return editor.getSite().getShell();
     }
 
+    @Override
     public void selectionChanged(IAction action, ISelection selection) {
         if (selection instanceof TextSelection) {
             sel = (TextSelection) selection;
@@ -70,6 +73,7 @@ public class FindOccurrencesAction implements IEditorActionDelegate {
         }
     }
 
+    @Override
     public void setActiveEditor(IAction action, IEditorPart targetEditor) {
         if (targetEditor instanceof GroovyEditor) {
             editor = (GroovyEditor) targetEditor;
@@ -79,7 +83,7 @@ public class FindOccurrencesAction implements IEditorActionDelegate {
     }
 
     private void showMessage(Shell shell, String msg) {
-        IEditorStatusLine statusLine = (IEditorStatusLine) editor.getAdapter(IEditorStatusLine.class);
+        IEditorStatusLine statusLine = Adapters.adapt(editor, IEditorStatusLine.class);
         if (statusLine != null) {
             statusLine.setMessage(true, msg, null);
         }

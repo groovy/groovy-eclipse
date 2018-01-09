@@ -139,6 +139,7 @@ public void setBinding(TypeBinding binding) {
 public int id() {
 	return this.id;
 }
+@Override
 public String toString() {
 	StringBuffer buffer = new StringBuffer();
 	switch(this.tag) {
@@ -180,6 +181,7 @@ public VerificationTypeInfo duplicate() {
 	verificationTypeInfo.offset = this.offset;
 	return verificationTypeInfo;
 }
+@Override
 public boolean equals(Object obj) {
 	if (obj instanceof VerificationTypeInfo) {
 		VerificationTypeInfo info1 = (VerificationTypeInfo) obj;
@@ -187,6 +189,7 @@ public boolean equals(Object obj) {
 	}
 	return false;
 }
+@Override
 public int hashCode() {
 	return this.tag + this.id + this.constantPoolName.length + this.offset;
 }

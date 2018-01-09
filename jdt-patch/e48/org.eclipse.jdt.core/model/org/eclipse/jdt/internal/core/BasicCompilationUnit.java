@@ -123,6 +123,7 @@ private void initAttributes(IJavaElement javaElement) {
 	}
 }
 
+@Override
 public char[] getContents() {
 	if (this.contents != null)
 		return this.contents;   // answer the cached source
@@ -138,9 +139,11 @@ public char[] getContents() {
 /**
  * @see org.eclipse.jdt.internal.compiler.env.IDependent#getFileName()
  */
+@Override
 public char[] getFileName() {
 	return this.fileName;
 }
+@Override
 public char[] getMainTypeName() {
 	if (this.mainTypeName == null) {
 		int start = CharOperation.lastIndexOf('/', this.fileName) + 1;
@@ -161,12 +164,15 @@ public char[] getMainTypeName() {
 	}
 	return this.mainTypeName;
 }
+@Override
 public char[][] getPackageName() {
 	return this.packageName;
 }
+@Override
 public boolean ignoreOptionalProblems() {
 	return false;
 }
+@Override
 public String toString(){
 	return "CompilationUnit: "+new String(this.fileName); //$NON-NLS-1$
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,18 +29,13 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
- * Manages type lookups
- *
- * @author Andrew Eisenberg
- * @created Nov 17, 2009
+ * Manages type lookups.
  */
 public class TypeLookupRegistry {
+
     private static final String APPLIES_TO = "appliesTo";
-
     private static final String NATURE = "projectNature";
-
     private static final String LOOKUP = "lookup";
-
     private static final String TYPE_LOOKUP_EXTENSION = "org.eclipse.jdt.groovy.core.typeLookup";
 
     private final static TypeLookupRegistry DEFAULT = new TypeLookupRegistry();
@@ -50,14 +45,14 @@ public class TypeLookupRegistry {
     }
 
     // maps from project nature to lists of type lookup classes
-    private Map<String, List<IConfigurationElement>> natureLookupMap = new HashMap<String, List<IConfigurationElement>>();
+    private Map<String, List<IConfigurationElement>> natureLookupMap = new HashMap<>();
 
     List<ITypeLookup> getLookupsFor(IProject project) throws CoreException {
         if (!project.exists()) {
-            return new ArrayList<ITypeLookup>(3);
+            return new ArrayList<>(3);
         }
         String[] natures = project.getDescription().getNatureIds();
-        List<ITypeLookup> lookups = new ArrayList<ITypeLookup>();
+        List<ITypeLookup> lookups = new ArrayList<>();
         for (String nature : natures) {
             List<IConfigurationElement> configs = natureLookupMap.get(nature);
             if (configs != null) {
@@ -99,7 +94,7 @@ public class TypeLookupRegistry {
                         if (natureLookupMap.containsKey(nature)) {
                             elts = natureLookupMap.get(nature);
                         } else {
-                            elts = new ArrayList<IConfigurationElement>(3);
+                            elts = new ArrayList<>(3);
                             natureLookupMap.put(nature, elts);
                         }
                         elts.add(config);

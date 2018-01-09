@@ -63,7 +63,7 @@ public class GroovyCleanupPostSaveListener extends CleanUpPostSaveListener imple
             }
         }
 
-        List<ICleanUp> groovyCleanUps = new ArrayList<ICleanUp>(4);
+        List<ICleanUp> groovyCleanUps = new ArrayList<>(4);
 
         if (doImports) {
             groovyCleanUps.add(new GroovyImportsCleanUp());

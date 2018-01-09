@@ -29,6 +29,7 @@ public interface IDOMPackage extends IDOMNode {
  * @return the name of this package declaration, or <code>null</code>
  *         if it has none
  */
+@Override
 public String getName();
 /**
  * The <code>IDOMPackage</code> refinement of this <code>IDOMNode</code>
@@ -39,5 +40,6 @@ public String getName();
  *
  * @param name the given name
  */
+@Override
 public void setName(String name);
 }

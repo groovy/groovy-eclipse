@@ -23,6 +23,7 @@ public interface IMultiModuleEntry extends IModulePathEntry {
 	 * Get the module named name that this entry contributes to the module path 
 	 */
 
+	@Override
 	IModule getModule(char[] name);
 
 	/**

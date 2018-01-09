@@ -36,13 +36,13 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 public class GetSetMethodCompletionProcessor extends AbstractGroovyCompletionProcessor {
 
-    public GetSetMethodCompletionProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext,
-            SearchableEnvironment nameEnvironment) {
+    public GetSetMethodCompletionProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
         super(context, javaContext, nameEnvironment);
     }
 
+    @Override
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
-        List<ICompletionProposal> proposals = new LinkedList<ICompletionProposal>();
+        List<ICompletionProposal> proposals = new LinkedList<>();
         ContentAssistContext context = getContext();
         IType enclosingType = context.getEnclosingType();
         if (enclosingType != null) {
@@ -58,17 +58,17 @@ public class GetSetMethodCompletionProcessor extends AbstractGroovyCompletionPro
     }
 
     private List<ICompletionProposal> createProposal(IField field, ContentAssistContext context) throws JavaModelException {
-        List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>(2);
+        List<ICompletionProposal> proposals = new ArrayList<>(2);
         int relevance = Relevance.HIGH.getRelevance();
         IMethod getter = GetterSetterUtil.getGetter(field);
         if (getter == null || !getter.exists()) {
-            proposals.add(new GetterSetterCompletionProposal(field, context.completionLocation
-                    - context.completionExpression.length(), context.completionExpression.length(), true, relevance));
+            proposals.add(new GetterSetterCompletionProposal(field, context.completionLocation -
+                context.completionExpression.length(), context.completionExpression.length(), true, relevance));
         }
         IMethod setter = GetterSetterUtil.getSetter(field);
         if ((field.getFlags() & Flags.AccFinal) == 0 && (setter == null || !setter.exists())) {
-            proposals.add(new GetterSetterCompletionProposal(field, context.completionLocation
-                    - context.completionExpression.length(), context.completionExpression.length(), false, relevance));
+            proposals.add(new GetterSetterCompletionProposal(field, context.completionLocation -
+                context.completionExpression.length(), context.completionExpression.length(), false, relevance));
         }
         return proposals;
     }

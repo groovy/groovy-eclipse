@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,38 +27,39 @@ import org.eclipse.jface.text.Position;
 import org.eclipse.swt.widgets.Shell;
 
 /**
- * Adds resource markers for all unknown and type assertion failures
- * 
- * @author andrew
- * @created Aug 29, 2011
+ * Adds resource markers for all unknown and type assertion failures.
  */
 public class ResourceMarkerHandler implements IStaticCheckerHandler {
 
     private IFile resource;
-    
+
     private int numFound = 0;
 
+    @Override
     public void setResource(IFile resource) {
         this.resource = resource;
     }
+
+    @Override
     public void handleUnknownReference(ASTNode node, Position position, int line) {
-        numFound++;
+        numFound += 1;
         createMarker(position, line, createUnknownMessage(node));
     }
 
+    @Override
     public void handleTypeAssertionFailed(ASTNode node, String expectedType, String actualType, Position position, int line) {
-        numFound++;
+        numFound += 1;
         createMarker(position, line, createInvalidTypeMessage(node, expectedType, actualType));
     }
 
     private String createUnknownMessage(ASTNode node) {
         return "Type of expression is statically unknown: " + node.getText();
     }
-    
+
     private String createInvalidTypeMessage(ASTNode node, String expectedType, String actualType) {
         return "Invalid inferred type.  Expected: " + expectedType + " Actual: " + actualType;
     }
-    
+
     private void createMarker(Position position, int line, String message) {
         try {
             IMarker marker = resource.createMarker(GroovyDSLCoreActivator.MARKER_ID);
@@ -73,24 +74,31 @@ public class ResourceMarkerHandler implements IStaticCheckerHandler {
             GroovyCore.logException("Unable to create marker on " + resource.getFullPath(), e);
         }
     }
+
+    @Override
     public int numProblemsFound() {
         return numFound;
     }
+
+    @Override
     public void handleResourceStart(IResource resource) throws CoreException {
         resource.deleteMarkers(GroovyDSLCoreActivator.MARKER_ID, true, IResource.DEPTH_ZERO);
     }
-    
+
+    @Override
     public boolean finish(Shell shell) {
         if (shell != null) {
             if (numProblemsFound() == 0) {
-                MessageDialog.openInformation(shell, "Static type checking complete", "Static type checking complete. Found no problems.");
+                MessageDialog.openInformation(shell, "Static type checking complete",
+                    "Static type checking complete. Found no problems.");
             } else if (numProblemsFound() == 1) {
-                MessageDialog.openInformation(shell, "Static type checking complete", "Static type checking complete. Found one problem.  See Problems view.");
+                MessageDialog.openInformation(shell, "Static type checking complete",
+                    "Static type checking complete. Found one problem.  See Problems view.");
             } else {
-                MessageDialog.openInformation(shell, "Static type checking complete", "Static type checking complete. Found " + numProblemsFound() + " problems.  See Problems view.");
+                MessageDialog.openInformation(shell, "Static type checking complete",
+                    "Static type checking complete. Found " + numProblemsFound() + " problems.  See Problems view.");
             }
         }
-        return numFound == 0;
+        return (numFound == 0);
     }
-
 }

@@ -58,36 +58,36 @@ import org.junit.Rule;
 import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
 public abstract class GroovyCompilerTestSuite {
 
-    //CompilerOptions.versionFromJdkLevel(_)
-    protected static final long JDK5 = ClassFileConstants.JDK1_5;
     protected static final long JDK6 = ClassFileConstants.JDK1_6;
     protected static final long JDK7 = ClassFileConstants.JDK1_7;
-    protected static final long JDK8 = (52 << 16) + ClassFileConstants.MINOR_VERSION_0;
-    protected static final long JDK9 = (53 << 16) + ClassFileConstants.MINOR_VERSION_0;
-    protected static final List<Long> JDKs = Collections.unmodifiableList(Arrays.asList(JDK5, JDK6, JDK7, JDK8, JDK9));
+    protected static final long JDK8 = ClassFileConstants.JDK1_8;
+    protected static final long JDK9 = ClassFileConstants.JDK9;
+    protected static final List<Long> JDKs = Collections.unmodifiableList(Arrays.asList(JDK6, JDK7, JDK8, JDK9));
 
-    @Parameterized.Parameters
+    @Parameters(name = "Java {1}")
     public static Iterable<Object[]> params() {
         long javaSpec = CompilerOptions.versionToJdkLevel(System.getProperty("java.specification.version"));
-        List<Object[]> params = new ArrayList<Object[]>();
+        List<Object[]> params = new ArrayList<>();
         for (long jdk : JDKs) {
             if (jdk <= javaSpec) {
-                params.add(new Object[] {jdk});
+                params.add(new Object[] {jdk, CompilerOptions.versionFromJdkLevel(jdk)});
             }
         }
         return params;
     }
 
-    private final long compliance;
-    protected String[] vmArguments;
+    @Parameter(0)
+    public long compliance;
+    @Parameter(1)
+    public String versionString;
 
-    public GroovyCompilerTestSuite(long compliance) {
-        this.compliance = compliance;
-    }
+    protected String[] vmArguments;
 
     @Rule
     public TestName test = new TestName();
@@ -122,8 +122,8 @@ public abstract class GroovyCompilerTestSuite {
                 String[] newcps = new String[cps.length + 3];
                 System.arraycopy(cps, 0, newcps, 0, cps.length);
 
-                String[] ivyVersions = {"2.4.0", "2.3.0", "2.2.0"};
-                String[] groovyVersions = {"2.5.0-indy", "2.4.13", "2.3.11", "2.2.2", "2.1.9", "2.0.8", "1.8.9"};
+                String[] ivyVersions = {"2.5.0", "2.4.0"};
+                String[] groovyVersions = {"2.5.0-indy", "2.4.13"};
                 try {
                     URL groovyJar = null;
                     for (String groovyVer : groovyVersions) {
@@ -148,6 +148,11 @@ public abstract class GroovyCompilerTestSuite {
                     Assert.fail("IOException thrown " + e.getMessage());
                 }
                 return newcps;
+            }
+
+            @Override
+            public String getName() {
+                return testName();
             }
 
             @Override

@@ -31,24 +31,25 @@ public class BufferFactoryWrapper extends WorkingCopyOwner {
 		return new BufferFactoryWrapper(factory);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.WorkingCopyOwner#createBuffer(org.eclipse.jdt.core.ICompilationUnit)
-	 */
+	@Override
 	public IBuffer createBuffer(ICompilationUnit workingCopy) {
 		if (this.factory == null) return super.createBuffer(workingCopy);
 		return this.factory.createBuffer(workingCopy);
 	}
 
+	@Override
 	public boolean equals(Object obj) {
 		if (!(obj instanceof BufferFactoryWrapper)) return false;
 		BufferFactoryWrapper other = (BufferFactoryWrapper)obj;
 		if (this.factory == null) return other.factory == null;
 		return this.factory.equals(other.factory);
 	}
+	@Override
 	public int hashCode() {
 		if (this.factory == null) return 0;
 		return this.factory.hashCode();
 	}
+	@Override
 	public String toString() {
 		return "FactoryWrapper for " + this.factory; //$NON-NLS-1$
 	}

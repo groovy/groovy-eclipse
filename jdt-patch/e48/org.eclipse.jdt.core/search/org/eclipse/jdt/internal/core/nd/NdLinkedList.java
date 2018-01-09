@@ -70,6 +70,7 @@ public final class NdLinkedList<T> {
 			final int metadataBitsPerElement) {
 
 		return new AbstractTypeFactory<NdLinkedList<T>>() {
+			@Override
 			public NdLinkedList<T> create(Nd dom, long address) {
 				return new NdLinkedList<T>(dom, address, elementFactory, recordsInFirstBlock, recordsInSubsequentBlocks, metadataBitsPerElement);
 			}

@@ -190,6 +190,7 @@ public boolean hasWarnings() {
  * Returns a readable representation of this result.
  * This is for debugging purpose only.
  */
+@Override
 public String toString() {
 	StringBuffer buffer = new StringBuffer();
 	switch (this.evaluationType) {

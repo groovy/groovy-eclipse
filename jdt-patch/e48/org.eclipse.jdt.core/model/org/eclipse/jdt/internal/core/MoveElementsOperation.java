@@ -34,12 +34,14 @@ public MoveElementsOperation(IJavaElement[] elementsToMove, IJavaElement[] destC
  * Returns the <code>String</code> to use as the main task name
  * for progress monitoring.
  */
+@Override
 protected String getMainTaskName() {
 	return Messages.operation_moveElementProgress;
 }
 /**
  * @see CopyElementsOperation#isMove()
  */
+@Override
 protected boolean isMove() {
 	return true;
 }

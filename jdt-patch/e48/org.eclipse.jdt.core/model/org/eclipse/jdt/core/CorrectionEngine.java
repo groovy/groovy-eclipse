@@ -313,6 +313,7 @@ public class CorrectionEngine {
 	 * This field is not intended to be used by client.
 	 */
 	protected CompletionRequestor completionRequestor = new CompletionRequestor() {
+		@Override
 		public void accept(CompletionProposal proposal) {
 			switch (proposal.getKind()) {
 				case CompletionProposal.TYPE_REF:

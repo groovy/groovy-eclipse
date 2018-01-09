@@ -45,6 +45,7 @@ public RecoveredInitializer(FieldDeclaration fieldDeclaration, RecoveredElement 
 /*
  * Record a nested block declaration
  */
+@Override
 public RecoveredElement add(Block nestedBlockDeclaration, int bracketBalanceValue) {
 
 	/* default behavior is to delegate recording to parent if any,
@@ -72,6 +73,7 @@ public RecoveredElement add(Block nestedBlockDeclaration, int bracketBalanceValu
 /*
  * Record a field declaration (act like inside method body)
  */
+@Override
 public RecoveredElement add(FieldDeclaration newFieldDeclaration, int bracketBalanceValue) {
 	resetPendingModifiers();
 
@@ -101,6 +103,7 @@ public RecoveredElement add(FieldDeclaration newFieldDeclaration, int bracketBal
 /*
  * Record a local declaration - regular method should have been created a block body
  */
+@Override
 public RecoveredElement add(LocalDeclaration localDeclaration, int bracketBalanceValue) {
 
 	/* do not consider a type starting passed the type end (if set)
@@ -136,6 +139,7 @@ public RecoveredElement add(LocalDeclaration localDeclaration, int bracketBalanc
 /*
  * Record a statement - regular method should have been created a block body
  */
+@Override
 public RecoveredElement add(Statement statement, int bracketBalanceValue) {
 
 	/* do not consider a statement starting passed the initializer end (if set)
@@ -162,6 +166,7 @@ public RecoveredElement add(Statement statement, int bracketBalanceValue) {
 
 	return element.add(statement, bracketBalanceValue);
 }
+@Override
 public RecoveredElement add(TypeDeclaration typeDeclaration, int bracketBalanceValue) {
 
 	/* do not consider a type starting passed the type end (if set)
@@ -219,6 +224,7 @@ public RecoveredElement add(TypeDeclaration typeDeclaration, int bracketBalanceV
 	}
 	return element;
 }
+@Override
 public RecoveredElement addAnnotationName(int identifierPtr, int identifierLengthPtr, int annotationStart, int bracketBalanceValue) {
 	if (this.pendingAnnotations == null) {
 		this.pendingAnnotations = new RecoveredAnnotation[5];
@@ -240,6 +246,7 @@ public RecoveredElement addAnnotationName(int identifierPtr, int identifierLengt
 
 	return element;
 }
+@Override
 public void addModifier(int flag, int modifiersSourceStart) {
 	this.pendingModifiers |= flag;
 
@@ -247,12 +254,14 @@ public void addModifier(int flag, int modifiersSourceStart) {
 		this.pendingModifersSourceStart = modifiersSourceStart;
 	}
 }
+@Override
 public void resetPendingModifiers() {
 	this.pendingAnnotations = null;
 	this.pendingAnnotationCount = 0;
 	this.pendingModifiers = 0;
 	this.pendingModifersSourceStart = -1;
 }
+@Override
 public String toString(int tab) {
 	StringBuffer result = new StringBuffer(tabString(tab));
 	result.append("Recovered initializer:\n"); //$NON-NLS-1$
@@ -269,6 +278,7 @@ public String toString(int tab) {
 	}
 	return result.toString();
 }
+@Override
 public FieldDeclaration updatedFieldDeclaration(int depth, Set<TypeDeclaration> knownTypes){
 
 	if (this.initializerBody != null){
@@ -294,6 +304,7 @@ public FieldDeclaration updatedFieldDeclaration(int depth, Set<TypeDeclaration> 
  * A closing brace got consumed, might have closed the current element,
  * in which case both the currentElement is exited
  */
+@Override
 public RecoveredElement updateOnClosingBrace(int braceStart, int braceEnd){
 	if ((--this.bracketBalance <= 0) && (this.parent != null)){
 		this.updateSourceEndIfNecessary(braceStart, braceEnd);
@@ -305,6 +316,7 @@ public RecoveredElement updateOnClosingBrace(int braceStart, int braceEnd){
  * An opening brace got consumed, might be the expected opening one of the current element,
  * in which case the bodyStart is updated.
  */
+@Override
 public RecoveredElement updateOnOpeningBrace(int braceStart, int braceEnd){
 	this.bracketBalance++;
 	return this; // request to restart
@@ -312,6 +324,7 @@ public RecoveredElement updateOnOpeningBrace(int braceStart, int braceEnd){
 /*
  * Update the declarationSourceEnd of the corresponding parse node
  */
+@Override
 public void updateSourceEndIfNecessary(int braceStart, int braceEnd){
 	if (this.fieldDeclaration.declarationSourceEnd == 0) {
 		Initializer initializer = (Initializer)this.fieldDeclaration;

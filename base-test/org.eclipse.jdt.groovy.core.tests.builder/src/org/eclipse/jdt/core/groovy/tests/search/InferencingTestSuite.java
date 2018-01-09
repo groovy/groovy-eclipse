@@ -354,14 +354,14 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
     }
 
     public static class UnknownTypeRequestor implements ITypeRequestor {
-        private List<ASTNode> unknownNodes = new ArrayList<ASTNode>();
+        private List<ASTNode> unknownNodes = new ArrayList<>();
 
         public List<ASTNode> getUnknownNodes() {
             return unknownNodes;
         }
 
-        public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result,
-                IJavaElement enclosingElement) {
+        @Override
+        public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
             if (result.confidence == TypeConfidence.UNKNOWN && node.getEnd() > 0) {
                 unknownNodes.add(node);
             }
@@ -377,13 +377,14 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
         public TypeLookupResult result;
         public ASTNode node;
 
-        public final List<ASTNode> unknowns = new ArrayList<ASTNode>();
+        public final List<ASTNode> unknowns = new ArrayList<>();
 
         public SearchRequestor(int start, int end) {
             this.start = start;
             this.end = end;
         }
 
+        @Override
         public VisitStatus acceptASTNode(ASTNode visitorNode, TypeLookupResult visitorResult, IJavaElement enclosingElement) {
             // might have AST nodes with overlapping locations, so result may not be null
             if (this.result == null &&

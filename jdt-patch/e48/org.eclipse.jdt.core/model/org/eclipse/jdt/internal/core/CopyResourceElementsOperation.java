@@ -189,9 +189,11 @@ public class CopyResourceElementsOperation extends MultiOperation implements Suf
 	/**
 	 * @see MultiOperation
 	 */
+	@Override
 	protected String getMainTaskName() {
 		return Messages.operation_copyResourceProgress;
 	}
+	@Override
 	protected ISchedulingRule getSchedulingRule() {
 		if (this.elementsToProcess == null)
 			return null;
@@ -409,6 +411,7 @@ public class CopyResourceElementsOperation extends MultiOperation implements Suf
 	 * <code>processPackageFragmentResource</code>, depending on the type of
 	 * <code>element</code>.
 	 */
+	@Override
 	protected void processElement(IJavaElement element) throws JavaModelException {
 		IJavaElement dest = getDestinationParent(element);
 		switch (element.getElementType()) {
@@ -428,6 +431,7 @@ public class CopyResourceElementsOperation extends MultiOperation implements Suf
 	 * Overridden to allow special processing of <code>JavaElementDelta</code>s
 	 * and <code>fResultElements</code>.
 	 */
+	@Override
 	protected void processElements() throws JavaModelException {
 		this.createdElements = new ArrayList(this.elementsToProcess.length);
 		try {
@@ -811,6 +815,7 @@ public class CopyResourceElementsOperation extends MultiOperation implements Suf
 	 *		does not match the number of elements that were supplied.
 	 * </ul>
 	 */
+	@Override
 	protected IJavaModelStatus verify() {
 		IJavaModelStatus status = super.verify();
 		if (!status.isOK()) {
@@ -825,6 +830,7 @@ public class CopyResourceElementsOperation extends MultiOperation implements Suf
 	/**
 	 * @see MultiOperation
 	 */
+	@Override
 	protected void verify(IJavaElement element) throws JavaModelException {
 		if (element == null || !element.exists())
 			error(IJavaModelStatusConstants.ELEMENT_DOES_NOT_EXIST, element);

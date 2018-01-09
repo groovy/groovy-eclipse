@@ -27,34 +27,24 @@ public class CompletionOnJavadocParamNameReference extends JavadocSingleNameRefe
 		super(nameRef.token, (((long)nameRef.sourceStart)<<32)+nameRef.sourceEnd, nameRef.tagSourceStart, nameRef.tagSourceStart);
 	}
 
-	/**
-	 * @param flags The completionFlags to set.
-	 */
+	@Override
 	public void addCompletionFlags(int flags) {
 		this.completionFlags |= flags;
 	}
 
-	/**
-	 * Get completion node flags.
-	 *
-	 * @return int Flags of the javadoc completion node.
-	 */
+	@Override
 	public int getCompletionFlags() {
 		return this.completionFlags;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.internal.compiler.ast.AllocationExpression#printExpression(int, java.lang.StringBuffer)
-	 */
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 		output.append("<CompletionOnJavadocParamNameReference:"); //$NON-NLS-1$
 		if (this.token != null) super.printExpression(indent, output);
 		return output.append('>');
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.internal.compiler.ast.SingleNameReference#reportError(org.eclipse.jdt.internal.compiler.lookup.BlockScope)
-	 */
+	@Override
 	public TypeBinding reportError(BlockScope scope) {
 		return null;
 	}

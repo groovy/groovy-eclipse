@@ -44,6 +44,7 @@ public CompletionOnQualifiedNameReference(char[][] previousIdentifiers, char[] c
 	this.completionIdentifier = completionIdentifier;
 	this.isInsideAnnotationAttribute = isInsideAnnotationAttribute;
 }
+@Override
 public StringBuffer printExpression(int indent, StringBuffer output) {
 
 	output.append("<CompleteOnName:"); //$NON-NLS-1$
@@ -54,6 +55,7 @@ public StringBuffer printExpression(int indent, StringBuffer output) {
 	output.append(this.completionIdentifier).append('>');
 	return output;
 }
+@Override
 public TypeBinding resolveType(BlockScope scope) {
 	// it can be a package, type, member type, local variable or field
 	this.binding = scope.getBinding(this.tokens, this);

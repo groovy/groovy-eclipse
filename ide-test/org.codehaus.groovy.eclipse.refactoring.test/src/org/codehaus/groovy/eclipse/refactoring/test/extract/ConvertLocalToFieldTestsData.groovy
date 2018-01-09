@@ -15,11 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.extract
 
-/**
- * @author Stephanie Van Dyk
- * @author Daniel Phan
- * @created Jan 22, 2012
- */
 class ConvertLocalToFieldTestsData {
 
 	static class TestCase {
@@ -27,18 +22,18 @@ class ConvertLocalToFieldTestsData {
 		String expected
 		String fieldName
 		boolean expectWarning
-		
+
 		public TestCase(input, expected = null, fieldName = "target", expectWarning = false) {
 			this.input = input
 			this.expected = expected
 			this.fieldName = fieldName
 			this.expectWarning = expectWarning
 		}
-		
+
 		int getSelectionOffset() { return input.indexOf("target/**/") }
 		int getSelectionLength() { return "target".length() }
 	}
-	
+
 	static Map<String, TestCase> testCases = [
 		testMethodToModule:
 		new TestCase('def test() { def target/**/ }', '@groovy.transform.Field def target\ndef test() { target/**/ }'),

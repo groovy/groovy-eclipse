@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011, 2017 IBM Corporation and others.
+ * Copyright (c) 2011, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -6733,6 +6733,52 @@ public void testBug522469a() {
 		"	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
 		"The target type of this expression is not a well formed parameterized type due to bound(s) mismatch\n" + 
 		"----------\n");
+}
+public void testBug522469b() {
+	runNegativeTest(
+		new String[] {
+			"X.java",
+			"class C<T> {}\n" + 
+			"public class X  {\n" + 
+			"    interface I<T> {\n" + 
+			"        void foo(C<? super Long> l);\n" + 
+			"    }\n" + 
+			"    public static void run() {\n" + 
+			"        I<String> i = (C<? super Number> l) -> {};\n" + 
+			"    }\n" + 
+			"}\n"
+		},
+		"----------\n" + 
+		"1. ERROR in X.java (at line 7)\n" + 
+		"	I<String> i = (C<? super Number> l) -> {};\n" +
+		"	               ^\n" + 
+		"Lambda expression's parameter l is expected to be of type C<? super Long>\n" +
+		"----------\n");
+}
+public void testBug529199() {
+	runConformTest(
+		new String[] {
+			"p2/Test.java",
+			"package p2;\n" + 
+			"public class Test {\n" + 
+			"   public static void main(String... args) {\n" + 
+			"       p1.B.m(); // ok\n" + 
+			"       Runnable r = p1.B::m; r.run(); // runtime error\n" + 
+			"   }\n" + 
+			"}",
+			"p1/A.java",
+			"package p1;\n" + 
+			"class A {\n" + 
+			"   public static void m() { System.out.println(\"A.m\"); }\n" + 
+			"}\n",
+			"p1/B.java",
+			"package p1;\n" + 
+			"public class B extends A {\n" + 
+			"}\n"
+		},
+		"A.m\n" +
+		"A.m"		
+	);
 }
 public static Class testClass() {
 	return LambdaExpressionsTest.class;

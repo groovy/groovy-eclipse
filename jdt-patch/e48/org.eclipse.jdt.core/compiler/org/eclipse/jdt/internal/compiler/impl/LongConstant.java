@@ -30,52 +30,64 @@ private LongConstant(long value) {
 	this.value = value;
 }
 
+@Override
 public byte byteValue() {
 	return (byte) this.value;
 }
 
+@Override
 public char charValue() {
 	return (char) this.value;
 }
 
+@Override
 public double doubleValue() {
 	return this.value; // implicit cast to return type
 }
 
+@Override
 public float floatValue() {
 	return this.value; // implicit cast to return type
 }
 
+@Override
 public int intValue() {
 	return (int) this.value;
 }
 
+@Override
 public long longValue() {
 	return this.value;
 }
 
+@Override
 public short shortValue() {
 	return (short) this.value;
 }
 
+@Override
 public String stringValue() {
 	//spec 15.17.11
 	return String.valueOf(this.value);
 }
 
+@Override
 public String toString(){
 
 	return "(long)" + this.value ; //$NON-NLS-1$
 }
 
+@Override
 public int typeID() {
 	return T_long;
 }
 
+@Override
 public int hashCode() {
 	return (int) (this.value ^ (this.value >>> 32));
 }
 
+@Override
 public boolean equals(Object obj) {
 	if (this == obj) {
 		return true;

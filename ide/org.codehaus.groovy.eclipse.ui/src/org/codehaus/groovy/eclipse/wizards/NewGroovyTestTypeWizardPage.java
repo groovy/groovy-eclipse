@@ -98,7 +98,7 @@ public class NewGroovyTestTypeWizardPage extends NewTestCaseWizardPageOne {
     @Override
     protected IStatus superClassChanged() {
         // replaces the super class validation of of the normal type wizard
-        if (isJUnit4()) {
+        if (getJUnitVersion() == JUnitVersion.VERSION_4) {
             return super.superClassChanged();
         }
 
@@ -143,7 +143,7 @@ public class NewGroovyTestTypeWizardPage extends NewTestCaseWizardPageOne {
         // GRECLIPSE-322
         if (pack == null) pack = getPackageFragmentRoot().getPackageFragment("");
         // if JUnit 3 and default package, calling super.creatType will be an error
-        if (!isJUnit4() && getPackageFragment().getElementName().equals("")) {
+        if (getJUnitVersion() == JUnitVersion.VERSION_3 && getPackageFragment().getElementName().equals("")) {
             String newline = StubUtility.getLineDelimiterUsed(pack.getJavaProject());
             StringBuilder source = new StringBuilder();
             String superClass = getSuperClass();
@@ -158,18 +158,18 @@ public class NewGroovyTestTypeWizardPage extends NewTestCaseWizardPageOne {
             // TODO: append requested members
             source.append(newline).append("}").append(newline);
 
-            unit = (GroovyCompilationUnit) pack.createCompilationUnit(getCompilationUnitName(name), source.toString(), true, submon.newChild(1));
+            unit = (GroovyCompilationUnit) pack.createCompilationUnit(getCompilationUnitName(name), source.toString(), true, submon.split(1));
 
             maybeCreatedType = unit.getType(name);
         } else {
-            super.createType(submon.newChild(1));
+            super.createType(submon.split(1));
 
             unit = (GroovyCompilationUnit) pack.getCompilationUnit(getCompilationUnitName(name));
         }
 
         try {
             char[] contents = unit.getContents();
-            unit.becomeWorkingCopy(submon.newChild(1));
+            unit.becomeWorkingCopy(submon.split(1));
             MultiTextEdit textEdit = new MultiTextEdit();
 
             // remove ';' from declarations and statements
@@ -185,8 +185,8 @@ public class NewGroovyTestTypeWizardPage extends NewTestCaseWizardPageOne {
             // TODO: organize imports
 
             if (textEdit.hasChildren()) {
-                unit.applyTextEdit(textEdit, submon.newChild(1));
-                unit.commitWorkingCopy(true, submon.newChild(1));
+                unit.applyTextEdit(textEdit, submon.split(1));
+                unit.commitWorkingCopy(true, submon.split(1));
             }
         } finally {
             if (unit != null) {

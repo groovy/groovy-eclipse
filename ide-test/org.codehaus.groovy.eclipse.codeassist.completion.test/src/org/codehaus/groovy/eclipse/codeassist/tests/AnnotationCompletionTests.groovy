@@ -15,9 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
 import static org.eclipse.jdt.ui.PreferenceConstants.TYPEFILTER_ENABLED
-import static org.junit.Assume.assumeTrue
 
 import groovy.transform.NotYetImplemented
 
@@ -76,7 +74,6 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
 
     @Test
     void testAnno2() {
-        assumeTrue(isAtLeastGroovy(21))
         String contents = '@Compile class Foo { }'
         def proposals = getProposals(contents, '@Compile')
 
@@ -92,7 +89,6 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
 
     @Test
     void testAnno2a() {
-        assumeTrue(isAtLeastGroovy(21))
         String contents = '@ComDyn class Foo { }'
         def proposals = getProposals(contents, '@ComDyn') // check camel case matching
         assertThat(proposals).includes('CompileDynamic').hasSize(1, 'Only @CompileDynamic should have been proposed\n')

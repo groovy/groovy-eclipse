@@ -63,6 +63,7 @@ public class SetClasspathOperation extends ChangeClasspathOperation {
 	/**
 	 * Sets the classpath of the pre-specified project.
 	 */
+	@Override
 	protected void executeOperation() throws JavaModelException {
 		checkCanceled();
 		try {
@@ -81,6 +82,7 @@ public class SetClasspathOperation extends ChangeClasspathOperation {
 		}
 	}
 	
+	@Override
 	protected ISchedulingRule getSchedulingRule() {
 		if (this.canChangeResources) {
 			IResourceRuleFactory ruleFactory = ResourcesPlugin.getWorkspace().getRuleFactory();
@@ -95,6 +97,7 @@ public class SetClasspathOperation extends ChangeClasspathOperation {
 		return super.getSchedulingRule();
 	}
 
+	@Override
 	public String toString(){
 		StringBuffer buffer = new StringBuffer(20);
 		buffer.append("SetClasspathOperation\n"); //$NON-NLS-1$
@@ -110,6 +113,7 @@ public class SetClasspathOperation extends ChangeClasspathOperation {
 		return buffer.toString();
 	}
 
+	@Override
 	public IJavaModelStatus verify() {
 		IJavaModelStatus status = super.verify();
 		if (!status.isOK())

@@ -42,6 +42,7 @@ public SynchronizedStatement(
 	this.sourceStart = s;
 }
 
+@Override
 public FlowInfo analyseCode(
 	BlockScope currentScope,
 	FlowContext flowContext,
@@ -72,6 +73,7 @@ public FlowInfo analyseCode(
 	return flowInfo;
 }
 
+@Override
 public boolean isSubRoutineEscaping() {
 	return false;
 }
@@ -82,6 +84,7 @@ public boolean isSubRoutineEscaping() {
  * @param currentScope org.eclipse.jdt.internal.compiler.lookup.BlockScope
  * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
  */
+@Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	if ((this.bits & IsReachable) == 0) {
 		return;
@@ -160,6 +163,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 /**
  * @see SubRoutineStatement#generateSubRoutineInvocation(BlockScope, CodeStream, Object, int, LocalVariableBinding)
  */
+@Override
 public boolean generateSubRoutineInvocation(BlockScope currentScope, CodeStream codeStream, Object targetLocation, int stateIndex, LocalVariableBinding secretLocal) {
 	codeStream.load(this.synchroVariable);
 	codeStream.monitorexit();
@@ -167,6 +171,7 @@ public boolean generateSubRoutineInvocation(BlockScope currentScope, CodeStream 
 	return false;
 }
 
+@Override
 public void resolve(BlockScope upperScope) {
 	// special scope for secret locals optimization.
 	this.scope = new BlockScope(upperScope);
@@ -199,6 +204,7 @@ public void resolve(BlockScope upperScope) {
 	this.block.resolveUsing(this.scope);
 }
 
+@Override
 public StringBuffer printStatement(int indent, StringBuffer output) {
 	printIndent(indent, output);
 	output.append("synchronized ("); //$NON-NLS-1$
@@ -207,6 +213,7 @@ public StringBuffer printStatement(int indent, StringBuffer output) {
 	return this.block.printStatement(indent + 1, output);
 }
 
+@Override
 public void traverse(ASTVisitor visitor, BlockScope blockScope) {
 	if (visitor.visit(this, blockScope)) {
 		this.expression.traverse(visitor, this.scope);

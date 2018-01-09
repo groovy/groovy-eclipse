@@ -21,6 +21,7 @@ public class SourceModule extends AbstractModule {
 		ModuleDescriptionInfo info = (ModuleDescriptionInfo) getElementInfo();
 		return info.getModifiers();
 	}
+	@Override
 	public String toString(String lineDelimiter) {
 		StringBuffer buffer = new StringBuffer();
 		try {

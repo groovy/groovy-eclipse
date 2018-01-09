@@ -39,6 +39,7 @@ public class BootstrapMethodsEntry
 	/**
 	 * @see IBootstrapMethodsEntry#getBootstrapArguments()
 	 */
+	@Override
 	public int[] getBootstrapArguments() {
 		return this.bootstrapArguments;
 	}
@@ -46,6 +47,7 @@ public class BootstrapMethodsEntry
 	/**
 	 * @see IBootstrapMethodsEntry#getBootstrapMethodReference()
 	 */
+	@Override
 	public int getBootstrapMethodReference() {
 		return this.bootstrapMethodReference;
 	}

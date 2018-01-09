@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,39 +17,28 @@ package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.preferencepage;
 
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovyPropertySuggestion;
 
-/**
- * 
- * @author Nieraj Singh
- * @created Apr 21, 2011
- */
 public class PropertySuggestionLabel extends AbstractSuggestionLabel {
+
     private GroovyPropertySuggestion property;
 
     public PropertySuggestionLabel(GroovyPropertySuggestion property) {
         this.property = property;
     }
 
+    @Override
     protected String constructName() {
         if (property == null) {
             return null;
         }
-        StringBuffer buffer = new StringBuffer();
-
-        String name = property.getName();
-
-        buffer.append(name);
- 
-
+        StringBuilder sb = new StringBuilder();
+        sb.append(property.getName());
         String type = property.getType();
-
-        if (type != null && type.length() > 0) {
-            buffer.append(EMPTY_SPACE);
-            buffer.append(COLON);
-            buffer.append(EMPTY_SPACE);
-            buffer.append(type);
+        if (type != null && !type.isEmpty()) {
+            sb.append(EMPTY_SPACE);
+            sb.append(COLON);
+            sb.append(EMPTY_SPACE);
+            sb.append(type);
         }
-
-        return buffer.toString();
+        return sb.toString();
     }
-
 }

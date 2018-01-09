@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,15 +22,13 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Debug listener used by some classes that are internal to the compiler but for which we'd like to externalize events that occur so
- * we can test for them.
- *
- * @author Andy Clement
+ * Debug listener used by some classes that are internal to the compiler but for
+ * which we'd like to externalize events that occur so we can test for them.
  */
 public class EventListener {
 
-    private List<String> events = new ArrayList<String>();
-    private Set<String> interestingEvents = new HashSet<String>();
+    private List<String> events = new ArrayList<>();
+    private Set<String> interestingEvents = new HashSet<>();
 
     public EventListener() {
 
@@ -61,6 +59,7 @@ public class EventListener {
         events.clear();
     }
 
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         for (String event : events) {

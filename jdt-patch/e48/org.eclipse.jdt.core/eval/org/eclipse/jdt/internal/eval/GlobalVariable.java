@@ -54,6 +54,7 @@ public char[] getTypeName() {
  * Returns a readable representation of the receiver.
  * This is for debugging purpose only.
  */
+@Override
 public String toString() {
 	StringBuffer buffer = new StringBuffer();
 	buffer.append(this.typeName);

@@ -20,11 +20,6 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.eclipse.codebrowsing.selection.IsSameExpression;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 
-/**
- *
- * @author andrew
- * @created Jun 4, 2010
- */
 public class SimpleExpressionASTFragment implements IASTFragment {
 
     private final Expression expression;
@@ -36,10 +31,12 @@ public class SimpleExpressionASTFragment implements IASTFragment {
         actualStartPosition = expression.getStart();
     }
 
+    @Override
     public Expression getAssociatedExpression() {
         return expression;
     }
 
+    @Override
     public ASTNode getAssociatedNode() {
         return expression;
     }
@@ -48,18 +45,22 @@ public class SimpleExpressionASTFragment implements IASTFragment {
         this.actualStartPosition = actualStartPosition;
     }
 
+    @Override
     public int getEnd() {
         return expression.getEnd();
     }
 
+    @Override
     public int getStart() {
         return actualStartPosition;
     }
 
+    @Override
     public int getLength() {
         return getEnd() - getStart();
     }
 
+    @Override
     public int getTrimmedEnd(GroovyCompilationUnit unit) {
         char[] contents = unit.getContents();
         int end = Math.min(getEnd(), contents.length - 1);
@@ -69,10 +70,12 @@ public class SimpleExpressionASTFragment implements IASTFragment {
         return end;
     }
 
+    @Override
     public int getTrimmedLength(GroovyCompilationUnit unit) {
         return getTrimmedEnd(unit) - getStart();
     }
 
+    @Override
     public boolean matches(IASTFragment other) {
         if (!(other instanceof SimpleExpressionASTFragment)) {
             return false;
@@ -85,27 +88,32 @@ public class SimpleExpressionASTFragment implements IASTFragment {
         return print(0);
     }
 
+    @Override
     public String print(int indentLvl) {
         return ASTFragmentFactory.spaces(indentLvl) + "(S) " + expression.toString();
     }
 
+    @Override
     public int fragmentLength() {
         return 1;
     }
 
+    @Override
     public void accept(FragmentVisitor visitor) {
         visitor.previsit(this);
         visitor.visit(this);
     }
 
+    @Override
     public ASTFragmentKind kind() {
         return ASTFragmentKind.SIMPLE_EXPRESSION;
     }
 
+    @Override
     public IASTFragment findMatchingSubFragment(IASTFragment other) {
         // cannot match method call fragments since there are no arguments here
-        if (other.kind() == ASTFragmentKind.SIMPLE_EXPRESSION
-                && new IsSameExpression().isSame(this.getAssociatedExpression(), other.getAssociatedExpression())) {
+        if (other.kind() == ASTFragmentKind.SIMPLE_EXPRESSION &&
+            new IsSameExpression().isSame(this.getAssociatedExpression(), other.getAssociatedExpression())) {
             return new SimpleExpressionASTFragment(expression);
         } else {
             return new EmptyASTFragment();

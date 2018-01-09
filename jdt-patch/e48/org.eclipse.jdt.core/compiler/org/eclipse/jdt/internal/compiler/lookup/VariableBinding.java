@@ -49,6 +49,7 @@ public abstract class VariableBinding extends Binding {
 		return constant();
 	}
 
+	@Override
 	public abstract AnnotationBinding[] getAnnotations();
 
 	public final boolean isBlankFinal(){
@@ -81,12 +82,14 @@ public abstract class VariableBinding extends Binding {
 				&& (this.type.tagBits & TagBits.AnnotationNullable) != 0);
 	}
 
+	@Override
 	public char[] readableName() {
 		return this.name;
 	}
 	public void setConstant(Constant constant) {
 		this.constant = constant;
 	}
+	@Override
 	public String toString() {
 		StringBuffer output = new StringBuffer(10);
 		ASTNode.printModifiers(this.modifiers, output);

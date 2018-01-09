@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,22 +26,18 @@ import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.graphics.RGB;
 
-/**
- * 
- * @author Andrew Eisenberg
- * @created Jan 27, 2010
- */
 class GroovyJavaStackFrameLabelProvider extends JavaStackFrameLabelProvider implements IPropertyChangeListener {
-    
+
     private boolean isEnabled;
     private String[] filteredList;
     private IPreferenceStore preferenceStore;
+
     public GroovyJavaStackFrameLabelProvider() {
         preferenceStore = GroovyPlugin.getDefault().getPreferenceStore();
         isEnabled = preferenceStore.getBoolean(PreferenceConstants.GROOVY_DEBUG_FILTER_STACK);
         filteredList = computeFilteredList();
     }
-	
+
     private String[] computeFilteredList() {
         String filter = preferenceStore.getString(PreferenceConstants.GROOVY_DEBUG_FILTER_LIST);
         if (filter != null) {
@@ -53,24 +49,24 @@ class GroovyJavaStackFrameLabelProvider extends JavaStackFrameLabelProvider impl
 
     @Override
     protected void retrieveLabel(ILabelUpdate update) throws CoreException {
-	    super.retrieveLabel(update);
-		if (isEnabled && !update.isCanceled()) {
-		    Object element = update.getElement();
-			if (element instanceof IJavaStackFrame) {
-			    IJavaStackFrame frame = (IJavaStackFrame) element;
-			    if (isFiltered(frame.getDeclaringTypeName())) {
-			        try {
-			            update.setForeground(new RGB(200, 200, 200), 0);
-			        } catch (ArrayIndexOutOfBoundsException e) {
-			            // ignore, there are no columns in this LabelUpdate
-			        } catch (NullPointerException e) {
-			            // ignore, the columns are null
-			        }
-			    }
-			}
-		}
-	}
-    
+        super.retrieveLabel(update);
+        if (isEnabled && !update.isCanceled()) {
+            Object element = update.getElement();
+            if (element instanceof IJavaStackFrame) {
+                IJavaStackFrame frame = (IJavaStackFrame) element;
+                if (isFiltered(frame.getDeclaringTypeName())) {
+                    try {
+                        update.setForeground(new RGB(200, 200, 200), 0);
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        // ignore, there are no columns in this LabelUpdate
+                    } catch (NullPointerException e) {
+                        // ignore, the columns are null
+                    }
+                }
+            }
+        }
+    }
+
     private boolean isFiltered(String qualifiedName) {
         for (String filter : filteredList) {
             if (qualifiedName.startsWith(filter)) {
@@ -80,6 +76,7 @@ class GroovyJavaStackFrameLabelProvider extends JavaStackFrameLabelProvider impl
         return false;
     }
 
+    @Override
     public void propertyChange(PropertyChangeEvent event) {
         if (PreferenceConstants.GROOVY_DEBUG_FILTER_STACK.equals(event.getProperty())) {
             isEnabled = preferenceStore.getBoolean(PreferenceConstants.GROOVY_DEBUG_FILTER_STACK);
@@ -87,12 +84,11 @@ class GroovyJavaStackFrameLabelProvider extends JavaStackFrameLabelProvider impl
             filteredList = computeFilteredList();
         }
     }
-	
-    
+
     void connect() {
         GroovyPlugin.getDefault().getPreferenceStore().addPropertyChangeListener(this);
     }
-    
+
     void disconnect() {
         GroovyPlugin.getDefault().getPreferenceStore().removePropertyChangeListener(this);
     }

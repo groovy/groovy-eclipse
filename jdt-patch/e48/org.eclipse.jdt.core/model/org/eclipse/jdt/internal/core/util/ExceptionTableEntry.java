@@ -46,6 +46,7 @@ public class ExceptionTableEntry
 	/**
 	 * @see IExceptionTableEntry#getStartPC()
 	 */
+	@Override
 	public int getStartPC() {
 		return this.startPC;
 	}
@@ -53,6 +54,7 @@ public class ExceptionTableEntry
 	/**
 	 * @see IExceptionTableEntry#getEndPC()
 	 */
+	@Override
 	public int getEndPC() {
 		return this.endPC;
 	}
@@ -60,6 +62,7 @@ public class ExceptionTableEntry
 	/**
 	 * @see IExceptionTableEntry#getHandlerPC()
 	 */
+	@Override
 	public int getHandlerPC() {
 		return this.handlerPC;
 	}
@@ -67,6 +70,7 @@ public class ExceptionTableEntry
 	/**
 	 * @see IExceptionTableEntry#getCatchTypeIndex()
 	 */
+	@Override
 	public int getCatchTypeIndex() {
 		return this.catchTypeIndex;
 	}
@@ -74,6 +78,7 @@ public class ExceptionTableEntry
 	/**
 	 * @see IExceptionTableEntry#getCatchType()
 	 */
+	@Override
 	public char[] getCatchType() {
 		return this.catchType;
 	}

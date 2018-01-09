@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.util.List;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jdt.core.IJavaProject;
@@ -36,70 +37,61 @@ import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 
 /**
- * RemoveGroovyNatureAction is responsible for removing the Groovy nature to a java
- * project.
- *
- * @author Andrew
+ * RemoveGroovyNatureAction is responsible for removing the Groovy nature to a
+ * Java project.
  */
 public class RemoveGroovyNatureAction implements IObjectActionDelegate {
-    private List<IProject> currSelected = new LinkedList<IProject>();
+    private List<IProject> currSelected = new LinkedList<>();
 
     private IWorkbenchPart targetPart;
 
     private boolean shouldAskToRemoveJars = true;
 
-
+    @Override
     public void run(final IAction action) {
-
         if (currSelected != null && currSelected.size() > 0) {
             GroovyCore.trace("RemoveGroovySupportAction.run()");
 
             for (IProject project : currSelected) {
                 GroovyCore.trace("   to " + project.getName());
                 try {
-					GroovyRuntime.removeGroovyNature(project);
-					IJavaProject javaProject = JavaCore.create(project);
-					if (GroovyRuntime.hasGroovyClasspathContainer(javaProject)) {
-					    boolean shouldRemove;
-					    if (shouldAskToRemoveJars) {
-					        shouldRemove = MessageDialog.openQuestion(getShell(), "Remove Groovy jars?", "Do you want to also remove the groovy runtime jars from project " + project.getName() + "?");
-					    } else {
-					        // do automatically during testing
-					        shouldRemove = true;
-					    }
-					    if (shouldRemove) {
-					        GroovyRuntime.removeGroovyClasspathContainer(javaProject);
+                    GroovyRuntime.removeGroovyNature(project);
+                    IJavaProject javaProject = JavaCore.create(project);
+                    if (GroovyRuntime.hasGroovyClasspathContainer(javaProject)) {
+                        boolean shouldRemove;
+                        if (shouldAskToRemoveJars) {
+                            shouldRemove = MessageDialog.openQuestion(getShell(), "Remove Groovy jars?", "Do you want to also remove the groovy runtime jars from project " + project.getName() + "?");
+                        } else {
+                            // do automatically during testing
+                            shouldRemove = true;
+                        }
+                        if (shouldRemove) {
+                            GroovyRuntime.removeGroovyClasspathContainer(javaProject);
                             GroovyRuntime.removeLibraryFromClasspath(javaProject, GroovyRuntime.DSLD_CONTAINER_ID);
-					    }
-					}
-				} catch (CoreException e) {
-					GroovyCore.logException("Error removing Groovy nature", e);
-				}
+                        }
+                    }
+                } catch (CoreException e) {
+                    GroovyCore.logException("Error removing Groovy nature", e);
+                }
             }
         }
     }
 
-    /**
-     * @return
-     */
     private Shell getShell() {
         return targetPart != null ? targetPart.getSite().getShell() : Display.getDefault().getActiveShell();
     }
 
-    /**
-     * @see IEditorActionDelegate#selectionChanged
-     */
+    @Override
     public void selectionChanged(final IAction action, final ISelection selection) {
         currSelected.clear();
-        List<IProject> newSelected = new LinkedList<IProject>();
+        List<IProject> newSelected = new LinkedList<>();
         boolean enabled = true;
         if (selection instanceof IStructuredSelection) {
             IStructuredSelection newSelection = (IStructuredSelection) selection;
             for (Iterator<?> iter = newSelection.iterator(); iter.hasNext();) {
                 Object object = iter.next();
                 if (object instanceof IAdaptable) {
-                    @SuppressWarnings("cast")
-                    IProject project = (IProject) ((IAdaptable)object).getAdapter(IProject.class);
+                    IProject project = Adapters.adapt(object, IProject.class);
                     if(project != null) {
                         newSelected.add(project);
                     } else {
@@ -121,9 +113,7 @@ public class RemoveGroovyNatureAction implements IObjectActionDelegate {
         }
     }
 
-    /**
-     * @see IEditorActionDelegate#setActivePart
-     */
+    @Override
     public void setActivePart(final IAction action, final IWorkbenchPart targetPart) {
         this.targetPart = targetPart;
     }

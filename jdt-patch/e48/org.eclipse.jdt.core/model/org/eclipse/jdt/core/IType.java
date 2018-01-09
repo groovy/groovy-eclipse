@@ -501,6 +501,7 @@ public interface IType extends IMember, IAnnotatable {
 	 *
 	 * @return the simple name of this type
 	 */
+	@Override
 	String getElementName();
 
 	/**

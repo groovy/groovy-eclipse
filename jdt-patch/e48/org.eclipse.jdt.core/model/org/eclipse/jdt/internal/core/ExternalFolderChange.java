@@ -54,6 +54,7 @@ public class ExternalFolderChange {
 		}
 		// removal of linked folders is done during save
 	}
+	@Override
 	public String toString() {
 		return "ExternalFolderChange: " + this.project.getElementName(); //$NON-NLS-1$
 	}

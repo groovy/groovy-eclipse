@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,10 +30,6 @@ import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.TextSelection;
 import org.eclipse.text.edits.TextEdit;
 
-/**
- * @author Andrew Eisenberg
- * @created Aug 18, 2009
- */
 public class GroovyCodeFormatCleanUp extends AbstractGroovyCleanUp {
 
     private final FormatKind kind;

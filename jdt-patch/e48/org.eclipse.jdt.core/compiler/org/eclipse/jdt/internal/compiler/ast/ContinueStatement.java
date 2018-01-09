@@ -22,6 +22,7 @@ public ContinueStatement(char[] label, int sourceStart, int sourceEnd) {
 	super(label, sourceStart, sourceEnd);
 }
 
+@Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 
 	// here requires to generate a sequence of finally blocks invocations depending corresponding
@@ -89,12 +90,14 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	return FlowInfo.DEAD_END;
 }
 
+@Override
 public StringBuffer printStatement(int tab, StringBuffer output) {
 	printIndent(tab, output).append("continue "); //$NON-NLS-1$
 	if (this.label != null) output.append(this.label);
 	return output.append(';');
 }
 
+@Override
 public void traverse(ASTVisitor visitor, 	BlockScope blockScope) {
 	visitor.visit(this, blockScope);
 	visitor.endVisit(this, blockScope);

@@ -28,6 +28,7 @@ public class QualifiedTypeReference extends TypeReference {
 		this.sourceEnd = (int)(this.sourcePositions[this.sourcePositions.length-1] & 0x00000000FFFFFFFFL ) ;
 	}
 
+	@Override
 	public TypeReference augmentTypeWithAdditionalDimensions(int additionalDimensions, Annotation[][] additionalAnnotations, boolean isVarargs) {
 		int totalDimensions = this.dimensions() + additionalDimensions;
 		Annotation [][] allAnnotations = getMergedAnnotationsOnDimensions(additionalDimensions, additionalAnnotations);
@@ -63,6 +64,7 @@ public class QualifiedTypeReference extends TypeReference {
 		}
 	}
 
+	@Override
 	public char[] getLastToken() {
 		return this.tokens[this.tokens.length-1];
 	}
@@ -96,6 +98,7 @@ public class QualifiedTypeReference extends TypeReference {
 		}
 	}
 
+	@Override
 	protected TypeBinding getTypeBinding(Scope scope) {
 
 		if (this.resolvedType != null) {
@@ -182,11 +185,13 @@ public class QualifiedTypeReference extends TypeReference {
 		}
 	}
 
+	@Override
 	public char[][] getTypeName(){
 
 		return this.tokens;
 	}
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 		for (int i = 0; i < this.tokens.length; i++) {
 			if (i > 0) output.append('.');
@@ -199,6 +204,7 @@ public class QualifiedTypeReference extends TypeReference {
 		return output;
 	}
 
+	@Override
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		if (visitor.visit(this, scope)) {
 			if (this.annotations != null) {
@@ -213,6 +219,7 @@ public class QualifiedTypeReference extends TypeReference {
 		visitor.endVisit(this, scope);
 	}
 
+	@Override
 	public void traverse(ASTVisitor visitor, ClassScope scope) {
 		if (visitor.visit(this, scope)) {
 			if (this.annotations != null) {
@@ -226,6 +233,7 @@ public class QualifiedTypeReference extends TypeReference {
 		}
 		visitor.endVisit(this, scope);
 	}
+	@Override
 	public int getAnnotatableLevels() {
 		return this.tokens.length;
 	}

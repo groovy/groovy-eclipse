@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,9 +35,6 @@ import org.eclipse.core.runtime.Assert;
  * Factory class to create an AST Fragment for a given expression.
  * Only works on expressions now, but consider expanding to statements in the
  * future if required.
- *
- * @author andrew
- * @created Jun 4, 2010
  */
 public class ASTFragmentFactory {
 
@@ -97,8 +94,8 @@ public class ASTFragmentFactory {
 
     private IASTFragment createBinaryFragment(BinaryExpression expression, int start, int end) {
         // tokens list will be one shorter than the exprs list
-        List<Expression> exprs = new ArrayList<Expression>();
-        List<Token> tokens = new ArrayList<Token>();
+        List<Expression> exprs = new ArrayList<>();
+        List<Token> tokens = new ArrayList<>();
         walkBinaryExpr(expression, exprs, tokens);
         Expression firstExpr = exprs.get(exprs.size() - 1);
         IASTFragment next = new EmptyASTFragment();
@@ -138,16 +135,16 @@ public class ASTFragmentFactory {
     private IASTFragment createPropertyBasedFragment(Expression expression, int start, int end) {
         // kinds list will be same size as exprs list
         // args list will contain nulls for items that are not method calls
-        List<ASTFragmentKind> kinds = new ArrayList<ASTFragmentKind>();
+        List<ASTFragmentKind> kinds = new ArrayList<>();
 
         // all of the target expressions
-        List<Expression> exprs = new ArrayList<Expression>();
+        List<Expression> exprs = new ArrayList<>();
 
         // ensure that method calls include their arguments
-        List<Expression> args = new ArrayList<Expression>();
+        List<Expression> args = new ArrayList<>();
 
         // ensure that method calls include the closing paren
-        List<Integer> ends = new ArrayList<Integer>();
+        List<Integer> ends = new ArrayList<>();
 
         walkPropertyExpr(expression, exprs, args, kinds, ends);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,20 +30,15 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.JavaCore;
 
 /**
- * @author Andrew Eisenberg
- * @created Jul 21, 2009
- *
- *          Converts a legacty Groovy 1.x project into a 2.x project <br>
+ * Converts a legacty Groovy 1.x project into a 2.x project.
  * <br>
- *          Steps:<br>
- *          1. remove old groovy nature<br>
- *          2. add new groovy nature<br>
- *          3. remove old groovy builder<br>
- *          4. ensure java builder exists<br>
+ * Steps:<br>
+ * 1. remove old groovy nature<br>
+ * 2. add new groovy nature<br>
+ * 3. remove old groovy builder<br>
+ * 4. ensure java builder exists<br>
  *
- *          As of Greclipse 2.7.0, This is no longer run on startup. But, this
- *          funcionality is
- *          available from the preferences page.
+ * This is no longer run on startup. But it is available from the preferences page.
  */
 public class ConvertLegacyProject {
 
@@ -57,13 +52,12 @@ public class ConvertLegacyProject {
         }
     }
 
-
     public void convertProject(IProject project) {
         try {
             IProjectDescription desc = project.getDescription();
 
             String[] natures = desc.getNatureIds();
-            List<String> newNatures = new LinkedList<String>();
+            List<String> newNatures = new LinkedList<>();
             for (String nature : natures) {
                 if (!nature.equals(OLD_NATURE) && !nature.equals(GROOVY_NATURE)) {
                     newNatures.add(nature);
@@ -74,17 +68,17 @@ public class ConvertLegacyProject {
             desc.setNatureIds(newNatures.toArray(new String[newNatures.size()]));
 
             List<ICommand> builders = Arrays.asList(desc.getBuildSpec());
-            List<ICommand> newBuilders = new ArrayList<ICommand>(builders.size());
+            List<ICommand> newBuilders = new ArrayList<>(builders.size());
             boolean javaBuilderFound = false;
             for (ICommand builder : builders) {
-                if (! builder.getBuilderName().equals(OLD_BUILDER)) {
+                if (!builder.getBuilderName().equals(OLD_BUILDER)) {
                     newBuilders.add(builder);
                     if (builder.getBuilderName().equals(JavaCore.BUILDER_ID)) {
                         javaBuilderFound = true;
                     }
                 }
             }
-            if (! javaBuilderFound) {
+            if (!javaBuilderFound) {
                 ICommand newCommand = new BuildCommand();
                 newCommand.setBuilderName(JavaCore.BUILDER_ID);
                 newBuilders.add(newCommand);
@@ -99,7 +93,7 @@ public class ConvertLegacyProject {
 
     public IProject[] getAllOldProjects() {
         IProject[] projects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
-        List<IProject> legacyProjects = new ArrayList<IProject>();
+        List<IProject> legacyProjects = new ArrayList<>();
         for (IProject project : projects) {
             try {
                 if (project.isAccessible() && project.hasNature(OLD_NATURE)) {

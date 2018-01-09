@@ -260,10 +260,12 @@ public class CompilerPreferencesPage extends PropertyAndPreferencePage implement
         Button updateButton = new Button(subsection, SWT.PUSH);
         updateButton.setText("Update all Groovy Classpath Containers");
         updateButton.addSelectionListener(new SelectionListener() {
+            @Override
             public void widgetSelected(SelectionEvent e) {
                 updateClasspathContainers();
             }
 
+            @Override
             public void widgetDefaultSelected(SelectionEvent e) {
                 updateClasspathContainers();
             }

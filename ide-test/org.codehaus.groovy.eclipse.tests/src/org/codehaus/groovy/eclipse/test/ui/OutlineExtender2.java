@@ -29,18 +29,16 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 
-/**
- * @author Maxime Hamm
- * @created April 11, 2011
- */
 public class OutlineExtender2 extends OutlineExtender1 {
 
     public static final String NATURE = "org.codehaus.groovy.eclipse.tests.testNature2";
 
+    @Override
     public boolean appliesTo(GroovyCompilationUnit unit) {
         return new String(unit.getFileName()).contains("Y");
     }
 
+    @Override
     public GroovyOutlinePage getGroovyOutlinePageForEditor(String contextMenuID, GroovyEditor editor) {
         TCompilationUnit2 ounit = new TCompilationUnit2(this, editor.getGroovyCompilationUnit());
         return new TGroovyOutlinePage(null, editor, ounit);
@@ -73,7 +71,7 @@ public class OutlineExtender2 extends OutlineExtender1 {
     public static class Finder extends ASTNodeFinder {
 
         private ModuleNode moduleNode;
-        private Stack<TType> methodStack = new Stack<TType>();
+        private Stack<TType> methodStack = new Stack<>();
 
         public Finder(ModuleNode moduleNode, TType rootType) {
             super(new Region(moduleNode));

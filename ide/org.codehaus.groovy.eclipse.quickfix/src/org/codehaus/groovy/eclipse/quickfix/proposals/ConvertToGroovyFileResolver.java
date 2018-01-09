@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,61 +27,48 @@ import org.eclipse.jface.text.IDocument;
 /**
  * Converts a Java resource to a Groovy resource if certain problems are
  * encountered, like ';' at the end of a statement.
- * 
- * @author Nieraj Singh
- * 
  */
 public class ConvertToGroovyFileResolver extends AbstractQuickFixResolver {
 
-	public static final String DESCRIPTION = "Convert to Groovy file and open in Groovy editor";
+    public static final String DESCRIPTION = "Convert to Groovy file and open in Groovy editor";
 
-	public ConvertToGroovyFileResolver(QuickFixProblemContext problem) {
-		super(problem);
-	}
+    public ConvertToGroovyFileResolver(QuickFixProblemContext problem) {
+        super(problem);
+    }
 
-	public static class ConvertToGroovyQuickFix extends
-			AbstractGroovyQuickFixProposal {
-		public ConvertToGroovyQuickFix(QuickFixProblemContext problem) {
-			super(problem);
-		}
+    public static class ConvertToGroovyQuickFix extends AbstractGroovyQuickFixProposal {
+        public ConvertToGroovyQuickFix(QuickFixProblemContext problem) {
+            super(problem);
+        }
 
-		protected String getImageBundleLocation() {
-			return JavaPluginImages.IMG_CORRECTION_CHANGE;
-		}
+        @Override
+        protected String getImageBundleLocation() {
+            return JavaPluginImages.IMG_CORRECTION_CHANGE;
+        }
 
-		public void apply(IDocument document) {
-			IResource resource = getQuickFixProblemContext().getResource();
-			List<IResource> resources = new ArrayList<IResource>();
-			resources.add(resource);
-			GroovyResourceUtil.renameFile(GroovyResourceUtil.GROOVY, resources);
-		}
+        @Override
+        public void apply(IDocument document) {
+            IResource resource = getQuickFixProblemContext().getResource();
+            List<IResource> resources = new ArrayList<>();
+            resources.add(resource);
+            GroovyResourceUtil.renameFile(GroovyResourceUtil.GROOVY, resources);
+        }
 
-		public String getDisplayString() {
-			return DESCRIPTION;
-		}
-	}
+        @Override
+        public String getDisplayString() {
+            return DESCRIPTION;
+        }
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.codehaus.groovy.eclipse.quickfix.proposals.AbstractQuickFixResolver
-	 * #getDescriptors()
-	 */
-	protected ProblemType[] getTypes() {
-		return new ProblemType[] { ProblemType.MISSING_SEMI_COLON_TYPE, ProblemType.MISSING_SEMI_COLON_TYPE_VARIANT };
-	}
+    @Override
+    protected ProblemType[] getTypes() {
+        return new ProblemType[] { ProblemType.MISSING_SEMI_COLON_TYPE, ProblemType.MISSING_SEMI_COLON_TYPE_VARIANT };
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixResolver#
-	 * getQuickFixProposals()
-	 */
-	public List<IJavaCompletionProposal> getQuickFixProposals() {
-		List<IJavaCompletionProposal> fixes = new ArrayList<IJavaCompletionProposal>();
-		fixes.add(new ConvertToGroovyQuickFix(getQuickFixProblem()));
-		return fixes;
-	}
-
+    @Override
+    public List<IJavaCompletionProposal> getQuickFixProposals() {
+        List<IJavaCompletionProposal> fixes = new ArrayList<>();
+        fixes.add(new ConvertToGroovyQuickFix(getQuickFixProblem()));
+        return fixes;
+    }
 }

@@ -26,9 +26,11 @@ public PrefixExpression(Expression lhs, Expression expression, int operator, int
 	this.sourceStart = pos;
 	this.sourceEnd = lhs.sourceEnd;
 }
+@Override
 public boolean checkCastCompatibility() {
 	return false;
 }
+@Override
 public String operatorToString() {
 	switch (this.operator) {
 		case PLUS :
@@ -39,16 +41,19 @@ public String operatorToString() {
 	return "unknown operator"; //$NON-NLS-1$
 }
 
+@Override
 public StringBuffer printExpressionNoParenthesis(int indent, StringBuffer output) {
 
 	output.append(operatorToString()).append(' ');
 	return this.lhs.printExpression(0, output);
 }
 
+@Override
 public boolean restrainUsageToNumericTypes() {
 	return true;
 }
 
+@Override
 public void traverse(ASTVisitor visitor, BlockScope scope) {
 	if (visitor.visit(this, scope)) {
 		this.lhs.traverse(visitor, scope);

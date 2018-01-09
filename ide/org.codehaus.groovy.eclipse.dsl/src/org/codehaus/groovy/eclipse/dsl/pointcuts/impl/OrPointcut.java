@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,9 +25,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 import org.eclipse.core.resources.IStorage;
 
 /**
- * Takes two or more elements and 
- * @author andrew
- * @created Feb 10, 2011
+ * Takes two or more elements and
  */
 public class OrPointcut extends AbstractPointcut {
 
@@ -38,9 +36,10 @@ public class OrPointcut extends AbstractPointcut {
     @Override
     public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
         Object[] args = getArgumentValues();
-        Collection<Object> result = new HashSet<Object>();
+        Collection<Object> result = new HashSet<>();
         for (Object arg : args) {
-            Collection<?> intermediate = matchOnPointcutArgumentReturnInner((IPointcut) arg, pattern, ensureCollection(toMatch));
+            Collection<?> intermediate =
+                matchOnPointcutArgumentReturnInner((IPointcut) arg, pattern, ensureCollection(toMatch));
             if (intermediate != null) {
                 result.addAll(intermediate);
             }
@@ -48,13 +47,13 @@ public class OrPointcut extends AbstractPointcut {
         return result.size() > 0 ? result : null;
     }
 
-
     /**
-     * Flatten all contained 'or' pointcuts into the top level (but only if they are unnamed) 
+     * Flatten all contained 'or' pointcuts into the top level (but only if they are unnamed)
      */
+    @Override
     public IPointcut normalize() {
         IPointcut newPointcut = super.normalize();
-        
+
         if (newPointcut instanceof OrPointcut) {
             OrPointcut newOr = (OrPointcut) newPointcut;
             OrPointcut newNewOr = new OrPointcut(getContainerIdentifier(), "or");
@@ -69,7 +68,7 @@ public class OrPointcut extends AbstractPointcut {
                     int argCount = argumentNames.length;
                     for (int j = 0; j < argCount; j++) {
                         newNewOr.addArgument(argumentNames[j], argumentValues[j]);
-                    } 
+                    }
                 } else {
                     newNewOr.addArgument(name, argument);
                 }
@@ -88,19 +87,4 @@ public class OrPointcut extends AbstractPointcut {
             throw new PointcutVerificationException(allArgsArePointcuts, this);
         }
     }
-    
-//    @Override
-//    protected IPointcut or(IPointcut other) {
-//        if (other instanceof OrPointcut) {
-//            Object[] argumentValues = other.getArgumentValues();
-//            String[] argumentNames = other.getArgumentNames();
-//            int argCount = argumentNames.length;
-//            for (int i = 0; i < argCount; i++) {
-//                this.addArgument(argumentNames[i], argumentValues[i]);
-//            }
-//        } else {
-//            addArgument(other);
-//        }
-//        return this;
-//    }
 }

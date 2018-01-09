@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,15 +20,16 @@ import org.eclipse.debug.ui.actions.IToggleBreakpointsTarget;
 
 public class GroovyRetargettableActionAdapterFactory implements IAdapterFactory {
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public Object getAdapter(Object adaptableObject, Class adapterType) {
-        if (adapterType == IToggleBreakpointsTarget.class) {
-            return new ToggleBreakpointAdapter();
-        }
-        return null;
-    }
-
+    @Override
     public Class<?>[] getAdapterList() {
         return new Class[] {IToggleBreakpointsTarget.class};
+    }
+
+    @Override @SuppressWarnings("unchecked")
+    public <T> T getAdapter(Object adaptableObject, Class<T> adapterType) {
+        if (IToggleBreakpointsTarget.class.equals(adapterType)) {
+            return (T) new ToggleBreakpointAdapter();
+        }
+        return null;
     }
 }

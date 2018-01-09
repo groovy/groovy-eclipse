@@ -999,7 +999,7 @@ public TypeBinding createIntersectionType18(ReferenceBinding[] intersectingTypes
 			@Override
 			public int compare(TypeBinding o1, TypeBinding o2) {
 				//
-				return o1.isClass() ? -1 : (o2.isClass() ? 1 : 0);
+				return o1.isClass() ? -1 : (o2.isClass() ? 1 : CharOperation.compareTo(o1.readableName(), o2.readableName()));
 			}
 		});
 	}

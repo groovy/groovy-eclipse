@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,10 +25,6 @@ import org.eclipse.jdt.ui.actions.ConvertLocalToFieldAction;
 import org.eclipse.jdt.ui.refactoring.RefactoringSaveHelper;
 import org.eclipse.jface.text.ITextSelection;
 
-/**
- * @author Daniel Phan
- * @created 2012-01-26
- */
 public class GroovyConvertLocalToFieldAction extends ConvertLocalToFieldAction {
 
     private final GroovyEditor fEditor;

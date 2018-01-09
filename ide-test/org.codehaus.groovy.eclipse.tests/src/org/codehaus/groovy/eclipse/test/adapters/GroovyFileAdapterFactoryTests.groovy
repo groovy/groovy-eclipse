@@ -17,7 +17,7 @@ package org.codehaus.groovy.eclipse.test.adapters
 
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
-import org.junit.Assert
+import org.eclipse.core.runtime.Adapters
 import org.junit.Test
 
 final class GroovyFileAdapterFactoryTests extends GroovyEclipseTestSuite {
@@ -26,35 +26,39 @@ final class GroovyFileAdapterFactoryTests extends GroovyEclipseTestSuite {
     void testFileAdapter() {
         def unit = addGroovySource('class MainClass { static void main(String[] args){}}', 'MainClass', 'pack1')
         buildProject()
-        ClassNode node = unit.getResource().getAdapter(ClassNode.class)
-        Assert.assertEquals('pack1.MainClass', node.getName())
-        Assert.assertFalse(node.isInterface())
-        Assert.assertNotNull(node.getMethods('main'))
+
+        ClassNode node = Adapters.adapt(unit.resource, ClassNode)
+        assert node.name == 'pack1.MainClass'
+        assert !node.getMethods('main').empty
+        assert !node.isInterface()
     }
 
     @Test
     void testFileAdapterCompileError() {
         def unit = addGroovySource('class OtherClass { static void main(String[] args', 'OtherClass', 'pack1')
         buildProject()
-        ClassNode node = unit.getResource().getAdapter(ClassNode.class)
-        Assert.assertEquals('pack1.OtherClass', node.getName())
-        Assert.assertFalse(node.isInterface())
-        Assert.assertNotNull(node.getMethods('main'))
+
+        ClassNode node = Adapters.adapt(unit.resource, ClassNode)
+        assert node.name == 'pack1.OtherClass'
+        assert node.getMethods('main').empty
+        assert !node.isInterface()
     }
 
     @Test
     void testFileAdapterCompileError2() {
         def unit = addGroovySource('class C { abstract def foo() {} }', 'C', 'pack1')
         buildProject()
-        ClassNode node = unit.getResource().getAdapter(ClassNode.class)
-        Assert.assertNull(node)
+
+        ClassNode node = Adapters.adapt(unit.resource, ClassNode)
+        assert node == null
     }
 
     @Test
     void testFileAdapterNotGroovyFile() {
         def notScript = addPlainText('this is not a groovy file', 'NotGroovy.file')
         buildProject()
-        Assert.assertNotNull(notScript)
-        Assert.assertNull(notScript.getAdapter(ClassNode.class))
+
+        ClassNode node = Adapters.adapt(notScript, ClassNode)
+        assert node == null
     }
 }

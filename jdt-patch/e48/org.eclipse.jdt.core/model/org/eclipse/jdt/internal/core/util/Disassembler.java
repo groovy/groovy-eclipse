@@ -223,6 +223,7 @@ public class Disassembler extends ClassFileBytesDisassembler {
 	/**
 	 * @see org.eclipse.jdt.core.util.ClassFileBytesDisassembler#disassemble(byte[], java.lang.String)
 	 */
+	@Override
 	public String disassemble(byte[] classFileBytes, String lineSeparator) throws ClassFormatException {
 		try {
 			return disassemble(new ClassFileReader(classFileBytes, IClassFileReader.ALL), lineSeparator, ClassFileBytesDisassembler.DEFAULT);
@@ -234,6 +235,7 @@ public class Disassembler extends ClassFileBytesDisassembler {
 	/**
 	 * @see org.eclipse.jdt.core.util.ClassFileBytesDisassembler#disassemble(byte[], java.lang.String, int)
 	 */
+	@Override
 	public String disassemble(byte[] classFileBytes, String lineSeparator, int mode) throws ClassFormatException {
 		try {
 			return disassemble(new ClassFileReader(classFileBytes, IClassFileReader.ALL), lineSeparator, mode);
@@ -2620,6 +2622,7 @@ public class Disassembler extends ClassFileBytesDisassembler {
 	/**
 	 * @see org.eclipse.jdt.core.util.ClassFileBytesDisassembler#getDescription()
 	 */
+	@Override
 	public String getDescription() {
 		return Messages.disassembler_description;
 	}

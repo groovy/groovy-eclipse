@@ -82,6 +82,7 @@ public class ClassFormatException extends Exception {
 	public Throwable getException() {
 		return this.nestedException;
 	}
+	@Override
 	public void printStackTrace() {
 		printStackTrace(System.err);
 	}
@@ -92,6 +93,7 @@ public class ClassFormatException extends Exception {
 	 *            the print stream
 	 * @since 3.0
 	 */
+	@Override
 	public void printStackTrace(PrintStream output) {
 		synchronized (output) {
 			super.printStackTrace(output);
@@ -115,6 +117,7 @@ public class ClassFormatException extends Exception {
 	 *            the print writer
 	 * @since 3.0
 	 */
+	@Override
 	public void printStackTrace(PrintWriter output) {
 		synchronized (output) {
 			super.printStackTrace(output);

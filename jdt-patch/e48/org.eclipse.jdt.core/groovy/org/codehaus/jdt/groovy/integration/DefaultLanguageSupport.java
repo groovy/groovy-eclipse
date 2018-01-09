@@ -52,6 +52,7 @@ import org.eclipse.jdt.internal.core.util.Util;
  */
 class DefaultLanguageSupport implements LanguageSupport {
 
+	@Override
 	public Parser getParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean parseLiteralExpressionsAsConstants,int variant) {
 		if (variant==1) {
 			return new Parser(problemReporter, parseLiteralExpressionsAsConstants);
@@ -66,6 +67,7 @@ class DefaultLanguageSupport implements LanguageSupport {
 		return new CompletionParser(problemReposrter, storeExtraSourceEnds, monitor);
 	}
 
+	@Override
 	public IndexingParser getIndexingParser(ISourceElementRequestor requestor, IProblemFactory problemFactory,
 			CompilerOptions options, boolean reportLocalDeclarations, boolean optimizeStringLiterals,
 			boolean useSourceJavadocParser) {
@@ -73,50 +75,60 @@ class DefaultLanguageSupport implements LanguageSupport {
 				optimizeStringLiterals, useSourceJavadocParser);
 	}
 
+	@Override
 	public ImportMatchLocatorParser getImportMatchLocatorParserParser(ProblemReporter problemReporter,
 			MatchLocator locator) {
 		return new ImportMatchLocatorParser(problemReporter, locator);
 	}
 
+	@Override
 	public SourceElementParser getSourceElementParser(ISourceElementRequestor requestor,
 			IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations,
 			boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
 		return new SourceElementParser(requestor, problemFactory, options, reportLocalDeclarations, optimizeStringLiterals, useSourceJavadocParser);
 	}
 
+	@Override
 	public MatchLocatorParser getMatchLocatorParserParser(ProblemReporter problemReporter, MatchLocator locator) {
 		return new MatchLocatorParser(problemReporter, locator);
 	}
 
+	@Override
 	public CompilationUnit newCompilationUnit(PackageFragment parent,
 			String name, WorkingCopyOwner owner) {
 		return new CompilationUnit(parent, name, owner);
 	}
 
+	@Override
 	public CompilationUnitDeclaration newCompilationUnitDeclaration(
 			ICompilationUnit unit,
 			ProblemReporter problemReporter, CompilationResult compilationResult, int sourceLength) {
 		return new CompilationUnitDeclaration(problemReporter, compilationResult, sourceLength);
 	}
 
+	@Override
 	public boolean isInterestingProject(IProject project) {
 		// assume that if this method is called, them this is a Java project
 		return true;
 	}
 
+	@Override
 	public boolean isSourceFile(String fileName, boolean isInterestingProject) {
 		return Util.isJavaLikeFileName(fileName);
 	}
 
+	@Override
 	public boolean isInterestingSourceFile(String fileName) {
 		return false;
 	}
 
+	@Override
 	public boolean maybePerformDelegatedSearch(PossibleMatch possibleMatch, SearchPattern pattern,
 			SearchRequestor requestor) {
 		return false;
 	}
 
+	@Override
 	public EventHandler getEventHandler() {
 		return DefaultEventHandler.instance;
 	}
@@ -126,28 +138,34 @@ class DefaultLanguageSupport implements LanguageSupport {
 		private DefaultEventHandler() {
 			// nop
 		}
+		@Override
 		public void handle(JavaProject javaProject, String string) {
 			// nop
 		}
 	}
 
+	@Override
 	public void filterNonSourceMembers(BinaryType binaryType) {
 		// nop
 	}
 
+	@Override
 	public IJavaSearchScope expandSearchScope(IJavaSearchScope scope, SearchPattern pattern, SearchRequestor requestor) {
 		// never expand
 		return scope;
 	}
 
+	@Override
 	public boolean isInterestingBinary(BinaryType type, IBinaryType typeInfo) {
 		return false;
 	}
 
+	@Override
 	public IJavaElement[] binaryCodeSelect(ClassFile classFile, int offset, int length, WorkingCopyOwner owner) throws JavaModelException {
 		return new IJavaElement[0];
 	}
 
+	@Override
 	public ISupplementalIndexer getSupplementalIndexer() {
 		return new NoopIndexer();
 	}

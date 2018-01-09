@@ -2,7 +2,7 @@
 
 <feature
       label="%featureName"
-      version="2.9.2.qualifier"
+      version="3.0.0.qualifier"
       provider-name="%providerName"
       id="org.codehaus.groovy.eclipse.feature"
       plugin="org.codehaus.groovy.eclipse">
@@ -22,12 +22,6 @@
    <includes
          id="org.codehaus.groovy.compilerless.feature"
          version="0.0.0"
-   />
-
-   <includes
-         id="org.codehaus.groovy23.feature"
-         version="0.0.0"
-         optional="true"
    />
 
    <includes

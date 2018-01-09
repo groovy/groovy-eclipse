@@ -26,6 +26,7 @@ public class BinaryModule extends AbstractModule {
 	/*
 	 * @see IParent#getChildren()
 	 */
+	@Override
 	public IJavaElement[] getChildren() throws JavaModelException {
 		return NO_ELEMENTS;
 	}
@@ -38,6 +39,7 @@ public class BinaryModule extends AbstractModule {
 		ModuleDescriptionInfo info = (ModuleDescriptionInfo) getElementInfo();
 		return info.getModifiers();
 	}
+	@Override
 	public String getKey(boolean forceOpen) throws JavaModelException {
 		return getKey(this, forceOpen);
 	}
@@ -53,6 +55,7 @@ public class BinaryModule extends AbstractModule {
 			return SourceMapper.UNKNOWN_RANGE;
 		}
 	}
+	@Override
 	public String getAttachedJavadoc(IProgressMonitor monitor) throws JavaModelException {
 		JavadocContents javadocContents = getJavadocContents(monitor);
 		if (javadocContents == null) return null;
@@ -86,6 +89,7 @@ public class BinaryModule extends AbstractModule {
 		}
 		return javadocContents;
 	}
+	@Override
 	public String toString(String lineDelimiter) {
 		StringBuffer buffer = new StringBuffer();
 		try {

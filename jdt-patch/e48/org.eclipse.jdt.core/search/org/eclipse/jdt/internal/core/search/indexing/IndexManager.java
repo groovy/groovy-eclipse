@@ -689,6 +689,7 @@ public synchronized void jobWasCancelled(IPath containerPath) {
  * Advance to the next available job, once the current one has been completed.
  * Note: clients awaiting until the job count is zero are still waiting at this point.
  */
+@Override
 protected synchronized void moveToNextJob() {
 	// remember that one job was executed, and we will need to save indexes at some point
 	this.needToSave = true;
@@ -697,12 +698,14 @@ protected synchronized void moveToNextJob() {
 /**
  * No more job awaiting.
  */
+@Override
 protected void notifyIdle(long idlingTime){
 	if (idlingTime > 1000 && this.needToSave) saveIndexes();
 }
 /**
  * Name of the background process
  */
+@Override
 public String processName(){
 	return Messages.process_name;
 }
@@ -907,6 +910,7 @@ public void removeSourceFolderFromIndex(JavaProject javaProject, IPath sourceFol
 /**
  * Flush current state
  */
+@Override
 public void reset() {
 	super.reset();
 	synchronized (this) {
@@ -1039,6 +1043,7 @@ public void scheduleDocumentIndexing(final SearchDocument searchDocument, IPath 
 	IPath targetLocation = JavaIndex.getLocationForPath(new Path(searchDocument.getPath()));
 	this.indexer.makeDirty(targetLocation);
 	request(new IndexRequest(container, this) {
+		@Override
 		public boolean execute(IProgressMonitor progressMonitor) {
 			if (this.isCancelled || progressMonitor != null && progressMonitor.isCanceled()) return true;
 
@@ -1059,6 +1064,7 @@ public void scheduleDocumentIndexing(final SearchDocument searchDocument, IPath 
 			}
 			return true;
 		}
+		@Override
 		public String toString() {
 			return "indexing " + searchDocument.getPath(); //$NON-NLS-1$
 		}
@@ -1069,6 +1075,7 @@ public void scheduleDocumentIndexing(final SearchDocument searchDocument, IPath 
 	});
 }
 
+@Override
 public String toString() {
 	StringBuffer buffer = new StringBuffer(10);
 	buffer.append(super.toString());

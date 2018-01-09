@@ -15,7 +15,6 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -1419,8 +1418,7 @@ public final class InferencingTests extends InferencingTestSuite {
     public void testCategoryMethodAsProperty() {
         String contents = "''.toURL().text";
         int start = contents.indexOf("text");
-        assertDeclaringType(contents, start, start + 4, isAtLeastGroovy(20)
-            ? "org.codehaus.groovy.runtime.ResourceGroovyMethods" : "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+        assertDeclaringType(contents, start, start + 4, "org.codehaus.groovy.runtime.ResourceGroovyMethods");
     }
 
     @Test

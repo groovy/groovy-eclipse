@@ -63,6 +63,7 @@ public CreateTypeMemberOperation(IJavaElement parentElement, String source, bool
 	this.source = source;
 	this.force = force;
 }
+@Override
 protected StructuralPropertyDescriptor getChildPropertyDescriptor(ASTNode parent) {
 	switch (parent.getNodeType()) {
 		case ASTNode.COMPILATION_UNIT:
@@ -75,6 +76,7 @@ protected StructuralPropertyDescriptor getChildPropertyDescriptor(ASTNode parent
 			return TypeDeclaration.BODY_DECLARATIONS_PROPERTY;
 	}
 }
+@Override
 protected ASTNode generateElementAST(ASTRewrite rewriter, ICompilationUnit cu) throws JavaModelException {
 	if (this.createdNode == null) {
 		this.source = removeIndentAndNewLines(this.source, cu);
@@ -185,6 +187,7 @@ protected IType getType() {
  * create this new element.
  * Used by the <code>CopyElementsOperation</code> for renaming
  */
+@Override
 protected void setAlteredName(String newName) {
 	this.alteredName = newName;
 }
@@ -196,6 +199,7 @@ protected void setAlteredName(String newName) {
   *	<li>NAME_COLLISION - A name collision occurred in the destination
  * </ul>
  */
+@Override
 public IJavaModelStatus verify() {
 	IJavaModelStatus status = super.verify();
 	if (!status.isOK()) {

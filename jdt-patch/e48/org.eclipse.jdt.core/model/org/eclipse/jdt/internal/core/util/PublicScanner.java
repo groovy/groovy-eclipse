@@ -441,9 +441,11 @@ public char[] getCurrentIdentifierSource() {
 	System.arraycopy(this.source, this.startPosition, result, 0, length);
 	return result;
 }
+@Override
 public int getCurrentTokenEndPosition(){
 	return this.currentPosition - 1;
 }
+@Override
 public char[] getCurrentTokenSource() {
 	// Return the token REAL source (aka unicodes are precomputed)
 
@@ -515,6 +517,7 @@ public final String getCurrentStringLiteral() {
 		return new String(this.source, this.startPosition + 1, this.currentPosition - this.startPosition - 2);
 	}
 }
+@Override
 public final char[] getRawTokenSource() {
 	int length = this.currentPosition - this.startPosition;
 	char[] tokenSource = new char[length];
@@ -529,6 +532,7 @@ public final char[] getRawTokenSourceEnd() {
 	return sourceEnd;
 }
 
+@Override
 public int getCurrentTokenStartPosition(){
 	return this.startPosition;
 }
@@ -540,6 +544,7 @@ public int getCurrentTokenStartPosition(){
  *
  * In case the given line number is inconsistent, answers -1.
  */
+@Override
 public final int getLineEnd(int lineNumber) {
 
 	if (this.lineEnds == null || this.linePtr == -1)
@@ -553,6 +558,7 @@ public final int getLineEnd(int lineNumber) {
 	return this.lineEnds[lineNumber-1]; // next line start one character behind the lineEnd of the previous line
 }
 
+@Override
 public final int[] getLineEnds() {
 	//return a bounded copy of this.lineEnds
 	if (this.linePtr == -1) {
@@ -576,6 +582,7 @@ public final int[] getLineEnds() {
  * @param lineNumber int
  * @return int
  */
+@Override
 public final int getLineStart(int lineNumber) {
 
 	if (this.lineEnds == null || this.linePtr == -1)
@@ -1115,6 +1122,7 @@ public int scanIdentifier() throws InvalidInputException {
 		return TokenNameERROR;
 	}
 }
+@Override
 public int getNextToken() throws InvalidInputException {
 	this.wasAcr = false;
 	if (this.diet) {
@@ -1851,6 +1859,7 @@ public NLSTag[] getNLSTags() {
 	}
 	return null;
 }
+@Override
 public char[] getSource(){
 	return this.source;
 }
@@ -2679,6 +2688,7 @@ public void recordComment(int token) {
  * @param begin the given start position
  * @param end the given end position
  */
+@Override
 public void resetTo(int begin, int end) {
 	//reset the scanner to a given position where it may rescan again
 
@@ -3747,9 +3757,11 @@ public int scanNumber(boolean dotPrefix) throws InvalidInputException {
  * @param position int
  * @return int
  */
+@Override
 public final int getLineNumber(int position) {
 	return Util.getLineNumber(position, this.lineEnds, 0, this.linePtr);
 }
+@Override
 public final void setSource(char[] sourceString){
 	//the source-buffer is set to sourceString
 
@@ -3791,6 +3803,7 @@ public final void setSource(char[] contents, CompilationResult compilationResult
 public final void setSource(CompilationResult compilationResult) {
 	setSource(null, compilationResult);
 }
+@Override
 public String toString() {
 	if (this.startPosition == this.eofPosition)
 		return "EOF\n\n" + new String(this.source); //$NON-NLS-1$

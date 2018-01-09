@@ -21,18 +21,22 @@ public class SourceMethodInfo extends SourceMethodElementInfo {
 	 */
 	protected char[] returnType;
 
+	@Override
 	public boolean isAnnotationMethod() {
 		return false;
 	}
 
+	@Override
 	public boolean isConstructor() {
 		return false;
 	}
 
+	@Override
 	public char[] getReturnTypeName() {
 		return this.returnType;
 	}
 
+	@Override
 	protected void setReturnType(char[] type) {
 		this.returnType = type;
 	}

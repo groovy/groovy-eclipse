@@ -41,6 +41,7 @@ public SourceFile(IFile resource, ClasspathMultiDirectory sourceLocation, boolea
 	this.updateClassFile = updateClassFile;
 }
 
+@Override
 public boolean equals(Object o) {
 	if (this == o) return true;
 	if (!(o instanceof SourceFile)) return false;
@@ -75,6 +76,7 @@ String extractTypeName() {
 	return new String(result);
 }
 
+@Override
 public char[] getContents() {
 
 	try {
@@ -87,24 +89,29 @@ public char[] getContents() {
 /**
  * @see org.eclipse.jdt.internal.compiler.env.IDependent#getFileName()
  */
+@Override
 public char[] getFileName() {
 	return this.resource.getFullPath().toString().toCharArray(); // do not know what you want to return here
 }
 
+@Override
 public char[] getMainTypeName() {
 	char[] typeName = this.initialTypeName.toCharArray();
 	int lastIndex = CharOperation.lastIndexOf('/', typeName);
 	return CharOperation.subarray(typeName, lastIndex + 1, -1);
 }
 
+@Override
 public char[][] getPackageName() {
 	char[] typeName = this.initialTypeName.toCharArray();
 	int lastIndex = CharOperation.lastIndexOf('/', typeName);
 	return CharOperation.splitOn('/', typeName, 0, lastIndex);
 }
+@Override
 public int hashCode() {
 	return this.initialTypeName.hashCode();
 }
+@Override
 public boolean ignoreOptionalProblems() {
 	return this.sourceLocation.ignoreOptionalProblems;
 }
@@ -112,6 +119,7 @@ String typeLocator() {
 	return this.resource.getProjectRelativePath().toString();
 }
 
+@Override
 public String toString() {
 	return "SourceFile[" //$NON-NLS-1$
 		+ this.resource.getFullPath() + "]";  //$NON-NLS-1$

@@ -28,7 +28,7 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.groovy.search.ITypeRequestor;
+import org.eclipse.jdt.groovy.search.ITypeRequestor.VisitStatus;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.VariableScope;
@@ -154,7 +154,7 @@ public class ContentAssistContext {
         if (favoriteStaticMembers == null) {
             String serializedFavorites = PreferenceConstants.getPreferenceStore().getString(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS);
             if (serializedFavorites != null && serializedFavorites.length() > 0) {
-                favoriteStaticMembers = new TreeSet<String>();
+                favoriteStaticMembers = new TreeSet<>();
                 Collections.addAll(favoriteStaticMembers,
                     serializedFavorites.split(";"));
             } else {
@@ -182,15 +182,14 @@ public class ContentAssistContext {
 
     public VariableScope getPerceivedCompletionScope() {
         if (currentScope == null && completionNode != null) {
-            new TypeInferencingVisitorFactory().createVisitor(unit).visitCompilationUnit(new ITypeRequestor() {
-                public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
+            new TypeInferencingVisitorFactory().createVisitor(unit).visitCompilationUnit(
+                (ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) -> {
                     if (node == completionNode) {
                         currentScope = result.scope;
                         return VisitStatus.STOP_VISIT;
                     }
                     return VisitStatus.CONTINUE;
-                }
-            });
+                });
         }
         return currentScope;
     }

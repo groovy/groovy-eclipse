@@ -41,12 +41,14 @@ public class SelectionOnFieldReference extends FieldReference {
 		super(source, pos);
 	}
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output){
 
 		output.append("<SelectionOnFieldReference:");  //$NON-NLS-1$
 		return super.printExpression(0, output).append('>');
 	}
 
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 
 		super.resolveType(scope);

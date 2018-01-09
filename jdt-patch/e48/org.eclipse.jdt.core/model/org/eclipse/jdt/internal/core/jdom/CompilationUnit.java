@@ -36,24 +36,30 @@ public CompilationUnit(char[] contents, char[] filename) {
 
 	this.fMainTypeName = file.substring(start, end).toCharArray();
 }
+@Override
 public char[] getContents() {
 	return this.fContents;
 }
 /**
  * @see org.eclipse.jdt.internal.compiler.env.IDependent#getFileName()
  */
+@Override
 public char[] getFileName() {
 	return this.fFileName;
 }
+@Override
 public char[] getMainTypeName() {
 	return this.fMainTypeName;
 }
+@Override
 public char[][] getPackageName() {
 	return null;
 }
+@Override
 public boolean ignoreOptionalProblems() {
 	return false;
 }
+@Override
 public String toString() {
 	return "CompilationUnit[" + new String(this.fFileName) + "]";  //$NON-NLS-2$ //$NON-NLS-1$
 }

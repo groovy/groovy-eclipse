@@ -174,9 +174,7 @@ public abstract class Statement extends ASTNode {
 		setLeadingComment(source.getLeadingComment());
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+	@Override
 	int memSize() {
 		int size = BASE_NODE_SIZE + 1 * 4 + stringSize(getLeadingComment());
 		return size;

@@ -95,8 +95,7 @@ public class FindSurroundingNode extends ASTNodeFinder {
 
     private final ASTFragmentFactory factory = new ASTFragmentFactory();
 
-    private final Stack<IASTFragment> nodeStack = new Stack<IASTFragment>();
-
+    private final Stack<IASTFragment> nodeStack = new Stack<>();
 
     public FindSurroundingNode(Region r) {
         this(r, VisitKind.EXTRA_EXPAND);

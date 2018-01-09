@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,11 @@ package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 
 import org.eclipse.core.resources.IProject;
 
-/**
- * 
- * @author Nieraj Singh
- * @created 2011-09-15
- */
 public interface ISuggestionsOperation {
 
-    public IProject getProject();
+    IProject getProject();
 
-    public ValueStatus run();
+    ValueStatus run();
 
-    public IBaseGroovySuggestion getContext();
+    IBaseGroovySuggestion getContext();
 }

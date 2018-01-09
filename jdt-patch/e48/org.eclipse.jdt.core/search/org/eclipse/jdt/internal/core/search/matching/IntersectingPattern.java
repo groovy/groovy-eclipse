@@ -27,6 +27,7 @@ public abstract class IntersectingPattern extends JavaSearchPattern {
 public IntersectingPattern(int patternKind, int matchRule) {
 	super(patternKind, matchRule);
 }
+@Override
 public void findIndexMatches(Index index, IndexQueryRequestor requestor, SearchParticipant participant, IJavaSearchScope scope, IProgressMonitor progressMonitor) throws IOException {
 	if (progressMonitor != null && progressMonitor.isCanceled()) throw new OperationCanceledException();
 

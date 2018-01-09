@@ -79,10 +79,12 @@ public class CompletionUnitStructureRequestor extends CompilationUnitStructureRe
 		this.elementWithProblemCache = elementWithProblemCache;
 	}
 
+	@Override
 	protected Annotation createAnnotation(JavaElement parent, String name) {
 		return new AssistAnnotation(parent, name, this.newElements);
 	}
 
+	@Override
 	protected SourceField createField(JavaElement parent, FieldInfo fieldInfo) {
 		String fieldName = JavaModelManager.getJavaModelManager().intern(new String(fieldInfo.name));
 		AssistSourceField field = new AssistSourceField(parent, fieldName, this.bindingCache, this.newElements);
@@ -95,18 +97,22 @@ public class CompletionUnitStructureRequestor extends CompilationUnitStructureRe
 		return field;
 	}
 
+	@Override
 	protected ImportContainer createImportContainer(ICompilationUnit parent) {
 		return new AssistImportContainer((CompilationUnit)parent, this.newElements);
 	}
 
+	@Override
 	protected ImportDeclaration createImportDeclaration(ImportContainer parent, String name, boolean onDemand) {
 		return new AssistImportDeclaration(parent, name, onDemand, this.newElements);
 	}
 
+	@Override
 	protected Initializer createInitializer(JavaElement parent) {
 		return new AssistInitializer(parent, 1, this.bindingCache, this.newElements);
 	}
 
+	@Override
 	protected SourceMethod createMethodHandle(JavaElement parent, MethodInfo methodInfo) {
 		String selector = JavaModelManager.getJavaModelManager().intern(new String(methodInfo.name));
 		String[] parameterTypeSigs = convertTypeNamesToSigs(methodInfo.parameterTypes);
@@ -120,10 +126,12 @@ public class CompletionUnitStructureRequestor extends CompilationUnitStructureRe
 		return method;
 	}
 
+	@Override
 	protected PackageDeclaration createPackageDeclaration(JavaElement parent, String name) {
 		return new AssistPackageDeclaration((CompilationUnit) parent, name, this.newElements);
 	}
 
+	@Override
 	protected SourceType createTypeHandle(JavaElement parent, TypeInfo typeInfo) {
 		String nameString= new String(typeInfo.name);
 		AssistSourceType type = new AssistSourceType(parent, nameString, this.bindingCache, this.newElements);
@@ -136,10 +144,12 @@ public class CompletionUnitStructureRequestor extends CompilationUnitStructureRe
 		return type;
 	}
 
+	@Override
 	protected TypeParameter createTypeParameter(JavaElement parent, String name) {
 		return new AssistTypeParameter(parent, name, this.newElements);
 	}
 
+	@Override
 	protected IAnnotation acceptAnnotation(
 			org.eclipse.jdt.internal.compiler.ast.Annotation annotation,
 			AnnotatableInfo parentInfo,
@@ -153,6 +163,7 @@ public class CompletionUnitStructureRequestor extends CompilationUnitStructureRe
 		return super.acceptAnnotation(annotation, parentInfo, parentHandle);
 	}
 
+	@Override
 	protected Object getMemberValue(
 			org.eclipse.jdt.internal.core.MemberValuePair memberValuePair,
 			Expression expression) {
@@ -165,6 +176,7 @@ public class CompletionUnitStructureRequestor extends CompilationUnitStructureRe
 		}
 		return super.getMemberValue(memberValuePair, expression);
 	}
+	@Override
 	protected IMemberValuePair[] getMemberValuePairs(MemberValuePair[] memberValuePairs) {
 		int membersLength = memberValuePairs.length;
 		int membersCount = 0;

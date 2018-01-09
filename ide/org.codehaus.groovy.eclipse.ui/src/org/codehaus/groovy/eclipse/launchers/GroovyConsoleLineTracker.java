@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,15 +45,8 @@ import org.eclipse.ui.console.IHyperlink;
 import org.eclipse.ui.dialogs.ListDialog;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 
-/**
- * @author Scott Hickey
- */
 public class GroovyConsoleLineTracker implements IConsoleLineTracker {
 
-    /**
-     * @author Andrew Eisenberg
-     * @created Sep 21, 2009
-     */
     public class AmbiguousFileLink extends FileLink implements IHyperlink {
         IFile[] files;
         boolean fileChosen = false;
@@ -79,12 +72,9 @@ public class GroovyConsoleLineTracker implements IConsoleLineTracker {
         }
     }
 
-    /**
-     * @author Andrew Eisenberg
-     * @created Sep 21, 2009
-     */
-    public class FileContentProvider implements IStructuredContentProvider {
+    public static class FileContentProvider implements IStructuredContentProvider {
 
+        @Override
         public Object[] getElements(Object inputElement) {
             IFile[] files = (IFile[]) inputElement;
             Object[] out = new Object[files.length];
@@ -94,9 +84,11 @@ public class GroovyConsoleLineTracker implements IConsoleLineTracker {
             return out;
         }
 
+        @Override
         public void dispose() {
         }
 
+        @Override
         public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
         }
     }
@@ -105,6 +97,7 @@ public class GroovyConsoleLineTracker implements IConsoleLineTracker {
     private final static Pattern linePattern = Pattern.compile(".*\\((.*)\\.groovy(:(.*))?\\)");
 
 
+    @Override
     public void init(IConsole console) {
         this.console = console;
     }
@@ -112,7 +105,7 @@ public class GroovyConsoleLineTracker implements IConsoleLineTracker {
     /**
      * Hyperlink error lines to the editor.
      */
-    // not implemented yet
+    @Override
     public void lineAppended(IRegion line) {
         if (console == null) return;
 
@@ -170,13 +163,8 @@ public class GroovyConsoleLineTracker implements IConsoleLineTracker {
         }
     }
 
-    /**
-     * @param groovyFileName
-     * @return
-     * @throws JavaModelException
-     */
     private IFile[] searchForFileInLaunchConfig(String groovyFileName) throws JavaModelException {
-        List<IFile> files = new LinkedList<IFile>();
+        List<IFile> files = new LinkedList<>();
         IJavaProject[] projects = JavaModelManager.getJavaModelManager().getJavaModel().getJavaProjects();
         for (IJavaProject javaProject : projects) {
             if (GroovyNature.hasGroovyNature(javaProject.getProject())) {
@@ -196,39 +184,31 @@ public class GroovyConsoleLineTracker implements IConsoleLineTracker {
         return files.toArray(new IFile[files.size()]);
     }
 
-    /**
-     * @param files
-     * @return
-     */
     IFile chooseFile(final IFile[] files) {
         final IFile[] result = new IFile[] { null };
-        ConsolePlugin.getStandardDisplay().syncExec(new Runnable() {
-            public void run() {
-                final ListDialog dialog = new ListDialog(ConsolePlugin.getStandardDisplay().getActiveShell());
-                dialog.setLabelProvider(new WorkbenchLabelProvider() {
-                    @Override
-                    protected String decorateText(String input, Object element) {
-                        return ((IFile) element).getFullPath().toPortableString();
-                    }
-                });
-                dialog.setTitle("Choose file to open");
-                dialog.setInput(files);
-                dialog.setContentProvider(new FileContentProvider());
-                dialog.setAddCancelButton(true);
-                dialog.setMessage("Select a file:");
-                dialog.setBlockOnOpen(true);
-                int dialogResult = dialog.open();
-                if (dialogResult == Window.OK && dialog.getResult().length > 0) {
-                    result[0] = (IFile) dialog.getResult()[0];
+        ConsolePlugin.getStandardDisplay().syncExec(() -> {
+            final ListDialog dialog = new ListDialog(ConsolePlugin.getStandardDisplay().getActiveShell());
+            dialog.setLabelProvider(new WorkbenchLabelProvider() {
+                @Override
+                protected String decorateText(String input, Object element) {
+                    return ((IFile) element).getFullPath().toPortableString();
                 }
+            });
+            dialog.setTitle("Choose file to open");
+            dialog.setInput(files);
+            dialog.setContentProvider(new FileContentProvider());
+            dialog.setAddCancelButton(true);
+            dialog.setMessage("Select a file:");
+            dialog.setBlockOnOpen(true);
+            int dialogResult = dialog.open();
+            if (dialogResult == Window.OK && dialog.getResult().length > 0) {
+                result[0] = (IFile) dialog.getResult()[0];
             }
         });
         return result[0];
     }
 
-    /**
-     * @see org.eclipse.debug.ui.console.IConsoleLineTracker#dispose()
-     */
+    @Override
     public void dispose() {
         console = null;
     }

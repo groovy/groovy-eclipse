@@ -47,6 +47,7 @@ public class DatabaseRef<T extends NdNode> implements Supplier<T> {
 	/**
 	 * Returns the referenced object or null if the object is no longer present in the database.
 	 */
+	@Override
 	public T get() {
 		long ndWriteNumber = this.nd.getWriteNumber();
 		if (this.writeCounter == ndWriteNumber) {

@@ -1022,6 +1022,7 @@ class BoundSet {
 	}
 
 	// debugging:
+	@Override
 	public String toString() {
 		StringBuffer buf = new StringBuffer("Type Bounds:\n"); //$NON-NLS-1$
 		TypeBound[] flattened = flatten();

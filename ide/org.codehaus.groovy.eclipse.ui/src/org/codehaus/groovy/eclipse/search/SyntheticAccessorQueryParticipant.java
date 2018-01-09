@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,9 +44,6 @@ import org.eclipse.ui.PartInitException;
  * This class handles searching for accessing synthetic getters, setters, and
  * properties (ie- fields that don't exist, but have an associated getter or
  * setter).
- *
- * @author andrew
- * @created Oct 3, 2011
  */
 public class SyntheticAccessorQueryParticipant implements IQueryParticipant {
 
@@ -71,6 +68,7 @@ public class SyntheticAccessorQueryParticipant implements IQueryParticipant {
          * If Java target, then ignore extra references in Java
          * If Groovy target, then ignore
          */
+        @Override
         public void acceptMatch(SearchMatch match) {
             IJavaElement enclosingElement = (IJavaElement) match.getElement();
             if (enclosingElement != null) {
@@ -116,14 +114,17 @@ public class SyntheticAccessorQueryParticipant implements IQueryParticipant {
 
     SyntheticAccessorSearchRequestor accessorRequestor;
 
-    public void search(ISearchRequestor requestor, QuerySpecification querySpecification, IProgressMonitor monitor)
-            throws CoreException {
+    @Override
+    public void search(ISearchRequestor requestor, QuerySpecification querySpecification, IProgressMonitor monitor) throws CoreException {
         if (querySpecification instanceof ElementQuerySpecification) {
             accessorRequestor = new SyntheticAccessorSearchRequestor();
             IJavaElement element = ((ElementQuerySpecification) querySpecification).getElement();
             accessorRequestor.findSyntheticMatches(element,
-                    querySpecification.getLimitTo(), getSearchParticipants(), querySpecification.getScope(), new UISearchRequestor(
-                            requestor, element.getOpenable() instanceof GroovyCompilationUnit), monitor);
+                querySpecification.getLimitTo(),
+                getSearchParticipants(),
+                querySpecification.getScope(),
+                new UISearchRequestor(requestor, element.getOpenable() instanceof GroovyCompilationUnit),
+                monitor);
         }
     }
 
@@ -131,6 +132,7 @@ public class SyntheticAccessorQueryParticipant implements IQueryParticipant {
         return new SearchParticipant[] { new JavaSearchParticipant() };
     }
 
+    @Override
     public int estimateTicks(QuerySpecification specification) {
         if (!(specification instanceof ElementQuerySpecification)) {
             return 0;
@@ -138,13 +140,15 @@ public class SyntheticAccessorQueryParticipant implements IQueryParticipant {
         return 3;
     }
 
+    @Override
     public IMatchPresentation getUIParticipant() {
         return new IMatchPresentation() {
-
+            @Override
             public ILabelProvider createLabelProvider() {
                 return new JavaElementLabelProvider();
             }
 
+            @Override
             public void showMatch(Match match, int currentOffset, int currentLength, boolean activate) throws PartInitException {
                 // no-op
             }

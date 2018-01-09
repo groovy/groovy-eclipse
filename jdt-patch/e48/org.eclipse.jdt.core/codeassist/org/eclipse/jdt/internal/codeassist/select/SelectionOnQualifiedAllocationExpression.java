@@ -50,6 +50,7 @@ public class SelectionOnQualifiedAllocationExpression extends QualifiedAllocatio
 		super(anonymous);
 	}
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 		if (this.enclosingInstance == null)
 			output.append("<SelectOnAllocationExpression:");  //$NON-NLS-1$
@@ -59,6 +60,7 @@ public class SelectionOnQualifiedAllocationExpression extends QualifiedAllocatio
 		return super.printExpression(indent, output).append('>');
 	}
 
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 		super.resolveType(scope);
 

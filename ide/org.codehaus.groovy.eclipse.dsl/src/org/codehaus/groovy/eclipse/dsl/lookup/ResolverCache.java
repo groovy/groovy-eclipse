@@ -35,7 +35,7 @@ public class ResolverCache {
     private final JDTResolver resolver;
 
     public ResolverCache(JDTResolver resolver, ModuleNode thisModule) {
-        this.nameTypeCache = new WeakHashMap<String, ClassNode>();
+        this.nameTypeCache = new WeakHashMap<>();
         this.resolver = resolver;
     }
 

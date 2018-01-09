@@ -28,6 +28,7 @@ import org.codehaus.groovy.eclipse.test.ui.OutlineExtender1.TGroovyOutlinePage
 import org.codehaus.groovy.eclipse.test.ui.OutlineExtender1.TType
 import org.codehaus.groovy.eclipse.test.ui.OutlineExtender2.TCompilationUnit2
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
+import org.eclipse.core.runtime.Adapters
 import org.eclipse.jdt.core.IField
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
@@ -190,7 +191,7 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
             }
             '''.stripIndent()
         def editor = openInEditor(unit)
-        def viewer = editor.getAdapter(IContentOutlinePage).outlineViewer
+        def viewer = Adapters.adapt(editor, IContentOutlinePage).outlineViewer
         IJavaElement[] children = viewer.getRawChildren(viewer.getRoot())
 
         assert children.size() == 1
@@ -213,7 +214,7 @@ final class OutlineExtenderTests extends GroovyEclipseTestSuite {
             }
             '''.stripIndent()
         def editor = openInEditor(unit)
-        def viewer = editor.getAdapter(IContentOutlinePage).outlineViewer
+        def viewer = Adapters.adapt(editor, IContentOutlinePage).outlineViewer
         IJavaElement[] children = viewer.getRawChildren(viewer.getRoot())
 
         assert children.size() == 1

@@ -34,21 +34,25 @@ public class MultiCatchExceptionLabel extends ExceptionLabel {
 			this.exceptionLabels[i] = new ExceptionLabel(this.codeStream, typeReferences[i].resolvedType, typeReferences[i], i == 0 ? annotations : null);
 		}
 	}
+	@Override
 	public void place() {
 		for (int i = 0, max = this.exceptionLabels.length; i < max; i++) {
 			this.exceptionLabels[i].place();
 		}
 	}
+	@Override
 	public void placeEnd() {
 		for (int i = 0, max = this.exceptionLabels.length; i < max; i++) {
 			this.exceptionLabels[i].placeEnd();
 		}
 	}
+	@Override
 	public void placeStart() {
 		for (int i = 0, max = this.exceptionLabels.length; i < max; i++) {
 			this.exceptionLabels[i].placeStart();
 		}
 	}
+	@Override
 	public int getCount() {
 		int temp = 0;
 		for (int i = 0, max = this.exceptionLabels.length; i < max; i++) {

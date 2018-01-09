@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,12 @@
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 
 /**
- * 
  * An immutable representation of a parameter for a method suggestion.
- * 
- * @author Nieraj Singh
- * @created 2011-09-12
  */
 public class MethodParameter {
 
-    private String name;
-
-    private String type;
+    private final String name;
+    private final String type;
 
     public MethodParameter(String name, String type) {
         this.name = name;
@@ -41,7 +36,7 @@ public class MethodParameter {
         return type;
     }
 
-    // generated
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
@@ -50,7 +45,7 @@ public class MethodParameter {
         return result;
     }
 
-    // generated
+    @Override
     public boolean equals(Object obj) {
         if (this == obj)
             return true;
@@ -71,5 +66,4 @@ public class MethodParameter {
             return false;
         return true;
     }
-
 }

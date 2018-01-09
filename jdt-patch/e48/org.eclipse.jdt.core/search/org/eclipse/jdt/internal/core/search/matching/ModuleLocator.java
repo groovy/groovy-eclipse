@@ -29,6 +29,7 @@ public class ModuleLocator extends PatternLocator {
 		super(pattern);
 		this.pattern = pattern;
 	}
+	@Override
 	public int match(ModuleDeclaration node, MatchingNodeSet nodeSet) {
 		if (!this.pattern.findDeclarations) return IMPOSSIBLE_MATCH;
 		if (!matchesName(this.pattern.name, node.moduleName)) return IMPOSSIBLE_MATCH;
@@ -49,6 +50,7 @@ public class ModuleLocator extends PatternLocator {
 	protected int matchContainer() {
 		return COMPILATION_UNIT_CONTAINER;
 	}
+	@Override
 	public int resolveLevel(ASTNode possibleMatchingNode) {
 		if (this.pattern.findDeclarations && possibleMatchingNode instanceof ModuleDeclaration) {
 			return resolveLevel(((ModuleDeclaration) possibleMatchingNode).binding);

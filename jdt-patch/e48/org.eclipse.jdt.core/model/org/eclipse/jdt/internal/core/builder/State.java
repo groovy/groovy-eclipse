@@ -709,6 +709,7 @@ private void writeRestriction(AccessRuleSet accessRuleSet, DataOutputStream out)
 /**
  * Returns a string representation of the receiver.
  */
+@Override
 public String toString() {
 	return "State for " + this.javaProjectName //$NON-NLS-1$
 		+ " (#" + this.buildNumber //$NON-NLS-1$

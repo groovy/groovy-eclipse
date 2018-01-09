@@ -110,6 +110,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         return requestedElement;
     }
 
+    @Override
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
         boolean found = false;
         try {

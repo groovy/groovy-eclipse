@@ -15,27 +15,19 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeTrue;
 
 import java.util.Arrays;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.groovy.core.Activator;
-import org.junit.Before;
 import org.junit.Test;
 
 /**
  * Tests for all Groovy 2.1 specific things for example, {@link groovy.lang.DelegatesTo}.
  */
 public final class Groovy21InferencingTests extends InferencingTestSuite {
-
-    @Before
-    public void setUp() {
-        assumeTrue(isAtLeastGroovy(21));
-    }
 
     @Test
     public void testDelegatesToValue() {

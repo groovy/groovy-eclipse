@@ -223,9 +223,20 @@ static class JavacCompiler {
 			if ("1.8.0_60".equals(rawVersion)) {
 				return 1500;
 			}
+			if ("1.8.0_131".equals(rawVersion)) {
+				return 1700;
+			}
+			if ("1.8.0_152".equals(rawVersion)) {
+				return 1900;
+			}
 		}
 		if (version == JavaCore.VERSION_9) {
-			return 0000; // We are still in EA
+			if ("9".equals(rawVersion)) {
+				return 0000;
+			}
+			if ("9.0.1".equals(rawVersion)) {
+				return 0100;
+			}
 		}
 		throw new RuntimeException("unknown raw javac version: " + rawVersion);
 	}
@@ -1858,7 +1869,8 @@ protected void runJavac(
 		String expectedErrorString,
 		boolean shouldFlushOutputDirectory,
 		JavacTestOptions options,
-		String[] vmArguments) {
+		String[] vmArguments,
+		String[] classLibraries) {
 	// WORK we're probably doing too much around class libraries in general - java should be able to fetch its own runtime libs
 	// WORK reorder parameters
 	if (options == JavacTestOptions.SKIP) {
@@ -1869,10 +1881,22 @@ protected void runJavac(
 	}
 	String newOptions = options.getCompilerOptions();
 	if (newOptions.indexOf(" -d ") < 0) {
-		options.setCompilerOptions(newOptions.concat(" -d ."));
+		newOptions = newOptions.concat(" -d .");
 	}
 	if (newOptions.indexOf(" -Xlint") < 0) {
-		options.setCompilerOptions(newOptions.concat(" -Xlint"));
+		newOptions = newOptions.concat(" -Xlint");
+	}
+	if (classLibraries != null) {
+		List<String> filteredLibs = new ArrayList<>();
+		for (String lib : classLibraries) {
+			if (!lib.startsWith(jdkRootDirPath.toString())) // this can fail if jdkRootDirPath is a symlink
+				filteredLibs.add(lib);
+		}
+		if (!filteredLibs.isEmpty()) {
+			newOptions = newOptions
+					.concat(" -classpath ")
+					.concat(String.join(File.pathSeparator, filteredLibs.toArray(new String[filteredLibs.size()])));
+		}
 	}
 	String testName = testName();
 	Iterator compilers = javacCompilers.iterator();
@@ -1915,7 +1939,7 @@ protected void runJavac(
 					sourceFileNames[j] = testFiles[i];
 				}
 				// compile
-				long compilerResult = compiler.compile(javacOutputDirectory, options.getCompilerOptions() /* options */, sourceFileNames, compilerLog);
+				long compilerResult = compiler.compile(javacOutputDirectory, newOptions /* options */, sourceFileNames, compilerLog);
 				// check cumulative javac results
 				// WORK need to use a per compiler approach
 				if (! testName.equals(javacTestName)) {
@@ -1961,8 +1985,10 @@ protected void runJavac(
 			String output = null;
 			String err = null;
 			try {
+				String className = testFiles[0].substring(0, testFiles[0].lastIndexOf('.'));
 				if ((expectedOutputString != null || expectedErrorString != null) &&
-						!javacTestErrorFlag && mismatch == 0 && sourceFileNames != null) {
+						!javacTestErrorFlag && mismatch == 0 && sourceFileNames != null &&
+						!className.endsWith(PACKAGE_INFO_NAME) && !className.endsWith(MODULE_INFO_NAME)) {
 					JavaRuntime runtime = JavaRuntime.runtimeFor(compiler);
 					StringBuffer stderr = new StringBuffer();
 					StringBuffer stdout = new StringBuffer();
@@ -1978,7 +2004,7 @@ protected void runJavac(
 							vmOptions = buffer.toString();
 						}
 					}
-					runtime.execute(javacOutputDirectory, vmOptions, testFiles[0].substring(0, testFiles[0].lastIndexOf('.')), stdout, stderr);
+					runtime.execute(javacOutputDirectory, vmOptions, className, stdout, stderr);
 					if (expectedOutputString != null /* null skips output test */) {
 						output = stdout.toString().trim();
 						if (!expectedOutputString.equals(output)) {
@@ -2735,59 +2761,59 @@ protected void runNegativeTest(boolean skipJavac, JavacTestOptions javacTestOpti
 
 			// Compute class name by removing ".java" and replacing slashes with dots
 			String className = sourceFile.substring(0, sourceFile.lastIndexOf('.')).replace('/', '.').replace('\\', '.');
-			if (className.endsWith(PACKAGE_INFO_NAME)) return;
-			if (className.endsWith(MODULE_INFO_NAME)) return;
+			if (!className.endsWith(PACKAGE_INFO_NAME) && !className.endsWith(MODULE_INFO_NAME)) {
 
-			if (vmArguments != null) {
-				if (this.verifier != null) {
-					this.verifier.shutDown();
+				if (vmArguments != null) {
+					if (this.verifier != null) {
+						this.verifier.shutDown();
+					}
+					this.verifier = new TestVerifier(false);
+					this.createdVerifier = true;
 				}
-				this.verifier = new TestVerifier(false);
-				this.createdVerifier = true;
-			}
-			boolean passed =
-				this.verifier.verifyClassFiles(
-					sourceFile,
-					className,
-					expectedOutputString,
-					expectedErrorString,
-					this.classpaths,
-					null,
-					vmArguments);
-			if (!passed) {
-				System.out.println(getClass().getName() + '#' + getName());
-				String execErrorString = this.verifier.getExecutionError();
-				if (execErrorString != null && execErrorString.length() > 0) {
-					System.out.println("[ERR]:"+execErrorString); //$NON-NLS-1$
+				boolean passed =
+					this.verifier.verifyClassFiles(
+						sourceFile,
+						className,
+						expectedOutputString,
+						expectedErrorString,
+						this.classpaths,
+						null,
+						vmArguments);
+				if (!passed) {
+					System.out.println(getClass().getName() + '#' + getName());
+					String execErrorString = this.verifier.getExecutionError();
+					if (execErrorString != null && execErrorString.length() > 0) {
+						System.out.println("[ERR]:"+execErrorString); //$NON-NLS-1$
+					}
+					String execOutputString = this.verifier.getExecutionOutput();
+					if (execOutputString != null && execOutputString.length() > 0) {
+						System.out.println("[OUT]:"+execOutputString); //$NON-NLS-1$
+					}
+					for (int i = 0; i < testFiles.length; i += 2) {
+						System.out.print(testFiles[i]);
+						System.out.println(" ["); //$NON-NLS-1$
+						System.out.println(testFiles[i + 1]);
+						System.out.println("]"); //$NON-NLS-1$
+					}
+					assertEquals(this.verifier.failureReason, expectedErrorString == null ? "" : expectedErrorString, execErrorString);
+					assertEquals(this.verifier.failureReason, expectedOutputString == null ? "" : expectedOutputString, execOutputString);
 				}
-				String execOutputString = this.verifier.getExecutionOutput();
-				if (execOutputString != null && execOutputString.length() > 0) {
-					System.out.println("[OUT]:"+execOutputString); //$NON-NLS-1$
+				assertTrue(this.verifier.failureReason, // computed by verifyClassFiles(...) action
+						passed);
+				if (vmArguments != null) {
+					if (this.verifier != null) {
+						this.verifier.shutDown();
+					}
+					this.verifier = new TestVerifier(false);
+					this.createdVerifier = true;
 				}
-				for (int i = 0; i < testFiles.length; i += 2) {
-					System.out.print(testFiles[i]);
-					System.out.println(" ["); //$NON-NLS-1$
-					System.out.println(testFiles[i + 1]);
-					System.out.println("]"); //$NON-NLS-1$
-				}
-				assertEquals(this.verifier.failureReason, expectedErrorString == null ? "" : expectedErrorString, execErrorString);
-				assertEquals(this.verifier.failureReason, expectedOutputString == null ? "" : expectedOutputString, execOutputString);
-			}
-			assertTrue(this.verifier.failureReason, // computed by verifyClassFiles(...) action
-					passed);
-			if (vmArguments != null) {
-				if (this.verifier != null) {
-					this.verifier.shutDown();
-				}
-				this.verifier = new TestVerifier(false);
-				this.createdVerifier = true;
 			}
 		}
 		// javac part
 		if (RUN_JAVAC && javacTestOptions != JavacTestOptions.SKIP) {
 			runJavac(testFiles, expectingCompilerErrors, expectedCompilerLog,
 					expectedOutputString, expectedErrorString, shouldFlushOutputDirectory,
-					javacTestOptions, vmArguments);
+					javacTestOptions, vmArguments, classLibraries);
 		}
 	}
 

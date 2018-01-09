@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,12 +25,9 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 
 /**
- * @author Andrew Eisenberg
- * @created Aug 29, 2009
- *          <p>
- *          Instances of this interface will attempt to determine the type of a Groovy ASTNode that is passed in.
- *          <p>
- *          Type Lookups are meant to be stateless. All interesting state should be stored in the variable lookup
+ * Instances of this interface will attempt to determine the type of a Groovy ASTNode that is passed in.
+ * <p>
+ * Type Lookups are meant to be stateless. All interesting state should be stored in the variable lookup
  */
 public interface ITypeLookup {
 

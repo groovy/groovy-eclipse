@@ -81,6 +81,7 @@ public class ScriptFolderSelector implements IEclipsePreferences.IPreferenceChan
         }
     }
 
+    @Override
     public void preferenceChange(IEclipsePreferences.PreferenceChangeEvent event) {
         doCopy = null;
         scriptPatterns = null;

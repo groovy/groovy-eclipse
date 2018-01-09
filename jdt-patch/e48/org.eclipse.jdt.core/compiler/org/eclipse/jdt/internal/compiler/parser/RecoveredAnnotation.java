@@ -42,6 +42,7 @@ public class RecoveredAnnotation extends RecoveredElement {
 		this.sourceStart = sourceStart;
 	}
 
+	@Override
 	public RecoveredElement add(TypeDeclaration typeDeclaration, int bracketBalanceValue) {
 		if (this.annotation == null && (typeDeclaration.bits & ASTNode.IsAnonymousType) != 0){
 			// ignore anonymous type in annotations when annotation isn't fully recovered
@@ -50,6 +51,7 @@ public class RecoveredAnnotation extends RecoveredElement {
 		return super.add(typeDeclaration, bracketBalanceValue);
 	}
 
+	@Override
 	public RecoveredElement addAnnotationName(int identPtr, int identLengthPtr, int annotationStart, int bracketBalanceValue) {
 
 		RecoveredAnnotation element = new RecoveredAnnotation(identPtr, identLengthPtr, annotationStart, this, bracketBalanceValue);
@@ -64,6 +66,7 @@ public class RecoveredAnnotation extends RecoveredElement {
 		return this;
 	}
 
+	@Override
 	public void updateFromParserState() {
 		Parser parser = parser();
 
@@ -180,10 +183,12 @@ public class RecoveredAnnotation extends RecoveredElement {
 		}
 	}
 
+	@Override
 	public ASTNode parseTree() {
 		return this.annotation;
 	}
 
+	@Override
 	public void resetPendingModifiers() {
 		if (this.parent != null) this.parent.resetPendingModifiers();
 	}
@@ -192,6 +197,7 @@ public class RecoveredAnnotation extends RecoveredElement {
 		this.kind = kind;
 	}
 
+	@Override
 	public int sourceEnd() {
 		if (this.annotation == null) {
 			Parser parser = parser();
@@ -204,6 +210,7 @@ public class RecoveredAnnotation extends RecoveredElement {
 		return this.annotation.declarationSourceEnd;
 	}
 
+	@Override
 	public String toString(int tab) {
 		if (this.annotation != null) {
 			return tabString(tab) + "Recovered annotation:\n" + this.annotation.print(tab + 1, new StringBuffer(10)); //$NON-NLS-1$
@@ -216,6 +223,7 @@ public class RecoveredAnnotation extends RecoveredElement {
 		return this.annotation;
 	}
 
+	@Override
 	public RecoveredElement updateOnClosingBrace(int braceStart, int braceEnd){
 		if (this.bracketBalance > 0){ // was an member value array initializer
 			this.bracketBalance--;
@@ -227,6 +235,7 @@ public class RecoveredAnnotation extends RecoveredElement {
 		return this;
 	}
 
+	@Override
 	public void updateParseTree() {
 		updatedAnnotationReference();
 	}

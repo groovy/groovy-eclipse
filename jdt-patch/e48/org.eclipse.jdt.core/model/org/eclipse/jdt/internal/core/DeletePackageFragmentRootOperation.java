@@ -34,6 +34,7 @@ public class DeletePackageFragmentRootOperation extends JavaModelOperation {
 		this.updateModelFlags = updateModelFlags;
 	}
 
+	@Override
 	protected void executeOperation() throws JavaModelException {
 
 		IPackageFragmentRoot root = (IPackageFragmentRoot)getElementToProcess();
@@ -73,6 +74,7 @@ public class DeletePackageFragmentRootOperation extends JavaModelOperation {
 		} else {
 			final IPath[] nestedFolders = getNestedFolders(root);
 			IResourceProxyVisitor visitor = new IResourceProxyVisitor() {
+				@Override
 				public boolean visit(IResourceProxy proxy) throws CoreException {
 					if (proxy.getType() == IResource.FOLDER) {
 						IPath path = proxy.requestFullPath();
@@ -143,6 +145,7 @@ public class DeletePackageFragmentRootOperation extends JavaModelOperation {
 			project.setRawClasspath(newClasspath, this.progressMonitor);
 		}
 	}
+	@Override
 	protected IJavaModelStatus verify() {
 		IJavaModelStatus status = super.verify();
 		if (!status.isOK()) {

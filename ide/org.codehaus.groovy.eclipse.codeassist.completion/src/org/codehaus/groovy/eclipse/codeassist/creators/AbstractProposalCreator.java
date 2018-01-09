@@ -55,10 +55,10 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
      * Returns all fields, even those that are converted into properties.
      */
     protected Collection<FieldNode> getAllFields(ClassNode thisType, Set<ClassNode> exclude) {
-        Map<String, FieldNode> allFields = new HashMap<String, FieldNode>();
+        Map<String, FieldNode> allFields = new HashMap<>();
 
         // use a LinkedHashSet to preserve order
-        Set<ClassNode> types = new LinkedHashSet<ClassNode>();
+        Set<ClassNode> types = new LinkedHashSet<>();
         getAllSupers(thisType, types, exclude);
 
         for (ClassNode type : types) {
@@ -90,7 +90,7 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
             }
         }
 
-        Set<ClassNode> types = new LinkedHashSet<ClassNode>();
+        Set<ClassNode> types = new LinkedHashSet<>();
         getAllSupers(type, types, exclude);
 
         // keep track of the already seen types so that next time, we won't include them
@@ -197,6 +197,7 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
         }
     }
 
+    @Override
     public boolean redoForLoopClosure() {
         return true;
     }

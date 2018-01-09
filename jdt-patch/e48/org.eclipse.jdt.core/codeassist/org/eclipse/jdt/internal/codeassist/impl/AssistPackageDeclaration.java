@@ -26,10 +26,12 @@ public class AssistPackageDeclaration extends PackageDeclaration {
 		this.infoCache = infoCache;
 	}
 
+	@Override
 	public Object getElementInfo(IProgressMonitor monitor) throws JavaModelException {
 		return this.infoCache.get(this);
 	}
 
+	@Override
 	public IAnnotation getAnnotation(String name) {
 		return new AssistAnnotation(this, name, this.infoCache);
 	}

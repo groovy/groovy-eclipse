@@ -52,7 +52,7 @@ public class EnclosingCallDeclaringTypePointcut extends AbstractPointcut {
         if (firstArgument == null) {
             List<CallAndType> allEnclosingMethodCallExpressions = pattern.getCurrentScope().getAllEnclosingMethodCallExpressions();
             if (allEnclosingMethodCallExpressions != null && allEnclosingMethodCallExpressions.size() > 0) {
-                List<ClassNode> enclosingCallTypes = new ArrayList<ClassNode>(allEnclosingMethodCallExpressions.size());
+                List<ClassNode> enclosingCallTypes = new ArrayList<>(allEnclosingMethodCallExpressions.size());
                 for (CallAndType callAndType : allEnclosingMethodCallExpressions) {
                     enclosingCallTypes.add(callAndType.getPerceivedDeclaringType());
                 }
@@ -76,7 +76,7 @@ public class EnclosingCallDeclaringTypePointcut extends AbstractPointcut {
     }
 
     private List<ClassNode> asTypeList(List<CallAndType> enclosing) {
-        List<ClassNode> types = new ArrayList<ClassNode>(enclosing.size());
+        List<ClassNode> types = new ArrayList<>(enclosing.size());
         for (CallAndType callAndType : enclosing) {
             types.add(callAndType.getPerceivedDeclaringType());
         }

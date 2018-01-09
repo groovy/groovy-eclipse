@@ -34,6 +34,7 @@ public class StringLiteral extends Literal {
 		super(s,e);
 	}
 
+	@Override
 	public void computeConstant() {
 
 		this.constant = StringConstant.fromValue(String.valueOf(this.source));
@@ -60,6 +61,7 @@ public class StringLiteral extends Literal {
 	/**
 	 * Code generation for string literal
 	 */
+	@Override
 	public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 
 		int pc = codeStream.position;
@@ -68,11 +70,13 @@ public class StringLiteral extends Literal {
 		codeStream.recordPositionsFrom(pc, this.sourceStart);
 	}
 
+	@Override
 	public TypeBinding literalType(BlockScope scope) {
 
 		return scope.getJavaLangString();
 	}
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 
 		// handle some special char.....
@@ -84,11 +88,13 @@ public class StringLiteral extends Literal {
 		return output;
 	}
 
+	@Override
 	public char[] source() {
 
 		return this.source;
 	}
 
+	@Override
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		visitor.visit(this, scope);
 		visitor.endVisit(this, scope);

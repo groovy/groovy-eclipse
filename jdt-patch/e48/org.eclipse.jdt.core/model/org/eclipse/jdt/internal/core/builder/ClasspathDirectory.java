@@ -50,6 +50,7 @@ ClasspathDirectory(IContainer binaryFolder, boolean isOutputFolder, AccessRuleSe
 	this.isOnModulePath = isOnModulePath;
 }
 
+@Override
 public void cleanup() {
 	if (this.annotationZipFile != null) {
 		try {
@@ -128,6 +129,7 @@ boolean doesFileExist(String fileName, String qualifiedPackageName, String quali
 	return false;
 }
 
+@Override
 public boolean equals(Object o) {
 	if (this == o) return true;
 	if (!(o instanceof ClasspathDirectory)) return false;
@@ -141,6 +143,7 @@ public boolean equals(Object o) {
 			return false;
 	return this.binaryFolder.equals(dir.binaryFolder);
 }
+@Override
 public NameEnvironmentAnswer findClass(String binaryFileName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName, boolean asBinaryOnly) {
 	if (!doesFileExist(binaryFileName, qualifiedPackageName, qualifiedBinaryFileName)) return null; // most common case
 
@@ -183,10 +186,12 @@ public NameEnvironmentAnswer findClass(String binaryFileName, String qualifiedPa
 	return null;
 }
 
+@Override
 public IPath getProjectRelativePath() {
 	return this.binaryFolder.getProjectRelativePath();
 }
 
+@Override
 public int hashCode() {
 	return this.binaryFolder == null ? super.hashCode() : this.binaryFolder.hashCode();
 }
@@ -195,10 +200,12 @@ protected boolean isExcluded(IResource resource) {
 	return false;
 }
 
+@Override
 public boolean isOutputFolder() {
 	return this.isOutputFolder;
 }
 
+@Override
 public boolean isPackage(String qualifiedPackageName, String moduleName) {
 	if (moduleName != null) {
 		if (this.module == null || !moduleName.equals(String.valueOf(this.module.name())))
@@ -219,10 +226,12 @@ public boolean hasCompilationUnit(String qualifiedPackageName, String moduleName
 	return false;
 }
 
+@Override
 public void reset() {
 	this.directoryCache = new SimpleLookupTable(5);
 }
 
+@Override
 public String toString() {
 	String start = "Binary classpath directory " + this.binaryFolder.getFullPath().toString(); //$NON-NLS-1$
 	if (this.accessRuleSet == null)
@@ -230,6 +239,7 @@ public String toString() {
 	return start + " with " + this.accessRuleSet; //$NON-NLS-1$
 }
 
+@Override
 public String debugPathString() {
 	return this.binaryFolder.getFullPath().toString();
 }

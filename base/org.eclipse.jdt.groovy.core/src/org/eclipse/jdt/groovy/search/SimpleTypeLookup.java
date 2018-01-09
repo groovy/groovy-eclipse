@@ -71,14 +71,17 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
     protected GroovyCompilationUnit unit;
 
+    @Override
     public void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {
         this.unit = unit;
     }
 
+    @Override
     public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
         return lookupType(node, scope, objectExpressionType, false);
     }
 
+    @Override
     public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType, boolean isStaticObjectExpression) {
         TypeConfidence[] confidence = {TypeConfidence.EXACT};
         if (ClassHelper.isPrimitiveType(objectExpressionType)) {
@@ -91,19 +94,23 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return result;
     }
 
+    @Override
     public TypeLookupResult lookupType(FieldNode node, VariableScope scope) {
         return new TypeLookupResult(node.getType(), node.getDeclaringClass(), node, TypeConfidence.EXACT, scope);
     }
 
+    @Override
     public TypeLookupResult lookupType(MethodNode node, VariableScope scope) {
         return new TypeLookupResult(node.getReturnType(), node.getDeclaringClass(), node, TypeConfidence.EXACT, scope);
     }
 
+    @Override
     public TypeLookupResult lookupType(AnnotationNode node, VariableScope scope) {
         ClassNode baseType = node.getClassNode();
         return new TypeLookupResult(baseType, baseType, baseType, TypeConfidence.EXACT, scope);
     }
 
+    @Override
     public TypeLookupResult lookupType(ImportNode node, VariableScope scope) {
         ClassNode baseType = node.getType();
         if (baseType != null) {
@@ -117,6 +124,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     /**
      * Returns the passed in node, unless the declaration of an InnerClassNode.
      */
+    @Override
     public TypeLookupResult lookupType(ClassNode node, VariableScope scope) {
         ClassNode resultType;
         if (node instanceof InnerClassNode && !node.isRedirectNode()) {
@@ -130,6 +138,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return new TypeLookupResult(resultType, resultType, node, TypeConfidence.EXACT, scope);
     }
 
+    @Override
     public TypeLookupResult lookupType(Parameter node, VariableScope scope) {
         // look up the type in the current scope to see if the type has
         // has been predetermined (eg- for loop variables)
@@ -143,6 +152,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         return new TypeLookupResult(type, scope.getEnclosingTypeDeclaration(), node /* should be methodnode? */, TypeConfidence.EXACT, scope);
     }
 
+    @Override
     public void lookupInBlock(BlockStatement node, VariableScope scope) {
     }
 
@@ -274,7 +284,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             // try to find best match if there is more than one constructor to choose from
             List<ConstructorNode> declaredConstructors = declaringType.getDeclaredConstructors();
             if (constructorCall.getArguments() instanceof ArgumentListExpression && declaredConstructors.size() > 1) {
-                List<ConstructorNode> looseMatches = new ArrayList<ConstructorNode>();
+                List<ConstructorNode> looseMatches = new ArrayList<>();
                 List<ClassNode> callTypes = scope.getMethodCallArgumentTypes();
                 for (ConstructorNode ctor : declaredConstructors) {
                     if (callTypes.size() == ctor.getParameters().length) {
@@ -297,11 +307,11 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             String methodName = ((StaticMethodCallExpression) node).getMethod();
             ClassNode ownerType = ((StaticMethodCallExpression) node).getOwnerType();
 
-            List<MethodNode> candidates = new LinkedList<MethodNode>();
+            List<MethodNode> candidates = new LinkedList<>();
             if (!ownerType.isInterface()) {
                 candidates.addAll(ownerType.getMethods(methodName));
             } else {
-                LinkedHashSet<ClassNode> faces = new LinkedHashSet<ClassNode>();
+                LinkedHashSet<ClassNode> faces = new LinkedHashSet<>();
                 VariableScope.findAllInterfaces(ownerType, faces, false);
                 for (ClassNode face : faces) {
                     candidates.addAll(face.getMethods(methodName));
@@ -523,7 +533,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             return accessor;
         }
 
-        LinkedHashSet<ClassNode> typeHierarchy = new LinkedHashSet<ClassNode>();
+        LinkedHashSet<ClassNode> typeHierarchy = new LinkedHashSet<>();
         VariableScope.createTypeHierarchy(declaringType, typeHierarchy, true);
 
         // look for property
@@ -593,7 +603,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
 
         // abstract types may not return all methods from getMethods(String)
-        LinkedHashSet<ClassNode> types = new LinkedHashSet<ClassNode>();
+        LinkedHashSet<ClassNode> types = new LinkedHashSet<>();
         if (!declaringType.isInterface()) types.add(declaringType);
         VariableScope.findAllInterfaces(declaringType, types, true);
         types.add(VariableScope.OBJECT_CLASS_NODE); // implicit super type

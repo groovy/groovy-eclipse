@@ -41,12 +41,14 @@ SiblingEnumeration(IDOMNode child) {
 /**
  * @see java.util.Enumeration#hasMoreElements()
  */
+@Override
 public boolean hasMoreElements() {
 	return this.fCurrentElement != null;
 }
 /**
  * @see java.util.Enumeration#nextElement()
  */
+@Override
 public Object nextElement() {
 	IDOMNode curr=  this.fCurrentElement;
 	if (curr != null) {

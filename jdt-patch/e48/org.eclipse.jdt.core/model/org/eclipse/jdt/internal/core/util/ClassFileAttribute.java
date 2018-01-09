@@ -35,6 +35,7 @@ public class ClassFileAttribute extends ClassFileStruct implements IClassFileAtt
 		this.attributeName = constantPoolEntry.getUtf8Value();
 	}
 
+	@Override
 	public int getAttributeNameIndex() {
 		return this.attributeNameIndex;
 	}
@@ -42,6 +43,7 @@ public class ClassFileAttribute extends ClassFileStruct implements IClassFileAtt
 	/**
 	 * @see IClassFileAttribute#getAttributeName()
 	 */
+	@Override
 	public char[] getAttributeName() {
 		return this.attributeName;
 	}
@@ -49,6 +51,7 @@ public class ClassFileAttribute extends ClassFileStruct implements IClassFileAtt
 	/**
 	 * @see IClassFileAttribute#getAttributeLength()
 	 */
+	@Override
 	public long getAttributeLength() {
 		return this.attributeLength;
 	}

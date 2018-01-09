@@ -1,15 +1,15 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.refactoring.test;singleton:=true
 Bundle-Name: Groovy Refactoring Tests
-Bundle-Version: 2.9.2.qualifier
+Bundle-Version: 3.0.0.qualifier
 Export-Package: org.codehaus.groovy.eclipse.refactoring.test,
  org.codehaus.groovy.eclipse.refactoring.test.extract,
  org.codehaus.groovy.eclipse.refactoring.test.formatter,
  org.codehaus.groovy.eclipse.refactoring.test.rename
-Require-Bundle: org.codehaus.groovy.eclipse.codebrowsing;bundle-version="2.9.2",
- org.codehaus.groovy.eclipse.codebrowsing.test;bundle-version="2.9.2",
- org.codehaus.groovy.eclipse.refactoring;bundle-version="2.9.2",
- org.codehaus.groovy.eclipse.tests;bundle-version="2.9.2"
+Require-Bundle: org.codehaus.groovy.eclipse.codebrowsing;bundle-version="3.0.0",
+ org.codehaus.groovy.eclipse.codebrowsing.test;bundle-version="3.0.0",
+ org.codehaus.groovy.eclipse.refactoring;bundle-version="3.0.0",
+ org.codehaus.groovy.eclipse.tests;bundle-version="3.0.0"
 Eclipse-BundleShape: dir

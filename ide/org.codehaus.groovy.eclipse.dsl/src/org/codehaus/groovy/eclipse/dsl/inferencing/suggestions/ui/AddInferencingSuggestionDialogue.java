@@ -95,8 +95,7 @@ public class AddInferencingSuggestionDialogue extends AbstractDialogue {
         this(parentShell, project, null, null, true);
     }
 
-    protected AddInferencingSuggestionDialogue(Shell parentShell, IProject project, IGroovySuggestion currentSuggestion,
-            GroovySuggestionDeclaringType declaringType, boolean isActive) {
+    protected AddInferencingSuggestionDialogue(Shell parentShell, IProject project, IGroovySuggestion currentSuggestion, GroovySuggestionDeclaringType declaringType, boolean isActive) {
         super(parentShell);
         this.project = project;
         this.currentSuggestion = currentSuggestion;
@@ -104,6 +103,7 @@ public class AddInferencingSuggestionDialogue extends AbstractDialogue {
         this.isActive = isActive;
     }
 
+    @Override
     protected DialogueDescriptor getDialogueDescriptor() {
         return DIALOGUE_DESCRIPTOR;
     }
@@ -117,8 +117,6 @@ public class AddInferencingSuggestionDialogue extends AbstractDialogue {
      * descriptor that can be
      * used to either create the actual suggestion or edit an existing one
      * outside of the dialogue logic.
-     *
-     * @return
      */
     public IGroovySuggestion getCurrentSuggestion() {
         return currentSuggestion;
@@ -164,6 +162,7 @@ public class AddInferencingSuggestionDialogue extends AbstractDialogue {
         }
     }
 
+    @Override
     protected void createCommandArea(Composite parent) {
         createFieldAreas(parent);
         createDocumentationArea(parent);
@@ -174,11 +173,10 @@ public class AddInferencingSuggestionDialogue extends AbstractDialogue {
     }
 
     protected void createFieldAreas(Composite parent) {
-
         JavaTextControl nameControl = new JavaTextControl(ControlTypes.NAME, getOffsetLabelLocation(), suggestionName);
         nameControl.createControlArea(parent);
         nameControl.addSelectionListener(new ValidatedValueSelectionListener(ControlTypes.NAME, suggestionName) {
-
+            @Override
             protected void handleValidatedValue(ControlSelectionEvent event) {
                 Object selection = event.getSelectionData();
                 if (selection instanceof String) {
@@ -187,22 +185,18 @@ public class AddInferencingSuggestionDialogue extends AbstractDialogue {
             }
         });
 
-        JavaTypeBrowsingControl declaringTypeControl = new JavaTypeBrowsingControl(ControlTypes.DECLARING_TYPE,
-                getOffsetLabelLocation(), declaringTypeName, getJavaProject()) {
-
-            // Don't check for parameterized types as it not necessary for
-            // declaring types
+        JavaTypeBrowsingControl declaringTypeControl = new JavaTypeBrowsingControl(ControlTypes.DECLARING_TYPE, getOffsetLabelLocation(), declaringTypeName, getJavaProject()) {
+            // Don't check for parameterized types as it not necessary for declaring types
+            @Override
             protected IValueCheckingRule getCachedValidationRule() {
                 return new JavaValidTypeRule(getJavaProject());
             }
-
         };
         declaringTypeControl.createControlArea(parent);
 
         declaringTypeControl.setEnabled(true);
-        declaringTypeControl.addSelectionListener(new ValidatedValueSelectionListener(ControlTypes.DECLARING_TYPE,
-                declaringTypeName) {
-
+        declaringTypeControl.addSelectionListener(new ValidatedValueSelectionListener(ControlTypes.DECLARING_TYPE, declaringTypeName) {
+            @Override
             protected void handleValidatedValue(ControlSelectionEvent event) {
                 Object selection = event.getSelectionData();
                 if (selection instanceof String) {
@@ -211,20 +205,18 @@ public class AddInferencingSuggestionDialogue extends AbstractDialogue {
             }
         });
 
-        JavaTypeBrowsingControl suggestionTypeControl = new JavaTypeBrowsingControl(ControlTypes.TYPE, getOffsetLabelLocation(),
-                suggestionType, getJavaProject()) {
-
+        JavaTypeBrowsingControl suggestionTypeControl = new JavaTypeBrowsingControl(ControlTypes.TYPE, getOffsetLabelLocation(), suggestionType, getJavaProject()) {
+            @Override
             protected ValueStatus isControlValueValid(String value) {
                 if (value == null || value.length() == 0) {
                     return ValueStatus.getValidStatus(value);
                 }
                 return super.isControlValueValid(value);
             }
-
         };
         suggestionTypeControl.createControlArea(parent);
         suggestionTypeControl.addSelectionListener(new ValidatedValueSelectionListener() {
-
+            @Override
             protected void handleValidatedValue(ControlSelectionEvent event) {
                 Object selection = event.getSelectionData();
                 if (selection instanceof String) {
@@ -236,7 +228,7 @@ public class AddInferencingSuggestionDialogue extends AbstractDialogue {
         ButtonDialogueControl isStaticButton = new ButtonDialogueControl(ControlTypes.IS_STATIC, SWT.CHECK, isStatic);
         isStaticButton.createControlArea(parent);
         isStaticButton.addSelectionListener(new ControlSelectionListener() {
-
+            @Override
             public void handleSelection(ControlSelectionEvent event) {
                 Object selection = event.getSelectionData();
                 if (selection instanceof Boolean) {
@@ -263,7 +255,7 @@ public class AddInferencingSuggestionDialogue extends AbstractDialogue {
         }
 
         table.addSelectionListener(new ControlSelectionListener() {
-
+            @Override
             public void handleSelection(ControlSelectionEvent event) {
                 Object selection = event.getSelectionData();
                 if (event.getControlDescriptor() == ControlTypes.USE_NAMED_ARGUMENTS && selection instanceof Boolean) {
@@ -273,7 +265,7 @@ public class AddInferencingSuggestionDialogue extends AbstractDialogue {
         });
 
         radioSelection.addSelectionListener(new ControlSelectionListener() {
-
+            @Override
             public void handleSelection(ControlSelectionEvent event) {
                 IDialogueControlDescriptor descriptor = event.getControlDescriptor();
                 if (descriptor == ControlTypes.PROPERTY) {
@@ -306,7 +298,7 @@ public class AddInferencingSuggestionDialogue extends AbstractDialogue {
         DocumentDialogueControl docControl = new DocumentDialogueControl(ControlTypes.DOC, null, javaDoc);
         docControl.createControlArea(parent);
         docControl.addSelectionListener(new ControlSelectionListener() {
-
+            @Override
             public void handleSelection(ControlSelectionEvent event) {
                 if (event.getSelectionData() instanceof String) {
                     javaDoc = (String) event.getSelectionData();

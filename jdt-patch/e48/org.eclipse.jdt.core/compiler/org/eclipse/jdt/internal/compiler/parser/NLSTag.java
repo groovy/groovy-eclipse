@@ -24,6 +24,7 @@ public class NLSTag {
 		this.index = index;
 	}
 
+	@Override
 	public String toString() {
 		return "NLSTag(" + this.start + "," + this.end + "," + this.lineNumber + ")"; //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$//$NON-NLS-4$
 	}

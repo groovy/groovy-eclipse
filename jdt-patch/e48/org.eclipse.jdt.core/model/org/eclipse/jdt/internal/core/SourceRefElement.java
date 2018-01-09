@@ -42,12 +42,14 @@ protected SourceRefElement(JavaElement parent) {
 /**
  * This element is being closed.  Do any necessary cleanup.
  */
+@Override
 protected void closing(Object info) throws JavaModelException {
 	// Do any necessary cleanup
 }
 /**
  * Returns a new element info for this element.
  */
+@Override
 protected Object createElementInfo() {
 	return null; // not used for source ref elements
 }
@@ -77,6 +79,7 @@ public void delete(boolean force, IProgressMonitor monitor) throws JavaModelExce
 	IJavaElement[] elements = new IJavaElement[] {this};
 	getJavaModel().delete(elements, force, monitor);
 }
+@Override
 public boolean equals(Object o) {
 	if (!(o instanceof SourceRefElement)) return false;
 	return this.occurrenceCount == ((SourceRefElement)o).occurrenceCount &&
@@ -86,6 +89,7 @@ public boolean equals(Object o) {
  * Returns the <code>ASTNode</code> that corresponds to this <code>JavaElement</code>
  * or <code>null</code> if there is no corresponding node.
  */
+@Override
 public ASTNode findNode(CompilationUnit ast) {
 	DOMFinder finder = new DOMFinder(ast, this, false);
 	try {
@@ -95,9 +99,8 @@ public ASTNode findNode(CompilationUnit ast) {
 		return null;
 	}
 }
-/*
- * @see JavaElement#generateInfos
- */
+
+@Override
 protected void generateInfos(Object info, HashMap newElements, IProgressMonitor pm) throws JavaModelException {
 	Openable openableParent = (Openable)getOpenableParent();
 	if (openableParent == null) return;
@@ -117,6 +120,7 @@ public IAnnotation[] getAnnotations() throws JavaModelException {
 /**
  * @see IMember
  */
+@Override
 public ICompilationUnit getCompilationUnit() {
 	return (ICompilationUnit) getAncestor(COMPILATION_UNIT);
 }
@@ -126,6 +130,7 @@ public ICompilationUnit getCompilationUnit() {
  *
  * @see IJavaElement
  */
+@Override
 public IResource getCorrespondingResource() throws JavaModelException {
 	if (!exists()) throw newNotPresentException();
 	return null;
@@ -133,6 +138,7 @@ public IResource getCorrespondingResource() throws JavaModelException {
 /*
  * @see JavaElement
  */
+@Override
 public IJavaElement getHandleFromMemento(String token, MementoTokenizer memento, WorkingCopyOwner workingCopyOwner) {
 	switch (token.charAt(0)) {
 		case JEM_COUNT:
@@ -140,6 +146,7 @@ public IJavaElement getHandleFromMemento(String token, MementoTokenizer memento,
 	}
 	return this;
 }
+@Override
 protected void getHandleMemento(StringBuffer buff) {
 	super.getHandleMemento(buff);
 	if (this.occurrenceCount > 1) {
@@ -168,6 +175,7 @@ public int getOccurrenceCount() {
  * Return the first instance of IOpenable in the hierarchy of this
  * type (going up the hierarchy from this type);
  */
+@Override
 public IOpenable getOpenableParent() {
 	IJavaElement current = getParent();
 	while (current != null){
@@ -181,18 +189,21 @@ public IOpenable getOpenableParent() {
 /*
  * @see IJavaElement
  */
+@Override
 public IPath getPath() {
 	return getParent().getPath();
 }
 /*
  * @see IJavaElement
  */
+@Override
 public IResource resource() {
 	return this.parent.resource();
 }
 /**
  * @see ISourceReference
  */
+@Override
 public String getSource() throws JavaModelException {
 	IOpenable openable = getOpenableParent();
 	IBuffer buffer = openable.getBuffer();
@@ -214,6 +225,7 @@ public String getSource() throws JavaModelException {
 /**
  * @see ISourceReference
  */
+@Override
 public ISourceRange getSourceRange() throws JavaModelException {
 	SourceRefElementInfo info = (SourceRefElementInfo) getElementInfo();
 	return info.getSourceRange();
@@ -221,6 +233,7 @@ public ISourceRange getSourceRange() throws JavaModelException {
 /**
  * @see IJavaElement
  */
+@Override
 public IResource getUnderlyingResource() throws JavaModelException {
 	if (!exists()) throw newNotPresentException();
 	return getParent().getUnderlyingResource();
@@ -228,12 +241,14 @@ public IResource getUnderlyingResource() throws JavaModelException {
 /**
  * @see IParent
  */
+@Override
 public boolean hasChildren() throws JavaModelException {
 	return getChildren().length > 0;
 }
 /**
  * @see IJavaElement
  */
+@Override
 public boolean isStructureKnown() throws JavaModelException {
 	// structure is always known inside an openable
 	return true;
@@ -269,6 +284,7 @@ public void rename(String newName, boolean force, IProgressMonitor monitor) thro
 	String[] renamings= new String[] {newName};
 	getJavaModel().rename(elements, dests, renamings, force, monitor);
 }
+@Override
 protected void toStringName(StringBuffer buffer) {
 	super.toStringName(buffer);
 	if (this.occurrenceCount > 1) {

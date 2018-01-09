@@ -23,6 +23,7 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -34,6 +35,7 @@ import org.eclipse.debug.ui.actions.IToggleBreakpointsTargetExtension;
 import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IMember;
+import org.eclipse.jdt.core.IOrdinaryClassFile;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
@@ -73,8 +75,7 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
     public final static Object TOGGLE_BREAKPOINT_FAMILY = new Object();
 
     protected static IResource getResource(IEditorPart editor) {
-        @SuppressWarnings("cast")
-        IResource resource = (IFile) editor.getEditorInput().getAdapter(IFile.class);
+        IResource resource = Adapters.adapt(editor.getEditorInput(), IFile.class);
         if (resource == null) {
             resource = ResourcesPlugin.getWorkspace().getRoot();
         }
@@ -88,31 +89,37 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
 
     //--------------------------------------------------------------------------
 
+    @Override
     public boolean canToggleBreakpoints(IWorkbenchPart part, ISelection selection) {
         return canToggleLineBreakpoints(part, selection);
     }
 
+    @Override
     public boolean canToggleLineBreakpoints(IWorkbenchPart part, ISelection selection) {
         return selection instanceof ITextSelection;
     }
 
+    @Override
     public boolean canToggleMethodBreakpoints(IWorkbenchPart part, ISelection selection) {
         return false;
     }
 
+    @Override
     public boolean canToggleWatchpoints(IWorkbenchPart part, ISelection selection) {
         return false;
     }
 
+    @Override
     public void toggleBreakpoints(IWorkbenchPart part, ISelection selection) throws CoreException {
         toggleLineBreakpoints(part, selection, true);
     }
 
+    @Override
     public void toggleLineBreakpoints(IWorkbenchPart part, ISelection selection) throws CoreException {
         toggleLineBreakpoints(part, selection, false);
     }
 
-    public void toggleLineBreakpoints(final IWorkbenchPart part, final ISelection selection, final boolean bestMatch) {
+    public void toggleLineBreakpoints(IWorkbenchPart part, ISelection selection, boolean bestMatch) {
         Job job = new Job("Toggle Line Breakpoint") { //$NON-NLS-1$
             @Override
             public boolean belongsTo(Object family) {
@@ -138,10 +145,9 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
                     int offset = textSelection.getOffset();
                     try {
                         if (type == null) {
-                            @SuppressWarnings("cast")
-                            IClassFile classFile = (IClassFile) editorInput.getAdapter(IClassFile.class);
-                            if (classFile != null) {
-                                type = classFile.getType();
+                            IClassFile classFile = Adapters.adapt(editorInput, IClassFile.class);
+                            if (classFile instanceof IOrdinaryClassFile) {
+                                type = ((IOrdinaryClassFile) classFile).getType();
                                 // bug 34856 - if this is an inner type, ensure
                                 // the breakpoint is not
                                 // being added to the outer type
@@ -162,7 +168,7 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
 
                         String typeName = null;
                         IResource resource = null;
-                        Map<String, Object> attributes = new HashMap<String, Object>(10);
+                        Map<String, Object> attributes = new HashMap<>(10);
                         if (type == null) {
                             resource = getResource(editorPart);
                             if (editorPart instanceof ITextEditor) {
@@ -227,9 +233,11 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
         job.schedule();
     }
 
+    @Override
     public void toggleMethodBreakpoints(IWorkbenchPart part, ISelection finalSelection) {
     }
 
+    @Override
     public void toggleWatchpoints(IWorkbenchPart part, ISelection finalSelection) {
     }
 
@@ -241,8 +249,7 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
     }
 
     protected ModuleNode getModuleNode(ITextEditor editor) throws CoreException {
-        @SuppressWarnings("cast")
-        ModuleNode moduleNode = (ModuleNode) editor.getEditorInput().getAdapter(ModuleNode.class);
+        ModuleNode moduleNode = Adapters.adapt(editor.getEditorInput(), ModuleNode.class);
         /*if (moduleNode == null) {
             throw new CoreException(Status.CANCEL_STATUS);
         }*/
@@ -274,20 +281,17 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
     }
 
     protected void report(final String message, final IWorkbenchPart part) {
-        JDIDebugUIPlugin.getStandardDisplay().asyncExec(new Runnable() {
-            public void run() {
-                @SuppressWarnings("cast")
-                IEditorStatusLine statusLine = (IEditorStatusLine) part.getAdapter(IEditorStatusLine.class);
-                if (statusLine != null) {
-                    if (message != null) {
-                        statusLine.setMessage(true, message, null);
-                    } else {
-                        statusLine.setMessage(true, null, null);
-                    }
+        JDIDebugUIPlugin.getStandardDisplay().asyncExec(() -> {
+            IEditorStatusLine statusLine = Adapters.adapt(part, IEditorStatusLine.class);
+            if (statusLine != null) {
+                if (message != null) {
+                    statusLine.setMessage(true, message, null);
+                } else {
+                    statusLine.setMessage(true, null, null);
                 }
-                if (message != null && JDIDebugUIPlugin.getActiveWorkbenchShell() != null) {
-                    JDIDebugUIPlugin.getActiveWorkbenchShell().getDisplay().beep();
-                }
+            }
+            if (message != null && JDIDebugUIPlugin.getActiveWorkbenchShell() != null) {
+                JDIDebugUIPlugin.getActiveWorkbenchShell().getDisplay().beep();
             }
         });
     }

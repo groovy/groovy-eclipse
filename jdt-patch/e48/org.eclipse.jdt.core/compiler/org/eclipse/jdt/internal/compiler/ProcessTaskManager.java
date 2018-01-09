@@ -108,6 +108,7 @@ public CompilationUnitDeclaration removeNextUnit() throws Error {
 	return next;
 }
 
+@Override
 public void run() {
 	boolean noAnnotations = this.compiler.annotationProcessorManager == null;
 	while (this.processingThread != null) {

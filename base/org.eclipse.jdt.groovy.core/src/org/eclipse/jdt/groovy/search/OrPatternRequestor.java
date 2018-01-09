@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,6 @@ import java.util.List;
 import org.codehaus.groovy.ast.ASTNode;
 import org.eclipse.jdt.core.IJavaElement;
 
-/**
- * @author Andrew Eisenberg
- * @created Nov 17, 2009
- */
 public class OrPatternRequestor implements ITypeRequestor {
     private final ITypeRequestor[] requestors;
 
@@ -31,6 +27,7 @@ public class OrPatternRequestor implements ITypeRequestor {
         this.requestors = requestors.toArray(new ITypeRequestor[requestors.size()]);
     }
 
+    @Override
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
         VisitStatus status = VisitStatus.CONTINUE;
         for (ITypeRequestor requestor : requestors) {

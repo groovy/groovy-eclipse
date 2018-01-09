@@ -61,7 +61,7 @@ public class GroovyContentAssist extends AbstractUIPlugin {
     public Set<String> getFilteredDGMs() {
         String filtered = getPreferenceStore().getString(FILTERED_DGMS);
         String[] filteredArr = filtered.split(",");
-        Set<String> filteredSet = new HashSet<String>(filteredArr.length);
+        Set<String> filteredSet = new HashSet<>(filteredArr.length);
         for (String s : filteredArr) {
             s = s.trim();
             if (s.length() > 0) {

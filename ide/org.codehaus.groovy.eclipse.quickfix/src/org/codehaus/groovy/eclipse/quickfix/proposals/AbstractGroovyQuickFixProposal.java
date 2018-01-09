@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,57 +25,58 @@ import org.eclipse.swt.graphics.Point;
 /**
  * Base class for a Groovy quick fix proposal where an image is specified by a
  * path, and the proposal can handle a Groovy quick fix problem representation.
- * 
- * @author Nieraj Singh
- * 
  */
 public abstract class AbstractGroovyQuickFixProposal implements IJavaCompletionProposal {
 
-	private QuickFixProblemContext problemContext;
-	private int relevance;
+    private QuickFixProblemContext problemContext;
+    private int relevance;
 
-	public AbstractGroovyQuickFixProposal(QuickFixProblemContext problem) {
-		this.problemContext = problem;
-	}
-	
-	public AbstractGroovyQuickFixProposal(QuickFixProblemContext problem, int relevance) {
-		this.problemContext = problem;
-		this.relevance = relevance;
-	}
+    public AbstractGroovyQuickFixProposal(QuickFixProblemContext problem) {
+        this.problemContext = problem;
+    }
 
-	
-	public int getRelevance() {
-		return relevance;
-	}
+    public AbstractGroovyQuickFixProposal(QuickFixProblemContext problem, int relevance) {
+        this.problemContext = problem;
+        this.relevance = relevance;
+    }
 
-	/**
-	 * 
-	 * @return the invocation context and problem this proposal should fix.
-	 */
-	protected QuickFixProblemContext getQuickFixProblemContext() {
-		return problemContext;
-	}
 
-	public Point getSelection(IDocument document) {
-		return problemContext != null ? new Point(problemContext.getOffset(), problemContext.getLength()) : null;
-	}
+    @Override
+    public int getRelevance() {
+        return relevance;
+    }
 
-	public String getAdditionalProposalInfo() {
-		return null;
-	}
+    /**
+     *
+     * @return the invocation context and problem this proposal should fix.
+     */
+    protected QuickFixProblemContext getQuickFixProblemContext() {
+        return problemContext;
+    }
 
-	public Image getImage() {
-		String imageLocation = getImageBundleLocation();
-		if (imageLocation != null) {
-			return JavaPluginImages.get(imageLocation);
-		}
-		return null;
-	}
+    @Override
+    public Point getSelection(IDocument document) {
+        return problemContext != null ? new Point(problemContext.getOffset(), problemContext.getLength()) : null;
+    }
 
-	abstract protected String getImageBundleLocation();
+    @Override
+    public String getAdditionalProposalInfo() {
+        return null;
+    }
 
-	public IContextInformation getContextInformation() {
-		return null;
-	}
+    @Override
+    public Image getImage() {
+        String imageLocation = getImageBundleLocation();
+        if (imageLocation != null) {
+            return JavaPluginImages.get(imageLocation);
+        }
+        return null;
+    }
 
+    @Override
+    public IContextInformation getContextInformation() {
+        return null;
+    }
+
+    abstract protected String getImageBundleLocation();
 }

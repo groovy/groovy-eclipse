@@ -26,6 +26,7 @@ public CaseLabel(CodeStream codeStream) {
 * Put down  a reference to the array at the location in the codestream.
 * #placeInstruction() must be performed prior to any #branch()
 */
+@Override
 void branch() {
 	if (this.position == POS_NOT_SET) {
 		addForwardReference(this.codeStream.position);
@@ -43,19 +44,23 @@ void branch() {
 /*
 * No support for wide branches yet
 */
+@Override
 void branchWide() {
 	branch(); // case label branch is already wide
 }
 
+@Override
 public boolean isCaseLabel() {
 	return true;
 }
+@Override
 public boolean isStandardLabel(){
 	return false;
 }
 /*
 * Put down  a reference to the array at the location in the codestream.
 */
+@Override
 public void place() {
 	if ((this.tagBits & USED) != 0) {
 		this.position = this.codeStream.getPosition();

@@ -24,10 +24,12 @@ class RecoveredVariableBinding implements IVariableBinding {
 		this.resolver = resolver;
 		this.variableDeclaration = variableDeclaration;
 	}
+	@Override
 	public Object getConstantValue() {
 		return null;
 	}
 
+	@Override
 	public ITypeBinding getDeclaringClass() {
 		ASTNode parent = this.variableDeclaration.getParent();
 		while (parent != null && parent.getNodeType() != ASTNode.TYPE_DECLARATION) {
@@ -39,6 +41,7 @@ class RecoveredVariableBinding implements IVariableBinding {
 		return null;
 	}
 
+	@Override
 	public IMethodBinding getDeclaringMethod() {
 		ASTNode parent = this.variableDeclaration.getParent();
 		while (parent != null && parent.getNodeType() != ASTNode.METHOD_DECLARATION) {
@@ -50,42 +53,52 @@ class RecoveredVariableBinding implements IVariableBinding {
 		return null;
 	}
 
+	@Override
 	public String getName() {
 		return this.variableDeclaration.getName().getIdentifier();
 	}
 
+	@Override
 	public ITypeBinding getType() {
 		return this.resolver.getTypeBinding(this.variableDeclaration);
 	}
 
+	@Override
 	public IVariableBinding getVariableDeclaration() {
 		return this;
 	}
 
+	@Override
 	public int getVariableId() {
 		return 0;
 	}
 
+	@Override
 	public boolean isEnumConstant() {
 		return false;
 	}
 
+	@Override
 	public boolean isField() {
 		return this.variableDeclaration.getParent() instanceof FieldDeclaration;
 	}
 
+	@Override
 	public boolean isParameter() {
 		return this.variableDeclaration instanceof SingleVariableDeclaration;
 	}
 
+	@Override
 	public IAnnotationBinding[] getAnnotations() {
 		return AnnotationBinding.NoAnnotations;
 	}
 
+	@Override
 	public IJavaElement getJavaElement() {
 		return null;
 	}
 
+	@Override
 	public String getKey() {
 		StringBuffer buffer = new StringBuffer();
 		buffer.append("Recovered#"); //$NON-NLS-1$
@@ -99,18 +112,22 @@ class RecoveredVariableBinding implements IVariableBinding {
 		return String.valueOf(buffer);
 	}
 
+	@Override
 	public int getKind() {
 		return IBinding.VARIABLE;
 	}
 
+	@Override
 	public int getModifiers() {
 		return 0;
 	}
 
+	@Override
 	public boolean isDeprecated() {
 		return false;
 	}
 
+	@Override
 	public boolean isEqualTo(IBinding binding) {
 		if (binding.isRecovered() && binding.getKind() == IBinding.VARIABLE) {
 			return getKey().equals(binding.getKey());
@@ -118,13 +135,16 @@ class RecoveredVariableBinding implements IVariableBinding {
 		return false;
 	}
 
+	@Override
 	public boolean isRecovered() {
 		return true;
 	}
 
+	@Override
 	public boolean isSynthetic() {
 		return false;
 	}
+	@Override
 	public boolean isEffectivelyFinal() {
 		return false;
 	}

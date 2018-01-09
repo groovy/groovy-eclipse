@@ -54,6 +54,7 @@ public class OpenableElementInfo extends JavaElementInfo {
 		}
 	}
 
+	@Override
 	public IJavaElement[] getChildren() {
 		return this.children;
 	}

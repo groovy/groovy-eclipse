@@ -27,6 +27,7 @@ public interface IPackageBinding extends IBinding {
 	 * @return the name of the package represented by this binding, or
 	 *    an empty string for an unnamed package
 	 */
+	@Override
 	public String getName();
 
 	/**

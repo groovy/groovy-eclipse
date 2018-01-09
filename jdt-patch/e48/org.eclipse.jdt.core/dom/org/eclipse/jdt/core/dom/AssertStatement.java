@@ -97,16 +97,12 @@ public class AssertStatement extends Statement {
 		super(ast);
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+	@Override
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+	@Override
 	final ASTNode internalGetSetChildProperty(ChildPropertyDescriptor property, boolean get, ASTNode child) {
 		if (property == EXPRESSION_PROPERTY) {
 			if (get) {
@@ -128,16 +124,12 @@ public class AssertStatement extends Statement {
 		return super.internalGetSetChildProperty(property, get, child);
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+	@Override
 	final int getNodeType0() {
 		return ASSERT_STATEMENT;
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+	@Override
 	ASTNode clone0(AST target) {
 		AssertStatement result = new AssertStatement(target);
 		result.setSourceRange(getStartPosition(), getLength());
@@ -149,17 +141,13 @@ public class AssertStatement extends Statement {
 		return result;
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+	@Override
 	final boolean subtreeMatch0(ASTMatcher matcher, Object other) {
 		// dispatch to correct overloaded match method
 		return matcher.match(this, other);
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+	@Override
 	void accept0(ASTVisitor visitor) {
 		boolean visitChildren = visitor.visit(this);
 		if (visitChildren) {
@@ -242,16 +230,12 @@ public class AssertStatement extends Statement {
 		postReplaceChild(oldChild, expression, MESSAGE_PROPERTY);
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+	@Override
 	int memSize() {
 		return super.memSize() + 2 * 4;
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+	@Override
 	int treeSize() {
 		return
 			memSize()

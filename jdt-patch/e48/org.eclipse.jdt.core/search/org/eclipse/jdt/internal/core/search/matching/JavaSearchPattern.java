@@ -165,6 +165,7 @@ public class JavaSearchPattern extends SearchPattern implements IIndexConstants 
 		return buffer.toString();
 	}
 
+	@Override
 	public SearchPattern getBlankPattern() {
 		return null;
 	}
@@ -443,6 +444,7 @@ public class JavaSearchPattern extends SearchPattern implements IIndexConstants 
 			setTypeArguments(typeParameters);
 		}
 	}
+	@Override
 	public final String toString() {
 		return print(new StringBuffer(30)).toString();
 	}

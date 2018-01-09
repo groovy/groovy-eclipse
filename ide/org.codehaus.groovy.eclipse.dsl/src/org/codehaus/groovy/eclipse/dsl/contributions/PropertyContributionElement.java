@@ -59,6 +59,7 @@ public class PropertyContributionElement implements IContributionElement {
         this.doc = (doc != null ? doc : NO_DOC + (provider != null ? provider : GROOVY_DSL_PROVIDER));
     }
 
+    @Override
     public TypeAndDeclaration lookupType(String name, ClassNode declaringType, ResolverCache resolver) {
         if (name.equals(propName)) {
             return new TypeAndDeclaration(returnType(resolver), toProperty(declaringType, resolver), declaringType(declaringType, resolver), doc);
@@ -66,12 +67,14 @@ public class PropertyContributionElement implements IContributionElement {
         return null;
     }
 
+    @Override
     public IGroovyProposal toProposal(ClassNode declaringType, ResolverCache resolver) {
         GroovyPropertyProposal proposal = new GroovyPropertyProposal(toProperty(declaringType, resolver), provider);
         proposal.setRelevanceMultiplier(relevanceMultiplier);
         return proposal;
     }
 
+    @Override
     public List<IGroovyProposal> extraProposals(ClassNode declaringType, ResolverCache resolver, Expression enclosingExpression) {
         return ProposalUtils.NO_PROPOSALS;
     }
@@ -106,14 +109,17 @@ public class PropertyContributionElement implements IContributionElement {
         return cachedDeclaringType == null ? lexicalDeclaringType : cachedDeclaringType;
     }
 
+    @Override
     public String contributionName() {
         return propName;
     }
 
+    @Override
     public String description() {
         return "Property: " + declaringType + "." + propName;
     }
 
+    @Override
     public String getDeclaringTypeName() {
         return declaringType;
     }

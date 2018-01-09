@@ -24,18 +24,23 @@ public class CompletionOnKeyword1 extends SingleTypeReference implements Complet
 		super(token, pos);
 		this.possibleKeywords = possibleKeywords;
 	}
+	@Override
 	public char[] getToken() {
 		return this.token;
 	}
+	@Override
 	public char[][] getPossibleKeywords() {
 		return this.possibleKeywords;
 	}
+	@Override
 	public void aboutToResolve(Scope scope) {
 		getTypeBinding(scope);
 	}
+	@Override
 	protected TypeBinding getTypeBinding(Scope scope) {
 		throw new CompletionNodeFound(this, scope);
 	}
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output){
 
 		return output.append("<CompleteOnKeyword:").append(this.token).append('>');  //$NON-NLS-1$

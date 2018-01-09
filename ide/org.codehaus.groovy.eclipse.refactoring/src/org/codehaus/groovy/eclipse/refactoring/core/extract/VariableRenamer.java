@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,11 +25,6 @@ import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 
-/**
- *
- * @author andrew
- * @created May 18, 2010
- */
 public class VariableRenamer extends ClassCodeVisitorSupport {
 
     private MultiTextEdit edits;
@@ -40,11 +35,6 @@ public class VariableRenamer extends ClassCodeVisitorSupport {
         edits = new MultiTextEdit();
     }
 
-    /**
-     * @param method
-     * @param variablesToRename
-     * @return
-     */
     public MultiTextEdit rename(MethodNode method, Map<String, String> variablesToRename) {
         this.variablesToRename = variablesToRename;
         // no need to visit parameters since they have already been changed

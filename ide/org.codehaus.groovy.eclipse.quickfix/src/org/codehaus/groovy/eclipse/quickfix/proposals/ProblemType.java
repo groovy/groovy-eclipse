@@ -21,9 +21,6 @@ import org.eclipse.jdt.core.compiler.IProblem;
 /**
  * A descriptor that represents a Java or Eclipse resource problem (compilation
  * problem, etc..) which the Groovy quick fix framework can understand.
- *
- * @author Nieraj Singh
- * @author Andrew Eisenberg
  */
 public enum ProblemType {
     // missing semi-colons will have different IProblem values in different places

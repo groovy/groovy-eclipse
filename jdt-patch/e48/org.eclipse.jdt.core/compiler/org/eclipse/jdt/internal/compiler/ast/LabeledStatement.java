@@ -39,6 +39,7 @@ public class LabeledStatement extends Statement {
 		this.sourceEnd = sourceEnd;
 	}
 
+	@Override
 	public FlowInfo analyseCode(
 		BlockScope currentScope,
 		FlowContext flowContext,
@@ -78,6 +79,7 @@ public class LabeledStatement extends Statement {
 		}
 	}
 
+	@Override
 	public ASTNode concreteStatement() {
 
 		// return statement.concreteStatement(); // for supporting nested labels:   a:b:c: someStatement (see 21912)
@@ -92,6 +94,7 @@ public class LabeledStatement extends Statement {
 	 * @param currentScope org.eclipse.jdt.internal.compiler.lookup.BlockScope
 	 * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
 	 */
+	@Override
 	public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 
 		if ((this.bits & IsReachable) == 0) {
@@ -113,6 +116,7 @@ public class LabeledStatement extends Statement {
 		codeStream.recordPositionsFrom(pc, this.sourceStart);
 	}
 
+	@Override
 	public StringBuffer printStatement(int tab, StringBuffer output) {
 
 		printIndent(tab, output).append(this.label).append(": "); //$NON-NLS-1$
@@ -123,6 +127,7 @@ public class LabeledStatement extends Statement {
 		return output;
 	}
 
+	@Override
 	public void resolve(BlockScope scope) {
 
 		if (this.statement != null) {
@@ -131,6 +136,7 @@ public class LabeledStatement extends Statement {
 	}
 
 
+	@Override
 	public void traverse(
 		ASTVisitor visitor,
 		BlockScope blockScope) {

@@ -86,6 +86,7 @@ public CreateTypeHierarchyOperation(IType element, ICompilationUnit[] workingCop
  * Performs the operation - creates the type hierarchy
  * @exception JavaModelException The operation has failed.
  */
+@Override
 protected void executeOperation() throws JavaModelException {
 	this.typeHierarchy.refresh(this);
 }
@@ -98,6 +99,7 @@ public ITypeHierarchy getResult() {
 /**
  * @see JavaModelOperation
  */
+@Override
 public boolean isReadOnly() {
 	return true;
 }
@@ -108,6 +110,7 @@ public boolean isReadOnly() {
  *	<li>ELEMENT_NOT_PRESENT - the provided type or type's project does not exist
  * </ul>
  */
+@Override
 public IJavaModelStatus verify() {
 	IJavaElement elementToProcess= getElementToProcess();
 	if (elementToProcess == null && !(this.typeHierarchy instanceof RegionBasedTypeHierarchy)) {

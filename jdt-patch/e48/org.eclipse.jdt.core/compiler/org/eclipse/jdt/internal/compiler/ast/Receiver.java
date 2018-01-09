@@ -17,10 +17,12 @@ public class Receiver extends Argument {
 		super(name, posNom, typeReference, modifiers);
 		this.qualifyingName = qualifyingName;
 	}
+	@Override
 	public boolean isReceiver() {
 		return true;
 	}
 	
+	@Override
 	public StringBuffer print(int indent, StringBuffer output) {
 
 		printIndent(indent, output);

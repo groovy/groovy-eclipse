@@ -59,18 +59,19 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyCompletionProcessorFactory {
 
+    @Override
     public IGroovyCompletionProcessor createProcessor(ContentAssistContext context,
             JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
 
         return new AbstractGroovyCompletionProcessor(context, javaContext, nameEnvironment) {
-
+            @Override
             public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
                 if (monitor == null) {
                     monitor = new NullProgressMonitor();
                 }
                 monitor.beginTask("Content assist in annotation", 2);
                 try {
-                    List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
+                    List<ICompletionProposal> proposals = new ArrayList<>();
                     String memberName = getPerceivedCompletionMember();
 
                     if (memberName == null || isImplicitValueExpression()) {
@@ -95,7 +96,7 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
 
                 Set<String> currentMembers = annotation.getMembers().keySet();
                 if (isImplicitValueExpression()) {
-                    currentMembers = new HashSet<String>(currentMembers);
+                    currentMembers = new HashSet<>(currentMembers);
                     currentMembers.remove("value");
                 }
 
@@ -136,7 +137,7 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
                     if (processor instanceof ITypeResolver) {
                         ((ITypeResolver) processor).setResolverInformation(moduleInfo.module, moduleInfo.resolver);
                     }
-                    proposals.addAll(processor.generateProposals(submon.newChild(1)));
+                    proposals.addAll(processor.generateProposals(submon.split(1)));
                 }
 
                 // generate field proposals from the current scope and (if applicable) enum constants
@@ -144,7 +145,7 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
                 fieldProposalCreator.setCurrentScope(context.getPerceivedCompletionScope());
                 fieldProposalCreator.setFavoriteStaticMembers(context.getFavoriteStaticMembers());
 
-                List<ClassNode> completionTypes = new ArrayList<ClassNode>(2);
+                List<ClassNode> completionTypes = new ArrayList<>(2);
                 if (context.containingDeclaration instanceof ClassNode) {
                     completionTypes.add((ClassNode) context.containingDeclaration);
                 } else {
@@ -159,7 +160,7 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
                     }
                 }
 
-                List<IGroovyProposal> groovyProposals = new ArrayList<IGroovyProposal>();
+                List<IGroovyProposal> groovyProposals = new ArrayList<>();
                 for (ClassNode completionType : completionTypes) {
                     groovyProposals.addAll(fieldProposalCreator.findAllProposals(
                         completionType, Collections.EMPTY_SET, context.completionExpression, true, true));

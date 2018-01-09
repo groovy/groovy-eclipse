@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.core.compiler;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -71,7 +70,7 @@ public class CompilerUtils {
     public static SortedSet<SpecifiedVersion> getAllGroovyVersions() {
         SpecifiedVersion[] versions = CompilerChooser.getInstance().getAllSpecifiedVersions();
         // remove dups and sort
-        SortedSet<SpecifiedVersion> allVersions = new TreeSet<SpecifiedVersion>();
+        SortedSet<SpecifiedVersion> allVersions = new TreeSet<>();
         for (SpecifiedVersion version : versions) {
             allVersions.add(version);
         }
@@ -217,7 +216,7 @@ public class CompilerUtils {
      * Returns the extra jars that belong inside the Groovy Classpath Container.
      */
     public static List<IPath> getExtraJarsForClasspath() {
-        List<IPath> jarPaths = new ArrayList<IPath>();
+        List<IPath> jarPaths = new ArrayList<>();
         Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
         for (URL jarUrl : Collections.list(groovyBundle.findEntries("lib", "*.jar", false))) {
             if (!jarUrl.getFile().contains("/groovy-all-") && (!jarUrl.getFile().contains("/servlet-") || includeServlet()) &&
@@ -271,11 +270,7 @@ public class CompilerUtils {
         if (home != null) {
             File libDir = new File(home);
             if (libDir.isDirectory()) {
-                File[] files = libDir.listFiles(new FilenameFilter() {
-                    public boolean accept(File dir, String name) {
-                        return !(new File(dir, name).isDirectory()) && name.endsWith(".jar");
-                    }
-                });
+                File[] files = libDir.listFiles((dir, name) -> !(new File(dir, name).isDirectory()) && name.endsWith(".jar"));
                 return files;
             }
         }

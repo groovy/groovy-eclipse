@@ -75,9 +75,6 @@ import org.eclipse.jface.text.TextUtilities;
  * is large and we can get a good parse tree. Eventually, the logic in this
  * class should become smart enough to be able to replace Klenk's
  * implementation.
- *
- * @author kdvolder
- * @created 2010-06-08
  */
 public class GroovyIndentationService {
 
@@ -164,9 +161,9 @@ public class GroovyIndentationService {
     /**
      * A map relating the closer of a pair of braces/brackets/parens to its corresponding opener.
      */
-    private static Map<Integer, Integer> closer2opener = new HashMap<Integer, Integer>();
-    private static Set<Integer> jumpIn = new HashSet<Integer>();
-    private static Set<Integer> jumpOut = new HashSet<Integer>();
+    private static Map<Integer, Integer> closer2opener = new HashMap<>();
+    private static Set<Integer> jumpIn = new HashSet<>();
+    private static Set<Integer> jumpOut = new HashSet<>();
     static {
         openClosePair(LCURLY, RCURLY);
         openClosePair(LBRACK, RBRACK);

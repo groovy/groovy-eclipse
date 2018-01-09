@@ -209,6 +209,7 @@ public class ClasspathChange {
 		return fragments;
 	}
 
+	@Override
 	public boolean equals(Object obj) {
 		if (!(obj instanceof ClasspathChange))
 			return false;
@@ -476,6 +477,7 @@ public class ClasspathChange {
 		}
 	}
 
+	@Override
 	public int hashCode() {
 		return this.project.hashCode();
 	}
@@ -575,6 +577,7 @@ public class ClasspathChange {
 		}
 	}
 
+	@Override
 	public String toString() {
 		return "ClasspathChange: " + this.project.getElementName(); //$NON-NLS-1$
 	}

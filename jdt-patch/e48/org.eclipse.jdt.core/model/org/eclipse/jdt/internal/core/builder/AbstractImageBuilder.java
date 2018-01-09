@@ -118,6 +118,7 @@ protected AbstractImageBuilder(JavaBuilder javaBuilder, boolean buildStarting, S
 	}
 }
 
+@Override
 public void acceptResult(CompilationResult result) {
 	// In Batch mode, we write out the class files, hold onto the dependency info
 	// & additional types and report problems.
@@ -226,6 +227,7 @@ protected void addAllSourceFiles(final LinkedHashSet<SourceFile> sourceFiles) th
 		final boolean isOutputFolder = sourceLocation.sourceFolder.equals(outputFolder);
 		sourceLocation.sourceFolder.accept(
 			new IResourceProxyVisitor() {
+				@Override
 				public boolean visit(IResourceProxy proxy) throws CoreException {
 					switch(proxy.getType()) {
 						case IResource.FILE :
@@ -503,11 +505,7 @@ protected IContainer createFolder(IPath packagePath, IContainer outputFolder) th
 	return folder;
 }
 
-
-
-/* (non-Javadoc)
- * @see org.eclipse.jdt.internal.core.builder.ICompilationUnitLocator#fromIFile(org.eclipse.core.resources.IFile)
- */
+@Override
 public ICompilationUnit fromIFile(IFile file) {
 	return findSourceFile(file, true);
 }

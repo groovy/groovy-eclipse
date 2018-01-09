@@ -18,10 +18,11 @@ package org.codehaus.groovy.eclipse.ui;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.codehaus.jdt.groovy.model.GroovyProjectFacade;
 import org.eclipse.core.expressions.PropertyTester;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaModelStatusConstants;
@@ -40,6 +41,7 @@ public class GroovyResourcePropertyTester extends PropertyTester {
     public static final String hasMain = "hasMain";
     public static final String isScript = "isScript";
 
+    @Override
     public boolean test(Object receiver, String property, Object[] args, Object expectedValue) {
         boolean result = false;
 
@@ -50,13 +52,11 @@ public class GroovyResourcePropertyTester extends PropertyTester {
                     result = isRunnable(unit);
 
                 } else if (receiver instanceof IAdaptable) {
-                    @SuppressWarnings("cast")
-                    ICompilationUnit unit = (ICompilationUnit) ((IAdaptable) receiver).getAdapter(ICompilationUnit.class);
+                    ICompilationUnit unit = Adapters.adapt(receiver, ICompilationUnit.class);
                     result = isRunnable(unit);
 
                     if (unit == null) {
-                        @SuppressWarnings("cast")
-                        IFile file = (IFile) ((IAdaptable) receiver).getAdapter(IFile.class);
+                        IFile file = Adapters.adapt(receiver, IFile.class);
                         if (file != null) {
                             unit = JavaCore.createCompilationUnitFrom(file);
                             result = isRunnable(unit);

@@ -12,7 +12,7 @@
 <feature
       id="org.codehaus.groovy.headless.feature"
       label="%featureName"
-      version="2.9.2.qualifier"
+      version="3.0.0.qualifier"
       provider-name="%providerName">
 
    <description url="%descriptionURL">
@@ -33,7 +33,7 @@
 
    <requires>
       <!-- this will choose the latest compiler available unless specified differently elsewhere -->
-      <import plugin="org.codehaus.groovy" version="1.7.0" match="greaterOrEqual"/>
+      <import plugin="org.codehaus.groovy" version="2.4.0" match="greaterOrEqual"/>
    </requires>
 
    <plugin

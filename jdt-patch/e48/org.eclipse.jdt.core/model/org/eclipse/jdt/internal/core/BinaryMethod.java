@@ -64,15 +64,18 @@ protected BinaryMethod(JavaElement parent, String name, String[] paramTypes) {
 		this.parameterTypes= paramTypes;
 	}
 }
+@Override
 public boolean equals(Object o) {
 	if (!(o instanceof BinaryMethod)) return false;
 	return super.equals(o) && Util.equalArraysOrNull(getErasedParameterTypes(), ((BinaryMethod)o).getErasedParameterTypes());
 }
+@Override
 public IAnnotation[] getAnnotations() throws JavaModelException {
 	IBinaryMethod info = (IBinaryMethod) getElementInfo();
 	IBinaryAnnotation[] binaryAnnotations = info.getAnnotations();
 	return getAnnotations(binaryAnnotations, info.getTagBits());
 }
+@Override
 public ILocalVariable[] getParameters() throws JavaModelException {
 	IBinaryMethod info = (IBinaryMethod) getElementInfo();
 	int length = this.parameterTypes.length;
@@ -144,6 +147,7 @@ private IAnnotation[] getAnnotations(JavaElement annotationParent, IBinaryAnnota
 	}
 	return annotations;
 }
+@Override
 public IMemberValuePair getDefaultValue() throws JavaModelException {
 	IBinaryMethod info = (IBinaryMethod) getElementInfo();
 	Object defaultValue = info.getDefaultValue();
@@ -156,6 +160,7 @@ public IMemberValuePair getDefaultValue() throws JavaModelException {
 /*
  * @see IMethod
  */
+@Override
 public String[] getExceptionTypes() throws JavaModelException {
 	if (this.exceptionTypes == null) {
 		IBinaryMethod info = (IBinaryMethod) getElementInfo();
@@ -188,12 +193,14 @@ public String[] getExceptionTypes() throws JavaModelException {
 /*
  * @see IJavaElement
  */
+@Override
 public int getElementType() {
 	return METHOD;
 }
 /*
  * @see IMember
  */
+@Override
 public int getFlags() throws JavaModelException {
 	IBinaryMethod info = (IBinaryMethod) getElementInfo();
 	int modifiers = info.getModifiers();
@@ -204,6 +211,7 @@ public int getFlags() throws JavaModelException {
 /*
  * @see JavaElement#getHandleMemento(StringBuffer)
  */
+@Override
 protected void getHandleMemento(StringBuffer buff) {
 	((JavaElement) getParent()).getHandleMemento(buff);
 	char delimiter = getHandleMementoDelimiter();
@@ -221,15 +229,18 @@ protected void getHandleMemento(StringBuffer buff) {
 /*
  * @see JavaElement#getHandleMemento()
  */
+@Override
 protected char getHandleMementoDelimiter() {
 	return JavaElement.JEM_METHOD;
 }
+@Override
 public String getKey(boolean forceOpen) throws JavaModelException {
 	return getKey(this, forceOpen);
 }
 /*
  * @see IMethod
  */
+@Override
 public int getNumberOfParameters() {
 	return this.parameterTypes == null ? 0 : this.parameterTypes.length;
 }
@@ -237,6 +248,7 @@ public int getNumberOfParameters() {
  * @see IMethod
  * Look for source attachment information to retrieve the actual parameter names as stated in source.
  */
+@Override
 public String[] getParameterNames() throws JavaModelException {
 	if (this.parameterNames != null)
 		return this.parameterNames;
@@ -328,6 +340,7 @@ public String[] getParameterNames() throws JavaModelException {
 			 */
 			final ParametersNameCollector nameCollector = new ParametersNameCollector();
 			Thread collect = new Thread() {
+				@Override
 				public void run() {
 					try {
 						// this call has a side-effect on the per project info cache
@@ -492,6 +505,7 @@ private char[][] splitParameters(char[] parametersSource, int paramCount) {
 /*
  * @see IMethod
  */
+@Override
 public String[] getParameterTypes() {
 	return this.parameterTypes;
 }
@@ -515,10 +529,12 @@ private String getErasedParameterType(int index) {
 	return getErasedParameterTypes()[index];
 }
 
+@Override
 public ITypeParameter getTypeParameter(String typeParameterName) {
 	return new TypeParameter(this, typeParameterName);
 }
 
+@Override
 public ITypeParameter[] getTypeParameters() throws JavaModelException {
 	String[] typeParameterSignatures = getTypeParameterSignatures();
 	int length = typeParameterSignatures.length;
@@ -536,6 +552,7 @@ public ITypeParameter[] getTypeParameters() throws JavaModelException {
  * @since 3.0
  * @deprecated
  */
+@Override
 public String[] getTypeParameterSignatures() throws JavaModelException {
 	IBinaryMethod info = (IBinaryMethod) getElementInfo();
 	char[] genericSignature = info.getGenericSignature();
@@ -546,6 +563,7 @@ public String[] getTypeParameterSignatures() throws JavaModelException {
 	return CharOperation.toStrings(typeParams);
 }
 
+@Override
 public String[] getRawParameterNames() throws JavaModelException {
 	IBinaryMethod info = (IBinaryMethod) getElementInfo();
 	int paramCount = Signature.getParameterCount(new String(info.getMethodDescriptor()));
@@ -562,6 +580,7 @@ private String[] getRawParameterNames(int paramCount) {
 /*
  * @see IMethod
  */
+@Override
 public String getReturnType() throws JavaModelException {
 	if (this.returnType == null) {
 		IBinaryMethod info = (IBinaryMethod) getElementInfo();
@@ -579,6 +598,7 @@ private String getReturnType(IBinaryMethod info) {
 /*
  * @see IMethod
  */
+@Override
 public String getSignature() throws JavaModelException {
 	IBinaryMethod info = (IBinaryMethod) getElementInfo();
 	return new String(info.getMethodDescriptor());
@@ -586,6 +606,7 @@ public String getSignature() throws JavaModelException {
 /**
  * @see org.eclipse.jdt.internal.core.JavaElement#hashCode()
  */
+@Override
 public int hashCode() {
    int hash = super.hashCode();
 	for (int i = 0, length = this.parameterTypes.length; i < length; i++) {
@@ -596,6 +617,7 @@ public int hashCode() {
 /*
  * @see IMethod
  */
+@Override
 public boolean isConstructor() throws JavaModelException {
 	if (!getElementName().equals(this.parent.getElementName())) {
 		// faster than reaching the info
@@ -607,24 +629,26 @@ public boolean isConstructor() throws JavaModelException {
 /*
  * @see IMethod#isMainMethod()
  */
+@Override
 public boolean isMainMethod() throws JavaModelException {
 	return this.isMainMethod(this);
 }
 /*
  * @see IMethod#isLambdaMethod()
  */
+@Override
 public boolean isLambdaMethod() {
 	return false;
 }
-/* (non-Javadoc)
- * @see org.eclipse.jdt.core.IMethod#isResolved()
- */
+
+@Override
 public boolean isResolved() {
 	return false;
 }
 /*
  * @see IMethod#isSimilar(IMethod)
  */
+@Override
 public boolean isSimilar(IMethod method) {
 	return
 		areSimilarMethods(
@@ -633,6 +657,7 @@ public boolean isSimilar(IMethod method) {
 			null);
 }
 
+@Override
 public String readableName() {
 
 	StringBuffer buffer = new StringBuffer(super.readableName());
@@ -650,6 +675,7 @@ public String readableName() {
 	buffer.append(")"); //$NON-NLS-1$
 	return buffer.toString();
 }
+@Override
 public JavaElement resolved(Binding binding) {
 	SourceRefElement resolvedHandle = new ResolvedBinaryMethod(this.parent, this.name, this.parameterTypes, new String(binding.computeUniqueKey()));
 	resolvedHandle.occurrenceCount = this.occurrenceCount;
@@ -657,6 +683,7 @@ public JavaElement resolved(Binding binding) {
 }/*
  * @private Debugging purposes
  */
+@Override
 protected void toStringInfo(int tab, StringBuffer buffer, Object info, boolean showResolvedInfo) {
 	buffer.append(tabString(tab));
 	if (info == null) {
@@ -677,6 +704,7 @@ protected void toStringInfo(int tab, StringBuffer buffer, Object info, boolean s
 		toStringName(buffer, flags);
 	}
 }
+@Override
 protected void toStringName(StringBuffer buffer) {
 	toStringName(buffer, 0);
 }
@@ -713,6 +741,7 @@ protected void toStringName(StringBuffer buffer, int flags) {
 		buffer.append(this.occurrenceCount);
 	}
 }
+@Override
 public String getAttachedJavadoc(IProgressMonitor monitor) throws JavaModelException {
 	JavadocContents javadocContents = ((BinaryType) this.getDeclaringType()).getJavadocContents(monitor);
 	if (javadocContents == null) return null;

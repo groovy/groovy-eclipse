@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,10 +27,6 @@ import org.apache.tools.ant.util.FileNameMapper;
 import org.apache.tools.ant.util.SourceFileScanner;
 import org.eclipse.jdt.core.JDTCompilerAdapter;
 
-/**
- * @author Andrew Eisenberg
- * @created Jul 10, 2010
- */
 public class GroovyCompilerAdapter extends JDTCompilerAdapter implements CompilerAdapter {
 
     @Override
@@ -96,6 +92,7 @@ public class GroovyCompilerAdapter extends JDTCompilerAdapter implements Compile
 
 class GroovyFileNameMapper implements FileNameMapper {
 
+    @Override
     public String[] mapFileName(String sourceFileName) {
         if (sourceFileName != null) {
             if (sourceFileName.endsWith(".groovy")) {
@@ -111,10 +108,12 @@ class GroovyFileNameMapper implements FileNameMapper {
         return name.substring(0, name.length() - postfixLength);
     }
 
+    @Override
     public void setFrom(String from) {
         // no-op
     }
 
+    @Override
     public void setTo(String to) {
         // no-op
     }

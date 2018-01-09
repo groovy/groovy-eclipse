@@ -99,31 +99,38 @@ class MemberValuePairBinding implements IMemberValuePairBinding {
 		this.bindingResolver = resolver;
 	}
 
+	@Override
 	public IAnnotationBinding[] getAnnotations() {
 		return AnnotationBinding.NoAnnotations;
 	}
 
+	@Override
 	public IJavaElement getJavaElement() {
 		return null;
 	}
 
+	@Override
 	public String getKey() {
 		// TODO when implementing, update spec in IBinding
 		return null;
 	}
 
+	@Override
 	public int getKind() {
 		return IBinding.MEMBER_VALUE_PAIR;
 	}
 
+	@Override
 	public IMethodBinding getMethodBinding() {
 		return this.bindingResolver.getMethodBinding(this.internalPair.getMethodBinding());
 	}
 
+	@Override
 	public int getModifiers() {
 		return Modifier.NONE;
 	}
 
+	@Override
 	public String getName() {
 		if (this.internalPair == null)
 			return null;
@@ -131,6 +138,7 @@ class MemberValuePairBinding implements IMemberValuePairBinding {
 		return membername == null ? null : new String(membername);
 	}
 
+	@Override
 	public Object getValue() {
 		if (this.value == null)
 			init();
@@ -151,6 +159,7 @@ class MemberValuePairBinding implements IMemberValuePairBinding {
 		return this.internalPair == null ? null : this.internalPair.getName();
 	}
 
+	@Override
 	public boolean isDefault() {
 		Object value2 = getValue();
 		Object defaultValue = getMethodBinding().getDefaultValue();
@@ -164,11 +173,13 @@ class MemberValuePairBinding implements IMemberValuePairBinding {
 		return defaultValue.equals(value2);
 	}
 
+	@Override
 	public boolean isDeprecated() {
 		MethodBinding methodBinding = this.internalPair.getMethodBinding();
 		return methodBinding == null ? false : methodBinding.isDeprecated();
 	}
 
+	@Override
 	public boolean isEqualTo(IBinding binding) {
 		if (this == binding)
 			return true;
@@ -219,18 +230,17 @@ class MemberValuePairBinding implements IMemberValuePairBinding {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.eclipse.jdt.core.dom.IBinding#isRecovered()
-	 */
+	@Override
 	public boolean isRecovered() {
 		return false;
 	}
 
+	@Override
 	public boolean isSynthetic() {
 		return false;
 	}
 
+	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
 		buffer.append(getName());

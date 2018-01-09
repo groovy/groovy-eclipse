@@ -22,6 +22,7 @@ public class SelectionOnNameOfMemberValuePair extends MemberValuePair {
 		super(token, sourceStart, sourceEnd, value);
 	}
 
+	@Override
 	public StringBuffer print(int indent, StringBuffer output) {
 		output.append("<SelectOnName:"); //$NON-NLS-1$
 		output.append(this.name);
@@ -29,6 +30,7 @@ public class SelectionOnNameOfMemberValuePair extends MemberValuePair {
 		return output;
 	}
 
+	@Override
 	public void resolveTypeExpecting(BlockScope scope, TypeBinding requiredType) {
 		super.resolveTypeExpecting(scope, requiredType);
 

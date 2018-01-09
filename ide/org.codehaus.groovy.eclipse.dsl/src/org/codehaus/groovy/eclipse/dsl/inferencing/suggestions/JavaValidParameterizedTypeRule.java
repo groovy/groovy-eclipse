@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,9 +39,6 @@ import org.eclipse.jdt.internal.corext.dom.ASTNodes;
 
 /**
  * Handles primitive types as well.
- * 
- * @author Nieraj Singh
- * @created 2011-09-13
  */
 public class JavaValidParameterizedTypeRule extends AbstractJavaTypeVerifiedRule {
 
@@ -49,6 +46,7 @@ public class JavaValidParameterizedTypeRule extends AbstractJavaTypeVerifiedRule
         super(project);
     }
 
+    @Override
     public ValueStatus checkValidity(Object value) {
         if (!(value instanceof String)) {
             return ValueStatus.getErrorStatus(value);
@@ -67,7 +65,7 @@ public class JavaValidParameterizedTypeRule extends AbstractJavaTypeVerifiedRule
         // ASTNode only checks for syntactic
         // correctness, not whether the type actually exists or not,
         // therefore an IType is needed.
-        List<String> allNonExistantTypes = new ArrayList<String>();
+        List<String> allNonExistantTypes = new ArrayList<>();
         if (astType != null) {
             try {
                 boolean isValid = allTypesExist(astType, source, allNonExistantTypes);
@@ -148,7 +146,7 @@ public class JavaValidParameterizedTypeRule extends AbstractJavaTypeVerifiedRule
         ASTParser parser = ASTParser.newParser(JavaConstants.AST_LEVEL);
         parser.setSource(sourceBuffer.toString().toCharArray());
 
-        Map<String, String> options = new HashMap<String, String>();
+        Map<String, String> options = new HashMap<>();
         JavaCore.setComplianceOptions(JavaCore.VERSION_1_5, options);
         parser.setCompilerOptions(options);
 

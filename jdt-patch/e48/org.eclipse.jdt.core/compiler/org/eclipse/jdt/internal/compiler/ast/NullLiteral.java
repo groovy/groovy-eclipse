@@ -28,6 +28,7 @@ public class NullLiteral extends MagicLiteral {
 		super(s,e);
 	}
 
+	@Override
 	public void computeConstant() {
 
 		this.constant = Constant.NotAConstant;
@@ -40,6 +41,7 @@ public class NullLiteral extends MagicLiteral {
 	 * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
 	 * @param valueRequired boolean
 	 */
+	@Override
 	public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 		int pc = codeStream.position;
 		if (valueRequired) {
@@ -48,22 +50,27 @@ public class NullLiteral extends MagicLiteral {
 		}
 		codeStream.recordPositionsFrom(pc, this.sourceStart);
 	}
+	@Override
 	public TypeBinding literalType(BlockScope scope) {
 		return TypeBinding.NULL;
 	}
 
+	@Override
 	public int nullStatus(FlowInfo flowInfo, FlowContext flowContext) {
 		return FlowInfo.NULL;
 	}
 
+	@Override
 	public Object reusableJSRTarget() {
 		return TypeBinding.NULL;
 	}
 
+	@Override
 	public char[] source() {
 		return source;
 	}
 
+	@Override
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		visitor.visit(this, scope);
 		visitor.endVisit(this, scope);

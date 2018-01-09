@@ -2691,6 +2691,7 @@ public EntryResult[] queryIn(Index index) throws IOException {
 /**
  * @see java.lang.Object#toString()
  */
+@Override
 public String toString() {
 	return "SearchPattern"; //$NON-NLS-1$
 }

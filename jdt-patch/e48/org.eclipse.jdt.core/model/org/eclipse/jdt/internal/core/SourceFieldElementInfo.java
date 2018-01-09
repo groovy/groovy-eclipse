@@ -33,12 +33,14 @@ public class SourceFieldElementInfo extends AnnotatableInfo implements ISourceFi
  * Returns the initialization source for this field.
  * Returns null if the field is not a constant or if it has no initialization.
  */
+@Override
 public char[] getInitializationSource() {
 	return this.initializationSource;
 }
 /**
  * Returns the type name of the field.
  */
+@Override
 public char[] getTypeName() {
 	return this.typeName;
 }

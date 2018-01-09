@@ -1,8 +1,5 @@
 /*
- * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
- *
- * IFS Institute for Software, HSR Rapperswil, Switzerland
- * http://ifs.hsr.ch/
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,10 +31,6 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
-/**
- * @author reto kleeb
- * @author andrew@eisenberg.as
- */
 public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionDelegate, IEditorActionDelegate {
 
     private GroovyEditor editor;
@@ -67,6 +60,7 @@ public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionD
         error.open();
     }
 
+    @Override
     public void dispose() {
         editor = null;
         gcu = null;
@@ -85,9 +79,11 @@ public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionD
         return gcu;
     }
 
+    @Override
     public void init(IWorkbenchWindow window) {
     }
 
+    @Override
     public void selectionChanged(IAction action, ISelection selection) {
         if (selection instanceof ITextSelection) {
             this.selection = (ITextSelection) selection;
@@ -98,6 +94,7 @@ public abstract class GroovyRefactoringAction implements IWorkbenchWindowActionD
         }
     }
 
+    @Override
     public void setActiveEditor(IAction action, IEditorPart targetEditor) {
         if (targetEditor instanceof GroovyEditor) {
             this.editor = (GroovyEditor) targetEditor;

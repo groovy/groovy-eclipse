@@ -39,6 +39,7 @@ public class CreateTypeOperation extends CreateTypeMemberOperation {
 public CreateTypeOperation(IJavaElement parentElement, String source, boolean force) {
 	super(parentElement, source, force);
 }
+@Override
 protected ASTNode generateElementAST(ASTRewrite rewriter, ICompilationUnit cu) throws JavaModelException {
 	ASTNode node = super.generateElementAST(rewriter, cu);
 	if (!(node instanceof AbstractTypeDeclaration))
@@ -49,6 +50,7 @@ protected ASTNode generateElementAST(ASTRewrite rewriter, ICompilationUnit cu) t
 /**
  * @see CreateElementInCUOperation#generateResultHandle()
  */
+@Override
 protected IJavaElement generateResultHandle() {
 	IJavaElement parent= getParentElement();
 	switch (parent.getElementType()) {
@@ -63,12 +65,14 @@ protected IJavaElement generateResultHandle() {
 /**
  * @see CreateElementInCUOperation#getMainTaskName()
  */
+@Override
 public String getMainTaskName(){
 	return Messages.operation_createTypeProgress;
 }
 /**
  * Returns the <code>IType</code> the member is to be created in.
  */
+@Override
 protected IType getType() {
 	IJavaElement parent = getParentElement();
 	if (parent.getElementType() == IJavaElement.TYPE) {
@@ -79,6 +83,7 @@ protected IType getType() {
 /**
  * @see CreateTypeMemberOperation#verifyNameCollision
  */
+@Override
 protected IJavaModelStatus verifyNameCollision() {
 	IJavaElement parent = getParentElement();
 	switch (parent.getElementType()) {
@@ -102,6 +107,7 @@ protected IJavaModelStatus verifyNameCollision() {
 	}
 	return JavaModelStatus.VERIFIED_OK;
 }
+@Override
 public IJavaModelStatus verify() {
 	IJavaModelStatus status = super.verify();
 	if (!status.isOK())
@@ -119,6 +125,7 @@ public IJavaModelStatus verify() {
 private String getASTNodeName() {
 	return ((AbstractTypeDeclaration) this.createdNode).getName().getIdentifier();
 }
+@Override
 protected SimpleName rename(ASTNode node, SimpleName newName) {
 	AbstractTypeDeclaration type = (AbstractTypeDeclaration) node;
 	SimpleName oldName = type.getName();

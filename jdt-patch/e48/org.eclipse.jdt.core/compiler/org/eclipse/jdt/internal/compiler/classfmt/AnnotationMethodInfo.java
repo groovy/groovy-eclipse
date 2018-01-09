@@ -110,6 +110,7 @@ AnnotationMethodInfo(MethodInfo methodInfo, Object defaultValue) {
 	this.signatureUtf8Offset = methodInfo.signatureUtf8Offset;
 	this.tagBits = methodInfo.tagBits;
 }
+@Override
 public Object getDefaultValue() {
 	return this.defaultValue;
 }

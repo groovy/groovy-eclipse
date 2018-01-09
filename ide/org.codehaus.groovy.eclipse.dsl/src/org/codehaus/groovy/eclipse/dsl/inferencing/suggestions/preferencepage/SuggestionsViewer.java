@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,11 +27,6 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.ui.dialogs.ContainerCheckedTreeViewer;
 
-/**
- * 
- * @author Nieraj Singh
- * @created Apr 21, 2011
- */
 public class SuggestionsViewer {
 
     private ContainerCheckedTreeViewer viewer;
@@ -151,7 +146,7 @@ public class SuggestionsViewer {
     }
 
     protected class ColumnSortListener extends SelectionAdapter {
-
+        @Override
         public void widgetSelected(SelectionEvent e) {
             if (e.widget instanceof TreeColumn) {
                 TreeColumn selected = (TreeColumn) e.widget;
@@ -169,6 +164,5 @@ public class SuggestionsViewer {
                 viewer.refresh();
             }
         }
-
     }
 }

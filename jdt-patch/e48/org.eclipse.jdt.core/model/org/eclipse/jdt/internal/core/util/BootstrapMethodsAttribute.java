@@ -54,10 +54,12 @@ public class BootstrapMethodsAttribute extends ClassFileAttribute implements IBo
 	/**
 	 * @see IBootstrapMethodsAttribute#getBootstrapMethods()
 	 */
+	@Override
 	public IBootstrapMethodsEntry[] getBootstrapMethods() {
 		return this.entries;
 	}
 	
+	@Override
 	public int getBootstrapMethodsLength() {
 		return this.numberOfBootstrapMethods;
 	}

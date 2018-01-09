@@ -17,10 +17,8 @@ package org.codehaus.groovy.eclipse.dsl.ui;
 
 import static org.eclipse.ui.plugin.AbstractUIPlugin.imageDescriptorFromPlugin;
 
-import java.io.IOException;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.io.Reader;
-import java.io.StringReader;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.jdt.groovy.model.GroovyNature;
@@ -44,7 +42,6 @@ import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.internal.ide.DialogUtil;
 import org.eclipse.ui.internal.wizards.newresource.ResourceMessages;
 import org.eclipse.ui.wizards.newresource.BasicNewResourceWizard;
-
 
 // Initially taken from org.eclipse.ui.wizards.newresource.BasicNewFileResourceWizard
 /**
@@ -78,14 +75,17 @@ public class NewDSLDWizard extends BasicNewResourceWizard {
 
         @Override
         protected InputStream getInitialContents() {
-            return new StringInputStream(
-                    "// this is a DSLD file\n" +
-                    "// start off creating a custom DSL Descriptor for your Groovy DSL\n" +
-                    "\n" +
-                    "// The following snippet adds the 'newProp' to all types that are a subtype of GroovyObjects\n" +
-                    "// contribute(currentType(subType('groovy.lang.GroovyObject'))) {\n" +
-                    "//   property name : 'newProp', type : String, provider : 'Sample DSL', doc : 'This is a sample.  You should see this in content assist for GroovyObjects: <pre>newProp</pre>'\n" +
-                    "// }\n");
+            byte[] bytes = (
+                "// this is a DSLD file\n" +
+                "// start off creating a custom DSL Descriptor for your Groovy DSL\n" +
+                "\n" +
+                "// The following snippet adds the 'newProp' to all types that are a subtype of GroovyObjects\n" +
+                "// contribute(currentType(subType('groovy.lang.GroovyObject'))) {\n" +
+                "//   property name : 'newProp', type : String, provider : 'Sample DSL', doc : 'This is a sample.  You should see this in content assist for GroovyObjects: <pre>newProp</pre>'\n" +
+                "// }\n"
+            ).getBytes();
+
+            return new ByteArrayInputStream(bytes);
         }
 
         /**
@@ -132,8 +132,9 @@ public class NewDSLDWizard extends BasicNewResourceWizard {
                     }
                 }
                 if (!inSourceFolder) {
-                    setMessage("Path is not in a source folder.  It is significantly easier to edit DSLDs when they are in source folders",
-                            IMessageProvider.WARNING);
+                    setMessage(
+                        "Path is not in a source folder.  It is significantly easier to edit DSLDs when they are in source folders",
+                        IMessageProvider.WARNING);
                 }
             } catch (JavaModelException e) {
                 GroovyCore.logException("Exception while creating DSLD file", e);
@@ -144,29 +145,6 @@ public class NewDSLDWizard extends BasicNewResourceWizard {
         }
     }
 
-    class StringInputStream extends InputStream {
-
-        private Reader reader;
-
-        public StringInputStream(String contents){
-            this.reader = new StringReader(contents);
-        }
-
-        /* (non-Javadoc)
-         * @see java.io.InputStream#read()
-         */
-        public int read() throws IOException {
-            return reader.read();
-        }
-
-
-        public void close() throws IOException {
-            reader.close();
-        }
-
-    }
-
-
     private WizardNewFileCreationPage mainPage;
 
     /**
@@ -176,9 +154,7 @@ public class NewDSLDWizard extends BasicNewResourceWizard {
         super();
     }
 
-    /* (non-Javadoc)
-     * Method declared on IWizard.
-     */
+    @Override
     public void addPages() {
         super.addPages();
         mainPage = new NewDSLDWizardPage("newDSLDFilePage", getSelection());//$NON-NLS-1$
@@ -188,25 +164,19 @@ public class NewDSLDWizard extends BasicNewResourceWizard {
         addPage(mainPage);
     }
 
-    /* (non-Javadoc)
-     * Method declared on IWorkbenchWizard.
-     */
+    @Override
     public void init(IWorkbench workbench, IStructuredSelection currentSelection) {
         super.init(workbench, currentSelection);
         setWindowTitle("New DSLD File");
         setNeedsProgressMonitor(true);
     }
 
-    /* (non-Javadoc)
-     * Method declared on BasicNewResourceWizard.
-     */
+    @Override
     protected void initializeDefaultPageImageDescriptor() {
         setDefaultPageImageDescriptor(imageDescriptorFromPlugin("org.codehaus.groovy.eclipse", "$nl$/groovy.png"));
     }
 
-    /* (non-Javadoc)
-     * Method declared on IWizard.
-     */
+    @Override
     public boolean performFinish() {
         IFile file = mainPage.createNewFile();
         if (file == null) {

@@ -87,6 +87,7 @@ public class ForeachStatement extends Statement {
 		this.kind = -1;
 	}
 
+	@Override
 	public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 		// initialize break and continue labels
 		this.breakLabel = new BranchLabel();
@@ -197,6 +198,7 @@ public class ForeachStatement extends Statement {
 	 * @param currentScope org.eclipse.jdt.internal.compiler.lookup.BlockScope
 	 * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
 	 */
+	@Override
 	public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 
 		if ((this.bits & IsReachable) == 0) {
@@ -394,6 +396,7 @@ public class ForeachStatement extends Statement {
 		codeStream.recordPositionsFrom(pc, this.sourceStart);
 	}
 
+	@Override
 	public StringBuffer printStatement(int indent, StringBuffer output) {
 
 		printIndent(indent, output).append("for ("); //$NON-NLS-1$
@@ -414,6 +417,7 @@ public class ForeachStatement extends Statement {
 		return output;
 	}
 
+	@Override
 	public void resolve(BlockScope upperScope) {
 		// use the scope that will hold the init declarations
 		this.scope = new BlockScope(upperScope);
@@ -577,6 +581,7 @@ public class ForeachStatement extends Statement {
 		}
 	}
 
+	@Override
 	public void traverse(
 		ASTVisitor visitor,
 		BlockScope blockScope) {

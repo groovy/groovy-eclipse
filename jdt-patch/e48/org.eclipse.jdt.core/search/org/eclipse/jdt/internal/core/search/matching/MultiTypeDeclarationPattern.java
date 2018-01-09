@@ -64,12 +64,15 @@ public MultiTypeDeclarationPattern(
 MultiTypeDeclarationPattern(int matchRule) {
 	super(TYPE_DECL_PATTERN, matchRule);
 }
+@Override
 public SearchPattern getBlankPattern() {
 	return new QualifiedTypeDeclarationPattern(R_EXACT_MATCH | R_CASE_SENSITIVE);
 }
+@Override
 public char[][] getIndexCategories() {
 	return CATEGORIES;
 }
+@Override
 public boolean matchesDecodedKey(SearchPattern decodedPattern) {
 	QualifiedTypeDeclarationPattern pattern = (QualifiedTypeDeclarationPattern) decodedPattern;
 
@@ -104,6 +107,7 @@ public boolean matchesDecodedKey(SearchPattern decodedPattern) {
 			break;
 	return count < max;
 }
+@Override
 public EntryResult[] queryIn(Index index) throws IOException {
 	if (this.simpleNames == null) {
 		// if no simple names then return all possible ones from index
@@ -160,6 +164,7 @@ public EntryResult[] queryIn(Index index) throws IOException {
 	}
 	return allEntries;
 }
+@Override
 protected StringBuffer print(StringBuffer output) {
 	switch (this.typeSuffix){
 		case CLASS_SUFFIX :

@@ -57,7 +57,7 @@ import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
@@ -85,10 +85,6 @@ import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEditGroup;
 
-/**
- * @author Andrew Eisenberg
- * @author Michael Klenk mklenk@hsr.ch
- */
 public class ExtractGroovyMethodRefactoring extends Refactoring {
 
     private class GroovyRefactoringObservable extends Observable {
@@ -289,7 +285,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
     }
 
     private void saveOriginalParameters() {
-        originalParametersBeforeRename = new ArrayList<Variable>();
+        originalParametersBeforeRename = new ArrayList<>();
         if (newMethod != null && newMethod.getParameters() != null) {
             for (Parameter p : newMethod.getParameters()) {
                 originalParametersBeforeRename.add(p);
@@ -461,14 +457,14 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         Set<Variable> selReturnVar = scanner.getAssignedVariables();
         Set<Variable> innerLoopAssigned = scanner.getInnerLoopAssignedVariables();
 
-        actualParameters = new ArrayList<Variable>(scanner.getUsedVariables());
-        inferredTypeOfActualParameters = new ArrayList<ClassNode>(actualParameters.size());
-        returnParameters = new HashSet<Variable>();
-        inferredReturnTypes = new ArrayList<ClassNode>();
+        actualParameters = new ArrayList<>(scanner.getUsedVariables());
+        inferredTypeOfActualParameters = new ArrayList<>(actualParameters.size());
+        returnParameters = new HashSet<>();
+        inferredReturnTypes = new ArrayList<>();
 
         // Variables that are assigned in the block AND used after it are the
         // ones that should be added as return parameters.
-        Set<Variable> assignedInBlockAndUsedAfterBlock = new HashSet<Variable>(postUsedVar);
+        Set<Variable> assignedInBlockAndUsedAfterBlock = new HashSet<>(postUsedVar);
         assignedInBlockAndUsedAfterBlock.retainAll(selReturnVar);
 
         returnParameters.addAll(assignedInBlockAndUsedAfterBlock);
@@ -518,23 +514,19 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
         return ClassHelper.getUnwrapper(type).getPlainNodeReference();
     }
 
-    private RefactoringStatus checkDuplicateMethod(IProgressMonitor pm) {
-        SubProgressMonitor sub = new SubProgressMonitor(pm, 25);
-        sub.beginTask("Checking for duplicate methods", 25);
+    private RefactoringStatus checkDuplicateMethod(IProgressMonitor monitor) {
+        monitor = SubMonitor.convert(monitor, "Checking for duplicate methods", 25);
         RefactoringStatus stat = new RefactoringStatus();
         if (getMethodNames().contains(newMethodName)) {
-            Object[] message = { newMethodName, getClassName() };
-            String messageString = MessageFormat.format(GroovyRefactoringMessages.ExtractMethodWizard_MethodNameAlreadyExists,
-                    message);
+            Object[] message = {newMethodName, getClassName()};
+            String messageString = MessageFormat.format(GroovyRefactoringMessages.ExtractMethodWizard_MethodNameAlreadyExists, message);
             stat.addError(messageString);
         }
-        sub.done();
         return stat;
     }
 
-    private RefactoringStatus checkExtractFromConstructor(IProgressMonitor pm) {
-        SubProgressMonitor sub = new SubProgressMonitor(pm, 25);
-        sub.beginTask("Checking for constructor calls", 25);
+    private RefactoringStatus checkExtractFromConstructor(IProgressMonitor monitor) {
+        monitor = SubMonitor.convert(monitor, "Checking for constructor calls", 25);
         RefactoringStatus stat = new RefactoringStatus();
         if (methodCodeFinder.isInConstructor()) {
             if (new ExtractConstructorTest().containsConstructorCall(newMethod)) {
@@ -542,25 +534,21 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
                         createErrorContext());
             }
         }
-        sub.done();
         return stat;
     }
 
-    private RefactoringStatus checkStatementSelection(IProgressMonitor pm) {
-        SubProgressMonitor sub = new SubProgressMonitor(pm, 25);
-        sub.beginTask("Checking statement selection", 25);
+    private RefactoringStatus checkStatementSelection(IProgressMonitor monitor) {
+        monitor = SubMonitor.convert(monitor, "Checking statement selection", 25);
         RefactoringStatus stat = new RefactoringStatus();
         int selectionLength = selectedText.getLength();
         if (block.isEmpty() && selectionLength >= 0) {
             stat.addFatalError(GroovyRefactoringMessages.ExtractMethodInfo_NoStatementSelected, createErrorContext());
         }
-        sub.done();
         return stat;
     }
 
-    private RefactoringStatus checkNrOfReturnValues(IProgressMonitor pm) {
-        SubProgressMonitor sub = new SubProgressMonitor(pm, 25);
-        sub.beginTask("Checking number of return values", 25);
+    private RefactoringStatus checkNrOfReturnValues(IProgressMonitor monitor) {
+        monitor = SubMonitor.convert(monitor, "Checking number of return values", 25);
         RefactoringStatus stat = new RefactoringStatus();
         if (returnParameters != null && returnParameters.size() > 1) {
             StringBuilder retValues = new StringBuilder();
@@ -570,7 +558,6 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
             String errorMsg = GroovyRefactoringMessages.ExtractMethodInfo_ToMuchReturnValues + retValues.toString();
             stat.addFatalError(errorMsg, createErrorContext());
         }
-        sub.done();
         return stat;
     }
 
@@ -708,7 +695,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
      */
     public int setMoveParameter(String variName, boolean upEvent, int numberOfMoves) {
         Parameter[] originalParams = getCallAndMethHeadParameters();
-        List<Variable> newParamList = new ArrayList<Variable>();
+        List<Variable> newParamList = new ArrayList<>();
 
         int indexOfSelectedParam = -1;
         for (Parameter param : originalParams) {
@@ -756,7 +743,7 @@ public class ExtractGroovyMethodRefactoring extends Refactoring {
 
     public void setParameterRename(Map<String, String> variablesToRename) {
         this.variablesToRename = variablesToRename;
-        List<Variable> newParamList = new ArrayList<Variable>();
+        List<Variable> newParamList = new ArrayList<>();
 
         for (Variable param : originalParametersBeforeRename) {
             if (variablesToRename.containsKey(param.getName())) {

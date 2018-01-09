@@ -37,6 +37,7 @@ import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator implements IJavaProjectConfigurator {
 
+    @Override
     public void configure(ProjectConfigurationRequest request, IProgressMonitor monitor) throws CoreException {
         super.configure(request, monitor); // drives calls to configureClasspath and configureRawClasspath
         ProjectSourceType sourceType = ProjectSourceType.getSourceType(request.getMavenProjectFacade());
@@ -47,10 +48,12 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
         }
     }
 
+    @Override
     public void configureClasspath(IMavenProjectFacade facade, IClasspathDescriptor classpath, IProgressMonitor monitor) throws CoreException {
         // nothing to add to the Maven Dependencies container
     }
 
+    @Override
     public void configureRawClasspath(ProjectConfigurationRequest request, IClasspathDescriptor classpath, IProgressMonitor monitor) throws CoreException {
         ProjectSourceType sourceType = ProjectSourceType.getSourceType(request.getMavenProjectFacade());
         if (sourceType != null) {
@@ -87,17 +90,16 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
         }
     }
 
+    @Override
     protected void addJavaProjectOptions(Map<String, String> options, ProjectConfigurationRequest request, IProgressMonitor monitor) throws CoreException {
         String configScript = null;
 
         for (MojoExecution me : getCompilerMojoExecutions(request, monitor)) {
-          //Map<String, String> m = maven.getMojoParameterValue(request.getMavenProject(), me, "compilerArguments", Map.class, monitor);
-            Map<String, String> m = maven.getMojoParameterValue(request.getMavenSession(), me, "compilerArguments", Map.class);
+            Map<String, String> m = maven.getMojoParameterValue(request.getMavenProject(), me, "compilerArguments", Map.class, monitor);
             if (m != null && m.get("configScript") != null) {
                 configScript = m.get("configScript").trim();
             } else {
-              //String s = maven.getMojoParameterValue(request.getMavenProject(), me, "compilerArgument", String.class, monitor);
-                String s = maven.getMojoParameterValue(request.getMavenSession(), me, "compilerArgument", String.class);
+                String s = maven.getMojoParameterValue(request.getMavenProject(), me, "compilerArgument", String.class, monitor);
                 if (s != null && s.contains("configScript")) {
                     String[] tokens = s.split("=");
                     if (tokens.length == 2 && tokens[0].trim().matches("-?configScript")) {
@@ -117,15 +119,7 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
 
     protected static boolean isAbsent(IClasspathDescriptor classpath, IPath path) {
         if (classpath.containsPath(path)) {
-            //classpath.touchEntry(path); -- call directly in Eclipse 4.6+ (m2e 1.7+)
-            try {
-                java.lang.reflect.Method touchEntry = IClasspathDescriptor.class.getDeclaredMethod("touchEntry", IPath.class);
-                touchEntry.invoke(classpath, path);
-            } catch (NoSuchMethodException e) {
-            } catch (IllegalAccessException e) {
-            } catch (java.lang.reflect.InvocationTargetException e) {
-                throw new RuntimeException(e.getCause());
-            }
+            classpath.touchEntry(path);
             return false;
         }
         return true;

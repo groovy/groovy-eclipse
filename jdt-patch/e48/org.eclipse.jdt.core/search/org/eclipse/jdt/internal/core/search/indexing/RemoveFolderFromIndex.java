@@ -31,6 +31,7 @@ class RemoveFolderFromIndex extends IndexRequest {
 		this.inclusionPatterns = inclusionPatterns;
 		this.exclusionPatterns = exclusionPatterns;
 	}
+	@Override
 	public boolean execute(IProgressMonitor progressMonitor) {
 
 		if (this.isCancelled || progressMonitor != null && progressMonitor.isCanceled()) return true;
@@ -70,6 +71,7 @@ class RemoveFolderFromIndex extends IndexRequest {
 		}
 		return true;
 	}
+	@Override
 	public String toString() {
 		return "removing " + this.folderPath + " from index " + this.containerPath; //$NON-NLS-1$ //$NON-NLS-2$
 	}

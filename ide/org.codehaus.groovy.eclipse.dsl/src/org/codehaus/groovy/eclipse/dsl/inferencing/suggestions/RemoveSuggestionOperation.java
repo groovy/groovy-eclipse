@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,9 +22,6 @@ import org.eclipse.core.resources.IProject;
 
 /**
  * Removes given selections from the specified project.
- * 
- * @author Nieraj Singh
- * @created 2011-09-15
  */
 public class RemoveSuggestionOperation extends AbstractSuggestionOperation {
 
@@ -38,6 +35,7 @@ public class RemoveSuggestionOperation extends AbstractSuggestionOperation {
         this.selections = selections;
     }
 
+    @Override
     public ValueStatus run() {
         ProjectSuggestions suggestions = InferencingSuggestionsManager.getInstance().getSuggestions(getProject());
         if (suggestions != null) {

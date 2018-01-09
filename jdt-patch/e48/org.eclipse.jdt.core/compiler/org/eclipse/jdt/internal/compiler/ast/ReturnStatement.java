@@ -66,6 +66,7 @@ public ReturnStatement(Expression expression, int sourceStart, int sourceEnd, bo
 	this.implicitReturn = implicitReturn;
 }
 
+@Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {	// here requires to generate a sequence of finally blocks invocations depending corresponding
 	// to each of the traversed try statements, so that execution will terminate properly.
 
@@ -209,6 +210,7 @@ void checkAgainstNullAnnotation(BlockScope scope, FlowContext flowContext, FlowI
  * @param currentScope org.eclipse.jdt.internal.compiler.lookup.BlockScope
  * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
  */
+@Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	if ((this.bits & ASTNode.IsReachable) == 0) {
 		return;
@@ -288,6 +290,7 @@ public void prepareSaveValueLocation(TryStatement targetTryStatement){
 	this.saveValueVariable = targetTryStatement.secretReturnValue;
 }
 
+@Override
 public StringBuffer printStatement(int tab, StringBuffer output){
 	printIndent(tab, output).append("return "); //$NON-NLS-1$
 	if (this.expression != null )
@@ -295,6 +298,7 @@ public StringBuffer printStatement(int tab, StringBuffer output){
 	return output.append(';');
 }
 
+@Override
 public void resolve(BlockScope scope) {
 	MethodScope methodScope = scope.methodScope();
 	MethodBinding methodBinding;
@@ -383,6 +387,7 @@ public void resolve(BlockScope scope) {
 	}
 }
 
+@Override
 public void traverse(ASTVisitor visitor, BlockScope scope) {
 	if (visitor.visit(this, scope)) {
 		if (this.expression != null)

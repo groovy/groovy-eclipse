@@ -47,6 +47,7 @@ public JavaWorkspaceScope() {
 	// As nothing is stored in the JavaWorkspaceScope now, no initialization is longer needed
 }
 
+@Override
 public boolean encloses(IJavaElement element) {
 	/*A workspace scope encloses all java elements (this assumes that the index selector
 	 * and thus enclosingProjectAndJars() returns indexes on the classpath only and that these
@@ -55,6 +56,7 @@ public boolean encloses(IJavaElement element) {
 	 */
 	return true;
 }
+@Override
 public boolean encloses(String resourcePathString) {
 	/*A workspace scope encloses all resources (this assumes that the index selector
 	 * and thus enclosingProjectAndJars() returns indexes on the classpath only and that these
@@ -63,9 +65,8 @@ public boolean encloses(String resourcePathString) {
 	 */
 	return true;
 }
-/* (non-Javadoc)
- * @see org.eclipse.jdt.core.search.IJavaSearchScope#enclosingProjectsAndJars()
- */
+
+@Override
 public IPath[] enclosingProjectsAndJars() {
 	IPath[] result = this.enclosingPaths;
 	if (result != null) {
@@ -119,15 +120,18 @@ public IPath[] enclosingProjectsAndJars() {
 	}
 }
 
+@Override
 public boolean equals(Object o) {
   return o == this; // use the singleton pattern
 }
 
+@Override
 public AccessRuleSet getAccessRuleSet(String relativePath, String containerPath) {
 	// Do not consider access rules on workspace scope
 	return null;
 }
 
+@Override
 public int hashCode() {
 	return JavaWorkspaceScope.class.hashCode();
 }
@@ -135,6 +139,7 @@ public int hashCode() {
 /**
  * @see AbstractJavaSearchScope#packageFragmentRoot(String, int, String)
  */
+@Override
 public IPackageFragmentRoot packageFragmentRoot(String resourcePathString, int jarSeparatorIndex, String jarPath) {
 	HashMap rootInfos = JavaModelManager.getDeltaState().roots;
 	DeltaProcessor.RootInfo rootInfo = null;
@@ -160,6 +165,7 @@ public IPackageFragmentRoot packageFragmentRoot(String resourcePathString, int j
 	return rootInfo.getPackageFragmentRoot(null/*no resource hint*/);
 }
 
+@Override
 public void processDelta(IJavaElementDelta delta, int eventType) {
 	if (this.enclosingPaths == null) return;
 	IJavaElement element = delta.getElement();
@@ -213,6 +219,7 @@ public void processDelta(IJavaElementDelta delta, int eventType) {
 }
 
 
+@Override
 public String toString() {
 	StringBuffer result = new StringBuffer("JavaWorkspaceScope on "); //$NON-NLS-1$
 	IPath[] paths = enclosingProjectsAndJars();

@@ -1235,12 +1235,7 @@ public void testBug425493() {
 		"	^^^^^^^^^^^^\n" + 
 		"The method addAttribute(Test.Attribute<T>, T) in the type Test is not applicable for the arguments (Test.Attribute<capture#1-of ?>, capture#2-of ?)\n" + 
 		"----------\n" + 
-		"2. ERROR in Test.java (at line 3)\n" + 
-		"	addAttribute(java.util.Objects.requireNonNull(attribute, \"\"),\n" + 
-		"	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-		"Type mismatch: cannot convert from Test.Attribute<capture#1-of ?> to Test.Attribute<T>\n" + 
-		"----------\n" + 
-		"3. ERROR in Test.java (at line 5)\n" + 
+		"2. ERROR in Test.java (at line 5)\n" + 
 		"	addAttribute(attribute, attribute.getDefault());\n" + 
 		"	^^^^^^^^^^^^\n" + 
 		"The method addAttribute(Test.Attribute<T>, T) in the type Test is not applicable for the arguments (Test.Attribute<capture#3-of ?>, capture#4-of ?)\n" + 
@@ -7007,15 +7002,10 @@ public void testBug502350() {
 			"",
 		},
 		"----------\n" + 
-		"1. ERROR in makeCompilerFreeze\\EclipseJava8Bug.java (at line 20)\n" + 
+		"1. ERROR in makeCompilerFreeze\\\u0045clipseJava8Bug.java (at line 20)\n" + 
 		"	Stuff.func(Comparator.naturalOrder());\n" + 
 		"	      ^^^^\n" + 
 		"The method func(Comparator<T>) in the type Stuff is not applicable for the arguments (Comparator<Comparable<Comparable<B>>>)\n" + 
-		"----------\n" + 
-		"2. ERROR in makeCompilerFreeze\\EclipseJava8Bug.java (at line 20)\n" + 
-		"	Stuff.func(Comparator.naturalOrder());\n" + 
-		"	           ^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-		"Type mismatch: cannot convert from Comparator<Comparable<Comparable<B>>> to Comparator<T>\n" + 
 		"----------\n"
 	);
 }
@@ -8234,6 +8224,68 @@ public void testBug508834_comment0() {
 			"Type safety: The expression of type Function needs unchecked conversion to conform to Function<String,String>\n" + 
 			"----------\n");
 	}
+	public void testBug517710() {
+		runConformTest(
+			new String[] {
+				"test/Test.java",
+				"package test;\n" +
+				"\n" +
+				"public class Test {\n" +
+				"	public static class Foo<T> {\n" +
+				"	}\n" +
+				"\n" +
+				"	public static class Bar<U> {\n" +
+				"	}\n" +
+				"\n" +
+				"	public <V> V foo(Foo<V> f) {\n" +
+				"		return null;\n" +
+				"	}\n" +
+				"\n" +
+				"	public Foo<Integer> bar(Bar<Integer> b) {\n" +
+				"		return null;\n" +
+				"	}\n" +
+				"\n" +
+				"	public Object baz() {\n" +
+				"		Bar b = null;\n" +
+				"		return foo(bar(b));\n" +
+				"	}\n" +
+				"\n" +
+				"}\n" +
+				"",
+			} 
+		);
+	}
+	public void testBug513567() {
+		runConformTest(
+			new String[] {
+				"Foo.java",
+				"import java.util.Collection;\n" + 
+				"import java.util.Optional;\n" + 
+				"\n" + 
+				"public class Foo {\n" + 
+				"	\n" + 
+				"	public static void main(String[] args) {\n" + 
+				"		new Foo().test();\n" + 
+				"	}\n" + 
+				"\n" + 
+				"    private Collection<String> createCollection(Optional<String> foo) {\n" + 
+				"        return null;\n" + 
+				"    }\n" + 
+				"\n" + 
+				"    private <T> void consumeCollection(Collection<T> bar) {\n" + 
+				"        // no-op\n" + 
+				"    }\n" + 
+				"\n" + 
+				"    @SuppressWarnings({\"rawtypes\", \"unchecked\"})\n" + 
+				"    public void test() {\n" + 
+				"        consumeCollection(createCollection((Optional) null));\n" + 
+				"    }\n" + 
+				"\n" + 
+				"}\n" + 
+				"",
+			} 
+		);
+	}
 
 	public void testBug521159() {
 		runConformTest(
@@ -8704,5 +8756,80 @@ public void testBug508834_comment0() {
 				"\n" + 
 				"}\n"
 			});
+	}
+	public void testBug519147() {
+		runConformTest(
+			new String[] {
+				"Main.java",
+				"import java.util.HashMap;\n" + 
+				"import java.util.HashSet;\n" + 
+				"import java.util.Set;\n" + 
+				"\n" + 
+				"public class Main<MyKey, MyValue> {\n" + 
+				"\n" + 
+				"    static class MyMap<K, V> extends HashMap<K, V> {\n" + 
+				"        public MyMap<K, V> putAllReturning(MyMap<K, V> c) { putAll(c); return this; }\n" + 
+				"        public MyMap<K, V> putReturning(K key, V value) { put(key, value); return this; }\n" + 
+				"    }\n" + 
+				"\n" + 
+				"    public Main() {\n" + 
+				"        Set<MyValue> values = new HashSet<>(); // actually something better\n" + 
+				"        final MyMap<MyKey, MyValue> myMap =\n" + 
+				"                values.stream()\n" + 
+				"                    .reduce(\n" + 
+				"                        new MyMap<MyKey, MyValue>(),\n" + 
+				"                        (map, value) -> {\n" + 
+				"                            Set<MyKey> keys = new HashSet<>(); // actually something better\n" + 
+				"\n" + 
+				"                            return keys.stream()\n" + 
+				"                                .reduce(\n" + 
+				"                                    map, // this would work syntactically: new MyMap<MyKey, MyValue>(),\n" + 
+				"                                    (map2, key) -> map2.putReturning(key, value),\n" + 
+				"                                    MyMap::putAllReturning);\n" + 
+				"                        },\n" + 
+				"                        MyMap::putAllReturning\n" + 
+				"                    );\n" + 
+				"    }\n" + 
+				"}\n"
+			});
+	}
+	// no change
+	public void testBug521982_comment1() {
+		runNegativeTest(
+			new String[] {
+				"X.java",
+				"public class X {\n" +
+				"	<T> T test(T a, Integer x) { return a; }\n" +
+				"	<T> T test(T a, int x) { return a; }\n" +
+				"	void doit1(Number nIn) {\n" +
+				"		// in assignment context, primitive or boxed target type does not influence overloading\n" +
+				"		Number n1 = test(nIn, 3);\n" +
+				"		int n2 = test(Integer.valueOf(2), Integer.valueOf(3)); // not ambiguous because one inferences succeeds in strict mode\n" +
+				"	}\n" +
+				"	void fun(int i) {}\n" +
+				"	void doit2() {\n" +
+				"		// unboxing allowed if outer invocation is unambiguous\n" +
+				"		fun(test(Integer.valueOf(2), 3));\n" +
+				"	}\n" +
+				"	<T> void fun2(int i, T t) {} // not picked, requires loose mode\n" +
+				"	<T> void fun2(Integer i, T t) {}\n" +
+				"	void doit3() {\n" +
+				"		// primitive arg puts inference to loose mode, then losing during overload resolution\n" +
+				"		fun2(test(Integer.valueOf(2), 3), this);\n" +
+				"	}\n" +
+				"	<T extends Number> void fun3(int i, int j) {} // requires loose mode for param 1\n" +
+				"	<T extends Number> void fun3(Integer i, T t) {} // requires loose mode for param 2\n" +
+				"	void doit4() {\n" +
+				"		// ambiguous because both candidates require loose mode\n" +
+				"		fun3(test(Integer.valueOf(2), 3), 4);\n" +
+				"	}\n" +
+				"}\n"
+			},
+			"----------\n" + 
+			"1. ERROR in X.java (at line 24)\n" + 
+			"	fun3(test(Integer.valueOf(2), 3), 4);\n" + 
+			"	^^^^\n" + 
+			"The method fun3(int, int) is ambiguous for the type X\n" + 
+			"----------\n");
 	}
 }

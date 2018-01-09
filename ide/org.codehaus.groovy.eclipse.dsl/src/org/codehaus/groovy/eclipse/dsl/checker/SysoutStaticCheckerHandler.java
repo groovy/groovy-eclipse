@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,61 +25,64 @@ import org.eclipse.jface.text.Position;
 import org.eclipse.swt.widgets.Shell;
 
 /**
- * Prints the results of static checking to sysout or some other specified print stream
- * @author andrew
- * @created Aug 31, 2011
+ * Prints the results of static checking to sysout or some other specified print stream.
  */
 public class SysoutStaticCheckerHandler implements IStaticCheckerHandler {
 
     private int numProblems = 0;
-    
+
     private final PrintStream out;
-    
+
     public SysoutStaticCheckerHandler(PrintStream out) {
         this.out = out;
     }
-    
+
+    @Override
     public void handleUnknownReference(ASTNode node, Position position, int line) {
+        numProblems += 1;
         out.println(createUnknownMessage(node, line));
-        numProblems++;
     }
 
+    @Override
     public void handleTypeAssertionFailed(ASTNode node, String expectedType, String actualType, Position position, int line) {
+        numProblems += 1;
         out.println(createInvalidTypeMessage(node, expectedType, actualType, line));
-        numProblems++;
     }
 
+    @Override
     public void setResource(IFile resource) {
         out.println("\nChecking: " + resource.getFullPath());
     }
-    
+
     private String createUnknownMessage(ASTNode node, int line) {
         return "\tLine " + line + ": unknown type: " + node.getText();
     }
-    
+
     private String createInvalidTypeMessage(ASTNode node, String expectedType, String actualType, int line) {
         return "\tLine " + line + ": Invalid inferred type.  " + node.getText() + "  Expected: " + expectedType + " Actual: " + actualType;
     }
 
+    @Override
     public int numProblemsFound() {
         return numProblems;
     }
 
+    @Override
     public void handleResourceStart(IResource resource) throws CoreException {
         // do nothing
     }
-    
+
+    @Override
     public boolean finish(Shell shell) {
         String message = createMessage();
         out.println(message);
-//        out.flush();
         if (out != System.out) {
             out.close();
             System.out.println(message);
         }
         return numProblems == 0;
     }
-    
+
     private String createMessage() {
         if (numProblems == 0) {
             return "SUCCESS";

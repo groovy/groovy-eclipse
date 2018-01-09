@@ -98,6 +98,7 @@ public class NonNullDefaultAwareTypeAnnotationWalker extends TypeAnnotationWalke
 		};
 	}
 
+	@Override
 	protected TypeAnnotationWalker restrict(long newMatches, int newPathPtr) {
 		// considers nextIsDefaultLocation as the new atDefaultLocation
 		try {

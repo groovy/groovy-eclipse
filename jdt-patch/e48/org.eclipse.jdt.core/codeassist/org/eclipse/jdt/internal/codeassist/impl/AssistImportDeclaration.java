@@ -25,6 +25,7 @@ public class AssistImportDeclaration extends ImportDeclaration {
 		this.infoCache = infoCache;
 	}
 
+	@Override
 	public Object getElementInfo(IProgressMonitor monitor) throws JavaModelException {
 		return this.infoCache.get(this);
 	}

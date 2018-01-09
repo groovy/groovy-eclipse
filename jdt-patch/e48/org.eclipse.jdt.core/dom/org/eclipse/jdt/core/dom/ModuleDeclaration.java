@@ -134,9 +134,7 @@ public class ModuleDeclaration extends ASTNode {
 		return propertyDescriptors(apiLevel);
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+	@Override
 	final boolean internalGetSetBooleanProperty(SimplePropertyDescriptor property, boolean get, boolean value) {
 		if (property == OPEN_PROPERTY) {
 			if (get) {
@@ -149,9 +147,8 @@ public class ModuleDeclaration extends ASTNode {
 		// allow default implementation to flag the error
 		return super.internalGetSetBooleanProperty(property, get, value);
 	}
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+
+	@Override
 	final ASTNode internalGetSetChildProperty(ChildPropertyDescriptor property, boolean get, ASTNode child) {
 		if (property == JAVADOC_PROPERTY) {
 			if (get) {
@@ -173,9 +170,7 @@ public class ModuleDeclaration extends ASTNode {
 		return super.internalGetSetChildProperty(property, get, child);
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+	@Override
 	final List internalGetChildListProperty(ChildListPropertyDescriptor property) {
 		if (property == ANNOTATIONS_PROPERTY) {
 			return annotations();

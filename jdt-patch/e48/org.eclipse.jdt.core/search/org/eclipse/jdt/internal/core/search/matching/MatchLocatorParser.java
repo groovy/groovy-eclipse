@@ -46,52 +46,64 @@ public static MatchLocatorParser createParser(ProblemReporter problemReporter, M
  * An ast visitor that visits local type declarations.
  */
 public class NoClassNoMethodDeclarationVisitor extends ASTVisitor {
+	@Override
 	public boolean visit(ConstructorDeclaration constructorDeclaration, ClassScope scope) {
 		return (constructorDeclaration.bits & ASTNode.HasLocalType) != 0; // continue only if it has local type
 	}
+	@Override
 	public boolean visit(FieldDeclaration fieldDeclaration, MethodScope scope) {
 		return (fieldDeclaration.bits & ASTNode.HasLocalType) != 0; // continue only if it has local type;
 	}
+	@Override
 	public boolean visit(Initializer initializer, MethodScope scope) {
 		return (initializer.bits & ASTNode.HasLocalType) != 0; // continue only if it has local type
 	}
+	@Override
 	public boolean visit(MethodDeclaration methodDeclaration, ClassScope scope) {
 		return (methodDeclaration.bits & ASTNode.HasLocalType) != 0; // continue only if it has local type
 	}
 }
 public class MethodButNoClassDeclarationVisitor extends NoClassNoMethodDeclarationVisitor {
+	@Override
 	public boolean visit(TypeDeclaration localTypeDeclaration, BlockScope scope) {
 		MatchLocatorParser.this.patternLocator.match(localTypeDeclaration, MatchLocatorParser.this.nodeSet);
 		return true;
 	}
 }
 public class ClassButNoMethodDeclarationVisitor extends ASTVisitor {
+	@Override
 	public boolean visit(ConstructorDeclaration constructorDeclaration, ClassScope scope) {
 		MatchLocatorParser.this.patternLocator.match(constructorDeclaration, MatchLocatorParser.this.nodeSet);
 		return (constructorDeclaration.bits & ASTNode.HasLocalType) != 0; // continue only if it has local type
 	}
+	@Override
 	public boolean visit(FieldDeclaration fieldDeclaration, MethodScope scope) {
 		MatchLocatorParser.this.patternLocator.match(fieldDeclaration, MatchLocatorParser.this.nodeSet);
 		return (fieldDeclaration.bits & ASTNode.HasLocalType) != 0; // continue only if it has local type;
 	}
+	@Override
 	public boolean visit(Initializer initializer, MethodScope scope) {
 		MatchLocatorParser.this.patternLocator.match(initializer, MatchLocatorParser.this.nodeSet);
 		return (initializer.bits & ASTNode.HasLocalType) != 0; // continue only if it has local type
 	}
+	@Override
 	public boolean visit(TypeDeclaration memberTypeDeclaration, ClassScope scope) {
 		MatchLocatorParser.this.patternLocator.match(memberTypeDeclaration, MatchLocatorParser.this.nodeSet);
 		return true;
 	}
+	@Override
 	public boolean visit(MethodDeclaration methodDeclaration, ClassScope scope) {
 		MatchLocatorParser.this.patternLocator.match(methodDeclaration, MatchLocatorParser.this.nodeSet);
 		return (methodDeclaration.bits & ASTNode.HasLocalType) != 0; // continue only if it has local type
 	}
+	@Override
 	public boolean visit(AnnotationMethodDeclaration methodDeclaration, ClassScope scope) {
 		MatchLocatorParser.this.patternLocator.match(methodDeclaration, MatchLocatorParser.this.nodeSet);
 		return false; // no local type for annotation type members
 	}
 }
 public class ClassAndMethodDeclarationVisitor extends ClassButNoMethodDeclarationVisitor {
+	@Override
 	public boolean visit(TypeDeclaration localTypeDeclaration, BlockScope scope) {
 		MatchLocatorParser.this.patternLocator.match(localTypeDeclaration, MatchLocatorParser.this.nodeSet);
 		return true;
@@ -114,6 +126,7 @@ public MatchLocatorParser(ProblemReporter problemReporter, MatchLocator locator)
 	}
 	this.patternFineGrain = this.patternLocator.fineGrain();
 }
+@Override
 public void checkComment() {
 	super.checkComment();
 	if (this.javadocParser.checkDocComment && this.javadoc != null && this.patternFineGrain == 0 /* there's no fine grain concerning Javadoc*/) {
@@ -193,6 +206,7 @@ public void checkComment() {
 	}
 }
 
+@Override
 protected void classInstanceCreation(boolean alwaysQualified) {
 	super.classInstanceCreation(alwaysQualified);
 	if (this.patternFineGrain == 0) {
@@ -203,6 +217,7 @@ protected void classInstanceCreation(boolean alwaysQualified) {
 	}
 }
 
+@Override
 protected void consumeAdditionalBound() {
 	super.consumeAdditionalBound();
 	if ((this.patternFineGrain & IJavaSearchConstants.TYPE_VARIABLE_BOUND_TYPE_REFERENCE) != 0) {
@@ -211,6 +226,7 @@ protected void consumeAdditionalBound() {
 	}
 }
 
+@Override
 protected void consumeAssignment() {
 	super.consumeAssignment();
 	if (this.patternFineGrain == 0) {
@@ -218,6 +234,7 @@ protected void consumeAssignment() {
 	}
 }
 
+@Override
 protected void consumeCastExpressionLL1() {
 	super.consumeCastExpressionLL1();
 	if ((this.patternFineGrain & IJavaSearchConstants.CAST_TYPE_REFERENCE) != 0) {
@@ -225,6 +242,7 @@ protected void consumeCastExpressionLL1() {
 		this.patternLocator.match(castExpression.type, this.nodeSet);
 	}
 }
+@Override
 protected void consumeCastExpressionLL1WithBounds() {
 	super.consumeCastExpressionLL1WithBounds();
 	if ((this.patternFineGrain & IJavaSearchConstants.CAST_TYPE_REFERENCE) != 0) {
@@ -234,6 +252,7 @@ protected void consumeCastExpressionLL1WithBounds() {
 			this.patternLocator.match(typeReferences[i], this.nodeSet);
 	}
 }
+@Override
 protected void consumeCastExpressionWithGenericsArray() {
 	super.consumeCastExpressionWithGenericsArray();
 	if ((this.patternFineGrain & IJavaSearchConstants.CAST_TYPE_REFERENCE) != 0) {
@@ -241,6 +260,7 @@ protected void consumeCastExpressionWithGenericsArray() {
 		this.patternLocator.match(castExpression.type, this.nodeSet);
 	}
 }
+@Override
 protected void consumeCastExpressionWithNameArray() {
 	super.consumeCastExpressionWithNameArray();
 	if ((this.patternFineGrain & IJavaSearchConstants.CAST_TYPE_REFERENCE) != 0) {
@@ -248,6 +268,7 @@ protected void consumeCastExpressionWithNameArray() {
 		this.patternLocator.match(castExpression.type, this.nodeSet);
 	}
 }
+@Override
 protected void consumeCastExpressionWithPrimitiveType() {
 	super.consumeCastExpressionWithPrimitiveType();
 	if ((this.patternFineGrain & IJavaSearchConstants.CAST_TYPE_REFERENCE) != 0) {
@@ -255,6 +276,7 @@ protected void consumeCastExpressionWithPrimitiveType() {
 		this.patternLocator.match(castExpression.type, this.nodeSet);
 	}
 }
+@Override
 protected void consumeCastExpressionWithQualifiedGenericsArray() {
 	super.consumeCastExpressionWithQualifiedGenericsArray();
 	if ((this.patternFineGrain & IJavaSearchConstants.CAST_TYPE_REFERENCE) != 0) {
@@ -262,11 +284,13 @@ protected void consumeCastExpressionWithQualifiedGenericsArray() {
 		this.patternLocator.match(castExpression.type, this.nodeSet);
 	}
 }
+@Override
 protected void consumeCatchFormalParameter() {
 	super.consumeCatchFormalParameter();
 	this.patternLocator.match((LocalDeclaration) this.astStack[this.astPtr], this.nodeSet);
 }
 
+@Override
 protected void consumeClassHeaderExtends() {
 	this.patternLocator.setFlavors(PatternLocator.SUPERTYPE_REF_FLAVOR);
 	super.consumeClassHeaderExtends();
@@ -277,6 +301,7 @@ protected void consumeClassHeaderExtends() {
 	this.patternLocator.setFlavors(PatternLocator.NO_FLAVOR);
 }
 
+@Override
 protected void consumeClassInstanceCreationExpressionQualifiedWithTypeArguments() {
 	super.consumeClassInstanceCreationExpressionWithTypeArguments();
 	if (this.patternFineGrain == 0) {
@@ -287,6 +312,7 @@ protected void consumeClassInstanceCreationExpressionQualifiedWithTypeArguments(
 	}
 }
 
+@Override
 protected void consumeClassInstanceCreationExpressionWithTypeArguments() {
 	super.consumeClassInstanceCreationExpressionWithTypeArguments();
 	if (this.patternFineGrain == 0) {
@@ -297,12 +323,14 @@ protected void consumeClassInstanceCreationExpressionWithTypeArguments() {
 	}
 }
 
+@Override
 protected void consumeEnterAnonymousClassBody(boolean qualified) {
 	this.patternLocator.setFlavors(PatternLocator.SUPERTYPE_REF_FLAVOR);
 	super.consumeEnterAnonymousClassBody(qualified);
 	this.patternLocator.setFlavors(PatternLocator.NO_FLAVOR);
 }
 
+@Override
 protected void consumeEnterVariable() {
 	boolean isLocalDeclaration = this.nestedMethod[this.nestedType] != 0;
 	super.consumeEnterVariable();
@@ -319,18 +347,22 @@ protected void consumeEnterVariable() {
 	}
 }
 
+@Override
 protected void consumeExplicitConstructorInvocation(int flag, int recFlag) {
 	super.consumeExplicitConstructorInvocation(flag, recFlag);
 	this.patternLocator.match(this.astStack[this.astPtr], this.nodeSet);
 }
+@Override
 protected void consumeExplicitConstructorInvocationWithTypeArguments(int flag, int recFlag) {
 	super.consumeExplicitConstructorInvocationWithTypeArguments(flag, recFlag);
 	this.patternLocator.match(this.astStack[this.astPtr], this.nodeSet);
 }
+@Override
 protected void consumeExportsHeader() {
 	super.consumeExportsHeader();
 	this.patternLocator.match(((ExportsStatement) this.astStack[this.astPtr]).pkgRef, this.nodeSet);
 }
+@Override
 protected void consumeFieldAccess(boolean isSuperAccess) {
 	super.consumeFieldAccess(isSuperAccess);
 
@@ -341,11 +373,13 @@ protected void consumeFieldAccess(boolean isSuperAccess) {
 	}
 }
 
+@Override
 protected void consumeFormalParameter(boolean isVarArgs) {
 	super.consumeFormalParameter(isVarArgs);
 	this.patternLocator.match((LocalDeclaration) this.astStack[this.astPtr], this.nodeSet);
 }
 
+@Override
 protected void consumeInstanceOfExpression() {
 	super.consumeInstanceOfExpression();
 	if ((this.patternFineGrain & IJavaSearchConstants.INSTANCEOF_TYPE_REFERENCE) != 0) {
@@ -353,6 +387,7 @@ protected void consumeInstanceOfExpression() {
 		this.patternLocator.match(expression.type, this.nodeSet);
 	}
 }
+@Override
 protected void consumeInstanceOfExpressionWithName() {
 	super.consumeInstanceOfExpressionWithName();
 	if ((this.patternFineGrain & IJavaSearchConstants.INSTANCEOF_TYPE_REFERENCE) != 0) {
@@ -360,6 +395,7 @@ protected void consumeInstanceOfExpressionWithName() {
 		this.patternLocator.match(expression.type, this.nodeSet);
 	}
 }
+@Override
 protected void consumeInterfaceType() {
 	this.patternLocator.setFlavors(PatternLocator.SUPERTYPE_REF_FLAVOR);
 	super.consumeInterfaceType();
@@ -376,11 +412,13 @@ protected void consumeLambdaExpression() {
 	this.patternLocator.match((LambdaExpression) this.expressionStack[this.expressionPtr], this.nodeSet);
 }
 
+@Override
 protected void consumeLocalVariableDeclaration() {
 	super.consumeLocalVariableDeclaration();
 	this.patternLocator.match((LocalDeclaration) this.astStack[this.astPtr], this.nodeSet);
 }
 
+@Override
 protected void consumeMarkerAnnotation(boolean isTypeAnnotation) {
 	super.consumeMarkerAnnotation(isTypeAnnotation);
 	if (this.patternFineGrain == 0 || (this.patternFineGrain & IJavaSearchConstants.ANNOTATION_TYPE_REFERENCE) != 0) {
@@ -388,6 +426,7 @@ protected void consumeMarkerAnnotation(boolean isTypeAnnotation) {
 		this.patternLocator.match(annotation, this.nodeSet);
 	}
 }
+@Override
 protected void consumeMemberValuePair() {
 	super.consumeMemberValuePair();
 	if ((this.patternFineGrain & ~IJavaSearchConstants.METHOD_REFERENCE_EXPRESSION) != 0) {
@@ -395,6 +434,7 @@ protected void consumeMemberValuePair() {
 	}
 }
 
+@Override
 protected void consumeMethodHeaderName(boolean isAnnotationMethod) {
 	super.consumeMethodHeaderName(isAnnotationMethod);
 	if ((this.patternFineGrain & IJavaSearchConstants.RETURN_TYPE_REFERENCE) != 0) {
@@ -403,6 +443,7 @@ protected void consumeMethodHeaderName(boolean isAnnotationMethod) {
 		this.patternLocator.match(methodDeclaration.returnType, this.nodeSet);
 	}
 }
+@Override
 protected void consumeMethodHeaderRightParen() {
 	super.consumeMethodHeaderRightParen();
 	if ((this.patternFineGrain & IJavaSearchConstants.PARAMETER_DECLARATION_TYPE_REFERENCE) != 0) {
@@ -417,6 +458,7 @@ protected void consumeMethodHeaderRightParen() {
 		}
 	}
 }
+@Override
 protected void consumeMethodHeaderThrowsClause() {
 	super.consumeMethodHeaderThrowsClause();
 	if ((this.patternFineGrain & IJavaSearchConstants.THROWS_CLAUSE_TYPE_REFERENCE) != 0) {
@@ -432,6 +474,7 @@ protected void consumeMethodHeaderThrowsClause() {
 	}
 }
 
+@Override
 protected void consumeMethodInvocationName() {
 	super.consumeMethodInvocationName();
 	MessageSend messageSend = (MessageSend) this.expressionStack[this.expressionPtr];
@@ -450,6 +493,7 @@ protected void consumeMethodInvocationName() {
 	}
 }
 
+@Override
 protected void consumeMethodInvocationNameWithTypeArguments() {
 	super.consumeMethodInvocationNameWithTypeArguments();
 	MessageSend messageSend = (MessageSend) this.expressionStack[this.expressionPtr];
@@ -468,6 +512,7 @@ protected void consumeMethodInvocationNameWithTypeArguments() {
 	}
 }
 
+@Override
 protected void consumeMethodInvocationPrimary() {
 	super.consumeMethodInvocationPrimary();
 	if (this.patternFineGrain == 0 || (this.patternFineGrain & IJavaSearchConstants.THIS_REFERENCE) != 0) {
@@ -475,6 +520,7 @@ protected void consumeMethodInvocationPrimary() {
 	}
 }
 
+@Override
 protected void consumeMethodInvocationPrimaryWithTypeArguments() {
 	super.consumeMethodInvocationPrimaryWithTypeArguments();
 	if (this.patternFineGrain == 0 || (this.patternFineGrain & IJavaSearchConstants.THIS_REFERENCE) != 0) {
@@ -482,6 +528,7 @@ protected void consumeMethodInvocationPrimaryWithTypeArguments() {
 	}
 }
 
+@Override
 protected void consumeMethodInvocationSuper() {
 	super.consumeMethodInvocationSuper();
 	if (this.patternFineGrain == 0 || (this.patternFineGrain & IJavaSearchConstants.SUPER_REFERENCE) != 0) {
@@ -489,6 +536,7 @@ protected void consumeMethodInvocationSuper() {
 	}
 }
 
+@Override
 protected void consumeMethodInvocationSuperWithTypeArguments() {
 	super.consumeMethodInvocationSuperWithTypeArguments();
 	if (this.patternFineGrain == 0 || (this.patternFineGrain & IJavaSearchConstants.SUPER_REFERENCE) != 0) {
@@ -501,6 +549,7 @@ protected void consumeModuleHeader() {
 	super.consumeModuleHeader();
 	this.patternLocator.match(((ModuleDeclaration) this.astStack[this.astPtr]), this.nodeSet);
 }
+@Override
 protected void consumeNormalAnnotation(boolean isTypeAnnotation) {
 	super.consumeNormalAnnotation(isTypeAnnotation);
 	if (this.patternFineGrain == 0 || (this.patternFineGrain & IJavaSearchConstants.ANNOTATION_TYPE_REFERENCE) != 0) {
@@ -510,6 +559,7 @@ protected void consumeNormalAnnotation(boolean isTypeAnnotation) {
 	}
 }
 
+@Override
 protected void consumeOnlyTypeArguments() {
 	super.consumeOnlyTypeArguments();
 	if ((this.patternFineGrain & IJavaSearchConstants.TYPE_ARGUMENT_TYPE_REFERENCE) != 0) {
@@ -542,6 +592,7 @@ protected void consumeProvidesStatement() {
 		this.patternLocator.match(impl, this.nodeSet);
 	}
 }
+@Override
 protected void consumePrimaryNoNewArrayWithName() {
 	// PrimaryNoNewArray ::=  PushLPAREN Expression PushRPAREN
 	pushOnExpressionStack(getUnspecifiedReferenceOptimized());
@@ -573,6 +624,7 @@ protected void consumeReferenceExpression(ReferenceExpression referenceExpressio
 	}
 }
 
+@Override
 protected void consumeSingleMemberAnnotation(boolean isTypeAnnotation) {
 	super.consumeSingleMemberAnnotation(isTypeAnnotation);
 	if (this.patternFineGrain == 0 || (this.patternFineGrain & IJavaSearchConstants.ANNOTATION_TYPE_REFERENCE) != 0) {
@@ -600,6 +652,7 @@ protected void consumeSingleTargetModuleName() {
 	setTarget(false);
 }
 
+@Override
 protected void consumeStatementCatch() {
 	super.consumeStatementCatch();
 	if ((this.patternFineGrain & IJavaSearchConstants.CATCH_TYPE_REFERENCE) != 0) {
@@ -616,6 +669,7 @@ protected void consumeStatementCatch() {
 	}
 }
 
+@Override
 protected void consumeTypeArgumentList1() {
 	super.consumeTypeArgumentList1();
 	if ((this.patternFineGrain & IJavaSearchConstants.TYPE_ARGUMENT_TYPE_REFERENCE) != 0) {
@@ -628,6 +682,7 @@ protected void consumeTypeArgumentList1() {
 	}
 }
 
+@Override
 protected void consumeTypeArgumentList2() {
 	super.consumeTypeArgumentList2();
 	if ((this.patternFineGrain & IJavaSearchConstants.TYPE_ARGUMENT_TYPE_REFERENCE) != 0) {
@@ -640,6 +695,7 @@ protected void consumeTypeArgumentList2() {
 	}
 }
 
+@Override
 protected void consumeTypeArgumentList3() {
 	super.consumeTypeArgumentList3();
 	if ((this.patternFineGrain & IJavaSearchConstants.TYPE_ARGUMENT_TYPE_REFERENCE) != 0) {
@@ -652,6 +708,7 @@ protected void consumeTypeArgumentList3() {
 	}
 }
 
+@Override
 protected void consumeTypeArgumentReferenceType1() {
 	super.consumeTypeArgumentReferenceType1();
 	if ((this.patternFineGrain & IJavaSearchConstants.TYPE_ARGUMENT_TYPE_REFERENCE) != 0) {
@@ -676,6 +733,7 @@ protected void consumeTypeArgumentReferenceType1() {
 	}
 }
 
+@Override
 protected void consumeTypeArgumentReferenceType2() {
 	super.consumeTypeArgumentReferenceType2();
 	if ((this.patternFineGrain & IJavaSearchConstants.TYPE_ARGUMENT_TYPE_REFERENCE) != 0) {
@@ -700,6 +758,7 @@ protected void consumeTypeArgumentReferenceType2() {
 	}
 }
 
+@Override
 protected void consumeTypeArguments() {
 	super.consumeTypeArguments();
 	if ((this.patternFineGrain & IJavaSearchConstants.TYPE_ARGUMENT_TYPE_REFERENCE) != 0) {
@@ -713,11 +772,13 @@ protected void consumeTypeArguments() {
 	}
 }
 
+@Override
 protected void consumeTypeElidedLambdaParameter(boolean parenthesized) {
 	super.consumeTypeElidedLambdaParameter(parenthesized);
 	this.patternLocator.match((LocalDeclaration) this.astStack[this.astPtr], this.nodeSet);
 }
 
+@Override
 protected void consumeTypeParameter1WithExtends() {
 	super.consumeTypeParameter1WithExtends();
 	if ((this.patternFineGrain & IJavaSearchConstants.TYPE_VARIABLE_BOUND_TYPE_REFERENCE) != 0) {
@@ -726,6 +787,7 @@ protected void consumeTypeParameter1WithExtends() {
 	}
 }
 
+@Override
 protected void consumeTypeParameter1WithExtendsAndBounds() {
 	super.consumeTypeParameter1WithExtendsAndBounds();
 	if ((this.patternFineGrain & IJavaSearchConstants.TYPE_VARIABLE_BOUND_TYPE_REFERENCE) != 0) {
@@ -734,11 +796,13 @@ protected void consumeTypeParameter1WithExtendsAndBounds() {
 	}
 }
 
+@Override
 protected void consumeTypeParameterHeader() {
 	super.consumeTypeParameterHeader();
 	this.patternLocator.match((TypeParameter)this.genericsStack[this.genericsPtr], this.nodeSet);
 }
 
+@Override
 protected void consumeTypeParameterWithExtends() {
 	super.consumeTypeParameterWithExtends();
 	if ((this.patternFineGrain & IJavaSearchConstants.TYPE_VARIABLE_BOUND_TYPE_REFERENCE) != 0) {
@@ -747,6 +811,7 @@ protected void consumeTypeParameterWithExtends() {
 	}
 }
 
+@Override
 protected void consumeTypeParameterWithExtendsAndBounds() {
 	super.consumeTypeParameterWithExtendsAndBounds();
 	if ((this.patternFineGrain & IJavaSearchConstants.TYPE_VARIABLE_BOUND_TYPE_REFERENCE) != 0) {
@@ -755,11 +820,13 @@ protected void consumeTypeParameterWithExtendsAndBounds() {
 	}
 }
 
+@Override
 protected void consumeUnaryExpression(int op, boolean post) {
 	super.consumeUnaryExpression(op, post);
 	this.patternLocator.match(this.expressionStack[this.expressionPtr], this.nodeSet);
 }
 
+@Override
 protected void consumeWildcardBounds1Extends() {
 	super.consumeWildcardBounds1Extends();
 	if ((this.patternFineGrain & IJavaSearchConstants.WILDCARD_BOUND_TYPE_REFERENCE) != 0) {
@@ -768,6 +835,7 @@ protected void consumeWildcardBounds1Extends() {
 	}
 }
 
+@Override
 protected void consumeWildcardBounds1Super() {
 	super.consumeWildcardBounds1Super();
 	if ((this.patternFineGrain & IJavaSearchConstants.WILDCARD_BOUND_TYPE_REFERENCE) != 0) {
@@ -776,6 +844,7 @@ protected void consumeWildcardBounds1Super() {
 	}
 }
 
+@Override
 protected void consumeWildcardBounds2Extends() {
 	super.consumeWildcardBounds2Extends();
 	if ((this.patternFineGrain & IJavaSearchConstants.WILDCARD_BOUND_TYPE_REFERENCE) != 0) {
@@ -784,6 +853,7 @@ protected void consumeWildcardBounds2Extends() {
 	}
 }
 
+@Override
 protected void consumeWildcardBounds2Super() {
 	super.consumeWildcardBounds2Super();
 	if ((this.patternFineGrain & IJavaSearchConstants.WILDCARD_BOUND_TYPE_REFERENCE) != 0) {
@@ -792,6 +862,7 @@ protected void consumeWildcardBounds2Super() {
 	}
 }
 
+@Override
 protected void consumeWildcardBounds3Extends() {
 	super.consumeWildcardBounds3Extends();
 	if ((this.patternFineGrain & IJavaSearchConstants.WILDCARD_BOUND_TYPE_REFERENCE) != 0) {
@@ -800,6 +871,7 @@ protected void consumeWildcardBounds3Extends() {
 	}
 }
 
+@Override
 protected void consumeWildcardBounds3Super() {
 	super.consumeWildcardBounds3Super();
 	if ((this.patternFineGrain & IJavaSearchConstants.WILDCARD_BOUND_TYPE_REFERENCE) != 0) {
@@ -808,6 +880,7 @@ protected void consumeWildcardBounds3Super() {
 	}
 }
 
+@Override
 protected void consumeWildcardBoundsExtends() {
 	super.consumeWildcardBoundsExtends();
 	if ((this.patternFineGrain & IJavaSearchConstants.WILDCARD_BOUND_TYPE_REFERENCE) != 0) {
@@ -816,6 +889,7 @@ protected void consumeWildcardBoundsExtends() {
 	}
 }
 
+@Override
 protected void consumeWildcardBoundsSuper() {
 	super.consumeWildcardBoundsSuper();
 	if ((this.patternFineGrain & IJavaSearchConstants.WILDCARD_BOUND_TYPE_REFERENCE) != 0) {
@@ -824,6 +898,7 @@ protected void consumeWildcardBoundsSuper() {
 	}
 }
 
+@Override
 protected TypeReference augmentTypeWithAdditionalDimensions(TypeReference typeRef, int additionalDimensions, Annotation [][] additionalAnnotations, boolean isVarargs) {
 	TypeReference result = super.augmentTypeWithAdditionalDimensions(typeRef, additionalDimensions, additionalAnnotations, isVarargs);
 	 if (this.nodeSet.removePossibleMatch(typeRef) != null)
@@ -832,6 +907,7 @@ protected TypeReference augmentTypeWithAdditionalDimensions(TypeReference typeRe
 		this.nodeSet.addTrustedMatch(result, true);
 	return result;
 }
+@Override
 protected TypeReference getTypeReference(int dim) {
 	TypeReference typeRef = super.getTypeReference(dim);
 	if (this.patternFineGrain == 0) {
@@ -839,6 +915,7 @@ protected TypeReference getTypeReference(int dim) {
 	}
 	return typeRef;
 }
+@Override
 protected NameReference getUnspecifiedReference(boolean rejectTypeAnnotations) {
 	NameReference nameRef = super.getUnspecifiedReference(rejectTypeAnnotations);
 	if (this.patternFineGrain == 0) {
@@ -854,6 +931,7 @@ protected NameReference getUnspecifiedReference(boolean rejectTypeAnnotations) {
 	}
 	return nameRef;
 }
+@Override
 protected NameReference getUnspecifiedReferenceOptimized() {
 	NameReference nameRef = super.getUnspecifiedReferenceOptimized();
 	if (this.patternFineGrain == 0) {

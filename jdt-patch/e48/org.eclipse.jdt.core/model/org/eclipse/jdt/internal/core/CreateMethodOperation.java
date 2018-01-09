@@ -74,6 +74,7 @@ protected String[] convertASTMethodTypesToSignatures() {
 	}
 	return this.parameterTypes;
 }
+@Override
 protected ASTNode generateElementAST(ASTRewrite rewriter, ICompilationUnit cu) throws JavaModelException {
 	ASTNode node = super.generateElementAST(rewriter, cu);
 	if (node.getNodeType() != ASTNode.METHOD_DECLARATION)
@@ -83,6 +84,7 @@ protected ASTNode generateElementAST(ASTRewrite rewriter, ICompilationUnit cu) t
 /**
  * @see CreateElementInCUOperation#generateResultHandle
  */
+@Override
 protected IJavaElement generateResultHandle() {
 	String[] types = convertASTMethodTypesToSignatures();
 	String name = getASTNodeName();
@@ -94,9 +96,11 @@ private String getASTNodeName() {
 /**
  * @see CreateElementInCUOperation#getMainTaskName()
  */
+@Override
 public String getMainTaskName(){
 	return Messages.operation_createMethodProgress;
 }
+@Override
 protected SimpleName rename(ASTNode node, SimpleName newName) {
 	MethodDeclaration method = (MethodDeclaration) node;
 	SimpleName oldName = method.getName();
@@ -106,6 +110,7 @@ protected SimpleName rename(ASTNode node, SimpleName newName) {
 /**
  * @see CreateTypeMemberOperation#verifyNameCollision
  */
+@Override
 protected IJavaModelStatus verifyNameCollision() {
 	if (this.createdNode != null) {
 		IType type = getType();

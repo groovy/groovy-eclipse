@@ -19,6 +19,7 @@ public class SourceElementRequestorAdapter implements ISourceElementRequestor {
 	/**
 	 * @see ISourceElementRequestor#acceptAnnotationTypeReference(char[][], int, int)
 	 */
+	@Override
 	public void acceptAnnotationTypeReference(
 		char[][] typeName,
 		int sourceStart,
@@ -29,6 +30,7 @@ public class SourceElementRequestorAdapter implements ISourceElementRequestor {
 	/**
 	 * @see ISourceElementRequestor#acceptAnnotationTypeReference(char[], int)
 	 */
+	@Override
 	public void acceptAnnotationTypeReference(char[] typeName, int sourcePosition) {
 		// default implementation: do nothing
 	}
@@ -36,6 +38,7 @@ public class SourceElementRequestorAdapter implements ISourceElementRequestor {
 	/**
 	 * @see ISourceElementRequestor#acceptConstructorReference(char[], int, int)
 	 */
+	@Override
 	public void acceptConstructorReference(
 		char[] typeName,
 		int argCount,
@@ -46,6 +49,7 @@ public class SourceElementRequestorAdapter implements ISourceElementRequestor {
 	/**
 	 * @see ISourceElementRequestor#acceptFieldReference(char[], int)
 	 */
+	@Override
 	public void acceptFieldReference(char[] fieldName, int sourcePosition) {
 		// default implementation: do nothing
 	}
@@ -53,6 +57,7 @@ public class SourceElementRequestorAdapter implements ISourceElementRequestor {
 	/**
 	 * @see ISourceElementRequestor#acceptImport(int, int, int, int, char[][], boolean, int)
 	 */
+	@Override
 	public void acceptImport(
 		int declarationStart,
 		int declarationEnd,
@@ -67,6 +72,7 @@ public class SourceElementRequestorAdapter implements ISourceElementRequestor {
 	/**
 	 * @see ISourceElementRequestor#acceptLineSeparatorPositions(int[])
 	 */
+	@Override
 	public void acceptLineSeparatorPositions(int[] positions) {
 		// default implementation: do nothing
 	}
@@ -74,6 +80,7 @@ public class SourceElementRequestorAdapter implements ISourceElementRequestor {
 	/**
 	 * @see ISourceElementRequestor#acceptMethodReference(char[], int, int)
 	 */
+	@Override
 	public void acceptMethodReference(
 		char[] methodName,
 		int argCount,
@@ -84,6 +91,7 @@ public class SourceElementRequestorAdapter implements ISourceElementRequestor {
 	/**
 	 * @see ISourceElementRequestor#acceptPackage(ImportReference)
 	 */
+	@Override
 	public void acceptPackage(ImportReference importReference) {
 		// default implementation: do nothing
 	}
@@ -91,6 +99,7 @@ public class SourceElementRequestorAdapter implements ISourceElementRequestor {
 	/**
 	 * @see ISourceElementRequestor#acceptProblem(CategorizedProblem)
 	 */
+	@Override
 	public void acceptProblem(CategorizedProblem problem) {
 		// default implementation: do nothing
 	}
@@ -98,6 +107,7 @@ public class SourceElementRequestorAdapter implements ISourceElementRequestor {
 	/**
 	 * @see ISourceElementRequestor#acceptTypeReference(char[][], int, int)
 	 */
+	@Override
 	public void acceptTypeReference(
 		char[][] typeName,
 		int sourceStart,
@@ -108,6 +118,7 @@ public class SourceElementRequestorAdapter implements ISourceElementRequestor {
 	/**
 	 * @see ISourceElementRequestor#acceptTypeReference(char[], int)
 	 */
+	@Override
 	public void acceptTypeReference(char[] typeName, int sourcePosition) {
 		// default implementation: do nothing
 	}
@@ -115,6 +126,7 @@ public class SourceElementRequestorAdapter implements ISourceElementRequestor {
 	/**
 	 * @see ISourceElementRequestor#acceptUnknownReference(char[][], int, int)
 	 */
+	@Override
 	public void acceptUnknownReference(
 		char[][] name,
 		int sourceStart,
@@ -125,6 +137,7 @@ public class SourceElementRequestorAdapter implements ISourceElementRequestor {
 	/**
 	 * @see ISourceElementRequestor#acceptUnknownReference(char[], int)
 	 */
+	@Override
 	public void acceptUnknownReference(char[] name, int sourcePosition) {
 		// default implementation: do nothing
 	}
@@ -132,10 +145,12 @@ public class SourceElementRequestorAdapter implements ISourceElementRequestor {
 	/**
 	 * @see ISourceElementRequestor#enterCompilationUnit()
 	 */
+	@Override
 	public void enterCompilationUnit() {
 		// default implementation: do nothing
 	}
 
+	@Override
 	public void enterConstructor(MethodInfo methodInfo) {
 		// default implementation: do nothing
 	}
@@ -143,6 +158,7 @@ public class SourceElementRequestorAdapter implements ISourceElementRequestor {
 	/**
 	 * @see ISourceElementRequestor#enterField(ISourceElementRequestor.FieldInfo)
 	 */
+	@Override
 	public void enterField(FieldInfo fieldInfo) {
 		// default implementation: do nothing
 	}
@@ -150,14 +166,17 @@ public class SourceElementRequestorAdapter implements ISourceElementRequestor {
 	/**
 	 * @see ISourceElementRequestor#enterInitializer(int, int)
 	 */
+	@Override
 	public void enterInitializer(int declarationStart, int modifiers) {
 		// default implementation: do nothing
 	}
 
+	@Override
 	public void enterMethod(MethodInfo methodInfo) {
 		// default implementation: do nothing
 	}
 
+	@Override
 	public void enterType(TypeInfo typeInfo) {
 		// default implementation: do nothing
 	}
@@ -165,6 +184,7 @@ public class SourceElementRequestorAdapter implements ISourceElementRequestor {
 	/**
 	 * @see ISourceElementRequestor#exitCompilationUnit(int)
 	 */
+	@Override
 	public void exitCompilationUnit(int declarationEnd) {
 		// default implementation: do nothing
 	}
@@ -172,6 +192,7 @@ public class SourceElementRequestorAdapter implements ISourceElementRequestor {
 	/**
 	 * @see ISourceElementRequestor#exitConstructor(int)
 	 */
+	@Override
 	public void exitConstructor(int declarationEnd) {
 		// default implementation: do nothing
 	}
@@ -179,6 +200,7 @@ public class SourceElementRequestorAdapter implements ISourceElementRequestor {
 	/**
 	 * @see ISourceElementRequestor#exitField(int, int, int)
 	 */
+	@Override
 	public void exitField(int initializationStart, int declarationEnd, int declarationSourceEnd) {
 		// default implementation: do nothing
 	}
@@ -186,6 +208,7 @@ public class SourceElementRequestorAdapter implements ISourceElementRequestor {
 	/**
 	 * @see ISourceElementRequestor#exitInitializer(int)
 	 */
+	@Override
 	public void exitInitializer(int declarationEnd) {
 		// default implementation: do nothing
 	}
@@ -193,6 +216,7 @@ public class SourceElementRequestorAdapter implements ISourceElementRequestor {
 	/**
 	 * @see ISourceElementRequestor#exitMethod(int, Expression)
 	 */
+	@Override
 	public void exitMethod(int declarationEnd, Expression defaultValue) {
 		// default implementation: do nothing
 	}
@@ -200,6 +224,7 @@ public class SourceElementRequestorAdapter implements ISourceElementRequestor {
 	/**
 	 * @see ISourceElementRequestor#exitType(int)
 	 */
+	@Override
 	public void exitType(int declarationEnd) {
 		// default implementation: do nothing
 	}

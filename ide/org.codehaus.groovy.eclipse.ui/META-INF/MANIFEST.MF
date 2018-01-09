@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.ui;singleton:=true
 Bundle-Name: Groovy UI
 Bundle-Vendor: Codehaus.org
-Bundle-Version: 2.9.2.qualifier
+Bundle-Version: 3.0.0.qualifier
 Export-Package: org.codehaus.groovy.eclipse,
  org.codehaus.groovy.eclipse.actions,
  org.codehaus.groovy.eclipse.adapters,
@@ -23,11 +23,11 @@ Export-Package: org.codehaus.groovy.eclipse,
  org.codehaus.groovy.eclipse.ui.decorators,
  org.codehaus.groovy.eclipse.ui.utils,
  org.codehaus.groovy.eclipse.wizards
-Require-Bundle: org.codehaus.groovy;bundle-version="1.8.9",
- org.codehaus.groovy.eclipse.core;bundle-version="2.9.2",
- org.codehaus.groovy.eclipse.codebrowsing;bundle-version="2.9.2",
- org.codehaus.groovy.eclipse.compilerResolver;bundle-version="2.9.2",
- org.codehaus.groovy.eclipse.refactoring;bundle-version="2.9.2",
+Require-Bundle: org.codehaus.groovy;bundle-version="2.1.9",
+ org.codehaus.groovy.eclipse.core;bundle-version="3.0.0",
+ org.codehaus.groovy.eclipse.codebrowsing;bundle-version="3.0.0",
+ org.codehaus.groovy.eclipse.compilerResolver;bundle-version="3.0.0",
+ org.codehaus.groovy.eclipse.refactoring;bundle-version="3.0.0",
  org.eclipse.core.expressions;visibility:=reexport,
  org.eclipse.core.filesystem,
  org.eclipse.core.runtime,
@@ -37,7 +37,7 @@ Require-Bundle: org.codehaus.groovy;bundle-version="1.8.9",
  org.eclipse.jdt.core.manipulation;visibility:=reexport,
  org.eclipse.jdt.debug,
  org.eclipse.jdt.debug.ui,
- org.eclipse.jdt.groovy.core;bundle-version="2.9.2",
+ org.eclipse.jdt.groovy.core;bundle-version="3.0.0",
  org.eclipse.jdt.junit,
  org.eclipse.jdt.launching,
  org.eclipse.jdt.ui;visibility:=reexport,
@@ -54,4 +54,4 @@ Require-Bundle: org.codehaus.groovy;bundle-version="1.8.9",
  org.eclipse.ui.workbench.texteditor
 Bundle-ActivationPolicy: lazy;exclude:="org.codehaus.groovy.eclipse.ui.decorators"
 Bundle-Activator: org.codehaus.groovy.eclipse.GroovyPlugin
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8

@@ -111,6 +111,7 @@ public FlowInfo analyseCode(MethodScope initializationScope, FlowContext flowCon
  * @param currentScope org.eclipse.jdt.internal.compiler.lookup.BlockScope
  * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
  */
+@Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	if ((this.bits & IsReachable) == 0) {
 		return;
@@ -145,6 +146,7 @@ public void getAllAnnotationContexts(int targetType, List allAnnotationContexts)
 /**
  * @see org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration#getKind()
  */
+@Override
 public int getKind() {
 	return this.type == null ? ENUM_CONSTANT : FIELD;
 }
@@ -161,6 +163,7 @@ public boolean isFinal() {
 	return (this.modifiers & ClassFileConstants.AccFinal) != 0;
 }
 
+@Override
 public StringBuffer printStatement(int indent, StringBuffer output) {
 	if (this.javadoc != null) {
 		this.javadoc.print(indent, output);

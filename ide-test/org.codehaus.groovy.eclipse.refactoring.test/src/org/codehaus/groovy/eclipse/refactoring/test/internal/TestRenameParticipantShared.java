@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IField;
@@ -41,12 +42,13 @@ import org.junit.Assert;
 public final class TestRenameParticipantShared extends RenameParticipant implements ISharableParticipant {
 
     static TestRenameParticipantShared fgInstance;
-    List<Object> fElements = new ArrayList<Object>(3);
-    List<String> fHandles = new ArrayList<String>(3);
-    List<RenameArguments> fArguments = new ArrayList<RenameArguments>(3);
-    Map<String, String> fSimilarToHandle = new HashMap<String, String>();
-    Map<String, String> fSimilarToNewName = new HashMap<String, String>();
+    List<Object> fElements = new ArrayList<>(3);
+    List<String> fHandles = new ArrayList<>(3);
+    List<RenameArguments> fArguments = new ArrayList<>(3);
+    Map<String, String> fSimilarToHandle = new HashMap<>();
+    Map<String, String> fSimilarToNewName = new HashMap<>();
 
+    @Override
     public boolean initialize(Object element) {
         fgInstance = this;
         fElements.add(element);
@@ -56,8 +58,7 @@ public final class TestRenameParticipantShared extends RenameParticipant impleme
         } else {
             fHandles.add(((IResource) element).getFullPath().toString());
         }
-        @SuppressWarnings("cast")
-        IJavaElementMapper updating = (IJavaElementMapper) getProcessor().getAdapter(IJavaElementMapper.class);
+        IJavaElementMapper updating = Adapters.adapt(getProcessor(), IJavaElementMapper.class);
         if ((updating != null) && getArguments() instanceof RenameTypeArguments) {
             RenameTypeArguments arguments = (RenameTypeArguments) getArguments();
             if (arguments.getUpdateSimilarDeclarations()) {
@@ -85,6 +86,7 @@ public final class TestRenameParticipantShared extends RenameParticipant impleme
         return "";
     }
 
+    @Override
     public void addElement(Object element, RefactoringArguments args) {
         fElements.add(element);
         fArguments.add((RenameArguments) args);
@@ -94,14 +96,17 @@ public final class TestRenameParticipantShared extends RenameParticipant impleme
             fHandles.add(((IResource) element).getFullPath().toString());
     }
 
+    @Override
     public String getName() {
         return getClass().getName();
     }
 
+    @Override
     public RefactoringStatus checkConditions(IProgressMonitor pm, CheckConditionsContext context) {
         return new RefactoringStatus();
     }
 
+    @Override
     public Change createChange(IProgressMonitor pm) throws CoreException {
         return null;
     }

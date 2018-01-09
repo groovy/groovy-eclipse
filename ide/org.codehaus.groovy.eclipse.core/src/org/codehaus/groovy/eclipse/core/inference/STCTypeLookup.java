@@ -54,9 +54,11 @@ public class STCTypeLookup implements ITypeLookup {
     // only enabled for Groovy 2.0 or greater
     private static final boolean isEnabled = (CompilerUtils.getActiveGroovyBundle().getVersion().getMajor() >= 2);
 
+    @Override
     public void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {
     }
 
+    @Override
     public TypeLookupResult lookupType(Expression expr, VariableScope scope, ClassNode objectExpressionType) {
         if (isEnabled) {
             ASTNode declaration = expr;
@@ -121,6 +123,7 @@ public class STCTypeLookup implements ITypeLookup {
         return null;
     }
 
+    @Override
     public TypeLookupResult lookupType(FieldNode node, VariableScope scope) {
         if (isEnabled) {
             Object inferredType = node.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
@@ -131,6 +134,7 @@ public class STCTypeLookup implements ITypeLookup {
         return null;
     }
 
+    @Override
     public TypeLookupResult lookupType(MethodNode node, VariableScope scope) {
         if (isEnabled) {
             Object inferredType = node.getNodeMetaData(StaticTypesMarker.INFERRED_RETURN_TYPE);
@@ -141,18 +145,22 @@ public class STCTypeLookup implements ITypeLookup {
         return null;
     }
 
+    @Override
     public TypeLookupResult lookupType(AnnotationNode node, VariableScope scope) {
         return null;
     }
 
+    @Override
     public TypeLookupResult lookupType(ImportNode node, VariableScope scope) {
         return null;
     }
 
+    @Override
     public TypeLookupResult lookupType(ClassNode node, VariableScope scope) {
         return null;
     }
 
+    @Override
     public TypeLookupResult lookupType(Parameter node, VariableScope scope) {
         return null;
     }
@@ -170,7 +178,7 @@ public class STCTypeLookup implements ITypeLookup {
             Matcher m = Pattern.compile("super\\$(\\d+)\\$(.+)").matcher(call.getMethodAsString());
             if (m.matches()) {
                 int dist = Integer.parseInt(m.group(1));
-                List<ClassNode> types = new ArrayList<ClassNode>();
+                List<ClassNode> types = new ArrayList<>();
                 for (ClassNode next = call.getMethodTarget().getDeclaringClass(); next != null; next = next.getSuperClass()) {
                     types.add(next);
                 }

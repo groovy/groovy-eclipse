@@ -26,8 +26,6 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.RadioGroupFieldEditor;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
@@ -59,11 +57,7 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
                 if (text != null) {
                     myLabel.setText(text);
                 }
-                myLabel.addDisposeListener(new DisposeListener() {
-                    public void widgetDisposed(DisposeEvent event) {
-                        myLabel = null;
-                    }
-                });
+                myLabel.addDisposeListener(event -> { myLabel = null; });
             } else {
                 checkParent(myLabel, parent);
             }
@@ -81,6 +75,7 @@ public class GroovyPreferencePage extends FieldEditorOverlayPage implements IWor
         setPreferenceStore(GroovyPlugin.getDefault().getPreferenceStore());
     }
 
+    @Override
     public void init(IWorkbench workbench) {
     }
 

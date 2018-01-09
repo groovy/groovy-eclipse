@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,17 +26,14 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
  * Completes new variable and field names when the type is known.
- *
- * @author andrew
- * @created Apr 29, 2011
  */
 public class NewVariableCompletionProcessor extends AbstractGroovyCompletionProcessor {
 
-    public NewVariableCompletionProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext,
-            SearchableEnvironment nameEnvironment) {
+    public NewVariableCompletionProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
         super(context, javaContext, nameEnvironment);
     }
 
+    @Override
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
         // a: if completion text is empty
         // if in statement/script, search text backwards for previous token. Do
@@ -53,5 +50,4 @@ public class NewVariableCompletionProcessor extends AbstractGroovyCompletionProc
         // if in class body, see if current node is a field node.
         return Collections.emptyList();
     }
-
 }

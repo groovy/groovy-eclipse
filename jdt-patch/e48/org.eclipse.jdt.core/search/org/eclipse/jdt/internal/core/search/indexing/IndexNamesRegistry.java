@@ -39,7 +39,7 @@ public class IndexNamesRegistry {
 	public IndexNamesRegistry(File savedIndexNamesFile, IPath javaPluginWorkingLocation) {
 		super();
 		this.savedIndexNamesFile = savedIndexNamesFile;
-		this.writeJob = Job.create("", this::save); //$NON-NLS-1$
+		this.writeJob = Job.create("Updating index names", this::save); //$NON-NLS-1$
 		this.writeJob.setSystem(true);
 		this.javaPluginWorkingLocation = javaPluginWorkingLocation;
 	}

@@ -32,6 +32,7 @@ public class CompositeRule implements IRelevanceRule {
         this.rules = rules;
     }
 
+    @Override
     public int getRelevance(IType type, IType[] contextTypes) {
         double relevance = 0;
 
@@ -42,6 +43,7 @@ public class CompositeRule implements IRelevanceRule {
         return Math.max(1, (int) Math.ceil(relevance));
     }
 
+    @Override
     public int getRelevance(char[] fullyQualifiedName, IType[] contextTypes, int accessibility, int modifiers) {
         double relevance = 0;
 
@@ -59,7 +61,7 @@ public class CompositeRule implements IRelevanceRule {
     }
 
     public static IRelevanceRule of(double weight1, IRelevanceRule rule1, double weight2, IRelevanceRule rule2) {
-        Map<IRelevanceRule, Double> rules = new IdentityHashMap<IRelevanceRule, Double>();
+        Map<IRelevanceRule, Double> rules = new IdentityHashMap<>();
         rules.put(rule1, weight1);
         rules.put(rule2, weight2);
 
@@ -67,7 +69,7 @@ public class CompositeRule implements IRelevanceRule {
     }
 
     public static IRelevanceRule of(double weight1, IRelevanceRule rule1, double weight2, IRelevanceRule rule2, double weight3, IRelevanceRule rule3) {
-        Map<IRelevanceRule, Double> rules = new IdentityHashMap<IRelevanceRule, Double>();
+        Map<IRelevanceRule, Double> rules = new IdentityHashMap<>();
         rules.put(rule1, weight1);
         rules.put(rule2, weight2);
         rules.put(rule3, weight3);

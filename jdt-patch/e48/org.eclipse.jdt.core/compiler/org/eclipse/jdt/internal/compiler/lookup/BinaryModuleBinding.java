@@ -33,6 +33,7 @@ public class BinaryModuleBinding extends ModuleBinding {
 			this.requiresTransitive = Binding.NO_MODULES;
 			this.exportedPackages = Binding.NO_PACKAGES;
 		}
+		@Override
 		public ModuleBinding[] getRequiresTransitive() {
 			if (this.requiresTransitive == NO_MODULES) {
 				char[][] autoModules = ((IModuleAwareNameEnvironment)this.environment.nameEnvironment).getAllAutomaticModules();

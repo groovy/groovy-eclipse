@@ -138,6 +138,7 @@ public class MessageSend extends Expression implements IPolyExpression, Invocati
 	public boolean argumentsHaveErrors = false;
 	
 
+@Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 	boolean nonStatic = !this.binding.isStatic();
 	boolean wasInsideAssert = ((flowContext.tagBits & FlowContext.HIDE_NULL_COMPARISON_WARNING) != 0);
@@ -399,6 +400,7 @@ private FlowInfo analyseNullAssertion(BlockScope currentScope, Expression argume
 	return flowInfo;
 }
 
+@Override
 public boolean checkNPE(BlockScope scope, FlowContext flowContext, FlowInfo flowInfo, int ttlForFieldCheck) {
 	// message send as a receiver
 	int nullStatus = nullStatus(flowInfo, flowContext); // note that flowInfo is not used inside nullStatus(..)
@@ -418,6 +420,7 @@ public boolean checkNPE(BlockScope scope, FlowContext flowContext, FlowInfo flow
 /**
  * @see org.eclipse.jdt.internal.compiler.ast.Expression#computeConversion(org.eclipse.jdt.internal.compiler.lookup.Scope, org.eclipse.jdt.internal.compiler.lookup.TypeBinding, org.eclipse.jdt.internal.compiler.lookup.TypeBinding)
  */
+@Override
 public void computeConversion(Scope scope, TypeBinding runtimeTimeType, TypeBinding compileTimeType) {
 	if (runtimeTimeType == null || compileTimeType == null)
 		return;
@@ -458,6 +461,7 @@ public void computeConversion(Scope scope, TypeBinding runtimeTimeType, TypeBind
  * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
  * @param valueRequired boolean
  */
+@Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 	cleanUpInferenceContexts();
 	int pc = codeStream.position;
@@ -521,13 +525,16 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean
 /**
  * @see org.eclipse.jdt.internal.compiler.lookup.InvocationSite#genericTypeArguments()
  */
+@Override
 public TypeBinding[] genericTypeArguments() {
 	return this.genericTypeArguments;
 }
 
+@Override
 public boolean isSuperAccess() {
 	return this.receiver.isSuper();
 }
+@Override
 public boolean isTypeAccess() {
 	return this.receiver != null && this.receiver.isTypeReference();
 }
@@ -569,6 +576,7 @@ public void manageSyntheticAccessIfNecessary(BlockScope currentScope, FlowInfo f
 		}
 	}
 }
+@Override
 public int nullStatus(FlowInfo flowInfo, FlowContext flowContext) {
 	if ((this.implicitConversion & TypeIds.BOXING) != 0)
 		return FlowInfo.NON_NULL;
@@ -587,6 +595,7 @@ public int nullStatus(FlowInfo flowInfo, FlowContext flowContext) {
 /**
  * @see org.eclipse.jdt.internal.compiler.ast.Expression#postConversionType(Scope)
  */
+@Override
 public TypeBinding postConversionType(Scope scope) {
 	TypeBinding convertedType = this.resolvedType;
 	if (this.valueCast != null)
@@ -625,6 +634,7 @@ public TypeBinding postConversionType(Scope scope) {
 	return convertedType;
 }
 
+@Override
 public StringBuffer printExpression(int indent, StringBuffer output){
 
 	if (!this.receiver.isImplicitThis()) this.receiver.printExpression(0, output).append('.');
@@ -648,6 +658,7 @@ public StringBuffer printExpression(int indent, StringBuffer output){
 	return output.append(')');
 }
 
+@Override
 public TypeBinding resolveType(BlockScope scope) {
 	// Answer the signature return type, answers PolyTypeBinding if a poly expression and there is no target type  
 	// Base type promotion
@@ -946,10 +957,12 @@ protected TypeBinding findMethodBinding(BlockScope scope) {
 	return this.binding.returnType;
 }
 
+@Override
 public void setActualReceiverType(ReferenceBinding receiverType) {
 	if (receiverType == null) return; // error scenario only
 	this.actualReceiverType = receiverType;
 }
+@Override
 public void setDepth(int depth) {
 	this.bits &= ~ASTNode.DepthMASK; // flush previous depth if any
 	if (depth > 0) {
@@ -960,14 +973,17 @@ public void setDepth(int depth) {
 /**
  * @see org.eclipse.jdt.internal.compiler.ast.Expression#setExpectedType(org.eclipse.jdt.internal.compiler.lookup.TypeBinding)
  */
+@Override
 public void setExpectedType(TypeBinding expectedType) {
     this.expectedType = expectedType;
 }
 
+@Override
 public void setExpressionContext(ExpressionContext context) {
 	this.expressionContext = context;
 }
 
+@Override
 public boolean isPolyExpression() {
 	
 	/* 15.12 has four requirements: 1) The invocation appears in an assignment context or an invocation context
@@ -980,6 +996,7 @@ public boolean isPolyExpression() {
 	return isPolyExpression(this.binding);
 }
 
+@Override
 public boolean isBoxingCompatibleWith(TypeBinding targetType, Scope scope) {
 	if (this.argumentsHaveErrors || this.binding == null || !this.binding.isValidBinding() || targetType == null || scope == null)
 		return false;
@@ -1002,6 +1019,7 @@ public boolean isBoxingCompatibleWith(TypeBinding targetType, Scope scope) {
 	}
 }
 
+@Override
 public boolean isCompatibleWith(TypeBinding targetType, final Scope scope) {
 	if (this.argumentsHaveErrors || this.binding == null || !this.binding.isValidBinding() || targetType == null || scope == null)
 		return false;
@@ -1017,6 +1035,8 @@ public boolean isCompatibleWith(TypeBinding targetType, final Scope scope) {
 		TypeBinding returnType;
 		if (method == null || !method.isValidBinding() || (returnType = method.returnType) == null || !returnType.isValidBinding())
 			return false;
+		if ((this.bits & ASTNode.Unchecked) != 0 && this.genericTypeArguments == null)
+			returnType = scope.environment().convertToRawType(returnType.erasure(), true);
 		return returnType.capture(scope, this.sourceStart, this.sourceEnd).isCompatibleWith(targetType, scope);
 	} finally {
 		this.expectedType = originalExpectedType;
@@ -1024,6 +1044,7 @@ public boolean isCompatibleWith(TypeBinding targetType, final Scope scope) {
 }
 
 /** Variant of isPolyExpression() to be used during type inference, when a resolution candidate exists. */
+@Override
 public boolean isPolyExpression(MethodBinding resolutionCandidate) {
 	if (this.expressionContext != ASSIGNMENT_CONTEXT && this.expressionContext != INVOCATION_CONTEXT)
 		return false;
@@ -1050,19 +1071,23 @@ public boolean isPolyExpression(MethodBinding resolutionCandidate) {
 	return false;
 }
 
+@Override
 public boolean sIsMoreSpecific(TypeBinding s, TypeBinding t, Scope scope) {
 	if (super.sIsMoreSpecific(s, t, scope))
 		return true;
 	return isPolyExpression() ? !s.isBaseType() && t.isBaseType() : false;
 }
 
+@Override
 public void setFieldIndex(int depth) {
 	// ignore for here
 }
+@Override
 public TypeBinding invocationTargetType() {
 	return this.expectedType;
 }
 
+@Override
 public void traverse(ASTVisitor visitor, BlockScope blockScope) {
 	if (visitor.visit(this, blockScope)) {
 		this.receiver.traverse(visitor, blockScope);
@@ -1079,17 +1104,21 @@ public void traverse(ASTVisitor visitor, BlockScope blockScope) {
 	}
 	visitor.endVisit(this, blockScope);
 }
+@Override
 public boolean statementExpression() {
 	return ((this.bits & ASTNode.ParenthesizedMASK) == 0);
 }
+@Override
 public boolean receiverIsImplicitThis() {
 	return this.receiver.isImplicitThis();
 }
 // -- interface Invocation: --
+@Override
 public MethodBinding binding() {
 	return this.binding;
 }
 
+@Override
 public void registerInferenceContext(ParameterizedGenericMethodBinding method, InferenceContext18 infCtx18) {
 	if (this.inferenceContexts == null)
 		this.inferenceContexts = new SimpleLookupTable();
@@ -1103,6 +1132,7 @@ public void registerResult(TypeBinding targetType, MethodBinding method) {
 	this.solutionsPerTargetType.put(targetType, method);
 }
 
+@Override
 public InferenceContext18 getInferenceContext(ParameterizedMethodBinding method) {
 	if (this.inferenceContexts == null)
 		return null;
@@ -1119,13 +1149,16 @@ public void cleanUpInferenceContexts() {
 	this.outerInferenceContext = null;
 	this.solutionsPerTargetType = null;
 }
+@Override
 public Expression[] arguments() {
 	return this.arguments;
 }
+@Override
 public ExpressionContext getExpressionContext() {
 	return this.expressionContext;
 }
 // -- Interface InvocationSite: --
+@Override
 public InferenceContext18 freshInferenceContext(Scope scope) {
 	return new InferenceContext18(scope, this.arguments, this, this.outerInferenceContext);
 }

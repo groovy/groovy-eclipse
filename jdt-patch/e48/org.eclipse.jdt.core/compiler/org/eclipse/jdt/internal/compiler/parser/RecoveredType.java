@@ -82,6 +82,7 @@ public RecoveredType(TypeDeclaration typeDeclaration, RecoveredElement parent, i
 
 	this.preserveContent = parser().methodRecoveryActivated || parser().statementRecoveryActivated;
 }
+@Override
 public RecoveredElement add(AbstractMethodDeclaration methodDeclaration, int bracketBalanceValue) {
 
 	/* do not consider a method starting passed the type end (if set)
@@ -135,6 +136,7 @@ public RecoveredElement add(AbstractMethodDeclaration methodDeclaration, int bra
 	if (methodDeclaration.declarationSourceEnd == 0) return element;
 	return this;
 }
+@Override
 public RecoveredElement add(Block nestedBlockDeclaration,int bracketBalanceValue) {
 	this.pendingTypeParameters = null;
 	resetPendingModifiers();
@@ -145,6 +147,7 @@ public RecoveredElement add(Block nestedBlockDeclaration,int bracketBalanceValue
 	}
 	return this.add(new Initializer(nestedBlockDeclaration, mods), bracketBalanceValue);
 }
+@Override
 public RecoveredElement add(FieldDeclaration fieldDeclaration, int bracketBalanceValue) {
 	this.pendingTypeParameters = null;
 
@@ -203,6 +206,7 @@ public RecoveredElement add(FieldDeclaration fieldDeclaration, int bracketBalanc
 	if (fieldDeclaration.declarationSourceEnd == 0) return element;
 	return this;
 }
+@Override
 public RecoveredElement add(TypeDeclaration memberTypeDeclaration, int bracketBalanceValue) {
 	this.pendingTypeParameters = null;
 
@@ -273,6 +277,7 @@ public void add(TypeParameter[] parameters, int startPos) {
 	this.pendingTypeParameters = parameters;
 	this.pendingTypeParametersStart = startPos;
 }
+@Override
 public RecoveredElement addAnnotationName(int identifierPtr, int identifierLengthPtr, int annotationStart, int bracketBalanceValue) {
 	if (this.pendingAnnotations == null) {
 		this.pendingAnnotations = new RecoveredAnnotation[5];
@@ -294,6 +299,7 @@ public RecoveredElement addAnnotationName(int identifierPtr, int identifierLengt
 
 	return element;
 }
+@Override
 public void addModifier(int flag, int modifiersSourceStart) {
 	this.pendingModifiers |= flag;
 
@@ -350,6 +356,7 @@ public boolean bodyStartsAtHeaderEnd(){
 /*
  * Answer the enclosing type node, or null if none
  */
+@Override
 public RecoveredType enclosingType(){
 	RecoveredElement current = this.parent;
 	while (current != null){
@@ -419,9 +426,11 @@ public char[] name(){
 /*
  * Answer the associated parsed structure
  */
+@Override
 public ASTNode parseTree(){
 	return this.typeDeclaration;
 }
+@Override
 public void resetPendingModifiers() {
 	this.pendingAnnotations = null;
 	this.pendingAnnotationCount = 0;
@@ -431,9 +440,11 @@ public void resetPendingModifiers() {
 /*
  * Answer the very source end of the corresponding parse node
  */
+@Override
 public int sourceEnd(){
 	return this.typeDeclaration.declarationSourceEnd;
 }
+@Override
 public String toString(int tab) {
 	StringBuffer result = new StringBuffer(tabString(tab));
 	result.append("Recovered type:\n"); //$NON-NLS-1$
@@ -471,10 +482,12 @@ public String toString(int tab) {
 /*
  * Update the bodyStart of the corresponding parse node
  */
+@Override
 public void updateBodyStart(int bodyStart){
 	this.foundOpeningBrace = true;
 	this.typeDeclaration.bodyStart = bodyStart;
 }
+@Override
 public Statement updatedStatement(int depth, Set knownTypes){
 
 	// ignore closed anonymous type
@@ -696,6 +709,7 @@ public TypeDeclaration updatedTypeDeclaration(int depth, Set<TypeDeclaration> kn
  * Update the corresponding parse node from parser state which
  * is about to disappear because of restarting recovery
  */
+@Override
 public void updateFromParserState(){
 
 	// anymous type and enum constant doesn't need to be updated
@@ -753,6 +767,7 @@ public void updateFromParserState(){
  * A closing brace got consumed, might have closed the current element,
  * in which case both the currentElement is exited
  */
+@Override
 public RecoveredElement updateOnClosingBrace(int braceStart, int braceEnd){
 	if ((--this.bracketBalance <= 0) && (this.parent != null)){
 		this.updateSourceEndIfNecessary(braceStart, braceEnd);
@@ -765,6 +780,7 @@ public RecoveredElement updateOnClosingBrace(int braceStart, int braceEnd){
  * An opening brace got consumed, might be the expected opening one of the current element,
  * in which case the bodyStart is updated.
  */
+@Override
 public RecoveredElement updateOnOpeningBrace(int braceStart, int braceEnd){
 	/* in case the opening brace is not close enough to the signature, ignore it */
 	if (this.bracketBalance == 0){
@@ -804,12 +820,14 @@ public RecoveredElement updateOnOpeningBrace(int braceStart, int braceEnd){
 	}
 	return super.updateOnOpeningBrace(braceStart, braceEnd);
 }
+@Override
 public void updateParseTree(){
 	updatedTypeDeclaration(0, new HashSet());
 }
 /*
  * Update the declarationSourceEnd of the corresponding parse node
  */
+@Override
 public void updateSourceEndIfNecessary(int start, int end){
 	if (this.typeDeclaration.declarationSourceEnd == 0){
 		this.bodyEnd = 0;

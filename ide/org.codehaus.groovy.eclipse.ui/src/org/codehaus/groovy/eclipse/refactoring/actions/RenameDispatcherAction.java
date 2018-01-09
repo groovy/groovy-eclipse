@@ -19,6 +19,7 @@ import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.CandidateCollector;
 import org.codehaus.groovy.eclipse.refactoring.core.rename.JavaRefactoringDispatcher;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jdt.core.IJavaElement;
@@ -36,6 +37,7 @@ import org.eclipse.ui.PlatformUI;
 
 public class RenameDispatcherAction extends GroovyRefactoringAction {
 
+    @Override
     public void run(IAction action) {
         if (initRefactoring()) {
             GroovyCompilationUnit unit = getUnit();
@@ -82,8 +84,7 @@ public class RenameDispatcherAction extends GroovyRefactoringAction {
     private boolean runViaAdapter(ISourceReference targetParam, boolean lightweight) {
         try {
             if (targetParam instanceof IAdaptable) {
-                @SuppressWarnings("cast")
-                IRenameTarget target = (IRenameTarget) ((IAdaptable) targetParam).getAdapter(IRenameTarget.class);
+                IRenameTarget target = Adapters.adapt(targetParam, IRenameTarget.class);
                 if (target != null) {
                     return target.performRenameAction(getShell(), getEditor(), lightweight);
                 }

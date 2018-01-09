@@ -173,6 +173,7 @@ public MethodDeclarationPattern(int matchRule) {
 	super(matchRule);
 }
 
+@Override
 public void decodeIndexKey(char[] key) {
 	
 	int start = 0;
@@ -262,10 +263,12 @@ public void decodeIndexKey(char[] key) {
 	removeInternalFlags(); // remove internal flags
 }
 
+	@Override
 	public SearchPattern getBlankPattern() {
 		return new MethodDeclarationPattern(R_EXACT_MATCH | R_CASE_SENSITIVE);
 	}
 
+	@Override
 	public char[][] getIndexCategories() {
 		return new char[][] { METHOD_DECL_PLUS };
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,6 @@ import org.codehaus.groovy.eclipse.core.ISourceBuffer;
 
 /**
  * A buffer useful for reverse regex.
- *
- * @author empovazan
  */
 public class ReverseSourceBuffer implements ISourceBuffer {
     private ISourceBuffer buffer;
@@ -32,23 +30,27 @@ public class ReverseSourceBuffer implements ISourceBuffer {
         this.origin = origin;
     }
 
+    @Override
     public char charAt(int offset) {
-        char ch = buffer.charAt(origin - offset);
-        return ch;
+        return buffer.charAt(origin - offset);
     }
 
+    @Override
     public int length() {
         return origin + 1;
     }
 
+    @Override
     public CharSequence subSequence(int start, int end) {
         return buffer.subSequence(origin - end + 1, origin - start + 1);
     }
 
+    @Override
     public int[] toLineColumn(int offset) {
         throw new UnsupportedOperationException();
     }
 
+    @Override
     public int toOffset(int line, int column) {
         throw new UnsupportedOperationException();
     }

@@ -20,8 +20,6 @@ import org.codehaus.groovy.eclipse.dsl.script.PointcutFactory
 
 /**
  * This is the meta DSL descriptor for *.dsld files.
- *
- * @author Andrew Eisenberg
  */
 
 // first thing to do is to check that versions are correct

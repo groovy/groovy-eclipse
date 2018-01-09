@@ -127,18 +127,22 @@ public class InferenceVariable extends TypeVariableBinding {
 		return clone;
 	}
 
+	@Override
 	public InferenceVariable prototype() {
 		return this.prototype;
 	}
 
+	@Override
 	public char[] constantPoolName() {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public PackageBinding getPackage() {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public boolean isCompatibleWith(TypeBinding right, Scope scope) {
 		// if inference variables are ever checked for compatibility
 		// (like during inner resolve of a ReferenceExpression during inference)
@@ -146,48 +150,59 @@ public class InferenceVariable extends TypeVariableBinding {
 		return true;
 	}
 
+	@Override
 	public boolean isProperType(boolean admitCapture18) {
 		return false;
 	}
 
+	@Override
 	TypeBinding substituteInferenceVariable(InferenceVariable var, TypeBinding substituteType) {
 		if (TypeBinding.equalsEquals(this, var))
 			return substituteType;
 		return this;
 	}
 
+	@Override
 	void collectInferenceVariables(Set<InferenceVariable> variables) {
 		variables.add(this);
 	}
 
+	@Override
 	public ReferenceBinding[] superInterfaces() {
 		return Binding.NO_SUPERINTERFACES;
 	}
 
+	@Override
 	public char[] qualifiedSourceName() {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public char[] sourceName() {
 		return this.sourceName;
 	}
 
+	@Override
 	public char[] readableName() {
 		return this.sourceName;
 	}
 
+	@Override
 	public boolean hasTypeBit(int bit) {
 		throw new UnsupportedOperationException();
 	}
 	
+	@Override
 	public String debugName() {
 		return String.valueOf(this.sourceName);
 	}
 	
+	@Override
 	public String toString() {
 		return debugName();
 	}
 	
+	@Override
 	public int hashCode() {
 		int code = this.typeParameter.hashCode() + 17 * this.rank;
 		if (this.site != null) {
@@ -196,6 +211,7 @@ public class InferenceVariable extends TypeVariableBinding {
 		}
 		return code;
 	}
+	@Override
 	public boolean equals(Object obj) {
 		if (!(obj instanceof InferenceVariable))
 			return false;
@@ -205,6 +221,7 @@ public class InferenceVariable extends TypeVariableBinding {
 				&& TypeBinding.equalsEquals(this.typeParameter, other.typeParameter);
 	}
 
+	@Override
 	public TypeBinding erasure() {
 		// lazily initialize field that may be required in super.erasure():
 		if (this.superclass == null)

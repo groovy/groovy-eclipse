@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,9 +24,6 @@ import org.codehaus.groovy.eclipse.codebrowsing.fragments.MethodCallFragment;
 
 /**
  * Checks to see if an expression is definitely not static.
- *
- * @author Andrew Eisenberg
- * @created May 11, 2010
  */
 public class StaticFragmentChecker extends FragmentVisitor {
 

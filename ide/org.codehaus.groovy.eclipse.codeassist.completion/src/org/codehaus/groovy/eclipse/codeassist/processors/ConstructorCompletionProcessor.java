@@ -46,10 +46,12 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
         super(context, javaContext, nameEnvironment);
     }
 
+    @Override
     public void setResolverInformation(ModuleNode module, JDTResolver resolver) {
         this.resolver = resolver;
     }
 
+    @Override
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
         ContentAssistContext context = getContext();
         char[] constructorText; int constructorStart;
@@ -78,7 +80,7 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
         if (context.location != ContentAssistLocation.METHOD_CONTEXT) {
             return Collections.emptySet();
         }
-        Set<String> usedParams = new HashSet<String>();
+        Set<String> usedParams = new HashSet<>();
         ASTNode completionNode = context.completionNode;
         if (completionNode instanceof ConstructorCallExpression) {
             // next find out if there are any existing named args

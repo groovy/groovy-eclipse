@@ -30,22 +30,27 @@ public QualifiedSuperReference(TypeReference name, int pos, int sourceEnd) {
 	super(name, pos, sourceEnd);
 }
 
+@Override
 public boolean isSuper() {
 	return true;
 }
 
+@Override
 public boolean isQualifiedSuper() {
 	return true;
 }
 
+@Override
 public boolean isThis() {
 	return false;
 }
 
+@Override
 public StringBuffer printExpression(int indent, StringBuffer output) {
 	return this.qualification.print(0, output).append(".super"); //$NON-NLS-1$
 }
 
+@Override
 public TypeBinding resolveType(BlockScope scope) {
 	if ((this.bits & ParenthesizedMASK) != 0) {
 		scope.problemReporter().invalidParenthesizedExpression(this);
@@ -68,6 +73,7 @@ public TypeBinding resolveType(BlockScope scope) {
 			: this.currentCompatibleType.superclass());
 }
 
+@Override
 int findCompatibleEnclosing(ReferenceBinding enclosingType, TypeBinding type, BlockScope scope) {
 	if (type.isInterface()) {
 		// super call to an overridden default method? (not considering outer enclosings)
@@ -103,6 +109,7 @@ int findCompatibleEnclosing(ReferenceBinding enclosingType, TypeBinding type, Bl
 	return super.findCompatibleEnclosing(enclosingType, type, scope);
 }
 
+@Override
 public void traverse(
 	ASTVisitor visitor,
 	BlockScope blockScope) {
@@ -112,6 +119,7 @@ public void traverse(
 	}
 	visitor.endVisit(this, blockScope);
 }
+@Override
 public void traverse(
 		ASTVisitor visitor,
 		ClassScope blockScope) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,26 +25,18 @@ import org.eclipse.jdt.debug.ui.launchConfigurations.JavaArgumentsTab;
 import org.eclipse.jdt.debug.ui.launchConfigurations.JavaClasspathTab;
 import org.eclipse.jdt.debug.ui.launchConfigurations.JavaJRETab;
 
+public class GroovyScriptLaunchConfigurationTabGroup extends AbstractLaunchConfigurationTabGroup {
 
-/**
- * @see AbstractLaunchConfigurationTabGroup
- */
-public class GroovyScriptLaunchConfigurationTabGroup
-extends AbstractLaunchConfigurationTabGroup {
-
-
-    /**
-     * @see AbstractLaunchConfigurationTabGroup#createTabs
-     */
+    @Override
     public void createTabs(ILaunchConfigurationDialog dialog, String mode) {
         ILaunchConfigurationTab[] tabs = new ILaunchConfigurationTab[] {
-                new GroovyScriptLauncherTab(),
-                new JavaArgumentsTab(),
-                new JavaJRETab(),
-                new JavaClasspathTab(),
-                new SourceLookupTab(),
-                new EnvironmentTab(),
-                new CommonTab()
+            new GroovyScriptLauncherTab(),
+            new JavaArgumentsTab(),
+            new JavaJRETab(),
+            new JavaClasspathTab(),
+            new SourceLookupTab(),
+            new EnvironmentTab(),
+            new CommonTab(),
         };
         setTabs(tabs);
     }

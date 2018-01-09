@@ -37,6 +37,7 @@ public class CompletionOnExportReference extends ExportsStatement {
 	public CompletionOnExportReference(ImportReference ref) {
 		super(ref, null);
 	}
+	@Override
 	public StringBuffer print(int indent, StringBuffer output) {
 
 		printIndent(indent, output).append("<CompleteOnExport:"); //$NON-NLS-1$

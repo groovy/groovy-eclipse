@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ProjectScope;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
@@ -42,7 +43,7 @@ import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 public abstract class FieldEditorOverlayPage extends FieldEditorPreferencePage implements IWorkbenchPropertyPage {
     // Stores all created field editors
-    private final List<FieldEditor> editors = new ArrayList<FieldEditor>();
+    private final List<FieldEditor> editors = new ArrayList<>();
 
     // Stores owning element of properties
     private IAdaptable element;
@@ -85,6 +86,7 @@ public abstract class FieldEditorOverlayPage extends FieldEditorPreferencePage i
      *
      * @see org.eclipse.ui.IWorkbenchPropertyPage#setElement(org.eclipse.core.runtime.IAdaptable)
      */
+    @Override
     public void setElement(final IAdaptable element) {
         this.element = element;
     }
@@ -94,6 +96,7 @@ public abstract class FieldEditorOverlayPage extends FieldEditorPreferencePage i
      *
      * @see org.eclipse.ui.IWorkbenchPropertyPage#getElement()
      */
+    @Override
     public IAdaptable getElement() {
         return element;
     }
@@ -140,8 +143,7 @@ public abstract class FieldEditorOverlayPage extends FieldEditorPreferencePage i
     }
 
     private IPreferenceStore createPreferenceStore() {
-        @SuppressWarnings("cast")
-        IProject proj = (IProject) getElement().getAdapter(IProject.class);
+        IProject proj = Adapters.adapt(getElement(), IProject.class);
         return preferenceStore(proj);
     }
 
@@ -224,12 +226,10 @@ public abstract class FieldEditorOverlayPage extends FieldEditorPreferencePage i
         final PreferenceManager manager = new PreferenceManager();
         manager.addToRoot(targetNode);
         final PreferenceDialog dialog = new PreferenceDialog(getControl().getShell(), manager);
-        BusyIndicator.showWhile(getControl().getDisplay(), new Runnable() {
-            public void run() {
-                dialog.create();
-                dialog.setMessage(targetNode.getLabelText());
-                dialog.open();
-            }
+        BusyIndicator.showWhile(getControl().getDisplay(), () -> {
+            dialog.create();
+            dialog.setMessage(targetNode.getLabelText());
+            dialog.open();
         });
     }
 }

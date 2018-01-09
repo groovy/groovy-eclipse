@@ -30,15 +30,16 @@ import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 /**
  * Adapts an IFile (likely a compilation unit) to Groovy AST types.
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
 public class GroovyFileAdapterFactory implements IAdapterFactory {
 
-    public Class[] getAdapterList() {
+    @Override
+    public Class<?>[] getAdapterList() {
         return new Class[] {ClassNode.class, ClassNode[].class, ModuleNode.class};
     }
 
-    public Object getAdapter(Object adaptable, Class adapterType) {
-        Object result = null;
+    @Override @SuppressWarnings("unchecked")
+    public <T> T getAdapter(Object adaptable, Class<T> adapterType) {
+        T result = null;
         if (adaptable instanceof IFile && Arrays.asList(getAdapterList()).contains(adapterType)) {
             IFile file = (IFile) adaptable;
             if (ContentTypeUtils.isGroovyLikeFileName(file.getName())) {
@@ -47,24 +48,24 @@ public class GroovyFileAdapterFactory implements IAdapterFactory {
                     ModuleNode module = unit.getModuleNode();
                     if (module != null) {
                         if (adapterType.equals(ModuleNode.class)) {
-                            result = module;
+                            result = (T) module;
                         } else {
                             List<ClassNode> classNodes = module.getClasses();
                             if (classNodes != null && !classNodes.isEmpty()) {
                                 if (adapterType.equals(ClassNode.class)) {
                                     if (classNodes.size() == 1) {
-                                        result = classNodes.get(0);
+                                        result = (T) classNodes.get(0);
                                     } else {
                                         String mainClassName = module.getMainClassName();
                                         for (ClassNode classNode : classNodes) {
                                             if (classNode.getName().equals(mainClassName)) {
-                                                result = classNode;
+                                                result = (T) classNode;
                                                 break;
                                             }
                                         }
                                     }
                                 } else if (adapterType.equals(ClassNode[].class)) {
-                                    result = classNodes.toArray(ClassNode.EMPTY_ARRAY);
+                                    result = (T) classNodes.toArray(ClassNode.EMPTY_ARRAY);
                                 }
                             }
                         }

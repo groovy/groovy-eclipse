@@ -64,6 +64,7 @@ public class GroovyQuickAssistContext {
         if (finder == null) {
             Region region = new Region(getSelectionOffset(), getSelectionLength());
             finder = new ASTNodeFinder(region) {
+                @Override
                 public void visitGStringExpression(GStringExpression expr) {
                     // skip GString fragments, i.e. expr.getStrings()
                     visitExpressions(expr.getValues());
@@ -107,14 +108,12 @@ public class GroovyQuickAssistContext {
 
     public TypeLookupResult getNodeType(final ASTNode node) {
         final TypeLookupResult[] ref = new TypeLookupResult[1];
-        visitCompilationUnit(new ITypeRequestor() {
-            public ITypeRequestor.VisitStatus acceptASTNode(ASTNode n, TypeLookupResult r, IJavaElement e) {
-                if (n == node) {
-                    ref[0] = r;
-                    return ITypeRequestor.VisitStatus.STOP_VISIT;
-                }
-                return ITypeRequestor.VisitStatus.CONTINUE;
+        visitCompilationUnit((ASTNode n, TypeLookupResult r, IJavaElement e) -> {
+            if (n == node) {
+                ref[0] = r;
+                return ITypeRequestor.VisitStatus.STOP_VISIT;
             }
+            return ITypeRequestor.VisitStatus.CONTINUE;
         });
         if (ref[0] != null) {
             return ref[0];

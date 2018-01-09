@@ -830,6 +830,7 @@ boolean areMethodsInitialized() {
 		return this.prototype.areMethodsInitialized();
 	return this.methods != Binding.UNINITIALIZED_METHODS;
 }
+@Override
 public int kind() {
 	if (!isPrototype())
 		return this.prototype.kind();
@@ -837,10 +838,12 @@ public int kind() {
 	return Binding.TYPE;
 }
 
+@Override
 public TypeBinding clone(TypeBinding immaterial) {
 	return new SourceTypeBinding(this);
 }
 
+@Override
 public char[] computeUniqueKey(boolean isLeaf) {
 	if (!isPrototype())
 		return this.prototype.computeUniqueKey();
@@ -910,6 +913,7 @@ private void internalFaultInTypeForFieldsAndMethods() {
 		((SourceTypeBinding) this.memberTypes[i]).internalFaultInTypeForFieldsAndMethods();
 }
 // NOTE: the type of each field of a source type is resolved when needed
+@Override
 public FieldBinding[] fields() {
 	
 	if (!isPrototype()) {
@@ -964,6 +968,7 @@ public FieldBinding[] fields() {
 /**
  * @see org.eclipse.jdt.internal.compiler.lookup.TypeBinding#genericTypeSignature()
  */
+@Override
 public char[] genericTypeSignature() {
 	if (!isPrototype())
 		return this.prototype.genericTypeSignature();
@@ -1013,6 +1018,7 @@ public char[] genericSignature() {
  * declaration binding.
  * @see org.eclipse.jdt.internal.compiler.lookup.Binding#getAnnotationTagBits()
  */
+@Override
 public long getAnnotationTagBits() {
 	if (!isPrototype())
 		return this.prototype.getAnnotationTagBits();
@@ -1049,6 +1055,7 @@ public MethodBinding[] getDefaultAbstractMethods() {
 	return result;
 }
 // NOTE: the return type, arg & exception types of each method of a source type are resolved when needed
+@Override
 public MethodBinding getExactConstructor(TypeBinding[] argumentTypes) {
 	if (!isPrototype())
 		return this.prototype.getExactConstructor(argumentTypes);
@@ -1099,6 +1106,7 @@ public MethodBinding getExactConstructor(TypeBinding[] argumentTypes) {
 
 //NOTE: the return type, arg & exception types of each method of a source type are resolved when needed
 //searches up the hierarchy as long as no potential (but not exact) match was found.
+@Override
 public MethodBinding getExactMethod(char[] selector, TypeBinding[] argumentTypes, CompilationUnitScope refScope) {
 	if (!isPrototype())
 		return this.prototype.getExactMethod(selector, argumentTypes, refScope);
@@ -1187,6 +1195,7 @@ public MethodBinding getExactMethod(char[] selector, TypeBinding[] argumentTypes
 }
 
 //NOTE: the type of a field of a source type is resolved when needed
+@Override
 public FieldBinding getField(char[] fieldName, boolean needResolve) {
 	
 	if (!isPrototype())
@@ -1233,12 +1242,14 @@ public FieldBinding getField(char[] fieldName, boolean needResolve) {
 
 // GROOVY add
 // FIXASC (M3) is this the right approach to adding extra methods? Probably not - they should be forced on when created
+@Override
 public MethodBinding[] getAnyExtraMethods(char[] selector, TypeBinding[] argumentTypes) {
 	return (this.scope == null ? null : this.scope.getAnyExtraMethods(selector, argumentTypes));
 }
 // GROOVY end
 
 // NOTE: the return type, arg & exception types of each method of a source type are resolved when needed
+@Override
 public MethodBinding[] getMethods(char[] selector) {
 	if (!isPrototype())
 		return this.prototype.getMethods(selector);
@@ -1350,6 +1361,7 @@ public SyntheticMethodBinding getSyntheticBridgeMethod(MethodBinding inheritedMe
 	return accessors[1];
 }
 
+@Override
 public boolean hasTypeBit(int bit) {
 	if (!isPrototype()) {
 		return this.prototype.hasTypeBit(bit);
@@ -1361,6 +1373,7 @@ public boolean hasTypeBit(int bit) {
 /**
  * @see org.eclipse.jdt.internal.compiler.lookup.Binding#initializeDeprecatedAnnotationTagBits()
  */
+@Override
 public void initializeDeprecatedAnnotationTagBits() {
 	if (!isPrototype()) {
 		this.prototype.initializeDeprecatedAnnotationTagBits();
@@ -1384,6 +1397,7 @@ public void initializeDeprecatedAnnotationTagBits() {
 
 // ensure the receiver knows its hierarchy & fields/methods so static imports can be resolved correctly
 // see bug 230026
+@Override
 void initializeForStaticImports() {
 	if (!isPrototype()) {
 		this.prototype.initializeForStaticImports();
@@ -1397,6 +1411,7 @@ void initializeForStaticImports() {
 	this.scope.buildMethods();
 }
 
+@Override
 int getNullDefault() {
 	
 	if (!isPrototype()) {
@@ -1418,6 +1433,7 @@ int getNullDefault() {
  * Returns true if a type is identical to another one,
  * or for generic types, true if compared to its raw type.
  */
+@Override
 public boolean isEquivalentTo(TypeBinding otherType) {
 	if (!isPrototype())
 		return this.prototype.isEquivalentTo(otherType);
@@ -1463,24 +1479,29 @@ public boolean isEquivalentTo(TypeBinding otherType) {
 	}
 	return false;
 }
+@Override
 public boolean isGenericType() {
 	if (!isPrototype())
 		return this.prototype.isGenericType();
     return this.typeVariables != Binding.NO_TYPE_VARIABLES;
 }
+@Override
 public boolean isHierarchyConnected() {
 	if (!isPrototype())
 		return this.prototype.isHierarchyConnected();
 	return (this.tagBits & TagBits.EndHierarchyCheck) != 0;
 }
+@Override
 public boolean isRepeatableAnnotationType() {
 	if (!isPrototype()) throw new IllegalStateException();
 	return this.containerAnnotationType != null;
 }
 
+@Override
 public boolean isTaggedRepeatable() {  // tagged but not necessarily repeatable. see isRepeatableAnnotationType.
 	return (this.tagBits & TagBits.AnnotationRepeatable) != 0;
 }
+@Override
 public boolean canBeSeenBy(Scope sco) {
 	SourceTypeBinding invocationType = sco.enclosingSourceType();
 	if (TypeBinding.equalsEquals(invocationType, this)) 
@@ -1488,6 +1509,7 @@ public boolean canBeSeenBy(Scope sco) {
 	return ((this.environment.canTypeBeAccessed(this, sco)) &&
 			super.canBeSeenBy(sco));
 }
+@Override
 public ReferenceBinding[] memberTypes() {
 	if (!isPrototype()) {
 		if ((this.tagBits & TagBits.HasUnresolvedMemberTypes) == 0)
@@ -1503,6 +1525,7 @@ public ReferenceBinding[] memberTypes() {
 	return this.memberTypes;
 }
 
+@Override
 public boolean hasMemberTypes() {
 	if (!isPrototype())
 		return this.prototype.hasMemberTypes();
@@ -1510,6 +1533,7 @@ public boolean hasMemberTypes() {
 }
 
 // NOTE: the return type, arg & exception types of each method of a source type are resolved when needed
+@Override
 public MethodBinding[] methods() {
 	
 	if (!isPrototype()) {
@@ -1735,6 +1759,7 @@ public MethodBinding[] methods() {
 	return this.methods;
 }
 
+@Override
 public TypeBinding prototype() {
 	return this.prototype;
 }
@@ -1743,6 +1768,7 @@ public boolean isPrototype() {
 	return this == this.prototype;  //$IDENTITY-COMPARISON$
 }
 
+@Override
 public ReferenceBinding containerAnnotationType() {
 	
 	if (!isPrototype()) throw new IllegalStateException();
@@ -2355,6 +2381,7 @@ boolean hasNonNullDefaultFor(int location, boolean useTypeAnnotations, int sourc
 	return false;
 }
 
+@Override
 public AnnotationHolder retrieveAnnotationHolder(Binding binding, boolean forceInitialization) {
 	if (!isPrototype())
 		return this.prototype.retrieveAnnotationHolder(binding, forceInitialization);
@@ -2363,11 +2390,13 @@ public AnnotationHolder retrieveAnnotationHolder(Binding binding, boolean forceI
 	return super.retrieveAnnotationHolder(binding, false);
 }
 
+@Override
 public void setContainerAnnotationType(ReferenceBinding value) {
 	if (!isPrototype()) throw new IllegalStateException();
 	this.containerAnnotationType  = value;
 }
 
+@Override
 public void tagAsHavingDefectiveContainerType() {
 	if (!isPrototype()) throw new IllegalStateException();
 	if (this.containerAnnotationType != null && this.containerAnnotationType.isValidBinding())
@@ -2484,6 +2513,7 @@ public final int sourceStart() {
 
 	return this.scope.referenceContext.sourceStart;
 }
+@Override
 SimpleLookupTable storedAnnotations(boolean forceInitialize) {
 	if (!isPrototype())
 		return this.prototype.storedAnnotations(forceInitialize);
@@ -2498,12 +2528,14 @@ SimpleLookupTable storedAnnotations(boolean forceInitialize) {
 	return this.storedAnnotations;
 }
 
+@Override
 public ReferenceBinding superclass() {
 	if (!isPrototype())
 		return this.superclass = this.prototype.superclass();
 	return this.superclass;
 }
 
+@Override
 public ReferenceBinding[] superInterfaces() {
 	if (!isPrototype())
 		return this.superInterfaces = this.prototype.superInterfaces();
@@ -2575,6 +2607,7 @@ public FieldBinding[] syntheticFields() {
 	}
 	return bindings;
 }
+@Override
 public String toString() {
 	if (this.hasTypeAnnotations()) {
 		return annotatedDebugName();
@@ -2670,6 +2703,7 @@ public String toString() {
 	buffer.append("\n\n"); //$NON-NLS-1$
 	return buffer.toString();
 }
+@Override
 public TypeVariableBinding[] typeVariables() {
 	if (!isPrototype())
 		return this.typeVariables = this.prototype.typeVariables();
@@ -2685,6 +2719,7 @@ void verifyMethods(MethodVerifier verifier) {
 		 ((SourceTypeBinding) this.memberTypes[i]).verifyMethods(verifier);
 }
 
+@Override
 public TypeBinding unannotated() {
 	return this.prototype;
 }
@@ -2699,6 +2734,7 @@ public TypeBinding withoutToplevelNullAnnotation() {
 	return this.prototype;
 }
 
+@Override
 public FieldBinding[] unResolvedFields() {
 	if (!isPrototype())
 		return this.prototype.unResolvedFields();
@@ -2723,6 +2759,7 @@ public void tagIndirectlyAccessibleMembers() {
 		if (this.superclass instanceof SourceTypeBinding)  // should always be true because private super type can only be accessed in same CU
 			((SourceTypeBinding) this.superclass).tagIndirectlyAccessibleMembers();
 }
+@Override
 public ModuleBinding module() {
 	if (!isPrototype())
 		return this.prototype.module;

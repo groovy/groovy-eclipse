@@ -72,6 +72,7 @@ public class LocalVariableBinding extends VariableBinding {
 	/* API
 	* Answer the receiver's binding type from Binding.BindingID.
 	*/
+	@Override
 	public final int kind() {
 		return LOCAL;
 	}
@@ -87,6 +88,7 @@ public class LocalVariableBinding extends VariableBinding {
 	 * without parameter names (see org.eclipse.jdt.internal.core.util.BindingKeyResolver.SyntheticLocalVariableBinding):
 	 *    p.X { void foo(int i0, int i1) { } } --> Lp/X;.foo()V#arg1#0#1
 	 */
+	@Override
 	public char[] computeUniqueKey(boolean isLeaf) {
 		StringBuffer buffer = new StringBuffer();
 
@@ -160,6 +162,7 @@ public class LocalVariableBinding extends VariableBinding {
 		return uniqueKey;
 	}
 
+	@Override
 	public AnnotationBinding[] getAnnotations() {
 		if (this.declaringScope == null) {
 			if ((this.tagBits & TagBits.AnnotationResolved) != 0) {
@@ -245,6 +248,7 @@ public class LocalVariableBinding extends VariableBinding {
 		this.initializationCount++;
 	}
 
+	@Override
 	public void setAnnotations(AnnotationBinding[] annotations, Scope scope) {
 		// note: we don's use this.declaringScope because we might be called before Scope.addLocalVariable(this)
 		//       which is where this.declaringScope is set.
@@ -260,6 +264,7 @@ public class LocalVariableBinding extends VariableBinding {
 		this.initializationPCs = null;
 	}
 
+	@Override
 	public String toString() {
 
 		String s = super.toString();
@@ -287,6 +292,7 @@ public class LocalVariableBinding extends VariableBinding {
 		return s;
 	}
 
+	@Override
 	public boolean isParameter() {
 		return ((this.tagBits & TagBits.IsArgument) != 0);
 	}

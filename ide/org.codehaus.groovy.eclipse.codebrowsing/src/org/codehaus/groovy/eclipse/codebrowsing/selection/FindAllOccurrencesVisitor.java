@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,9 +68,6 @@ import org.codehaus.groovy.eclipse.codebrowsing.fragments.MethodCallFragment;
 
 /**
  * Finds all occurrences of the passed in expression in the module.
- *
- * @author andrew
- * @created May 12, 2010
  */
 public class FindAllOccurrencesVisitor extends ClassCodeVisitorSupport {
 
@@ -150,7 +147,7 @@ public class FindAllOccurrencesVisitor extends ClassCodeVisitorSupport {
 
     public List<IASTFragment> findOccurrences(IASTFragment fragment) {
         this.toFind = fragment;
-        this.occurrences = new ArrayList<IASTFragment>();
+        this.occurrences = new ArrayList<>();
 
         if (limitTo == null) {
             List<ClassNode> classes = module.getClasses();

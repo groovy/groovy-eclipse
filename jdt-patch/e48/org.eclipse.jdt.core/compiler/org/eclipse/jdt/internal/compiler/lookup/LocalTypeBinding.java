@@ -108,6 +108,7 @@ public ReferenceBinding anonymousOriginalSuperType() {
 	return this.superclass; // default answer
 }
 
+@Override
 protected void checkRedundantNullnessDefaultRecurse(ASTNode location, Annotation[] annotations, long nullBits, boolean useNullTypeAnnotations) {
 	
 	if (!isPrototype()) throw new IllegalStateException();
@@ -127,6 +128,7 @@ protected void checkRedundantNullnessDefaultRecurse(ASTNode location, Annotation
 	super.checkRedundantNullnessDefaultRecurse(location, annotations, nullBits, useNullTypeAnnotations);
 }
 
+@Override
 public char[] computeUniqueKey(boolean isLeaf) {
 	if (!isPrototype())
 		return this.prototype.computeUniqueKey(isLeaf);
@@ -156,6 +158,7 @@ public char[] computeUniqueKey(boolean isLeaf) {
 	return uniqueKey;
 }
 
+@Override
 public char[] constantPoolName() /* java/lang/Object */ {
 	if (this.constantPoolName != null)
 		return this.constantPoolName;
@@ -169,12 +172,14 @@ public char[] constantPoolName() /* java/lang/Object */ {
 	return this.constantPoolName;	
 }
 
+@Override
 public TypeBinding clone(TypeBinding outerType) {
 	LocalTypeBinding copy = new LocalTypeBinding(this);
 	copy.enclosingType = (SourceTypeBinding) outerType;
 	return copy;
 }
 
+@Override
 public int hashCode() {
 	return this.enclosingType.hashCode();
 }
@@ -183,6 +188,7 @@ public int hashCode() {
  * Slam the source name so that the signature is syntactically correct.
  * (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=99686)
  */
+@Override
 public char[] genericTypeSignature() {
 	
 	if (!isPrototype())
@@ -197,6 +203,7 @@ public char[] genericTypeSignature() {
 	return super.genericTypeSignature();
 }
 
+@Override
 public char[] readableName() /*java.lang.Object,  p.X<T> */ {
     char[] readableName;
 	if (isAnonymousType()) {
@@ -222,6 +229,7 @@ public char[] readableName() /*java.lang.Object,  p.X<T> */ {
 	return readableName;
 }
 
+@Override
 public char[] shortReadableName() /*Object*/ {
     char[] shortReadableName;
 	if (isAnonymousType()) {
@@ -271,6 +279,7 @@ public void setConstantPoolName(char[] computedConstantPoolName) /* java/lang/Ob
  * Slam the source name so that the signature is syntactically correct.
  * (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=102284)
  */
+@Override
 public char[] signature() {
 	
 	if (!isPrototype())
@@ -285,6 +294,7 @@ public char[] signature() {
 	return super.signature();
 }
 
+@Override
 public char[] sourceName() {
 	if (isAnonymousType()) {
 		return CharOperation.concat(TypeConstants.ANONYM_PREFIX, anonymousOriginalSuperType().sourceName(), TypeConstants.ANONYM_SUFFIX);
@@ -292,6 +302,7 @@ public char[] sourceName() {
 		return this.sourceName;
 }
 
+@Override
 public String toString() {
 	if (this.hasTypeAnnotations())
 		return annotatedDebugName() + " (local)"; //$NON-NLS-1$
@@ -306,6 +317,7 @@ public String toString() {
 /* Trigger the dependency mechanism forcing the innerclass emulation
 * to be propagated to all dependent source types.
 */
+@Override
 public void updateInnerEmulationDependents() {
 	if (!isPrototype()) throw new IllegalStateException();
 	if (this.dependents != null) {

@@ -82,6 +82,7 @@ public class CompilationResult {
 
 	private static final int[] EMPTY_LINE_ENDS = Util.EMPTY_INT_ARRAY;
 	private static final Comparator PROBLEM_COMPARATOR = new Comparator() {
+		@Override
 		public int compare(Object o1, Object o2) {
 			return ((CategorizedProblem) o1).getSourceStart() - ((CategorizedProblem) o2).getSourceStart();
 		}
@@ -444,6 +445,7 @@ public CompilationResult tagAsAccepted(){
 	return this;
 }
 
+@Override
 public String toString(){
 	StringBuffer buffer = new StringBuffer();
 	if (this.fileName != null){

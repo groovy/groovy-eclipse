@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,10 +28,6 @@ import org.eclipse.jdt.core.search.SearchRequestor;
 import org.eclipse.jdt.internal.core.search.matching.ConstructorPattern;
 import org.eclipse.jdt.internal.core.util.Util;
 
-/**
- * @author Andrew Eisenberg
- * @created Jun 27, 2013
- */
 public class ConstructorReferenceSearchRequestor implements ITypeRequestor {
 
     private final SearchRequestor requestor;
@@ -50,6 +46,7 @@ public class ConstructorReferenceSearchRequestor implements ITypeRequestor {
         }
     }
 
+    @Override
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
         if (!(node instanceof ConstructorCallExpression) || node.getEnd() <= 0) {
             return VisitStatus.CONTINUE;
@@ -59,11 +56,12 @@ public class ConstructorReferenceSearchRequestor implements ITypeRequestor {
 
         // don't match on method parameters, only class name
         if (declaring.getName().equals(declaringQualifiedName)) {
-            IJavaElement realElement = enclosingElement.getOpenable() instanceof GroovyClassFileWorkingCopy ? ((GroovyClassFileWorkingCopy) enclosingElement
-                    .getOpenable()).convertToBinary(enclosingElement) : enclosingElement;
+            IJavaElement realElement = enclosingElement;
+            if (enclosingElement.getOpenable() instanceof GroovyClassFileWorkingCopy) {
+                realElement = ((GroovyClassFileWorkingCopy) enclosingElement.getOpenable()).convertToBinary(enclosingElement);
+            }
             SearchMatch match = null;
-            match = new MethodReferenceMatch(realElement, SearchMatch.A_ACCURATE, declaring.getStart(), declaring.getLength(),
-                    true, false, false, false, participant, realElement.getResource());
+            match = new MethodReferenceMatch(realElement, SearchMatch.A_ACCURATE, declaring.getStart(), declaring.getLength(), true, false, false, false, participant, realElement.getResource());
             try {
                 requestor.acceptSearchMatch(match);
             } catch (CoreException e) {

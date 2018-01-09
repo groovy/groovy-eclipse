@@ -38,6 +38,7 @@ public class RecoveredModule extends RecoveredElement {
 		super(parent, bracketBalance);
 		this.moduleDeclaration = moduleDeclaration;
 	}
+	@Override
 	public RecoveredElement add(ModuleStatement moduleStatement, int bracketBalanceValue) {
 		
 		// TODO: can't we do away with all these additions except for ProvidesStatement - to check
@@ -160,6 +161,7 @@ public class RecoveredModule extends RecoveredElement {
 		RecoveredUsesStatement element = new RecoveredUsesStatement(usesStatement, this, bracketBalanceValue);
 		this.uses[this.usesCount++] = element;
 	}
+	@Override
 	public String toString(int tab) {
 		StringBuffer result = new StringBuffer(tabString(tab));
 		result.append("Recovered module:\n"); //$NON-NLS-1$
@@ -277,6 +279,7 @@ public class RecoveredModule extends RecoveredElement {
 			mod.servicesCount = actualCount;  			
 		}
 	}
+	@Override
 	public void updateParseTree(){
 		updatedModuleDeclaration();
 	}

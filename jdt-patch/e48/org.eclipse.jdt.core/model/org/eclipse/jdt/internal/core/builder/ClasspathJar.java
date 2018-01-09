@@ -180,6 +180,7 @@ public ClasspathJar(String fileName, AccessRuleSet accessRuleSet, IPath external
 		this.externalAnnotationPath = externalAnnotationPath.toString();
 }
 
+@Override
 public void cleanup() {
 	if (this.closeZipFileAtEnd) {
 		if (this.zipFile != null) {
@@ -218,6 +219,7 @@ public void cleanup() {
 	this.knownPackageNames = null;
 }
 
+@Override
 public boolean equals(Object o) {
 	if (this == o) return true;
 	if (!(o instanceof ClasspathJar)) return false;
@@ -230,6 +232,7 @@ public boolean equals(Object o) {
 			&& this.isOnModulePath == jar.isOnModulePath;
 }
 
+@Override
 public NameEnvironmentAnswer findClass(String binaryFileName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName, boolean asBinaryOnly) {
 	if (!isPackage(qualifiedPackageName, moduleName)) return null; // most common case
 
@@ -274,15 +277,18 @@ public NameEnvironmentAnswer findClass(String binaryFileName, String qualifiedPa
 	return null;
 }
 
+@Override
 public IPath getProjectRelativePath() {
 	if (this.resource == null) return null;
 	return	this.resource.getProjectRelativePath();
 }
 
+@Override
 public int hashCode() {
 	return this.zipFilename == null ? super.hashCode() : this.zipFilename.hashCode();
 }
 
+@Override
 public boolean isPackage(String qualifiedPackageName, String moduleName) {
 	if (moduleName != null) {
 		if (this.module == null || !moduleName.equals(String.valueOf(this.module.name())))
@@ -326,6 +332,7 @@ public long lastModified() {
 	return this.lastModified;
 }
 
+@Override
 public String toString() {
 	String start = "Classpath jar file " + this.zipFilename; //$NON-NLS-1$
 	if (this.accessRuleSet == null)
@@ -333,6 +340,7 @@ public String toString() {
 	return start + " with " + this.accessRuleSet; //$NON-NLS-1$
 }
 
+@Override
 public String debugPathString() {
 	long time = lastModified();
 	if (time == 0)

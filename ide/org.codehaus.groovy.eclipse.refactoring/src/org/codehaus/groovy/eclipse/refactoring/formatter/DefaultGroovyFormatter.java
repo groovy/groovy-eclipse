@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
+import java.util.List;
 import java.util.Map.Entry;
-import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -47,9 +47,6 @@ import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
 import org.eclipse.text.edits.UndoEdit;
 
-/**
- * @author Mike Klenk
- */
 public class DefaultGroovyFormatter extends GroovyFormatter {
 
     protected IFormatterPreferences pref;
@@ -406,7 +403,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
         return getOffsetOfTokenEnd(token) - getOffsetOfToken(token);
     }
 
-    public Vector<Vector<Token>> getLineTokens() {
+    public List<List<Token>> getLineTokens() {
         return tokens.getLineTokensVector();
     }
 

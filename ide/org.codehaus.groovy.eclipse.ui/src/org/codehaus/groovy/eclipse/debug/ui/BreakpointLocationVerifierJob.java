@@ -22,8 +22,8 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -85,7 +85,6 @@ public class BreakpointLocationVerifierJob extends Job {
      */
     private IEditorStatusLine fStatusLine;
 
-    @SuppressWarnings("cast")
     public BreakpointLocationVerifierJob(IJavaLineBreakpoint breakpoint, int lineNumber, String typeName, IType type, IResource resource, IEditorPart editorPart) {
         super(ActionMessages.BreakpointLocationVerifierJob_breakpoint_location);
         fBreakpoint = breakpoint;
@@ -93,14 +92,13 @@ public class BreakpointLocationVerifierJob extends Job {
         fTypeName = typeName;
         fType = type;
         fResource = resource;
-        fStatusLine = (IEditorStatusLine) editorPart.getAdapter(IEditorStatusLine.class);
+        fStatusLine = Adapters.adapt(editorPart, IEditorStatusLine.class);
     }
 
     @Override
     public IStatus run(IProgressMonitor monitor) {
         try {
-            @SuppressWarnings("cast")
-            ModuleNode node = (ModuleNode) ((IFile) fResource).getAdapter(ModuleNode.class);
+            ModuleNode node = Adapters.adapt(fResource, ModuleNode.class);
             if (node == null) {
                 return new Status(IStatus.WARNING, JDIDebugUIPlugin.getUniqueIdentifier(), ActionMessages.BreakpointLocationVerifierJob_not_valid_location);
             }
@@ -126,7 +124,7 @@ public class BreakpointLocationVerifierJob extends Job {
     }
 
     private void createNewMethodBreakpoint(MethodNode node, String typeName) throws CoreException {
-        Map<String, Object> newAttributes = new HashMap<String, Object>(10);
+        Map<String, Object> newAttributes = new HashMap<>(10);
         int start = node.getNameStart();
         int end = node.getNameEnd();
         if (fType != null) {
@@ -170,7 +168,7 @@ public class BreakpointLocationVerifierJob extends Job {
         if (JDIDebugModel.lineBreakpointExists(typeName, node.getLineNumber()) != null) {
             return;
         }
-        Map<String, Object> newAttributes = new HashMap<String, Object>(10);
+        Map<String, Object> newAttributes = new HashMap<>(10);
         int start= node.getStart();
         int end= node.getEnd();
         if (fType != null) {
@@ -180,14 +178,12 @@ public class BreakpointLocationVerifierJob extends Job {
     }
 
     protected void report(final String message) {
-        JDIDebugUIPlugin.getStandardDisplay().asyncExec(new Runnable() {
-            public void run() {
-                if (fStatusLine != null) {
-                    fStatusLine.setMessage(true, message, null);
-                }
-                if (message != null && JDIDebugUIPlugin.getActiveWorkbenchShell() != null) {
-                    Display.getCurrent().beep();
-                }
+        JDIDebugUIPlugin.getStandardDisplay().asyncExec(() -> {
+            if (fStatusLine != null) {
+                fStatusLine.setMessage(true, message, null);
+            }
+            if (message != null && JDIDebugUIPlugin.getActiveWorkbenchShell() != null) {
+                Display.getCurrent().beep();
             }
         });
     }

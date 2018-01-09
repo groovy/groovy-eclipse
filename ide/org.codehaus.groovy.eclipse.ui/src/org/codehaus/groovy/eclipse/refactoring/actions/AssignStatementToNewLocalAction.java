@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2012 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,20 +23,18 @@ import org.eclipse.swt.graphics.Point;
 
 /**
  * Assign a statement to a new local variable.
- * 
+ *
  * Example:
- * 
+ *
  * foo()
  * becomes
  * def foo = foo()
- * 
- * @author Stephanie Van Dyk sevandyk@gmail.com
- * @created April 15, 2012
  */
 public class AssignStatementToNewLocalAction extends GroovyRefactoringAction {
 
     private AssignStatementToNewLocalRefactoring assignStatementRefactoring;
 
+    @Override
     public void run(IAction action) {
         if (initRefactoring() && assignStatementRefactoring.isApplicable()) {
             assignStatementRefactoring.applyRefactoring(getDocument());

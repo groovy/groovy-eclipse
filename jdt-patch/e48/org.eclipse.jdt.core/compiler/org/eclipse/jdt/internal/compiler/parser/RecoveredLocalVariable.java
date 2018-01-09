@@ -42,6 +42,7 @@ public RecoveredLocalVariable(LocalDeclaration localDeclaration, RecoveredElemen
 /*
  * Record an expression statement if local variable is expecting an initialization expression.
  */
+@Override
 public RecoveredElement add(Statement stmt, int bracketBalanceValue) {
 
 	if (this.alreadyCompletedLocalInitialization || !(stmt instanceof Expression)) {
@@ -80,18 +81,22 @@ public void attach(RecoveredAnnotation[] annots, int annotCount, int mods, int m
 /*
  * Answer the associated parsed structure
  */
+@Override
 public ASTNode parseTree(){
 	return this.localDeclaration;
 }
 /*
  * Answer the very source end of the corresponding parse node
  */
+@Override
 public int sourceEnd(){
 	return this.localDeclaration.declarationSourceEnd;
 }
+@Override
 public String toString(int tab) {
 	return tabString(tab) + "Recovered local variable:\n" + this.localDeclaration.print(tab + 1, new StringBuffer(10)); //$NON-NLS-1$
 }
+@Override
 public Statement updatedStatement(int depth, Set knownTypes){
 	/* update annotations */
 	if (this.modifiers != 0) {
@@ -125,6 +130,7 @@ public Statement updatedStatement(int depth, Set knownTypes){
  *
  * Fields have no associated braces, thus if matches, then update parent.
  */
+@Override
 public RecoveredElement updateOnClosingBrace(int braceStart, int braceEnd){
 	if (this.bracketBalance > 0){ // was an array initializer
 		this.bracketBalance--;
@@ -140,6 +146,7 @@ public RecoveredElement updateOnClosingBrace(int braceStart, int braceEnd){
  * An opening brace got consumed, might be the expected opening one of the current element,
  * in which case the bodyStart is updated.
  */
+@Override
 public RecoveredElement updateOnOpeningBrace(int braceStart, int braceEnd){
 	if (this.localDeclaration.declarationSourceEnd == 0
 		&& (this.localDeclaration.type instanceof ArrayTypeReference || this.localDeclaration.type instanceof ArrayQualifiedTypeReference)
@@ -151,12 +158,14 @@ public RecoveredElement updateOnOpeningBrace(int braceStart, int braceEnd){
 	this.updateSourceEndIfNecessary(braceStart - 1, braceEnd - 1);
 	return this.parent.updateOnOpeningBrace(braceStart, braceEnd);
 }
+@Override
 public void updateParseTree(){
 	updatedStatement(0, new HashSet());
 }
 /*
  * Update the declarationSourceEnd of the corresponding parse node
  */
+@Override
 public void updateSourceEndIfNecessary(int bodyStart, int bodyEnd){
 	if (this.localDeclaration.declarationSourceEnd == 0) {
 		this.localDeclaration.declarationSourceEnd = bodyEnd;

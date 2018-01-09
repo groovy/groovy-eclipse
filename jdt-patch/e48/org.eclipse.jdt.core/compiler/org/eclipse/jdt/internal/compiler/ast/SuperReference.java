@@ -30,11 +30,13 @@ public class SuperReference extends ThisReference {
 		return new ExplicitConstructorCall(ExplicitConstructorCall.ImplicitSuper);
 	}
 
+	@Override
 	public boolean isImplicitThis() {
 
 		return false;
 	}
 
+	@Override
 	public boolean isSuper() {
 
 		return true;
@@ -45,17 +47,20 @@ public class SuperReference extends ThisReference {
 		return true;
 	}
 
+	@Override
 	public boolean isThis() {
 
 		return false ;
 	}
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output){
 
 		return output.append("super"); //$NON-NLS-1$
 
 	}
 
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 
 		this.constant = Constant.NotAConstant;
@@ -69,6 +74,7 @@ public class SuperReference extends ThisReference {
 		return this.resolvedType = enclosingReceiverType.superclass();
 	}
 
+	@Override
 	public void traverse(ASTVisitor visitor, BlockScope blockScope) {
 		visitor.visit(this, blockScope);
 		visitor.endVisit(this, blockScope);

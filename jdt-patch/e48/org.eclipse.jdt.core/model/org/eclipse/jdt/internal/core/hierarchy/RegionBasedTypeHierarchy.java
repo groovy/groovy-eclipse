@@ -50,6 +50,7 @@ public RegionBasedTypeHierarchy(IRegion region, ICompilationUnit[] workingCopies
 /*
  * @see TypeHierarchy#initializeRegions
  */
+@Override
 protected void initializeRegions() {
 	super.initializeRegions();
 	IJavaElement[] roots = this.region.getElements();
@@ -69,10 +70,12 @@ protected void initializeRegions() {
 /**
  * Compute this type hierarchy.
  */
+@Override
 protected void compute() throws JavaModelException, CoreException {
 	HierarchyBuilder builder = new RegionBasedHierarchyBuilder(this);
 	builder.build(this.computeSubtypes);
 }
+@Override
 protected boolean isAffectedByOpenable(IJavaElementDelta delta, IJavaElement element, int eventType) {
 	// change to working copy
 	if (element instanceof CompilationUnit && ((CompilationUnit)element).isWorkingCopy()) {
@@ -89,6 +92,7 @@ protected boolean isAffectedByOpenable(IJavaElementDelta delta, IJavaElement ele
 /**
  * Returns the java project this hierarchy was created in.
  */
+@Override
 public IJavaProject javaProject() {
 	return this.project;
 }

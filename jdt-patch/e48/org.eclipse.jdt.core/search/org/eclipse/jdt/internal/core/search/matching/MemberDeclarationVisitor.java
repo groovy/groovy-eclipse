@@ -77,18 +77,23 @@ public MemberDeclarationVisitor(IJavaElement element, ASTNode[] nodes, MatchingN
 		}
 	}
 }
+@Override
 public void endVisit(Argument argument, BlockScope scope) {
     this.localDeclaration = null;
 }
+@Override
 public void endVisit(LocalDeclaration declaration, BlockScope scope) {
     this.localDeclaration = null;
 }
+@Override
 public void endVisit(MarkerAnnotation markerAnnotation, BlockScope unused) {
 	this.annotation = null;
 }
+@Override
 public void endVisit(NormalAnnotation normalAnnotation, BlockScope unused) {
 	this.annotation = null;
 }
+@Override
 public void endVisit(SingleMemberAnnotation singleMemberAnnotation, BlockScope unused) {
 	this.annotation = null;
 }
@@ -206,10 +211,12 @@ private void storeHandle(int idx) {
     	}
     }
 }
+@Override
 public boolean visit(Argument argument, BlockScope scope) {
     this.localDeclaration = argument;
     return true;
 }
+@Override
 public boolean visit(LambdaExpression lambdaExpression, BlockScope scope) {
 	Integer level = (Integer) this.nodeSet.matchingNodes.removeKey(lambdaExpression);
 	try {
@@ -223,18 +230,22 @@ public boolean visit(LambdaExpression lambdaExpression, BlockScope scope) {
 	}
 	return false; // Don't visit the children as they get traversed under control of reportMatching.
 }
+@Override
 public boolean visit(LocalDeclaration declaration, BlockScope scope) {
     this.localDeclaration = declaration;
     return true;
 }
+@Override
 public boolean visit(MarkerAnnotation markerAnnotation, BlockScope unused) {
 	this.annotation = markerAnnotation;
 	return true;
 }
+@Override
 public boolean visit(NormalAnnotation normalAnnotation, BlockScope unused) {
 	this.annotation = normalAnnotation;
 	return true;
 }
+@Override
 public boolean visit(QualifiedNameReference nameReference, BlockScope unused) {
 	if (this.nodesCount > 0){
 		int idx = matchNode(nameReference);
@@ -244,6 +255,7 @@ public boolean visit(QualifiedNameReference nameReference, BlockScope unused) {
 	}
 	return false;
 }
+@Override
 public boolean visit(QualifiedTypeReference typeReference, BlockScope unused) {
 	if (this.nodesCount > 0){
 		int idx = matchNode(typeReference);
@@ -253,10 +265,12 @@ public boolean visit(QualifiedTypeReference typeReference, BlockScope unused) {
 	}
 	return false;
 }
+@Override
 public boolean visit(SingleMemberAnnotation singleMemberAnnotation, BlockScope unused) {
 	this.annotation = singleMemberAnnotation;
 	return true;
 }
+@Override
 public boolean visit(SingleNameReference nameReference, BlockScope unused) {
 	if (this.nodesCount > 0){
 		int idx = matchNode(nameReference);
@@ -266,6 +280,7 @@ public boolean visit(SingleNameReference nameReference, BlockScope unused) {
 	}
 	return false;
 }
+@Override
 public boolean visit(SingleTypeReference typeReference, BlockScope unused) {
 	if (this.nodesCount > 0){
 		int idx = matchNode(typeReference);
@@ -289,6 +304,7 @@ int getInTypeOccurrenceCountForBinaryAnonymousType(TypeDeclaration typeDeclarati
 	}
 	return ret;
 }
+@Override
 public boolean visit(TypeDeclaration typeDeclaration, BlockScope unused) {
 	try {
 		char[] simpleName;

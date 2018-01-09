@@ -11,18 +11,18 @@
       <kind>lifecycles</kind>
       <license>EPL</license>
       <name>Groovy-Eclipse</name>
-      <provider>the Codehaus</provider>
+      <provider>Codehaus.org</provider>
       <p2>
-        <repositoryUrl>http://dist.codehaus.org/groovy/distributions/greclipse/snapshot/e4.2</repositoryUrl>
         <iuId>org.codehaus.groovy.m2eclipse.feature.group</iuId>
         <lifecycleMappingIU>
           <iuId>org.codehaus.groovy.m2eclipse</iuId>
         </lifecycleMappingIU>
+        <repositoryUrl>http://dist.springsource.org/snapshot/GRECLIPSE/e4.7</repositoryUrl>
       </p2>
       <overview>
         <summary>Maven Integration for Grooovy-Eclipse</summary>
-        <url>http://docs.codehaus.org/display/GROOVY/Groovy-Eclipse+compiler+plugin+for+Maven</url>
+        <url>https://github.com/groovy/groovy-eclipse/wiki/Groovy-Eclipse-Maven-plugin</url>
       </overview>
-    </catalogItem>  
+    </catalogItem>
   </catalogItems>
 </catalog>

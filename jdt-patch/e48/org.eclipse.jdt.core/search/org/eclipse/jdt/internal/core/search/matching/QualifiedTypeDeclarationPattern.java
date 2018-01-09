@@ -38,6 +38,7 @@ public QualifiedTypeDeclarationPattern(char[] qualification, int qualificationMa
 QualifiedTypeDeclarationPattern(int matchRule) {
 	super(matchRule);
 }
+@Override
 public void decodeIndexKey(char[] key) {
 	int slash = CharOperation.indexOf(SEPARATOR, key, 0);
 	this.simpleName = CharOperation.subarray(key, 0, slash);
@@ -79,9 +80,11 @@ public void decodeIndexKey(char[] key) {
 		}
 	}
 }
+@Override
 public SearchPattern getBlankPattern() {
 	return new QualifiedTypeDeclarationPattern(R_EXACT_MATCH | R_CASE_SENSITIVE);
 }
+@Override
 public boolean matchesDecodedKey(SearchPattern decodedPattern) {
 	QualifiedTypeDeclarationPattern pattern = (QualifiedTypeDeclarationPattern) decodedPattern;
 
@@ -96,6 +99,7 @@ public boolean matchesDecodedKey(SearchPattern decodedPattern) {
 	return matchesName(this.simpleName, pattern.simpleName) &&
 		(this.qualification == null || this.packagePattern == null || this.packagePattern.matchesName(this.qualification, pattern.qualification));
 }
+@Override
 protected StringBuffer print(StringBuffer output) {
 	switch (this.typeSuffix){
 		case CLASS_SUFFIX :

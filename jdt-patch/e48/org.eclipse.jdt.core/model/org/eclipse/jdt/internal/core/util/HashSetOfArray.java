@@ -35,6 +35,7 @@ public final class HashSetOfArray implements Cloneable {
 		this.set = new Object[extraRoom][];
 	}
 
+	@Override
 	public Object clone() throws CloneNotSupportedException {
 		HashSetOfArray result = (HashSetOfArray) super.clone();
 		result.elementSize = this.elementSize;
@@ -129,6 +130,7 @@ public final class HashSetOfArray implements Cloneable {
 		return this.elementSize;
 	}
 
+	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
 		Object[] element;

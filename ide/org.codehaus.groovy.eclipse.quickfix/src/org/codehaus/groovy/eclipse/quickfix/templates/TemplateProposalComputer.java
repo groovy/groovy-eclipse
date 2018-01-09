@@ -37,20 +37,25 @@ public class TemplateProposalComputer implements IJavaCompletionProposalComputer
 
     private static final int EMPTY_PREFIX_TEMPLATE_RELEVANCE = 20;
 
+    @Override
     public void sessionStarted() {
     }
 
+    @Override
     public void sessionEnded() {
     }
 
+    @Override
     public String getErrorMessage() {
         return null;
     }
 
+    @Override
     public List<IContextInformation> computeContextInformation(ContentAssistInvocationContext context, IProgressMonitor monitor) {
         return Collections.emptyList();
     }
 
+    @Override
     public List<ICompletionProposal> computeCompletionProposals(ContentAssistInvocationContext context, IProgressMonitor monitor) {
         try {
             if (context instanceof JavaContentAssistInvocationContext) {
@@ -84,7 +89,7 @@ public class TemplateProposalComputer implements IJavaCompletionProposalComputer
     }
 
     private List<ICompletionProposal> computeCompletionProposals(GroovyContext context, String prefix) throws BadLocationException {
-        List<ICompletionProposal> templates = new ArrayList<ICompletionProposal>();
+        List<ICompletionProposal> templates = new ArrayList<>();
         Region region = new Region(context.getCompletionOffset(), context.getCompletionLength());
         for (Template template : GroovyQuickFixPlugin.getDefault().getTemplateStore().getTemplates()) {
             if (template.getName().startsWith(prefix)) {

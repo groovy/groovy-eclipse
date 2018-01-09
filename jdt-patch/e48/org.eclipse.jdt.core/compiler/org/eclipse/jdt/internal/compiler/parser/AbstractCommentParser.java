@@ -1613,6 +1613,7 @@ public abstract class AbstractCommentParser implements JavadocTagConstants {
 		return null;
 	}
 
+	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
 		int startPos = this.scanner.currentPosition<this.index ? this.scanner.currentPosition : this.index;

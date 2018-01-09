@@ -21,9 +21,7 @@ public class JavadocReturnStatement extends ReturnStatement {
 		this.bits |= (ASTNode.InsideJavadoc | ASTNode.Empty);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.internal.compiler.ast.Statement#resolve(org.eclipse.jdt.internal.compiler.lookup.BlockScope)
-	 */
+	@Override
 	public void resolve(BlockScope scope) {
 		MethodScope methodScope = scope.methodScope();
 		MethodBinding methodBinding = null;
@@ -40,9 +38,7 @@ public class JavadocReturnStatement extends ReturnStatement {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.internal.compiler.ast.Statement#printStatement(int, java.lang.StringBuffer)
-	 */
+	@Override
 	public StringBuffer printStatement(int tab, StringBuffer output) {
 		printIndent(tab, output).append("return"); //$NON-NLS-1$
 		if ((this.bits & ASTNode.Empty) == 0)
@@ -54,6 +50,7 @@ public class JavadocReturnStatement extends ReturnStatement {
 	 * Redefine to capture javadoc specific signatures
 	 * @see org.eclipse.jdt.internal.compiler.ast.ASTNode#traverse(org.eclipse.jdt.internal.compiler.ASTVisitor, org.eclipse.jdt.internal.compiler.lookup.BlockScope)
 	 */
+	@Override
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		visitor.visit(this, scope);
 		visitor.endVisit(this, scope);

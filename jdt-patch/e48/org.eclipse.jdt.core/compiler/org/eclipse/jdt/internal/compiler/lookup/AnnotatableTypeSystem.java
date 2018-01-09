@@ -37,6 +37,7 @@ public class AnnotatableTypeSystem extends TypeSystem {
 	}
 	
 	// Given a type, return all its annotated variants: parameter may be annotated.
+	@Override
 	public TypeBinding[] getAnnotatedTypes(TypeBinding type) {
 		
 		TypeBinding[] derivedTypes = getDerivedTypes(type);
@@ -64,6 +65,7 @@ public class AnnotatableTypeSystem extends TypeSystem {
 	   See ArrayBinding.swapUnresolved for further special case handling if incoming leafType is a URB that would resolve to a raw 
 	   type later.
 	*/
+	@Override
 	public ArrayBinding getArrayType(TypeBinding leafType, int dimensions, AnnotationBinding [] annotations) {
 		if (leafType instanceof ArrayBinding) { // substitution attempts can cause this, don't create array of arrays.
 			dimensions += leafType.dimensions();
@@ -98,16 +100,19 @@ public class AnnotatableTypeSystem extends TypeSystem {
 		return (ArrayBinding) cacheDerivedType(leafType, nakedType, arrayType);
 	}
 
+	@Override
 	public ArrayBinding getArrayType(TypeBinding leaftType, int dimensions) {
 		return getArrayType(leaftType, dimensions, Binding.NO_ANNOTATIONS);
 	}
 
+	@Override
 	public ReferenceBinding getMemberType(ReferenceBinding memberType, ReferenceBinding enclosingType) {
 		if (!haveTypeAnnotations(memberType, enclosingType))
 			return super.getMemberType(memberType, enclosingType);
 		return (ReferenceBinding) getAnnotatedType(memberType, enclosingType, memberType.getTypeAnnotations());
 	}
 	
+	@Override
 	public ParameterizedTypeBinding getParameterizedType(ReferenceBinding genericType, TypeBinding[] typeArguments, ReferenceBinding enclosingType, AnnotationBinding [] annotations) {
 		
 		if (genericType.hasTypeAnnotations())   // @NonNull (List<String>) and not (@NonNull List)<String>
@@ -129,10 +134,12 @@ public class AnnotatableTypeSystem extends TypeSystem {
 		return (ParameterizedTypeBinding) cacheDerivedType(genericType, nakedType, parameterizedType);
 	}
 	
+	@Override
 	public ParameterizedTypeBinding getParameterizedType(ReferenceBinding genericType, TypeBinding[] typeArguments, ReferenceBinding enclosingType) {
 		return getParameterizedType(genericType, typeArguments, enclosingType, Binding.NO_ANNOTATIONS);
 	}
 
+	@Override
 	public RawTypeBinding getRawType(ReferenceBinding genericType, ReferenceBinding enclosingType, AnnotationBinding [] annotations) {
 		if (genericType.hasTypeAnnotations())
 			throw new IllegalStateException();
@@ -165,10 +172,12 @@ public class AnnotatableTypeSystem extends TypeSystem {
 		return (RawTypeBinding) cacheDerivedType(genericType, nakedType, rawType);
 	}
 	
+	@Override
 	public RawTypeBinding getRawType(ReferenceBinding genericType, ReferenceBinding enclosingType) {
 		return getRawType(genericType, enclosingType, Binding.NO_ANNOTATIONS);
 	}
 	
+	@Override
 	public WildcardBinding getWildcard(ReferenceBinding genericType, int rank, TypeBinding bound, TypeBinding[] otherBounds, int boundKind, AnnotationBinding [] annotations) {
 		
 		if (genericType == null) // pseudo wildcard denoting composite bounds for lub computation
@@ -206,6 +215,7 @@ public class AnnotatableTypeSystem extends TypeSystem {
 		return (WildcardBinding) cacheDerivedType(useDerivedTypesOfBound ? bound : genericType, nakedType, wildcard);
 	}
 
+	@Override
 	public WildcardBinding getWildcard(ReferenceBinding genericType, int rank, TypeBinding bound, TypeBinding[] otherBounds, int boundKind) {
 		return getWildcard(genericType, rank, bound, otherBounds, boundKind, Binding.NO_ANNOTATIONS);
 	}
@@ -213,6 +223,7 @@ public class AnnotatableTypeSystem extends TypeSystem {
 	/* Take a type and apply annotations to various components of it. By construction when we see the type reference @Outer Outer.@Middle Middle.@Inner Inner,
 	   we first construct the binding for Outer.Middle.Inner and then annotate various parts of it. Likewise for PQTR's binding.
 	*/
+	@Override
 	public TypeBinding getAnnotatedType(TypeBinding type, AnnotationBinding[][] annotations) {
 		
 		if (type == null || !type.isValidBinding() || annotations == null || annotations.length == 0)
@@ -412,6 +423,7 @@ public class AnnotatableTypeSystem extends TypeSystem {
 		return series;
 	}
 
+	@Override
 	public boolean isAnnotatedTypeSystem() {
 		return true;
 	}

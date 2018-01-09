@@ -38,10 +38,12 @@ public class AssistSourceType extends ResolvedSourceType {
 		this.infoCache = infoCache;
 	}
 
+	@Override
 	public Object getElementInfo(IProgressMonitor monitor) throws JavaModelException {
 		return this.infoCache.get(this);
 	}
 
+	@Override
 	public String getFullyQualifiedParameterizedName() throws JavaModelException {
 		if (isResolved()) {
 			return getFullyQualifiedParameterizedName(getFullyQualifiedName('.'), this.getKey());
@@ -49,9 +51,7 @@ public class AssistSourceType extends ResolvedSourceType {
 		return getFullyQualifiedName('.', true/*show parameters*/);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.internal.core.SourceType#getKey()
-	 */
+	@Override
 	public String getKey() {
 		if (this.uniqueKey == null) {
 			Binding binding = (Binding) this.bindingCache.get(this);
@@ -71,41 +71,50 @@ public class AssistSourceType extends ResolvedSourceType {
 		return this.uniqueKey;
 	}
 
+	@Override
 	public boolean isResolved() {
 		getKey();
 		return this.isResolved;
 	}
 
+	@Override
 	protected void toStringInfo(int tab, StringBuffer buffer, Object info,boolean showResolvedInfo) {
 		super.toStringInfo(tab, buffer, info, showResolvedInfo && isResolved());
 	}
 
+	@Override
 	public IAnnotation getAnnotation(String annotationName) {
 		return new AssistAnnotation(this, annotationName, this.infoCache);
 	}
 
+	@Override
 	public IField getField(String fieldName) {
 		return new AssistSourceField(this, fieldName, this.bindingCache, this.infoCache);
 	}
 
+	@Override
 	public IInitializer getInitializer(int count) {
 		return new AssistInitializer(this, count, this.bindingCache, this.infoCache);
 	}
 
+	@Override
 	public IMethod getMethod(String selector, String[] parameterTypeSignatures) {
 		return new AssistSourceMethod(this, selector, parameterTypeSignatures, this.bindingCache, this.infoCache);
 	}
 
+	@Override
 	public IType getType(String typeName) {
 		return new AssistSourceType(this, typeName, this.bindingCache, this.infoCache);
 	}
 
+	@Override
 	public IType getType(String typeName, int count) {
 		AssistSourceType type = new AssistSourceType(this, typeName, this.bindingCache, this.infoCache);
 		type.occurrenceCount = count;
 		return type;
 	}
 
+	@Override
 	public ITypeParameter getTypeParameter(String typeParameterName) {
 		return new AssistTypeParameter(this, typeParameterName, this.infoCache);
 	}

@@ -24,6 +24,7 @@ public class CompletionOnAnnotationMemberValuePair extends NormalAnnotation {
 		this.completedMemberValuePair = completedMemberValuePair;
 	}
 
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 		super.resolveType(scope);
 
@@ -34,6 +35,7 @@ public class CompletionOnAnnotationMemberValuePair extends NormalAnnotation {
 		}
 	}
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 		output.append('@');
 		this.type.printExpression(0, output);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,14 +27,9 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
-/**
- * 
- * @author Nieraj Singh
- * @created 2011-04-20
- */
 public class InferencingPreferencesPage extends PreferencePage implements IWorkbenchPreferencePage {
-    private IWorkbenchPage page;
 
+    private IWorkbenchPage page;
     private GroovySuggestionsTable table;
 
     public static final String PAGE_DESCRIPTION = "Select a project to manage the Groovy inferencing suggestions.";
@@ -43,6 +38,7 @@ public class InferencingPreferencesPage extends PreferencePage implements IWorkb
         setDescription(PAGE_DESCRIPTION);
     }
 
+    @Override
     public void init(IWorkbench workbench) {
         if (workbench != null && workbench.getActiveWorkbenchWindow() != null) {
             page = workbench.getActiveWorkbenchWindow().getActivePage();
@@ -53,14 +49,15 @@ public class InferencingPreferencesPage extends PreferencePage implements IWorkb
         return page;
     }
 
+    @Override
     protected Control createContents(Composite parent) {
         List<IProject> projects = GroovyNature.getAllAccessibleGroovyProjects();
         table = new GroovySuggestionsTable(projects);
         return table.createTable(parent);
     }
 
+    @Override
     public boolean performOk() {
-
         if (super.performOk()) {
             IProject project = table.getSelectedProject();
             InferencingSuggestionsManager.getInstance().commitChanges(project);
@@ -69,11 +66,10 @@ public class InferencingPreferencesPage extends PreferencePage implements IWorkb
         return false;
     }
 
+    @Override
     public boolean performCancel() {
         IProject project = table.getSelectedProject();
         InferencingSuggestionsManager.getInstance().restoreSuggestions(project);
-
         return super.performCancel();
     }
-
 }

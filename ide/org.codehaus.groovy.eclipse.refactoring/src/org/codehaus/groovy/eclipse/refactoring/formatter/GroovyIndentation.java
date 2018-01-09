@@ -1,8 +1,5 @@
 /*
- * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
- *
- * IFS Institute for Software, HSR Rapperswil, Switzerland
- * http://ifs.hsr.ch/
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +15,11 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.formatter;
 
-import groovyjarjarantlr.Token;
-
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import groovyjarjarantlr.Token;
 import org.codehaus.greclipse.GroovyTokenTypeBridge;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
@@ -44,10 +40,6 @@ import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
 
-/**
- * @author Mike Klenk mklenk@hsr.ch
- * @author kdvolder
- */
 public class GroovyIndentation {
 
     private static boolean DEBUG = false;
@@ -58,48 +50,48 @@ public class GroovyIndentation {
         }
     }
 
-	private final DefaultGroovyFormatter formatter;
-	private final IFormatterPreferences pref;
+    private final DefaultGroovyFormatter formatter;
+    private final IFormatterPreferences pref;
 
-	private int indentation = 0;
-	private final int[] tempIndentation;
+    private int indentation = 0;
+    private final int[] tempIndentation;
 
-	private final LineIndentations lineInd;
+    private final LineIndentations lineInd;
 
-	TextEdit indentationEdits;
+    TextEdit indentationEdits;
 
     private final KlenkDocumentScanner tokens;
 
-	public GroovyIndentation(DefaultGroovyFormatter formatter,
-			IFormatterPreferences pref, int indentationLevel) {
-		this.formatter = formatter;
-		tempIndentation = new int[formatter.getProgressDocument().getNumberOfLines()];
-		lineInd = new LineIndentations(formatter.getProgressDocument().getNumberOfLines());
+    public GroovyIndentation(DefaultGroovyFormatter formatter,
+            IFormatterPreferences pref, int indentationLevel) {
+        this.formatter = formatter;
+        tempIndentation = new int[formatter.getProgressDocument().getNumberOfLines()];
+        lineInd = new LineIndentations(formatter.getProgressDocument().getNumberOfLines());
 
-		this.tokens = formatter.getTokens();
-		this.pref = pref;
-		this.indentation = indentationLevel;
-	}
+        this.tokens = formatter.getTokens();
+        this.pref = pref;
+        this.indentation = indentationLevel;
+    }
 
-	public TextEdit getIndentationEdits() {
-		indentationEdits = new MultiTextEdit();
+    public TextEdit getIndentationEdits() {
+        indentationEdits = new MultiTextEdit();
 
         // GRECLIPSE-1478
         handleMultilineMethodParameters();
 
-		try {
-			if (formatter.isMultilineStatement(tokens.get(0))) {
-				setAdditionalIndentation(tokens.get(0),
-						pref.getIndentationMultiline(), false);
-				lineInd.setMultilineToken(tokens.get(0).getLine(), tokens.get(0));
-			}
+        try {
+            if (formatter.isMultilineStatement(tokens.get(0))) {
+                setAdditionalIndentation(tokens.get(0),
+                        pref.getIndentationMultiline(), false);
+                lineInd.setMultilineToken(tokens.get(0).getLine(), tokens.get(0));
+            }
 
-			Token token = null;
+            Token token = null;
             for (int i = 0; i < tokens.size(); i++) {
-				token = tokens.get(i);
-				int offsetToken = formatter.getOffsetOfToken(token);
-				int offsetNextToken = formatter.getOffsetOfToken(formatter
-						.getNextTokenIncludingNLS(i));
+                token = tokens.get(i);
+                int offsetToken = formatter.getOffsetOfToken(token);
+                int offsetNextToken = formatter.getOffsetOfToken(formatter
+                        .getNextTokenIncludingNLS(i));
 
 
                 int ttype = token.getType();
@@ -308,8 +300,8 @@ public class GroovyIndentation {
         if (edit instanceof InsertEdit && ((InsertEdit) edit).getText().length() < 1) {
             return;
         }
-		if(edit != null && edit.getOffset() >= formatter.formatOffset &&
-				edit.getOffset() + edit.getLength() <= formatter.formatOffset + formatter.formatLength) {
+        if(edit != null && edit.getOffset() >= formatter.formatOffset &&
+                edit.getOffset() + edit.getLength() <= formatter.formatOffset + formatter.formatLength) {
             if (edit instanceof DeleteEdit) {
                 debug("DeleteEdit: " + edit.getOffset() + ":" + edit.getLength());
                 debug("---------------------------");
@@ -399,13 +391,13 @@ public class GroovyIndentation {
      *            the current indentation level
      * @return the formatted indeationed comment
      * @throws BadLocationException
-	 */
-	private String formatMultilineComment(String str, int ind)
-			throws BadLocationException {
-	    String string = str;
-		Matcher m = Pattern.compile("(\n|\r|\r\n)\\s*", Pattern.MULTILINE)
-				.matcher(string);
-		string = m.replaceAll(formatter.getNewLine() + formatter.getLeadingGap(ind) + " ");
+     */
+    private String formatMultilineComment(String str, int ind)
+            throws BadLocationException {
+        String string = str;
+        Matcher m = Pattern.compile("(\n|\r|\r\n)\\s*", Pattern.MULTILINE)
+                .matcher(string);
+        string = m.replaceAll(formatter.getNewLine() + formatter.getLeadingGap(ind) + " ");
         return string;
     }
 }

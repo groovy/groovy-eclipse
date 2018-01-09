@@ -76,6 +76,7 @@ public CompilationUnit(char[] contents, String fileName, String encoding,
 	this.destinationPath = destinationPath;
 	this.ignoreOptionalProblems = ignoreOptionalProblems;
 }
+@Override
 public char[] getContents() {
 	if (this.contents != null)
 		return this.contents;   // answer the cached source
@@ -91,18 +92,23 @@ public char[] getContents() {
 /**
  * @see org.eclipse.jdt.internal.compiler.env.IDependent#getFileName()
  */
+@Override
 public char[] getFileName() {
 	return this.fileName;
 }
+@Override
 public char[] getMainTypeName() {
 	return this.mainTypeName;
 }
+@Override
 public char[][] getPackageName() {
 	return null;
 }
+@Override
 public boolean ignoreOptionalProblems() {
 	return this.ignoreOptionalProblems;
 }
+@Override
 public String toString() {
 	return "CompilationUnit[" + new String(this.fileName) + "]";  //$NON-NLS-2$ //$NON-NLS-1$
 }
@@ -127,6 +133,7 @@ public ModuleBinding module(LookupEnvironment rootEnvironment) {
 	}
 	return rootEnvironment.UnNamedModule;
 }
+@Override
 public String getDestinationPath() {
 	return this.destinationPath;
 }

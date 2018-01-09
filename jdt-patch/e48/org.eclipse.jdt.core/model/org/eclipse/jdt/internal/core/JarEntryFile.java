@@ -38,12 +38,14 @@ public class JarEntryFile  extends JarEntryResource {
 		super(simpleName);
 	}
 
+	@Override
 	public JarEntryResource clone(Object newParent) {
 		JarEntryFile file = new JarEntryFile(this.simpleName);
 		file.setParent(newParent);
 		return file;
 	}
 
+	@Override
 	public InputStream getContents() throws CoreException {
 		IPackageFragmentRoot root = getPackageFragmentRoot();
 		if (Util.isJrt(root.getPath().toOSString())) {
@@ -80,14 +82,17 @@ public class JarEntryFile  extends JarEntryResource {
 		}
 	}
 
+	@Override
 	public IJarEntryResource[] getChildren() {
 		return NO_CHILDREN;
 	}
 
+	@Override
 	public boolean isFile() {
 		return true;
 	}
 
+	@Override
 	public String toString() {
 		return "JarEntryFile["+getEntryName()+"]"; //$NON-NLS-2$ //$NON-NLS-1$
 	}

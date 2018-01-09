@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,6 +45,7 @@ import org.eclipse.ui.progress.UIJob;
 public class DebuggerPreferencesPage extends FieldEditorOverlayPage implements IWorkbenchPreferencePage {
 
     private class PackagePrefixValidator implements IInputValidator {
+        @Override
         public String isValid(String newText) {
             if (newText.trim().length() == 0)
                 return "";
@@ -58,8 +59,7 @@ public class DebuggerPreferencesPage extends FieldEditorOverlayPage implements I
 
     private class PackageChooserListEditor extends ListEditor {
 
-        public PackageChooserListEditor(String name, String labelText,
-                Composite parent) {
+        public PackageChooserListEditor(String name, String labelText, Composite parent) {
             super(name, labelText, parent);
             setPreferenceStore(DebuggerPreferencesPage.this.getPreferenceStore());
         }
@@ -143,11 +143,12 @@ public class DebuggerPreferencesPage extends FieldEditorOverlayPage implements I
         Button forceDebugOptions = new Button(getFieldEditorParent(), SWT.PUSH);
         forceDebugOptions.setText("Automatically configure common Groovy step filtering");
         forceDebugOptions.addSelectionListener(new SelectionListener() {
+            @Override
             public void widgetSelected(SelectionEvent arg0) {
                 doForceOptions = true;
                 new GroovyDebugOptionsEnforcer().force();
             }
-
+            @Override
             public void widgetDefaultSelected(SelectionEvent arg0) {
                 doForceOptions = true;
                 new GroovyDebugOptionsEnforcer().force();
@@ -157,7 +158,9 @@ public class DebuggerPreferencesPage extends FieldEditorOverlayPage implements I
         Composite c2 = new Composite(getFieldEditorParent(), 0);
     }
 
-    public void init(IWorkbench workbench) {}
+    @Override
+    public void init(IWorkbench workbench) {
+    }
 
     @Override
     public boolean performOk() {

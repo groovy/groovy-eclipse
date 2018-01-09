@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,6 +52,7 @@ public class GroovyProjectWizard extends NewElementWizard implements IExecutable
         setDefaultPageImageDescriptor(GroovyPluginImages.DESC_NEW_GROOVY_PROJECT);
     }
 
+    @Override
     public void addPages() {
         super.addPages();
         fFirstPage = new NewJavaProjectWizardPageOne();
@@ -64,14 +65,15 @@ public class GroovyProjectWizard extends NewElementWizard implements IExecutable
         addPage(fSecondPage);
     }
 
+    @Override
     protected void finishPage(IProgressMonitor monitor) throws InterruptedException, CoreException {
         fSecondPage.performFinish(monitor); // use the full progress monitor
     }
 
+    @Override
     public boolean performFinish() {
         boolean res = super.performFinish();
         if (res) {
-
             // Fix for 78263
             BasicNewProjectResourceWizard.updatePerspective(fConfigElement);
             IProject project = fSecondPage.getJavaProject().getProject();
@@ -88,6 +90,7 @@ public class GroovyProjectWizard extends NewElementWizard implements IExecutable
         return res;
     }
 
+    @Override
     protected void handleFinishException(Shell shell, InvocationTargetException e) {
         String title = NewWizardMessages.GroovyProjectWizard_OpErrorTitle;
         String message = NewWizardMessages.GroovyProjectWizard_OpErrorCreateMessage;
@@ -122,19 +125,23 @@ public class GroovyProjectWizard extends NewElementWizard implements IExecutable
      * Stores the configuration element for the wizard.  The config element will be used
      * in <code>performFinish</code> to set the result perspective.
      */
+    @Override
     public void setInitializationData(IConfigurationElement cfig, String propertyName, Object data) {
         fConfigElement = cfig;
     }
 
+    @Override
     public boolean performCancel() {
         fSecondPage.performCancel();
         return super.performCancel();
     }
 
+    @Override
     public boolean canFinish() {
         return super.canFinish();
     }
 
+    @Override
     public IJavaElement getCreatedElement() {
         return fSecondPage.getJavaProject();
     }

@@ -1557,6 +1557,7 @@ public abstract class OperatorExpression extends Expression implements OperatorI
 		return "unknown operator"; //$NON-NLS-1$
 	}
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output){
 
 		output.append('(');

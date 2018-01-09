@@ -58,6 +58,7 @@ DOMCompilationUnit(char[] document, int[] sourceRange) {
 /**
  * @see DOMNode#appendContents(CharArrayBuffer)
  */
+@Override
 protected void appendFragmentedContents(CharArrayBuffer buffer) {
 	buffer.append(getHeader());
 	appendContentsOfChildren(buffer);
@@ -65,18 +66,21 @@ protected void appendFragmentedContents(CharArrayBuffer buffer) {
 /**
  * @see IDOMNode#canHaveChildren()
  */
+@Override
 public boolean canHaveChildren() {
 	return true;
 }
 /**
  * @see IDOMCompilationUnit#getHeader()
  */
+@Override
 public String getHeader() {
 	return this.fHeader;
 }
 /**
  * @see IDOMNode#getJavaElement
  */
+@Override
 public IJavaElement getJavaElement(IJavaElement parent) throws IllegalArgumentException {
 	if (parent.getElementType() == IJavaElement.PACKAGE_FRAGMENT) {
 		return ((IPackageFragment)parent).getCompilationUnit(getName());
@@ -87,6 +91,7 @@ public IJavaElement getJavaElement(IJavaElement parent) throws IllegalArgumentEx
 /**
  * @see IDOMCompilationUnit#getName()
  */
+@Override
 public String getName() {
 	IDOMType topLevelType= null;
 	IDOMType firstType= null;
@@ -116,6 +121,7 @@ public String getName() {
 /**
  * @see IDOMNode#getNodeType()
  */
+@Override
 public int getNodeType() {
 	return IDOMNode.COMPILATION_UNIT;
 }
@@ -134,6 +140,7 @@ protected void initalizeHeader() {
 /**
  * @see IDOMNode#isAllowableChild(IDOMNode)
  */
+@Override
 public boolean isAllowableChild(IDOMNode node) {
 	if (node != null) {
 		int type= node.getNodeType();
@@ -146,6 +153,7 @@ public boolean isAllowableChild(IDOMNode node) {
 /**
  * @see DOMNode
  */
+@Override
 protected DOMNode newDOMNode() {
 	return new DOMCompilationUnit();
 }
@@ -154,6 +162,7 @@ protected DOMNode newDOMNode() {
  * the node on the line on which the node starts, and all whitespace after the node up to
  * the next node's start
  */
+@Override
 void normalize(ILineStartFinder finder) {
 	super.normalize(finder);
 	initalizeHeader();
@@ -161,6 +170,7 @@ void normalize(ILineStartFinder finder) {
 /**
  * @see IDOMCompilationUnit#setHeader(String)
  */
+@Override
 public void setHeader(String comment) {
 	this.fHeader= comment;
 	fragment();
@@ -168,12 +178,14 @@ public void setHeader(String comment) {
 /**
  * @see IDOMCompilationUnit#setName(String)
  */
+@Override
 public void setName(String name) {
 	// nothing to do
 }
 /**
  * @see DOMNode#shareContents(DOMNode)
  */
+@Override
 protected void shareContents(DOMNode node) {
 	super.shareContents(node);
 	this.fHeader= ((DOMCompilationUnit)node).fHeader;
@@ -181,6 +193,7 @@ protected void shareContents(DOMNode node) {
 /**
  * @see IDOMNode#toString()
  */
+@Override
 public String toString() {
 	return "COMPILATION_UNIT: " + getName(); //$NON-NLS-1$
 }

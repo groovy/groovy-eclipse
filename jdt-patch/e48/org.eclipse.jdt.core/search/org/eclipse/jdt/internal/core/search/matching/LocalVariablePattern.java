@@ -31,6 +31,7 @@ public LocalVariablePattern(LocalVariable localVariable, int limitTo, int matchR
 	super(LOCAL_VAR_PATTERN, localVariable.getElementName().toCharArray(), limitTo, matchRule);
 	this.localVariable = localVariable;
 }
+@Override
 public void findIndexMatches(Index index, IndexQueryRequestor requestor, SearchParticipant participant, IJavaSearchScope scope, IProgressMonitor progressMonitor) {
     IPackageFragmentRoot root = (IPackageFragmentRoot)this.localVariable.getAncestor(IJavaElement.PACKAGE_FRAGMENT_ROOT);
 	String documentPath;
@@ -59,6 +60,7 @@ public void findIndexMatches(Index index, IndexQueryRequestor requestor, SearchP
 			throw new OperationCanceledException();
 	}
 }
+@Override
 protected StringBuffer print(StringBuffer output) {
 	if (this.findDeclarations) {
 		output.append(this.findReferences

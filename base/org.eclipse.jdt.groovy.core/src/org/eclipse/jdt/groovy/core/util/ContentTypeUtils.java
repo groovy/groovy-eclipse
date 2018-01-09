@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -29,7 +28,6 @@ import java.util.TreeSet;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.content.IContentType;
 import org.eclipse.core.runtime.content.IContentTypeManager;
-import org.eclipse.core.runtime.content.IContentTypeManager.ContentTypeChangeEvent;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
@@ -64,12 +62,10 @@ public class ContentTypeUtils {
         if (GROOVY_LIKE_EXTENSIONS == null) {
             IContentTypeManager contentTypeManager = Platform.getContentTypeManager();
             if (contentTypeManager != null) {
-                Set<String> extensions = new TreeSet<String>(new Comparator<String>() {
-                    public int compare(String s1, String s2) {
-                        if (s1.equals("groovy")) return -1;
-                        if (s2.equals("groovy")) return +1;
-                        return s1.compareTo(s2);
-                    }
+                Set<String> extensions = new TreeSet<>((s1, s2) -> {
+                    if (s1.equals("groovy")) return -1;
+                    if (s2.equals("groovy")) return +1;
+                    return s1.compareTo(s2);
                 });
                 IContentType groovyContentType = contentTypeManager.getContentType(GROOVY_SOURCE_CONTENT_TYPE);
                 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=121715
@@ -107,7 +103,7 @@ public class ContentTypeUtils {
         if (JAVA_LIKE_BUT_NOT_GROOVY_LIKE_EXTENSIONS == null) {
             char[][] javaLikeExtensions = getJavaLikeExtensions();
             char[][] groovyLikeExtensiosn = getGroovyLikeExtensions();
-            List<char[]> interestingExtensions = new ArrayList<char[]>();
+            List<char[]> interestingExtensions = new ArrayList<>();
             for (char[] javaLike : javaLikeExtensions) {
                 boolean found = false;
                 for (char[] groovyLike : groovyLikeExtensiosn) {
@@ -221,25 +217,16 @@ public class ContentTypeUtils {
 
     //--------------------------------------------------------------------------
 
-    @Deprecated // retained for backwards compatibility
-    public static boolean isGroovyLikeFileName(String fileName) {
-        return isGroovyLikeFileName((CharSequence) fileName);
-    }
-
-    //--------------------------------------------------------------------------
-
     static {
         IContentTypeManager contentTypeManager = Platform.getContentTypeManager();
         if (contentTypeManager != null) {
-            contentTypeManager.addContentTypeChangeListener(new IContentTypeManager.IContentTypeChangeListener() {
-                public void contentTypeChanged(ContentTypeChangeEvent event) {
-                    // we can be more specific here, but content types change so rarely, that
-                    // I am not concerned about being overly eager to invalidate the cache
-                    GROOVY_FILE_NAMES = null;
-                    GROOVY_LIKE_EXTENSIONS = null;
-                    GRADLE_LIKE_EXTENSIONS = null;
-                    JAVA_LIKE_BUT_NOT_GROOVY_LIKE_EXTENSIONS = null;
-                }
+            contentTypeManager.addContentTypeChangeListener(event -> {
+                // we can be more specific here, but content types change so rarely, that
+                // I am not concerned about being overly eager to invalidate the cache
+                GROOVY_FILE_NAMES = null;
+                GROOVY_LIKE_EXTENSIONS = null;
+                GRADLE_LIKE_EXTENSIONS = null;
+                JAVA_LIKE_BUT_NOT_GROOVY_LIKE_EXTENSIONS = null;
             });
         }
     }
@@ -262,7 +249,7 @@ public class ContentTypeUtils {
             for (IContentType contentType : contentTypeManager.getAllContentTypes()) {
                 if (contentType.isKindOf(groovyContentType)) {
                     for (String fileName : contentType.getFileSpecs(IContentType.FILE_NAME_SPEC)) {
-                        if (names == null) names = new TreeSet<String>();
+                        if (names == null) names = new TreeSet<>();
                         names.add(fileName);
                     }
                 }

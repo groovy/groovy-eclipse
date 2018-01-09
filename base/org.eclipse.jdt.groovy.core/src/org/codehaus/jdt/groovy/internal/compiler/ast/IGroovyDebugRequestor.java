@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@ package org.codehaus.jdt.groovy.internal.compiler.ast;
 /**
  * A requestor that is called back when GroovyCompilationUnitDeclarations are created. This enables the writing of tests that check
  * the structure of the constructed declaration. Only tests should define implementations and plug them into GroovyParser.
- *
- * @author Andy Clement
  */
+@FunctionalInterface
 public interface IGroovyDebugRequestor {
+
     void acceptCompilationUnitDeclaration(GroovyCompilationUnitDeclaration gcuDeclaration);
 }

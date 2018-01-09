@@ -73,7 +73,7 @@ public final class BuildAccessRulesTests extends BuilderTestSuite {
         // read back contents in case of line delimeters change or package statement addition or ...
         source = env.readTextFile(foo);
 
-        List<String> problems = new ArrayList<String>();
+        List<String> problems = new ArrayList<>();
         for (String type : types) {
             int offset = -1;
             while ((offset = source.indexOf(type.trim(), offset + 1)) != -1) {

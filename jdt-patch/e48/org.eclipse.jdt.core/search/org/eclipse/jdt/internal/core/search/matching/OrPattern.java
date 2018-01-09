@@ -53,6 +53,7 @@ public class OrPattern extends SearchPattern implements IIndexConstants {
 			this.matchCompatibility |= ((JavaSearchPattern) this.patterns[i]).matchCompatibility;
 		}
 	}
+	@Override
 	public void findIndexMatches(Index index, IndexQueryRequestor requestor, SearchParticipant participant, IJavaSearchScope scope, IProgressMonitor progressMonitor) throws IOException {
 		// per construction, OR pattern can only be used with a PathCollector (which already gather results using a set)
 		try {
@@ -64,6 +65,7 @@ public class OrPattern extends SearchPattern implements IIndexConstants {
 		}
 	}
 
+	@Override
 	public SearchPattern getBlankPattern() {
 		return null;
 	}
@@ -72,6 +74,7 @@ public class OrPattern extends SearchPattern implements IIndexConstants {
 		return (this.matchCompatibility & R_ERASURE_MATCH) != 0;
 	}
 
+	@Override
 	public boolean isPolymorphicSearch() {
 		for (int i = 0, length = this.patterns.length; i < length; i++)
 			if (this.patterns[i].isPolymorphicSearch()) return true;
@@ -103,6 +106,7 @@ public class OrPattern extends SearchPattern implements IIndexConstants {
 		return false;
 	}
 
+	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
 		buffer.append(this.patterns[0].toString());

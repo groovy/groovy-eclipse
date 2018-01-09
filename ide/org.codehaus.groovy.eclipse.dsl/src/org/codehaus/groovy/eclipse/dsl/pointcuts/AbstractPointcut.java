@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,13 @@
  */
 package org.codehaus.groovy.eclipse.dsl.pointcuts;
 
-import groovy.lang.Closure;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
+
+import groovy.lang.Closure;
 
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
@@ -34,13 +34,9 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.OrPointcut;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IStorage;
 
-
-
 /**
  * Abstract implementation of the Pointcut.  Most concrete instances will only
  * accept one argument.
- * @author andrew
- * @created Nov 17, 2010
  */
 public abstract class AbstractPointcut implements IPointcut {
 
@@ -57,6 +53,12 @@ public abstract class AbstractPointcut implements IPointcut {
         this.pointcutName = pointcutName;
     }
 
+    @Override
+    public String getPointcutDebugName() {
+        return pointcutName + " (" + getClass().getSimpleName() + ")";
+    }
+
+    @Override
     public String getPointcutName() {
         return pointcutName;
     }
@@ -65,10 +67,7 @@ public abstract class AbstractPointcut implements IPointcut {
         this.pointcutName = pointcutName;
     }
 
-    public String getPointcutDebugName() {
-        return pointcutName + " (" + getClass().getSimpleName() + ")";
-    }
-
+    @Override
     public IStorage getContainerIdentifier() {
         return containerIdentifier;
     }
@@ -77,6 +76,7 @@ public abstract class AbstractPointcut implements IPointcut {
         this.containerIdentifier = containerIdentifier;
     }
 
+    @Override
     public void verify() throws PointcutVerificationException {
         // most pointcuts can't have more than one argument
         if (elements.size > 1) {
@@ -84,6 +84,7 @@ public abstract class AbstractPointcut implements IPointcut {
         }
     }
 
+    @Override
     public final void addArgument(Object argument) {
         elements.add(null, argument);
     }
@@ -94,8 +95,10 @@ public abstract class AbstractPointcut implements IPointcut {
      * @param toMatch object to match on
      * @return collection of objects matched, or null if no matches found
      */
+    @Override
     public abstract Collection<?> matches(GroovyDSLDContext pattern, Object toMatch);
 
+    @Override
     public final void addArgument(String name, Object argument) {
         if (name == null) {
             addArgument(argument);
@@ -110,16 +113,13 @@ public abstract class AbstractPointcut implements IPointcut {
      * a name exists.
      *
      * Must call if the argument to this pointcut is another pointcut
-     * @param argument
-     * @param pattern
-     * @return
      */
     protected Collection<?> matchOnPointcutArgument(
             IPointcut argument, GroovyDSLDContext pattern, Collection<?> allElementsToMatch) {
         if (allElementsToMatch == null) {
             return null;
         }
-        Collection<Object> outerResults = new LinkedHashSet<Object>();
+        Collection<Object> outerResults = new LinkedHashSet<>();
         for (Object toMatch : allElementsToMatch) {
             Collection<?> innerResults = argument.matches(pattern, toMatch);
             if (innerResults != null) {
@@ -142,7 +142,7 @@ public abstract class AbstractPointcut implements IPointcut {
     protected Collection<?> matchOnPointcutArgumentReturnInner(
             IPointcut argument, GroovyDSLDContext pattern, Collection<?> allElementsToMatch) {
         String bindingName = getArgumentName(argument);
-        Collection<Object> innerResults = new HashSet<Object>();
+        Collection<Object> innerResults = new HashSet<>();
         for (Object toMatch : allElementsToMatch) {
             Collection<?> tempInnerResults = argument.matches(pattern, toMatch);
             if (tempInnerResults != null) {
@@ -162,13 +162,14 @@ public abstract class AbstractPointcut implements IPointcut {
      * @return
      */
     protected Collection<?> flatten(Map<Object, Collection<?>> pointcutResult) {
-        Collection<Object> newCollection = new HashSet<Object>(pointcutResult.size());
+        Collection<Object> newCollection = new HashSet<>(pointcutResult.size());
         for (Collection<?> collection : pointcutResult.values()) {
             newCollection.addAll(collection);
         }
         return newCollection;
     }
 
+    @Override
     public final Object getFirstArgument() {
         if (elements.size > 0) {
             return elements.elementAt(0);
@@ -177,10 +178,12 @@ public abstract class AbstractPointcut implements IPointcut {
         }
     }
 
+    @Override
     public final String[] getArgumentNames() {
         return elements.getNames();
     }
 
+    @Override
     public final Object[] getArgumentValues() {
         return elements.getElements();
     }
@@ -201,6 +204,7 @@ public abstract class AbstractPointcut implements IPointcut {
         return null;
     }
 
+    @Override
     public final String getFirstArgumentName() {
         if (elements.size > 0) {
             return elements.nameAt(0);
@@ -213,6 +217,7 @@ public abstract class AbstractPointcut implements IPointcut {
         return elements.nameOf(arg);
     }
 
+    @Override
     public IPointcut normalize() {
         for (int i = 0; i < elements.size; i++) {
             Object elt = elements.elementAt(i);
@@ -223,6 +228,7 @@ public abstract class AbstractPointcut implements IPointcut {
         return this;
     }
 
+    @Override
     public boolean fastMatch(GroovyDSLDContext pattern) {
         for (Object elt : elements.getElements()) {
             if (elt instanceof IPointcut && ! ((IPointcut) elt).fastMatch(pattern)) {
@@ -232,10 +238,12 @@ public abstract class AbstractPointcut implements IPointcut {
         return true;
     }
 
+    @Override
     public void setProject(IProject project) {
         this.project = project;
     }
 
+    @Override
     public void accept(Closure contributionGroupClosure) {
         IContributionGroup group = new DSLContributionGroup(contributionGroupClosure);
         if (project != null) {

@@ -18,6 +18,7 @@ public class RecoveredExportsStatement extends RecoveredPackageVisibilityStateme
 	public RecoveredExportsStatement(ExportsStatement exportsStatement, RecoveredElement parent, int bracketBalance) {
 		super(exportsStatement, parent, bracketBalance);
 	}
+	@Override
 	public String toString(int tab) {
 		return tabString(tab) + "Recovered exports stmt: " + super.toString(); //$NON-NLS-1$
 	}

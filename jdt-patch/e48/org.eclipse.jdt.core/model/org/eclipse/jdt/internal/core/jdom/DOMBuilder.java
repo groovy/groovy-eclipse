@@ -63,6 +63,7 @@ public DOMBuilder() {
 /**
  * @see IDocumentElementRequestor#acceptImport(int, int, int[], char[], int, boolean, int)
  */
+@Override
 public void acceptImport(int declarationStart, int declarationEnd, int[] javaDocPositions, char[] name,
 	int nameStart, boolean onDemand, int modifiers) {
 	int[] sourceRange = {declarationStart, declarationEnd};
@@ -80,6 +81,7 @@ public void acceptImport(int declarationStart, int declarationEnd, int[] javaDoc
 /**
  * @see IDocumentElementRequestor#acceptInitializer(int declarationStart, int declarationEnd, int[] javaDocPositions, int modifiers, int modifiersStart, int bodyStart, int bodyEnd)
  */
+@Override
 public void acceptInitializer(int declarationStart, int declarationEnd, int[] javaDocPositions, int modifiers,
 	int modifiersStart, int bodyStart, int bodyEnd) {
 	int[] sourceRange = {declarationStart, declarationEnd};
@@ -105,6 +107,7 @@ public void acceptInitializer(int declarationStart, int declarationEnd, int[] ja
 /**
  * @see IDocumentElementRequestor#acceptPackage(int declarationStart, int declarationEnd, int[] javaDocPositions, char[] name, int nameStartPosition)
  */
+@Override
 public void acceptPackage(int declarationStart, int declarationEnd, int[] javaDocPositions, char[] name,
 	int nameStartPosition) {
 	int[] sourceRange = null;
@@ -129,6 +132,7 @@ public void acceptPackage(int declarationStart, int declarationEnd, int[] javaDo
  *
  * @see IDocumentElementRequestor
  */
+@Override
 public void acceptProblem(CategorizedProblem problem){
 	if (this.fBuildingSingleMember && this.fFinishedSingleMember) {
 		return;
@@ -143,6 +147,7 @@ public void acceptProblem(CategorizedProblem problem){
  * <p>NOTE: nodes are added to the JDOM via the method #basicAddChild such that
  * the nodes in the newly created JDOM are not fragmented.
  */
+@Override
 protected void addChild(IDOMNode child) {
 	super.addChild(child);
 	if (this.fStack.isEmpty() && this.fFields != null) {
@@ -158,6 +163,7 @@ public IDOMCompilationUnit createCompilationUnit() {
 /**
  * @see IDOMFactory#createCompilationUnit(String, String)
  */
+@Override
 public IDOMCompilationUnit createCompilationUnit(ICompilationUnit compilationUnit) {
 	initializeBuild(compilationUnit.getContents(), true, true, false);
 	getParser(this.options).parseCompilationUnit(compilationUnit);
@@ -389,6 +395,7 @@ protected void enterAbstractMethod(int declarationStart, int[] javaDocPositions,
 	int[] superinterfaceEnds,
 	int bodyStart)
  */
+@Override
 public void enterClass(int declarationStart, int[] javaDocPositions, int modifiers, int modifiersStart, int keywordStart,
 	char[] name, int nameStart, int nameEnd, char[] superclass, int superclassStart,
 	int superclassEnd, char[][] superinterfaces, int[] superinterfaceStarts,
@@ -420,6 +427,7 @@ public void enterClass(int declarationStart, int[] javaDocPositions, int modifie
 	int [] exceptionTypeEnds,
 	int bodyStart)
  */
+@Override
 public void enterConstructor(int declarationStart, int[] javaDocPositions, int modifiers, int modifiersStart,
 	char[] name, int nameStart, int nameEnd, char[][] parameterTypes,
 	int[] parameterTypeStarts, int[] parameterTypeEnds, char[][] parameterNames,
@@ -457,6 +465,7 @@ public void enterConstructor(int declarationStart, int[] javaDocPositions, int m
 	int extendedTypeDimensionCount,
 	int extendedTypeDimensionEnd)
  */
+@Override
 public void enterField(int declarationStart, int[] javaDocPositions, int modifiers, int modifiersStart,
 	char[] type, int typeStart, int typeEnd, int typeDimensionCount, char[] name,
 	int nameStart, int nameEnd, int extendedTypeDimensionCount,
@@ -505,6 +514,7 @@ public void enterField(int declarationStart, int[] javaDocPositions, int modifie
 	int[] superinterfaceEnds,
 	int bodyStart)
  */
+@Override
 public void enterInterface(int declarationStart, int[] javaDocPositions, int modifiers, int modifiersStart, int keywordStart,
 	char[] name, int nameStart, int nameEnd, char[][] superinterfaces,
 	int[] superinterfaceStarts, int[] superinterfaceEnds, int bodyStart) {
@@ -540,6 +550,7 @@ public void enterInterface(int declarationStart, int[] javaDocPositions, int mod
 	int [] exceptionTypeEnds,
 	int bodyStart)
  */
+@Override
 public void enterMethod(int declarationStart, int[] javaDocPositions, int modifiers, int modifiersStart,
 	char[] returnType, int returnTypeStart, int returnTypeEnd, int returnTypeDimensionCount,
 	char[] name, int nameStart, int nameEnd, char[][] parameterTypes, int[] parameterTypeStarts,
@@ -639,6 +650,7 @@ protected void exitAbstractMethod(int bodyEnd, int declarationEnd) {
  *
  * @see IDocumentElementRequestor#exitClass(int, int)
  */
+@Override
 public void exitClass(int bodyEnd, int declarationEnd) {
 	exitType(bodyEnd, declarationEnd);
 }
@@ -648,6 +660,7 @@ public void exitClass(int bodyEnd, int declarationEnd) {
  *
  * @see IDocumentElementRequestor#exitConstructor(int, int)
  */
+@Override
 public void exitConstructor(int bodyEnd, int declarationEnd) {
 	exitAbstractMethod(bodyEnd, declarationEnd);
 }
@@ -657,6 +670,7 @@ public void exitConstructor(int bodyEnd, int declarationEnd) {
  *
  * @see IDocumentElementRequestor#exitField(int, int)
  */
+@Override
 public void exitField(int bodyEnd, int declarationEnd) {
 	DOMField field = (DOMField)this.fStack.pop();
 	if (field.getEndPosition() < declarationEnd) {
@@ -684,6 +698,7 @@ public void exitField(int bodyEnd, int declarationEnd) {
  *
  * @see IDocumentElementRequestor#exitInterface(int, int)
  */
+@Override
 public void exitInterface(int bodyEnd, int declarationEnd) {
 	exitType(bodyEnd, declarationEnd);
 }
@@ -693,6 +708,7 @@ public void exitInterface(int bodyEnd, int declarationEnd) {
  *
  * @see IDocumentElementRequestor#exitMethod(int, int)
  */
+@Override
 public void exitMethod(int bodyEnd, int declarationEnd) {
 	exitAbstractMethod(bodyEnd, declarationEnd);
 }

@@ -18,12 +18,16 @@ public abstract class ReductionResult {
 
 	protected static final ConstraintTypeFormula TRUE = new ConstraintTypeFormula() {
 		/* empty body just to make abstract class instantiable */
+		@Override
 		public Object reduce(InferenceContext18 context) { return this; }
+		@Override
 		public String toString() { return "TRUE"; } //$NON-NLS-1$
 	};
 	protected static final ConstraintTypeFormula FALSE = new ConstraintTypeFormula() { 
 		/* empty body just to make abstract class instantiable */ 
+		@Override
 		public Object reduce(InferenceContext18 context) { return this; }
+		@Override
 		public String toString() { return "FALSE"; } //$NON-NLS-1$
 	};
 	

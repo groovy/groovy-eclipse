@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,33 +18,27 @@ package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * 
- * @author Nieraj Singh
- * @created Apr 19, 2011
- */
 public class GroovySuggestionDeclaringType implements IBaseGroovySuggestion {
+
     private List<IGroovySuggestion> suggestions;
 
     private String name;
 
     public GroovySuggestionDeclaringType(String name) {
-        this.suggestions = new ArrayList<IGroovySuggestion>();
+        this.suggestions = new ArrayList<>();
         this.name = name;
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
     /**
      * Creates a new instance of the suggestion in the specified declaring type.
-     * If a suggestion
-     * already exists that matches the descriptor, null is returned
-     * 
-     * @param type
-     * @param isActive whether the suggestion should be active in the declaring
-     *            type
+     * If a suggestion already exists that matches the descriptor, null is returned
+     *
+     * @param isActive whether the suggestion should be active in the declaring type
      * @return new created suggestion, or null if the suggestion already exists
      */
     public IGroovySuggestion createSuggestion(SuggestionDescriptor descriptor) {

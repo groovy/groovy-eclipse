@@ -20,6 +20,7 @@ public class ImportContainer extends SourceRefElement implements IImportContaine
 protected ImportContainer(CompilationUnit parent) {
 	super(parent);
 }
+@Override
 public boolean equals(Object o) {
 	if (!(o instanceof ImportContainer)) return false;
 	return super.equals(o);
@@ -27,12 +28,12 @@ public boolean equals(Object o) {
 /**
  * @see IJavaElement
  */
+@Override
 public int getElementType() {
 	return IMPORT_CONTAINER;
 }
-/*
- * @see JavaElement
- */
+
+@Override
 public IJavaElement getHandleFromMemento(String token, MementoTokenizer memento, WorkingCopyOwner workingCopyOwner) {
 	switch (token.charAt(0)) {
 		case JEM_COUNT:
@@ -51,12 +52,14 @@ public IJavaElement getHandleFromMemento(String token, MementoTokenizer memento,
 /**
  * @see JavaElement#getHandleMemento()
  */
+@Override
 protected char getHandleMementoDelimiter() {
 	return JavaElement.JEM_IMPORTDECLARATION;
 }
 /**
  * @see IImportContainer
  */
+@Override
 public IImportDeclaration getImport(String importName) {
 	int index = importName.indexOf(".*"); ///$NON-NLS-1$
 	boolean isOnDemand = index != -1;
@@ -68,9 +71,8 @@ public IImportDeclaration getImport(String importName) {
 protected IImportDeclaration getImport(String importName, boolean isOnDemand) {
 	return new ImportDeclaration(this, importName, isOnDemand);
 }
-/*
- * @see JavaElement#getPrimaryElement(boolean)
- */
+
+@Override
 public IJavaElement getPrimaryElement(boolean checkOwner) {
 	CompilationUnit cu = (CompilationUnit)this.parent;
 	if (checkOwner && cu.isPrimary()) return this;
@@ -79,6 +81,7 @@ public IJavaElement getPrimaryElement(boolean checkOwner) {
 /**
  * @see ISourceReference
  */
+@Override
 public ISourceRange getSourceRange() throws JavaModelException {
 	IJavaElement[] imports= getChildren();
 	ISourceRange firstRange= ((ISourceReference)imports[0]).getSourceRange();
@@ -88,6 +91,7 @@ public ISourceRange getSourceRange() throws JavaModelException {
 }
 /**
  */
+@Override
 public String readableName() {
 
 	return null;
@@ -95,6 +99,7 @@ public String readableName() {
 /**
  * @private Debugging purposes
  */
+@Override
 protected void toString(int tab, StringBuffer buffer) {
 	Object info = JavaModelManager.getJavaModelManager().peekAtInfo(this);
 	if (info == null || !(info instanceof JavaElementInfo)) return;
@@ -107,6 +112,7 @@ protected void toString(int tab, StringBuffer buffer) {
 /**
  *  Debugging purposes
  */
+@Override
 protected void toStringInfo(int tab, StringBuffer buffer, Object info, boolean showResolvedInfo) {
 	buffer.append(tabString(tab));
 	buffer.append("<import container>"); //$NON-NLS-1$
@@ -114,6 +120,7 @@ protected void toStringInfo(int tab, StringBuffer buffer, Object info, boolean s
 		buffer.append(" (not open)"); //$NON-NLS-1$
 	}
 }
+@Override
 public ISourceRange getNameRange() {
 	return null;
 }

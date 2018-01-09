@@ -64,6 +64,7 @@ public class InnerClassesAttributeEntry
 	/**
 	 * @see IInnerClassesAttributeEntry#getAccessFlags()
 	 */
+	@Override
 	public int getAccessFlags() {
 		return this.accessFlags;
 	}
@@ -71,6 +72,7 @@ public class InnerClassesAttributeEntry
 	/**
 	 * @see IInnerClassesAttributeEntry#getInnerClassName()
 	 */
+	@Override
 	public char[] getInnerClassName() {
 		return this.innerClassName;
 	}
@@ -78,6 +80,7 @@ public class InnerClassesAttributeEntry
 	/**
 	 * @see IInnerClassesAttributeEntry#getInnerClassNameIndex()
 	 */
+	@Override
 	public int getInnerClassNameIndex() {
 		return this.innerClassNameIndex;
 	}
@@ -85,6 +88,7 @@ public class InnerClassesAttributeEntry
 	/**
 	 * @see IInnerClassesAttributeEntry#getInnerName()
 	 */
+	@Override
 	public char[] getInnerName() {
 		return this.innerName;
 	}
@@ -92,6 +96,7 @@ public class InnerClassesAttributeEntry
 	/**
 	 * @see IInnerClassesAttributeEntry#getInnerNameIndex()
 	 */
+	@Override
 	public int getInnerNameIndex() {
 		return this.innerNameIndex;
 	}
@@ -99,6 +104,7 @@ public class InnerClassesAttributeEntry
 	/**
 	 * @see IInnerClassesAttributeEntry#getOuterClassName()
 	 */
+	@Override
 	public char[] getOuterClassName() {
 		return this.outerClassName;
 	}
@@ -106,6 +112,7 @@ public class InnerClassesAttributeEntry
 	/**
 	 * @see IInnerClassesAttributeEntry#getOuterClassNameIndex()
 	 */
+	@Override
 	public int getOuterClassNameIndex() {
 		return this.outerClassNameIndex;
 	}

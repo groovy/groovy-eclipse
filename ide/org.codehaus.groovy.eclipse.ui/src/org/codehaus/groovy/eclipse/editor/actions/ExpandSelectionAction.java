@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,10 +28,7 @@ import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.TextSelection;
 
 /**
- * Expands the current TextSelection to include the containing AST node
- *
- * @author Andrew Eisenberg
- * @created May 7, 2010
+ * Expands the current TextSelection to include the containing AST node.
  */
 public class ExpandSelectionAction extends SelectionDispatchAction {
     private GroovyEditor editor;

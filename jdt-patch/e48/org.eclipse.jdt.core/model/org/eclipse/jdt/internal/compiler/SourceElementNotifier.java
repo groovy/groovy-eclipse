@@ -76,10 +76,12 @@ public class SourceElementNotifier {
 			if (size == 0) return null;
 			return (TypeDeclaration) this.declaringTypes.get(size-1);
 		}
+		@Override
 		public boolean visit(TypeDeclaration typeDeclaration, BlockScope scope) {
 			notifySourceElementRequestor(typeDeclaration, true, peekDeclaringType(), this.currentPackage);
 			return false; // don't visit members as this was done during notifySourceElementRequestor(...)
 		}
+		@Override
 		public boolean visit(TypeDeclaration typeDeclaration, ClassScope scope) {
 			notifySourceElementRequestor(typeDeclaration, true, peekDeclaringType(), this.currentPackage);
 			return false; // don't visit members as this was done during notifySourceElementRequestor(...)

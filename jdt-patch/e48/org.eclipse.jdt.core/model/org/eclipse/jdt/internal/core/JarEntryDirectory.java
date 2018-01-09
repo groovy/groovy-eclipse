@@ -23,6 +23,7 @@ public class JarEntryDirectory extends JarEntryResource {
 		super(simpleName);
 	}
 
+	@Override
 	public JarEntryResource clone(Object newParent) {
 		JarEntryDirectory dir = new JarEntryDirectory(this.simpleName);
 		dir.setParent(newParent);
@@ -38,14 +39,17 @@ public class JarEntryDirectory extends JarEntryResource {
 		return dir;
 	}
 
+	@Override
 	public IJarEntryResource[] getChildren() {
 		return this.children;
 	}
 
+	@Override
 	public InputStream getContents() throws CoreException {
 		return new ByteArrayInputStream(new byte[0]);
 	}
 
+	@Override
 	public boolean isFile() {
 		return false;
 	}
@@ -54,6 +58,7 @@ public class JarEntryDirectory extends JarEntryResource {
 		this.children = children;
 	}
 
+	@Override
 	public String toString() {
 		return "JarEntryDirectory["+getEntryName()+"]"; //$NON-NLS-1$ //$NON-NLS-2$
 	}

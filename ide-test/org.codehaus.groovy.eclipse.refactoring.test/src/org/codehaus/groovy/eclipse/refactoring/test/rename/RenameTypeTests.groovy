@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.refactoring.test.rename
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSuite
 import org.codehaus.groovy.eclipse.refactoring.test.internal.ParticipantTesting
 import org.eclipse.core.resources.IFile
+import org.eclipse.core.runtime.Adapters
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IJavaProject
@@ -100,8 +101,8 @@ final class RenameTypeTests extends RefactoringTestSuite {
         ICompilationUnit newcu = pack.getCompilationUnit(newCUName + '.groovy')
         assert newcu.exists() : "cu $newcu.elementName does not exist"
         assertEqualLines('invalid renaming', getFileContents(getOutputTestFileName(newCUName)), newcu.source)
-        INameUpdating nameUpdating = refactoring.getAdapter(INameUpdating)
-        IType newElement = (IType) nameUpdating.newElement
+        INameUpdating nameUpdating = Adapters.adapt(refactoring, INameUpdating)
+        IType newElement = nameUpdating.newElement
         assert newElement.exists() : 'new element does not exist:\n' + newElement.toString()
         checkMappers(refactoring, classA, newCUName + '.groovy', classAMembers)
         return renameHandles

@@ -60,15 +60,18 @@ public class KeyToSignature extends BindingKeyParser {
 		this.asBinarySignature = asBinarySignature;
 	}
 
+	@Override
 	public void consumeArrayDimension(char[] brakets) {
 		this.signature.append(brakets);
 	}
 
+	@Override
 	public void consumeBaseType(char[] baseTypeSig) {
 		this.typeSigStart = this.signature.length();
 		this.signature.append(baseTypeSig);
 	}
 
+	@Override
 	public void consumeCapture(int position) {
 		this.signature.append('!');
 		this.signature.append(((KeyToSignature) this.arguments.get(0)).signature);
@@ -80,6 +83,7 @@ public class KeyToSignature extends BindingKeyParser {
 		this.signature.append("!*"); // pretend a 'capture-of ?' //$NON-NLS-1$
 	}
 
+	@Override
 	public void consumeLocalType(char[] uniqueKey) {
 		this.signature = new StringBuffer();
 		// remove trailing semi-colon as it is added later in comsumeType()
@@ -89,6 +93,7 @@ public class KeyToSignature extends BindingKeyParser {
 		this.signature.append(uniqueKey);
 	}
 
+	@Override
 	public void consumeMethod(char[] selector, char[] methodSignature) {
 		this.arguments = new ArrayList();
 		this.typeArguments = new ArrayList();
@@ -111,15 +116,18 @@ public class KeyToSignature extends BindingKeyParser {
 		}
 	}
 
+	@Override
 	public void consumeMemberType(char[] simpleTypeName) {
 		this.signature.append('$');
 		this.signature.append(simpleTypeName);
 	}
 
+	@Override
 	public void consumePackage(char[] pkgName) {
 		this.signature.append(pkgName);
 	}
 
+	@Override
 	public void consumeParameterizedGenericMethod() {
 		this.typeArguments = this.arguments;
 		int typeParametersSize = this.arguments.size();
@@ -207,6 +215,7 @@ public class KeyToSignature extends BindingKeyParser {
 		}
 	}
 
+	@Override
 	public void consumeParameterizedType(char[] simpleTypeName, boolean isRaw) {
 		if (simpleTypeName != null) {
 			// member type
@@ -225,16 +234,19 @@ public class KeyToSignature extends BindingKeyParser {
 		}
 	}
 
+	@Override
 	public void consumeParser(BindingKeyParser parser) {
 		this.arguments.add(parser);
 	}
 
+	@Override
 	public void consumeField(char[] fieldName) {
 		if (this.kind == SIGNATURE) {
 			this.signature = ((KeyToSignature) this.arguments.get(0)).signature;
 		}
 	}
 
+	@Override
 	public void consumeException() {
 		int size = this.arguments.size();
 		if (size > 0) {
@@ -246,6 +258,7 @@ public class KeyToSignature extends BindingKeyParser {
 		}
 	}
 
+	@Override
 	public void consumeFullyQualifiedName(char[] fullyQualifiedName) {
 		this.typeSigStart = this.signature.length();
 		this.signature.append('L');
@@ -254,6 +267,7 @@ public class KeyToSignature extends BindingKeyParser {
 		this.signature.append(fullyQualifiedName);
 	}
 
+	@Override
 	public void consumeSecondaryType(char[] simpleTypeName) {
 		this.signature.append('~');
 		this.mainTypeStart = this.signature.lastIndexOf(this.asBinarySignature ? "/" : ".") + 1; //$NON-NLS-1$ //$NON-NLS-2$
@@ -270,6 +284,7 @@ public class KeyToSignature extends BindingKeyParser {
 		this.signature.append(simpleTypeName);
 	}
 
+	@Override
 	public void consumeType() {
 		// remove main type if needed
 		if (this.mainTypeStart != -1) {
@@ -294,10 +309,12 @@ public class KeyToSignature extends BindingKeyParser {
 		this.signature.append(';');
 	}
 
+	@Override
 	public void consumeTypeParameter(char[] typeParameterName) {
 		this.typeParameters.add(typeParameterName);
 	}
 
+	@Override
 	public void consumeTypeVariable(char[] position, char[] typeVariableName) {
 		this.signature = new StringBuffer();
 		this.signature.append('T');
@@ -305,6 +322,7 @@ public class KeyToSignature extends BindingKeyParser {
 		this.signature.append(';');
 	}
 
+	@Override
 	public void consumeTypeWithCapture() {
 		KeyToSignature keyToSignature = (KeyToSignature) this.arguments.get(0);
 		this.signature = keyToSignature.signature;
@@ -313,6 +331,7 @@ public class KeyToSignature extends BindingKeyParser {
 		this.thrownExceptions = keyToSignature.thrownExceptions;
 	}
 
+	@Override
 	public void consumeWildCard(int wildCardKind) {
 		// don't put generic type in signature
 		this.signature = new StringBuffer();
@@ -352,13 +371,12 @@ public class KeyToSignature extends BindingKeyParser {
 		return result;
 	}
 
+	@Override
 	public BindingKeyParser newParser() {
 		return new KeyToSignature(this);
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
+	@Override
 	public String toString() {
 		return this.signature.toString();
 	}

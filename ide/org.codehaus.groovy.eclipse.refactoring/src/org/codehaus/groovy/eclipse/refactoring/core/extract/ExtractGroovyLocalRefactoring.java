@@ -62,7 +62,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
@@ -160,7 +160,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
     @Override
     public RefactoringStatus checkInitialConditions(IProgressMonitor monitor) throws CoreException {
         try {
-            monitor.beginTask("", 6);
+            monitor = SubMonitor.convert(monitor, "", 6);
 
             IASTFragment expr = getSelectedFragment();
             if (expr == null) {
@@ -190,7 +190,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
                 result.addFatalError("Illegal expression selected");
             }
 
-            result.merge(checkSelection(new SubProgressMonitor(monitor, 3)));
+            result.merge(checkSelection(((SubMonitor) monitor).split(3)));
             /*if (!result.hasFatalError() && isLiteralNodeSelected()) {
                 replaceAllOccurrences = false;
             }*/
@@ -204,10 +204,10 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
     @Override
     public RefactoringStatus checkFinalConditions(IProgressMonitor monitor) throws CoreException {
         try {
-            monitor.beginTask(RefactoringCoreMessages.ExtractTempRefactoring_checking_preconditions, 4);
+            monitor = SubMonitor.convert(monitor, RefactoringCoreMessages.ExtractTempRefactoring_checking_preconditions, 4);
 
             RefactoringStatus result = new RefactoringStatus();
-            change = doCreateChange(result, new SubProgressMonitor(monitor, 2));
+            change = doCreateChange(result, ((SubMonitor) monitor).split(2));
 
             if (getExcludedVariableNames().contains(getLocalName())) {
                 result.addWarning(Messages.format(RefactoringCoreMessages.ExtractTempRefactoring_another_variable, BasicElementLabels.getJavaElementName(getLocalName())));
@@ -255,7 +255,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
      * Finds all variable names that are currently in use in the scope.
      */
     private Set<String> getExcludedVariableNames() {
-        Set<String> usedNames = new HashSet<String>();
+        Set<String> usedNames = new HashSet<>();
         if (getSelectedFragment() != null) {
             Set<Variable> vars = ASTTools.getVariablesInScope(module, getSelectedFragment().getAssociatedExpression());
             for (Variable v : vars) {
@@ -413,15 +413,13 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
         // insert at position before statement
 
         // find the longest matching parent prefix
-        @SuppressWarnings("unchecked")
-        List<IASTFragment>[] parentsStack = new List[matchingExpressions.size()];
-        int i = 0;
+        List<List<IASTFragment>> parentsStack = new ArrayList<>(matchingExpressions.size());
         IASTFragment firstExpression = null;
         for (IASTFragment matchingExpr : matchingExpressions) {
             if (firstExpression == null || matchingExpr.getStart() < firstExpression.getStart()) {
                 firstExpression = matchingExpr;
             }
-            parentsStack[i++] = getParentStack(matchingExpr);
+            parentsStack.add(getParentStack(matchingExpr));
         }
         IASTFragment[] commonPrefix = getLongestStackPrefix(parentsStack);
 
@@ -483,16 +481,16 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
         return insertLoc;
     }
 
-    private IASTFragment[] getLongestStackPrefix(List<IASTFragment>[] parentsStack) {
+    private IASTFragment[] getLongestStackPrefix(List<List<IASTFragment>> parentsStack) {
         int length = -1;
-        if (parentsStack.length == 0) {
+        if (parentsStack.isEmpty()) {
             return new IASTFragment[0];
         }/* else if (parentsStack.length == 1) {
             return (IASTFragment[]) parentsStack[0].toArray(new IASTFragment[0]);
         }*/
-        int minArrayLength = parentsStack[0].size();
-        for (int i = 1; i < parentsStack.length; i++) {
-            minArrayLength = Math.min(minArrayLength, parentsStack[i].size());
+        int minArrayLength = parentsStack.get(0).size();
+        for (int i = 1; i < parentsStack.size(); i += 1) {
+            minArrayLength = Math.min(minArrayLength, parentsStack.get(i).size());
         }
 
         for (int i = 0; i < minArrayLength; i++) {
@@ -504,7 +502,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
         if (length <= -1) {
             return new IASTFragment[0];
         }
-        return getStackPrefix(parentsStack[0], length);
+        return getStackPrefix(parentsStack.get(0), length);
     }
 
     /**
@@ -525,8 +523,8 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
      *
      * @return true iff all elements are equal in the ith position
      */
-    private boolean allStacksEqual(List<IASTFragment>[] parentsStack, int i) {
-        IASTFragment candidate = parentsStack[0].get(parentsStack[0].size() - 1 - i);
+    private boolean allStacksEqual(List<List<IASTFragment>> parentsStack, int i) {
+        IASTFragment candidate = parentsStack.get(0).get(parentsStack.get(0).size() - 1 - i);
         for (List<IASTFragment> stack : parentsStack) {
             if (stack.get(stack.size() - 1 - i).getAssociatedNode() != candidate.getAssociatedNode()) {
                 return false;
@@ -537,13 +535,13 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
 
     private List<IASTFragment> getParentStack(IASTFragment expr) {
         if (allParentStack == null) {
-            allParentStack = new HashMap<IASTFragment, List<IASTFragment>>();
+            allParentStack = new HashMap<>();
         } else if (allParentStack.containsKey(expr)) {
             return allParentStack.get(expr);
         }
         FindSurroundingNode find = new FindSurroundingNode(new Region(expr), VisitKind.PARENT_STACK);
         find.doVisitSurroundingNode(module);
-        List<IASTFragment> parentStack = new ArrayList<IASTFragment>(find.getParentStack());
+        List<IASTFragment> parentStack = new ArrayList<>(find.getParentStack());
         Collections.reverse(parentStack);
         allParentStack.put(expr, parentStack);
         return parentStack;
@@ -677,7 +675,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
     }
 
     private ExtractLocalDescriptor createRefactoringDescriptor() {
-        final Map<String, String> arguments = new HashMap<String, String>();
+        final Map<String, String> arguments = new HashMap<>();
         String project = null;
         IJavaProject javaProject = unit.getJavaProject();
         if (javaProject != null)

@@ -76,6 +76,7 @@ public QualifiedNameReference(char[][] tokens, long[] positions, int sourceStart
 	this.sourceEnd = sourceEnd;
 }
 
+@Override
 public FlowInfo analyseAssignment(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo, Assignment assignment, boolean isCompound) {
 	// determine the rank until which we now we do not need any actual value for the field access
 	int otherBindingsCount = this.otherBindings == null ? 0 : this.otherBindings.length;
@@ -178,10 +179,12 @@ public FlowInfo analyseAssignment(BlockScope currentScope, FlowContext flowConte
 	return flowInfo;
 }
 
+@Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 	return analyseCode(currentScope, flowContext, flowInfo, true);
 }
 
+@Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo, boolean valueRequired) {
 	// determine the rank until which we now we do not need any actual value for the field access
 	int otherBindingsCount = this.otherBindings == null ? 0 : this.otherBindings.length;
@@ -263,6 +266,7 @@ private void checkInternalNPE(BlockScope scope, FlowContext flowContext, FlowInf
 	}
 }
 
+@Override
 public boolean checkNPE(BlockScope scope, FlowContext flowContext, FlowInfo flowInfo, int ttlForFieldCheck) {
 	if (super.checkNPE(scope, flowContext, flowInfo, ttlForFieldCheck)) {
 		return true;
@@ -287,6 +291,7 @@ public boolean checkNPE(BlockScope scope, FlowContext flowContext, FlowInfo flow
 /**
  * @see org.eclipse.jdt.internal.compiler.ast.Expression#computeConversion(org.eclipse.jdt.internal.compiler.lookup.Scope, org.eclipse.jdt.internal.compiler.lookup.TypeBinding, org.eclipse.jdt.internal.compiler.lookup.TypeBinding)
  */
+@Override
 public void computeConversion(Scope scope, TypeBinding runtimeTimeType, TypeBinding compileTimeType) {
 	if (runtimeTimeType == null || compileTimeType == null)
 		return;
@@ -325,6 +330,7 @@ public void computeConversion(Scope scope, TypeBinding runtimeTimeType, TypeBind
 	super.computeConversion(scope, runtimeTimeType, compileTimeType);
 }
 
+@Override
 public void generateAssignment(BlockScope currentScope, CodeStream codeStream, Assignment assignment, boolean valueRequired) {
 	int pc = codeStream.position;
 	FieldBinding lastFieldBinding = generateReadSequence(currentScope, codeStream);
@@ -337,6 +343,7 @@ public void generateAssignment(BlockScope currentScope, CodeStream codeStream, A
 	}
 }
 
+@Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 	int pc = codeStream.position;
 	if (this.constant != Constant.NotAConstant) {
@@ -419,6 +426,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean
 	codeStream.recordPositionsFrom(pc, this.sourceStart);
 }
 
+@Override
 public void generateCompoundAssignment(BlockScope currentScope, CodeStream codeStream, Expression expression, int operator, int assignmentImplicitConversion, boolean valueRequired) {
 	FieldBinding lastFieldBinding = generateReadSequence(currentScope, codeStream);
 	// check if compound assignment is the only usage of a private field
@@ -472,6 +480,7 @@ public void generateCompoundAssignment(BlockScope currentScope, CodeStream codeS
 	// equivalent to valuesRequired[maxOtherBindings]
 }
 
+@Override
 public void generatePostIncrement(BlockScope currentScope, CodeStream codeStream, CompoundAssignment postIncrement, boolean valueRequired) {
 	FieldBinding lastFieldBinding = generateReadSequence(currentScope, codeStream);
 	// check if this post increment is the only usage of a private field
@@ -681,6 +690,7 @@ public void generateReceiver(CodeStream codeStream) {
 /**
  * @see org.eclipse.jdt.internal.compiler.lookup.InvocationSite#genericTypeArguments()
  */
+@Override
 public TypeBinding[] genericTypeArguments() {
 	return null;
 }
@@ -817,6 +827,7 @@ public TypeBinding getOtherFieldBindings(BlockScope scope) {
 			: type;
 }
 
+@Override
 public boolean isEquivalent(Reference reference) {
 	if (reference instanceof FieldReference) {
 		return reference.isEquivalent(this); // comparison FR <-> QNR is implemented only once
@@ -846,6 +857,7 @@ public boolean isFieldAccess() {
 	return (this.bits & ASTNode.RestrictiveFlagMASK) == Binding.FIELD;
 }
 
+@Override
 public FieldBinding lastFieldBinding() {
 	if (this.otherBindings != null) {
 		return this.otherBindings[this.otherBindings.length - 1];		
@@ -909,6 +921,7 @@ public void manageSyntheticAccessIfNecessary(BlockScope currentScope, FieldBindi
 	}
 }
 
+@Override
 public Constant optimizedBooleanConstant() {
 	switch (this.resolvedType.id) {
 		case T_boolean :
@@ -929,6 +942,7 @@ public Constant optimizedBooleanConstant() {
 /**
  * @see org.eclipse.jdt.internal.compiler.ast.Expression#postConversionType(Scope)
  */
+@Override
 public TypeBinding postConversionType(Scope scope) {
 	TypeBinding convertedType = this.resolvedType;
 	TypeBinding requiredGenericCast = getGenericCast(this.otherBindings == null ? 0 : this.otherBindings.length);
@@ -968,6 +982,7 @@ public TypeBinding postConversionType(Scope scope) {
 	return convertedType;
 }
 
+@Override
 public StringBuffer printExpression(int indent, StringBuffer output) {
 	for (int i = 0; i < this.tokens.length; i++) {
 		if (i > 0) output.append('.');
@@ -990,6 +1005,7 @@ public TypeBinding reportError(BlockScope scope) {
 	return null;
 }
 
+@Override
 public TypeBinding resolveType(BlockScope scope) {
 	// field and/or local are done before type lookups
 	// the only available value for the restrictiveFlag BEFORE
@@ -1101,6 +1117,7 @@ public TypeBinding resolveType(BlockScope scope) {
 	return this.resolvedType = reportError(scope);
 }
 
+@Override
 public void setFieldIndex(int index) {
 	this.indexOfFirstFieldBinding = index;
 }
@@ -1130,24 +1147,29 @@ protected void setSyntheticAccessor(FieldBinding fieldBinding, int index, Synthe
     }
 }
 
+@Override
 public void traverse(ASTVisitor visitor, BlockScope scope) {
 	visitor.visit(this, scope);
 	visitor.endVisit(this, scope);
 }
 
+@Override
 public void traverse(ASTVisitor visitor, ClassScope scope) {
 	visitor.visit(this, scope);
 	visitor.endVisit(this, scope);
 }
 
+@Override
 public String unboundReferenceErrorName() {
 	return new String(this.tokens[0]);
 }
 
+@Override
 public char[][] getName() {
 	return this.tokens;
 }
 
+@Override
 public VariableBinding nullAnnotatedVariableBinding(boolean supportTypeAnnotations) {
 	if (this.binding != null && isFieldAccess()) {
 		FieldBinding fieldBinding;

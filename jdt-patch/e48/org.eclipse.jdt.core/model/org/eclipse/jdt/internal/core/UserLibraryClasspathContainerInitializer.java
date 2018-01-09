@@ -23,16 +23,12 @@ import org.eclipse.jdt.internal.core.util.Util;
  */
 public class UserLibraryClasspathContainerInitializer extends ClasspathContainerInitializer {
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.ClasspathContainerInitializer#canUpdateClasspathContainer(org.eclipse.core.runtime.IPath, org.eclipse.jdt.core.IJavaProject)
-	 */
+	@Override
 	public boolean canUpdateClasspathContainer(IPath containerPath, IJavaProject project) {
 		return isUserLibraryContainer(containerPath);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.ClasspathContainerInitializer#getComparisonID(org.eclipse.core.runtime.IPath, org.eclipse.jdt.core.IJavaProject)
-	 */
+	@Override
 	public Object getComparisonID(IPath containerPath, IJavaProject project) {
 		return containerPath;
 	}
@@ -40,6 +36,7 @@ public class UserLibraryClasspathContainerInitializer extends ClasspathContainer
 	/**
 	 * @see org.eclipse.jdt.core.ClasspathContainerInitializer#getDescription(org.eclipse.core.runtime.IPath, org.eclipse.jdt.core.IJavaProject)
 	 */
+	@Override
 	public String getDescription(IPath containerPath, IJavaProject project) {
 		if (isUserLibraryContainer(containerPath)) {
 			return containerPath.segment(1);
@@ -47,6 +44,7 @@ public class UserLibraryClasspathContainerInitializer extends ClasspathContainer
 		return super.getDescription(containerPath, project);
 	}
 
+	@Override
 	public void initialize(IPath containerPath, IJavaProject project) throws CoreException {
 		if (isUserLibraryContainer(containerPath)) {
 			String userLibName = containerPath.segment(1);
@@ -69,6 +67,7 @@ public class UserLibraryClasspathContainerInitializer extends ClasspathContainer
 	/**
 	 * @see org.eclipse.jdt.core.ClasspathContainerInitializer#requestClasspathContainerUpdate(org.eclipse.core.runtime.IPath, org.eclipse.jdt.core.IJavaProject, org.eclipse.jdt.core.IClasspathContainer)
 	 */
+	@Override
 	public void requestClasspathContainerUpdate(IPath containerPath, IJavaProject project, IClasspathContainer containerSuggestion) throws CoreException {
 		if (isUserLibraryContainer(containerPath)) {
 			String name = containerPath.segment(1);

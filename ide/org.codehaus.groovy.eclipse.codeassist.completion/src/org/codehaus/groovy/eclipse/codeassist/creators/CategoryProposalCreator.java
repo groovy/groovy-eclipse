@@ -54,12 +54,13 @@ import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 
 public class CategoryProposalCreator extends AbstractProposalCreator {
 
+    @Override
     public List<IGroovyProposal> findAllProposals(ClassNode selfType, Set<ClassNode> categories, String prefix, boolean isStatic, boolean isPrimary) {
         DGMProposalFilter filter = new DGMProposalFilter();
-        Set<String> existingPropertyProposals = new HashSet<String>();
-        Map<String, List<MethodNode>> existingMethodProposals = new HashMap<String, List<MethodNode>>();
+        Set<String> existingPropertyProposals = new HashSet<>();
+        Map<String, List<MethodNode>> existingMethodProposals = new HashMap<>();
 
-        List<IGroovyProposal> groovyProposals = new LinkedList<IGroovyProposal>();
+        List<IGroovyProposal> groovyProposals = new LinkedList<>();
         for (ClassNode category : categories) {
             boolean isDGMCategory = isDGM(category);
             for (MethodNode method : category.getAllDeclaredMethods()) {
@@ -77,7 +78,7 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
 
                             List<MethodNode> methodList = existingMethodProposals.get(methodName);
                             if (methodList == null) {
-                                methodList = new ArrayList<MethodNode>(2);
+                                methodList = new ArrayList<>(2);
                                 existingMethodProposals.put(methodName, methodList);
                             }
                             methodList.add(method);
@@ -190,6 +191,7 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
 
                 // replace default resolveMember, which fails due to self type being removed from parameter arrays
                 ((LazyJavaCompletionProposal) javaProposal).setProposalInfo(new MemberProposalInfo(javaContext.getProject(), proposal) {
+                    @Override
                     protected IMember resolveMember() throws JavaModelException {
                         IType type = fJavaProject.findType(getMethod().getDeclaringClass().getName());
                         if (type != null) {

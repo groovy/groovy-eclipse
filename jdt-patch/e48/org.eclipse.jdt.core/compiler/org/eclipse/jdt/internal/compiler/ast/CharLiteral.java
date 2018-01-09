@@ -25,6 +25,7 @@ public CharLiteral(char[] token, int s, int e) {
 	computeValue();
 }
 
+@Override
 public void computeConstant() {
 	//The source is a  char[3] first and last char are '
 	//This is true for both regular char AND unicode char
@@ -86,6 +87,7 @@ private void computeValue() {
  * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
  * @param valueRequired boolean
  */
+@Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 	int pc = codeStream.position;
 	if (valueRequired) {
@@ -94,10 +96,12 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean
 	codeStream.recordPositionsFrom(pc, this.sourceStart);
 }
 
+@Override
 public TypeBinding literalType(BlockScope scope) {
 	return TypeBinding.CHAR;
 }
 
+@Override
 public void traverse(ASTVisitor visitor, BlockScope blockScope) {
 	visitor.visit(this, blockScope);
 	visitor.endVisit(this, blockScope);

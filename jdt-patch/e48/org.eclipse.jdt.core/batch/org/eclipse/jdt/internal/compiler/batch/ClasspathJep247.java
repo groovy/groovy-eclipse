@@ -40,12 +40,15 @@ public class ClasspathJep247 extends ClasspathLocation {
 		this.release = release;
 		this.file = jdkHome;
 	}
+	@Override
 	public List<Classpath> fetchLinkedJars(FileSystem.ClasspathSectionProblemReporter problemReporter) {
 		 return null;
 	}
+	@Override
 	public NameEnvironmentAnswer findClass(char[] typeName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName) {
 		return findClass(typeName, qualifiedPackageName, moduleName, qualifiedBinaryFileName, false);
 	}
+	@Override
 	public NameEnvironmentAnswer findClass(char[] typeName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName, boolean asBinaryOnly) {
 		if (!isPackage(qualifiedPackageName, moduleName))
 			return null; // most common case
@@ -82,11 +85,13 @@ public class ClasspathJep247 extends ClasspathLocation {
 	public boolean hasAnnotationFileFor(String qualifiedTypeName) {
 		return false;
 	}
+	@Override
 	public char[][][] findTypeNames(final String qualifiedPackageName, String moduleName) {
 		// TODO: Revisit
 		return null;
 	}
 
+	@Override
 	public void initialize() throws IOException {
 		if (this.release == null) {
 			return;
@@ -119,6 +124,7 @@ public class ClasspathJep247 extends ClasspathLocation {
 			return;
 		this.packageCache.add(packageName);
 	}
+	@Override
 	public synchronized char[][] getModulesDeclaringPackage(String qualifiedPackageName, String moduleName) {
 		// Ignore moduleName as this has nothing to do with modules (as of now)
 		if (this.packageCache != null)
@@ -173,6 +179,7 @@ public class ClasspathJep247 extends ClasspathLocation {
 		// TOOD: Revisit
 		return false;
 	}
+	@Override
 	public void reset() {
 		try {
 			this.fs.close();
@@ -180,9 +187,11 @@ public class ClasspathJep247 extends ClasspathLocation {
 			// Move on
 		}
 	}
+	@Override
 	public String toString() {
 		return "Classpath for JEP 247 for JDK " + this.file.getPath(); //$NON-NLS-1$
 	}
+	@Override
 	public char[] normalizedPath() {
 		if (this.normalizedPath == null) {
 			String path2 = this.getPath();
@@ -194,6 +203,7 @@ public class ClasspathJep247 extends ClasspathLocation {
 		}
 		return this.normalizedPath;
 	}
+	@Override
 	public String getPath() {
 		if (this.path == null) {
 			try {
@@ -205,10 +215,12 @@ public class ClasspathJep247 extends ClasspathLocation {
 		}
 		return this.path;
 	}
+	@Override
 	public int getMode() {
 		return BINARY;
 	}
 
+	@Override
 	public IModule getModule() {
 		return null;
 	}

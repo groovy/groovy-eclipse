@@ -40,7 +40,7 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor implements ITypeResolver {
 
     private static final Set<String> FIELD_MODIFIERS = Collections.unmodifiableSet(
-        new HashSet<String>(Arrays.asList("private", "protected", "public", "static", "final")));
+        new HashSet<>(Arrays.asList("private", "protected", "public", "static", "final")));
 
     protected JDTResolver resolver;
 
@@ -48,10 +48,12 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor i
         super(context, javaContext, nameEnvironment);
     }
 
+    @Override
     public void setResolverInformation(ModuleNode module, JDTResolver resolver) {
         this.resolver = resolver;
     }
 
+    @Override
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
         ContentAssistContext context = getContext();
         String prefix = context.completionExpression.replaceFirst("^new\\s+", "");

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009, 2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,12 +43,6 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.progress.UIJob;
 
-/**
- *
- * @author Andrew Eisenberg
- * @author Nieraj Singh
- * @created 2010-11-18
- */
 public class GroovyResourceUtil {
 
     public static final String GROOVY = ".groovy";
@@ -65,11 +59,6 @@ public class GroovyResourceUtil {
         return Status.OK_STATUS;
     }
 
-    /**
-     * @author Andrew Eisenberg
-     * @created Oct 17, 2009
-     *
-     */
     public static class RenameToGroovyOrJavaJob extends UIJob {
 
         private List<IResource> resources;
@@ -93,8 +82,8 @@ public class GroovyResourceUtil {
 
         @Override
         public IStatus runInUIThread(IProgressMonitor monitor) {
-            Set<IProject> affectedProjects = new HashSet<IProject>();
-            final Set<IResource> filesAlreadyOpened = new HashSet<IResource>();
+            Set<IProject> affectedProjects = new HashSet<>();
+            final Set<IResource> filesAlreadyOpened = new HashSet<>();
 
             for (IResource resource : resources) {
                 if (resource != null) {

@@ -15,9 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
-import static org.junit.Assume.assumeTrue
-
 import org.junit.Test
 
 final class CodeSelectKeywordsTests extends BrowsingTestSuite {
@@ -281,8 +278,6 @@ final class CodeSelectKeywordsTests extends BrowsingTestSuite {
 
     @Test
     void testSelectKeywordIn5() {
-        assumeTrue(isAtLeastGroovy(20))
-
         // 'in' binary expression gets xformed
         String contents = '''\
             @groovy.transform.CompileStatic
@@ -295,8 +290,6 @@ final class CodeSelectKeywordsTests extends BrowsingTestSuite {
 
     @Test
     void testSelectKeywordIn6() {
-        assumeTrue(isAtLeastGroovy(20))
-
         // 'in' binary expression gets xformed
         String contents = '''\
             @groovy.transform.CompileStatic

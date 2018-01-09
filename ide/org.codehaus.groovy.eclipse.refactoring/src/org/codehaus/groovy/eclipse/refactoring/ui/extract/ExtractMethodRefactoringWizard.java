@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,8 @@ package org.codehaus.groovy.eclipse.refactoring.ui.extract;
 import org.codehaus.groovy.eclipse.refactoring.core.extract.ExtractGroovyMethodRefactoring;
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard;
 
-/**
- *
- * @author andrew
- * @created May 17, 2010
- */
 public class ExtractMethodRefactoringWizard extends RefactoringWizard {
+
     public ExtractMethodRefactoringWizard(ExtractGroovyMethodRefactoring refactoring) {
         super(refactoring, DIALOG_BASED_USER_INTERFACE);
     }

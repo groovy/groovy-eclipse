@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,9 +29,6 @@ import org.eclipse.jdt.internal.ui.javaeditor.saveparticipant.SaveParticipantReg
 import org.eclipse.jface.text.IRegion;
 
 /**
- * @author Andrew Eisenberg
- * @created Aug 25, 2009
- *
  * This class Delegates to either the {@link org.eclipse.jdt.internal.corext.fix.CleanUpPostSaveListener} or
  * to {@link GroovyCleanupPostSaveListener} depending on the content type of the file being saved.
  * <p>
@@ -95,16 +92,18 @@ public class DelegatingCleanUpPostSaveListener extends CleanUpPostSaveListener {
         }
     }
 
+    @Override
     public String getId() {
         return jdtCleanUp.getId();
     }
 
+    @Override
     public String getName() {
         return jdtCleanUp.getName();
     }
 
-    public boolean needsChangedRegions(ICompilationUnit compilationUnit)
-            throws CoreException {
+    @Override
+    public boolean needsChangedRegions(ICompilationUnit compilationUnit) throws CoreException {
         if (ContentTypeUtils.isGroovyLikeFileName(compilationUnit.getElementName())) {
             return groovyCleanUp.needsChangedRegions(compilationUnit);
         } else {
@@ -112,6 +111,7 @@ public class DelegatingCleanUpPostSaveListener extends CleanUpPostSaveListener {
         }
     }
 
+    @Override
     public void saved(ICompilationUnit compilationUnit, IRegion[] changedRegions, IProgressMonitor monitor) throws CoreException {
         if (ContentTypeUtils.isGroovyLikeFileName(compilationUnit.getElementName())) {
             groovyCleanUp.saved(compilationUnit, changedRegions, monitor);

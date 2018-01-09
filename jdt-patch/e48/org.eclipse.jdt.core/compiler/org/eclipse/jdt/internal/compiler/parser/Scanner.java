@@ -81,7 +81,7 @@ public class Scanner implements TerminalTokens {
 	public int[] commentStarts = new int[COMMENT_ARRAYS_SIZE];
 	public int[] commentTagStarts = new int[COMMENT_ARRAYS_SIZE];
 	public int commentPtr = -1; // no comment test with commentPtr value -1
-	protected int lastCommentLinePosition = -1;
+	public int lastCommentLinePosition = -1;
 
 	// task tag support
 	public char[][] foundTaskTags = null;
@@ -2727,7 +2727,7 @@ public final void pushLineSeparator() {
 		if ((this.linePtr >= 0) && (this.lineEnds[this.linePtr] >= separatorPos)) return;
 		int length = this.lineEnds.length;
 		if (++this.linePtr >=  length)
-			System.arraycopy(this.lineEnds, 0, this.lineEnds = new int[length + INCREMENT], 0, length);
+			System.arraycopy(this.lineEnds, 0, this.lineEnds = new int[2*length + INCREMENT], 0, length);
 		this.lineEnds[this.linePtr] = separatorPos;
 		// look-ahead for merged cr+lf
 		try {
@@ -2753,7 +2753,7 @@ public final void pushLineSeparator() {
 				if ((this.linePtr >= 0) && (this.lineEnds[this.linePtr] >= separatorPos)) return;
 				int length = this.lineEnds.length;
 				if (++this.linePtr >=  length)
-					System.arraycopy(this.lineEnds, 0, this.lineEnds = new int[length + INCREMENT], 0, length);
+					System.arraycopy(this.lineEnds, 0, this.lineEnds = new int[2*length + INCREMENT], 0, length);
 				this.lineEnds[this.linePtr] = separatorPos;
 			}
 			this.wasAcr = false;
@@ -4061,6 +4061,7 @@ public final void setSource(char[] contents, CompilationResult compilationResult
 public final void setSource(CompilationResult compilationResult) {
 	setSource(null, compilationResult);
 }
+@Override
 public String toString() {
 	if (this.startPosition == this.eofPosition)
 		return "EOF\n\n" + new String(this.source); //$NON-NLS-1$
@@ -4429,6 +4430,7 @@ private static final class VanguardScanner extends Scanner {
 		super (false /*comment*/, false /*whitespace*/, false /*nls*/, sourceLevel, complianceLevel, null/*taskTag*/, null/*taskPriorities*/, false /*taskCaseSensitive*/);
 	}
 	
+	@Override
 	public int getNextToken() throws InvalidInputException {
 		int token;
 		if (this.nextToken != TokenNameNotAToken) {
@@ -4604,6 +4606,7 @@ private static class VanguardParser extends Parser {
 			return FAILURE;
 		}
 	}
+	@Override
 	public String toString() {
 		return "\n\n\n----------------Scanner--------------\n" + this.scanner.toString(); //$NON-NLS-1$;
 	}
@@ -4620,6 +4623,7 @@ private class ScanContextDetector extends VanguardParser {
 		this.reportOnlyOneSyntaxError = false;
 	}
 
+	@Override
 	public void initializeScanner(){
 		this.scanner = new Scanner(
 			false /*comment*/,
@@ -4641,6 +4645,7 @@ private class ScanContextDetector extends VanguardParser {
 		this.scanner.setActiveParser(this);
 	}
 
+	@Override
 	public boolean isParsingModuleDeclaration() {
 		return true;
 	}
@@ -4650,6 +4655,7 @@ private class ScanContextDetector extends VanguardParser {
 		this.scanner.resetTo(0, begin);
 		goForCompilationUnit();
 		Goal goal = new Goal(TokenNamePLUS_PLUS, null, 0) {
+			@Override
 			boolean hasBeenReached(int act, int token) {
 				return token == TokenNameEOF;
 			}

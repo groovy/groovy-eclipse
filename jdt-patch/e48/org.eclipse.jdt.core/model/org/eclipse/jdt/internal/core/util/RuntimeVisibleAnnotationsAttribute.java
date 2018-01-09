@@ -53,15 +53,13 @@ public class RuntimeVisibleAnnotationsAttribute
 			this.annotations = NO_ENTRIES;
 		}
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IRuntimeVisibleAnnotations#getAnnotations()
-	 */
+
+	@Override
 	public IAnnotation[] getAnnotations() {
 		return this.annotations;
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IRuntimeVisibleAnnotations#getAnnotationsNumber()
-	 */
+
+	@Override
 	public int getAnnotationsNumber() {
 		return this.annotationsNumber;
 	}

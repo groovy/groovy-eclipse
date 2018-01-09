@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,8 +32,10 @@ import org.eclipse.ui.IWorkbenchPart;
 public abstract class AbstractAddClasspathContainerAction implements IObjectActionDelegate {
     protected IJavaProject targetProject;
 
+    @Override
     public void setActivePart(final IAction action, final IWorkbenchPart targetPart) {}
 
+    @Override
     public void run(final IAction action) {
         try {
             if (GroovyRuntime.hasClasspathContainer(targetProject, getClasspathContainerPath())) {
@@ -46,6 +48,7 @@ public abstract class AbstractAddClasspathContainerAction implements IObjectActi
         }
     }
 
+    @Override
     public void selectionChanged(final IAction action, final ISelection selection) {
         targetProject = getTargetProject(selection);
         if (targetProject == null) {
@@ -97,5 +100,4 @@ public abstract class AbstractAddClasspathContainerAction implements IObjectActi
     protected abstract String addText();
 
     protected abstract String removeText();
-
 }

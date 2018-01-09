@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,9 +33,6 @@ import org.eclipse.swt.widgets.Shell;
  * default selection. New selections
  * can be set via setProject(..). Selection changes trigger a selection change
  * event that can be handled by registered listeners.
- * 
- * @author Nieraj Singh
- * @created 2011-05-13
  */
 public class ProjectDropDownControl extends ProjectDisplayControl {
 
@@ -75,8 +72,8 @@ public class ProjectDropDownControl extends ProjectDisplayControl {
         return control;
     }
 
+    @Override
     public void createProjectDisplayControl(Composite parent) {
-
         // Otherwise create the drop down
         String[] projectNames = new String[projects.size()];
 
@@ -90,7 +87,7 @@ public class ProjectDropDownControl extends ProjectDisplayControl {
         dropDown.setItems(projectNames);
 
         dropDown.addSelectionListener(new SelectionAdapter() {
-
+            @Override
             public void widgetSelected(SelectionEvent e) {
                 String newSelection = dropDown.getItem(dropDown.getSelectionIndex());
                 IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(newSelection);
@@ -107,7 +104,7 @@ public class ProjectDropDownControl extends ProjectDisplayControl {
     /**
      * True iff both the current selection and the project to select are the
      * same. False any other case.
-     * 
+     *
      * @param projectToSelect
      * @return
      */
@@ -124,10 +121,8 @@ public class ProjectDropDownControl extends ProjectDisplayControl {
     /**
      * Return the selected project, or null if the project is not available in
      * the selection and cannot be selected.
-     * 
-     * @param projectToSelect
-     * @return
      */
+    @Override
     public IProject setProject(IProject projectToSelect) {
         if (projectToSelect == null || isSelectionSame(projectToSelect)) {
             return projectToSelect;

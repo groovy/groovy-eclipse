@@ -42,8 +42,6 @@ import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
  * - Selection is in a Method
  * - Covers at minimum a whole Statement
  * - is in a BlockStatement or contains a whole BlockStatement
- *
- * @author Michael Klenk mklenk@hsr.ch
  */
 public class StatementFinder extends CodeVisitorSupport {
 
@@ -124,7 +122,7 @@ public class StatementFinder extends CodeVisitorSupport {
      * @return List of method names
      */
     public List<String> getMethodNames() {
-        List<String> methods = new ArrayList<String>();
+        List<String> methods = new ArrayList<>();
         if (actualSelectedDeclaration != null) {
             ClassNode declaringClass = actualSelectedDeclaration.getDeclaringClass();
             for (MethodNode method : declaringClass.getMethods()) {
@@ -155,8 +153,8 @@ public class StatementFinder extends CodeVisitorSupport {
      * Finds all satements in the given editor and the given Selection
      */
     public void scanDocument() {
-        inSelection = new ArrayList<Statement>();
-        postSelection = new ArrayList<Statement>();
+        inSelection = new ArrayList<>();
+        postSelection = new ArrayList<>();
 
         if (rootNode != null) {
             for (ClassNode cl : rootNode.getClasses()) {

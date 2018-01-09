@@ -41,6 +41,7 @@ public final class HashtableOfIntValues implements Cloneable {
 		this.valueTable = new int[extraRoom];
 	}
 
+	@Override
 	public Object clone() throws CloneNotSupportedException {
 		HashtableOfIntValues result = (HashtableOfIntValues) super.clone();
 		result.elementSize = this.elementSize;
@@ -145,6 +146,7 @@ public final class HashtableOfIntValues implements Cloneable {
 		return this.elementSize;
 	}
 
+	@Override
 	public String toString() {
 		String s = ""; //$NON-NLS-1$
 		char[] key;

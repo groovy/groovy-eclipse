@@ -1025,6 +1025,7 @@ void verify(SourceTypeBinding someType) {
 	}
 }
 
+@Override
 public String toString() {
 	StringBuffer buffer = new StringBuffer(10);
 	buffer.append("MethodVerifier for type: "); //$NON-NLS-1$

@@ -26,6 +26,7 @@ public class RecoveredProvidesStatement extends RecoveredModuleStatement {
 		return this;
 	}
 
+	@Override
 	public String toString(int tab) {
 		return tabString(tab) + "Recovered Provides: " + super.toString(); //$NON-NLS-1$
 	}
@@ -36,6 +37,7 @@ public class RecoveredProvidesStatement extends RecoveredModuleStatement {
 		}
 		return providesStatement;
 	}
+	@Override
 	public void updateParseTree(){
 		updatedProvidesStatement();
 	}

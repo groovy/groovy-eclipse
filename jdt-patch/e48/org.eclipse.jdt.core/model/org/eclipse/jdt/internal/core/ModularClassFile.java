@@ -191,6 +191,7 @@ public class ModularClassFile extends AbstractClassFile implements IModularClass
 	/**
 	 * @see ITypeRoot
 	 */
+	@Override
 	public IJavaElement getElementAt(int position) throws JavaModelException {
 		IJavaElement parentElement = getParent();
 		while (parentElement.getElementType() != IJavaElement.PACKAGE_FRAGMENT_ROOT) {

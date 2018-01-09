@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 
-/**
- * 
- * @author Nieraj Singh
- * @created 2011-09-12
- */
 public class GroovySuggestion implements IGroovySuggestion {
 
     protected String name;
@@ -34,12 +29,13 @@ public class GroovySuggestion implements IGroovySuggestion {
 
     protected GroovySuggestionDeclaringType declaringType;
 
-    public GroovySuggestionDeclaringType getDeclaringType() {
-        return declaringType;
-    }
-
-    public GroovySuggestion(GroovySuggestionDeclaringType declaringType, String name, String type, boolean isStatic,
-            String javaDoc, boolean isActive) {
+    public GroovySuggestion(
+            GroovySuggestionDeclaringType declaringType,
+            String name,
+            String type,
+            boolean isStatic,
+            String javaDoc,
+            boolean isActive) {
         this.name = name;
         this.type = type;
         this.isStatic = isStatic;
@@ -48,30 +44,42 @@ public class GroovySuggestion implements IGroovySuggestion {
         this.declaringType = declaringType;
     }
 
+    @Override
+    public GroovySuggestionDeclaringType getDeclaringType() {
+        return declaringType;
+    }
+
+    @Override
     public boolean isActive() {
         return isActive;
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     public String getType() {
         return type;
     }
 
+    @Override
     public boolean isStatic() {
         return isStatic;
     }
 
+    @Override
     public String getJavaDoc() {
         return javaDoc;
     }
 
+    @Override
     public void changeActiveState(boolean isActive) {
         this.isActive = isActive;
     }
 
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
@@ -84,6 +92,7 @@ public class GroovySuggestion implements IGroovySuggestion {
         return result;
     }
 
+    @Override
     public boolean equals(Object obj) {
         if (this == obj)
             return true;
@@ -118,5 +127,4 @@ public class GroovySuggestion implements IGroovySuggestion {
             return false;
         return true;
     }
-
 }

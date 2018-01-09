@@ -50,11 +50,13 @@ public AndLocator(AndPattern pattern) {
 	}
 	this.patternLocators = locators;
 }
+@Override
 public void initializePolymorphicSearch(MatchLocator locator) {
 	for (int i = 0, length = this.patternLocators.length; i < length; i++) {
 		this.patternLocators[i].initializePolymorphicSearch(locator);
 	}
 }
+@Override
 public int match(Annotation node, MatchingNodeSet nodeSet) {
 	int level = IMPOSSIBLE_MATCH;
 	for (int i = 0, length = this.patternLocators.length; i < length; i++) {
@@ -66,6 +68,7 @@ public int match(Annotation node, MatchingNodeSet nodeSet) {
 	}
 	return level;
 }
+@Override
 public int match(ASTNode node, MatchingNodeSet nodeSet) {
 	int level = IMPOSSIBLE_MATCH;
 	for (int i = 0, length = this.patternLocators.length; i < length; i++) {
@@ -77,6 +80,7 @@ public int match(ASTNode node, MatchingNodeSet nodeSet) {
 	}
 	return level;
 }
+@Override
 public int match(ConstructorDeclaration node, MatchingNodeSet nodeSet) {
 	int level = IMPOSSIBLE_MATCH;
 	for (int i = 0, length = this.patternLocators.length; i < length; i++) {
@@ -88,6 +92,7 @@ public int match(ConstructorDeclaration node, MatchingNodeSet nodeSet) {
 	}
 	return level;
 }
+@Override
 public int match(Expression node, MatchingNodeSet nodeSet) {
 	int level = IMPOSSIBLE_MATCH;
 	for (int i = 0, length = this.patternLocators.length; i < length; i++) {
@@ -99,6 +104,7 @@ public int match(Expression node, MatchingNodeSet nodeSet) {
 	}
 	return level;
 }
+@Override
 public int match(FieldDeclaration node, MatchingNodeSet nodeSet) {
 	int level = IMPOSSIBLE_MATCH;
 	for (int i = 0, length = this.patternLocators.length; i < length; i++) {
@@ -110,6 +116,7 @@ public int match(FieldDeclaration node, MatchingNodeSet nodeSet) {
 	}
 	return level;
 }
+@Override
 public int match(LambdaExpression node, MatchingNodeSet nodeSet) {
 	int level = IMPOSSIBLE_MATCH;
 	for (int i = 0, length = this.patternLocators.length; i < length; i++) {
@@ -121,6 +128,7 @@ public int match(LambdaExpression node, MatchingNodeSet nodeSet) {
 	}
 	return level;
 }
+@Override
 public int match(LocalDeclaration node, MatchingNodeSet nodeSet) {
 	int level = IMPOSSIBLE_MATCH;
 	for (int i = 0, length = this.patternLocators.length; i < length; i++) {
@@ -132,6 +140,7 @@ public int match(LocalDeclaration node, MatchingNodeSet nodeSet) {
 	}
 	return level;
 }
+@Override
 public int match(MethodDeclaration node, MatchingNodeSet nodeSet) {
 	int level = IMPOSSIBLE_MATCH;
 	for (int i = 0, length = this.patternLocators.length; i < length; i++) {
@@ -143,6 +152,7 @@ public int match(MethodDeclaration node, MatchingNodeSet nodeSet) {
 	}
 	return level;
 }
+@Override
 public int match(MemberValuePair node, MatchingNodeSet nodeSet) {
 	int level = IMPOSSIBLE_MATCH;
 	for (int i = 0, length = this.patternLocators.length; i < length; i++) {
@@ -154,6 +164,7 @@ public int match(MemberValuePair node, MatchingNodeSet nodeSet) {
 	}
 	return level;
 }
+@Override
 public int match(MessageSend node, MatchingNodeSet nodeSet) {
 	int level = IMPOSSIBLE_MATCH;
 	for (int i = 0, length = this.patternLocators.length; i < length; i++) {
@@ -165,6 +176,7 @@ public int match(MessageSend node, MatchingNodeSet nodeSet) {
 	}
 	return level;
 }
+@Override
 public int match(Reference node, MatchingNodeSet nodeSet) {
 	int level = IMPOSSIBLE_MATCH;
 	for (int i = 0, length = this.patternLocators.length; i < length; i++) {
@@ -176,6 +188,7 @@ public int match(Reference node, MatchingNodeSet nodeSet) {
 	}
 	return level;
 }
+@Override
 public int match(ReferenceExpression node, MatchingNodeSet nodeSet) {
 	int level = IMPOSSIBLE_MATCH;
 	for (int i = 0, length = this.patternLocators.length; i < length; i++) {
@@ -187,6 +200,7 @@ public int match(ReferenceExpression node, MatchingNodeSet nodeSet) {
 	}
 	return level;
 }
+@Override
 public int match(TypeDeclaration node, MatchingNodeSet nodeSet) {
 	int level = IMPOSSIBLE_MATCH;
 	for (int i = 0, length = this.patternLocators.length; i < length; i++) {
@@ -198,6 +212,7 @@ public int match(TypeDeclaration node, MatchingNodeSet nodeSet) {
 	}
 	return level;
 }
+@Override
 public int match(TypeParameter node, MatchingNodeSet nodeSet) {
 	int level = IMPOSSIBLE_MATCH;
 	for (int i = 0, length = this.patternLocators.length; i < length; i++) {
@@ -209,6 +224,7 @@ public int match(TypeParameter node, MatchingNodeSet nodeSet) {
 	}
 	return level;
 }
+@Override
 public int match(TypeReference node, MatchingNodeSet nodeSet) {
 	int level = IMPOSSIBLE_MATCH;
 	for (int i = 0, length = this.patternLocators.length; i < length; i++) {
@@ -220,6 +236,7 @@ public int match(TypeReference node, MatchingNodeSet nodeSet) {
 	}
 	return level;
 }
+@Override
 protected int matchContainer() {
 	int result = ALL_CONTAINER;
 	for (int i = 0, length = this.patternLocators.length; i < length; i++) {
@@ -227,6 +244,7 @@ protected int matchContainer() {
 	}
 	return result;
 }
+@Override
 protected void matchReportImportRef(ImportReference importRef, Binding binding, IJavaElement element, int accuracy, MatchLocator locator) throws CoreException {
 	PatternLocator weakestPattern = null;
 	int level = IMPOSSIBLE_MATCH;
@@ -240,6 +258,7 @@ protected void matchReportImportRef(ImportReference importRef, Binding binding, 
 	}
 	weakestPattern.matchReportImportRef(importRef, binding, element, accuracy, locator);
 }
+@Override
 protected void matchReportReference(ASTNode reference, IJavaElement element, IJavaElement localElement, IJavaElement[] otherElements, Binding elementBinding, int accuracy, MatchLocator locator) throws CoreException {
 	PatternLocator weakestPattern = null;
 	int level = IMPOSSIBLE_MATCH;
@@ -254,9 +273,11 @@ protected void matchReportReference(ASTNode reference, IJavaElement element, IJa
 	}
 	weakestPattern.matchReportReference(reference, element, localElement, otherElements, elementBinding, accuracy, locator);
 }
+@Override
 protected void matchReportReference(ASTNode reference, IJavaElement element, Binding elementBinding, int accuracy, MatchLocator locator) throws CoreException {
 	matchReportReference(reference, element, null, null, elementBinding, accuracy, locator);
 }
+@Override
 public int resolveLevel(ASTNode node) {
 	int level = ACCURATE_MATCH;
 	for (int i = 0, length = this.patternLocators.length; i < length; i++) {
@@ -269,6 +290,7 @@ public int resolveLevel(ASTNode node) {
 	}
 	return level;
 }
+@Override
 public int resolveLevel(Binding binding) {
 	int level = ACCURATE_MATCH;
 	for (int i = 0, length = this.patternLocators.length; i < length; i++) {
@@ -281,14 +303,14 @@ public int resolveLevel(Binding binding) {
 	}
 	return level;
 }
-/* (non-Javadoc)
- * @see org.eclipse.jdt.internal.core.search.matching.PatternLocator#setFlavors(int)
- */
+
+@Override
 void setFlavors(int flavors) {
 	for (int i = 0, length = this.patternLocators.length; i < length; i++) {
 		this.patternLocators[i].setFlavors(flavors);
 	}
 }
+@Override
 public void recordResolution(QualifiedTypeReference typeReference, TypeBinding resolution) {
 	for (int i = 0, length = this.patternLocators.length; i < length; i++) {
 		this.patternLocators[i].recordResolution(typeReference, resolution);

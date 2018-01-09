@@ -139,6 +139,7 @@ public void removeAll() {
 	this.elementSet = null;
 	this.size = 0;
 }
+@Override
 public String toString() {
 	StringBuilder buffer = new StringBuilder("["); //$NON-NLS-1$
 	for (int i = 0; i < this.size; i++) {

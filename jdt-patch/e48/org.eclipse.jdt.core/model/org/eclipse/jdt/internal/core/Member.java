@@ -121,6 +121,7 @@ public static IMethod[] findMethods(IMethod method, IMethod[] methods) {
 		return result;
 	}
 }
+@Override
 public String[] getCategories() throws JavaModelException {
 	IType type = (IType) getAncestor(IJavaElement.TYPE);
 	if (type == null) return CharOperation.NO_STRINGS;
@@ -138,6 +139,7 @@ public String[] getCategories() throws JavaModelException {
 /**
  * @see IMember
  */
+@Override
 public IClassFile getClassFile() {
 	IJavaElement element = getParent();
 	while (element instanceof IMember) {
@@ -151,6 +153,7 @@ public IClassFile getClassFile() {
 /**
  * @see IMember
  */
+@Override
 public IType getDeclaringType() {
 	JavaElement parentElement = (JavaElement)getParent();
 	if (parentElement.getElementType() == TYPE) {
@@ -161,6 +164,7 @@ public IType getDeclaringType() {
 /**
  * @see IMember
  */
+@Override
 public int getFlags() throws JavaModelException {
 	MemberElementInfo info = (MemberElementInfo) getElementInfo();
 	return info.getModifiers();
@@ -168,6 +172,7 @@ public int getFlags() throws JavaModelException {
 /*
  * @see JavaElement
  */
+@Override
 public IJavaElement getHandleFromMemento(String token, MementoTokenizer memento, WorkingCopyOwner workingCopyOwner) {
 	switch (token.charAt(0)) {
 		case JEM_COUNT:
@@ -257,6 +262,7 @@ public IJavaElement getHandleFromMemento(String token, MementoTokenizer memento,
 /**
  * @see JavaElement#getHandleMemento()
  */
+@Override
 protected char getHandleMementoDelimiter() {
 	return JavaElement.JEM_TYPE;
 }
@@ -287,6 +293,7 @@ public Member getOuterMostLocalContext() {
 	}
 	return lastLocalContext;
 }
+@Override
 public ISourceRange getJavadocRange() throws JavaModelException {
 	ISourceRange range= getSourceRange();
 	if (range == null) return null;
@@ -339,6 +346,7 @@ public ISourceRange getJavadocRange() throws JavaModelException {
 /**
  * @see IMember
  */
+@Override
 public ISourceRange getNameRange() throws JavaModelException {
 	MemberElementInfo info= (MemberElementInfo)getElementInfo();
 	return new SourceRange(info.getNameSourceStart(), info.getNameSourceEnd() - info.getNameSourceStart() + 1);
@@ -346,6 +354,7 @@ public ISourceRange getNameRange() throws JavaModelException {
 /**
  * @see IMember
  */
+@Override
 public IType getType(String typeName, int count) {
 	if (isBinary()) {
 		throw new IllegalArgumentException("Not a source member " + toStringWithAncestors()); //$NON-NLS-1$
@@ -358,6 +367,7 @@ public IType getType(String typeName, int count) {
 /**
  * @see IMember#getTypeRoot()
  */
+@Override
 public ITypeRoot getTypeRoot() {
 	IJavaElement element = getParent();
 	while (element instanceof IMember) {
@@ -368,6 +378,7 @@ public ITypeRoot getTypeRoot() {
 /**
  * @see IMember
  */
+@Override
 public boolean isBinary() {
 	return false;
 }
@@ -390,11 +401,13 @@ protected boolean isMainMethod(IMethod method) throws JavaModelException {
 /**
  * @see IJavaElement
  */
+@Override
 public boolean isReadOnly() {
 	return getClassFile() != null;
 }
 /**
  */
+@Override
 public String readableName() {
 
 	IJavaElement declaringType = getDeclaringType();

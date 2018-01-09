@@ -59,6 +59,7 @@ public interface IAnnotationBinding extends IBinding {
 	 *
 	 * @return the name of the annotation type
 	 */
+	@Override
 	public String getName();
 
 }

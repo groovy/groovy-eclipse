@@ -21,6 +21,7 @@ MethodInfoWithParameterAnnotations(MethodInfo methodInfo, AnnotationInfo[] annot
 	super(methodInfo, annotations);
 	this.parameterAnnotations = parameterAnnotations;
 }
+@Override
 public IBinaryAnnotation[] getParameterAnnotations(int index, char[] classFileName) {
 	try {
 		return this.parameterAnnotations == null ? null : this.parameterAnnotations[index];
@@ -42,9 +43,11 @@ public IBinaryAnnotation[] getParameterAnnotations(int index, char[] classFileNa
 		throw new IllegalStateException(message.toString(), aioobe);
 	}
 }
+@Override
 public int getAnnotatedParametersCount() {
 	return this.parameterAnnotations == null ? 0 : this.parameterAnnotations.length;
 }
+@Override
 protected void initialize() {
 	for (int i = 0, l = this.parameterAnnotations == null ? 0 : this.parameterAnnotations.length; i < l; i++) {
 		AnnotationInfo[] infos = this.parameterAnnotations[i];
@@ -53,6 +56,7 @@ protected void initialize() {
 	}
 	super.initialize();
 }
+@Override
 protected void reset() {
 	for (int i = 0, l = this.parameterAnnotations == null ? 0 : this.parameterAnnotations.length; i < l; i++) {
 		AnnotationInfo[] infos = this.parameterAnnotations[i];

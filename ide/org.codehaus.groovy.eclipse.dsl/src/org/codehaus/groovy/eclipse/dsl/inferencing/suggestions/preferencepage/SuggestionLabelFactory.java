@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,6 @@ import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovyMethodSugge
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.GroovyPropertySuggestion;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.IGroovySuggestion;
 
-/**
- * 
- * @author Nieraj Singh
- * @created Apr 21, 2011
- */
 public class SuggestionLabelFactory {
 
     public ISuggestionLabel getSuggestionLabel(IGroovySuggestion suggestion) {

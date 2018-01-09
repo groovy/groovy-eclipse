@@ -371,6 +371,7 @@ protected boolean isOnModulePath(ClasspathEntry entry) {
 	return entry.isModular();
 }
 
+@Override
 public void cleanup() {
 	this.initialTypeNames = null;
 	this.additionalUnits = null;

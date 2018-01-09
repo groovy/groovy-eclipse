@@ -18,17 +18,19 @@ package org.codehaus.groovy.eclipse.adapters;
 import org.codehaus.groovy.eclipse.core.adapters.GroovyFileAdapterFactory;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.IAdapterFactory;
 import org.eclipse.ui.IEditorInput;
 
-@SuppressWarnings({"rawtypes", "unchecked"})
 public class GroovyEditorAdapterFactory implements IAdapterFactory {
 
-    public Class[] getAdapterList() {
+    @Override
+    public Class<?>[] getAdapterList() {
         return new GroovyFileAdapterFactory().getAdapterList();
     }
 
-    public Object getAdapter(Object adaptable, Class adapterType) {
+    @Override
+    public <T> T getAdapter(Object adaptable, Class<T> adapterType) {
         if (!(adaptable instanceof GroovyEditor)) {
             throw new IllegalArgumentException("adaptable is not the GroovyEditor");
         }
@@ -36,16 +38,15 @@ public class GroovyEditorAdapterFactory implements IAdapterFactory {
         IEditorInput editorInput = ((GroovyEditor) adaptable).getEditorInput();
 
         // delegate to GroovyIFileEditorInputAdapterFactory?
-        Object adapter = editorInput.getAdapter(adapterType);
+        T adapter = Adapters.adapt(editorInput, adapterType);
         if (adapter != null) {
             return adapter;
         }
 
         // delegate to GroovyFileAdapterFactory?
-        @SuppressWarnings("cast")
-        IFile file = (IFile) editorInput.getAdapter(IFile.class);
+        IFile file = Adapters.adapt(editorInput, IFile.class);
         if (file != null) {
-            return file.getAdapter(adapterType);
+            return Adapters.adapt(file, adapterType);
         }
 
         return null;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,10 +28,6 @@ import org.eclipse.jdt.internal.core.search.indexing.IIndexConstants;
 import org.eclipse.jdt.internal.core.search.matching.TypeDeclarationPattern;
 import org.eclipse.jdt.internal.core.util.Util;
 
-/**
- * @author Andrew Eisenberg
- * @created Dec 1, 2009
- */
 public class TypeDeclarationSearchRequestor implements ITypeRequestor, IIndexConstants {
 
     private final char[] simpleNamePattern;
@@ -50,6 +46,7 @@ public class TypeDeclarationSearchRequestor implements ITypeRequestor, IIndexCon
         this.participant = participant;
     }
 
+    @Override
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
         if (node instanceof ClassNode) {
             ClassNode orig = (ClassNode) node;
@@ -60,30 +57,30 @@ public class TypeDeclarationSearchRequestor implements ITypeRequestor, IIndexCon
                 if (pattern.matchesName(simpleNamePattern, orig.getNameWithoutPackage().toCharArray())) {
                     boolean matchFound;
                     switch (typeSuffix) {
-                        case CLASS_SUFFIX:
-                            matchFound = isClass(orig);
-                            break;
-                        case CLASS_AND_INTERFACE_SUFFIX:
-                            matchFound = orig.isInterface() || isClass(orig);
-                            break;
-                        case CLASS_AND_ENUM_SUFFIX:
-                            matchFound = orig.isInterface() || orig.isEnum();
-                            break;
-                        case INTERFACE_SUFFIX:
-                            matchFound = orig.isInterface();
-                            break;
-                        case INTERFACE_AND_ANNOTATION_SUFFIX:
-                            matchFound = orig.isInterface() || orig.isAnnotationDefinition();
-                            break;
-                        case ENUM_SUFFIX:
-                            matchFound = orig.isEnum();
-                            break;
-                        case ANNOTATION_TYPE_SUFFIX:
-                            matchFound = orig.isAnnotationDefinition();
-                            break;
-                        default:
-                            matchFound = true;
-                            break;
+                    case CLASS_SUFFIX:
+                        matchFound = isClass(orig);
+                        break;
+                    case CLASS_AND_INTERFACE_SUFFIX:
+                        matchFound = orig.isInterface() || isClass(orig);
+                        break;
+                    case CLASS_AND_ENUM_SUFFIX:
+                        matchFound = orig.isInterface() || orig.isEnum();
+                        break;
+                    case INTERFACE_SUFFIX:
+                        matchFound = orig.isInterface();
+                        break;
+                    case INTERFACE_AND_ANNOTATION_SUFFIX:
+                        matchFound = orig.isInterface() || orig.isAnnotationDefinition();
+                        break;
+                    case ENUM_SUFFIX:
+                        matchFound = orig.isEnum();
+                        break;
+                    case ANNOTATION_TYPE_SUFFIX:
+                        matchFound = orig.isAnnotationDefinition();
+                        break;
+                    default:
+                        matchFound = true;
+                        break;
                     }
                     if (matchFound) {
                         try {

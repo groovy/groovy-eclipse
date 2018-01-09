@@ -51,6 +51,7 @@ public class ExceptionAttribute extends ClassFileAttribute implements IException
 	/**
 	 * @see IExceptionAttribute#getExceptionIndexes()
 	 */
+	@Override
 	public int[] getExceptionIndexes() {
 		return this.exceptionIndexes;
 	}
@@ -58,6 +59,7 @@ public class ExceptionAttribute extends ClassFileAttribute implements IException
 	/**
 	 * @see IExceptionAttribute#getExceptionNames()
 	 */
+	@Override
 	public char[][] getExceptionNames() {
 		return this.exceptionNames;
 	}
@@ -65,6 +67,7 @@ public class ExceptionAttribute extends ClassFileAttribute implements IException
 	/**
 	 * @see IExceptionAttribute#getExceptionsNumber()
 	 */
+	@Override
 	public int getExceptionsNumber() {
 		return this.exceptionsNumber;
 	}

@@ -199,14 +199,12 @@ public class ClassInstanceCreation extends Expression {
 	 * Method declared on ASTNode.
 	 * @since 3.0
 	 */
+	@Override
 	final List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
 
-
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+	@Override
 	final ASTNode internalGetSetChildProperty(ChildPropertyDescriptor property, boolean get, ASTNode child) {
 		if (property == EXPRESSION_PROPERTY) {
 			if (get) {
@@ -244,9 +242,7 @@ public class ClassInstanceCreation extends Expression {
 		return super.internalGetSetChildProperty(property, get, child);
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+	@Override
 	final List internalGetChildListProperty(ChildListPropertyDescriptor property) {
 		if (property == ARGUMENTS_PROPERTY) {
 			return arguments();
@@ -258,16 +254,12 @@ public class ClassInstanceCreation extends Expression {
 		return super.internalGetChildListProperty(property);
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+	@Override
 	final int getNodeType0() {
 		return CLASS_INSTANCE_CREATION;
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+	@Override
 	ASTNode clone0(AST target) {
 		ClassInstanceCreation result = new ClassInstanceCreation(target);
 		result.setSourceRange(getStartPosition(), getLength());
@@ -287,17 +279,13 @@ public class ClassInstanceCreation extends Expression {
 		return result;
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+	@Override
 	final boolean subtreeMatch0(ASTMatcher matcher, Object other) {
 		// dispatch to correct overloaded match method
 		return matcher.match(this, other);
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+	@Override
 	void accept0(ASTVisitor visitor) {
 		boolean visitChildren = visitor.visit(this);
 		if (visitChildren) {
@@ -549,18 +537,14 @@ public class ClassInstanceCreation extends Expression {
 	public boolean isResolvedTypeInferredFromExpectedType() {
 		return this.ast.getBindingResolver().isResolvedTypeInferredFromExpectedType(this);
 	}
-	
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+
+	@Override
 	int memSize() {
 		// treat Code as free
 		return BASE_NODE_SIZE + 6 * 4;
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+	@Override
 	int treeSize() {
 		// n.b. type == null for ast.API_LEVEL == JLS2
 		// n.b. typeArguments == null for ast.API_LEVEL == JLS2

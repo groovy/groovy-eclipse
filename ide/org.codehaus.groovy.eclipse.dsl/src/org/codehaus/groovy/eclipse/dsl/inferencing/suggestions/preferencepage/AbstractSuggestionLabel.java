@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,30 +15,26 @@
  */
 package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.preferencepage;
 
-/**
- * 
- * @author Nieraj Singh
- * @created Apr 21, 2011
- */
 public abstract class AbstractSuggestionLabel implements ISuggestionLabel {
 
-	protected static final String EMPTY_SPACE = " ";
-	protected static final String COLON = ":";
-	protected static final String OPEN_PAR = "(";
-	protected static final String CLOSE_PAR = ")";
-	protected static final String COMMA = ",";
+    protected static final String EMPTY_SPACE = " ";
+    protected static final String COLON = ":";
+    protected static final String OPEN_PAR = "(";
+    protected static final String CLOSE_PAR = ")";
+    protected static final String COMMA = ",";
 
-	private String displayName;
+    private String displayName;
 
-	public String getLabel() {
-		if (displayName == null) {
-			displayName = constructName();
-			if (displayName == null) {
-				displayName = "";
-			}
-		}
-		return displayName;
-	}
+    @Override
+    public String getLabel() {
+        if (displayName == null) {
+            displayName = constructName();
+            if (displayName == null) {
+                displayName = "";
+            }
+        }
+        return displayName;
+    }
 
-	protected abstract String constructName();
+    protected abstract String constructName();
 }

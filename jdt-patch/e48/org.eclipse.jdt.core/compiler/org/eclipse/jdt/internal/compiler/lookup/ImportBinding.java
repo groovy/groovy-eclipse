@@ -30,18 +30,21 @@ public ImportBinding(char[][] compoundName, boolean isOnDemand, Binding binding,
 * Answer the receiver's binding type from Binding.BindingID.
 */
 
+@Override
 public final int kind() {
 	return IMPORT;
 }
 public boolean isStatic() {
 	return this.reference != null && this.reference.isStatic();
 }
+@Override
 public char[] readableName() {
 	if (this.onDemand)
 		return CharOperation.concat(CharOperation.concatWith(this.compoundName, '.'), ".*".toCharArray()); //$NON-NLS-1$
 	else
 		return CharOperation.concatWith(this.compoundName, '.');
 }
+@Override
 public String toString() {
 	return "import : " + new String(readableName()); //$NON-NLS-1$
 }

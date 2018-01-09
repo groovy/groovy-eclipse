@@ -35,28 +35,34 @@ public class CancelableNameEnvironment extends SearchableEnvironment implements 
 		}
 	}
 
+	@Override
 	public void findPackages(char[] prefix, ISearchRequestor requestor) {
 		checkCanceled();
 		super.findPackages(prefix, requestor);
 	}
 
+	@Override
 	public NameEnvironmentAnswer findType(char[] name, char[][] packageName) {
 		checkCanceled();
 		return super.findType(name, packageName);
 	}
 
+	@Override
 	public NameEnvironmentAnswer findType(char[][] compoundTypeName) {
 		checkCanceled();
 		return super.findType(compoundTypeName);
 	}
+	@Override
 	public NameEnvironmentAnswer findType(char[] typeName, char[][] packageName, boolean searchWithSecondaryTypes, char[] moduleName) {
 		return findType(typeName, packageName, moduleName);
 	}
+	@Override
 	public void findTypes(char[] prefix, boolean findMembers, boolean camelCaseMatch, int searchFor, ISearchRequestor storage, IProgressMonitor progressMonitor) {
 		checkCanceled();
 		super.findTypes(prefix, findMembers, camelCaseMatch, searchFor, storage, progressMonitor);
 	}
 	
+	@Override
 	public void setMonitor(IProgressMonitor monitor) {
 		this.monitor = monitor;
 	}

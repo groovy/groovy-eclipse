@@ -199,6 +199,7 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 			}
 		}
 	}
+	@Override
 	public void addTypeReference(char[] typeName) {
 		int length = typeName.length;
 		if (length > 2 && typeName[length - 2] == '$') {
@@ -637,6 +638,7 @@ public class BinaryIndexer extends AbstractIndexer implements SuffixConstants {
 		int utf8Offset = constantPoolOffsets[reader.u2At(constantPoolOffsets[constantPoolIndex] + 3)];
 		return reader.utf8At(utf8Offset + 3, reader.u2At(utf8Offset + 1));
 	}
+	@Override
 	public void indexDocument() {
 		try {
 			final byte[] contents = this.document.getByteContents();

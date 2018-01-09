@@ -184,6 +184,7 @@ protected void exitType(int bodyEnd, int declarationEnd) {
 /**
  * @see ILineStartFinder#getLineStart(int)
  */
+@Override
 public int getLineStart(int position) {
 	int lineSeparatorCount = this.fLineStartPositions.length;
 	// reverse traversal intentional.

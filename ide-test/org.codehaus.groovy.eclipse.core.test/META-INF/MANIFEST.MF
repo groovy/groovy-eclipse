@@ -1,8 +1,8 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.core.test;singleton:=true
 Bundle-Name: Groovy Core Tests
-Bundle-Version: 2.9.2.qualifier
+Bundle-Version: 3.0.0.qualifier
 Export-Package: org.codehaus.groovy.eclipse.core.test
-Require-Bundle: org.codehaus.groovy.eclipse.tests;bundle-version="2.9.2"
+Require-Bundle: org.codehaus.groovy.eclipse.tests;bundle-version="3.0.0"

@@ -15,7 +15,6 @@
  */
 package org.eclipse.jdt.core.groovy.tests.builder;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -422,8 +421,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test @Ignore
     public void testCompileStatic_1505() throws Exception {
-        assumeTrue(isAtLeastGroovy(20));
-
         IPath projectPath = env.addProject("Project","1.6");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -502,8 +499,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test @Ignore
     public void testCompileStatic_1506() throws Exception {
-        assumeTrue(isAtLeastGroovy(20));
-
         IPath projectPath = env.addProject("Project","1.6");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -582,8 +577,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test
     public void testCompileStatic_ArrayArray() throws Exception {
-        assumeTrue(isAtLeastGroovy(20));
-
         IPath projectPath = env.addProject("Project","1.6");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -621,8 +614,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test
     public void testCompileStatic_FileAddAll() throws Exception {
-        assumeTrue(isAtLeastGroovy(20));
-
         IPath projectPath = env.addProject("Project","1.6");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -656,8 +647,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test
     public void testCompileStatic_ListFileArgIteratedOver() throws Exception {
-        assumeTrue(isAtLeastGroovy(20));
-
         IPath projectPath = env.addProject("Project","1.6");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -693,8 +682,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test
     public void testCompileStatic_IterableParameter() throws Exception {
-        assumeTrue(isAtLeastGroovy(20));
-
         IPath projectPath = env.addProject("Project","1.6");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -728,8 +715,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test
     public void testCompileStatic_BuildSettings() throws Exception {
-        assumeTrue(isAtLeastGroovy(20));
-
         IPath projectPath = env.addProject("Project","1.6");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -795,8 +780,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test
     public void testCompileStatic() throws Exception {
-        assumeTrue(isAtLeastGroovy(20));
-
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -832,8 +815,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test // verify generics are correct for the 'Closure<?>' as CompileStatic will attempt an exact match
     public void testCompileStatic2() throws Exception {
-        assumeTrue(isAtLeastGroovy(20));
-
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -871,8 +852,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test
     public void testCompileStatic3() throws Exception {
-        assumeTrue(isAtLeastGroovy(20));
-
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -898,8 +877,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test
     public void testCompileStatic_MapEachClosure() throws Exception {
-        assumeTrue(isAtLeastGroovy(20));
-
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -1905,7 +1882,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test
     public void testAnnotationCollectorMultiProject() throws Exception {
-        assumeTrue(isAtLeastGroovy(21));
         assumeTrue(JavaCore.getPlugin().getBundle().getVersion().compareTo(new Version("3.9.50")) >= 0);
 
         // Construct 'annotation' project that defines annotation using 'AnnotationsCollector'
@@ -1953,8 +1929,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test
     public void testAnnotationCollectorIncremental() throws Exception {
-        assumeTrue(isAtLeastGroovy(21));
-
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -2341,13 +2315,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         expectingCompiledClasses("p1.Hello");
         expectingNoProblems();
         executeClass(projectPath, "p1.Hello", "Hello Groovy world", null);
-        // IJavaProject javaProject = env.getJavaProject(projectPath);
-        // IJavaElement pkgFragmentRoot = javaProject.findElement(new
-        // Path("p1/Hello.groovy"));
-        // System.out.println("A>"+pkgFragmentRoot);
-        // IJavaElement cu = find(pkgFragmentRoot,
-        // "Hello");cu.getAdapter(adapter)
-        // System.out.println(cu);
     }
 
     @Test
@@ -3352,8 +3319,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test // GRECLIPSE-1727
     public void testTraitBasics() throws Exception {
-        assumeTrue(isAtLeastGroovy(23));
-
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -3377,8 +3342,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test
     public void testTraitIncremental() throws Exception {
-        assumeTrue(isAtLeastGroovy(23));
-
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -3450,8 +3413,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test
     public void testTraitBinary() throws Exception {
-        assumeTrue(isAtLeastGroovy(23));
-
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -3537,8 +3498,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
     @Test
     public void testTraitGRE1776() throws Exception {
-        assumeTrue(isAtLeastGroovy(23));
-
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
@@ -3659,10 +3618,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         expectingProblemsFor(class1, Arrays.asList(
             "Problem : Groovy:expecting EOF, found 'abstract' @ line 3, column 5. [ resource : </Project/src/test/Class1.groovy> range : <41,42> category : <60> severity : <2>]",
             "Problem : Groovy:unexpected token: abstract @ line 3, column 5. [ resource : </Project/src/test/Class1.groovy> range : <41,42> category : <60> severity : <2>]"));
-        if (isAtLeastGroovy(20)) { // Groovy 1.8 has no @Override checking
-            expectingProblemsFor(class2, Arrays.asList("Problem : Groovy:Method \'m1\' from class \'test.Class2\' does not override method from its superclass or interfaces but is annotated with @Override. [ resource : </Project/src/test/Class2.groovy> range : <48,56> category : <60> severity : <2>]"));
-            expectingProblemsFor(class3, Arrays.asList("Problem : Groovy:Method \'m1\' from class \'test.Class3\' does not override method from its superclass or interfaces but is annotated with @Override. [ resource : </Project/src/test/Class3.groovy> range : <48,56> category : <60> severity : <2>]"));
-        }
+        expectingProblemsFor(class2, Arrays.asList("Problem : Groovy:Method \'m1\' from class \'test.Class2\' does not override method from its superclass or interfaces but is annotated with @Override. [ resource : </Project/src/test/Class2.groovy> range : <48,56> category : <60> severity : <2>]"));
+        expectingProblemsFor(class3, Arrays.asList("Problem : Groovy:Method \'m1\' from class \'test.Class3\' does not override method from its superclass or interfaces but is annotated with @Override. [ resource : </Project/src/test/Class3.groovy> range : <48,56> category : <60> severity : <2>]"));
 
         // modify the body of the abstract class to fix build
         env.addGroovyClass(root, "test", "Class1",

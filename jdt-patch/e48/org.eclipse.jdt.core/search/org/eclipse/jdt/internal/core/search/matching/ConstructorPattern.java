@@ -454,6 +454,7 @@ public ConstructorPattern(
 	if (hasConstructorArguments())  this.mustResolve = true;
 }
 
+@Override
 public void decodeIndexKey(char[] key) {
 	int last = key.length - 1;
 	int slash = CharOperation.indexOf(SEPARATOR, key, 0);
@@ -481,9 +482,11 @@ public void decodeIndexKey(char[] key) {
 		}
 	}
 }
+@Override
 public SearchPattern getBlankPattern() {
 	return new ConstructorPattern(R_EXACT_MATCH | R_CASE_SENSITIVE);
 }
+@Override
 public char[][] getIndexCategories() {
 	if (this.findReferences)
 		return this.findDeclarations ? REF_AND_DECL_CATEGORIES : REF_CATEGORIES;
@@ -497,6 +500,7 @@ boolean hasConstructorArguments() {
 boolean hasConstructorParameters() {
 	return this.constructorParameters;
 }
+@Override
 public boolean matchesDecodedKey(SearchPattern decodedPattern) {
 	ConstructorPattern pattern = (ConstructorPattern) decodedPattern;
 
@@ -513,6 +517,7 @@ protected boolean mustResolve() {
 			if (this.parameterQualifications[i] != null) return true;
 	return this.findReferences; // need to check resolved default constructors and explicit constructor calls
 }
+@Override
 public EntryResult[] queryIn(Index index) throws IOException {
 	char[] key = this.declaringSimpleName; // can be null
 	int matchRule = getMatchRule();
@@ -549,6 +554,7 @@ public EntryResult[] queryIn(Index index) throws IOException {
 
 	return index.query(getIndexCategories(), key, matchRule); // match rule is irrelevant when the key is null
 }
+@Override
 protected StringBuffer print(StringBuffer output) {
 	if (this.findDeclarations) {
 		output.append(this.findReferences

@@ -47,6 +47,7 @@ public class SourceRangeVerifier extends ASTVisitor {
 		return buffer.toString();
 	}
 	
+	@Override
 	public boolean preVisit2(ASTNode node) {
 		ASTNode previous = null;
 		

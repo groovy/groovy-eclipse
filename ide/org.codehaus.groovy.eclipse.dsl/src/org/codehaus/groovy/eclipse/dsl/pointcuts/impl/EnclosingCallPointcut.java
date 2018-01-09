@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,10 +28,8 @@ import org.eclipse.core.resources.IStorage;
 import org.eclipse.jdt.groovy.search.VariableScope.CallAndType;
 
 /**
- * Tests that the enclosing call matches certain charactereistics, such as names 
- * arguments, and values
- * @author andrew
- * @created Feb 10, 2011
+ * Tests that the enclosing call matches certain charactereistics, such as names
+ * arguments, and values.
  */
 public class EnclosingCallPointcut extends AbstractPointcut {
 
@@ -55,9 +53,9 @@ public class EnclosingCallPointcut extends AbstractPointcut {
             return matchOnPointcutArgument((IPointcut) firstArgument, pattern, asCallList(enclosing));
         }
     }
-    
+
     private List<MethodCallExpression> asCallList(List<CallAndType> enclosing) {
-        List<MethodCallExpression> types = new ArrayList<MethodCallExpression>(enclosing.size());
+        List<MethodCallExpression> types = new ArrayList<>(enclosing.size());
         for (CallAndType callAndType : enclosing) {
             types.add(callAndType.call);
         }
@@ -70,7 +68,7 @@ public class EnclosingCallPointcut extends AbstractPointcut {
         for (CallAndType callAndType : enclosing) {
             if (callName == null || callName.equals(callAndType.call.getMethodAsString())) {
                 if (calls == null) {
-                    calls = new ArrayList<MethodCallExpression>(1);
+                    calls = new ArrayList<>(1);
                 }
                 calls.add(callAndType.call);
             }

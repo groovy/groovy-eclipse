@@ -68,6 +68,7 @@ public class JDTCompilerAdapter extends DefaultCompilerAdapter {
 	 * @throws BuildException if anything wrong happen during the compilation
 	 * @return boolean true if the compilation is ok, false otherwise
 	 */
+	@Override
 	public boolean execute() throws BuildException {
 		this.attributes.log(AntAdapterMessages.getString("ant.jdtadapter.info.usingJDTCompiler"), Project.MSG_VERBOSE); //$NON-NLS-1$
 		Commandline cmd = setupJavacCommand();
@@ -91,6 +92,7 @@ public class JDTCompilerAdapter extends DefaultCompilerAdapter {
 	}
 
 
+	@Override
 	protected Commandline setupJavacCommand() throws BuildException {
 		Commandline cmd = new Commandline();
 		this.customDefaultOptions = new CompilerOptions().getMap();
@@ -510,6 +512,7 @@ public class JDTCompilerAdapter extends DefaultCompilerAdapter {
 	 *
 	 * @param cmd the given command line
 	 */
+	@Override
 	protected void logAndAddFilesToCompile(Commandline cmd) {
 		this.attributes.log("Compilation " + cmd.describeArguments(), //$NON-NLS-1$
 				Project.MSG_VERBOSE);
@@ -535,6 +538,7 @@ public class JDTCompilerAdapter extends DefaultCompilerAdapter {
 			//we need the directories sorted, longest first,since sub directories can
 			//override encodings for their parent directories
 			Comparator comparator = new Comparator() {
+				@Override
 				public int compare(Object o1, Object o2) {
 					return ((String) o2).length() - ((String) o1).length();
 				}

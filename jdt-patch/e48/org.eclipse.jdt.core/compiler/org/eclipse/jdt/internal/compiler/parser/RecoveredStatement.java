@@ -32,31 +32,37 @@ public RecoveredStatement(Statement statement, RecoveredElement parent, int brac
 /*
  * Answer the associated parsed structure
  */
+@Override
 public ASTNode parseTree() {
 	return this.statement;
 }
 /*
  * Answer the very source end of the corresponding parse node
  */
+@Override
 public int sourceEnd(){
 	return this.statement.sourceEnd;
 }
+@Override
 public String toString(int tab){
 	return tabString(tab) + "Recovered statement:\n" + this.statement.print(tab + 1, new StringBuffer(10)); //$NON-NLS-1$
 }
 public Statement updatedStatement(int depth, Set<TypeDeclaration> knownTypes){
 	return this.statement;
 }
+@Override
 public void updateParseTree(){
 	updatedStatement(0, new HashSet<TypeDeclaration>());
 }
 /*
  * Update the declarationSourceEnd of the corresponding parse node
  */
+@Override
 public void updateSourceEndIfNecessary(int bodyStart, int bodyEnd){
 	if (this.statement.sourceEnd == 0)
 		this.statement.sourceEnd = bodyEnd;
 }
+@Override
 public RecoveredElement updateOnClosingBrace(int braceStart, int braceEnd){
 	if ((--this.bracketBalance <= 0) && (this.parent != null)){
 		this.updateSourceEndIfNecessary(braceStart, braceEnd);

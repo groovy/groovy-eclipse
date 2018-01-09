@@ -83,6 +83,7 @@ public abstract class ClasspathLocation implements FileSystem.Classpath,
 	public int getMode() {
 		return SOURCE | BINARY;
 	}
+	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
@@ -90,6 +91,7 @@ public abstract class ClasspathLocation implements FileSystem.Classpath,
 		result = prime * result + ((this.path == null) ? 0 : this.path.hashCode());
 		return result;
 	}
+	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;
@@ -109,13 +111,16 @@ public abstract class ClasspathLocation implements FileSystem.Classpath,
 			return false;
 		return true;
 	}
+	@Override
 	public String getPath() {
 		return this.path;
 	}
+	@Override
 	public String getDestinationPath() {
 		return this.destinationPath;
 	}
 	
+	@Override
 	public void acceptModule(IModule mod) {
 		this.module = mod;
 		this.isAutoModule = mod.isAutomatic();
@@ -173,6 +178,7 @@ public abstract class ClasspathLocation implements FileSystem.Classpath,
 		return result;
 	}
 
+	@Override
 	public boolean isPackage(String qualifiedPackageName, String moduleName) {
 		return getModulesDeclaringPackage(qualifiedPackageName, moduleName) != null;
 	}

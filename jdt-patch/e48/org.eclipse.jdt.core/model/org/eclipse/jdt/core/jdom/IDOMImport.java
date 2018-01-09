@@ -29,6 +29,7 @@ public interface IDOMImport extends IDOMNode {
  *
  * @return  the name of this import
  */
+@Override
 public String getName();
 /**
  * Returns whether this import declaration ends with <code>".*"</code>.
@@ -65,5 +66,6 @@ void setFlags(int flags);
  * @param name the given name
  * @exception IllegalArgumentException if <code>null</code> is specified
  */
+@Override
 public void setName(String name);
 }

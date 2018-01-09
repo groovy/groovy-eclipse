@@ -1,7 +1,5 @@
 /*
- * Copyright 2011 SpringSource, a division of VMware, Inc
- * 
- * andrew - Initial API and implementation
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,13 +27,11 @@ import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jface.text.IDocument;
 
 /**
- * Quick fix to add the groovy classpath container
- * @author Andrew Eisenberg
- * @created Oct 14, 2011
+ * Quick fix to add the groovy classpath container.
  */
 public class AddGroovyRuntimeResolver extends AbstractQuickFixResolver {
-    public static class AddGroovyRuntimeProposal extends
-        AbstractGroovyQuickFixProposal {
+
+    public static class AddGroovyRuntimeProposal extends AbstractGroovyQuickFixProposal {
 
         private final IJavaProject project;
 
@@ -45,10 +41,12 @@ public class AddGroovyRuntimeResolver extends AbstractQuickFixResolver {
             this.project = project;
         }
 
+        @Override
         public void apply(IDocument document) {
             GroovyRuntime.addGroovyClasspathContainer(project);
         }
 
+        @Override
         public String getDisplayString() {
             return "Add Groovy Runtime to classpath";
         }
@@ -62,9 +60,10 @@ public class AddGroovyRuntimeResolver extends AbstractQuickFixResolver {
         super(problem);
     }
 
+    @Override
     public List<IJavaCompletionProposal> getQuickFixProposals() {
         IJavaProject project = getQuickFixProblem().getCompilationUnit().getJavaProject();
-        List<IJavaCompletionProposal> proposals = new ArrayList<IJavaCompletionProposal>(2);
+        List<IJavaCompletionProposal> proposals = new ArrayList<>(2);
         try {
             if (!GroovyRuntime.hasGroovyClasspathContainer(project)) {
                 proposals.add(new AddGroovyRuntimeProposal(project, getQuickFixProblem(), 100));
@@ -73,13 +72,12 @@ public class AddGroovyRuntimeResolver extends AbstractQuickFixResolver {
         } catch (CoreException e) {
             GroovyCore.logWarning("Problem calculating quickfixes", e);
         }
-        
+
         return null;
     }
 
     @Override
     protected ProblemType[] getTypes() {
-        return new ProblemType[] { ProblemType.MISSING_CLASSPATH_CONTAINER_TYPE };
+        return new ProblemType[] {ProblemType.MISSING_CLASSPATH_CONTAINER_TYPE};
     }
-
 }

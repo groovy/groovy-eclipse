@@ -60,6 +60,7 @@ class AddJarFileToIndex extends BinaryContainer {
 		this.indexFileURL = indexFile;
 		this.forceIndexUpdate = updateIndex;
 	}
+	@Override
 	public boolean equals(Object o) {
 		if (o instanceof AddJarFileToIndex) {
 			if (this.resource != null)
@@ -69,6 +70,7 @@ class AddJarFileToIndex extends BinaryContainer {
 		}
 		return false;
 	}
+	@Override
 	public int hashCode() {
 		if (this.resource != null)
 			return this.resource.hashCode();
@@ -76,6 +78,7 @@ class AddJarFileToIndex extends BinaryContainer {
 			return this.containerPath.hashCode();
 		return -1;
 	}
+	@Override
 	public boolean execute(IProgressMonitor progressMonitor) {
 
 		if (this.isCancelled || progressMonitor != null && progressMonitor.isCanceled()) return true;
@@ -260,11 +263,13 @@ class AddJarFileToIndex extends BinaryContainer {
 		}
 		return true;
 	}
+	@Override
 	public String getJobFamily() {
 		if (this.resource != null)
 			return super.getJobFamily();
 		return this.containerPath.toOSString(); // external jar
 	}	
+	@Override
 	protected Integer updatedIndexState() {
 
 		Integer updateState = null;
@@ -276,6 +281,7 @@ class AddJarFileToIndex extends BinaryContainer {
 		}
 		return updateState;
 	}
+	@Override
 	public String toString() {
 		return "indexing " + this.containerPath.toString(); //$NON-NLS-1$
 	}

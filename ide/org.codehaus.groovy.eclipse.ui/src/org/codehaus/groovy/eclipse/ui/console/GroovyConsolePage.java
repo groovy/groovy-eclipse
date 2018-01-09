@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,11 +34,6 @@ import org.eclipse.ui.console.actions.CloseConsoleAction;
 import org.eclipse.ui.internal.console.ScrollLockAction;
 import org.eclipse.ui.part.IPageSite;
 
-/**
- *
- * @author andrew
- * @created Nov 24, 2010
- */
 public class GroovyConsolePage extends TextConsolePage implements IGroovyLogger {
 
     private ScrollLockAction fScrollLockAction;
@@ -58,6 +53,7 @@ public class GroovyConsolePage extends TextConsolePage implements IGroovyLogger 
         }
     }
 
+    @Override
     public void log(final TraceCategory category, String message) {
         /*
          * This code no longer dependent on either java.util.DateFormat, nor its ICU4J
@@ -69,24 +65,20 @@ public class GroovyConsolePage extends TextConsolePage implements IGroovyLogger 
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
 
-        StringBuffer time = new StringBuffer();
+        StringBuilder time = new StringBuilder();
         time.append(twodigit(calendar.get(Calendar.HOUR_OF_DAY))).append(":");
         time.append(twodigit(calendar.get(Calendar.MINUTE))).append(":");
         time.append(twodigit(calendar.get(Calendar.SECOND)));
         time.append(" ").append(message).append("\n");
         final String txt = time.toString();
-        //        final String txt = twodigit(calendar.get(Calendar.HOUR_OF_DAY)) + ":"  //$NON-NLS-1$
-        //            + calendar.get(Calendar.MINUTE) + ":" + calendar.get(Calendar.SECOND) + " " + message + "\n"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-        this.getControl().getDisplay().asyncExec(new Runnable() {
-            public void run() {
-                TextConsoleViewer viewer = getViewer();
-                if (viewer != null) {
-                    StyledText text = viewer.getTextWidget();
-                    text.append(category.getPaddedLabel() + " : " + txt);
-                    if (!fScrollLockAction.isChecked()) {
-                        text.setTopIndex(text.getLineCount() - 1);
-                    }
+        this.getControl().getDisplay().asyncExec(() -> {
+            TextConsoleViewer viewer = getViewer();
+            if (viewer != null) {
+                StyledText text = viewer.getTextWidget();
+                text.append(category.getPaddedLabel() + " : " + txt);
+                if (!fScrollLockAction.isChecked()) {
+                    text.setTopIndex(text.getLineCount() - 1);
                 }
             }
         });
@@ -96,6 +88,7 @@ public class GroovyConsolePage extends TextConsolePage implements IGroovyLogger 
      * always returns true. Maybe later add capability to
      * disable log categories
      */
+    @Override
     public boolean isCategoryEnabled(TraceCategory category) {
         return true;
     }

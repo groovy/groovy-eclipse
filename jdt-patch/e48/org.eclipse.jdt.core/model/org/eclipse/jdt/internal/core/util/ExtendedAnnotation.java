@@ -227,21 +227,17 @@ public class ExtendedAnnotation extends ClassFileStruct implements IExtendedAnno
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IAnnotation#getTypeIndex()
-	 */
+	@Override
 	public int getTypeIndex() {
 		return this.typeIndex;
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IAnnotation#getComponentsNumber()
-	 */
+
+	@Override
 	public int getComponentsNumber() {
 		return this.componentsNumber;
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IAnnotation#getComponents()
-	 */
+
+	@Override
 	public IAnnotationComponent[] getComponents() {
 		return this.components;
 	}
@@ -249,49 +245,58 @@ public class ExtendedAnnotation extends ClassFileStruct implements IExtendedAnno
 	int sizeInBytes() {
 		return this.readOffset;
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IAnnotation#getTypeName()
-	 */
+
+	@Override
 	public char[] getTypeName() {
 		return this.typeName;
 	}
 
+	@Override
 	public int getTargetType() {
 		return this.targetType;
 	}
 	
+	@Override
 	public int getExceptionTableIndex() {
 		return this.exceptionTableIndex;
 	}
 
+	@Override
 	public int getOffset() {
 		return this.offset;
 	}
 
+	@Override
 	public int getLocalVariableRefenceInfoLength() {
 		return this.localVariableTable.length;
 	}
 
+	@Override
 	public ILocalVariableReferenceInfo[] getLocalVariableTable() {
 		return this.localVariableTable;
 	}
 
+	@Override
 	public int getParameterIndex() {
 		return this.parameterIndex;
 	}
 
+	@Override
 	public int getTypeParameterIndex() {
 		return this.typeParameterIndex;
 	}
 
+	@Override
 	public int getTypeParameterBoundIndex() {
 		return this.typeParameterBoundIndex;
 	}
 
+	@Override
 	public int[][] getTypePath() {
 		return this.typePath;
 	}
 
+	@Override
 	public int getAnnotationTypeIndex() {
 		return this.annotationTypeIndex;
 	}

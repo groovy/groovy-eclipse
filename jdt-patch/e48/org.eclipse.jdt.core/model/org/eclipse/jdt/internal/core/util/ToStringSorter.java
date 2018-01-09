@@ -10,66 +10,48 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.util;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Function;
+
 /**
  * The SortOperation takes a collection of objects and returns
  * a sorted collection of these objects. The sorting of these
  * objects is based on their toString(). They are sorted in
  * alphabetical order.
  */
-public class ToStringSorter {
-	Object[] sortedObjects;
-	String[] sortedStrings;
-/**
- *  Returns true if stringTwo is 'greater than' stringOne
- *  This is the 'ordering' method of the sort operation.
- */
-public boolean compare(String stringOne, String stringTwo) {
-	return stringOne.compareTo(stringTwo) < 0;
-}
-/**
- *  Sort the objects in sorted collection and return that collection.
- */
-private void quickSort(int left, int right) {
-	int originalLeft = left;
-	int originalRight = right;
-	int midIndex =  left + (right - left) / 2;
-	String midToString = this.sortedStrings[midIndex];
+public class ToStringSorter <T> {
+	private final Function<T, String> toString;
+	List<Pair <T>> sortedObjects;
 
-	do {
-		while (compare(this.sortedStrings[left], midToString))
-			left++;
-		while (compare(midToString, this.sortedStrings[right]))
-			right--;
-		if (left <= right) {
-			Object tmp = this.sortedObjects[left];
-			this.sortedObjects[left] = this.sortedObjects[right];
-			this.sortedObjects[right] = tmp;
-			String tmpToString = this.sortedStrings[left];
-			this.sortedStrings[left] = this.sortedStrings[right];
-			this.sortedStrings[right] = tmpToString;
-			left++;
-			right--;
+	public ToStringSorter(Function<T, String> toString) {
+		this.toString = toString;
+	}
+
+	static class Pair<T> implements Comparable<Pair<T>> {
+		final T object;
+		final String string;
+		public Pair(T k, String s) {
+			this.object = k;
+			this.string = s;
 		}
-	} while (left <= right);
 
-	if (originalLeft < right)
-		quickSort(originalLeft, right);
-	if (left < originalRight)
-		quickSort(left, originalRight);
-}
-/**
- *  Return a new sorted collection from this unsorted collection.
- *  Sort using quick sort.
- */
-public void sort(Object[] unSortedObjects, String[] unsortedStrings) {
-	int size = unSortedObjects.length;
-	this.sortedObjects = new Object[size];
-	this.sortedStrings = new String[size];
+		@Override
+		public int compareTo(Pair<T> other) {
+			return this.string.compareTo(other.string);
+		}
+	}
 
-	//copy the array so can return a new sorted collection
-	System.arraycopy(unSortedObjects, 0, this.sortedObjects, 0, size);
-	System.arraycopy(unsortedStrings, 0, this.sortedStrings, 0, size);
-	if (size > 1)
-		quickSort(0, size - 1);
-}
+	/**
+	 *  Return a new sorted collection from this unsorted collection.
+	 */
+	public void sort(Collection<T> unSorted) {
+		int size = unSorted.size();
+		//copy the list so can return a new sorted collection
+		this.sortedObjects = new ArrayList<>(size);
+		unSorted.forEach(k -> this.sortedObjects.add(new Pair<>(k, this.toString.apply(k))));
+		Collections.sort(this.sortedObjects);
+	}
 }

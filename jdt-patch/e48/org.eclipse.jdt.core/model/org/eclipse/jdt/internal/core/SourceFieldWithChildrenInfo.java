@@ -20,6 +20,7 @@ public class SourceFieldWithChildrenInfo extends SourceFieldElementInfo {
 		this.children = children;
 	}
 
+	@Override
 	public IJavaElement[] getChildren() {
 		return this.children;
 	}

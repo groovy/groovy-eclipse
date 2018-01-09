@@ -255,7 +255,7 @@ public class ProposalUtils {
      * e.g. mA = ['m','A']
      */
     private static String[] toCamelCaseParts(String str) {
-        List<String> parts = new ArrayList<String>();
+        List<String> parts = new ArrayList<>();
         for (int i = str.length() - 1; i >= 0; --i) {
             if (Character.isUpperCase(str.charAt(i))) {
                 parts.add(str.substring(i));

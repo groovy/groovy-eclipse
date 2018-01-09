@@ -162,6 +162,7 @@ public Object[] getExtraMarkerAttributeValues() {
  *
  * @since 3.12
  */
+@Override
 public boolean isInfo() {
 	return false;
 }

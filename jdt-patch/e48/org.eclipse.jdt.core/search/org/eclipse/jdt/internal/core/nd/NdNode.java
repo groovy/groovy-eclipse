@@ -114,6 +114,7 @@ public abstract class NdNode extends NdStruct implements IDestructable {
 		return this.nd.getNodeType(getClass());
 	}
 
+	@Override
 	public final long getAddress() {
 		return this.address;
 	}
@@ -175,6 +176,7 @@ public abstract class NdNode extends NdStruct implements IDestructable {
 	 * If an external object wants to destroy a node, they should invoke {@link NdNode#delete} rather than this
 	 * method.
 	 */
+	@Override
 	public void destruct() {
 		// Nothing to do by default. Subclasses will provide an implementation if necessary.
 	}

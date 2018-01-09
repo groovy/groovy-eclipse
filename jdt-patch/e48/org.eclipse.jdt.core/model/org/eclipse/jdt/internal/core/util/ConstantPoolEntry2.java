@@ -29,34 +29,42 @@ public class ConstantPoolEntry2 extends ConstantPoolEntry implements IConstantPo
 	private int packageIndex;
 	private char[] packageName;
 
+	@Override
 	public int getDescriptorIndex() {
 		return this.descriptorIndex;
 	}
 
+	@Override
 	public int getReferenceKind() {
 		return this.referenceKind;
 	}
 
+	@Override
 	public int getReferenceIndex() {
 		return this.referenceIndex;
 	}
 
+	@Override
 	public int getBootstrapMethodAttributeIndex() {
 		return this.bootstrapMethodAttributeIndex;
 	}
 
+	@Override
 	public int getModuleIndex() {
 		return this.moduleIndex;
 	}
 
+	@Override
 	public char[] getModuleName() {
 		return this.moduleName;
 	}
 
+	@Override
 	public int getPackageIndex() {
 		return this.packageIndex;
 	}
 
+	@Override
 	public char[] getPackageName() {
 		return this.packageName;
 	}
@@ -93,6 +101,7 @@ public class ConstantPoolEntry2 extends ConstantPoolEntry implements IConstantPo
 		this.packageName = packageName;
 	}
 
+	@Override
 	public void reset() {
 		super.reset();
 		this.descriptorIndex = 0;

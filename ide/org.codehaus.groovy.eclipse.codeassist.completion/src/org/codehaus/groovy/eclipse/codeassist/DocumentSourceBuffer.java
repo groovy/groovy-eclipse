@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,54 +20,59 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 
 public class DocumentSourceBuffer implements ISourceBuffer {
-	private IDocument document;
+    private IDocument document;
 
-	public DocumentSourceBuffer(IDocument document) {
-		this.document = document;
-	}
+    public DocumentSourceBuffer(IDocument document) {
+        this.document = document;
+    }
 
-	public char charAt(int offset) {
-		try {
-			return document.getChar(offset);
-		} catch (BadLocationException e) {
-			throw new IndexOutOfBoundsException(e.getMessage());
-		}
-	}
+    @Override
+    public char charAt(int offset) {
+        try {
+            return document.getChar(offset);
+        } catch (BadLocationException e) {
+            throw new IndexOutOfBoundsException(e.getMessage());
+        }
+    }
 
-	public int length() {
-		return document.getLength();
-	}
+    @Override
+    public int length() {
+        return document.getLength();
+    }
 
-	public CharSequence subSequence(int start, int end) {
-		try {
-			return document.get(start, end - start);
-		} catch (BadLocationException e) {
-			throw new IndexOutOfBoundsException(e.getMessage());
-		}
-	}
+    @Override
+    public CharSequence subSequence(int start, int end) {
+        try {
+            return document.get(start, end - start);
+        } catch (BadLocationException e) {
+            throw new IndexOutOfBoundsException(e.getMessage());
+        }
+    }
 
-	public int[] toLineColumn(int offset) {
-		int line;
-		try {
-			line = document.getLineOfOffset(offset);
-			int lineOffset = document.getLineOffset(line);
-			return new int[] { line + 1, offset - lineOffset + 1 };
-		} catch (BadLocationException e) {
-			throw new IndexOutOfBoundsException(e.getMessage());
-		}
-	}
+    @Override
+    public int[] toLineColumn(int offset) {
+        int line;
+        try {
+            line = document.getLineOfOffset(offset);
+            int lineOffset = document.getLineOffset(line);
+            return new int[] { line + 1, offset - lineOffset + 1 };
+        } catch (BadLocationException e) {
+            throw new IndexOutOfBoundsException(e.getMessage());
+        }
+    }
 
-	public int toOffset(int line, int column) {
-		int offset;
-		try {
-			offset = document.getLineOffset(line - 1);
-			return offset + column - 1;
-		} catch (BadLocationException e) {
-			try {
-				return document.getLineOffset(document.getNumberOfLines()-1);
-			} catch (BadLocationException e1) {
-				throw new IndexOutOfBoundsException(e.getMessage());
-			}
-		}
-	}
+    @Override
+    public int toOffset(int line, int column) {
+        int offset;
+        try {
+            offset = document.getLineOffset(line - 1);
+            return offset + column - 1;
+        } catch (BadLocationException e) {
+            try {
+                return document.getLineOffset(document.getNumberOfLines()-1);
+            } catch (BadLocationException e1) {
+                throw new IndexOutOfBoundsException(e.getMessage());
+            }
+        }
+    }
 }

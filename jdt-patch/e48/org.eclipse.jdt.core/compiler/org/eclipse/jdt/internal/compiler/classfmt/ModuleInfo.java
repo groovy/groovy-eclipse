@@ -78,6 +78,7 @@ public class ModuleInfo extends ClassFileStruct implements IBinaryModule {
 	public IModule.IPackageExport[] opens() {
 		return this.opens;
 	}
+	@Override
 	public void addReads(char[] modName) {
 		Predicate<char[]> shouldAdd = m -> {
 			return Stream.of(this.requires).map(ref -> ref.name()).noneMatch(n -> CharOperation.equals(modName, n));
@@ -89,6 +90,7 @@ public class ModuleInfo extends ClassFileStruct implements IBinaryModule {
 			info.refName = modName;
 		}		
 	}
+	@Override
 	public void addExports(IPackageExport[] toAdd) {
 		Predicate<char[]> shouldAdd = m -> {
 			return Stream.of(this.exports).map(ref -> ref.packageName).noneMatch(n -> CharOperation.equals(m, n));
@@ -276,6 +278,7 @@ public class ModuleInfo extends ClassFileStruct implements IBinaryModule {
 		public boolean isTransitive() {
 			return this.isTransitive;
 		}
+		@Override
 		public boolean equals(Object o) {
 			if (this == o) 
 				return true;
@@ -309,6 +312,7 @@ public class ModuleInfo extends ClassFileStruct implements IBinaryModule {
 		public char[][] targets() {
 			return this.exportedTo;
 		}
+		@Override
 		public String toString() {
 			StringBuffer buffer = new StringBuffer();
 			toStringContent(buffer);
@@ -339,6 +343,7 @@ public class ModuleInfo extends ClassFileStruct implements IBinaryModule {
 			return this.with;
 		}
 	}
+	@Override
 	public boolean equals(Object o) {
 		if (this == o)
 			return true;
@@ -358,6 +363,7 @@ public class ModuleInfo extends ClassFileStruct implements IBinaryModule {
 		result = 31 * result + c;
 		return result;
 	}
+	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer(getClass().getName());
 		toStringContent(buffer);

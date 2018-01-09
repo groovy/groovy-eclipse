@@ -25,12 +25,14 @@ public class CompletionOnLocalName extends LocalDeclaration {
 		this.realName = name;
 	}
 
+	@Override
 	public void resolve(BlockScope scope) {
 
 		super.resolve(scope);
 		throw new CompletionNodeFound(this, scope);
 	}
 
+	@Override
 	public StringBuffer printAsExpression(int indent, StringBuffer output) {
 		printIndent(indent, output);
 		output.append("<CompleteOnLocalName:"); //$NON-NLS-1$
@@ -43,6 +45,7 @@ public class CompletionOnLocalName extends LocalDeclaration {
 		return output.append('>');
 	}
 
+	@Override
 	public StringBuffer printStatement(int indent, StringBuffer output) {
 		printAsExpression(indent, output);
 		return output.append(';');

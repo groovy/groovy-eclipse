@@ -43,8 +43,6 @@ import org.eclipse.text.edits.TextEdit;
  * be imported, the resolver will generate 5 different proposals, one for each
  * suggested type. Each proposal has its own display string indicating which
  * type will be imported.
- *
- * @author Nieraj Singh
  */
 public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
 
@@ -67,6 +65,7 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
             return resolvedSuggestedType;
         }
 
+        @Override
         protected String getImageBundleLocation() {
             return JavaPluginImages.IMG_OBJS_IMPDECL;
         }
@@ -81,6 +80,7 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
             return rewriter;
         }
 
+        @Override
         public void apply(IDocument document) {
             ImportRewrite rewrite = getImportRewrite();
             if (rewrite != null) {
@@ -96,6 +96,7 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
             }
         }
 
+        @Override
         public String getDisplayString() {
             IType declaringType = getSuggestedJavaType().getDeclaringType();
             // For inner types, display the fully qualified top-level type as
@@ -107,6 +108,7 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
         }
     }
 
+    @Override
     protected ProblemType[] getTypes() {
         return new ProblemType[] {ProblemType.MISSING_IMPORTS_TYPE};
     }
@@ -128,7 +130,7 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
 
                 List<TypeNameMatch> matches = data.getFoundInfos();
                 if (matches != null && !matches.isEmpty()) {
-                    List<IType> suggestions = new ArrayList<IType>(matches.size());
+                    List<IType> suggestions = new ArrayList<>(matches.size());
                     for (TypeNameMatch match : matches) {
                         suggestions.add(match.getType());
                     }
@@ -193,10 +195,11 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
         return simpleName;
     }
 
+    @Override
     public List<IJavaCompletionProposal> getQuickFixProposals() {
         List<IType> suggestions = getImportTypeSuggestions();
         if (suggestions != null && !suggestions.isEmpty()) {
-            List<IJavaCompletionProposal> fixes = new ArrayList<IJavaCompletionProposal>(suggestions.size());
+            List<IJavaCompletionProposal> fixes = new ArrayList<>(suggestions.size());
             for (IType type : suggestions) {
                 fixes.add(new AddMissingImportProposal(type, getGroovyCompilationUnit(), getQuickFixProblem(), getRelevance(type)));
             }

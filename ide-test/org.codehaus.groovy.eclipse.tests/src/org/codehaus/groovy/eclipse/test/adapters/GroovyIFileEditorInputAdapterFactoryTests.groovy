@@ -17,9 +17,9 @@ package org.codehaus.groovy.eclipse.test.adapters
 
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
+import org.eclipse.core.runtime.Adapters
 import org.eclipse.ui.IFileEditorInput
 import org.eclipse.ui.part.FileEditorInput
-import org.junit.Assert
 import org.junit.Test
 
 /**
@@ -29,14 +29,14 @@ final class GroovyIFileEditorInputAdapterFactoryTests extends GroovyEclipseTestS
 
     @Test
     void testIFileEditorInputAdapter() {
-        def unit = addGroovySource('class MainClass { static void main(String[] args', 'MainClass', 'pack1')
+        def unit = addGroovySource('class MainClass { static void main(String[] args) {} }', 'MainClass', 'pack1')
         buildProject()
 
-        IFileEditorInput editor = new FileEditorInput(unit.getResource())
-        ClassNode node = editor.getAdapter(ClassNode.class)
-        Assert.assertEquals('pack1.MainClass', node.getName())
-        Assert.assertFalse(node.isInterface())
-        Assert.assertNotNull(node.getMethods('main'))
+        IFileEditorInput editor = new FileEditorInput(unit.resource)
+        ClassNode node = Adapters.adapt(editor, ClassNode)
+        assert node.name == 'pack1.MainClass'
+        assert !node.getMethods('main').empty
+        assert !node.isInterface()
     }
 
     @Test
@@ -44,11 +44,11 @@ final class GroovyIFileEditorInputAdapterFactoryTests extends GroovyEclipseTestS
         def unit = addGroovySource('class OtherClass { static void main(String[] args', 'OtherClass', 'pack1')
         buildProject()
 
-        IFileEditorInput editor = new FileEditorInput(unit.getResource())
-        ClassNode node = editor.getAdapter(ClassNode.class)
-        Assert.assertEquals('pack1.OtherClass', node.getName())
-        Assert.assertFalse(node.isInterface())
-        Assert.assertNotNull(node.getMethods('main'))
+        IFileEditorInput editor = new FileEditorInput(unit.resource)
+        ClassNode node = Adapters.adapt(editor, ClassNode)
+        assert node.name == 'pack1.OtherClass'
+        assert node.getMethods('main').empty
+        assert !node.isInterface()
     }
 
     @Test
@@ -56,8 +56,9 @@ final class GroovyIFileEditorInputAdapterFactoryTests extends GroovyEclipseTestS
         def unit = addGroovySource('class C { abstract def foo() {} }', 'C', 'pack1')
         buildProject()
 
-        IFileEditorInput editor = new FileEditorInput(unit.getResource())
-        Assert.assertNull(editor.getAdapter(ClassNode.class))
+        IFileEditorInput editor = new FileEditorInput(unit.resource)
+        ClassNode node = Adapters.adapt(editor, ClassNode)
+        assert node == null
     }
 
     @Test
@@ -66,6 +67,7 @@ final class GroovyIFileEditorInputAdapterFactoryTests extends GroovyEclipseTestS
         buildProject()
 
         IFileEditorInput editor = new FileEditorInput(file)
-        Assert.assertNull(editor.getAdapter(ClassNode.class))
+        ClassNode node = Adapters.adapt(editor, ClassNode)
+        assert node == null
     }
 }

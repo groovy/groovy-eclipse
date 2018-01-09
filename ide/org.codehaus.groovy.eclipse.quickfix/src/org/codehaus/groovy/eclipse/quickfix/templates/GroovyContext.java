@@ -1,7 +1,5 @@
 /*
- * Copyright 2011 SpringSource, a division of VMware, Inc
- * 
- * andrew - Initial API and implementation
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,11 +24,6 @@ import org.eclipse.jface.text.templates.TemplateBuffer;
 import org.eclipse.jface.text.templates.TemplateContextType;
 import org.eclipse.jface.text.templates.TemplateException;
 
-/**
- * 
- * @author Andrew Eisenberg
- * @created 2013-03-31
- */
 public class GroovyContext extends JavaContext {
 
     public GroovyContext(TemplateContextType type, IDocument document,
@@ -38,12 +31,12 @@ public class GroovyContext extends JavaContext {
             ICompilationUnit compilationUnit) {
         super(type, document, completionOffset, completionLength, compilationUnit);
     }
-    
+
     @Override
     public TemplateBuffer evaluate(Template template)
             throws BadLocationException, TemplateException {
         TemplateBuffer buffer = super.evaluate(template);
-        
+
         // TODO must reformat since Java formatter may not have worked
         // but also must update the variable positions
 //        IDocument doc = new Document(buffer.getString());
@@ -60,5 +53,4 @@ public class GroovyContext extends JavaContext {
 //        buffer.setContent(doc.get(), buffer.getVariables());
         return buffer;
     }
-
 }

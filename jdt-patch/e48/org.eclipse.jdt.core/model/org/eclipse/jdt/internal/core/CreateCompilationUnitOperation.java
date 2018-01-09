@@ -76,6 +76,7 @@ public CreateCompilationUnitOperation(IPackageFragment parentElement, String nam
  *
  * @exception JavaModelException if unable to create the compilation unit.
  */
+@Override
 protected void executeOperation() throws JavaModelException {
 	try {
 		beginTask(Messages.operation_createUnitProgress, 2);
@@ -139,6 +140,7 @@ protected void executeOperation() throws JavaModelException {
 protected ICompilationUnit getCompilationUnit() {
 	return ((IPackageFragment)getParentElement()).getCompilationUnit(this.name);
 }
+@Override
 protected ISchedulingRule getSchedulingRule() {
 	IResource resource  = getCompilationUnit().getResource();
 	IWorkspace workspace = resource.getWorkspace();
@@ -157,6 +159,7 @@ protected ISchedulingRule getSchedulingRule() {
  *  <li>INVALID_CONTENTS - the source specified for the compiliation unit is null
  * </ul>
  */
+@Override
 public IJavaModelStatus verify() {
 	if (getParentElement() == null) {
 		return new JavaModelStatus(IJavaModelStatusConstants.NO_ELEMENTS_TO_PROCESS);

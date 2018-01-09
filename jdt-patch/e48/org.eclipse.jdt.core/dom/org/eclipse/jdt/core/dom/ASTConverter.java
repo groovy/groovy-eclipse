@@ -3392,6 +3392,7 @@ class ASTConverter {
 
 		List<ModuleDirective> stmts = moduleDecl.moduleStatements();
 		TreeSet<ModuleDirective> tSet = new TreeSet<> (new Comparator() {
+			@Override
 			public int compare(Object o1, Object o2) {
 				int p1 = ((ModuleDirective) o1).getStartPosition();
 				int p2 = ((ModuleDirective) o2).getStartPosition();

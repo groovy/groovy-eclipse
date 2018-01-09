@@ -38,6 +38,7 @@ ProblemBinding(char[] name, ReferenceBinding searchType, int problemId) {
 * Answer the receiver's binding type from Binding.BindingID.
 */
 
+@Override
 public final int kind() {
 	return VARIABLE | TYPE;
 }
@@ -46,9 +47,11 @@ public final int kind() {
 * NoError if the receiver is a valid binding.
 */
 
+@Override
 public final int problemId() {
 	return this.problemId;
 }
+@Override
 public char[] readableName() {
 	return this.name;
 }

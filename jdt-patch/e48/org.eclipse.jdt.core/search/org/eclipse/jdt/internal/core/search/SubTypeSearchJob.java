@@ -28,6 +28,7 @@ public void finished() {
 		if (values[i] != null)
 			((Index) values[i]).stopQuery();
 }
+@Override
 public Index[] getIndexes(IProgressMonitor progressMonitor) {
 	if (this.indexes.elementSize == 0) {
 		return super.getIndexes(progressMonitor);
@@ -37,6 +38,7 @@ public Index[] getIndexes(IProgressMonitor progressMonitor) {
 	this.indexes.asArray(values);
 	return values;
 }
+@Override
 public boolean search(Index index, IProgressMonitor progressMonitor) {
 	if (index == null) return COMPLETE;
 	if (this.indexes.addIfNotIncluded(index) == index)

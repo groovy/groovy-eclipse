@@ -37,6 +37,7 @@ public final class HashtableOfObjectToIntArray implements Cloneable {
 		this.valueTable = new int[extraRoom][];
 	}
 
+	@Override
 	public Object clone() throws CloneNotSupportedException {
 		HashtableOfObjectToIntArray result = (HashtableOfObjectToIntArray) super.clone();
 		result.elementSize = this.elementSize;
@@ -144,6 +145,7 @@ public final class HashtableOfObjectToIntArray implements Cloneable {
 		return this.elementSize;
 	}
 
+	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
 		Object key;

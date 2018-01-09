@@ -15,7 +15,6 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -41,10 +40,6 @@ import org.junit.Test;
 import org.osgi.framework.Version;
 
 public final class TransformationsTests extends GroovyCompilerTestSuite {
-
-    public TransformationsTests(long level) {
-        super(level);
-    }
 
     private String getJarPath(String entry) {
         try {
@@ -431,7 +426,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in bad.groovy (at line 1)\n" +
             "\t@Category(C.class) \n" +
-            "\t  ^"+(isAtLeastGroovy(20)?"^^^^^^^":"")+"\n" +
+            "\t  ^^^^^^^^\n" +
             "Groovy:@groovy.lang.Category must define \'value\' which is the class to apply this category to @ line 1, column 2.\n" +
             "----------\n" +
             "2. ERROR in bad.groovy (at line 1)\n" +
@@ -441,7 +436,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "3. ERROR in bad.groovy (at line 1)\n" +
             "\t@Category(C.class) \n" +
-            "\t           ^"+(isAtLeastGroovy(20)?"^^^^^^":"")+"\n" +
+            "\t           ^^^^^^^\n" +
             "Groovy:Only classes and closures can be used for attribute \'value\' in @groovy.lang.Category\n" +
             "----------\n" +
             "4. ERROR in bad.groovy (at line 2)\n" +
@@ -451,7 +446,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "5. ERROR in bad.groovy (at line 2)\n" +
             "\t@ScriptMixin(C.class)\n" +
-            "\t ^"+(isAtLeastGroovy(20)?"^^^^^^^^^^":"")+"\n" +
+            "\t ^^^^^^^^^^^\n" +
             "Groovy:class ScriptMixin is not an annotation in @ScriptMixin\n" +
             "----------\n" +
             "6. ERROR in bad.groovy (at line 2)\n" +
@@ -459,12 +454,11 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "\t             ^\n" +
             "Groovy:unable to find class \'C.class\' for annotation attribute constant\n" +
             "----------\n" +
-            (!isAtLeastGroovy(20)?"":
             "7. ERROR in bad.groovy (at line 4)\n" +
             "\t@Override\n" +
             "\t ^^^^^^^^\n" +
             "Groovy:Method \'toString\' from class \'Bad\' does not override method from its superclass or interfaces but is annotated with @Override.\n" +
-            "----------\n"));
+            "----------\n");
     }
 
     @Test
@@ -519,8 +513,6 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testSortable() {
-        assumeTrue(isAtLeastGroovy(23));
-
         String[] sources = {
             "Face.java",
             "public interface Face<T> extends Comparable<T> {\n" +
@@ -571,9 +563,6 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
 
     @Test // lazy option set in Singleton
     public void testSingleton2() {
-        //This test breaks on Groovy < 2.2.1 because the 'strict' flag was introduced in that version.
-        assumeTrue(isAtLeastGroovy(22));
-
         String[] sources = {
             "Goo.groovy",
             "class Goo {\n"+
@@ -604,9 +593,6 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testSingleton3() {
-        //This test breaks on Groovy < 2.2.1 because the 'strict' flag was introduced in that version.
-        assumeTrue(isAtLeastGroovy(22));
-
         String[] sources = {
             "Goo.groovy",
             "class Goo {\n"+
@@ -728,8 +714,6 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "\n"+
             "/**\n"+
             " * Demonstrates how a local transformation works. \n"+
-            " * \n"+
-            " * @author Hamlet D'Arcy\n"+
             " */ \n"+
             "\n"+
             "def greet() {\n"+
@@ -785,8 +769,6 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testAnnotationCollector() {
-        assumeTrue(isAtLeastGroovy(21));
-
         String[] sources = {
             "Book.groovy",
             "import java.lang.reflect.*;\n" +
@@ -845,8 +827,6 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTypeChecked1() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String[] sources = {
             "Foo.groovy",
             "import groovy.transform.TypeChecked\n"+
@@ -862,20 +842,18 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in Foo.groovy (at line 4)\n" +
             "\tif (rareCondition) {\n" +
-            "\t    ^"+(isAtLeastGroovy(20)?"^^^^^^^^^^^^":"")+"\n" +
+            "\t    ^^^^^^^^^^^^^\n" +
             "Groovy:[Static type checking] - The variable [rareCondition] is undeclared.\n" +
             "----------\n" +
             "2. ERROR in Foo.groovy (at line 5)\n" +
             "\tprintln \"Did you spot the error in this ${message.toUppercase()}?\"\n" +
-            "\t                                         ^"+(isAtLeastGroovy(20)?"^^^^^^^^^^^^^^^^^^^^^^":"")+"\n" +
-            "Groovy:[Static type checking] - Cannot find matching method java.lang.String#toUppercase()"+(isAtLeastGroovy(20)?". Please check if the declared type is right and if the method exists.":"")+"\n" +
+            "\t                                         ^^^^^^^^^^^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot find matching method java.lang.String#toUppercase(). Please check if the declared type is right and if the method exists.\n" +
             "----------\n");
     }
 
     @Test
     public void testTypeChecked2() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String[] sources = {
             "Foo.groovy",
             "import groovy.transform.TypeChecked\n"+
@@ -891,16 +869,13 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in Foo.groovy (at line 6)\n" +
             "\tls.add(\'abc\');\n" +
-            "\t^" + (isAtLeastGroovy(20) ? "^^^^^^^^^^^^" : "") + "\n" +
-            (isAtLeastGroovy(23) ? "Groovy:[Static type checking] - Cannot call java.util.ArrayList <Integer>#add(java.lang.Integer) with arguments [java.lang.String] ":
-            "Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)" + (isAtLeastGroovy(20) ? ". Please check if the declared type is right and if the method exists." : "")) + "\n" +
+            "\t^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot call java.util.ArrayList <Integer>#add(java.lang.Integer) with arguments [java.lang.String] \n" +
             "----------\n");
     }
 
     @Test
     public void testTypeChecked3() {
-        assumeTrue(isAtLeastGroovy(21));
-
         String[] sources = {
             "Foo.groovy",
             "@groovy.transform.TypeChecked\n" +
@@ -917,8 +892,6 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testTypeChecked4() {
-        assumeTrue(isAtLeastGroovy(24)); // GROOVY-8033 fixed in Groovy 2.4.9
-
         String[] sources = {
             "Foo.groovy",
             "@groovy.transform.TypeChecked\n" +
@@ -935,8 +908,6 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
 
     @Test @Ignore("VM argument not accepted on CI server")
     public void testTypeChecked1506() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String[] sources = {
             "LoggerTest.groovy",
             "import groovy.transform.*\n"+
@@ -956,8 +927,6 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic1() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String[] sources = {
             "Foo.groovy",
             "import groovy.transform.CompileStatic\n"+
@@ -973,10 +942,8 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in Foo.groovy (at line 6)\n" +
             "\tls.add(\'abc\');\n" +
-            "\t^"+(isAtLeastGroovy(20)?"^^^^^^^^^^^^":"")+"\n" +
-            (isAtLeastGroovy(23)?
-            "Groovy:[Static type checking] - Cannot call java.util.ArrayList <Integer>#add(java.lang.Integer) with arguments [java.lang.String] \n":
-            "Groovy:[Static type checking] - Cannot find matching method java.util.ArrayList#add(java.lang.String)"+(isAtLeastGroovy(20)?". Please check if the declared type is right and if the method exists.":""))+(isAtLeastGroovy(23)?"":"\n") +
+            "\t^^^^^^^^^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot call java.util.ArrayList <Integer>#add(java.lang.Integer) with arguments [java.lang.String] \n" +
             "----------\n");
     }
 
@@ -987,8 +954,6 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
      */
     @Test
     public void testCompileStatic2() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String[] sources = {
             "One.groovy",
             "import groovy.transform.CompileStatic;\n"+
@@ -1023,8 +988,6 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic3() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String[] sources = {
             "Foo.groovy",
             "import groovy.transform.CompileStatic;\n"+
@@ -1040,8 +1003,6 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic4() {
-        assumeTrue(isAtLeastGroovy(20));
-
         // verify generics are correct for the 'Closure<?>' as CompileStatic will attempt an exact match
         String[] sources = {
             "A.groovy",
@@ -1065,8 +1026,6 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic5() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String[] sources = {
             "FlowTyping.groovy",
             "@groovy.transform.CompileStatic\n" +
@@ -1084,8 +1043,6 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
 
     @Test // GROOVY-8337
     public void testCompileStatic6() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String[] sources = {
             "FlowTyping.groovy",
             "@groovy.transform.CompileStatic\n" +
@@ -1102,8 +1059,6 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic7() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String[] sources = {
             "BridgeMethod.groovy",
             "@groovy.transform.CompileStatic\n" +
@@ -1114,19 +1069,11 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "}\n",
         };
 
-        runNegativeTest(sources, isAtLeastGroovy(21) ? "" :
-            "----------\n" +
-            "1. ERROR in BridgeMethod.groovy (at line 3)\n" +
-            "\tif (integer.compareTo(0) == 0)\n" +
-            "\t    ^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Reference to method is ambiguous. Cannot choose between [int java.lang.Integer#compareTo(java.lang.##), int java.lang.Integer#compareTo(java.lang.##)]\n" +
-            "----------\n");
+        runNegativeTest(sources, "");
     }
 
     @Test
     public void testCompileStatic1505() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String[] sources = {
             "DynamicQuery.groovy",
             "import groovy.transform.TypeChecked\n"+
@@ -1148,8 +1095,6 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
 
     @Test @Ignore("VM argument not accepted on CI server")
     public void testCompileStatic1506() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String[] sources = {
             "LoggerTest.groovy",
             "import groovy.transform.*\n"+
@@ -1169,8 +1114,6 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic1511() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String[] sources = {
             "Foo.groovy",
             "@groovy.transform.CompileStatic\n"+
@@ -1188,8 +1131,6 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic1514() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String[] sources = {
             "C.groovy",
             "@SuppressWarnings('rawtypes')\n"+
@@ -1206,8 +1147,6 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic1515() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String[] sources = {
             "C.groovy",
             "import groovy.transform.CompileStatic;\n" +
@@ -1228,8 +1167,6 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileStatic1521() {
-        assumeTrue(isAtLeastGroovy(20));
-
         String[] sources = {
             "Foo.groovy",
             "@groovy.transform.CompileStatic\n"+
@@ -1243,8 +1180,6 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testCompileDynamic() {
-        assumeTrue(isAtLeastGroovy(21));
-
         String[] sources = {
             "A.groovy",
             "@groovy.transform.CompileStatic\n" +
@@ -1337,8 +1272,6 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testJDTClassNode_1731() {
-        assumeTrue(isAtLeastGroovy(21));
-
         // Test code based on article: http://www.infoq.com/articles/groovy-1.5-new
         // The groups of tests are loosely based on the article contents - but what is really exercised here is the accessibility of
         // the described constructs across the Java/Groovy divide.

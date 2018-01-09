@@ -15,9 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
-import static org.junit.Assume.assumeTrue
-
 import groovy.transform.NotYetImplemented
 
 import org.eclipse.jdt.core.SourceRange
@@ -126,7 +123,6 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
 
     @Test
     void testSelectAnnotationClass4() {
-        assumeTrue(isAtLeastGroovy(21)) // CompileDynamic was added in 2.1
         // CompileDynamic is an AnnotationCollector, so it is not in the AST after transformation
         String contents = 'import groovy.transform.CompileDynamic; @CompileDynamic class Type { }'
         assertCodeSelect([contents], 'CompileDynamic')
@@ -134,21 +130,18 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
 
     @Test
     void testSelectAnnotationClass5() {
-        assumeTrue(isAtLeastGroovy(21)) // AnnotationCollector was added in 2.1
         String contents = 'import groovy.transform.*; @AnnotationCollector([EqualsAndHashCode]) public @interface Custom { }'
         assertCodeSelect([contents], 'EqualsAndHashCode')
     }
 
     @Test
     void testSelectAnnotationClass5a() {
-        assumeTrue(isAtLeastGroovy(21)) // AnnotationCollector was added in 2.1
         String contents = 'import groovy.transform.*; @EqualsAndHashCode @AnnotationCollector public @interface Custom { }'
         assertCodeSelect([contents], 'EqualsAndHashCode')
     }
 
     @Test
     void testSelectAnnotationClass6() {
-        assumeTrue(isAtLeastGroovy(21)) // enum constant annotation support was added in 2.1
         String another = 'import java.lang.annotation.*; @Target(ElementType.FIELD) @interface Tag { String value() }'
         String contents = 'enum Foo { @Tag("Bar") Baz }'
         assertCodeSelect([another, contents], 'Tag')
@@ -380,14 +373,12 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
 
     @Test
     void testSelectForEachInParamTypeTC() {
-        assumeTrue(isAtLeastGroovy(20)) // TypeChecked was added in 2.0
         String contents = '@groovy.transform.TypeChecked def m() { List<String> list; for (String s in list) { println s } }'
         assertCodeSelect([contents], 'String')
     }
 
     @Test
     void testSelectForEachInParamTypeCS() {
-        assumeTrue(isAtLeastGroovy(20)) // CompileStatic was added in 2.0
         // @see StaticCompilationVisitor.visitForLoop -- param type is set to class node from 'List<String>', which impacts code select
         String contents = '@groovy.transform.CompileStatic def m() { List<String> list; for (String s in list) { println s } }'
         assertCodeSelect([contents], 'String')
@@ -556,21 +547,18 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
 
     @Test
     void testSelectAnnotationOnMethod2() {
-        assumeTrue(isAtLeastGroovy(20)) // CompileStatic was added in 2.0
         String contents = 'import groovy.transform.*; class Type { @CompileStatic void method() {} }'
         assertCodeSelect([contents], 'CompileStatic')
     }
 
     @Test
     void testSelectAnnotationOnMethod3() {
-        assumeTrue(isAtLeastGroovy(21)) // CompileDynamic was added in 2.1
         String contents = 'import groovy.transform.*; class Type { @CompileDynamic void method() {} }'
         assertCodeSelect([contents], 'CompileDynamic')
     }
 
     @Test
     void testSelectAnnotationOnMethod4() {
-        assumeTrue(isAtLeastGroovy(20)) // TypeChecked was added in 2.0
         String contents = 'import groovy.transform.*; class Type { @TypeChecked(TypeCheckingMode.SKIP) void method() {} }'
         assertCodeSelect([contents], 'TypeChecked')
         assertCodeSelect([contents], 'TypeCheckingMode')

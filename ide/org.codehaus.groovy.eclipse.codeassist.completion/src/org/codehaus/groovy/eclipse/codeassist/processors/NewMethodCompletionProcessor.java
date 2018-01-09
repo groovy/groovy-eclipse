@@ -56,9 +56,10 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
         super(context, javaContext, nameEnvironment);
     }
 
+    @Override
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
         List<MethodNode> unimplementedMethods = getAllUnimplementedMethods(getClassNode());
-        List<ICompletionProposal> proposals = new LinkedList<ICompletionProposal>();
+        List<ICompletionProposal> proposals = new LinkedList<>();
         ContentAssistContext context = getContext();
         IType enclosingType = context.getEnclosingType();
         if (enclosingType != null) {
@@ -149,7 +150,7 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
         return paramNames;
     }
 
-    private Map<ClassNode, GenericsMapper> mappers = new HashMap<ClassNode, GenericsMapper>();
+    private Map<ClassNode, GenericsMapper> mappers = new HashMap<>();
 
     private String[] getParameterTypeNames(MethodNode method) {
         // need to keep track of generic types
@@ -217,7 +218,7 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
     private List<MethodNode> getAllUnimplementedMethods(ClassNode declaring) {
         List<MethodNode> allMethods = declaring.getAllDeclaredMethods();
         List<MethodNode> thisClassMethods = declaring.getMethods();
-        List<MethodNode> unimplementedMethods = new ArrayList<MethodNode>(allMethods.size()-thisClassMethods.size());
+        List<MethodNode> unimplementedMethods = new ArrayList<>(allMethods.size()-thisClassMethods.size());
 
         // uggh n^2 loop.  Can be made more efficient by doing declaring.getMethods(allMethodNode.getName())
         for (MethodNode allMethodNode : allMethods) {

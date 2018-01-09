@@ -90,6 +90,7 @@ public class TryStatement extends SubRoutineStatement {
 	private ExceptionLabel[] resourceExceptionLabels;
 	private int[] caughtExceptionsCatchBlocks;
 
+@Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 
 	// Consider the try block and catch block so as to compute the intersection of initializations and
@@ -439,24 +440,28 @@ private boolean isUncheckedCatchBlock(int catchBlock) {
 	return false;
 }
 
+@Override
 public ExceptionLabel enterAnyExceptionHandler(CodeStream codeStream) {
 	if (this.subRoutineStartLabel == null)
 		return null;
 	return super.enterAnyExceptionHandler(codeStream);
 }
 
+@Override
 public void enterDeclaredExceptionHandlers(CodeStream codeStream) {
 	for (int i = 0, length = this.declaredExceptionLabels == null ? 0 : this.declaredExceptionLabels.length; i < length; i++) {
 		this.declaredExceptionLabels[i].placeStart();
 	}
 }
 
+@Override
 public void exitAnyExceptionHandler() {
 	if (this.subRoutineStartLabel == null)
 		return;
 	super.exitAnyExceptionHandler();
 }
 
+@Override
 public void exitDeclaredExceptionHandlers(CodeStream codeStream) {
 	for (int i = 0, length = this.declaredExceptionLabels == null ? 0 : this.declaredExceptionLabels.length; i < length; i++) {
 		this.declaredExceptionLabels[i].placeEnd();
@@ -479,6 +484,7 @@ private int finallyMode() {
  *	post 1.5 target level, cannot use jsr bytecode, must instead inline finally block
  * returnAddress is only allocated if jsr is allowed
  */
+@Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	if ((this.bits & ASTNode.IsReachable) == 0) {
 		return;
@@ -930,6 +936,7 @@ private boolean isDuplicateResourceReference(int index) {
 /**
  * @see SubRoutineStatement#generateSubRoutineInvocation(BlockScope, CodeStream, Object, int, LocalVariableBinding)
  */
+@Override
 public boolean generateSubRoutineInvocation(BlockScope currentScope, CodeStream codeStream, Object targetLocation, int stateIndex, LocalVariableBinding secretLocal) {
 
 	int resourceCount = this.resources.length;
@@ -1025,10 +1032,12 @@ public boolean generateSubRoutineInvocation(BlockScope currentScope, CodeStream 
 	}
 	return false;
 }
+@Override
 public boolean isSubRoutineEscaping() {
 	return (this.bits & ASTNode.IsSubRoutineEscaping) != 0;
 }
 
+@Override
 public StringBuffer printStatement(int indent, StringBuffer output) {
 	int length = this.resources.length;
 	printIndent(indent, output).append("try" + (length == 0 ? "\n" : " (")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -1066,6 +1075,7 @@ public StringBuffer printStatement(int indent, StringBuffer output) {
 	return output;
 }
 
+@Override
 public void resolve(BlockScope upperScope) {
 	// special scope for secret locals optimization.
 	this.scope = new BlockScope(upperScope);
@@ -1207,6 +1217,7 @@ public void resolve(BlockScope upperScope) {
 		this.scope.addSubscope(finallyScope);
 	}
 }
+@Override
 public void traverse(ASTVisitor visitor, BlockScope blockScope) {
 	if (visitor.visit(this, blockScope)) {
 		Statement[] statements = this.resources;

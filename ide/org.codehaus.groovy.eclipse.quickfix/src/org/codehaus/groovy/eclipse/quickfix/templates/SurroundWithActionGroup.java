@@ -1,3 +1,18 @@
+/*
+ * Copyright 2009-2017 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 // Copied from org.eclipse.jdt.internal.ui.actions.SurroundWithActionGroup version 3.8.2
 /*******************************************************************************
  * Copyright (c) 2000, 2011 IBM Corporation and others.
@@ -16,7 +31,6 @@ package org.codehaus.groovy.eclipse.quickfix.templates;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.eclipse.jdt.internal.ui.actions.ActionMessages;
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.text.ITextSelection;
@@ -26,43 +40,38 @@ import org.eclipse.ui.actions.ActionGroup;
 
 public class SurroundWithActionGroup extends ActionGroup {
 
-	private GroovyEditor fEditor;
-	private final String fGroup;
+    private GroovyEditor fEditor;
+    private final String fGroup;
 
-	public SurroundWithActionGroup(GroovyEditor editor, String group) {
-		fEditor= editor;
-		fGroup= group;
-	}
+    public SurroundWithActionGroup(GroovyEditor editor, String group) {
+        fEditor = editor;
+        fGroup = group;
+    }
 
-	/**
-	 * The Menu to show when right click on the editor
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void fillContextMenu(IMenuManager menu) {
-		ISelectionProvider selectionProvider= fEditor.getSelectionProvider();
-		if (selectionProvider == null)
-			return;
+    /**
+     * The Menu to show when right click on the editor
+     * {@inheritDoc}
+     */
+    @Override
+    public void fillContextMenu(IMenuManager menu) {
+        ISelectionProvider selectionProvider = fEditor.getSelectionProvider();
+        if (selectionProvider == null)
+            return;
 
-		ISelection selection= selectionProvider.getSelection();
-		if (!(selection instanceof ITextSelection))
-			return;
+        ISelection selection = selectionProvider.getSelection();
+        if (!(selection instanceof ITextSelection))
+            return;
 
-//		ITextSelection textSelection= (ITextSelection)selection;
-//		if (textSelection.getLength() == 0)
-//			return;
+        String menuText = ActionMessages.SurroundWithTemplateMenuAction_SurroundWithTemplateSubMenuName;
 
-		String menuText= ActionMessages.SurroundWithTemplateMenuAction_SurroundWithTemplateSubMenuName;
-
-		MenuManager subMenu = new MenuManager(menuText, SurroundWithTemplateMenuAction.SURROUND_WITH_QUICK_MENU_ACTION_ID);
-		subMenu.setActionDefinitionId(SurroundWithTemplateMenuAction.SURROUND_WITH_QUICK_MENU_ACTION_ID);
-		menu.appendToGroup(fGroup, subMenu);
-		subMenu.add(new Action() {});
-		subMenu.addMenuListener(new IMenuListener() {
-			public void menuAboutToShow(IMenuManager manager) {
-				manager.removeAll();
-				SurroundWithTemplateMenuAction.fillMenu(manager, fEditor);
-			}
-		});
-	}
+        MenuManager subMenu = new MenuManager(menuText, SurroundWithTemplateMenuAction.SURROUND_WITH_QUICK_MENU_ACTION_ID);
+        subMenu.setActionDefinitionId(SurroundWithTemplateMenuAction.SURROUND_WITH_QUICK_MENU_ACTION_ID);
+        menu.appendToGroup(fGroup, subMenu);
+        subMenu.add(new Action() {
+        });
+        subMenu.addMenuListener(manager -> {
+            manager.removeAll();
+            SurroundWithTemplateMenuAction.fillMenu(manager, fEditor);
+        });
+    }
 }

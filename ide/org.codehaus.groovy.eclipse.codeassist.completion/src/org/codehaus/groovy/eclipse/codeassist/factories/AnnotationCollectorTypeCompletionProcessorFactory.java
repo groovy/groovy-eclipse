@@ -44,6 +44,7 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
  */
 public class AnnotationCollectorTypeCompletionProcessorFactory implements IGroovyCompletionProcessorFactory {
 
+    @Override
     public IGroovyCompletionProcessor createProcessor(ContentAssistContext context,
             final JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
 

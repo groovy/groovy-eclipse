@@ -23,6 +23,7 @@ import java.util.List;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.IBreakpointManager;
@@ -53,12 +54,11 @@ public class GroovyBreakpointRulerAction extends Action {
     private final IEditorStatusLine fStatusLine;
     private final ToggleBreakpointAdapter fBreakpointAdapter;
 
-    @SuppressWarnings("cast")
     public GroovyBreakpointRulerAction(IVerticalRulerInfo ruler, ITextEditor editor, IEditorPart editorPart) {
         super("Toggle &Breakpoint");
         fRuler = ruler;
         fTextEditor = editor;
-        fStatusLine = (IEditorStatusLine) editorPart.getAdapter(IEditorStatusLine.class);
+        fStatusLine = Adapters.adapt(editorPart, IEditorStatusLine.class);
         fBreakpointAdapter = new ToggleBreakpointAdapter();
     }
 
@@ -67,6 +67,7 @@ public class GroovyBreakpointRulerAction extends Action {
         fRuler = null;
     }
 
+    @Override
     public void run() {
         try {
             List<IMarker> list = getMarkers();
@@ -127,7 +128,7 @@ public class GroovyBreakpointRulerAction extends Action {
                         if (breakpoint != null && breakpointManager.isRegistered(breakpoint) &&
                                 includesRulerLine(((AbstractMarkerAnnotationModel) model).getMarkerPosition(marker), document)) {
                             if (breakpoints.isEmpty())
-                                breakpoints = new ArrayList<IMarker>();
+                                breakpoints = new ArrayList<>();
                             breakpoints.add(marker);
                         }
                     }
@@ -163,14 +164,12 @@ public class GroovyBreakpointRulerAction extends Action {
     }
 
     protected void report(final String message) {
-        JDIDebugUIPlugin.getStandardDisplay().asyncExec(new Runnable() {
-            public void run() {
-                if (fStatusLine != null) {
-                    fStatusLine.setMessage(true, message, null);
-                }
-                if (message != null && JDIDebugUIPlugin.getActiveWorkbenchShell() != null) {
-                    Display.getCurrent().beep();
-                }
+        JDIDebugUIPlugin.getStandardDisplay().asyncExec(() -> {
+            if (fStatusLine != null) {
+                fStatusLine.setMessage(true, message, null);
+            }
+            if (message != null && JDIDebugUIPlugin.getActiveWorkbenchShell() != null) {
+                Display.getCurrent().beep();
             }
         });
     }

@@ -27,18 +27,22 @@ public class CharArraySequence implements CharSequence {
         this.chars = chars;
     }
 
+    @Override
     public char charAt(int offset) {
         return chars[offset];
     }
 
+    @Override
     public int length() {
         return chars.length;
     }
 
+    @Override
     public CharSequence subSequence(int start, int until) {
         return new CharArraySequence(CharOperation.subarray(chars, start, until));
     }
 
+    @Override
     public String toString() {
         return String.valueOf(chars);
     }

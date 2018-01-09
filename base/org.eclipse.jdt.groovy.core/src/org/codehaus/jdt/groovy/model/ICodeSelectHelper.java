@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,13 +23,11 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.IJavaElement;
 
 /**
- * @author Andrew Eisenberg
- * @created May 26, 2009
- *
- *          Performs code select in a Groovy-aware way.
+ * Performs code select in a Groovy-aware way.
  */
+@FunctionalInterface
 public interface ICodeSelectHelper {
-    public IJavaElement[] select(GroovyCompilationUnit unit, int start, int length);
+    IJavaElement[] select(GroovyCompilationUnit unit, int start, int length);
 }
 
 class CodeSelectHelperFactory {

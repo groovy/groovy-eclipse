@@ -21,7 +21,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
 import java.util.Iterator;
@@ -51,10 +50,6 @@ import org.junit.Test;
 
 public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
-    public GroovySimpleTests(long level) {
-        super(level);
-    }
-
     @Test
     public void testClosureSyntax() {
         runNegativeTest(new String[] {
@@ -83,8 +78,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testGreclipse1521_pre() {
-        assumeTrue(isAtLeastGroovy(20));
-
         runConformTest(new String[] {
             "Color.groovy",
             "enum Color { R,G,B }\n",
@@ -133,7 +126,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in A.groovy (at line 2)\n" +
         "\tclass Foo {}\n" +
-        "\t^" + (isAtLeastGroovy(20) ? "^^^^^^^^^^^" : "") + "\n" +
+        "\t^^^^^^^^^^^^\n" +
         "Groovy:Invalid duplicate class definition of class Foo : The source A.groovy contains at least two definitions of the class Foo.\n" +
         "----------\n" +
         "2. ERROR in A.groovy (at line 2)\n" +
@@ -272,9 +265,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in Foo.groovy (at line 1)\n" +
         "\tclass Foo {}\n" +
-        "\t ^"+(isAtLeastGroovy(20)?"^^^^^^^^^^":"")+"\n" +
-        "Groovy:Invalid duplicate class definition of class Foo : The sources Foo.groovy and A.groovy "+
-        (isAtLeastGroovy(22) ? "each contain a class with the name" : "are containing both a class of the name") + " Foo.\n" +
+        "\t ^^^^^^^^^^^\n" +
+        "Groovy:Invalid duplicate class definition of class Foo : The sources Foo.groovy and A.groovy each contain a class with the name Foo.\n" +
         "----------\n" +
         "2. ERROR in Foo.groovy (at line 1)\n" +
         "\tclass Foo {}\n" +
@@ -297,7 +289,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in a\\Foo.groovy (at line 3)\n" +
         "\tclass Foo {}\n" +
-        "\t^"+(isAtLeastGroovy(20)?"^^^^^^^^^^^":"")+"\n" +
+        "\t^^^^^^^^^^^^\n" +
         "Groovy:Invalid duplicate class definition of class a.Foo : The source a"+File.separator+"Foo.groovy contains at least two definitions of the class a.Foo.\n" +
         "----------\n" +
         "2. ERROR in a\\Foo.groovy (at line 3)\n" +
@@ -1177,8 +1169,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test // GROOVY-4219
     public void testGRE637() {
-        assumeTrue(isAtLeastGroovy(22));
-
         runConformTest(new String[] {
             "de/brazzy/nikki/Texts.java",
             "package de.brazzy.nikki;\n"+
@@ -1321,8 +1311,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testEnumPositions_GRE1072() {
-        assumeTrue(isAtLeastGroovy(20));
-
         runConformTest(new String[] {
             "Color.groovy",
             "enum Color {\n" +
@@ -2408,7 +2396,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in T.groovy (at line 3)\n" +
         "\tthis \"\"\n" +
-        "\t     ^"+(isAtLeastGroovy(20)?"^":"")+"\n" +
+        "\t     ^^\n" +
         "Groovy:Constructor call must be the first statement in a constructor. at line: 3 column: 8. File: T.groovy @ line 3, column 8.\n" +
         "----------\n");
     }
@@ -4110,7 +4098,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in p\\Code.groovy (at line 5)\n" +
         "\tpublic void m(String s, Integer i =3) {}\n" +
-        "\t^"+(isAtLeastGroovy(20)?"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^":"")+"\n" +
+        "\t^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
         "Groovy:The method with default parameters \"void m(java.lang.String, java.lang.Integer)\" defines a method \"void m(java.lang.String)\" that is already defined.\n"+
         "----------\n"
         );
@@ -4613,8 +4601,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testExtraImports2() {
-        assumeTrue(isAtLeastGroovy(21));
-
         Map<String, String> options = getCompilerOptions();
         options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
             "withConfig(configuration) {\n" +
@@ -4645,8 +4631,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testExtraImports3() {
-        assumeTrue(isAtLeastGroovy(21));
-
         Map<String, String> options = getCompilerOptions();
         options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
             "withConfig(configuration) {\n" +
@@ -4677,8 +4661,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testExtraImports4() {
-        assumeTrue(isAtLeastGroovy(21));
-
         Map<String, String> options = getCompilerOptions();
         options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
             "withConfig(configuration) {\n" +
@@ -4717,8 +4699,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testExtraImports_extensionFilter1() {
-        assumeTrue(isAtLeastGroovy(21));
-
         Map<String, String> options = getCompilerOptions();
         options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
             "withConfig(configuration) {\n" +
@@ -4750,8 +4730,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testExtraImports_extensionFilter2() {
-        assumeTrue(isAtLeastGroovy(21));
-
         Map<String, String> options = getCompilerOptions();
         options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
             "withConfig(configuration) {\n" +
@@ -4783,8 +4761,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testExtraImports_extensionFilter3() {
-        assumeTrue(isAtLeastGroovy(21));
-
         Map<String, String> options = getCompilerOptions();
         options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
             "withConfig(configuration) {\n" +
@@ -4824,8 +4800,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testExtraImports_nonMatchingSuffix() {
-        assumeTrue(isAtLeastGroovy(21));
-
         Map<String, String> options = getCompilerOptions();
         options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
             "withConfig(configuration) {\n" +
@@ -4863,8 +4837,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testExtraImports_typeDoesNotExist() {
-        assumeTrue(isAtLeastGroovy(21));
-
         Map<String, String> options = getCompilerOptions();
         options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
             "withConfig(configuration) {\n" +
@@ -4912,8 +4884,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testExtraImports_packageDoesNotExist() {
-        assumeTrue(isAtLeastGroovy(21));
-
         Map<String, String> options = getCompilerOptions();
         options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
             "withConfig(configuration) {\n" +
@@ -4950,8 +4920,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testExtraImports_mixedAdditions() {
-        assumeTrue(isAtLeastGroovy(21));
-
         Map<String, String> options = getCompilerOptions();
         options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
             "withConfig(configuration) {\n" +
@@ -5490,8 +5458,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testParsingBlankImport_538() throws Exception {
-        assumeTrue(isAtLeastGroovy(21));
-
         runNegativeTest(new String[] {
                 "A.groovy",
                 "import "
@@ -5659,8 +5625,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testParsingBlankImportFollowedByClassDeclaration_538() throws Exception {
-        assumeTrue(isAtLeastGroovy(21));
-
         runNegativeTest(new String[] {
                 "A.groovy",
                 "import\n"+
@@ -5803,8 +5767,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testAbstractMethodWithinEnum_STS3803() {
-        assumeTrue(isAtLeastGroovy(21));
-
         runConformTest(new String[] {
             "Bad.groovy",
             "enum Bad {\n" +

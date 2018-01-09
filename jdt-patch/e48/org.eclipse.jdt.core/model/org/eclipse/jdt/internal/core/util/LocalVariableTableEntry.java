@@ -61,6 +61,7 @@ public class LocalVariableTableEntry extends ClassFileStruct implements ILocalVa
 	/**
 	 * @see ILocalVariableTableEntry#getStartPC()
 	 */
+	@Override
 	public int getStartPC() {
 		return this.startPC;
 	}
@@ -68,6 +69,7 @@ public class LocalVariableTableEntry extends ClassFileStruct implements ILocalVa
 	/**
 	 * @see ILocalVariableTableEntry#getLength()
 	 */
+	@Override
 	public int getLength() {
 		return this.length;
 	}
@@ -75,6 +77,7 @@ public class LocalVariableTableEntry extends ClassFileStruct implements ILocalVa
 	/**
 	 * @see ILocalVariableTableEntry#getNameIndex()
 	 */
+	@Override
 	public int getNameIndex() {
 		return this.nameIndex;
 	}
@@ -82,6 +85,7 @@ public class LocalVariableTableEntry extends ClassFileStruct implements ILocalVa
 	/**
 	 * @see ILocalVariableTableEntry#getDescriptorIndex()
 	 */
+	@Override
 	public int getDescriptorIndex() {
 		return this.descriptorIndex;
 	}
@@ -89,6 +93,7 @@ public class LocalVariableTableEntry extends ClassFileStruct implements ILocalVa
 	/**
 	 * @see ILocalVariableTableEntry#getIndex()
 	 */
+	@Override
 	public int getIndex() {
 		return this.index;
 	}
@@ -96,6 +101,7 @@ public class LocalVariableTableEntry extends ClassFileStruct implements ILocalVa
 	/**
 	 * @see ILocalVariableTableEntry#getName()
 	 */
+	@Override
 	public char[] getName() {
 		return this.name;
 	}
@@ -103,6 +109,7 @@ public class LocalVariableTableEntry extends ClassFileStruct implements ILocalVa
 	/**
 	 * @see ILocalVariableTableEntry#getDescriptor()
 	 */
+	@Override
 	public char[] getDescriptor() {
 		return this.descriptor;
 	}

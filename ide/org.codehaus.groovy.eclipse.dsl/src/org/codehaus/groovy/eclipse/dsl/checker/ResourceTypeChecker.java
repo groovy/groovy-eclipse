@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,12 +40,10 @@ import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
- * Performs static checking on all groovy files contained in the resource passed in
- * @author andrew
- * @created Aug 29, 2011
+ * Performs static checking on all groovy files contained in the resource passed in.
  */
 public class ResourceTypeChecker {
-    
+
     class CheckerVisitor implements IResourceVisitor {
         private IProgressMonitor monitor;
 
@@ -53,18 +51,19 @@ public class ResourceTypeChecker {
             this.monitor = monitor;
         }
 
+        @Override
         public boolean visit(IResource resource) throws CoreException {
             if (resource.isDerived()) {
                 return false;
             }
-            
+
             handler.handleResourceStart(resource);
-            
+
             if (resource.getType() == IResource.FILE && ContentTypeUtils.isGroovyLikeFileName(resource.getName())) {
                 if (Util.isExcluded(resource, includes, excludes)) {
                     return false;
                 }
-                
+
                 GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.create((IFile) resource);
                 if (unit != null && unit.isOnBuildPath()) {
                     if (monitor.isCanceled()) {
@@ -88,7 +87,7 @@ public class ResourceTypeChecker {
 
         private Map<Integer, String> findComments(GroovyCompilationUnit unit) {
             List<Comment> comments = unit.getModuleNode().getContext().getComments();
-            Map<Integer, String> allComments = new HashMap<Integer, String>(comments.size());
+            Map<Integer, String> allComments = new HashMap<>(comments.size());
             for (Comment comment : comments) {
                 StringTokenizer stok = new StringTokenizer(comment.toString());
                 String type = null;
@@ -122,14 +121,14 @@ public class ResourceTypeChecker {
             return allComments;
         }
     }
-    
+
     private final IStaticCheckerHandler handler;
     private final List<IResource> resources;
 
     protected boolean onlyAssertions;
     protected final char[][] includes;
     protected final char[][] excludes;
-    
+
     public ResourceTypeChecker(IStaticCheckerHandler handler, String projectName, char[][] includes, char[][] excludes, boolean onlyAssertions) {
         this(handler, createProject(projectName), includes, excludes, onlyAssertions);
     }

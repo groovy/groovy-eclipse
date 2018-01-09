@@ -153,12 +153,14 @@ DOMField(char[] document, int[] sourceRange, String name, int[] nameRange, int f
  *
  * @see DOMMember#appendMemberBodyContents(CharArrayBuffer)
  */
+@Override
 protected void appendMemberBodyContents(CharArrayBuffer buffer) {
 	// nothing to do
 }
 /**
  * @see DOMMember#appendMemberDeclarationContents(CharArrayBuffer)
  */
+@Override
 protected void appendMemberDeclarationContents(CharArrayBuffer buffer) {
 
 	if (isVariableDeclarator()) {
@@ -199,6 +201,7 @@ protected void appendMemberDeclarationContents(CharArrayBuffer buffer) {
  *
  * @see DOMMember#appendMemberHeaderFragment(CharArrayBuffer)
  */
+@Override
 protected void appendMemberHeaderFragment(CharArrayBuffer buffer) {
 
 	if (isVariableDeclarator()) {
@@ -211,6 +214,7 @@ protected void appendMemberHeaderFragment(CharArrayBuffer buffer) {
 /**
  * @see DOMMember#appendSimpleContents(CharArrayBuffer)
  */
+@Override
 protected void appendSimpleContents(CharArrayBuffer buffer) {
 	// append eveything before my name
 	buffer.append(this.fDocument, this.fSourceRange[0], this.fNameRange[0] - this.fSourceRange[0]);
@@ -225,6 +229,7 @@ protected void appendSimpleContents(CharArrayBuffer buffer) {
  * @exception DOMException if unable to generate detailed source indexes
  * 	for this node
  */
+@Override
 protected void becomeDetailed() throws DOMException {
 	if (!isDetailed()) {
 		if (isVariableDeclarator() || hasMultipleVariableDeclarators()) {
@@ -256,6 +261,7 @@ protected void becomeDetailed() throws DOMException {
 /**
  * @see IDOMNode#clone()
  */
+@Override
 public Object clone() {
 	if (isVariableDeclarator() || hasMultipleVariableDeclarators()) {
 		return getFactory().createField(new String(getSingleVariableDeclaratorContents()));
@@ -286,6 +292,7 @@ protected void expand() {
 /**
  * @see DOMNode#getDetailedNode()
  */
+@Override
 protected DOMNode getDetailedNode() {
 	if (isVariableDeclarator() || hasMultipleVariableDeclarators()) {
 		return (DOMNode)getFactory().createField(new String(getSingleVariableDeclaratorContents()));
@@ -307,6 +314,7 @@ protected DOMField getFirstFieldDeclaration() {
 /**
  * @see IDOMField#getInitializer()
  */
+@Override
 public String getInitializer() {
 	becomeDetailed();
 	if (hasInitializer()) {
@@ -322,6 +330,7 @@ public String getInitializer() {
 /**
  * @see IDOMNode#getJavaElement
  */
+@Override
 public IJavaElement getJavaElement(IJavaElement parent) throws IllegalArgumentException {
 	if (parent.getElementType() == IJavaElement.TYPE) {
 		return ((IType)parent).getField(getName());
@@ -346,12 +355,14 @@ protected DOMField getLastFieldDeclaration() {
 /**
  * @see DOMMember#getMemberDeclarationStartPosition()
  */
+@Override
 protected int getMemberDeclarationStartPosition() {
 	return this.fTypeRange[0];
 }
 /**
  * @see IDOMNode#getNodeType()
  */
+@Override
 public int getNodeType() {
 	return IDOMNode.FIELD;
 }
@@ -399,6 +410,7 @@ protected char[] getSingleVariableDeclaratorContents() {
 /**
  * @see IDOMField#getType()
  */
+@Override
 public String getType() {
 	return this.fType;
 }
@@ -437,6 +449,7 @@ protected boolean hasMultipleVariableDeclarators() {
  *
  * @see IDOMNode#insertSibling(IDOMNode)
  */
+@Override
 public void insertSibling(IDOMNode sibling) throws IllegalArgumentException, DOMException {
 	if (isVariableDeclarator()) {
 		expand();
@@ -460,12 +473,14 @@ protected boolean isVariableDeclarator() {
 /**
  * @see DOMNode
  */
+@Override
 protected DOMNode newDOMNode() {
 	return new DOMField();
 }
 /**
  * Normalizes this <code>DOMNode</code>'s end position.
  */
+@Override
 void normalizeEndPosition(ILineStartFinder finder, DOMNode next) {
 	if (next == null) {
 		// this node's end position includes all of the characters up
@@ -497,6 +512,7 @@ void normalizeEndPosition(ILineStartFinder finder, DOMNode next) {
 /**
  * Normalizes this <code>DOMNode</code>'s start position.
  */
+@Override
 void normalizeStartPosition(int endPosition, ILineStartFinder finder) {
 	if (isVariableDeclarator()) {
 		// start position is end of last element
@@ -508,6 +524,7 @@ void normalizeStartPosition(int endPosition, ILineStartFinder finder) {
 /**
  * Offsets all the source indexes in this node by the given amount.
  */
+@Override
 protected void offset(int offset) {
 	super.offset(offset);
 	offsetRange(this.fInitializerRange, offset);
@@ -522,6 +539,7 @@ protected void offset(int offset) {
  *
  * @see IDOMNode#remove()
  */
+@Override
 public void remove() {
 	expand();
 	super.remove();
@@ -529,6 +547,7 @@ public void remove() {
 /**
  * @see IDOMMember#setComment(String)
  */
+@Override
 public void setComment(String comment) {
 	expand();
 	super.setComment(comment);
@@ -536,6 +555,7 @@ public void setComment(String comment) {
 /**
  * @see IDOMMember#setFlags(int)
  */
+@Override
 public void setFlags(int flags) {
 	expand();
 	super.setFlags(flags);
@@ -550,6 +570,7 @@ protected void setHasInitializer(boolean hasInitializer) {
 /**
  * @see IDOMField#setInitializer(String)
  */
+@Override
 public void setInitializer(String initializer) {
 	becomeDetailed();
 	fragment();
@@ -574,6 +595,7 @@ protected void setIsVariableDeclarator(boolean isVariableDeclarator) {
 /**
  * @see IDOMField#setName(String)
  */
+@Override
 public void setName(String name) throws IllegalArgumentException {
 	if (name == null) {
 		throw new IllegalArgumentException(Messages.element_nullName);
@@ -585,6 +607,7 @@ public void setName(String name) throws IllegalArgumentException {
 /**
  * @see IDOMField#setType(String)
  */
+@Override
 public void setType(String typeName) throws IllegalArgumentException {
 	if (typeName == null) {
 		throw new IllegalArgumentException(Messages.element_nullType);
@@ -606,6 +629,7 @@ protected void setTypeAltered(boolean typeAltered) {
 /**
  * @see DOMNode#shareContents(DOMNode)
  */
+@Override
 protected void shareContents(DOMNode node) {
 	super.shareContents(node);
 	DOMField field= (DOMField)node;
@@ -617,6 +641,7 @@ protected void shareContents(DOMNode node) {
 /**
  * @see IDOMNode#toString()
  */
+@Override
 public String toString() {
 	return "FIELD: " + getName(); //$NON-NLS-1$
 }

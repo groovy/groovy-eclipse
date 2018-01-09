@@ -17,10 +17,6 @@ package org.codehaus.groovy.eclipse.dsl;
 
 import java.util.Set;
 
-/**
- * @author andrew
- * @created Feb 28, 2011
- */
 public class DisabledScriptsCache {
 
     private Set<String> disabled;

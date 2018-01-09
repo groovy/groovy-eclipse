@@ -35,13 +35,8 @@ public InnerClassInfo(byte classFileBytes[], int offsets[], int offset) {
 	this.outerClassNameIndex = u2At(2);
 	this.innerNameIndex = u2At(4);
 }
-/**
- * Answer the resolved name of the enclosing type in the
- * class file format as specified in section 4.2 of the Java 2 VM spec.
- *
- * For example, java.lang.String is java/lang/String.
- * @return char[]
- */
+
+@Override
 public char[] getEnclosingTypeName() {
 	if (!this.readOuterClassName) {
 		// read outer class name
@@ -57,11 +52,8 @@ public char[] getEnclosingTypeName() {
 	}
 	return this.outerClassName;
 }
-/**
- * Answer an int whose bits are set according the access constants
- * defined by the VM spec.
- * @return int
- */
+
+@Override
 public int getModifiers() {
 	if (this.accessFlags == -1) {
 		// read access flag
@@ -69,13 +61,8 @@ public int getModifiers() {
 	}
 	return this.accessFlags;
 }
-/**
- * Answer the resolved name of the member type in the
- * class file format as specified in section 4.2 of the Java 2 VM spec.
- *
- * For example, p1.p2.A.M is p1/p2/A$M.
- * @return char[]
- */
+
+@Override
 public char[] getName() {
 	if (!this.readInnerClassName) {
 		// read the inner class name
@@ -108,6 +95,7 @@ public char[] getSourceName() {
  * Answer the string representation of the receiver
  * @return java.lang.String
  */
+@Override
 public String toString() {
 	StringBuffer buffer = new StringBuffer();
 	if (getName() != null) {

@@ -37,6 +37,7 @@ public class BuildJarIndex extends Task {
 	private String jarPath;
 	private String indexPath;
 
+	@Override
 	public void execute() throws BuildException {
 		if (this.jarPath == null) {
 			throw new BuildException(AntAdapterMessages.getString("buildJarIndex.jarFile.cannot.be.null")); //$NON-NLS-1$

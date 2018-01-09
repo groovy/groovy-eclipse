@@ -33,12 +33,14 @@ public MoveResourceElementsOperation(IJavaElement[] elementsToMove, IJavaElement
 /**
  * @see MultiOperation
  */
+@Override
 protected String getMainTaskName() {
 	return Messages.operation_moveResourceProgress;
 }
 /**
  * @see CopyResourceElementsOperation#isMove()
  */
+@Override
 protected boolean isMove() {
 	return true;
 }

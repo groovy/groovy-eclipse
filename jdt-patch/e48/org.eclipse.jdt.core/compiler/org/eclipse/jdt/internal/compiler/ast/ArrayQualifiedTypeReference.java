@@ -36,11 +36,13 @@ public class ArrayQualifiedTypeReference extends QualifiedTypeReference {
 			this.bits |= ASTNode.HasTypeAnnotations;
 	}
 
+	@Override
 	public int dimensions() {
 
 		return this.dimensions;
 	}
 	
+	@Override
 	public int extraDimensions() {
 		return this.extendedDimensions;
 	}
@@ -48,6 +50,7 @@ public class ArrayQualifiedTypeReference extends QualifiedTypeReference {
 	/**
 	 @see org.eclipse.jdt.internal.compiler.ast.TypeReference#getAnnotationsOnDimensions(boolean)
 	*/
+	@Override
 	public Annotation[][] getAnnotationsOnDimensions(boolean useSourceOrder) {
 		if (useSourceOrder || this.annotationsOnDimensions == null || this.annotationsOnDimensions.length == 0 || this.extendedDimensions == 0 || this.extendedDimensions == this.dimensions)
 			return this.annotationsOnDimensions;
@@ -58,6 +61,7 @@ public class ArrayQualifiedTypeReference extends QualifiedTypeReference {
 		return externalAnnotations;
 	}
 	
+	@Override
 	public void setAnnotationsOnDimensions(Annotation [][] annotationsOnDimensions) {
 		this.annotationsOnDimensions = annotationsOnDimensions;
 	}
@@ -65,6 +69,7 @@ public class ArrayQualifiedTypeReference extends QualifiedTypeReference {
 	/**
 	 * @return char[][]
 	 */
+	@Override
 	public char [][] getParameterizedTypeName(){
 		int dim = this.dimensions;
 		char[] dimChars = new char[dim*2];
@@ -80,6 +85,7 @@ public class ArrayQualifiedTypeReference extends QualifiedTypeReference {
 		return qParamName;
 	}
 
+	@Override
 	protected TypeBinding getTypeBinding(Scope scope) {
 
 		if (this.resolvedType != null)
@@ -103,6 +109,7 @@ public class ArrayQualifiedTypeReference extends QualifiedTypeReference {
 		}
 	}
 
+	@Override
 	protected TypeBinding internalResolveType(Scope scope, int location) {
 		TypeBinding internalResolveType = super.internalResolveType(scope, location);
 		internalResolveType = ArrayTypeReference.maybeMarkArrayContentsNonNull(scope, internalResolveType, this.sourceStart, this.dimensions, null);
@@ -110,6 +117,7 @@ public class ArrayQualifiedTypeReference extends QualifiedTypeReference {
 		return internalResolveType;
 	}
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output){
 
 		super.printExpression(indent, output);
@@ -141,6 +149,7 @@ public class ArrayQualifiedTypeReference extends QualifiedTypeReference {
 		return output;
 	}
 
+	@Override
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		if (visitor.visit(this, scope)) {
 			if (this.annotations != null) {
@@ -164,6 +173,7 @@ public class ArrayQualifiedTypeReference extends QualifiedTypeReference {
 		visitor.endVisit(this, scope);
 	}
 
+	@Override
 	public void traverse(ASTVisitor visitor, ClassScope scope) {
 		if (visitor.visit(this, scope)) {
 			if (this.annotations != null) {

@@ -47,6 +47,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
         super.accept0(visitor);
     }
 
+    @Override
     public List getCommentList() {
         // prevent NullPointerExceptions down-stream
         return super.getCommentList() != null ? super.getCommentList() : Collections.emptyList();

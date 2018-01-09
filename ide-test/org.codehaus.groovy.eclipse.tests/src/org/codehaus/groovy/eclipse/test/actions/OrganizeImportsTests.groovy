@@ -15,9 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.test.actions
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
-import static org.junit.Assume.assumeTrue
-
 import org.junit.Ignore
 import org.junit.Test
 
@@ -523,7 +520,6 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
 
     @Test
     void testRetainImport9() {
-        assumeTrue(isAtLeastGroovy(21))
         String contents = '''\
             import groovy.transform.AnnotationCollector
             import groovy.transform.EqualsAndHashCode
@@ -538,7 +534,6 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
 
     @Test
     void testRetainImport9a() {
-        assumeTrue(isAtLeastGroovy(21))
         String contents = '''\
             import groovy.transform.AnnotationCollector
             import groovy.transform.EqualsAndHashCode
@@ -1117,7 +1112,6 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
 
     @Test
     void testCompileDynamicImport1() {
-        assumeTrue(isAtLeastGroovy(21))
         String contents = '''
             @CompileDynamic
             public void x() {
@@ -1128,7 +1122,6 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
 
     @Test // GRECLIPSE-1794
     void testCompileDynamicImport2() {
-        assumeTrue(isAtLeastGroovy(21))
         String contents = '''\
             import groovy.transform.CompileDynamic
             @CompileDynamic
@@ -1140,7 +1133,6 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
 
     @Test // GRECLIPSE-1794
     void testCompileDynamicImport3() {
-        assumeTrue(isAtLeastGroovy(21))
         String originalContents = '''\
             import groovy.transform.CompileDynamic
             import groovy.transform.CompileStatic
@@ -1265,8 +1257,6 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
 
     @Test // GRECLIPSE-1553
     void testCompileStaticAndMapStyleConstructor() {
-        assumeTrue(isAtLeastGroovy(20))
-
         createGroovyType 'example2', 'Bar', '''
             class Bar {
                 String name

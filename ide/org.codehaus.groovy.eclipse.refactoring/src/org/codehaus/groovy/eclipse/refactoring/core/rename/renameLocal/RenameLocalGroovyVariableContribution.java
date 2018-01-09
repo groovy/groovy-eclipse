@@ -33,8 +33,8 @@ public class RenameLocalGroovyVariableContribution extends JavaUIRefactoringCont
 
     public static final String ID = "org.codehaus.groovy.eclipse.refactoring.renameLocal";
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public RefactoringDescriptor createDescriptor(String id, String project, String description, String comment, Map arguments, int flags) {
+    @Override
+    public RefactoringDescriptor createDescriptor(String id, String project, String description, String comment, Map<String, String> arguments, int flags) {
         return new RenameJavaElementDescriptor(id, project, description, comment, arguments, flags);
     }
 

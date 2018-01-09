@@ -527,31 +527,24 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
      * @return the temporary file wth the arguments
      */
     private File createFileWithArguments(String[] args, String outputDirectory) throws IOException {
-        PrintWriter writer = null;
-        try {
-            File tempFile;
-            if (getLogger().isDebugEnabled()) {
-                tempFile = File.createTempFile(GroovyEclipseCompiler.class.getName(), "arguments", new File(outputDirectory));
-            } else {
-                tempFile = File.createTempFile(GroovyEclipseCompiler.class.getName(), "arguments");
-                tempFile.deleteOnExit();
-            }
+        File tempFile;
+        if (getLogger().isDebugEnabled()) {
+            tempFile = File.createTempFile(GroovyEclipseCompiler.class.getName(), "arguments", new File(outputDirectory));
+        } else {
+            tempFile = File.createTempFile(GroovyEclipseCompiler.class.getName(), "arguments");
+            tempFile.deleteOnExit();
+        }
 
-            writer = new PrintWriter(new FileWriter(tempFile));
+        try (PrintWriter writer = new PrintWriter(new FileWriter(tempFile))) {
             for (String arg : args) {
                 String argValue = arg.replace(File.separatorChar, '/');
                 writer.write("\"" + argValue + "\"");
                 writer.println();
             }
             writer.flush();
-
-            return tempFile;
-
-        } finally {
-            if (writer != null) {
-                writer.close();
-            }
         }
+
+        return tempFile;
     }
 
     private String getAdditionnalJavaAgentLocation() throws CompilerException {

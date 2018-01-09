@@ -7876,7 +7876,7 @@ public void test424400() {
 			"1. ERROR in X.java (at line 3)\n" + 
 			"	int result = ((Comparable<Integer> & MyComparable) new X()).compareTo(1);\n" + 
 			"	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-			"The interface Comparable cannot be implemented more than once with different arguments: Comparable and Comparable<Integer>\n" + 
+			"The interface Comparable cannot be implemented more than once with different arguments: Comparable<Integer> and Comparable\n" + 
 			"----------\n" + 
 			"2. WARNING in X.java (at line 3)\n" + 
 			"	int result = ((Comparable<Integer> & MyComparable) new X()).compareTo(1);\n" + 

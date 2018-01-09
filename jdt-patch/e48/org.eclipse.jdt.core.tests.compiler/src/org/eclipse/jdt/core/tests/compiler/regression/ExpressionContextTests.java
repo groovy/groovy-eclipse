@@ -281,7 +281,7 @@ public void test009() {
 			"1. WARNING in X.java (at line 9)\n" + 
 			"	I<X> i2 = (Map<String, String> & I<X>) null;\n" + 
 			"	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-			"Unnecessary cast from null to Map<String,String> & I<X>\n" + 
+			"Unnecessary cast from null to I<X> & Map<String,String>\n" + 
 			"----------\n");
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=399773, [1.8][compiler] Cast expression should allow for additional bounds to form intersection types

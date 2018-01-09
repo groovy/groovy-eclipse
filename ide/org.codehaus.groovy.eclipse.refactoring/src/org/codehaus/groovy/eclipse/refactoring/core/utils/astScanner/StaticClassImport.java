@@ -1,8 +1,5 @@
-/* 
- * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
- *
- * IFS Institute for Software, HSR Rapperswil, Switzerland
- * http://ifs.hsr.ch/
+/*
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,17 +21,14 @@ import org.codehaus.groovy.ast.GroovyCodeVisitor;
 /**
  * This class represents the imports like
  * import static java.lang.Math.*
- * 
- * @author martin
- *
  */
 public class StaticClassImport extends RefactoringImportNode {
-	
+
 
     public StaticClassImport(ClassNode type) {
         super(type, null);
     }
-    
+
     @Override
     public String getText() {
 		return "import static " + newClassName + ".*";

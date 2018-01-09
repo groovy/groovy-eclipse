@@ -99,6 +99,10 @@ protected Map getCompilerOptions() {
     return defaultOptions;
 }
 
+protected void runNegativeNullTest(String[] testFiles, String expectedCompilerLog) {
+	runNegativeTest(testFiles, expectedCompilerLog, JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
+}
+
 // null analysis -- simple case for local
 public void test0001_simple_local() {
 	runNegativeTest(
@@ -769,7 +773,7 @@ public void test0033_conditional_expression() {
 // null analysis -- conditional expression
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=133125
 public void test0034_conditional_expression() {
-	this.runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -807,7 +811,7 @@ public void test0034_conditional_expression_2() {
 // null analysis -- conditional expression
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=133125
 public void test0034_conditional_expression_3() {
-	this.runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -3008,7 +3012,7 @@ public void test0334_if_else() {
 // Test that no false null reference warning is issued for a variable
 // that has been wrongly tainted by a redundant null check upstream.
 public void test0335_if_else() {
-	this.runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -4437,7 +4441,7 @@ public void test0451_while_nested() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=123399
 // variant - the bug is not specific to the do while loop
 public void _test0452_while() {
-	this.runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -4913,7 +4917,7 @@ public void test0469_while_break() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=220788
 public void test0470_while() {
-	this.runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -5055,7 +5059,7 @@ public void test0504_try_finally() {
 // that the try block may exit before the assignment is completed.
 // As of Bug 345305 this has been changed to a more accurate analysis.
 public void test0505_try_finally() {
-	this.runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -6176,7 +6180,7 @@ public void test0553_try_catch() {
 
 // null analysis - try/catch
 public void test0554_try_catch() {
-	this.runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -7324,7 +7328,7 @@ public void test0611_do_while() {
 // test0606)
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=123399
 public void _test0612_do_while() {
-	this.runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -8509,7 +8513,7 @@ public void test0744_for_infinite() {
 // null analysis - for
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=195638
 public void test0746_for_try_catch() {
-	runTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -8527,22 +8531,12 @@ public void test0746_for_try_catch() {
 			"  }\n" +
 			"}\n"
 			},
-		true /* expectingCompilerErrors */,
 		"----------\n" +
 		"1. ERROR in X.java (at line 10)\n" +
 		"	str.charAt(i);\n" +
 		"	^^^\n" +
 		"Potential null pointer access: The variable str may be null at this location\n" +
-		"----------\n" /* expectedCompilerLog */,
-		"" /* expectedOutputString */,
-		"" /* expectedErrorString */,
-		false /* forceExecution */,
-		null /* classLib */,
-		true /* shouldFlushOutputDirectory */,
-		null /* vmArguments */,
-		null /* customOptions */,
-		null /* clientRequestor */,
-		false /* skipJavac */);
+		"----------\n");
 }
 
 // null analysis - for
@@ -9019,7 +9013,8 @@ public void test0953_assert_combined() {
 // [compiler] Null reference analysis doesn't understand assertions
 public void test0954_assert_fake_reachable() {
 	if (this.complianceLevel >= ClassFileConstants.JDK1_4) {
-		this.runNegativeTest(
+		runConformTest(
+			true/*flush*/,
 			new String[] {
 				"X.java",
 				"public class X {\n" +
@@ -9027,13 +9022,17 @@ public void test0954_assert_fake_reachable() {
 				"    assert(false && o != null);\n" +
 				"    if (o == null) { };\n" + 		// quiet
 				"  }\n" +
-				"}\n"},
-				"----------\n" + 
-				"1. WARNING in X.java (at line 3)\n" + 
-				"	assert(false && o != null);\n" + 
-				"	                ^^^^^^^^^\n" + 
-				"Dead code\n" + 
-				"----------\n");
+				"}\n"
+			},
+			"----------\n" + 
+			"1. WARNING in X.java (at line 3)\n" + 
+			"	assert(false && o != null);\n" + 
+			"	                ^^^^^^^^^\n" + 
+			"Dead code\n" + 
+			"----------\n",
+			"",
+			"",
+			JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings);
 	}
 }
 
@@ -10160,7 +10159,7 @@ public void _test1026() {
 }
 
 public void test1027() {
-	this.runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -10376,7 +10375,7 @@ public void test1033() {
 
 // from AssignmentTest#test034, simplified
 public void test1034() {
-	this.runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public final class X \n" +
@@ -11716,7 +11715,7 @@ public void test2020_flow_info() {
 // Test to verify that redundant null checks are properly reported in all loops
 public void testBug291418a() {
 	if (this.complianceLevel >= ClassFileConstants.JDK1_5) {
-		this.runNegativeTest(
+		runNegativeNullTest(
 				new String[] {
 						"X.java",
 						"class X {\n" +
@@ -11801,7 +11800,7 @@ public void testBug291418a() {
 // in a loop in case the null status is modified downstream in the loop
 public void testBug291418b() {
 	if (this.complianceLevel >= ClassFileConstants.JDK1_5) {
-		this.runNegativeTest(
+		runNegativeNullTest(
 				new String[] {
 						"X.java",
 						"class X {\n" +
@@ -11965,7 +11964,7 @@ public void testBug190623() {
 //Test to verify that null checks are properly reported for the variable(s)	 
 //in the right expression of an OR condition statement.
 public void testBug299900a() {
-	this.runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"class X {\n" +
@@ -11993,7 +11992,7 @@ public void testBug299900a() {
 //Test to verify that null checks are properly reported for the variable(s)	 
 //in the right expression of an OR condition statement.
 public void testBug299900b() {
-	this.runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"class X {\n" +
@@ -12021,7 +12020,7 @@ public void testBug299900b() {
 // Test whether Null pointer access warnings are being reported correctly when auto-unboxing
 public void testBug253896a() {
 	if (this.complianceLevel >= ClassFileConstants.JDK1_5) {
-		this.runNegativeTest(
+		runNegativeNullTest(
 			new String[] {
 				"X.java",
 				"public class X {\n" +
@@ -12072,7 +12071,7 @@ public void testBug253896a() {
 // To test whether null pointer access and potential null pointer access warnings are correctly reported when auto-unboxing
 public void testBug253896b() {
 	if (this.complianceLevel >= ClassFileConstants.JDK1_5) {
-		this.runNegativeTest(
+		runNegativeNullTest(
 			new String[] {
 				"X.java",
 				"public class X {\n" +
@@ -12103,7 +12102,7 @@ public void testBug253896b() {
 // Test whether Null pointer access warnings are being reported correctly when auto-unboxing inside loops
 public void testBug253896c() {
 	if (this.complianceLevel >= ClassFileConstants.JDK1_5) {
-		this.runNegativeTest(
+		runNegativeNullTest(
 			new String[] {
 				"X.java",
 				"public class X {\n" +
@@ -12171,7 +12170,7 @@ public void testBug253896c() {
 // Test whether Null pointer access warnings are being reported correctly when auto-unboxing inside finally contexts
 public void testBug253896d() {
 	if (this.complianceLevel >= ClassFileConstants.JDK1_5) {
-		this.runNegativeTest(
+		runNegativeNullTest(
 			new String[] {
 				"X.java",
 				"public class X {\n" +
@@ -12851,7 +12850,9 @@ public void testBug319201d() {
 			"----------\n",
 			null/*classLibraries*/,
 			true/*shouldFlushOutputDirectory*/,
-			customOptions);
+			customOptions,
+			"",
+			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=320414
 public void testBug320414() throws Exception {
@@ -13402,7 +13403,7 @@ public void testBug321926l() {
 		null, // vm args
 		options,	
 		null,
-		null);
+		JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings);
 }
 public void testBug321926m() {
 	this.runConformTest(
@@ -14090,7 +14091,7 @@ this.runNegativeTest(
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=292478 -  Report potentially null across variable assignment
 // Assignment affects initsOnFinally
 public void testBug292478d() {
-	this.runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -14438,7 +14439,9 @@ public void testBug325342a() {
 			"----------\n",
 			null,
 			true,
-			compilerOptions);
+			compilerOptions,
+			"",
+			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
 	}
 }
 
@@ -14508,7 +14511,8 @@ public void testBug325342b() {
 			"	    ^\n" + 
 			"Null pointer access: The variable c can only be null at this location\n" + 
 			"----------\n",
-			null, true, compilerOptions);
+			null, true, compilerOptions, "",
+			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
 	}
 }
 
@@ -14855,7 +14859,7 @@ public void _testBug336428a() {
 //Bug 336428 - [compiler][null] bogus warning "redundant null check" in condition of do {} while() loop
 //in this variant the analysis believes o2 is def unknown and doesn't even consider raising a warning.
 public void _testBug336428b() {
-	this.runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 	"DoWhileBug.java",
 			"public class DoWhileBug {\n" + 
@@ -14899,7 +14903,7 @@ public void testBug336428c() {
 //Bug 336428 - [compiler][null] bogus warning "redundant null check" in condition of do {} while() loop
 //one more if-statement triggers the expected warnings
 public void testBug336428d() {
-	this.runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 	"DoWhileBug.java",
 			"public class DoWhileBug {\n" + 
@@ -14957,7 +14961,7 @@ public void testBug336428d2() {
 //same analysis, but assert instead of if suppresses the warning
 public void testBug336428e() {
 	if (this.complianceLevel >= ClassFileConstants.JDK1_5) {
-		this.runNegativeTest(
+		runNegativeNullTest(
 			new String[] {
 		"DoWhileBug.java",
 				"public class DoWhileBug {\n" + 
@@ -14993,7 +14997,7 @@ public void testBug336428e() {
 // condition inside assert is redundant null check and hence should not be warned against
 public void testBug336428f() {
 	if (this.complianceLevel >= ClassFileConstants.JDK1_5) {
-		this.runNegativeTest(
+		runNegativeNullTest(
 			new String[] {
 		"DoWhileBug.java",
 				"public class DoWhileBug {\n" + 
@@ -15058,7 +15062,9 @@ public void testBug332838() {
 			"----------\n",
 			null,
 			true,
-			compilerOptions);
+			compilerOptions,
+			"",
+			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
 	}
 }
 
@@ -15241,7 +15247,7 @@ public void testBug338303() {
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=338234
 public void testBug338234() {
-	this.runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" + 
@@ -15496,7 +15502,7 @@ public void testBug339250() throws Exception {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=339250
 // Check that the redundant null check warning is correctly produced
 public void testBug339250a() throws Exception {
-	this.runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" + 
@@ -15519,7 +15525,7 @@ public void testBug339250a() throws Exception {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=339250
 // Check that the redundant null check warning is correctly produced
 public void testBug339250b() throws Exception {
-	this.runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" + 
@@ -15582,7 +15588,7 @@ public void testBug342300() throws Exception {
 // To make sure only the redundant null check is given and not a potential NPE
 public void testBug342300b() throws Exception {
 	if (this.complianceLevel >= ClassFileConstants.JDK1_5) {
-		this.runNegativeTest(
+		runNegativeNullTest(
 			new String[] {
 				"X.java",
 				"public class X {\n" + 
@@ -15608,7 +15614,7 @@ public void testBug342300b() throws Exception {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=348379
 public void testBug348379a() throws Exception {
 	if (this.complianceLevel >= ClassFileConstants.JDK1_7) {
-		this.runNegativeTest(
+		runNegativeNullTest(
 			new String[] {
 				"X.java",
 				"public class X {\n" + 
@@ -15659,7 +15665,7 @@ public void testBug348379b() throws Exception {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=348379
 public void testBug348379c() throws Exception {
 	if (this.complianceLevel >= ClassFileConstants.JDK1_7) {
-		this.runNegativeTest(
+		runNegativeNullTest(
 			new String[] {
 				"X.java",
 				"public class X {\n" + 
@@ -15687,7 +15693,7 @@ public void testBug348379c() throws Exception {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=348379
 public void testBug348379d() throws Exception {
 	if (this.complianceLevel >= ClassFileConstants.JDK1_7) {
-		this.runNegativeTest(
+		runNegativeNullTest(
 			new String[] {
 				"X.java",
 				"public class X {\n" + 
@@ -15739,7 +15745,7 @@ public void testBug348379e() throws Exception {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=348379
 public void testBug348379f() throws Exception {
 	if (this.complianceLevel >= ClassFileConstants.JDK1_7) {
-		this.runNegativeTest(
+		runNegativeNullTest(
 			new String[] {
 				"X.java",
 				"public class X {\n" + 
@@ -15771,7 +15777,7 @@ public void testBug348379f() throws Exception {
 }
 // Bug 354554 - [null] conditional with redundant condition yields weak error message
 public void testBug354554() {
-	this.runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"Bug354554.java",
 			"public class Bug354554{\n" +
@@ -15796,7 +15802,7 @@ public void testBug354554() {
 }
 //Bug 354554 - [null] conditional with redundant condition yields weak error message
 public void testBug354554b() {
-	this.runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"Bug354554.java",
 			"public class Bug354554{\n" +
@@ -15817,7 +15823,7 @@ public void testBug354554b() {
 // Bug 358827 - [1.7] exception analysis for t-w-r spoils null analysis
 public void test358827() {
 	if (this.complianceLevel >= ClassFileConstants.JDK1_7) {
-		this.runNegativeTest(
+		runNegativeNullTest(
 				new String[] {
 					"Bug358827.java",
 					"import java.io.FileReader;\n" +
@@ -15913,7 +15919,9 @@ public void testBug256796() {
 			"----------\n",
 			null,
 			true,
-			compilerOptions);
+			compilerOptions,
+			null,
+			JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=256796
 public void testBug256796a() {
@@ -16011,7 +16019,9 @@ public void testBug256796a() {
 			"----------\n",
 			null,
 			true,
-			compilerOptions);
+			compilerOptions,
+			"",
+			JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings);
 }
 // Bug 360328 - [compiler][null] detect null problems in nested code (local class inside a loop)
 public void testBug360328() {
@@ -16436,7 +16446,7 @@ public void testBug376263() {
 }
 //object/array allocation
 public void testExpressions01() {
-	this.runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -16480,7 +16490,7 @@ public void testExpressions01() {
 }
 //'this' expressions (incl. qualif.)
 public void testExpressions02() {
-	this.runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -16516,7 +16526,7 @@ public void testExpressions02() {
 }
 //various non-null expressions: class-literal, string-literal, casted 'this'
 public void testExpressions03() {
-	this.runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -16563,7 +16573,7 @@ public void testExpressions03() {
 
 //a non-null ternary expression
 public void testExpressions04() {
-	this.runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -16654,7 +16664,7 @@ public void testBug345305_3() {
 // Bug 345305 - [compiler][null] Compiler misidentifies a case of "variable can only be null"
 // analysis of second local variable must not interfere
 public void testBug345305_4() {
-	runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -16687,7 +16697,7 @@ public void testBug345305_4() {
 // Bug 345305 - [compiler][null] Compiler misidentifies a case of "variable can only be null"
 // block-less if involved - info about pot.nn. was lost when checking against loop's info (deferred check)
 public void testBug345305_6() {
-	runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -16717,7 +16727,7 @@ public void testBug345305_6() {
 // Bug 345305 - [compiler][null] Compiler misidentifies a case of "variable can only be null"
 // block-less if involved
 public void testBug345305_7() {
-	runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -16747,7 +16757,7 @@ public void testBug345305_7() {
 // Bug 345305 - [compiler][null] Compiler misidentifies a case of "variable can only be null"
 // consider exception thrown from cast expression
 public void testBug345305_8() {
-	runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -16776,7 +16786,7 @@ public void testBug345305_8() {
 // Bug 345305 - [compiler][null] Compiler misidentifies a case of "variable can only be null"
 // consider exception thrown from binary expression
 public void testBug345305_9() {
-	runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -16805,7 +16815,7 @@ public void testBug345305_9() {
 // Bug 345305 - [compiler][null] Compiler misidentifies a case of "variable can only be null"
 // inner labeled block with break
 public void testBug345305_10() {
-	runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -16840,7 +16850,7 @@ public void testBug345305_10() {
 // Bug 345305 - [compiler][null] Compiler misidentifies a case of "variable can only be null"
 // switch statement
 public void testBug345305_11() {
-	runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -16874,7 +16884,7 @@ public void testBug345305_11() {
 // Bug 345305 - [compiler][null] Compiler misidentifies a case of "variable can only be null"
 // assignment inside conditional expression
 public void testBug345305_12() {
-	runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -16903,7 +16913,7 @@ public void testBug345305_12() {
 // Bug 345305 - [compiler][null] Compiler misidentifies a case of "variable can only be null"
 // explicit throw
 public void testBug345305_13() {
-	runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -16935,7 +16945,7 @@ public void testBug345305_13() {
 // Bug 345305 - [compiler][null] Compiler misidentifies a case of "variable can only be null"
 // do-while
 public void testBug345305_14() {
-	runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -16985,7 +16995,7 @@ public void testBug345305_14() {
 // Bug 364326 - [compiler][null] NullPointerException is not found by compiler. FindBugs finds that one
 public void testBug364326() {
 	if (this.complianceLevel < ClassFileConstants.JDK1_5) return; // employs auto-unboxing
-	runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"NPE_OnBoxing.java",
 			"\n" + 
@@ -17189,7 +17199,7 @@ public void test401092a() {
 }
 // Bug 402993 - [null] Follow up of bug 401088: Missing warning about redundant null check
 public void testBug402993() {
-	runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"Test.java",
 			"public class Test {\n" + 
@@ -17244,7 +17254,7 @@ public void testBug402993() {
 // Bug 402993 - [null] Follow up of bug 401088: Missing warning about redundant null check
 // variant with finally block in inner try
 public void testBug402993a() {
-	runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"Test.java",
 			"public class Test {\n" + 
@@ -17413,7 +17423,8 @@ public void testBug432109() {
 		});
 }
 public void testBug435528() {
-	runNegativeTest(
+	runConformTest(
+		true/*flush*/,
 		new String[] {
 			"Test.java",
 			"public class Test\n" + 
@@ -17444,7 +17455,10 @@ public void testBug435528() {
 		"         }\n" + 
 		"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
 		"Statement unnecessarily nested within else clause. The corresponding then clause does not complete normally\n" + 
-		"----------\n");
+		"----------\n",
+		"",
+		"",
+		JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings);
 }
 public void testBug418500() {
 	runConformTest(
@@ -17554,7 +17568,7 @@ public void testBug195638_comment3() {
 		});
 }
 public void testBug195638_comment6() {
-	runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"CanOnlyBeNullShouldBeMayBeNull.java",
 			"public class CanOnlyBeNullShouldBeMayBeNull {\n" + 
@@ -17587,7 +17601,7 @@ public void testBug195638_comment6() {
 		"----------\n");
 }
 public void testBug195638_comment14() {
-	runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"Test.java",
 			"public class Test {\n" + 
@@ -17641,7 +17655,7 @@ public void testBug195638_comment19() {
 		});
 }
 public void testBug454031() {
-	runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"xy/Try.java",
 			"package xy;\n" + 
@@ -17680,7 +17694,7 @@ public void testBug454031() {
 }
 // switch with fall-through nested in for:
 public void testBug451660() {
-	runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"X.java",
 			"public class X {\n" + 
@@ -17710,7 +17724,7 @@ public void testBug451660() {
 		"----------\n");
 }
 public void testBug486912KnownNullInLoop() {
-	runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"test/KnownNullInLoop.java",
 			"package test;\n" +
@@ -17747,7 +17761,7 @@ public void testBug486912KnownNullInLoop() {
 	);
 }
 public void testBug486912PotNullInLoop_orig() {
-	runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"test/PotNullInLoop.java",
 			"package test;\n" +
@@ -17879,7 +17893,7 @@ public void testBug486912PotNullInLoop_orig() {
 }
 // variant of testBug486912PotNullInLoop_orig spiced up with potentiality from an 'unknown' o0:
 public void testBug486912PotNullInLoop() {
-	runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"test/PotNullInLoop.java",
 			"package test;\n" +
@@ -18084,7 +18098,7 @@ public void testBug447695f() {
 	);
 }
 public void testBug447695g() {
-	runNegativeTest(
+	runNegativeNullTest(
 		new String[] {
 			"test/Test447695.java",
 			"package test;\n" +

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,6 @@ import java.io.Serializable;
 
 /**
  * Tokens recognized for an expression.
- *
- * @author empovazan
  */
 public class Token implements Serializable {
 
@@ -119,16 +117,19 @@ public class Token implements Serializable {
         }
     }
 
+    @Override
     public boolean equals(Object that) {
         if (that == this) return true;
         if (!(that instanceof Token)) return false;
         return ((Token) that).type == this.type;
     }
 
+    @Override
     public int hashCode() {
         return getType().hashCode() + type;
     }
 
+    @Override
     public String toString() {
         return getType() + "[" + startOffset + ":" + endOffset + "] - " + text;
     }

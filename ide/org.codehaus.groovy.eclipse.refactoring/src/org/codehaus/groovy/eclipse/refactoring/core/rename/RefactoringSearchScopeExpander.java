@@ -31,6 +31,7 @@ import org.eclipse.jdt.internal.corext.refactoring.RefactoringScopeFactory;
  */
 public class RefactoringSearchScopeExpander implements ISearchScopeExpander {
 
+    @Override
     public IJavaSearchScope expandSearchScope(IJavaSearchScope scope, SearchPattern pattern, SearchRequestor requestor) {
         // at this point, we already know this is a groovy project, so no need to check again
         if (pattern.focus.getOpenable() instanceof ICompilationUnit && requestor instanceof CollectingSearchRequestor) {

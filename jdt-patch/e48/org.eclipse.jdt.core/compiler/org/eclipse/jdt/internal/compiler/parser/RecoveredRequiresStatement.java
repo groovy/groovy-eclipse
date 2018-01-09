@@ -18,6 +18,7 @@ public class RecoveredRequiresStatement extends RecoveredModuleStatement {
 	public RecoveredRequiresStatement(RequiresStatement requiresStatement, RecoveredElement parent, int bracketBalance) {
 		super(requiresStatement, parent, bracketBalance);
 	}
+	@Override
 	public String toString(int tab) {
 		return tabString(tab) + "Recovered requires: " + super.toString(); //$NON-NLS-1$
 	}

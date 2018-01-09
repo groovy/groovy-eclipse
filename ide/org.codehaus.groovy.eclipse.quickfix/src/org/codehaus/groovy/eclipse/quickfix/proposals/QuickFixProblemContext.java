@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,18 +24,14 @@ import org.eclipse.jdt.ui.text.java.IProblemLocation;
 
 /**
  * Base implementation of a quick fix problem.
- * 
- * @author Nieraj Singh
- * 
  */
 public class QuickFixProblemContext {
 
-	
-	private final ProblemDescriptor problemDescriptor;
+    private final ProblemDescriptor problemDescriptor;
     private final IInvocationContext context;
     private final IProblemLocation location;
 
-	public QuickFixProblemContext(ProblemDescriptor problemDescriptor, IInvocationContext context,
+    public QuickFixProblemContext(ProblemDescriptor problemDescriptor, IInvocationContext context,
             IProblemLocation location) {
                 this.problemDescriptor = problemDescriptor;
                 this.context = context;
@@ -43,78 +39,78 @@ public class QuickFixProblemContext {
     }
 
     /**
-     * 
+     *
      * @return compilation unit containing the problem. Never null.
      */
-	public ICompilationUnit getCompilationUnit() {
-		return context.getCompilationUnit();
-	}
+    public ICompilationUnit getCompilationUnit() {
+        return context.getCompilationUnit();
+    }
 
     /**
-     * 
+     *
      * @return non-null problem descriptor for the problem that requires a quick
      *         fix
      */
-	public ProblemDescriptor getProblemDescriptor() {
-		return problemDescriptor;
-	}
+    public ProblemDescriptor getProblemDescriptor() {
+        return problemDescriptor;
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixProblemContext
-	 * #isError()
-	 */
-	public boolean isError() {
-		return location != null ? location.isError() : true;
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see
+     * org.codehaus.groovy.eclipse.quickfix.proposals.IQuickFixProblemContext
+     * #isError()
+     */
+    public boolean isError() {
+        return location != null ? location.isError() : true;
+    }
 
     /**
      * Returns the start offset of the problem.
-     * 
+     *
      * @return the start offset of the problem
      */
-	public int getOffset() {
-		return location != null ? location.getOffset() : context.getSelectionOffset();
-	}
+    public int getOffset() {
+        return location != null ? location.getOffset() : context.getSelectionOffset();
+    }
 
     /**
      * Returns the length of the problem.
-     * 
+     *
      * @return the length of the problem
      */
-	public int getLength() {
+    public int getLength() {
         return location != null ? location.getLength() : context.getSelectionLength();
-	}
+    }
 
-	public ASTNode getCoveringNode(CompilationUnit astRoot) {
-		return context.getCoveringNode();
-	}
+    public ASTNode getCoveringNode(CompilationUnit astRoot) {
+        return context.getCoveringNode();
+    }
 
-	public ASTNode getCoveredNode(CompilationUnit astRoot) {
-		return context.getCoveredNode();
-	}
+    public ASTNode getCoveredNode(CompilationUnit astRoot) {
+        return context.getCoveredNode();
+    }
 
-	public CompilationUnit getASTRoot() {
-		return context.getASTRoot();
-	}
+    public CompilationUnit getASTRoot() {
+        return context.getASTRoot();
+    }
 
     /**
-     * 
+     *
      * @return the resource containing the problem.
      */
-	public IResource getResource() {
-		return getCompilationUnit() != null ? getCompilationUnit()
-				.getResource() : null;
-	}
+    public IResource getResource() {
+        return getCompilationUnit() != null ? getCompilationUnit()
+                .getResource() : null;
+    }
 
-	
-	public IInvocationContext getContext() {
+
+    public IInvocationContext getContext() {
         return context;
     }
-	
-	public IProblemLocation getLocation() {
+
+    public IProblemLocation getLocation() {
         return location;
     }
 }

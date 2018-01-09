@@ -38,14 +38,17 @@ public class GroovyResolvedSourceField extends ResolvedSourceField implements IG
         this.inferredElement = inferredElement;
     }
 
+    @Override
     public String getExtraDoc() {
         return extraDoc;
     }
 
+    @Override
     public ASTNode getInferredElement() {
         return inferredElement;
     }
 
+    @Override
     public String getInferredElementName() {
         if (inferredElement instanceof Variable) {
             return ((Variable) inferredElement).getName();
@@ -57,6 +60,7 @@ public class GroovyResolvedSourceField extends ResolvedSourceField implements IG
         return inferredElement.getText();
     }
 
+    @Override
     public Object getElementInfo() throws JavaModelException {
         try {
             return super.getElementInfo();

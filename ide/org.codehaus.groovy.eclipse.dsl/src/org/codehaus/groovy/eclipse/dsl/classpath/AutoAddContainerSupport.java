@@ -50,8 +50,6 @@ import org.eclipse.jface.preference.IPreferenceStore;
 /**
  * This class is called on startup as well as whenever there is a project added to the workspace.
  * If the option is set, then the DSL support will be secretly added to all groovy projects
- * @author andrew
- * @created May 27, 2011
  */
 public class AutoAddContainerSupport implements IResourceChangeListener {
 
@@ -84,7 +82,7 @@ public class AutoAddContainerSupport implements IResourceChangeListener {
     private final Set<String> alreadyAddedProjects;
 
     public AutoAddContainerSupport() {
-        alreadyAddedProjects = new HashSet<String>();
+        alreadyAddedProjects = new HashSet<>();
         String toIgnore = store.getString(DSLPreferencesInitializer.PROJECTS_TO_IGNORE);
         if (toIgnore != null) {
             String[] split = toIgnore.split(",");
@@ -140,6 +138,7 @@ public class AutoAddContainerSupport implements IResourceChangeListener {
         }
     }
 
+    @Override
     public void resourceChanged(IResourceChangeEvent event) {
         if (!shouldAddSupport()) {
             return;
@@ -149,7 +148,7 @@ public class AutoAddContainerSupport implements IResourceChangeListener {
         // we can approximate this by looking for changes in .project files
         IResourceDelta delta = event.getDelta();
         if (delta != null) {
-            List<IProject> projects = new ArrayList<IProject>();
+            List<IProject> projects = new ArrayList<>();
             if (delta.getAffectedChildren().length > 0) {
                 IResourceDelta[] children = delta.getAffectedChildren();
                 for (IResourceDelta child : children) {

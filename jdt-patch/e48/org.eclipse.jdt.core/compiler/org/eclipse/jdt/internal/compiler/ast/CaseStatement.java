@@ -35,6 +35,7 @@ public CaseStatement(Expression constantExpression, int sourceEnd, int sourceSta
 	this.sourceStart = sourceStart;
 }
 
+@Override
 public FlowInfo analyseCode(
 	BlockScope currentScope,
 	FlowContext flowContext,
@@ -50,6 +51,7 @@ public FlowInfo analyseCode(
 	return flowInfo;
 }
 
+@Override
 public StringBuffer printStatement(int tab, StringBuffer output) {
 	printIndent(tab, output);
 	if (this.constantExpression == null) {
@@ -65,6 +67,7 @@ public StringBuffer printStatement(int tab, StringBuffer output) {
  * Case code generation
  *
  */
+@Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	if ((this.bits & ASTNode.IsReachable) == 0) {
 		return;
@@ -77,6 +80,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 /**
  * No-op : should use resolveCase(...) instead.
  */
+@Override
 public void resolve(BlockScope scope) {
 	// no-op : should use resolveCase(...) instead.
 }
@@ -85,6 +89,7 @@ public void resolve(BlockScope scope) {
  * Returns the constant intValue or ordinal for enum constants. If constant is NotAConstant, then answers Float.MIN_VALUE
  * @see org.eclipse.jdt.internal.compiler.ast.Statement#resolveCase(org.eclipse.jdt.internal.compiler.lookup.BlockScope, org.eclipse.jdt.internal.compiler.lookup.TypeBinding, org.eclipse.jdt.internal.compiler.ast.SwitchStatement)
  */
+@Override
 public Constant resolveCase(BlockScope scope, TypeBinding switchExpressionType, SwitchStatement switchStatement) {
 	// switchExpressionType maybe null in error case
 	scope.enclosingCase = this; // record entering in a switch case block
@@ -135,6 +140,7 @@ public Constant resolveCase(BlockScope scope, TypeBinding switchExpressionType, 
 	return Constant.NotAConstant;
 }
 
+@Override
 public void traverse(ASTVisitor visitor, 	BlockScope blockScope) {
 	if (visitor.visit(this, blockScope)) {
 		if (this.constantExpression != null) this.constantExpression.traverse(visitor, blockScope);

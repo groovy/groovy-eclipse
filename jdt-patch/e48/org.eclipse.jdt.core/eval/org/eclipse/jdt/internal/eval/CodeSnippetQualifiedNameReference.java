@@ -73,6 +73,7 @@ public TypeBinding checkFieldAccess(BlockScope scope) {
 	return getOtherFieldBindings(scope);
 }
 
+@Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 	int pc = codeStream.position;
 	if ((this.bits & Binding.VARIABLE) == 0) { // nothing to do if type ref
@@ -149,6 +150,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean
 /**
  * Check and/or redirect the field access to the delegate receiver if any
  */
+@Override
 public void generateAssignment(BlockScope currentScope, CodeStream codeStream, Assignment assignment, boolean valueRequired) {
     FieldBinding lastFieldBinding = this.otherBindings == null ? (FieldBinding) this.binding : this.otherBindings[this.otherBindings.length-1];
 	if (lastFieldBinding.canBeSeenBy(getFinalReceiverType(), this, currentScope)) {
@@ -176,6 +178,7 @@ public void generateAssignment(BlockScope currentScope, CodeStream codeStream, A
 	}
 }
 
+@Override
 public void generateCompoundAssignment(BlockScope currentScope, CodeStream codeStream, Expression expression, int operator, int assignmentImplicitConversion, boolean valueRequired) {
     FieldBinding lastFieldBinding = this.otherBindings == null ? (FieldBinding) this.binding : this.otherBindings[this.otherBindings.length-1];
 	if (lastFieldBinding.canBeSeenBy(getFinalReceiverType(), this, currentScope)) {
@@ -234,6 +237,7 @@ public void generateCompoundAssignment(BlockScope currentScope, CodeStream codeS
 	// value field receiver value
 	codeStream.generateEmulatedWriteAccessForField(lastFieldBinding);
 }
+@Override
 public void generatePostIncrement(BlockScope currentScope, CodeStream codeStream, CompoundAssignment postIncrement, boolean valueRequired) {
     FieldBinding lastFieldBinding = this.otherBindings == null ? (FieldBinding) this.binding : this.otherBindings[this.otherBindings.length-1];
 	if (lastFieldBinding.canBeSeenBy(getFinalReceiverType(), this, currentScope)) {
@@ -285,6 +289,7 @@ public void generatePostIncrement(BlockScope currentScope, CodeStream codeStream
  * Generate code for all bindings (local and fields) excluding the last one, which may then be generated code
  * for a read or write access.
  */
+@Override
 public FieldBinding generateReadSequence(BlockScope currentScope, CodeStream codeStream) {
 	// determine the rank until which we now we do not need any actual value for the field access
 	int otherBindingsCount = this.otherBindings == null ? 0 : this.otherBindings.length;
@@ -443,6 +448,7 @@ public FieldBinding generateReadSequence(BlockScope currentScope, CodeStream cod
 }
 
 
+@Override
 public void generateReceiver(CodeStream codeStream) {
 	codeStream.aload_0();
 	if (this.delegateThis != null) {
@@ -450,6 +456,7 @@ public void generateReceiver(CodeStream codeStream) {
 	}
 }
 
+@Override
 public TypeBinding getOtherFieldBindings(BlockScope scope) {
 	// At this point restrictiveFlag may ONLY have two potential value : FIELD LOCAL (i.e cast <<(VariableBinding) binding>> is valid)
 	int length = this.tokens.length;
@@ -535,6 +542,7 @@ public TypeBinding getOtherFieldBindings(BlockScope scope) {
 /**
  * index is <0 to denote write access emulation
  */
+@Override
 public void manageSyntheticAccessIfNecessary(BlockScope currentScope, FieldBinding fieldBinding, int index, FlowInfo flowInfo) {
 	// do nothing
 }
@@ -542,6 +550,7 @@ public void manageSyntheticAccessIfNecessary(BlockScope currentScope, FieldBindi
 /**
  * Normal field binding did not work, try to bind to a field of the delegate receiver.
  */
+@Override
 public TypeBinding reportError(BlockScope scope) {
 	if (this.evaluationContext.declaringTypeName != null) {
 		this.delegateThis = scope.getField(scope.enclosingSourceType(), DELEGATE_THIS, this);

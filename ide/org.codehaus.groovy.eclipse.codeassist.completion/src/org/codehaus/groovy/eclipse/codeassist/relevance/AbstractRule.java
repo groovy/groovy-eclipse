@@ -21,15 +21,11 @@ import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IType;
 
 /**
- *
  * Abstract class containing helper methods to obtain information like enclosing
  * package or project for the context types, as well as uses an optional
  * relevance category to further prioritise rules. A relevance category is
  * applied to the relevance value of this rule. Categories may be useful to
  * avoid rule clashes, in case one rule has a higher priority than another one.
- *
- * @author Nieraj Singh
- * @created 2011-02-18
  */
 @Deprecated
 public abstract class AbstractRule implements IRelevanceRule {

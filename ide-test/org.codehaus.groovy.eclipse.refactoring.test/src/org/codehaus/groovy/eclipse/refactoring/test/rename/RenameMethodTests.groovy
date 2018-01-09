@@ -15,9 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.rename
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
-import static org.junit.Assume.assumeTrue
-
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSuite
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
@@ -131,14 +128,12 @@ final class RenameMethodTests extends RefactoringTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/389
     void testEnumOverrides() {
-        assumeTrue(isAtLeastGroovy(21))
         // rename A.getFoo() to A.foo() and enum constant overrides should change
         runTest('A', 'getFoo', 'foo', [], true, false)
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/390
     void testEnumOverrides2() {
-        assumeTrue(isAtLeastGroovy(21))
         // rename A.getFoo() to A.foo() and enum constant overrides should change
         runTest('A', 'getFoo', 'foo', [], true, false)
     }

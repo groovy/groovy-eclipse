@@ -143,6 +143,7 @@ public abstract class NdTypeSignature extends NdNode {
 	 */
 	public abstract List<NdTypeArgument> getTypeArguments();
 
+	@Override
 	public String toString() {
 		try {
 			CharArrayBuffer result = new CharArrayBuffer();

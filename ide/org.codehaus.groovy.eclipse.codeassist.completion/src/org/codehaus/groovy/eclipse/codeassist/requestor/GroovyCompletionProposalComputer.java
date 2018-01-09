@@ -67,8 +67,7 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
 
     private static final Map<ContentAssistLocation, List<IGroovyCompletionProcessorFactory>> LOCATION_FACTORIES;
     static {
-        Map<ContentAssistLocation, List<IGroovyCompletionProcessorFactory>> locationFactories =
-            new EnumMap<ContentAssistLocation, List<IGroovyCompletionProcessorFactory>>(ContentAssistLocation.class);
+        Map<ContentAssistLocation, List<IGroovyCompletionProcessorFactory>> locationFactories = new EnumMap<>(ContentAssistLocation.class);
 
         locationFactories.put(ContentAssistLocation.ANNOTATION, Collections.unmodifiableList(Arrays.asList(
             new TypeCompletionProcessorFactory(),
@@ -161,6 +160,7 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
         LOCATION_FACTORIES = Collections.unmodifiableMap(locationFactories);
     }
 
+    @Override
     public List<ICompletionProposal> computeCompletionProposals(ContentAssistInvocationContext context, IProgressMonitor monitor) {
         if (!(context instanceof JavaContentAssistInvocationContext)) {
             return Collections.EMPTY_LIST;
@@ -198,7 +198,7 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
         }
 
         ContentAssistContext assistContext = createContentAssistContext(gunit, offset, document);
-        List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
+        List<ICompletionProposal> proposals = new ArrayList<>();
         if (assistContext != null) {
             List<IGroovyCompletionProcessorFactory> factories = LOCATION_FACTORIES.get(assistContext.location);
             if (factories != null) {
@@ -211,7 +211,7 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
                             if (processor instanceof ITypeResolver) {
                                 ((ITypeResolver) processor).setResolverInformation(moduleInfo.module, moduleInfo.resolver);
                             }
-                            proposals.addAll(processor.generateProposals(submon.newChild(1)));
+                            proposals.addAll(processor.generateProposals(submon.split(1)));
                         }
                     }
                 } finally {
@@ -317,9 +317,10 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
         return end;
     }
 
+    @Override
     public List<IContextInformation> computeContextInformation(ContentAssistInvocationContext context, IProgressMonitor monitor) {
         List<ICompletionProposal> proposals = computeCompletionProposals(context, monitor);
-        List<IContextInformation> contexts = new ArrayList<IContextInformation>(proposals.size());
+        List<IContextInformation> contexts = new ArrayList<>(proposals.size());
         for (ICompletionProposal proposal : proposals) {
             if (proposal.getContextInformation() != null) {
                 contexts.add(proposal.getContextInformation());
@@ -328,13 +329,16 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
         return contexts;
     }
 
+    @Override
     public String getErrorMessage() {
         return "";
     }
 
+    @Override
     public void sessionStarted() {
     }
 
+    @Override
     public void sessionEnded() {
     }
 }

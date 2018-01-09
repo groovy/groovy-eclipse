@@ -38,10 +38,12 @@ public class ClasspathAccessRule extends AccessRule implements IAccessRule {
 		}
 	}
 
+	@Override
 	public IPath getPattern() {
 		return new Path(new String(this.pattern));
 	}
 
+	@Override
 	public int getKind() {
 		switch (getProblemId()) {
 			case IProblem.ForbiddenReference:

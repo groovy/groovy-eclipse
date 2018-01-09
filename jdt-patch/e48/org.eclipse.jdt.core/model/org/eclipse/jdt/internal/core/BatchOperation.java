@@ -26,14 +26,13 @@ public class BatchOperation extends JavaModelOperation {
 		this.runnable = runnable;
 	}
 
+	@Override
 	protected boolean canModifyRoots() {
 		// anything in the workspace runnable can modify the roots
 		return true;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.internal.core.JavaModelOperation#executeOperation()
-	 */
+	@Override
 	protected void executeOperation() throws JavaModelException {
 		try {
 			this.runnable.run(this.progressMonitor);
@@ -52,9 +51,7 @@ public class BatchOperation extends JavaModelOperation {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.internal.core.JavaModelOperation#verify()
-	 */
+	@Override
 	protected IJavaModelStatus verify() {
 		// cannot verify user defined operation
 		return JavaModelStatus.VERIFIED_OK;

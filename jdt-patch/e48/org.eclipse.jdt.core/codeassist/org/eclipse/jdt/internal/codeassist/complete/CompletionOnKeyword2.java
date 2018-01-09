@@ -21,12 +21,15 @@ public class CompletionOnKeyword2 extends ImportReference implements CompletionO
 		this.token = token;
 		this.possibleKeywords = possibleKeywords;
 	}
+	@Override
 	public char[] getToken() {
 		return this.token;
 	}
+	@Override
 	public char[][] getPossibleKeywords() {
 		return this.possibleKeywords;
 	}
+	@Override
 	public StringBuffer print(int indent, StringBuffer output, boolean withOnDemand) {
 
 		return printIndent(indent, output).append("<CompleteOnKeyword:").append(this.token).append('>'); //$NON-NLS-1$

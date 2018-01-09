@@ -21,9 +21,11 @@ public enum ExpressionContext {
 	   Context induced by: ReturnStatement, ArrayInitializer, Assignment, FieldDeclaration and LocalDeclaration. 
 	*/
 	ASSIGNMENT_CONTEXT { 
+		@Override
 		public String toString() {
 			return "assignment context"; //$NON-NLS-1$
 		}
+		@Override
 		public boolean definesTargetType() {
 			return true;
 		}
@@ -37,9 +39,11 @@ public enum ExpressionContext {
 	   CodeSnippetAllocationExpression and CodeSnippetMessageSend.
 	*/													
 	INVOCATION_CONTEXT {
+		@Override
 		public String toString() {
 			return "invocation context"; //$NON-NLS-1$
 		}
+		@Override
 		public boolean definesTargetType() {
 			return true;
 		}
@@ -49,9 +53,11 @@ public enum ExpressionContext {
 	   Context induced by: CastExpression.
 	*/
 	CASTING_CONTEXT {
+		@Override
 		public String toString() {
 			return "casting context"; //$NON-NLS-1$
 		}
+		@Override
 		public boolean definesTargetType() {
 			return false;
 		}
@@ -61,9 +67,11 @@ public enum ExpressionContext {
 	   expressions get evaluated, unless they feature in one of the above contexts. 
 	*/
 	VANILLA_CONTEXT {
+		@Override
 		public String toString() {
 			return "vanilla context"; //$NON-NLS-1$
 		}
+		@Override
 		public boolean definesTargetType() {
 			return false;
 		}

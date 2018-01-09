@@ -34,24 +34,31 @@ public abstract class GroovyQuickAssistProposal implements IJavaCompletionPropos
 
     //--------------------------------------------------------------------------
 
+    @Override
     public String getAdditionalProposalInfo() {
         return null;
     }
 
+    @Override
     public IContextInformation getContextInformation() {
         return null;
     }
 
+    @Override
     public abstract String getDisplayString();
 
+    @Override
     public abstract Image getImage();
 
+    @Override
     public abstract int getRelevance();
 
     //--------------------------------------------------------------------------
 
+    @Override
     public abstract void apply(IDocument document);
 
+    @Override
     public Point getSelection(IDocument document) {
         return null;
     }

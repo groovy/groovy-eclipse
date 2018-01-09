@@ -17,7 +17,6 @@ package org.eclipse.jdt.core.groovy.tests;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import org.eclipse.core.runtime.CoreException;
@@ -28,26 +27,24 @@ import org.eclipse.jdt.core.search.SearchRequestor;
 
 public class MockSearchRequestor extends SearchRequestor {
 
-    private final List<SearchMatch> matches = new ArrayList<SearchMatch>();
+    private final List<SearchMatch> matches = new ArrayList<>();
 
     @Override
     public void acceptSearchMatch(SearchMatch match) throws CoreException {
         matches.add(match);
-        Collections.sort(matches, new Comparator<SearchMatch>() {
-            public int compare(SearchMatch l, SearchMatch r) {
-                ITypeRoot lTypeRoot = (ITypeRoot) ((IJavaElement) l.getElement()).getAncestor(IJavaElement.COMPILATION_UNIT);
-                if (lTypeRoot == null) {
-                    lTypeRoot = (ITypeRoot) ((IJavaElement) l.getElement()).getAncestor(IJavaElement.CLASS_FILE);
-                }
-                ITypeRoot rTypeRoot = (ITypeRoot) ((IJavaElement) r.getElement()).getAncestor(IJavaElement.COMPILATION_UNIT);
-                if (rTypeRoot == null) {
-                    rTypeRoot = (ITypeRoot) ((IJavaElement) r.getElement()).getAncestor(IJavaElement.CLASS_FILE);
-                }
-                if (!lTypeRoot.equals(rTypeRoot)) {
-                    return lTypeRoot.getElementName().compareTo(rTypeRoot.getElementName());
-                }
-                return l.getOffset() - r.getOffset();
+        Collections.sort(matches, (l, r) -> {
+            ITypeRoot lTypeRoot = (ITypeRoot) ((IJavaElement) l.getElement()).getAncestor(IJavaElement.COMPILATION_UNIT);
+            if (lTypeRoot == null) {
+                lTypeRoot = (ITypeRoot) ((IJavaElement) l.getElement()).getAncestor(IJavaElement.CLASS_FILE);
             }
+            ITypeRoot rTypeRoot = (ITypeRoot) ((IJavaElement) r.getElement()).getAncestor(IJavaElement.COMPILATION_UNIT);
+            if (rTypeRoot == null) {
+                rTypeRoot = (ITypeRoot) ((IJavaElement) r.getElement()).getAncestor(IJavaElement.CLASS_FILE);
+            }
+            if (!lTypeRoot.equals(rTypeRoot)) {
+                return lTypeRoot.getElementName().compareTo(rTypeRoot.getElementName());
+            }
+            return l.getOffset() - r.getOffset();
         });
     }
 

@@ -58,6 +58,7 @@ protected PackageFragmentRoot(IResource resource, JavaProject project) {
 /**
  * @see IPackageFragmentRoot
  */
+@Override
 public void attachSource(IPath sourcePath, IPath rootPath, IProgressMonitor monitor) throws JavaModelException {
 	try {
 		verifyAttachSource(sourcePath);
@@ -153,6 +154,7 @@ public void attachSource(IPath sourcePath, IPath rootPath, IProgressMonitor moni
 /**
  * @see Openable
  */
+@Override
 protected boolean buildStructure(OpenableElementInfo info, IProgressMonitor pm, Map newElements, IResource underlyingResource) throws JavaModelException {
 	((PackageFragmentRootInfo) info).setRootKind(determineKind(underlyingResource));
 	return computeChildren(info, underlyingResource);
@@ -169,9 +171,8 @@ SourceMapper createSourceMapper(IPath sourcePath, IPath rootPath) throws JavaMod
 
 	return mapper;
 }
-/*
- * @see org.eclipse.jdt.core.IPackageFragmentRoot#delete
- */
+
+@Override
 public void delete(
 	int updateResourceFlags,
 	int updateModelFlags,
@@ -280,9 +281,7 @@ protected void computeFolderChildren(IContainer folder, boolean isIncluded, Stri
 	}
 }
 
-/*
- * @see org.eclipse.jdt.core.IPackageFragmentRoot#copy
- */
+@Override
 public void copy(
 	IPath destination,
 	int updateResourceFlags,
@@ -299,6 +298,7 @@ public void copy(
 /**
  * Returns a new element info for this element.
  */
+@Override
 protected Object createElementInfo() {
 	return new PackageFragmentRootInfo();
 }
@@ -306,6 +306,7 @@ protected Object createElementInfo() {
 /**
  * @see IPackageFragmentRoot
  */
+@Override
 public IPackageFragment createPackageFragment(String pkgName, boolean force, IProgressMonitor monitor) throws JavaModelException {
 	CreatePackageFragmentOperation op = new CreatePackageFragmentOperation(this, pkgName, force);
 	op.runOperation(monitor);
@@ -333,6 +334,7 @@ protected int determineKind(IResource underlyingResource) throws JavaModelExcept
  * same parent, same resources, and occurrence count.
  *
  */
+@Override
 public boolean equals(Object o) {
 	if (this == o)
 		return true;
@@ -420,6 +422,7 @@ public char[][] fullInclusionPatternChars() {
 		return null;
 	}
 }
+@Override
 public String getElementName() {
 	IResource res = resource();
 	if (res instanceof IFolder)
@@ -429,18 +432,21 @@ public String getElementName() {
 /**
  * @see IJavaElement
  */
+@Override
 public int getElementType() {
 	return PACKAGE_FRAGMENT_ROOT;
 }
 /**
  * @see JavaElement#getHandleMemento()
  */
+@Override
 protected char getHandleMementoDelimiter() {
 	return JavaElement.JEM_PACKAGEFRAGMENTROOT;
 }
 /*
  * @see JavaElement
  */
+@Override
 public IJavaElement getHandleFromMemento(String token, MementoTokenizer memento, WorkingCopyOwner owner) {
 	switch (token.charAt(0)) {
 		case JEM_PACKAGEFRAGMENT:
@@ -470,6 +476,7 @@ public IJavaElement getHandleFromMemento(String token, MementoTokenizer memento,
 /**
  * @see JavaElement#getHandleMemento(StringBuffer)
  */
+@Override
 protected void getHandleMemento(StringBuffer buff) {
 	IPath path;
 	IResource underlyingResource = getResource();
@@ -495,6 +502,7 @@ protected void getHandleMemento(StringBuffer buff) {
 /**
  * @see IPackageFragmentRoot
  */
+@Override
 public int getKind() throws JavaModelException {
 	return ((PackageFragmentRootInfo)getElementInfo()).getRootKind();
 }
@@ -515,6 +523,7 @@ int internalKind() throws JavaModelException {
 /**
  * Returns an array of non-java resources contained in the receiver.
  */
+@Override
 public Object[] getNonJavaResources() throws JavaModelException {
 	return ((PackageFragmentRootInfo) getElementInfo()).getNonJavaResources(getJavaProject(), resource(), this);
 }
@@ -522,6 +531,7 @@ public Object[] getNonJavaResources() throws JavaModelException {
 /**
  * @see IPackageFragmentRoot
  */
+@Override
 public IPackageFragment getPackageFragment(String packageName) {
 	// tolerate package names with spaces (e.g. 'x . y') (http://bugs.eclipse.org/bugs/show_bug.cgi?id=21957)
 	String[] pkgName = Util.getTrimmedSimpleNames(packageName);
@@ -555,6 +565,7 @@ protected String getPackageName(IFolder folder) {
 /**
  * @see IJavaElement
  */
+@Override
 public IPath getPath() {
 	return internalPath();
 }
@@ -565,6 +576,7 @@ public IPath internalPath() {
 /*
  * @see IPackageFragmentRoot
  */
+@Override
 public IClasspathEntry getRawClasspathEntry() throws JavaModelException {
 
 	IClasspathEntry rawEntry = null;
@@ -582,6 +594,7 @@ public IClasspathEntry getRawClasspathEntry() throws JavaModelException {
 /*
  * @see IPackageFragmentRoot
  */
+@Override
 public IClasspathEntry getResolvedClasspathEntry() throws JavaModelException {
 	IClasspathEntry resolvedEntry = null;
 	JavaProject project = (JavaProject)getJavaProject();
@@ -597,6 +610,7 @@ public IClasspathEntry getResolvedClasspathEntry() throws JavaModelException {
 }
 
 
+@Override
 public IResource resource() {
 	if (this.resource != null) // perf improvement to avoid message send in resource()
 		return this.resource;
@@ -605,6 +619,7 @@ public IResource resource() {
 /*
  * @see IJavaElement
  */
+@Override
 public IResource resource(PackageFragmentRoot root) {
 	return this.resource;
 }
@@ -612,6 +627,7 @@ public IResource resource(PackageFragmentRoot root) {
 /**
  * @see IPackageFragmentRoot
  */
+@Override
 public IPath getSourceAttachmentPath() throws JavaModelException {
 	if (getKind() != K_BINARY) return null;
 
@@ -657,6 +673,7 @@ public void setSourceMapper(SourceMapper mapper) throws JavaModelException {
 /**
  * @see IPackageFragmentRoot
  */
+@Override
 public IPath getSourceAttachmentRootPath() throws JavaModelException {
 	if (getKind() != K_BINARY) return null;
 
@@ -690,6 +707,7 @@ public IPath getSourceAttachmentRootPath() throws JavaModelException {
 /**
  * @see JavaElement
  */
+@Override
 public SourceMapper getSourceMapper() {
 	SourceMapper mapper;
 	try {
@@ -715,6 +733,7 @@ public SourceMapper getSourceMapper() {
 /**
  * @see IJavaElement
  */
+@Override
 public IResource getUnderlyingResource() throws JavaModelException {
 	if (!exists()) throw newNotPresentException();
 	return resource();
@@ -723,11 +742,13 @@ public IResource getUnderlyingResource() throws JavaModelException {
 /**
  * @see IParent
  */
+@Override
 public boolean hasChildren() throws JavaModelException {
 	// a package fragment root always has the default package as a child
 	return true;
 }
 
+@Override
 public int hashCode() {
 	return resource().hashCode();
 }
@@ -743,6 +764,7 @@ public boolean ignoreOptionalProblems() {
 /**
  * @see IPackageFragmentRoot
  */
+@Override
 public boolean isArchive() {
 	return false;
 }
@@ -750,6 +772,7 @@ public boolean isArchive() {
 /**
  * @see IPackageFragmentRoot
  */
+@Override
 public boolean isExternal() {
 	return false;
 }
@@ -773,9 +796,8 @@ protected IStatus validateOnClasspath() {
 	}
 	return new JavaModelStatus(IJavaModelStatusConstants.ELEMENT_NOT_ON_CLASSPATH, this);
 }
-/*
- * @see org.eclipse.jdt.core.IPackageFragmentRoot#move
- */
+
+@Override
 public void move(
 	IPath destination,
 	int updateResourceFlags,
@@ -792,6 +814,7 @@ public void move(
 /**
  * @private Debugging purposes
  */
+@Override
 protected void toStringInfo(int tab, StringBuffer buffer, Object info, boolean showResolvedInfo) {
 	buffer.append(tabString(tab));
 	IPath path = getPath();
@@ -811,6 +834,7 @@ protected void toStringInfo(int tab, StringBuffer buffer, Object info, boolean s
 	}
 }
 
+@Override
 protected IStatus validateExistence(IResource underlyingResource) {
 	// check whether this pkg fragment root can be opened
 	IStatus status = validateOnClasspath();
@@ -851,6 +875,7 @@ protected void verifyAttachSource(IPath sourcePath) throws JavaModelException {
 public String getClassFilePath(String classname) {
 	return classname;
 }
+@Override
 public IModuleDescription getModuleDescription() {
 	try {
 		IJavaElement[] pkgs = getChildren();

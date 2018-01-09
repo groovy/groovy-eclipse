@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.core.builder;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IPackageFragment;
@@ -44,7 +45,7 @@ public class GroovyNameLookup extends NameLookup {
         this.packageFragmentRoots = (IPackageFragmentRoot[]) ReflectionUtils.getPrivateField(NameLookup.class, "packageFragmentRoots", other);
         this.packageFragments = (HashtableOfArrayToObject) ReflectionUtils.getPrivateField(NameLookup.class, "packageFragments", other);
         this.typesInWorkingCopies = (HashMap<PackageFragmentRoot, ?>) ReflectionUtils.getPrivateField(NameLookup.class, "typesInWorkingCopies", other);
-        this.rootToResolvedEntries = (Map/*<IPackageFragmentRoot, IClasspathEntry>*/) ReflectionUtils.getPrivateField(NameLookup.class, "rootToResolvedEntries", other);
+        this.rootToResolvedEntries = (Map<IPackageFragmentRoot, IClasspathEntry>) ReflectionUtils.getPrivateField(NameLookup.class, "rootToResolvedEntries", other);
     }
 
     public GroovyNameLookup(IPackageFragmentRoot[] packageFragmentRoots, HashtableOfArrayToObject packageFragments, ICompilationUnit[] workingCopies, Map<PackageFragmentRoot, ClasspathEntry> rootToResolvedEntries) {

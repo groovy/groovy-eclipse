@@ -867,6 +867,7 @@ public class ASTRewrite {
 	 *
 	 * @return a debug string
 	 */
+	@Override
 	public String toString() {
 		StringBuffer buf= new StringBuffer();
 		buf.append("Events:\n"); //$NON-NLS-1$

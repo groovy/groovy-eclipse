@@ -34,6 +34,7 @@ public class SelectionOnPackageVisibilityReference extends ImportReference {
 		super(tokens, positions, false, 0);
 	}
 
+	@Override
 	public StringBuffer print(int indent, StringBuffer output) {
 
 		printIndent(indent, output).append("<SelectOnPackageVisibility:"); //$NON-NLS-1$

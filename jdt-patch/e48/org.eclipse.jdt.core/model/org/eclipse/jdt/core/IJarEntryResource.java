@@ -48,6 +48,7 @@ public interface IJarEntryResource extends IStorage {
 	 *
 	 * @return the absolute path of this jar entry resource
 	 */
+	@Override
 	IPath getFullPath();
 
 	/**

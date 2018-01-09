@@ -73,9 +73,11 @@ public CreateImportOperation(String importName, ICompilationUnit parentElement, 
 	this.importName = importName;
 	this.flags = flags;
 }
+@Override
 protected StructuralPropertyDescriptor getChildPropertyDescriptor(ASTNode parent) {
 	return CompilationUnit.IMPORTS_PROPERTY;
 }
+@Override
 protected ASTNode generateElementAST(ASTRewrite rewriter, ICompilationUnit cu) throws JavaModelException {
 	// ensure no duplicate
 	Iterator imports = this.cuAST.imports().iterator();
@@ -112,12 +114,14 @@ protected ASTNode generateElementAST(ASTRewrite rewriter, ICompilationUnit cu) t
 /**
  * @see CreateElementInCUOperation#generateResultHandle
  */
+@Override
 protected IJavaElement generateResultHandle() {
 	return getCompilationUnit().getImport(this.importName);
 }
 /**
  * @see CreateElementInCUOperation#getMainTaskName()
  */
+@Override
 public String getMainTaskName(){
 	return Messages.operation_createImportsProgress;
 }
@@ -128,6 +132,7 @@ public String getMainTaskName(){
  * <li> if no type, after the package statement
  * <li> and if no package statement - first thing in the CU
  */
+@Override
 protected void initializeDefaultPosition() {
 	try {
 		ICompilationUnit cu = getCompilationUnit();
@@ -162,6 +167,7 @@ protected void initializeDefaultPosition() {
  * @see IJavaModelStatus
  * @see JavaConventions
  */
+@Override
 public IJavaModelStatus verify() {
 	IJavaModelStatus status = super.verify();
 	if (!status.isOK()) {

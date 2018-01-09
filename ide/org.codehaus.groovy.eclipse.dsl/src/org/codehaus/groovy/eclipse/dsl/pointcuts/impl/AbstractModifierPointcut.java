@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
 import groovyjarjarasm.asm.Opcodes;
-
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -28,11 +27,9 @@ import org.eclipse.core.resources.IStorage;
 
 /**
  * the match returns true if the pattern passed in has a modifier of the kind specified
- * @author andrew
- * @created Feb 11, 2011
  */
 public class AbstractModifierPointcut extends FilteringPointcut<AnnotatedNode> {
-    
+
     public static class FinalPointcut extends AbstractModifierPointcut {
         public FinalPointcut(IStorage containerIdentifier, String pointcutName) {
             super(containerIdentifier, pointcutName, Opcodes.ACC_FINAL);
@@ -44,28 +41,28 @@ public class AbstractModifierPointcut extends FilteringPointcut<AnnotatedNode> {
             super(containerIdentifier, pointcutName, Opcodes.ACC_STATIC);
         }
     }
-    
+
     public static class PublicPointcut extends AbstractModifierPointcut {
         public PublicPointcut(IStorage containerIdentifier, String pointcutName) {
             super(containerIdentifier, pointcutName, Opcodes.ACC_PUBLIC);
         }
     }
-    
+
     public static class PrivatePointcut extends AbstractModifierPointcut {
         public PrivatePointcut(IStorage containerIdentifier, String pointcutName) {
             super(containerIdentifier, pointcutName, Opcodes.ACC_PRIVATE);
         }
     }
-    
+
     public static class SynchronizedPointcut extends AbstractModifierPointcut {
         public SynchronizedPointcut(IStorage containerIdentifier, String pointcutName) {
             super(containerIdentifier, pointcutName, Opcodes.ACC_SYNCHRONIZED);
         }
     }
-    
+
 
     private final int modifier;
-    
+
     public AbstractModifierPointcut(IStorage containerIdentifier, String pointcutName, int modifier) {
         super(containerIdentifier, pointcutName, AnnotatedNode.class);
         this.modifier = modifier;
@@ -90,7 +87,7 @@ public class AbstractModifierPointcut extends FilteringPointcut<AnnotatedNode> {
         }
         return success ? result : null;
     }
-    
+
     @Override
     public void verify() throws PointcutVerificationException {
         if(getArgumentValues().length > 0) {

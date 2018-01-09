@@ -32,10 +32,9 @@ import org.eclipse.jdt.internal.compiler.lookup.SyntheticMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 
 /**
- * Simple subtype of the JDT ClassFile that represents a fully built class file from groovy. It is immutable and just intended to be
- * a 'holder' for bytes from groovy that are passed back to JDT.
- *
- * @author Andy Clement
+ * Simple subtype of the JDT ClassFile that represents a fully built class file
+ * from groovy. It is immutable and just intended to be a holder for bytes from
+ * groovy that are passed back to JDT.
  */
 class GroovyClassFile extends ClassFile {
 
@@ -80,24 +79,23 @@ class GroovyClassFile extends ClassFile {
     }
 
     @Override
+    public void addProblemConstructor(AbstractMethodDeclaration method, MethodBinding methodBinding, CategorizedProblem[] problems) {
+        throw new ImmutableException();
+    }
+
+    @Override
     public void addProblemConstructor(AbstractMethodDeclaration method, MethodBinding methodBinding, CategorizedProblem[] problems,
             int savedOffset) {
         throw new ImmutableException();
     }
 
     @Override
-    public void addProblemConstructor(AbstractMethodDeclaration method, MethodBinding methodBinding, CategorizedProblem[] problems) {
-        throw new ImmutableException();
-    }
-
-    @Override
-    public void addProblemMethod(AbstractMethodDeclaration method, MethodBinding methodBinding, CategorizedProblem[] problems,
-            int savedOffset) {
-        throw new ImmutableException();
-    }
-
-    @Override
     public void addProblemMethod(AbstractMethodDeclaration method, MethodBinding methodBinding, CategorizedProblem[] problems) {
+        throw new ImmutableException();
+    }
+
+    @Override
+    public void addProblemMethod(AbstractMethodDeclaration method, MethodBinding methodBinding, CategorizedProblem[] problems, int savedOffset) {
         throw new ImmutableException();
     }
 
@@ -147,12 +145,12 @@ class GroovyClassFile extends ClassFile {
     }
 
     @Override
-    public void completeCodeAttributeForClinit(int codeAttributeOffset, int problemLine) {
+    public void completeCodeAttributeForClinit(int codeAttributeOffset) {
         throw new ImmutableException();
     }
 
     @Override
-    public void completeCodeAttributeForClinit(int codeAttributeOffset) {
+    public void completeCodeAttributeForClinit(int codeAttributeOffset, int problemLine) {
         throw new ImmutableException();
     }
 
@@ -176,12 +174,7 @@ class GroovyClassFile extends ClassFile {
         throw new ImmutableException();
     }
 
-    // For 3.6:
-    public void completeMethodInfo(int methodAttributeOffset, int attributeNumber) {
-        throw new ImmutableException();
-    }
-
-    // For 3.7
+    @Override
     public void completeMethodInfo(MethodBinding methodBinding, int methodAttributeOffset, int attributeNumber) {
         throw new ImmutableException();
     }
@@ -196,31 +189,23 @@ class GroovyClassFile extends ClassFile {
         throw new ImmutableException();
     }
 
-    // these two for 3.6
-    public int generateMethodInfoAttribute(MethodBinding methodBinding, AnnotationMethodDeclaration declaration) {
-        throw new ImmutableException();
-    }
-
-    public int generateMethodInfoAttribute(MethodBinding methodBinding) {
-        throw new ImmutableException();
-    }
-
-    // these two for 3.7
-    public int generateMethodInfoAttributes(MethodBinding methodBinding, AnnotationMethodDeclaration declaration) {
-        throw new ImmutableException();
-    }
-
+    @Override
     public int generateMethodInfoAttributes(MethodBinding methodBinding) {
         throw new ImmutableException();
     }
 
     @Override
-    public void generateMethodInfoHeader(MethodBinding methodBinding, int accessFlags) {
+    public int generateMethodInfoAttributes(MethodBinding methodBinding, AnnotationMethodDeclaration declaration) {
         throw new ImmutableException();
     }
 
     @Override
     public void generateMethodInfoHeader(MethodBinding methodBinding) {
+        throw new ImmutableException();
+    }
+
+    @Override
+    public void generateMethodInfoHeader(MethodBinding methodBinding, int accessFlags) {
         throw new ImmutableException();
     }
 
@@ -244,10 +229,7 @@ class GroovyClassFile extends ClassFile {
         return name;
     }
 
-    protected void initByteArrays() {
-        throw new UnsupportedOperationException();
-    }
-
+    @Override
     protected void initByteArrays(int members) {
         throw new UnsupportedOperationException();
     }
@@ -259,20 +241,15 @@ class GroovyClassFile extends ClassFile {
 
     @Override
     public ClassFile outerMostEnclosingClassFile() {
-        // FIXASC Does this ever get called for Groovy?
         throw new UnsupportedOperationException();
     }
 
     @Override
     public void recordInnerClasses(TypeBinding binding) {
-        // FIXASC Does this ever get called for Groovy?
         throw new UnsupportedOperationException();
     }
 
-    public void reset(SourceTypeBinding typeBinding) {
-        throw new UnsupportedOperationException();
-    }
-
+    @Override
     public void reset(SourceTypeBinding typeBinding, CompilerOptions options) {
         throw new UnsupportedOperationException();
     }
@@ -282,11 +259,7 @@ class GroovyClassFile extends ClassFile {
         throw new UnsupportedOperationException();
     }
 
-    public void traverse(MethodBinding methodBinding, int maxLocals, byte[] bytecodes, int codeOffset, int codeLength, List<?> frames, boolean isClinit) {
-        throw new UnsupportedOperationException();
-    }
-
-    // 4.3 method (version of above method?)
+    @Override
     public List traverse(MethodBinding methodBinding, int maxLocals, byte[] bytecodes, int codeOffset, int codeLength, Map frames, boolean isClinit) {
         throw new UnsupportedOperationException();
     }

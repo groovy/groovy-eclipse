@@ -60,23 +60,17 @@ public class MethodParametersAttribute extends ClassFileAttribute implements IMe
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IMethodParametersAttribute#getMethodParameterLength()
-	 */
+	@Override
 	public int getMethodParameterLength() {
 		return this.numberOfEntries;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IMethodParametersAttribute#getParameterName(int)
-	 */
+	@Override
 	public char[] getParameterName(int i) {
 		return this.names[i];
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IMethodParametersAttribute#getAccessFlags(int)
-	 */
+	@Override
 	public short getAccessFlags(int i) {
 		return this.accessFlags[i];
 	}

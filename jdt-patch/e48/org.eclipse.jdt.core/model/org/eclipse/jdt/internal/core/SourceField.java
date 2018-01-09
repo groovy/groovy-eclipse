@@ -26,10 +26,12 @@ public class SourceField extends NamedMember implements IField {
 protected SourceField(JavaElement parent, String name) {
 	super(parent, name);
 }
+@Override
 public boolean equals(Object o) {
 	if (!(o instanceof SourceField)) return false;
 	return super.equals(o);
 }
+@Override
 public ASTNode findNode(org.eclipse.jdt.core.dom.CompilationUnit ast) {
 	// For field declarations, a variable declaration fragment is returned
 	// Return the FieldDeclaration instead
@@ -44,6 +46,7 @@ public ASTNode findNode(org.eclipse.jdt.core.dom.CompilationUnit ast) {
 /**
  * @see IField
  */
+@Override
 public Object getConstant() throws JavaModelException {
 	Object constant = null;
 	SourceFieldElementInfo info = (SourceFieldElementInfo) getElementInfo();
@@ -97,12 +100,12 @@ public Object getConstant() throws JavaModelException {
 /**
  * @see IJavaElement
  */
+@Override
 public int getElementType() {
 	return FIELD;
 }
-/* (non-Javadoc)
- * @see org.eclipse.jdt.core.IField#getKey()
- */
+
+@Override
 public String getKey() {
 	try {
 		return getKey(this, false/*don't open*/);
@@ -114,12 +117,12 @@ public String getKey() {
 /**
  * @see JavaElement#getHandleMemento()
  */
+@Override
 protected char getHandleMementoDelimiter() {
 	return JavaElement.JEM_FIELD;
 }
-/*
- * @see JavaElement#getPrimaryElement(boolean)
- */
+
+@Override
 public IJavaElement getPrimaryElement(boolean checkOwner) {
 	if (checkOwner) {
 		CompilationUnit cu = (CompilationUnit)getAncestor(COMPILATION_UNIT);
@@ -131,21 +134,22 @@ public IJavaElement getPrimaryElement(boolean checkOwner) {
 /**
  * @see IField
  */
+@Override
 public String getTypeSignature() throws JavaModelException {
 	SourceFieldElementInfo info = (SourceFieldElementInfo) getElementInfo();
 	return info.getTypeSignature();
 }
-/* (non-Javadoc)
- * @see org.eclipse.jdt.core.IField#isEnumConstant()
- */public boolean isEnumConstant() throws JavaModelException {
+
+@Override
+public boolean isEnumConstant() throws JavaModelException {
 	return Flags.isEnum(getFlags());
 }
-/* (non-Javadoc)
- * @see org.eclipse.jdt.core.IField#isResolved()
- */
+
+@Override
 public boolean isResolved() {
 	return false;
 }
+@Override
 public JavaElement resolved(Binding binding) {
 	SourceRefElement resolvedHandle = new ResolvedSourceField(this.parent, this.name, new String(binding.computeUniqueKey()));
 	resolvedHandle.occurrenceCount = this.occurrenceCount;
@@ -154,6 +158,7 @@ public JavaElement resolved(Binding binding) {
 /**
  * @private Debugging purposes
  */
+@Override
 protected void toStringInfo(int tab, StringBuffer buffer, Object info, boolean showResolvedInfo) {
 	buffer.append(tabString(tab));
 	if (info == null) {

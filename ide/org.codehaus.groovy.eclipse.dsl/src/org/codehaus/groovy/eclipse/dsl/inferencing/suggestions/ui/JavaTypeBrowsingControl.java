@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.ui;
 
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.IValueCheckingRule;
 import org.codehaus.groovy.eclipse.dsl.inferencing.suggestions.JavaValidParameterizedTypeRule;
-import org.codehaus.groovy.eclipse.ui.browse.IBrowseTypeHandler;
 import org.codehaus.groovy.eclipse.ui.browse.TypeBrowseSupport;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.layout.GridDataFactory;
@@ -31,24 +30,19 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-/**
- * 
- * @author Nieraj Singh
- * @created 2011-05-13
- */
 public class JavaTypeBrowsingControl extends JavaTextControl {
 
-    /**
-     * 
-     */
     private static final String BROWSE = "Browse...";
 
     private Button browse;
 
     private IJavaProject project;
 
-    public JavaTypeBrowsingControl(IDialogueControlDescriptor labelDescriptor, Point offsetLabelLocation, String initialValue,
-            IJavaProject project) {
+    public JavaTypeBrowsingControl(
+        IDialogueControlDescriptor labelDescriptor,
+        Point offsetLabelLocation,
+        String initialValue,
+        IJavaProject project) {
         super(labelDescriptor, offsetLabelLocation, initialValue);
         this.project = project;
     }
@@ -56,6 +50,7 @@ public class JavaTypeBrowsingControl extends JavaTextControl {
     /**
      * Must return the control that is managed by the manager.
      */
+    @Override
     protected Control getManagedControl(Composite parent) {
         // First create a composite with 2 columns, one for the labeled text
         // control
@@ -87,13 +82,9 @@ public class JavaTypeBrowsingControl extends JavaTextControl {
     protected void addTypeBrowseSupport(Text text, Button browse, Shell shell) {
         final Text finText = text;
 
-        new TypeBrowseSupport(shell, project, new IBrowseTypeHandler() {
-
-            public void handleTypeSelection(String qualifiedName) {
-                finText.setText(qualifiedName);
-                notifyControlChange(qualifiedName, finText);
-            }
-
+        new TypeBrowseSupport(shell, project, qualifiedName -> {
+            finText.setText(qualifiedName);
+            notifyControlChange(qualifiedName, finText);
         }).applySupport(browse, text);
     }
 
@@ -101,13 +92,14 @@ public class JavaTypeBrowsingControl extends JavaTextControl {
         return 23;
     }
 
+    @Override
     public void setEnabled(boolean enable) {
         super.setEnabled(enable);
         browse.setEnabled(enable);
     }
 
+    @Override
     protected IValueCheckingRule getCachedValidationRule() {
         return new JavaValidParameterizedTypeRule(project);
     }
-
 }

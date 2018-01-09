@@ -20,10 +20,6 @@ import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.action.IAction;
 
-/**
- * @author andrew
- * @created May 24, 2011
- */
 public class AddDSLDContainerAction extends AbstractAddClasspathContainerAction {
 
     @Override

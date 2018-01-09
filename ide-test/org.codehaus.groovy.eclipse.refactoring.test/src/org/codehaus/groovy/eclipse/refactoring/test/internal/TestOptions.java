@@ -55,7 +55,7 @@ public class TestOptions {
     }
 
     public static void initializeProjectOptions(IJavaProject project) {
-        Map<String, String> options = new HashMap<String, String>();
+        Map<String, String> options = new HashMap<>();
         JavaProjectHelper.set15CompilerOptions(options);
         project.setOptions(options);
     }
@@ -120,9 +120,13 @@ class TestFormatterOptions {
     public boolean indent_switchstatements_compare_to_switch;
 
     public boolean insert_new_line_after_opening_brace_in_array_initializer;
-    public boolean insert_new_line_after_annotation_on_member;
-    public boolean insert_new_line_after_annotation_on_parameter;
+    public boolean insert_new_line_after_annotation_on_enum_const;
+    public boolean insert_new_line_after_annotation_on_field;
     public boolean insert_new_line_after_annotation_on_local_variable;
+    public boolean insert_new_line_after_annotation_on_method;
+    public boolean insert_new_line_after_annotation_on_package;
+    public boolean insert_new_line_after_annotation_on_parameter;
+    public boolean insert_new_line_after_annotation_on_type;
     public boolean insert_new_line_at_end_of_file_if_missing;
     public boolean insert_new_line_before_catch_in_try_statement;
     public boolean insert_new_line_before_closing_brace_in_array_initializer;
@@ -267,7 +271,7 @@ class TestFormatterOptions {
     }
 
     private Hashtable<String, String> getMap() {
-        Hashtable<String, String> options = new Hashtable<String, String>();
+        Hashtable<String, String> options = new Hashtable<>();
         options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_ARGUMENTS_IN_ALLOCATION_EXPRESSION, getAlignment(this.alignment_for_arguments_in_allocation_expression));
         options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_ARGUMENTS_IN_EXPLICIT_CONSTRUCTOR_CALL, getAlignment(this.alignment_for_arguments_in_explicit_constructor_call));
         options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_ARGUMENTS_IN_METHOD_INVOCATION, getAlignment(this.alignment_for_arguments_in_method_invocation));
@@ -313,10 +317,14 @@ class TestFormatterOptions {
         options.put(DefaultCodeFormatterConstants.FORMATTER_INDENT_SWITCHSTATEMENTS_COMPARE_TO_CASES, this.indent_switchstatements_compare_to_cases ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
         options.put(DefaultCodeFormatterConstants.FORMATTER_INDENT_SWITCHSTATEMENTS_COMPARE_TO_SWITCH, this.indent_switchstatements_compare_to_switch ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
         options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_OPENING_BRACE_IN_ARRAY_INITIALIZER, this.insert_new_line_after_opening_brace_in_array_initializer? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
-        options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_MEMBER, this.insert_new_line_after_annotation_on_member? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
-        options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_PARAMETER, this.insert_new_line_after_annotation_on_parameter? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
-        options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_LOCAL_VARIABLE, this.insert_new_line_after_annotation_on_local_variable? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
-        options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AT_END_OF_FILE_IF_MISSING, this.insert_new_line_at_end_of_file_if_missing? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
+        options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_ENUM_CONSTANT, this.insert_new_line_after_annotation_on_enum_const ? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
+        options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_FIELD, this.insert_new_line_after_annotation_on_field ? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
+        options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_LOCAL_VARIABLE, this.insert_new_line_after_annotation_on_local_variable ? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
+        options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_METHOD, this.insert_new_line_after_annotation_on_method ? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
+        options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_PACKAGE, this.insert_new_line_after_annotation_on_package ? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
+        options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_PARAMETER, this.insert_new_line_after_annotation_on_parameter ? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
+        options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AFTER_ANNOTATION_ON_TYPE, this.insert_new_line_after_annotation_on_type ? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
+        options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_AT_END_OF_FILE_IF_MISSING, this.insert_new_line_at_end_of_file_if_missing ? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
         options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_BEFORE_CATCH_IN_TRY_STATEMENT, this.insert_new_line_before_catch_in_try_statement? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
         options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_BEFORE_CLOSING_BRACE_IN_ARRAY_INITIALIZER, this.insert_new_line_before_closing_brace_in_array_initializer? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
         options.put(DefaultCodeFormatterConstants.FORMATTER_INSERT_NEW_LINE_BEFORE_ELSE_IN_IF_STATEMENT, this.insert_new_line_before_else_in_if_statement? JavaCore.INSERT : JavaCore.DO_NOT_INSERT);
@@ -512,10 +520,14 @@ class TestFormatterOptions {
         this.indent_breaks_compare_to_cases = true;
         this.indent_switchstatements_compare_to_cases = true;
         this.indent_switchstatements_compare_to_switch = true;
-        this.insert_new_line_after_annotation_on_member= true;
-        this.insert_new_line_after_annotation_on_parameter= false;
-        this.insert_new_line_after_annotation_on_local_variable= true;
-        this.insert_new_line_at_end_of_file_if_missing= false;
+        this.insert_new_line_after_annotation_on_enum_const = true;
+        this.insert_new_line_after_annotation_on_field = true;
+        this.insert_new_line_after_annotation_on_local_variable = true;
+        this.insert_new_line_after_annotation_on_method = true;
+        this.insert_new_line_after_annotation_on_package = true;
+        this.insert_new_line_after_annotation_on_parameter = true;
+        this.insert_new_line_after_annotation_on_type = true;
+        this.insert_new_line_at_end_of_file_if_missing = false;
         this.insert_new_line_after_opening_brace_in_array_initializer = false;
         this.insert_new_line_before_catch_in_try_statement = false;
         this.insert_new_line_before_closing_brace_in_array_initializer = false;

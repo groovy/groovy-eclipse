@@ -99,6 +99,7 @@ public class GenericXMLWriter extends PrintWriter {
 			Map.Entry[] entries = new Map.Entry[length];
 			parameters.entrySet().toArray(entries);
 			Arrays.sort(entries, new Comparator() {
+				@Override
 				public int compare(Object o1, Object o2) {
 					Map.Entry entry1 = (Map.Entry) o1;
 					Map.Entry entry2 = (Map.Entry) o2;

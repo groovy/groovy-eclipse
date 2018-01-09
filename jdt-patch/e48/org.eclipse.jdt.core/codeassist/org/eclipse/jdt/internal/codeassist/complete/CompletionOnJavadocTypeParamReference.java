@@ -26,25 +26,17 @@ public class CompletionOnJavadocTypeParamReference extends JavadocSingleTypeRefe
 		super(typeRef.token, (((long)typeRef.sourceStart)<<32)+typeRef.sourceEnd, typeRef.tagSourceStart, typeRef.tagSourceStart);
 	}
 
-	/**
-	 * @param flags The completionFlags to set.
-	 */
+	@Override
 	public void addCompletionFlags(int flags) {
 		this.completionFlags |= flags;
 	}
 
-	/**
-	 * Get completion node flags.
-	 *
-	 * @return int Flags of the javadoc completion node.
-	 */
+	@Override
 	public int getCompletionFlags() {
 		return this.completionFlags;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.internal.compiler.ast.AllocationExpression#printExpression(int, java.lang.StringBuffer)
-	 */
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 		output.append("<CompletionOnJavadocTypeParamReference:"); //$NON-NLS-1$
 		if (this.token != null) super.printExpression(indent, output);

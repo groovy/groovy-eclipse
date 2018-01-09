@@ -1,5 +1,5 @@
  /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,24 +18,16 @@ package org.codehaus.groovy.eclipse.launchers;
 
 import java.util.List;
 
-import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
+import org.codehaus.jdt.groovy.model.GroovyProjectFacade;
 import org.eclipse.debug.ui.ILaunchConfigurationTab;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 
-/**
- * @author Andrew Eisenberg
- * @created Oct 7, 2009
- *
- */
-public class GroovyScriptLauncherTab extends AbstractGroovyLauncherTab
-        implements ILaunchConfigurationTab {
+public class GroovyScriptLauncherTab extends AbstractGroovyLauncherTab implements ILaunchConfigurationTab {
 
     @Override
-    protected List<IType> findAllRunnableTypes(IJavaProject javaProject)
-            throws JavaModelException {
+    protected List<IType> findAllRunnableTypes(IJavaProject javaProject) throws JavaModelException {
         return new GroovyProjectFacade(javaProject).findAllScripts();
     }
-
 }

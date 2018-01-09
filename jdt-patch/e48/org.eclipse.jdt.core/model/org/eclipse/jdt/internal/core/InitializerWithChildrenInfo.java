@@ -20,6 +20,7 @@ public class InitializerWithChildrenInfo extends InitializerElementInfo {
 		this.children = children;
 	}
 
+	@Override
 	public IJavaElement[] getChildren() {
 		return this.children;
 	}

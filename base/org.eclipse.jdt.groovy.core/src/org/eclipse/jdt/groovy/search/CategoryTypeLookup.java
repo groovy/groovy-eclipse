@@ -40,6 +40,7 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
  */
 public class CategoryTypeLookup implements ITypeLookup {
 
+    @Override
     public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
         if (node instanceof VariableExpression || isCompatibleConstantExpression(node, scope)) {
             String simpleName = node.getText();
@@ -48,7 +49,7 @@ public class CategoryTypeLookup implements ITypeLookup {
             ClassNode normalizedType = GroovyUtils.getWrapperTypeIfPrimitive(expectedType);
 
             //
-            List<MethodNode> candidates = new ArrayList<MethodNode>();
+            List<MethodNode> candidates = new ArrayList<>();
 
             for (ClassNode category : scope.getCategoryNames()) {
                 for (MethodNode method : category.getMethods(simpleName)) {
@@ -78,7 +79,7 @@ public class CategoryTypeLookup implements ITypeLookup {
 
             if (!candidates.isEmpty()) {
                 int args = 1 + scope.getMethodCallNumberOfArguments();
-                List<ClassNode> argumentTypes = new ArrayList<ClassNode>(args);
+                List<ClassNode> argumentTypes = new ArrayList<>(args);
                 argumentTypes.add(normalizedType); // lhs of dot or delegate type
                 if (args > 1) argumentTypes.addAll(scope.getMethodCallArgumentTypes());
 
@@ -191,30 +192,37 @@ public class CategoryTypeLookup implements ITypeLookup {
 
     //--------------------------------------------------------------------------
 
+    @Override
     public TypeLookupResult lookupType(AnnotationNode node, VariableScope scope) {
         return null;
     }
 
+    @Override
     public TypeLookupResult lookupType(ImportNode node, VariableScope scope) {
         return null;
     }
 
+    @Override
     public TypeLookupResult lookupType(ClassNode node, VariableScope scope) {
         return null;
     }
 
+    @Override
     public TypeLookupResult lookupType(FieldNode node, VariableScope scope) {
         return null;
     }
 
+    @Override
     public TypeLookupResult lookupType(MethodNode node, VariableScope scope) {
         return null;
     }
 
+    @Override
     public TypeLookupResult lookupType(Parameter node, VariableScope scope) {
         return null;
     }
 
+    @Override
     public void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {
         // do nothing
     }

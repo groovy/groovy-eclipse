@@ -41,18 +41,21 @@ public RenameElementsOperation(IJavaElement[] elements, IJavaElement[] destinati
 /**
  * @see MultiOperation
  */
+@Override
 protected String getMainTaskName() {
 	return Messages.operation_renameElementProgress;
 }
 /**
  * @see CopyElementsOperation#isRename()
  */
+@Override
 protected boolean isRename() {
 	return true;
 }
 /**
  * @see MultiOperation
  */
+@Override
 protected IJavaModelStatus verify() {
 	IJavaModelStatus status = super.verify();
 	if (! status.isOK())
@@ -64,6 +67,7 @@ protected IJavaModelStatus verify() {
 /**
  * @see MultiOperation
  */
+@Override
 protected void verify(IJavaElement element) throws JavaModelException {
 	if (element == null || !element.exists())
 		error(IJavaModelStatusConstants.ELEMENT_DOES_NOT_EXIST, element);

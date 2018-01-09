@@ -31,6 +31,7 @@ public class BecomeWorkingCopyOperation extends JavaModelOperation {
 		super(new IJavaElement[] {workingCopy});
 		this.problemRequestor = problemRequestor;
 	}
+	@Override
 	protected void executeOperation() throws JavaModelException {
 
 		// open the working copy now to ensure contents are that of the current state of this element
@@ -71,6 +72,7 @@ public class BecomeWorkingCopyOperation extends JavaModelOperation {
 	/*
 	 * @see JavaModelOperation#isReadOnly
 	 */
+	@Override
 	public boolean isReadOnly() {
 		return true;
 	}

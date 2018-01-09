@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assume.assumeTrue;
 
 import org.junit.Before;
@@ -23,14 +22,9 @@ import org.junit.Test;
 
 public final class GroovySimpleTests_Compliance_1_8 extends GroovyCompilerTestSuite {
 
-    public GroovySimpleTests_Compliance_1_8(long level) {
-        super(level);
-    }
-
     @Before
     public void setUp() {
         assumeTrue(isAtLeastJava(JDK8));
-        assumeTrue(isAtLeastGroovy(23));
     }
 
     @Test

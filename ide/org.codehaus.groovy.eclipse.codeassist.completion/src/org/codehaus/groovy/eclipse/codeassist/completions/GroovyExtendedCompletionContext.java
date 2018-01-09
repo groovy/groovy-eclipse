@@ -85,7 +85,7 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
     public GroovyExtendedCompletionContext(ContentAssistContext context, VariableScope currentScope) {
         this.context = context;
         this.currentScope = currentScope;
-        this.visibleElements = new HashMap<String, IJavaElement[]>();
+        this.visibleElements = new HashMap<>();
     }
 
     @Override
@@ -122,7 +122,7 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
         boolean isEnum = targetType.isEnum();
 
         // look at all local variables in scope
-        Map<String, IJavaElement> nameElementMap = new LinkedHashMap<String, IJavaElement>();
+        Map<String, IJavaElement> nameElementMap = new LinkedHashMap<>();
         if (currentScope != null) {
             for (VariableInfo varInfo : currentScope) {
                 // GRECLIPSE-1268 currently, no good way to get to the actual declaration of the variable.

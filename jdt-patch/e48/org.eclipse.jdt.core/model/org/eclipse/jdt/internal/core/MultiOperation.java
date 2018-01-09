@@ -87,6 +87,7 @@ public abstract class MultiOperation extends JavaModelOperation {
 	 * If multiple errors occured, the corresponding <code>JavaModelStatus</code> is a
 	 * multi-status. Otherwise, it is a simple one.
 	 */
+	@Override
 	protected void executeOperation() throws JavaModelException {
 		processElements();
 	}

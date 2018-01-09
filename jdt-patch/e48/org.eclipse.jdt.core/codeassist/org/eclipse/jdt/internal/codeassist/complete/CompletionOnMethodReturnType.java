@@ -22,10 +22,12 @@ public class CompletionOnMethodReturnType extends MethodDeclaration {
 		this.sourceEnd = returnType.sourceEnd;
 	}
 
+	@Override
 	public void resolveStatements() {
 			throw new CompletionNodeFound(this, this.scope);
 	}
 
+	@Override
 	public StringBuffer print(int tab, StringBuffer output) {
 		return this.returnType.print(tab, output);
 	}

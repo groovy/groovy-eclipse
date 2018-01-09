@@ -1,13 +1,18 @@
-/*******************************************************************************
- * Copyright (c) 2011 Codehaus.org, SpringSource, and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2017 the original author or authors.
  *
- * Contributors:
- *      Andrew Eisenberg - Initial implemenation
- *******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.dsl.pointcuts;
 
 import java.util.Collection;
@@ -25,23 +30,20 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 
 /**
- * A set of elements bound under the current evaluated pointcut
- * BindingSet 
- * @author andrew
- * @created Feb 10, 2011
+ * A set of elements bound under the current evaluated pointcut.
  */
 public class BindingSet {
 
     // the table of named bindings built up through contained pointcuts
-    private final Map<String, Collection<Object>> namedBindings = new HashMap<String, Collection<Object>>();
-    
-    
+    private final Map<String, Collection<Object>> namedBindings = new HashMap<>();
+
+
     public BindingSet() {
     }
 
     /**
      * Augments the existing named binding with the collection value.
-     * 
+     *
      * Creates the binding if it doesn't exist yet
      * @param name
      * @param value should not be null
@@ -50,7 +52,7 @@ public class BindingSet {
     public BindingSet addToBinding(String name, Collection<?> value) {
         Collection<Object> binding = namedBindings.get(name);
         if (binding == null) {
-            binding = new HashSet<Object>();
+            binding = new HashSet<>();
             namedBindings.put(name, binding);
         }
         binding.addAll(value);
@@ -60,15 +62,15 @@ public class BindingSet {
     public Map<String, Collection<Object>> getBindings() {
         return Collections.unmodifiableMap(namedBindings);
     }
-    
+
     public Collection<Object> getBinding(String name) {
         return namedBindings.get(name);
     }
-    
+
     public int size() {
         return namedBindings.size();
     }
-    
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

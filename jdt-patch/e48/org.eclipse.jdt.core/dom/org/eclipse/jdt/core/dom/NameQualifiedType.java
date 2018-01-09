@@ -113,23 +113,17 @@ public class NameQualifiedType extends AnnotatableType {
 	    unsupportedIn2_3_4();
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on AnnotatableType.
-	 */
+	@Override
 	ChildListPropertyDescriptor internalAnnotationsProperty() {
 		return ANNOTATIONS_PROPERTY;
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+	@Override
 	List internalStructuralPropertiesForType(int apiLevel) {
 		return propertyDescriptors(apiLevel);
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+	@Override
 	final List internalGetChildListProperty(ChildListPropertyDescriptor property) {
 		if (property == ANNOTATIONS_PROPERTY) {
 			return annotations();
@@ -137,10 +131,8 @@ public class NameQualifiedType extends AnnotatableType {
 		// allow default implementation to flag the error
 		return super.internalGetChildListProperty(property);
 	}
-	
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+
+	@Override
 	final ASTNode internalGetSetChildProperty(ChildPropertyDescriptor property, boolean get, ASTNode child) {
 		if (property == QUALIFIER_PROPERTY) {
 			if (get) {
@@ -162,15 +154,18 @@ public class NameQualifiedType extends AnnotatableType {
 		return super.internalGetSetChildProperty(property, get, child);
 	}
 
+	@Override
 	final int getNodeType0() {
 		return NAME_QUALIFIED_TYPE;
 	}
 
+	@Override
 	final boolean subtreeMatch0(ASTMatcher matcher, Object other) {
 		// dispatch to correct overloaded match method
 		return matcher.match(this, other);
 	}
 
+	@Override
 	ASTNode clone0(AST target) {
 		NameQualifiedType result = new NameQualifiedType(target);
 		result.setSourceRange(getStartPosition(), getLength());
@@ -180,9 +175,7 @@ public class NameQualifiedType extends AnnotatableType {
 		return result;
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+	@Override
 	void accept0(ASTVisitor visitor) {
 		boolean visitChildren = visitor.visit(this);
 		if (visitChildren) {
@@ -272,17 +265,13 @@ public class NameQualifiedType extends AnnotatableType {
 		postReplaceChild(oldChild, name, NAME_PROPERTY);
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+	@Override
 	int memSize() {
 		// treat Code as free
 		return BASE_NODE_SIZE + 2 * 4;
 	}
 
-	/* (omit javadoc for this method)
-	 * Method declared on ASTNode.
-	 */
+	@Override
 	int treeSize() {
 		return
 			memSize()

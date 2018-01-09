@@ -30,10 +30,12 @@ public class MarkerAnnotation extends Annotation {
 	/**
 	 * @see org.eclipse.jdt.internal.compiler.ast.Annotation#memberValuePairs()
 	 */
+	@Override
 	public MemberValuePair[] memberValuePairs() {
 		return NoValuePairs;
 	}
 
+	@Override
 	public void traverse(ASTVisitor visitor, BlockScope scope) {
 		if (visitor.visit(this, scope)) {
 			if (this.type != null) {
@@ -42,6 +44,7 @@ public class MarkerAnnotation extends Annotation {
 		}
 		visitor.endVisit(this, scope);
 	}
+	@Override
 	public void traverse(ASTVisitor visitor, ClassScope scope) {
 		if (visitor.visit(this, scope)) {
 			if (this.type != null) {

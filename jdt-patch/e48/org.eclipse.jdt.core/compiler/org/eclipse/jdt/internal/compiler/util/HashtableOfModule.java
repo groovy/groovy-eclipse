@@ -95,6 +95,7 @@ public final class HashtableOfModule {
 	public int size() {
 		return this.elementSize;
 	}
+	@Override
 	public String toString() {
 		String s = ""; //$NON-NLS-1$
 		ModuleBinding pkg;

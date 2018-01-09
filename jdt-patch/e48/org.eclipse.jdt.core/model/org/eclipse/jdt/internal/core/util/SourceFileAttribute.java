@@ -49,6 +49,7 @@ public class SourceFileAttribute
 	/**
 	 * @see ISourceAttribute#getSourceFileIndex()
 	 */
+	@Override
 	public int getSourceFileIndex() {
 		return this.sourceFileIndex;
 	}
@@ -56,6 +57,7 @@ public class SourceFileAttribute
 	/**
 	 * @see ISourceAttribute#getSourceFileName()
 	 */
+	@Override
 	public char[] getSourceFileName() {
 		return this.sourceFileName;
 	}

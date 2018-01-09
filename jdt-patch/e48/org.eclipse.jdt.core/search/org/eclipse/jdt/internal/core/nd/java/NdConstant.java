@@ -87,6 +87,7 @@ public abstract class NdConstant extends NdNode {
 	 */
 	public abstract Constant getConstant();
 
+	@Override
 	public String toString() {
 		try {
 			return getConstant().toString();

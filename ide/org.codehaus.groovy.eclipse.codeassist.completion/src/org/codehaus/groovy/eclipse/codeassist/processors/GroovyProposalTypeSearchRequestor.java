@@ -160,9 +160,11 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         }
     }
 
+    @Override
     public void acceptModule(char[] moduleName) {
     }
 
+    @Override
     public void acceptPackage(char[] packageName) {
         checkCancel();
 
@@ -171,10 +173,11 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         }
 
         if (acceptedPackages == null)
-            acceptedPackages = new HashSet<String>();
+            acceptedPackages = new HashSet<>();
         acceptedPackages.add(String.valueOf(packageName));
     }
 
+    @Override
     public void acceptConstructor(
             int modifiers,
             char[] simpleTypeName,
@@ -243,13 +246,8 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         }
     }
 
-    public void acceptType(
-            char[] packageName,
-            char[] simpleTypeName,
-            char[][] enclosingTypeNames,
-            int modifiers,
-            AccessRestriction accessRestriction) {
-
+    @Override
+    public void acceptType(char[] packageName, char[] simpleTypeName, char[][] enclosingTypeNames, int modifiers, AccessRestriction accessRestriction) {
         // do not check cancellation for every type to avoid performance loss
         if ((foundTypesCount % CHECK_CANCEL_FREQUENCY) == 0)
             checkCancel();
@@ -325,7 +323,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         String thisPackageName = module.getPackageName();
         if (thisPackageName == null) thisPackageName = "";
 
-        List<ICompletionProposal> proposals = new LinkedList<ICompletionProposal>();
+        List<ICompletionProposal> proposals = new LinkedList<>();
         try {
             next: for (int i = 0; i < n; i += 1) {
                 // does not check cancellation for every types to avoid performance loss
@@ -468,7 +466,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
 
     List<ICompletionProposal> processAcceptedPackages() {
         checkCancel();
-        List<ICompletionProposal> proposals = new LinkedList<ICompletionProposal>();
+        List<ICompletionProposal> proposals = new LinkedList<>();
         if (acceptedPackages != null && acceptedPackages.size() > 0) {
             for (String packageNameStr : acceptedPackages) {
                 char[] packageName = packageNameStr.toCharArray();
@@ -510,7 +508,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             }
         }
 
-        List<ICompletionProposal> proposals = new LinkedList<ICompletionProposal>();
+        List<ICompletionProposal> proposals = new LinkedList<>();
         try {
             for (int i = 0; i < n; i += 1) {
                 // does not check cancellation for every types to avoid performance loss
@@ -647,7 +645,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             proposal.setHasNoParameterNamesFromIndex(true);
             if (mockEngine == null) {
                 // used for caching types only
-                mockEngine = new CompletionEngine(null, new CompletionRequestor() { public void accept(CompletionProposal proposal) {} }, null, javaContext.getProject(), null, null);
+                mockEngine = new CompletionEngine(null, new CompletionRequestor() { @Override public void accept(CompletionProposal proposal) {} }, null, javaContext.getProject(), null, null);
             }
             proposal.setCompletionEngine(mockEngine);
         }

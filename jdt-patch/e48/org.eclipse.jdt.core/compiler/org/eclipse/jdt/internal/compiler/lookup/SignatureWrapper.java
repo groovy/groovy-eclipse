@@ -191,6 +191,7 @@ public class SignatureWrapper {
 	public char[] tail() {
 		return CharOperation.subarray(this.signature, this.start, this.signature.length);
 	}
+	@Override
 	public String toString() {
 		if (this.start >= 0 && this.start <= this.signature.length) {
 			return new String(CharOperation.subarray(this.signature, 0, this.start)) + " ^ " //$NON-NLS-1$

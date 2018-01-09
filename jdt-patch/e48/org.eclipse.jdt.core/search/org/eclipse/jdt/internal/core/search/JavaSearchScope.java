@@ -335,6 +335,7 @@ private void add(String projectPath, String relativePath, String containerPath, 
  *
  * @see IJavaSearchScope#encloses(String)
  */
+@Override
 public boolean encloses(String resourcePathString) {
 	int separatorIndex = resourcePathString.indexOf(JAR_FILE_ENTRY_SEPARATOR);
 	if (separatorIndex != -1) {
@@ -435,9 +436,7 @@ private boolean encloses(String enclosingPath, String path, int index) {
 	return false;
 }
 
-/* (non-Javadoc)
- * @see IJavaSearchScope#encloses(IJavaElement)
- */
+@Override
 public boolean encloses(IJavaElement element) {
 	if (this.elements != null) {
 		for (int i = 0, length = this.elements.size(); i < length; i++) {
@@ -464,9 +463,7 @@ public boolean encloses(IJavaElement element) {
 	return indexOf(fullResourcePathString) >= 0;
 }
 
-/* (non-Javadoc)
- * @see IJavaSearchScope#enclosingProjectsAndJars()
- */
+@Override
 public IPath[] enclosingProjectsAndJars() {
 	return this.enclosingProjectsAndJars;
 }
@@ -491,12 +488,7 @@ private IPath getPath(IJavaElement element, boolean relativeToRoot) {
 	}
 }
 
-/**
- * Get access rule set corresponding to a given path.
- * @param relativePath The path user want to have restriction access
- * @return The access rule set for given path or null if none is set for it.
- * 	Returns specific uninit access rule set when scope does not enclose the given path.
- */
+@Override
 public AccessRuleSet getAccessRuleSet(String relativePath, String containerPath) {
 	int index = indexOf(containerPath, relativePath);
 	if (index == -1) {
@@ -537,9 +529,7 @@ private String normalize(String path) {
 	return path;
 }
 
-/*
- * @see AbstractSearchScope#processDelta(IJavaElementDelta)
- */
+@Override
 public void processDelta(IJavaElementDelta delta, int eventType) {
 	switch (delta.getKind()) {
 		case IJavaElementDelta.CHANGED:
@@ -581,6 +571,7 @@ public void processDelta(IJavaElementDelta delta, int eventType) {
 /**
  * @see AbstractJavaSearchScope#packageFragmentRoot(String, int, String)
  */
+@Override
 public IPackageFragmentRoot packageFragmentRoot(String resourcePathString, int jarSeparatorIndex, String jarPath) {
 	int index = -1;
 	boolean isJarFile = jarSeparatorIndex != -1;
@@ -636,6 +627,7 @@ private void rehash() {
 	this.threshold = newScope.threshold;
 }
 
+@Override
 public String toString() {
 	StringBuffer result = new StringBuffer("JavaSearchScope on "); //$NON-NLS-1$
 	if (this.elements != null) {

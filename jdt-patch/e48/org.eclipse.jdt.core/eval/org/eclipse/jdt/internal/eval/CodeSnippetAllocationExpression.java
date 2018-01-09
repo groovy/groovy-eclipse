@@ -52,6 +52,7 @@ public class CodeSnippetAllocationExpression extends AllocationExpression implem
 public CodeSnippetAllocationExpression(EvaluationContext evaluationContext) {
 	this.evaluationContext = evaluationContext;
 }
+@Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream, 	boolean valueRequired) {
 	int pc = codeStream.position;
 	MethodBinding codegenBinding = this.binding.original();
@@ -125,12 +126,15 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream, 	boolea
  * types, since by the time we reach them, we might not yet know their
  * exact need.
  */
+@Override
 public void manageEnclosingInstanceAccessIfNecessary(BlockScope currentScope, FlowInfo flowInfo) {
 	// not supported yet
 }
+@Override
 public void manageSyntheticAccessIfNecessary(BlockScope currentScope, FlowInfo flowInfo) {
 	// do nothing
 }
+@Override
 public TypeBinding resolveType(BlockScope scope) {
 	// Propagate the type checking to the arguments, and check if the constructor is defined.
 	this.constant = Constant.NotAConstant;

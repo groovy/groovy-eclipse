@@ -48,7 +48,7 @@ public class FieldProposalCreator extends AbstractProposalCreator {
 
     private static final GroovyFieldProposal CLASS_PROPOSAL = createClassProposal();
 
-    private Set<ClassNode> alreadySeen = new HashSet<ClassNode>();
+    private Set<ClassNode> alreadySeen = new HashSet<>();
 
     private static GroovyFieldProposal createClassProposal() {
         FieldNode field = new FieldNode("class", Opcodes.ACC_PUBLIC & Opcodes.ACC_STATIC & Opcodes.ACC_FINAL, VariableScope.CLASS_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE, null);
@@ -56,8 +56,9 @@ public class FieldProposalCreator extends AbstractProposalCreator {
         return new GroovyFieldProposal(field);
     }
 
+    @Override
     public List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic, boolean isPrimary) {
-        List<IGroovyProposal> proposals = new ArrayList<IGroovyProposal>();
+        List<IGroovyProposal> proposals = new ArrayList<>();
 
         boolean isFirstTime = alreadySeen.isEmpty();
         Collection<FieldNode> allFields = getAllFields(type, alreadySeen);

@@ -33,6 +33,7 @@ public class TypeParameterLocator extends PatternLocator {
 	 * Verify whether a type reference matches name pattern.
 	 * Type parameter references (i.e. type arguments) are compiler type reference nodes
 	 */
+	@Override
 	public int match(TypeReference node, MatchingNodeSet nodeSet) {
 		if (this.pattern.findReferences) {
 			if (node instanceof SingleTypeReference) { // Type parameter cannot be qualified
@@ -49,6 +50,7 @@ public class TypeParameterLocator extends PatternLocator {
 	/*
 	 * Verify whether a type parameter matches name pattern.
 	 */
+	@Override
 	public int match(TypeParameter node, MatchingNodeSet nodeSet) {
 		if (this.pattern.findDeclarations) {
 			if (matchesName(this.pattern.name, node.name)) {
@@ -63,6 +65,7 @@ public class TypeParameterLocator extends PatternLocator {
 	 * While searching for references, need to match all containers as we can have references in javadoc comments.
 	 * Otherwise, only class or method container can declare type parameters.
 	 */
+	@Override
 	protected int matchContainer() {
 		if (this.pattern.findReferences) {
 			return ALL_CONTAINER;
@@ -102,6 +105,7 @@ public class TypeParameterLocator extends PatternLocator {
 		return IMPOSSIBLE_MATCH;
 	}
 
+	@Override
 	protected int referenceType() {
 		return IJavaElement.TYPE_PARAMETER;
 	}
@@ -111,6 +115,7 @@ public class TypeParameterLocator extends PatternLocator {
 	 * Only type references while searching references and type parameters
 	 * while searching declarations are valid.
 	 */
+	@Override
 	public int resolveLevel(ASTNode possibleMatchingNode) {
 		if (this.pattern.findReferences) {
 			if (possibleMatchingNode instanceof SingleTypeReference) {
@@ -129,6 +134,7 @@ public class TypeParameterLocator extends PatternLocator {
 	 * Resolve level for a binding.
 	 * Only type variable bindings are valid.
 	 */
+	@Override
 	public int resolveLevel(Binding binding) {
 		if (binding == null) return INACCURATE_MATCH;
 		if (!(binding instanceof TypeVariableBinding)) return IMPOSSIBLE_MATCH;
@@ -136,6 +142,7 @@ public class TypeParameterLocator extends PatternLocator {
 		return matchTypeParameter((TypeVariableBinding) binding, true);
 	}
 
+	@Override
 	public String toString() {
 		return "Locator for " + this.pattern.toString(); //$NON-NLS-1$
 	}

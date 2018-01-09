@@ -292,6 +292,7 @@ protected boolean checkForClassFileChanges(IResourceDelta binaryDelta, Classpath
 	return true;
 }
 
+@Override
 protected void cleanUp() {
 	super.cleanUp();
 
@@ -305,6 +306,7 @@ protected void cleanUp() {
 	this.compileLoop = 0;
 }
 
+@Override
 protected void compile(SourceFile[] units, SourceFile[] additionalUnits, boolean compilingFirstGroup) {
 	if (compilingFirstGroup && additionalUnits != null) {
 		// add any source file from additionalUnits to units if it defines secondary types
@@ -332,6 +334,7 @@ protected void compile(SourceFile[] units, SourceFile[] additionalUnits, boolean
 	super.compile(units, additionalUnits, compilingFirstGroup);
 }
 
+@Override
 protected void deleteGeneratedFiles(IFile[] deletedGeneratedFiles) {
 	// delete generated files and recompile any affected source files
 	try {
@@ -706,6 +709,7 @@ protected boolean findSourceFiles(IResourceDelta sourceDelta, ClasspathMultiDire
 	return true;
 }
 
+@Override
 protected void finishedWith(String sourceLocator, CompilationResult result, char[] mainTypeName, ArrayList definedTypeNames, ArrayList duplicateTypeNames) {
 	char[][] previousTypeNames = this.newState.getDefinedTypeNamesFor(sourceLocator);
 	if (previousTypeNames == null)
@@ -733,6 +737,7 @@ protected void finishedWith(String sourceLocator, CompilationResult result, char
 	super.finishedWith(sourceLocator, result, mainTypeName, definedTypeNames, duplicateTypeNames);
 }
 
+@Override
 protected void processAnnotationResults(CompilationParticipantResult[] results) {
 	for (int i = results.length; --i >= 0;) {
 		CompilationParticipantResult result = results[i];
@@ -809,6 +814,7 @@ protected void resetCollections() {
 	}
 }
 
+@Override
 protected void updateProblemsFor(SourceFile sourceFile, CompilationResult result) throws CoreException {
 	if (CharOperation.equals(sourceFile.getMainTypeName(), TypeConstants.PACKAGE_INFO_NAME)) {
 		IResource pkgResource = sourceFile.resource.getParent();
@@ -829,6 +835,7 @@ protected void updateProblemsFor(SourceFile sourceFile, CompilationResult result
 	storeProblemsFor(sourceFile, problems);
 }
 
+@Override
 protected void updateTasksFor(SourceFile sourceFile, CompilationResult result) throws CoreException {
 	IMarker[] markers = JavaBuilder.getTasksFor(sourceFile.resource);
 	CategorizedProblem[] tasks = result.getTasks();
@@ -841,6 +848,7 @@ protected void updateTasksFor(SourceFile sourceFile, CompilationResult result) t
 /**
  * @see org.eclipse.jdt.internal.core.builder.AbstractImageBuilder#writeClassFileContents(org.eclipse.jdt.internal.compiler.ClassFile, org.eclipse.core.resources.IFile, java.lang.String, boolean, org.eclipse.jdt.internal.core.builder.SourceFile)
  */
+@Override
 protected void writeClassFileContents(ClassFile classfile, IFile file, String qualifiedFileName, boolean isTopLevelType, SourceFile compilationUnit) throws CoreException {
 	// Before writing out the class file, compare it to the previous file
 	// If structural changes occurred then add dependent source files
@@ -928,6 +936,7 @@ protected boolean writeClassFileCheck(IFile file, String fileName, byte[] newByt
 	return true;
 }
 
+@Override
 public String toString() {
 	return "incremental image builder for:\n\tnew state: " + this.newState; //$NON-NLS-1$
 }

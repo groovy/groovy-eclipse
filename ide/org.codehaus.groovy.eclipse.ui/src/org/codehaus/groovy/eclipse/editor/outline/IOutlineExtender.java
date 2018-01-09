@@ -1,5 +1,5 @@
  /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,9 +22,6 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
  * Extends the Groovy Editor to allow update the outline content.
  * See the extension point
  * org.codehaus.groovy.eclipse.ui.outlineExtension
- *
- * @author Maxime Hamm
- * @created April 4, 2011
  */
 public interface IOutlineExtender {
 
@@ -42,5 +39,4 @@ public interface IOutlineExtender {
      *         for the unit file
      */
     boolean appliesTo(GroovyCompilationUnit unit);
-
 }

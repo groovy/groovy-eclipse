@@ -169,6 +169,7 @@ private void buildCUSource(String lineSeparator) {
  */
 public CompletionRequestor getCompletionRequestor(final CompletionRequestor originalRequestor) {
 	return new CompletionRequestor() {
+		@Override
 		public void accept(CompletionProposal proposal) {
 			switch(proposal.getKind()) {
 				case CompletionProposal.TYPE_REF:
@@ -203,6 +204,7 @@ public CompletionRequestor getCompletionRequestor(final CompletionRequestor orig
 			originalRequestor.accept(proposal);
 		}
 
+		@Override
 		public void completionFailure(IProblem problem) {
 			problem.setSourceStart(problem.getSourceStart() - CodeSnippetToCuMapper.this.startPosOffset);
 			problem.setSourceEnd(problem.getSourceEnd() - CodeSnippetToCuMapper.this.startPosOffset);
@@ -210,30 +212,37 @@ public CompletionRequestor getCompletionRequestor(final CompletionRequestor orig
 			originalRequestor.completionFailure(problem);
 		}
 
+		@Override
 		public void acceptContext(CompletionContext context) {
 			originalRequestor.acceptContext(context);
 		}
 
+		@Override
 		public void beginReporting() {
 			originalRequestor.beginReporting();
 		}
 
+		@Override
 		public void endReporting() {
 			originalRequestor.endReporting();
 		}
 
+		@Override
 		public boolean isIgnored(int completionProposalKind) {
 			return originalRequestor.isIgnored(completionProposalKind);
 		}
 
+		@Override
 		public void setIgnored(int completionProposalKind, boolean ignore) {
 			originalRequestor.setIgnored(completionProposalKind, ignore);
 		}
 
+		@Override
 		public boolean isAllowingRequiredProposals(int mainKind, int requiredKind) {
 			return originalRequestor.isAllowingRequiredProposals(mainKind, requiredKind);
 		}
 
+		@Override
 		public void setAllowsRequiredProposals(int mainKind, int requiredKind, boolean allow) {
 			originalRequestor.setAllowsRequiredProposals(mainKind, requiredKind, allow);
 		}
@@ -296,28 +305,35 @@ public char[] getImport(int lineNumber) {
  */
 public ISelectionRequestor getSelectionRequestor(final ISelectionRequestor originalRequestor) {
 	return new ISelectionRequestor() {
+		@Override
 		public void acceptType(char[] packageName, char[] typeName, int modifiers, boolean isDeclaration, char[] uniqueKey, int start, int end) {
 			originalRequestor.acceptType(packageName, typeName, modifiers, isDeclaration, uniqueKey, start, end);
 		}
+		@Override
 		public void acceptError(CategorizedProblem error) {
 			error.setSourceLineNumber(error.getSourceLineNumber() -  CodeSnippetToCuMapper.this.lineNumberOffset);
 			error.setSourceStart(error.getSourceStart() - CodeSnippetToCuMapper.this.startPosOffset);
 			error.setSourceEnd(error.getSourceEnd() - CodeSnippetToCuMapper.this.startPosOffset);
 			originalRequestor.acceptError(error);
 		}
+		@Override
 		public void acceptField(char[] declaringTypePackageName, char[] declaringTypeName, char[] name, boolean isDeclaration, char[] uniqueKey, int start, int end) {
 			originalRequestor.acceptField(declaringTypePackageName, declaringTypeName, name, isDeclaration, uniqueKey, start, end);
 		}
+		@Override
 		public void acceptMethod(char[] declaringTypePackageName, char[] declaringTypeName, String enclosingDeclaringTypeSignature, char[] selector, char[][] parameterPackageNames, char[][] parameterTypeNames, String[] parameterSignatures, char[][] typeParameterNames, char[][][] typeParameterBoundNames, boolean isConstructor, boolean isDeclaration, char[] uniqueKey, int start, int end) {
 			originalRequestor.acceptMethod(declaringTypePackageName, declaringTypeName, enclosingDeclaringTypeSignature, selector, parameterPackageNames, parameterTypeNames, parameterSignatures, typeParameterNames, typeParameterBoundNames, isConstructor, isDeclaration, uniqueKey, start, end);
 		}
+		@Override
 		public void acceptPackage(char[] packageName) {
 			originalRequestor.acceptPackage(packageName);
 		}
 
+		@Override
 		public void acceptTypeParameter(char[] declaringTypePackageName, char[] declaringTypeName, char[] typeParameterName, boolean isDeclaration, int start, int end) {
 			originalRequestor.acceptTypeParameter(declaringTypePackageName, declaringTypeName, typeParameterName, isDeclaration, start, end);
 		}
+		@Override
 		public void acceptMethodTypeParameter(char[] declaringTypePackageName, char[] declaringTypeName, char[] selector, int selectorStart, int selectorEnd, char[] typeParameterName,boolean isDeclaration, int start, int end) {
 			originalRequestor.acceptMethodTypeParameter(declaringTypePackageName, declaringTypeName, selector, selectorStart, selectorEnd, typeParameterName, isDeclaration, start, end);
 		}

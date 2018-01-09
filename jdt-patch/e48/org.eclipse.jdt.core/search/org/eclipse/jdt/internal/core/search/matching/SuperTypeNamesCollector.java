@@ -41,33 +41,40 @@ public class SuperTypeNamesCollector {
 	 * collecting their super type names.
 	 */
 	public class TypeDeclarationVisitor extends ASTVisitor {
+		@Override
 		public boolean visit(TypeDeclaration typeDeclaration, BlockScope scope) {
 			ReferenceBinding binding = typeDeclaration.binding;
 			if (SuperTypeNamesCollector.this.matches(binding))
 				collectSuperTypeNames(binding, binding.compoundName);
 			return true;
 		}
+		@Override
 		public boolean visit(TypeDeclaration typeDeclaration, CompilationUnitScope scope) {
 			ReferenceBinding binding = typeDeclaration.binding;
 			if (SuperTypeNamesCollector.this.matches(binding))
 				collectSuperTypeNames(binding, binding.compoundName);
 			return true;
 		}
+		@Override
 		public boolean visit(TypeDeclaration memberTypeDeclaration, ClassScope scope) {
 			ReferenceBinding binding = memberTypeDeclaration.binding;
 			if (SuperTypeNamesCollector.this.matches(binding))
 				collectSuperTypeNames(binding, binding.compoundName);
 			return true;
 		}
+		@Override
 		public boolean visit(FieldDeclaration fieldDeclaration, MethodScope scope) {
 			return false; // don't visit field declarations
 		}
+		@Override
 		public boolean visit(Initializer initializer, MethodScope scope) {
 			return false; // don't visit initializers
 		}
+		@Override
 		public boolean visit(ConstructorDeclaration constructorDeclaration, ClassScope scope) {
 			return false; // don't visit constructor declarations
 		}
+		@Override
 		public boolean visit(MethodDeclaration methodDeclaration, ClassScope scope) {
 			return false; // don't visit method declarations
 		}
@@ -258,6 +265,7 @@ protected String[] getPathsOfDeclaringType() {
 		IIndexConstants.TYPE_SUFFIX,
 		this.pattern.getMatchRule());
 	IndexQueryRequestor searchRequestor = new IndexQueryRequestor(){
+		@Override
 		public boolean acceptIndexMatch(String documentPath, SearchPattern indexRecord, SearchParticipant participant, AccessRuleSet access) {
 			TypeDeclarationPattern record = (TypeDeclarationPattern)indexRecord;
 			if (record.enclosingTypeNames != IIndexConstants.ONE_ZERO_CHAR) {  // filter out local and anonymous classes

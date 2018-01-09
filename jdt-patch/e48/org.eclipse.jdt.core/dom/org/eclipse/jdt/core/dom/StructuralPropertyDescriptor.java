@@ -119,6 +119,7 @@ public abstract class StructuralPropertyDescriptor {
 	 * Returns a string suitable for debug purposes.
 	 * @return {@inheritDoc}
 	 */
+	@Override
 	public String toString() {
 		StringBuffer b = new StringBuffer();
 		if (isChildListProperty()) {

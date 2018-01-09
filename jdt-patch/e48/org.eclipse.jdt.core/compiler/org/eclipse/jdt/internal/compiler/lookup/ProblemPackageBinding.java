@@ -26,6 +26,7 @@ ProblemPackageBinding(char[] name, int problemId) {
 * NoError if the receiver is a valid binding.
 */
 
+@Override
 public final int problemId() {
 	return this.problemId;
 }

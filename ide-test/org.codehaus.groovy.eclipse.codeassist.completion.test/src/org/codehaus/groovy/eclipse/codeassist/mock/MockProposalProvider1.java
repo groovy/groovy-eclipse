@@ -36,18 +36,19 @@ public class MockProposalProvider1 implements IProposalProvider {
         providerCalled = false;
     }
 
-    public List<IGroovyProposal> getStatementAndExpressionProposals(
-            ContentAssistContext context, ClassNode completionType,
-            boolean isStatic, Set<ClassNode> categories) {
+    @Override
+    public List<IGroovyProposal> getStatementAndExpressionProposals(ContentAssistContext context, ClassNode completionType, boolean isStatic, Set<ClassNode> categories) {
         providerCalled = true;
         return null;
     }
 
+    @Override
     public List<MethodNode> getNewMethodProposals(ContentAssistContext context) {
         providerCalled = true;
         return null;
     }
 
+    @Override
     public List<String> getNewFieldProposals(ContentAssistContext context) {
         providerCalled = true;
         return null;

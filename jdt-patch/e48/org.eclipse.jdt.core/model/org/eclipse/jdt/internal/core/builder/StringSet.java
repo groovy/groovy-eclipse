@@ -70,6 +70,7 @@ private void rehash() {
 	this.threshold = newSet.threshold;
 }
 
+@Override
 public String toString() {
 	String s = ""; //$NON-NLS-1$
 	String value;

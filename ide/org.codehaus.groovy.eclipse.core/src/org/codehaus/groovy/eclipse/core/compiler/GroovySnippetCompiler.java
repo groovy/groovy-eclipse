@@ -34,7 +34,6 @@ import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
-import org.eclipse.jdt.internal.compiler.ICompilerRequestor;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
@@ -96,11 +95,7 @@ public class GroovySnippetCompiler {
 
         Map<String, String> options = JavaCore.getOptions();
         options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
-        ICompilerRequestor requestor = new ICompilerRequestor() {
-            public void acceptResult(CompilationResult result) {
-            }
-        };
-        Compiler compiler = new CompilationUnitResolver(nameEnvironment, DefaultErrorHandlingPolicies.proceedWithAllProblems(), new CompilerOptions(options), requestor, new DefaultProblemFactory(), null, true);
+        Compiler compiler = new CompilationUnitResolver(nameEnvironment, DefaultErrorHandlingPolicies.proceedWithAllProblems(), new CompilerOptions(options), result -> {}, new DefaultProblemFactory(), null, true);
         GroovyCompilationUnitDeclaration decl = (GroovyCompilationUnitDeclaration) compiler.resolve(new MockCompilationUnit(source.toCharArray(), sourcePath.toCharArray()), true, false, false);
         return decl;
     }

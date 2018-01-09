@@ -19,14 +19,17 @@ public class VoidTypeBinding extends BaseTypeBinding {
 		super(TypeIds.T_void, TypeConstants.VOID, new char[] { 'V' });
 	}
 	
+	@Override
 	public TypeBinding clone(TypeBinding enclosingType) {
 		return this;  // enforce solitude.
 	}
 	
+	@Override
 	public void setTypeAnnotations(AnnotationBinding[] annotations, boolean evalNullAnnotations) {
 		return; // reject misguided attempt.
 	}
 	
+	@Override
 	public TypeBinding unannotated() {
 		return this;
 	}

@@ -85,6 +85,7 @@ class InternalASTRewrite extends NodeEventHandler {
 				 * original AST has been modified from its original form. This means that
 				 * one cannot trust that the root of the given node is the compilation unit.
 				 */
+				@Override
 				public SourceRange computeSourceRange(ASTNode node) {
 					int extendedStartPosition = rootNode.getExtendedStartPosition(node);
 					int extendedLength = rootNode.getExtendedLength(node);
@@ -163,6 +164,7 @@ class InternalASTRewrite extends NodeEventHandler {
 		return this.root;
 	}
 
+	@Override
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
 		buf.append("Events:\n"); //$NON-NLS-1$
@@ -170,16 +172,19 @@ class InternalASTRewrite extends NodeEventHandler {
 		return buf.toString();
 	}
 
+	@Override
 	void preValueChangeEvent(ASTNode node, SimplePropertyDescriptor property) {
 		// force event creation
 		getNodeEvent(node, property);
 	}
 
+	@Override
 	void postValueChangeEvent(ASTNode node, SimplePropertyDescriptor property) {
 		NodeRewriteEvent event = getNodeEvent(node, property);
 		event.setNewValue(node.getStructuralProperty(property));
 	}
 
+	@Override
 	void preAddChildEvent(ASTNode node, ASTNode child,	StructuralPropertyDescriptor property) {
 		if(property.isChildProperty()) {
 			NodeRewriteEvent event = getNodeEvent(node, property);
@@ -193,6 +198,7 @@ class InternalASTRewrite extends NodeEventHandler {
 		}
 	}
 
+	@Override
 	void postAddChildEvent(ASTNode node, ASTNode child,	StructuralPropertyDescriptor property) {
 		if(property.isChildListProperty()) {
 
@@ -214,6 +220,7 @@ class InternalASTRewrite extends NodeEventHandler {
 		}
 	}
 
+	@Override
 	void preRemoveChildEvent(ASTNode node, ASTNode child, StructuralPropertyDescriptor property) {
 		if(property.isChildProperty()) {
 			NodeRewriteEvent event = getNodeEvent(node, property);
@@ -230,6 +237,7 @@ class InternalASTRewrite extends NodeEventHandler {
 		}
 	}
 
+	@Override
 	void preReplaceChildEvent(ASTNode node, ASTNode child, ASTNode newChild, StructuralPropertyDescriptor property) {
 		if(property.isChildProperty()) {
 			NodeRewriteEvent event = getNodeEvent(node, property);
@@ -249,11 +257,13 @@ class InternalASTRewrite extends NodeEventHandler {
 	}
 
 
+	@Override
 	void preCloneNodeEvent(ASTNode node) {
 		this.cloneDepth++;
 	}
 
 
+	@Override
 	void postCloneNodeEvent(ASTNode node, ASTNode clone) {
 		if(node.ast == this.root.ast && clone.ast == this.root.ast) {
 			if((node.getFlags() & ASTNode.ORIGINAL) != 0) {

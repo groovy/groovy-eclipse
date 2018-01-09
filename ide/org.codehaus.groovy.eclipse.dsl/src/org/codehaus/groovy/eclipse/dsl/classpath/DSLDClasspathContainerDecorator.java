@@ -23,6 +23,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 
 public class DSLDClasspathContainerDecorator extends LabelProvider implements ILightweightLabelDecorator {
 
+    @Override
     public void decorate(Object element, IDecoration decoration) {
         // decorate the class path container and add the originating target runtime
         if (element instanceof ClassPathContainer) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,8 +31,6 @@ import org.eclipse.jdt.internal.core.util.Util;
  * A subtype of the Groovy ErrorCollector that can be made more JDT friendly
  * (not throwing exceptions when errors occur and doing nicer mapping from
  * errors to JDT problems). Still much to be done with this.
- *
- * @author Andy Clement
  */
 public class GroovyErrorCollectorForJDT extends ErrorCollector {
 

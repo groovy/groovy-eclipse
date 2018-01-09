@@ -38,7 +38,9 @@ import java.util.Set;
 import java.util.regex.Matcher;
 
 import groovy.lang.Closure;
+import groovy.lang.DelegatesTo;
 import groovy.lang.Tuple;
+import groovy.transform.stc.ClosureParams;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -62,7 +64,10 @@ import org.codehaus.groovy.runtime.DateGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyStaticMethods;
 import org.codehaus.groovy.runtime.EncodingGroovyMethods;
+import org.codehaus.groovy.runtime.IOGroovyMethods;
 import org.codehaus.groovy.runtime.ProcessGroovyMethods;
+import org.codehaus.groovy.runtime.ResourceGroovyMethods;
+import org.codehaus.groovy.runtime.StringGroovyMethods;
 import org.codehaus.groovy.runtime.SwingGroovyMethods;
 import org.codehaus.groovy.runtime.XmlGroovyMethods;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
@@ -116,49 +121,24 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     public static final ClassNode PGM_CLASS_NODE = ClassHelper.make(ProcessGroovyMethods.class);
     public static final ClassNode SGM_CLASS_NODE = ClassHelper.make(SwingGroovyMethods.class);
     public static final ClassNode XGM_CLASS_NODE = ClassHelper.make(XmlGroovyMethods.class);
-    public static final ClassNode DGSM_CLASS_NODE = ClassHelper.make(DefaultGroovyStaticMethods.class);
     public static final ClassNode DATE_GM_CLASS_NODE = ClassHelper.make(DateGroovyMethods.class);
-
-    // only exists on Groovy 2.0
-    public static ClassNode RESOURCE_GROOVY_METHODS;
-    public static ClassNode STRING_GROOVY_METHODS;
-    public static ClassNode IO_GROOVY_METHODS;
-    static {
-        try {
-            RESOURCE_GROOVY_METHODS = ClassHelper.make(Class.forName("org.codehaus.groovy.runtime.ResourceGroovyMethods"));
-            STRING_GROOVY_METHODS = ClassHelper.make(Class.forName("org.codehaus.groovy.runtime.StringGroovyMethods"));
-            IO_GROOVY_METHODS = ClassHelper.make(Class.forName("org.codehaus.groovy.runtime.IOGroovyMethods"));
-        } catch (ClassNotFoundException e) {
-            RESOURCE_GROOVY_METHODS = null;
-            STRING_GROOVY_METHODS = null;
-            IO_GROOVY_METHODS = null;
-        }
-    }
+    public static final ClassNode DGSM_CLASS_NODE = ClassHelper.make(DefaultGroovyStaticMethods.class);
+    public static final ClassNode IO_GROOVY_METHODS = ClassHelper.make(IOGroovyMethods.class);
+    public static final ClassNode STRING_GROOVY_METHODS = ClassHelper.make(StringGroovyMethods.class);
+    public static final ClassNode RESOURCE_GROOVY_METHODS = ClassHelper.make(ResourceGroovyMethods.class);
 
     // only exists on 2.1 and later
-    public static ClassNode DELEGATES_TO;
-    static {
-        try {
-            DELEGATES_TO = ClassHelper.make(Class.forName("groovy.lang.DelegatesTo"));
-        } catch (ClassNotFoundException e) {
-            DELEGATES_TO = null;
-        }
-    }
+    public static final ClassNode CLOSURE_PARAMS = ClassHelper.make(ClosureParams.class);
+    public static final ClassNode DELEGATES_TO = ClassHelper.make(DelegatesTo.class);
 
-    public static Set<ClassNode> ALL_DEFAULT_CATEGORIES;
+    public static final Set<ClassNode> ALL_DEFAULT_CATEGORIES;
     static {
         // add all of the known DGM classes. Order counts since we look up earlier in the list before later and need to
         // ensure we don't accidentally place deprecated elements early in the list
-        List<ClassNode> dgm_classes = new ArrayList<ClassNode>(10);
-        if (STRING_GROOVY_METHODS != null) {
-            dgm_classes.add(STRING_GROOVY_METHODS);
-        }
-        if (RESOURCE_GROOVY_METHODS != null) {
-            dgm_classes.add(RESOURCE_GROOVY_METHODS);
-        }
-        if (IO_GROOVY_METHODS != null) {
-            dgm_classes.add(IO_GROOVY_METHODS);
-        }
+        Set<ClassNode> dgm_classes = new LinkedHashSet<>();
+        dgm_classes.add(STRING_GROOVY_METHODS);
+        dgm_classes.add(RESOURCE_GROOVY_METHODS);
+        dgm_classes.add(IO_GROOVY_METHODS);
         dgm_classes.add(EGM_CLASS_NODE);
         dgm_classes.add(PGM_CLASS_NODE);
         dgm_classes.add(SGM_CLASS_NODE);
@@ -166,7 +146,8 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         dgm_classes.add(DATE_GM_CLASS_NODE);
         dgm_classes.add(DGSM_CLASS_NODE);
         dgm_classes.add(DGM_CLASS_NODE);
-        ALL_DEFAULT_CATEGORIES = Collections.unmodifiableSet(new LinkedHashSet<ClassNode>(dgm_classes));
+
+        ALL_DEFAULT_CATEGORIES = Collections.unmodifiableSet(dgm_classes);
     }
 
     // don't cache because we have to add properties
@@ -229,7 +210,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
             this.declaringType = declaringType;
 
             // handle the Groovy 2.1+ @DelegatesTo annotation; see also org.codehaus.groovy.transform.stc.StaticTypeCheckingVisitor#checkClosureWithDelegatesTo
-            if (DELEGATES_TO != null && declaration instanceof MethodNode) {
+            if (declaration instanceof MethodNode) {
                 MethodNode methodNode = (MethodNode) declaration;
                 Parameter[] parameters = methodNode.getParameters();
                 if (parameters != null && parameters.length > 0) {
@@ -239,7 +220,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                     }
                     if (arguments != null && !arguments.isEmpty()) {
                         if (!methodNode.getDeclaringClass().equals(getPerceivedDeclaringType())) {
-                            List<Expression> categoryMethodArguments = new ArrayList<Expression>(arguments.size() + 1);
+                            List<Expression> categoryMethodArguments = new ArrayList<>(arguments.size() + 1);
                             categoryMethodArguments.add(new ClassExpression(declaringType));
                             categoryMethodArguments.addAll(arguments);
                             arguments = categoryMethodArguments;
@@ -341,7 +322,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
 
         private void addDelegatesToClosure(ClosureExpression closure, ClassNode delegateType, Integer resolveStrategy) {
             if (delegatesTo == null) {
-                delegatesTo = new HashMap<ClosureExpression, Object[]>();
+                delegatesTo = new HashMap<>();
             }
             delegatesTo.put(closure, new Object[] {delegateType, resolveStrategy});
         }
@@ -376,15 +357,15 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         /**
          * this field stores values that need to get passed between parts of the file to another
          */
-        final Map<String, Object> wormhole = new HashMap<String, Object>();
+        final Map<String, Object> wormhole = new HashMap<>();
         /**
          * the enclosing method call is the one where there are the current node is part of an argument list
          */
-        final List<CallAndType> enclosingCallStack = new ArrayList<CallAndType>();
+        final List<CallAndType> enclosingCallStack = new ArrayList<>();
         /**
          * Node currently being evaluated, or null if none
          */
-        final LinkedList<ASTNode> nodeStack = new LinkedList<ASTNode>();
+        final LinkedList<ASTNode> nodeStack = new LinkedList<>();
         /**
          * true iff current scope is implicit run method of script
          */
@@ -421,7 +402,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     private int enclosingCallStackDepth;
     private List<ClassNode> methodCallArgumentTypes;
     private GenericsType[]  methodCallGenericsTypes;
-    private final Map<String, VariableInfo> nameVariableMap = new HashMap<String, VariableInfo>();
+    private final Map<String, VariableInfo> nameVariableMap = new HashMap<>();
 
     //--------------------------------------------------------------------------
 
@@ -511,7 +492,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
             }
             return categories;
         } else {
-            return new LinkedHashSet<ClassNode>(ALL_DEFAULT_CATEGORIES);
+            return new LinkedHashSet<>(ALL_DEFAULT_CATEGORIES);
         }
     }
 
@@ -1065,11 +1046,13 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         return methodCallArgumentTypes != null;
     }
 
+    @Override
     public Iterator<VariableInfo> iterator() {
         return new Iterator<VariableInfo>() {
             VariableScope currentScope = VariableScope.this;
             Iterator<VariableInfo> currentIter = currentScope.nameVariableMap.values().iterator();
 
+            @Override
             public boolean hasNext() {
                 if (currentIter == null) {
                     return false;
@@ -1081,10 +1064,12 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                 return currentIter != null && currentIter.hasNext();
             }
 
+            @Override
             public VariableInfo next() {
                 return new VariableInfo(currentIter.next(), currentScope.scopeNode);
             }
 
+            @Override
             public void remove() {
                 throw new UnsupportedOperationException();
             }

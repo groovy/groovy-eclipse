@@ -1549,6 +1549,7 @@ public void comparingIdenticalExpressions(Expression comparison){
  * when different from Ignore, severity can be coupled with ProblemSeverities.Optional
  * to indicate that this problem is configurable through options
  */
+@Override
 public int computeSeverity(int problemID){
 
 	switch (problemID) {

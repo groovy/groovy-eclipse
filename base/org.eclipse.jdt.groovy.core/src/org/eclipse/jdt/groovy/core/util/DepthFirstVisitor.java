@@ -143,6 +143,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         }
     }
 
+    @Override
     public void visitClass(ClassNode node) {
         visitAnnotations(node.getAnnotations());
 
@@ -183,6 +184,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         }
     }
 
+    @Override
     public void visitProperty(PropertyNode node) {
         visitAnnotations(node.getAnnotations());
         visitIfPresent(node.getInitialExpression());
@@ -190,6 +192,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         visitIfPresent(node.getSetterBlock());
     }
 
+    @Override
     public void visitField(FieldNode node) {
         visitAnnotations(node.getAnnotations());
         // script field annotations are saved in script transforms map
@@ -218,10 +221,12 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         }
     }
 
+    @Override
     public void visitConstructor(ConstructorNode node) {
         visitMethod(node);
     }
 
+    @Override
     public void visitMethod(MethodNode node) {
         if (node == runMethod || "<clinit>".equals(node.getName())) return;
         visitAnnotations(node.getAnnotations());
@@ -231,12 +236,14 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
 
     // statements:
 
+    @Override
     public void visitAssertStatement(AssertStatement statement) {
         visitIfPresent(statement.getBooleanExpression());
         visitIfPresent(statement.getMessageExpression());
         visitStatement(statement);
     }
 
+    @Override
     public void visitBlockStatement(BlockStatement statement) {
         for (Statement stmt : statement.getStatements()) {
             visitIfPresent(stmt);
@@ -244,26 +251,31 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         visitStatement(statement);
     }
 
+    @Override
     public void visitBreakStatement(BreakStatement statement) {
         visitStatement(statement);
     }
 
+    @Override
     public void visitCaseStatement(CaseStatement statement) {
         visitIfPresent(statement.getExpression());
         visitIfPresent(statement.getCode());
         visitStatement(statement);
     }
 
+    @Override
     public void visitCatchStatement(CatchStatement statement) {
         visitParameter(statement.getVariable());
         visitIfPresent(statement.getCode());
         visitStatement(statement);
     }
 
+    @Override
     public void visitContinueStatement(ContinueStatement statement) {
         visitStatement(statement);
     }
 
+    @Override
     public void visitDoWhileLoop(DoWhileStatement statement) {
         visitIfPresent(statement.getLoopBlock());
         visitIfPresent(statement.getBooleanExpression());
@@ -274,11 +286,13 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         visitStatement(statement);
     }
 
+    @Override
     public void visitExpressionStatement(ExpressionStatement statement) {
         visitIfPresent(statement.getExpression());
         visitStatement(statement);
     }
 
+    @Override
     public void visitForLoop(ForStatement statement) {
         visitParameter(statement.getVariable());
         visitIfPresent(statement.getCollectionExpression());
@@ -286,6 +300,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         visitStatement(statement);
     }
 
+    @Override
     public void visitIfElse(IfStatement statement) {
         visitIfPresent(statement.getBooleanExpression());
         visitIfPresent(statement.getIfBlock());
@@ -297,11 +312,13 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         visitStatement(statement);
     }
 
+    @Override
     public void visitReturnStatement(ReturnStatement statement) {
         visitIfPresent(statement.getExpression());
         visitStatement(statement);
     }
 
+    @Override
     public void visitSwitch(SwitchStatement statement) {
         visitIfPresent(statement.getExpression());
         for (Statement stmt : statement.getCaseStatements()) {
@@ -311,17 +328,20 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         visitStatement(statement);
     }
 
+    @Override
     public void visitSynchronizedStatement(SynchronizedStatement statement) {
         visitIfPresent(statement.getExpression());
         visitIfPresent(statement.getCode());
         visitStatement(statement);
     }
 
+    @Override
     public void visitThrowStatement(ThrowStatement statement) {
         visitIfPresent(statement.getExpression());
         visitStatement(statement);
     }
 
+    @Override
     public void visitTryCatchFinally(TryCatchStatement statement) {
         visitIfPresent(statement.getTryStatement());
         for (Statement stmt : statement.getCatchStatements()) {
@@ -335,6 +355,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         visitStatement(statement);
     }
 
+    @Override
     public void visitWhileLoop(WhileStatement statement) {
         statement.getBooleanExpression().visit(this);
         statement.getLoopBlock().visit(this);
@@ -343,10 +364,12 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
 
     // expressions:
 
+    @Override
     public void visitArgumentlistExpression(ArgumentListExpression expression) {
         visitTupleExpression(expression);
     }
 
+    @Override
     public void visitArrayExpression(ArrayExpression expression) {
         visitAnnotations(expression.getAnnotations());
         visitExpressions(expression.getSizeExpression());
@@ -354,10 +377,12 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         visitExpression(expression);
     }
 
+    @Override
     public void visitAttributeExpression(AttributeExpression expression) {
         visitPropertyExpression(expression);
     }
 
+    @Override
     public void visitBinaryExpression(BinaryExpression expression) {
         visitAnnotations(expression.getAnnotations());
         expression.getLeftExpression().visit(this);
@@ -365,33 +390,39 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         visitExpression(expression);
     }
 
+    @Override
     public void visitBitwiseNegationExpression(BitwiseNegationExpression expression) {
         visitAnnotations(expression.getAnnotations());
         expression.getExpression().visit(this);
         visitExpression(expression);
     }
 
+    @Override
     public void visitBooleanExpression(BooleanExpression expression) {
         visitAnnotations(expression.getAnnotations());
         expression.getExpression().visit(this);
         visitExpression(expression);
     }
 
+    @Override
     public void visitBytecodeExpression(BytecodeExpression expression) {
         visitExpression(expression);
     }
 
+    @Override
     public void visitCastExpression(CastExpression expression) {
         visitAnnotations(expression.getAnnotations());
         expression.getExpression().visit(this);
         visitExpression(expression);
     }
 
+    @Override
     public void visitClassExpression(ClassExpression expression) {
         visitAnnotations(expression.getAnnotations());
         visitExpression(expression);
     }
 
+    @Override
     public void visitClosureExpression(ClosureExpression expression) {
         visitAnnotations(expression.getAnnotations());
         visitParameters(expression.getParameters());
@@ -399,16 +430,19 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         visitExpression(expression);
     }
 
+    @Override
     public void visitClosureListExpression(ClosureListExpression expression) {
         visitAnnotations(expression.getAnnotations());
         visitExpressions(expression.getExpressions());
         visitExpression(expression);
     }
 
+    @Override
     public void visitConstantExpression(ConstantExpression expression) {
         visitExpression(expression);
     }
 
+    @Override
     public void visitConstructorCallExpression(ConstructorCallExpression expression) {
         visitAnnotations(expression.getAnnotations());
         if (expression.isUsingAnonymousInnerClass()) {
@@ -418,19 +452,23 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         visitExpression(expression);
     }
 
+    @Override
     public void visitDeclarationExpression(DeclarationExpression expression) {
         visitBinaryExpression(expression);
     }
 
+    @Override
     public void visitEmptyExpression(EmptyExpression expression) {
         visitExpression(expression);
     }
 
+    @Override
     public void visitFieldExpression(FieldExpression expression) {
         visitAnnotations(expression.getAnnotations());
         visitExpression(expression);
     }
 
+    @Override
     public void visitGStringExpression(GStringExpression expression) {
         visitAnnotations(expression.getAnnotations());
         visitExpressions(expression.getStrings());
@@ -438,18 +476,21 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         visitExpression(expression);
     }
 
+    @Override
     public void visitListExpression(ListExpression expression) {
         visitAnnotations(expression.getAnnotations());
         visitExpressions(expression.getExpressions());
         visitExpression(expression);
     }
 
+    @Override
     public void visitMapExpression(MapExpression expression) {
         visitAnnotations(expression.getAnnotations());
         visitExpressions(expression.getMapEntryExpressions());
         visitExpression(expression);
     }
 
+    @Override
     public void visitMapEntryExpression(MapEntryExpression expression) {
         visitAnnotations(expression.getAnnotations());
         expression.getKeyExpression().visit(this);
@@ -457,6 +498,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         visitExpression(expression);
     }
 
+    @Override
     public void visitMethodCallExpression(MethodCallExpression expression) {
         visitAnnotations(expression.getAnnotations());
         expression.getObjectExpression().visit(this);
@@ -475,6 +517,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         visitExpression(expression);
     }
 
+    @Override
     public void visitMethodPointerExpression(MethodPointerExpression expression) {
         visitAnnotations(expression.getAnnotations());
         expression.getExpression().visit(this);
@@ -482,22 +525,26 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         visitExpression(expression);
     }
 
+    @Override
     public void visitNotExpression(NotExpression expression) {
         visitBooleanExpression(expression);
     }
 
+    @Override
     public void visitPostfixExpression(PostfixExpression expression) {
         visitAnnotations(expression.getAnnotations());
         expression.getExpression().visit(this);
         visitExpression(expression);
     }
 
+    @Override
     public void visitPrefixExpression(PrefixExpression expression) {
         visitAnnotations(expression.getAnnotations());
         expression.getExpression().visit(this);
         visitExpression(expression);
     }
 
+    @Override
     public void visitPropertyExpression(PropertyExpression expression) {
         visitAnnotations(expression.getAnnotations());
         expression.getObjectExpression().visit(this);
@@ -505,6 +552,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         visitExpression(expression);
     }
 
+    @Override
     public void visitRangeExpression(RangeExpression expression) {
         visitAnnotations(expression.getAnnotations());
         expression.getFrom().visit(this);
@@ -512,22 +560,26 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         visitExpression(expression);
     }
 
+    @Override
     public void visitShortTernaryExpression(ElvisOperatorExpression expression) {
         visitTernaryExpression(expression);
     }
 
+    @Override
     public void visitSpreadExpression(SpreadExpression expression) {
         visitAnnotations(expression.getAnnotations());
         expression.getExpression().visit(this);
         visitExpression(expression);
     }
 
+    @Override
     public void visitSpreadMapExpression(SpreadMapExpression expression) {
         visitAnnotations(expression.getAnnotations());
         expression.getExpression().visit(this);
         visitExpression(expression);
     }
 
+    @Override
     public void visitStaticMethodCallExpression(StaticMethodCallExpression expression) {
         visitAnnotations(expression.getAnnotations());
         ClassNode ownerType = expression.getOwnerType();
@@ -538,6 +590,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         visitExpression(expression);
     }
 
+    @Override
     public void visitTernaryExpression(TernaryExpression expression) {
         visitAnnotations(expression.getAnnotations());
         expression.getBooleanExpression().visit(this);
@@ -546,12 +599,14 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         visitExpression(expression);
     }
 
+    @Override
     public void visitTupleExpression(TupleExpression expression) {
         visitAnnotations(expression.getAnnotations());
         visitExpressions(expression.getExpressions());
         visitExpression(expression);
     }
 
+    @Override
     public void visitVariableExpression(VariableExpression expression) {
         visitAnnotations(expression.getAnnotations());
         if (expression.getAccessedVariable() == expression) {
@@ -560,12 +615,14 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         visitExpression(expression);
     }
 
+    @Override
     public void visitUnaryMinusExpression(UnaryMinusExpression expression) {
         visitAnnotations(expression.getAnnotations());
         expression.getExpression().visit(this);
         visitExpression(expression);
     }
 
+    @Override
     public void visitUnaryPlusExpression(UnaryPlusExpression expression) {
         visitAnnotations(expression.getAnnotations());
         expression.getExpression().visit(this);

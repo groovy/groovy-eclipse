@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,17 +46,20 @@ public class GroovyImportsCleanUp extends AbstractGroovyCleanUp {
 
     private ImportsCleanUp javaCleanUp = new ImportsCleanUp(Collections.singletonMap(CleanUpConstants.ORGANIZE_IMPORTS, CleanUpOptions.TRUE));
 
+    @Override
     public CleanUpRequirements getRequirements() {
         return javaCleanUp.getRequirements();
     }
 
+    @Override
     public String[] getStepDescriptions() {
         return javaCleanUp.getStepDescriptions();
     }
 
+    @Override
     public RefactoringStatus checkPreConditions(IJavaProject project, ICompilationUnit[] compilationUnits, IProgressMonitor monitor) throws CoreException {
-        List<ICompilationUnit> groovyUnits = new ArrayList<ICompilationUnit>(compilationUnits.length);
-        //List<ICompilationUnit> otherUnits = new ArrayList<ICompilationUnit>(compilationUnits.length);
+        List<ICompilationUnit> groovyUnits = new ArrayList<>(compilationUnits.length);
+        //List<ICompilationUnit> otherUnits = new ArrayList<>(compilationUnits.length);
         for (ICompilationUnit unit : compilationUnits) {
             if (unit instanceof GroovyCompilationUnit) {
                 groovyUnits.add(unit);
@@ -70,10 +73,12 @@ public class GroovyImportsCleanUp extends AbstractGroovyCleanUp {
         return groovyStatus;
     }
 
+    @Override
     public RefactoringStatus checkPostConditions(IProgressMonitor monitor) throws CoreException {
         return javaCleanUp.checkPostConditions(monitor);
     }
 
+    @Override
     public ICleanUpFix createFix(CleanUpContext context) throws CoreException {
         ICompilationUnit unit = context.getCompilationUnit();
         if (!(unit instanceof GroovyCompilationUnit)) {
@@ -82,6 +87,7 @@ public class GroovyImportsCleanUp extends AbstractGroovyCleanUp {
 
         final boolean hasAmbiguity[] = new boolean[] {false};
         IChooseImportQuery query = new IChooseImportQuery() {
+            @Override
             public TypeNameMatch[] chooseImports(TypeNameMatch[][] openChoices, ISourceRange[] ranges) {
                 hasAmbiguity[0] = true;
                 return new TypeNameMatch[0];

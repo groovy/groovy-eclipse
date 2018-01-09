@@ -22,6 +22,7 @@ public class PackageExportImpl implements IModule.IPackageExport {
 	public char[][] targets() {
 		return this.exportedTo;
 	}
+	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
 		buffer.append(this.pack);

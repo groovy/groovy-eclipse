@@ -53,6 +53,7 @@ public class InnerClassesAttribute extends ClassFileAttribute implements IInnerC
 	/**
 	 * @see IInnerClassesAttribute#getInnerClassAttributesEntries()
 	 */
+	@Override
 	public IInnerClassesAttributeEntry[] getInnerClassAttributesEntries() {
 		return this.entries;
 	}
@@ -60,6 +61,7 @@ public class InnerClassesAttribute extends ClassFileAttribute implements IInnerC
 	/**
 	 * @see IInnerClassesAttribute#getNumberOfClasses()
 	 */
+	@Override
 	public int getNumberOfClasses() {
 		return this.numberOfClasses;
 	}

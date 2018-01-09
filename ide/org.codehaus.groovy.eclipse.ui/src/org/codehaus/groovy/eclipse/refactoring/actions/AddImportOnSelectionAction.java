@@ -80,14 +80,17 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
         super(editor);
     }
 
+    @Override
     protected AddImportOperation newAddImportOperation(final GroovyCompilationUnit compilationUnit, final ITextSelection textSelection, final IChooseImportQuery typeQuery) {
         return new AddImportOperation() {
             private IStatus fStatus = Status.OK_STATUS;
 
+            @Override
             public IStatus getStatus() {
                 return fStatus;
             }
 
+            @Override
             public void run(IProgressMonitor monitor) throws CoreException {
                 SubMonitor submon = SubMonitor.convert(monitor, CodeGenerationMessages.AddImportsOperation_description, 4);
                 try {
@@ -99,15 +102,15 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
                     submon.worked(1);
 
                     ImportRewrite importRewrite = CodeStyleConfiguration.createImportRewrite(compilationUnit, true);
-                    TextEdit edit = evaluateEdits(info.module, importRewrite, submon.newChild(1));
+                    TextEdit edit = evaluateEdits(info.module, importRewrite, submon.split(1));
                     if (edit == null) {
                         return;
                     }
 
                     MultiTextEdit result = new MultiTextEdit();
                     result.addChild(edit);
-                    result.addChild(importRewrite.rewriteImports(submon.newChild(1)));
-                    applyEdit(compilationUnit, result, true, submon.newChild(1));
+                    result.addChild(importRewrite.rewriteImports(submon.split(1)));
+                    applyEdit(compilationUnit, result, true, submon.split(1));
                 } catch (OperationCanceledException cancel) {
                     if (fStatus == Status.OK_STATUS)
                         fStatus = Status.CANCEL_STATUS;
@@ -234,7 +237,7 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
             private TypeNameMatch findCandidateTypes(String typeName, IProgressMonitor monitor) throws CoreException {
                 int matchRule = SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE,
                     searchFor = IJavaSearchConstants.TYPE;
-                List<TypeNameMatch> typesFound = new ArrayList<TypeNameMatch>();
+                List<TypeNameMatch> typesFound = new ArrayList<>();
                 new SearchEngine().searchAllTypeNames(null, 0, typeName.toCharArray(), matchRule, searchFor,
                     SearchEngine.createJavaSearchScope(new IJavaElement[] {compilationUnit.getJavaProject()}),
                     new TypeNameMatchCollector(typesFound), IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH, monitor);
@@ -296,14 +299,12 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
 
             private String propertyName(final ASTNode node) {
                 final TypeLookupResult[] result = new TypeLookupResult[1];
-                new TypeInferencingVisitorFactory().createVisitor(compilationUnit).visitCompilationUnit(new ITypeRequestor() {
-                    public ITypeRequestor.VisitStatus acceptASTNode(ASTNode n, TypeLookupResult r, IJavaElement e) {
-                        if (n == node) {
-                            result[0] = r;
-                            return ITypeRequestor.VisitStatus.STOP_VISIT;
-                        }
-                        return ITypeRequestor.VisitStatus.CONTINUE;
+                new TypeInferencingVisitorFactory().createVisitor(compilationUnit).visitCompilationUnit((ASTNode n, TypeLookupResult r, IJavaElement e) -> {
+                    if (n == node) {
+                        result[0] = r;
+                        return ITypeRequestor.VisitStatus.STOP_VISIT;
                     }
+                    return ITypeRequestor.VisitStatus.CONTINUE;
                 });
 
                 if (result[0] != null && result[0].declaration instanceof MethodNode) {
@@ -330,14 +331,14 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
         SubMonitor subMonitor = SubMonitor.convert(monitor, CorextMessages.JavaModelUtil_applyedit_operation, 2);
         IFile file = (IFile) cu.getResource();
         if (!save || !file.exists()) {
-            cu.applyTextEdit(edit, subMonitor.newChild(2));
+            cu.applyTextEdit(edit, subMonitor.split(2));
         } else {
             IStatus status = Resources.makeCommittable(file, null);
             if (!status.isOK()) {
                 throw new ValidateEditException(status);
             }
-            cu.applyTextEdit(edit, subMonitor.newChild(1));
-            cu.save(subMonitor.newChild(1), true);
+            cu.applyTextEdit(edit, subMonitor.split(1));
+            cu.save(subMonitor.split(1), true);
         }
     }
 }

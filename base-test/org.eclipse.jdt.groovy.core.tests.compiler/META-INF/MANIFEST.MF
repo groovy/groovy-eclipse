@@ -1,17 +1,17 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-SymbolicName: org.eclipse.jdt.groovy.core.tests.compiler;singleton:=true
 Bundle-Name: Compiler Tests
 Bundle-Vendor: Codehaus.org
-Bundle-Version: 2.9.2.qualifier
+Bundle-Version: 3.0.0.qualifier
 Export-Package: org.eclipse.jdt.groovy.core.tests,
  org.eclipse.jdt.groovy.core.tests.basic
-Require-Bundle: org.codehaus.groovy;bundle-version="1.8.9";visibility:=reexport,
- org.eclipse.core.resources;bundle-version="[3.7.0,4.0.0)";visibility:=reexport,
- org.eclipse.core.runtime;bundle-version="[3.7.0,4.0.0)";visibility:=reexport,
- org.eclipse.jdt.core;bundle-version="[3.7.0,4.0.0)";visibility:=reexport,
+Require-Bundle: org.codehaus.groovy;bundle-version="2.1.9";visibility:=reexport,
+ org.eclipse.core.resources;bundle-version="[3.12.0,4.0.0)";visibility:=reexport,
+ org.eclipse.core.runtime;bundle-version="[3.13.0,4.0.0)";visibility:=reexport,
+ org.eclipse.jdt.core;bundle-version="[3.13.0,4.0.0)";visibility:=reexport,
  org.eclipse.jdt.core.tests.compiler;visibility:=reexport,
  org.eclipse.jdt.groovy.core;visibility:=reexport,
- org.junit;bundle-version="[4.8.0,5.0.0)";visibility:=reexport
+ org.junit;bundle-version="[4.12.0,5.0.0)";visibility:=reexport
 Eclipse-BundleShape: dir

@@ -325,6 +325,7 @@ public abstract class JobManager implements Runnable {
 	/**
 	 * Infinite loop performing resource indexing
 	 */
+	@Override
 	public void run() {
 
 		long idlingStart = -1;
@@ -334,6 +335,7 @@ public abstract class JobManager implements Runnable {
 				ProgressJob(String name) {
 					super(name);
 				}
+				@Override
 				protected IStatus run(IProgressMonitor monitor) {
 					IJob job = currentJob();
 					while (!monitor.isCanceled() && job != null) {
@@ -463,6 +465,7 @@ public abstract class JobManager implements Runnable {
 			// ignore
 		}
 	}
+	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer(10);
 		buffer.append("Enable count:").append(this.enableCount).append('\n'); //$NON-NLS-1$

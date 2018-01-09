@@ -15,9 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
-import static org.junit.Assume.assumeTrue
-
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
@@ -79,7 +76,7 @@ final class OtherCompletionTests extends CompletionTestSuite {
         proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this.collect'))
         Arrays.sort(proposals, { ICompletionProposal o1, ICompletionProposal o2 ->
             o2.displayString <=> o1.displayString
-        } as Comparator<ICompletionProposal>)
+        })
         proposalExists(proposals, 'collect', 3)
         assert proposals[0].displayString ==~ /collect\(Collection \p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*, Closure \p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*\) : Collection - DefaultGroovyMethods \(Groovy\)/ : printProposals(proposals)
         assert proposals[1].displayString ==~ /collect\(Closure \p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*\) : List - DefaultGroovyMethods \(Groovy\)/ : printProposals(proposals)
@@ -327,8 +324,6 @@ final class OtherCompletionTests extends CompletionTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/371
     void testCompileStaticCompletion() {
-        assumeTrue(isAtLeastGroovy(20))
-
         String contents = '''\
             import groovy.transform.*
             class Bean {
@@ -351,8 +346,6 @@ final class OtherCompletionTests extends CompletionTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/371
     void testCompileStaticCompletion2() {
-        assumeTrue(isAtLeastGroovy(20))
-
         String contents = '''\
             import groovy.transform.*
             class Bean {
@@ -374,8 +367,6 @@ final class OtherCompletionTests extends CompletionTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/391
     void testCompileStaticCompletion3() {
-        assumeTrue(isAtLeastGroovy(20))
-
         String contents = '''\
             import javax.swing.JFrame
             import groovy.transform.*

@@ -49,12 +49,15 @@ public class ModulePattern extends JavaSearchPattern {
 		}
 		this.mustResolve = mustResolve();
 	}
+	@Override
 	public void decodeIndexKey(char[] key) {
 		this.name = key;
 	}
+	@Override
 	public SearchPattern getBlankPattern() {
 		return new ModulePattern(R_EXACT_MATCH);
 	}
+	@Override
 	public char[][] getIndexCategories() {
 		if (this.findReferences)
 			return this.findDeclarations ? REF_AND_DECL_CATEGORIES : REF_CATEGORIES;
@@ -62,9 +65,11 @@ public class ModulePattern extends JavaSearchPattern {
 			return DECL_CATEGORIES;
 		return CharOperation.NO_CHAR_CHAR;
 	}
+	@Override
 	public boolean matchesDecodedKey(SearchPattern decodedPattern) {
 		return matchesName(this.name, ((ModulePattern) decodedPattern).name);
 	}
+	@Override
 	public EntryResult[] queryIn(Index index) throws IOException {
 		char[] key = this.name; // can be null
 		int matchRule = getMatchRule();
@@ -102,6 +107,7 @@ public class ModulePattern extends JavaSearchPattern {
 	protected boolean mustResolve() {
 		return true;
 	}
+	@Override
 	protected StringBuffer print(StringBuffer output) {
 		if (this.findDeclarations) {
 			output.append(this.findReferences

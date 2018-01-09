@@ -33,6 +33,7 @@ public class IndexBinaryFolder extends IndexRequest {
 		super(folder.getFullPath(), manager);
 		this.folder = folder;
 	}
+	@Override
 	public boolean equals(Object o) {
 		if (o instanceof IndexBinaryFolder)
 			return this.folder.equals(((IndexBinaryFolder) o).folder);
@@ -43,6 +44,7 @@ public class IndexBinaryFolder extends IndexRequest {
 	 * and discover resources which have either been changed, added or deleted
 	 * since the index was produced.
 	 */
+	@Override
 	public boolean execute(IProgressMonitor progressMonitor) {
 
 		if (this.isCancelled || progressMonitor != null && progressMonitor.isCanceled()) return true;
@@ -63,6 +65,7 @@ public class IndexBinaryFolder extends IndexRequest {
 			final String DELETED = "DELETED"; //$NON-NLS-1$
 			if (paths == null) {
 				this.folder.accept(new IResourceProxyVisitor() {
+					@Override
 					public boolean visit(IResourceProxy proxy) {
 						if (IndexBinaryFolder.this.isCancelled) return false;
 						if (proxy.getType() == IResource.FILE) {
@@ -83,6 +86,7 @@ public class IndexBinaryFolder extends IndexRequest {
 				final long indexLastModified = index.getIndexLastModified();
 				this.folder.accept(
 					new IResourceProxyVisitor() {
+						@Override
 						public boolean visit(IResourceProxy proxy) throws CoreException {
 							if (IndexBinaryFolder.this.isCancelled) return false;
 							if (proxy.getType() == IResource.FILE) {
@@ -147,12 +151,15 @@ public class IndexBinaryFolder extends IndexRequest {
 		}
 		return true;
 	}
+	@Override
 	public int hashCode() {
 		return this.folder.hashCode();
 	}
+	@Override
 	protected Integer updatedIndexState() {
 		return IndexManager.REBUILDING_STATE;
 	}
+	@Override
 	public String toString() {
 		return "indexing binary folder " + this.folder.getFullPath(); //$NON-NLS-1$
 	}

@@ -25,9 +25,7 @@ public class PathCollector extends IndexQueryRequestor {
 	/* a set of resource paths */
 	public HashSet paths = new HashSet(5);
 
-	/* (non-Javadoc)
-	 * @see IndexQueryRequestor#acceptIndexMatch(String, SearchPattern, SearchParticipant, AccessRuleSet)
-	 */
+	@Override
 	public boolean acceptIndexMatch(String documentPath, SearchPattern indexRecord, SearchParticipant participant, AccessRuleSet access) {
 		this.paths.add(documentPath);
 		return true;

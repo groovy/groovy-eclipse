@@ -37,6 +37,7 @@ public ArrayReference(Expression rec, Expression pos) {
 	this.sourceStart = rec.sourceStart;
 }
 
+@Override
 public FlowInfo analyseAssignment(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo, Assignment assignment, boolean compoundAssignment) {
 	// TODO (maxime) optimization: unconditionalInits is applied to all existing calls
 	// account for potential ArrayIndexOutOfBoundsException:
@@ -56,6 +57,7 @@ public FlowInfo analyseAssignment(BlockScope currentScope, FlowContext flowConte
 	return flowInfo;
 }
 
+@Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 	flowInfo = this.receiver.analyseCode(currentScope, flowContext, flowInfo);
 	this.receiver.checkNPE(currentScope, flowContext, flowInfo, 1);
@@ -66,6 +68,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	return flowInfo;
 }
 
+@Override
 public boolean checkNPE(BlockScope scope, FlowContext flowContext, FlowInfo flowInfo, int ttlForFieldCheck) {
 	if ((this.resolvedType.tagBits & TagBits.AnnotationNullable) != 0) {
 		scope.problemReporter().arrayReferencePotentialNullReference(this);
@@ -75,6 +78,7 @@ public boolean checkNPE(BlockScope scope, FlowContext flowContext, FlowInfo flow
 	}
 }
 
+@Override
 public void generateAssignment(BlockScope currentScope, CodeStream codeStream, Assignment assignment, boolean valueRequired) {
 	int pc = codeStream.position;
 	this.receiver.generateCode(currentScope, codeStream, true);
@@ -94,6 +98,7 @@ public void generateAssignment(BlockScope currentScope, CodeStream codeStream, A
 /**
  * Code generation for a array reference
  */
+@Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 	int pc = codeStream.position;
 	this.receiver.generateCode(currentScope, codeStream, true);
@@ -122,6 +127,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean
 	codeStream.recordPositionsFrom(pc, this.sourceStart);
 }
 
+@Override
 public void generateCompoundAssignment(BlockScope currentScope, CodeStream codeStream, Expression expression, int operator, int assignmentImplicitConversion, boolean valueRequired) {
 	this.receiver.generateCode(currentScope, codeStream, true);
 	if (this.receiver instanceof CastExpression	// ((type[])null)[0]
@@ -155,6 +161,7 @@ public void generateCompoundAssignment(BlockScope currentScope, CodeStream codeS
 	codeStream.arrayAtPut(this.resolvedType.id, valueRequired);
 }
 
+@Override
 public void generatePostIncrement(BlockScope currentScope, CodeStream codeStream, CompoundAssignment postIncrement, boolean valueRequired) {
 	this.receiver.generateCode(currentScope, codeStream, true);
 	if (this.receiver instanceof CastExpression	// ((type[])null)[0]
@@ -185,11 +192,13 @@ public void generatePostIncrement(BlockScope currentScope, CodeStream codeStream
 	codeStream.arrayAtPut(this.resolvedType.id, false);
 }
 
+@Override
 public StringBuffer printExpression(int indent, StringBuffer output) {
 	this.receiver.printExpression(0, output).append('[');
 	return this.position.printExpression(0, output).append(']');
 }
 
+@Override
 public TypeBinding resolveType(BlockScope scope) {
 	this.constant = Constant.NotAConstant;
 	if (this.receiver instanceof CastExpression	// no cast check for ((type[])null)[0]
@@ -213,6 +222,7 @@ public TypeBinding resolveType(BlockScope scope) {
 	return this.resolvedType;
 }
 
+@Override
 public void traverse(ASTVisitor visitor, BlockScope scope) {
 	if (visitor.visit(this, scope)) {
 		this.receiver.traverse(visitor, scope);
@@ -221,6 +231,7 @@ public void traverse(ASTVisitor visitor, BlockScope scope) {
 	visitor.endVisit(this, scope);
 }
 
+@Override
 public int nullStatus(FlowInfo flowInfo, FlowContext flowContext) {
 	if (this.resolvedType != null && (this.resolvedType.tagBits & TagBits.AnnotationNullMASK) == 0L && this.resolvedType.isFreeTypeVariable()) {
 		return FlowInfo.FREE_TYPEVARIABLE;

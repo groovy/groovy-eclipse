@@ -208,6 +208,7 @@ public interface IPackageFragment extends IParent, IJavaElement, IOpenable, ISou
 	 *
 	 * @return the dot-separated package name of this fragment
 	 */
+	@Override
 	String getElementName();
 	/**
 	 * Returns this package fragment's root kind encoded as an integer.

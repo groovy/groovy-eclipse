@@ -59,6 +59,7 @@ public BinaryExpression(BinaryExpression expression) {
 	this.sourceStart = expression.sourceStart;
 	this.sourceEnd = expression.sourceEnd;
 }
+@Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 	// keep implementation in sync with CombinedBinaryExpression#analyseCode
 	try {
@@ -113,6 +114,7 @@ public void computeConstant(BlockScope scope, int leftId, int rightId) {
 	}
 }
 
+@Override
 public Constant optimizedBooleanConstant() {
 	return this.optimizedBooleanConstant == null ? this.constant : this.optimizedBooleanConstant;
 }
@@ -123,6 +125,7 @@ public Constant optimizedBooleanConstant() {
 // given the current focus of CombinedBinaryExpression on strings concatenation,
 // we do not provide a general, non-recursive implementation of generateCode,
 // but rely upon generateOptimizedStringConcatenationCreation instead
+@Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 	int pc = codeStream.position;
 	if (this.constant != Constant.NotAConstant) {
@@ -582,6 +585,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean
  * Boolean operator code generation
  *	Optimized operations are: <, <=, >, >=, &, |, ^
  */
+@Override
 public void generateOptimizedBoolean(BlockScope currentScope, CodeStream codeStream, BranchLabel trueLabel, BranchLabel falseLabel, boolean valueRequired) {
 	if ((this.constant != Constant.NotAConstant) && (this.constant.typeID() == TypeIds.T_boolean)) {
 		super.generateOptimizedBoolean(
@@ -1547,6 +1551,7 @@ public void generateOptimizedLogicalXor(BlockScope currentScope, CodeStream code
 	codeStream.recordPositionsFrom(codeStream.position, this.sourceEnd);
 }
 
+@Override
 public void generateOptimizedStringConcatenation(BlockScope blockScope, CodeStream codeStream, int typeID) {
 	// keep implementation in sync with CombinedBinaryExpression
 	// #generateOptimizedStringConcatenation
@@ -1579,6 +1584,7 @@ public void generateOptimizedStringConcatenation(BlockScope blockScope, CodeStre
 	}
 }
 
+@Override
 public void generateOptimizedStringConcatenationCreation(BlockScope blockScope, CodeStream codeStream, int typeID) {
 	// keep implementation in sync with CombinedBinaryExpression
 	// #generateOptimizedStringConcatenationCreation
@@ -1613,6 +1619,7 @@ public void generateOptimizedStringConcatenationCreation(BlockScope blockScope, 
 	}
 }
 
+@Override
 public boolean isCompactableOperation() {
 	return true;
 }
@@ -1784,6 +1791,7 @@ public void optimizedBooleanConstant(int leftId, int operator, int rightId) {
 	}
 }
 
+@Override
 public StringBuffer printExpressionNoParenthesis(int indent, StringBuffer output) {
 	// keep implementation in sync with
 	// CombinedBinaryExpression#printExpressionNoParenthesis
@@ -1791,6 +1799,7 @@ public StringBuffer printExpressionNoParenthesis(int indent, StringBuffer output
 	return this.right.printExpression(0, output);
 }
 
+@Override
 public TypeBinding resolveType(BlockScope scope) {
 	// keep implementation in sync with CombinedBinaryExpression#resolveType
 	// and nonRecursiveResolveTypeUpwards
@@ -1901,6 +1910,7 @@ public TypeBinding resolveType(BlockScope scope) {
 	return this.resolvedType;
 }
 
+@Override
 public void traverse(ASTVisitor visitor, BlockScope scope) {
 	if (visitor.visit(this, scope)) {
 		this.left.traverse(visitor, scope);

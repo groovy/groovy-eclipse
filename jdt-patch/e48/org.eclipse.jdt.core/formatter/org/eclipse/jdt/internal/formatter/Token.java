@@ -324,6 +324,7 @@ public class Token {
 	 */
 //	public static String source;
 
+	@Override
 	public String toString() {
 //		if (source != null)  // see comment above
 //			return toString(source);

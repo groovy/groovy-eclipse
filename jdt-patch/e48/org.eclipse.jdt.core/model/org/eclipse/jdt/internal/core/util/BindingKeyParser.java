@@ -411,6 +411,7 @@ public class BindingKeyParser {
 			this.start = this.index;
 		}
 
+		@Override
 		public String toString() {
 			StringBuffer buffer = new StringBuffer();
 			switch (this.token) {

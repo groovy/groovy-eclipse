@@ -202,7 +202,7 @@ public class GroovyDSLDContext {
 
         if (cachedHierarchy == null) {
             // use linked hash set because order is important
-            cachedHierarchy = new LinkedHashSet<ClassNode>();
+            cachedHierarchy = new LinkedHashSet<>();
             getAllSupers(toCheck, cachedHierarchy);
         }
 

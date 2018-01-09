@@ -31,6 +31,7 @@ public interface ILocalVariable extends IJavaElement, ISourceReference, IAnnotat
 	 *
 	 * @return the name of this local variable.
 	 */
+	@Override
 	String getElementName();
 
 	/**
@@ -38,6 +39,7 @@ public interface ILocalVariable extends IJavaElement, ISourceReference, IAnnotat
 	 *
 	 * @return the source range of this local variable's name
 	 */
+	@Override
 	ISourceRange getNameRange();
 
 	/**

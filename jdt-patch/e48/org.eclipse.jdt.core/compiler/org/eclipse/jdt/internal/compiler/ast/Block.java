@@ -33,6 +33,7 @@ public Block(int explicitDeclarations) {
 	this.explicitDeclarations = explicitDeclarations;
 }
 
+@Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 	// empty block
 	if (this.statements == null)	return flowInfo;
@@ -68,6 +69,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 /**
  * Code generation for a block
  */
+@Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	if ((this.bits & IsReachable) == 0) {
 		return;
@@ -84,6 +86,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 	codeStream.recordPositionsFrom(pc, this.sourceStart);
 }
 
+@Override
 public boolean isEmptyBlock() {
 	return this.statements == null;
 }
@@ -97,6 +100,7 @@ public StringBuffer printBody(int indent, StringBuffer output) {
 	return output;
 }
 
+@Override
 public StringBuffer printStatement(int indent, StringBuffer output) {
 	printIndent(indent, output);
 	output.append("{\n"); //$NON-NLS-1$
@@ -104,6 +108,7 @@ public StringBuffer printStatement(int indent, StringBuffer output) {
 	return printIndent(indent, output).append('}');
 }
 
+@Override
 public void resolve(BlockScope upperScope) {
 	if ((this.bits & UndocumentedEmptyBlock) != 0) {
 		upperScope.problemReporter().undocumentedEmptyBlock(this.sourceStart, this.sourceEnd);
@@ -132,6 +137,7 @@ public void resolveUsing(BlockScope givenScope) {
 	}
 }
 
+@Override
 public void traverse(ASTVisitor visitor, BlockScope blockScope) {
 	if (visitor.visit(this, blockScope)) {
 		if (this.statements != null) {
@@ -145,6 +151,7 @@ public void traverse(ASTVisitor visitor, BlockScope blockScope) {
 /**
  * Dispatch the call on its last statement.
  */
+@Override
 public void branchChainTo(BranchLabel label) {
 	if (this.statements != null) {
 		this.statements[this.statements.length - 1].branchChainTo(label);

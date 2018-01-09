@@ -1,8 +1,5 @@
 /*
- * Copyright (C) 2007, 2009 Martin Kempf, Reto Kleeb, Michael Klenk
- *
- * IFS Institute for Software, HSR Rapperswil, Switzerland
- * http://ifs.hsr.ch/
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,11 +23,8 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 import org.eclipse.ui.texteditor.ChainedPreferenceStore;
 
-/**
- * @author Mike Klenk mklenk@hsr.ch
- * @author Kris De Volder <kris.de.volder@gmail.com>
- */
 public class FormatterPreferences extends FormatterPreferencesOnStore implements IFormatterPreferences {
+
     /**
      * Create Formatter Preferences for a given GroovyCompilationUnit. This will
      * only take a "snapshot" of the current preferences for the project.

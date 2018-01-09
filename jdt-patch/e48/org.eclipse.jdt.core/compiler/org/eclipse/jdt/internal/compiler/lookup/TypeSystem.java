@@ -105,6 +105,7 @@ public class TypeSystem {
 					}
 				}
 			}
+			@Override
 			public boolean equals(Object other) {
 				PTBKey that = (PTBKey) other;  // homogeneous container. 
 				return this.type == that.type && this.enclosingType == that.enclosingType && Util.effectivelyEqual(this.arguments, that.arguments); //$IDENTITY-COMPARISON$
@@ -115,6 +116,7 @@ public class TypeSystem {
 				}
 				return b.hashCode();
 			}
+			@Override
 			public int hashCode() {
 				final int prime=31;
 				int hashCode = 1 + hash(this.type) + (this.enclosingType != null ? hash(this.enclosingType) : 0);

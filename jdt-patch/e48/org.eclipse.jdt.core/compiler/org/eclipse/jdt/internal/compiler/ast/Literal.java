@@ -23,6 +23,7 @@ public abstract class Literal extends Expression {
 		this.sourceEnd = e;
 	}
 
+	@Override
 	public FlowInfo analyseCode(
 		BlockScope currentScope,
 		FlowContext flowContext,
@@ -35,11 +36,13 @@ public abstract class Literal extends Expression {
 
 	public abstract TypeBinding literalType(BlockScope scope);
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output){
 
 		return output.append(source());
 	 }
 
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 		// compute the real value, which must range its type's range
 		this.resolvedType = literalType(scope);

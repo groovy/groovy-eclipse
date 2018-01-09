@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,9 @@ package org.codehaus.groovy.eclipse.core.util;
 
 /**
  * An exception that may be thrown by visitors to indicate that a visit type is unsupported.
- *
- * @author empovazan
  */
 public class UnsupportedVisitException extends RuntimeException {
+
     private static final long serialVersionUID = 4688541986127456100L;
 
     public UnsupportedVisitException(String message) {

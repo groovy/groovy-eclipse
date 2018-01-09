@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
 import static org.junit.Assume.assumeTrue
 
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
@@ -293,8 +292,6 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testSelfTypeTransform1() {
-        assumeTrue(isAtLeastGroovy(24)) // SelfType was added in Groovy 2.4
-
         String contents = '''\
             import groovy.transform.*
 
@@ -319,8 +316,6 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testSelfTypeTransform2() {
-        assumeTrue(isAtLeastGroovy(24)) // SelfType was added in Groovy 2.4
-
         String contents = '''\
             import groovy.transform.*
 

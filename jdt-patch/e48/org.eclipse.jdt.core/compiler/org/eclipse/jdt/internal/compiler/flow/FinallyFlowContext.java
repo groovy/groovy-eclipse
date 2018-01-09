@@ -220,6 +220,7 @@ public void complainOnDeferredChecks(FlowInfo flowInfo, BlockScope scope) {
 	}
 }
 
+	@Override
 	public String individualToString() {
 
 		StringBuffer buffer = new StringBuffer("Finally flow context"); //$NON-NLS-1$
@@ -228,10 +229,12 @@ public void complainOnDeferredChecks(FlowInfo flowInfo, BlockScope scope) {
 		return buffer.toString();
 	}
 
+	@Override
 	public boolean isSubRoutine() {
 		return true;
 	}
 
+	@Override
 	protected boolean recordFinalAssignment(
 		VariableBinding binding,
 		Reference finalAssignment) {
@@ -258,6 +261,7 @@ public void complainOnDeferredChecks(FlowInfo flowInfo, BlockScope scope) {
 		return true;
 	}
 
+	@Override
 	public void recordUsingNullReference(Scope scope, LocalVariableBinding local,
 			ASTNode location, int checkType, FlowInfo flowInfo) {
 		if ((flowInfo.tagBits & FlowInfo.UNREACHABLE) == 0 && !flowInfo.isDefinitelyUnknown(local))	{
@@ -430,6 +434,7 @@ public void complainOnDeferredChecks(FlowInfo flowInfo, BlockScope scope) {
 		}
 	}
 
+	@Override
 	void removeFinalAssignmentIfAny(Reference reference) {
 		for (int i = 0; i < this.assignCount; i++) {
 			if (this.finalAssignments[i] == reference) {
@@ -440,6 +445,7 @@ public void complainOnDeferredChecks(FlowInfo flowInfo, BlockScope scope) {
 		}
 	}
 
+@Override
 protected void recordNullReference(LocalVariableBinding local,
 	ASTNode expression, int checkType, FlowInfo nullInfo) {
 	if (this.nullCount == 0) {
@@ -463,12 +469,14 @@ protected void recordNullReference(LocalVariableBinding local,
 	this.nullReferences[this.nullCount] = expression;
 	this.nullCheckTypes[this.nullCount++] = checkType;
 }
+@Override
 public void recordUnboxing(Scope scope, Expression expression, int nullStatus, FlowInfo flowInfo) {
 	if (nullStatus == FlowInfo.NULL)
 		super.recordUnboxing(scope, expression, nullStatus, flowInfo);
 	else // defer checking:
 		recordNullReference(null, expression, IN_UNBOXING, flowInfo);
 }
+@Override
 protected boolean internalRecordNullityMismatch(Expression expression, TypeBinding providedType, FlowInfo flowInfo, int nullStatus, TypeBinding expectedType, int checkType) {
 	// cf. decision structure inside FinallyFlowContext.recordUsingNullReference(..)
 	if (nullStatus == FlowInfo.UNKNOWN ||

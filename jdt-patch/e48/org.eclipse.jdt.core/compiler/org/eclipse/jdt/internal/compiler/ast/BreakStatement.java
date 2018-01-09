@@ -22,6 +22,7 @@ public BreakStatement(char[] label, int sourceStart, int e) {
 	super(label, sourceStart, e);
 }
 
+@Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 
 	// here requires to generate a sequence of finally blocks invocations depending corresponding
@@ -86,12 +87,14 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	return FlowInfo.DEAD_END;
 }
 
+@Override
 public StringBuffer printStatement(int tab, StringBuffer output) {
 	printIndent(tab, output).append("break"); //$NON-NLS-1$
 	if (this.label != null) output.append(' ').append(this.label);
 	return output.append(';');
 }
 
+@Override
 public void traverse(ASTVisitor visitor, BlockScope blockscope) {
 	visitor.visit(this, blockscope);
 	visitor.endVisit(this, blockscope);

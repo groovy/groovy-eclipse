@@ -99,8 +99,7 @@ public abstract class AbstractGroovyProposal implements IGroovyProposal {
 
     private static final Set<ClassNode> EXTREMELY_COMMON_TYPES;
     static {
-        Set<ClassNode> types =
-            new HashSet<ClassNode>();
+        Set<ClassNode> types = new HashSet<>();
         types.add(VariableScope.CLASS_CLASS_NODE);
         types.add(VariableScope.OBJECT_CLASS_NODE);
         types.add(VariableScope.GROOVY_OBJECT_CLASS_NODE);

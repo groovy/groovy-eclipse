@@ -22,6 +22,7 @@ public class LocalVariableLocator extends VariableLocator {
 public LocalVariableLocator(LocalVariablePattern pattern) {
 	super(pattern);
 }
+@Override
 public int match(LocalDeclaration node, MatchingNodeSet nodeSet) {
 	int referencesLevel = IMPOSSIBLE_MATCH;
 	if (this.pattern.findReferences)
@@ -41,6 +42,7 @@ public int match(LocalDeclaration node, MatchingNodeSet nodeSet) {
 private LocalVariable getLocalVariable() {
 	return ((LocalVariablePattern) this.pattern).localVariable;
 }
+@Override
 protected void matchReportReference(ASTNode reference, IJavaElement element, Binding elementBinding, int accuracy, MatchLocator locator) throws CoreException {
 	int offset = -1;
 	int length = -1;
@@ -66,6 +68,7 @@ protected void matchReportReference(ASTNode reference, IJavaElement element, Bin
 		locator.report(this.match);
 	}
 }
+@Override
 protected int matchContainer() {
 	return METHOD_CONTAINER;
 }
@@ -78,9 +81,11 @@ protected int matchLocalVariable(LocalVariableBinding variable, boolean matchNam
 		? ACCURATE_MATCH
 		: IMPOSSIBLE_MATCH;
 }
+@Override
 protected int referenceType() {
 	return IJavaElement.LOCAL_VARIABLE;
 }
+@Override
 public int resolveLevel(ASTNode possiblelMatchingNode) {
 	if (this.pattern.findReferences || this.pattern.fineGrain != 0)
 		if (possiblelMatchingNode instanceof NameReference)
@@ -89,6 +94,7 @@ public int resolveLevel(ASTNode possiblelMatchingNode) {
 		return matchLocalVariable(((LocalDeclaration) possiblelMatchingNode).binding, true);
 	return IMPOSSIBLE_MATCH;
 }
+@Override
 public int resolveLevel(Binding binding) {
 	if (binding == null) return INACCURATE_MATCH;
 	if (!(binding instanceof LocalVariableBinding)) return IMPOSSIBLE_MATCH;

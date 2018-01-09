@@ -145,6 +145,7 @@ public char[] getContents(ICompilationUnit unit) throws Error {
 	return unit.getContents();
 }
 
+@Override
 public void run() {
 	try {
 		while (this.readingThreads != null && this.nextFileToRead < this.units.length) {

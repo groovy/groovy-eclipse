@@ -78,10 +78,12 @@ public class TypeBound extends ReductionResult {
 		return this.right.isProperType(true);
 	}
 	
+	@Override
 	public int hashCode() {
 		return this.left.hashCode() + this.right.hashCode() + this.relation;
 	}
 	
+	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof TypeBound) {
 			TypeBound other = (TypeBound) obj;
@@ -91,6 +93,7 @@ public class TypeBound extends ReductionResult {
 	}
 	
 	// debugging:
+	@Override
 	public String toString() {
 		boolean isBound = this.right.isProperType(true);
 		StringBuffer buf = new StringBuffer();

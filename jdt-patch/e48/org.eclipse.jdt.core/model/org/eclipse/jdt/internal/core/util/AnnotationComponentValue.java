@@ -133,75 +133,63 @@ public class AnnotationComponentValue extends ClassFileStruct implements IAnnota
 				break;
 		}
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IAnnotationComponentValue#getAnnotationComponentValues()
-	 */
+
+	@Override
 	public IAnnotationComponentValue[] getAnnotationComponentValues() {
 		return this.annotationComponentValues;
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IAnnotationComponentValue#getAnnotationValue()
-	 */
+
+	@Override
 	public IAnnotation getAnnotationValue() {
 		return this.annotationValue;
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IAnnotationComponentValue#getClassInfo()
-	 */
+
+	@Override
 	public IConstantPoolEntry getClassInfo() {
 		return this.classInfo;
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IAnnotationComponentValue#getClassInfoIndex()
-	 */
+
+	@Override
 	public int getClassInfoIndex() {
 		return this.classFileInfoIndex;
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IAnnotationComponentValue#getConstantValue()
-	 */
+
+	@Override
 	public IConstantPoolEntry getConstantValue() {
 		return this.constantValue;
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IAnnotationComponentValue#getConstantValueIndex()
-	 */
+
+	@Override
 	public int getConstantValueIndex() {
 		return this.constantValueIndex;
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IAnnotationComponentValue#getEnumConstantName()
-	 */
+
+	@Override
 	public char[] getEnumConstantName() {
 		return this.enumConstantName;
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IAnnotationComponentValue#getEnumConstantNameIndex()
-	 */
+
+	@Override
 	public int getEnumConstantNameIndex() {
 		return this.enumConstantNameIndex;
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IAnnotationComponentValue#getEnumConstantTypeName()
-	 */
+
+	@Override
 	public char[] getEnumConstantTypeName() {
 		return this.enumConstantTypeName;
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IAnnotationComponentValue#getEnumConstantTypeNameIndex()
-	 */
+
+	@Override
 	public int getEnumConstantTypeNameIndex() {
 		return this.enumConstantTypeNameIndex;
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IAnnotationComponentValue#getTag()
-	 */
+
+	@Override
 	public int getTag() {
 		return this.tag;
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.util.IAnnotationComponentValue#getValuesNumber()
-	 */
+
+	@Override
 	public int getValuesNumber() {
 		return this.valuesNumber;
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,9 +41,6 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
  * </ul>
  *
  * Note that the <code>|| true</code> segment is required in order to ensure that the assertions do not fail at runtime.
- *
- * @author andrew
- * @created Aug 28, 2011
  */
 public class StaticTypeCheckerRequestor extends SemanticReferenceRequestor {
 
@@ -59,7 +56,7 @@ public class StaticTypeCheckerRequestor extends SemanticReferenceRequestor {
         this.onlyAssertions = onlyAssertions;
     }
 
-
+    @Override
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
         if (node instanceof BlockStatement) {
             if (((BlockStatement) node).getStatements() == null) {
@@ -90,16 +87,10 @@ public class StaticTypeCheckerRequestor extends SemanticReferenceRequestor {
         return VisitStatus.CONTINUE;
     }
 
-    /**
-     * @param type
-     * @param expectedType
-     * @return
-     */
     private boolean typeMatches(ClassNode type, String expectedType) {
         String actualType = printTypeName(type);
         return expectedType.equals(actualType);
     }
-
 
     protected String printTypeName(ClassNode type) {
         return type != null ? type.getName() + printGenerics(type) : "null";

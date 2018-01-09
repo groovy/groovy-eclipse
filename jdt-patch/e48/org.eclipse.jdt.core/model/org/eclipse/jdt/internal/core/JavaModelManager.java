@@ -345,10 +345,15 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	 */
 	public final static IPath VARIABLE_INITIALIZATION_IN_PROGRESS = new Path("Variable Initialization In Progress"); //$NON-NLS-1$
 	public final static IClasspathContainer CONTAINER_INITIALIZATION_IN_PROGRESS = new IClasspathContainer() {
+		@Override
 		public IClasspathEntry[] getClasspathEntries() { return null; }
+		@Override
 		public String getDescription() { return "Container Initialization In Progress"; } //$NON-NLS-1$
+		@Override
 		public int getKind() { return 0; }
+		@Override
 		public IPath getPath() { return null; }
+		@Override
 		public String toString() { return getDescription(); }
 	};
 
@@ -450,9 +455,11 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 					final IConfigurationElement configElement = (IConfigurationElement) participants[i];
 					final int participantIndex = i;
 					SafeRunner.run(new ISafeRunnable() {
+						@Override
 						public void handleException(Throwable exception) {
 							Util.log(exception, "Exception occurred while creating compilation participant"); //$NON-NLS-1$
 						}
+						@Override
 						public void run() throws Exception {
 							Object executableExtension = configElement.createExecutableExtension("class"); //$NON-NLS-1$
 							for (int j = sourceLevelIndex; j < MAX_SOURCE_LEVEL; j++)
@@ -586,6 +593,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			if (size == 0) return index;
 			Object[] elements = group.toArray();
 			Util.sort(elements, new Util.Comparer() {
+				@Override
 				public int compare(Object a, Object b) {
 					if (a == b) return 0;
 					String id = ((IConfigurationElement) a).getAttribute("id"); //$NON-NLS-1$
@@ -832,12 +840,14 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			org.eclipse.jdt.internal.compiler.util.Util.toString(
 				projects,
 				new org.eclipse.jdt.internal.compiler.util.Util.Displayable(){
+					@Override
 					public String displayString(Object o) { return ((IJavaProject) o).getElementName(); }
 				}) +
 			"}\n	values on previous session: {\n"  +//$NON-NLS-1$
 			org.eclipse.jdt.internal.compiler.util.Util.toString(
 				respectiveContainers,
 				new org.eclipse.jdt.internal.compiler.util.Util.Displayable(){
+					@Override
 					public String displayString(Object o) {
 						StringBuffer buffer = new StringBuffer("		"); //$NON-NLS-1$
 						if (o == null) {
@@ -864,6 +874,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			org.eclipse.jdt.internal.compiler.util.Util.toString(
 				respectiveContainers,
 				new org.eclipse.jdt.internal.compiler.util.Util.Displayable(){
+					@Override
 					public String displayString(Object o) {
 						StringBuffer buffer = new StringBuffer("		"); //$NON-NLS-1$
 						if (o == null) {
@@ -893,6 +904,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			org.eclipse.jdt.internal.compiler.util.Util.toString(
 				classpathEntries,
 				new org.eclipse.jdt.internal.compiler.util.Util.Displayable(){
+					@Override
 					public String displayString(Object o) {
 						StringBuffer buffer = new StringBuffer("		"); //$NON-NLS-1$
 						if (o == null) {
@@ -1218,7 +1230,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	/*
 	 * Temporary cache of newly opened elements
 	 */
-	private ThreadLocal temporaryCache = new ThreadLocal();
+	private ThreadLocal<HashMap<IJavaElement, Object>> temporaryCache = new ThreadLocal<>();
 
 	/**
 	 * Set of elements which are out of sync with their buffers.
@@ -1272,14 +1284,16 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		public IEclipsePreferences preferences;
 		public Hashtable options;
 		public Hashtable secondaryTypes;
-		public LRUCache javadocCache;
+		// NB: PackageFragment#getAttachedJavadoc uses this map differently
+		// and stores String data, not JavadocContents as values
+		public LRUCache<IJavaElement, Object> javadocCache;
 
 		public PerProjectInfo(IProject project) {
 
 			this.triedRead = false;
 			this.savedState = null;
 			this.project = project;
-			this.javadocCache = new LRUCache(JAVADOC_CACHE_INITIAL_SIZE);
+			this.javadocCache = new LRUCache<>(JAVADOC_CACHE_INITIAL_SIZE);
 		}
 
 		public synchronized IClasspathEntry[] getResolvedClasspath() {
@@ -1450,6 +1464,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			return classpath;
 		}
 
+		@Override
 		public String toString() {
 			StringBuffer buffer = new StringBuffer();
 			buffer.append("Info for "); //$NON-NLS-1$
@@ -1524,16 +1539,19 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			this.workingCopy = workingCopy;
 			this.problemRequestor = problemRequestor;
 		}
+		@Override
 		public void acceptProblem(IProblem problem) {
 			IProblemRequestor requestor = getProblemRequestor();
 			if (requestor == null) return;
 			requestor.acceptProblem(problem);
 		}
+		@Override
 		public void beginReporting() {
 			IProblemRequestor requestor = getProblemRequestor();
 			if (requestor == null) return;
 			requestor.beginReporting();
 		}
+		@Override
 		public void endReporting() {
 			IProblemRequestor requestor = getProblemRequestor();
 			if (requestor == null) return;
@@ -1548,10 +1566,12 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		public ICompilationUnit getWorkingCopy() {
 			return this.workingCopy;
 		}
+		@Override
 		public boolean isActive() {
 			IProblemRequestor requestor = getProblemRequestor();
 			return requestor != null && requestor.isActive();
 		}
+		@Override
 		public String toString() {
 			StringBuffer buffer = new StringBuffer();
 			buffer.append("Info for "); //$NON-NLS-1$
@@ -1638,7 +1658,8 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		/**
          * @see org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener#preferenceChange(org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent)
          */
-        public void preferenceChange(IEclipsePreferences.PreferenceChangeEvent event) {
+        @Override
+		public void preferenceChange(IEclipsePreferences.PreferenceChangeEvent event) {
         	String propertyName = event.getKey();
         	if (propertyName.startsWith(JavaCore.PLUGIN_ID)) {
 	        	if (propertyName.startsWith(CP_VARIABLE_PREFERENCES_PREFIX)) {
@@ -1722,9 +1743,11 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	 * Listener on eclipse preferences default/instance node changes.
 	 */
 	IEclipsePreferences.INodeChangeListener instanceNodeListener = new IEclipsePreferences.INodeChangeListener() {
+		@Override
 		public void added(IEclipsePreferences.NodeChangeEvent event) {
 			// do nothing
 		}
+		@Override
 		public void removed(IEclipsePreferences.NodeChangeEvent event) {
 			if (event.getChild() == JavaModelManager.this.preferencesLookup[PREF_INSTANCE]) {
 				JavaModelManager.this.preferencesLookup[PREF_INSTANCE] = InstanceScope.INSTANCE.getNode(JavaCore.PLUGIN_ID);
@@ -1733,9 +1756,11 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		}
 	};
 	IEclipsePreferences.INodeChangeListener defaultNodeListener = new IEclipsePreferences.INodeChangeListener() {
+		@Override
 		public void added(IEclipsePreferences.NodeChangeEvent event) {
 			// do nothing
 		}
+		@Override
 		public void removed(IEclipsePreferences.NodeChangeEvent event) {
 			if (event.getChild() == JavaModelManager.this.preferencesLookup[PREF_DEFAULT]) {
 				JavaModelManager.this.preferencesLookup[PREF_DEFAULT] = DefaultScope.INSTANCE.getNode(JavaCore.PLUGIN_ID);
@@ -1939,9 +1964,11 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		apm[0] = null;
 		final IConfigurationElement factory = this.annotationProcessorManagerFactory;
 		SafeRunner.run(new ISafeRunnable() {
+			@Override
 			public void handleException(Throwable exception) {
 				Util.log(exception, "Exception occurred while loading annotation processor manager"); //$NON-NLS-1$
 			}
+			@Override
 			public void run() throws Exception {
 				Object executableExtension = factory.createExecutableExtension("class"); //$NON-NLS-1$
 				if (executableExtension instanceof AbstractAnnotationProcessorManager) {
@@ -2007,6 +2034,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	/**
 	 * @see ISaveParticipant
 	 */
+	@Override
 	public void doneSaving(ISaveContext context){
 		// nothing to do for jdt.core
 	}
@@ -2146,7 +2174,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	 *  Returns the info for the element.
 	 */
 	public synchronized Object getInfo(IJavaElement element) {
-		HashMap tempCache = (HashMap)this.temporaryCache.get();
+		HashMap<IJavaElement, Object> tempCache = this.temporaryCache.get();
 		if (tempCache != null) {
 			Object result = tempCache.get(element);
 			if (result != null) {
@@ -2587,10 +2615,10 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	 * Returns the temporary cache for newly opened elements for the current thread.
 	 * Creates it if not already created.
 	 */
-	public HashMap getTemporaryCache() {
-		HashMap result = (HashMap)this.temporaryCache.get();
+	public HashMap<IJavaElement, Object> getTemporaryCache() {
+		HashMap<IJavaElement, Object> result = this.temporaryCache.get();
 		if (result == null) {
-			result = new HashMap();
+			result = new HashMap<>();
 			this.temporaryCache.set(result);
 		}
 		return result;
@@ -3024,6 +3052,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			// (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=118507)
 			IWorkspaceRunnable runnable =
 				new IWorkspaceRunnable() {
+					@Override
 					public void run(IProgressMonitor monitor) throws CoreException {
 						try {
 							// Collect all containers
@@ -3188,6 +3217,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		} else {
 			// create a dummy initializer and get the default failure container
 			container = (new ClasspathContainerInitializer() {
+				@Override
 				public void initialize(IPath path, IJavaProject javaProject) throws CoreException {
 					// not used
 				}
@@ -3284,9 +3314,11 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 
 		// Listen to instance preferences node removal from parent in order to refresh stored one
 		this.instanceNodeListener = new IEclipsePreferences.INodeChangeListener() {
+			@Override
 			public void added(IEclipsePreferences.NodeChangeEvent event) {
 				// do nothing
 			}
+			@Override
 			public void removed(IEclipsePreferences.NodeChangeEvent event) {
 				if (event.getChild() == JavaModelManager.this.preferencesLookup[PREF_INSTANCE]) {
 					JavaModelManager.this.preferencesLookup[PREF_INSTANCE] = InstanceScope.INSTANCE.getNode(JavaCore.PLUGIN_ID);
@@ -3299,9 +3331,11 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 
 		// Listen to default preferences node removal from parent in order to refresh stored one
 		this.defaultNodeListener = new IEclipsePreferences.INodeChangeListener() {
+			@Override
 			public void added(IEclipsePreferences.NodeChangeEvent event) {
 				// do nothing
 			}
+			@Override
 			public void removed(IEclipsePreferences.NodeChangeEvent event) {
 				if (event.getChild() == JavaModelManager.this.preferencesLookup[PREF_DEFAULT]) {
 					JavaModelManager.this.preferencesLookup[PREF_DEFAULT] = DefaultScope.INSTANCE.getNode(JavaCore.PLUGIN_ID);
@@ -3335,6 +3369,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 
 	void touchProjects(final IProject[] projectsToTouch, IProgressMonitor progressMonitor) throws JavaModelException {
 		WorkspaceJob touchJob = new WorkspaceJob(Messages.synchronizing_projects_job) {
+			@Override
 			public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
 				SubMonitor subMonitor = SubMonitor.convert(monitor, projectsToTouch.length);
 				for (IProject iProject : projectsToTouch) {
@@ -3348,6 +3383,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 				return Status.OK_STATUS;
 			}
 
+			@Override
 			public boolean belongsTo(Object family) {
 				return ResourcesPlugin.FAMILY_MANUAL_REFRESH == family;
 			}
@@ -3717,24 +3753,29 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			this.project = project;
 		}
 
+		@Override
 		public IClasspathEntry[] getClasspathEntries() {
 			return this.entries;
 		}
 
+		@Override
 		public String getDescription() {
 			return "Persisted container [" + this.containerPath //$NON-NLS-1$
 					+ " for project [" + this.project.getElementName() //$NON-NLS-1$
 					+ "]]"; //$NON-NLS-1$
 		}
 
+		@Override
 		public int getKind() {
 			return 0;
 		}
 
+		@Override
 		public IPath getPath() {
 			return this.containerPath;
 		}
 
+		@Override
 		public String toString() {
 			return getDescription();
 		}
@@ -3984,7 +4025,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	 *  disturbing the cache ordering.
 	 */
 	protected synchronized Object peekAtInfo(IJavaElement element) {
-		HashMap tempCache = (HashMap)this.temporaryCache.get();
+		HashMap tempCache = this.temporaryCache.get();
 		if (tempCache != null) {
 			Object result = tempCache.get(element);
 			if (result != null) {
@@ -3997,6 +4038,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	/**
 	 * @see ISaveParticipant
 	 */
+	@Override
 	public void prepareToSave(ISaveContext context) /*throws CoreException*/ {
 		// nothing to do
 	}
@@ -4007,7 +4049,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	 * If forceAdd is false it just returns the existing info and if true, this element and it's children are closed and then 
 	 * this particular info is added to the cache.
 	 */
-	protected synchronized Object putInfos(IJavaElement openedElement, Object newInfo, boolean forceAdd, Map newElements) {
+	protected synchronized Object putInfos(IJavaElement openedElement, Object newInfo, boolean forceAdd, Map<IJavaElement, Object> newElements) {
 		// remove existing children as the are replaced with the new children contained in newElements
 		Object existingInfo = this.cache.peekAtInfo(openedElement);
 		if (existingInfo != null && !forceAdd) {
@@ -4033,20 +4075,20 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		// Subsequent resolution against package in the jar would fail as a result.
 		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=102422
 		// (theodora)
-		for(Iterator it = newElements.entrySet().iterator(); it.hasNext(); ) {
-			Map.Entry entry = (Map.Entry)it.next();
-			IJavaElement element = (IJavaElement)entry.getKey();
+		for(Iterator<Entry<IJavaElement, Object>> it = newElements.entrySet().iterator(); it.hasNext(); ) {
+			Entry<IJavaElement, Object> entry = it.next();
+			IJavaElement element = entry.getKey();
 			if (element instanceof JarPackageFragmentRoot) {
-				Object info = entry.getValue();
+				JavaElementInfo info = (JavaElementInfo) entry.getValue();
 				it.remove();
 				this.cache.putInfo(element, info);
 			}
 		}
 
-		Iterator iterator = newElements.entrySet().iterator();
+		Iterator<Entry<IJavaElement, Object>> iterator = newElements.entrySet().iterator();
 		while (iterator.hasNext()) {
-			Map.Entry entry = (Map.Entry) iterator.next();
-			this.cache.putInfo((IJavaElement) entry.getKey(), entry.getValue());
+			Entry<IJavaElement, Object> entry = iterator.next();
+			this.cache.putInfo(entry.getKey(), entry.getValue());
 		}
 		return newInfo;
 	}
@@ -4065,8 +4107,9 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		}
 	}
 
-	/*
+	/**
 	 * Remember the info for the jar binary type
+	 * @param info instanceof IBinaryType or {@link JavaModelCache#NON_EXISTING_JAR_TYPE_INFO}
 	 */
 	protected synchronized void putJarTypeInfo(IJavaElement type, Object info) {
 		this.cache.jarTypeCache.put(type, info);
@@ -4134,18 +4177,23 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			if (entries != JavaProject.INVALID_CLASSPATH) {
 				final IClasspathEntry[] containerEntries = entries;
 				IClasspathContainer container = new IClasspathContainer() {
+					@Override
 					public IClasspathEntry[] getClasspathEntries() {
 						return containerEntries;
 					}
+					@Override
 					public String getDescription() {
 						return "Persisted container ["+containerPath+" for project ["+ project.getElementName()+"]"; //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$
 					}
+					@Override
 					public int getKind() {
 						return 0;
 					}
+					@Override
 					public IPath getPath() {
 						return containerPath;
 					}
+					@Override
 					public String toString() {
 						return getDescription();
 					}
@@ -4291,6 +4339,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	/**
 	 * @see ISaveParticipant
 	 */
+	@Override
 	public void rollback(ISaveContext context){
 		// nothing to do
 	}
@@ -4610,6 +4659,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 	/**
 	 * @see ISaveParticipant
 	 */
+	@Override
 	public void saving(ISaveContext context) throws CoreException {
 
 	    long start = -1;
@@ -4939,6 +4989,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 
 		final Hashtable secondaryTypes = new Hashtable(3);
 		IRestrictedAccessTypeRequestor nameRequestor = new IRestrictedAccessTypeRequestor() {
+			@Override
 			public void acceptType(int modifiers, char[] packageName, char[] simpleTypeName, char[][] enclosingTypeNames, String path, AccessRestriction access) {
 				String key = packageName==null ? "" : new String(packageName); //$NON-NLS-1$
 				HashMap types = (HashMap) secondaryTypes.get(key);
@@ -5305,6 +5356,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 
 			// Listen to preference changes
 			this.propertyListener = new IEclipsePreferences.IPreferenceChangeListener() {
+				@Override
 				public void preferenceChange(PreferenceChangeEvent event) {
 					JavaModelManager.this.optionsCache = null;
 				}
@@ -5313,6 +5365,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			
 			// listen for encoding changes (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=255501 )
 			this.resourcesPropertyListener = new IEclipsePreferences.IPreferenceChangeListener() {
+				@Override
 				public void preferenceChange(PreferenceChangeEvent event) {
 					if (ResourcesPlugin.PREF_ENCODING.equals(event.getKey())) {
 						JavaModelManager.this.optionsCache = null;
@@ -5356,12 +5409,14 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 			// process deltas since last activated in indexer thread so that indexes are up-to-date.
 			// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=38658
 			Job processSavedState = new Job(Messages.savedState_jobName) {
+				@Override
 				protected IStatus run(IProgressMonitor monitor) {
 					try {
 						// add save participant and process delta atomically
 						// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=59937
 						workspace.run(
 							new IWorkspaceRunnable() {
+								@Override
 								public void run(IProgressMonitor progress) throws CoreException {
 									ISavedState savedState = workspace.addSaveParticipant(JavaCore.PLUGIN_ID, JavaModelManager.this);
 									if (savedState != null) {
@@ -5542,6 +5597,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		return true;
 	}
 
+	@Override
 	public void contentTypeChanged(ContentTypeChangeEvent event) {
 		Util.resetJavaLikeExtensions();
 

@@ -34,6 +34,7 @@ public class MostSpecificExceptionMethodBinding  extends MethodBinding {
 		this.defaultNullness = originalMethod.defaultNullness;
 	}
 	
+	@Override
 	public MethodBinding original() {
 		return this.originalMethod.original();
 	}

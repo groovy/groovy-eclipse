@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,12 +58,12 @@ public class Activator extends Plugin {
         plugin = this;
     }
 
+    @Override
     public void start(BundleContext context) throws Exception {
         super.start(context);
-
-        SystemPropertyCleaner.clean();
     }
 
+    @Override
     public void stop(BundleContext context) throws Exception {
         super.stop(context);
     }

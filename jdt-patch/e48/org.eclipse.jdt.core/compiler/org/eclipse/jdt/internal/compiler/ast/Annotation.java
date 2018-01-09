@@ -144,30 +144,37 @@ public abstract class Annotation extends Expression {
 				}
 				return false; // if annotation is not found in the type reference, it must be one from SE7 location, typePathEntries captures the proper path entries for them. 
 			}	
+			@Override
 			public boolean visit(SingleTypeReference typeReference, BlockScope scope) {
 				return visit((TypeReference) typeReference, scope);
 			}
 			
+			@Override
 			public boolean visit(ArrayTypeReference typeReference, BlockScope scope) {
 				return visit((TypeReference) typeReference, scope);
 			}
 			
+			@Override
 			public boolean visit(ParameterizedSingleTypeReference typeReference, BlockScope scope) {
 				return visit((TypeReference) typeReference, scope);
 			}
 
+			@Override
 			public boolean visit(QualifiedTypeReference typeReference, BlockScope scope) {
 				return visit((TypeReference) typeReference, scope);
 			}
 			
+			@Override
 			public boolean visit(ArrayQualifiedTypeReference typeReference, BlockScope scope) {
 				return visit((TypeReference) typeReference, scope);
 			}
 			
+			@Override
 			public boolean visit(ParameterizedQualifiedTypeReference typeReference, BlockScope scope) {
 				return visit((TypeReference) typeReference, scope);
 			}
 			
+			@Override
 			public boolean visit(Wildcard typeReference, BlockScope scope) {
 				visit((TypeReference) typeReference, scope);
 				if (this.continueSearch) {
@@ -183,6 +190,7 @@ public abstract class Annotation extends Expression {
 				return false;
 			}
 
+			@Override
 			public boolean visit(ArrayAllocationExpression allocationExpression, BlockScope scope) {
 				if (this.continueSearch) {
 					inspectArrayDimensions(allocationExpression.getAnnotationsOnDimensions(), allocationExpression.dimensions.length);
@@ -194,6 +202,7 @@ public abstract class Annotation extends Expression {
 				return false;
 			}
 						
+			@Override
 			public String toString() {
 				StringBuffer buffer = new StringBuffer();
 				buffer
@@ -627,6 +636,7 @@ public abstract class Annotation extends Expression {
 					}
 					this.targetBuffer.append(targetName);
 				}
+				@Override
 				public String toString() {
 					return this.targetBuffer.toString();
 				}
@@ -749,6 +759,7 @@ public abstract class Annotation extends Expression {
 
 	public abstract MemberValuePair[] memberValuePairs();
 
+	@Override
 	public StringBuffer printExpression(int indent, StringBuffer output) {
 		output.append('@');
 		this.type.printExpression(0, output);
@@ -802,6 +813,7 @@ public abstract class Annotation extends Expression {
 		}
 	}
 
+	@Override
 	public TypeBinding resolveType(BlockScope scope) {
 
 		if (this.compilerAnnotation != null)
@@ -812,6 +824,7 @@ public abstract class Annotation extends Expression {
 		if (this.resolvedType == null) {
 			typeBinding = this.type.resolveType(scope);
 			if (typeBinding == null) {
+				this.resolvedType = new ProblemReferenceBinding(this.type.getTypeName(), null, ProblemReasons.NotFound);
 				return null;
 			}
 			this.resolvedType = typeBinding;
@@ -1310,8 +1323,10 @@ public abstract class Annotation extends Expression {
 		return this.resolvedType instanceof ReferenceBinding && ((ReferenceBinding) this.resolvedType).hasNullBit(bit);
 	}
 
+	@Override
 	public abstract void traverse(ASTVisitor visitor, BlockScope scope);
 
+	@Override
 	public abstract void traverse(ASTVisitor visitor, ClassScope scope);
 
 	public Annotation getPersistibleAnnotation() {

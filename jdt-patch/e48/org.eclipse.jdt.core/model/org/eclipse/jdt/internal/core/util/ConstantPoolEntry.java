@@ -66,6 +66,7 @@ public class ConstantPoolEntry implements IConstantPoolEntry {
 	/**
 	 * @see IConstantPoolEntry#getKind()
 	 */
+	@Override
 	public int getKind() {
 		return this.kind;
 	}
@@ -81,6 +82,7 @@ public class ConstantPoolEntry implements IConstantPoolEntry {
 	/**
 	 * @see IConstantPoolEntry#getClassInfoNameIndex()
 	 */
+	@Override
 	public int getClassInfoNameIndex() {
 		return this.classInfoNameIndex;
 	}
@@ -88,6 +90,7 @@ public class ConstantPoolEntry implements IConstantPoolEntry {
 	/**
 	 * @see IConstantPoolEntry#getClassIndex()
 	 */
+	@Override
 	public int getClassIndex() {
 		return this.classIndex;
 	}
@@ -95,6 +98,7 @@ public class ConstantPoolEntry implements IConstantPoolEntry {
 	/**
 	 * @see IConstantPoolEntry#getNameAndTypeIndex()
 	 */
+	@Override
 	public int getNameAndTypeIndex() {
 		return this.nameAndTypeIndex;
 	}
@@ -102,6 +106,7 @@ public class ConstantPoolEntry implements IConstantPoolEntry {
 	/**
 	 * @see IConstantPoolEntry#getStringIndex()
 	 */
+	@Override
 	public int getStringIndex() {
 		return this.stringIndex;
 	}
@@ -109,6 +114,7 @@ public class ConstantPoolEntry implements IConstantPoolEntry {
 	/**
 	 * @see IConstantPoolEntry#getStringValue()
 	 */
+	@Override
 	public String getStringValue() {
 		return new String(this.stringValue);
 	}
@@ -116,6 +122,7 @@ public class ConstantPoolEntry implements IConstantPoolEntry {
 	/**
 	 * @see IConstantPoolEntry#getIntegerValue()
 	 */
+	@Override
 	public int getIntegerValue() {
 		return this.integerValue;
 	}
@@ -123,6 +130,7 @@ public class ConstantPoolEntry implements IConstantPoolEntry {
 	/**
 	 * @see IConstantPoolEntry#getFloatValue()
 	 */
+	@Override
 	public float getFloatValue() {
 		return this.floatValue;
 	}
@@ -130,6 +138,7 @@ public class ConstantPoolEntry implements IConstantPoolEntry {
 	/**
 	 * @see IConstantPoolEntry#getDoubleValue()
 	 */
+	@Override
 	public double getDoubleValue() {
 		return this.doubleValue;
 	}
@@ -137,6 +146,7 @@ public class ConstantPoolEntry implements IConstantPoolEntry {
 	/**
 	 * @see IConstantPoolEntry#getLongValue()
 	 */
+	@Override
 	public long getLongValue() {
 		return this.longValue;
 	}
@@ -144,6 +154,7 @@ public class ConstantPoolEntry implements IConstantPoolEntry {
 	/**
 	 * @see IConstantPoolEntry#getNameAndTypeInfoDescriptorIndex()
 	 */
+	@Override
 	public int getNameAndTypeInfoDescriptorIndex() {
 		return this.nameAndTypeDescriptorIndex;
 	}
@@ -151,6 +162,7 @@ public class ConstantPoolEntry implements IConstantPoolEntry {
 	/**
 	 * @see IConstantPoolEntry#getNameAndTypeInfoNameIndex()
 	 */
+	@Override
 	public int getNameAndTypeInfoNameIndex() {
 		return this.nameAndTypeNameIndex;
 	}
@@ -158,6 +170,7 @@ public class ConstantPoolEntry implements IConstantPoolEntry {
 	/**
 	 * @see IConstantPoolEntry#getClassName()
 	 */
+	@Override
 	public char[] getClassName() {
 		return this.className;
 	}
@@ -165,6 +178,7 @@ public class ConstantPoolEntry implements IConstantPoolEntry {
 	/**
 	 * @see IConstantPoolEntry#getFieldName()
 	 */
+	@Override
 	public char[] getFieldName() {
 		return this.fieldName;
 	}
@@ -172,6 +186,7 @@ public class ConstantPoolEntry implements IConstantPoolEntry {
 	/**
 	 * @see IConstantPoolEntry#getMethodName()
 	 */
+	@Override
 	public char[] getMethodName() {
 		return this.methodName;
 	}
@@ -179,6 +194,7 @@ public class ConstantPoolEntry implements IConstantPoolEntry {
 	/**
 	 * @see IConstantPoolEntry#getFieldDescriptor()
 	 */
+	@Override
 	public char[] getFieldDescriptor() {
 		return this.fieldDescriptor;
 	}
@@ -186,6 +202,7 @@ public class ConstantPoolEntry implements IConstantPoolEntry {
 	/**
 	 * @see IConstantPoolEntry#getMethodDescriptor()
 	 */
+	@Override
 	public char[] getMethodDescriptor() {
 		return this.methodDescriptor;
 	}
@@ -193,6 +210,7 @@ public class ConstantPoolEntry implements IConstantPoolEntry {
 	/**
 	 * @see IConstantPoolEntry#getUtf8Value()
 	 */
+	@Override
 	public char[] getUtf8Value() {
 		return this.utf8Value;
 	}
@@ -200,6 +218,7 @@ public class ConstantPoolEntry implements IConstantPoolEntry {
 	/**
 	 * @see IConstantPoolEntry#getClassInfoName()
 	 */
+	@Override
 	public char[] getClassInfoName() {
 		return this.classInfoName;
 	}
@@ -368,6 +387,7 @@ public class ConstantPoolEntry implements IConstantPoolEntry {
 	/**
 	 * @see IConstantPoolEntry#getUtf8Length()
 	 */
+	@Override
 	public int getUtf8Length() {
 		return this.utf8Length;
 	}

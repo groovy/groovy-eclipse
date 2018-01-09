@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,43 +47,10 @@ import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
- * Compilation participant for notification when a compile completes. Copies over specified script files into the output directory
- *
- * @author Andrew Eisenberg
- * @created Oct 5, 2010
+ * Compilation participant for notification when a compile completes.  Copies
+ * specified script files into the output directory.
  */
 public class ScriptFolderCompilationParticipant extends CompilationParticipant {
-
-    /**
-     * use this to ensure that the longest paths are looked at first
-     * ensures that nested source folders will be appropriately found
-     */
-    static class PathLengthComparator implements Comparator<IContainer> {
-        public int compare(IContainer c1, IContainer c2) {
-            if (c1 == null) {
-                if (c2 == null) {
-                    return 0;
-                }
-                return -1;
-            }
-            if (c2 == null) {
-                return 1;
-            }
-            int len1 = c1.getFullPath().segmentCount();
-            int len2 = c2.getFullPath().segmentCount();
-            if (len1 > len2) { // a larger path should come first
-                return -1;
-            } else if (len1 == len2) {
-                // then compare by text:
-                return c1.toString().compareTo(c2.toString());
-            } else {
-                return 1;
-            }
-        }
-
-    }
-
-    private static final PathLengthComparator comparator = new PathLengthComparator();
 
     private IJavaProject project;
 
@@ -136,8 +103,6 @@ public class ScriptFolderCompilationParticipant extends CompilationParticipant {
 
     /**
      * Some simple checks that we can do to ensure that the builder is set up properly
-     *
-     * @param files
      */
     private boolean sanityCheckBuilder(BuildContext[] files) {
         // GRECLIPSE-1230 also do a check to ensure the proper compiler is being used
@@ -170,10 +135,6 @@ public class ScriptFolderCompilationParticipant extends CompilationParticipant {
 
     }
 
-    /**
-     * @param buildContext
-     * @return
-     */
     private CategorizedProblem[] createProblem(BuildContext buildContext) {
         DefaultProblem problem = new DefaultProblem(buildContext.getFile().getFullPath().toOSString().toCharArray(),
                 "Error compiling Groovy project.  Either the Groovy-JDT patch is not installed or JavaBuilder is not being used.",
@@ -183,40 +144,35 @@ public class ScriptFolderCompilationParticipant extends CompilationParticipant {
 
     @Override
     public void buildFinished(IJavaProject project) {
-        // try {
-        // IProject iproject = project.getProject();
-        // if (compiledFiles == null || !ScriptFolderSelector.isEnabled(iproject)) {
-        // return;
-        // }
-        //
-        // ScriptFolderSelector selector = new ScriptFolderSelector(iproject);
-        // Map<IContainer, IContainer> sourceToOut = generateSourceToOut(project);
-        // for (BuildContext compiledFile : compiledFiles) {
-        // IFile file = compiledFile.getFile();
-        // if (selector.getFileKind(file) == FileKind.SCRIPT) {
-        // IPath filePath = file.getFullPath();
-        // IContainer containingSourceFolder = findContainingSourceFolder(sourceToOut, filePath);
-        //
-        // // if null, that means the out folder is the same as the source folder
-        // if (containingSourceFolder != null) {
-        // IPath packagePath = findPackagePath(filePath, containingSourceFolder);
-        // IContainer out = sourceToOut.get(containingSourceFolder);
-        // copyFile(file, packagePath, out);
-        // }
-        // }
-        // }
-        // } catch (CoreException e) {
-        //			Util.log(e, "Error in Script folder compilation participant");
-        // } finally {
-        // compiledFiles = null;
-        // }
+        /*try {
+            IProject iproject = project.getProject();
+            if (compiledFiles == null || !ScriptFolderSelector.isEnabled(iproject)) {
+                return;
+            }
+
+            ScriptFolderSelector selector = new ScriptFolderSelector(iproject);
+            Map<IContainer, IContainer> sourceToOut = generateSourceToOut(project);
+            for (BuildContext compiledFile : compiledFiles) {
+                IFile file = compiledFile.getFile();
+                if (selector.getFileKind(file) == FileKind.SCRIPT) {
+                    IPath filePath = file.getFullPath();
+                    IContainer containingSourceFolder = findContainingSourceFolder(sourceToOut, filePath);
+
+                    // if null, that means the out folder is the same as the source folder
+                    if (containingSourceFolder != null) {
+                        IPath packagePath = findPackagePath(filePath, containingSourceFolder);
+                        IContainer out = sourceToOut.get(containingSourceFolder);
+                        copyFile(file, packagePath, out);
+                    }
+                }
+            }
+        } catch (CoreException e) {
+            Util.log(e, "Error in Script folder compilation participant");
+        } finally {
+            compiledFiles = null;
+        }*/
     }
 
-    /**
-     * @param file
-     * @param containingSourceFolder
-     * @return
-     */
     private IPath findPackagePath(IPath filePath, IContainer containingSourceFolder) {
         IPath containerPath = containingSourceFolder.getFullPath();
         filePath = filePath.removeFirstSegments(containerPath.segmentCount());
@@ -284,7 +240,9 @@ public class ScriptFolderCompilationParticipant extends CompilationParticipant {
             defaultOutContainer = p;
         }
 
-        Map<IContainer, IContainer> sourceToOut = new TreeMap<IContainer, IContainer>(comparator);
+        Map<IContainer, IContainer> sourceToOut = new TreeMap<>(
+            // ensure that the longest paths are looked at first so that nested source folders will be appropriately found
+            Comparator.comparing((IContainer c) -> c.getFullPath().segmentCount()).reversed().thenComparing((IContainer c) -> c.toString()));
         for (IClasspathEntry cpe : cp) {
             if (cpe.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
 

@@ -11,13 +11,13 @@
 package org.eclipse.jdt.internal.core;
 
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IOpenable;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.internal.core.util.LRUCache;
 
 /**
  * An LRU cache of <code>JavaElements</code>.
  */
-public class ElementCache extends OverflowingLRUCache {
+public class ElementCache<K extends IJavaElement & IOpenable> extends OverflowingLRUCache<K, JavaElementInfo> {
 
 	IJavaElement spaceLimitParent = null;
 
@@ -40,7 +40,11 @@ public ElementCache(int size, int overflow) {
  * <p>NOTE: this triggers an external removal of this element
  * by closing the element.
  */
-protected boolean close(LRUCacheEntry entry) {
+@Override
+protected boolean close(LRUCacheEntry<K, JavaElementInfo> entry) {
+	if(!(entry.key instanceof Openable)) {
+		return false;
+	}
 	Openable element = (Openable) entry.key;
 	try {
 		if (!element.canBeRemovedFromCache()) {
@@ -58,9 +62,9 @@ protected boolean close(LRUCacheEntry entry) {
  * Ensures that there is enough room for adding the children of the given info.
  * If the space limit must be increased, record the parent that needed this space limit.
  */
-protected void ensureSpaceLimit(Object info, IJavaElement parent) {
+protected void ensureSpaceLimit(JavaElementInfo info, IJavaElement parent) {
 	// ensure the children can be put without closing other elements
-	int childrenSize = ((JavaElementInfo) info).getChildren().length;
+	int childrenSize = info.getChildren().length;
 	int spaceNeeded = 1 + (int)((1 + this.loadFactor) * (childrenSize + this.overflow));
 	if (this.spaceLimit < spaceNeeded) {
 		// parent is being opened with more children than the space limit
@@ -73,8 +77,9 @@ protected void ensureSpaceLimit(Object info, IJavaElement parent) {
 /*
  * Returns a new instance of the receiver.
  */
-protected LRUCache newInstance(int size, int newOverflow) {
-	return new ElementCache(size, newOverflow);
+@Override
+protected ElementCache<K> newInstance(int size, int newOverflow) {
+	return new ElementCache<>(size, newOverflow);
 }
 
 /*

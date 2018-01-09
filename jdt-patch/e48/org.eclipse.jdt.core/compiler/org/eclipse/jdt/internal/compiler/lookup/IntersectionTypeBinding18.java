@@ -72,6 +72,7 @@ public class IntersectionTypeBinding18 extends ReferenceBinding { // abstraction
 		return contracts;
 	}
 
+	@Override
 	public boolean hasTypeBit(int bit) { // Stephan ??
 		for (int i = 0; i < this.length; i++) {		
 			if (this.intersectingTypes[i].hasTypeBit(bit))
@@ -80,10 +81,12 @@ public class IntersectionTypeBinding18 extends ReferenceBinding { // abstraction
 		return false;
 	}
 
+	@Override
 	public boolean canBeInstantiated() {
 		return false;
 	}
 	
+	@Override
 	public boolean canBeSeenBy(PackageBinding invocationPackage) {
 		for (int i = 0; i < this.length; i++) {
 			if (!this.intersectingTypes[i].canBeSeenBy(invocationPackage))
@@ -92,6 +95,7 @@ public class IntersectionTypeBinding18 extends ReferenceBinding { // abstraction
 		return true;
 	}
 	
+	@Override
 	public boolean canBeSeenBy(Scope scope) {
 		for (int i = 0; i < this.length; i++) {
 			if (!this.intersectingTypes[i].canBeSeenBy(scope))
@@ -100,6 +104,7 @@ public class IntersectionTypeBinding18 extends ReferenceBinding { // abstraction
 		return true;
 	}
 	
+	@Override
 	public boolean canBeSeenBy(ReferenceBinding receiverType, ReferenceBinding invocationType) {
 		for (int i = 0; i < this.length; i++) {
 			if (!this.intersectingTypes[i].canBeSeenBy(receiverType, invocationType))
@@ -109,22 +114,27 @@ public class IntersectionTypeBinding18 extends ReferenceBinding { // abstraction
 	}
 	
 	
+	@Override
 	public char[] constantPoolName() {
 		return this.intersectingTypes[0].constantPoolName();
 	}
 
+	@Override
 	public PackageBinding getPackage() {
 		throw new UnsupportedOperationException(); // cannot be referred to
 	}
 	
+	@Override
 	public ReferenceBinding[] getIntersectingTypes() {
 		return this.intersectingTypes;
 	}
 
+	@Override
 	public ReferenceBinding superclass() {
 		return this.intersectingTypes[0].isClass() ? this.intersectingTypes[0] : this.javaLangObject; 
 	}
 	
+	@Override
 	public ReferenceBinding [] superInterfaces() {
 		if (this.intersectingTypes[0].isClass()) {
 			ReferenceBinding [] superInterfaces = new ReferenceBinding[this.length - 1];
@@ -141,6 +151,7 @@ public class IntersectionTypeBinding18 extends ReferenceBinding { // abstraction
 	
 	/* Answer true if the receiver type can be assigned to the argument type (right)
 	 */
+	@Override
 	public boolean isCompatibleWith(TypeBinding right, Scope scope) {
 
 		// easy way out?
@@ -195,6 +206,7 @@ public class IntersectionTypeBinding18 extends ReferenceBinding { // abstraction
 		return false;
 	}
 
+	@Override
 	public char[] qualifiedSourceName() {
 		StringBuffer qualifiedSourceName = new StringBuffer(16);
 		for (int i = 0; i < this.length; i++) {		
@@ -205,6 +217,7 @@ public class IntersectionTypeBinding18 extends ReferenceBinding { // abstraction
 		return qualifiedSourceName.toString().toCharArray();
 	}
 
+	@Override
 	public char[] sourceName() {
 		StringBuffer srcName = new StringBuffer(16);
 		for (int i = 0; i < this.length; i++) {		
@@ -215,6 +228,7 @@ public class IntersectionTypeBinding18 extends ReferenceBinding { // abstraction
 		return srcName.toString().toCharArray();
 	}
 
+	@Override
 	public char[] readableName() {
 		StringBuffer readableName = new StringBuffer(16);
 		for (int i = 0; i < this.length; i++) {		
@@ -224,6 +238,7 @@ public class IntersectionTypeBinding18 extends ReferenceBinding { // abstraction
 		}
 		return readableName.toString().toCharArray();
 	}
+	@Override
 	public char[] shortReadableName() {
 		StringBuffer shortReadableName = new StringBuffer(16);
 		for (int i = 0; i < this.length; i++) {		
@@ -233,12 +248,15 @@ public class IntersectionTypeBinding18 extends ReferenceBinding { // abstraction
 		}
 		return shortReadableName.toString().toCharArray();
 	}
+	@Override
 	public boolean isIntersectionType18() {
 		return true;
 	}
+	@Override
 	public int kind() {
 		return Binding.INTERSECTION_TYPE18;
 	}
+	@Override
 	public String debugName() {
 		StringBuffer debugName = new StringBuffer(16);
 		for (int i = 0; i < this.length; i++) {		
@@ -248,6 +266,7 @@ public class IntersectionTypeBinding18 extends ReferenceBinding { // abstraction
 		}
 		return debugName.toString();
 	}
+	@Override
 	public String toString() {
 	    return debugName();
 	}

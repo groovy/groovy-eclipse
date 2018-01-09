@@ -85,6 +85,7 @@ public class JavaElementRequestor implements IJavaElementRequestor {
 /**
  * @see IJavaElementRequestor
  */
+@Override
 public void acceptField(IField field) {
 	if (this.fields == null) {
 		this.fields= new ArrayList();
@@ -94,6 +95,7 @@ public void acceptField(IField field) {
 /**
  * @see IJavaElementRequestor
  */
+@Override
 public void acceptInitializer(IInitializer initializer) {
 	if (this.initializers == null) {
 		this.initializers= new ArrayList();
@@ -103,6 +105,7 @@ public void acceptInitializer(IInitializer initializer) {
 /**
  * @see IJavaElementRequestor
  */
+@Override
 public void acceptMemberType(IType type) {
 	if (this.memberTypes == null) {
 		this.memberTypes= new ArrayList();
@@ -112,6 +115,7 @@ public void acceptMemberType(IType type) {
 /**
  * @see IJavaElementRequestor
  */
+@Override
 public void acceptMethod(IMethod method) {
 	if (this.methods == null) {
 		this.methods = new ArrayList();
@@ -121,6 +125,7 @@ public void acceptMethod(IMethod method) {
 /**
  * @see IJavaElementRequestor
  */
+@Override
 public void acceptPackageFragment(IPackageFragment packageFragment) {
 	if (this.packageFragments== null) {
 		this.packageFragments= new ArrayList();
@@ -130,6 +135,7 @@ public void acceptPackageFragment(IPackageFragment packageFragment) {
 /**
  * @see IJavaElementRequestor
  */
+@Override
 public void acceptType(IType type) {
 	if (this.types == null) {
 		this.types= new ArrayList();
@@ -139,6 +145,7 @@ public void acceptType(IType type) {
 /**
  * @see IJavaElementRequestor
  */
+@Override
 public void acceptModule(IModuleDescription module) {
 	if (this.modules == null) {
 		this.modules= new ArrayList();
@@ -233,6 +240,7 @@ public IModuleDescription[] getModules() {
 /**
  * @see IJavaElementRequestor
  */
+@Override
 public boolean isCanceled() {
 	return this.canceled;
 }

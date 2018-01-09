@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,8 +27,6 @@ import org.eclipse.core.resources.IStorage;
 /**
  * the match returns true if the pattern passed in has a field with the
  * supplied characteristics (either a name, or another pointcut such as hasAnnotation).
- * @author andrew
- * @created Feb 11, 2011
  */
 public class FindPropertyPointcut extends FilteringPointcut<PropertyNode> {
 
@@ -44,7 +42,7 @@ public class FindPropertyPointcut extends FilteringPointcut<PropertyNode> {
     @Override
     protected Collection<PropertyNode> explodeObject(Object toMatch) {
         if (toMatch instanceof Collection) {
-            Collection<PropertyNode> properties = new ArrayList<PropertyNode>();
+            Collection<PropertyNode> properties = new ArrayList<>();
             for (Object obj : (Collection<?>) toMatch) {
                 if (obj instanceof PropertyNode) {
                     properties.add((PropertyNode) obj);
@@ -56,7 +54,7 @@ public class FindPropertyPointcut extends FilteringPointcut<PropertyNode> {
         } else if (toMatch instanceof PropertyNode) {
             return Collections.singleton((PropertyNode) toMatch);
         } else if (toMatch instanceof ClassNode) {
-            return new ArrayList<PropertyNode>(((ClassNode) toMatch).getProperties());
+            return new ArrayList<>(((ClassNode) toMatch).getProperties());
         }
         return null;
     }

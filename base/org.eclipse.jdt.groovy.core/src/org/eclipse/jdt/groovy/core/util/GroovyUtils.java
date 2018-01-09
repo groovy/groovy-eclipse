@@ -15,7 +15,6 @@
  */
 package org.eclipse.jdt.groovy.core.util;
 
-import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -69,9 +68,7 @@ public class GroovyUtils {
     }
 
     public static char[] readSourceRange(SourceUnit unit, int offset, int length) {
-        Reader reader = null;
-        try {
-            reader = unit.getSource().getReader();
+        try (Reader reader = unit.getSource().getReader()) {
             reader.skip(offset);
             int n = length;
             final char[] code = new char[n];
@@ -81,15 +78,13 @@ public class GroovyUtils {
             return code;
         } catch (Exception e) {
             Util.log(e);
-        } finally {
-            try { if (reader != null) reader.close(); } catch (IOException ignored) {}
         }
         return null;
     }
 
     // FIXASC don't use this any more?
     public static int[] getSourceLineSeparatorsIn(char[] code) {
-        List<Integer> lineSeparatorsCollection = new ArrayList<Integer>();
+        List<Integer> lineSeparatorsCollection = new ArrayList<>();
         for (int i = 0, max = code.length; i < max; i++) {
             if (code[i] == '\r') {
                 if ((i + 1) < max && code[i + 1] == '\n') {// \r\n
@@ -193,7 +188,7 @@ public class GroovyUtils {
     public static List<ClassNode> getParameterTypes(Parameter... params) {
         final int n = params.length;
         if (n == 0) return Collections.emptyList();
-        List<ClassNode> types = new ArrayList<ClassNode>(n);
+        List<ClassNode> types = new ArrayList<>(n);
         for (Parameter param : params) {
             types.add(param.getType());
         }
@@ -296,7 +291,7 @@ public class GroovyUtils {
     }
 
     public static List<ImportNode> getAllImportNodes(ModuleNode moduleNode) {
-        List<ImportNode> importNodes = new ArrayList<ImportNode>();
+        List<ImportNode> importNodes = new ArrayList<>();
 
         importNodes.addAll(moduleNode.getImports());
         importNodes.addAll(moduleNode.getStarImports());
@@ -304,11 +299,7 @@ public class GroovyUtils {
         importNodes.addAll(moduleNode.getStaticStarImports().values());
 
         // order imports by source position
-        Collections.sort(importNodes, new Comparator<ImportNode>() {
-            public int compare(ImportNode in1, ImportNode in2) {
-                return in1.getEnd() - in2.getEnd();
-            }
-        });
+        Collections.sort(importNodes, Comparator.comparing(ImportNode::getEnd));
 
         return importNodes;
     }

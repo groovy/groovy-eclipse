@@ -1003,6 +1003,7 @@ public class Util implements SuffixConstants {
 	public static String toString(Object[] objects) {
 		return toString(objects,
 			new Displayable(){
+				@Override
 				public String displayString(Object o) {
 					if (o == null) return "null"; //$NON-NLS-1$
 					return o.toString();

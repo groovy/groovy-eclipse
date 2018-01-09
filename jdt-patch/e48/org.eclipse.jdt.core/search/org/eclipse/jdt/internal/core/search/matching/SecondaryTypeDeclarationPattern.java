@@ -29,17 +29,17 @@ public SecondaryTypeDeclarationPattern(int matchRule) {
 	super(matchRule);
 }
 
+@Override
 public SearchPattern getBlankPattern() {
 	return new SecondaryTypeDeclarationPattern(R_EXACT_MATCH | R_CASE_SENSITIVE);
 }
+@Override
 protected StringBuffer print(StringBuffer output) {
 	output.append("Secondary"); //$NON-NLS-1$
 	return super.print(output);
 }
 
-/* (non-Javadoc)
- * @see org.eclipse.jdt.internal.core.search.matching.TypeDeclarationPattern#queryIn(org.eclipse.jdt.internal.core.index.Index)
- */
+@Override
 public EntryResult[] queryIn(Index index) throws IOException {
 	return index.query(CATEGORIES, SECONDARY_PATTERN_KEY, R_PATTERN_MATCH | R_CASE_SENSITIVE);
 }

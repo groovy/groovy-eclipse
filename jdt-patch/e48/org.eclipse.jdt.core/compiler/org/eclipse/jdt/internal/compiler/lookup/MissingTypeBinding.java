@@ -41,6 +41,7 @@ public MissingTypeBinding(PackageBinding packageBinding, char[][] compoundName, 
 	this.methods = Binding.NO_METHODS;
 }
 
+@Override
 public TypeBinding clone(TypeBinding outerType) {
 	return this; // shouldn't get here.
 }
@@ -48,6 +49,7 @@ public TypeBinding clone(TypeBinding outerType) {
 /**
  * @see org.eclipse.jdt.internal.compiler.lookup.TypeBinding#collectMissingTypes(java.util.List)
  */
+@Override
 public List<TypeBinding> collectMissingTypes(List<TypeBinding> missingTypes) {
 	if (missingTypes == null) {
 		missingTypes = new ArrayList<>(5);
@@ -62,6 +64,7 @@ public List<TypeBinding> collectMissingTypes(List<TypeBinding> missingTypes) {
  * Missing binary type will answer <code>false</code> to #isValidBinding()
  * @see org.eclipse.jdt.internal.compiler.lookup.Binding#problemId()
  */
+@Override
 public int problemId() {
 	return ProblemReasons.NotFound;
 }
@@ -75,10 +78,12 @@ void setMissingSuperclass(ReferenceBinding missingSuperclass) {
 	this.superclass = missingSuperclass;
 }
 
+@Override
 public void setTypeAnnotations(AnnotationBinding[] annotations, boolean evalNullAnnotations) {
 	return; // reject misguided attempts.
 }
 
+@Override
 public String toString() {
 		return "[MISSING:" + new String(CharOperation.concatWith(this.compoundName, '.')) + "]"; //$NON-NLS-1$ //$NON-NLS-2$
 	}

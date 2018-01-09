@@ -25,7 +25,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.groovy.eclipse.core.search.ISearchRequestor;
 import org.codehaus.groovy.eclipse.core.search.SyntheticAccessorSearchRequestor;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IFile;
@@ -164,7 +163,7 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
     }
 
     private SearchResultGroup[] convert(List<SearchMatch> toGroup) {
-        Map<IResource, List<SearchMatch>> groups = new HashMap<IResource, List<SearchMatch>>(toGroup.size());
+        Map<IResource, List<SearchMatch>> groups = new HashMap<>(toGroup.size());
         for (SearchMatch searchMatch : toGroup) {
             if (searchMatch.getResource() == null) {
                 // likely a binary match. These are handled elsewhere
@@ -172,7 +171,7 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
             }
             List<SearchMatch> group = groups.get(searchMatch.getResource());
             if (group == null) {
-                group = new ArrayList<SearchMatch>();
+                group = new ArrayList<>();
                 groups.put(searchMatch.getResource(), group);
             }
             group.add(searchMatch);
@@ -278,12 +277,8 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
 
     private List<SearchMatch> findExtraReferences(IProgressMonitor pm) throws CoreException {
         SyntheticAccessorSearchRequestor synthRequestor = new SyntheticAccessorSearchRequestor();
-        final List<SearchMatch> matches = new ArrayList<SearchMatch>();
-        synthRequestor.findSyntheticMatches(renameTarget, new ISearchRequestor() {
-            public void acceptMatch(SearchMatch match) {
-                matches.add(match);
-            }
-        }, SubMonitor.convert(pm, "Find synthetic accessors", 10));
+        final List<SearchMatch> matches = new ArrayList<>();
+        synthRequestor.findSyntheticMatches(renameTarget, match -> matches.add(match), SubMonitor.convert(pm, "Find synthetic accessors", 10));
         return matches;
     }
 
@@ -333,7 +328,7 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
     }
 
     private Map<String, String> getNameMap() {
-        Map<String, String> nameMap = new HashMap<String, String>();
+        Map<String, String> nameMap = new HashMap<>();
         String newBaseName = basename(getArguments().getNewName());
         String oldBaseName = basename(renameTarget.getElementName());
 

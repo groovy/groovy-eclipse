@@ -67,7 +67,7 @@ public class JavaRefactoringDispatcher {
     //--------------------------------------------------------------------------
 
     public RenameJavaElementDescriptor createDescriptorForLocalVariable() {
-        Map<String, String> args = new HashMap<String, String>();
+        Map<String, String> args = new HashMap<>();
         args.put("name", getNewName());
         args.put("input", element.getHandleIdentifier());
         RenameJavaElementDescriptor descriptor = new RenameJavaElementDescriptor(

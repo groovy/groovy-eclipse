@@ -54,8 +54,6 @@ import org.eclipse.text.edits.ReplaceEdit;
 
 /**
  * Various AST related helpers.
- *
- * @author mike klenk
  */
 public class ASTTools {
 
@@ -75,7 +73,8 @@ public class ASTTools {
             if (start >= until) {
                 throw new IllegalStateException(String.format(
                     "Block statement start offset (%d) >= end offset (%d)%nfirst statement: %s%nlast statement: %s",
-                    start, until, block.getStatements().get(0), block.getStatements().get(block.getStatements().size() - 1)));
+                    start, until, block.getStatements().get(0),
+                    block.getStatements().get(block.getStatements().size() - 1)));
             }
             return new Region(start, until - start);
         }
@@ -139,12 +138,12 @@ public class ASTTools {
             int currentIntetnation = getCurrentIntentation(line);
             String space;
             switch (modus) {
-                case SPACE:
-                    space = "    ";
-                    break;
-                default:
-                    space = "\t";
-                    break;
+            case SPACE:
+                space = "    ";
+                break;
+            default:
+                space = "\t";
+                break;
             }
             for (int i = 0; i < (currentIntetnation + intentation); i++) {
                 retString.append(space);
@@ -153,8 +152,9 @@ public class ASTTools {
         }
         return retString.toString();
     }
+
     public static final int SPACE = 1;
-    public static final int TAB   = 2;
+    public static final int TAB = 2;
 
     /**
      * Returns the current Intentation of this string measured in "Tabs".
@@ -164,14 +164,14 @@ public class ASTTools {
         int tabs = 0, spaces = 0;
         for (int i = 0, n = leadingGap.length(); i < n; i += 1) {
             switch (leadingGap.charAt(i)) {
-                case '\t':
-                    tabs += 1;
-                    break;
-                case ' ':
-                    spaces += 1;
-                    break;
-                default:
-                    break;
+            case '\t':
+                tabs += 1;
+                break;
+            case ' ':
+                spaces += 1;
+                break;
+            default:
+                break;
             }
         }
         int currentIntetnation = tabs + (spaces / 4);
@@ -206,7 +206,7 @@ public class ASTTools {
     }
 
     public static boolean hasMultipleReturnStatements(Statement statement) {
-        List<ReturnStatement> returns = new ArrayList<ReturnStatement>();
+        List<ReturnStatement> returns = new ArrayList<>();
         statement.visit(new FindReturns(returns));
         return returns.size() > 1;
     }
@@ -224,7 +224,7 @@ public class ASTTools {
     }
 
     public static String getTextofNode(ASTNode node, IDocument document) {
-        TextSelection sel = new TextSelection(document, node.getStart(), node.getEnd()-node.getStart());
+        TextSelection sel = new TextSelection(document, node.getStart(), node.getEnd() - node.getStart());
         try {
             return document.get(sel.getOffset(), sel.getLength());
         } catch (BadLocationException e) {
@@ -235,10 +235,10 @@ public class ASTTools {
     public static Set<Variable> getVariablesInScope(ModuleNode moduleNode, ASTNode node) {
         FindSurroundingNode find = new FindSurroundingNode(new Region(node), VisitKind.PARENT_STACK);
         find.doVisitSurroundingNode(moduleNode);
-        List<IASTFragment> parentStack = new ArrayList<IASTFragment>(find.getParentStack());
+        List<IASTFragment> parentStack = new ArrayList<>(find.getParentStack());
         Collections.reverse(parentStack);
 
-        Set<Variable> vars = new HashSet<Variable>();
+        Set<Variable> vars = new HashSet<>();
         for (IASTFragment fragment : parentStack) {
             ASTNode astNode = fragment.getAssociatedNode();
             VariableScope scope;

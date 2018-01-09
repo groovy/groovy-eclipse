@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.quickfix.test.resolvers
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
 import static org.junit.Assume.assumeTrue
 
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
@@ -276,7 +275,6 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
 
     @Test
     void testAddImportGRECLIPSE1612() {
-        assumeTrue(isAtLeastGroovy(20))
         addJavaSource('''\
             public class FooJava {
               public static String getProperty() {
@@ -299,7 +297,6 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
 
     @Test
     void testGRECLIPSE1777() {
-        assumeTrue(isAtLeastGroovy(21))
         def unit = addGroovySource('''\
             @groovy.transform.CompileStatic
             class D {

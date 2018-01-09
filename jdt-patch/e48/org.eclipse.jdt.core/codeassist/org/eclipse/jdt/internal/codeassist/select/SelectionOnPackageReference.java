@@ -36,6 +36,7 @@ public class SelectionOnPackageReference extends ImportReference {
 public SelectionOnPackageReference(char[][] tokens , long[] positions) {
 	super(tokens, positions, false, ClassFileConstants.AccDefault);
 }
+@Override
 public StringBuffer print(int tab, StringBuffer output, boolean withOnDemand) {
 	printIndent(tab, output).append("<SelectOnPackage:"); //$NON-NLS-1$
 	for (int i = 0; i < this.tokens.length; i++) {

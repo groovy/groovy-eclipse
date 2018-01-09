@@ -146,8 +146,6 @@ import org.eclipse.jdt.internal.core.util.Util;
 /**
  * A subtype of JDT CompilationUnitDeclaration that represents a groovy source file. It overrides methods as appropriate, delegating
  * to the groovy infrastructure.
- *
- * @author Andy Clement
  */
 public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration {
 
@@ -283,7 +281,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
     /** Unwraps any SyntaxExceptions embedded within a GroovyRuntimeException. */
     private void fixGroovyRuntimeException(MultipleCompilationErrorsException mce) {
-        List<SyntaxException> syntaxErrors = new ArrayList<SyntaxException>();
+        List<SyntaxException> syntaxErrors = new ArrayList<>();
 
         for (Iterator<? extends Message> it = mce.getErrorCollector().getErrors().iterator(); it.hasNext();) {
             Message m = it.next();
@@ -456,7 +454,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         // unit and so we ignore it. If we do deal with it then we remember that we did (in errorsRecorded) and remove it from
         // the list of those to process.
 
-        List<Message> errorsRecorded = new ArrayList<Message>();
+        List<Message> errorsRecorded = new ArrayList<>();
         // FIXASC poor way to get the errors attached to the files
         // FIXASC does groovy ever produce warnings? How are they treated here?
         for (Iterator<?> iterator = errors.iterator(); iterator.hasNext();) {
@@ -639,7 +637,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             if (taskTags != null) {
                 // For each comment find all task tags within it and cope with
                 for (Comment comment : comments) {
-                    List<TaskEntry> allTasksInComment = new ArrayList<TaskEntry>();
+                    List<TaskEntry> allTasksInComment = new ArrayList<>();
                     for (int t = 0; t < taskTags.length; t++) {
                         String taskTag = String.valueOf(taskTags[t]);
                         String taskPriority = null;
@@ -969,7 +967,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             Map<String, ImportNode> importStaticStars = moduleNode.getStaticStarImports();
             int importCount = importNodes.size() + importPackages.size() + importStatics.size() + importStaticStars.size();
             if (importCount > 0) {
-                List<ImportReference> importReferences = new ArrayList<ImportReference>(importCount);
+                List<ImportReference> importReferences = new ArrayList<>(importCount);
 
                 // type imports
                 for (ImportNode importNode : importNodes) {
@@ -1073,11 +1071,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 // ensure proper lexical order
                 if (!importReferences.isEmpty()) {
                     ImportReference[] refs = importReferences.toArray(new ImportReference[importReferences.size()]);
-                    Arrays.sort(refs, new Comparator<ImportReference>() {
-                        public int compare(ImportReference left, ImportReference right) {
-                            return left.sourceStart - right.sourceStart;
-                        }
-                    });
+                    Arrays.sort(refs, Comparator.comparing(ref -> ref.sourceStart));
                     for (ImportReference ref : refs) {
                         if (ref.declarationSourceStart > 0 && (ref.declarationEnd - ref.declarationSourceStart + 1) < 0) {
                             throw new IllegalStateException("Import reference alongside class " + moduleNode.getClasses().get(0)
@@ -1094,16 +1088,16 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             List<ClassNode> moduleClassNodes = moduleNode.getClasses();
             for (ClassNode classNode : moduleClassNodes) {
                 if (classNode.isPrimaryClassNode() && GroovyUtils.isAnonymous(classNode)) {
-                    anonymousLocations = new HashMap<ClassNode, Object>();
+                    anonymousLocations = new HashMap<>();
                     break;
                 }
             }
-            List<TypeDeclaration> typeDeclarations = new ArrayList<TypeDeclaration>();
-            Map<ClassNode, TypeDeclaration> fromClassNodeToDecl = new HashMap<ClassNode, TypeDeclaration>();
+            List<TypeDeclaration> typeDeclarations = new ArrayList<>();
+            Map<ClassNode, TypeDeclaration> fromClassNodeToDecl = new HashMap<>();
 
             CompilationResult compilationResult = unitDeclaration.compilationResult;
             char[] mainName = toMainName(compilationResult.getFileName());
-            Map<ClassNode, List<TypeDeclaration>> innersToRecord = new HashMap<ClassNode, List<TypeDeclaration>>();
+            Map<ClassNode, List<TypeDeclaration>> innersToRecord = new HashMap<>();
             for (ClassNode classNode : moduleClassNodes) {
                 if (!classNode.isPrimaryClassNode()) {
                     continue;
@@ -1147,7 +1141,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     // record that we need to set the parent of this inner type later
                     List<TypeDeclaration> inners = innersToRecord.get(outerClassNode);
                     if (inners == null) {
-                        inners = new ArrayList<TypeDeclaration>();
+                        inners = new ArrayList<>();
                         innersToRecord.put(outerClassNode, inners);
                     }
                     inners.add(typeDeclaration);
@@ -1240,7 +1234,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
          * expected to have any modifiers (2) leave the type as null, that is how these things are identified by JDT.
          */
         private FieldDeclaration[] createFieldDeclarations(ClassNode classNode, boolean isEnum) {
-            List<FieldDeclaration> fieldDeclarations = new ArrayList<FieldDeclaration>();
+            List<FieldDeclaration> fieldDeclarations = new ArrayList<>();
             List<FieldNode> fieldNodes = classNode.getFields();
             boolean isTrait = isTrait(classNode);
             if (fieldNodes != null) {
@@ -1267,6 +1261,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                             if (anonymousLocations != null && fieldNode.getInitialExpression() != null) {
                                 fieldNode.getInitialExpression().visit(new CodeVisitorSupport() {
+                                    @Override
                                     public void visitConstructorCallExpression(ConstructorCallExpression call) {
                                         if (call.isUsingAnonymousInnerClass()) {
                                             anonymousLocations.put(call.getType(), fieldNode);
@@ -1291,7 +1286,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
          */
         private AbstractMethodDeclaration[] createMethodAndConstructorDeclarations(ClassNode classNode, boolean isEnum,
                 GroovyTypeDeclaration typeDeclaration, CompilationResult compilationResult) {
-            List<AbstractMethodDeclaration> accumulatedDeclarations = new ArrayList<AbstractMethodDeclaration>();
+            List<AbstractMethodDeclaration> accumulatedDeclarations = new ArrayList<>();
             createConstructorDeclarations(classNode, isEnum, accumulatedDeclarations);
             createMethodDeclarations(classNode, isEnum, typeDeclaration, accumulatedDeclarations);
             return accumulatedDeclarations.toArray(new AbstractMethodDeclaration[accumulatedDeclarations.size()]);
@@ -1349,6 +1344,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                 if (anonymousLocations != null && constructorNode.getCode() != null) {
                     constructorNode.getCode().visit(new CodeVisitorSupport() {
+                        @Override
                         public void visitConstructorCallExpression(ConstructorCallExpression call) {
                             if (call.isUsingAnonymousInnerClass()) {
                                 anonymousLocations.put(call.getType(), constructorDeclaration);
@@ -1394,6 +1390,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                 if (anonymousLocations != null && methodNode.getCode() != null) {
                     methodNode.getCode().visit(new CodeVisitorSupport() {
+                        @Override
                         public void visitConstructorCallExpression(ConstructorCallExpression call) {
                             if (call.isUsingAnonymousInnerClass()) {
                                 anonymousLocations.put(call.getType(), methodDeclaration);
@@ -1523,7 +1520,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
         private Annotation[] createAnnotations(List<AnnotationNode> groovyAnnotations) {
             if (groovyAnnotations != null && !groovyAnnotations.isEmpty()) {
-                List<Annotation> annotations = new ArrayList<Annotation>(groovyAnnotations.size());
+                List<Annotation> annotations = new ArrayList<>(groovyAnnotations.size());
 
                 for (AnnotationNode annotationNode : groovyAnnotations) {
                     ClassNode annoType = annotationNode.getClassNode();
@@ -1629,7 +1626,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
         private org.eclipse.jdt.internal.compiler.ast.MemberValuePair[] createAnnotationMemberValuePairs(Map<String, Expression> memberValuePairs) {
             List<org.eclipse.jdt.internal.compiler.ast.MemberValuePair> mvps =
-                new ArrayList<org.eclipse.jdt.internal.compiler.ast.MemberValuePair>(memberValuePairs.size());
+                new ArrayList<>(memberValuePairs.size());
 
             for (Map.Entry<String, Expression> memberValuePair : memberValuePairs.entrySet()) {
                 char[] name = memberValuePair.getKey().toCharArray();
@@ -1828,7 +1825,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         private TypeReference createTypeReferenceForClassLiteral(PropertyExpression expression) {
             // FIXASC ignore type parameters for now
             Expression candidate = expression.getObjectExpression();
-            List<char[]> nameParts = new LinkedList<char[]>();
+            List<char[]> nameParts = new LinkedList<>();
             while (candidate instanceof PropertyExpression) {
                 nameParts.add(0, ((PropertyExpression) candidate).getPropertyAsString().toCharArray());
                 candidate = ((PropertyExpression) candidate).getObjectExpression();
@@ -1881,7 +1878,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         TypeReference tr = createTypeReferenceForGenerics(genericsInfo[g]);
                         if (tr != null) {
                             if (typeArguments == null) {
-                                typeArguments = new ArrayList<TypeReference>();
+                                typeArguments = new ArrayList<>();
                             }
                             typeArguments.add(tr);
                         }
@@ -2069,8 +2066,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         private static final Pattern AND = Pattern.compile("^\\s*&\\s*");
         private static final Pattern EXTENDS = Pattern.compile("^\\s*extends\\s+");
 
-        private static final Map<Character, Integer> charToTypeId = new HashMap<Character, Integer>();
-        private static final Map<String, Integer> nameToPrimitiveTypeId = new HashMap<String, Integer>();
+        private static final Map<Character, Integer> charToTypeId = new HashMap<>();
+        private static final Map<String, Integer> nameToPrimitiveTypeId = new HashMap<>();
         static {
             charToTypeId.put('D', TypeIds.T_double);
             charToTypeId.put('I', TypeIds.T_int);
@@ -2532,7 +2529,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
          * variants of defaulting parameters allowed and returns a List of Argument arrays. Each argument array represents a variation.
          */
         private List<Argument[]> getVariantsAllowingForDefaulting(Parameter[] groovyParams, Argument[] jdtArguments) {
-            List<Argument[]> variants = new ArrayList<Argument[]>();
+            List<Argument[]> variants = new ArrayList<>();
 
             int psCount = groovyParams.length;
             Parameter[] wipableParameters = new Parameter[psCount];
@@ -2542,7 +2539,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             // values in the list indicate a parameter variation. On each repeat we null the last one in the list that
             // has an initial expression. This is repeated until there are no more left to null.
 
-            List<Argument> oneVariation = new ArrayList<Argument>();
+            List<Argument> oneVariation = new ArrayList<>();
             int nextToLetDefault = -1;
             do {
                 oneVariation.clear();

@@ -27,8 +27,6 @@ import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 
 /**
  * Wraps a JDT FieldBinding, representing it to groovy as a FieldNode. Translates annotations only when required.
- *
- * @author Andy Clement
  */
 public class JDTFieldNode extends FieldNode implements JDTNode {
 
@@ -80,14 +78,17 @@ public class JDTFieldNode extends FieldNode implements JDTNode {
         return fieldBinding;
     }
 
+    @Override
     public Binding getJdtBinding() {
         return fieldBinding;
     }
 
+    @Override
     public JDTResolver getResolver() {
         return resolver;
     }
 
+    @Override
     public boolean isDeprecated() {
         return fieldBinding.isDeprecated();
     }

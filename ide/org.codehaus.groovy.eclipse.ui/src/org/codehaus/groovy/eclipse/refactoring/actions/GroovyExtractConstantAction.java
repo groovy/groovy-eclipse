@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,11 +25,6 @@ import org.eclipse.jdt.ui.actions.ExtractConstantAction;
 import org.eclipse.jdt.ui.refactoring.RefactoringSaveHelper;
 import org.eclipse.jface.text.ITextSelection;
 
-/**
- * 
- * @author Andrew Eisenberg
- * @created May 10, 2010
- */
 public class GroovyExtractConstantAction extends ExtractConstantAction {
 
     private final GroovyEditor fEditor;
@@ -39,6 +34,7 @@ public class GroovyExtractConstantAction extends ExtractConstantAction {
         this.fEditor = editor;
     }
 
+    @Override
     public void run(ITextSelection selection) {
         if (!ActionUtil.isEditable(fEditor))
             return;

@@ -22,53 +22,65 @@ public class DoubleConstant extends Constant {
 		this.value = value;
 	}
 
+	@Override
 	public byte byteValue() {
 		return (byte) this.value;
 	}
 
+	@Override
 	public char charValue() {
 		return (char) this.value;
 	}
 
+	@Override
 	public double doubleValue() {
 		return this.value;
 	}
 
+	@Override
 	public float floatValue() {
 		return (float) this.value;
 	}
 
+	@Override
 	public int intValue() {
 		return (int) this.value;
 	}
 
+	@Override
 	public long longValue() {
 		return (long) this.value;
 	}
 
+	@Override
 	public short shortValue() {
 		return (short) this.value;
 	}
 
+	@Override
 	public String stringValue() {
 		return String.valueOf(this.value);
 	}
 
+	@Override
 	public String toString() {
 		if (this == NotAConstant)
 			return "(Constant) NotAConstant"; //$NON-NLS-1$
 		return "(double)" + this.value;  //$NON-NLS-1$
 	}
 
+	@Override
 	public int typeID() {
 		return T_double;
 	}
 
+	@Override
 	public int hashCode() {
 		long temp = Double.doubleToLongBits(this.value);
 		return (int) (temp ^ (temp >>> 32));
 	}
 
+	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
 			return true;

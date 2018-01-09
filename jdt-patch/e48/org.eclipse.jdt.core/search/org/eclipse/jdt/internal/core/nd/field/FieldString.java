@@ -70,6 +70,7 @@ public class FieldString extends BaseField implements IDestructableField {
 		put(nd, address, newString.toCharArray());
 	}
 
+	@Override
 	public void destruct(Nd nd, long address) {
 		Database db = nd.getDB();
 		db.getLog().start(this.destructTag);

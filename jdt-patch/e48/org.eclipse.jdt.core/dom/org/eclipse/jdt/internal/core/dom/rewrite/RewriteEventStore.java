@@ -63,6 +63,7 @@ public final class RewriteEventStore {
 			return this.property;
 		}
 
+		@Override
 		public boolean equals(Object obj) {
 			if (obj != null && obj.getClass().equals(getClass())) {
 				PropertyLocation other= (PropertyLocation) obj;
@@ -71,6 +72,7 @@ public final class RewriteEventStore {
 			return false;
 		}
 
+		@Override
 		public int hashCode() {
 			return getParent().hashCode() + getProperty().hashCode();
 		}
@@ -106,6 +108,7 @@ public final class RewriteEventStore {
 			this.event= change;
 		}
 
+		@Override
 		public String toString() {
 			StringBuffer buf= new StringBuffer();
 			buf.append(this.parent).append(" - "); //$NON-NLS-1$
@@ -130,6 +133,7 @@ public final class RewriteEventStore {
 			return this.node;
 		}
 
+		@Override
 		public int compareTo(Object o2) {
 			CopySourceInfo r2= (CopySourceInfo) o2;
 
@@ -144,6 +148,7 @@ public final class RewriteEventStore {
 			return 0;
 		}
 
+		@Override
 		public String toString() {
 			StringBuffer buf= new StringBuffer();
 			if (this.isMove) {
@@ -187,6 +192,7 @@ public final class RewriteEventStore {
 			return (Block) this.copyInfo.getNode();
 		}
 
+		@Override
 		public int compareTo(Object o2) {
 			NodeRangeInfo r2= (NodeRangeInfo) o2;
 
@@ -214,6 +220,7 @@ public final class RewriteEventStore {
 			internalPlaceholder.setSourceRange(startPos, endPos - startPos);
 		}
 
+		@Override
 		public String toString() {
 			StringBuffer buf= new StringBuffer();
 			if (this.first != this.last) {
@@ -262,16 +269,12 @@ public final class RewriteEventStore {
 			}
 		}
 
-		/* (non-Javadoc)
-		 * @see java.util.Iterator#hasNext()
-		 */
+		@Override
 		public boolean hasNext() {
 			return this.eventIter.hasNext() || this.sourceNodeIter.hasNext() || this.rangeNodeIter.hasNext() || this.trackedNodeIter.hasNext();
 		}
 
-		/* (non-Javadoc)
-		 * @see java.util.Iterator#next()
-		 */
+		@Override
 		public Object next() {
 			if (this.eventIter.hasNext()) {
 				return this.eventIter.next();
@@ -285,9 +288,7 @@ public final class RewriteEventStore {
 			return this.trackedNodeIter.next();
 		}
 
-		/* (non-Javadoc)
-		 * @see java.util.Iterator#remove()
-		 */
+		@Override
 		public void remove() {
 			throw new UnsupportedOperationException();
 		}
@@ -872,6 +873,7 @@ public final class RewriteEventStore {
 		}
 	}
 
+	@Override
 	public String toString() {
 		StringBuffer buf= new StringBuffer();
 		for (Iterator iter = this.eventLookup.values().iterator(); iter.hasNext();) {

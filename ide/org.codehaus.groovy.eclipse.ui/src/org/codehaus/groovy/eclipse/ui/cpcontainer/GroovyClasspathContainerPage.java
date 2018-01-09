@@ -45,8 +45,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.osgi.service.prefs.BackingStoreException;
 
-public class GroovyClasspathContainerPage extends NewElementWizardPage
-implements IClasspathContainerPage, IClasspathContainerPageExtension {
+public class GroovyClasspathContainerPage extends NewElementWizardPage implements IClasspathContainerPage, IClasspathContainerPageExtension {
+
     private IJavaProject jProject;
     private IEclipsePreferences prefStore;
     private IClasspathEntry containerEntryResult;
@@ -54,36 +54,34 @@ implements IClasspathContainerPage, IClasspathContainerPageExtension {
     private Button yesButt;
     private Button noButt;
 
-    private enum UseGroovyLib { TRUE("true", "Yes"), FALSE("false", "No"), DEFAULT("default", "Use workspace default");
-    private final String val;
-    private final String label;
-    private UseGroovyLib(String val, String label) {
-        this.val = val;
-        this.label = label;
-    }
-    String val() {
-        return val;
-    }
+    private enum UseGroovyLib {
+        TRUE("true", "Yes"), FALSE("false", "No"), DEFAULT("default", "Use workspace default");
 
-    String label() {
-        return label;
-    }
+        private final String val;
+        private final String label;
 
-
-    /**
-     * @param string
-     * @return
-     */
-    static UseGroovyLib fromString(String val) {
-        if (val.equals(TRUE.val)) {
-            return TRUE;
-        } else if (val.equals(FALSE.val)) {
-            return FALSE;
+        private UseGroovyLib(String val, String label) {
+            this.val = val;
+            this.label = label;
         }
-        return DEFAULT;
-    }
-    }
 
+        String val() {
+            return val;
+        }
+
+        String label() {
+            return label;
+        }
+
+        static UseGroovyLib fromString(String val) {
+            if (val.equals(TRUE.val)) {
+                return TRUE;
+            } else if (val.equals(FALSE.val)) {
+                return FALSE;
+            }
+            return DEFAULT;
+        }
+    }
 
     public GroovyClasspathContainerPage() {
         super("Groovy Classpath Container");
@@ -98,6 +96,7 @@ implements IClasspathContainerPage, IClasspathContainerPageExtension {
                     UseGroovyLib.DEFAULT;
     }
 
+    @Override
     public boolean finish() {
         try {
             if (prefStore != null) {
@@ -144,13 +143,14 @@ implements IClasspathContainerPage, IClasspathContainerPageExtension {
         }
     }
 
+    @Override
     public IClasspathEntry getSelection() {
-        return this.containerEntryResult != null ?
-                this.containerEntryResult :
-                    JavaCore.newContainerEntry(GroovyClasspathContainer.CONTAINER_ID);
+        return this.containerEntryResult != null ? this.containerEntryResult
+            : JavaCore.newContainerEntry(GroovyClasspathContainer.CONTAINER_ID);
     }
 
-    public void setSelection(final IClasspathEntry containerEntry) {
+    @Override
+    public void setSelection(IClasspathEntry containerEntry) {
         this.containerEntryResult = containerEntry;
     }
 
@@ -163,14 +163,14 @@ implements IClasspathContainerPage, IClasspathContainerPageExtension {
         }
     }
 
+    @Override
     public void createControl(final Composite parent) {
         Composite composite = new Composite(parent, SWT.NONE);
 
         composite.setLayout(new GridLayout(1, false));
 
         Composite isMinimalContainer = new Composite(composite, SWT.NONE | SWT.BORDER);
-        isMinimalContainer.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true,
-                false));
+        isMinimalContainer.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false));
 
         isMinimalContainer.setLayout(new GridLayout(1, false));
         Label isMinimal = new Label(isMinimalContainer, SWT.WRAP);
@@ -229,8 +229,8 @@ implements IClasspathContainerPage, IClasspathContainerPageExtension {
         return sb.toString();
     }
 
-    public void initialize(final IJavaProject project,
-            final IClasspathEntry[] currentEntries) {
+    @Override
+    public void initialize(IJavaProject project, IClasspathEntry[] currentEntries) {
         if (project == null) {
             return;
         }

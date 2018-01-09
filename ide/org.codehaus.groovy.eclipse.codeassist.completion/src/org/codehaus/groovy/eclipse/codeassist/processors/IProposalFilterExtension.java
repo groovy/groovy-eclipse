@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,13 +22,9 @@ import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 /**
- * @author Maxime HAMM
- *         Filters completion proposals displayed by the groovy editor content
- *         assistant.
- *         Contributions to the
- *         <tt>org.codehaus.groovy.eclipse.codeassist.completion.ProposalFilter</tt>
- *         extension point
- *         can optionally implement this interface.
+ * Filters completion proposals displayed by the groovy editor content assistant.
+ * Contributions to the <tt>org.codehaus.groovy.eclipse.codeassist.completion.ProposalFilter</tt>
+ * extension point can optionally implement this interface.
  */
 public interface IProposalFilterExtension extends IProposalFilter {
 
@@ -43,11 +39,7 @@ public interface IProposalFilterExtension extends IProposalFilter {
      * method {@link AbstractGroovyProposal#setRelevanceMultiplier(float)}. Look
      * at the {@link Relevance} enumeration for how relevance is calculated.
      *
-     * @param proposals
-     *            The List of proposals
      * @return The filtered list of proposals as List
      */
-    public List<ICompletionProposal> filterExtendedProposals(
-            List<ICompletionProposal> proposals, ContentAssistContext context,
-            JavaContentAssistInvocationContext javaContext);
+    List<ICompletionProposal> filterExtendedProposals(List<ICompletionProposal> proposals, ContentAssistContext context, JavaContentAssistInvocationContext javaContext);
 }

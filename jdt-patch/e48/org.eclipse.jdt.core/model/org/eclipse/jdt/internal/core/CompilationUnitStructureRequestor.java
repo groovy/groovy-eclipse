@@ -141,6 +141,7 @@ protected CompilationUnitStructureRequestor(ICompilationUnit unit, CompilationUn
 /**
  * @see ISourceElementRequestor
  */
+@Override
 public void acceptImport(int declarationStart, int declarationEnd, int nameSourceStart, int nameSourceEnd, char[][] tokens, boolean onDemand, int modifiers) {
 	JavaElement parentHandle= (JavaElement) this.handleStack.peek();
 	if (!(parentHandle.getElementType() == IJavaElement.COMPILATION_UNIT)) {
@@ -178,12 +179,14 @@ public void acceptImport(int declarationStart, int declarationEnd, int nameSourc
  * A line separator might corresponds to several characters in the source,
  *
  */
+@Override
 public void acceptLineSeparatorPositions(int[] positions) {
 	// ignore line separator positions
 }
 /**
  * @see ISourceElementRequestor
  */
+@Override
 public void acceptPackage(ImportReference importReference) {
 
 		Object parentInfo = this.infoStack.peek();
@@ -215,6 +218,7 @@ public void acceptPackage(ImportReference importReference) {
 			}
 		}
 }
+@Override
 public void acceptProblem(CategorizedProblem problem) {
 	if ((problem.getID() & IProblem.Syntax) != 0){
 		this.hasSyntaxErrors = true;
@@ -314,6 +318,7 @@ protected IAnnotation acceptAnnotation(org.eclipse.jdt.internal.compiler.ast.Ann
 /**
  * @see ISourceElementRequestor
  */
+@Override
 public void enterCompilationUnit() {
 	this.infoStack = new Stack();
 	this.children = new HashMap();
@@ -324,12 +329,14 @@ public void enterCompilationUnit() {
 /**
  * @see ISourceElementRequestor
  */
+@Override
 public void enterConstructor(MethodInfo methodInfo) {
 	enterMethod(methodInfo);
 }
 /**
  * @see ISourceElementRequestor
  */
+@Override
 public void enterField(FieldInfo fieldInfo) {
 
 	TypeInfo parentInfo = (TypeInfo) this.infoStack.peek();
@@ -353,6 +360,7 @@ public void enterField(FieldInfo fieldInfo) {
 /**
  * @see ISourceElementRequestor
  */
+@Override
 public void enterInitializer(int declarationSourceStart, int modifiers) {
 	Object parentInfo = this.infoStack.peek();
 	JavaElement parentHandle= (JavaElement) this.handleStack.peek();
@@ -374,6 +382,7 @@ public void enterInitializer(int declarationSourceStart, int modifiers) {
 /**
  * @see ISourceElementRequestor
  */
+@Override
 public void enterMethod(MethodInfo methodInfo) {
 
 	TypeInfo parentInfo = (TypeInfo) this.infoStack.peek();
@@ -496,6 +505,7 @@ private LocalVariable[] acceptMethodParameters(Argument[] arguments, JavaElement
 	}
 	return result;
 }
+@Override
 public void enterModule(ModuleInfo info) {
 
 	Object parentInfo = this.infoStack.peek();
@@ -510,6 +520,7 @@ public void enterModule(ModuleInfo info) {
 /**
  * @see ISourceElementRequestor
  */
+@Override
 public void enterType(TypeInfo typeInfo) {
 
 	Object parentInfo = this.infoStack.peek();
@@ -546,6 +557,7 @@ private SourceTypeElementInfo createTypeInfo(TypeInfo typeInfo, SourceType handl
 	SourceTypeElementInfo info =
 		typeInfo.anonymousMember ?
 			new SourceTypeElementInfo() {
+				@Override
 				public boolean isAnonymousMember() {
 					return true;
 				}
@@ -628,6 +640,7 @@ protected void acceptTypeParameter(TypeParameterInfo typeParameterInfo, JavaElem
 /**
  * @see ISourceElementRequestor
  */
+@Override
 public void exitCompilationUnit(int declarationEnd) {
 	// set import container children
 	if (this.importContainerInfo != null) {
@@ -643,12 +656,14 @@ public void exitCompilationUnit(int declarationEnd) {
 /**
  * @see ISourceElementRequestor
  */
+@Override
 public void exitConstructor(int declarationEnd) {
 	exitMethod(declarationEnd, null);
 }
 /**
  * @see ISourceElementRequestor
  */
+@Override
 public void exitField(int initializationStart, int declarationEnd, int declarationSourceEnd) {
 	JavaElement handle = (JavaElement) this.handleStack.peek();
 	FieldInfo fieldInfo = (FieldInfo) this.infoStack.peek();
@@ -696,6 +711,7 @@ public void exitField(int initializationStart, int declarationEnd, int declarati
 /**
  * @see ISourceElementRequestor
  */
+@Override
 public void exitInitializer(int declarationEnd) {
 	JavaElement handle = (JavaElement) this.handleStack.peek();
 	int[] initializerInfo = (int[]) this.infoStack.peek();
@@ -714,6 +730,7 @@ public void exitInitializer(int declarationEnd) {
 /**
  * @see ISourceElementRequestor
  */
+@Override
 public void exitMethod(int declarationEnd, Expression defaultValue) {
 	SourceMethod handle = (SourceMethod) this.handleStack.peek();
 	MethodInfo methodInfo = (MethodInfo) this.infoStack.peek();
@@ -735,6 +752,7 @@ public void exitMethod(int declarationEnd, Expression defaultValue) {
 	this.handleStack.pop();
 	this.infoStack.pop();
 }
+@Override
 public void exitModule(int declarationEnd) {
 	ModuleInfo moduleInfo = (ModuleInfo) this.infoStack.peek();
 	SourceModule handle = (SourceModule) this.handleStack.peek();
@@ -757,6 +775,7 @@ public void exitModule(int declarationEnd) {
 /**
  * @see ISourceElementRequestor
  */
+@Override
 public void exitType(int declarationEnd) {
 	TypeInfo typeInfo = (TypeInfo) this.infoStack.peek();
 	SourceType handle = (SourceType) this.handleStack.peek();

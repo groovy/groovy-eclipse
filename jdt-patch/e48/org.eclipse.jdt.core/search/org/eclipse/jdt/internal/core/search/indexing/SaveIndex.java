@@ -25,6 +25,7 @@ public class SaveIndex extends IndexRequest {
 	public SaveIndex(IPath containerPath, IndexManager manager) {
 		super(containerPath, manager);
 	}
+	@Override
 	public boolean execute(IProgressMonitor progressMonitor) {
 
 		if (this.isCancelled || progressMonitor != null && progressMonitor.isCanceled()) return true;
@@ -49,6 +50,7 @@ public class SaveIndex extends IndexRequest {
 		}
 		return true;
 	}
+	@Override
 	public String toString() {
 		return "saving index for " + this.containerPath; //$NON-NLS-1$
 	}

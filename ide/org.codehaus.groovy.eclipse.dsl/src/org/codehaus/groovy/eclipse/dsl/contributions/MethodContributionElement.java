@@ -114,6 +114,7 @@ public class MethodContributionElement implements IContributionElement {
         this.doc = (doc != null ? doc : NO_DOC + (provider != null ? provider : GROOVY_DSL_PROVIDER));
     }
 
+    @Override
     public TypeAndDeclaration lookupType(String name, ClassNode declaringType, ResolverCache resolver) {
         if (name.equals(methodName)) {
             return new TypeAndDeclaration(returnType(resolver), toMethod(declaringType, resolver), declaringType(declaringType, resolver), doc);
@@ -121,6 +122,7 @@ public class MethodContributionElement implements IContributionElement {
         return null;
     }
 
+    @Override
     public IGroovyProposal toProposal(ClassNode declaringType, ResolverCache resolver) {
         GroovyMethodProposal proposal = new GroovyMethodProposal(toMethod(declaringType.redirect(), resolver), provider);
         proposal.setProposalFormattingOptions(ProposalFormattingOptions.newFromOptions().newFromExisting(useNamedArgs, noParens, proposal.getMethod()));
@@ -128,6 +130,7 @@ public class MethodContributionElement implements IContributionElement {
         return proposal;
     }
 
+    @Override
     public List<IGroovyProposal> extraProposals(ClassNode declaringType, ResolverCache resolver, Expression expression) {
         // first find the arguments that are possible
         Map<String, ClassNode> availableParams = findAvailableParameters(resolver);
@@ -138,7 +141,7 @@ public class MethodContributionElement implements IContributionElement {
 
         removeUsedParameters(expression, availableParams);
 
-        List<IGroovyProposal> extraProposals = new ArrayList<IGroovyProposal>(availableParams.size());
+        List<IGroovyProposal> extraProposals = new ArrayList<>(availableParams.size());
         for (Entry<String, ClassNode> available : availableParams.entrySet()) {
             extraProposals.add(new GroovyNamedArgumentProposal(available.getKey(), available.getValue(), toMethod(declaringType.redirect(), resolver), provider));
         }
@@ -172,7 +175,7 @@ public class MethodContributionElement implements IContributionElement {
     }
 
     private Map<String, ClassNode> findAvailableParameters(ResolverCache resolver) {
-        Map<String, ClassNode> available = new HashMap<String, ClassNode>(params.length);
+        Map<String, ClassNode> available = new HashMap<>(params.length);
         if (useNamedArgs) {
             for (ParameterContribution param : params) {
                 available.put(param.name, param.toParameter(resolver).getType());
@@ -242,14 +245,17 @@ public class MethodContributionElement implements IContributionElement {
         return modifiers;
     }
 
+    @Override
     public String contributionName() {
         return methodName;
     }
 
+    @Override
     public String description() {
         return "Method: " + declaringType + "." + methodName + "(..)";
     }
 
+    @Override
     public String getDeclaringTypeName() {
         return declaringType;
     }

@@ -52,6 +52,7 @@ public class ExternalPackageFragmentRoot extends PackageFragmentRoot {
 	/**
 	 * An external class folder is always K_BINARY.
 	 */
+	@Override
 	protected int determineKind(IResource underlyingResource) {
 		return IPackageFragmentRoot.K_BINARY;
 	}
@@ -61,6 +62,7 @@ public class ExternalPackageFragmentRoot extends PackageFragmentRoot {
 	 *
 	 * @see Object#equals
 	 */
+	@Override
 	public boolean equals(Object o) {
 		if (this == o)
 			return true;
@@ -70,21 +72,25 @@ public class ExternalPackageFragmentRoot extends PackageFragmentRoot {
 		}
 		return false;
 	}
+	@Override
 	public String getElementName() {
 		return this.externalPath.lastSegment();
 	}
 	/**
 	 * @see IPackageFragmentRoot
 	 */
+	@Override
 	public int getKind() {
 		return IPackageFragmentRoot.K_BINARY;
 	}
+	@Override
 	int internalKind() throws JavaModelException {
 		return IPackageFragmentRoot.K_BINARY;
 	}
 	/**
 	 * @see IPackageFragmentRoot
 	 */
+	@Override
 	public IPath getPath() {
 		return this.externalPath;
 	}
@@ -92,25 +98,30 @@ public class ExternalPackageFragmentRoot extends PackageFragmentRoot {
 	/**
 	 * @see IJavaElement
 	 */
+	@Override
 	public IResource getUnderlyingResource() throws JavaModelException {
 		return null;
 	}
+	@Override
 	public int hashCode() {
 		return this.externalPath.hashCode();
 	}
 	/**
 	 * @see IPackageFragmentRoot
 	 */
+	@Override
 	public boolean isExternal() {
 		return true;
 	}
 
+	@Override
 	public IResource resource(PackageFragmentRoot root) {
 		if (this.resource == null)
 			return this.resource = JavaModelManager.getExternalManager().getFolder(this.externalPath);
 		return super.resource(root);
 	}
 
+	@Override
 	protected boolean resourceExists(IResource underlyingResource) {
 		if (underlyingResource == null)
 			return false;
@@ -123,6 +134,7 @@ public class ExternalPackageFragmentRoot extends PackageFragmentRoot {
 		return file.exists();
 	}
 
+	@Override
 	protected void toStringAncestors(StringBuffer buffer) {
 		// don't show project as it is irrelevant for external folders.
 	}

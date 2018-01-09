@@ -41,6 +41,7 @@ public class CompletionOnExplicitConstructorCall extends ExplicitConstructorCall
 		super(accessMode);
 	}
 
+	@Override
 	public StringBuffer printStatement(int tab, StringBuffer output) {
 
 		printIndent(tab, output);
@@ -60,6 +61,7 @@ public class CompletionOnExplicitConstructorCall extends ExplicitConstructorCall
 		return output.append(")>;"); //$NON-NLS-1$
 	}
 
+	@Override
 	public void resolve(BlockScope scope) {
 
 		ReferenceBinding receiverType = scope.enclosingSourceType();

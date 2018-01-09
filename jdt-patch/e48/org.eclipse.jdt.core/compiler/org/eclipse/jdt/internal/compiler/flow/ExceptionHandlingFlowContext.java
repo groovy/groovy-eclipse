@@ -207,6 +207,7 @@ public FlowContext getInitializationContext() {
 	return this.initializationParent;
 }
 
+@Override
 public String individualToString() {
 	StringBuffer buffer = new StringBuffer("Exception flow context"); //$NON-NLS-1$
 	int length = this.handledExceptions.length;
@@ -236,6 +237,7 @@ public UnconditionalFlowInfo initsOnException(int index) {
 	return this.initsOnExceptions[index];
 }
 
+@Override
 public UnconditionalFlowInfo initsOnReturn(){
 	return this.initsOnReturn;
 }
@@ -296,6 +298,7 @@ public void recordHandlingException(
 			flowInfo.unconditionalCopy();
 }
 
+@Override
 public void recordReturnFrom(UnconditionalFlowInfo flowInfo) {
 	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) == 0) {
 		if ((this.initsOnReturn.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) == 0) {
@@ -314,6 +317,7 @@ public void recordReturnFrom(UnconditionalFlowInfo flowInfo) {
  * exception handlers.
  * @see org.eclipse.jdt.internal.compiler.flow.FlowContext#subroutine()
  */
+@Override
 public SubRoutineStatement subroutine() {
 	if (this.associatedNode instanceof SubRoutineStatement) {
 		// exception handler context may be child of InsideSubRoutineFlowContext, which maps to same handler

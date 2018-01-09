@@ -27,11 +27,12 @@ import java.util.TreeSet;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
+import org.codehaus.jdt.groovy.model.GroovyProjectFacade;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
@@ -55,7 +56,6 @@ import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.PlatformUI;
 
@@ -92,9 +92,8 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
 
     /**
      * Launches from the package explorer.
-     *
-     * @see ILaunchShortcut#launch
      */
+    @Override
     public void launch(ISelection selection, String mode) {
         ICompilationUnit unit = extractCompilationUnit(selection);
         IJavaProject javaProject;
@@ -116,22 +115,16 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
         }
     }
 
-    /**
-     * @param selection
-     * @return
-     */
     private IJavaProject extractJavaProject(ISelection selection) {
         if (selection instanceof IStructuredSelection) {
             IStructuredSelection struct = (IStructuredSelection) selection;
             Object obj = struct.getFirstElement();
             if (obj instanceof IAdaptable) {
-                @SuppressWarnings("cast")
-                IJavaProject javaProject = (IJavaProject) ((IAdaptable) obj).getAdapter(IJavaProject.class);
+                IJavaProject javaProject = Adapters.adapt(obj, IJavaProject.class);
                 if (javaProject != null) {
                     return javaProject;
                 }
-                @SuppressWarnings("cast")
-                IProject project = (IProject) ((IAdaptable) obj).getAdapter(IProject.class);
+                IProject project = Adapters.adapt(obj, IProject.class);
                 if (project != null) {
                     return JavaCore.create(project);
                 }
@@ -145,13 +138,11 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
             IStructuredSelection struct = (IStructuredSelection) selection;
             Object obj = struct.getFirstElement();
             if (obj instanceof IAdaptable) {
-                @SuppressWarnings("cast")
-                ICompilationUnit unit = (ICompilationUnit) ((IAdaptable) obj).getAdapter(ICompilationUnit.class);
+                ICompilationUnit unit = Adapters.adapt(obj, ICompilationUnit.class);
                 if (unit != null) {
                     return unit;
                 }
-                @SuppressWarnings("cast")
-                IFile file = (IFile) ((IAdaptable) obj).getAdapter(IFile.class);
+                IFile file = Adapters.adapt(obj, IFile.class);
                 if (file != null) {
                     return JavaCore.createCompilationUnitFrom(file);
                 }
@@ -205,7 +196,7 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
     protected abstract String classToRun();
 
     protected Map<String, String> createLaunchProperties(IType runType, IJavaProject javaProject) {
-        Map<String, String> launchConfigProperties = new HashMap<String, String>();
+        Map<String, String> launchConfigProperties = new HashMap<>();
         String pathToClass;
 
         if (runType != null) {
@@ -286,8 +277,8 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
 
     /* make protected for testing purposes */
     protected String generateClasspath(IJavaProject javaProject) {
-        SortedSet<String> sourceEntries = new TreeSet<String>();
-        SortedSet<String> binEntries = new TreeSet<String>();
+        SortedSet<String> sourceEntries = new TreeSet<>();
+        SortedSet<String> binEntries = new TreeSet<>();
         addClasspathEntriesForProject(javaProject, sourceEntries, binEntries);
         StringBuilder sb = new StringBuilder();
         sb.append("\"");
@@ -315,7 +306,7 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
      */
     private void addClasspathEntriesForProject(IJavaProject javaProject,
             SortedSet<String> sourceEntries, SortedSet<String> binEntries) {
-        List<IJavaProject> dependingProjects = new ArrayList<IJavaProject>();
+        List<IJavaProject> dependingProjects = new ArrayList<>();
         try {
             IClasspathEntry[] entries = javaProject.getRawClasspath();
             for (IClasspathEntry entry : entries) {
@@ -386,15 +377,12 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
 
     /**
      * Launches from the source file.
-     *
-     * @see ILaunchShortcut#launch
      */
+    @Override
     public void launch(IEditorPart editor, String mode) {
         // make sure we are saved as we run groovy from the file
         editor.getEditorSite().getPage().saveEditor(editor, false);
-        IEditorInput input = editor.getEditorInput();
-        @SuppressWarnings("cast")
-        IFile file = (IFile) input.getAdapter(IFile.class);
+        IFile file = Adapters.adapt(editor.getEditorInput(), IFile.class);
         ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
         if (unit != null) {
             launchGroovy(unit, unit.getJavaProject(), mode);
@@ -405,13 +393,12 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
      * Finds the runnable classnode in an array.  If more than one possible node is found,
      * will prompt the user to select one.
      *
-     * @param classNodes
      * @return Returns a classnode if found, or null if no classNode can be run.
      * @throws OperationCanceledException If the user selects cancel
      */
     public IType findClassToRun(IType[] types) {
         IType returnValue = null;
-        List<IType> candidates = new ArrayList<IType>();
+        List<IType> candidates = new ArrayList<>();
         for (int i = 0; i < types.length; i++) {
             if (GroovyProjectFacade.hasRunnableMain(types[i])) {
                 candidates.add(types[i]);
@@ -496,7 +483,7 @@ public abstract class AbstractGroovyLaunchShortcut  implements ILaunchShortcut {
     private ILaunchConfiguration findConfiguration(String projectName, String mainTypeName) throws CoreException {
         ILaunchConfiguration returnValue = null;
         ILaunchConfigurationType configType = getGroovyLaunchConfigType();
-        List<ILaunchConfiguration> candidateConfigs = new ArrayList<ILaunchConfiguration>();
+        List<ILaunchConfiguration> candidateConfigs = new ArrayList<>();
         ILaunchConfiguration[] configs = getLaunchManager().getLaunchConfigurations(configType);
         for (int i = 0; i < configs.length; i++) {
             ILaunchConfiguration config = configs[i];

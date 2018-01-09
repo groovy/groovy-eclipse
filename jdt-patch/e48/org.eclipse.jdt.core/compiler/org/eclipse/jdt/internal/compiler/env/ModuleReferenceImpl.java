@@ -19,6 +19,7 @@ public class ModuleReferenceImpl implements IModule.IModuleReference {
 	public char[] name() {
 		return this.name;
 	}
+	@Override
 	public boolean equals(Object o) {
 		if (this == o) 
 			return true;

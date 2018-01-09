@@ -48,8 +48,6 @@ import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.JFaceResources;
-import org.eclipse.jface.util.IPropertyChangeListener;
-import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
@@ -90,17 +88,21 @@ public class ScriptFolderSelectorPreferences {
     }
 
     private class ScriptPatternAdapter implements IListAdapter<String>, IDialogFieldListener {
+        @Override
         public void customButtonPressed(ListDialogField<String> field, int index) {
             doCustomButtonPressed(field, index);
             hasChanges = true;
         }
+        @Override
         public void selectionChanged(ListDialogField<String> field) {
             doSelectionChanged(field);
         }
+        @Override
         public void doubleClicked(ListDialogField<String> field) {
             doDoubleClicked(field);
             hasChanges = true;
         }
+        @Override
         public void dialogFieldChanged(DialogField field) {
             hasChanges = true;
         }
@@ -124,6 +126,7 @@ public class ScriptFolderSelectorPreferences {
                 return sb.toString();
             }
         }
+        @Override
         protected IStatus run(IProgressMonitor monitor) {
             try {
                 IProgressMonitor sub = SubMonitor.convert(monitor, projects.length);
@@ -195,21 +198,19 @@ public class ScriptFolderSelectorPreferences {
         innerInner.setToolTipText("CHECKED boxes are COPIED to output folder.\nUNCHECKED boxes are NOT copied.");
 
         // enable/disable pattern list
-        disableButton.setPropertyChangeListener(new IPropertyChangeListener() {
-            public void propertyChange(PropertyChangeEvent event) {
-                if (event.getProperty() == FieldEditor.VALUE) {
-                    Object o = event.getNewValue();
-                    if (o instanceof Boolean) {
-                        enablePatternList((Boolean) o);
-                    }
+        disableButton.setPropertyChangeListener(event -> {
+            if (event.getProperty() == FieldEditor.VALUE) {
+                Object o = event.getNewValue();
+                if (o instanceof Boolean) {
+                    enablePatternList((Boolean) o);
                 }
-                hasChanges = true;
             }
+            hasChanges = true;
         });
 
         ScriptPatternAdapter adapter = new ScriptPatternAdapter();
 
-        patternList = new CheckedListDialogField<String>(adapter, BUTTON_LABELS, new ScriptLabelProvider(DESCRIPTOR));
+        patternList = new CheckedListDialogField<>(adapter, BUTTON_LABELS, new ScriptLabelProvider(DESCRIPTOR));
         patternList.setDialogFieldListener(adapter);
         patternList.setLabelText("Groovy files that match these patterns are treated as scripts, i.e. compiled at run-time.  " +
             "Any script that matches a checked pattern and is in a source folder will be copied as-is to the output folder.\n\n" +
@@ -292,7 +293,7 @@ public class ScriptFolderSelectorPreferences {
         disableButton.store();
 
         List<String> elts = patternList.getElements();
-        List<String> result = new ArrayList<String>(elts.size() * 2);
+        List<String> result = new ArrayList<>(elts.size() * 2);
         for (String elt : elts) {
             result.add(elt);
             result.add(patternList.isChecked(elt) ? "y" : "n");
@@ -326,8 +327,8 @@ public class ScriptFolderSelectorPreferences {
     }
 
     private void populatePatternList(List<String> elements) {
-        List<String> filteredElements = new ArrayList<String>(elements.size() / 2);
-        List<String> checkedElements = new ArrayList<String>(elements.size() / 2);
+        List<String> filteredElements = new ArrayList<>(elements.size() / 2);
+        List<String> checkedElements = new ArrayList<>(elements.size() / 2);
         for (Iterator<String> eltIter = elements.iterator(); eltIter.hasNext();) {
             String elt = eltIter.next();
             filteredElements.add(elt);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,11 +24,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 
-/**
- * 
- * @author Nieraj Singh
- * @created 2011-05-13
- */
 public class ProjectDisplayControl implements IProjectUIControl {
 
     private Shell shell;
@@ -48,12 +43,13 @@ public class ProjectDisplayControl implements IProjectUIControl {
         return shell;
     }
 
+    @Override
     public IProject getProject() {
         return project;
     }
 
+    @Override
     public Control createControls() {
-
         Composite projectComposite = new Composite(parent, SWT.NONE);
 
         GridLayoutFactory.fillDefaults().numColumns(2).equalWidth(false).applyTo(projectComposite);
@@ -72,12 +68,11 @@ public class ProjectDisplayControl implements IProjectUIControl {
         GridDataFactory.fillDefaults().align(SWT.LEFT, SWT.CENTER).grab(false, false).applyTo(projectLabel);
         String labelVal = project != null ? project.getName() : NO_PROJECT;
         projectLabel.setText(labelVal);
-
     }
 
+    @Override
     public IProject setProject(IProject project) {
         this.project = project;
         return project;
     }
-
 }

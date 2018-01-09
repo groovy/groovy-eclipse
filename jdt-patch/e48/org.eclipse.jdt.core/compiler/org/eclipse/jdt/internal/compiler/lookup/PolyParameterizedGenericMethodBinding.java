@@ -18,6 +18,7 @@ public class PolyParameterizedGenericMethodBinding extends ParameterizedGenericM
 		this.wrappedBinding = applicableMethod;
 	}
 	
+	@Override
 	public boolean equals(Object other) {
 		if (other instanceof PolyParameterizedGenericMethodBinding) {
 			PolyParameterizedGenericMethodBinding ppgmb = (PolyParameterizedGenericMethodBinding)other;

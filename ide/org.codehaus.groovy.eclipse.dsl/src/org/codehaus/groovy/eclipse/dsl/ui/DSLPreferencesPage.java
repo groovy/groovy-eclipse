@@ -88,6 +88,7 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
     private static final int IDX_UNCHECK_ALL= 4;
 
     private class CheckStateListener implements ICheckStateListener {
+        @Override
         public void checkStateChanged(CheckStateChangedEvent event) {
             Object element = event.getElement();
             if (element instanceof ProjectContextKey) {
@@ -109,6 +110,7 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
             super(adapter, buttonLabels, lprovider);
         }
 
+        @Override
         protected TreeViewer createTreeViewer(Composite parent) {
             Tree tree = new Tree(parent, getTreeStyle() | SWT.CHECK);
             tree.setFont(parent.getFont());
@@ -126,6 +128,7 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
 
         WorkbenchLabelProvider provider = new WorkbenchLabelProvider();
 
+        @Override
         public void dispose() {
             provider.dispose();
             super.dispose();
@@ -140,6 +143,7 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
             return super.getText(element);
         }
 
+        @Override
         public Image getImage(Object element) {
             IProject proj = toProject(element);
             if (proj != null) {
@@ -159,7 +163,7 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
     }
 
     private class DSLListAdapter implements ITreeListAdapter<String> {
-
+        @Override
         public void customButtonPressed(TreeListDialogField<String> field, int index) {
             if (index == IDX_EDIT) {
                 // edit
@@ -179,6 +183,7 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
             }
         }
 
+        @Override
         public void selectionChanged(TreeListDialogField<String> field) {
             if (canEdit()) {
                 field.enableButton(IDX_EDIT, true);
@@ -187,12 +192,16 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
             }
         }
 
+        @Override
         public void doubleClicked(TreeListDialogField<String> field) {
             edit();
         }
 
-        public void keyPressed(TreeListDialogField<String> field, KeyEvent event) { }
+        @Override
+        public void keyPressed(TreeListDialogField<String> field, KeyEvent event) {
+        }
 
+        @Override
         public Object[] getChildren(TreeListDialogField<String> field, Object element) {
             if (element instanceof String) {
                 return elementsMap.get(element);
@@ -201,6 +210,7 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
             }
         }
 
+        @Override
         public Object getParent(TreeListDialogField<String> field, Object element) {
             if (element instanceof ProjectContextKey) {
                 return ((ProjectContextKey) element).projectName;
@@ -208,6 +218,7 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
             return null;
         }
 
+        @Override
         public boolean hasChildren(TreeListDialogField<String> field, Object element) {
             Object[] children = getChildren(field, element);
             return children != null && children.length > 0;
@@ -237,9 +248,10 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
     private Button autoAdd;
     private Button disableDSLDs;
 
+    @Override
     public void init(IWorkbench workbench) {
         cache = new DisabledScriptsCache();
-        elementsMap = new HashMap<String, ProjectContextKey[]>();
+        elementsMap = new HashMap<>();
         try {
             page = workbench.getActiveWorkbenchWindow().getActivePage();
         } catch (NullPointerException e) {
@@ -403,7 +415,7 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
 
     @Override
     public boolean performOk() {
-        Set<String> unchecked = new HashSet<String>();
+        Set<String> unchecked = new HashSet<>();
         for (ProjectContextKey[] keys : elementsMap.values()) {
             for (ProjectContextKey key : keys) {
                 if (! key.isChecked) {

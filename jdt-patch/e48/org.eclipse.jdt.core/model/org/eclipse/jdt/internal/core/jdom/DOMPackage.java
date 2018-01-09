@@ -75,6 +75,7 @@ DOMPackage(char[] document, int[] sourceRange, String name, int[] nameRange) {
 /**
  * @see DOMNode#appendFragmentedContents(CharArrayBuffer)
  */
+@Override
 protected void appendFragmentedContents(CharArrayBuffer buffer) {
 	if (this.fNameRange[0] < 0) {
 		String lineSeparator = Util.getLineSeparator(buffer.toString(), null);
@@ -94,6 +95,7 @@ protected void appendFragmentedContents(CharArrayBuffer buffer) {
 /**
  * @see IDOMNode#getContents()
  */
+@Override
 public String getContents() {
 	if (this.fName == null) {
 		return null;
@@ -104,12 +106,14 @@ public String getContents() {
 /**
  * @see DOMNode#getDetailedNode()
  */
+@Override
 protected DOMNode getDetailedNode() {
 	return (DOMNode)getFactory().createPackage(getContents());
 }
 /**
  * @see IDOMNode#getJavaElement
  */
+@Override
 public IJavaElement getJavaElement(IJavaElement parent) throws IllegalArgumentException {
 	if (parent.getElementType() == IJavaElement.COMPILATION_UNIT) {
 		return ((ICompilationUnit)parent).getPackageDeclaration(getName());
@@ -120,18 +124,21 @@ public IJavaElement getJavaElement(IJavaElement parent) throws IllegalArgumentEx
 /**
  * @see IDOMNode#getNodeType()
  */
+@Override
 public int getNodeType() {
 	return IDOMNode.PACKAGE;
 }
 /**
  * @see DOMNode
  */
+@Override
 protected DOMNode newDOMNode() {
 	return new DOMPackage();
 }
 /**
  * @see IDOMNode#setName
  */
+@Override
 public void setName(String name) {
 	becomeDetailed();
 	super.setName(name);
@@ -139,6 +146,7 @@ public void setName(String name) {
 /**
  * @see IDOMNode#toString()
  */
+@Override
 public String toString() {
 	return "PACKAGE: " + getName(); //$NON-NLS-1$
 }

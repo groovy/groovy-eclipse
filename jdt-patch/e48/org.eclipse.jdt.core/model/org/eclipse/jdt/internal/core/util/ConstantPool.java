@@ -32,6 +32,7 @@ public class ConstantPool extends ClassFileStruct implements IConstantPool {
 	/**
 	 * @see IConstantPool#decodeEntry(int)
 	 */
+	@Override
 	public IConstantPoolEntry decodeEntry(int index) {
 		ConstantPoolEntry constantPoolEntry = null;
 		int kind = getEntryKind(index);
@@ -176,6 +177,7 @@ public class ConstantPool extends ClassFileStruct implements IConstantPool {
 	/**
 	 * @see IConstantPool#getConstantPoolCount()
 	 */
+	@Override
 	public int getConstantPoolCount() {
 		return this.constantPoolCount;
 	}
@@ -183,6 +185,7 @@ public class ConstantPool extends ClassFileStruct implements IConstantPool {
 	/**
 	 * @see IConstantPool#getEntryKind(int)
 	 */
+	@Override
 	public int getEntryKind(int index) {
 		return u1At(this.classFileBytes, 0, this.constantPoolOffset[index]);
 	}

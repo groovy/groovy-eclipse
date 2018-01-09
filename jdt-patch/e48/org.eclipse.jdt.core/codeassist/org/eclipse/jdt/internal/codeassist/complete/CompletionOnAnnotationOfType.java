@@ -29,6 +29,7 @@ public class CompletionOnAnnotationOfType extends TypeDeclaration {
 		this.annotations = new Annotation[]{annotation};
 	}
 
+	@Override
 	public StringBuffer print(int indent, StringBuffer output) {
 		return this.annotations[0].print(indent, output);
 	}

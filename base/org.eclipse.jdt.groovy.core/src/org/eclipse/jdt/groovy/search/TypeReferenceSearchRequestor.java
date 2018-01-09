@@ -55,7 +55,7 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
     private final char[] namePattern;
     private final char[] qualificationPattern;
 
-    private final Set<Position> acceptedPositions = new HashSet<Position>();
+    private final Set<Position> acceptedPositions = new HashSet<>();
     private char[] cachedContents; // see cachedContentsAvailable(IJavaElement)
 
     public TypeReferenceSearchRequestor(TypeReferencePattern pattern, SearchRequestor requestor, SearchParticipant participant) {
@@ -78,6 +78,7 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
         return arr;
     }
 
+    @Override
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
         if (!hasValidSourceLocation(node)) {
             return VisitStatus.CONTINUE;

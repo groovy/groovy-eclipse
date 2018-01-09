@@ -24,15 +24,18 @@ public RecoveredModuleReference(ModuleReference moduleReference, RecoveredElemen
 /*
  * Answer the associated parsed structure
  */
+@Override
 public ASTNode parseTree(){
 	return this.moduleReference;
 }
 /*
  * Answer the very source end of the corresponding parse node
  */
+@Override
 public int sourceEnd(){
 	return this.moduleReference.sourceEnd;
 }
+@Override
 public String toString(int tab) {
 	return tabString(tab) + "Recovered ModuleReference: " + this.moduleReference.toString(); //$NON-NLS-1$
 }
@@ -40,6 +43,7 @@ public ModuleReference updatedModuleReference(){
 
 	return this.moduleReference;
 }
+@Override
 public void updateParseTree(){
 	updatedModuleReference();
 }

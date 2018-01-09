@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,10 @@ package org.codehaus.groovy.eclipse.dsl.inferencing.suggestions;
 
 import org.eclipse.core.resources.IProject;
 
-/**
- * 
- * @author Nieraj Singh
- * @created 2011-09-15
- */
 public abstract class AbstractCreateOperation extends AbstractSuggestionOperation {
 
-    protected static final String MISSING_DESCRIPTOR = "Failed to run operation. Descriptor required to create suggestion.";
+    protected static final String MISSING_DESCRIPTOR =
+        "Failed to run operation. Descriptor required to create suggestion.";
 
     private SuggestionDescriptor descriptor;
 
@@ -43,14 +39,12 @@ public abstract class AbstractCreateOperation extends AbstractSuggestionOperatio
         return descriptor;
     }
 
+    @Override
     public ValueStatus run() {
-
         if (descriptor != null) {
             return run(descriptor);
         }
-
         return ValueStatus.getErrorStatus(null, MISSING_DESCRIPTOR);
-
     }
 
     /**
@@ -61,5 +55,4 @@ public abstract class AbstractCreateOperation extends AbstractSuggestionOperatio
      * original, unedited suggestion.
      * */
     abstract protected ValueStatus run(SuggestionDescriptor descriptor);
-
 }

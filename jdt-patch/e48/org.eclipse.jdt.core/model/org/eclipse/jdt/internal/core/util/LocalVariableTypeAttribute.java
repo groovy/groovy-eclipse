@@ -55,6 +55,7 @@ public class LocalVariableTypeAttribute
 	/**
 	 * @see ILocalVariableTypeTableAttribute#getLocalVariableTypeTable()
 	 */
+	@Override
 	public ILocalVariableTypeTableEntry[] getLocalVariableTypeTable() {
 		return this.localVariableTypeTableEntries;
 	}
@@ -62,6 +63,7 @@ public class LocalVariableTypeAttribute
 	/**
 	 * @see ILocalVariableTypeTableAttribute#getLocalVariableTypeTableLength()
 	 */
+	@Override
 	public int getLocalVariableTypeTableLength() {
 		return this.localVariableTypeTableLength;
 	}

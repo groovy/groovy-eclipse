@@ -78,6 +78,7 @@ public class DeltaProcessor {
 			this.traverseModes = traverseModes;
 			this.outputCount = outputCount;
 		}
+		@Override
 		public String toString() {
 			if (this.paths == null) return "<none>"; //$NON-NLS-1$
 			StringBuffer buffer = new StringBuffer();
@@ -153,6 +154,7 @@ public class DeltaProcessor {
 		boolean isRootOfProject(IPath path) {
 			return this.rootPath.equals(path) && this.project.getProject().getFullPath().isPrefixOf(path);
 		}
+		@Override
 		public String toString() {
 			StringBuffer buffer = new StringBuffer("project="); //$NON-NLS-1$
 			if (this.project == null) {
@@ -884,6 +886,7 @@ public class DeltaProcessor {
 						//	 so that there is no concurrency with the Java builder
 						// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=96575
 						IWorkspaceRunnable runnable = new IWorkspaceRunnable() {
+							@Override
 							public void run(IProgressMonitor progressMonitor) throws CoreException {
 								for (int i = 0; i < projectsToTouch.length; i++) {
 									IProject project = projectsToTouch[i];
@@ -1587,6 +1590,7 @@ public class DeltaProcessor {
 			}
 			try {
 				rootDelta.accept(new IResourceDeltaVisitor() {
+					@Override
 					public boolean visit(IResourceDelta delta) /* throws CoreException */ {
 						switch (delta.getKind()){
 							case IResourceDelta.ADDED :
@@ -1718,9 +1722,11 @@ public class DeltaProcessor {
 				}
 				// wrap callbacks with Safe runnable for subsequent listeners to be called when some are causing grief
 				SafeRunner.run(new ISafeRunnable() {
+					@Override
 					public void handleException(Throwable exception) {
 						Util.log(exception, "Exception occurred in listener of Java element change notification"); //$NON-NLS-1$
 					}
+					@Override
 					public void run() throws Exception {
 						PerformanceStats stats = null;
 						if(PERF) {
@@ -1746,9 +1752,11 @@ public class DeltaProcessor {
 
 			// wrap callbacks with Safe runnable for subsequent listeners to be called when some are causing grief
 			SafeRunner.run(new ISafeRunnable() {
+				@Override
 				public void handleException(Throwable exception) {
 					Util.log(exception, "Exception occurred in listener of Java element change notification"); //$NON-NLS-1$
 				}
+				@Override
 				public void run() throws Exception {
 					TypeHierarchy typeHierarchy = (TypeHierarchy)listener;
 					if (typeHierarchy.hasFineGrainChanges()) {

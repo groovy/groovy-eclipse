@@ -67,8 +67,6 @@ import org.eclipse.jdt.internal.core.builder.BuildNotifier;
 /**
  * The mapping layer between the groovy parser and the JDT. This class communicates with the groovy parser and translates results
  * back for JDT to consume.
- *
- * @author Andy Clement
  */
 public class GroovyParser {
 
@@ -93,8 +91,8 @@ public class GroovyParser {
      * instances associated with the project.
      */
 
-    private static Map<String, PathLoaderPair> projectToLoaderCache = new ConcurrentHashMap<String, PathLoaderPair>();
-    private static Map<String, ScriptFolderSelector> scriptFolderSelectorCache = new ConcurrentHashMap<String, ScriptFolderSelector>();
+    private static Map<String, PathLoaderPair> projectToLoaderCache = new ConcurrentHashMap<>();
+    private static Map<String, ScriptFolderSelector> scriptFolderSelectorCache = new ConcurrentHashMap<>();
 
     static class PathLoaderPair {
         String classpath;
@@ -295,7 +293,7 @@ public class GroovyParser {
         if (path == null) {
             return createLoader(null, pcl);
         }
-        List<URL> urls = new ArrayList<URL>();
+        List<URL> urls = new ArrayList<>();
         if (path.indexOf(File.pathSeparator) != -1) {
             int pos = 0;
             while (pos != -1) {
@@ -426,6 +424,7 @@ public class GroovyParser {
             this.notifier = notifier;
         }
 
+        @Override
         public void parseComplete(int phase, String sourceUnitName) {
             try {
                 // Chop it down to the containing package folder
@@ -445,6 +444,7 @@ public class GroovyParser {
             notifier.checkCancel();
         }
 
+        @Override
         public void generateComplete(int phase, ClassNode classNode) {
             try {
                 String pkgName = classNode.getPackageName();

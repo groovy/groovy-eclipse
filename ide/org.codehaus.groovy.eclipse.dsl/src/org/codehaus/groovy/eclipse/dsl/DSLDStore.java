@@ -36,24 +36,19 @@ import org.eclipse.jdt.internal.core.NonJavaResource;
 
 /**
  * Stores the pointcuts for a single project.
- *
- * @author andrew
- * @created Nov 17, 2010
  */
 public class DSLDStore {
 
     /** Maps pointcuts to their contributors. */
-    private final Map<IPointcut, List<IContributionGroup>> pointcutContributionMap =
-        new LinkedHashMap<IPointcut, List<IContributionGroup>>();
+    private final Map<IPointcut, List<IContributionGroup>> pointcutContributionMap = new LinkedHashMap<>();
     /** Maps keys (such as script names) to the pointcuts they produce. */
-    private final Map<IStorage, Set<IPointcut>> keyContextMap =
-        new HashMap<IStorage, Set<IPointcut>>();
+    private final Map<IStorage, Set<IPointcut>> keyContextMap = new HashMap<>();
 
     public void addContributionGroup(IPointcut pointcut, IContributionGroup contribution) {
         synchronized (pointcutContributionMap) {
             List<IContributionGroup> contributions = pointcutContributionMap.get(pointcut);
             if (contributions == null) {
-                contributions = new ArrayList<IContributionGroup>();
+                contributions = new ArrayList<>();
                 pointcutContributionMap.put(pointcut, contributions);
             }
             contributions.add(contribution);
@@ -63,7 +58,7 @@ public class DSLDStore {
         synchronized (keyContextMap) {
             Set<IPointcut> pointcuts = keyContextMap.get(identifier);
             if (pointcuts == null) {
-                pointcuts = new HashSet<IPointcut>();
+                pointcuts = new HashSet<>();
                 keyContextMap.put(identifier, pointcuts);
             }
             pointcuts.add(pointcut);
@@ -142,7 +137,7 @@ public class DSLDStore {
      * @return The set of contributions applicable for the pattern
      */
     public List<IContributionElement> findContributions(GroovyDSLDContext pattern, Set<String> disabledScripts) {
-        List<IContributionElement> elts = new ArrayList<IContributionElement>();
+        List<IContributionElement> elts = new ArrayList<>();
         synchronized (pointcutContributionMap) {
             for (Map.Entry<IPointcut, List<IContributionGroup>> entry : pointcutContributionMap.entrySet()) {
                 IPointcut pointcut = entry.getKey();

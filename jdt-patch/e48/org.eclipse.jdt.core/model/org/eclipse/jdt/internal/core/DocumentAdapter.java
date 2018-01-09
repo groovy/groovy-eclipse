@@ -26,11 +26,13 @@ public class DocumentAdapter extends Document {
 		this.buffer = buffer;
 	}
 
+	@Override
 	public void set(String text) {
 		super.set(text);
 		this.buffer.setContents(text);
 	}
 
+	@Override
 	public void replace(int offset, int length, String text) throws BadLocationException {
 		super.replace(offset, length, text);
 		this.buffer.replace(offset, length, text);

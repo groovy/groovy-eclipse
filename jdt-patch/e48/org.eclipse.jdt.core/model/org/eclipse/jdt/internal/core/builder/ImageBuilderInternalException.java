@@ -29,6 +29,7 @@ public CoreException getThrowable() {
 	return this.coreException;
 }
 
+@Override
 public void printStackTrace() {
 	if (this.coreException != null) {
 		System.err.println(this);

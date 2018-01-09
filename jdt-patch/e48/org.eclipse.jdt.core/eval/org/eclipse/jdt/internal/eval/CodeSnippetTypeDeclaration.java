@@ -28,6 +28,7 @@ public CodeSnippetTypeDeclaration(CompilationResult compilationResult){
 /**
  * Generic bytecode generation for type
  */
+@Override
 public void generateCode(ClassFile enclosingClassFile) {
 	if ((this.bits & ASTNode.HasBeenGenerated) != 0) return;
 	this.bits |= ASTNode.HasBeenGenerated;

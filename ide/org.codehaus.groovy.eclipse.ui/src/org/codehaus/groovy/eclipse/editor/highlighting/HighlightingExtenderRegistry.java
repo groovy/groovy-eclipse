@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,8 +33,6 @@ import org.eclipse.ui.internal.WorkbenchPlugin;
 /**
  * Manages the HighlightingExtenderRegistry
  * This class is a singleton and is managed by {@link GroovyTextTools}
- * @author Andrew Eisenberg
- * @created Oct 23, 2009
  */
 public class HighlightingExtenderRegistry {
 
@@ -45,7 +43,7 @@ public class HighlightingExtenderRegistry {
     Map<String, IHighlightingExtender> natureToExtenderMap;
 
     public void initialize() throws CoreException {
-        natureToExtenderMap = new HashMap<String, IHighlightingExtender>();
+        natureToExtenderMap = new HashMap<>();
         IExtensionRegistry registry = Platform.getExtensionRegistry();
         IExtensionPoint extensionPoint = registry.getExtensionPoint(EXTENSION_POINT);
         IExtension[] extensions = extensionPoint.getExtensions();
@@ -77,7 +75,7 @@ public class HighlightingExtenderRegistry {
         if (project == null) {
             return null;
         }
-        List<String> extraKeywords = new ArrayList<String>();
+        List<String> extraKeywords = new ArrayList<>();
         String[] natureIds = project.getDescription().getNatureIds();
         for (String natureId : natureIds) {
             IHighlightingExtender extender = getExtender(natureId);
@@ -95,7 +93,7 @@ public class HighlightingExtenderRegistry {
         if (project == null) {
             return null;
         }
-        List<IRule> extraRules = new ArrayList<IRule>();
+        List<IRule> extraRules = new ArrayList<>();
         String[] natureIds = project.getDescription().getNatureIds();
         for (String natureId : natureIds) {
             IHighlightingExtender extender = getExtender(natureId);
@@ -113,7 +111,7 @@ public class HighlightingExtenderRegistry {
         if (project == null) {
             return null;
         }
-        List<IRule> extraRules = new ArrayList<IRule>();
+        List<IRule> extraRules = new ArrayList<>();
         String[] natureIds = project.getDescription().getNatureIds();
         for (String natureId : natureIds) {
             IHighlightingExtender extender = getExtender(natureId);

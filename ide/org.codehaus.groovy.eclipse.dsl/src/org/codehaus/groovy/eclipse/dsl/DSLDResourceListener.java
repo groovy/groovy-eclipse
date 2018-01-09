@@ -41,9 +41,6 @@ import org.eclipse.jdt.core.JavaCore;
  * DSLD script added: update that script from context
  * DSLD script deleted: remove that script from context
  * DSLD script changed: first remove and then re-add to context
- *
- * @author andrew
- * @created Nov 25, 2010
  */
 public class DSLDResourceListener implements IResourceChangeListener {
 
@@ -54,6 +51,7 @@ public class DSLDResourceListener implements IResourceChangeListener {
             this.eventType = eventType;
         }
 
+        @Override
         public boolean visit(IResourceDelta delta) throws CoreException {
             IResource deltaResource = delta.getResource();
 
@@ -129,6 +127,7 @@ public class DSLDResourceListener implements IResourceChangeListener {
 
     private static final DSLDStoreManager contextStoreManager = GroovyDSLCoreActivator.getDefault().getContextStoreManager();
 
+    @Override
     public void resourceChanged(IResourceChangeEvent event) {
         switch (event.getType()) {
             case IResourceChangeEvent.PRE_DELETE:
@@ -144,10 +143,6 @@ public class DSLDResourceListener implements IResourceChangeListener {
         }
     }
 
-    /**
-     * @param file
-     * @return
-     */
     public boolean isDSLDFile(IFile file) {
         String fileExtension = file.getFileExtension();
         return fileExtension != null && fileExtension.equals("dsld");

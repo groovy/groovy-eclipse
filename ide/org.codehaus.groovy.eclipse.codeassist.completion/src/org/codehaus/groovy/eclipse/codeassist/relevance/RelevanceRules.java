@@ -53,7 +53,6 @@ public class RelevanceRules implements IRelevanceRule {
             RelevanceRuleType.MODIFIERS, RelevanceRuleType.SIMILAR_PACKAGE);
 
     public static IRelevanceRule getRule(RelevanceRuleType type) {
-
         if (type == null) {
             return null;
         }
@@ -93,8 +92,8 @@ public class RelevanceRules implements IRelevanceRule {
      * Computes the integer relevance value of a given type based on registered
      * relevance rule types
      */
-    public int getRelevance(char[] fullyQualifiedName, IType[] contextTypes,
-            int accessibility, int modifiers) {
+    @Override
+    public int getRelevance(char[] fullyQualifiedName, IType[] contextTypes, int accessibility, int modifiers) {
         if (fullyQualifiedName == null) {
             return 0;
         }
@@ -120,6 +119,7 @@ public class RelevanceRules implements IRelevanceRule {
      * Computes the integer relevance value of a given type based on registered
      * relevance rule types
      */
+    @Override
     public int getRelevance(IType type, IType[] contextTypes) {
         if (type == null) {
             return 0;
@@ -155,6 +155,7 @@ public class RelevanceRules implements IRelevanceRule {
     @Deprecated
     public static class SourceRule extends AbstractRule {
 
+        @Override
         public int getRelevance(IType relevanceType, IType[] contextTypes) {
             // Source have higher relevance than Binary
             return relevanceType instanceof SourceType
@@ -162,6 +163,7 @@ public class RelevanceRules implements IRelevanceRule {
                 : TypeRelevanceCategory.LOW_TYPE   .applyCategory(1);
         }
 
+        @Override
         public int getRelevance(char[] fullyQualifiedName, IType[] contextTypes, int accessibility, int modifiers) {
             return 0;
         }
@@ -176,6 +178,7 @@ public class RelevanceRules implements IRelevanceRule {
     @Deprecated // replaced by internal.AccessibilityRule
     public static class AccessibilityRule extends AbstractRule {
 
+        @Override
         public int getRelevance(IType relevanceType, IType[] contextTypes) {
             if (relevanceType == null) {
                 return 0;
@@ -201,6 +204,7 @@ public class RelevanceRules implements IRelevanceRule {
             return getRelevance(null, null, accessibility, 0);
         }
 
+        @Override
         public int getRelevance(char[] fullyQualifiedName, IType[] contextTypes, int accessibility, int modifiers) {
             return accessibility == IAccessRule.K_ACCESSIBLE ? TypeRelevanceCategory.MEDIUM_TYPE.applyCategory(1) : 0;
         }
@@ -228,6 +232,7 @@ public class RelevanceRules implements IRelevanceRule {
             return category;
         }
 
+        @Override
         public int getRelevance(IType relevanceType, IType[] contextTypes) {
             int relevance = 0;
             TypeRelevanceCategory category = null;
@@ -246,6 +251,7 @@ public class RelevanceRules implements IRelevanceRule {
         }
 
         // don't do for relevance calculation involving content assist
+        @Override
         public int getRelevance(char[] fullyQualifiedName, IType[] contextTypes, int accessibility, int modifiers) {
             return 0;
         }
@@ -300,6 +306,7 @@ public class RelevanceRules implements IRelevanceRule {
             return null;
         }
 
+        @Override
         public int getRelevance(IType relevanceType, IType[] contextTypes) {
             if (relevanceType == null) {
                 return 0;
@@ -307,6 +314,7 @@ public class RelevanceRules implements IRelevanceRule {
             return getRelevance(relevanceType.getFullyQualifiedName().toCharArray(), contextTypes, 0, 0);
         }
 
+        @Override
         public int getRelevance(char[] fullyQualifiedName, IType[] contextTypes, int accessibility, int modifiers) {
             // Default is zero, meaning relevance for types in any other library
             // is governed by other rules. Only types in the following libraries
@@ -365,10 +373,12 @@ public class RelevanceRules implements IRelevanceRule {
             return name != null ? name.replace('$', '.') : name;
         }
 
+        @Override
         public int getRelevance(IType relevanceType, IType[] contextTypes) {
             return getRelevance(relevanceType.getFullyQualifiedName('.').toCharArray(), contextTypes, 0, 0);
         }
 
+        @Override
         public int getRelevance(char[] fullyQualifiedName, IType[] contextTypes, int accessibility, int modifiers) {
             int relevance = 0;
             IPackageFragment contextFragment = getContextPackageFragment(contextTypes);

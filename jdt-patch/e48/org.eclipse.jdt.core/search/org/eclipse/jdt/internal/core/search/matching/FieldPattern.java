@@ -72,15 +72,19 @@ public FieldPattern(
 		setTypeArguments(Util.getAllTypeArguments(this.typeSignatures));
 	}
 }
+@Override
 public void decodeIndexKey(char[] key) {
 	this.name = key;
 }
+@Override
 public SearchPattern getBlankPattern() {
 	return new FieldPattern(null, null, null, null, null, 0, R_EXACT_MATCH | R_CASE_SENSITIVE);
 }
+@Override
 public char[] getIndexKey() {
 	return this.name;
 }
+@Override
 public char[][] getIndexCategories() {
 	if (this.findReferences || this.fineGrain != 0)
 		return this.findDeclarations || this.writeAccess ? REF_AND_DECL_CATEGORIES : REF_CATEGORIES;
@@ -88,15 +92,18 @@ public char[][] getIndexCategories() {
 		return DECL_CATEGORIES;
 	return CharOperation.NO_CHAR_CHAR;
 }
+@Override
 public boolean matchesDecodedKey(SearchPattern decodedPattern) {
 	return true; // index key is not encoded so query results all match
 }
+@Override
 protected boolean mustResolve() {
 	if (this.declaringSimpleName != null || this.declaringQualification != null) return true;
 	if (this.typeSimpleName != null || this.typeQualification != null) return true;
 
 	return super.mustResolve();
 }
+@Override
 protected StringBuffer print(StringBuffer output) {
 	if (this.findDeclarations) {
 		output.append(this.findReferences

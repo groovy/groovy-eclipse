@@ -127,6 +127,7 @@ public final class ObjectVector implements Iterable<Object> {
 		return this.size;
 	}
 
+	@Override
 	public String toString() {
 
 		String s = ""; //$NON-NLS-1$

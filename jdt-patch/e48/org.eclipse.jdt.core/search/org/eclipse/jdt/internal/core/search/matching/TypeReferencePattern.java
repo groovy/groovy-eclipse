@@ -108,12 +108,15 @@ public class TypeReferencePattern extends IntersectingPattern {
 		super(TYPE_REF_PATTERN, matchRule);
 		this.categories = CATEGORIES;
 	}
+	@Override
 	public void decodeIndexKey(char[] key) {
 		this.simpleName = key;
 	}
+	@Override
 	public SearchPattern getBlankPattern() {
 		return new TypeReferencePattern(R_EXACT_MATCH | R_CASE_SENSITIVE);
 	}
+	@Override
 	public char[] getIndexKey() {
 		if (this.simpleName != null)
 			return this.simpleName;
@@ -123,9 +126,11 @@ public class TypeReferencePattern extends IntersectingPattern {
 			return this.segments[this.currentSegment];
 		return null;
 	}
+	@Override
 	public char[][] getIndexCategories() {
 		return this.categories;
 	}
+	@Override
 	protected boolean hasNextQuery() {
 		if (this.segments == null) return false;
 
@@ -135,15 +140,18 @@ public class TypeReferencePattern extends IntersectingPattern {
 		return --this.currentSegment >= (this.segments.length >= 4 ? 2 : 0);
 	}
 
+	@Override
 	public boolean matchesDecodedKey(SearchPattern decodedPattern) {
 		return true; // index key is not encoded so query results all match
 	}
 
+	@Override
 	protected void resetQuery() {
 		/* walk the segments from end to start as it will find less potential references using 'lang' than 'java' */
 		if (this.segments != null)
 			this.currentSegment = this.segments.length - 1;
 	}
+	@Override
 	protected StringBuffer print(StringBuffer output) {
 		String patternClassName = getClass().getName();
 		output.append(patternClassName.substring(patternClassName.lastIndexOf('.')+1));

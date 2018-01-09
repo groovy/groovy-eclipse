@@ -70,7 +70,7 @@ public class GroovyPartitionScanner extends RuleBasedPartitionScanner {
     }
 
     public static List<IRule> createRules(boolean withColor) {
-        List<IRule> rules = new ArrayList<IRule>(8);
+        List<IRule> rules = new ArrayList<>(8);
 
         IToken javadocComment = new Token(JAVA_DOC);
         IToken multilnComment = new Token(JAVA_MULTI_LINE_COMMENT);
@@ -114,9 +114,11 @@ public class GroovyPartitionScanner extends RuleBasedPartitionScanner {
     //--------------------------------------------------------------------------
 
     static class EmptyCommentDetector implements IWordDetector {
+        @Override
         public boolean isWordStart(char c) {
             return (c == '/');
         }
+        @Override
         public boolean isWordPart(char c) {
             return (c == '*' || c == '/');
         }
@@ -132,16 +134,12 @@ public class GroovyPartitionScanner extends RuleBasedPartitionScanner {
             addWord("/**/", fSuccessToken); //$NON-NLS-1$
         }
 
-        /*
-         * @see org.eclipse.jface.text.rules.IPredicateRule#evaluate(ICharacterScanner, boolean)
-         */
+        @Override
         public IToken evaluate(ICharacterScanner scanner, boolean resume) {
             return super.evaluate(scanner);
         }
 
-        /*
-         * @see org.eclipse.jface.text.rules.IPredicateRule#getSuccessToken()
-         */
+        @Override
         public IToken getSuccessToken() {
             return fSuccessToken;
         }

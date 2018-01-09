@@ -96,12 +96,13 @@ public class DSLContributionGroup extends ContributionGroup {
     /**
      * This is the main entry point into the contribution
      */
+    @Override
     public List<IContributionElement> getContributions(GroovyDSLDContext pattern, BindingSet matches) {
         // uh oh...needs to be synchronized, or can we make this class stateless?
         synchronized (this) {
             List<IContributionElement> result;
             try {
-                this.contributions = new ArrayList<IContributionElement>();
+                this.contributions = new ArrayList<>();
                 this.scope = pattern.getCurrentScope();
                 this.project = pattern.getCurrentProject();
                 this.resolver = pattern.getResolverCache();
@@ -232,7 +233,7 @@ public class DSLContributionGroup extends ContributionGroup {
 
             // naked variants of getter and setter methods must be added at the end
             // FIXADE why???
-            List<IContributionElement> accessorContribs = new ArrayList<IContributionElement>(1);
+            List<IContributionElement> accessorContribs = new ArrayList<>(1);
             for (MethodNode method : type.getMethods()) {
                 if ((exceptions == null || !exceptions.contains(method.getName())) && !(method instanceof ConstructorNode) && ! method.getName().contains("$")) {
                     ClassNode resolvedReturnType = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(method.getReturnType()));
@@ -560,7 +561,7 @@ public class DSLContributionGroup extends ContributionGroup {
             }
         }
 
-        Map<String, ClassNode> params = new LinkedHashMap<String, ClassNode>(parameters.length);
+        Map<String, ClassNode> params = new LinkedHashMap<>(parameters.length);
         for (int i = 0; i < parameters.length; i += 1) {
             params.put(names != null ? names[i] : parameters[i].getName(), parameters[i].getType());
         }

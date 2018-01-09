@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,11 +27,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
-/**
- * 
- * @author Nieraj Singh
- * @created 2011-05-13
- */
 public class RadioSelectionDialogueControl extends AbstractControlManager {
 
     private IDialogueControlDescriptor[] radioValues;
@@ -43,13 +38,14 @@ public class RadioSelectionDialogueControl extends AbstractControlManager {
         this.defaultValue = defaultValue;
     }
 
+    @Override
     protected Map<Control, IDialogueControlDescriptor> createManagedControls(Composite parent) {
         Composite buttonArea = new Composite(parent, SWT.NONE);
 
         GridLayoutFactory.fillDefaults().numColumns(2).equalWidth(true).applyTo(buttonArea);
         GridDataFactory.fillDefaults().grab(true, false).applyTo(buttonArea);
 
-        Map<Control, IDialogueControlDescriptor> controls = new HashMap<Control, IDialogueControlDescriptor>();
+        Map<Control, IDialogueControlDescriptor> controls = new HashMap<>();
 
         for (IDialogueControlDescriptor descriptor : radioValues) {
 
@@ -78,17 +74,15 @@ public class RadioSelectionDialogueControl extends AbstractControlManager {
                     button.setSelection(true);
                 }
                 button.addSelectionListener(new SelectionAdapter() {
-
+                    @Override
                     public void widgetSelected(SelectionEvent e) {
                         if (button.getData() instanceof IDialogueControlDescriptor) {
                             notifyControlChange(button.getData(), button);
                         }
                     }
-
                 });
             }
         }
         return controls;
     }
-
 }

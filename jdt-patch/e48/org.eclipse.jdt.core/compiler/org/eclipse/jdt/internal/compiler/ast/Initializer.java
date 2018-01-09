@@ -37,6 +37,7 @@ public class Initializer extends FieldDeclaration {
 		}
 	}
 
+	@Override
 	public FlowInfo analyseCode(
 		MethodScope currentScope,
 		FlowContext flowContext,
@@ -55,6 +56,7 @@ public class Initializer extends FieldDeclaration {
 	 * @param currentScope org.eclipse.jdt.internal.compiler.lookup.BlockScope
 	 * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
 	 */
+	@Override
 	public void generateCode(BlockScope currentScope, CodeStream codeStream) {
 
 		if ((this.bits & IsReachable) == 0) {
@@ -68,10 +70,12 @@ public class Initializer extends FieldDeclaration {
 	/**
 	 * @see org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration#getKind()
 	 */
+	@Override
 	public int getKind() {
 		return INITIALIZER;
 	}
 
+	@Override
 	public boolean isStatic() {
 
 		return (this.modifiers & ClassFileConstants.AccStatic) != 0;
@@ -86,6 +90,7 @@ public class Initializer extends FieldDeclaration {
 		parser.parse(this, typeDeclaration, unit);
 	}
 
+	@Override
 	public StringBuffer printStatement(int indent, StringBuffer output) {
 
 		if (this.modifiers != 0) {
@@ -109,6 +114,7 @@ public class Initializer extends FieldDeclaration {
 		return output;
 	}
 
+	@Override
 	public void resolve(MethodScope scope) {
 
 		FieldBinding previousField = scope.initializedField;
@@ -141,6 +147,7 @@ public class Initializer extends FieldDeclaration {
 		return this.methodBinding;
 	}
 
+	@Override
 	public void traverse(ASTVisitor visitor, MethodScope scope) {
 		if (visitor.visit(this, scope)) {
 			if (this.block != null) this.block.traverse(visitor, scope);

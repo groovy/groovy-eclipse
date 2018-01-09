@@ -21,6 +21,7 @@ import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.jdt.core.ElementChangedEvent;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IElementChangedListener;
@@ -30,8 +31,6 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.text.TextSelection;
-import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -68,12 +67,15 @@ public class ASTView extends ViewPart {
     private static class ViewContentProvider implements IStructuredContentProvider, ITreeContentProvider {
         ITreeNode root;
 
+        @Override
         public void inputChanged(Viewer v, Object oldInput, Object newInput) {
         }
 
+        @Override
         public void dispose() {
         }
 
+        @Override
         public Object[] getElements(Object inputElement) {
             if (!(inputElement instanceof ModuleNode)) {
                 return new Object[0];
@@ -83,16 +85,19 @@ public class ASTView extends ViewPart {
             return children;
         }
 
+        @Override
         public Object getParent(Object child) {
             Object parent = ((ITreeNode) child).getParent();
             return parent;
         }
 
+        @Override
         public Object[] getChildren(Object parent) {
             ITreeNode[] children = ((ITreeNode) parent).getChildren();
             return children;
         }
 
+        @Override
         public boolean hasChildren(Object parent) {
             boolean has = !((ITreeNode) parent).isLeaf();
             return has;
@@ -100,10 +105,12 @@ public class ASTView extends ViewPart {
     }
 
     private static class ViewLabelProvider extends LabelProvider {
+        @Override
         public String getText(Object obj) {
             return ((ITreeNode) obj).getDisplayName();
         }
 
+        @Override
         public Image getImage(Object obj) {
             return null;
         }
@@ -112,8 +119,10 @@ public class ASTView extends ViewPart {
     /**
      * This is a callback that will allow us to create the viewer and initialize it.
      */
+    @Override
     public void createPartControl(Composite parent) {
         viewer = new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+        @SuppressWarnings("unused")
         DrillDownAdapter drillDownAdapter = new DrillDownAdapter(viewer);
         viewer.setContentProvider(new ViewContentProvider());
         viewer.setLabelProvider(new ViewLabelProvider());
@@ -126,6 +135,7 @@ public class ASTView extends ViewPart {
         //contributeToActionBars();
     }
 
+    @Override
     public void dispose() {
         unhookGroovy();
         super.dispose();
@@ -133,14 +143,15 @@ public class ASTView extends ViewPart {
 
     private void hookGroovy() {
         partListener = new IPartListener() {
+            @Override
             public void partActivated(IWorkbenchPart part) {
             }
 
+            @Override
             public void partBroughtToTop(IWorkbenchPart part) {
                 try {
                     if (part instanceof IEditorPart) {
-                        @SuppressWarnings("cast")
-                        IFile file = (IFile) ((IEditorPart) part).getEditorInput().getAdapter(IFile.class);
+                        IFile file = Adapters.adapt(((IEditorPart) part).getEditorInput(), IFile.class);
                         if (file != null && ContentTypeUtils.isGroovyLikeFileName(file.getName())) {
                             ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
                             if (unit instanceof GroovyCompilationUnit) {
@@ -168,12 +179,15 @@ public class ASTView extends ViewPart {
                 }
             }
 
+            @Override
             public void partClosed(IWorkbenchPart part) {
             }
 
+            @Override
             public void partDeactivated(IWorkbenchPart part) {
             }
 
+            @Override
             public void partOpened(IWorkbenchPart part) {
             }
         };
@@ -185,24 +199,22 @@ public class ASTView extends ViewPart {
         }
 
         listener = new IElementChangedListener() {
+            @Override
             public void elementChanged(ElementChangedEvent event) {
                 // The editor is currently not a GroovyEditor, so there is not ASTView to refresh.
                 if (editor == null) {
                     return;
                 }
                 IJavaElementDelta delta = event.getDelta();
-                @SuppressWarnings("cast")
-                IFile file = (IFile) editor.getEditorInput().getAdapter(IFile.class);
+                IFile file = Adapters.adapt(editor.getEditorInput(), IFile.class);
                 final GroovyCompilationUnit unit = (GroovyCompilationUnit) JavaCore.createCompilationUnitFrom(file);
 
                 // determine if the delta contains the ICompUnit under question
                 if (isUnitInDelta(delta, unit)) {
-                    Display.getDefault().asyncExec(new Runnable() {
-                        public void run() {
-                            Object[] treePaths = viewer.getExpandedElements();
-                            viewer.setInput(unit.getModuleNode());
-                            viewer.setExpandedElements(treePaths);
-                        }
+                    Display.getDefault().asyncExec(() -> {
+                        Object[] treePaths = viewer.getExpandedElements();
+                        viewer.setInput(unit.getModuleNode());
+                        viewer.setExpandedElements(treePaths);
                     });
                 }
             }
@@ -280,11 +292,7 @@ public class ASTView extends ViewPart {
     }
 
     private void hookDoubleClickAction() {
-        viewer.addDoubleClickListener(new IDoubleClickListener() {
-            public void doubleClick(DoubleClickEvent event) {
-                doubleClickAction.run();
-            }
-        });
+        viewer.addDoubleClickListener(event -> doubleClickAction.run());
     }
 
     /**

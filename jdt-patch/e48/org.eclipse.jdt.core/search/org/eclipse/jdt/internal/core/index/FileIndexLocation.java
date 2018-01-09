@@ -37,6 +37,7 @@ public class FileIndexLocation extends IndexLocation {
 		this.participantIndex = true;
 	}
 
+	@Override
 	public boolean createNewFile() throws IOException {
 		File directory = this.indexFile.getParentFile();
 		if (directory != null && !directory.exists()) {
@@ -46,31 +47,38 @@ public class FileIndexLocation extends IndexLocation {
 		return this.indexFile.createNewFile();
 	}
 
+	@Override
 	public boolean delete() {
 		return this.indexFile.delete();
 	}
 
+	@Override
 	public boolean equals(Object other) {
 		if (!(other instanceof FileIndexLocation)) return false;
 		return this.indexFile.equals(((FileIndexLocation) other).indexFile);
 	}
 
+	@Override
 	public boolean exists() {
 		return this.indexFile.exists();
 	}
 
+	@Override
 	public String fileName() {
 		return this.indexFile.getName();
 	}
 	
+	@Override
 	public File getIndexFile() {
 		return this.indexFile;
 	}
 
+	@Override
 	InputStream getInputStream() throws IOException {
 		return new FileInputStream(this.indexFile);
 	}
 
+	@Override
 	public String getCanonicalFilePath() {
 		try {
 			return this.indexFile.getCanonicalPath();
@@ -80,18 +88,22 @@ public class FileIndexLocation extends IndexLocation {
 		return null;
 	}
 
+	@Override
 	public int hashCode() {
 		return this.indexFile.hashCode();
 	}
 
+	@Override
 	public long lastModified() {
 		return this.indexFile.lastModified();
 	}
 
+	@Override
 	public long length() {
 		return this.indexFile.length();
 	}
 
+	@Override
 	public boolean startsWith(IPath path) {
 		try {
 			return path.isPrefixOf(new Path(this.indexFile.getCanonicalPath()));

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,6 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
  * An extension to the {@link ITypeLookup} interface that specifies that a particular expression visit occurs in the context of a
  * static object expression. We use an extension interface because we do not want to break backwards compatibility with existing
  * third party implementors of {@link ITypeLookup}.
- *
- * @author Andrew Eisenberg
- * @created Jun 9, 2011
  */
 public interface ITypeLookupExtension extends ITypeLookup {
     /**

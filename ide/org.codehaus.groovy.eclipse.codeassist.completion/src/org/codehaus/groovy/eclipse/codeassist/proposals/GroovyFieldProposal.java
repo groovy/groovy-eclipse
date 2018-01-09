@@ -45,6 +45,7 @@ public class GroovyFieldProposal extends AbstractGroovyProposal {
         return field;
     }
 
+    @Override
     public IJavaCompletionProposal createJavaProposal(ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
         if (context.location == ContentAssistLocation.METHOD_CONTEXT) {
             return null;

@@ -63,9 +63,17 @@ public static Test suite() {
 
 void runTestsExpectingErrorsOnlyIn17(String[] testFiles, String errorsIn17, Map options) {
 	if (this.complianceLevel >= ClassFileConstants.JDK1_7)
-		runNegativeTest(testFiles, errorsIn17, null, true, options);
+		runLeakTest(testFiles, errorsIn17, options);
 	else
 		runConformTest(testFiles, "", null, true, null, options, null);
+}
+
+protected void runLeakTest(String[] testFiles, String expectedCompileError, Map options) {
+	runNegativeTest(testFiles, expectedCompileError, null, true, options, null, JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
+}
+
+protected void runLeakWarningTest(String[] testFiles, String expectedCompileError, Map options) {
+	runNegativeTest(testFiles, expectedCompileError, null, true, options, null, JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings);
 }
 
 // Bug 349326 - [1.7] new warning for missing try-with-resources
@@ -74,7 +82,7 @@ public void test056() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.WARNING);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -99,8 +107,6 @@ public void test056() {
 		"	           ^^^^^^^^^^\n" +
 		"Resource leak: 'fileReader' is never closed\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 349326 - [1.7] new warning for missing try-with-resources
@@ -218,7 +224,7 @@ public void test056d() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.WARNING);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -256,8 +262,6 @@ public void test056d() {
 		"	^^^^^^^\n" +
 		"Resource leak: 'fileReader1' is not closed at this location\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 349326 - [1.7] new warning for missing try-with-resources
@@ -271,7 +275,7 @@ public void test056d_suppress() {
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.WARNING);
 	options.put(CompilerOptions.OPTION_SuppressOptionalErrors, CompilerOptions.ENABLED);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -316,8 +320,6 @@ public void test056d_suppress() {
 		"	^^^^^^^\n" +
 		"Resource leak: 'fileReader1' is not closed at this location\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 349326 - [1.7] new warning for missing try-with-resources
@@ -327,7 +329,7 @@ public void test056e() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -355,8 +357,6 @@ public void test056e() {
 		"	           ^^^^^^\n" +
 		"Potential resource leak: \'reader\' may not be closed\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 349326 - [1.7] new warning for missing try-with-resources
@@ -401,7 +401,7 @@ public void test056g() {
 	options.put(JavaCore.COMPILER_PB_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE, CompilerOptions.WARNING);
 	options.put(JavaCore.COMPILER_PB_EXPLICITLY_CLOSED_AUTOCLOSEABLE, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -429,8 +429,6 @@ public void test056g() {
 		"	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
 		"Resource leak: 'fileReader' is not closed at this location\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 349326 - [1.7] new warning for missing try-with-resources
@@ -440,7 +438,7 @@ public void test056g2() {
 	options.put(JavaCore.COMPILER_PB_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE, CompilerOptions.WARNING);
 	options.put(JavaCore.COMPILER_PB_EXPLICITLY_CLOSED_AUTOCLOSEABLE, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -468,8 +466,6 @@ public void test056g2() {
 		"	^^^^^^^^^^^^^^^^^\n" +
 		"Resource leak: 'fileReader' is not closed at this location\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 349326 - [1.7] new warning for missing try-with-resources
@@ -479,7 +475,7 @@ public void test056h() {
 	options.put(JavaCore.COMPILER_PB_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE, CompilerOptions.WARNING);
 	options.put(JavaCore.COMPILER_PB_EXPLICITLY_CLOSED_AUTOCLOSEABLE, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -514,8 +510,6 @@ public void test056h() {
 		"	           ^^^^^^^^^^^\n" +
 		"Resource leak: 'localReader' is never closed\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 349326 - [1.7] new warning for missing try-with-resources
@@ -525,7 +519,7 @@ public void test056i() {
 	options.put(JavaCore.COMPILER_PB_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE, CompilerOptions.WARNING);
 	options.put(JavaCore.COMPILER_PB_EXPLICITLY_CLOSED_AUTOCLOSEABLE, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -565,8 +559,6 @@ public void test056i() {
 		"	           ^^^^^^^^^^\n" +
 		"Potential resource leak: 'fileReader' may not be closed\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 349326 - [1.7] new warning for missing try-with-resources
@@ -616,7 +608,7 @@ public void test056i2() {
 	options.put(JavaCore.COMPILER_PB_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_EXPLICITLY_CLOSED_AUTOCLOSEABLE, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -652,8 +644,6 @@ public void test056i2() {
 		"	           ^^^^^^^^^^\n" +
 		"Potential resource leak: 'fileReader' may not be closed\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 349326 - [1.7] new warning for missing try-with-resources
@@ -662,7 +652,7 @@ public void test056j() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -686,8 +676,6 @@ public void test056j() {
 		"	           ^^^^^^^^^^\n" +
 		"Potential resource leak: 'fileReader' may not be closed\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 349326 - [1.7] new warning for missing try-with-resources
@@ -696,7 +684,7 @@ public void test056jconditional() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -722,8 +710,6 @@ public void test056jconditional() {
 		"	           ^^^^^^^^^^\n" +
 		"Potential resource leak: 'fileReader' may not be closed\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 349326 - [1.7] new warning for missing try-with-resources
@@ -779,7 +765,7 @@ public void test056k() {
 				"	           ^^^\n" +
 				"Resource 'rb3' should be managed by try-with-resource\n" +
 				"----------\n";
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -825,8 +811,6 @@ public void test056k() {
 			"}\n"
 		},
 		expectedProblems,
-		null,
-		true,
 		options);
 }
 // Bug 349326 - [1.7] new warning for missing try-with-resources
@@ -870,7 +854,7 @@ public void test056l() {
 				"	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
 				"Potential resource leak: \'<unassigned Closeable value>\' may not be closed\n" +
 				"----------\n";
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -902,8 +886,6 @@ public void test056l() {
 			"}\n"
 		},
 		expectedProblems,
-		null,
-		true,
 		options);
 }
 // Bug 349326 - [1.7] new warning for missing try-with-resources
@@ -1042,7 +1024,7 @@ public void test056p() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -1070,8 +1052,6 @@ public void test056p() {
 		"	  ^^^^^^^^^^\n" +
 		"Potential resource leak: \'fileReader\' may not be closed\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 349326 - [1.7] new warning for missing try-with-resources
@@ -1081,7 +1061,7 @@ public void test056q() {
 	options.put(JavaCore.COMPILER_PB_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE, CompilerOptions.WARNING);
 	options.put(JavaCore.COMPILER_PB_EXPLICITLY_CLOSED_AUTOCLOSEABLE, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -1118,8 +1098,6 @@ public void test056q() {
 		"	^^^^^^^^^^^^^^^^^^\n" +
 		"Dead code\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 349326 - [1.7] new warning for missing try-with-resources
@@ -1130,7 +1108,7 @@ public void test056r() {
 	options.put(JavaCore.COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE, CompilerOptions.WARNING);
 	options.put(JavaCore.COMPILER_PB_EXPLICITLY_CLOSED_AUTOCLOSEABLE, CompilerOptions.IGNORE);
 	options.put(JavaCore.COMPILER_PB_DEAD_CODE, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -1171,8 +1149,6 @@ public void test056r() {
 		"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
 		"Statement unnecessarily nested within else clause. The corresponding then clause does not complete normally\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 349326 - [1.7] new warning for missing try-with-resources
@@ -1183,7 +1159,7 @@ public void test056s() {
 	options.put(JavaCore.COMPILER_PB_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE, CompilerOptions.WARNING);
 	options.put(JavaCore.COMPILER_PB_EXPLICITLY_CLOSED_AUTOCLOSEABLE, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	runNegativeTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -1221,7 +1197,7 @@ public void test056t() {
 	options.put(JavaCore.COMPILER_PB_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE, CompilerOptions.WARNING);
 	options.put(JavaCore.COMPILER_PB_DEAD_CODE, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.FileReader;\n" +
@@ -1248,8 +1224,6 @@ public void test056t() {
 		"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
 		"Dead code\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 349326 - [1.7] new warning for missing try-with-resources
@@ -1261,7 +1235,7 @@ public void test056u() {
 	options.put(JavaCore.COMPILER_PB_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE, CompilerOptions.WARNING);
 	options.put(JavaCore.COMPILER_PB_DEAD_CODE, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.FileReader;\n" +
@@ -1304,8 +1278,6 @@ public void test056u() {
 		"	^^^^^^^^^^^^^^^^^\n" +
 		"Resource leak: 'reader1' is not closed at this location\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 349326 - [1.7] new warning for missing try-with-resources
@@ -1345,7 +1317,7 @@ public void test056v() {
 				"	^^^^^^^\n" +
 				"Resource leak: 'reader2' is not closed at this location\n" +
 				"----------\n";
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.FileReader;\n" +
@@ -1398,8 +1370,6 @@ public void test056v() {
 			"}\n"
 		},
 		expectedProblems,
-		null,
-		true,
 		options);
 }
 // Bug 349326 - [1.7] new warning for missing try-with-resources
@@ -1409,7 +1379,7 @@ public void test056w() {
 	options.put(JavaCore.COMPILER_PB_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE, CompilerOptions.WARNING);
 	options.put(JavaCore.COMPILER_PB_DEAD_CODE, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.FileReader;\n" +
@@ -1438,8 +1408,6 @@ public void test056w() {
 		"	^^^^^^^^^^^^^\n" +
 		"Resource leak: 'reader' is not closed at this location\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 349326 - [1.7] new warning for missing try-with-resources
@@ -1449,7 +1417,7 @@ public void test056x() {
 	options.put(JavaCore.COMPILER_PB_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE, CompilerOptions.WARNING);
 	options.put(JavaCore.COMPILER_PB_DEAD_CODE, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.FileReader;\n" +
@@ -1479,8 +1447,6 @@ public void test056x() {
 		"	           ^^^^^^\n" +
 		"Resource leak: 'reader' is never closed\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 349326 - [1.7] new warning for missing try-with-resources
@@ -1490,7 +1456,7 @@ public void test056y() {
 	options.put(JavaCore.COMPILER_PB_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE, CompilerOptions.WARNING);
 	options.put(JavaCore.COMPILER_PB_DEAD_CODE, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakWarningTest(
 		new String[] {
 			"X.java",
 			"import java.io.FileReader;\n" +
@@ -1526,8 +1492,6 @@ public void test056y() {
 		"	                 ^^^^^^^^\n" +
 		"Potential resource leak: 'reader31' may not be closed\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 349326 - [1.7] new warning for missing try-with-resources
@@ -1537,7 +1501,7 @@ public void test056z() {
 	options.put(JavaCore.COMPILER_PB_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_DEAD_CODE, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.FileReader;\n" +
@@ -1562,8 +1526,6 @@ public void test056z() {
 		"	           ^^^^^^^^^\n" +
 		"Potential resource leak: 'reader17a' may not be closed\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 349326 - [1.7] new warning for missing try-with-resources
@@ -1610,7 +1572,7 @@ public void test056zzz() {
 	options.put(JavaCore.COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_EXPLICITLY_CLOSED_AUTOCLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_DEAD_CODE, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.FileReader;\n" +
@@ -1635,8 +1597,6 @@ public void test056zzz() {
 		"	           ^^^^^^^^\n" +
 		"Resource leak: 'reader16' is never closed\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 359334 - Analysis for resource leak warnings does not consider exceptions as method exit points
@@ -1647,7 +1607,7 @@ public void test056throw1() {
 	options.put(JavaCore.COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_EXPLICITLY_CLOSED_AUTOCLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_DEAD_CODE, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.FileReader;\n" +
@@ -1675,8 +1635,6 @@ public void test056throw1() {
 		"	^^^^^^^^^^^^^^^^^^^^^^\n" +
 		"Resource leak: 'reader' is not closed at this location\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 359334 - Analysis for resource leak warnings does not consider exceptions as method exit points
@@ -1790,7 +1748,7 @@ public void test056throw4() {
 	options.put(JavaCore.COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_EXPLICITLY_CLOSED_AUTOCLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_DEAD_CODE, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.FileReader;\n" +
@@ -1822,8 +1780,6 @@ public void test056throw4() {
 		"	^^^^^^^^^^^^^^^^^^^^^^\n" +
 		"Potential resource leak: 'reader' may not be closed at this location\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 359334 - Analysis for resource leak warnings does not consider exceptions as method exit points
@@ -1834,7 +1790,7 @@ public void test056throw5() {
 	options.put(JavaCore.COMPILER_PB_POTENTIALLY_UNCLOSED_CLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_EXPLICITLY_CLOSED_AUTOCLOSEABLE, CompilerOptions.ERROR);
 	options.put(JavaCore.COMPILER_PB_DEAD_CODE, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.FileReader;\n" +
@@ -1864,8 +1820,6 @@ public void test056throw5() {
 		"	^^^^^^^^^^^^^^^^^^^^^^\n" +
 		"Potential resource leak: 'reader' may not be closed at this location\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 358903 - Filter practically unimportant resource leak warnings
@@ -1983,7 +1937,7 @@ public void test061d() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.WARNING);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -2023,8 +1977,6 @@ public void test061d() {
 		"	                    ^^^^\n" +
 		"Resource leak: \'bis2\' is never closed\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 358903 - Filter practically unimportant resource leak warnings
@@ -2171,7 +2123,7 @@ public void test061f3() throws IOException {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -2200,8 +2152,6 @@ public void test061f3() throws IOException {
 		"	^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
 		"Potential resource leak: \'stream\' may not be closed at this location\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 358903 - Filter practically unimportant resource leak warnings
@@ -2211,7 +2161,7 @@ public void test061g() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -2250,8 +2200,6 @@ public void test061g() {
 		"	                    ^^^^^^^^^^^\n" +
 		"Resource leak: \'doubleWrap3\' is never closed\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 358903 - Filter practically unimportant resource leak warnings
@@ -2261,7 +2209,7 @@ public void test061h() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -2310,8 +2258,6 @@ public void test061h() {
 		"	                    ^^^^^^^^^^^\n" +
 		"Potential resource leak: \'doubleWrap2\' may not be closed\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 358903 - Filter practically unimportant resource leak warnings
@@ -2320,7 +2266,7 @@ public void test061i() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -2361,8 +2307,6 @@ public void test061i() {
 		"	            ^^^^^^^\n" +
 		"Resource leak: \'stream3\' is never closed\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 358903 - Filter practically unimportant resource leak warnings
@@ -2457,7 +2401,7 @@ public void test061l2() throws IOException {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"xy/Leaks.java",
 			"package xy;\n" +
@@ -2503,8 +2447,6 @@ public void test061l2() throws IOException {
 		"	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
 		"Potential resource leak: \'<unassigned Closeable value>\' may not be closed\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 361407 - Resource leak warning when resource is assigned to a field outside of constructor
@@ -2513,7 +2455,7 @@ public void test061l3() throws IOException {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"xy/Leaks.java",
 			"package xy;\n" +
@@ -2549,8 +2491,6 @@ public void test061l3() throws IOException {
 		"	                ^^^^^^^^^^^^^^^\n" +
 		"Potential resource leak: \'fileInputStream\' may not be closed\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 358903 - Filter practically unimportant resource leak warnings
@@ -2560,7 +2500,7 @@ public void test061m() throws IOException {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -2602,8 +2542,6 @@ public void test061m() throws IOException {
 		"	^^^^^^^^^^^^^^^^\n" +
 		"Potential resource leak: \'s\' may not be closed at this location\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 358903 - Filter practically unimportant resource leak warnings
@@ -2612,7 +2550,7 @@ public void test061n() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.PrintWriter;\n" +
@@ -2630,8 +2568,6 @@ public void test061n() {
 		"	            ^^^^^^\n" +
 		"Resource leak: \'writer\' is never closed\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 358903 - Filter practically unimportant resource leak warnings
@@ -2640,7 +2576,7 @@ public void test061o() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -2665,8 +2601,6 @@ public void test061o() {
 		"	                    ^^^\n" +
 		"Potential resource leak: \'bis\' may not be closed\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 358903 - Filter practically unimportant resource leak warnings
@@ -2675,7 +2609,7 @@ public void test061f4() throws IOException {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -2699,8 +2633,6 @@ public void test061f4() throws IOException {
 		"	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
 		"Potential resource leak: \'stream\' may not be closed\n" + // message could be stronger, but the enclosing if blurs the picture
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 358903 - Filter practically unimportant resource leak warnings
@@ -2740,7 +2672,7 @@ public void _test061q() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.PrintWriter;\n" +
@@ -2762,8 +2694,6 @@ public void _test061q() {
 		"	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
 		"Potential resource leak: \'writer\' may not be closed\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 358903 - Filter practically unimportant resource leak warnings
@@ -2831,7 +2761,7 @@ public void test062a() throws IOException {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -2849,8 +2779,6 @@ public void test062a() throws IOException {
 		"	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
 		"Resource leak: \'<unassigned Closeable value>\' is never closed\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 362331 - Resource leak not detected when closeable not assigned to variable
@@ -2884,7 +2812,7 @@ public void test062c() throws IOException {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -2906,8 +2834,6 @@ public void test062c() throws IOException {
 		"	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
 		"Potential resource leak: \'<unassigned Closeable value>\' may not be closed\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 362331 - Resource leak not detected when closeable not assigned to variable
@@ -2916,7 +2842,7 @@ public void test062d() throws IOException {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -2934,8 +2860,6 @@ public void test062d() throws IOException {
 		"	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
 		"Resource leak: \'<unassigned Closeable value>\' is never closed\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 362332 - Only report potential leak when closeable not created in the local scope
@@ -2944,7 +2868,7 @@ public void test063a() throws IOException {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -2980,8 +2904,6 @@ public void test063a() throws IOException {
 		"	^^^^^^^^^^^^^^^^^^^^^^^^\n" +
 		"Potential resource leak: \'bis\' may not be closed\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 362332 - Only report potential leak when closeable not created in the local scope
@@ -3116,7 +3038,7 @@ public void testBug368709a() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.*;\n" +
@@ -3168,8 +3090,6 @@ public void testBug368709a() {
 		"	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
 		"Potential resource leak: \'in\' may not be closed at this location\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 // Bug 368709 - Endless loop in FakedTrackingVariable.markPassedToOutside
@@ -3179,7 +3099,7 @@ public void testBug368709b() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.*;\n" +
@@ -3200,8 +3120,6 @@ public void testBug368709b() {
 		"	            ^^\n" +
 		"Potential resource leak: \'in\' may not be closed\n" +
 		"----------\n",
-		null,
-		true,
 		options);
 }
 
@@ -3211,7 +3129,7 @@ public void test064() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
-	this.runNegativeTest(new String[] {
+	runLeakTest(new String[] {
 		"Test064.java",
 		"import java.io.*;\n" +
 		"public class Test064 {\n" +
@@ -3235,8 +3153,6 @@ public void test064() {
 	"	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
 	"Potential resource leak: \'out\' may not be closed\n" + 
 	"----------\n",
-	null,
-	true,
 	options);
 }
 // Bug 368546 - [compiler][resource] Avoid remaining false positives found when compiling the Eclipse SDK
@@ -3288,7 +3204,7 @@ public void test066() {
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportMissingSerialVersion, CompilerOptions.IGNORE);
-	this.runNegativeTest(new String[] {
+	runLeakTest(new String[] {
 		"Test066.java",
 		"import java.io.*;\n" +
 		"class MyException extends Exception{}\n" + 
@@ -3312,8 +3228,6 @@ public void test066() {
 	"	^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
 	"Potential resource leak: \'lineReader\' may not be closed at this location\n" + 
 	"----------\n",
-	null,
-	true,
 	options);
 }
 // Bug 368546 - [compiler][resource] Avoid remaining false positives found when compiling the Eclipse SDK
@@ -3323,7 +3237,7 @@ public void test066b() {
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportMissingSerialVersion, CompilerOptions.IGNORE);
-	this.runNegativeTest(new String[] {
+	runLeakTest(new String[] {
 		"Test066.java",
 		"import java.io.*;\n" +
 		"class MyException extends Exception{}\n" + 
@@ -3347,8 +3261,6 @@ public void test066b() {
 	"	^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
 	"Potential resource leak: \'lineReader\' may not be closed at this location\n" + 
 	"----------\n",
-	null,
-	true,
 	options);
 }
 
@@ -3493,7 +3405,7 @@ public void test070() {
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportMissingSerialVersion, CompilerOptions.IGNORE);
-	this.runNegativeTest(new String[] {
+	runLeakTest(new String[] {
 		"Test070.java",
 		"import java.io.*;\n" +
 		"public class Test070 {\n" +
@@ -3510,8 +3422,6 @@ public void test070() {
 	"	                 ^^^^^^^^\n" + 
 	"Potential resource leak: \'fileRead\' may not be closed\n" + 
 	"----------\n",
-	null,
-	true,
 	options);
 }
 
@@ -3522,7 +3432,7 @@ public void test071() {
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportMissingSerialVersion, CompilerOptions.IGNORE);
-	this.runNegativeTest(new String[] {
+	runLeakTest(new String[] {
 		"Test071.java",
 		"import java.io.*;\n" +
 		"public class Test071 {\n" +
@@ -3555,8 +3465,6 @@ public void test071() {
 	"	^^^^^^^\n" + 
 	"Potential resource leak: \'reader\' may not be closed at this location\n" + 
 	"----------\n",
-	null,
-	true,
 	options);
 }
 
@@ -3569,7 +3477,7 @@ public void _test071b() {
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportMissingSerialVersion, CompilerOptions.IGNORE);
-	this.runNegativeTest(new String[] {
+	runLeakTest(new String[] {
 		"Test071b.java",
 		"import java.io.*;\n" +
 		"public class Test071b {\n" +
@@ -3601,8 +3509,6 @@ public void _test071b() {
 	"	^^^^^^^\n" + 
 	"Potential resource leak: \'reader\' may not be closed at this location\n" + 
 	"----------\n",
-	null,
-	true,
 	options);
 }
 
@@ -3680,7 +3586,7 @@ public void test074() {
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportMissingSerialVersion, CompilerOptions.IGNORE);
-	this.runNegativeTest(new String[] {
+	runLeakTest(new String[] {
 		"Test074.java",
 		"import java.io.*;\n" +
 		"public class Test074 {\n" +
@@ -3706,14 +3612,12 @@ public void test074() {
 	"	^^^^^^^^^^\n" + 
 	"Potential resource leak: \'out\' may not be closed at this location\n" + 
 	"----------\n",
-	null,
-	true,
 	options);
 }
 // Bug 370639 - [compiler][resource] restore the default for resource leak warnings
 // check that the default is warning
 public void test075() {
-	this.runNegativeTest(
+	runLeakWarningTest(
 		new String[] {
 			"X.java",
 			"import java.io.File;\n" +
@@ -3731,7 +3635,8 @@ public void test075() {
 		"	FileReader fileReader = new FileReader(file);\n" +
 		"	           ^^^^^^^^^^\n" +
 		"Resource leak: 'fileReader' is never closed\n" +
-		"----------\n");
+		"----------\n",
+		getCompilerOptions());
 }
 // Bug 385415 - Incorrect resource leak detection
 public void testBug385415() {
@@ -4043,7 +3948,7 @@ public void testBug381445_1() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
-	runNegativeTest(
+	runLeakTest(
 		new String[] {
 			GUAVA_CLOSEABLES_JAVA,
 			GUAVA_CLOSEABLES_CONTENT,
@@ -4088,10 +3993,7 @@ public void testBug381445_1() {
 		"	            ^^^^^^^\n" + 
 		"Potential resource leak: \'stream4\' may not be closed\n" + 
 		"----------\n",
-		null,
-		true,
-		options,
-		null);	
+		options);	
 }
 
 // Bug 405569 - Resource leak check false positive when using DbUtils.closeQuietly
@@ -4101,7 +4003,7 @@ public void testBug381445_1b() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
-	runNegativeTest(
+	runLeakTest(
 		new String[] {
 			APACHE_DBUTILS_JAVA,
 			APACHE_DBUTILS_CONTENT,
@@ -4144,10 +4046,7 @@ public void testBug381445_1b() {
 		"	          ^^^^^\n" + 
 		"Potential resource leak: \'rset2\' may not be closed\n" + 
 		"----------\n",
-		null,
-		true,
-		options,
-		null);	
+		options);	
 }
 
 // Bug 381445 - [compiler][resource] Can the resource leak check be made aware of Closeables.closeQuietly?
@@ -4156,7 +4055,7 @@ public void testBug381445_2() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
-	runNegativeTest(
+	runLeakTest(
 		new String[] {
 			GUAVA_CLOSEABLES_JAVA,
 			GUAVA_CLOSEABLES_CONTENT,
@@ -4192,10 +4091,7 @@ public void testBug381445_2() {
 		"	            ^^^^^^^\n" + 
 		"Potential resource leak: \'stream2\' may not be closed\n" + 
 		"----------\n",
-		null,
-		true,
-		options,
-		null);	
+		options);	
 }
 
 // Bug 381445 - [compiler][resource] Can the resource leak check be made aware of Closeables.closeQuietly?
@@ -4322,7 +4218,7 @@ public void testBug395977_1() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
-	runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"WriterTest.java",
 			"import java.io.*;\n" + 
@@ -4378,8 +4274,6 @@ public void testBug395977_1() {
 		"	                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
 		"Potential resource leak: \'<unassigned Closeable value>\' may not be closed\n" + 
 		"----------\n",
-		null,
-		true,
 		options);
 }
 
@@ -4389,7 +4283,7 @@ public void testBug395977_2() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
-	runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"WriterTest.java",
 			"import java.io.*;\n" + 
@@ -4437,8 +4331,6 @@ public void testBug395977_2() {
 		"	                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
 		"Potential resource leak: \'<unassigned Closeable value>\' may not be closed\n" + 
 		"----------\n",
-		null,
-		true,
 		options);
 }
 
@@ -4448,7 +4340,7 @@ public void testBug376053() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
-	runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"Try.java",
 			"package xy;\n" + 
@@ -4479,8 +4371,6 @@ public void testBug376053() {
 		"	^^^^^^^\n" + 
 		"Potential resource leak: \'<unassigned Closeable value from line 8>\' may not be closed at this location\n" + 
 		"----------\n",
-		null,
-		true,
 		options);
 }
 
@@ -4511,7 +4401,7 @@ public void testBug411098_test2() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
-	runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"A.java",
 			"import java.io.*;\n"+
@@ -4530,8 +4420,6 @@ public void testBug411098_test2() {
 		"	                                ^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
 		"Potential resource leak: '<unassigned Closeable value>' may not be closed\n" + 
 		"----------\n",
-		null,
-		true,
 		options
 		);
 }
@@ -4542,7 +4430,7 @@ public void testBug411098_test3() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
-	runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"A.java",
 			"import java.io.*;\n" + 
@@ -4562,8 +4450,6 @@ public void testBug411098_test3() {
 		"	                ^\n" + 
 		"Resource leak: 'b' is never closed\n" + 
 		"----------\n",
-		null,
-		true,
 		options
 		);
 }
@@ -4663,7 +4549,7 @@ public void testBug411098_comment19() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
-	runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"A.java",
 			"import java.io.PrintWriter;\n" + 
@@ -4681,8 +4567,6 @@ public void testBug411098_comment19() {
 		"	            ^^^\n" + 
 		"Potential resource leak: \'bug\' may not be closed\n" + 
 		"----------\n",
-		null,
-		true,
 		options
 		);
 }
@@ -4761,7 +4645,7 @@ public void testStream2() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
-	runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"A.java",
 			"import java.util.stream.Stream;\n" + 
@@ -4779,8 +4663,6 @@ public void testStream2() {
 		"	             ^^^^^^\n" + 
 		"Resource leak: \'stream\' is never closed\n" + 
 		"----------\n",
-		null,
-		true,
 		options
 		);
 }
@@ -4791,7 +4673,7 @@ public void testStream3() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
-	runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"A.java",
 			"import java.util.stream.Stream;\n" + 
@@ -4810,8 +4692,6 @@ public void testStream3() {
 		"	               ^^^^^\n" + 
 		"Potential resource leak: \'lines\' may not be closed\n" + 
 		"----------\n",
-		null,
-		true,
 		options
 		);
 }
@@ -4903,7 +4783,7 @@ public void testBug371614_comment0() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
-	runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"C.java",
 			"import java.io.FileInputStream;\n" + 
@@ -4948,8 +4828,6 @@ public void testBug371614_comment0() {
 		"	^^^^^^^\n" + 
 		"Potential resource leak: \'fileInputStream\' may not be closed at this location\n" + 
 		"----------\n",
-		null,
-		true,
 		options);
 }
 public void testBug371614_comment2() {
@@ -5068,7 +4946,7 @@ public void _testBug462371_shouldWarn() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
-	runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"X.java",
 			"import java.io.*;\n" +
@@ -5110,8 +4988,6 @@ public void _testBug462371_shouldWarn() {
 		"	^^^^^^^\n" + 
 		"Potential resource leak: \'fileInputStream\' may not be closed at this location\n" + 
 		"----------\n",
-		null,
-		true,
 		options);
 }
 public void testBug421035() {
@@ -5285,7 +5161,7 @@ public void testBug440282() {
 	Map options = getCompilerOptions();
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
-	runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"ResourceLeakFalseNegative.java",
 			"import java.io.FileInputStream;\n" + 
@@ -5359,8 +5235,6 @@ public void testBug440282() {
 		"	       ^^^^^^^^^^^^^^^\n" + 
 		"Resource leak: \'<unassigned Closeable value>\' is never closed\n" + 
 		"----------\n",
-		null,
-		true,
 		options);
 }
 public void testBug390064() {
@@ -5369,7 +5243,7 @@ public void testBug390064() {
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportSyntheticAccessEmulation, CompilerOptions.IGNORE);
-	runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"Redundant.java",
 			"public class Redundant\n" + 
@@ -5417,8 +5291,6 @@ public void testBug390064() {
 		"	^^^^^^^\n" + 
 		"Resource leak: \'<unassigned Closeable value>\' is never closed\n" + 
 		"----------\n",
-		null,
-		true,
 		options);
 }
 public void testBug396575() {
@@ -5426,7 +5298,7 @@ public void testBug396575() {
 	options.put(CompilerOptions.OPTION_ReportPotentiallyUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportUnclosedCloseable, CompilerOptions.ERROR);
 	options.put(CompilerOptions.OPTION_ReportSyntheticAccessEmulation, CompilerOptions.IGNORE);
-	runNegativeTest(
+	runLeakTest(
 		new String[] {
 			"Bug396575.java",
 			"import java.io.*;\n" + 
@@ -5478,8 +5350,6 @@ public void testBug396575() {
 		"	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
 		"Resource leak: \'bw\' is never closed\n" + 
 		"----------\n",
-		null,
-		true,
 		options);
 }
 }

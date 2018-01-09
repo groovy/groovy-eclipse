@@ -40,14 +40,17 @@ import org.eclipse.core.runtime.CoreException;
 
 public class DSLDProposalProvider implements IProposalProvider {
 
+    @Override
     public List<String> getNewFieldProposals(ContentAssistContext context) {
         return null;
     }
 
+    @Override
     public List<MethodNode> getNewMethodProposals(ContentAssistContext context) {
         return null;
     }
 
+    @Override
     public List<IGroovyProposal> getStatementAndExpressionProposals(ContentAssistContext context, ClassNode completionType, boolean isStatic, Set<ClassNode> categories) {
         String event = null;
         if (GroovyLogManager.manager.hasLoggers()) {
@@ -56,7 +59,7 @@ public class DSLDProposalProvider implements IProposalProvider {
             GroovyLogManager.manager.logStart(event);
         }
         List<IContributionElement> contributions;
-        List<IGroovyProposal> proposals = new ArrayList<IGroovyProposal>();
+        List<IGroovyProposal> proposals = new ArrayList<>();
         try {
             DSLDStore store = GroovyDSLCoreActivator.getDefault().getContextStoreManager().getDSLDStore(context.unit.getJavaProject());
             ModuleNodeInfo info = context.unit.getModuleInfo(true);

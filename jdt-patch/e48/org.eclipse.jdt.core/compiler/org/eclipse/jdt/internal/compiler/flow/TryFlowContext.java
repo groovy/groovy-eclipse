@@ -28,6 +28,7 @@ public abstract class TryFlowContext extends FlowContext {
 		super(parent, associatedNode, true);
 	}
 	
+	@Override
 	public void markFinallyNullStatus(LocalVariableBinding local, int nullStatus) {
 		if (this.outerTryContext != null) {
 			this.outerTryContext.markFinallyNullStatus(local, nullStatus);
@@ -35,6 +36,7 @@ public abstract class TryFlowContext extends FlowContext {
 		super.markFinallyNullStatus(local, nullStatus);
 	}
 
+	@Override
 	public void mergeFinallyNullInfo(FlowInfo flowInfo) {
 		if (this.outerTryContext != null) {
 			this.outerTryContext.mergeFinallyNullInfo(flowInfo);

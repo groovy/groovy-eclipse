@@ -473,6 +473,7 @@ public class ClassScope extends Scope {
 		sourceType.modifiers |= ExtraCompilerModifiers.AccGenericSignature;
 	}
 
+	@Override
 	void resolveTypeParameter(TypeParameter typeParameter) {
 		typeParameter.resolve(this);
 	}
@@ -1379,6 +1380,7 @@ public class ClassScope extends Scope {
 	* (unit, type or method) in case the problem handler decides it is necessary
 	* to abort.
 	*/
+	@Override
 	public ProblemReporter problemReporter() {
 		MethodScope outerMethodScope;
 		if ((outerMethodScope = outerMostMethodScope()) == null) {
@@ -1428,6 +1430,7 @@ public class ClassScope extends Scope {
 		return this.parent.checkRedundantDefaultNullness(nullBits, sourceStart);
 	}
 	
+	@Override
 	public String toString() {
 		if (this.referenceContext != null)
 			return "--- Class Scope ---\n\n"  //$NON-NLS-1$

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,8 +34,6 @@ import org.eclipse.jdt.internal.debug.ui.variables.JavaDebugElementAdapterFactor
  * stack frames of groovy internals in a lighter shade.
  * <p>
  * In all other cases, control is delegated to an internal {@link JavaDebugElementAdapterFactory}.
- * @author Andrew Eisenberg
- * @created Jan 27, 2010
  */
 public class GroovyJavaDebugElementAdapterFactory implements IAdapterFactory {
 
@@ -43,19 +41,19 @@ public class GroovyJavaDebugElementAdapterFactory implements IAdapterFactory {
 
     static final GroovyJavaStackFrameLabelProvider fgLPFrame = new GroovyJavaStackFrameLabelProvider();
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public Object getAdapter(Object adaptableObject, Class adapterType) {
+    @Override
+    public Class<?>[] getAdapterList() {
+        return new Class[] {IElementLabelProvider.class, IElementContentProvider.class, IWatchExpressionFactoryAdapter.class};
+    }
+
+    @Override @SuppressWarnings("unchecked")
+    public <T> T getAdapter(Object adaptableObject, Class<T> adapterType) {
         if (IElementLabelProvider.class.equals(adapterType)) {
             if (adaptableObject instanceof IJavaStackFrame) {
-                return fgLPFrame;
+                return (T) fgLPFrame;
             }
         }
         return containedFactory.getAdapter(adaptableObject, adapterType);
-    }
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public Class[] getAdapterList() {
-        return new Class[] {IElementLabelProvider.class, IElementContentProvider.class, IWatchExpressionFactoryAdapter.class};
     }
 
     public static void connect() {
@@ -68,8 +66,7 @@ public class GroovyJavaDebugElementAdapterFactory implements IAdapterFactory {
     public static void removeJDIAdapter() {
         // a little dicey, so wrap in try/catch
         try {
-            @SuppressWarnings("cast")
-            List<IAdapterFactory> factories = (List<IAdapterFactory>) ((AdapterManager) Platform.getAdapterManager()).getFactories().get("org.eclipse.jdt.debug.core.IJavaStackFrame");
+            List<IAdapterFactory> factories = ((AdapterManager) Platform.getAdapterManager()).getFactories().get("org.eclipse.jdt.debug.core.IJavaStackFrame");
 
             for (Iterator<IAdapterFactory> iterator = factories.iterator(); iterator.hasNext();) {
                 IAdapterFactory factory = iterator.next();

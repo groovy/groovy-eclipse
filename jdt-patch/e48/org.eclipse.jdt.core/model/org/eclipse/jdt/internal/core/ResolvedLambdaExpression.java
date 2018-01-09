@@ -23,13 +23,12 @@ public class ResolvedLambdaExpression extends LambdaExpression {
 		this.unresolved = unresolved;
 	}
 
+	@Override
 	public String getFullyQualifiedParameterizedName() throws JavaModelException {
 		return getFullyQualifiedParameterizedName(getFullyQualifiedName('.'), this.uniqueKey);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.internal.core.SourceType#getKey()
-	 */
+	@Override
 	public String getKey() {
 		return this.uniqueKey;
 	}
@@ -38,10 +37,8 @@ public class ResolvedLambdaExpression extends LambdaExpression {
 	public boolean equals(Object o) {
 		return this.unresolved.equals(o);
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.internal.core.SourceType#isResolved()
-	 */
+
+	@Override
 	public boolean isResolved() {
 		return true;
 	}
@@ -49,6 +46,7 @@ public class ResolvedLambdaExpression extends LambdaExpression {
 	/**
 	 * @private Debugging purposes
 	 */
+	@Override
 	protected void toStringInfo(int tab, StringBuffer buffer, Object info, boolean showResolvedInfo) {
 		super.toStringInfo(tab, buffer, info, showResolvedInfo);
 		if (showResolvedInfo) {
@@ -58,6 +56,7 @@ public class ResolvedLambdaExpression extends LambdaExpression {
 		}
 	}
 
+	@Override
 	public JavaElement unresolved() {
 		return this.unresolved;
 	}

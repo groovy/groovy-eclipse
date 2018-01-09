@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,27 +23,24 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 
-/**
- * @author Andrew Eisenberg
- * @created 2013-04-30
- */
 public class BinaryGroovySupplementalIndexer implements ISupplementalIndexer {
 
+    @Override
     public List<char[]> extractNamedReferences(byte[] contents, ClassFileReader reader) {
         int[] constantPoolOffsets = reader.getConstantPoolOffsets();
         int constantPoolCount = constantPoolOffsets.length;
-        List<char[]> refs = new ArrayList<char[]>();
+        List<char[]> refs = new ArrayList<>();
         for (int i = 1; i < constantPoolCount; i++) {
             int tag = reader.u1At(constantPoolOffsets[i]);
             switch (tag) {
-                case ClassFileConstants.Utf8Tag:
-                    char[] strConst = extractStringConstant(constantPoolOffsets, reader, i);
-                    if (isValidId(strConst)) {
-                        char[][] splits = CharOperation.splitOn('.', strConst);
-                        for (char[] split : splits) {
-                            refs.add(split);
-                        }
+            case ClassFileConstants.Utf8Tag:
+                char[] strConst = extractStringConstant(constantPoolOffsets, reader, i);
+                if (isValidId(strConst)) {
+                    char[][] splits = CharOperation.splitOn('.', strConst);
+                    for (char[] split : splits) {
+                        refs.add(split);
                     }
+                }
             }
         }
         return refs;

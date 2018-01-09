@@ -57,13 +57,16 @@ MethodHolder(AnnotationBinding[] annotations, AnnotationBinding[][] parameterAnn
 	setAnnotations(annotations);
 	this.parameterAnnotations = parameterAnnotations;
 }
+@Override
 public AnnotationBinding[][] getParameterAnnotations() {
 	return this.parameterAnnotations;
 }
+@Override
 AnnotationBinding[] getParameterAnnotations(int paramIndex) {
 	AnnotationBinding[] result = this.parameterAnnotations == null ? null : this.parameterAnnotations[paramIndex];
 	return result == null ? Binding.NO_ANNOTATIONS : result;
 }
+@Override
 AnnotationHolder setAnnotations(AnnotationBinding[] annotations) {
 	this.annotations = annotations == null || annotations.length == 0 ? Binding.NO_ANNOTATIONS : annotations;
 	return this;
@@ -79,6 +82,7 @@ AnnotationMethodHolder(AnnotationBinding[] annotations, AnnotationBinding[][] pa
 	this.defaultValue = defaultValue;
 	this.env = optionalEnv;
 }
+@Override
 Object getDefaultValue() {
 	if (this.defaultValue instanceof UnresolvedReferenceBinding) {
 		if (this.env == null)

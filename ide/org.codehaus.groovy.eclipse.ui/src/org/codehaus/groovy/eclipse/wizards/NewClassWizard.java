@@ -35,6 +35,7 @@ public class NewClassWizard extends NewElementWizard {
         setDefaultPageImageDescriptor(GroovyPluginImages.DESC_NEW_GROOVY_ELEMENT);
     }
 
+    @Override
     public void addPages() {
         super.addPages();
         fPage = new NewClassWizardPage();
@@ -42,14 +43,17 @@ public class NewClassWizard extends NewElementWizard {
         fPage.init(getSelection());
     }
 
+    @Override
     protected boolean canRunForked() {
         return !fPage.isEnclosingTypeSelected();
     }
 
+    @Override
     protected void finishPage(IProgressMonitor monitor) throws InterruptedException, CoreException {
         fPage.createType(monitor); // use the full progress monitor
     }
 
+    @Override
     public boolean performFinish() {
         warnAboutTypeCommentDeprecation();
         boolean res = super.performFinish();
@@ -63,6 +67,7 @@ public class NewClassWizard extends NewElementWizard {
         return res;
     }
 
+    @Override
     public IJavaElement getCreatedElement() {
         return fPage.getCreatedType();
     }

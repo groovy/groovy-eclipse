@@ -41,6 +41,7 @@ public class GroovyPropertyProposal extends AbstractGroovyProposal {
         this.contributor = contributor;
     }
 
+    @Override
     public IJavaCompletionProposal createJavaProposal(ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
         if (context.location == ContentAssistLocation.METHOD_CONTEXT) {
             return null;

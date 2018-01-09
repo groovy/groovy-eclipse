@@ -23,6 +23,7 @@ import java.util.ResourceBundle;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.refactoring.formatter.GroovyIndentationService;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
@@ -65,8 +66,7 @@ public class GroovyTabAction extends TextEditorAction {
                 int tabLine = d.getLineOfOffset(offset);
                 String lineStartText = getLineTextUpto(d, offset);
 
-                @SuppressWarnings("cast")
-                IFile file = (IFile) getTextEditor().getEditorInput().getAdapter(IFile.class);
+                IFile file = Adapters.adapt(getTextEditor().getEditorInput(), IFile.class);
                 if (file != null && file.getProject() != null) {
 
                     GroovyIndentationService indentation = GroovyIndentationService.get(JavaCore.create(file.getProject()));

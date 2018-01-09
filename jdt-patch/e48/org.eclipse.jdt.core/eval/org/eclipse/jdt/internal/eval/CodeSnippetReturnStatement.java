@@ -39,6 +39,7 @@ public CodeSnippetReturnStatement(Expression expr, int s, int e) {
 	super(expr, s, e);
 }
 
+@Override
 public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, FlowInfo flowInfo) {
 	FlowInfo info = super.analyseCode(currentScope, flowContext, flowInfo);
 	// we need to remove this optimization in order to prevent the inlining of the return bytecode
@@ -51,11 +52,13 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
  * Dump the suitable return bytecode for a return statement
  *
  */
+@Override
 public void generateReturnBytecode(CodeStream codeStream) {
 
 	// output the return bytecode
 	codeStream.return_();
 }
+@Override
 public void generateStoreSaveValueIfNecessary(CodeStream codeStream){
 
 	// push receiver
@@ -93,25 +96,32 @@ public void generateStoreSaveValueIfNecessary(CodeStream codeStream){
 /**
  * @see org.eclipse.jdt.internal.compiler.lookup.InvocationSite#genericTypeArguments()
  */
+@Override
 public TypeBinding[] genericTypeArguments() {
 	return null;
 }
+@Override
 public InferenceContext18 freshInferenceContext(Scope scope) {
 	return null;
 }
+@Override
 public boolean isSuperAccess() {
 	return false;
 }
+@Override
 public boolean isTypeAccess() {
 	return false;
 }
+@Override
 public boolean needValue(){
 	return true;
 }
+@Override
 public void prepareSaveValueLocation(TryStatement targetTryStatement){
 
 	// do nothing: no storage is necessary for snippets
 }
+@Override
 public void resolve(BlockScope scope) {
 	if (this.expression != null) {
 		if (this.expression.resolveType(scope) != null) {
@@ -139,12 +149,15 @@ public void resolve(BlockScope scope) {
 		}
 	}
 }
+@Override
 public void setActualReceiverType(ReferenceBinding receiverType) {
 	// ignored
 }
+@Override
 public void setDepth(int depth) {
 	// ignored
 }
+@Override
 public void setFieldIndex(int depth) {
 	// ignored
 }

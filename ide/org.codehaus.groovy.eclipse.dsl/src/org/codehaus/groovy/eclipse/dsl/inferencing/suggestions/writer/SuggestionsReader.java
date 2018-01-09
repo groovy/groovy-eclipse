@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,11 +39,6 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-/**
- * 
- * @author Nieraj Singh
- * @created 2011-09-08
- */
 public class SuggestionsReader {
 
     private String absoluteFile;
@@ -177,7 +172,7 @@ public class SuggestionsReader {
             return null;
         }
 
-        List<MethodParameter> parameters = new ArrayList<MethodParameter>();
+        List<MethodParameter> parameters = new ArrayList<>();
         NodeList parametersNodeList = parametersElement.getChildNodes();
 
         if (parametersNodeList != null) {

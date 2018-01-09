@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,9 +22,6 @@ import org.eclipse.jface.text.IDocument;
  * This is a common superclass for different Auto Edit strategies we may
  * implement. This class provides a convenient place to put useful helper
  * methods.
- *
- * @author kdvolder
- * @created 2010-05-19
  */
 public abstract class AbstractAutoEditStrategy implements IAutoEditStrategy {
 

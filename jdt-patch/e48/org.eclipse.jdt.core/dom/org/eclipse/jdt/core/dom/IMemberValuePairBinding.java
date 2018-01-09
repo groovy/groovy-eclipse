@@ -26,6 +26,7 @@ public interface IMemberValuePairBinding extends IBinding {
  *
  * @return the name of the member
  */
+@Override
 public String getName();
 
 /**

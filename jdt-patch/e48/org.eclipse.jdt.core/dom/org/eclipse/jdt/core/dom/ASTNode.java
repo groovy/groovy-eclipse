@@ -1358,25 +1358,19 @@ public abstract class ASTNode {
 			 */
 			private int position = 0;
 
-			/* (non-Javadoc)
-			 * Method declared on <code>Iterator</code>.
-			 */
+			@Override
 			public boolean hasNext() {
 				return this.position < NodeList.this.store.size();
 			}
 
-			/* (non-Javadoc)
-			 * Method declared on <code>Iterator</code>.
-			 */
+			@Override
 			public Object next() {
 				Object result = NodeList.this.store.get(this.position);
 				this.position++;
 				return result;
 		    }
 
-			/* (non-Javadoc)
-			 * Method declared on <code>Iterator</code>.
-			 */
+			@Override
 			public void remove() {
 				throw new UnsupportedOperationException();
 			}
@@ -1425,23 +1419,17 @@ public abstract class ASTNode {
 			this.propertyDescriptor = property;
 		}
 
-		/* (non-javadoc)
-		 * @see java.util.AbstractCollection#size()
-		 */
+		@Override
 		public int size() {
 			return this.store.size();
 		}
 
-		/* (non-javadoc)
-		 * @see AbstractList#get(int)
-		 */
+		@Override
 		public Object get(int index) {
 			return this.store.get(index);
 		}
 
-		/* (non-javadoc)
-		 * @see List#set(int, java.lang.Object)
-		 */
+		@Override
 		public Object set(int index, Object element) {
 		    if (element == null) {
 		        throw new IllegalArgumentException();
@@ -1471,9 +1459,7 @@ public abstract class ASTNode {
 			return result;
 		}
 
-		/* (non-javadoc)
-		 * @see List#add(int, java.lang.Object)
-		 */
+		@Override
 		public void add(int index, Object element) {
 		    if (element == null) {
 		        throw new IllegalArgumentException();
@@ -1495,9 +1481,7 @@ public abstract class ASTNode {
 			ASTNode.this.ast.postAddChildEvent(ASTNode.this, newChild, this.propertyDescriptor);
 		}
 
-		/* (non-javadoc)
-		 * @see List#remove(int)
-		 */
+		@Override
 		public Object remove(int index) {
 			if ((ASTNode.this.typeAndFlags & PROTECT) != 0) {
 				// this node is protected => cannot gain or lose children
@@ -2620,6 +2604,7 @@ public abstract class ASTNode {
 	 * @return {@inheritDoc}
 	 * @see #subtreeMatch(ASTMatcher matcher, Object other)
 	 */
+	@Override
 	public final boolean equals(Object obj) {
 		return this == obj; // equivalent to Object.equals
 	}
@@ -2629,6 +2614,7 @@ public abstract class ASTNode {
 	 * This makes it consistent with the fact that a equals methods has been provided.
 	 * @see java.lang.Object#hashCode()
 	 */
+	@Override
 	public final int hashCode() {
 		return super.hashCode();
 	}
@@ -2945,6 +2931,7 @@ public abstract class ASTNode {
 	 *
 	 * @return a debug string
 	 */
+	@Override
 	public final String toString() {
 		StringBuffer buffer = new StringBuffer();
 		int p = buffer.length();

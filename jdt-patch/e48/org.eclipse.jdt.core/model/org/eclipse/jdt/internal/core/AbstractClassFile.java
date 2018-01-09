@@ -50,6 +50,7 @@ public abstract class AbstractClassFile extends Openable implements IClassFile, 
 	/*
 	 * @see IClassFile#becomeWorkingCopy(IProblemRequestor, WorkingCopyOwner, IProgressMonitor)
 	 */
+	@Override
 	public ICompilationUnit becomeWorkingCopy(IProblemRequestor problemRequestor, WorkingCopyOwner owner, IProgressMonitor monitor) throws JavaModelException {
 		JavaModelManager manager = JavaModelManager.getJavaModelManager();
 		CompilationUnit workingCopy = new ClassFileWorkingCopy(this, owner == null ? DefaultWorkingCopyOwner.PRIMARY : owner);
@@ -70,6 +71,7 @@ public abstract class AbstractClassFile extends Openable implements IClassFile, 
 	 * @see ICodeAssist#codeComplete(int, ICompletionRequestor)
 	 * @deprecated
 	 */
+	@Override
 	@Deprecated
 	public void codeComplete(int offset, ICompletionRequestor requestor) throws JavaModelException {
 		codeComplete(offset, requestor, DefaultWorkingCopyOwner.PRIMARY);
@@ -78,6 +80,7 @@ public abstract class AbstractClassFile extends Openable implements IClassFile, 
 	 * @see ICodeAssist#codeComplete(int, ICompletionRequestor, WorkingCopyOwner)
 	 * @deprecated
 	 */
+	@Override
 	@Deprecated
 	public void codeComplete(int offset, ICompletionRequestor requestor, WorkingCopyOwner owner) throws JavaModelException {
 		if (requestor == null) {
@@ -85,33 +88,32 @@ public abstract class AbstractClassFile extends Openable implements IClassFile, 
 		}
 		codeComplete(offset, new org.eclipse.jdt.internal.codeassist.CompletionRequestorWrapper(requestor), owner);
 	}
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.ICodeAssist#codeComplete(int, org.eclipse.jdt.core.CompletionRequestor)
-	 */
+
+	@Override
 	public void codeComplete(int offset, CompletionRequestor requestor) throws JavaModelException {
 		codeComplete(offset, requestor, DefaultWorkingCopyOwner.PRIMARY);
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.ICodeAssist#codeComplete(int, org.eclipse.jdt.core.CompletionRequestor, org.eclipse.core.runtime.IProgressMonitor)
-	 */
+
+	@Override
 	public void codeComplete(int offset, CompletionRequestor requestor, IProgressMonitor monitor) throws JavaModelException {
 		codeComplete(offset, requestor, DefaultWorkingCopyOwner.PRIMARY, monitor);
 	}
-	/* (non-Javadoc)
-	 * @see org.eclipse.jdt.core.ICodeAssist#codeComplete(int, org.eclipse.jdt.core.CompletionRequestor, org.eclipse.jdt.core.WorkingCopyOwner)
-	 */
+
+	@Override
 	public void codeComplete(int offset, CompletionRequestor requestor, WorkingCopyOwner owner) throws JavaModelException {
 		codeComplete(offset, requestor, owner, null);
 	}
+	@Override
 	public abstract void codeComplete(int offset, CompletionRequestor requestor, WorkingCopyOwner owner, IProgressMonitor monitor) throws JavaModelException;
 	
 	/**
 	 * @see ICodeAssist#codeSelect(int, int)
 	 */
+	@Override
 	public IJavaElement[] codeSelect(int offset, int length) throws JavaModelException {
 		return codeSelect(offset, length, DefaultWorkingCopyOwner.PRIMARY);
 	}
+	@Override
 	public abstract IJavaElement[] codeSelect(int offset, int length, WorkingCopyOwner owner) throws JavaModelException;
 	
 	/**
@@ -155,6 +157,7 @@ public abstract class AbstractClassFile extends Openable implements IClassFile, 
 		return elt;
 	}
 	
+	@Override
 	public byte[] getBytes() throws JavaModelException {
 		JavaElement pkg = (JavaElement) getParent();
 		if (pkg instanceof JarPackageFragment) {
@@ -294,6 +297,7 @@ public abstract class AbstractClassFile extends Openable implements IClassFile, 
 	/**
 	 * @see IJavaElement
 	 */
+	@Override
 	public int getElementType() {
 		return CLASS_FILE;
 	}
@@ -301,6 +305,7 @@ public abstract class AbstractClassFile extends Openable implements IClassFile, 
 	/*
 	 * @see IJavaElement
 	 */
+	@Override
 	public IPath getPath() {
 		PackageFragmentRoot root = getPackageFragmentRoot();
 		if (root.isArchive()) {
@@ -320,6 +325,7 @@ public abstract class AbstractClassFile extends Openable implements IClassFile, 
 	/**
 	 * @see ISourceReference
 	 */
+	@Override
 	public String getSource() throws JavaModelException {
 		IBuffer buffer = getBuffer();
 		if (buffer == null) {
@@ -330,6 +336,7 @@ public abstract class AbstractClassFile extends Openable implements IClassFile, 
 	/**
 	 * @see ISourceReference
 	 */
+	@Override
 	public ISourceRange getSourceRange() throws JavaModelException {
 		IBuffer buffer = getBuffer();
 		if (buffer != null) {
@@ -344,6 +351,7 @@ public abstract class AbstractClassFile extends Openable implements IClassFile, 
 	 * @see IClassFile
 	 * @deprecated
 	 */
+	@Override
 	@Deprecated
 	public IJavaElement getWorkingCopy(IProgressMonitor monitor, org.eclipse.jdt.core.IBufferFactory factory) throws JavaModelException {
 		return getWorkingCopy(BufferFactoryWrapper.create(factory), monitor);
@@ -383,6 +391,7 @@ public abstract class AbstractClassFile extends Openable implements IClassFile, 
 	 * @see ICodeAssist#codeComplete(int, ICodeCompletionRequestor)
 	 * @deprecated - should use codeComplete(int, ICompletionRequestor) instead
 	 */
+	@Override
 	@Deprecated
 	public void codeComplete(int offset, final org.eclipse.jdt.core.ICodeCompletionRequestor requestor) throws JavaModelException {
 
@@ -393,46 +402,60 @@ public abstract class AbstractClassFile extends Openable implements IClassFile, 
 		codeComplete(
 			offset,
 			new ICompletionRequestor(){
+				@Override
 				public void acceptAnonymousType(char[] superTypePackageName,char[] superTypeName, char[][] parameterPackageNames,char[][] parameterTypeNames,char[][] parameterNames,char[] completionName,int modifiers,int completionStart,int completionEnd, int relevance) {
 					// ignore
 				}
+				@Override
 				public void acceptClass(char[] packageName, char[] className, char[] completionName, int modifiers, int completionStart, int completionEnd, int relevance) {
 					requestor.acceptClass(packageName, className, completionName, modifiers, completionStart, completionEnd);
 				}
+				@Override
 				public void acceptError(IProblem error) {
 					// was disabled in 1.0
 				}
+				@Override
 				public void acceptField(char[] declaringTypePackageName, char[] declaringTypeName, char[] fieldName, char[] typePackageName, char[] typeName, char[] completionName, int modifiers, int completionStart, int completionEnd, int relevance) {
 					requestor.acceptField(declaringTypePackageName, declaringTypeName, fieldName, typePackageName, typeName, completionName, modifiers, completionStart, completionEnd);
 				}
+				@Override
 				public void acceptInterface(char[] packageName,char[] interfaceName,char[] completionName,int modifiers,int completionStart,int completionEnd, int relevance) {
 					requestor.acceptInterface(packageName, interfaceName, completionName, modifiers, completionStart, completionEnd);
 				}
+				@Override
 				public void acceptKeyword(char[] keywordName,int completionStart,int completionEnd, int relevance){
 					requestor.acceptKeyword(keywordName, completionStart, completionEnd);
 				}
+				@Override
 				public void acceptLabel(char[] labelName,int completionStart,int completionEnd, int relevance){
 					requestor.acceptLabel(labelName, completionStart, completionEnd);
 				}
+				@Override
 				public void acceptLocalVariable(char[] localVarName,char[] typePackageName,char[] typeName,int modifiers,int completionStart,int completionEnd, int relevance){
 					// ignore
 				}
+				@Override
 				public void acceptMethod(char[] declaringTypePackageName,char[] declaringTypeName,char[] selector,char[][] parameterPackageNames,char[][] parameterTypeNames,char[][] parameterNames,char[] returnTypePackageName,char[] returnTypeName,char[] completionName,int modifiers,int completionStart,int completionEnd, int relevance){
 					// skip parameter names
 					requestor.acceptMethod(declaringTypePackageName, declaringTypeName, selector, parameterPackageNames, parameterTypeNames, returnTypePackageName, returnTypeName, completionName, modifiers, completionStart, completionEnd);
 				}
+				@Override
 				public void acceptMethodDeclaration(char[] declaringTypePackageName,char[] declaringTypeName,char[] selector,char[][] parameterPackageNames,char[][] parameterTypeNames,char[][] parameterNames,char[] returnTypePackageName,char[] returnTypeName,char[] completionName,int modifiers,int completionStart,int completionEnd, int relevance){
 					// ignore
 				}
+				@Override
 				public void acceptModifier(char[] modifierName,int completionStart,int completionEnd, int relevance){
 					requestor.acceptModifier(modifierName, completionStart, completionEnd);
 				}
+				@Override
 				public void acceptPackage(char[] packageName,char[] completionName,int completionStart,int completionEnd, int relevance){
 					requestor.acceptPackage(packageName, completionName, completionStart, completionEnd);
 				}
+				@Override
 				public void acceptType(char[] packageName,char[] typeName,char[] completionName,int completionStart,int completionEnd, int relevance){
 					requestor.acceptType(packageName, typeName, completionName, completionStart, completionEnd);
 				}
+				@Override
 				public void acceptVariableName(char[] typePackageName,char[] typeName,char[] varName,char[] completionName,int completionStart,int completionEnd, int relevance){
 					// ignore
 				}
@@ -456,6 +479,7 @@ public abstract class AbstractClassFile extends Openable implements IClassFile, 
 		return JavaModelStatus.VERIFIED_OK;
 	}
 	
+	@Override
 	public ISourceRange getNameRange() {
 		return null;
 	}

@@ -22,9 +22,7 @@ public class JavaCorePreferenceModifyListener extends PreferenceModifyListener {
 	static int PREFIX_LENGTH = JavaModelManager.CP_CONTAINER_PREFERENCES_PREFIX.length();
 	JavaModel javaModel = JavaModelManager.getJavaModelManager().getJavaModel();
 
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.preferences.PreferenceModifyListener#preApply(org.eclipse.core.runtime.preferences.IEclipsePreferences)
-	 */
+	@Override
 	public IEclipsePreferences preApply(IEclipsePreferences node) {
 		// the node does not need to be the root of the hierarchy
 		Preferences root = node.node("/"); //$NON-NLS-1$

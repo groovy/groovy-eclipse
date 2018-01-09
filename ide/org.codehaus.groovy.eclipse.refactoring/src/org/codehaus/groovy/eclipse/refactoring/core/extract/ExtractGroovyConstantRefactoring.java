@@ -48,7 +48,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMember;
@@ -121,17 +121,17 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
     }
 
     @Override
-    public RefactoringStatus checkInitialConditions(IProgressMonitor pm) throws CoreException {
+    public RefactoringStatus checkInitialConditions(IProgressMonitor monitor) throws CoreException {
         try {
-            pm.beginTask("", 7);
+            monitor = SubMonitor.convert(monitor, "", 7);
 
             RefactoringStatus result = Checks.validateEdit(getCu(), getValidationContext());
             if (result.hasFatalError()) {
                 return result;
             }
-            pm.worked(4);
+            monitor.worked(4);
 
-            result.merge(checkSelection(new SubProgressMonitor(pm, 3)));
+            result.merge(checkSelection(((SubMonitor) monitor).split(3)));
 
             if (result.hasFatalError()) {
                 return result;
@@ -156,7 +156,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
 
             return result;
         } finally {
-            pm.done();
+            monitor.done();
         }
     }
 
@@ -330,7 +330,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
     }
 
     private ExtractConstantDescriptor createRefactoringDescriptor() {
-        final Map<String, String> arguments = new HashMap<String, String>();
+        final Map<String, String> arguments = new HashMap<>();
         String project = null;
         IJavaProject javaProject = getCu().getJavaProject();
         if (javaProject != null)
@@ -535,7 +535,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
 
     private String[] getExcludedVariableNames() {
         if (fExcludedVariableNames == null) {
-            HashSet<String> usedNames = new HashSet<String>();
+            HashSet<String> usedNames = new HashSet<>();
             for (ClassNode classNode : unit.getModuleNode().getClasses()) {
                 for (FieldNode fieldNode : classNode.getFields()) {
                     usedNames.add(fieldNode.getName());

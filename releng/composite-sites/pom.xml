@@ -12,7 +12,7 @@
 		<relativePath>../../pom.xml</relativePath>
 		<groupId>org.codehaus.groovy.eclipse</groupId>
 		<artifactId>org.codehaus.groovy.eclipse.parent</artifactId>
-		<version>2.9.2-SNAPSHOT</version>
+		<version>3.0.0-SNAPSHOT</version>
 	</parent>
 
 	<groupId>org.codehaus.groovy.eclipse</groupId>
@@ -33,7 +33,7 @@
 	</pluginRepositories>
 
 	<properties>
-		<dist.version>2.9.2</dist.version>
+		<dist.version>3.0.0</dist.version>
 		<dist.bucket>dist.springsource.org</dist.bucket>
 		<!-- before doing it 'for real' you can try the path with '-test' in it.
 			This will upload and do everything as if a real release, but in a 'GRECLIPSE-test' directory.
@@ -41,7 +41,7 @@
 			If all is working well? Then remove the '-test' -->
 		<dist.path>release/GRECLIPSE-test</dist.path>
 		<!-- if you change dist.targets you also have to change the list of <items> embedded in the build-loqic below -->
-		<dist.targets>e4.8,e4.7,e4.6,e4.5,e4.4,e4.3,e4.3-j8,e4.2,e3.7</dist.targets>
+		<dist.targets>e4.8,e4.7</dist.targets>
 	</properties>
 
 	<profiles>
@@ -134,13 +134,6 @@
 							<!-- It would be nice to define the list of items as a variable up top but this not possible. -->
 							<item>e4.8</item>
 							<item>e4.7</item>
-							<item>e4.6</item>
-							<item>e4.5</item>
-							<item>e4.4</item>
-							<item>e4.3</item>
-							<item>e4.3-j8</item>
-							<item>e4.2</item>
-							<item>e3.7</item>
 						</items>
 						<pluginExecutors>
 							<pluginExecutor>
@@ -205,7 +198,7 @@
 								<!-- add the ant tasks from ant-contrib -->
 								<taskdef resource="net/sf/antcontrib/antlib.xml"/>
 
-								<property name="dist.target" value="e4.3" />
+								<property name="dist.target" value="e4.7" />
 
 								<taskdef resource="net/sf/antcontrib/antcontrib.properties" />
 								<taskdef resource="org/springframework/build/aws/ant/antlib.xml" />

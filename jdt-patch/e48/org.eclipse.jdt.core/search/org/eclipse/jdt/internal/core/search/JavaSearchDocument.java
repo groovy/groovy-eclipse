@@ -40,6 +40,7 @@ public class JavaSearchDocument extends SearchDocument {
 		this.byteContents = contents;
 	}
 
+	@Override
 	public byte[] getByteContents() {
 		if (this.byteContents != null) return this.byteContents;
 		try {
@@ -51,6 +52,7 @@ public class JavaSearchDocument extends SearchDocument {
 			return null;
 		}
 	}
+	@Override
 	public char[] getCharContents() {
 		if (this.charContents != null) return this.charContents;
 		try {
@@ -62,6 +64,7 @@ public class JavaSearchDocument extends SearchDocument {
 			return null;
 		}
 	}
+	@Override
 	public String getEncoding() {
 		// Return the encoding of the associated file
 		IFile resource = getFile();
@@ -84,6 +87,7 @@ public class JavaSearchDocument extends SearchDocument {
 			this.file = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(getPath()));
 		return this.file;
 	}
+	@Override
 	public String toString() {
 		return "SearchDocument for " + getPath(); //$NON-NLS-1$
 	}

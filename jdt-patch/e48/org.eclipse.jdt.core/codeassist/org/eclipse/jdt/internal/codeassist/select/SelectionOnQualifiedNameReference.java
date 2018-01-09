@@ -50,6 +50,7 @@ public SelectionOnQualifiedNameReference(char[][] previousIdentifiers, char[] se
 		(int) (positions[0] >>> 32),
 		(int) positions[positions.length - 1]);
 }
+@Override
 public StringBuffer printExpression(int indent, StringBuffer output) {
 
 	output.append("<SelectOnName:"); //$NON-NLS-1$
@@ -59,6 +60,7 @@ public StringBuffer printExpression(int indent, StringBuffer output) {
 	}
 	return output.append('>');
 }
+@Override
 public TypeBinding resolveType(BlockScope scope) {
 	// it can be a package, type, member type, local variable or field
 	this.binding = scope.getBinding(this.tokens, this);

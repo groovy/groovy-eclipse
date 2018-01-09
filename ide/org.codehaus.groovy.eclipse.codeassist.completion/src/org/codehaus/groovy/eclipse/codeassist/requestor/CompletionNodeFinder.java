@@ -78,16 +78,16 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
      */
     private Expression lhsNode;
 
-    private final LinkedList<ASTNode> blockStack = new LinkedList<ASTNode>();
+    private final LinkedList<ASTNode> blockStack = new LinkedList<>();
 
-    private final LinkedList<AnnotatedNode> declarationStack = new LinkedList<AnnotatedNode>();
+    private final LinkedList<AnnotatedNode> declarationStack = new LinkedList<>();
 
     /**
      * Tracks the current argument list expressions so that we can know if a
      * completion of a MapExpression is actually an argument and therefore
      * named parameters should be available.
      */
-    private final LinkedList<TupleExpression> argumentListStack = new LinkedList<TupleExpression>();
+    private final LinkedList<TupleExpression> argumentListStack = new LinkedList<>();
 
     public CompletionNodeFinder(
         int completionOffset,

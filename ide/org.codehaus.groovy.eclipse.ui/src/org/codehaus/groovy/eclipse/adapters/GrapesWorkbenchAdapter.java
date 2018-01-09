@@ -25,14 +25,15 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.model.IWorkbenchAdapter;
 import org.eclipse.ui.model.WorkbenchAdapter;
 
-@SuppressWarnings({"rawtypes", "unchecked"})
 public class GrapesWorkbenchAdapter implements IAdapterFactory {
 
-    public Class[] getAdapterList() {
+    @Override
+    public Class<?>[] getAdapterList() {
         return new Class[] {IWorkbenchAdapter.class};
     }
 
-    public Object getAdapter(Object adaptable, Class adapterType) {
+    @Override @SuppressWarnings("unchecked")
+    public <T> T getAdapter(Object adaptable, Class<T> adapterType) {
         if (Arrays.asList(getAdapterList()).contains(adapterType)) {
             final ImageDescriptor imageDescriptor;
             if (adaptable instanceof GrabDeclaration) {
@@ -44,7 +45,8 @@ public class GrapesWorkbenchAdapter implements IAdapterFactory {
             }
 
             if (imageDescriptor != null) {
-                return new WorkbenchAdapter() {
+                return (T) new WorkbenchAdapter() {
+                    @Override
                     public ImageDescriptor getImageDescriptor(Object object) {
                         return imageDescriptor;
                     };

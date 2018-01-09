@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ import org.eclipse.jface.text.rules.RuleBasedPartitionScanner;
 import org.eclipse.jface.text.rules.SingleLineRule;
 import org.eclipse.jface.text.rules.Token;
 import org.eclipse.jface.util.IPropertyChangeListener;
-import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.graphics.Font;
@@ -40,18 +39,13 @@ import org.eclipse.ui.console.TextConsole;
 import org.eclipse.ui.part.IPageBookViewPage;
 
 
-/**
- *
- * @author andrew
- * @created Nov 24, 2010
- */
 public class GroovyConsole extends TextConsole {
 
     public final static String CONSOLE_TYPE = "GroovyEventTraceConsole"; //$NON-NLS-1$
 
     final static RuleBasedPartitionScanner scanner = new RuleBasedPartitionScanner();
     {
-        List<IPredicateRule> rules = new ArrayList<IPredicateRule>(TraceCategory.values().length);
+        List<IPredicateRule> rules = new ArrayList<>(TraceCategory.values().length);
         for (TraceCategory category : TraceCategory.values()) {
             rules.add(new SingleLineRule(category.getPaddedLabel(), "", new Token(category.label)));
         }
@@ -68,10 +62,12 @@ public class GroovyConsole extends TextConsole {
             getDocument().setDocumentPartitioner(this);
         }
 
+        @Override
         public boolean isReadOnly(int offset) {
             return true;
         }
 
+        @Override
         public StyleRange[] getStyleRanges(int offset, int length) {
             ITypedRegion regions[] = computePartitioning(offset, length);
             StyleRange[] styles = new StyleRange[regions.length];
@@ -98,12 +94,10 @@ public class GroovyConsole extends TextConsole {
 
     private GroovyEventTraceConsolePartitioner partitioner = new GroovyEventTraceConsolePartitioner();
 
-    private IPropertyChangeListener propertyListener = new IPropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent event) {
-            String property = event.getProperty();
-            if (property.equals(IDebugUIConstants.PREF_CONSOLE_FONT)) {
-                setFont(JFaceResources.getFont(IDebugUIConstants.PREF_CONSOLE_FONT));
-            }
+    private IPropertyChangeListener propertyListener = event -> {
+        String property = event.getProperty();
+        if (property.equals(IDebugUIConstants.PREF_CONSOLE_FONT)) {
+            setFont(JFaceResources.getFont(IDebugUIConstants.PREF_CONSOLE_FONT));
         }
     };
 

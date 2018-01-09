@@ -105,6 +105,7 @@ public final class StructDef<T> {
 		this.hasUserDestructor = IDestructable.class.isAssignableFrom(clazz);
 
 		this.factory = new ITypeFactory<T>() {
+			@Override
 			public T create(Nd dom, long address) {
 				if (StructDef.this.isAbstract) {
 					throw new UnsupportedOperationException(
@@ -126,18 +127,22 @@ public final class StructDef<T> {
 				}
 			}
 
+			@Override
 			public int getRecordSize() {
 				return StructDef.this.size();
 			}
 
+			@Override
 			public boolean hasDestructor() {
 				return StructDef.this.hasUserDestructor || hasDestructableFields(); 
 			}
 
+			@Override
 			public Class<?> getElementClass() {
 				return StructDef.this.clazz;
 			}
 
+			@Override
 			public void destruct(Nd nd, long address) {
 				checkNotMutable();
 				Database db = nd.getDB();
@@ -153,6 +158,7 @@ public final class StructDef<T> {
 				}
 			}
 
+			@Override
 			public void destructFields(Nd dom, long address) {
 				StructDef.this.destructFields(dom, address);
 			}

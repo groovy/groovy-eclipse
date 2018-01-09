@@ -66,6 +66,7 @@ String[] getTypeParameters();
  *
  * @return the name of this type
  */
+@Override
 public String getName();
 /**
  * Returns the name of this type's superclass. The syntax for a superclass name
@@ -177,6 +178,7 @@ void setTypeParameters(String[] typeParameters);
  * @param name the given name
  * @exception IllegalArgumentException if <code>null</code> is specified
  */
+@Override
 public void setName(String name) throws IllegalArgumentException;
 /**
  * Sets the name of this type's superclass. Has no effect if this type

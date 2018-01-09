@@ -39,6 +39,7 @@ public ExceptionLabel(CodeStream codeStream, TypeBinding exceptionType) {
 public int getCount() {
 	return this.count;
 }
+@Override
 public void place() {
 	// register the handler inside the codeStream then normal place
 	this.codeStream.registerExceptionHandler(this);
@@ -69,6 +70,7 @@ public void placeStart() {
 	}
 	this.ranges[this.count++] = startPosition;
 }
+@Override
 public String toString() {
 	String basic = getClass().getName();
 	basic = basic.substring(basic.lastIndexOf('.')+1);

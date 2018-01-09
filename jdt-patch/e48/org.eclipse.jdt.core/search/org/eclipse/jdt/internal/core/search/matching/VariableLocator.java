@@ -21,6 +21,7 @@ public VariableLocator(VariablePattern pattern) {
 
 	this.pattern = pattern;
 }
+@Override
 public int match(Expression node, MatchingNodeSet nodeSet) { // interested in Assignment
 	if (this.pattern.writeAccess) {
 		if (this.pattern.readAccess) return IMPOSSIBLE_MATCH; // already checked the lhs in match(Reference...) before we reached here
@@ -48,6 +49,7 @@ public int match(Expression node, MatchingNodeSet nodeSet) { // interested in As
 	}
 	return IMPOSSIBLE_MATCH;
 }
+@Override
 public int match(Reference node, MatchingNodeSet nodeSet) { // interested in NameReference & its subtypes
 	return (this.pattern.readAccess || this.pattern.fineGrain != 0)
 		? matchReference(node, nodeSet, false)
@@ -76,6 +78,7 @@ protected int matchReference(Reference node, MatchingNodeSet nodeSet, boolean wr
 	}
 	return IMPOSSIBLE_MATCH;
 }
+@Override
 public String toString() {
 	return "Locator for " + this.pattern.toString(); //$NON-NLS-1$
 }

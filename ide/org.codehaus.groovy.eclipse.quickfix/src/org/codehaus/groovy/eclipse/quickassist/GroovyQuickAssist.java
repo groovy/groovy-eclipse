@@ -59,17 +59,19 @@ import org.eclipse.jface.text.templates.TemplateContextType;
 
 public class GroovyQuickAssist implements IQuickAssistProcessor {
 
+    @Override
     public boolean hasAssists(IInvocationContext context) throws CoreException {
         return getAssists(context, null).length > 0;
     }
 
+    @Override
     public IJavaCompletionProposal[] getAssists(IInvocationContext context, IProblemLocation[] locations) throws CoreException {
         if (context == null || !(context.getCompilationUnit() instanceof GroovyCompilationUnit) ||
                 !isContentInGroovyProject(context.getCompilationUnit())) {
             return new IJavaCompletionProposal[0];
         }
 
-        List<IJavaCompletionProposal> proposals = new ArrayList<IJavaCompletionProposal>();
+        List<IJavaCompletionProposal> proposals = new ArrayList<>();
 
         if (context instanceof IQuickAssistInvocationContext) {
             proposals.addAll(getTemplateAssists((IQuickAssistInvocationContext) context, (GroovyCompilationUnit) context.getCompilationUnit()));
@@ -116,7 +118,7 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
             templateContext.setForceEvaluation(true);
             templateContext.setVariable(LineSelection.NAME, document.get(region.getOffset(), region.getLength()));
 
-            List<IJavaCompletionProposal> templates = new ArrayList<IJavaCompletionProposal>();
+            List<IJavaCompletionProposal> templates = new ArrayList<>();
             for (Template template : GroovyQuickFixPlugin.getDefault().getTemplateStore().getTemplates()) {
                 if (isSurroundWith(template, templateContext)) {
                     templates.add(new TemplateProposal(template, templateContext, region, null));

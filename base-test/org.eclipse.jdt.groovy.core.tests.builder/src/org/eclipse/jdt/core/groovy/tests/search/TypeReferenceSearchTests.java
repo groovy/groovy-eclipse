@@ -15,11 +15,9 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -205,7 +203,7 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
 
         SearchParticipant[] searchParticipants = new SearchParticipant[] { SearchEngine.getDefaultSearchParticipant() };
 
-        final ArrayList<Object> result = new ArrayList<Object>();
+        final ArrayList<Object> result = new ArrayList<>();
         IJavaSearchScope scope= SearchEngine.createJavaSearchScope(
                 new IJavaElement[] { songTests, weirdTests, artistTests},
                 IJavaSearchScope.SOURCES);
@@ -221,7 +219,7 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
 
         assertEquals("Number of results found", 2, result.size());
 
-        assertElements(new HashSet<Object>(result), songTestsType, artistTestsType);
+        assertElements(new HashSet<>(result), songTestsType, artistTestsType);
     }
 
     @Test // GRECLIPSE-628
@@ -368,8 +366,6 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testConstructorWithDefaultArgsInCompileStatic() throws Exception {
-        assumeTrue(isAtLeastGroovy(20));
-
         String firstContents =
                 "package p\n" +
                 "class First {\n" +
@@ -400,7 +396,7 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
     //--------------------------------------------------------------------------
 
     private static void assertElements(Set<Object> actualSet, Object... expecteds) {
-        Set<Object> expectedSet = new HashSet<Object>(Arrays.asList(expecteds));
+        Set<Object> expectedSet = new HashSet<>(Arrays.asList(expecteds));
         StringBuilder msg = new StringBuilder();
         for (Object expected : expectedSet) {
             if (!actualSet.contains(expected)) {

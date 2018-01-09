@@ -37,7 +37,7 @@ public class ReflectionUtils {
 
     public static Class<?>[] getAllInterfaces(Class<?> clazz) {
         @SuppressWarnings("rawtypes")
-        Set<Class> interfaces = new LinkedHashSet<Class>();
+        Set<Class> interfaces = new LinkedHashSet<>();
 
         do {
             Collections.addAll(interfaces, clazz.getInterfaces());
@@ -147,5 +147,5 @@ public class ReflectionUtils {
 
     private static final Object[] NO_ARGS = new Object[0];
     private static final Class<?>[] NO_TYPES = new Class[0];
-    private static final Map<String, Field> FIELDS = new HashMap<String, Field>();
+    private static final Map<String, Field> FIELDS = new HashMap<>();
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,9 +43,6 @@ import org.eclipse.jdt.internal.core.util.Util;
  * Stores module nodes for groovy compilation units This class is not meant to be accessed externally.
  * <p>
  * One module node is stored per working copy of a unit.
- *
- * @author Andrew Eisenberg
- * @created Jun 11, 2009
  */
 public class ModuleNodeMapper {
 
@@ -93,7 +90,7 @@ public class ModuleNodeMapper {
 
     private final ReentrantLock lock = new ReentrantLock(true);
 
-    private final Map<PerWorkingCopyInfo, ModuleNodeInfo> infoToModuleMap = new HashMap<PerWorkingCopyInfo, ModuleNodeInfo>();
+    private final Map<PerWorkingCopyInfo, ModuleNodeInfo> infoToModuleMap = new HashMap<>();
 
     void store(PerWorkingCopyInfo key, ModuleNodeInfo val) {
         lock.lock();
@@ -216,7 +213,7 @@ public class ModuleNodeMapper {
                 return;
             }
 
-            List<PerWorkingCopyInfo> toPurge = new ArrayList<PerWorkingCopyInfo>();
+            List<PerWorkingCopyInfo> toPurge = new ArrayList<>();
             for (PerWorkingCopyInfo info : infoToModuleMap.keySet()) {
                 int useCount = ((Integer) ReflectionUtils.getPrivateField(PerWorkingCopyInfo.class, "useCount", info)).intValue();
                 if (useCount <= 0) {

@@ -42,6 +42,7 @@ public CodeSnippetFieldReference(char[] source, long pos, EvaluationContext eval
 	super(source, pos);
 	this.evaluationContext = evaluationContext;
 }
+@Override
 public void generateAssignment(BlockScope currentScope, CodeStream codeStream, Assignment assignment, boolean valueRequired) {
 	FieldBinding codegenBinding = this.binding.original();
 	if (codegenBinding.canBeSeenBy(this.actualReceiverType, this, currentScope)) {
@@ -79,6 +80,7 @@ public void generateAssignment(BlockScope currentScope, CodeStream codeStream, A
  * @param codeStream org.eclipse.jdt.internal.compiler.codegen.CodeStream
  * @param valueRequired boolean
  */
+@Override
 public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean valueRequired) {
 	int pc = codeStream.position;
 	if (this.constant != Constant.NotAConstant) {
@@ -128,6 +130,7 @@ public void generateCode(BlockScope currentScope, CodeStream codeStream, boolean
 	codeStream.recordPositionsFrom(pc, this.sourceStart);
 }
 
+@Override
 public void generateCompoundAssignment(BlockScope currentScope, CodeStream codeStream, Expression expression, int operator, int assignmentImplicitConversion, boolean valueRequired) {
 	boolean isStatic;
 	FieldBinding codegenBinding = this.binding.original();
@@ -212,6 +215,7 @@ public void generateCompoundAssignment(BlockScope currentScope, CodeStream codeS
 		codeStream.generateEmulatedWriteAccessForField(codegenBinding);
 	}
 }
+@Override
 public void generatePostIncrement(BlockScope currentScope, CodeStream codeStream, CompoundAssignment postIncrement, boolean valueRequired) {
 	boolean isStatic;
 	FieldBinding codegenBinding = this.binding.original();
@@ -277,11 +281,13 @@ public void generatePostIncrement(BlockScope currentScope, CodeStream codeStream
 /*
  * No need to emulate access to protected fields since not implicitly accessed
  */
+@Override
 public void manageSyntheticAccessIfNecessary(BlockScope currentScope, FlowInfo flowInfo, boolean isReadAccess){
 	// The private access will be managed through the code generation
 
 	if ((flowInfo.tagBits & FlowInfo.UNREACHABLE_OR_DEAD) != 0) return;
 }
+@Override
 public TypeBinding resolveType(BlockScope scope) {
 	// Answer the signature type of the field.
 	// constants are propaged when the field is final
