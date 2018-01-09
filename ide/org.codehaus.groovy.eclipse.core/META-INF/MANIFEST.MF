@@ -3,15 +3,15 @@ Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.core;singleton:=true
 Bundle-Name: Groovy Core
 Bundle-Vendor: Codehaus.org
-Bundle-Version: 2.9.2.qualifier
+Bundle-Version: 2.9.3.qualifier
 Require-Bundle: org.codehaus.groovy,
  org.eclipse.core.runtime,
  org.eclipse.jdt.core,
  org.eclipse.debug.core;resolution:=optional,
- org.eclipse.jdt.groovy.core;bundle-version="2.9.2",
+ org.eclipse.jdt.groovy.core;bundle-version="2.9.3",
  org.eclipse.jdt.launching;bundle-version="3.5.0",
  org.eclipse.osgi,
- org.codehaus.groovy.eclipse.compilerResolver;bundle-version="2.9.2";visibility:=reexport
+ org.codehaus.groovy.eclipse.compilerResolver;bundle-version="2.9.3";visibility:=reexport
 Export-Package: org.codehaus.groovy.eclipse.core,
  org.codehaus.groovy.eclipse.core.adapters,
  org.codehaus.groovy.eclipse.core.builder,

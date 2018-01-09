@@ -3,4 +3,4 @@ Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.codehaus.groovy.eclipse;singleton:=true
 Bundle-Name: Groovy-Eclipse
 Bundle-Vendor: Codehaus.org
-Bundle-Version: 2.9.2.qualifier
+Bundle-Version: 2.9.3.qualifier

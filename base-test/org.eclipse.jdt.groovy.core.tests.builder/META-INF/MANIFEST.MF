@@ -4,7 +4,7 @@ Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Bundle-SymbolicName: org.eclipse.jdt.groovy.core.tests.builder;singleton:=true
 Bundle-Name: Builder Tests
 Bundle-Vendor: Codehaus.org
-Bundle-Version: 2.9.2.qualifier
+Bundle-Version: 2.9.3.qualifier
 Export-Package: org.eclipse.jdt.core.groovy.tests,
  org.eclipse.jdt.core.groovy.tests.builder,
  org.eclipse.jdt.core.groovy.tests.locations,

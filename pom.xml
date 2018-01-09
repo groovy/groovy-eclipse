@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.codehaus.groovy.eclipse</groupId>
 	<artifactId>org.codehaus.groovy.eclipse.parent</artifactId>
-	<version>2.9.2-SNAPSHOT</version>
+	<version>2.9.3-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<!-- To run this build use the following commands (depending on what you are trying to do) -->
@@ -31,7 +31,7 @@
 			mostly test related, have groovy code that can't be compiled with standard
 			tycho jdt compiler. These two properties define what compiler will be used
 			for those bundles. -->
-		<groovy-eclipse-compiler-version>2.9.2-03</groovy-eclipse-compiler-version>
+		<groovy-eclipse-compiler-version>2.9.2-04</groovy-eclipse-compiler-version>
 
 		<!-- This should be the oldest version of groovy we support. -->
 		<groovy-eclipse-batch-version>2.1.9-01</groovy-eclipse-batch-version>
@@ -431,7 +431,7 @@
 			<id>release</id>
 			<properties>
 				<dist.type>release</dist.type>
-				<dist.version>2.9.2</dist.version>
+				<dist.version>2.9.3</dist.version>
 				<dist.qualifier>-RELEASE</dist.qualifier>
 				<!-- use the below for 'practice' builds, comment out to do the 'real' build -->
 				<dist.path>${dist.type}/${dist.key}/${dist.version}/${dist.target}</dist.path>
