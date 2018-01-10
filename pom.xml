@@ -6,35 +6,34 @@
 	<version>3.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
-	<!-- To run this build use the following commands (depending on what you are trying to do) -->
-	<!-- mvn clean install -Pe47 -->
-	<!-- mvn clean deploy -Pe47 -->
-	<!-- Running 'deploy' requires s3 accessKey and secretKey to be provided
-		in a properties file. The properties file must be specified via env variable
-		'dist_properties'. The existence of this env variable enables the deployment
-		profile automatically and will allow the 'deploy' to execute. -->
-
-	<!-- Example commands to build and deploy a milestone or a release
-		mvn clean deploy -Pe47 -Pmilestone
+	<!-- To run this build, use the following commands (depending on what you are trying to do):
+		mvn clean verify -Pe47
+		mvn clean deploy -Pe47 -Pmilestone -Ddist.qualifier=-M1
 		mvn clean deploy -Pe47 -Prelease
 
-		Before building a release also check the definition of the release profile
-		in this pom. It may need some minor edits such as the deploy location
-		and version number.
+		Running 'deploy' requires s3 accessKey and secretKey to be provided in a
+		properties file. The properties file must be specified via env variable
+		'dist_properties'. The existence of this env variable enables the deployment
+		profile automatically and will allow 'deploy' to execute.
 	-->
 
 	<properties>
-		<tycho-version>0.24.0</tycho-version>
-		<tycho-extras-version>0.24.0</tycho-extras-version>
+		<!-- See https://www.eclipse.org/tycho/sitedocs/index.html -->
+		<tycho-version>1.0.0</tycho-version>
+		<!-- See https://www.eclipse.org/tycho/sitedocs-extras/index.html -->
+		<tycho-extras-version>1.0.0</tycho-extras-version>
 
 		<!-- Version of greclipse maven compiler to use for building. (Some bundles,
 			mostly test related, have groovy code that can't be compiled with standard
 			tycho jdt compiler. These two properties define what compiler will be used
-			for those bundles. -->
+			for those bundles.
+		-->
 		<groovy-eclipse-compiler-version>2.9.2-04</groovy-eclipse-compiler-version>
 
-		<!-- This should be the oldest version of groovy we support. -->
+		<!-- This should be the oldest supported Groovy version. -->
 		<groovy-eclipse-batch-version>2.4.13-02</groovy-eclipse-batch-version>
+
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
 		<!-- Properties that define where stuff gets uploaded and how jar is named etc. -->
 		<dist.bucket>dist.springsource.org</dist.bucket>
@@ -42,18 +41,18 @@
 		<dist.name>Groovy Eclipse</dist.name>
 		<dist.key>GRECLIPSE</dist.key>
 		<dist.type>snapshot</dist.type>
-		<dist.qualifier></dist.qualifier> <!-- appended to the end of p2 qualifier, used to add stuff like 'M1', 'RELEASE' etc. -->
 		<dist.path>${dist.type}/${dist.key}/${dist.target}</dist.path>
+		<dist.qualifier></dist.qualifier> <!-- appended to the end of p2 qualifier, used to add stuff like '-M1', '-RELEASE' etc. -->
 
-		<!-- signing properties: Note these properties here are only 'documentation'.
+		<!-- Signing properties: These properties here are only 'documentation'.
 			The real values are furnished by the 'bamboo-signing' profile.
 			When not running on bamboo, singing is disabled by default.
 		-->
 		<signing.skip>true</signing.skip>
 		<signing.alias>pivotal</signing.alias>
 		<signing.keystore></signing.keystore>
-		<signing.store.password></signing.store.password>
 		<signing.key.password></signing.key.password>
+		<signing.store.password></signing.store.password>
 	</properties>
 
 	<modules>
@@ -96,13 +95,13 @@
 		<module>ide-test/org.codehaus.groovy.alltests</module>
 
 		<!-- m2e integration -->
-		<module>extras/Feature-org.codehaus.groovy.m2eclipse</module>
 		<module>extras/org.codehaus.groovy.m2eclipse</module>
+		<module>extras/Feature-org.codehaus.groovy.m2eclipse</module>
 
 		<!-- update site -->
 		<module>Site-org.codehaus.groovy.eclipse</module>
 
-		<!-- Beware: these are not all the modules; there are are also some profile-specific ones declared below! -->
+		<!-- These are not all the modules. There are are also some profile-specific ones declared below! -->
 	</modules>
 
 	<profiles>
@@ -177,7 +176,7 @@
 					<plugin>
 						<groupId>org.codehaus.mojo</groupId>
 						<artifactId>properties-maven-plugin</artifactId>
-						<version>1.0-alpha-2</version>
+						<version>1.0.0</version>
 						<executions>
 							<execution>
 								<phase>initialize</phase>
@@ -259,17 +258,18 @@
 
 	<build>
 		<plugins>
+			<!-- We'll be doing our own deployment to s3, so disable default behavior. -->
 			<plugin>
-				<groupId>org.eclipse.tycho</groupId>
-				<artifactId>tycho-maven-plugin</artifactId>
-				<version>${tycho-version}</version>
-				<extensions>true</extensions>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<version>2.8.2</version>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
 			</plugin>
 
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jarsigner-plugin</artifactId>
-				<version>1.2</version>
+				<version>1.4</version>
 				<executions>
 					<execution>
 						<id>sign</id>
@@ -282,8 +282,8 @@
 					<skip>${signing.skip}</skip>
 					<alias>${signing.alias}</alias>
 					<keystore>${signing.keystore}</keystore>
-					<storepass>${signing.store.password}</storepass>
 					<keypass>${signing.key.password}</keypass>
+					<storepass>${signing.store.password}</storepass>
 				</configuration>
 			</plugin>
 
@@ -332,13 +332,11 @@
 				</configuration>
 			</plugin>
 
-			<!-- We'll be doing our own deployment by antrun task uploading to s3. Disable default behavior: -->
 			<plugin>
-				<artifactId>maven-deploy-plugin</artifactId>
-				<version>2.5</version>
-				<configuration>
-					<skip>true</skip>
-				</configuration>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-maven-plugin</artifactId>
+				<version>${tycho-version}</version>
+				<extensions>true</extensions>
 			</plugin>
 
 			<plugin>
