@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<feature
+<feature id="org.codehaus.groovy.m2eclipse.feature"
       label="%featureName"
       version="3.0.0.qualifier"
       provider-name="%providerName"
-      id="org.codehaus.groovy.m2eclipse.feature">
+      plugin="org.codehaus.groovy.eclipse">
 
    <description url="%descriptionURL">
       %description
@@ -20,9 +20,7 @@
 
    <requires>
       <import plugin="org.codehaus.groovy" version="2.1.9" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.jdt.core" version="3.13.0" match="greaterOrEqual"/>
-      <import plugin="org.eclipse.jdt.groovy.core" version="3.0.0" match="greaterOrEqual"/>
-      <import plugin="org.codehaus.groovy.eclipse.core" version="3.0.0" match="greaterOrEqual"/>
+      <!--import feature="org.eclipse.m2e.feature" version="1.8.0" match="greaterOrEqual"/-->
       <import feature="org.codehaus.groovy.eclipse.feature" version="3.0.0" match="greaterOrEqual"/>
    </requires>
 
