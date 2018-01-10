@@ -12,6 +12,19 @@
 	<version>3.0.0-SNAPSHOT</version>
 	<packaging>eclipse-update-site</packaging>
 
+	<!--build>
+		<plugins>
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-packaging-plugin</artifactId>
+				<version>${tycho-version}</version>
+				<configuration>
+					<archiveSite>true</archiveSite>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build-->
+
 	<profiles>
 		<profile>
 			<id>s3-deploy</id>
@@ -24,7 +37,6 @@
 			<build>
 				<plugins>
 					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-antrun-plugin</artifactId>
 						<version>1.6</version>
 						<executions>
@@ -33,7 +45,6 @@
 								<phase>deploy</phase>
 								<configuration>
 									<target>
-
 										<echo>Uploading main update site to s3..."</echo>
 
 										<taskdef resource="net/sf/antcontrib/antcontrib.properties" />
@@ -52,16 +63,14 @@
 
 										<echo>unqualifiedVersion=${unqualifiedVersion}</echo>
 										<echo>buildQualifier=${buildQualifier}</echo>
-										<property name="dist.full.version"
-											value="${unqualifiedVersion}.${buildQualifier}" />
+										<property name="dist.full.version" value="${unqualifiedVersion}.${buildQualifier}" />
 										<echo>dist.full.version=${dist.full.version}</echo>
 
-										<property name="dist.file.name"
-											value="${dist.project}-${dist.full.version}-updatesite.zip" />
+										<property name="dist.file.name" value="${dist.project}-${dist.full.version}-updatesite.zip" />
 										<echo>dist.file.name=${dist.file.name}</echo>
 
-										<property name="dist.full.path"
-											value="${site.target.dir}/site/${dist.file.name}" />
+										<!--property name="dist.full.path" value="${site.target.dir}/site_assembly.zip" /-->
+										<property name="dist.full.path" value="${site.target.dir}/site/${dist.file.name}" />
 
 										<delete file="${dist.full.path}" />
 										<zip zipfile="${dist.full.path}" filesonly="true">
@@ -70,10 +79,8 @@
 												<exclude name="**/*.gz" />
 											</zipfileset>
 										</zip>
-										<checksum file="${dist.full.path}" algorithm="SHA1"
-											fileext=".sha1" />
-										<checksum file="${dist.full.path}" algorithm="MD5"
-											fileext=".md5" />
+										<checksum file="${dist.full.path}" algorithm="MD5" fileext=".md5" />
+										<checksum file="${dist.full.path}" algorithm="SHA1" fileext=".sha1" />
 
 										<echo>Preparing for upload... This will happen:</echo>
 
@@ -83,20 +90,19 @@
 
 										<echo>Will Upload: </echo>
 										<echo> dist.bucket=${dist.bucket}</echo>
-										<echo> toDir=${dist.path}</echo>
 										<echo> fromDir=${site.target.dir}/site</echo>
+										<echo> toDir=${dist.path}</echo>
 
 										<echo>Will Upload: </echo>
 										<echo> dist.bucket=${dist.bucket}</echo>
+										<echo> fromFile=${dist.full.path}</echo>
 										<echo> toFile=${dist.path}/${dist.file.name}</echo>
-										<echo> fromFile=${dist.path}/${dist.file.name}</echo>
 										<echo> metadata project.name=${dist.name}</echo>
 										<echo> metadata release.type=${dist.type}</echo>
 										<echo> metadata bundle.version=${dist.full.version}</echo>
 										<echo> metadata package.file.name=${dist.file.name}</echo>
-										
- 										<s3 accessKey="${accessKey}" secretKey="${secretKey}">
 
+										<s3 accessKey="${accessKey}" secretKey="${secretKey}">
 											<delete bucketName="${dist.bucket}">
 												<fileset dir="${dist.path}">
 													<include name="site.xml" />
@@ -107,8 +113,7 @@
 												</fileset>
 											</delete>
 
-											<upload bucketName="${dist.bucket}" toDir="${dist.path}"
-												publicRead="true">
+											<upload bucketName="${dist.bucket}" toDir="${dist.path}" publicRead="true">
 												<fileset dir="${site.target.dir}/site">
 													<include name="**/*" />
 													<include name="**" />
@@ -116,16 +121,13 @@
 												</fileset>
 											</upload>
 
-											<upload bucketName="${dist.bucket}" file="${dist.full.path}"
-												toFile="${dist.path}/${dist.file.name}" publicRead="true">
+											<upload bucketName="${dist.bucket}" file="${dist.full.path}" toFile="${dist.path}/${dist.file.name}" publicRead="true">
 												<metadata name="project.name" value="${dist.name}" />
 												<metadata name="release.type" value="${dist.type}" />
 												<metadata name="bundle.version" value="${dist.full.version}" />
 												<metadata name="package.file.name" value="${dist.file.name}" />
 											</upload>
-
 										</s3>
-										
 									</target>
 								</configuration>
 								<goals>
