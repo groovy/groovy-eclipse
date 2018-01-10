@@ -35,6 +35,9 @@
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
+		<!-- Used by tycho-packaging-plugin to add Eclipse-SourceReferences to plugins. -->
+		<tycho.scmUrl>scm:git:git://github.com/gitroot/groovy/groovy-eclipse</tycho.scmUrl>
+
 		<!-- Properties that define where stuff gets uploaded and how jar is named etc. -->
 		<dist.bucket>dist.springsource.org</dist.bucket>
 		<dist.project>org.codehaus.groovy</dist.project>
@@ -345,7 +348,17 @@
 				<version>${tycho-version}</version>
 				<configuration>
 					<format>${greclipse.build.qualifier}</format>
+					<sourceReferences>
+						<generate>true</generate>
+					</sourceReferences>
 				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>org.eclipse.tycho.extras</groupId>
+						<artifactId>tycho-sourceref-jgit</artifactId>
+						<version>${tycho-extras-version}</version>
+					</dependency>
+				</dependencies>
 			</plugin>
 
 			<plugin>
