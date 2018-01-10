@@ -2,25 +2,25 @@
 
 <site>
 
-   <category-def name="org.codehaus.groovy.eclipse" label="Groovy-Eclipse (Required)">
+   <category-def name="org.codehaus.groovy.eclipse" label="Main Package (required)">
       <description>
          Provides Groovy support to Eclipse.
       </description>
    </category-def>
 
-   <category-def name="org.codehaus.groovy.eclipse.sdk" label="Groovy-Eclipse SDK (Optional)">
+   <category-def name="org.codehaus.groovy.eclipse.sdk" label="Main Sources (optional)">
       <description>
          Provides source code for the Groovy-Eclipse plugins.
       </description>
    </category-def>
 
-   <category-def name="org.codehaus.groovy.compilers" label="Groovy Compilers (Optional)">
+   <category-def name="org.codehaus.groovy.compilers" label="More Compilers (optional)">
       <description>
          The Groovy 2.4 compiler is installed automatically, but you may install any other Groovy compiler as well.
       </description>
    </category-def>
 
-   <category-def name="org.codehaus.groovy.m2eclipse" label="Maven Support (Optional)">
+   <category-def name="org.codehaus.groovy.m2eclipse" label="Maven Support (optional)">
       <description>
          Provides Groovy support to m2eclipse. This is compatible with m2eclipse v1.0 and greater.
       </description>
@@ -35,12 +35,13 @@
       <category name="org.codehaus.groovy.eclipse.sdk"/>
    </feature>
 
-   <feature id="org.codehaus.groovy.jdt.patch" url="features/org.codehaus.groovy.jdt.patch_3.0.0.qualifier.jar" version="3.0.0.qualifier" patch="true">
-   </feature>
+   <!--feature id="org.codehaus.groovy.jdt.patch" url="features/org.codehaus.groovy.jdt.patch_3.0.0.qualifier.jar" version="3.0.0.qualifier" patch="true">
+      <category name="org.codehaus.groovy.eclipse"/>
+   </feature-->
 
-   <feature id="org.codehaus.groovy.jdt.patch.source" url="features/org.codehaus.groovy.jdt.patch.source_3.0.0.qualifier.jar" version="3.0.0.qualifier">
+   <!--feature id="org.codehaus.groovy.jdt.patch.source" url="features/org.codehaus.groovy.jdt.patch.source_3.0.0.qualifier.jar" version="3.0.0.qualifier">
       <category name="org.codehaus.groovy.eclipse.sdk"/>
-   </feature>
+   </feature-->
 
    <feature id="org.codehaus.groovy24.feature" url="features/org.codehaus.groovy24.feature_3.0.0.qualifier.jar" version="3.0.0.qualifier">
       <category name="org.codehaus.groovy.compilers"/>
