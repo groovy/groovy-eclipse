@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -370,6 +370,24 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
         // Is cancel member handled properly?
         assertCodeSelect([contents], 'verb')
         assertCodeSelect([contents], 'noun')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/420
+    void testCodeSelectAnonVariadicMethod() {
+        String contents = '''\
+            interface LibarayFunction {
+              String compute(String... args)
+            }
+
+            def stringFunction = new LibarayFunction() {
+              @Override
+              String compute(String... args) {
+              }
+            }
+            '''.stripIndent()
+
+        IJavaElement elem = assertCodeSelect([contents], 'compute')
+        assert elem.sourceRange.offset > 0
     }
 
     @Test
