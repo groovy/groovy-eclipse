@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -273,12 +273,22 @@ public class GroovyProjectFacade {
         int n = signatures.length;
         Parameter[] parameters = new Parameter[n];
         for (int i = 0; i < n; i += 1) {
-            parameters[i] = new Parameter(ClassHelper.makeWithoutCaching(Signature.toString(signatures[i])), null);
+            parameters[i] = new Parameter(javaTypeToGroovyClass(signatures[i]), null);
         }
         return parameters;
     }
 
-    private ClassNode javaTypeToGroovyClass(IType type) {
+    private static ClassNode javaTypeToGroovyClass(String signature) {
+        int dims = Signature.getArrayCount(signature); // TODO: handle generics types
+        String type = Signature.toString(Signature.getTypeErasure(signature.substring(dims)));
+
+        ClassNode node = ClassHelper.make(type);
+        while (dims-- > 0)
+            node = node.makeArray();
+        return node;
+    }
+
+    private static ClassNode javaTypeToGroovyClass(IType type) {
         ICompilationUnit unit = type.getCompilationUnit();
         if (unit instanceof GroovyCompilationUnit) {
             ModuleNode module = ((GroovyCompilationUnit) unit).getModuleNode();
