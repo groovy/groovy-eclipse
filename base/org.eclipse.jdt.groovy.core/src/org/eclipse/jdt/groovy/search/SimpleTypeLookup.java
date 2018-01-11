@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -646,25 +646,22 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             arguments = Collections.emptyList();
         }
 
-        // prefer retrieving the method with the same number of args as specified in the parameter.
-        // if none exists, or parameter is -1, then arbitrarily choose the first.
-        for (Iterator<MethodNode> iterator = candidates.iterator(); iterator.hasNext();) {
-            MethodNode maybeMethod = iterator.next();
-            Parameter[] parameters = maybeMethod.getParameters();
+        // prefer retrieving the method with the same number of parameters as arguments
+        // if none exists, then arbitrarily choose the first; TODO: handle variadic methods
+        for (MethodNode candidate : candidates) {
+            Parameter[] parameters = candidate.getParameters();
             if (parameters.length == 0 && arguments.isEmpty()) {
-                return maybeMethod.getOriginal();
+                return candidate.getOriginal();
             }
             if (parameters.length == arguments.size()) {
                 Boolean suitable = isTypeCompatible(arguments, parameters);
                 if (Boolean.TRUE.equals(suitable)) {
-                    return maybeMethod.getOriginal();
+                    return candidate.getOriginal();
                 }
-                if (!Boolean.FALSE.equals(suitable)) {
-                    closestMatch = maybeMethod.getOriginal();
-                    continue; // don't remove
+                if (!Boolean.FALSE.equals(suitable) || closestMatch.getParameters().length != arguments.size()) {
+                    closestMatch = candidate.getOriginal();
                 }
             }
-            iterator.remove();
         }
         return closestMatch;
     }

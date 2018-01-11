@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -2280,5 +2280,62 @@ public final class InferencingTests extends InferencingTestSuite {
         String contents = "def cal = domain.Calendar.instance()";
         assertExprType(contents, "instance", "domain.Calendar");
         assertExprType(contents, "cal", "domain.Calendar");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/405
+    public void testMethodOverloadsAndImperfectArgumentMatching() {
+        createJavaUnit("MyEnum", "enum MyEnum { A, B }");
+
+        String contents = "class Issue405 {\n" +
+            "  void meth(String s, MyEnum e) {\n" +
+            "    def d1, d2\n" +
+            "    switch (e) {\n" +
+            "    case MyEnum.A:\n" +
+            "      d1 = new Date()\n" +
+            "      d2 = new Date()\n" +
+            "      break\n" +
+            "    case MyEnum.B:\n" +
+            "      d1 = null\n" +
+            "      d2 = null\n" +
+            "      break\n" +
+            "    }\n" +
+            "    meth(s, d1, d2)\n" +
+            "  }\n" +
+            "  void meth(String s, Date d1, Date d2) {\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.indexOf("meth(s");
+        MethodNode m = assertDeclaration(contents, offset, offset + 4, "Issue405", "meth", DeclarationKind.METHOD);
+        assertEquals("Expected 'meth(String, Date, Date)' but was 'meth(String, MyEnum)'", 3, m.getParameters().length);
+    }
+
+    @Test
+    public void testMethodOverloadsAndPerfectArgumentMatching() {
+        createJavaUnit("MyEnum", "enum MyEnum { A, B }");
+
+        String contents = "class Issue405 {\n" +
+            "  void meth(String s, MyEnum e) {\n" +
+            "    def d1, d2\n" +
+            "    switch (e) {\n" +
+            "    case MyEnum.A:\n" +
+            "      d1 = new Date()\n" +
+            "      d2 = new Date()\n" +
+            "      break\n" +
+            "    case MyEnum.B:\n" +
+            "      d1 = null\n" +
+            "      d2 = null\n" +
+            "      break\n" +
+            "    }\n" +
+            "    meth(s, d1, d2)\n" +
+            "  }\n" +
+            "  void meth(String s, Date d1, Date d2) {\n" +
+            "  }\n" +
+            "  void meth(String s, Object o1, Object o2) {\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.indexOf("meth(s");
+        MethodNode m = assertDeclaration(contents, offset, offset + 4, "Issue405", "meth", DeclarationKind.METHOD);
+        assertTrue("Expected 'meth(String, Object, Object)' but was 'meth(String, MyEnum)' or 'meth(String, Date, Date)'",
+            m.getParameters().length == 3 && m.getParameters()[2].getType().getNameWithoutPackage().equals("Object"));
     }
 }
