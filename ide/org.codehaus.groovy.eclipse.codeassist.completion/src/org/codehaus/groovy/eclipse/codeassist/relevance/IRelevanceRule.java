@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import org.eclipse.jdt.core.IType;
 /**
  * Computes type relevance. Useful for content assist or import selection.
  */
+@FunctionalInterface
 public interface IRelevanceRule {
 
     IRelevanceRule DEFAULT = CompositeRule.of(
@@ -41,7 +42,12 @@ public interface IRelevanceRule {
      * @return Positive value, with a higher value indicating higher relevance;
      *     or zero if relevance cannot be computed.
      */
-    public int getRelevance(IType type, IType[] contextTypes);
+    default int getRelevance(IType type, IType[] contextTypes) {
+        if (type == null) {
+            return 0;
+        }
+        return getRelevance(type.getFullyQualifiedName().toCharArray(), contextTypes, 0, 0);
+    }
 
     /**
      * @param fullyQualifiedName Non-null type name whose relevance must be computed.
@@ -52,5 +58,5 @@ public interface IRelevanceRule {
      * @return Positive value, with a higher value indicating higher relevance;
      *     or zero if relevance cannot be computed.
      */
-    public int getRelevance(char[] fullyQualifiedName, IType[] contextTypes, int accessibility, int modifiers);
+    int getRelevance(char[] fullyQualifiedName, IType[] contextTypes, int accessibility, int modifiers);
 }

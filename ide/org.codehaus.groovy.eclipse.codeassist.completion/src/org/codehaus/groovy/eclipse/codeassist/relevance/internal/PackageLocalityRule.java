@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,11 +21,6 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.compiler.CharOperation;
 
 public class PackageLocalityRule implements IRelevanceRule {
-
-    @Override
-    public int getRelevance(IType type, IType[] contextTypes) {
-        return getRelevance(type.getFullyQualifiedName().toCharArray(), contextTypes, 0, 0);
-    }
 
     @Override
     public int getRelevance(char[] fullyQualifiedName, IType[] contextTypes, int accessibility, int modifiers) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,11 +32,6 @@ public class PackagePriorityRule implements IRelevanceRule {
         for (int i = 0, p = packages.length; p > 0; i += 1, p -= 1) {
             priorities.put(packages[i], p);
         }
-    }
-
-    @Override
-    public int getRelevance(IType type, IType[] contextTypes) {
-        return getRelevance(type.getFullyQualifiedName().toCharArray(), contextTypes, 0, 0);
     }
 
     @Override
