@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import java.util.TreeSet;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
@@ -78,7 +77,7 @@ public class ContentAssistContext {
      * the left hand side of the assignment statement containing the completion
      * node, or null if there is none
      */
-    public final Expression lhsNode;
+    public final ASTNode lhsNode;
     public ClassNode lhsType;
 
     /**
@@ -110,7 +109,7 @@ public class ContentAssistContext {
             String fullCompletionExpression,
             ASTNode completionNode,
             ASTNode containingCodeBlock,
-            Expression lhsNode,
+            ASTNode lhsNode,
             ContentAssistLocation location,
             GroovyCompilationUnit unit,
             AnnotatedNode containingDeclaration,

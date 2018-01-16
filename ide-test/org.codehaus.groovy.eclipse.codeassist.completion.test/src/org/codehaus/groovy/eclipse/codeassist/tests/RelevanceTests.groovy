@@ -344,7 +344,7 @@ final class RelevanceTests extends CompletionTestSuite {
         assertProposalOrdering(proposals, 'String - java.lang', 'StringBuffer - java.lang', 'StringBuilder - java.lang', 'Stack - java.util')
     }
 
-    @Test @NotYetImplemented
+    @Test
     void testClassVariableAssignedType3() {
         String contents = '''\
             class X {
@@ -356,7 +356,7 @@ final class RelevanceTests extends CompletionTestSuite {
         assertProposalOrdering(proposals, 'String - java.lang', 'StringBuffer - java.lang', 'StringBuilder - java.lang', 'Stack - java.util')
     }
 
-    @Test @NotYetImplemented
+    @Test
     void testClassVariableAssignedType4() {
         String contents = '''\
             class X {
@@ -367,7 +367,7 @@ final class RelevanceTests extends CompletionTestSuite {
         assertProposalOrdering(proposals, 'String - java.lang', 'StringBuffer - java.lang', 'StringBuilder - java.lang', 'Stack - java.util')
     }
 
-    @Test @NotYetImplemented
+    @Test
     void testClassVariableAssignedType5() {
         String contents = '''\
             class X {
@@ -378,7 +378,7 @@ final class RelevanceTests extends CompletionTestSuite {
         assertProposalOrdering(proposals, 'String - java.lang', 'StringBuffer - java.lang', 'StringBuilder - java.lang', 'Stack - java.util')
     }
 
-    @Test @NotYetImplemented
+    @Test
     void testClassVariableAssignedType6() {
         addJavaSource '''\
             import java.lang.annotation.*;
@@ -400,18 +400,10 @@ final class RelevanceTests extends CompletionTestSuite {
         assertProposalOrdering(proposals, 'String - java.lang', 'StringBuffer - java.lang', 'StringBuilder - java.lang', 'Stack - java.util')
     }
 
-    @Test @NotYetImplemented
+    @Test
     void testClassAttributeDefaultType() {
-        addJavaSource '''\
-            '''.stripIndent(), 'Anno'
-
         String contents = '''\
-            import java.lang.annotation.*
-
-            @Retention(RetentionPolicy.RUNTIME)
-            @Target(ElementType.TYPE)
-            @Inherited
-            public @interface Anno {
+            @interface X {
               Class<? extends CharSequence> value() default St
             }
             '''.stripIndent()

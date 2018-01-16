@@ -25,6 +25,7 @@ import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
+import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
@@ -767,16 +768,16 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         if (context.lhsNode instanceof Variable) {
             ClassNode lhsType = ((Variable) context.lhsNode).getType();
             if (VariableScope.CLASS_CLASS_NODE.equals(lhsType) && lhsType.isUsingGenerics()) {
-                ClassNode targetType = lhsType.getGenericsTypes()[0].getType();
-                if (VariableScope.OBJECT_CLASS_NODE.equals(targetType)) return;
-
-                // create a relevance rule that will boost types derived form the target type
+                GenericsType target = lhsType.getGenericsTypes()[0];
+                if (target.getLowerBound() == null && target.getUpperBounds().length == 1 &&
+                        VariableScope.OBJECT_CLASS_NODE.equals(target.getUpperBounds()[0])) {
+                    return;
+                }
+                // create a relevance rule that will boost types compatible with the target type
                 IRelevanceRule rule = (char[] fullyQualifiedName, IType[] contextTypes, int accessibility, int modifiers) -> {
                     try {
                         ClassNode sourceType = resolver.resolve(String.valueOf(fullyQualifiedName));
-                        if (sourceType.isDerivedFrom(targetType) || sourceType.implementsInterface(targetType)) {
-                            return 10;
-                        }
+                        if (target.isCompatibleWith(sourceType)) return 10;
                     } catch (RuntimeException e) {
                         if (GroovyLogManager.manager.hasLoggers()) {
                             GroovyLogManager.manager.log(TraceCategory.CONTENT_ASSIST, e.getMessage());

@@ -34,9 +34,6 @@ public abstract class CodeVisitorSupport implements GroovyCodeVisitor {
 
     public void visitBlockStatement(BlockStatement block) {
         for (Statement statement : block.getStatements()) {
-            // GRECLIPSE add
-            if (statement != null)
-            // GRECLIPSE end
             statement.visit(this);
         }
     }
@@ -271,12 +268,14 @@ public abstract class CodeVisitorSupport implements GroovyCodeVisitor {
     protected void visitListOfExpressions(List<? extends Expression> list) {
         if (list == null) return;
         for (Expression expression : list) {
-            if (expression instanceof SpreadExpression) {
-                Expression spread = ((SpreadExpression) expression).getExpression();
-                spread.visit(this);
-            } else if (expression != null) { // GRECLIPSE null check
+            // GRECLIPSE edit
+            //if (expression instanceof SpreadExpression) {
+            //    Expression spread = ((SpreadExpression) expression).getExpression();
+            //    spread.visit(this);
+            //} else {
                 expression.visit(this);
-            }
+            //}
+            // GRECLIPSE end
         }
     }
 
