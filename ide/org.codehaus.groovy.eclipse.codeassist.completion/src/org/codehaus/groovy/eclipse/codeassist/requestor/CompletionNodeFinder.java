@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +22,14 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
@@ -52,6 +54,7 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
+import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.eclipse.core.util.VisitCompleteException;
 import org.codehaus.groovy.syntax.Types;
@@ -76,7 +79,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
     /**
      * Left hand side of any assignment statement or {@code null} if there is none.
      */
-    private Expression lhsNode;
+    private ASTNode lhsNode;
 
     private final LinkedList<ASTNode> blockStack = new LinkedList<>();
 
@@ -225,6 +228,11 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
             return;
         }
 
+        if (node.hasAnnotationDefault()) {
+            // provide some context for the visitation of the annotation attribute default value expression
+            lhsNode = new MemberValueExpression(node.getName(), ((ReturnStatement) node.getCode()).getExpression(), new AnnotationNode(node.getDeclaringClass()));
+        }
+
         declarationStack.add(node);
 
         blockStack.add(node);
@@ -274,7 +282,9 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
     @Override
     protected void visitParameter(Parameter node) {
+        blockStack.add(node);
         super.visitParameter(node);
+        blockStack.removeLast();
 
         // check parameter type
         if (check(node.getType()) || (check(node) && completionOffset < node.getNameStart())) {
@@ -293,7 +303,27 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
     }
 
     /**
-     * Visit method/constructor call arguments, but only if we are not at the
+     * Saves LHS node for possible initialization expression of field, property,
+     * method parameter, or annotation attribute.
+     * <p>
+     * <b>Note</b>: DynamicVariable and VariableExpression are skipped by design.
+     * @see #visitVariableExpression
+     * @see #visitBinaryExpression
+     */
+    @Override
+    protected void visitVariable(Variable var) {
+        assert !(var instanceof DynamicVariable ||
+                 var instanceof VariableExpression);
+
+        if (var instanceof ASTNode) {
+            lhsNode = (ASTNode) var;
+        }
+        super.visitVariable(var);
+        lhsNode = null;
+    }
+
+    /**
+     * Visits method/constructor call arguments, but only if we are not at the
      * start of an expression. Otherwise, we don't do normal completion, but
      * only show context information.
      */
@@ -316,7 +346,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         if (!doContext) {
             blockStack.add(call);
             // outer receiver is irrelevant within argument list
-            final Expression lhs = lhsNode; lhsNode = null;
+            final ASTNode lhs = lhsNode; lhsNode = null;
 
             // check the arguments; ignores in-between locations
             args.visit(this);
@@ -642,6 +672,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
     @Override
     public void visitVariableExpression(VariableExpression expression) {
+        visitAnnotations(expression.getAnnotations());
         if (expression.getAccessedVariable() == expression) {
             ClassNode type = expression.getOriginType();
             if (check(type)) {
@@ -657,7 +688,8 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
             }
             createContext(expression, blockStack.getLast(), loc);
         }
-        super.visitVariableExpression(expression);
+        visitExpression(expression);
+        // no call to super.visitVariableExpression
     }
 
     //--------------------------------------------------------------------------

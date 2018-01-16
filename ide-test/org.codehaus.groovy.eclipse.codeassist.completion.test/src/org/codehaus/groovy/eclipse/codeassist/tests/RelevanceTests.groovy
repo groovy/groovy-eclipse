@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
+
+import groovy.transform.NotYetImplemented
 
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Ignore
@@ -321,5 +323,102 @@ final class RelevanceTests extends CompletionTestSuite {
             '''.stripIndent()
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'b.a')))
         assertProposalOrdering(proposals, 'ab', 'ay', 'az', 'aa', 'ac')
+    }
+
+    @Test
+    void testClassVariableAssignedType1() {
+        String contents = '''\
+            Class<? extends CharSequence> cs = St
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'St')))
+        assertProposalOrdering(proposals, 'String - java.lang', 'StringBuffer - java.lang', 'StringBuilder - java.lang', 'Stack - java.util')
+    }
+
+    @Test
+    void testClassVariableAssignedType2() {
+        String contents = '''\
+            for (Class<? extends CharSequence> cs = St; condition;) {
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'St')))
+        assertProposalOrdering(proposals, 'String - java.lang', 'StringBuffer - java.lang', 'StringBuilder - java.lang', 'Stack - java.util')
+    }
+
+    @Test
+    void testClassVariableAssignedType3() {
+        String contents = '''\
+            class X {
+              void meth(Class<? extends CharSequence> cs = St) {
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'St')))
+        assertProposalOrdering(proposals, 'String - java.lang', 'StringBuffer - java.lang', 'StringBuilder - java.lang', 'Stack - java.util')
+    }
+
+    @Test
+    void testClassVariableAssignedType4() {
+        String contents = '''\
+            class X {
+              Class<? extends CharSequence> cs = St
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'St')))
+        assertProposalOrdering(proposals, 'String - java.lang', 'StringBuffer - java.lang', 'StringBuilder - java.lang', 'Stack - java.util')
+    }
+
+    @Test
+    void testClassVariableAssignedType5() {
+        String contents = '''\
+            class X {
+              public Class<? extends CharSequence> cs = St
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'St')))
+        assertProposalOrdering(proposals, 'String - java.lang', 'StringBuffer - java.lang', 'StringBuilder - java.lang', 'Stack - java.util')
+    }
+
+    @Test
+    void testClassVariableAssignedType6() {
+        addJavaSource '''\
+            import java.lang.annotation.*;
+
+            @Retention(RetentionPolicy.RUNTIME)
+            @Target(ElementType.TYPE)
+            @Inherited
+            public @interface Anno {
+              Class<? extends CharSequence> value();
+            }
+            '''.stripIndent(), 'Anno'
+
+        String contents = '''\
+            @Anno(value = St)
+            class X {
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'St')))
+        assertProposalOrdering(proposals, 'String - java.lang', 'StringBuffer - java.lang', 'StringBuilder - java.lang', 'Stack - java.util')
+    }
+
+    @Test
+    void testClassAttributeDefaultType() {
+        String contents = '''\
+            @interface X {
+              Class<? extends CharSequence> value() default St
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'St')))
+        assertProposalOrdering(proposals, 'String - java.lang', 'StringBuffer - java.lang', 'StringBuilder - java.lang', 'Stack - java.util')
+    }
+
+    @Test @NotYetImplemented
+    void testCatchParameterType() {
+        String contents = '''\
+            try {
+            } catch (St) {
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'St')))
+        assertProposalOrdering(proposals, 'StringWriterIOException - groovy.lang', 'StackOverflowError - java.lang', 'StringTestUtil - groovy.util')
     }
 }

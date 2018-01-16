@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import static org.eclipse.jdt.groovy.core.util.GroovyUtils.getTransformNodes;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -38,6 +39,7 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.AttributeExpression;
@@ -54,6 +56,7 @@ import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.ElvisOperatorExpression;
 import org.codehaus.groovy.ast.expr.EmptyExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.ExpressionTransformer;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.GStringExpression;
 import org.codehaus.groovy.ast.expr.ListExpression;
@@ -93,6 +96,7 @@ import org.codehaus.groovy.ast.stmt.ThrowStatement;
 import org.codehaus.groovy.ast.stmt.TryCatchStatement;
 import org.codehaus.groovy.ast.stmt.WhileStatement;
 import org.codehaus.groovy.classgen.BytecodeExpression;
+import org.codehaus.groovy.classgen.Verifier;
 import org.codehaus.groovy.runtime.GeneratedClosure;
 import org.codehaus.groovy.transform.FieldASTTransformation;
 import org.eclipse.core.runtime.Assert;
@@ -187,9 +191,9 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
     @Override
     public void visitProperty(PropertyNode node) {
         visitAnnotations(node.getAnnotations());
-        visitIfPresent(node.getInitialExpression());
         visitIfPresent(node.getGetterBlock());
         visitIfPresent(node.getSetterBlock());
+        visitVariable(node);
     }
 
     @Override
@@ -203,7 +207,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
                 }
             }
         }
-        visitIfPresent(node.getInitialExpression());
+        visitVariable(node);
 
         // visit enum field initializer inline with enum field
         if (node.isEnum() && node.isStatic() && !node.getName().matches("(MAX|MIN)_VALUE|\\$VALUES")) {
@@ -246,7 +250,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
     @Override
     public void visitBlockStatement(BlockStatement statement) {
         for (Statement stmt : statement.getStatements()) {
-            visitIfPresent(stmt);
+            stmt.visit(this);
         }
         visitStatement(statement);
     }
@@ -288,7 +292,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
 
     @Override
     public void visitExpressionStatement(ExpressionStatement statement) {
-        visitIfPresent(statement.getExpression());
+        statement.getExpression().visit(this);
         visitStatement(statement);
     }
 
@@ -610,7 +614,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
     public void visitVariableExpression(VariableExpression expression) {
         visitAnnotations(expression.getAnnotations());
         if (expression.getAccessedVariable() == expression) {
-            visitIfPresent(expression.getInitialExpression());
+            visitVariable(expression);
         }
         visitExpression(expression);
     }
@@ -645,13 +649,16 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
     }
 
     protected void visitAnnotation(AnnotationNode node) {
-        visitExpressions(node.getMembers().values());
+        for (Map.Entry<String, Expression> pair : node.getMembers().entrySet()) {
+            // provide some context for the visitation of the initial value expression
+            visitVariable(new MemberValueExpression(pair.getKey(), pair.getValue(), node));
+        }
     }
 
     protected void visitExpressions(Collection<? extends Expression> nodes) {
         if (isNotEmpty(nodes)) {
             for (Expression node : nodes) {
-                visitIfPresent(node);
+                node.visit(this);
             }
         }
     }
@@ -671,13 +678,18 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
     }
 
     protected void visitParameter(Parameter parameter) {
-        if (parameter != null) {
-            visitAnnotations(parameter.getAnnotations());
-            visitIfPresent(parameter.getInitialExpression());
-        }
+        visitAnnotations(parameter.getAnnotations());
+        visitVariable(parameter);
     }
 
     protected void visitStatement(Statement statement) {
+    }
+
+    protected void visitVariable(Variable variable) {
+        visitIfPresent(variable.getInitialExpression());
+        if (variable instanceof Parameter) { // special case; see Verifier.addDefaultParameters
+            visitIfPresent((Expression) ((Parameter) variable).getNodeMetaData(Verifier.INITIAL_EXPRESSION));
+        }
     }
 
     protected final void visitIfPresent(ASTNode node) {
@@ -685,10 +697,80 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
     }
 
     protected static boolean isNotEmpty(Object[] array) {
-        return array != null && array.length > 0;
+        return (array != null && array.length > 0);
     }
 
     protected static boolean isNotEmpty(Collection<?> collection) {
-        return collection != null && !collection.isEmpty();
+        return (collection != null && !collection.isEmpty());
+    }
+
+    //--------------------------------------------------------------------------
+
+    protected static class MemberValueExpression extends Expression implements Variable {
+
+        private String name;
+        private Expression value;
+        private AnnotationNode parent;
+
+        public MemberValueExpression(String name, Expression value, AnnotationNode parent) {
+            this.name = name;
+            this.value = value;
+            this.parent = parent;
+        }
+
+        @Override
+        public Expression getInitialExpression() {
+            return value;
+        }
+
+        @Override
+        public boolean hasInitialExpression() {
+            return (value != null);
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public int getModifiers() {
+            return 0;
+        }
+
+        @Override
+        public ClassNode getType() {
+            MethodNode member = parent.getClassNode().getMethod(getName(), Parameter.EMPTY_ARRAY);
+            return member.getReturnType();
+        }
+
+        @Override
+        public ClassNode getOriginType() {
+            return getType();
+        }
+
+        @Override
+        public boolean isDynamicTyped() {
+            return false;
+        }
+
+        @Override
+        public boolean isInStaticContext() {
+            return true;
+        }
+
+        @Override
+        public boolean isClosureSharedVariable() {
+            return false;
+        }
+
+        @Override
+        public void setClosureSharedVariable(boolean value) {
+        }
+
+        @Override
+        public Expression transformExpression(ExpressionTransformer xformer) {
+            return null;
+        }
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -99,8 +99,7 @@ public class RelevanceRules implements IRelevanceRule {
         }
 
         // use all the rule types if none were specified by the invoker.
-        RelevanceRuleType[] rTypes = ruleTypes == null || ruleTypes.length == 0 ? RelevanceRuleType
-                .values() : ruleTypes;
+        RelevanceRuleType[] rTypes = (ruleTypes != null && ruleTypes.length > 0 ? ruleTypes : RelevanceRuleType.values());
 
         int relevance = getStartingRelevanceValue();
         for (RelevanceRuleType ruleType : rTypes) {
@@ -126,8 +125,7 @@ public class RelevanceRules implements IRelevanceRule {
         }
 
         // use all the rule types if none were specified by the invoker.
-        RelevanceRuleType[] rTypes = ruleTypes == null || ruleTypes.length == 0 ? RelevanceRuleType
-                .values() : ruleTypes;
+        RelevanceRuleType[] rTypes = (ruleTypes != null && ruleTypes.length > 0 ? ruleTypes : RelevanceRuleType.values());
 
         int relevance = getStartingRelevanceValue();
         for (RelevanceRuleType ruleType : rTypes) {
@@ -307,14 +305,6 @@ public class RelevanceRules implements IRelevanceRule {
         }
 
         @Override
-        public int getRelevance(IType relevanceType, IType[] contextTypes) {
-            if (relevanceType == null) {
-                return 0;
-            }
-            return getRelevance(relevanceType.getFullyQualifiedName().toCharArray(), contextTypes, 0, 0);
-        }
-
-        @Override
         public int getRelevance(char[] fullyQualifiedName, IType[] contextTypes, int accessibility, int modifiers) {
             // Default is zero, meaning relevance for types in any other library
             // is governed by other rules. Only types in the following libraries
@@ -384,14 +374,12 @@ public class RelevanceRules implements IRelevanceRule {
             IPackageFragment contextFragment = getContextPackageFragment(contextTypes);
             if (contextFragment != null && fullyQualifiedName != null) {
                 String relQualified = String.valueOf(fullyQualifiedName);
-                String contextQualified = convertToDot(contextFragment
-                        .getElementName());
+                String contextQualified = convertToDot(contextFragment.getElementName());
 
                 String[] relSegments = relQualified.split("\\.");
                 String[] contextSegments = contextQualified.split("\\.");
 
-                for (int i = 0; i < relSegments.length
-                        && i < contextSegments.length; i++) {
+                for (int i = 0; i < relSegments.length && i < contextSegments.length; i++) {
                     if (relSegments[i].equals(contextSegments[i])) {
                         relevance++;
                     } else {

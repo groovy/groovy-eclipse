@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,14 +20,19 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
+import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.eclipse.GroovyLogManager;
+import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaMethodCompletionProposal;
@@ -35,6 +40,7 @@ import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyNamedArgumentPropo
 import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOptions;
 import org.codehaus.groovy.eclipse.codeassist.relevance.IRelevanceRule;
 import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
+import org.codehaus.groovy.eclipse.codeassist.relevance.internal.CompositeRule;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.codehaus.groovy.eclipse.codeassist.requestor.MethodInfoContentAssistContext;
@@ -57,6 +63,7 @@ import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
+import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.codeassist.CompletionEngine;
 import org.eclipse.jdt.internal.codeassist.ISearchRequestor;
 import org.eclipse.jdt.internal.codeassist.RelevanceConstants;
@@ -102,6 +109,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
     /** Array of fully-qualified names. Default imports should be included (aka java.lang, groovy.lang, etc.). */
     private char[][] onDemandImports;
 
+    private final boolean isImport;
     private final NameLookup nameLookup;
     private final IProgressMonitor monitor;
     private final String completionExpression;
@@ -112,6 +120,8 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
     private ProposalFormattingOptions groovyProposalPrefs;
     private final JavaContentAssistInvocationContext javaContext;
 
+    private IRelevanceRule relevanceRule;
+
     // use this completion engine only to create parameter names for Constructors
     private CompletionEngine mockEngine;
 
@@ -120,8 +130,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
 
     // instead of inserting text, show context information only for constructors
     private boolean contextOnly;
-
-    private final boolean isImport;
 
     private final ContentAssistContext context;
     private final        AssistOptions options;
@@ -135,14 +143,14 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             IProgressMonitor monitor) {
 
         this.context = context;
-        this.offset = exprStart;
         this.javaContext = javaContext;
         Assert.isNotNull(javaContext.getCoreContext());
-        this.module = context.unit.getModuleNode();
-        this.unit = context.unit;
+        this.offset = exprStart;
         this.replaceLength = replaceLength;
-        this.monitor = monitor;
         this.nameLookup = nameLookup;
+        this.monitor = monitor;
+        this.unit = context.unit;
+        this.module = context.unit.getModuleNode();
         this.isImport = (context.location == ContentAssistLocation.IMPORT);
         // if contextOnly then do not insert any text, only show context information
         this.contextOnly = (context.location == ContentAssistLocation.METHOD_CONTEXT);
@@ -319,14 +327,14 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             return Collections.emptyList();
         }
 
-        HashtableOfObject onDemandFound = new HashtableOfObject();
-        String thisPackageName = module.getPackageName();
-        if (thisPackageName == null) thisPackageName = "";
+        initializeRelevanceRule(resolver);
 
         List<ICompletionProposal> proposals = new LinkedList<>();
         try {
+            HashtableOfObject onDemandFound = new HashtableOfObject();
+
             next: for (int i = 0; i < n; i += 1) {
-                // does not check cancellation for every types to avoid performance loss
+                // does not check cancellation for every type to avoid performance loss
                 if ((i % CHECK_CANCEL_FREQUENCY) == 0) {
                     checkCancel();
                 }
@@ -365,9 +373,8 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                     }
                 }
 
-                if ((enclosingTypeNames == null || enclosingTypeNames.length == 0) && CharOperation.equals(thisPackageName.toCharArray(), packageName)) {
+                if ((enclosingTypeNames == null || enclosingTypeNames.length == 0) && isCurrentPackage(packageName)) {
                     proposals.add(proposeType(packageName, simpleTypeName, modifiers, accessibility, typeName, fullyQualifiedName, false));
-                    continue next;
                 } else if (((AcceptedType) onDemandFound.get(simpleTypeName)) == null && onDemandImports != null) {
                     char[] fullyQualifiedEnclosingTypeOrPackageName = null;
                     for (char[] importFlatName : onDemandImports) {
@@ -403,35 +410,10 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                 }
             }
         } finally {
-            acceptedTypes = null; // reset
+            acceptedTypes = null;
+            relevanceRule = null;
         }
         return proposals;
-    }
-
-    private ICompletionProposal proposeNoImportType(char[] packageName, char[] simpleTypeName, int modifiers, int accessibility, char[] qualifiedTypeName, char[] fullyQualifiedName, boolean isQualified) {
-        char[] completionName;
-        if (isQualified) {
-            completionName = fullyQualifiedName;
-        } else {
-            completionName = simpleTypeName;
-        }
-
-        GroovyCompletionProposal proposal = createProposal(CompletionProposal.TYPE_REF, context.completionLocation - offset);
-        proposal.setDeclarationSignature(packageName);
-        proposal.setSignature(CompletionEngine.createNonGenericTypeSignature(packageName, simpleTypeName));
-        proposal.setCompletion(completionName);
-        proposal.setFlags(modifiers);
-        proposal.setReplaceRange(offset, offset + replaceLength);
-        proposal.setTokenRange(offset, context.completionLocation);
-        proposal.setRelevance(IRelevanceRule.DEFAULT.getRelevance(fullyQualifiedName, allTypesInUnit, accessibility, modifiers));
-        proposal.setTypeName(simpleTypeName);
-        proposal.setAccessibility(accessibility);
-        proposal.setPackageName(packageName);
-        String completionString = new String(completionName);
-        JavaTypeCompletionProposal javaCompletionProposal = new JavaTypeCompletionProposal(completionString, null, offset, replaceLength, ProposalUtils.getImage(proposal), ProposalUtils.createDisplayString(proposal), proposal.getRelevance(), completionString, javaContext);
-        javaCompletionProposal.setRelevance(proposal.getRelevance());
-
-        return javaCompletionProposal;
     }
 
     private ICompletionProposal proposeType(char[] packageName, char[] simpleTypeName, int modifiers, int accessibility, char[] qualifiedTypeName, char[] fullyQualifiedName, boolean isQualified) {
@@ -440,16 +422,37 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             : proposeImportableType(packageName, simpleTypeName, modifiers, accessibility, qualifiedTypeName, fullyQualifiedName, isQualified);
     }
 
+    private ICompletionProposal proposeNoImportType(char[] packageName, char[] simpleTypeName, int modifiers, int accessibility, char[] qualifiedTypeName, char[] fullyQualifiedName, boolean isQualified) {
+        char[] completion = isQualified ? fullyQualifiedName : simpleTypeName;
+        String completionString = String.valueOf(completion);
+
+        GroovyCompletionProposal proposal = createProposal(CompletionProposal.TYPE_REF, context.completionLocation - offset);
+        proposal.setAccessibility(accessibility);
+        proposal.setCompletion(completion);
+        proposal.setDeclarationSignature(packageName);
+        proposal.setFlags(modifiers);
+        proposal.setPackageName(packageName);
+        proposal.setRelevance(computeRelevanceForTypeProposal(fullyQualifiedName, accessibility, modifiers));
+        proposal.setReplaceRange(offset, offset + replaceLength);
+        proposal.setSignature(CompletionEngine.createNonGenericTypeSignature(packageName, simpleTypeName));
+        proposal.setTokenRange(offset, context.completionLocation);
+        proposal.setTypeName(simpleTypeName);
+
+        JavaTypeCompletionProposal javaProposal = new JavaTypeCompletionProposal(completionString, null, offset, replaceLength, ProposalUtils.getImage(proposal), ProposalUtils.createDisplayString(proposal), proposal.getRelevance(), completionString, javaContext);
+        javaProposal.setTriggerCharacters(ProposalUtils.TYPE_TRIGGERS);
+        javaProposal.setRelevance(proposal.getRelevance());
+        return javaProposal;
+    }
+
     private ICompletionProposal proposeImportableType(char[] packageName, char[] simpleTypeName, int modifiers, int accessibility, char[] qualifiedTypeName, char[] fullyQualifiedName, boolean isQualified) {
         GroovyCompletionProposal proposal = createProposal(CompletionProposal.TYPE_REF, context.completionLocation - offset);
         proposal.setAccessibility(accessibility);
         proposal.setCompletion(isQualified ? fullyQualifiedName : simpleTypeName);
         proposal.setDeclarationSignature(packageName);
         proposal.setFlags(modifiers);
-        proposal.setNameLookup(nameLookup);
         proposal.setPackageName(packageName);
+        proposal.setRelevance(computeRelevanceForTypeProposal(fullyQualifiedName, accessibility, modifiers));
         proposal.setReplaceRange(offset, offset + replaceLength);
-        proposal.setRelevance(IRelevanceRule.DEFAULT.getRelevance(fullyQualifiedName, allTypesInUnit, accessibility, modifiers));
         proposal.setSignature(CompletionEngine.createNonGenericTypeSignature(packageName, simpleTypeName));
         proposal.setTokenRange(offset, context.completionLocation);
         proposal.setTypeName(simpleTypeName);
@@ -578,7 +581,8 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             }
 
         } finally {
-            acceptedTypes = null; // reset
+            acceptedTypes = null;
+            relevanceRule = null;
         }
         return proposals;
     }
@@ -711,7 +715,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             //typeProposal.setTypeName(simpleTypeName);
             //typeProposal.setPackageName(packageName);
             //typeProposal.setDeclarationSignature(declarationSignature);
-            //typeProposal.setRelevance(IRelevanceRule.DEFAULT.getRelevance(fullyQualifiedName, allTypesInUnit, accessibility, augmentedModifiers));
+            //typeProposal.setRelevance(computeRelevanceForTypeProposal(fullyQualifiedName, accessibility, augmentedModifiers));
 
             proposal.setRequiredProposals(new CompletionProposal[] {typeProposal});
         }
@@ -740,7 +744,13 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         return Signature.createMethodSignature(parameterTypeSigs, new char[] { 'V' });
     }
 
-    int computeRelevanceForCaseMatching(char[] token, char[] proposalName) {
+    protected final GroovyCompletionProposal createProposal(int kind, int completionOffset) {
+        GroovyCompletionProposal proposal = new GroovyCompletionProposal(kind, completionOffset);
+        proposal.setNameLookup(nameLookup);
+        return proposal;
+    }
+
+    private int computeRelevanceForCaseMatching(char[] token, char[] proposalName) {
         if (CharOperation.equals(token, proposalName, true /* do not ignore case */)) {
             return RelevanceConstants.R_CASE + RelevanceConstants.R_EXACT_NAME;
         } else if (CharOperation.equals(token, proposalName, false /* ignore case */)) {
@@ -749,10 +759,38 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         return 0;
     }
 
-    protected final GroovyCompletionProposal createProposal(int kind, int completionOffset) {
-        GroovyCompletionProposal proposal = new GroovyCompletionProposal(kind, completionOffset);
-        proposal.setNameLookup(nameLookup);
-        return proposal;
+    private int computeRelevanceForTypeProposal(char[] fullyQualifiedName, int accessibility, int modifiers) {
+        IRelevanceRule rule = Optional.ofNullable(relevanceRule).orElse(IRelevanceRule.DEFAULT);
+        return rule.getRelevance(fullyQualifiedName, allTypesInUnit, accessibility, modifiers);
+    }
+
+    private void initializeRelevanceRule(JDTResolver resolver) {
+        if (context.lhsNode instanceof Variable) {
+            ClassNode lhsType = ((Variable) context.lhsNode).getType();
+            if (VariableScope.CLASS_CLASS_NODE.equals(lhsType) && lhsType.isUsingGenerics()) {
+                GenericsType target = lhsType.getGenericsTypes()[0];
+                if (target.getLowerBound() == null && target.getUpperBounds().length == 1 &&
+                        VariableScope.OBJECT_CLASS_NODE.equals(target.getUpperBounds()[0])) {
+                    return;
+                }
+                // create a relevance rule that will boost types compatible with the target type
+                IRelevanceRule rule = (char[] fullyQualifiedName, IType[] contextTypes, int accessibility, int modifiers) -> {
+                    try {
+                        ClassNode sourceType = resolver.resolve(String.valueOf(fullyQualifiedName));
+                        if (target.isCompatibleWith(sourceType)) return 10;
+                    } catch (RuntimeException e) {
+                        if (GroovyLogManager.manager.hasLoggers()) {
+                            GroovyLogManager.manager.log(TraceCategory.CONTENT_ASSIST, e.getMessage());
+                        } else {
+                            System.err.println(getClass().getSimpleName() + ": " + e.getMessage());
+                        }
+                    }
+                    return 0;
+                };
+
+                relevanceRule = CompositeRule.of(1.0, IRelevanceRule.DEFAULT, 2.0, rule);
+            }
+        }
     }
 
     /**
