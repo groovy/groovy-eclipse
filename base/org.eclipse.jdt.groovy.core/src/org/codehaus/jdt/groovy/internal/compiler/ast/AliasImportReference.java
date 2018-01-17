@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 public class AliasImportReference extends ImportReference {
 
     // eg. 'Foo' in 'import a.b.c.D as Foo'
-    private char[] alias;
+    private final char[] alias;
 
     public AliasImportReference(char[] alias, char[][] tokens, long[] sourcePositions, boolean onDemand, int modifiers) {
         super(tokens, sourcePositions, onDemand, modifiers);
@@ -45,5 +45,10 @@ public class AliasImportReference extends ImportReference {
     @Override
     public char[] getSimpleName() {
         return alias;
+    }
+
+    @Override
+    public String toString() {
+        return print(0, new StringBuffer(42)).append(" as ").append(alias).toString();
     }
 }
