@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2016 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -101,6 +102,12 @@ public class SearchableEnvironment
 		this(project, owner == null ? null : JavaModelManager.getJavaModelManager().getWorkingCopies(owner, true/*add primary WCs*/));
 		this.owner = owner;
 	}
+
+	// GROOVY add
+	public SearchableEnvironment(JavaProject project, WorkingCopyOwner owner, boolean value) throws JavaModelException {
+		this(project, owner);
+	}
+	// GROOVY end
 
 	private static int convertSearchFilterToModelFilter(int searchFilter) {
 		switch (searchFilter) {
