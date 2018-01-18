@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2017 IBM Corporation.
+ * Copyright (c) 2016, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -38,7 +38,7 @@ public class ProjectEntry implements IModulePathEntry {
 		try {
 			IModuleDescription module = this.project.getModuleDescription();
 			if (module != null) {
-				return (ModuleDescriptionInfo) ((JavaElement) module) .getElementInfo();
+				return (IModule) ((JavaElement) module) .getElementInfo();
 			}
 		} catch (JavaModelException e) {
 			// Proceed with null;

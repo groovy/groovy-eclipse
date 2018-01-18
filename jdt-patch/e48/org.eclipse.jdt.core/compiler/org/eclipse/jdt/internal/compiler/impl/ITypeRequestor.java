@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,8 +13,13 @@ package org.eclipse.jdt.internal.compiler.impl;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
+import org.eclipse.jdt.internal.compiler.env.IModule;
+import org.eclipse.jdt.internal.compiler.env.ISourceModule;
 import org.eclipse.jdt.internal.compiler.env.ISourceType;
+import org.eclipse.jdt.internal.compiler.lookup.BinaryModuleBinding;
+import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
+import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 
 public interface ITypeRequestor {
 
@@ -35,4 +40,25 @@ public interface ITypeRequestor {
 	 * requested type.
 	 */
 	void accept(ISourceType[] sourceType, PackageBinding packageBinding, AccessRestriction accessRestriction);
+
+	/**
+	 * Accept the requested module, could come in in different forms like IBinaryModule, ISourceModule,
+	 * "hopefully" no other form.
+	 *
+	 * @since 3.14
+	 */
+	default void accept(IModule module, LookupEnvironment environment) {
+		if (module instanceof ISourceModule) {
+			try {
+				ICompilationUnit compilationUnit = ((ISourceModule) module).getCompilationUnit();
+				if (compilationUnit != null) {
+					accept(compilationUnit, null);
+					return;
+				}
+			} catch (AbortCompilation abort) {
+				// fall through
+			}
+		}
+		BinaryModuleBinding.create(module, environment);
+	}
 }

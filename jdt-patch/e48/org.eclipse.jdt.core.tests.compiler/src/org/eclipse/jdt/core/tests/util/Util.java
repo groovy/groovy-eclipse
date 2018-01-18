@@ -38,7 +38,6 @@ import org.eclipse.jdt.internal.compiler.batch.FileSystem;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.env.IModule;
-import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
@@ -236,7 +235,10 @@ public static void compile(String[] pathsAndContents, Map options, String[] clas
         	classpath = classLibs;
         }
         
-        INameEnvironment nameEnvironment = new FileSystem(classpath, new String[] {}, null);
+        FileSystem nameEnvironment = new FileSystem(classpath, new String[] {}, null);
+        if (CompilerOptions.versionToJdkLevel((String) options.get(CompilerOptions.OPTION_Compliance)) >= ClassFileConstants.JDK9) {
+        	nameEnvironment.scanForModules(createParser9());
+        }
         IErrorHandlingPolicy errorHandlingPolicy =
             new IErrorHandlingPolicy() {
                 public boolean proceedOnErrors() {
@@ -272,6 +274,25 @@ public static void compile(String[] pathsAndContents, Map options, String[] clas
     	nameEnvironment.cleanup();
         if (requestor.hasErrors)
 	        System.err.print(requestor.problemLog); // problem log empty if no problems
+}
+private static Parser createParser9() {
+	Map<String,String> opts = new HashMap<String, String>();
+	opts.put(CompilerOptions.OPTION_Source, CompilerOptions.VERSION_9);
+	return new Parser(
+			new ProblemReporter(new IErrorHandlingPolicy() {
+						public boolean stopOnFirstError() {
+							return false;
+						}
+						public boolean proceedOnErrors() {
+							return true;
+						}
+						public boolean ignoreAllErrors() {
+							return false;
+						}
+					},
+					new CompilerOptions(opts),
+					new DefaultProblemFactory(Locale.getDefault())),
+			false);
 }
 public static String[] concatWithClassLibs(String[] classpaths, boolean inFront) {
     String[] classLibs = getJavaClassLibs();

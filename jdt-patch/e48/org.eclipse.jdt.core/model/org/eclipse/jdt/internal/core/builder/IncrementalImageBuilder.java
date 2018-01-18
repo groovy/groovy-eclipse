@@ -23,6 +23,7 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.problem.*;
 import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
+import org.eclipse.jdt.internal.core.CompilationGroup;
 import org.eclipse.jdt.internal.core.util.Messages;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -43,29 +44,45 @@ protected StringSet simpleStrings;
 protected StringSet rootStrings;
 protected SimpleLookupTable secondaryTypesToRemove;
 protected boolean hasStructuralChanges;
-protected int compileLoop;
 protected boolean makeOutputFolderConsistent;
+
+private IncrementalImageBuilder testImageBuilder;
 
 public static int MaxCompileLoop = 5; // perform a full build if it takes more than ? incremental compile loops
 
-protected IncrementalImageBuilder(JavaBuilder javaBuilder, State buildState) {
-	super(javaBuilder, true, buildState);
+protected IncrementalImageBuilder(JavaBuilder javaBuilder, State buildState, CompilationGroup compilationGroup) {
+	super(javaBuilder, true, buildState, compilationGroup);
 	this.nameEnvironment.isIncrementalBuild = true;
 	this.makeOutputFolderConsistent = JavaCore.ENABLED.equals(
 		javaBuilder.javaProject.getOption(JavaCore.CORE_JAVA_BUILD_RECREATE_MODIFIED_CLASS_FILES_IN_OUTPUT_FOLDER, true));
+	if (compilationGroup == CompilationGroup.MAIN) {
+		final IncrementalImageBuilder builder = new IncrementalImageBuilder(javaBuilder, this.newState,
+				CompilationGroup.TEST);
+		if (builder.sourceLocations.length > 0) {
+			this.testImageBuilder = builder;
+			this.testImageBuilder.resetCollections();
+		}
+	}
 }
 
 protected IncrementalImageBuilder(JavaBuilder javaBuilder) {
-	this(javaBuilder, null);
+	this(javaBuilder, null, CompilationGroup.MAIN);
 	this.newState.copyFrom(javaBuilder.lastState);
 }
 
-protected IncrementalImageBuilder(BatchImageBuilder batchBuilder) {
-	this(batchBuilder.javaBuilder, batchBuilder.newState);
+protected IncrementalImageBuilder(BatchImageBuilder batchBuilder, CompilationGroup compilationGroup) {
+	this(batchBuilder.javaBuilder, batchBuilder.newState, compilationGroup);
 	resetCollections();
 }
 
 public boolean build(SimpleLookupTable deltas) {
+	if(this.sourceLocations.length == 0) {
+		if (this.testImageBuilder != null) {
+			return this.testImageBuilder.build(deltas);
+		} else {
+			return true;
+		}
+	}
 	// initialize builder
 	// walk this project's deltas, find changed source files
 	// walk prereq projects' deltas, find changed class files & add affected source files
@@ -95,8 +112,12 @@ public boolean build(SimpleLookupTable deltas) {
 			this.notifier.updateProgressDelta(0.25f);
 		} else {
 			IResourceDelta sourceDelta = (IResourceDelta) deltas.get(this.javaBuilder.currentProject);
-			if (sourceDelta != null)
-				if (!findSourceFiles(sourceDelta)) return false;
+			if (sourceDelta != null) {
+				if (!findSourceFiles(sourceDelta)) return this.testImageBuilder != null ? this.testImageBuilder.build(deltas) : false;
+				if(this.testImageBuilder != null) {
+					this.testImageBuilder.findSourceFiles(sourceDelta);
+				}
+			}
 			this.notifier.updateProgressDelta(0.10f);
 
 			Object[] keyTable = deltas.keyTable;
@@ -117,26 +138,11 @@ public boolean build(SimpleLookupTable deltas) {
 			this.notifier.updateProgressDelta(0.05f);
 		}
 
-		this.compileLoop = 0;
-		float increment = 0.40f;
-		while (this.sourceFiles.size() > 0) { // added to in acceptResult
-			if (++this.compileLoop > MaxCompileLoop) {
-				if (JavaBuilder.DEBUG)
-					System.out.println("ABORTING incremental build... exceeded loop count"); //$NON-NLS-1$
-				return false;
-			}
-			this.notifier.checkCancel();
-
-			SourceFile[] allSourceFiles = new SourceFile[this.sourceFiles.size()];
-			this.sourceFiles.toArray(allSourceFiles);
-			resetCollections();
-
-			this.workQueue.addAll(allSourceFiles);
-			this.notifier.setProgressPerCompilationUnit(increment / allSourceFiles.length);
-			increment = increment / 2;
-			compile(allSourceFiles);
-			removeSecondaryTypes();
-			addAffectedSourceFiles();
+		if (incrementalBuildLoop() == false) {
+			return false;
+		}
+		if (this.testImageBuilder != null && this.testImageBuilder.incrementalBuildLoop() == false) {
+			return false;
 		}
 		if (this.hasStructuralChanges && this.javaBuilder.javaProject.hasCycleMarker())
 			this.javaBuilder.mustPropagateStructuralChanges();
@@ -150,6 +156,34 @@ public boolean build(SimpleLookupTable deltas) {
 		throw internalException(e);
 	} finally {
 		cleanUp();
+		if (this.testImageBuilder != null) {
+			this.testImageBuilder.cleanUp();
+		}
+	}
+	return true;
+}
+
+private boolean incrementalBuildLoop() throws CoreException {
+	int compileLoop = 0;
+	float increment = 0.40f;
+	while (this.sourceFiles.size() > 0) { // added to in acceptResult
+		if (++compileLoop > MaxCompileLoop) {
+			if (JavaBuilder.DEBUG)
+				System.out.println("ABORTING incremental build... exceeded loop count"); //$NON-NLS-1$
+			return false;
+		}
+		this.notifier.checkCancel();
+
+		SourceFile[] allSourceFiles = new SourceFile[this.sourceFiles.size()];
+		this.sourceFiles.toArray(allSourceFiles);
+		resetCollections();
+
+		this.workQueue.addAll(allSourceFiles);
+		this.notifier.setProgressPerCompilationUnit(increment / allSourceFiles.length);
+		increment = increment / 2;
+		compile(allSourceFiles);
+		removeSecondaryTypes();
+		addAffectedSourceFiles();
 	}
 	return true;
 }
@@ -184,7 +218,9 @@ protected void buildAfterBatchBuild() {
 
 protected void addAffectedSourceFiles() {
 	if (this.qualifiedStrings.elementSize == 0 && this.simpleStrings.elementSize == 0) return;
-
+	if(this.testImageBuilder != null) {
+		this.testImageBuilder.addAffectedSourceFiles(this.qualifiedStrings, this.simpleStrings, this.rootStrings, null);
+	}
 	addAffectedSourceFiles(this.qualifiedStrings, this.simpleStrings, this.rootStrings, null);
 }
 
@@ -303,7 +339,6 @@ protected void cleanUp() {
 	this.rootStrings = null;
 	this.secondaryTypesToRemove = null;
 	this.hasStructuralChanges = false;
-	this.compileLoop = 0;
 }
 
 @Override
@@ -802,7 +837,6 @@ protected void resetCollections() {
 		this.simpleStrings = new StringSet(3);
 		this.rootStrings = new StringSet(3);
 		this.hasStructuralChanges = false;
-		this.compileLoop = 0;
 	} else {
 		this.previousSourceFiles = this.sourceFiles.isEmpty() ? null : (LinkedHashSet) this.sourceFiles.clone();
 

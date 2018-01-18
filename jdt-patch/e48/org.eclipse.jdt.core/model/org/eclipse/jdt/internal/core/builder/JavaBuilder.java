@@ -32,6 +32,7 @@ JavaProject javaProject;
 IWorkspaceRoot workspaceRoot;
 CompilationParticipant[] participants;
 NameEnvironment nameEnvironment;
+NameEnvironment testNameEnvironment;
 SimpleLookupTable binaryLocationsPerProject; // maps a project to its binary resources (output folders, class folders, zip/jar files)
 public State lastState;
 BuildNotifier notifier;
@@ -253,8 +254,15 @@ private void buildAll() {
 	if (DEBUG && this.lastState != null)
 		System.out.println("JavaBuilder: Clearing last state : " + this.lastState); //$NON-NLS-1$
 	clearLastState();
-	BatchImageBuilder imageBuilder = new BatchImageBuilder(this, true);
+	BatchImageBuilder imageBuilder = new BatchImageBuilder(this, true, CompilationGroup.MAIN);
+	BatchImageBuilder testImageBuilder = new BatchImageBuilder(imageBuilder, true, CompilationGroup.TEST);
 	imageBuilder.build();
+	if (testImageBuilder.sourceLocations.length > 0) {
+		// Note: testImageBuilder *MUST* have a separate output folder, or it will delete the files created by imageBuilder.build() 
+		testImageBuilder.build();
+	} else {
+		testImageBuilder.cleanUp();
+	}
 	recordNewState(imageBuilder.newState);
 }
 
@@ -292,7 +300,8 @@ protected void clean(IProgressMonitor monitor) throws CoreException {
 			System.out.println("JavaBuilder: Clearing last state as part of clean : " + this.lastState); //$NON-NLS-1$
 		clearLastState();
 		removeProblemsAndTasksFor(this.currentProject);
-		new BatchImageBuilder(this, false).cleanOutputFolders(false);
+		new BatchImageBuilder(this, false, CompilationGroup.MAIN).cleanOutputFolders(false);
+		new BatchImageBuilder(this, false, CompilationGroup.TEST).cleanOutputFolders(false);
 	} catch (CoreException e) {
 		Util.log(e, "JavaBuilder handling CoreException while cleaning: " + this.currentProject.getName()); //$NON-NLS-1$
 		createInconsistentBuildMarker(e);
@@ -480,8 +489,12 @@ boolean hasBuildpathErrors() throws CoreException {
 }
 
 private boolean hasClasspathChanged() {
-	ClasspathMultiDirectory[] newSourceLocations = this.nameEnvironment.sourceLocations;
-	ClasspathMultiDirectory[] oldSourceLocations = this.lastState.sourceLocations;
+	return hasClasspathChanged(CompilationGroup.MAIN) || hasClasspathChanged(CompilationGroup.TEST);	
+}
+
+private boolean hasClasspathChanged(CompilationGroup compilationGroup) {
+	ClasspathMultiDirectory[] newSourceLocations = (compilationGroup == CompilationGroup.MAIN ? this.nameEnvironment : this.testNameEnvironment).sourceLocations;
+	ClasspathMultiDirectory[] oldSourceLocations = compilationGroup == CompilationGroup.MAIN ? this.lastState.sourceLocations : this.lastState.testSourceLocations;
 	int newLength = newSourceLocations.length;
 	int oldLength = oldSourceLocations.length;
 	int n, o;
@@ -529,8 +542,8 @@ private boolean hasClasspathChanged() {
 		return true;
 	}
 
-	ClasspathLocation[] newBinaryLocations = this.nameEnvironment.binaryLocations;
-	ClasspathLocation[] oldBinaryLocations = this.lastState.binaryLocations;
+	ClasspathLocation[] newBinaryLocations = (compilationGroup == CompilationGroup.MAIN ? this.nameEnvironment : this.testNameEnvironment).binaryLocations;
+	ClasspathLocation[] oldBinaryLocations = compilationGroup == CompilationGroup.MAIN ? this.lastState.binaryLocations : this.lastState.testBinaryLocations;
 	newLength = newBinaryLocations.length;
 	oldLength = oldBinaryLocations.length;
 	for (n = o = 0; n < newLength && o < oldLength; n++, o++) {
@@ -603,7 +616,8 @@ private int initializeBuilder(int kind, boolean forBuild) throws CoreException {
 	}
 
 	this.binaryLocationsPerProject = new SimpleLookupTable(3);
-	this.nameEnvironment = new NameEnvironment(this.workspaceRoot, this.javaProject, this.binaryLocationsPerProject, this.notifier);
+	this.nameEnvironment = new NameEnvironment(this.workspaceRoot, this.javaProject, this.binaryLocationsPerProject, this.notifier, CompilationGroup.MAIN);
+	this.testNameEnvironment = new NameEnvironment(this.workspaceRoot, this.javaProject, this.binaryLocationsPerProject, this.notifier, CompilationGroup.TEST);
 
 	if (forBuild) {
 		String filterSequence = this.javaProject.getOption(JavaCore.CORE_JAVA_BUILD_RESOURCE_COPY_FILTER, true);

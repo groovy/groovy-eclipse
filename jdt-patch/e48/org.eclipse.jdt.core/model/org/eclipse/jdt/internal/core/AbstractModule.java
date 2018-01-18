@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017 IBM Corporation.
+ * Copyright (c) 2017, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,6 +14,7 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IModuleDescription;
 import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.env.IModule.IModuleReference;
 import org.eclipse.jdt.internal.compiler.env.IModule.IPackageExport;
 import org.eclipse.jdt.internal.compiler.env.IModule.IService;
@@ -56,25 +57,23 @@ public abstract class AbstractModule extends NamedMember implements IModuleDescr
 	protected AbstractModule(JavaElement parent, String name) {
 		super(parent, name);
 	}
+	protected IModule getModuleInfo() throws JavaModelException {
+		return (IModule) getElementInfo();
+	}
 	public IModuleReference[] getRequiredModules() throws JavaModelException {
-		ModuleDescriptionInfo info = (ModuleDescriptionInfo) getElementInfo();
-		return info.requires();
+		return getModuleInfo().requires();
 	}
 	public IPackageExport[] getExportedPackages() throws JavaModelException {
-		ModuleDescriptionInfo info = (ModuleDescriptionInfo) getElementInfo();
-		return info.exports();
+		return getModuleInfo().exports();
 	}
 	public IService[] getProvidedServices() throws JavaModelException {
-		ModuleDescriptionInfo info = (ModuleDescriptionInfo) getElementInfo();
-		return info.provides();
+		return getModuleInfo().provides();
 	}
 	public char[][] getUsedServices() throws JavaModelException {
-		ModuleDescriptionInfo info = (ModuleDescriptionInfo) getElementInfo();
-		return info.uses();
+		return getModuleInfo().uses();
 	}
 	public IPackageExport[] getOpenedPackages() throws JavaModelException {
-		ModuleDescriptionInfo info = (ModuleDescriptionInfo) getElementInfo();
-		return info.opens();
+		return getModuleInfo().opens();
 	}
 	public String getKey(boolean forceOpen) throws JavaModelException {
 		return getKey(this, forceOpen);

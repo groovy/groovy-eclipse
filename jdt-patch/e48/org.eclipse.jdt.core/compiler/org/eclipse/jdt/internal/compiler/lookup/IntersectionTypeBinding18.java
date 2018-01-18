@@ -196,11 +196,11 @@ public class IntersectionTypeBinding18 extends ReferenceBinding { // abstraction
 	}
 	
 	@Override
-	public boolean isSubtypeOf(TypeBinding other) {
+	public boolean isSubtypeOf(TypeBinding other, boolean simulatingBugJDK8026527) {
 		if (TypeBinding.equalsEquals(this, other))
 			return true;
 		for (int i = 0; i < this.intersectingTypes.length; i++) {
-			if (this.intersectingTypes[i].isSubtypeOf(other))
+			if (this.intersectingTypes[i].isSubtypeOf(other, false))
 				return true;
 		}
 		return false;

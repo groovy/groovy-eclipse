@@ -966,6 +966,7 @@ public void test011_problem_categories() {
 		expectedProblemAttributes.put("RedundantNullCheckOnNullLocalVariable", new ProblemAttributes(CategorizedProblem.CAT_POTENTIAL_PROGRAMMING_PROBLEM));
 		expectedProblemAttributes.put("RedundantNullCheckOnSpecdNonNullLocalVariable", new ProblemAttributes(CategorizedProblem.CAT_POTENTIAL_PROGRAMMING_PROBLEM));
 		expectedProblemAttributes.put("RedundantNullDefaultAnnotation", new ProblemAttributes(CategorizedProblem.CAT_UNNECESSARY_CODE));
+		expectedProblemAttributes.put("RedundantNullDefaultAnnotationModule", new ProblemAttributes(CategorizedProblem.CAT_UNNECESSARY_CODE));
 		expectedProblemAttributes.put("RedundantNullDefaultAnnotationPackage", new ProblemAttributes(CategorizedProblem.CAT_UNNECESSARY_CODE));
 		expectedProblemAttributes.put("RedundantNullDefaultAnnotationType", new ProblemAttributes(CategorizedProblem.CAT_UNNECESSARY_CODE));
 		expectedProblemAttributes.put("RedundantNullDefaultAnnotationMethod", new ProblemAttributes(CategorizedProblem.CAT_UNNECESSARY_CODE));
@@ -1850,6 +1851,7 @@ public void test012_compiler_problems_tuning() {
 		expectedProblemAttributes.put("RedundantNullCheckOnNullLocalVariable", new ProblemAttributes(JavaCore.COMPILER_PB_REDUNDANT_NULL_CHECK));
 		expectedProblemAttributes.put("RedundantNullCheckOnSpecdNonNullLocalVariable", new ProblemAttributes(JavaCore.COMPILER_PB_REDUNDANT_NULL_CHECK));
 		expectedProblemAttributes.put("RedundantNullDefaultAnnotation", new ProblemAttributes(JavaCore.COMPILER_PB_REDUNDANT_NULL_ANNOTATION));
+		expectedProblemAttributes.put("RedundantNullDefaultAnnotationModule", new ProblemAttributes(JavaCore.COMPILER_PB_REDUNDANT_NULL_ANNOTATION));
 		expectedProblemAttributes.put("RedundantNullDefaultAnnotationPackage", new ProblemAttributes(JavaCore.COMPILER_PB_REDUNDANT_NULL_ANNOTATION));
 		expectedProblemAttributes.put("RedundantNullDefaultAnnotationType", new ProblemAttributes(JavaCore.COMPILER_PB_REDUNDANT_NULL_ANNOTATION));
 		expectedProblemAttributes.put("RedundantNullDefaultAnnotationMethod", new ProblemAttributes(JavaCore.COMPILER_PB_REDUNDANT_NULL_ANNOTATION));

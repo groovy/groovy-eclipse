@@ -17,6 +17,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.env.IBinaryAnnotation;
 import org.eclipse.jdt.internal.compiler.env.IBinaryModule;
 import org.eclipse.jdt.internal.compiler.env.IModule;
 
@@ -34,6 +35,9 @@ public class ModuleInfo extends ClassFileStruct implements IBinaryModule {
 	protected PackageExportInfo[] opens;
 	char[][] uses;
 	IModule.IService[] provides;
+
+	protected AnnotationInfo[] annotations;
+
 
 	@Override
 	public boolean isOpen() {
@@ -79,6 +83,10 @@ public class ModuleInfo extends ClassFileStruct implements IBinaryModule {
 		return this.opens;
 	}
 	@Override
+	public IBinaryAnnotation[] getAnnotations() {
+		return this.annotations;
+	}
+	@Override
 	public void addReads(char[] modName) {
 		Predicate<char[]> shouldAdd = m -> {
 			return Stream.of(this.requires).map(ref -> ref.name()).noneMatch(n -> CharOperation.equals(modName, n));
@@ -118,153 +126,170 @@ public class ModuleInfo extends ClassFileStruct implements IBinaryModule {
 		super(classFileBytes, offsets, offset);
 	}
 
-	public static ModuleInfo createModule(char[] className, byte classFileBytes[], int offsets[], int offset) {
+	/**
+	 * @param classFileBytes bytes of the enclosing class file
+	 * @param offsets constant pool offsets
+	 * @param offset offset to the "Module" attribute
+	 * @return a module info initialized from the "Module" attribute, which was already detected by the caller
+	 */
+	public static ModuleInfo createModule(byte classFileBytes[], int offsets[], int offset) {
 
-		int readOffset = offset;
-//		module.name = module.utf8At(utf8Offset + 3, module.u2At(utf8Offset + 1)); // returns 'Module' 
-		int moduleOffset = readOffset + 6;
-		int utf8Offset;
 		ModuleInfo module = new ModuleInfo(classFileBytes, offsets, 0);
-		int name_index = module.constantPoolOffsets[module.u2At(moduleOffset)];
-		utf8Offset = module.constantPoolOffsets[module.u2At(name_index + 1)];
-		module.name = module.utf8At(utf8Offset + 3, module.u2At(utf8Offset + 1));
-		CharOperation.replace(module.name, '/', '.');
+
+		module.readModuleAttribute(offset+6);
+
+		return module;
+	}
+
+	private void readModuleAttribute(int moduleOffset) {
+		int utf8Offset;
+		int name_index = this.constantPoolOffsets[u2At(moduleOffset)];
+		utf8Offset = this.constantPoolOffsets[u2At(name_index + 1)];
+		this.name = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
+		CharOperation.replace(this.name, '/', '.');
 		moduleOffset += 2;
-		module.flags = module.u2At(moduleOffset);
+		this.flags = u2At(moduleOffset);
 		moduleOffset += 2;
-		int version_index = module.u2At(moduleOffset);
+		int version_index = u2At(moduleOffset);
 		if (version_index > 0) {
-			utf8Offset = module.constantPoolOffsets[version_index];
-			module.version = module.utf8At(utf8Offset + 3, module.u2At(utf8Offset + 1));
+			utf8Offset = this.constantPoolOffsets[version_index];
+			this.version = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
 		}
 		moduleOffset += 2;
 
-		utf8Offset = module.constantPoolOffsets[module.u2At(readOffset)];
-		int count = module.u2At(moduleOffset);
-		module.requiresCount = count;
-		module.requires = new ModuleReferenceInfo[count];
+		int count = u2At(moduleOffset);
+		this.requiresCount = count;
+		this.requires = new ModuleReferenceInfo[count];
 		moduleOffset += 2;
 		for (int i = 0; i < count; i++) {
-			name_index = module.constantPoolOffsets[module.u2At(moduleOffset)];
-			utf8Offset = module.constantPoolOffsets[module.u2At(name_index + 1)];
-			char[] requiresNames = module.utf8At(utf8Offset + 3, module.u2At(utf8Offset + 1));
-			module.requires[i] = module.new ModuleReferenceInfo();
+			name_index = this.constantPoolOffsets[u2At(moduleOffset)];
+			utf8Offset = this.constantPoolOffsets[u2At(name_index + 1)];
+			char[] requiresNames = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
+			this.requires[i] = this.new ModuleReferenceInfo();
 			CharOperation.replace(requiresNames, '/', '.');
-			module.requires[i].refName = requiresNames;
+			this.requires[i].refName = requiresNames;
 			moduleOffset += 2;
-			int modifiers = module.u2At(moduleOffset);
-			module.requires[i].modifiers = modifiers;
-			module.requires[i].isTransitive = (ClassFileConstants.ACC_TRANSITIVE & modifiers) != 0; // Access modifier
+			int modifiers = u2At(moduleOffset);
+			this.requires[i].modifiers = modifiers;
+			this.requires[i].isTransitive = (ClassFileConstants.ACC_TRANSITIVE & modifiers) != 0; // Access modifier
 			moduleOffset += 2;
-			version_index = module.u2At(moduleOffset);
+			version_index = u2At(moduleOffset);
 			if (version_index > 0) {
-				utf8Offset = module.constantPoolOffsets[version_index];
-				module.requires[i].required_version = module.utf8At(utf8Offset + 3, module.u2At(utf8Offset + 1));
+				utf8Offset = this.constantPoolOffsets[version_index];
+				this.requires[i].required_version = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
 			}
 			moduleOffset += 2;
 		}
-		count = module.u2At(moduleOffset);
+		count = u2At(moduleOffset);
 		moduleOffset += 2;
-		module.exportsCount = count;
-		module.exports = new PackageExportInfo[count];
+		this.exportsCount = count;
+		this.exports = new PackageExportInfo[count];
 		for (int i = 0; i < count; i++) {
-			name_index = module.constantPoolOffsets[module.u2At(moduleOffset)];
-			utf8Offset = module.constantPoolOffsets[module.u2At(name_index + 1)];
-			char[] exported = module.utf8At(utf8Offset + 3, module.u2At(utf8Offset + 1));
+			name_index = this.constantPoolOffsets[u2At(moduleOffset)];
+			utf8Offset = this.constantPoolOffsets[u2At(name_index + 1)];
+			char[] exported = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
 			CharOperation.replace(exported, '/', '.');
-			PackageExportInfo pack = module.new PackageExportInfo();
-			module.exports[i] = pack;
+			PackageExportInfo pack = this.new PackageExportInfo();
+			this.exports[i] = pack;
 			pack.packageName = exported;
 			moduleOffset += 2;
-			pack.modifiers = module.u2At(moduleOffset);
+			pack.modifiers = u2At(moduleOffset);
 			moduleOffset += 2;
-			int exportedtoCount = module.u2At(moduleOffset);
+			int exportedtoCount = u2At(moduleOffset);
 			moduleOffset += 2;
 			if (exportedtoCount > 0) {
 				pack.exportedTo = new char[exportedtoCount][];
 				pack.exportedToCount = exportedtoCount;
 				for(int k = 0; k < exportedtoCount; k++) {
-					name_index = module.constantPoolOffsets[module.u2At(moduleOffset)];
-					utf8Offset = module.constantPoolOffsets[module.u2At(name_index + 1)];
-					char[] exportedToName = module.utf8At(utf8Offset + 3, module.u2At(utf8Offset + 1));
+					name_index = this.constantPoolOffsets[u2At(moduleOffset)];
+					utf8Offset = this.constantPoolOffsets[u2At(name_index + 1)];
+					char[] exportedToName = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
 					CharOperation.replace(exportedToName, '/', '.');
 					pack.exportedTo[k] = exportedToName;
 					moduleOffset += 2;
 				}
 			}
 		}
-		count = module.u2At(moduleOffset);
+		count = u2At(moduleOffset);
 		moduleOffset += 2;
-		module.opensCount = count;
-		module.opens = new PackageExportInfo[count];
+		this.opensCount = count;
+		this.opens = new PackageExportInfo[count];
 		for (int i = 0; i < count; i++) {
-			name_index = module.constantPoolOffsets[module.u2At(moduleOffset)];
-			utf8Offset = module.constantPoolOffsets[module.u2At(name_index + 1)];
-			char[] exported = module.utf8At(utf8Offset + 3, module.u2At(utf8Offset + 1));
+			name_index = this.constantPoolOffsets[u2At(moduleOffset)];
+			utf8Offset = this.constantPoolOffsets[u2At(name_index + 1)];
+			char[] exported = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
 			CharOperation.replace(exported, '/', '.');
-			PackageExportInfo pack = module.new PackageExportInfo();
-			module.opens[i] = pack;
+			PackageExportInfo pack = this.new PackageExportInfo();
+			this.opens[i] = pack;
 			pack.packageName = exported;
 			moduleOffset += 2;
-			pack.modifiers = module.u2At(moduleOffset);
+			pack.modifiers = u2At(moduleOffset);
 			moduleOffset += 2;
-			int exportedtoCount = module.u2At(moduleOffset);
+			int exportedtoCount = u2At(moduleOffset);
 			moduleOffset += 2;
 			if (exportedtoCount > 0) {
 				pack.exportedTo = new char[exportedtoCount][];
 				pack.exportedToCount = exportedtoCount;
 				for(int k = 0; k < exportedtoCount; k++) {
-					name_index = module.constantPoolOffsets[module.u2At(moduleOffset)];
-					utf8Offset = module.constantPoolOffsets[module.u2At(name_index + 1)];
-					char[] exportedToName = module.utf8At(utf8Offset + 3, module.u2At(utf8Offset + 1));
+					name_index = this.constantPoolOffsets[u2At(moduleOffset)];
+					utf8Offset = this.constantPoolOffsets[u2At(name_index + 1)];
+					char[] exportedToName = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
 					CharOperation.replace(exportedToName, '/', '.');
 					pack.exportedTo[k] = exportedToName;
 					moduleOffset += 2;
 				}
 			}
 		}
-		count = module.u2At(moduleOffset);
+		count = u2At(moduleOffset);
 		moduleOffset += 2;
-		module.usesCount = count;
-		module.uses = new char[count][];
+		this.usesCount = count;
+		this.uses = new char[count][];
 		for (int i = 0; i < count; i++) {
-			int classIndex = module.constantPoolOffsets[module.u2At(moduleOffset)];
-			utf8Offset = module.constantPoolOffsets[module.u2At(classIndex + 1)];
-			char[] inf = module.utf8At(utf8Offset + 3, module.u2At(utf8Offset + 1));
+			int classIndex = this.constantPoolOffsets[u2At(moduleOffset)];
+			utf8Offset = this.constantPoolOffsets[u2At(classIndex + 1)];
+			char[] inf = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
 			CharOperation.replace(inf, '/', '.');
-			module.uses[i] = inf;
+			this.uses[i] = inf;
 			moduleOffset += 2;
 		}
-		count = module.u2At(moduleOffset);
+		count = u2At(moduleOffset);
 		moduleOffset += 2;
-		module.providesCount = count;
-		module.provides = new ServiceInfo[count];
+		this.providesCount = count;
+		this.provides = new ServiceInfo[count];
 		for (int i = 0; i < count; i++) {
-			int classIndex = module.constantPoolOffsets[module.u2At(moduleOffset)];
-			utf8Offset = module.constantPoolOffsets[module.u2At(classIndex + 1)];
-			char[] inf = module.utf8At(utf8Offset + 3, module.u2At(utf8Offset + 1));
+			int classIndex = this.constantPoolOffsets[u2At(moduleOffset)];
+			utf8Offset = this.constantPoolOffsets[u2At(classIndex + 1)];
+			char[] inf = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
 			CharOperation.replace(inf, '/', '.');
-			ServiceInfo service = module.new ServiceInfo();
-			module.provides[i] = service;
+			ServiceInfo service = this.new ServiceInfo();
+			this.provides[i] = service;
 			service.serviceName = inf;
 			moduleOffset += 2;
-			int implCount = module.u2At(moduleOffset);
+			int implCount = u2At(moduleOffset);
 			moduleOffset += 2;
 			service.with = new char[implCount][];
 			if (implCount > 0) {
 				service.with = new char[implCount][];
 				for(int k = 0; k < implCount; k++) {
-					classIndex = module.constantPoolOffsets[module.u2At(moduleOffset)];
-					utf8Offset = module.constantPoolOffsets[module.u2At(classIndex + 1)];
-					char[] implName = module.utf8At(utf8Offset + 3, module.u2At(utf8Offset + 1));
+					classIndex = this.constantPoolOffsets[u2At(moduleOffset)];
+					utf8Offset = this.constantPoolOffsets[u2At(classIndex + 1)];
+					char[] implName = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
 					CharOperation.replace(implName, '/', '.');
 					service.with[k] = implName;
 					moduleOffset += 2;
 				}
 			}
 		}
-		return module;
 	}
+	void setAnnotations(AnnotationInfo[] annotationInfos, boolean fullyInitialize) {
+		this.annotations = annotationInfos;
+		if (fullyInitialize) {
+			for (int i = 0, max = annotationInfos.length; i < max; i++) {
+				annotationInfos[i].initialize();
+			}
+		}
+	}
+
 	class ModuleReferenceInfo implements IModule.IModuleReference {
 		char[] refName;
 		boolean isTransitive = false;

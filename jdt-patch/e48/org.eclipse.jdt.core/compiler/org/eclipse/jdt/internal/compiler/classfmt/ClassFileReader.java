@@ -52,7 +52,7 @@ public class ClassFileReader extends ClassFileStruct implements IBinaryType {
 	private AnnotationInfo[] annotations;
 	private TypeAnnotationInfo[] typeAnnotations;
 	private FieldInfo[] fields;
-	private IBinaryModule moduleDeclaration;
+	private ModuleInfo moduleDeclaration;
 	public char[] moduleName;
 	private int fieldsCount;
 
@@ -432,11 +432,15 @@ public ClassFileReader(byte[] classFileBytes, char[] fileName, boolean fullyInit
 							}
 						}
 					} else if (CharOperation.equals(attributeName, AttributeNamesConstants.ModuleName)) {
-						this.moduleDeclaration = ModuleInfo.createModule(this.className, this.reference, this.constantPoolOffsets, readOffset);
+						this.moduleDeclaration = ModuleInfo.createModule(this.reference, this.constantPoolOffsets, readOffset);
 						this.moduleName = this.moduleDeclaration.name();
 					}
 			}
 			readOffset += (6 + u4At(readOffset + 2));
+		}
+		if (this.moduleDeclaration != null && this.annotations != null) {
+			this.moduleDeclaration.setAnnotations(this.annotations, fullyInitialize);
+			this.annotations = null;
 		}
 		if (fullyInitialize) {
 			initialize();

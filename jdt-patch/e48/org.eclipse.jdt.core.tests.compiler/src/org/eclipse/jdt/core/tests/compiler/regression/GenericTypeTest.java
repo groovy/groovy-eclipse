@@ -29606,8 +29606,14 @@ public void test0901() {
 		"----------\n" +
 		"1. ERROR in X.java (at line 6)\n" +
 		"	return foo(i, f);\n" +
+		(this.complianceLevel < ClassFileConstants.JDK1_8
+		?
 		"	       ^^^^^^^^^\n" +
-		"Type mismatch: cannot convert from Object&Serializable&Cloneable to Object[]\n" +
+		"Type mismatch: cannot convert from Object&Serializable&Cloneable to Object[]\n"
+		:
+		"	       ^^^\n" +
+		"The method foo(T, T) in the type X is not applicable for the arguments (int[], float[])\n"
+		)+
 		"----------\n",
 		// javac options
 		JavacTestOptions.JavacHasABug.JavacBugFixed_6_10 /* javac test options */);

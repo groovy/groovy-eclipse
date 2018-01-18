@@ -495,7 +495,7 @@ protected void getHandleMemento(StringBuffer buff) {
 	buff.append(getHandleMementoDelimiter());
 	escapeMementoName(buff, path.toString());
 	if (org.eclipse.jdt.internal.compiler.util.Util.isJrt(path.toOSString())) {
-		buff.append(getHandleMementoDelimiter());
+		buff.append(JavaElement.JEM_MODULE);
 		escapeMementoName(buff, getElementName());
 	}
 }

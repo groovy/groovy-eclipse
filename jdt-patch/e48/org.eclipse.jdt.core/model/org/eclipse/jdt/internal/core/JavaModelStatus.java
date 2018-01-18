@@ -397,6 +397,22 @@ public class JavaModelStatus extends Status implements IJavaModelStatus, IJavaMo
 				case DEPRECATED_VARIABLE :
 					javaProject = (IJavaProject)this.elements[0];
 					return Messages.bind(Messages.classpath_deprecated_variable, new String[] {this.path.segment(0).toString(), javaProject.getElementName(), this.string});
+				case TEST_SOURCE_REQUIRES_SEPARATE_OUTPUT_LOCATION:
+					javaProject = (IJavaProject)this.elements[0];
+					projectName = javaProject.getElementName();
+					newPath = this.path;
+					if (this.path.segment(0).toString().equals(projectName)) {
+						newPath = this.path.removeFirstSegments(1);
+					}
+					return Messages.bind(Messages.classpath_testSourceRequiresSeparateOutputFolder, new String[] {newPath.makeRelative().toString(), projectName});
+				case TEST_OUTPUT_FOLDER_MUST_BE_SEPARATE_FROM_MAIN_OUTPUT_FOLDERS:
+					javaProject = (IJavaProject)this.elements[0];
+					projectName = javaProject.getElementName();
+					newPath = this.path;
+					if (this.path.segment(0).toString().equals(projectName)) {
+						newPath = this.path.removeFirstSegments(1);
+					}
+					return Messages.bind(Messages.classpath_testOutputFolderMustBeSeparateFromMainOutputFolders, new String[] {newPath.makeRelative().toString(), projectName});
 			}
 			if (this.string != null) {
 				return this.string;

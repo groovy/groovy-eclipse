@@ -116,7 +116,7 @@ public void codeComplete(
 	}
 
 	JavaProject project = (JavaProject) getJavaProject();
-	SearchableEnvironment environment = project.newSearchableNameEnvironment(owner);
+	SearchableEnvironment environment = project.newSearchableNameEnvironment(owner, requestor.isTestCodeExcluded());
 	CompletionEngine engine = new CompletionEngine(environment, requestor, project.getOptions(true), project, owner, monitor);
 
 	String source = getCompilationUnit().getSource();

@@ -162,6 +162,7 @@ public static Test suite() {
 	since_9.add(ModuleAttributeTests.class);
 	since_9.add(AutomaticModuleNamingTest.class);
 	since_9.add(UnnamedModuleTest.class);
+	since_9.add(NullAnnotationTests9.class);
 	
 	// Build final test suite
 	TestSuite all = new TestSuite(TestAll.class.getName());

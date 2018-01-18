@@ -356,4 +356,20 @@ public interface IJavaModelStatusConstants {
 	 * @see org.eclipse.jdt.core.IClasspathAttribute#EXTERNAL_ANNOTATION_PATH
 	 */
 	public static final int CP_INVALID_EXTERNAL_ANNOTATION_PATH = 1014;
+	
+	/**
+	 * Status constant indicating that a source folder marked to contain test sources has no separate output location, but the project also contains main sources. 
+	 * preference settings.
+	 * @see IClasspathAttribute#TEST
+	 * @since 3.14
+	 */
+	public static final int TEST_SOURCE_REQUIRES_SEPARATE_OUTPUT_LOCATION = 1015;
+
+	/**
+	 * Status constant indicating that the output folder of a source folder marked to contain test sources is not separate from the output folders of main sources.
+	 * @see IClasspathAttribute#TEST
+	 * @since 3.14
+	 */
+	public static final int TEST_OUTPUT_FOLDER_MUST_BE_SEPARATE_FROM_MAIN_OUTPUT_FOLDERS = 1016;
+
 }

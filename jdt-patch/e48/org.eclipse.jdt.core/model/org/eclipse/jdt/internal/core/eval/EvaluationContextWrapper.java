@@ -291,7 +291,7 @@ public void evaluateVariable(IGlobalVariable variable, ICodeSnippetRequestor req
  * Returns a name environment for the last built state.
  */
 protected INameEnvironment getBuildNameEnvironment() {
-	return new NameEnvironment(getProject());
+	return new NameEnvironment(getProject(), CompilationGroup.TEST);
 }
 public char[] getVarClassName() {
 	return this.context.getVarClassName();

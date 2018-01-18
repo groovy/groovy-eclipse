@@ -15,6 +15,7 @@
 package org.eclipse.jdt.internal.compiler.lookup;
 
 import java.util.ArrayList;
+import java.util.function.Predicate;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.env.IModuleAwareNameEnvironment;
@@ -35,7 +36,7 @@ public class PackageBinding extends Binding implements TypeConstants {
 
 	// code representing the default that has been defined for this package (using @NonNullByDefault)
 	// one of Binding.{NO_NULL_DEFAULT,NULL_UNSPECIFIED_BY_DEFAULT,NONNULL_BY_DEFAULT}
-	protected int defaultNullness = NO_NULL_DEFAULT;
+	private int defaultNullness = NO_NULL_DEFAULT;
 
 	public ModuleBinding enclosingModule;
 
@@ -298,6 +299,26 @@ public final boolean isViewedAsDeprecated() {
 		}
 	}
 	return (this.tagBits & TagBits.AnnotationDeprecated) != 0;
+}
+public int getDefaultNullness() {
+	if (this.defaultNullness == NO_NULL_DEFAULT)
+		return this.enclosingModule.getDefaultNullness();
+	return this.defaultNullness;
+}
+public void setDefaultNullness(int nullness) {
+	this.defaultNullness = nullness;
+}
+/**
+ * Find a binding (either this package or its enclosing ModuleBinding)
+ * where 'defaultNullness' matches the given predicate.
+ */
+public Binding findDefaultNullnessTarget(Predicate<Integer> predicate) {
+	if (predicate.test(this.defaultNullness))
+		return this;
+	if (this.defaultNullness == NO_NULL_DEFAULT)
+		if (predicate.test(this.enclosingModule.getDefaultNullness()))
+			return this.enclosingModule;
+	return null;
 }
 /* API
 * Answer the receiver's binding type from Binding.BindingID.

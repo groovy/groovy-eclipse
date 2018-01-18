@@ -294,7 +294,7 @@ public boolean isCompatibleWith(TypeBinding otherType, Scope captureScope) {
 }
 
 @Override
-public boolean isSubtypeOf(TypeBinding otherType) {
+public boolean isSubtypeOf(TypeBinding otherType, boolean simulatingBugJDK8026527) {
 	if (equalsEquals(this, otherType))
 		return true;
 
@@ -304,7 +304,7 @@ public boolean isSubtypeOf(TypeBinding otherType) {
 			if (otherArray.leafComponentType.isBaseType())
 				return false; // relying on the fact that all equal arrays are identical
 			if (this.dimensions == otherArray.dimensions)
-				return this.leafComponentType.isSubtypeOf(otherArray.leafComponentType);
+				return this.leafComponentType.isSubtypeOf(otherArray.leafComponentType, simulatingBugJDK8026527);
 			if (this.dimensions < otherArray.dimensions)
 				return false; // cannot assign 'String[]' into 'Object[][]' but can assign 'byte[][]' into 'Object[]'
 			break;

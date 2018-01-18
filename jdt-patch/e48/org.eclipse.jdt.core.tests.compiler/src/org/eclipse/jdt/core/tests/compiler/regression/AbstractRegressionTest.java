@@ -96,6 +96,110 @@ import org.osgi.framework.Bundle;
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public abstract class AbstractRegressionTest extends AbstractCompilerTest implements StopableTestCase {
 
+	protected class Runner {
+		boolean shouldFlushOutputDirectory = true;
+		// input:
+		String[] testFiles;
+		String[] dependantFiles;
+		String[] classLibraries;
+		// control compilation:
+		Map customOptions;
+		boolean performStatementsRecovery;
+		boolean generateOutput;
+		ICompilerRequestor customRequestor;
+		// compiler result:
+		String expectedCompilerLog;
+		String[] alternateCompilerLogs;
+		boolean showCategory;
+		boolean showWarningToken;
+		// javac:
+		boolean skipJavac;
+		public String expectedJavacOutputString;
+		JavacTestOptions javacTestOptions;
+		// execution:
+		boolean forceExecution;
+		String[] vmArguments;
+		String expectedOutputString;
+		String expectedErrorString;
+
+		ASTVisitor visitor;
+
+		@SuppressWarnings("synthetic-access")
+		protected void runConformTest() {
+			runTest(this.shouldFlushOutputDirectory,
+					this.testFiles,
+					this.dependantFiles != null ? this.dependantFiles : new String[] {},
+					this.classLibraries,
+					this.customOptions,
+					this.performStatementsRecovery,
+					new Requestor(
+							this.generateOutput,
+							this.customRequestor,
+							this.showCategory,
+							this.showWarningToken),
+					false,
+					this.expectedCompilerLog,
+					this.alternateCompilerLogs,
+					this.forceExecution,
+					this.vmArguments,
+					this.expectedOutputString,
+					this.expectedErrorString,
+					this.visitor,
+					this.expectedJavacOutputString != null ? this.expectedJavacOutputString : this.expectedOutputString,
+					this.skipJavac ? JavacTestOptions.SKIP : this.javacTestOptions);
+		}
+
+		@SuppressWarnings("synthetic-access")
+		protected void runNegativeTest() {
+			runTest(this.shouldFlushOutputDirectory,
+					this.testFiles,
+					this.dependantFiles != null ? this.dependantFiles : new String[] {},
+					this.classLibraries,
+					this.customOptions,
+					this.performStatementsRecovery,
+					new Requestor(
+							this.generateOutput,
+							this.customRequestor,
+							this.showCategory,
+							this.showWarningToken),
+					true,
+					this.expectedCompilerLog,
+					this.alternateCompilerLogs,
+					this.forceExecution,
+					this.vmArguments,
+					this.expectedOutputString,
+					this.expectedErrorString,
+					this.visitor,
+					this.expectedJavacOutputString != null ? this.expectedJavacOutputString : this.expectedOutputString,
+					this.skipJavac ? JavacTestOptions.SKIP : this.javacTestOptions);
+		}
+
+		@SuppressWarnings("synthetic-access")
+		protected void runWarningTest() {
+			runTest(this.shouldFlushOutputDirectory,
+					this.testFiles,
+					this.dependantFiles != null ? this.dependantFiles : new String[] {},
+					this.classLibraries,
+					this.customOptions,
+					this.performStatementsRecovery,
+					new Requestor(
+							this.generateOutput,
+							this.customRequestor,
+							this.showCategory,
+							this.showWarningToken),
+					false,
+					this.expectedCompilerLog,
+					this.alternateCompilerLogs,
+					this.forceExecution,
+					this.vmArguments,
+					this.expectedOutputString,
+					this.expectedErrorString,
+					this.visitor,
+					this.expectedJavacOutputString != null ? this.expectedJavacOutputString : this.expectedOutputString,
+					this.skipJavac ? JavacTestOptions.SKIP : this.javacTestOptions);
+		}
+	}
+
 	// javac comparison related types, fields and methods - see runJavac for
 	// details
 static class JavacCompiler {
@@ -1386,6 +1490,7 @@ protected static class JavacTestOptions {
 			null /* do not check error string */,
 			visitor,
 			// javac options
+			null /* do not check javac output string */,
 			JavacTestOptions.DEFAULT /* default javac test options */);
 	}
 
@@ -1479,6 +1584,7 @@ protected static class JavacTestOptions {
 				expectedSuccessOutputString,
 				null,
 				null,
+				expectedSuccessOutputString,
 				JavacTestOptions.DEFAULT);
 	}
 
@@ -1886,6 +1992,9 @@ protected void runJavac(
 	if (newOptions.indexOf(" -Xlint") < 0) {
 		newOptions = newOptions.concat(" -Xlint");
 	}
+	if (newOptions.indexOf(" -implicit") < 0) {
+		newOptions = newOptions.concat(" -implicit:none");
+	}
 	if (classLibraries != null) {
 		List<String> filteredLibs = new ArrayList<>();
 		for (String lib : classLibraries) {
@@ -1938,6 +2047,7 @@ protected void runJavac(
 				for (int i = 0, j = 0; i < testFilesLength; i += 2, j++) {
 					sourceFileNames[j] = testFiles[i];
 				}
+
 				// compile
 				long compilerResult = compiler.compile(javacOutputDirectory, newOptions /* options */, sourceFileNames, compilerLog);
 				// check cumulative javac results
@@ -2552,6 +2662,7 @@ protected void runNegativeTest(boolean skipJavac, JavacTestOptions javacTestOpti
 			expectedOutputString,
 			expectedErrorString,
 			null,
+			expectedOutputString,
 			javacTestOptions);
 	}
 	/** Call this if the compiler randomly produces different error logs. */
@@ -2572,6 +2683,7 @@ protected void runNegativeTest(boolean skipJavac, JavacTestOptions javacTestOpti
 			null,
 			alternateCompilerErrorLogs,
 			false,
+			null,
 			null,
 			null,
 			null,
@@ -2672,6 +2784,7 @@ protected void runNegativeTest(boolean skipJavac, JavacTestOptions javacTestOpti
 			String expectedErrorString,
 			final ASTVisitor visitor,
 			// javac options
+			String expectedJavacOutputString,
 			JavacTestOptions javacTestOptions) {
 		// non-javac part
 		if (shouldFlushOutputDirectory)
@@ -2812,7 +2925,7 @@ protected void runNegativeTest(boolean skipJavac, JavacTestOptions javacTestOpti
 		// javac part
 		if (RUN_JAVAC && javacTestOptions != JavacTestOptions.SKIP) {
 			runJavac(testFiles, expectingCompilerErrors, expectedCompilerLog,
-					expectedOutputString, expectedErrorString, shouldFlushOutputDirectory,
+					expectedJavacOutputString, expectedErrorString, shouldFlushOutputDirectory,
 					javacTestOptions, vmArguments, classLibraries);
 		}
 	}

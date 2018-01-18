@@ -17,23 +17,23 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.formatter;
 
+import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameCOMMENT_BLOCK;
+import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameCOMMENT_JAVADOC;
+import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameCOMMENT_LINE;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameEOF;
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameNotAToken;
-import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameCOMMENT_JAVADOC;
-import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameCOMMENT_BLOCK;
-import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.TokenNameCOMMENT_LINE;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IModuleDescription;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.compiler.InvalidInputException;
 import org.eclipse.jdt.core.dom.AST;
@@ -49,7 +49,8 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.parser.Scanner;
 import org.eclipse.jdt.internal.compiler.util.Util;
-import org.eclipse.jdt.internal.core.PackageFragment;
+import org.eclipse.jdt.internal.core.JavaProject;
+import org.eclipse.jdt.internal.core.SourceModule;
 import org.eclipse.jdt.internal.formatter.linewrap.CommentWrapExecutor;
 import org.eclipse.jdt.internal.formatter.linewrap.WrapPreparator;
 import org.eclipse.jface.text.IRegion;
@@ -331,16 +332,7 @@ public class DefaultCodeFormatter extends CodeFormatter {
 		ASTParser parser = ASTParser.newParser(AST.JLS9);
 
 		if (kind == K_MODULE_INFO) {
-			Path fakeModuleInfoPath = new Path("project/" + TypeConstants.MODULE_INFO_FILE_NAME_STRING); //$NON-NLS-1$
-			IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(fakeModuleInfoPath);
-			ICompilationUnit unit = JavaCore.createCompilationUnitFrom(file);
-			parser.setSource(new org.eclipse.jdt.internal.core.CompilationUnit((PackageFragment) unit.getParent(),
-					unit.getElementName(), unit.getOwner()) {
-				@Override
-				public char[] getContents() {
-					return DefaultCodeFormatter.this.sourceArray;
-				}
-			});
+			parser.setSource(createDummyModuleInfoCompilationUnit());
 		} else {
 			parser.setSource(this.sourceArray);
 		}
@@ -351,6 +343,32 @@ public class DefaultCodeFormatter extends CodeFormatter {
 		parserOptions.put(CompilerOptions.OPTION_DocCommentSupport, CompilerOptions.ENABLED);
 		parser.setCompilerOptions(parserOptions);
 		return parser;
+	}
+
+	private ICompilationUnit createDummyModuleInfoCompilationUnit() {
+		IJavaProject dummyProject = new JavaProject() {
+			@Override
+			public Map<String, String> getOptions(boolean inheritJavaCoreOptions) {
+				return new HashMap<>();
+			}
+
+			@Override
+			public IModuleDescription getModuleDescription() throws JavaModelException {
+				return new SourceModule(this, ""); //$NON-NLS-1$
+			}
+		};
+		return new org.eclipse.jdt.internal.core.CompilationUnit(null, TypeConstants.MODULE_INFO_FILE_NAME_STRING,
+				null) {
+			@Override
+			public char[] getContents() {
+				return DefaultCodeFormatter.this.sourceArray;
+			}
+
+			@Override
+			public IJavaProject getJavaProject() {
+				return dummyProject;
+			}
+		};
 	}
 
 	private boolean hasErrors(ASTNode astNode) {

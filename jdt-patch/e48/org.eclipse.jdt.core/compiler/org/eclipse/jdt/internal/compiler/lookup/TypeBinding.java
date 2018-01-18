@@ -1636,7 +1636,7 @@ public boolean sIsMoreSpecific(TypeBinding s, TypeBinding t, Scope scope) {
 	return s.isCompatibleWith(t, scope) && !s.needsUncheckedConversion(t);
 }
 
-public boolean isSubtypeOf(TypeBinding right) {
+public boolean isSubtypeOf(TypeBinding right, boolean simulatingBugJDK8026527) {
 	return isCompatibleWith(right);
 }
 

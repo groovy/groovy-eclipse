@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -43,7 +43,6 @@ import org.eclipse.jdt.internal.core.JavaElementRequestor;
 import org.eclipse.jdt.internal.core.JavaModel;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.JavaProject;
-import org.eclipse.jdt.internal.core.ModuleDescriptionInfo;
 import org.eclipse.jdt.internal.core.NameLookup;
 import org.eclipse.jdt.internal.core.PackageFragmentRoot;
 import org.eclipse.jdt.internal.core.builder.ClasspathJar;
@@ -373,7 +372,7 @@ public IModule getModule(char[] moduleName) {
 	IModule module = null;
 	try {
 		if (moduleDesc != null)
-			module =  ((ModuleDescriptionInfo)((JavaElement) moduleDesc).getElementInfo());
+			module =  (IModule)((JavaElement) moduleDesc).getElementInfo();
 	} catch (JavaModelException e) {
 		// do nothing
 	}

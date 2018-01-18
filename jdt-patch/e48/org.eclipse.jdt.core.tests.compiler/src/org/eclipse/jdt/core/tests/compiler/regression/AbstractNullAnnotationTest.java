@@ -11,6 +11,7 @@
 package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 
 import org.eclipse.core.runtime.FileLocator;
@@ -63,11 +64,15 @@ public abstract class AbstractNullAnnotationTest extends AbstractComparableTest 
 		super(name);
 	}
 
+	protected void setUp() throws Exception {
+		super.setUp();
+		setUpAnnotationLib();
+	}
+
 	/**
 	 * @deprecated indirectly uses deprecated class PackageAdmin
 	 */
-	protected void setUp() throws Exception {
-		super.setUp();
+	protected void setUpAnnotationLib() throws IOException {
 		if (this.LIBS == null) {
 			String[] defaultLibs = getDefaultClassPaths();
 			int len = defaultLibs.length;

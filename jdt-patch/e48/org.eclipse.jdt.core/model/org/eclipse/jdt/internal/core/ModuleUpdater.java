@@ -11,14 +11,18 @@
 package org.eclipse.jdt.internal.core;
 
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaModelStatusConstants;
 import org.eclipse.jdt.core.IModuleDescription;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.env.IModuleAwareNameEnvironment;
@@ -107,5 +111,50 @@ public class ModuleUpdater {
 					update.accept(compilerModule);
 			}
 		}
+	}
+
+	private static boolean containsNonModularDependency(IClasspathEntry[] entries) {
+		for (IClasspathEntry e : entries) {
+			if (e.getEntryKind() != IClasspathEntry.CPE_SOURCE && !((ClasspathEntry) e).isModular())
+				return true;
+		}
+		return false;
+	}
+
+	// Bug 520713: allow test code to access code on the classpath
+	public void addReadUnnamedForNonEmptyClasspath(JavaProject project, IClasspathEntry[] expandedClasspath)
+			throws JavaModelException {
+		for (String moduleName : determineModulesOfProjectsWithNonEmptyClasspath(project, expandedClasspath)) {
+			addModuleUpdate(moduleName, m -> m.addReads(ModuleBinding.ALL_UNNAMED), UpdateKind.MODULE);
+		}
+	}
+
+	public static Set<String> determineModulesOfProjectsWithNonEmptyClasspath(JavaProject project,
+			IClasspathEntry[] expandedClasspath) throws JavaModelException {
+		LinkedHashSet<String> list = new LinkedHashSet<>();
+		if (containsNonModularDependency(expandedClasspath)) {
+			IModuleDescription moduleDescription = project.getModuleDescription();
+			if (moduleDescription != null) {
+				list.add(moduleDescription.getElementName());
+			}
+		}
+		for (IClasspathEntry e1 : expandedClasspath) {
+			if (e1.getEntryKind() == IClasspathEntry.CPE_PROJECT) {
+				Object target = JavaModel.getTarget(e1.getPath(), true);
+				if (target instanceof IProject) {
+					IProject prereqProject = (IProject) target;
+					if (JavaProject.hasJavaNature(prereqProject)) {
+						JavaProject prereqJavaProject = (JavaProject) JavaCore.create(prereqProject);
+						if (containsNonModularDependency(prereqJavaProject.getResolvedClasspath())) {
+							IModuleDescription prereqModuleDescription = prereqJavaProject.getModuleDescription();
+							if (prereqModuleDescription != null) {
+								list.add(prereqModuleDescription.getElementName());
+							}
+						}
+					}
+				}
+			}
+		}
+		return list;
 	}
 }

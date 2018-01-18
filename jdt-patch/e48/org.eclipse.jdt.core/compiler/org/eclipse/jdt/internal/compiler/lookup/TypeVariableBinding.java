@@ -569,16 +569,16 @@ public class TypeVariableBinding extends ReferenceBinding {
 	}
 
 	@Override
-	public boolean isSubtypeOf(TypeBinding other) {
+	public boolean isSubtypeOf(TypeBinding other, boolean simulatingBugJDK8026527) {
 		if (isSubTypeOfRTL(other))
 			return true;
-		if (this.firstBound != null && this.firstBound.isSubtypeOf(other))
+		if (this.firstBound != null && this.firstBound.isSubtypeOf(other, simulatingBugJDK8026527))
 			return true;
-		if (this.superclass != null && this.superclass.isSubtypeOf(other))
+		if (this.superclass != null && this.superclass.isSubtypeOf(other, simulatingBugJDK8026527))
 			return true;
 		if (this.superInterfaces != null)
 			for (int i = 0, l = this.superInterfaces.length; i < l; i++)
-		   		if (this.superInterfaces[i].isSubtypeOf(other))
+		   		if (this.superInterfaces[i].isSubtypeOf(other, false))
 					return true;
 		return other.id == TypeIds.T_JavaLangObject;
 	}

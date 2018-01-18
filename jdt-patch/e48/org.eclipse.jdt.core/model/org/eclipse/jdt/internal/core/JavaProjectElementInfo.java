@@ -66,6 +66,7 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 	}
 
 	ProjectCache projectCache;
+	ProjectCache mainProjectCache;
 
 	/*
 	 * Adds the given name and its super names to the given set
@@ -193,13 +194,13 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 		return resources;
 	}
 
-	ProjectCache getProjectCache(JavaProject project) {
-		ProjectCache cache = this.projectCache;
+	ProjectCache getProjectCache(JavaProject project, boolean excludeTestCode) {
+		ProjectCache cache = excludeTestCode ? this.mainProjectCache : this.projectCache;
 		if (cache == null) {
 			IPackageFragmentRoot[] roots;
 			Map reverseMap = new HashMap(3);
 			try {
-				roots = project.getAllPackageFragmentRoots(reverseMap);
+				roots = project.getAllPackageFragmentRoots(reverseMap, excludeTestCode);
 			} catch (JavaModelException e) {
 				// project does not exist: cannot happen since this is the info of the project
 				roots = new IPackageFragmentRoot[0];
@@ -224,7 +225,11 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 			}
 
 			cache = new ProjectCache(roots, reverseMap, pkgFragmentsCaches);
-			this.projectCache = cache;
+			if(excludeTestCode) {
+				this.mainProjectCache = cache;				
+			} else {
+				this.projectCache = cache;
+			}
 		}
 		return cache;
 	}
@@ -283,8 +288,8 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 	 * The given project is assumed to be the handle of this info.
 	 * This name lookup first looks in the given working copies.
 	 */
-	NameLookup newNameLookup(JavaProject project, ICompilationUnit[] workingCopies) {
-		ProjectCache cache = getProjectCache(project);
+	NameLookup newNameLookup(JavaProject project, ICompilationUnit[] workingCopies, boolean excludeTestCode) {
+		ProjectCache cache = getProjectCache(project, excludeTestCode);
 		HashtableOfArrayToObject allPkgFragmentsCache = cache.allPkgFragmentsCache;
 		if (allPkgFragmentsCache == null) {
 			HashMap rootInfos = JavaModelManager.getJavaModelManager().deltaState.roots;
@@ -303,7 +308,7 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 					// retrieve package fragments  cache from the root's project
 					ProjectCache rootProjectCache;
 					try {
-						rootProjectCache = rootProject.getProjectCache();
+						rootProjectCache = rootProject.getProjectCache(excludeTestCode);
 					} catch (JavaModelException e) {
 						// project doesn't exit
 						continue;
@@ -348,5 +353,6 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 	 */
 	void resetCaches() {
 		this.projectCache = null;
+		this.mainProjectCache = null;
 	}
 }

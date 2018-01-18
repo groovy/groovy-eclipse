@@ -65,20 +65,26 @@ public class SearchableEnvironment
 	protected boolean checkAccessRestrictions;
 	// moduleName -> IPackageFragmentRoot[](lazily populated)
 	private Map<String,IPackageFragmentRoot[]> knownModuleLocations; // null indicates: not using JPMS
+	private boolean excludeTestCode;
 
 	private ModuleUpdater moduleUpdater;
 	private Map<IPackageFragmentRoot,IModuleDescription> rootToModule;
 
+	@Deprecated
+	public SearchableEnvironment(JavaProject project, org.eclipse.jdt.core.ICompilationUnit[] workingCopies) throws JavaModelException {
+		this(project, workingCopies, false);
+	}
 	/**
 	 * Creates a SearchableEnvironment on the given project
 	 */
-	public SearchableEnvironment(JavaProject project, org.eclipse.jdt.core.ICompilationUnit[] workingCopies) throws JavaModelException {
+	public SearchableEnvironment(JavaProject project, org.eclipse.jdt.core.ICompilationUnit[] workingCopies, boolean excludeTestCode) throws JavaModelException {
 		this.project = project;
+		this.excludeTestCode = excludeTestCode;
 		this.checkAccessRestrictions =
 			!JavaCore.IGNORE.equals(project.getOption(JavaCore.COMPILER_PB_FORBIDDEN_REFERENCE, true))
 			|| !JavaCore.IGNORE.equals(project.getOption(JavaCore.COMPILER_PB_DISCOURAGED_REFERENCE, true));
 		this.workingCopies = workingCopies;
-		this.nameLookup = project.newNameLookup(workingCopies);
+		this.nameLookup = project.newNameLookup(workingCopies, excludeTestCode);
 		if (CompilerOptions.versionToJdkLevel(project.getOption(JavaCore.COMPILER_COMPLIANCE, true)) >= ClassFileConstants.JDK9) {
 			for (IPackageFragmentRoot root : project.getPackageFragmentRoots()) {
 				if (root.getModuleDescription() != null) {
@@ -89,16 +95,22 @@ public class SearchableEnvironment
 		}
 		if (CompilerOptions.versionToJdkLevel(project.getOption(JavaCore.COMPILER_COMPLIANCE, true)) >= ClassFileConstants.JDK9) {
 			this.moduleUpdater = new ModuleUpdater(project);
+			if (!excludeTestCode) {
+				IClasspathEntry[] expandedClasspath = project.getExpandedClasspath();
+				if(Arrays.stream(expandedClasspath).anyMatch(e -> e.isTest())) {
+					this.moduleUpdater.addReadUnnamedForNonEmptyClasspath(project, expandedClasspath);
+				}
+			}
 			for (IClasspathEntry entry : project.getRawClasspath())
-				this.moduleUpdater.computeModuleUpdates(entry);
+				if(!excludeTestCode || !entry.isTest())
+					this.moduleUpdater.computeModuleUpdates(entry);
 		}
 	}
-
 	/**
 	 * Creates a SearchableEnvironment on the given project
 	 */
-	public SearchableEnvironment(JavaProject project, WorkingCopyOwner owner) throws JavaModelException {
-		this(project, owner == null ? null : JavaModelManager.getJavaModelManager().getWorkingCopies(owner, true/*add primary WCs*/));
+	public SearchableEnvironment(JavaProject project, WorkingCopyOwner owner, boolean excludeTestCode) throws JavaModelException {
+		this(project, owner == null ? null : JavaModelManager.getJavaModelManager().getWorkingCopies(owner, true/*add primary WCs*/), excludeTestCode);
 		this.owner = owner;
 	}
 
@@ -809,9 +821,9 @@ public class SearchableEnvironment
 		if (this.searchScope == null) {
 			// Create search scope with visible entry on the project's classpath
 			if(this.checkAccessRestrictions) {
-				this.searchScope = BasicSearchEngine.createJavaSearchScope(new IJavaElement[] {this.project});
+				this.searchScope = BasicSearchEngine.createJavaSearchScope(this.excludeTestCode, new IJavaElement[] {this.project});
 			} else {
-				this.searchScope = BasicSearchEngine.createJavaSearchScope(this.nameLookup.packageFragmentRoots);
+				this.searchScope = BasicSearchEngine.createJavaSearchScope(this.excludeTestCode, this.nameLookup.packageFragmentRoots);
 			}
 		}
 		return this.searchScope;

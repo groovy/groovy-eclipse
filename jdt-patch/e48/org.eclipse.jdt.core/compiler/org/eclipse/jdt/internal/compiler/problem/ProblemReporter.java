@@ -466,6 +466,7 @@ public static int getIrritant(int problemID) {
 			return CompilerOptions.NullUncheckedConversion;
 		case IProblem.RedundantNullAnnotation:
 		case IProblem.RedundantNullDefaultAnnotation:
+		case IProblem.RedundantNullDefaultAnnotationModule:
 		case IProblem.RedundantNullDefaultAnnotationPackage:
 		case IProblem.RedundantNullDefaultAnnotationType:
 		case IProblem.RedundantNullDefaultAnnotationMethod:
@@ -9915,7 +9916,9 @@ public void nullDefaultAnnotationIsRedundant(ASTNode location, Annotation[] anno
 		shortArgs = new String[] { new String(outer.shortReadableName()) };
 	}
 	int problemId = IProblem.RedundantNullDefaultAnnotation;
-	if (outer instanceof PackageBinding) {
+	if (outer instanceof ModuleBinding) {
+		problemId = IProblem.RedundantNullDefaultAnnotationModule;
+	} else if (outer instanceof PackageBinding) {
 		problemId = IProblem.RedundantNullDefaultAnnotationPackage;
 	} else if (outer instanceof ReferenceBinding) {
 		problemId = IProblem.RedundantNullDefaultAnnotationType;

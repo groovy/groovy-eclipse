@@ -204,7 +204,8 @@ public ModuleBinding getModule(char[] name) {
 		if (this.useModuleSystem) {
 			IModule mod = ((IModuleAwareNameEnvironment) this.nameEnvironment).getModule(name);
 			if (mod != null) {
-				moduleBinding = BinaryModuleBinding.create(mod, this);
+				this.typeRequestor.accept(mod, this);
+				moduleBinding = this.root.knownModules.get(name);
 			}
 		} else 
 			return this.UnNamedModule;

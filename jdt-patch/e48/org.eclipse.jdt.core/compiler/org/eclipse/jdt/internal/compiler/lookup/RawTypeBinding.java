@@ -211,6 +211,13 @@ public class RawTypeBinding extends ParameterizedTypeBinding {
 	    }
         return true;
 	}
+    @Override
+	public boolean isSubtypeOf(TypeBinding right, boolean simulatingBugJDK8026527) {
+    	if (simulatingBugJDK8026527) {
+    		right = this.environment.convertToRawType(right.erasure(), false);
+    	}
+    	return super.isSubtypeOf(right, simulatingBugJDK8026527);
+    }
 
     @Override
 	public boolean isProperType(boolean admitCapture18) {

@@ -530,6 +530,7 @@ public class BuilderTests extends TestCase {
 			StaticFinalTests.class,
 			GetResourcesTests.class,
 			FriendDependencyTests.class,
+			TestAttributeBuilderTests.class,
 		};
 
 		if ((AbstractCompilerTest.getPossibleComplianceLevels()  & AbstractCompilerTest.F_1_5) != 0) {

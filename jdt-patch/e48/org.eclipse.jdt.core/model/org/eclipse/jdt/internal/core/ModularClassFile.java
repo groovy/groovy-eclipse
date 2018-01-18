@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017 GK Software AG, and others.
+ * Copyright (c) 2017, 2018 GK Software AG, and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,7 +11,6 @@
 package org.eclipse.jdt.internal.core;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.core.resources.IResource;
@@ -58,13 +57,15 @@ public class ModularClassFile extends AbstractClassFile implements IModularClass
 			return false;
 		}
 		
-		// Read the module	
-		BinaryModule module = ((ClassFileInfo) info).readBinaryModule(this, (HashMap<?,?>) newElements, moduleInfo);
-		if (module != null) {
-			this.binaryModule = module;
-			info.setChildren(new IJavaElement[] {module});
-			((PackageFragmentRootInfo) getPackageFragmentRoot().getElementInfo()).setModule(module);
+		// Create & link a handle:	
+		BinaryModule module = new BinaryModule(this, moduleInfo);
+		newElements.put(module, moduleInfo);
+		info.setChildren(new IJavaElement[] {module});
+		this.binaryModule = module;
+		if (info instanceof ClassFileInfo) {
+			((ClassFileInfo) info).setModule(module);
 		}
+		((PackageFragmentRootInfo) getPackageFragmentRoot().getElementInfo()).setModule(module);
 		return true;
 	}
 

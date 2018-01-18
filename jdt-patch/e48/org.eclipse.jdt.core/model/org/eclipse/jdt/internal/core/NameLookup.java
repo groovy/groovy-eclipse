@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -854,16 +854,17 @@ public class NameLookup implements SuffixConstants {
 		if (moduleDesc != null) {
 			try {
 				if (moduleDesc instanceof BinaryModule) {
-					return (ModuleDescriptionInfo)((BinaryModule) moduleDesc).getElementInfo();
+					IJavaElement parent = moduleDesc.getParent();
+					if (parent instanceof ModularClassFile)
+						return ((ModularClassFile) parent).getBinaryModuleInfo();
 				} else if (moduleDesc instanceof SourceModule) {
-					return (ModuleDescriptionInfo)((SourceModule) moduleDesc).getElementInfo();
+					return (IModule)((SourceModule) moduleDesc).getElementInfo();
 				} else {
 					return IModule.createAutomatic(moduleDesc.getElementName().toCharArray());
 				}
 			} catch (JavaModelException e) {
-				// TODO Auto-generated catch block
 				if (!e.isDoesNotExist())
-					e.printStackTrace();
+					Util.log(e);
 			}
 		}
 		return null;

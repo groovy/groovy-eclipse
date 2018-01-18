@@ -931,6 +931,11 @@ public abstract class Annotation extends Expression {
 			if (tagBits != 0 || defaultNullness != 0) {
 				// tag bits onto recipient
 				switch (kind) {
+					case Binding.MODULE :
+						SourceModuleBinding module = (SourceModuleBinding) this.recipient;
+						module.tagBits |= tagBits;
+						module.defaultNullness |= defaultNullness;
+						break;
 					case Binding.PACKAGE :
 						((PackageBinding)this.recipient).tagBits |= tagBits;
 						break;

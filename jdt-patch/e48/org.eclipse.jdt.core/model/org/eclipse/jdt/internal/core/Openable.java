@@ -123,7 +123,7 @@ protected void codeComplete(
 		throw new JavaModelException(new JavaModelStatus(IJavaModelStatusConstants.INDEX_OUT_OF_BOUNDS));
 	}
 	JavaProject project = (JavaProject) getJavaProject();
-	SearchableEnvironment environment = project.newSearchableNameEnvironment(owner);
+	SearchableEnvironment environment = project.newSearchableNameEnvironment(owner, requestor.isTestCodeExcluded());
 
 	// set unit to skip
 	environment.unitToSkip = unitToSkip;

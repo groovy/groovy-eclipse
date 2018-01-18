@@ -241,8 +241,14 @@ private IBinaryType getJarBinaryTypeInfo() throws CoreException, IOException, Cl
 				String rootIdentifier = root.getHandleIdentifier();
 				if (org.eclipse.jdt.internal.compiler.util.Util.isJrt(rootPath)) {
 					int slash = rootIdentifier.lastIndexOf('/');
-					if (slash != -1)
-						rootIdentifier = rootIdentifier.substring(0, slash);
+					if (slash != -1) {
+						StringBuilder extract = new StringBuilder();
+						extract.append(rootIdentifier.substring(0, slash));
+						int modStart = rootIdentifier.indexOf(JavaElement.JEM_MODULE);
+						if (modStart != -1)
+							extract.append(rootIdentifier.substring(modStart));
+						rootIdentifier = extract.toString();
+					}
 				}
 				fileName = rootIdentifier + IDependent.JAR_FILE_ENTRY_SEPARATOR + entryName;
 				result = new ClassFileReader(contents, fileName.toCharArray(), false);

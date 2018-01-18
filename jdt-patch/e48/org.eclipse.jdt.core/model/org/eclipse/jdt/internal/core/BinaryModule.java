@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2017 IBM Corporation.
+ * Copyright (c) 2016, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,11 +17,31 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.env.IBinaryModule;
+import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.core.JavaModelManager.PerProjectInfo;
 
 public class BinaryModule extends AbstractModule {
+
+	private IBinaryModule info;
+	
+	/** For creating a pure handle from its memento. */
 	public BinaryModule(JavaElement parent, String name) {
 		super(parent, name);
+	}
+	/** For creating a populated handle from a class file. */
+	public BinaryModule(JavaElement parent, IBinaryModule info) {
+		super(parent, String.valueOf(info.name()));
+		this.info = info;
+	}
+	@Override
+	public IModule getModuleInfo() throws JavaModelException {
+		if (this.info == null) {
+			ModularClassFile classFile = (ModularClassFile) this.parent;
+			this.info = classFile.getBinaryModuleInfo();			
+		}
+		return this.info;
 	}
 	/*
 	 * @see IParent#getChildren()
@@ -36,8 +56,9 @@ public class BinaryModule extends AbstractModule {
 	}
 	@Override
 	public int getFlags() throws JavaModelException {
-		ModuleDescriptionInfo info = (ModuleDescriptionInfo) getElementInfo();
-		return info.getModifiers();
+		if (getModuleInfo().isOpen())
+			return ClassFileConstants.ACC_OPEN;
+		return 0;
 	}
 	@Override
 	public String getKey(boolean forceOpen) throws JavaModelException {

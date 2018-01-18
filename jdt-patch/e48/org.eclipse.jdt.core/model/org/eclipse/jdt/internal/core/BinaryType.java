@@ -113,7 +113,7 @@ public void codeComplete(
 		throw new IllegalArgumentException("Completion requestor cannot be null"); //$NON-NLS-1$
 	}
 	JavaProject project = (JavaProject) getJavaProject();
-	SearchableEnvironment environment = project.newSearchableNameEnvironment(owner);
+	SearchableEnvironment environment = project.newSearchableNameEnvironment(owner, requestor.isTestCodeExcluded());
 	CompletionEngine engine = new CompletionEngine(environment, requestor, project.getOptions(true), project, owner, monitor);
 
 	String source = getClassFile().getSource();

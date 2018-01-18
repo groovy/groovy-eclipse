@@ -52,6 +52,32 @@ public class SourceModuleBinding extends ModuleBinding {
 		this.uses = merge(this.uses, uses, null, TypeBinding[]::new);
 	}
 
+	@Override
+	public TypeBinding[] getUses() {
+		resolveTypes();
+		return super.getUses();
+	}
+	
+	@Override
+	public TypeBinding[] getServices() {
+		resolveTypes();
+		return super.getServices();
+	}
+	
+	@Override
+	public TypeBinding[] getImplementations(TypeBinding binding) {
+		resolveTypes();
+		return super.getImplementations(binding);
+	}
+
+	private void resolveTypes() {
+		if (this.scope != null) {
+			ModuleDeclaration ast = this.scope.referenceCompilationUnit().moduleDeclaration;
+			if (ast != null)
+				ast.resolveTypeDirectives(this.scope);
+		}
+	}
+
 	public void setServices(TypeBinding[] services) {
 		this.services = merge(this.services, services, null, TypeBinding[]::new);
 	}

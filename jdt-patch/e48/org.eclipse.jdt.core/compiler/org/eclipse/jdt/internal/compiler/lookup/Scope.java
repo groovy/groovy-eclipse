@@ -4454,7 +4454,7 @@ public abstract class Scope {
 						if (levelj == VARARGS_COMPATIBLE && levelk == VARARGS_COMPATIBLE) {
 							TypeBinding s = InferenceContext18.getParameter(mbjParameters, argumentTypes.length, true);
 							TypeBinding t = InferenceContext18.getParameter(mbkParameters, argumentTypes.length, true);
-							if (TypeBinding.notEquals(s, t) && t.isSubtypeOf(s))
+							if (TypeBinding.notEquals(s, t) && t.isSubtypeOf(s, false))
 								continue nextJ;
 						}
 					}

@@ -226,7 +226,7 @@ class ConstraintTypeFormula extends ConstraintFormula {
 	private Object reduceSubType(Scope scope, TypeBinding subCandidate, TypeBinding superCandidate) {
 		// 18.2.3 Subtyping Constraints
 		if (subCandidate.isProperType(true) && superCandidate.isProperType(true)) {
-			if (subCandidate.isCompatibleWith(superCandidate, scope))
+			if (subCandidate.isSubtypeOf(superCandidate, InferenceContext18.SIMULATE_BUG_JDK_8026527))
 				return TRUE;
 			return FALSE;
 		}
@@ -243,7 +243,7 @@ class ConstraintTypeFormula extends ConstraintFormula {
 			case Binding.TYPE:
 			case Binding.RAW_TYPE:
 				{
-					if (subCandidate.isSubtypeOf(superCandidate))
+					if (subCandidate.isSubtypeOf(superCandidate, InferenceContext18.SIMULATE_BUG_JDK_8026527))
 						return TRUE;
 					return FALSE;
 				}

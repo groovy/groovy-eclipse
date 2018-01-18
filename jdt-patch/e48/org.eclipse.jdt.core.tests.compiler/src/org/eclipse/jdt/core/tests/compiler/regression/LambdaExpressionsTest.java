@@ -1585,7 +1585,7 @@ public void test055() {
 		  "}\n" +
 		  "public class X {\n" +
 		  "	public static void main(String[] args) {\n" +
-		  "		X x = null;\n" +
+		  "		X x = new X();\n" +
 		  "		I i = x::foo;\n" +
 		  "	}\n" +
 		  "	int foo(int x) {\n" +
@@ -1597,8 +1597,6 @@ public void test055() {
 }
 public void test056() {
 	  this.runConformTest(
-		false /* skipJavac */,
-		JavacTestOptions.Excuse.JavacGeneratesIncorrectCode,
 	    new String[] {
 	      "X.java",
 	      "interface I {\n" +
@@ -1607,8 +1605,8 @@ public void test056() {
 		  "public class X {\n" +
 		  "	public static void main(String[] args) {\n" +
 		  "		X x = null;\n" +
-		  "		I i = x::foo;\n" +
 		  "		try {\n" +
+		  "			I i = x::foo;\n" +
 		  "			i.foo(10);\n" +
 		  "		} catch (NullPointerException npe) {\n" +
 		  "			System.out.println(npe.getMessage());\n" +
@@ -4882,7 +4880,8 @@ public void test444785() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=447119, [1.8][compiler] method references lost generic type information (4.4 -> 4.4.1 regression) 
 public void test447119() {
-	this.runConformTest(
+	Runner runner = new Runner();
+	runner.testFiles =
 			new String[] {
 				"X.java",
 				"import java.lang.reflect.Method;\n" +
@@ -4902,8 +4901,12 @@ public void test447119() {
 				"        }\n" +
 				"    }\n" +
 				"}\n"
-			},
-			"- interface java.util.List lambda$0([interface java.util.List])");
+			};
+	runner.expectedOutputString =
+			"- interface java.util.List lambda$0([interface java.util.List])";
+	runner.expectedJavacOutputString =
+			"- interface java.util.List lambda$main$0([interface java.util.List])";
+	runner.runConformTest();
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=447119, [1.8][compiler] method references lost generic type information (4.4 -> 4.4.1 regression) 
 public void test447119a() {
@@ -4932,7 +4935,8 @@ public void test447119a() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=447119, [1.8][compiler] method references lost generic type information (4.4 -> 4.4.1 regression) 
 public void test447119b() {
-	this.runConformTest(
+	Runner runner = new Runner();
+	runner.testFiles =
 			new String[] {
 				"X.java",
 				"import java.lang.reflect.Method;\n" +
@@ -4954,8 +4958,12 @@ public void test447119b() {
 				"        }\n" +
 				"    }\n" +
 				"}\n"
-			},
-			"- interface java.util.List lambda$0([interface java.util.List])");
+			};
+	runner.expectedOutputString =
+			"- interface java.util.List lambda$0([interface java.util.List])";
+	runner.expectedJavacOutputString =
+			"- interface java.util.List lambda$main$7796d039$1([interface java.util.List])";
+	runner.runConformTest();
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=447119, [1.8][compiler] method references lost generic type information (4.4 -> 4.4.1 regression) 
 public void test447119c() {
@@ -6151,7 +6159,8 @@ public void test489631a() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=476859 enclosing method not found error when EJC compiled, works fine with oracle jdk compiler
 public void test476859() {
-	this.runConformTest(
+	Runner runner = new Runner();
+	runner.testFiles =
 		new String[] {
 			"Test.java",
 			"import java.lang.reflect.Method;\n" + 
@@ -6165,12 +6174,17 @@ public void test476859() {
 			"    System.out.println(f.apply(null));\n" + 
 			"  }\n" + 
 			"}"
-	},
-	"private static java.lang.reflect.Method Test.lambda$0(java.lang.Void)");
+		};
+	runner.expectedOutputString =
+		"private static java.lang.reflect.Method Test.lambda$0(java.lang.Void)";
+	runner.expectedJavacOutputString =
+		"private static java.lang.reflect.Method Test.lambda$main$0(java.lang.Void)";
+	runner.runConformTest();
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=476859 enclosing method not found error when EJC compiled, works fine with oracle jdk compiler
 public void test476859a() {
-	this.runConformTest(
+	Runner runner = new Runner();
+	runner.testFiles =
 		new String[] {
 			"Test.java",
 			"import java.lang.reflect.Method;\n" + 
@@ -6195,9 +6209,14 @@ public void test476859a() {
 			"	    System.out.println(f.apply(null));\n" + 
 			"	}\n" + 
 			"}\n"
-	},
-	"private static java.lang.reflect.Method Test.lambda$0(java.lang.Void)\n" +
-	"private java.lang.reflect.Method AnotherClass.lambda$0(java.lang.Void)");
+		};
+	runner.expectedOutputString =
+		"private static java.lang.reflect.Method Test.lambda$0(java.lang.Void)\n" +
+		"private java.lang.reflect.Method AnotherClass.lambda$0(java.lang.Void)";
+	runner.expectedJavacOutputString =
+			"private static java.lang.reflect.Method Test.lambda$main$0(java.lang.Void)\n" +
+			"private java.lang.reflect.Method AnotherClass.lambda$foo$0(java.lang.Void)";
+	runner.runConformTest();
 }
 public void testBug499258() {
 	runConformTest(
@@ -6390,7 +6409,8 @@ public void testBUg490469() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=509804 Incorrect Enclosing Method Attribute generated for anonymous class in lambda after method reference
 public void test509804() {
-	this.runConformTest(
+	Runner runner = new Runner();
+	runner.testFiles =
 		new String[] {
 			"Test.java",
 			"import java.lang.reflect.Method;\n" + 
@@ -6407,8 +6427,12 @@ public void test509804() {
 			"		System.out.println(B.s.get().getClass().getEnclosingMethod());\n" + 
 			"	}\n" + 
 			"}\n"
-	},
-	"private static java.lang.Object Test.lambda$1()");
+		};
+	runner.expectedOutputString =
+			"private static java.lang.Object Test.lambda$1()";
+	runner.expectedJavacOutputString =
+			"private static java.lang.Object Test.lambda$static$0()";
+	runner.runConformTest();
 }
 public void testBug514105() {
 	runConformTest(
@@ -6649,7 +6673,8 @@ public void testBug517951c() {
 	);
 }
 public void testBug521818() {
-	runConformTest(
+	Runner runner = new Runner();
+	runner.testFiles =
 		new String[] {
 			"test/Main.java",
 			"package test;\n" + 
@@ -6685,12 +6710,14 @@ public void testBug521818() {
 			"    	g.m(null);\n" + 
 			"    } \n" + 
 			"}"
-		},
+		};
+	runner.expectedOutputString =
 		"Baz\n" +
 		"D\n" +
-		"Bar"
-		
-	);
+		"Bar";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.JavacGeneratesIncorrectCode; // similar to fixed https://bugs.openjdk.java.net/browse/JDK-8058112
+	runner.runConformTest();
 }
 public void testBug522469a() {
 	runNegativeTest(
@@ -6779,6 +6806,72 @@ public void testBug529199() {
 		"A.m\n" +
 		"A.m"		
 	);
+}
+public void testBug521182() {
+	runConformTest(
+		new String[] {
+			"MethodRef.java",
+			"import java.util.function.Supplier;\n" + 
+			"public class MethodRef {\n" + 
+			"  public static void m(Supplier<?> s) {\n" + 
+			"  }\n" + 
+			"  public static void main(String[] args) {\n" + 
+			"    Object ref = null;\n" +
+			"	 try {\n" +
+			"    	m(ref::toString);\n" +
+			"	    System.out.println(\"A NPE should have been thrown !!!!!\");\n" + 
+			"	 } catch (NullPointerException e) {\n" +
+			"		System.out.println(\"Success\");\n" +
+			"	 }\n" +
+			"  }\n" + 
+			"}"
+		},
+		"Success");
+}
+public void testBug521182a() {
+	runConformTest(
+		new String[] {
+			"MethodRef.java",
+			"import java.util.function.Supplier;\n" + 
+			"public class MethodRef {\n" +
+			"	Object field = null;\n" +
+			"  public static void m(Supplier<?> s) {\n" + 
+			"  }\n" + 
+			"  public static void main(String[] args) {\n" + 
+			"	 try {\n" +
+			"		MethodRef ref = new MethodRef();\n" +
+			"    	m(ref.field::toString);\n" +
+			"	    System.out.println(\"A NPE should have been thrown !!!!!\");\n" + 
+			"	 } catch (NullPointerException e) {\n" +
+			"		System.out.println(\"Success\");\n" +
+			"	 }\n" +
+			"  }\n" + 
+			"}"
+		},
+		"Success");
+}
+public void testBug521182b() {
+	runConformTest(
+		new String[] {
+			"MethodRef.java",
+			"import java.util.function.Supplier;\n" + 
+			"public class MethodRef {\n" +
+			"  public static void m(Supplier<?> s) {\n" + 
+			"  }\n" + 
+			"  public static Object get() {\n" +
+			"	 return null;\n" +
+			"  }\n" +
+			"  public static void main(String[] args) {\n" + 
+			"	 try {\n" +
+			"    	m(get()::toString);\n" +
+			"	    System.out.println(\"A NPE should have been thrown !!!!!\");\n" + 
+			"	 } catch (NullPointerException e) {\n" +
+			"		System.out.println(\"Success\");\n" +
+			"	 }\n" +
+			"  }\n" + 
+			"}"
+		},
+		"Success");
 }
 public static Class testClass() {
 	return LambdaExpressionsTest.class;

@@ -108,6 +108,7 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 	public int modifiers;
 	public LookupEnvironment environment;
 	public int tagBits;
+	public int defaultNullness = NO_NULL_DEFAULT;
 	ModuleBinding[] requiredModules = null;
 	boolean isAuto = false;
 	private boolean[] isComplete = new boolean[UpdateKind.values().length];
@@ -835,5 +836,10 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 			this.transitiveRequires = transitiveDeps;
 		}
 		return this.transitiveRequires.contains(otherModule);
+	}
+
+	public int getDefaultNullness() {
+		getAnnotationTagBits(); // ensure annotations are initialized
+		return this.defaultNullness;
 	}
 }

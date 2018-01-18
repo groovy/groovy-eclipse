@@ -18,6 +18,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.*;
 import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.impl.CompilerStats;
+import org.eclipse.jdt.internal.core.CompilationGroup;
 import org.eclipse.jdt.internal.core.util.Messages;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -29,14 +30,26 @@ public class BatchImageBuilder extends AbstractImageBuilder {
 	IncrementalImageBuilder incrementalBuilder; // if annotations or secondary types have to be processed after the compile loop
 	ArrayList secondaryTypes; // qualified names for all secondary types found during batch compile
 	StringSet typeLocatorsWithUndefinedTypes; // type locators for all source files with errors that may be caused by 'not found' secondary types
+	final CompilationGroup compilationGroup;
 
-protected BatchImageBuilder(JavaBuilder javaBuilder, boolean buildStarting) {
-	super(javaBuilder, buildStarting, null);
+protected BatchImageBuilder(JavaBuilder javaBuilder, boolean buildStarting, CompilationGroup compilationGroup) {
+	super(javaBuilder, buildStarting, null, compilationGroup);
+	this.compilationGroup = compilationGroup;
 	this.nameEnvironment.isIncrementalBuild = false;
 	this.incrementalBuilder = null;
 	this.secondaryTypes = null;
 	this.typeLocatorsWithUndefinedTypes = null;
 }
+
+protected BatchImageBuilder(BatchImageBuilder batchImageBuilder, boolean buildStarting, CompilationGroup compilationGroup) {
+	super(batchImageBuilder.javaBuilder, buildStarting, batchImageBuilder.newState, compilationGroup);
+	this.compilationGroup = compilationGroup;
+	this.nameEnvironment.isIncrementalBuild = false;
+	this.incrementalBuilder = null;
+	this.secondaryTypes = null;
+	this.typeLocatorsWithUndefinedTypes = null;
+}
+
 
 public void build() {
 	if (JavaBuilder.DEBUG)
@@ -44,7 +57,9 @@ public void build() {
 
 	try {
 		this.notifier.subTask(Messages.bind(Messages.build_cleaningOutput, this.javaBuilder.currentProject.getName()));
-		JavaBuilder.removeProblemsAndTasksFor(this.javaBuilder.currentProject);
+		if(this.compilationGroup != CompilationGroup.TEST) {
+			JavaBuilder.removeProblemsAndTasksFor(this.javaBuilder.currentProject);
+		}
 		cleanOutputFolders(true);
 		this.notifier.updateProgressDelta(0.05f);
 
@@ -296,7 +311,7 @@ protected void processAnnotationResults(CompilationParticipantResult[] results) 
 	// to compile the compilation participant results, we need to incrementally recompile all affected types
 	// whenever the generated types are initially added or structurally changed
 	if (this.incrementalBuilder == null)
-		this.incrementalBuilder = new IncrementalImageBuilder(this);
+		this.incrementalBuilder = new IncrementalImageBuilder(this, this.compilationGroup);
 	this.incrementalBuilder.processAnnotationResults(results);
 }
 
@@ -305,7 +320,7 @@ protected void rebuildTypesAffectedBySecondaryTypes() {
 	// compile groups, we need to incrementally recompile all affected types as if the missing
 	// secondary types have just been added, see bug 146324
 	if (this.incrementalBuilder == null)
-		this.incrementalBuilder = new IncrementalImageBuilder(this);
+		this.incrementalBuilder = new IncrementalImageBuilder(this, this.compilationGroup);
 
 	int count = this.secondaryTypes.size();
 	StringSet qualifiedNames = new StringSet(count * 2);

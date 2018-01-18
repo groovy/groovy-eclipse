@@ -64,11 +64,14 @@ public class JavaSearchScope extends AbstractJavaSearchScope {
 	private IPath[] enclosingProjectsAndJars;
 	public final static AccessRuleSet NOT_ENCLOSED = new AccessRuleSet(null, (byte) 0, null);
 
-public JavaSearchScope() {
-	this(5);
+	private final boolean excludeTestCode;
+
+public JavaSearchScope(boolean excludeTestCode) {
+	this(5, excludeTestCode);
 }
 
-private JavaSearchScope(int size) {
+private JavaSearchScope(int size, boolean excludeTestCode) {
+	this.excludeTestCode = excludeTestCode;
 	initialize(size);
 
 	//disabled for now as this could be expensive
@@ -121,6 +124,9 @@ void add(JavaProject javaProject, IPath pathToAdd, int includeMask, HashSet proj
 	JavaModelManager.PerProjectInfo perProjectInfo = javaProject.getPerProjectInfo();
 	for (int i = 0, length = entries.length; i < length; i++) {
 		IClasspathEntry entry = entries[i];
+		if (this.excludeTestCode && entry.isTest()) {
+			continue;
+		}
 		AccessRuleSet access = null;
 		ClasspathEntry cpEntry = (ClasspathEntry) entry;
 		if (referringEntry != null) {
@@ -608,7 +614,7 @@ public IPackageFragmentRoot packageFragmentRoot(String resourcePathString, int j
 }
 
 private void rehash() {
-	JavaSearchScope newScope = new JavaSearchScope(this.pathsCount * 2);		// double the number of expected elements
+	JavaSearchScope newScope = new JavaSearchScope(this.pathsCount * 2, this.excludeTestCode);		// double the number of expected elements
 	newScope.projectPaths.ensureCapacity(this.projectPaths.size());
 	String currentPath;
 	for (int i=0, length=this.relativePaths.length; i<length; i++)

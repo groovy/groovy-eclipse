@@ -1856,9 +1856,9 @@ public class ClasspathEntry implements IClasspathEntry {
 		int sourceEntryCount = 0;
 		boolean disableExclusionPatterns = JavaCore.DISABLED.equals(javaProject.getOption(JavaCore.CORE_ENABLE_CLASSPATH_EXCLUSION_PATTERNS, true));
 		boolean disableCustomOutputLocations = JavaCore.DISABLED.equals(javaProject.getOption(JavaCore.CORE_ENABLE_CLASSPATH_MULTIPLE_OUTPUT_LOCATIONS, true));
-
-		for (int i = 0 ; i < length; i++) {
-			IClasspathEntry resolvedEntry = classpath[i];
+		ArrayList<IClasspathEntry> testSourcesFolders=new ArrayList<>();
+		HashSet<IPath> mainOutputLocations=new HashSet<>();
+		for (IClasspathEntry resolvedEntry : classpath) {
 			if (disableExclusionPatterns &&
 			        ((resolvedEntry.getInclusionPatterns() != null && resolvedEntry.getInclusionPatterns().length > 0)
 			        || (resolvedEntry.getExclusionPatterns() != null && resolvedEntry.getExclusionPatterns().length > 0))) {
@@ -1867,6 +1867,10 @@ public class ClasspathEntry implements IClasspathEntry {
 			switch(resolvedEntry.getEntryKind()){
 				case IClasspathEntry.CPE_SOURCE :
 					sourceEntryCount++;
+					boolean isTest = resolvedEntry.isTest();
+					if(isTest) {
+						testSourcesFolders.add(resolvedEntry);
+					}
 
 					IPath customOutput;
 					if ((customOutput = resolvedEntry.getOutputLocation()) != null) {
@@ -1882,7 +1886,9 @@ public class ClasspathEntry implements IClasspathEntry {
 						} else {
 							return new JavaModelStatus(IJavaModelStatusConstants.RELATIVE_PATH, customOutput);
 						}
-
+						if(!isTest) {
+							mainOutputLocations.add(customOutput);
+						}
 						// ensure custom output doesn't conflict with other outputs
 						// check exact match
 						if (Util.indexOfMatchingPath(customOutput, outputLocations, outputCount) != -1) {
@@ -1913,6 +1919,23 @@ public class ClasspathEntry implements IClasspathEntry {
 		    allowNestingInOutputLocations[0] = true;
 		} else if (potentialNestedOutput != null) {
 			return new JavaModelStatus(IJavaModelStatusConstants.INVALID_CLASSPATH, Messages.bind(Messages.classpath_cannotNestOutputInOutput, new String[] {potentialNestedOutput.makeRelative().toString(), outputLocations[0].makeRelative().toString()}));
+		} else {
+			if (sourceEntryCount > testSourcesFolders.size()) {
+				// if there are source folders with main sources, treat project output location as main output location
+				mainOutputLocations.add(outputLocations[0]);
+			}
+		}
+		for (IClasspathEntry resolvedEntry : testSourcesFolders) {
+			IPath customOutput;
+			if ((customOutput = resolvedEntry.getOutputLocation()) != null) {
+				if(mainOutputLocations.contains(customOutput)) {
+					return new JavaModelStatus(IJavaModelStatusConstants.TEST_OUTPUT_FOLDER_MUST_BE_SEPARATE_FROM_MAIN_OUTPUT_FOLDERS, javaProject, resolvedEntry.getPath());				
+				}
+			} else {
+				if(sourceEntryCount > testSourcesFolders.size()) {
+					return new JavaModelStatus(IJavaModelStatusConstants.TEST_SOURCE_REQUIRES_SEPARATE_OUTPUT_LOCATION, javaProject, resolvedEntry.getPath());
+				}
+			}
 		}
 
 		for (int i = 0 ; i < length; i++) {

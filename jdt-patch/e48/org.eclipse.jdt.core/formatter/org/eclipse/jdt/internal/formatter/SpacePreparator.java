@@ -14,6 +14,7 @@ package org.eclipse.jdt.internal.formatter;
 
 import static org.eclipse.jdt.internal.compiler.parser.TerminalTokens.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -226,13 +227,21 @@ public class SpacePreparator extends ASTVisitor {
 				: this.options.insert_space_before_opening_brace_in_method_declaration) && node.getBody() != null)
 			this.tm.firstTokenIn(node.getBody(), TokenNameLBRACE).spaceBefore();
 
+		if (node.getReceiverType() != null)
+			this.tm.lastTokenIn(node.getReceiverType(), -1).spaceAfter();
+
 		boolean beforeComma = node.isConstructor()
 				? this.options.insert_space_before_comma_in_constructor_declaration_parameters
 				: this.options.insert_space_before_comma_in_method_declaration_parameters;
 		boolean afterComma = node.isConstructor()
 				? this.options.insert_space_after_comma_in_constructor_declaration_parameters
 				: this.options.insert_space_after_comma_in_method_declaration_parameters;
-		handleCommas(node.parameters(), beforeComma, afterComma);
+		List<SingleVariableDeclaration> params = node.parameters();
+		if (node.getReceiverType() != null) {
+			params = new ArrayList<>(params);
+			params.add(0, null); // space for explicit receiver, null OK - first value not read in handleCommas 
+		}
+		handleCommas(params, beforeComma, afterComma);
 
 		List<Type> thrownExceptionTypes = node.thrownExceptionTypes();
 		if (!thrownExceptionTypes.isEmpty()) {

@@ -31,6 +31,7 @@ import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.env.IUpdatableModule.UpdateKind;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.util.SimpleSetOfCharArray;
+import org.eclipse.jdt.internal.core.CompilationGroup;
 import org.eclipse.jdt.internal.core.JavaModelStatus;
 import org.eclipse.jdt.internal.core.ModuleUpdater;
 
@@ -51,7 +52,7 @@ public class ModuleInfoBuilder {
 	
 	public byte[] compileWithAttributes(IModuleDescription module, Map<String,String> classFileAttributes) throws JavaModelException {
 		IJavaProject javaProject = module.getJavaProject();
-		NameEnvironment nameEnvironment = new NameEnvironment(javaProject);
+		NameEnvironment nameEnvironment = new NameEnvironment(javaProject, CompilationGroup.MAIN);
 
 		addModuleUpdates(module, nameEnvironment.moduleUpdater, classFileAttributes);
 		

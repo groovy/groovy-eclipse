@@ -95,7 +95,7 @@ public class AutomaticModuleNaming {
 		dashLoop: for (index = start; index < end - 1; index++) {
 			if (name.charAt(index) == '-' && name.charAt(index + 1) >= '0' && name.charAt(index + 1) <= '9') {
 				for (int index2 = index + 2; index2 < end; index2++) {
-					final char c = name.charAt(index2 + 1);
+					final char c = name.charAt(index2);
 					if (c == '.') {
 						break;
 					}

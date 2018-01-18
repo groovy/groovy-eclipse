@@ -209,6 +209,37 @@ public interface IClasspathAttribute {
 	String EXTERNAL_ANNOTATION_PATH = "annotationpath"; //$NON-NLS-1$
 
 	/**
+	 * Constant for the name of the test attribute.
+	 * 
+	 * <p>
+	 * The possible values for this attribute are <code>"true"</code> or <code>"false"</code>. When not present,
+	 * <code>"false"</code> is assumed. If the value of this attribute is <code>"true"</code>, and the classpath entry
+	 * is a source folder, it is assumed to contain test sources, otherwise main sources.
+	 * </p>
+	 * </p>
+	 * During the compilation of main sources, only code is visible, that is reachable via classpath entries which do
+	 * not have the test attribute set to to "true". During the compilation of test sources, all code is visible as if
+	 * this attribute didn't exist at all.
+	 * </p>
+	 * 
+	 * @since 3.14
+	 */
+	String TEST = "test"; //$NON-NLS-1$
+
+	/**
+	 * Constant for the name of the without_test_code attribute.
+	 * 
+	 * <p>
+	 * The possible values for this attribute are <code>"true"</code> or <code>"false"</code>. When not present,
+	 * <code>"false"</code> is assumed. If the value of this attribute is <code>"true"</code>, and the classpath entry
+	 * is a project, any test code reachable via that classpath entry will not be visible even to test sources.
+	 * </p>
+	 * 
+	 * @since 3.14
+	 */
+	String WITHOUT_TEST_CODE = "without_test_code"; //$NON-NLS-1$
+
+	/**
 	 * Returns the name of this classpath attribute.
 	 *
 	 * @return the name of this classpath attribute.

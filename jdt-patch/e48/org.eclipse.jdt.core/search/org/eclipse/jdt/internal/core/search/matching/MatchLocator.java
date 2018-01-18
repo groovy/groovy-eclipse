@@ -45,6 +45,7 @@ import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeRoot;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.*;
@@ -125,6 +126,7 @@ public int matchContainer;
 public SearchRequestor requestor;
 public IJavaSearchScope scope;
 public IProgressMonitor progressMonitor;
+private IJavaSearchScope subScope = null;
 
 public org.eclipse.jdt.core.ICompilationUnit[] workingCopies;
 public HandleFactory handleFactory;
@@ -1501,6 +1503,7 @@ public void locateMatches(SearchDocument[] searchDocuments) throws CoreException
 
 			// create new parser and lookup environment if this is a new project
 			IResource resource = null;
+			openable = getCloserOpenable(openable, pathString);
 			JavaProject javaProject = (JavaProject) openable.getJavaProject();
 			resource = workingCopy != null ? workingCopy.getResource() : openable.getResource();
 			if (resource == null)
@@ -1544,6 +1547,42 @@ public void locateMatches(SearchDocument[] searchDocuments) throws CoreException
 		this.bindings = null;
 	}
 }
+private IJavaSearchScope getSubScope(String optionString, long value, boolean ref) {
+	if (this.subScope != null)
+		return this.subScope;
+	IPath[] enclosingProjectsAndJars = this.scope.enclosingProjectsAndJars();
+	JavaModelManager manager = JavaModelManager.getJavaModelManager();
+	HashSet<IJavaProject> set = new HashSet<>();
+	for (int i = 0, l = enclosingProjectsAndJars.length; i < l; i++) {
+		IPath path = enclosingProjectsAndJars[i];
+		if (path.segmentCount() == 1) {
+			IJavaProject p = manager.getJavaModel().getJavaProject(path.segment(0));
+			if (p == null) continue;
+			if (CompilerOptions.versionToJdkLevel(p.getOption(optionString, true)) >= value) {
+				set.add(p);
+			}
+		}
+	}
+	return this.subScope = BasicSearchEngine.createJavaSearchScope(set.toArray(new IJavaProject[0]), ref);
+}
+private Openable getCloserOpenable(Openable openable, String pathString) {
+	if (this.pattern instanceof TypeDeclarationPattern &&
+			((TypeDeclarationPattern) this.pattern).moduleNames != null) {
+		JavaProject javaProject = (JavaProject) openable.getJavaProject();
+		PackageFragmentRoot root = openable.getPackageFragmentRoot();
+		if (root instanceof JarPackageFragmentRoot) {
+			JarPackageFragmentRoot jpkf = (JarPackageFragmentRoot) root;
+			if (jpkf.getModuleDescription() != null &&
+					CompilerOptions.versionToJdkLevel(javaProject.getOption(JavaCore.COMPILER_COMPLIANCE, true)) <
+					ClassFileConstants.JDK9) {
+				openable = this.handleFactory.createOpenable(pathString, 
+						getSubScope(JavaCore.COMPILER_COMPLIANCE, ClassFileConstants.JDK9, false));
+			}
+		}
+	}
+	return openable;
+}
+
 /**
  * Locates the package declarations corresponding to this locator's pattern.
  */

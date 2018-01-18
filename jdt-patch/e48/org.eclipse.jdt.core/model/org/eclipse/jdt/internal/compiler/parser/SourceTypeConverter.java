@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -103,6 +103,19 @@ public class SourceTypeConverter extends TypeConverter {
 */		}
 	}
 
+	public static CompilationUnitDeclaration buildModularCompilationUnit(
+		IModule module,
+		ProblemReporter problemReporter,
+		CompilationResult compilationResult) {
+
+		SourceTypeConverter converter = new SourceTypeConverter(0, problemReporter);
+		try {
+			return converter.convert(module, compilationResult);
+		} catch (JavaModelException e) {
+			return null;
+		}
+	}
+
 	/*
 	 * Convert a set of source element types into a parsed compilation unit declaration
 	 * The argument types are then all grouped in the same unit. The argument types must
@@ -187,6 +200,17 @@ public class SourceTypeConverter extends TypeConverter {
 		} catch (AnonymousMemberFound e) {
 			return new Parser(this.problemReporter, true).parse(this.cu, compilationResult);
 		}
+	}
+
+	private CompilationUnitDeclaration convert(IModule module, CompilationResult compilationResult) throws JavaModelException {
+		this.unit = new CompilationUnitDeclaration(this.problemReporter, compilationResult, 0);
+		// not filled at this point
+
+		ModuleDescriptionInfo moduleInfo = (ModuleDescriptionInfo) module;
+		org.eclipse.jdt.core.ICompilationUnit cuHandle = moduleInfo.getHandle().getCompilationUnit();
+		this.cu = (ICompilationUnit) cuHandle;
+		// always parse, because (a) dietParse is always sufficient, (b) we don't yet have the necessary conversion methods for module directives 
+		return new Parser(this.problemReporter, true).dietParse(this.cu, compilationResult);
 	}
 
 	/*

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -19,7 +19,6 @@ import org.eclipse.jdt.internal.compiler.env.IBinaryAnnotation;
 import org.eclipse.jdt.internal.compiler.env.IBinaryElementValuePair;
 import org.eclipse.jdt.internal.compiler.env.IBinaryField;
 import org.eclipse.jdt.internal.compiler.env.IBinaryMethod;
-import org.eclipse.jdt.internal.compiler.env.IBinaryModule;
 import org.eclipse.jdt.internal.compiler.env.IBinaryNestedType;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
@@ -440,21 +439,6 @@ protected void readBinaryChildren(ClassFile classFile, HashMap newElements, IBin
 		this.typeParameters = new ITypeParameter[typeParameterHandleSize];
 		typeParameterHandles.toArray(this.typeParameters);
 	}
-}
-protected BinaryModule readBinaryModule(AbstractClassFile classFile, HashMap newElements, IBinaryModule modDecl) {
-	this.binaryChildren = JavaElement.NO_ELEMENTS;
-	this.typeParameters = TypeParameter.NO_TYPE_PARAMETERS;
-	if (modDecl != null) {//may not be a valid class file
-		// TODO: The following needs fix once we can get ModuleDeclaration from IndexBinaryType
-		char[] modName = modDecl.name();
-		BinaryModule handle = new BinaryModule(classFile, new String(modName));
-		ModuleDescriptionInfo moduleInfo = ModuleDescriptionInfo.createModule(modDecl);
-		setModule(handle);
-		newElements.put(handle, moduleInfo);
-		this.binaryChildren = new JavaElement[] { handle };
-		return handle;
-	}
-	return null;
 }
 /**
  * Removes the binary children handles and remove their infos from

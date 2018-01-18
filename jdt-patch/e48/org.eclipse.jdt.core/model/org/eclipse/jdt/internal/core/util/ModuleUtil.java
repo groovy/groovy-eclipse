@@ -35,6 +35,7 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.core.BasicCompilationUnit;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
+import org.eclipse.jdt.internal.core.CompilationGroup;
 import org.eclipse.jdt.internal.core.builder.NameEnvironment;
 import org.eclipse.jdt.internal.core.builder.ProblemFactory;
 
@@ -42,7 +43,7 @@ public class ModuleUtil {
 
 	static class ModuleAccumulatorEnvironment extends NameEnvironment {
 		public ModuleAccumulatorEnvironment(IJavaProject javaProject) {
-			super(javaProject);
+			super(javaProject, CompilationGroup.MAIN);
 		}
 
 		Set<String> modules = new HashSet<>();

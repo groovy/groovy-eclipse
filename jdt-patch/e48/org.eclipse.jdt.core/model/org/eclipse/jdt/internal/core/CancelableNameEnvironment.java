@@ -23,7 +23,10 @@ public class CancelableNameEnvironment extends SearchableEnvironment implements 
 	private IProgressMonitor monitor;
 
 	public CancelableNameEnvironment(JavaProject project, WorkingCopyOwner owner, IProgressMonitor monitor) throws JavaModelException {
-		super(project, owner);
+		this(project, owner, monitor, false);
+	}
+	public CancelableNameEnvironment(JavaProject project, WorkingCopyOwner owner, IProgressMonitor monitor, boolean excludeTestCode) throws JavaModelException {
+		super(project, owner, excludeTestCode);
 		setMonitor(monitor);
 	}
 

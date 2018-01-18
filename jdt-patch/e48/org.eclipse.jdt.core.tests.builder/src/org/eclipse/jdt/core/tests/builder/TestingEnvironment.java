@@ -138,6 +138,10 @@ public void addClassFolder(IPath projectPath, IPath classFolderPath, boolean isE
 		return addPackageFragmentRoot(projectPath, sourceFolderName, null, null); //$NON-NLS-1$
 	}
 
+	public IPath addTestPackageFragmentRoot(IPath projectPath, String sourceFolderName) throws JavaModelException {
+		return addPackageFragmentRoot(projectPath, sourceFolderName, null, null, "bin-"+sourceFolderName, true);
+	}
+
 	/** Adds a package fragment root to the workspace.  If
 	 * a package fragment root with the same name already
 	 * exists, it is not replaced.  A workspace must be open.
@@ -147,12 +151,15 @@ public void addClassFolder(IPath projectPath, IPath classFolderPath, boolean isE
 		return addPackageFragmentRoot(projectPath, sourceFolderName, null, exclusionPatterns, specificOutputLocation);
 	}
 
+	public IPath addPackageFragmentRoot(IPath projectPath, String sourceFolderName, IPath[] inclusionPatterns, IPath[] exclusionPatterns, String specificOutputLocation) throws JavaModelException {
+		return addPackageFragmentRoot(projectPath, sourceFolderName, inclusionPatterns, exclusionPatterns, specificOutputLocation, false);
+	}
 	/** Adds a package fragment root to the workspace.  If
 	 * a package fragment root with the same name already
 	 * exists, it is not replaced.  A workspace must be open.
 	 * Returns the path of the added package fragment root.
 	 */
-	public IPath addPackageFragmentRoot(IPath projectPath, String sourceFolderName, IPath[] inclusionPatterns, IPath[] exclusionPatterns, String specificOutputLocation) throws JavaModelException {
+	public IPath addPackageFragmentRoot(IPath projectPath, String sourceFolderName, IPath[] inclusionPatterns, IPath[] exclusionPatterns, String specificOutputLocation, boolean isTest) throws JavaModelException {
 		checkAssertion("a workspace must be open", this.isOpen); //$NON-NLS-1$
 		IPath path = getPackageFragmentRootPath(projectPath, sourceFolderName);
 		createFolder(path);
@@ -165,7 +172,8 @@ public void addClassFolder(IPath projectPath, IPath classFolderPath, boolean isE
 			path,
 			inclusionPatterns == null ? new Path[0] : inclusionPatterns,
 			exclusionPatterns == null ? new Path[0] : exclusionPatterns,
-			outputPath);
+			outputPath,
+			isTest ? new IClasspathAttribute[] {JavaCore.newClasspathAttribute(IClasspathAttribute.TEST, "true")} : ClasspathEntry.NO_EXTRA_ATTRIBUTES);
 		addEntry(projectPath, entry);
 		return path;
 	}
@@ -222,6 +230,26 @@ public void addClassFolder(IPath projectPath, IPath classFolderPath, boolean isE
 	public void addRequiredProject(IPath projectPath, IPath requiredProjectPath) throws JavaModelException {
 		addRequiredProject(projectPath, requiredProjectPath, new IPath[]{}/*include all*/, new IPath[]{}/*exclude none*/, false);
 	}
+	public void addRequiredTestProject(IPath projectPath, IPath requiredProjectPath) throws JavaModelException {
+		checkAssertion("required project must not be in project", !projectPath.isPrefixOf(requiredProjectPath)); //$NON-NLS-1$
+		IAccessRule[] accessRules = ClasspathEntry.getAccessRules(new IPath[]{}, new IPath[]{});
+		addEntry(projectPath, JavaCore.newProjectEntry(requiredProjectPath, accessRules, true, new IClasspathAttribute[] {JavaCore.newClasspathAttribute(IClasspathAttribute.TEST, "true")}, false));
+	}
+	public void addRequiredProjectWithoutTestCode(IPath projectPath, IPath requiredProjectPath) throws JavaModelException {
+		checkAssertion("required project must not be in project", !projectPath.isPrefixOf(requiredProjectPath)); //$NON-NLS-1$
+		IAccessRule[] accessRules = ClasspathEntry.getAccessRules(new IPath[]{}, new IPath[]{});
+		addEntry(projectPath, JavaCore.newProjectEntry(requiredProjectPath, accessRules, true, new IClasspathAttribute[] {JavaCore.newClasspathAttribute(IClasspathAttribute.WITHOUT_TEST_CODE, "true")}, false));
+	}
+
+	public void addRequiredTestProjectWithoutTestCode(IPath projectPath, IPath requiredProjectPath) throws JavaModelException {
+		checkAssertion("required project must not be in project", !projectPath.isPrefixOf(requiredProjectPath)); //$NON-NLS-1$
+		IAccessRule[] accessRules = ClasspathEntry.getAccessRules(new IPath[]{}, new IPath[]{});
+		addEntry(projectPath,
+				JavaCore.newProjectEntry(requiredProjectPath, accessRules, true,
+						new IClasspathAttribute[] { JavaCore.newClasspathAttribute(IClasspathAttribute.TEST, "true"),
+								JavaCore.newClasspathAttribute(IClasspathAttribute.WITHOUT_TEST_CODE, "true") },
+						false));
+	}
 
 	/** Adds a project to the classpath of a project.
 	 */
@@ -276,6 +304,15 @@ public void addClassFolder(IPath projectPath, IPath classFolderPath, boolean isE
 	 */
 	public void addExternalJar(IPath projectPath, String jar, boolean isExported) throws JavaModelException {
 		addEntry(projectPath, JavaCore.newLibraryEntry(new Path(jar), null, null, isExported));
+	}
+	public void addExternalTestJar(IPath projectPath, String jar, boolean isExported) throws JavaModelException {
+		addEntry(projectPath, JavaCore.newLibraryEntry(
+		new Path(jar),
+		null,
+		null,
+		ClasspathEntry.NO_ACCESS_RULES,
+		new IClasspathAttribute[] {JavaCore.newClasspathAttribute(IClasspathAttribute.TEST, "true")},
+		isExported));
 	}
 
 public void addLibrary(IPath projectPath, IPath libraryPath, IPath sourceAttachmentPath, IPath sourceAttachmentRootPath)
@@ -977,6 +1014,33 @@ public void cleanBuild(String projectName) {
 				System.arraycopy(oldEntries, 0, newEntries, 0, i);
 				System.arraycopy(oldEntries, i + 1, newEntries, i, oldEntries.length - i - 1);
 				setClasspath(projectPath, newEntries);
+			}
+		}
+	}
+
+	public void changePackageFragmentRootTestAttribute(IPath projectPath, IPath entryPath, boolean isTest) throws JavaModelException {
+		checkAssertion("a workspace must be open", this.isOpen); //$NON-NLS-1$
+		IClasspathEntry[] oldEntries = getClasspath(projectPath);
+		for (int i = 0; i < oldEntries.length; ++i) {
+			final IClasspathEntry oldEntry = oldEntries[i];
+			if (oldEntry.getPath().equals(entryPath)) {
+				IClasspathEntry[] newEntries = oldEntries.clone();
+				IClasspathAttribute[] classpathAttributes = Arrays.stream(oldEntry.getExtraAttributes())
+						.filter(e -> !e.getName().equals(IClasspathAttribute.TEST)).toArray(IClasspathAttribute[]::new);
+				if(isTest) {
+					int length=classpathAttributes.length;
+					System.arraycopy(classpathAttributes, 0, classpathAttributes = new IClasspathAttribute[length + 1], 0, length);
+					classpathAttributes[length] = JavaCore.newClasspathAttribute(IClasspathAttribute.TEST, "true");
+				}
+				IClasspathEntry entry = JavaCore.newSourceEntry(
+						entryPath,
+						oldEntry.getInclusionPatterns(),
+						oldEntry.getExclusionPatterns(),
+						oldEntry.getOutputLocation(),
+						classpathAttributes);
+				newEntries[i] = entry;
+				setClasspath(projectPath, newEntries);
+				return;
 			}
 		}
 	}

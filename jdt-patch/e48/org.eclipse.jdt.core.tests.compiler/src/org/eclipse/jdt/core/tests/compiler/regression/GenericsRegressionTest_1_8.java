@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2017 GK Software AG, and others.
+ * Copyright (c) 2013, 2018 GK Software AG, and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -8831,5 +8831,52 @@ public void testBug508834_comment0() {
 			"	^^^^\n" + 
 			"The method fun3(int, int) is ambiguous for the type X\n" + 
 			"----------\n");
+	}
+
+	public void testBug529518() {
+		Runner run = new Runner();
+		run.testFiles = new String[] {
+			"Try.java",
+			"import java.util.function.*;\n" +
+			"public class Try<T> {\n" + 
+			"    @FunctionalInterface\n" + 
+			"    interface CheckedSupplier<R> {\n" + 
+			"        R get() throws Throwable;\n" + 
+			"    }\n" + 
+			"    static <T> Try<T> of(CheckedSupplier<? extends T> supplier) {\n" + 
+			"    	return null;\n" + 
+			"    }\n" +
+			"	 T getOrElseGet(Function<? super Throwable, ? extends T> other) { return null; }\n" + 
+			"}\n",
+			"X.java",
+			"import java.util.*;\n" + 
+			"\n" + 
+			"public class X {\n" + 
+			"        byte[] decode(byte[] base64Bytes) {\n" + 
+			"                return Try.of(() -> Base64.getDecoder().decode(base64Bytes))\n" + 
+			"                        .getOrElseGet(t -> null);\n" + 
+			"        }\n" + 
+			"}\n" + 
+			""
+		};
+		run.runConformTest();
+	}
+	public void testBug528970() throws Exception {
+		runConformTest(
+			new String[] {
+				"X.java",
+				"import java.util.*;\n" +
+				"import java.util.concurrent.atomic.*;\n" +
+				"public class X {\n" +
+				"	public static <T> List<T> returnNull(Class<? extends T> clazz) {\n" + 
+				"		return null;\n" + 
+				"	}\n" + 
+				"\n" + 
+				"	public static void main( String[] args )\n" + 
+				"	{\n" + 
+				"		List<AtomicReference<?>> l = returnNull(AtomicReference.class);\n" + 
+				"	}" +
+				"}\n"
+			});
 	}
 }

@@ -117,28 +117,38 @@ public class BasicSearchEngine {
 		return new HierarchyScope(project, type, owner, onlySubtypes, true, includeFocusType);
 	}
 
-	/**
-	 * @see SearchEngine#createJavaSearchScope(IJavaElement[]) for detailed comment.
-	 */
 	public static IJavaSearchScope createJavaSearchScope(IJavaElement[] elements) {
-		return createJavaSearchScope(elements, true);
+		return createJavaSearchScope(false, elements, true);
 	}
 
 	/**
+	 * @see SearchEngine#createJavaSearchScope(IJavaElement[]) for detailed comment.
+	 */
+	public static IJavaSearchScope createJavaSearchScope(boolean excludeTestCode, IJavaElement[] elements) {
+		return createJavaSearchScope(excludeTestCode, elements, true);
+	}
+
+	public static IJavaSearchScope createJavaSearchScope(IJavaElement[] elements, boolean includeReferencedProjects) {
+		return createJavaSearchScope(false, elements, includeReferencedProjects);
+	}
+	/**
 	 * @see SearchEngine#createJavaSearchScope(IJavaElement[], boolean) for detailed comment.
 	 */
-	public static IJavaSearchScope createJavaSearchScope(IJavaElement[] elements, boolean includeReferencedProjects) {
+	public static IJavaSearchScope createJavaSearchScope(boolean excludeTestCode, IJavaElement[] elements, boolean includeReferencedProjects) {
 		int includeMask = IJavaSearchScope.SOURCES | IJavaSearchScope.APPLICATION_LIBRARIES | IJavaSearchScope.SYSTEM_LIBRARIES;
 		if (includeReferencedProjects) {
 			includeMask |= IJavaSearchScope.REFERENCED_PROJECTS;
 		}
-		return createJavaSearchScope(elements, includeMask);
+		return createJavaSearchScope(excludeTestCode, elements, includeMask);
 	}
-
+	
+	public static IJavaSearchScope createJavaSearchScope(IJavaElement[] elements, int includeMask) {
+		return createJavaSearchScope(false, elements, includeMask);
+	}
 	/**
 	 * @see SearchEngine#createJavaSearchScope(IJavaElement[], int) for detailed comment.
 	 */
-	public static IJavaSearchScope createJavaSearchScope(IJavaElement[] elements, int includeMask) {
+	public static IJavaSearchScope createJavaSearchScope(boolean excludeTestCode, IJavaElement[] elements, int includeMask) {
 		HashSet projectsToBeAdded = new HashSet(2);
 		for (int i = 0, length = elements.length; i < length; i++) {
 			IJavaElement element = elements[i];
@@ -146,7 +156,7 @@ public class BasicSearchEngine {
 				projectsToBeAdded.add(element);
 			}
 		}
-		JavaSearchScope scope = new JavaSearchScope();
+		JavaSearchScope scope = new JavaSearchScope(excludeTestCode);
 		for (int i = 0, length = elements.length; i < length; i++) {
 			IJavaElement element = elements[i];
 			if (element != null) {

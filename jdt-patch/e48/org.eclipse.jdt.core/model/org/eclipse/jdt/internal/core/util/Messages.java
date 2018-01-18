@@ -187,6 +187,8 @@ public final class Messages extends NLS {
 	public static String classpath_duplicateEntryExtraAttribute;
 	public static String classpath_deprecated_variable;
 	public static String classpath_invalidExternalAnnotationPath;
+	public static String classpath_testSourceRequiresSeparateOutputFolder;
+	public static String classpath_testOutputFolderMustBeSeparateFromMainOutputFolders;
 	public static String file_notFound;
 	public static String file_badFormat;
 	public static String path_nullPath;

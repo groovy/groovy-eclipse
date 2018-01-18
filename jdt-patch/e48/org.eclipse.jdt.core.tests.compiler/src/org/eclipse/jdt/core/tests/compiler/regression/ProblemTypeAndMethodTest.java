@@ -3815,11 +3815,12 @@ public void test080() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=239758
 public void test081() {
 	if (this.complianceLevel <= ClassFileConstants.JDK1_4) return;
-	Map customOptions = getCompilerOptions();
-	customOptions.put(	CompilerOptions.OPTION_DocCommentSupport, CompilerOptions.ENABLED);	
-	customOptions.put(CompilerOptions.OPTION_ReportInvalidJavadoc, CompilerOptions.ERROR);
-	customOptions.put(CompilerOptions.OPTION_ReportInvalidJavadocTags, CompilerOptions.ENABLED);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(	CompilerOptions.OPTION_DocCommentSupport, CompilerOptions.ENABLED);	
+	runner.customOptions.put(CompilerOptions.OPTION_ReportInvalidJavadoc, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportInvalidJavadocTags, CompilerOptions.ENABLED);
+	runner.testFiles =
 			new String[] {
 				"com/ost/util/report/Matrix.java", // =================
 				"package com.ost.util.report;\n" + 
@@ -3865,8 +3866,9 @@ public void test081() {
 				"	public InvalidRowSizeException(String message) {\n" + 
 				"		super(message);\n" + 
 				"	}\n" + 
-				"}\n"				
-			},
+				"}\n"
+			};
+	runner.expectedCompilerLog =
 			"----------\n" + 
 			"1. WARNING in com\\ost\\util\\report\\Matrix.java (at line 4)\n" + 
 			"	public class Matrix<T> implements Serializable {\n" + 
@@ -3900,10 +3902,10 @@ public void test081() {
 			"	public class InvalidRowSizeException extends RuntimeException {\n" + 
 			"	             ^^^^^^^^^^^^^^^^^^^^^^^\n" + 
 			"The serializable class InvalidRowSizeException does not declare a static final serialVersionUID field of type long\n" + 
-			"----------\n",
-			null,
-			false,
-			customOptions);
+			"----------\n";
+	runner.javacTestOptions =	
+			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=239758 - variation
 public void test082() {
@@ -5002,7 +5004,8 @@ public void test097() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=296660
 public void test098() {
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.testFiles =
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -5035,7 +5038,8 @@ public void test098() {
 			"   	}\n" +
 			"   }\n" +
 			"}\n"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. WARNING in X.java (at line 3)\n" + 
 		"	public void foo(int a) {\n" + 
@@ -5076,11 +5080,15 @@ public void test098() {
 		"	public void foo(char a) {\n" + 
 		"	            ^^^^^^^^^^^\n" + 
 		"The method foo(char) from the type X.B is never used locally\n" + 
-		"----------\n");
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings;
+	runner.runWarningTest();
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=296660
 public void test099() {
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.testFiles =
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -5127,7 +5135,8 @@ public void test099() {
 			"		}\n" +
 		    "   }\n" +
 			"}\n"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. WARNING in X.java (at line 3)\n" + 
 		"	public void foo(int a) {\n" + 
@@ -5158,12 +5167,16 @@ public void test099() {
 		"	public class C extends B {\n" + 
 		"	             ^\n" + 
 		"Access to enclosing constructor X.B() is emulated by a synthetic accessor method\n" + 
-		"----------\n");
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings;
+	runner.runWarningTest();
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=296660
 // check independence of textual order
 public void test099a() {
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.testFiles =
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -5210,7 +5223,8 @@ public void test099a() {
 			"   	}\n" +
 			"   }\n" + 
 			"}\n"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. WARNING in X.java (at line 2)\n" + 
 		"	public class C extends B {\n" + 
@@ -5241,12 +5255,16 @@ public void test099a() {
 		"	public void foo(boolean a) {\n" + 
 		"	            ^^^^^^^^^^^^^^\n" + 
 		"The method foo(boolean) from the type X.A is never used locally\n" + 
-		"----------\n");
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings;
+	runner.runWarningTest();
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=296660
 // check usage via super-call
 public void test099b() {
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.testFiles =
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -5293,7 +5311,8 @@ public void test099b() {
 			"		}\n" +
 		    "   }\n" +
 			"}\n"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. WARNING in X.java (at line 16)\n" + 
 		"	private class B extends A {\n" + 
@@ -5304,11 +5323,15 @@ public void test099b() {
 		"	public class C extends B {\n" + 
 		"	             ^\n" + 
 		"Access to enclosing constructor X.B() is emulated by a synthetic accessor method\n" + 
-		"----------\n");
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings;
+	runner.runWarningTest();
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=296660
 public void test100() {
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.testFiles =
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -5317,17 +5340,22 @@ public void test100() {
 			"    }\n" +
 			"    public class B extends A {}\n" +
 			"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. WARNING in X.java (at line 5)\n" + 
 		"	public class B extends A {}\n" + 
 		"	             ^\n" + 
 		"Access to enclosing constructor X.A() is emulated by a synthetic accessor method\n" + 
-		"----------\n");
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings;
+	runner.runWarningTest();
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=296660
 public void test101() {
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.testFiles =
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -5337,17 +5365,22 @@ public void test101() {
 			"    }\n" +
 			"    public class B extends A {}\n" +
 			"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. WARNING in X.java (at line 6)\n" + 
 		"	public class B extends A {}\n" + 
 		"	             ^\n" + 
 		"Access to enclosing constructor X.A() is emulated by a synthetic accessor method\n" + 
-		"----------\n");
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings;
+	runner.runWarningTest();
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=296660
 public void test102() {
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.testFiles =
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -5357,7 +5390,8 @@ public void test102() {
 			"    }\n" +
 			"    public class B extends A {}\n" +
 			"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. WARNING in X.java (at line 3)\n" + 
 		"	private void foo() {}\n" + 
@@ -5373,11 +5407,15 @@ public void test102() {
 		"	public class B extends A {}\n" + 
 		"	             ^\n" + 
 		"Access to enclosing constructor X.A() is emulated by a synthetic accessor method\n" + 
-		"----------\n");
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings;
+	runner.runWarningTest();
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=296660
 public void test103() {
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.testFiles =
 		new String[] {
 			"X.java",
 			"public class X {\n" +
@@ -5387,7 +5425,8 @@ public void test103() {
 			"    }\n" +
 			"    private class B extends A {}\n" +
 			"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. WARNING in X.java (at line 3)\n" + 
 		"	public void foo() {}\n" + 
@@ -5408,7 +5447,10 @@ public void test103() {
 		"	private class B extends A {}\n" + 
 		"	              ^\n" + 
 		"Access to enclosing constructor X.A() is emulated by a synthetic accessor method\n" + 
-		"----------\n");
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings;
+	runner.runWarningTest();
 }
 public void test104() {
 	this.runNegativeTest(
@@ -5434,7 +5476,10 @@ public void test104() {
 		false /* do not show warning token */,
 		false  /* do not skip javac for this peculiar test */,
 		false  /* do not perform statements recovery */);
-	this.runConformTest(
+	Runner runner = new Runner();
+	runner.shouldFlushOutputDirectory =
+		false;
+	runner.testFiles =
 		new String[] {
 			"X.java", //-----------------------------------------------------------------------
 			"import p.Bar;\n" +
@@ -5443,11 +5488,12 @@ public void test104() {
 			"		return false;\n" + 
 			"	}\n" + 
 			"}",
-		},
-		"",
-		null,
-		false,
-		null);
+		};
+	runner.expectedOutputString =
+		"";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.JavacHasErrorsEclipseHasNone; // ecj can create .class from erroneous .java
+	runner.runConformTest();
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=243917
 public void test105() {
@@ -5523,7 +5569,8 @@ public void test107() {
 		false /* do not show warning token */,
 		false  /* do not skip javac for this peculiar test */,
 		false  /* do not perform statements recovery */);
-	this.runConformTest(
+	Runner runner = new Runner();
+	runner.testFiles =
 		new String[] {
 			"p/Bogus.java", //-----------------------------------------------------------------------
 			"package p;\n" +
@@ -5539,11 +5586,14 @@ public void test107() {
 			"		}\n" +
 			"	}\n" + 
 			"}",
-		},
-		"Compilation error found",
-		null,
-		false,
-		null);
+		};
+	runner.expectedOutputString =
+		"Compilation error found";
+	runner.shouldFlushOutputDirectory =
+		false;
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.JavacHasErrorsEclipseHasNone; // ecj can create .class from erroneous .java
+	runner.runConformTest();
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=321414
 public void test108() {
@@ -5976,7 +6026,8 @@ public void test112() {
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=325567
 public void test113() {
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.testFiles =
 		new String[] {
 			"X.java",
 			"import java.io.IOException;\n" + 
@@ -6011,23 +6062,20 @@ public void test113() {
 			"		String bar();\n" + 
 			"	}\n" + 
 			"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 12)\n" + 
 		"	return new String(before);\n" + 
 		"	                  ^^^^^^\n" + 
 		"The local variable before may not have been initialized\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		null /* no custom options */,
-		true /* do not generate output */,
-		false /* do not show category */,
-		false /* do not show warning token */,
-		false  /* do not skip javac for this peculiar test */,
-		false  /* do not perform statements recovery */
-	);
-	this.runConformTest(
+		"----------\n";
+	runner.generateOutput =
+		true;
+	runner.runNegativeTest();
+
+	runner = new Runner();
+	runner.testFiles =
 		new String[] {
 			"Y.java", //-----------------------------------------------------------------------
 			"public class Y {\n" + 
@@ -6039,21 +6087,25 @@ public void test113() {
 			"		}\n" +
 			"	}\n" + 
 			"}",
-		},
-		"",
-		null,
-		false,
-		null);
+		};
+	runner.expectedOutputString =
+		"";
+	runner.shouldFlushOutputDirectory =
+		false;
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.JavacHasErrorsEclipseHasNone; // ecj can create .class from erroneous .java
+	runner.runConformTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=318682
 // QualifiedNameReference, SingleNameReference and MessageSend
 // Can be static warning shown
 public void test114() {
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.testFiles =
 		new String[] {
 			"X.java", 
 			"public class X {\n" +
@@ -6084,7 +6136,8 @@ public void test114() {
 			"		return null;\n" + 
 			"	}\n" + 
 			"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 4)\n" + 
 		"	public void bar(int i) {\n" + 
@@ -6105,21 +6158,21 @@ public void test114() {
 		"	private void bar3(int i) {\n" + 
 		"	             ^^^^^^^^^^^\n" + 
 		"The method bar3(int) from the type X can be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=318682
 // FieldReference and MessageSend
 // Can be static warning shown
 public void test115() {
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.testFiles =
 		new String[] {
 			"X.java",
 			"public class X extends B{\n" +
@@ -6144,27 +6197,28 @@ public void test115() {
 			"	public void b1(){\n" +
 			"	}\n" +
 			"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 4)\n" + 
 		"	public void bar(int i) {\n" + 
 		"	            ^^^^^^^^^^\n" + 
 		"The method bar(int) from the type X can potentially be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=318682
 // MessageSend in different ways
 public void test116a() {
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportNonStaticAccessToStatic, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportNonStaticAccessToStatic, CompilerOptions.IGNORE);
+	runner.testFiles =
 		new String[] {
 			"X.java",
 			"public class X extends B{\n" +
@@ -6208,7 +6262,8 @@ public void test116a() {
 			"	public void b1(){\n" +
 			"	}\n" +
 			"}",
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 16)\n" + 
 		"	public void bar5(int i) {\n" + 
@@ -6224,21 +6279,21 @@ public void test116a() {
 		"	public void bar9(int i) {\n" + 
 		"	            ^^^^^^^^^^^\n" + 
 		"The method bar9(int) from the type X can potentially be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=318682
 // MessageSend in different ways, referencing a static method.
 public void test116b() {
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportNonStaticAccessToStatic, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportNonStaticAccessToStatic, CompilerOptions.IGNORE);
+	runner.testFiles =
 		new String[] {
 			"X.java",
 			"public class X extends B{\n" +
@@ -6282,7 +6337,8 @@ public void test116b() {
 			"	public static void b1(){\n" +
 			"	}\n" +
 			"}",
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 4)\n" + 
 		"	public void bar1(int i) {\n" + 
@@ -6313,21 +6369,21 @@ public void test116b() {
 		"	public void bar9(int i) {\n" + 
 		"	            ^^^^^^^^^^^\n" + 
 		"The method bar9(int) from the type X can potentially be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=318682
 // Referring a field in different ways, accessing non-static field.
 public void test117a() {
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportNonStaticAccessToStatic, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportNonStaticAccessToStatic, CompilerOptions.IGNORE);
+	runner.testFiles =
 		new String[] {
 			"X.java",
 			"public class X extends B{\n" +
@@ -6391,7 +6447,8 @@ public void test117a() {
 			"class B{\n" +
 			"	public int b1;\n" +
 			"}",
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 16)\n" + 
 		"	public void bar5(int i) {\n" + 
@@ -6412,21 +6469,21 @@ public void test117a() {
 		"	public void bar12(int i) {\n" + 
 		"	            ^^^^^^^^^^^^\n" + 
 		"The method bar12(int) from the type X can potentially be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=318682
 // Referring a field in different ways, accessing non-static field.
 public void test117b() {
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportNonStaticAccessToStatic, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportNonStaticAccessToStatic, CompilerOptions.IGNORE);
+	runner.testFiles =
 		new String[] {
 			"X.java",
 			"public class X extends B{\n" +
@@ -6490,7 +6547,8 @@ public void test117b() {
 			"class B{\n" +
 			"	public static int b1;\n" +
 			"}",
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 4)\n" + 
 		"	public void bar1(int i) {\n" + 
@@ -6541,20 +6599,20 @@ public void test117b() {
 		"	public void bar16(int i) {\n" + 
 		"	            ^^^^^^^^^^^^\n" + 
 		"The method bar16(int) from the type X can potentially be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=318682
 // Final class -> can be static (and not potentially be static) warning shown
 public void test118() {
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.testFiles =
 		new String[] {
 				"X.java", 
 				"final public class X {\n" +
@@ -6569,27 +6627,28 @@ public void test118() {
 				"	}\n" +
 				"	public static int foo(){ return 1;}\n" + 
 				"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 4)\n" + 
 		"	public void bar(int i) {\n" + 
 		"	            ^^^^^^^^^^\n" + 
 		"The method bar(int) from the type X can be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=318682
 // Method of a local class -> can't be static, so no warning
 // Also method with such a local class accessing a member of the outer class can't be static
 public void test119() {
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.testFiles =
 		new String[] {
 				"X.java", 
 				"public class X {\n" +
@@ -6613,17 +6672,17 @@ public void test119() {
 					"	System.out.println(X.field1);\n" +
 					"	}\n" + 
 					"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 12)\n" + 
 		"	public void bar2(int i) {\n" + 
 		"	            ^^^^^^^^^^^\n" + 
 		"The method bar2(int) from the type X can potentially be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=318682
@@ -6631,10 +6690,11 @@ public void test119() {
 public void test120() {
 	if (this.complianceLevel < ClassFileConstants.JDK1_5)
 		return;
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.testFiles =
 		new String[] {
 				"X.java", 
 				"public class X<T> {\n" +
@@ -6657,7 +6717,8 @@ public void test120() {
 				"		System.out.println();\n" +
 				"	}\n" + 
 				"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 8)\n" + 
 		"	public <E> void bar2(E e) {\n" + 
@@ -6668,21 +6729,21 @@ public void test120() {
 		"	public <E,Y> void bar4() {\n" + 
 		"	                  ^^^^^^\n" + 
 		"The method bar4() from the type X<T> can potentially be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=318682
 // Access to super in a method disqualifies it from being static
 public void test121() {
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportNonStaticAccessToStatic, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportNonStaticAccessToStatic, CompilerOptions.IGNORE);
+	runner.testFiles =
 		new String[] {
 				"X.java", 
 				"public class X extends A{\n" +
@@ -6706,27 +6767,28 @@ public void test121() {
 				"   public void methodA(){\n" +
 				"   }\n" +
 				"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 13)\n" + 
 		"	public void bar3() {\n" + 
 		"	            ^^^^^^\n" + 
 		"The method bar3() from the type X can potentially be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=318682
 // Methods of non-static member types can't be static
 public void test122() {
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportNonStaticAccessToStatic, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportNonStaticAccessToStatic, CompilerOptions.IGNORE);
+	runner.testFiles =
 		new String[] {
 				"X.java", 
 				"public class X {\n" +
@@ -6741,17 +6803,17 @@ public void test122() {
 				"		}\n" +
 				"   }\n" +
 				"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 8)\n" + 
 		"	void methodB() {\n" + 
 		"	     ^^^^^^^^^\n" + 
 		"The method methodB() from the type X.B can potentially be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=318682
@@ -6759,11 +6821,12 @@ public void test122() {
 public void test123() {
 	if (this.complianceLevel < ClassFileConstants.JDK1_5)
 		return;
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportNonStaticAccessToStatic, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportNonStaticAccessToStatic, CompilerOptions.IGNORE);
+	runner.testFiles =
 		new String[] {
 				"X.java", 
 				"public class X<T> {\n" +
@@ -6774,17 +6837,17 @@ public void test123() {
 				"		return null;\n" +
 				"	}\n" + 
 				"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 5)\n" + 
 		"	<E,Y> E method2() {\n" + 
 		"	        ^^^^^^^^^\n" + 
 		"The method method2() from the type X<T> can potentially be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=335845
@@ -6850,15 +6913,16 @@ public void testBug335845b() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=335845
 // If method allocates an inner static type without an enclosing object, method can be static
 public void testBug335845c() {
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportNonStaticAccessToStatic, CompilerOptions.IGNORE);
-	compilerOptions.put(CompilerOptions.OPTION_ReportUnusedLocal, CompilerOptions.IGNORE);
-	compilerOptions.put(CompilerOptions.OPTION_ReportUnusedObjectAllocation, CompilerOptions.IGNORE);
-	compilerOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
-	compilerOptions.put(CompilerOptions.OPTION_ReportSyntheticAccessEmulation, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportNonStaticAccessToStatic, CompilerOptions.IGNORE);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedLocal, CompilerOptions.IGNORE);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedObjectAllocation, CompilerOptions.IGNORE);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportSyntheticAccessEmulation, CompilerOptions.IGNORE);
+	runner.testFiles =
 		new String[] {
 				"X.java", 
 				"public class X {\n" +
@@ -6870,17 +6934,17 @@ public void testBug335845c() {
 				"		int x = new Bar().a;" +
 				"	}\n" + 
 				"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 5)\n" + 
 		"	private void foo() {\n" + 
 		"	             ^^^^^\n" + 
 		"The method foo() from the type X can be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=335845
@@ -6916,15 +6980,16 @@ public void testBug335845d() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=335845
 // If method allocates an inner static type without an enclosing object, method can be static
 public void testBug335845e() {
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportNonStaticAccessToStatic, CompilerOptions.IGNORE);
-	compilerOptions.put(CompilerOptions.OPTION_ReportUnusedLocal, CompilerOptions.IGNORE);
-	compilerOptions.put(CompilerOptions.OPTION_ReportUnusedObjectAllocation, CompilerOptions.IGNORE);
-	compilerOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
-	compilerOptions.put(CompilerOptions.OPTION_ReportSyntheticAccessEmulation, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportNonStaticAccessToStatic, CompilerOptions.IGNORE);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedLocal, CompilerOptions.IGNORE);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedObjectAllocation, CompilerOptions.IGNORE);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportSyntheticAccessEmulation, CompilerOptions.IGNORE);
+	runner.testFiles =
 		new String[] {
 				"X.java", 
 				"public class X {\n" +
@@ -6935,31 +7000,32 @@ public void testBug335845e() {
 				"		new X().new Bar();\n" +
 				"	}\n" + 
 				"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 5)\n" + 
 		"	private void foo() {\n" + 
 		"	             ^^^^^\n" + 
 		"The method foo() from the type X can be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=335845
 // If method allocates an inner static type without an enclosing object, method can be static
 public void testBug335845f() {
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportNonStaticAccessToStatic, CompilerOptions.IGNORE);
-	compilerOptions.put(CompilerOptions.OPTION_ReportUnusedLocal, CompilerOptions.IGNORE);
-	compilerOptions.put(CompilerOptions.OPTION_ReportUnusedObjectAllocation, CompilerOptions.IGNORE);
-	compilerOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
-	compilerOptions.put(CompilerOptions.OPTION_ReportSyntheticAccessEmulation, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportNonStaticAccessToStatic, CompilerOptions.IGNORE);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedLocal, CompilerOptions.IGNORE);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedObjectAllocation, CompilerOptions.IGNORE);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportSyntheticAccessEmulation, CompilerOptions.IGNORE);
+	runner.testFiles =
 		new String[] {
 				"X.java", 
 				"public class X {\n" +
@@ -6971,17 +7037,17 @@ public void testBug335845f() {
 				"		x.new Bar().a = 2;\n" +
 				"	}\n" + 
 				"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 5)\n" + 
 		"	private void foo() {\n" + 
 		"	             ^^^^^\n" + 
 		"The method foo() from the type X can be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=335845
@@ -7060,7 +7126,6 @@ public void test124b() {
 	Map compilerOptions = getCompilerOptions();
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
 	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportNonStaticAccessToStatic, CompilerOptions.IGNORE);
 	this.runNegativeTest(
 		new String[] {
 				"X.java", 
@@ -7076,7 +7141,12 @@ public void test124b() {
 				"}\n" +
 				"}"
 		},
-		"",
+		"----------\n" + 
+		"1. WARNING in X.java (at line 3)\n" + 
+		"	Foo.m(this.xField);\n" + 
+		"	           ^^^^^^\n" + 
+		"The static field X.xField should be accessed in a static way\n" + 
+		"----------\n",
 		null /* no extra class libraries */,
 		true /* flush output directory */,
 		compilerOptions /* custom options */
@@ -7088,11 +7158,13 @@ public void test124b() {
 public void test354502() {
 	if (this.complianceLevel < ClassFileConstants.JDK1_5)
 		return;
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
+	runner.testFiles =
+
 		new String[] {
 				"X.java", 
 				"public class X {\n" +
@@ -7105,17 +7177,17 @@ public void test354502() {
 				"		new Abstract2() {};\n" +
 				"	}\n" +
 				"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 7)\n" + 
 		"	private void method2() {\n" + 
 		"	             ^^^^^^^^^\n" + 
 		"The method method2() from the type X can be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=360164
 public void test360164() {
@@ -7232,11 +7304,12 @@ public void test376550_1a() {
 public void test376550_1b() {
 	if (this.complianceLevel < ClassFileConstants.JDK1_5)
 		return;
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	new Runner() {{
+	  this.customOptions = getCompilerOptions();
+	  this.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	  this.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	  this.customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
+	  this.testFiles =
 		new String[] {
 				"X.java", 
 				"public class X {\n" +
@@ -7251,17 +7324,17 @@ public void test376550_1b() {
 				"		}\n" +
 				"	}\n" +
 				"}"
-		},
+		};
+	  this.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 4)\n" + 
 		"	public void foo(){\n" + 
 		"	            ^^^^^\n" + 
 		"The method foo() from the type X can potentially be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	  this.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	}}.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
@@ -7269,11 +7342,12 @@ public void test376550_1b() {
 public void test376550_2a() {
 	if (this.complianceLevel < ClassFileConstants.JDK1_5)
 		return;
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
+	runner.testFiles =
 		new String[] {
 				"X.java", 
 				"public class X<T> {\n" +
@@ -7286,17 +7360,17 @@ public void test376550_2a() {
 				"		}\n" +
 				"	}\n" +
 				"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 3)\n" + 
 		"	public void foo(){\n" + 
 		"	            ^^^^^\n" + 
 		"The method foo() from the type X<T> can potentially be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
@@ -7365,11 +7439,12 @@ public void test376550_3a() {
 public void test376550_3b() {
 	if (this.complianceLevel < ClassFileConstants.JDK1_5)
 		return;
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
+	runner.testFiles =
 		new String[] {
 				"X.java", 
 				"public class X<T> {\n" +
@@ -7383,17 +7458,17 @@ public void test376550_3b() {
 				"		}\n" +
 				"	}\n" +
 				"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 3)\n" + 
 		"	public void foo(){\n" + 
 		"	            ^^^^^\n" + 
 		"The method foo() from the type X<T> can potentially be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
@@ -7401,11 +7476,12 @@ public void test376550_3b() {
 public void test376550_4a() {
 	if (this.complianceLevel < ClassFileConstants.JDK1_5)
 		return;
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
+	runner.testFiles =
 		new String[] {
 				"X.java", 
 				"public class X<T> {\n" +
@@ -7420,17 +7496,17 @@ public void test376550_4a() {
 				"		}\n" +
 				"	}\n" +
 				"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 3)\n" + 
 		"	public void foo(){\n" + 
 		"	            ^^^^^\n" + 
 		"The method foo() from the type X<T> can potentially be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
@@ -7470,11 +7546,12 @@ public void test376550_4b() {
 public void test376550_5a() {
 	if (this.complianceLevel < ClassFileConstants.JDK1_5)
 		return;
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
+	runner.testFiles =
 		new String[] {
 				"X.java", 
 				"public class X {\n" +
@@ -7488,17 +7565,17 @@ public void test376550_5a() {
 				"		}\n" +
 				"	}\n" +
 				"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 3)\n" + 
 		"	public void foo(){\n" + 
 		"	            ^^^^^\n" + 
 		"The method foo() from the type X can potentially be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
@@ -7507,11 +7584,12 @@ public void test376550_5a() {
 public void test376550_5aa() {
 	if (this.complianceLevel < ClassFileConstants.JDK1_5)
 		return;
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
+	runner.testFiles =
 		new String[] {
 				"X.java", 
 				"public class X {\n" +
@@ -7527,17 +7605,17 @@ public void test376550_5aa() {
 				"		}\n" +
 				"	}\n" +
 				"}\n"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" +
 		"1. ERROR in X.java (at line 3)\n" +
 		"	public void foo(){\n" +
 		"	            ^^^^^\n" +
 		"The method foo() from the type X can potentially be declared as static\n" +
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
@@ -7576,11 +7654,12 @@ public void test376550_5b() {
 public void test376550_6a() {
 	if (this.complianceLevel < ClassFileConstants.JDK1_5)
 		return;
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
+	runner.testFiles =
 		new String[] {
 				"X.java", 
 				"public class X {\n" +
@@ -7594,17 +7673,17 @@ public void test376550_6a() {
 				"		}\n" +
 				"	}\n" +
 				"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 3)\n" + 
 		"	public void foo(){\n" + 
 		"	            ^^^^^\n" + 
 		"The method foo() from the type X can potentially be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
@@ -7644,11 +7723,12 @@ public void test376550_6b() {
 public void test376550_7a() {
 	if (this.complianceLevel < ClassFileConstants.JDK1_5)
 		return;
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
+	runner.testFiles =
 		new String[] {
 				"X.java", 
 				"public class X {\n" +
@@ -7662,17 +7742,17 @@ public void test376550_7a() {
 				"		}\n" +
 				"	}\n" +
 				"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 3)\n" + 
 		"	public void foo(){\n" + 
 		"	            ^^^^^\n" + 
 		"The method foo() from the type X can potentially be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
@@ -7712,11 +7792,12 @@ public void test376550_7b() {
 public void test376550_8a() {
 	if (this.complianceLevel < ClassFileConstants.JDK1_5)
 		return;
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
+	runner.testFiles =
 		new String[] {
 				"X.java", 
 				"public class X {\n" +
@@ -7730,17 +7811,17 @@ public void test376550_8a() {
 				"		}\n" +
 				"	}\n" +
 				"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 3)\n" + 
 		"	public void foo(){\n" + 
 		"	            ^^^^^\n" + 
 		"The method foo() from the type X can potentially be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
@@ -7779,11 +7860,12 @@ public void test376550_8b() {
 public void test376550_9a() {
 	if (this.complianceLevel < ClassFileConstants.JDK1_5)
 		return;
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
+	runner.testFiles =
 		new String[] {
 				"X.java", 
 				"public class X {\n" +
@@ -7799,17 +7881,17 @@ public void test376550_9a() {
 				"		}\n" +
 				"	}\n" +
 				"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 4)\n" + 
 		"	public void foo(){\n" + 
 		"	            ^^^^^\n" + 
 		"The method foo() from the type X can potentially be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
@@ -7850,11 +7932,12 @@ public void test376550_9b() {
 public void test376550_10a() {
 	if (this.complianceLevel < ClassFileConstants.JDK1_5)
 		return;
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
+	runner.testFiles =
 		new String[] {
 				"X.java", 
 				"public class X {\n" +
@@ -7870,17 +7953,17 @@ public void test376550_10a() {
 				"		}\n" +
 				"	}\n" +
 				"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 4)\n" + 
 		"	public void foo(){\n" + 
 		"	            ^^^^^\n" + 
 		"The method foo() from the type X can potentially be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
@@ -7921,11 +8004,12 @@ public void test376550_10b() {
 public void test376550_11() {
 	if (this.complianceLevel < ClassFileConstants.JDK1_5)
 		return;
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
+	runner.testFiles =
 		new String[] {
 				"X.java", 
 				"import java.util.ArrayList;\n" +
@@ -7938,7 +8022,8 @@ public void test376550_11() {
 				"		};\n" +
 				"	}\n" +
 				"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. WARNING in X.java (at line 6)\n" + 
 		"	return new ArrayList<Object>() {\n" + 
@@ -7949,11 +8034,10 @@ public void test376550_11() {
 		"	{ add(o);}\n" + 
 		"	      ^\n" + 
 		"Read access to enclosing field X.o is emulated by a synthetic accessor method\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings;
+	runner.runWarningTest();
 }
 
 // https://bugs.eclipse.org/376550
@@ -7962,11 +8046,12 @@ public void test376550_11() {
 public void test376550_11a() {
 	if (this.complianceLevel < ClassFileConstants.JDK1_5)
 		return;
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
+	runner.testFiles =
 		new String[] {
 				"X.java", 
 				"import java.util.ArrayList;\n" +
@@ -7979,7 +8064,8 @@ public void test376550_11a() {
 				"		};\n" +
 				"	}\n" +
 				"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" +
 		"1. ERROR in X.java (at line 5)\n" +
 		"	public final Collection<Object> go() {\n" +
@@ -7990,22 +8076,22 @@ public void test376550_11a() {
 		"	return new ArrayList<Object>() {\n" +
 		"	           ^^^^^^^^^^^^^^^^^^^\n" +
 		"The serializable class  does not declare a static final serialVersionUID field of type long\n" +
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
 public void test376550_12() {
 	if (this.complianceLevel < ClassFileConstants.JDK1_5)
 		return;
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportUnusedPrivateMember, CompilerOptions.IGNORE);
+	runner.testFiles =
 		new String[] {
 				"X.java", 
 				"import java.util.ArrayList;\n" +
@@ -8018,7 +8104,8 @@ public void test376550_12() {
 				"		};\n" +
 				"	}\n" +
 				"}"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 5)\n" + 
 		"	public final <E1> Collection<E1> go() {\n" + 
@@ -8029,11 +8116,10 @@ public void test376550_12() {
 		"	return new ArrayList<E1>() {\n" + 
 		"	           ^^^^^^^^^^^^^^^\n" + 
 		"The serializable class  does not declare a static final serialVersionUID field of type long\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=376550
@@ -8377,10 +8463,11 @@ public void test378674_comment21d() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=406396, Method can be static analysis misses a bunch of cases... 
 public void test406396() {
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.testFiles =
 		new String[] {
 			"X.java", 
 			"public class X  {\n" +
@@ -8396,7 +8483,8 @@ public void test406396() {
 			"		};\n" +
 			"	}\n" +
 			"}\n"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 3)\n" + 
 		"	void foo() {\n" + 
@@ -8422,18 +8510,18 @@ public void test406396() {
 		"	int f = p;\n" + 
 		"	    ^\n" + 
 		"The value of the field Z.f is not used\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=406396, Method can be static analysis misses a bunch of cases... 
 public void test406396a() {
-	Map compilerOptions = getCompilerOptions();
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
-	compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
-	this.runNegativeTest(
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
+	runner.customOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+	runner.testFiles =
 		new String[] {
 			"X.java", 
 			"public class X  {\n" +
@@ -8446,7 +8534,8 @@ public void test406396a() {
 			"		return 0;\n" +
 			"	}\n" +
 			"}\n"
-		},
+		};
+	runner.expectedCompilerLog =
 		"----------\n" + 
 		"1. ERROR in X.java (at line 3)\n" + 
 		"	int foo() {\n" + 
@@ -8462,10 +8551,9 @@ public void test406396a() {
 		"	int goo() {\n" + 
 		"	    ^^^^^\n" + 
 		"The method goo() from the type X can potentially be declared as static\n" + 
-		"----------\n",
-		null /* no extra class libraries */,
-		true /* flush output directory */,
-		compilerOptions /* custom options */
-	);
+		"----------\n";
+	runner.javacTestOptions =
+		JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
+	runner.runNegativeTest();
 }
 }
