@@ -141,6 +141,17 @@ public final class ImportRewriteAnalyzer {
 	 */
 	private static List<OriginalImportEntry> readOriginalImports(CompilationUnit compilationUnit) {
 		List<ImportDeclaration> importDeclarations = compilationUnit.imports();
+		// GROOVY add -- filter imports added by AST transformation or compiler configuration
+		if (!importDeclarations.isEmpty() && compilationUnit.getClass().getName().contains("Groovy")) { //$NON-NLS-1$
+			List<ImportDeclaration> originalDeclarations = new ArrayList<>(importDeclarations.size());
+			for (ImportDeclaration importDeclaration : importDeclarations) {
+				if (importDeclaration.getLength() > 0) {
+					originalDeclarations.add(importDeclaration);
+				}
+			}
+			importDeclarations = originalDeclarations;
+		}
+		// GROOVY end
 
 		if (importDeclarations.isEmpty()) {
 			return Collections.emptyList();

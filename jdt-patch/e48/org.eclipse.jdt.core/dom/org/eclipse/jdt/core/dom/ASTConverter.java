@@ -3230,7 +3230,7 @@ class ASTConverter {
 		int length = tokens != null ? tokens.length : 0;
 		// GROOVY add
 		if (node instanceof org.eclipse.jdt.internal.compiler.ast.ImportReference) {
-			org.eclipse.jdt.internal.compiler.ast.ImportReference importReference = (org.eclipse.jdt.internal.compiler.ast.ImportReference)node;
+			org.eclipse.jdt.internal.compiler.ast.ImportReference importReference = (org.eclipse.jdt.internal.compiler.ast.ImportReference) node;
 			if (!CharOperation.equals(tokens[length - 1], importReference.getSimpleName())) {
 				tokens[length - 1] = CharOperation.concat(tokens[length - 1], ' ', new char[] {'a','s'}, ' ', importReference.getSimpleName());
 			}

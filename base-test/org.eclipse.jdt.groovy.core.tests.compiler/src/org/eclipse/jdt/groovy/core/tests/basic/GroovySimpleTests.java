@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -5364,96 +5364,90 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     public void testStaticImportsAliasing_G() {
         runConformTest(new String[] {
             "p/Run.groovy",
-            "package p;\n"+
-            "import static java.lang.Math.PI\n"+
-            "import static java.lang.Math.sin as sine\n"+
-            "import static java.lang.Math.cos as cosine\n"+
+            "package p\n" +
+            "import static java.lang.Math.PI as pi\n" +
+            "import static java.lang.Math.sin as sine\n" +
+            "import static java.lang.Math.cos as cosine\n" +
             "\n"+
-            " print sine(PI / 6) + cosine(PI / 3)"
-        },"1.0");
+            "print sine(pi / 6) + cosine(pi / 3)\n",
+        }, "1.0");
     }
 
-    // Test 'import static a.B.FOO'
-    @Test
+    @Test // 'import static a.B.FOO'
     public void testImportStatic1() {
         runConformTest(new String[] {
             "b/Run.groovy",
-            "package b\n"+
-            "import static a.B.FOO\n"+
+            "package b\n" +
+            "import static a.B.FOO\n" +
             "class Run { public static void main(String[]argv) { print FOO;} }\n",
+
             "a/B.groovy",
-            "package a\n"+
+            "package a\n" +
             "class B { public static String FOO='abc';}\n",
-        },"abc");
-        GroovyCompilationUnitDeclaration gcud = getCUDeclFor("Run.groovy");
-        ImportReference[] irs = gcud.imports;
-        assertEquals("a.B.FOO",irs[0].toString().trim());
-        assertTrue(irs[0].isStatic());
+        }, "abc");
+
+        ImportReference ref = getCUDeclFor("Run.groovy").imports[0];
+        assertTrue(ref.isStatic());
+        assertEquals("a.B.FOO", ref.toString());
+        assertFalse(ref instanceof AliasImportReference);
+        assertEquals("FOO", String.valueOf(ref.getSimpleName()));
     }
 
-    // Test 'import static a.B.*'
-    @Test
+    @Test // 'import static a.B.*'
     public void testImportStatic2() {
         runConformTest(new String[] {
             "b/Run.groovy",
-            "package b\n"+
-            "import static a.B.*\n"+
+            "package b\n" +
+            "import static a.B.*\n" +
             "class Run { public static void main(String[]argv) { print FOO;} }\n",
+
             "a/B.groovy",
-            "package a\n"+
+            "package a\n" +
             "class B { public static String FOO='abc';}\n",
-        },"abc");
-        GroovyCompilationUnitDeclaration gcud = getCUDeclFor("Run.groovy");
-        ImportReference[] irs = gcud.imports;
-        assertEquals("a.B.*",irs[0].toString().trim());
-        assertTrue(irs[0].isStatic());
+        }, "abc");
+
+        ImportReference ref = getCUDeclFor("Run.groovy").imports[0];
+        assertTrue(ref.isStatic());
+        assertEquals("a.B.*", ref.toString());
     }
 
-    // Test 'import static a.B.FOO as Wibble'
-    @Test
+    @Test // 'import static a.B.FOO as Wibble'
     public void testImportStatic3() {
         runConformTest(new String[] {
             "b/Run.groovy",
-            "package b\n"+
-            "import static a.B.FOO as Wibble\n"+
+            "package b\n" +
+            "import static a.B.FOO as Wibble\n" +
             "class Run { public static void main(String[]argv) { print Wibble;} }\n",
+
             "a/B.groovy",
-            "package a\n"+
+            "package a\n" +
             "class B { public static String FOO='abc';}\n",
-        },"abc");
-        GroovyCompilationUnitDeclaration gcud = getCUDeclFor("Run.groovy");
-        ImportReference[] irs = gcud.imports;
-        assertTrue(irs[0] instanceof AliasImportReference);
-        assertEquals("a.B.FOO",irs[0].toString().trim());
-        assertTrue(irs[0].isStatic());
-        assertEquals("Wibble",new String(((AliasImportReference)irs[0]).getSimpleName()));
+        }, "abc");
+
+        ImportReference ref = getCUDeclFor("Run.groovy").imports[0];
+        assertTrue(ref.isStatic());
+        assertTrue(ref instanceof AliasImportReference);
+        assertEquals("a.B.FOO as Wibble", ref.toString());
+        assertEquals("Wibble", String.valueOf(ref.getSimpleName()));
     }
 
     @Test
     public void testImportStatic4() {
         runConformTest(new String[] {
             "a/B.groovy",
-            "package a\n"+
-            "interface B {\n"+
+            "package a\n" +
+            "interface B {\n" +
             "  String C = 'nls'\n" +
             "}",
 
             "x/Y.groovy",
-            "package x\n"+
+            "package x\n" +
             "import static a.B.C\n" +
             "class Y {\n" +
             "  @SuppressWarnings(C) def one() {}\n" +
             "  @SuppressWarnings(C) def two() {}\n" +
             "}",
         });
-        /* once was:
-        ----------\n
-        1. ERROR in a\B.groovy (at line 1)\n
-            package a\n
-            ^\n
-        Groovy:Internal groovy compiler error.\n
-        ----------\n
-         */
     }
 
     @Test

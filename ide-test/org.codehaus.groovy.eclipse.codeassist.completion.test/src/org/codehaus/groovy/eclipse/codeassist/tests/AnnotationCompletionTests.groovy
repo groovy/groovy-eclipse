@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import static org.eclipse.jdt.ui.PreferenceConstants.TYPEFILTER_ENABLED
 
 import groovy.transform.NotYetImplemented
 
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Assert
 import org.junit.Before
@@ -572,6 +573,33 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
             }
             '''.stripIndent()
         checkProposalApplication(contents, expected, contents.indexOf('(') + 1, 'SECONDS', false)
+    }
+
+    @Test
+    void testConfigScriptCompletion() {
+        addPlainText('''\
+            withConfig(configuration) {
+              imports {
+                star 'java.util.regex'
+              }
+            }
+            '''.stripIndent(), '../config.groovy')
+        setJavaPreference(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, 'config.groovy')
+        // addition of imports through compiler configuration should not affect proposal application
+
+        String contents = '''\
+            |@TypeCh
+            |class C {
+            |}
+            |'''.stripMargin()
+        String expected = '''\
+            |import groovy.transform.TypeChecked
+            |
+            |@TypeChecked
+            |class C {
+            |}
+            |'''.stripMargin()
+        checkProposalApplication(contents, expected, contents.indexOf('Ch') + 2, 'TypeChecked', true)
     }
 
     @Test @NotYetImplemented

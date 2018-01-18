@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,15 +18,15 @@ package org.codehaus.jdt.groovy.internal.compiler.ast;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.math.BigInteger;
+import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -967,28 +967,31 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             Map<String, ImportNode> importStaticStars = moduleNode.getStaticStarImports();
             int importCount = importNodes.size() + importPackages.size() + importStatics.size() + importStaticStars.size();
             if (importCount > 0) {
-                List<ImportReference> importReferences = new ArrayList<>(importCount);
+                Map<String, ImportReference> importReferences = new TreeMap<>();
 
                 // type imports
                 for (ImportNode importNode : importNodes) {
-                    int typeStartOffset = importNode.getTypeStart(),
-                        typeEndOffset = importNode.getTypeEnd(),
-                        endOffset = typeEndOffset;
-                    if (typeStartOffset == 0) {
-                        // incomplete import created during recovery
-                        continue;
+                    int endOffset = endOffset(importNode), typeEndOffset = -2, typeStartOffset = -1;
+                    if (endOffset > 0) {
+                        typeEndOffset = importNode.getTypeEnd();
+                        typeStartOffset = importNode.getTypeStart();
+                        if (typeStartOffset < 1) {
+                            continue; // incomplete import created during recovery
+                        }
                     }
                     char[][] splits = CharOperation.splitOn('.', importNode.getClassName().toCharArray());
                     ImportReference ref;
-                    if (importNode.getAlias() == null || importNode.getAlias().length() < 1) {
-                        long[] positions = positionsFor(splits, typeStartOffset, typeEndOffset);
+                    if (importNode.getAlias() == null || importNode.getAlias().length() < 1 ||
+                            importNode.getAlias().equals(String.valueOf(splits[splits.length - 1]))) {
+                        endOffset = typeEndOffset; // endOffset may include extras before ;
+                        long[] positions = positionsFor(splits, typeStartOffset, endOffset);
                         ref = new ImportReference(splits, positions, false, Flags.AccDefault);
                     } else {
-                        endOffset = endOffset(importNode);
                         long[] positions = positionsFor(splits, typeStartOffset, endOffset);
                         ref = new AliasImportReference(importNode.getAlias().toCharArray(), splits, positions, false, Flags.AccDefault);
                     }
                     ref.annotations = createAnnotations(importNode.getAnnotations());
+
                     ref.sourceEnd = Math.max(endOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
                     if (ref.sourceEnd < 0) {
                         // synthetic node; set all source positions to "unknown"
@@ -1002,81 +1005,105 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         ref.declarationSourceEnd = ref.sourceEnd;
                     }
 
-                    importReferences.add(ref);
+                    importReferences.put(lexicalKey(ref), ref);
                 }
 
                 // star imports
                 for (ImportNode importPackage : importPackages) {
                     String importText = importPackage.getText();
-                    // when calculating these offsets, assume no extraneous whitespace
-                    int packageStartOffset = importPackage.getStart() + "import ".length(),
-                        packageEndOffset = packageStartOffset + importText.length() - "import ".length() - ".*".length(),
-                        endOffset = endOffset(importPackage);
+                    int endOffset = endOffset(importPackage), packageEndOffset = -2, packageStartOffset = -1;
+                    if (endOffset > 0) {
+                        // when calculating these offsets, assume no extraneous whitespace
+                        packageStartOffset = importPackage.getStart() + "import ".length();
+                        packageEndOffset = packageStartOffset + importText.length() - "import ".length() - ".*".length();
+                    }
                     char[][] splits = CharOperation.splitOn('.', importPackage.getPackageName().substring(0, importPackage.getPackageName().length() - 1).toCharArray());
                     ImportReference ref = new ImportReference(splits, positionsFor(splits, packageStartOffset, packageEndOffset), true, Flags.AccDefault);
                     ref.annotations = createAnnotations(importPackage.getAnnotations());
-                    // import * style only have slocs for the entire ImportNode and not for the embedded type
-                    ref.sourceEnd = Math.max(endOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
-                    ref.declarationEnd = ref.sourceEnd + trailerLength(importPackage);
-                    ref.declarationSourceStart = importPackage.getStart();
-                    ref.declarationSourceEnd = ref.sourceEnd;
 
-                    importReferences.add(ref);
+                    ref.sourceEnd = Math.max(endOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
+                    if (ref.sourceEnd < 0) {
+                        // synthetic node; set all source positions to "unknown"
+                        ref.declarationSourceStart = -1;
+                        ref.declarationSourceEnd = -2;
+                        ref.declarationEnd = -2;
+                        ref.sourceEnd = -2;
+                    } else {
+                        ref.declarationEnd = ref.sourceEnd + trailerLength(importPackage);
+                        ref.declarationSourceStart = importPackage.getStart();
+                        ref.declarationSourceEnd = ref.sourceEnd;
+                    }
+
+                    importReferences.put(lexicalKey(ref), ref);
                 }
 
                 // static imports
                 for (Map.Entry<String, ImportNode> importStatic : importStatics.entrySet()) {
                     ImportNode importNode = importStatic.getValue();
+                    int endOffset = endOffset(importNode), typeStartOffset = importNode.getTypeStart();
                     char[][] splits = CharOperation.splitOn('.', (importNode.getClassName() + '.' + importNode.getFieldName()).toCharArray());
-                    int typeStartOffset = importNode.getTypeStart(),
-                        typeEndOffset = importNode.getTypeEnd(),
-                        endOffset = typeEndOffset;
-                    ImportReference ref = null;
-                    if (importNode.getAlias() == null || importNode.getAlias().length() < 1) {
-                        long[] positions = positionsFor(splits, typeStartOffset, typeEndOffset);
+                    long[] positions = positionsFor(splits, typeStartOffset, endOffset);
+                    ImportReference ref;
+                    if (importNode.getAlias() == null || importNode.getAlias().length() < 1 || importNode.getAlias().equals(importNode.getFieldName())) {
                         ref = new ImportReference(splits, positions, false, Flags.AccDefault | Flags.AccStatic);
                     } else {
-                        endOffset = endOffset(importNode);
-                        long[] positions = positionsFor(splits, typeStartOffset, endOffset);
                         ref = new AliasImportReference(importNode.getAlias().toCharArray(), splits, positions, false, Flags.AccDefault | Flags.AccStatic);
                     }
                     ref.annotations = createAnnotations(importNode.getAnnotations());
-                    ref.sourceEnd = Math.max(endOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
-                    ref.declarationEnd = ref.sourceEnd + trailerLength(importNode);
-                    ref.declarationSourceStart = startOffset(importNode);
-                    ref.declarationSourceEnd = ref.sourceEnd;
 
-                    importReferences.add(ref);
+                    ref.sourceEnd = Math.max(endOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
+                    if (ref.sourceEnd < 0) {
+                        // synthetic node; set all source positions to "unknown"
+                        ref.declarationSourceStart = -1;
+                        ref.declarationSourceEnd = -2;
+                        ref.declarationEnd = -2;
+                        ref.sourceEnd = -2;
+                    } else {
+                        ref.declarationEnd = ref.sourceEnd + trailerLength(importNode);
+                        ref.declarationSourceStart = startOffset(importNode);
+                        ref.declarationSourceEnd = ref.sourceEnd;
+                    }
+
+                    importReferences.put(lexicalKey(ref), ref);
                 }
 
                 // static star imports
                 for (Map.Entry<String, ImportNode> importStaticStar : importStaticStars.entrySet()) {
                     String classname = importStaticStar.getKey();
                     ImportNode importNode = importStaticStar.getValue();
-                    int typeStartOffset = Math.max(0, importNode.getTypeStart()),
-                        typeEndOffset = Math.max(0, importNode.getTypeEnd()),
-                        endOffset = endOffset(importNode);
+                    int endOffset = endOffset(importNode), typeEndOffset = -2, typeStartOffset = -1;
+                    if (endOffset > 0) {
+                        typeEndOffset = importNode.getTypeEnd();
+                        typeStartOffset = importNode.getTypeStart();
+                    }
                     char[][] splits = CharOperation.splitOn('.', classname.toCharArray());
                     long[] positions = positionsFor(splits, typeStartOffset, typeEndOffset);
                     ImportReference ref = new ImportReference(splits, positions, true, Flags.AccDefault | Flags.AccStatic);
                     ref.annotations = createAnnotations(importNode.getAnnotations());
-                    ref.sourceEnd = Math.max(endOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
-                    ref.declarationEnd = ref.sourceEnd + trailerLength(importNode);
-                    ref.declarationSourceStart = importNode.getStart();
-                    ref.declarationSourceEnd = ref.sourceEnd;
 
-                    importReferences.add(ref);
+                    ref.sourceEnd = Math.max(endOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
+                    if (ref.sourceEnd < 0) {
+                        // synthetic node; set all source positions to "unknown"
+                        ref.declarationSourceStart = -1;
+                        ref.declarationSourceEnd = -2;
+                        ref.declarationEnd = -2;
+                        ref.sourceEnd = -2;
+                    } else {
+                        ref.declarationEnd = ref.sourceEnd + trailerLength(importNode);
+                        ref.declarationSourceStart = importNode.getStart();
+                        ref.declarationSourceEnd = ref.sourceEnd;
+                    }
+
+                    importReferences.put(lexicalKey(ref), ref);
                 }
 
-                // ensure proper lexical order
                 if (!importReferences.isEmpty()) {
-                    ImportReference[] refs = importReferences.toArray(new ImportReference[importReferences.size()]);
-                    Arrays.sort(refs, Comparator.comparing(ref -> ref.sourceStart));
+                    ImportReference[] refs = importReferences.values().toArray(new ImportReference[0]);
                     for (ImportReference ref : refs) {
                         if (ref.declarationSourceStart > 0 && (ref.declarationEnd - ref.declarationSourceStart + 1) < 0) {
-                            throw new IllegalStateException("Import reference alongside class " + moduleNode.getClasses().get(0)
-                                    + " will trigger later failure: " + ref.toString() + " declSourceStart="
-                                    + ref.declarationSourceStart + " declEnd=" + ref.declarationEnd);
+                            throw new IllegalStateException(String.format(
+                                "Import reference alongside class %s will trigger later failure: %s declSourceStart=%d declEnd=%d",
+                                  moduleNode.getClasses().get(0), ref.toString(), ref.declarationSourceStart, ref.declarationEnd));
                         }
                     }
                     unitDeclaration.imports = refs;
@@ -2306,10 +2333,30 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             return false;
         }
 
-        private char[] toMainName(char[] fileName) {
-            if (fileName == null) {
-                return new char[0];
+        /**
+         * Ensures lexical ordering and synthetic de-duplication.
+         */
+        private static String lexicalKey(ImportReference ref) {
+            StringBuilder key = new StringBuilder();
+            key.append(Prefix.format(ref.declarationSourceStart));
+            key.append(CharOperation.concatWith(ref.tokens, '.'));
+            if ((ref.bits & ASTNode.OnDemand) == 0) {
+                key.append(" as ").append(ref.getSimpleName());
             }
+            return key.toString();
+        }
+        private static final NumberFormat Prefix;
+        static {
+            Prefix = NumberFormat.getInstance();
+            Prefix.setMinimumIntegerDigits(5);
+            Prefix.setGroupingUsed(false);
+        }
+
+        private static char[] toMainName(char[] fileName) {
+            if (fileName == null) {
+                return CharOperation.NO_CHAR;
+            }
+
             int start = CharOperation.lastIndexOf('/', fileName) + 1;
             if (start == 0 || start < CharOperation.lastIndexOf('\\', fileName))
                 start = CharOperation.lastIndexOf('\\', fileName) + 1;
