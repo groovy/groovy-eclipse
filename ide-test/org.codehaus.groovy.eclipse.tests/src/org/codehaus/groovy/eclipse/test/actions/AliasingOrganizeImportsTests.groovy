@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -477,6 +477,61 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
             }
             '''
         doContentsCompareTest(originalContents, expectedContents)
+    }
+
+    @Test
+    void testOrganizeWithExtraImports1() {
+        addConfigScript '''\
+            withConfig(configuration) {
+              imports {
+                alias 'Regexp', 'java.util.regex.Pattern'
+              }
+            }
+            '''
+
+        String originalContents = '''\
+            import java.util.regex.Matcher
+
+            class C {
+              Regexp regexp = ~/123/
+              Matcher matcher(String string) {
+                regexp.matcher(string)
+              }
+            }
+            '''
+        String expectedContents = '''\
+            import java.util.regex.Matcher
+
+            class C {
+              Regexp regexp = ~/123/
+              Matcher matcher(String string) {
+                regexp.matcher(string)
+              }
+            }
+            '''
+
+        doContentsCompareTest(originalContents, expectedContents)
+    }
+
+    @Test
+    void testOrganizeWithExtraImports2() {
+        addConfigScript '''\
+            withConfig(configuration) {
+              imports {
+                staticMember 'java.util.concurrent.TimeUnit', 'DAYS'
+                staticMember 'MILLIS', 'java.util.concurrent.TimeUnit', 'MILLISECONDS'
+              }
+            }
+            '''
+
+        String contents = '''\
+            import java.util.concurrent.TimeUnit
+
+            TimeUnit units = DAYS
+            units = MILLIS
+            '''
+
+        doContentsCompareTest(contents)
     }
 
     // TODO: What about an alias that is the same as the type or field/method?

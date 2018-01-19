@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,17 +15,24 @@
  */
 package org.codehaus.groovy.eclipse.test.actions
 
+import static org.eclipse.jdt.internal.compiler.impl.CompilerOptions.OPTIONG_GroovyCompilerConfigScript
+
 import org.codehaus.groovy.eclipse.refactoring.actions.OrganizeGroovyImports
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
+import org.eclipse.core.resources.IProject
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.ISourceRange
+import org.eclipse.jdt.core.JavaCore
+import org.eclipse.jdt.core.groovy.tests.ReconcilerUtils
 import org.eclipse.jdt.core.search.TypeNameMatch
+import org.eclipse.jdt.core.tests.util.Util
 import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.Document
 import org.eclipse.text.edits.DeleteEdit
 import org.eclipse.text.edits.InsertEdit
 import org.eclipse.text.edits.TextEdit
+import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 
@@ -72,11 +79,32 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
             'Other', 'other4'
     }
 
+    @After
+    final void tearDownImportsTestCase() {
+        withProject { IProject project ->
+            Util.delete(project.getFile('config.groovy'))
+        }
+
+        JavaCore.options = JavaCore.options.with {
+            remove(OPTIONG_GroovyCompilerConfigScript)
+            return it
+        }
+    }
+
+    protected void addConfigScript(CharSequence contents) {
+        addPlainText(contents.stripIndent(), '../config.groovy')
+        setJavaPreference(OPTIONG_GroovyCompilerConfigScript, 'config.groovy')
+    }
+
+    protected ICompilationUnit createGroovyType(String pack, String name, CharSequence contents) {
+        addGroovySource(contents.stripIndent(), name, pack)
+    }
+
     protected void doAddImportTest(CharSequence contents, List<String> expectedImports = []) {
         def unit = addGroovySource(contents, nextUnitName())
-        waitForIndex()
-        IChooseImportQuery query = new NoChoiceQuery()
-        OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, query)
+        ReconcilerUtils.reconcile(unit)
+
+        OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, new NoChoiceQuery())
         TextEdit edit = organize.calculateMissingImports()
         if (expectedImports == null) {
             Assert.assertNull('Expected null due to a compile error in the contents', edit)
@@ -124,12 +152,11 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
 
     protected void doContentsCompareTest(CharSequence originalContents, CharSequence expectedContents = originalContents) {
         def unit = addGroovySource(originalContents.stripIndent(), nextUnitName(), 'main')
-        buildProject()
-        waitForIndex()
+        ReconcilerUtils.reconcile(unit)
 
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, new NoChoiceQuery())
         TextEdit edit = organize.calculateMissingImports()
-        // TODO: Must match TestProject.createGroovyType()!
+        // NOTE: Must match TestProject.createGroovyType()!
         String prefix = "package main;\n\n"
 
         Document doc = new Document(prefix + originalContents.stripIndent())
@@ -147,8 +174,8 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
     }
 
     protected void doChoiceTest(CharSequence contents, List expectedChoices) {
-        def unit = addGroovySource(contents.stripIndent(), nextUnitName(), 'main')
-        buildProject()
+        def unit = addGroovySource(contents.stripIndent(), nextUnitName())
+        ReconcilerUtils.reconcile(unit)
 
         def query = new ChoiceQuery()
         OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, query)
@@ -157,10 +184,6 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
             Assert.assertTrue("Should have found $choice in choices", query.choices.contains(choice))
         }
         Assert.assertEquals("Wrong number of choices found.  Expecting:\n$expectedChoices\nFound:\n$query.choices", query.choices.size(), expectedChoices.size())
-    }
-
-    protected ICompilationUnit createGroovyType(String pack, String name, CharSequence contents) {
-        addGroovySource(contents.stripIndent(), name, pack)
     }
 }
 
@@ -171,7 +194,7 @@ class NoChoiceQuery implements IChooseImportQuery {
 }
 
 class ChoiceQuery implements IChooseImportQuery {
-    List choices
+    List<String> choices
     public TypeNameMatch[] chooseImports(TypeNameMatch[][] matches, ISourceRange[] range) {
         choices = matches[0].collect { it.type.fullyQualifiedName }
         return []
