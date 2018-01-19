@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.test.actions
 
-import org.junit.Ignore
+import groovy.transform.NotYetImplemented
+
 import org.junit.Test
 
 /**
@@ -421,7 +422,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainImport() {
+    void testRetainImport1() {
         String contents = '''\
             import javax.swing.text.html.HTML
             HTML.class
@@ -612,7 +613,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(contents)
     }
 
-    @Test @Ignore('Currently not possible due to heuristic in FindUnresolvedReferencesVisitor.handleVariable()')
+    @Test @NotYetImplemented // Currently not possible due to heuristic in FindUnresolvedReferencesVisitor.handleVariable()
     void testDynamicVariable1() {
         String contents = '''
             HTML.NULL_ATTRIBUTE_VALUE
@@ -867,7 +868,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testStaticImport() {
+    void testStaticImport1() {
         String contents = '''\
             import static java.lang.String.format
             format
@@ -876,7 +877,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testStaticImportX() {
+    void testStaticImport1a() {
         String originalContents = '''\
             import static java.lang.String.format
             formage
@@ -1100,6 +1101,26 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(contents)
     }
 
+    @Test // GRECLIPSE-1219
+    void testAnnotationsOnImports2() {
+        String originalContents = '''\
+            @Deprecated
+            import javax.swing.text.html.HTML
+            '''
+        String expectedContents = ''
+        doContentsCompareTest(originalContents, expectedContents)
+    }
+
+    @Test // GRECLIPSE-1219
+    void testAnnotationsOnImports3() {
+        String contents = '''\
+            @Deprecated
+            import javax.swing.text.html.*
+            HTML
+            '''
+        doContentsCompareTest(contents)
+    }
+
     @Test // GRECLIPSE-1692
     void testFieldAnnotationImport() {
         String contents = '''\
@@ -1147,26 +1168,6 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             }
             '''
         doContentsCompareTest(originalContents, expectedContents)
-    }
-
-    @Test // GRECLIPSE-1219
-    void testAnnotationsOnImports2() {
-        String originalContents = '''\
-            @Deprecated
-            import javax.swing.text.html.HTML
-            '''
-        String expectedContents = ''
-        doContentsCompareTest(originalContents, expectedContents)
-    }
-
-    @Test // GRECLIPSE-1219
-    void testAnnotationsOnImports3() {
-        String contents = '''\
-            @Deprecated
-            import javax.swing.text.html.*
-            HTML
-            '''
-        doContentsCompareTest(contents)
     }
 
     @Test
@@ -1323,7 +1324,60 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(contents)
     }
 
-    @Ignore @Test
+    @Test
+    void testOrganizeWithExtraImports1() {
+        addConfigScript '''\
+            withConfig(configuration) {
+              imports {
+                normal 'java.util.regex.Matcher'
+                normal 'java.util.regex.Pattern'
+              }
+            }
+            '''
+
+        String originalContents = '''\
+            import java.util.regex.Matcher
+
+            class C {
+              Pattern pattern = ~/123/
+              Matcher matcher(String string) {
+                pattern.matcher(string)
+              }
+            }
+            '''
+        String expectedContents = '''\
+            class C {
+              Pattern pattern = ~/123/
+              Matcher matcher(String string) {
+                pattern.matcher(string)
+              }
+            }
+            '''
+
+        doContentsCompareTest(originalContents, expectedContents)
+    }
+
+    @Test
+    void testOrganizeWithExtraImports2() {
+        addConfigScript '''\
+            withConfig(configuration) {
+              imports {
+                star 'groovy.transform'
+                normal 'java.util.concurrent.TimeUnit'
+                staticStar 'java.util.concurrent.TimeUnit'
+              }
+            }
+            '''
+
+        String contents = '''\
+            @Field
+            TimeUnit units = DAYS
+            '''
+
+        doContentsCompareTest(contents)
+    }
+
+    @Test @NotYetImplemented
     void testOrganizeWithInterleavedComments() {
         String originalContents = '''\
             import java.util.regex.Pattern

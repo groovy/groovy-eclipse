@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -445,7 +445,7 @@ public class OrganizeGroovyImports {
                     } else {
                         rewriter.addStaticImport(imp.getClassName().replace('$', '.'), "*", true);
                     }
-                    // GRECLIPSE-929: ensure that on-demand (i.e. star) imports are never removed
+                    // GRECLIPSE-929: Ensure that on-demand (i.e. star) imports are never removed.
                 } else {
                     String className = imp.getClassName().replace('$', '.');
                     if (!imp.isStatic()) {
@@ -453,9 +453,9 @@ public class OrganizeGroovyImports {
                             rewriter.addImport(className);
                             importsSlatedForRemoval.put(className, imp);
                         } else {
-                            String alias = className + " as " + imp.getAlias();
-                            rewriter.addImport(alias);
-                            importsSlatedForRemoval.put(alias, imp);
+                            String fullName = className + " as " + imp.getAlias();
+                            rewriter.addImport(fullName);
+                            importsSlatedForRemoval.put(fullName, imp);
                         }
                     } else {
                         if (!isAliased(imp)) {
@@ -482,16 +482,20 @@ public class OrganizeGroovyImports {
             // remove all default imports
             for (ImportNode imp : allImports) {
                 if (isDefaultImport(imp)) {
-                    // remove default imports
                     String key;
-                    // not removing static imports
-                    if (imp.getClassName() != null) {
-                        key = imp.getClassName();
+                    if (imp.isStar()) {
+                        if (!imp.isStatic()) {
+                            key = imp.getPackageName() + "*";
+                        } else {
+                            key = imp.getClassName().replace('$', '.') + ".*";
+                        }
                     } else {
-                        // an on-demand/star import
-                        key = imp.getPackageName();
-                        if (key.endsWith(".")) {
-                            key += "*";
+                        key = imp.getClassName().replace('$', '.');
+                        if (imp.isStatic()) {
+                            key += "." + imp.getFieldName();
+                        }
+                        if (isAliased(imp)) {
+                            key += " as " + imp.getAlias();
                         }
                     }
                     importsSlatedForRemoval.put(key, imp);
