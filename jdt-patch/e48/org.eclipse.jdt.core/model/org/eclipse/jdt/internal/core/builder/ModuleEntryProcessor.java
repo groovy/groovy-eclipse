@@ -11,7 +11,7 @@
 package org.eclipse.jdt.internal.core.builder;
 
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -98,6 +98,6 @@ class ModuleEntryProcessor {
 			return null;
 		
 		// collect the transitive closure of modules contained in limitSet
-		return new HashSet<>(Arrays.asList(extraAttribute.split(","))); //$NON-NLS-1$
+		return new LinkedHashSet<>(Arrays.asList(extraAttribute.split(","))); //$NON-NLS-1$
 	}
 }

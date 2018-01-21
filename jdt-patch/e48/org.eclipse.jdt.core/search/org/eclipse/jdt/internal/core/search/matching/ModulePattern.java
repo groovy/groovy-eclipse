@@ -27,6 +27,7 @@ public class ModulePattern extends JavaSearchPattern {
 	protected static char[][] REF_CATEGORIES = { MODULE_REF };
 	protected static char[][] REF_AND_DECL_CATEGORIES = { MODULE_REF, MODULE_DECL };
 	protected static char[][] DECL_CATEGORIES = { MODULE_DECL };
+	private static char[] regexPrefix = {'\\','r',' '};
 
 	public static char[] createIndexKey(char[] name) {
 		return name; // until a need arises, let the name itself be the index key.
@@ -35,8 +36,8 @@ public class ModulePattern extends JavaSearchPattern {
 		super(MODULE_PATTERN, matchRule);
 	}
 	public ModulePattern(char[] name, int limitTo, int matchRule) {
-		this(matchRule);
-		this.name = name;
+		this(ModulePattern.trapDoorRegexMatchRule(name, matchRule));
+		this.name = trapDoorRegexExtractModuleName(name);
 		switch (limitTo & 0xF) {
 			case IJavaSearchConstants.DECLARATIONS :
 				this.findReferences = false;
@@ -45,9 +46,28 @@ public class ModulePattern extends JavaSearchPattern {
 				this.findDeclarations = false;
 				break;
 			case IJavaSearchConstants.ALL_OCCURRENCES :
+				if ((getMatchRule() & SearchPattern.R_REGEXP_MATCH) != 0)
+					this.findReferences = false; //regex implemented only for module declarations.
 				break;
 		}
 		this.mustResolve = mustResolve();
+	}
+	/*
+	 * Trap door method for implicitly triggering a regex search.
+	 * if the module name starts with regex: (case insensitive),
+	 * the rest of the characters are taken as a regular expression
+	 * for the module name.
+	 */
+	private static char[] trapDoorRegexExtractModuleName(char[] name2) {
+		int index = CharOperation.indexOf(regexPrefix, name2, false);
+		return index >= 0 ? CharOperation.subarray(name2, index + regexPrefix.length, name2.length) : name2;
+	}
+	/*
+	 * Sets the match rule to regular expression search as well.
+	 */
+	private static int trapDoorRegexMatchRule(char[] name2, int matchRule) {
+		return CharOperation.indexOf(regexPrefix, name2, false) == 0 ?
+				SearchPattern.R_REGEXP_MATCH : matchRule;
 	}
 	@Override
 	public void decodeIndexKey(char[] key) {

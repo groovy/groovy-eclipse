@@ -62,11 +62,11 @@ public class NullAnnotationTests9 extends AbstractNullAnnotationTest {
 			int len = defaultLibs.length;
 			this.LIBS = new String[len+1];
 			System.arraycopy(defaultLibs, 0, this.LIBS, 0, len);
-			this.LIBS[len] = createAnnotation_2_2_jar(Util.getOutputDirectory() + File.separator);
+			this.LIBS[len] = createAnnotation_2_2_jar(Util.getOutputDirectory() + File.separator, null);
 		}
 	}
 
-	public static String createAnnotation_2_2_jar(String dirName) throws IOException {
+	public static String createAnnotation_2_2_jar(String dirName, String jcl9Path) throws IOException {
 		// role our own annotation library as long as o.e.j.annotation is still at BREE 1.8:
 		String jarFileName = dirName + "org.eclipse.jdt.annotation_2.2.0.jar";
 		createJar(new String[] {
@@ -125,7 +125,9 @@ public class NullAnnotationTests9 extends AbstractNullAnnotationTest {
 				"	// marker annotation with no members\n" + 
 				"}\n"
 			},
+			null,
 			jarFileName,
+			jcl9Path != null ? new String[] { jcl9Path } : null,
 			"9");
 		return jarFileName;
 	}

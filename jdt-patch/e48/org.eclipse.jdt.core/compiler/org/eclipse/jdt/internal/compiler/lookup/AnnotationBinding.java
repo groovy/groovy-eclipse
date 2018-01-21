@@ -250,9 +250,9 @@ public String toString() {
 @Override
 public int hashCode() {
 	int result = 17;
-	int c = this.type.hashCode();
+	int c = this.getAnnotationType().hashCode();
 	result = 31 * result + c;
-	c =  Arrays.hashCode(this.pairs);
+	c =  Arrays.hashCode(this.getElementValuePairs());
 	result = 31 * result + c;
 	return result;
 }

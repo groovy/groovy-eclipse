@@ -66,7 +66,7 @@ import org.eclipse.jdt.internal.core.util.Util;
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class NameLookup implements SuffixConstants {
 
-	private static IModuleDescription NO_MODULE = new AbstractModule(null, "Not a module") { /* empty */ }; //$NON-NLS-1$
+	private static IModuleDescription NO_MODULE = new SourceModule(null, "Not a module") { /* empty */ }; //$NON-NLS-1$
 
 	public static class Answer {
 		public IType type;

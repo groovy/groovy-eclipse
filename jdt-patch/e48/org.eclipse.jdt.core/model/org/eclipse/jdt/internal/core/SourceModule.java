@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017 IBM Corporation.
+ * Copyright (c) 2017, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@ package org.eclipse.jdt.internal.core;
 
 import org.eclipse.jdt.core.JavaModelException;
 
-public class SourceModule extends AbstractModule {
+public class SourceModule extends NamedMember implements AbstractModule {
 	public SourceModule(JavaElement parent, String name) {
 		super(parent, name);
 	}
@@ -20,6 +20,10 @@ public class SourceModule extends AbstractModule {
 	public int getFlags() throws JavaModelException {
 		ModuleDescriptionInfo info = (ModuleDescriptionInfo) getElementInfo();
 		return info.getModifiers();
+	}
+	@Override
+	public char getHandleMementoDelimiter() {
+		return JavaElement.JEM_MODULE;
 	}
 	@Override
 	public String toString(String lineDelimiter) {

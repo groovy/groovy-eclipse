@@ -15,6 +15,7 @@
 package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.jdt.core.ToolFactory;
@@ -6872,6 +6873,33 @@ public void testBug521182b() {
 			"}"
 		},
 		"Success");
+}
+public void testBug516833() {
+	Map options = new HashMap<>(2);
+	options.put(CompilerOptions.OPTION_MethodParametersAttribute, "generate");
+	this.runConformTest(
+		new String[] {
+			"ParameterTest.java",
+			"import java.lang.reflect.Method;\n" + 
+			"import java.lang.reflect.Parameter;\n" + 
+			"import java.util.Arrays;\n" + 
+			"import java.util.List;\n" + 
+			"public class ParameterTest {\n" + 
+			"	void foo(String s, List<String> s1) {\n" + 
+			"		s1.stream().filter(p -> p.equals(s));\n" + 
+			"	}\n" + 
+			"	public static void main(String[] args) {\n" + 
+			"		for (Method m : ParameterTest.class.getDeclaredMethods()) {\n" + 
+			"			if (m.getName().contains(\"lambda\")) {\n" + 
+			"				Parameter[] params = m.getParameters();\n" + 
+			"				System.out.println(Arrays.asList(params));\n" + 
+			"			}\n" + 
+			"			\n" + 
+			"		}\n" + 
+			"	}\n" + 
+			"}\n"
+		},
+		"[java.lang.String arg0, java.lang.String arg1]", options);
 }
 public static Class testClass() {
 	return LambdaExpressionsTest.class;

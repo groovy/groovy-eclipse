@@ -2912,8 +2912,6 @@ public void test430015a() throws IOException, ClassFormatException {
 				"        [pc: 0, line: 7]\n" + 
 				"      Local variable table:\n" + 
 				"        [pc: 0, pc: 1] local: i index: 0 type: int\n" + 
-				"      Method Parameters:\n" + 
-				"        i\n" + 
 				"\n";
 
 	verifyClassFile(expectedOutput, "X.class", ClassFileBytesDisassembler.SYSTEM);
@@ -3190,8 +3188,6 @@ public void test430571() throws IOException, ClassFormatException {
 				"        [pc: 0, line: 12]\n" +
 				"      Local variable table:\n" +
 				"        [pc: 0, pc: 4] local: x index: 0 type: int\n" +
-				"      Method Parameters:\n" + // Method Parameters
-				"        x\n" + // <---
 				"    RuntimeInvisibleTypeAnnotations: \n" + // Annotations
 				"      #26 @A(\n" + // <---
 				"        target type = 0x16 METHOD_FORMAL_PARAMETER\n" +

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -128,7 +128,7 @@ public ISourceRange getNameRange() throws JavaModelException {
 	SourceMapper mapper= getSourceMapper();
 	if (mapper != null) {
 		// ensure the class file's buffer is open so that source ranges are computed
-		((ClassFile)getClassFile()).getBuffer();
+		((AbstractClassFile)getClassFile()).getBuffer();
 
 		return mapper.getNameRange(this);
 	} else {

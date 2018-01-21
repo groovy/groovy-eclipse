@@ -18,7 +18,7 @@
    </license>
 
    <requires>
-      <import feature="org.eclipse.jdt" version="3.14.0.v20180117-2000" patch="true"/>
+      <import feature="org.eclipse.jdt" version="3.14.0.v20180121-0800" patch="true"/>
    </requires>
 
    <plugin

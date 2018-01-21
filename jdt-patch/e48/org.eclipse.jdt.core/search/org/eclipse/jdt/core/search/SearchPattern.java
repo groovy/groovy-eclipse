@@ -78,7 +78,8 @@ public abstract class SearchPattern {
 
 	/**
 	 * Match rule: The search pattern contains a regular expression.
-	 * <p><b>Warning:</b> The support for this rule is <b>not yet implemented</b></p>
+	 * <p><b>Warning:</b> Implemented only for module declaration search.
+	 * The support for this rule is <b>not yet implemented for others</b></p>
 	 */
 	public static final int R_REGEXP_MATCH = 0x0004;
 

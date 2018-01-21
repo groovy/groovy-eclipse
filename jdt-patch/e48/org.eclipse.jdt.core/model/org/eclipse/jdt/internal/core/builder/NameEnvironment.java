@@ -24,6 +24,7 @@ import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.*;
+import org.eclipse.jdt.internal.compiler.env.IUpdatableModule.UpdateKind;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
@@ -34,6 +35,7 @@ import org.eclipse.jdt.internal.core.*;
 
 import java.io.*;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
@@ -169,6 +171,7 @@ private void computeClasspathLocations(
 					if (patchedModule != null) {
 						ModuleEntryProcessor.combinePatchIntoModuleEntry(bLocation, patchedModule, moduleEntries);
 					}
+					bLocation.patchModuleName = patchedModuleName;
 				} else {
 					ClasspathLocation sourceLocation = ClasspathLocation.forSourceFolder(
 								(IContainer) target, 
@@ -180,6 +183,7 @@ private void computeClasspathLocations(
 						ModuleEntryProcessor.combinePatchIntoModuleEntry(sourceLocation, patchedModule, moduleEntries);
 					}
 					sLocations.add(sourceLocation);
+					sourceLocation.patchModuleName = patchedModuleName;
 				}
 				continue nextEntry;
 
@@ -240,6 +244,12 @@ private void computeClasspathLocations(
 					ModulePathEntry projectEntry = new ModulePathEntry(prereqJavaProject.getPath(), info,
 							projectLocations.toArray(new ClasspathLocation[projectLocations.size()]));
 					String moduleName = String.valueOf(info.name());
+					IUpdatableModule.UpdatesByKind updates = this.moduleUpdater.getUpdates(moduleName);
+					for (ClasspathLocation loc : projectLocations) {
+						loc.limitModuleNames = limitModules;
+						loc.updates = updates;
+						loc.patchModuleName = patchedModuleName;
+					}
 					if (limitModules == null || limitModules.contains(moduleName)) {
 						moduleEntries.put(moduleName, projectEntry);
 						if (moduleName.equals(patchedModuleName))
@@ -368,8 +378,28 @@ IModule collectModuleEntries(ClasspathLocation bLocation, IPath path, boolean is
 								String patchedModuleName, IModule patchedModule, Map<String, IModulePathEntry> moduleEntries) {
 	if (bLocation instanceof IMultiModuleEntry) {
 		IMultiModuleEntry binaryModulePathEntry = (IMultiModuleEntry) bLocation;
+		bLocation.limitModuleNames = limitModules;
+		bLocation.patchModuleName = patchedModuleName;
+		IUpdatableModule.UpdatesByKind updates = null;//new IUpdatableModule.UpdatesByKind();
+		IUpdatableModule.UpdatesByKind finalUpdates = new IUpdatableModule.UpdatesByKind();
+		List<Consumer<IUpdatableModule>> packageUpdates = null;
+		List<Consumer<IUpdatableModule>> moduleUpdates = null;
 		for (String moduleName : binaryModulePathEntry.getModuleNames(limitModules)) {
 			moduleEntries.put(moduleName, binaryModulePathEntry);
+			updates = this.moduleUpdater.getUpdates(moduleName);
+			if (updates != null) {
+				List<Consumer<IUpdatableModule>> pu = updates.getList(UpdateKind.PACKAGE, false);
+				if (pu != null) {
+					(packageUpdates = finalUpdates.getList(UpdateKind.PACKAGE, true)).addAll(pu);
+				}
+				List<Consumer<IUpdatableModule>> mu = updates.getList(UpdateKind.MODULE, false);
+				if (mu != null) {
+					(moduleUpdates = finalUpdates.getList(UpdateKind.MODULE, true)).addAll(mu);
+				}
+			}
+		}
+		if (packageUpdates != null || moduleUpdates != null) {
+			bLocation.updates = finalUpdates;
 		}
 		if (patchedModuleName != null) {
 			IModule module = binaryModulePathEntry.getModule(patchedModuleName.toCharArray());
@@ -382,6 +412,9 @@ IModule collectModuleEntries(ClasspathLocation bLocation, IPath path, boolean is
 		IModule module = binaryModulePathEntry.getModule();
 		if (module != null) {
 			String moduleName = String.valueOf(module.name());
+			bLocation.updates = this.moduleUpdater.getUpdates(moduleName);
+			bLocation.limitModuleNames = limitModules;
+			bLocation.patchModuleName = patchedModuleName;
 			if (limitModules == null || limitModules == ClasspathJrt.NO_LIMIT_MODULES || limitModules.contains(moduleName)) {
 				moduleEntries.put(moduleName, binaryModulePathEntry);
 				if (patchedModuleName != null) {

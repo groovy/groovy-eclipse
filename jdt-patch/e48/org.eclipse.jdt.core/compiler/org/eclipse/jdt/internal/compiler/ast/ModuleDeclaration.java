@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015, 2017 IBM Corporation and others.
+ * Copyright (c) 2015, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,18 +11,22 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
+import static org.eclipse.jdt.internal.compiler.problem.ProblemSeverities.*;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
@@ -34,11 +38,14 @@ import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.SourceModuleBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SplitPackageBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
+import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
+import org.eclipse.jdt.internal.compiler.problem.AbortCompilationUnit;
+import org.eclipse.jdt.internal.compiler.problem.AbortMethod;
 import org.eclipse.jdt.internal.compiler.problem.AbortType;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObject;
 
-public class ModuleDeclaration extends ASTNode {
+public class ModuleDeclaration extends ASTNode implements ReferenceContext {
 
 	public ExportsStatement[] exports;
 	public RequiresStatement[] requires;
@@ -105,6 +112,10 @@ public class ModuleDeclaration extends ASTNode {
 			public ProblemReporter problemReporter() {
 				// this method scope has no reference context so we better deletegate to the 'real' cuScope:
 				return parentScope.problemReporter();
+			}
+			@Override
+			public ReferenceContext referenceContext() {
+				return ModuleDeclaration.this;
 			}
 		};
 	}
@@ -378,5 +389,44 @@ public class ModuleDeclaration extends ASTNode {
 		printIndent(indent, output);
 		printHeader(0, output);
 		return printBody(indent, output);
+	}
+
+	@Override
+	public void abort(int abortLevel, CategorizedProblem problem) {
+		switch (abortLevel) {
+			case AbortCompilation :
+				throw new AbortCompilation(this.compilationResult, problem);
+			case AbortCompilationUnit :
+				throw new AbortCompilationUnit(this.compilationResult, problem);
+			case AbortMethod :
+				throw new AbortMethod(this.compilationResult, problem);
+			default :
+				throw new AbortType(this.compilationResult, problem);
+		}
+	}
+
+	@Override
+	public CompilationResult compilationResult() {
+		return this.compilationResult;
+	}
+
+	@Override
+	public CompilationUnitDeclaration getCompilationUnitDeclaration() {
+		return this.scope.referenceCompilationUnit();
+	}
+
+	@Override
+	public boolean hasErrors() {
+		return this.ignoreFurtherInvestigation;
+	}
+
+	@Override
+	public void tagAsHavingErrors() {
+		this.ignoreFurtherInvestigation = true;
+	}
+
+	@Override
+	public void tagAsHavingIgnoredMandatoryErrors(int problemId) {
+		// Nothing to do for this context;
 	}
 }

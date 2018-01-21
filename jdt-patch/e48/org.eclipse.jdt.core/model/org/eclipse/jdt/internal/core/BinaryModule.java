@@ -22,7 +22,7 @@ import org.eclipse.jdt.internal.compiler.env.IBinaryModule;
 import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.core.JavaModelManager.PerProjectInfo;
 
-public class BinaryModule extends AbstractModule {
+public class BinaryModule extends BinaryMember implements AbstractModule {
 
 	private IBinaryModule info;
 	
@@ -59,6 +59,10 @@ public class BinaryModule extends AbstractModule {
 		if (getModuleInfo().isOpen())
 			return ClassFileConstants.ACC_OPEN;
 		return 0;
+	}
+	@Override
+	public char getHandleMementoDelimiter() {
+		return JavaElement.JEM_MODULE;
 	}
 	@Override
 	public String getKey(boolean forceOpen) throws JavaModelException {
