@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,6 +35,7 @@ import org.codehaus.groovy.eclipse.codebrowsing.fragments.IASTFragment;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.ASTNodeFinder;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.Region;
 import org.codehaus.groovy.eclipse.codebrowsing.selection.FindSurroundingNode;
+import org.codehaus.groovy.eclipse.refactoring.actions.TypeSearch.UnresolvedTypeData;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.resources.IFile;
@@ -47,10 +48,8 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.SourceRange;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
-import org.eclipse.jdt.core.search.IJavaSearchConstants;
-import org.eclipse.jdt.core.search.SearchEngine;
-import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.TypeNameMatch;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
@@ -63,7 +62,6 @@ import org.eclipse.jdt.internal.corext.codemanipulation.AddImportsOperation.ICho
 import org.eclipse.jdt.internal.corext.codemanipulation.CodeGenerationMessages;
 import org.eclipse.jdt.internal.corext.util.Messages;
 import org.eclipse.jdt.internal.corext.util.Resources;
-import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector;
 import org.eclipse.jdt.internal.ui.JavaUIStatus;
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor;
 import org.eclipse.jdt.internal.ui.viewsupport.BasicElementLabels;
@@ -126,7 +124,7 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
                 if (node != null) {
                     if (node instanceof VariableExpression) {
                         // part of object expression "Pattern p = ..." or part of init expression "def p = Pattern.compile(...)"
-                        TypeNameMatch choice = findCandidateTypes(((VariableExpression) node).getName(), monitor);
+                        TypeNameMatch choice = findCandidateTypes(((VariableExpression) node).getName(), node.getStart(), monitor);
                         importRewrite.addImport(choice.getFullyQualifiedName());
                         return new RangeMarker(node.getStart(), node.getLength());
                     }
@@ -140,7 +138,7 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
 
                         // check for unknown and unqualified type name
                         if (type.getName().equals(type.getNameWithoutPackage())) {
-                            TypeNameMatch choice = findCandidateTypes(type.getName(), monitor);
+                            TypeNameMatch choice = findCandidateTypes(type.getName(), typeStart, monitor);
                             importRewrite.addImport(choice.getFullyQualifiedName());
                             return new RangeMarker(typeStart, type.getName().length());
                         }
@@ -209,7 +207,7 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
                                 return new DeleteEdit(expr.getStart(), expr.getLength() + 1);
                             }
                             if (expr instanceof VariableExpression) {
-                                TypeNameMatch choice = findCandidateTypes(((VariableExpression) expr).getName(), monitor);
+                                TypeNameMatch choice = findCandidateTypes(((VariableExpression) expr).getName(), expr.getStart(), monitor);
                                 importRewrite.addStaticImport(choice.getFullyQualifiedName(), node.getText(), true);
                                 return new DeleteEdit(expr.getStart(), expr.getLength() + 1);
                             }
@@ -223,7 +221,7 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
                                     return new DeleteEdit(expr.getStart(), call.getMethod().getStart() - expr.getStart());
                                 }
                                 if (expr instanceof VariableExpression) {
-                                    TypeNameMatch choice = findCandidateTypes(((VariableExpression) expr).getName(), monitor);
+                                    TypeNameMatch choice = findCandidateTypes(((VariableExpression) expr).getName(), expr.getStart(), monitor);
                                     importRewrite.addStaticImport(choice.getFullyQualifiedName(), call.getMethodAsString(), false);
                                     return new DeleteEdit(expr.getStart(), call.getMethod().getStart() - expr.getStart());
                                 }
@@ -234,13 +232,12 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
                 return null;
             }
 
-            private TypeNameMatch findCandidateTypes(String typeName, IProgressMonitor monitor) throws CoreException {
-                int matchRule = SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE,
-                    searchFor = IJavaSearchConstants.TYPE;
-                List<TypeNameMatch> typesFound = new ArrayList<>();
-                new SearchEngine().searchAllTypeNames(null, 0, typeName.toCharArray(), matchRule, searchFor,
-                    SearchEngine.createJavaSearchScope(new IJavaElement[] {compilationUnit.getJavaProject()}),
-                    new TypeNameMatchCollector(typesFound), IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH, monitor);
+            private TypeNameMatch findCandidateTypes(String typeName, int typeStart, IProgressMonitor monitor) throws CoreException {
+                boolean isAnnotation = ('@' == compilationUnit.getContents()[Math.max(0, typeStart - 1)]);
+                UnresolvedTypeData typeData = new UnresolvedTypeData(typeName, isAnnotation, new SourceRange(typeStart, typeName.length()));
+
+                new TypeSearch().searchForTypes(compilationUnit, Collections.singletonMap(typeName, typeData), monitor);
+                List<TypeNameMatch> typesFound = typeData.getFoundInfos();
 
                 if (typesFound.isEmpty()) {
                     fStatus = JavaUIStatus.createError(IStatus.ERROR, Messages.format(

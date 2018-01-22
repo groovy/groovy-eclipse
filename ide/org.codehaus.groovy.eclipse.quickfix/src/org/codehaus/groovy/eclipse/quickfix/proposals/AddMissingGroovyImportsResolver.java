@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -123,7 +123,8 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
         try {
             String simpleTypeName = getUnresolvedSimpleName();
             if (simpleTypeName != null) {
-                boolean isAnnotation = getQuickFixProblem().getProblemDescriptor().getMarkerMessages()[0].contains("@" + simpleTypeName);
+                String[] messages = getQuickFixProblem().getProblemDescriptor().getMarkerMessages();
+                boolean isAnnotation = (messages[0].contains("@" + simpleTypeName) || messages[0].endsWith("unable to find class for annotation"));
                 UnresolvedTypeData data = new UnresolvedTypeData(simpleTypeName, isAnnotation, new SourceRange(offset, simpleTypeName.length()));
 
                 new TypeSearch().searchForTypes(getGroovyCompilationUnit(), Collections.singletonMap(simpleTypeName, data), null);
