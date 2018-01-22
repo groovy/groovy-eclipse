@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.core.Flags;
+import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.JavaModelException;
@@ -32,6 +33,7 @@ import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.TypeNameMatch;
+import org.eclipse.jdt.internal.core.BinaryType;
 import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector;
 
 public class TypeSearch {
@@ -96,15 +98,18 @@ public class TypeSearch {
         }
     }
 
-    /**
-     * If looking for an annotation, then filter out non-annoations, otherwise everything is acceptable.
-     */
-    protected boolean isOfKind(TypeNameMatch match, boolean isAnnotation) {
-        boolean isRegularAnnotation = isAnnotation ? Flags.isAnnotation(match.getModifiers()) : true;
-
-        // annotations that are annotated with {@link AnnotationCollector} are not treated as annotations, so additional check is required
-        boolean isCollectedByAnnotationCollector = (match.getType().getAnnotation("AnnotationCollector") != null);
-
-        return isRegularAnnotation || isCollectedByAnnotationCollector;
+    protected boolean isOfKind(TypeNameMatch match, boolean isAnnotation) throws JavaModelException {
+        if (!isAnnotation || Flags.isAnnotation(match.getModifiers())) {
+            return true;
+        }
+        // @AnnotationCollector types lose their annotation modifier after compilation; check for the annotation
+        if (match.getType() instanceof BinaryType && match.getType().getAnnotations() != null) {
+            for (IAnnotation anno : match.getType().getAnnotations()) {
+                if ("groovy.transform.AnnotationCollector".equals(anno.getElementName())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

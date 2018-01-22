@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -242,35 +242,29 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
         assert resolver == null : 'Expected no resolver for nonexistant type: ' + nonExistantType
     }
 
-    /**
-     * Tests if Groovy add import quick fix resolvers are obtained for an annotation.
-     */
     @Test
-    void testAddImportAnnotation() {
-        String typeToImport = 'Target'
-        String expectedQuickFixDisplay = 'Import \'Target\' (java.lang.annotation)'
-        String fullQualifiedTypeToImport = 'java.lang.annotation.Target'
-        String typeToAddImport = 'Test'
-        String typeToAddImportContent = '@Target() public @interface Test {}'
-
-        testSelectImportGroovyTypeFromNewPackage(typeToImport, fullQualifiedTypeToImport, expectedQuickFixDisplay, typeToAddImport, typeToAddImportContent)
+    void testAddImportAnnotation1() {
+        Map<String, String> expectedProposals = [
+            'Import \'Builder\' (groovy.transform.builder)': 'groovy.transform.builder.Builder'
+        ]
+        testMultipleProposalsSameTypeName('Builder', expectedProposals, 'Test', '@Builder public class Test {}')
     }
 
-    /**
-     * Tests that no Groovy quick fix resolvers are encountered for unrecognised
-     * errors
-     */
     @Test
-    void testUnrecognisedErrorNoProposals() {
-        String typeToAddImport = 'BarUnrecognisedError'
-        String typeToAddImportContent = 'class BarUnrecognisedError  { public void doSomething () { 222  }  }'
-        def unit = addGroovySource(typeToAddImportContent, typeToAddImport, 'com.test')
+    void testAddImportAnnotation2() {
+        Map<String, String> expectedProposals = [
+            'Import \'Target\' (java.lang.annotation)': 'java.lang.annotation.Target',
+            'Import \'Target\' (groovy.lang.DelegatesTo)': 'groovy.lang.DelegatesTo.Target'
+        ]
+        testMultipleProposalsSameTypeName('Target', expectedProposals, 'Test', '@Target() public @interface Test {}')
+    }
 
-        IMarker[] markers = getCompilationUnitJDTFailureMarkers(unit)
-        for (type in ProblemType.values()) {
-            List<IQuickFixResolver> resolvers = getAllQuickFixResolversForType(markers, type, unit)
-            assert resolvers == null || resolvers.isEmpty() : 'Encountered resolvers for unknown compilation error; none expected'
-        }
+    @Test
+    void testAddImportAnnotation3() {
+        Map<String, String> expectedProposals = [
+            'Import \'CompileDynamic\' (groovy.transform)': 'groovy.transform.CompileDynamic'
+        ]
+        testMultipleProposalsSameTypeName('CompileDynamic', expectedProposals, 'Test', '@CompileDynamic public class Test {}')
     }
 
     @Test
@@ -335,5 +329,18 @@ final class GroovyProjectGroovyQuickFixTests extends QuickFixHarness {
 
         markers = testProject.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
         assert !markers : 'Should not have found problems in this project'
+    }
+
+    @Test // no Groovy quick fix resolvers should be encountered for unrecognized errors
+    void testUnrecognisedErrorNoProposals() {
+        String typeToAddImport = 'BarUnrecognisedError'
+        String typeToAddImportContent = 'class BarUnrecognisedError  { public void doSomething () { 222  }  }'
+        def unit = addGroovySource(typeToAddImportContent, typeToAddImport, 'com.test')
+
+        IMarker[] markers = getCompilationUnitJDTFailureMarkers(unit)
+        for (type in ProblemType.values()) {
+            List<IQuickFixResolver> resolvers = getAllQuickFixResolversForType(markers, type, unit)
+            assert resolvers == null || resolvers.isEmpty() : 'Encountered resolvers for unknown compilation error; none expected'
+        }
     }
 }

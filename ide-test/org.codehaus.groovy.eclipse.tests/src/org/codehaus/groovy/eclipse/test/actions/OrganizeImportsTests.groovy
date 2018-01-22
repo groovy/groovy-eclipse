@@ -1121,14 +1121,50 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(contents)
     }
 
+    @Test
+    void testFieldAnnotationImport1() {
+        String contents = '''\
+            @Field
+            def x = 0
+            '''
+        doAddImportTest(contents, ['groovy.transform.Field'])
+    }
+
     @Test // GRECLIPSE-1692
-    void testFieldAnnotationImport() {
+    void testFieldAnnotationImport2() {
         String contents = '''\
             import groovy.transform.Field
             @Field
             def x = 0
             '''
         doContentsCompareTest(contents)
+    }
+
+    @Test
+    void testBuilderAnnotationImport1() {
+        String contents = '''\
+            @Builder
+            class Main {
+            }
+            '''
+        doAddImportTest(contents, ['groovy.transform.builder.Builder'])
+    }
+
+    @Test
+    void testBuilderAnnotationImport2() {
+        String originalContents = '''\
+            @Builder
+            class Main {
+            }
+            '''
+        String expectedContents = '''\
+            import groovy.transform.builder.Builder
+
+            @Builder
+            class Main {
+            }
+            '''
+        doContentsCompareTest(originalContents, expectedContents)
     }
 
     @Test

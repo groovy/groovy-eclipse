@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -109,7 +109,7 @@ abstract class QuickFixHarness extends QuickFixTestSuite {
             String typeToAddImport,
             String typeToAddImportContent) {
 
-        assertTrue("Must pass non-null, non-empty expected quick fixes", expectedQuickFixes != null && expectedQuickFixes.size() > 0)
+        assertTrue("Must pass non-null, non-empty expected quick fixes", expectedQuickFixes != null && !expectedQuickFixes.isEmpty())
 
         ICompilationUnit unit = addGroovySource(typeToAddImportContent, typeToAddImport, 'com.test')
 
@@ -123,7 +123,7 @@ abstract class QuickFixHarness extends QuickFixTestSuite {
         }
 
         // The number of expected quick fixes must match the number of proposals to make sure duplicates are not present
-        assertEquals("Number of expected proposals does not match actual number", proposalsMap.size(), expectedQuickFixes.size())
+        assertEquals("Number of expected proposals does not match actual number", expectedQuickFixes.size(), proposalsMap.size())
 
         for (Map.Entry<String, String> entry : expectedQuickFixes.entrySet()) {
             String expectedDisplay = entry.getKey()
