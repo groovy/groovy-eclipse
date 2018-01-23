@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,10 @@ package org.codehaus.groovy.eclipse.codeassist.completions;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
@@ -118,68 +116,64 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
     }
 
     private IJavaElement[] computeVisibleElements(String typeSignature) {
+        Map<String, IJavaElement> visibleElements = new LinkedHashMap<>();
         ClassNode targetType = toClassNode(typeSignature);
-        boolean isEnum = targetType.isEnum();
 
-        // look at all local variables in scope
-        Map<String, IJavaElement> nameElementMap = new LinkedHashMap<>();
+        // add qualifying local variables of the enclosing scope
         if (currentScope != null) {
             for (VariableInfo varInfo : currentScope) {
                 // GRECLIPSE-1268 currently, no good way to get to the actual declaration of the variable.
                 // This can cause ordering problems for the guessed parameters.
                 // don't put elements in a second time since we are moving from inner scope to outer scope
                 String varName = varInfo.name;
-                // ignore synthetic getters and setters that are put in the scope
-                // looking at prefix is a good approximation
+                // ignore synthetic getters and setters that are put in the scope; looking at prefix is an approximation
                 if (!varName.startsWith("get") &&
                     !varName.startsWith("set") &&
                     !varName.equals("this" ) &&
                     !varName.equals("super") &&
                     !varName.startsWith("<") &&
-                    !nameElementMap.containsKey(varName)) {
+                    !visibleElements.containsKey(varName)) {
 
                     ClassNode type = varInfo.type;
                     if (GroovyUtils.isAssignable(type, targetType)) {
                         // NOTE: parent, source location, typeSignature, etc. are not important here
                         int start = 0, until = varName.length() - 1;
-                        nameElementMap.put(varName, new LocalVariable(
+                        visibleElements.put(varName, new LocalVariable(
                             (JavaElement) getEnclosingElement(), varName, start, until, start, until, typeSignature, null, 0, false));
                     }
                 }
             }
         }
 
-        // now check fields
+        // add qualifying fields of the enclosing type(s)
         IType enclosingType = (IType) getEnclosingElement().getAncestor(IJavaElement.TYPE);
         if (enclosingType != null) {
             try {
-                addFields(targetType, nameElementMap, enclosingType);
+                addFields(targetType, visibleElements, enclosingType);
                 ITypeHierarchy typeHierarchy = enclosingType.newSupertypeHierarchy(null);
-                IType[] allTypes = typeHierarchy.getAllSupertypes(enclosingType);
-                for (IType superType : allTypes) {
-                    addFields(targetType, nameElementMap, superType);
+                for (IType superType : typeHierarchy.getAllSupertypes(enclosingType)) {
+                    addFields(targetType, visibleElements, superType);
                 }
             } catch (JavaModelException e) {
                 GroovyContentAssist.logError(e);
             }
         }
 
-        if (isEnum) {
-            IType targetIType = new GroovyProjectFacade(enclosingElement).groovyClassToJavaType(targetType);
-            List<FieldNode> fields = targetType.getFields();
-            for (FieldNode enumVal : fields) {
-                String name = enumVal.getName();
-                if (name.equals("MIN_VALUE") || name.equals("MAX_VALUE")) {
-                    continue;
+        // add enum constants if target type is an enum
+        if (targetType.isEnum()) {
+            try {
+                IType enumType = new GroovyProjectFacade(enclosingElement).groovyClassToJavaType(targetType);
+                for (IField enumField : enumType.getFields()) {
+                    if (enumField.isEnumConstant()) {
+                        visibleElements.put(enumField.getElementName(), enumField);
+                        visibleElements.put(enumType.getElementName() + '.' + enumField.getElementName(), enumField);
+                    }
                 }
-                if (!enumVal.getType().equals(targetType)) {
-                    continue;
-                }
-                nameElementMap.put(targetIType.getElementName() + "." + name, targetIType.getField(name));
-                nameElementMap.put(name, targetIType.getField(name));
+            } catch (JavaModelException e) {
+                GroovyContentAssist.logError(e);
             }
         }
-        return nameElementMap.values().toArray(new IJavaElement[0]);
+        return visibleElements.values().toArray(new IJavaElement[0]);
     }
 
     public void addFields(ClassNode targetType, Map<String, IJavaElement> nameElementMap, IType type)

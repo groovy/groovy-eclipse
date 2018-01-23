@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -343,34 +343,36 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
         }
     }
 
-    protected void checkProposalChoices(String contents, String toFind, String lookFor, String replacementString, String[] expectedChoices) {
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, toFind))
+    protected ICompletionProposal checkUniqueProposal(CharSequence contents, String completionExpr, String completionName = completionExpr, String replacementString) {
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, completionExpr))
         checkReplacementString(proposals, replacementString, 1)
-        ICompletionProposal proposal = findFirstProposal(proposals, lookFor)
-        ICompletionProposal[] choices = proposal.choices
+        findFirstProposal(proposals, completionName)
+    }
 
+    protected void checkProposalChoices(String contents, String completionExpr, String lookFor, String replacementString, String[] expectedChoices) {
+        ICompletionProposal proposal = checkUniqueProposal(contents, completionExpr, lookFor, replacementString)
+
+        ICompletionProposal[] choices = proposal.choices
         assertEquals(expectedChoices.length, choices.length)
-        for (int i = 0; i < expectedChoices.length; i++) {
+        for (int i = 0; i < expectedChoices.length; i += 1) {
             assertEquals('unexpected choice', expectedChoices[i], choices[i].displayString)
         }
     }
 
-    protected void checkProposalChoices(String contents, String lookFor, String replacementString, String[][] expectedChoices) {
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, lookFor))
-        checkReplacementString(proposals, replacementString, 1)
-        ICompletionProposal proposal = findFirstProposal(proposals, lookFor)
-        proposal.getReplacementString() // instantiate the guesses
-        ICompletionProposal[][] choices = proposal.choices
+    protected void checkProposalChoices(String contents, String completion, String replacementString, String[][] expectedChoices) {
+        ICompletionProposal proposal = checkUniqueProposal(contents, completion, replacementString)
+        proposal.replacementString // instantiate the guesses
 
+        ICompletionProposal[][] choices = proposal.choices
         assertEquals(expectedChoices.length, choices.length)
-        for (int i = 0; i < expectedChoices.length; i++) {
+        for (int i = 0; i < expectedChoices.length; i += 1) {
             assertEquals(expectedChoices[i].length, choices[i].length)
 
             // fix order for comparison
             expectedChoices[i].sort(true)
             choices[i].sort(true) { ICompletionProposal p -> p.displayString }
 
-            for (int j = 0; j < expectedChoices[i].length; j++) {
+            for (int j = 0; j < expectedChoices[i].length; j += 1) {
                 assertEquals('unexpected choice', expectedChoices[i][j], choices[i][j].displayString)
             }
         }
