@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.codeassist.completions;
+
+import java.util.Arrays;
 
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
@@ -30,6 +32,7 @@ import org.eclipse.jdt.internal.corext.template.java.SignatureUtil;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.javaeditor.EditorHighlightingSynchronizer;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
+import org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.JavaMethodCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
@@ -134,22 +137,12 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
     }
 
     private IJavaElement[][] getAssignableElements() {
-        // get the visible parameters (ie- the regular and named params
-        // together)
-        String[] parameterTypes = getParameterTypes();
-        IJavaElement[][] assignableElements = new IJavaElement[parameterTypes.length][];
-        for (int i = 0; i < parameterTypes.length; i++) {
-            // hmmmm...I don't like all this back and forth between type names
-            // and signatures
-            String typeName = new String(parameterTypes[i]);
-            assignableElements[i] = fCoreContext.getVisibleElements(Signature.createTypeSignature(typeName, true));
-        }
-        return assignableElements;
+        return Arrays.stream(getParameterTypes())
+            .map(t -> Signature.createTypeSignature(t, true))
+            .map(fCoreContext::getVisibleElements)
+            .toArray(IJavaElement[][]::new);
     }
 
-    /*
-     * @see ICompletionProposalExtension#apply(IDocument, char)
-     */
     @Override
     public void apply(IDocument document, char trigger, int offset) {
         methodPointer = ProposalUtils.isMethodPointerCompletion(document, getReplacementOffset());
@@ -160,10 +153,9 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
             String replacement = getReplacementString();
 
             if (fPositions != null && getTextViewer() != null) {
-
                 LinkedModeModel model = new LinkedModeModel();
 
-                for (int i = 0; i < fPositions.length; i++) {
+                for (int i = 0; i < fPositions.length; i += 1) {
                     LinkedPositionGroup group = new LinkedPositionGroup();
                     int positionOffset = fPositions[i].getOffset();
                     int positionLength = fPositions[i].getLength();
@@ -173,8 +165,7 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
                     } else {
                         ensurePositionCategoryInstalled(document, model);
                         document.addPosition(getCategory(), fPositions[i]);
-                        group.addPosition(new ProposalPosition(document, positionOffset, positionLength,
-                                LinkedPositionGroup.NO_STOP, fChoices[i]));
+                        group.addPosition(new ProposalPosition(document, positionOffset, positionLength, LinkedPositionGroup.NO_STOP, fChoices[i]));
                     }
                     model.addGroup(group);
                 }
@@ -192,7 +183,6 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
                 ui.setDoContextInfo(true);
                 ui.enter();
                 fSelectedRegion = ui.getSelectedRegion();
-
             } else {
                 fSelectedRegion = new Region(baseOffset + replacement.length(), 0);
             }
@@ -208,9 +198,6 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         }
     }
 
-    /**
-     * @see org.eclipse.jdt.internal.ui.text.java.JavaMethodCompletionProposal#needsLinkedMode()
-     */
     @Override
     protected boolean needsLinkedMode() {
         return false; // we handle it ourselves
@@ -225,9 +212,6 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         return displayString;
     }
 
-    /**
-     * @see org.eclipse.jdt.internal.ui.text.java.JavaMethodCompletionProposal#computeReplacementString()
-     */
     @Override
     protected String computeReplacementString() {
         char[] proposalName = fProposal.getName();
@@ -261,6 +245,7 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
 
         return super.computeReplacementString();
     }
+
     /**
      * Creates the completion string. Offsets and Lengths are set to the offsets
      * and lengths of the
@@ -351,10 +336,12 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
                 position.setOffset(replacementOffset + buffer.length());
                 position.setLength(argument.length());
 
-                // handle the "unknown" case where we only insert a proposal.
-                if (proposal instanceof JavaCompletionProposal) {
-                    ((JavaCompletionProposal) proposal).setReplacementOffset(replacementOffset + buffer.length());
+                // handle the "unknown" case where we only insert a proposal
+                if (proposal instanceof AbstractJavaCompletionProposal) {
+                    ((AbstractJavaCompletionProposal) proposal).setReplacementOffset(position.getOffset());
+                    ((AbstractJavaCompletionProposal) proposal).setReplacementLength(position.getLength());
                 }
+
                 buffer.append(argument);
 
                 // check what to add after argument
@@ -403,10 +390,9 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
             // it is not always available
             // so a simple name is close enough
             return CharOperation.equals("Closure".toCharArray(), lastArgType);
-        } else {
-            // no args
-            return false;
         }
+        // no args
+        return false;
     }
 
     /**
@@ -417,54 +403,48 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
      */
     private JavaEditor getJavaEditor() {
         IEditorPart part = JavaPlugin.getActivePage().getActiveEditor();
-        if (part instanceof JavaEditor)
+        if (part instanceof JavaEditor) {
             return (JavaEditor) part;
-        else
-            return null;
+        }
+        return null;
     }
 
-    private ICompletionProposal[][] guessParameters(char[][] firstParameterNames, char[][] secondParameterNames)
-            throws JavaModelException {
-        // find matches in reverse order. Do this because people tend to declare
-        // the variable meant for the last
-        // parameter last. That is, local variables for the last parameter in
-        // the method completion are more
-        // likely to be closer to the point of code completion. As an example
-        // consider a "delegation" completion:
-        //
-        // public void myMethod(int param1, int param2, int param3) {
-        // someOtherObject.yourMethod(param1, param2, param3);
-        // }
-        //
-        // The other consideration is giving preference to variables that have
-        // not previously been used in this
-        // code completion (which avoids
-        // "someOtherObject.yourMethod(param1, param1, param1)";
+    private ICompletionProposal[][] guessParameters(char[][] firstParameterNames, char[][] secondParameterNames) throws JavaModelException {
+        int count = firstParameterNames.length + secondParameterNames.length;
 
-        char[][] parameterNames = new char[firstParameterNames.length + secondParameterNames.length][];
+        fPositions = new Position[count];
+        fChoices = new ICompletionProposal[count][];
+        String[] parameterTypes = getParameterTypes();
+        IJavaElement[][] assignableElements = getAssignableElements();
+
+        char[][] parameterNames = new char[count][];
         System.arraycopy(firstParameterNames, 0, parameterNames, 0, firstParameterNames.length);
         System.arraycopy(secondParameterNames, 0, parameterNames, firstParameterNames.length, secondParameterNames.length);
 
-        int count = parameterNames.length;
-        fPositions = new Position[count];
+        // Find matches in reverse order. Do this because people tend to declare
+        // the variable meant for the last parameter last. That is, local variables
+        // for the last parameter in the method completion are more likely to be
+        // closer to the point of code completion. As an example consider:
+        //
+        // public void myMethod(int param1, int param2, int param3) {
+        //   someOtherObject.yourMethod(param1, param2, param3);
+        // }
+        //
+        // The other consideration is giving preference to variables that have
+        // not previously been used in this code completion, which avoids
+        // "someOtherObject.yourMethod(param1, param1, param1)".
 
-        fChoices = new ICompletionProposal[count][];
-
-        String[] parameterTypes = getParameterTypes();
-
-        IJavaElement[][] assignableElements = getAssignableElements();
-
-        for (int i = count - 1; i >= 0; i--) {
-            String paramName = new String(parameterNames[i]);
+        for (int i = count - 1; i >= 0; i -= 1) {
             Position position = new Position(0, 0);
+            String paramName = String.valueOf(parameterNames[i]);
+            ICompletionProposal[] argumentProposals = new ParameterGuesserDelegate(getEnclosingElement(), fInvocationContext).
+                parameterProposals(parameterTypes[i], paramName, position, assignableElements[i], fFillBestGuess);
 
-            ICompletionProposal[] argumentProposals = new ParameterGuesserDelegate(getEnclosingElement()).parameterProposals(
-                    parameterTypes[i],
-                    paramName, position, assignableElements[i], fFillBestGuess);
-
-            if (argumentProposals.length == 0)
-                argumentProposals = new ICompletionProposal[] { new JavaCompletionProposal(paramName, 0, paramName.length(), null,
-                        paramName, 0) };
+            if (argumentProposals.length == 0) {
+                argumentProposals = new ICompletionProposal[] {
+                    new JavaCompletionProposal(paramName, 0, paramName.length(), null, paramName, 0)
+                };
+            }
 
             fPositions[i] = position;
             fChoices[i] = argumentProposals;
@@ -473,9 +453,6 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
         return fChoices;
     }
 
-    /**
-     * @see ICompletionProposal#getSelection(IDocument)
-     */
     @Override
     public Point getSelection(IDocument document) {
         if (fSelectedRegion == null)
@@ -524,7 +501,7 @@ public class GroovyJavaGuessingCompletionProposal extends JavaMethodCompletionPr
     }
 
     private String getCategory() {
-        return "ParameterGuessingProposal_" + toString(); //$NON-NLS-1$
+        return "ParameterGuessingProposal_" + toString();
     }
 
     /**

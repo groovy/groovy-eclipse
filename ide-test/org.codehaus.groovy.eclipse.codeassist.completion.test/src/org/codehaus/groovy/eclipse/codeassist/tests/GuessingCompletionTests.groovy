@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,10 @@
 package org.codehaus.groovy.eclipse.codeassist.tests
 
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
+import org.eclipse.jface.text.Document
+import org.eclipse.jface.text.IDocument
+import org.eclipse.jface.text.contentassist.ICompletionProposal
+import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
@@ -30,41 +34,45 @@ final class GuessingCompletionTests extends CompletionTestSuite {
 
     @Test
     void testParamGuessing1() {
-        String contents = "String yyy\n" +
-            "def xxx(String x) { }\n" +
-            "xxx"
-        String[][] expectedChoices = [ [ "yyy", "\"\"" ] as String[] ].toArray()
-        checkProposalChoices(contents, "xxx", "xxx(yyy)", expectedChoices)
+        String contents = '''\
+            String yyy
+            def xxx(String x) { }
+            xxx
+            '''.stripIndent()
+        String[][] expectedChoices = [ [ 'yyy', '""' ] as String[] ]
+        checkProposalChoices(contents, 'xxx', 'xxx(yyy)', expectedChoices)
     }
 
     @Test
     void testParamGuessing2() {
-        String contents =
-            "String yyy\n" +
-            "int zzz\n" +
-            "def xxx(String x, int z) { }\n" +
-            "xxx"
+        String contents = '''\
+            String yyy
+            int zzz
+            def xxx(String x, int z) { }
+            xxx
+            '''.stripIndent()
         String[][] expectedChoices = [
-            [ "yyy", "\"\"" ] as String[],
-            [ "zzz", "0" ] as String[]
-        ].toArray()
-        checkProposalChoices(contents, "xxx", "xxx(yyy, zzz)", expectedChoices)
+            [ 'yyy', '""' ] as String[],
+            [ 'zzz', '0' ] as String[]
+        ]
+        checkProposalChoices(contents, 'xxx', 'xxx(yyy, zzz)', expectedChoices)
     }
 
     @Test
     void testParamGuessing3() {
-        String contents =
-            "String yyy\n" +
-            "Integer zzz\n" +
-            "boolean aaa\n" +
-            "def xxx(String x, int z, boolean a) { }\n" +
-            "xxx"
+        String contents = '''\
+            String yyy
+            Integer zzz
+            boolean aaa
+            def xxx(String x, int z, boolean a) { }
+            xxx
+            '''.stripIndent()
         String[][] expectedChoices = [
-            [ "yyy", "\"\"" ] as String[],
-            [ "zzz", "0" ] as String[],
-            [ "aaa", "false", "true" ] as String[]
-        ].toArray()
-        checkProposalChoices(contents, "xxx", "xxx(yyy, zzz, aaa)", expectedChoices)
+            [ 'yyy', '""' ] as String[],
+            [ 'zzz', '0' ] as String[],
+            [ 'aaa', 'false', 'true' ] as String[]
+        ]
+        checkProposalChoices(contents, 'xxx', 'xxx(yyy, zzz, aaa)', expectedChoices)
     }
 
     @Test // GRECLIPSE-1268
@@ -73,22 +81,63 @@ final class GuessingCompletionTests extends CompletionTestSuite {
         // parameters is not based on actual source location.  Need a way to map
         // from variable name to local variable declaration in
         // GroovyExtendedCompletionContext.computeVisibleElements(String)
-        String contents =
-            "Closure yyy\n" +
-            "def zzz = { }\n" +
-            "def xxx(Closure c) { }\n" +
-            "xxx"
+        String contents = '''\
+            Closure yyy
+            def zzz = { }
+            def xxx(Closure c) { }
+            xxx
+            '''.stripIndent()
         String[][] expectedChoices = [
-            ["zzz", "yyy", "{  }"] as String[]
-        ].toArray()
+            ['zzz', 'yyy', '{  }'] as String[]
+        ]
         try {
-            checkProposalChoices(contents, "xxx", "xxx {", expectedChoices)
+            checkProposalChoices(contents, 'xxx', 'xxx {', expectedChoices)
         } catch (AssertionError e) {
             try {
-                checkProposalChoices(contents, "xxx", "xxx yyy", expectedChoices)
+                checkProposalChoices(contents, 'xxx', 'xxx yyy', expectedChoices)
             } catch (AssertionError e2) {
-                checkProposalChoices(contents, "xxx", "xxx zzz", expectedChoices)
+                checkProposalChoices(contents, 'xxx', 'xxx zzz', expectedChoices)
             }
         }
+    }
+
+    @Test
+    void testParamGuessing5() {
+        addGroovySource '''\
+            import java.util.concurrent.TimeUnit
+            class Util {
+              static void util(TimeUnit units) {
+              }
+            }
+            '''.stripIndent(), 'Util', 'pack'
+
+        String contents = '''\
+            |import static java.util.concurrent.TimeUnit.MILLISECONDS as MILLIS
+            |
+            |pack.Util.util
+            |'''.stripMargin()
+        IDocument document = new Document(contents)
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'util', 'util(MILLIS)')
+
+        // apply initial proposal to generate parameter proposals
+        applyProposalAndCheck(document, proposal, '''\
+            |import static java.util.concurrent.TimeUnit.MILLISECONDS as MILLIS
+            |
+            |pack.Util.util(MILLIS)
+            |'''.stripMargin());
+
+        // check the parameter guesses
+        ICompletionProposal[] choices = proposal.choices[0]
+        Assert.assertEquals(['MILLIS', 'DAYS', 'TimeUnit.DAYS', 'HOURS', 'TimeUnit.HOURS', 'MINUTES', 'TimeUnit.MINUTES',
+            'SECONDS', 'TimeUnit.SECONDS', 'MILLISECONDS', 'TimeUnit.MILLISECONDS', 'MICROSECONDS', 'TimeUnit.MICROSECONDS',
+            'NANOSECONDS', 'TimeUnit.NANOSECONDS', 'null'].join('\n'), choices*.displayString.join('\n'))
+
+        // TODO: Something below is not matching the real editor's application of the parameter proposal
+        /*applyProposalAndCheck(document, choices[1], '''\
+            |import static java.util.concurrent.TimeUnit.DAYS
+            |import static java.util.concurrent.TimeUnit.MILLISECONDS as MILLIS
+            |
+            |pack.Util.util(DAYS)
+            |'''.stripMargin())*/
     }
 }
