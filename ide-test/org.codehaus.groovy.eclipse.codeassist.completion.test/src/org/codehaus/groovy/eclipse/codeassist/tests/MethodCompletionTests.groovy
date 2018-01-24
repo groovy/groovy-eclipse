@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.core.compiler.CharOperation
+import org.eclipse.jdt.internal.codeassist.impl.AssistOptions
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.contentassist.ICompletionProposal
@@ -394,23 +395,6 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testFavoriteStaticMethod() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, 'java.util.regex.Pattern.compile')
-
-        String contents = '''\
-            comp
-            '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'comp'))
-        proposalExists(proposals, 'compile', 2)
-
-        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'compile(String regex)'), '''\
-            |import static java.util.regex.Pattern.compile
-            |
-            |compile(regex)
-            |'''.stripMargin())
-    }
-
-    @Test
     void testFavoriteStaticStarMethod() {
         setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, 'java.util.regex.Pattern.*')
 
@@ -437,6 +421,60 @@ final class MethodCompletionTests extends CompletionTestSuite {
             '''.stripIndent()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'comp'))
         proposalExists(proposals, 'compile', 2)
+    }
+
+    @Test
+    void testFavoriteStaticMethod() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, 'java.util.regex.Pattern.compile')
+
+        String contents = '''\
+            comp
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'comp'))
+        proposalExists(proposals, 'compile', 2)
+
+        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'compile(String regex)'), '''\
+            |import static java.util.regex.Pattern.compile
+            |
+            |compile(regex)
+            |'''.stripMargin())
+    }
+
+    @Test
+    void testFavoriteStaticMethod2() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, 'java.util.regex.Pattern.compile')
+        setJavaPreference(AssistOptions.OPTION_SuggestStaticImports, AssistOptions.DISABLED)
+        try {
+            String contents = '''\
+                comp
+                '''.stripIndent()
+            ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'comp'))
+            proposalExists(proposals, 'compile', 2)
+
+            applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'compile(String regex)'), '''\
+                |import java.util.regex.Pattern
+                |
+                |Pattern.compile(regex)
+                |'''.stripMargin())
+        } finally {
+            setJavaPreference(AssistOptions.OPTION_SuggestStaticImports, AssistOptions.ENABLED)
+        }
+    }
+
+    @Test
+    void testFavoriteStaticMethod3() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, 'java.util.regex.Pattern.compile')
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+
+        String contents = '''\
+            comp
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'comp'))
+        proposalExists(proposals, 'compile', 2)
+
+        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'compile(String regex)'), '''\
+            java.util.regex.Pattern.compile(regex)
+            '''.stripIndent())
     }
 
     @Test

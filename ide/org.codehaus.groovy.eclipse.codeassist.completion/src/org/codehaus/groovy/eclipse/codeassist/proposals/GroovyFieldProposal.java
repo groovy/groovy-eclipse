@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.eclipse.jdt.core.CompletionFlags;
 import org.eclipse.jdt.core.CompletionProposal;
+import org.eclipse.jdt.internal.codeassist.impl.AssistOptions;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.viewers.StyledString;
@@ -51,7 +52,7 @@ public class GroovyFieldProposal extends AbstractGroovyProposal {
             return null;
         }
 
-        GroovyCompletionProposal proposal = new GroovyCompletionProposal(CompletionProposal.FIELD_REF, context.completionLocation);
+        GroovyCompletionProposal proposal = new GroovyCompletionProposal(CompletionProposal.METHOD_REF, context.completionLocation);
         proposal.setCompletion(proposal.getName());
         proposal.setDeclarationSignature(ProposalUtils.createTypeSignature(field.getDeclaringClass()));
         proposal.setFlags(field.getModifiers());
@@ -61,25 +62,30 @@ public class GroovyFieldProposal extends AbstractGroovyProposal {
         proposal.setSignature(ProposalUtils.createTypeSignature(field.getType()));
 
         if (getRequiredStaticImport() != null) {
-            GroovyCompletionProposal fieldImportProposal = new GroovyCompletionProposal(CompletionProposal.FIELD_IMPORT, context.completionLocation);
-            fieldImportProposal.setAdditionalFlags(CompletionFlags.StaticImport);
-            fieldImportProposal.setCompletion(("import static " + getRequiredStaticImport() + "\n").toCharArray());
-            fieldImportProposal.setDeclarationSignature(proposal.getDeclarationSignature());
-            fieldImportProposal.setName(proposal.getName());
+            CompletionProposal importProposal;
+            if (new AssistOptions(javaContext.getProject().getOptions(true)).suggestStaticImport) {
+                importProposal = CompletionProposal.create(CompletionProposal.FIELD_IMPORT, context.completionLocation);
+                importProposal.setAdditionalFlags(CompletionFlags.StaticImport);
+                importProposal.setDeclarationSignature(proposal.getDeclarationSignature());
+                importProposal.setName(proposal.getName());
 
-            /*
-            fieldImportProposal.setDeclarationPackageName(field.getDeclaringClass().getPackageName().toCharArray());
-            fieldImportProposal.setDeclarationTypeName(field.getDeclaringClass().getName().toCharArray());
-            fieldImportProposal.setFlags(proposal.getFlags());
-            fieldImportProposal.setPackageName(field.getType().getPackageName().toCharArray());
-            fieldImportProposal.setRelevance(proposal.getRelevance());
-            fieldImportProposal.setReplaceRange(importStart - this.offset, importEnd - this.offset);
-            fieldImportProposal.setSignature(proposal.getSignature());
-            fieldImportProposal.setTokenRange(importStart - this.offset, importEnd - this.offset);
-            fieldImportProposal.setTypeName(field.getType().getName().toCharArray());
-            */
-
-            proposal.setRequiredProposals(new CompletionProposal[] {fieldImportProposal});
+                /*
+                importProposal.setCompletion(("import static " + getRequiredStaticImport() + "\n").toCharArray());
+                importProposal.setDeclarationPackageName(field.getDeclaringClass().getPackageName().toCharArray());
+                importProposal.setDeclarationTypeName(field.getDeclaringClass().getName().toCharArray());
+                importProposal.setFlags(proposal.getFlags());
+                importProposal.setPackageName(field.getType().getPackageName().toCharArray());
+                importProposal.setRelevance(proposal.getRelevance());
+                importProposal.setReplaceRange(importStart - this.offset, importEnd - this.offset);
+                importProposal.setSignature(proposal.getSignature());
+                importProposal.setTokenRange(importStart - this.offset, importEnd - this.offset);
+                importProposal.setTypeName(field.getType().getName().toCharArray());
+                */
+            } else {
+                importProposal = CompletionProposal.create(CompletionProposal.TYPE_IMPORT, context.completionLocation);
+                importProposal.setSignature(proposal.getDeclarationSignature());
+            }
+            proposal.setRequiredProposals(new CompletionProposal[] {importProposal});
         }
 
         return new GroovyJavaFieldCompletionProposal(proposal, createDisplayString(field), javaContext);

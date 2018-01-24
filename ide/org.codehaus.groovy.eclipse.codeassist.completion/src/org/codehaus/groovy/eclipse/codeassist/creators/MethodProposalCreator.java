@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -122,7 +122,7 @@ public class MethodProposalCreator extends AbstractProposalCreator {
         for (Map.Entry<String, ImportNode> entry : module.getStaticStarImports().entrySet()) {
             ClassNode type = entry.getValue().getType();
             if (type != null) {
-                for (MethodNode method : (Iterable<MethodNode>) type.getMethods()) {
+                for (MethodNode method : type.getMethods()) {
                     if (method.isStatic() && ProposalUtils.looselyMatches(prefix, method.getName())) {
                         addIfNotPresent(proposals, new GroovyMethodProposal(method));
                     }
@@ -146,7 +146,7 @@ public class MethodProposalCreator extends AbstractProposalCreator {
             }
 
             if ("*".equals(fieldName)) {
-                for (MethodNode method : (Iterable<MethodNode>) typeNode.getMethods()) {
+                for (MethodNode method : typeNode.getMethods()) {
                     if (method.isStatic() && ProposalUtils.looselyMatches(prefix, method.getName())) {
                         GroovyMethodProposal proposal = new GroovyMethodProposal(method);
                         proposal.setRequiredStaticImport(typeName + '.' + method.getName());

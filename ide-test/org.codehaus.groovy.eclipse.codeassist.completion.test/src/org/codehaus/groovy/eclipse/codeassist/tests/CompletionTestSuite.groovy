@@ -60,6 +60,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     @After
     final void tearDownCompletionTestCase() {
         setJavaPreference(PreferenceConstants.TYPEFILTER_ENABLED, '')
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'true')
         setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, '')
     }
 
