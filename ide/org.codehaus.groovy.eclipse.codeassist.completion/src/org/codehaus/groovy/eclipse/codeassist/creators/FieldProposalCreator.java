@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -123,7 +123,7 @@ public class FieldProposalCreator extends AbstractProposalCreator {
         for (Map.Entry<String, ImportNode> entry : module.getStaticStarImports().entrySet()) {
             ClassNode type = entry.getValue().getType();
             if (type != null) {
-                for (FieldNode field : (Iterable<FieldNode>) type.getFields()) {
+                for (FieldNode field : type.getFields()) {
                     if (field.isStatic() && ProposalUtils.looselyMatches(prefix, field.getName())) {
                         proposals.add(new GroovyFieldProposal(field));
                     }
@@ -147,7 +147,7 @@ public class FieldProposalCreator extends AbstractProposalCreator {
             }
 
             if ("*".equals(fieldName)) {
-                for (FieldNode field : (Iterable<FieldNode>) typeNode.getFields()) {
+                for (FieldNode field : typeNode.getFields()) {
                     if (field.isStatic() && ProposalUtils.looselyMatches(prefix, field.getName())) {
                         GroovyFieldProposal proposal = new GroovyFieldProposal(field);
                         proposal.setRequiredStaticImport(typeName + '.' + field.getName());

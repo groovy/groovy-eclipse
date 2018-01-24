@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.codeassist.impl.AssistOptions;
 import org.eclipse.jdt.internal.ui.text.java.AnnotationAtttributeProposalInfo;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
@@ -115,29 +116,35 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         proposal.setRelevance(computeRelevance(context));
 
         if (getRequiredStaticImport() != null) {
-            GroovyCompletionProposal methodImportProposal = new GroovyCompletionProposal(CompletionProposal.METHOD_IMPORT, context.completionLocation);
-            methodImportProposal.setAdditionalFlags(CompletionFlags.StaticImport);
-            methodImportProposal.setCompletion(("import static " + getRequiredStaticImport() + "\n").toCharArray());
-            methodImportProposal.setDeclarationSignature(proposal.getDeclarationSignature());
-            methodImportProposal.setName(proposal.getName());
+            CompletionProposal importProposal;
+            if (new AssistOptions(javaContext.getProject().getOptions(true)).suggestStaticImport) {
+                importProposal = CompletionProposal.create(CompletionProposal.METHOD_IMPORT, context.completionLocation);
+                importProposal.setAdditionalFlags(CompletionFlags.StaticImport);
+                importProposal.setDeclarationSignature(proposal.getDeclarationSignature());
+                importProposal.setName(proposal.getName());
 
-            /*
-            methodImportProposal.setDeclarationPackageName(method.declaringClass.qualifiedPackageName());
-            methodImportProposal.setDeclarationTypeName(method.declaringClass.qualifiedSourceName());
-            methodImportProposal.setFlags(method.modifiers);
-            if (original != method) proposal.setOriginalSignature(getSignature(original));
-            if(parameterNames != null) methodImportProposal.setParameterNames(parameterNames);
-            methodImportProposal.setParameterPackageNames(parameterPackageNames);
-            methodImportProposal.setParameterTypeNames(parameterTypeNames);
-            methodImportProposal.setPackageName(method.returnType.qualifiedPackageName());
-            methodImportProposal.setReplaceRange(importStart - this.offset, importEnd - this.offset);
-            methodImportProposal.setRelevance(relevance);
-            methodImportProposal.setSignature(getSignature(method));
-            methodImportProposal.setTokenRange(importStart - this.offset, importEnd - this.offset);
-            methodImportProposal.setTypeName(method.returnType.qualifiedSourceName());
-            */
+                /*
+                importProposal.setCompletion(("import static " + getRequiredStaticImport() + "\n").toCharArray());
+                importProposal.setDeclarationPackageName(method.declaringClass.qualifiedPackageName());
+                importProposal.setDeclarationTypeName(method.declaringClass.qualifiedSourceName());
+                importProposal.setFlags(method.modifiers);
+                if (original != method) proposal.setOriginalSignature(getSignature(original));
+                if (parameterNames != null) importProposal.setParameterNames(parameterNames);
+                importProposal.setParameterPackageNames(parameterPackageNames);
+                importProposal.setParameterTypeNames(parameterTypeNames);
+                importProposal.setPackageName(method.returnType.qualifiedPackageName());
+                importProposal.setReplaceRange(importStart - this.offset, importEnd - this.offset);
+                importProposal.setRelevance(relevance);
+                importProposal.setSignature(getSignature(method));
+                importProposal.setTokenRange(importStart - this.offset, importEnd - this.offset);
+                importProposal.setTypeName(method.returnType.qualifiedSourceName());
+                */
+            } else {
+                importProposal = CompletionProposal.create(CompletionProposal.TYPE_IMPORT, context.completionLocation);
+                importProposal.setSignature(proposal.getDeclarationSignature());
+            }
 
-            proposal.setRequiredProposals(new CompletionProposal[] {methodImportProposal});
+            proposal.setRequiredProposals(new CompletionProposal[] {importProposal});
         }
 
         LazyJavaCompletionProposal lazyProposal = null;

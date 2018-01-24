@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import org.eclipse.jdt.internal.codeassist.impl.AssistOptions
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.contentassist.ICompletionProposal
@@ -444,8 +445,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
             import static java.util.regex.Pattern.DOTALL
             DOT
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'DOT'))
-        proposalExists(proposals, 'DOTALL', 1)
+        checkUniqueProposal(contents, 'DOT', 'DOTALL', 'DOTALL')
     }
 
     @Test
@@ -454,25 +454,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
             import static java.util.regex.Pattern.*
             DOT
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'DOT'))
-        proposalExists(proposals, 'DOTALL', 1)
-    }
-
-    @Test
-    void testFavoriteStaticField() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, 'java.util.regex.Pattern.DOTALL')
-
-        String contents = '''\
-            DOT
-            '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'DOT'))
-        proposalExists(proposals, 'DOTALL', 1)
-
-        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'DOTALL'), '''\
-            |import static java.util.regex.Pattern.DOTALL
-            |
-            |DOTALL
-            |'''.stripMargin())
+        checkUniqueProposal(contents, 'DOT', 'DOTALL', 'DOTALL')
     }
 
     @Test
@@ -482,13 +464,63 @@ final class FieldCompletionTests extends CompletionTestSuite {
         String contents = '''\
             DOT
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'DOT'))
-        proposalExists(proposals, 'DOTALL', 1)
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'DOT', 'DOTALL', 'DOTALL')
 
-        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'DOTALL'), '''\
+        applyProposalAndCheck(new Document(contents), proposal, '''\
             |import static java.util.regex.Pattern.DOTALL
             |
             |DOTALL
             |'''.stripMargin())
+    }
+
+    @Test
+    void testFavoriteStaticField() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, 'java.util.regex.Pattern.DOTALL')
+
+        String contents = '''\
+            DOT
+            '''.stripIndent()
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'DOT', 'DOTALL', 'DOTALL')
+
+        applyProposalAndCheck(new Document(contents), proposal, '''\
+            |import static java.util.regex.Pattern.DOTALL
+            |
+            |DOTALL
+            |'''.stripMargin())
+    }
+
+    @Test
+    void testFavoriteStaticField2() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, 'java.util.regex.Pattern.DOTALL')
+        setJavaPreference(AssistOptions.OPTION_SuggestStaticImports, AssistOptions.DISABLED)
+        try {
+            String contents = '''\
+                DOT
+                '''.stripIndent()
+            ICompletionProposal proposal = checkUniqueProposal(contents, 'DOT', 'DOTALL', 'DOTALL')
+
+            applyProposalAndCheck(new Document(contents), proposal, '''\
+                |import java.util.regex.Pattern
+                |
+                |Pattern.DOTALL
+                |'''.stripMargin())
+        } finally {
+            setJavaPreference(AssistOptions.OPTION_SuggestStaticImports, AssistOptions.ENABLED)
+        }
+    }
+
+    @Test
+    void testFavoriteStaticField3() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_FAVORITE_STATIC_MEMBERS, 'java.util.regex.Pattern.DOTALL')
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+
+        String contents = '''\
+            DOT
+            '''.stripIndent()
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'DOT', 'DOTALL', 'DOTALL')
+
+        applyProposalAndCheck(new Document(contents), proposal, '''\
+            java.util.regex.Pattern.DOTALL
+            '''.stripIndent())
     }
 }
