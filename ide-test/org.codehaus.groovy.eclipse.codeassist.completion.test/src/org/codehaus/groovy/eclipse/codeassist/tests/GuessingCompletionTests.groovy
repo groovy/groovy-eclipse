@@ -128,9 +128,8 @@ final class GuessingCompletionTests extends CompletionTestSuite {
 
         // check the parameter guesses
         ICompletionProposal[] choices = proposal.choices[0]
-        Assert.assertEquals(['MILLIS', 'DAYS', 'TimeUnit.DAYS', 'HOURS', 'TimeUnit.HOURS', 'MINUTES', 'TimeUnit.MINUTES',
-            'SECONDS', 'TimeUnit.SECONDS', 'MILLISECONDS', 'TimeUnit.MILLISECONDS', 'MICROSECONDS', 'TimeUnit.MICROSECONDS',
-            'NANOSECONDS', 'TimeUnit.NANOSECONDS', 'null'].join('\n'), choices*.displayString.join('\n'))
+        Assert.assertEquals(['MILLIS', 'DAYS', 'HOURS', 'MINUTES', 'SECONDS', 'MILLISECONDS', 'MICROSECONDS', 'NANOSECONDS', 'null'].join('\n'),
+            choices*.displayString.join('\n'))
 
         // TODO: Something below is not matching the real editor's application of the parameter proposal
         /*applyProposalAndCheck(document, choices[1], '''\

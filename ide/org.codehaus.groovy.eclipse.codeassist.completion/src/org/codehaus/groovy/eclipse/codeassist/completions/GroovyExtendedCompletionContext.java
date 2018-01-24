@@ -138,7 +138,7 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
                     if (GroovyUtils.isAssignable(type, targetType)) {
                         // NOTE: parent, source location, typeSignature, etc. are not important here
                         int start = 0, until = varName.length() - 1;
-                        visibleElements.put(varName, new LocalVariable(
+                        visibleElements.putIfAbsent(varName, new LocalVariable(
                             (JavaElement) getEnclosingElement(), varName, start, until, start, until, typeSignature, null, 0, false));
                     }
                 }
@@ -165,8 +165,7 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
                 IType enumType = new GroovyProjectFacade(enclosingElement).groovyClassToJavaType(targetType);
                 for (IField enumField : enumType.getFields()) {
                     if (enumField.isEnumConstant()) {
-                        visibleElements.put(enumField.getElementName(), enumField);
-                        visibleElements.put(enumType.getElementName() + '.' + enumField.getElementName(), enumField);
+                        visibleElements.putIfAbsent(enumField.getElementName(), enumField);
                     }
                 }
             } catch (JavaModelException e) {
@@ -176,26 +175,22 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
         return visibleElements.values().toArray(new IJavaElement[0]);
     }
 
-    public void addFields(ClassNode targetType, Map<String, IJavaElement> nameElementMap, IType type)
+    public void addFields(ClassNode targetType, Map<String, IJavaElement> visibleElements, IType type)
             throws JavaModelException {
-        IField[] fields = type.getFields();
-        for (IField field : fields) {
+        for (IField field : type.getFields()) {
             ClassNode fieldTypeClassNode = toClassNode(field.getTypeSignature());
             if (GroovyUtils.isAssignable(fieldTypeClassNode, targetType)) {
-                nameElementMap.put(field.getElementName(), field);
+                visibleElements.putIfAbsent(field.getElementName(), field);
             }
         }
-        // also add methods
-        IMethod[] methods = type.getMethods();
-        for (IMethod method : methods) {
+        for (IMethod method : type.getMethods()) {
             ClassNode methodReturnTypeClassNode = toClassNode(method.getReturnType());
             if (GroovyUtils.isAssignable(methodReturnTypeClassNode, targetType)) {
                 if ((method.getParameterTypes() == null || method.getParameterTypes().length == 0) &&
-                    (method.getElementName().startsWith("get") || method.getElementName().startsWith("is"))) {
-
-                    nameElementMap.put(method.getElementName(), method);
+                        (method.getElementName().startsWith("get") || method.getElementName().startsWith("is"))) {
+                    visibleElements.putIfAbsent(method.getElementName(), method);
                     IField field = new PropertyVariant(method);
-                    nameElementMap.put(field.getElementName(), field);
+                    visibleElements.putIfAbsent(field.getElementName(), field);
                 }
             }
         }
