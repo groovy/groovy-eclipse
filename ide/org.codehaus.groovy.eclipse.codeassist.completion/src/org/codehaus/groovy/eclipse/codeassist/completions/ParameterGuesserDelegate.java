@@ -15,12 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.completions;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
-import org.codehaus.groovy.eclipse.codeassist.processors.GroovyCompletionProposal;
 import org.eclipse.jdt.core.CompletionFlags;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.IJavaElement;
@@ -28,10 +24,12 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
+import org.eclipse.jdt.internal.codeassist.impl.AssistOptions;
 import org.eclipse.jdt.internal.ui.text.java.FieldProposalInfo;
 import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.ParameterGuesser;
 import org.eclipse.jdt.internal.ui.text.template.contentassist.PositionBasedCompletionProposal;
+import org.eclipse.jdt.ui.PreferenceConstants;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
@@ -57,10 +55,9 @@ public class ParameterGuesserDelegate {
             if (completions != null && completions.length > 0 && suggestions != null && suggestions.length > 0) {
                 IType declaring = (IType) suggestions[suggestions.length - 1].getAncestor(IJavaElement.TYPE);
                 if (declaring != null && declaring.isEnum()) {
-                    // each enum constant is proposed twice; see GroovyExtendedCompletionContext.computeVisibleElements
+                    boolean preferStaticImport = isStaticImportPreferred();
 
                     // NOTE: completions and suggestions are not parallel arrays
-                    Set<String> seen = new HashSet<>(suggestions.length);
                     for (int i = 0; i < completions.length; i += 1) {
                         ICompletionProposal completion = completions[i];
 
@@ -74,18 +71,16 @@ public class ParameterGuesserDelegate {
                         }
 
                         if (suggestion != null) {
-                            GroovyCompletionProposal supporting;
+                            CompletionProposal supporting;
                             String replacement = completion.getDisplayString();
 
-                            // for first occurrence, propose "NAME"; for second occurrence, propose "Type.NAME"
-                            if (seen.add(replacement)) {
-                                supporting = new GroovyCompletionProposal(CompletionProposal.FIELD_IMPORT, 0);
+                            if (preferStaticImport) {
+                                supporting = CompletionProposal.create(CompletionProposal.FIELD_IMPORT, 0);
                                 supporting.setAdditionalFlags(CompletionFlags.StaticImport);
                                 supporting.setDeclarationSignature(Signature.createTypeSignature(declaring.getFullyQualifiedName(), true).toCharArray());
                                 supporting.setName(replacement.toCharArray());
                             } else {
-                                replacement = declaring.getElementName() + '.' + replacement;
-                                supporting = new GroovyCompletionProposal(CompletionProposal.TYPE_IMPORT, 0);
+                                supporting = CompletionProposal.create(CompletionProposal.TYPE_IMPORT, 0);
                                 supporting.setSignature(Signature.createTypeSignature(declaring.getFullyQualifiedName(), true).toCharArray());
                             }
 
@@ -145,19 +140,38 @@ public class ParameterGuesserDelegate {
         return parameterProposals;
     }
 
+    private boolean isStaticImportPreferred() {
+        if (PreferenceConstants.getPreferenceStore().getBoolean(PreferenceConstants.CODEASSIST_ADDIMPORT)) {
+            return new AssistOptions(invocationContext.getProject().getOptions(true)).suggestStaticImport;
+        }
+        return false;
+    }
+
     private ICompletionProposal newEnumProposal(Position position, String replacement, CompletionProposal supporting, Image image, char[] triggers) {
-        GroovyCompletionProposal groovyProposal = new GroovyCompletionProposal(CompletionProposal.FIELD_REF, 0);
+        CompletionProposal groovyProposal = CompletionProposal.create(CompletionProposal.METHOD_REF, 0);
         groovyProposal.setRequiredProposals(new CompletionProposal[] {supporting});
 
         // replacement offset and length are not known at this time, so they must be supplied from Position upon request
         JavaCompletionProposal javaProposal = new JavaCompletionProposal(replacement, 0, 0, image, null, 1, false, invocationContext) {
             @Override
+            public int getReplacementLength() {
+                return position.getLength();
+            }
+            @Override
             public int getReplacementOffset() {
                 return position.getOffset();
             }
             @Override
-            public int getReplacementLength() {
-                return position.getLength();
+            public void setReplacementOffset(int offset) {
+                if (offset > getReplacementOffset()) {
+                    position.setOffset(getReplacementOffset() + (getReplacementLength() - super.getReplacementLength()));
+                    position.setLength(super.getReplacementLength());
+                }
+                super.setReplacementOffset(offset);
+            }
+            @Override
+            public void setReplacementLength(int length) {
+                super.setReplacementLength(length);
             }
         };
         javaProposal.setProposalInfo(new FieldProposalInfo(invocationContext.getProject(), groovyProposal));
