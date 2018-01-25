@@ -114,10 +114,10 @@ final class GuessingCompletionTests extends CompletionTestSuite {
         String contents = '''\
             |import static java.util.concurrent.TimeUnit.MILLISECONDS as MILLIS
             |
-            |pack.Util.util
+            |pack.Util.ut
             |'''.stripMargin()
         IDocument document = new Document(contents)
-        ICompletionProposal proposal = checkUniqueProposal(contents, 'util', 'util(MILLIS)')
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'ut', 'util', 'util(MILLIS)')
 
         // apply initial proposal to generate parameter proposals
         applyProposalAndCheck(document, proposal, '''\

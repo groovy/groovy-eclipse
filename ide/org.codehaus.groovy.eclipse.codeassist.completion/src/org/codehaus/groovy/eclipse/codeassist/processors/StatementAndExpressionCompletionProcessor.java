@@ -187,7 +187,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                             // for maps, always use the type of value
                             candidate = candidate.getGenericsTypes()[1].getType();
                         } else {
-                            for (int j = 0; j < derefCount; j++) {
+                            for (int j = 0; j < derefCount; j += 1) {
                                 candidate = VariableScope.extractElementType(candidate);
                             }
                         }
@@ -397,7 +397,11 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                     List<IGroovyProposal> enumFields = new FieldProposalCreator().findAllProposals(
                         context.lhsType, Collections.EMPTY_SET, context.getPerceivedCompletionExpression(), true, true);
                     for (Iterator<IGroovyProposal> it = enumFields.iterator(); it.hasNext();) {
-                        if (!((GroovyFieldProposal) it.next()).getField().isEnum()) {
+                        GroovyFieldProposal proposal = (GroovyFieldProposal) it.next();
+                        if (proposal.getField().isEnum()) {
+                            proposal.setRequiredStaticImport(
+                                context.lhsType.getName() + '.' + proposal.getField().getName());
+                        } else {
                             it.remove();
                         }
                     }
