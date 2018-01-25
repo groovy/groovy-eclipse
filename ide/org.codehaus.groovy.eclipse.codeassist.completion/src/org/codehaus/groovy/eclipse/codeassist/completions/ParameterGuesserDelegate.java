@@ -161,18 +161,14 @@ public class ParameterGuesserDelegate {
             public int getReplacementOffset() {
                 return position.getOffset();
             }
-            @Override
+            /*@Override
             public void setReplacementOffset(int offset) {
                 if (offset > getReplacementOffset()) {
                     position.setOffset(getReplacementOffset() + (getReplacementLength() - super.getReplacementLength()));
                     position.setLength(super.getReplacementLength());
                 }
                 super.setReplacementOffset(offset);
-            }
-            @Override
-            public void setReplacementLength(int length) {
-                super.setReplacementLength(length);
-            }
+            }*/
         };
         javaProposal.setProposalInfo(new FieldProposalInfo(invocationContext.getProject(), groovyProposal));
         javaProposal.setTriggerCharacters(triggers);
