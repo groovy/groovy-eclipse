@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
@@ -46,15 +45,7 @@ import org.eclipse.jdt.groovy.search.VariableScope;
  */
 public class FieldProposalCreator extends AbstractProposalCreator {
 
-    private static final GroovyFieldProposal CLASS_PROPOSAL = createClassProposal();
-
-    private Set<ClassNode> alreadySeen = new HashSet<>();
-
-    private static GroovyFieldProposal createClassProposal() {
-        FieldNode field = new FieldNode("class", Opcodes.ACC_PUBLIC & Opcodes.ACC_STATIC & Opcodes.ACC_FINAL, VariableScope.CLASS_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE, null);
-        field.setDeclaringClass(VariableScope.OBJECT_CLASS_NODE);
-        return new GroovyFieldProposal(field);
-    }
+    private final Set<ClassNode> alreadySeen = new HashSet<>();
 
     @Override
     public List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic, boolean isPrimary) {
@@ -68,7 +59,7 @@ public class FieldProposalCreator extends AbstractProposalCreator {
             if ((!isStatic || field.isStatic()) && ProposalUtils.looselyMatches(prefix, field.getName())) {
                 // de-emphasize 'this' references inside closure
                 float relevanceMultiplier = !isFirstTime ? 0.1f : 1.0f;
-                if (field.getType().isEnum()) relevanceMultiplier *= 5;
+                if (field.isEnum()) relevanceMultiplier *= 5.0f;
 
                 GroovyFieldProposal proposal = new GroovyFieldProposal(field);
                 proposal.setRelevanceMultiplier(relevanceMultiplier);
@@ -81,8 +72,13 @@ public class FieldProposalCreator extends AbstractProposalCreator {
             }
         }
 
-        if (isStatic && "class".startsWith(prefix)) {
-            proposals.add(CLASS_PROPOSAL);
+        if (!isPrimary && "class".startsWith(prefix) && VariableScope.CLASS_CLASS_NODE.equals(type)) {
+            @SuppressWarnings("static-access")
+            FieldNode field = new FieldNode("class",
+                FieldNode.ACC_PUBLIC & FieldNode.ACC_STATIC & FieldNode.ACC_FINAL,
+                VariableScope.CLASS_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE, null);
+            field.setDeclaringClass(VariableScope.OBJECT_CLASS_NODE);
+            proposals.add(new GroovyFieldProposal(field));
         }
 
         if (currentScope != null) {

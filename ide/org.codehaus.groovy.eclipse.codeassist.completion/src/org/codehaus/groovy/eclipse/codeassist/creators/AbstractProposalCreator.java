@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -166,19 +166,19 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
     }
 
     /**
-     * Check to ensure that there is no field with a getter or setter name before creating the mock field.
+     * Checks that there is no field matching the bean property for a getter or setter.
      *
      * @param declaringClass declaring type of the method
-     * @param methodName method to check for
+     * @param methodName name of method to check
      */
     protected boolean hasNoField(ClassNode declaringClass, String methodName) {
-        return declaringClass.getField(ProposalUtils.createMockFieldName(methodName)) == null &&
-            declaringClass.getField(ProposalUtils.createCapitalMockFieldName(methodName)) == null;
+        return (!"getClass".equals(methodName) &&
+            declaringClass.getField(ProposalUtils.createMockFieldName(methodName)) == null &&
+            declaringClass.getField(ProposalUtils.createCapitalMockFieldName(methodName)) == null);
     }
 
     protected FieldNode createMockField(MethodNode method) {
-        FieldNode field = new FieldNode(ProposalUtils.createMockFieldName(
-            method.getName()), method.getModifiers(), method.getReturnType(), method.getDeclaringClass(), null);
+        FieldNode field = new FieldNode(ProposalUtils.createMockFieldName(method.getName()), method.getModifiers(), method.getReturnType(), method.getDeclaringClass(), null);
         field.setDeclaringClass(method.getDeclaringClass());
         field.setSourcePosition(method);
         return field;
