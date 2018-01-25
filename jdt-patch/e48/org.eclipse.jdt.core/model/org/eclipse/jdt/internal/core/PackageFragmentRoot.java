@@ -908,7 +908,7 @@ public IModuleDescription getModuleDescription() {
 }
 
 public IModuleDescription getAutomaticModuleDescription() throws JavaModelException {
-	return getAutomaticModuleDescription(getRawClasspathEntry());
+	return getAutomaticModuleDescription(getResolvedClasspathEntry());
 }
 
 IModuleDescription getAutomaticModuleDescription(IClasspathEntry classpathEntry) {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2017 IBM Corporation.
+ * Copyright (c) 2016, 2018 IBM Corporation.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -102,8 +102,11 @@ public class ModuleFinder {
 						break;
 				}
 			}
-		} else if (isJar(file)) {
-			module = extractModuleFromJar(file, modulePath);
+		} else {
+			String moduleDescPath = getModulePathForArchive(file);
+			if (moduleDescPath != null) {
+				module = extractModuleFromArchive(file, modulePath, moduleDescPath);
+			}
 		}
 		if (considerAutoModules && module == null && !(modulePath instanceof ClasspathJrt)) {
 			module = IModule.createAutomatic(getFileName(file), file.isFile(), getManifest(file));
@@ -113,7 +116,7 @@ public class ModuleFinder {
 		return module;
 	}
 	private static Manifest getManifest(File file) {
-		if (!isJar(file))
+		if (getModulePathForArchive(file) == null)
 			return null;
 		try (JarFile jar = new JarFile(file)) {
 			return jar.getManifest();
@@ -196,15 +199,20 @@ public class ModuleFinder {
 		return module;
 	}
 
-	private static boolean isJar(File file) {
+	private static String getModulePathForArchive(File file) {
 		int format = Util.archiveFormat(file.getAbsolutePath());
-		return format >= Util.ZIP_FILE;
+		if (format == Util.ZIP_FILE) {
+			return IModule.MODULE_INFO_CLASS;
+		} else if(format == Util.JMOD_FILE) {
+			return "classes/" + IModule.MODULE_INFO_CLASS; //$NON-NLS-1$
+		}
+		return null;
 	}
-	private static IModule extractModuleFromJar(File file, Classpath pathEntry) {
+	private static IModule extractModuleFromArchive(File file, Classpath pathEntry, String path) {
 		ZipFile zipFile = null;
 		try {
 			zipFile = new ZipFile(file);
-			ClassFileReader reader = ClassFileReader.read(zipFile, IModule.MODULE_INFO_CLASS);
+			ClassFileReader reader = ClassFileReader.read(zipFile, path);
 			IModule module = getModule(reader);
 			if (module != null) {
 				return reader.getModuleDeclaration();

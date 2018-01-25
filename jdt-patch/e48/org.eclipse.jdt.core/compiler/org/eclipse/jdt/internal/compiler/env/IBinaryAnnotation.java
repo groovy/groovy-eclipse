@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2007 BEA Systems, Inc.
+ * Copyright (c) 2005, 2018 BEA Systems, Inc and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -29,6 +29,13 @@ IBinaryElementValuePair[] getElementValuePairs();
  * @return true, if this an external annotation
  */
 default boolean isExternalAnnotation() {
+	return false;
+}
+
+/**
+ * @return true, if this is a @Deprecated annotation.
+ */
+default boolean isDeprecatedAnnotation() {
 	return false;
 }
 }

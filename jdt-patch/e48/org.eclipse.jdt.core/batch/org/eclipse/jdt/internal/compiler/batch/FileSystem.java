@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -299,7 +299,7 @@ public static Classpath getClasspath(String classpathName, String encoding,
 				}
 			}
 		} else if (format == Util.JMOD_FILE) {
-			// TODO Java 9: we need new type of classpath to handle Jmod files in batch compiler.
+			return new ClasspathJmod(file, true, accessRuleSet, null);
 		}
 
 	}

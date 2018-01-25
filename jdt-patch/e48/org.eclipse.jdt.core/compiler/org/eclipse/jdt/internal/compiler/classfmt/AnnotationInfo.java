@@ -165,6 +165,10 @@ public IBinaryElementValuePair[] getElementValuePairs() {
 public char[] getTypeName() {
 	return this.typename;
 }
+@Override
+public boolean isDeprecatedAnnotation() {
+	return (this.standardAnnotationTagBits & (TagBits.AnnotationDeprecated | TagBits.AnnotationTerminallyDeprecated)) != 0;
+}
 void initialize() {
 	if (this.pairs == null)
 		decodeAnnotation();

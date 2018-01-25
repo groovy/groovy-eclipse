@@ -46,7 +46,7 @@ public FieldBinding(FieldBinding initialFieldBinding, ReferenceBinding declaring
 	super(initialFieldBinding.name, initialFieldBinding.type, initialFieldBinding.modifiers, initialFieldBinding.constant());
 	this.declaringClass = declaringClass;
 	this.id = initialFieldBinding.id;
-	setAnnotations(initialFieldBinding.getAnnotations());
+	setAnnotations(initialFieldBinding.getAnnotations(), false);
 }
 /* API
 * Answer the receiver's binding type from Binding.BindingID.
@@ -419,8 +419,8 @@ public FieldBinding original() {
 	return this;
 }
 @Override
-public void setAnnotations(AnnotationBinding[] annotations) {
-	this.declaringClass.storeAnnotations(this, annotations);
+public void setAnnotations(AnnotationBinding[] annotations, boolean forceStore) {
+	this.declaringClass.storeAnnotations(this, annotations, forceStore);
 }
 public FieldDeclaration sourceField() {
 	SourceTypeBinding sourceType;

@@ -27,7 +27,7 @@ public class ModulePattern extends JavaSearchPattern {
 	protected static char[][] REF_CATEGORIES = { MODULE_REF };
 	protected static char[][] REF_AND_DECL_CATEGORIES = { MODULE_REF, MODULE_DECL };
 	protected static char[][] DECL_CATEGORIES = { MODULE_DECL };
-	private static char[] regexPrefix = {'\\','r',' '};
+	private static char[] regexPrefix = {'/','r',' '};
 
 	public static char[] createIndexKey(char[] name) {
 		return name; // until a need arises, let the name itself be the index key.

@@ -102,8 +102,9 @@ public abstract class AbstractRegressionTest extends AbstractCompilerTest implem
 		String[] testFiles;
 		String[] dependantFiles;
 		String[] classLibraries;
+		boolean  libsOnModulePath;
 		// control compilation:
-		Map customOptions;
+		Map<String,String> customOptions;
 		boolean performStatementsRecovery;
 		boolean generateOutput;
 		ICompilerRequestor customRequestor;
@@ -130,6 +131,7 @@ public abstract class AbstractRegressionTest extends AbstractCompilerTest implem
 					this.testFiles,
 					this.dependantFiles != null ? this.dependantFiles : new String[] {},
 					this.classLibraries,
+					this.libsOnModulePath,
 					this.customOptions,
 					this.performStatementsRecovery,
 					new Requestor(
@@ -155,6 +157,7 @@ public abstract class AbstractRegressionTest extends AbstractCompilerTest implem
 					this.testFiles,
 					this.dependantFiles != null ? this.dependantFiles : new String[] {},
 					this.classLibraries,
+					this.libsOnModulePath,
 					this.customOptions,
 					this.performStatementsRecovery,
 					new Requestor(
@@ -180,6 +183,7 @@ public abstract class AbstractRegressionTest extends AbstractCompilerTest implem
 					this.testFiles,
 					this.dependantFiles != null ? this.dependantFiles : new String[] {},
 					this.classLibraries,
+					this.libsOnModulePath,
 					this.customOptions,
 					this.performStatementsRecovery,
 					new Requestor(
@@ -1475,6 +1479,7 @@ protected static class JavacTestOptions {
 			new String[] {},
 			// compiler options
 			null /* no class libraries */,
+			false,
 			null /* no custom options */,
 			false /* do not perform statements recovery */,
 			null /* no custom requestor */,
@@ -1573,6 +1578,7 @@ protected static class JavacTestOptions {
 				testFiles,
 				dependantFiles,
 				null,
+				false,
 				null,
 				false,
 				null,
@@ -1976,7 +1982,8 @@ protected void runJavac(
 		boolean shouldFlushOutputDirectory,
 		JavacTestOptions options,
 		String[] vmArguments,
-		String[] classLibraries) {
+		String[] classLibraries,
+		boolean libsOnModulePath) {
 	// WORK we're probably doing too much around class libraries in general - java should be able to fetch its own runtime libs
 	// WORK reorder parameters
 	if (options == JavacTestOptions.SKIP) {
@@ -2003,7 +2010,7 @@ protected void runJavac(
 		}
 		if (!filteredLibs.isEmpty()) {
 			newOptions = newOptions
-					.concat(" -classpath ")
+					.concat(libsOnModulePath ? " --module-path " : " -classpath ")
 					.concat(String.join(File.pathSeparator, filteredLibs.toArray(new String[filteredLibs.size()])));
 		}
 	}
@@ -2651,6 +2658,7 @@ protected void runNegativeTest(boolean skipJavac, JavacTestOptions javacTestOpti
 			testFiles,
 			new String[] {},
 			classLibraries,
+			false,
 			customOptions,
 			performStatementsRecovery,
 			customRequestor,
@@ -2672,6 +2680,7 @@ protected void runNegativeTest(boolean skipJavac, JavacTestOptions javacTestOpti
 			testFiles,
 			new String[] {},
 			null,
+			false,
 			options,
 			false,
 			new Requestor( /* custom requestor */
@@ -2769,6 +2778,7 @@ protected void runNegativeTest(boolean skipJavac, JavacTestOptions javacTestOpti
 			String[] dependantFiles,
 			// compiler options
 			String[] classLibraries,
+			boolean libsOnModulePath,
 			Map customOptions,
 			boolean performStatementsRecovery,
 			ICompilerRequestor customRequestor,
@@ -2926,7 +2936,7 @@ protected void runNegativeTest(boolean skipJavac, JavacTestOptions javacTestOpti
 		if (RUN_JAVAC && javacTestOptions != JavacTestOptions.SKIP) {
 			runJavac(testFiles, expectingCompilerErrors, expectedCompilerLog,
 					expectedJavacOutputString, expectedErrorString, shouldFlushOutputDirectory,
-					javacTestOptions, vmArguments, classLibraries);
+					javacTestOptions, vmArguments, classLibraries, libsOnModulePath);
 		}
 	}
 

@@ -191,10 +191,10 @@ public abstract class Binding {
 	public AnnotationBinding[] getAnnotations() {
 		return Binding.NO_ANNOTATIONS;
 	}
-	public void setAnnotations(AnnotationBinding[] annotations, Scope scope) {
-		setAnnotations(annotations);
+	public void setAnnotations(AnnotationBinding[] annotations, Scope scope, boolean forceStore) {
+		setAnnotations(annotations, forceStore);
 	}
-	public void setAnnotations(AnnotationBinding[] annotations) {
+	public void setAnnotations(AnnotationBinding[] annotations, boolean forceStore) {
 		// Left to subtypes.
 	}
 }

@@ -16,7 +16,7 @@ public class FieldInfoWithAnnotation extends FieldInfo {
 	private AnnotationInfo[] annotations;
 
 FieldInfoWithAnnotation(FieldInfo info, AnnotationInfo[] annos) {
-	super(info.reference, info.constantPoolOffsets, info.structOffset);
+	super(info.reference, info.constantPoolOffsets, info.structOffset, info.version);
 	this.accessFlags = info.accessFlags;
 	this.attributeBytes = info.attributeBytes;
 	this.constant = info.constant;

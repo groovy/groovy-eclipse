@@ -214,6 +214,7 @@ public class NullAnnotationTests9 extends AbstractNullAnnotationTest {
 	private Runner getDefaultRunner() {
 		Runner runner = new Runner();
 		runner.classLibraries = this.LIBS;
+		runner.libsOnModulePath = true;
 		runner.javacTestOptions =
 				JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
 		return runner;
@@ -275,6 +276,7 @@ public class NullAnnotationTests9 extends AbstractNullAnnotationTest {
 		runner.shouldFlushOutputDirectory = false;
 		runner.classLibraries = Arrays.copyOf(this.LIBS, this.LIBS.length+1);
 		runner.classLibraries[runner.classLibraries.length-1] = jarPath;
+		runner.libsOnModulePath = true;
 		runner.testFiles = new String[] {
 				"my.mod/module-info.java",
 				  "import org.eclipse.jdt.annotation.*;\n" +
