@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import groovy.transform.NotYetImplemented
+
 import org.eclipse.jdt.internal.codeassist.impl.AssistOptions
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.Document
@@ -401,8 +403,37 @@ final class FieldCompletionTests extends CompletionTestSuite {
             def meth(tree.node.Color c) { }
             meth(B)
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'B'))
-        proposalExists(proposals, 'BLACK', 1)
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'B', 'BLACK')
+        applyProposalAndCheck(new Document(contents), proposal, '''\
+            |import static tree.node.Color.BLACK
+            |
+            |def meth(tree.node.Color c) { }
+            |meth(BLACK)
+            |'''.stripMargin())
+    }
+
+    @Test @NotYetImplemented
+    void testEnumReceiver2a() {
+        addJavaSource('public enum Color { RED, BLACK }', 'Color', 'tree.node')
+        addJavaSource('public interface D { String BLACK= ""; }', 'D', 'a.b.c')
+
+        String contents = '''\
+            |import static a.b.c.D.BLACK
+            |
+            |def meth(tree.node.Color c) { }
+            |meth(BL)
+            |'''.stripMargin()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'BL'))
+        proposalExists(proposals, 'BLACK', 2)
+
+        applyProposalAndCheck(new Document(contents), orderByRelevance(proposals)[0], '''\
+            |import static a.b.c.D.BLACK
+            |
+            |import tree.node.Color
+            |
+            |def meth(tree.node.Color c) { }
+            |meth(Color.BLACK)
+            |'''.stripMargin())
     }
 
     @Test
@@ -413,8 +444,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
             def meth(tree.node.Color... colors) { }
             meth(RED, B)
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'B'))
-        proposalExists(proposals, 'BLACK', 1)
+        checkUniqueProposal(contents, 'B', 'BLACK')
     }
 
     @Test // GRECLIPSE-1175
@@ -445,7 +475,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
             import static java.util.regex.Pattern.DOTALL
             DOT
             '''.stripIndent()
-        checkUniqueProposal(contents, 'DOT', 'DOTALL', 'DOTALL')
+        checkUniqueProposal(contents, 'DOT', 'DOTALL')
     }
 
     @Test
@@ -454,7 +484,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
             import static java.util.regex.Pattern.*
             DOT
             '''.stripIndent()
-        checkUniqueProposal(contents, 'DOT', 'DOTALL', 'DOTALL')
+        checkUniqueProposal(contents, 'DOT', 'DOTALL')
     }
 
     @Test
@@ -464,7 +494,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
         String contents = '''\
             DOT
             '''.stripIndent()
-        ICompletionProposal proposal = checkUniqueProposal(contents, 'DOT', 'DOTALL', 'DOTALL')
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'DOT', 'DOTALL')
 
         applyProposalAndCheck(new Document(contents), proposal, '''\
             |import static java.util.regex.Pattern.DOTALL
@@ -480,7 +510,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
         String contents = '''\
             DOT
             '''.stripIndent()
-        ICompletionProposal proposal = checkUniqueProposal(contents, 'DOT', 'DOTALL', 'DOTALL')
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'DOT', 'DOTALL')
 
         applyProposalAndCheck(new Document(contents), proposal, '''\
             |import static java.util.regex.Pattern.DOTALL
@@ -497,7 +527,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
             String contents = '''\
                 DOT
                 '''.stripIndent()
-            ICompletionProposal proposal = checkUniqueProposal(contents, 'DOT', 'DOTALL', 'DOTALL')
+            ICompletionProposal proposal = checkUniqueProposal(contents, 'DOT', 'DOTALL')
 
             applyProposalAndCheck(new Document(contents), proposal, '''\
                 |import java.util.regex.Pattern
@@ -517,7 +547,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
         String contents = '''\
             DOT
             '''.stripIndent()
-        ICompletionProposal proposal = checkUniqueProposal(contents, 'DOT', 'DOTALL', 'DOTALL')
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'DOT', 'DOTALL')
 
         applyProposalAndCheck(new Document(contents), proposal, '''\
             java.util.regex.Pattern.DOTALL

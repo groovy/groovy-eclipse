@@ -344,14 +344,14 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
         }
     }
 
-    protected ICompletionProposal checkUniqueProposal(CharSequence contents, String completionExpr, String completionName = completionExpr, String replacementString) {
+    protected ICompletionProposal checkUniqueProposal(CharSequence contents, String completionExpr, String completionName, String replacementString = completionName) {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, completionExpr))
         checkReplacementString(proposals, replacementString, 1)
         findFirstProposal(proposals, completionName)
     }
 
-    protected void checkProposalChoices(String contents, String completionExpr, String lookFor, String replacementString, String[] expectedChoices) {
-        ICompletionProposal proposal = checkUniqueProposal(contents, completionExpr, lookFor, replacementString)
+    protected void checkProposalChoices(String contents, String completionExpr, String completionName, String replacementString, String[] expectedChoices) {
+        ICompletionProposal proposal = checkUniqueProposal(contents, completionExpr, completionName, replacementString)
 
         ICompletionProposal[] choices = proposal.choices
         assertEquals(expectedChoices.length, choices.length)
@@ -361,7 +361,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     }
 
     protected void checkProposalChoices(String contents, String completion, String replacementString, String[][] expectedChoices) {
-        ICompletionProposal proposal = checkUniqueProposal(contents, completion, replacementString)
+        ICompletionProposal proposal = checkUniqueProposal(contents, completion, completion, replacementString)
         proposal.replacementString // instantiate the guesses
 
         ICompletionProposal[][] choices = proposal.choices
