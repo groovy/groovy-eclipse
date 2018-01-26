@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObjectToInt;
 import org.eclipse.jdt.internal.core.search.indexing.IndexingParser;
+import org.eclipse.jdt.internal.core.util.Util;
 
 public class MultiplexingIndexingParser extends IndexingParser {
 
@@ -68,16 +69,22 @@ public class MultiplexingIndexingParser extends IndexingParser {
             CompilationResult compilationResult = new CompilationResult(unit, 0, 0, this.options.maxProblemsPerUnit);
 
             // FIXASC Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
-            GroovyCompilationUnitDeclaration cud = (GroovyCompilationUnitDeclaration) new GroovyParser(this.options,
-                    problemReporter, false, true).dietParse(unit, compilationResult);
+            GroovyCompilationUnitDeclaration cud = (GroovyCompilationUnitDeclaration)
+                new GroovyParser(this.options, problemReporter, false, true).dietParse(unit, compilationResult);
 
             // CompilationUnitDeclaration cud groovyParser.dietParse(sourceUnit, compilationResult);
             HashtableOfObjectToInt sourceEnds = createSourceEnds(cud);
-            GroovyIndexingVisitor visitor = new GroovyIndexingVisitor(requestor);
-            visitor.doVisit(cud.getModuleNode(), cud.currentPackage);
+            if (cud.getModuleNode() != null) {
+                try {
+                    GroovyIndexingVisitor visitor = new GroovyIndexingVisitor(requestor);
+                    visitor.visitModule(cud.getModuleNode());
+                } catch (RuntimeException e) {
+                    Util.log(e);
+                }
+            }
 
             notifier.notifySourceElementRequestor(cud, 0, unit.getContents().length, groovyReportReferenceInfo, sourceEnds,
-            /* We don't care about the @category tag, so pass empty map */Collections.EMPTY_MAP);
+                /* We don't care about the @category tag, so pass empty map */Collections.EMPTY_MAP);
             return cud;
         } else {
             return super.parseCompilationUnit(unit, fullParse, pm);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,13 +72,17 @@ final class RenameTypeTests extends RefactoringTestSuite {
         project.setOption(JavaCore.CODEASSIST_ARGUMENT_SUFFIXES, suffixes)
     }
 
-    private RenameJavaElementDescriptor createRefactoringDescriptor(IType type, String newName) {
-        RenameJavaElementDescriptor descriptor =
-            RefactoringSignatureDescriptorFactory.createRenameJavaElementDescriptor(IJavaRefactorings.RENAME_TYPE)
-        descriptor.javaElement = type
-        descriptor.newName = newName
-        descriptor.updateReferences = true
-        return descriptor
+    private RenameJavaElementDescriptor createRefactoringDescriptor(IType type, String name) {
+        RefactoringSignatureDescriptorFactory.createRenameJavaElementDescriptor(IJavaRefactorings.RENAME_TYPE).with {
+            updateReferences = true
+            javaElement = type
+            newName = name
+            return it
+        }
+    }
+
+    private String[] helper(String oldName, String newName, String newCUName = newName, boolean updateReferences = true) {
+        return helperWithTextual(oldName, oldName, newName, newCUName, updateReferences, false)
     }
 
     private String[] helperWithTextual(String oldCuName, String oldName, String newName, String newCUName, boolean updateReferences, boolean updateTextualMatches) {
@@ -106,14 +110,6 @@ final class RenameTypeTests extends RefactoringTestSuite {
         assert newElement.exists() : 'new element does not exist:\n' + newElement.toString()
         checkMappers(refactoring, classA, newCUName + '.groovy', classAMembers)
         return renameHandles
-    }
-
-    private String[] helper2_0(String oldName, String newName, String newCUName, boolean updateReferences) {
-        return helperWithTextual(oldName, oldName, newName, newCUName, updateReferences, false)
-    }
-
-    private String[] helper2(String oldName, String newName) {
-        return helper2_0(oldName, newName, newName, true)
     }
 
     private void checkMappers(Refactoring refactoring, IType type, String newCUName, IJavaElement[] someClassMembers) {
@@ -151,82 +147,82 @@ final class RenameTypeTests extends RefactoringTestSuite {
 
     @Test // Rename paramter type
     void test1() {
-        helper2('A', 'B')
+        helper('A', 'B')
     }
 
     @Test // Rename super type
     void test2() {
-        helper2('A', 'B')
+        helper('A', 'B')
     }
 
     @Test // Rename interface type
     void test3() {
-        helper2('A', 'B')
+        helper('A', 'B')
     }
 
     @Test // Rename return type
     void test4() {
-        helper2('A', 'B')
+        helper('A', 'B')
     }
 
     @Test // Rename variable type in method
     void test5() {
-        helper2('A', 'B')
+        helper('A', 'B')
     }
 
     @Test // Rename field type
     void test6() {
-        helper2('A', 'B')
+        helper('A', 'B')
     }
 
     @Test // Rename variable type in closure
     void test7() {
-        helper2('A', 'B')
+        helper('A', 'B')
     }
 
     @Test // Rename parameter type in closure
     void test8() {
-        helper2('A', 'B')
+        helper('A', 'B')
     }
 
     @Test // Rename variable type in closure assigned to field
     void test9() {
-        helper2('A', 'B')
+        helper('A', 'B')
     }
 
     @Test // Rename parameter type in closure assigned to field
     void test10() {
-        helper2('A', 'B')
+        helper('A', 'B')
     }
 
     @Test // Rename type literal static context
     void test11() {
-        helper2('A', 'B')
+        helper('A', 'B')
     }
 
     @Test // Rename type literal non-static context
     void test12() {
-        helper2('A', 'B')
+        helper('A', 'B')
     }
 
     @Test // Rename type and constructors
     void test13() {
-        helper2('A', 'B')
+        helper('A', 'B')
     }
 
     @Test // some funky things with annotations
     void testAnnotation1() {
-        helper2('A', 'B')
+        helper('A', 'B')
     }
 
     @Test
     void testAnnotation2() {
-        helper2('A', 'B')
+        helper('A', 'B')
     }
 
     @Test
     void testAnnotation3() {
-        helper2('A', 'B')
+        helper('A', 'B')
     }
 
     @Test
@@ -236,7 +232,7 @@ final class RenameTypeTests extends RefactoringTestSuite {
         String type = 'A'
         ICompilationUnit cu = createCUfromTestFile(p2, type, folder)
 
-        helper2('A', 'B')
+        helper('A', 'B')
 
         assertEqualLines('invalid renaming in p2.A', getFileContents(getOutputTestFileName(type, folder)), cu.source)
     }
@@ -248,34 +244,42 @@ final class RenameTypeTests extends RefactoringTestSuite {
         String type = 'A'
         ICompilationUnit cu = createCUfromTestFile(p2, type, folder)
 
-        helper2('A', 'B')
+        helper('A', 'B')
 
         assertEqualLines('invalid renaming in p2.A', getFileContents(getOutputTestFileName(type, folder)), cu.source)
     }
 
     @Test
     void testEnum2() {
-        helper2('A', 'B')
+        helper('A', 'B')
     }
 
     @Test
     void testGenerics1() {
-        helper2('A', 'B')
+        helper('A', 'B')
     }
 
     @Test
     void testGenerics2() {
-        helper2('A', 'B')
+        helper('A', 'B')
     }
 
     @Test
     void testGenerics3() {
-        helper2('A', 'B')
+        helper('A', 'B')
     }
 
     @Test
     void testGenerics4() {
-        helper2('A', 'B')
+        helper('A', 'B')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/442
+    void testGenerics5() {
+        ICompilationUnit unit = createCUfromTestFile(packageP, 'C')
+
+        helper('A', 'B')
+        assertEqualLines(getFileContents(getOutputTestFileName('C')), unit.source)
     }
 
     @Test

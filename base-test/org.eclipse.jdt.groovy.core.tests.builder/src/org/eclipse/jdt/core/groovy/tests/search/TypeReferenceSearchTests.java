@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -230,6 +230,27 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
         assertEquals("Should find no matches", 0, matches.size());
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/442
+    public void testGenerics1() throws Exception {
+        String firstContents =
+            "package a\n" +
+            "class First {\n" +
+            "}\n";
+
+        String secondContents =
+            "package a\n" +
+            "class Second {\n" +
+            "  List<First> firsts\n" +
+            "}\n";
+
+        List<SearchMatch> matches = getAllMatches(firstContents, secondContents, "a", "a", false);
+        assertEquals("Wrong count", 1, matches.size());
+
+        SearchMatch match = matches.get(0);
+        assertEquals("Wrong length", "First".length(), match.getLength());
+        assertEquals("Wrong offset", secondContents.indexOf("First"), match.getOffset());
+    }
+
     @Test
     public void testInnerTypes1() throws Exception {
         String firstContents =
@@ -400,12 +421,12 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
         StringBuilder msg = new StringBuilder();
         for (Object expected : expectedSet) {
             if (!actualSet.contains(expected)) {
-                msg.append("Expected but not found: "+expected+"\n");
+                msg.append("Expected but not found: " + expected + "\n");
             }
         }
         for (Object actual : actualSet) {
             if (!expectedSet.contains(actual)) {
-                msg.append("Found but not expected: "+actual+"\n");
+                msg.append("Found but not expected: " + actual + "\n");
             }
         }
         if (!"".equals(msg.toString())) {
