@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,245 +16,247 @@
 package org.codehaus.jdt.groovy.integration.internal;
 
 import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
+import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
-import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
-import org.codehaus.groovy.ast.stmt.Statement;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.jdt.groovy.core.Activator;
-import org.eclipse.jdt.groovy.core.util.GroovyUtils;
+import org.eclipse.jdt.groovy.core.util.DepthFirstVisitor;
 import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
-import org.eclipse.jdt.internal.compiler.ast.ImportReference;
-import org.eclipse.jdt.internal.core.util.Util;
 
 /**
- * Visits a ModuleNode and passes it to an indexing element requestor, thus adding this class to the Java indexes
+ * Visits a {@link ModuleNode} and passes it to an indexing element requestor,
+ * thus adding this class to the Java indexes.
  */
-public class GroovyIndexingVisitor extends ClassCodeVisitorSupport {
+public class GroovyIndexingVisitor extends DepthFirstVisitor {
 
-    private ISourceElementRequestor requestor;
-
-    // used for GRECLIPSE-741, remove when issue is solved
-    private ModuleNode module;
+    private final ISourceElementRequestor requestor;
 
     public GroovyIndexingVisitor(ISourceElementRequestor requestor) {
         this.requestor = requestor;
     }
 
-    void doVisit(ModuleNode node, ImportReference pkg) {
-        if (node == null) {
-            // there is an unrecoverable compile problem.
-            return;
-        }
+    // NOTE: Expected entry point is visitModule(ModuleNode).
 
-        // used for GRECLIPSE-741, remove when issue is solved
-        module = node;
-        try {
-            this.visitImports(node);
-
-            for (ClassNode clazz : (Iterable<ClassNode>) node.getClasses()) {
-                this.visitClass(clazz);
-            }
-        } catch (RuntimeException e) {
-            Util.log(e);
+    @Override
+    public void visitImport(ImportNode node) {
+        if (node.getType() != null) {
+            visitTypeReference(node.getType(), false, true);
         }
+        String fieldName = node.getFieldName();
+        if (fieldName != null) {
+            requestor.acceptUnknownReference(fieldName.toCharArray(), node.getTypeEnd() + 1);
+        }
+        super.visitImport(node);
     }
 
     @Override
-    public void visitImports(ModuleNode node) {
-        if (node != null) {
-            for (ImportNode importNode : GroovyUtils.getAllImportNodes(node)) {
-                visitAnnotations(importNode);
-                if (importNode.getType() != null) {
-                    handleType(importNode.getType(), false, true);
-                }
-                String importFieldName = importNode.getFieldName();
-                if (importFieldName != null) {
-                    requestor.acceptUnknownReference(importFieldName.toCharArray(), 0);
-                }
+    public void visitClass(ClassNode node) {
+        if (!node.isSynthetic()) {
+            visitTypeReference(node, false, false);
+            visitTypeReference(node.getSuperClass(), false, true);
+            for (ClassNode face : node.getInterfaces()) {
+                visitTypeReference(face, false, true);
             }
         }
-    }
-
-    @Override
-    public void visitMethodCallExpression(MethodCallExpression call) {
-        super.visitMethodCallExpression(call);
-        String methodStr = call.getMethodAsString();
-        if (methodStr == null)
-            return;
-
-        char[] methodName = methodStr.toCharArray();
-        int start = call.getStart();
-        // also could be a field reference
-        requestor.acceptFieldReference(methodName, start);
-        // we don't know how many arguments the method has, so go up to 7.
-        for (int i = 0; i < 7; i++) {
-            requestor.acceptMethodReference(methodName, i, start);
-        }
-    }
-
-    @Override
-    public void visitFieldExpression(FieldExpression expression) {
-        super.visitFieldExpression(expression);
-        requestor.acceptFieldReference(expression.getFieldName().toCharArray(), expression.getStart());
-    }
-
-    @Override
-    public void visitConstantExpression(ConstantExpression expression) {
-        if (!(expression.isTrueExpression() || expression.isFalseExpression() || expression.isNullExpression() || expression
-                .isEmptyStringExpression())) {
-            char[] constName = expression.getValue().toString().toCharArray();
-            int start = expression.getStart();
-            requestor.acceptFieldReference(constName, start);
-            // also could be a method reference
-            // we don't know how many arguments the method has, so go up to 7.
-            for (int i = 0; i < 7; i++) {
-                requestor.acceptMethodReference(constName, i, start);
-            }
-        }
-        super.visitConstantExpression(expression);
-    }
-
-    @Override
-    public void visitCastExpression(CastExpression expression) {
-        handleType(expression.getType(), false, true);
-    }
-
-    @Override
-    public void visitClassExpression(ClassExpression expression) {
-        handleType(expression.getType(), false, true);
-    }
-
-    @Override
-    public void visitConstructorCallExpression(ConstructorCallExpression call) {
-        super.visitConstructorCallExpression(call);
-        for (int i = 0; i < 10; i++) {
-            requestor.acceptConstructorReference(call.getType().getName().toCharArray(), i, call.getStart());
-        }
-        // handleType(call.getType(), false);
-    }
-
-    @Override
-    public void visitDeclarationExpression(DeclarationExpression expression) {
-        handleType(expression.getLeftExpression().getType(), false, true);
-        expression.getRightExpression().visit(this);
-        // super.visitDeclarationExpression(expression);
-    }
-
-    @Override
-    public void visitVariableExpression(VariableExpression expression) {
-        requestor.acceptUnknownReference(expression.getName().toCharArray(), expression.getStart());
+        super.visitClass(node);
     }
 
     @Override
     public void visitField(FieldNode node) {
-        // handleType(node.getType(), false);
+        if (node.getType() != node.getDeclaringClass() && node.getEnd() > 0) {
+            visitTypeReference(node.getType(), false, true);
+        }
         super.visitField(node);
     }
 
     @Override
     public void visitMethod(MethodNode node) {
-        if (!node.isSynthetic()) {
-            handleType(node.getReturnType(), false, true);
-            for (Parameter param : node.getParameters()) {
-                handleType(param.getType(), false, true);
+        if (node != runMethod && node.getEnd() > 0) {
+            if (isNotEmpty(node.getGenericsTypes())) {
+                visitTypeParameters(node.getGenericsTypes(), null);
+            }
+            visitTypeReference(node.getReturnType(), false, true);
+
+            if (isNotEmpty(node.getExceptions())) {
+                for (ClassNode type : node.getExceptions()) {
+                    visitTypeReference(type, false, true);
+                }
             }
         }
         super.visitMethod(node);
     }
 
     @Override
-    public void visitClass(ClassNode node) {
-        if (!node.isSynthetic()) {
-            handleType(node, false, false);
-            handleType(node.getSuperClass(), false, true);
-            for (ClassNode impls : node.getInterfaces()) {
-                handleType(impls, false, true);
-            }
-            // handleType(node, node.isAnnotationDefinition(), false);
-        }
-        // don't do a super call because it revisits the imports and packages
-        // super.visitClass(node);
-        visitAnnotations(node);
-        node.visitContents(this);
-        for (Statement element : (Iterable<Statement>) node.getObjectInitializerStatements()) {
-            element.visit(this);
-        }
-    }
-
-    @Override
-    public void visitClosureExpression(ClosureExpression node) {
-        if (node.getParameters() != null) {
-            for (Parameter param : node.getParameters()) {
-                handleType(param.getType(), false, true);
-            }
-        }
-        super.visitClosureExpression(node);
-    }
-
-    @Override
     protected void visitAnnotation(AnnotationNode node) {
-        handleType(node.getClassNode(), true, true);
+        visitTypeReference(node.getClassNode(), true, true);
         super.visitAnnotation(node);
     }
 
-    // may not be resolved
-    private void handleType(ClassNode node, boolean isAnnotation, boolean useQualifiedName) {
-        if (node == null) {
-            // GRECLIPSE-741
-            Util.log(new Status(IStatus.WARNING, Activator.PLUGIN_ID, "GRECLIPSE-741: module: " + module.getDescription(),
-                    new RuntimeException()));
-            return;
+    @Override
+    protected void visitParameter(Parameter parameter) {
+        visitTypeReference(parameter.getType(), false, true);
+        super.visitParameter(parameter);
+    }
+
+    // expressions:
+
+    @Override
+    public void visitArrayExpression(ArrayExpression expression) {
+        if (expression.getType() != expression.getType().redirect()) {
+            visitTypeReference(expression.getType(), false, true);
         }
+        super.visitArrayExpression(expression);
+    }
+
+    @Override
+    public void visitCastExpression(CastExpression expression) {
+        // NOTE: expression.getType() may refer to ClassNode behind "this" or "super"
+        if (expression.getEnd() > 0 && expression.getStart() == expression.getType().getStart()) {
+            visitTypeReference(expression.getType(), false, true);
+        }
+        super.visitCastExpression(expression);
+    }
+
+    @Override
+    public void visitClassExpression(ClassExpression expression) {
+        visitTypeReference(expression.getType(), false, true);
+        super.visitClassExpression(expression);
+    }
+
+    @Override
+    public void visitConstantExpression(ConstantExpression expression) {
+        if (!(expression.isNullExpression() || expression.isTrueExpression() || expression.isFalseExpression() || expression.isEmptyStringExpression())) {
+            if (expression instanceof AnnotationConstantExpression) {
+                // ex: @interface X { Y default @Y(...) } -- expression is "@Y(...)"
+                visitTypeReference(expression.getType(), true, true);
+            }
+
+            char[] constName = expression.getValue().toString().toCharArray();
+            requestor.acceptFieldReference(constName, expression.getStart());
+            // also could be a method reference
+            // we don't know how many arguments the method has, so go up to 7
+            for (int i = 0; i < 7; i += 1) {
+                requestor.acceptMethodReference(constName, i, expression.getStart());
+            }
+        }
+        super.visitConstantExpression(expression);
+    }
+
+    @Override
+    public void visitConstructorCallExpression(ConstructorCallExpression expression) {
+        char[] typeName = expression.getType().getName().toCharArray();
+        // we don't know how many arguments the ctor has, so go up to 9
+        for (int i = 0; i < 10; i += 1) {
+            requestor.acceptConstructorReference(typeName, i, expression.getStart());
+        }
+        //if (!expression.isUsingAnonymousInnerClass()) {
+        //    visitTypeReference(call.getType(), false);
+        //}
+        super.visitConstructorCallExpression(expression);
+    }
+
+    @Override
+    public void visitDeclarationExpression(DeclarationExpression expression) {
+        visitTypeReference(expression.getLeftExpression().getType(), false, true);
+        visitAnnotations(expression.getAnnotations());
+        expression.getRightExpression().visit(this);
+        //super.visitDeclarationExpression(expression);
+    }
+
+    @Override
+    public void visitFieldExpression(FieldExpression expression) {
+        requestor.acceptFieldReference(expression.getFieldName().toCharArray(), expression.getStart());
+        super.visitFieldExpression(expression);
+    }
+
+    @Override
+    public void visitMethodCallExpression(MethodCallExpression expression) {
+        String methodStr = expression.getMethodAsString();
+        if (methodStr != null) {
+            char[] methodName = methodStr.toCharArray();
+            // also could be a field reference
+            requestor.acceptFieldReference(methodName, expression.getStart());
+            // we don't know how many arguments the method has, so go up to 7
+            for (int i = 0; i < 7; i += 1) {
+                requestor.acceptMethodReference(methodName, i, expression.getStart());
+            }
+        }
+        if (expression.isUsingGenerics() && isNotEmpty(expression.getGenericsTypes())) {
+            visitTypeParameters(expression.getGenericsTypes(), null);
+        }
+        super.visitMethodCallExpression(expression);
+    }
+
+    @Override
+    public void visitStaticMethodCallExpression(StaticMethodCallExpression expression) {
+        ClassNode ownerType = expression.getOwnerType();
+        if (ownerType != ownerType.redirect()) {
+            visitTypeReference(ownerType, false, true);
+        }
+        super.visitStaticMethodCallExpression(expression);
+    }
+
+    @Override
+    public void visitVariableExpression(VariableExpression expression) {
+        requestor.acceptUnknownReference(expression.getName().toCharArray(), expression.getStart());
+        //super.visitVariableExpression(expression);
+    }
+
+    //--------------------------------------------------------------------------
+
+    private void visitTypeReference(ClassNode type, boolean isAnnotation, boolean useQualifiedName) {
         if (isAnnotation) {
-            requestor.acceptAnnotationTypeReference(splitName(node, useQualifiedName), node.getStart(), node.getEnd());
+            requestor.acceptAnnotationTypeReference(splitName(type, useQualifiedName), type.getStart(), type.getEnd());
         } else {
-            ClassNode componentType = node.getComponentType();
-            requestor.acceptTypeReference(splitName(componentType != null ? componentType : node, useQualifiedName),
-                    node.getStart(), node.getEnd());
+            ClassNode componentType = type.getComponentType();
+            requestor.acceptTypeReference(splitName(componentType != null ? componentType : type, useQualifiedName), type.getStart(), type.getEnd());
         }
-        if (node.isUsingGenerics() && node.getGenericsTypes() != null) {
-            for (GenericsType gen : node.getGenericsTypes()) {
-                ClassNode lowerBound = gen.getLowerBound();
-                if (lowerBound != null) {
-                    handleType(lowerBound, lowerBound.isAnnotationDefinition(), true);
-                }
-                if (gen.getUpperBounds() != null) {
-                    for (ClassNode upper : gen.getUpperBounds()) {
-                        // handle enums where the upper bound is the same as the type
-                        if (!upper.getName().equals(node.getName())) {
-                            handleType(upper, upper.isAnnotationDefinition(), true);
-                        }
+        visitTypeParameters(type);
+    }
+
+    private void visitTypeParameters(ClassNode type) {
+        if (type.isUsingGenerics() && isNotEmpty(type.getGenericsTypes())) {
+            visitTypeParameters(type.getGenericsTypes(), type.getName());
+        }
+    }
+
+    private void visitTypeParameters(GenericsType[] generics, String typeName) {
+        for (GenericsType generic : generics) {
+            if (generic.getType() != null && generic.getType().getName().charAt(0) != '?') {
+                visitTypeReference(generic.getType(), generic.getType().isAnnotationDefinition(), true);
+            }
+            if (generic.getLowerBound() != null) {
+                visitTypeReference(generic.getLowerBound(), generic.getLowerBound().isAnnotationDefinition(), true);
+            }
+            if (generic.getUpperBounds() != null) {
+                for (ClassNode bound : generic.getUpperBounds()) {
+                    // handle enums where the upper bound is the same as the type
+                    if (!bound.getName().equals(typeName)) {
+                        visitTypeReference(bound, bound.isAnnotationDefinition(), true);
                     }
-                }
-                ClassNode genType = gen.getType();
-                if (genType != null && gen.getName().charAt(0) != '?') {
-                    handleType(genType, genType.isAnnotationDefinition(), true);
                 }
             }
         }
     }
 
-    private char[][] splitName(ClassNode node, boolean useQualifiedName) {
-        String name = useQualifiedName ? node.getName() : node.getNameWithoutPackage();
+    private static char[][] splitName(ClassNode type, boolean useQualifiedName) {
+        String name = useQualifiedName ? type.getName() : type.getNameWithoutPackage();
         String[] nameArr = name.split("\\.");
         char[][] nameCharArr = new char[nameArr.length][];
-        for (int i = 0; i < nameArr.length; i++) {
+        for (int i = 0; i < nameArr.length; i += 1) {
             nameCharArr[i] = nameArr[i].toCharArray();
         }
         return nameCharArr;
