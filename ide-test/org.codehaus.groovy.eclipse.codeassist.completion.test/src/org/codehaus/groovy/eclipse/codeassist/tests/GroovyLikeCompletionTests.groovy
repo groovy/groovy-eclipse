@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,13 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import groovy.transform.NotYetImplemented
+
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -315,27 +316,31 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
     void testNamedArguments0() {
         groovyPrefs.setValue(GroovyContentAssist.NAMED_ARGUMENTS, true)
 
-        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, 'clone'))
-        checkReplacementString(proposals, 'clone()', 1)
+        checkUniqueProposal(SCRIPTCONTENTS, 'clone', 'clone()')
     }
 
-    @Ignore @Test
+    @Test
     void testNamedArguments1() {
         groovyPrefs.setValue(GroovyContentAssist.NAMED_ARGUMENTS, true)
 
-        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, 'new Foo'))
-        checkReplacementString(proposals, '(first:first, second:second)', 1)
+        checkUniqueProposal(SCRIPTCONTENTS - ~/\(\)\s*$/, 'new Foo', 'Foo(Object first, Object second)', '(first: first, second: second)')
     }
 
-    @Ignore @Test
+    @Test
     void testNamedArguments2() {
         groovyPrefs.setValue(GroovyContentAssist.NAMED_ARGUMENTS, true)
 
-        ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, 'new Foo'))
-        checkReplacementString(proposals, '(third:third)', 1)
+        checkUniqueProposal(SCRIPTCONTENTS - ~/\(\)\s*$/, 'new Foo', 'Foo(int third)', '(third: third)')
     }
 
-    @Ignore @Test // GRECLIPSE-268
+    @Test
+    void testNamedArguments3() {
+        groovyPrefs.setValue(GroovyContentAssist.NAMED_ARGUMENTS, true)
+
+        checkUniqueProposal((SCRIPTCONTENTS - ~/\s*$/) + '.', 'new Foo().', 'method3', 'method3(arg: arg, c1: { it }) { it }')
+    }
+
+    @NotYetImplemented @Test // GRECLIPSE-268
     void testGString1() {
         ICompletionProposal[] proposals = createProposalsAtOffset('""""""', 3)
         assert proposals.length == 0 : 'Should not have found any proposals, but found:\n' + printProposals(proposals)
@@ -356,7 +361,6 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
     @Test // GRECLIPSE-268
     void testGString4() {
         String contents = 'def flarb;\n"""${flarb}"""'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '${flarb'))
-        checkReplacementString(proposals, 'flarb', 1)
+        checkUniqueProposal(contents, '${flarb', 'flarb')
     }
 }
