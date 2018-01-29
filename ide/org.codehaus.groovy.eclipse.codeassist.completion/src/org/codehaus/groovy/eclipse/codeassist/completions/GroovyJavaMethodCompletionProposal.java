@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.processors.GroovyCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOptions;
 import org.eclipse.jdt.core.CompletionProposal;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
@@ -52,21 +53,9 @@ import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
 
 public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProposal {
 
-    private static final char[] CLOSURE_TYPE_NAME = "Closure".toCharArray();
+    protected final String contributor;
 
-    private final ProposalFormattingOptions options;
-
-    private final String contributor;
-
-    // if true, shows the context only and does not perform completion
-    private boolean contextOnly;
-
-    private boolean methodPointer;
-
-    private int[] fArgumentOffsets;
-    private int[] fArgumentLengths;
-    private IRegion fSelectedRegion;
-    private ImportRewrite fImportRewite;
+    protected final ReplacementPreferences preferences;
 
     public GroovyJavaMethodCompletionProposal(GroovyCompletionProposal proposal, JavaContentAssistInvocationContext context, ProposalFormattingOptions options) {
         this(proposal, context, options, null);
@@ -75,24 +64,39 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     public GroovyJavaMethodCompletionProposal(GroovyCompletionProposal proposal, JavaContentAssistInvocationContext context, ProposalFormattingOptions options, String contributor) {
         super(proposal, context);
 
-        this.options = options;
         this.contributor = contributor;
+        this.preferences = new ReplacementPreferences(context.getProject(), getFormatterPrefs(), options);
+
         this.setRelevance(proposal.getRelevance());
         this.setProposalInfo(new MethodProposalInfo(context.getProject(), proposal));
         this.setTriggerCharacters(!proposal.hasParameters() ? ProposalUtils.METHOD_TRIGGERS : ProposalUtils.METHOD_WITH_ARGUMENTS_TRIGGERS);
     }
 
+    protected ImportRewrite fImportRewite;
+
     public void setImportRewite(ImportRewrite importRewite) {
         fImportRewite = importRewite;
     }
 
+    /** If {@code true}, shows the context only and does not perform completion. */
+    protected boolean fContextOnly;
+
     public void contextOnly() {
-        contextOnly = true;
+        fContextOnly = true;
     }
+
+    // initialized during application
+    protected boolean fMethodPointer;
+    protected int[] fArgumentOffsets;
+    protected int[] fArgumentLengths;
+    protected IRegion fSelectedRegion;
+
+    //--------------------------------------------------------------------------
 
     @Override
     public void apply(IDocument document, char trigger, int offset) {
-        methodPointer = ProposalUtils.isMethodPointerCompletion(document, getReplacementOffset());
+        fMethodPointer = ProposalUtils.isMethodPointerCompletion(document, getReplacementOffset());
+        ReflectionUtils.setPrivateField(LazyJavaCompletionProposal.class, "fReplacementStringComputed", this, Boolean.FALSE);
 
         super.apply(document, trigger, offset);
 
@@ -105,16 +109,13 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
     @Override
     public Point getSelection(IDocument document) {
-        if (fSelectedRegion == null)
-            return new Point(getReplacementOffset(), 0);
-
-        return new Point(fSelectedRegion.getOffset(), fSelectedRegion.getLength());
+        return (fSelectedRegion == null ? null : new Point(fSelectedRegion.getOffset(), fSelectedRegion.getLength()));
     }
 
     @Override
     protected StyledString computeDisplayString() {
         StyledString displayString = super.computeDisplayString();
-        if (contributor != null && contributor.trim().length() > 0) {
+        if (contributor != null && !contributor.trim().isEmpty()) {
             displayString.append(new StyledString(" (" + contributor.trim() + ")", StyledString.DECORATIONS_STYLER));
         }
         return displayString;
@@ -155,14 +156,14 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
     @Override
     protected String computeReplacementString() {
-        if (contextOnly) {
+        if (fContextOnly) {
             return "";
         }
 
         char[] proposalName = fProposal.getName();
         boolean hasWhitespace = ProposalUtils.hasWhitespace(proposalName);
 
-        if (methodPointer) {
+        if (fMethodPointer) {
             // complete the name only for a method pointer expression
             return String.valueOf(!hasWhitespace ? proposalName : CharOperation.concat('"', proposalName, '"'));
         }
@@ -177,14 +178,12 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         }
 
         StringBuffer buffer = new StringBuffer();
-        char[] newProposalName = !hasWhitespace ? proposalName : CharOperation.concat('"', proposalName, '"');
-
-        fProposal.setName(newProposalName);
+        fProposal.setName(!hasWhitespace ? proposalName : CharOperation.concat('"', proposalName, '"'));
         appendMethodNameReplacement(buffer);
         fProposal.setName(proposalName);
 
         if (!hasParameters()) {
-            if (getFormatterPrefs().inEmptyList) {
+            if (preferences.insertSpaceBetweenEmptyParensInMethodCall) {
                 buffer.append(SPACE);
             }
             buffer.append(RPAREN);
@@ -192,7 +191,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
             int indexOfLastClosure = -1;
             char[][] regularParameterTypes = ((GroovyCompletionProposal) fProposal).getRegularParameterTypeNames();
             char[][] namedParameterTypes = ((GroovyCompletionProposal) fProposal).getNamedParameterTypeNames();
-            if (options.noParensAroundClosures) {
+            if (preferences.insertClosureAfterClosingParenInMethodCall) {
                 // need to check both regular and named parameters for closure
                 if (lastArgIsClosure(regularParameterTypes, namedParameterTypes)) {
                     indexOfLastClosure = regularParameterTypes.length + namedParameterTypes.length - 1;
@@ -200,71 +199,83 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
                 // remove the opening paren only if there is a single closure parameter
                 if (indexOfLastClosure == 0) {
-                    buffer.replace(buffer.length() - 1, buffer.length(), "");
+                    buffer.deleteCharAt(buffer.length() - 1);
 
                     // add space if not already there would be added by call to appendMethodNameReplacement
-                    if (!getFormatterPrefs().beforeOpeningParen) {
+                    if (!preferences.insertSpaceBeforeOpeningParenInMethodCall) {
                         buffer.append(SPACE);
                     }
                 }
-            } else if (getFormatterPrefs().afterOpeningParen) {
+            } else if (preferences.insertSpaceAfterOpeningParenInMethodCall) {
                 buffer.append(SPACE);
             }
 
             // now add the parameters; named parameters go first
             char[][] namedParameterNames = ((GroovyCompletionProposal) fProposal).getNamedParameterNames();
             char[][] regularParameterNames = ((GroovyCompletionProposal) fProposal).getRegularParameterNames();
-            int namedCount = namedParameterNames.length;
-            int argCount = regularParameterNames.length;
-            int allCount = argCount + namedCount;
+            int namedCount = namedParameterNames.length, totalCount = regularParameterNames.length + namedCount;
 
-            fArgumentOffsets = new int[allCount];
-            fArgumentLengths = new int[allCount];
+            fArgumentOffsets = new int[totalCount];
+            fArgumentLengths = new int[totalCount];
 
-            for (int i = 0; i < allCount; i += 1) {
+            for (int i = 0; i < totalCount; i += 1) {
+                char[] nextName, nextType;
                 // check for named args (either all of them, or the explicitly named ones)
-                char[] nextName;
-                char[] nextTypeName;
-                if (i < namedCount) { // named arg
+                if (i < namedCount) {
                     nextName = namedParameterNames[i];
-                    nextTypeName = namedParameterNames[i];
+                    nextType = namedParameterTypes[i];
                 } else {
                     nextName = regularParameterNames[i - namedCount];
-                    nextTypeName = regularParameterTypes[i - namedCount];
+                    nextType = regularParameterTypes[i - namedCount];
                 }
 
-                if (options.useNamedArguments || i < namedCount) {
-                    buffer.append(nextName).append(":");
+                if ((preferences.useNamedArguments || i < namedCount) && i != indexOfLastClosure) {
+                    buffer.append(nextName);
+                    if (preferences.insertSpaceBeforeColonInNamedArgument) {
+                        buffer.append(SPACE);
+                    }
+                    buffer.append(":");
+                    if (preferences.insertSpaceAfterColonInNamedArgument) {
+                        buffer.append(SPACE);
+                    }
                 }
-                fArgumentOffsets[i] = buffer.length();
-                if (i == 0) {
-                    setCursorPosition(buffer.length());
-                }
-                // handle the argument name
-                if (options.useBracketsForClosures && CharOperation.equals(nextTypeName, CLOSURE_TYPE_NAME)) {
-                    fArgumentOffsets[i] = buffer.length() + 2;
+
+                if (preferences.useClosureLiteral && CharOperation.equals(nextType, CLOSURE_TYPE_NAME)) {
+                    buffer.append("{");
+                    if (preferences.insertSpaceAfterOpeningBraceInClosure) {
+                        buffer.append(SPACE);
+                    }
+
+                    fArgumentOffsets[i] = buffer.length();
                     fArgumentLengths[i] = 2; // select "it"
-                    buffer.append("{ it }");
+                    buffer.append("it");
+
+                    if (preferences.insertSpaceBeforeClosingBraceInClosure) {
+                        buffer.append(SPACE);
+                    }
+                    buffer.append("}");
                 } else {
                     fArgumentOffsets[i] = buffer.length();
                     fArgumentLengths[i] = nextName.length;
                     buffer.append(nextName);
                 }
 
-                if (i == indexOfLastClosure - 1 || (i != indexOfLastClosure && i == allCount - 1)) {
-                    if (getFormatterPrefs().beforeClosingParen) {
+                if (i == (indexOfLastClosure - 1) || (i != indexOfLastClosure && i == (totalCount - 1))) {
+                    if (preferences.insertSpaceBeforeClosingParenInMethodCall) {
                         buffer.append(SPACE);
                     }
                     buffer.append(RPAREN);
                     if (i == indexOfLastClosure - 1) {
                         buffer.append(SPACE);
                     }
-                } else if (i < allCount - 1) {
-                    if (getFormatterPrefs().beforeComma)
+                } else if (i < (totalCount - 1)) {
+                    if (preferences.insertSpaceBeforeCommaInMethodCallArgs) {
                         buffer.append(SPACE);
+                    }
                     buffer.append(COMMA);
-                    if (getFormatterPrefs().afterComma)
+                    if (preferences.insertSpaceAfterCommaInMethodCallArgs) {
                         buffer.append(SPACE);
+                    }
                 }
             }
         }
@@ -272,9 +283,6 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         return buffer.toString();
     }
 
-    /**
-     * @see org.eclipse.jdt.internal.ui.text.java.JavaMethodCompletionProposal#needsLinkedMode()
-     */
     @Override
     protected boolean needsLinkedMode() {
         return super.needsLinkedMode();
@@ -315,19 +323,21 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         }
     }
 
+    //--------------------------------------------------------------------------
+
     /**
      * Returns the currently active Java editor, or <code>null</code> if it
      * cannot be determined.
      */
-    private static JavaEditor getJavaEditor() {
-        IEditorPart part= JavaPlugin.getActivePage().getActiveEditor();
+    protected static JavaEditor getJavaEditor() {
+        IEditorPart part = JavaPlugin.getActivePage().getActiveEditor();
         if (part instanceof JavaEditor) {
             return (JavaEditor) part;
         }
         return null;
     }
 
-    private static boolean lastArgIsClosure(char[][] regularParameterTypes, char[][] namedParameterTypes) {
+    protected static boolean lastArgIsClosure(char[][] regularParameterTypes, char[][] namedParameterTypes) {
         char[] lastArgType;
         if (namedParameterTypes != null && namedParameterTypes.length > 0) {
             lastArgType = namedParameterTypes[namedParameterTypes.length - 1];
@@ -338,5 +348,50 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         }
         // we should be comparing against a fully qualified type name, but it is not always available so a simple name is close enough
         return CharOperation.equals(lastArgType, CLOSURE_TYPE_NAME);
+    }
+
+    protected static final char[] CLOSURE_TYPE_NAME = "Closure".toCharArray();
+
+    //--------------------------------------------------------------------------
+
+    /**
+     * @see org.codehaus.groovy.eclipse.codeassist.proposals.ProposalFormattingOptions
+     * @see org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal.FormatterPrefs
+     */
+    protected static class ReplacementPreferences {
+
+        public ReplacementPreferences(IJavaProject project, FormatterPrefs prefs, ProposalFormattingOptions opts) {
+            insertSpaceBetweenEmptyParensInMethodCall = prefs.inEmptyList;
+            insertSpaceBeforeOpeningParenInMethodCall = prefs.beforeOpeningParen;
+            insertSpaceAfterOpeningParenInMethodCall = prefs.afterOpeningParen;
+            insertSpaceBeforeClosingParenInMethodCall = prefs.beforeClosingParen;
+            insertSpaceBeforeCommaInMethodCallArgs = prefs.beforeComma;
+            insertSpaceAfterCommaInMethodCallArgs = prefs.afterComma;
+
+            useClosureLiteral = opts.useBracketsForClosures;
+            insertSpaceAfterOpeningBraceInClosure = true; // TODO: Add formatter preference or read org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_OPENING_BRACE_IN_ARRAY_INITIALIZER
+            insertSpaceBeforeClosingBraceInClosure = true; // TODO: Add formatter preference or read org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_BEFORE_CLOSING_BRACE_IN_ARRAY_INITIALIZER
+            insertClosureAfterClosingParenInMethodCall = opts.noParensAroundClosures;
+
+            useNamedArguments = opts.useNamedArguments;
+            insertSpaceBeforeColonInNamedArgument = false; // TODO: Add formatter preference or read org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_BEFORE_COLON_IN_LABELED_STATEMENT
+            insertSpaceAfterColonInNamedArgument = true; // TODO: Add formatter preference or read org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_COLON_IN_LABELED_STATEMENT
+        }
+
+        public final boolean insertSpaceBetweenEmptyParensInMethodCall;
+        public final boolean insertSpaceBeforeOpeningParenInMethodCall;
+        public final boolean insertSpaceAfterOpeningParenInMethodCall ;
+        public final boolean insertSpaceBeforeClosingParenInMethodCall;
+        public final boolean insertSpaceBeforeCommaInMethodCallArgs;
+        public final boolean insertSpaceAfterCommaInMethodCallArgs ;
+
+        public final boolean useClosureLiteral;
+        public final boolean insertSpaceAfterOpeningBraceInClosure;
+        public final boolean insertSpaceBeforeClosingBraceInClosure;
+        public final boolean insertClosureAfterClosingParenInMethodCall;
+
+        public final boolean useNamedArguments;
+        public final boolean insertSpaceBeforeColonInNamedArgument;
+        public final boolean insertSpaceAfterColonInNamedArgument;
     }
 }
