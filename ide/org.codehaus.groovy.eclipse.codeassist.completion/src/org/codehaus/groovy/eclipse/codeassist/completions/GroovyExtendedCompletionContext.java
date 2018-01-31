@@ -24,7 +24,6 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
-import org.codehaus.jdt.groovy.internal.SimplifiedExtendedCompletionContext;
 import org.codehaus.jdt.groovy.model.GroovyProjectFacade;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
@@ -33,14 +32,16 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeHierarchy;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
+import org.eclipse.jdt.internal.codeassist.InternalExtendedCompletionContext;
 import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.LocalVariable;
 import org.eclipse.jdt.internal.core.SourceField;
 
-public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletionContext {
+public class GroovyExtendedCompletionContext extends InternalExtendedCompletionContext {
 
     private static class PropertyVariant extends SourceField implements IField {
         private final IMethod baseMethod;
@@ -81,6 +82,8 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
     private final Map<String, IJavaElement[]> visibleElements;
 
     public GroovyExtendedCompletionContext(ContentAssistContext context, VariableScope currentScope) {
+        super(null, null, null, null, null, null, null, null, null);
+
         this.context = context;
         this.currentScope = currentScope;
         this.visibleElements = new HashMap<>();
@@ -196,33 +199,50 @@ public class GroovyExtendedCompletionContext extends SimplifiedExtendedCompletio
         }
     }
 
-    private ClassNode toClassNode(String typeSignature) {
+    protected ClassNode toClassNode(char[] typeSignature) {
         int dims = Signature.getArrayCount(typeSignature);
-        String noArray = Signature.getElementType(typeSignature);
-        String qualifiedName = getQualifiedName(noArray);
-        ClassNode resolved;
-        if (typeSignature.length() == 1 + dims) { // is primitive type
-            resolved = /*ClassHelper.getWrapper(*/ClassHelper.make(qualifiedName)/*)*/;
+        char[] base = Signature.getElementType(typeSignature);
+        char[] name = CharOperation.concat(Signature.getSignatureQualifier(base), Signature.getSignatureSimpleName(base), '.');
+
+        ClassNode node;
+        if (typeSignature.length == (1 + dims)) { // primitive type
+            node = ClassHelper.make(String.valueOf(name));
         } else {
-            try {
-                resolved = context.unit.getModuleInfo(false).resolver.resolve(qualifiedName);
-            } catch (NullPointerException e) {
-                // ignore; likely DSL support not available
-                resolved = VariableScope.OBJECT_CLASS_NODE;
-            }
+            node = resolve(String.valueOf(name));
         }
-        for (int i = 0; i < dims; i += 1) {
-            resolved = resolved.makeArray();
+        while (dims-- > 0) {
+            node = node.makeArray();
         }
-        return resolved;
+        return node;
     }
 
-    private String getQualifiedName(String typeSignature) {
-        String qualifier = Signature.getSignatureQualifier(typeSignature);
-        String qualifiedName = Signature.getSignatureSimpleName(typeSignature);
-        if (qualifier.length() > 0) {
-            qualifiedName = qualifier + "." + qualifiedName;
+    protected ClassNode toClassNode(String typeSignature) {
+        int dims = Signature.getArrayCount(typeSignature);
+        String base = Signature.getElementType(typeSignature);
+        String name = Signature.getSignatureSimpleName(base);
+        String qual = Signature.getSignatureQualifier(base);
+        if (qual.length() > 0) {
+            name = qual + '.' + name;
         }
-        return qualifiedName;
+
+        ClassNode node;
+        if (typeSignature.length() == (1 + dims)) { // primitive type
+            node = ClassHelper.make(name);
+        } else {
+            node = resolve(name);
+        }
+        while (dims-- > 0) {
+            node = node.makeArray();
+        }
+        return node;
+    }
+
+    protected ClassNode resolve(String fullyQualifiedTypeName) {
+        try {
+            return context.unit.getModuleInfo(false).resolver.resolve(fullyQualifiedTypeName);
+        } catch (NullPointerException e) {
+            // ignore; likely DSL support not available
+            return VariableScope.OBJECT_CLASS_NODE;
+        }
     }
 }

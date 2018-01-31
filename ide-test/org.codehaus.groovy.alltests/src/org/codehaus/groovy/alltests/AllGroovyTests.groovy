@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,6 +46,7 @@ import org.junit.runners.Suite
     org.codehaus.groovy.eclipse.codeassist.tests.ProposalProviderAndFilterTests,
     org.codehaus.groovy.eclipse.codeassist.tests.RelevanceTests,
     org.codehaus.groovy.eclipse.codeassist.tests.StaticImportsCompletionTests,
+    org.codehaus.groovy.eclipse.codeassist.tests.TriggerCharacterCompletionTests,
     org.codehaus.groovy.eclipse.codeassist.tests.TypeCompletionTests,
     org.codehaus.groovy.eclipse.codeassist.tests.TypeCompletionTests2,
 
