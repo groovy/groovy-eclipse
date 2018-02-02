@@ -132,7 +132,15 @@ public class ParameterGuesserDelegate {
         if (proposal != null) {
             if (parameterProposals[parameterProposals.length - 1].getDisplayString().equals("null")) {
                 // replace 'null' proposal with simple value proposal
-                parameterProposals[parameterProposals.length - 1] = proposal;
+                if (VariableScope.CLOSURE_CLASS_NODE.getName().equals(expectedType) &&
+                        GroovyContentAssist.getDefault().getPreferenceStore().getBoolean(GroovyContentAssist.CLOSURE_BRACKETS)) {
+                    for (int i = (parameterProposals.length - 1); i > 0; i -=1) {
+                        parameterProposals[i] = parameterProposals[i - 1];
+                    }
+                    parameterProposals[0] = proposal;
+                } else {
+                    parameterProposals[parameterProposals.length - 1] = proposal;
+                }
             } else {
                 parameterProposals = (ICompletionProposal[]) ArrayUtils.add(parameterProposals, proposal);
             }

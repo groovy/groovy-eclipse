@@ -614,16 +614,8 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         relevanceMultiplier += computeRelevanceForCaseMatching(completionExpressionChars, simpleTypeName);
         proposal.setRelevance(Relevance.MEDIUM_HIGH.getRelevance(relevanceMultiplier));
 
-        GroovyJavaMethodCompletionProposal lazyProposal = new GroovyJavaMethodCompletionProposal(proposal, javaContext, getProposalOptions());
+        GroovyJavaMethodCompletionProposal lazyProposal = new GroovyJavaMethodCompletionProposal(proposal, getProposalOptions(), javaContext, null);
         lazyProposal.setImportRewite(groovyRewriter.getImportRewrite(monitor));
-        if (contextOnly) {
-            lazyProposal.contextOnly();
-        }
-        if (proposal.hasParameters()) {
-            lazyProposal.setTriggerCharacters(ProposalUtils.METHOD_WITH_ARGUMENTS_TRIGGERS);
-        } else {
-            lazyProposal.setTriggerCharacters(ProposalUtils.METHOD_TRIGGERS);
-        }
         return lazyProposal;
     }
 

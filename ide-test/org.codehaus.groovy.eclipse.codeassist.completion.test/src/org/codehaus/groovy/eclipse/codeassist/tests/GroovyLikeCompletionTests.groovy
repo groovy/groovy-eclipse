@@ -86,7 +86,6 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_BRACKETS, true)
         groovyPrefs.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
         groovyPrefs.setValue(GroovyContentAssist.NAMED_ARGUMENTS, false)
-        groovyPrefs.setValue(GroovyContentAssist.PARAMETER_GUESSING, false)
         setJavaPreference(PreferenceConstants.TYPEFILTER_ENABLED, 'com.sun.*;sun.*')
     }
 

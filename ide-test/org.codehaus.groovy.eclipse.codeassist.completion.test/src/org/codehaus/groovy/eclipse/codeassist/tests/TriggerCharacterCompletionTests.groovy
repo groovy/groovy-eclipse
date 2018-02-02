@@ -43,7 +43,6 @@ final class TriggerCharacterCompletionTests extends CompletionTestSuite {
             GroovyContentAssist.NAMED_ARGUMENTS,
             GroovyContentAssist.CLOSURE_BRACKETS,
             GroovyContentAssist.CLOSURE_NOPARENS,
-          //GroovyContentAssist.PARAMETER_GUESSING
         ]
 
         // produce every combination of all prefs, each paired with a boolean
@@ -88,15 +87,23 @@ final class TriggerCharacterCompletionTests extends CompletionTestSuite {
 
             StringBuilder closure = new StringBuilder()
             closure << '{'
-            if (true || isEnabled(FORMATTER_INSERT_SPACE_AFTER_OPENING_BRACE_IN_ARRAY_INITIALIZER)) {
+            if (isEnabled(FORMATTER_INSERT_SPACE_AFTER_OPENING_BRACE_IN_ARRAY_INITIALIZER)) {
                 closure << ' '
             }
             if (proposal.toString().contains('Closure')) {
                 closure << 'it'
             } else {
-                closure << 'o1, o2 ->'
+                closure << 'o1'
+                if (isEnabled(FORMATTER_INSERT_SPACE_BEFORE_COMMA_IN_ARRAY_INITIALIZER)) {
+                    closure << ' '
+                }
+                closure << ','
+                if (isEnabled(FORMATTER_INSERT_SPACE_AFTER_COMMA_IN_ARRAY_INITIALIZER)) {
+                    closure << ' '
+                }
+                closure << 'o2 ->'
             }
-            if (true || isEnabled(FORMATTER_INSERT_SPACE_BEFORE_CLOSING_BRACE_IN_ARRAY_INITIALIZER)) {
+            if (isEnabled(FORMATTER_INSERT_SPACE_BEFORE_CLOSING_BRACE_IN_ARRAY_INITIALIZER)) {
                 closure << ' '
             }
             closure << '}'
@@ -119,7 +126,14 @@ final class TriggerCharacterCompletionTests extends CompletionTestSuite {
                         expected << ' '
                     }
                     if (isEnabled(GroovyContentAssist.NAMED_ARGUMENTS)) {
-                        expected << (proposal.toString() =~ /(\w+)\)/)[0][1] << ': '
+                        expected << (proposal.toString() =~ /(\w+)\)/)[0][1]
+                        if (isEnabled(FORMATTER_INSERT_SPACE_BEFORE_COLON_IN_LABELED_STATEMENT)) {
+                            expected << ' '
+                        }
+                        expected << ':'
+                        if (isEnabled(FORMATTER_INSERT_SPACE_AFTER_COLON_IN_LABELED_STATEMENT)) {
+                            expected << ' '
+                        }
                     }
                     expected << closure
 
@@ -138,7 +152,14 @@ final class TriggerCharacterCompletionTests extends CompletionTestSuite {
                     expected << ' '
                 }
                 if (isEnabled(GroovyContentAssist.NAMED_ARGUMENTS)) {
-                    expected << 'mutate: '
+                    expected << 'mutate'
+                    if (isEnabled(FORMATTER_INSERT_SPACE_BEFORE_COLON_IN_LABELED_STATEMENT)) {
+                        expected << ' '
+                    }
+                    expected << ':'
+                    if (isEnabled(FORMATTER_INSERT_SPACE_AFTER_COLON_IN_LABELED_STATEMENT)) {
+                        expected << ' '
+                    }
                 }
                 expected << 'mutate'
 
@@ -163,7 +184,14 @@ final class TriggerCharacterCompletionTests extends CompletionTestSuite {
                             expected << ' '
                         }
                         if (isEnabled(GroovyContentAssist.NAMED_ARGUMENTS)) {
-                            expected << (proposal.toString() =~ /(\w+)\)/)[0][1] << ': '
+                            expected << (proposal.toString() =~ /(\w+)\)/)[0][1]
+                            if (isEnabled(FORMATTER_INSERT_SPACE_BEFORE_COLON_IN_LABELED_STATEMENT)) {
+                                expected << ' '
+                            }
+                            expected << ':'
+                            if (isEnabled(FORMATTER_INSERT_SPACE_AFTER_COLON_IN_LABELED_STATEMENT)) {
+                                expected << ' '
+                            }
                         }
                     } else {
                         if (isEnabled(FORMATTER_INSERT_SPACE_BEFORE_CLOSING_PAREN_IN_METHOD_INVOCATION)) {

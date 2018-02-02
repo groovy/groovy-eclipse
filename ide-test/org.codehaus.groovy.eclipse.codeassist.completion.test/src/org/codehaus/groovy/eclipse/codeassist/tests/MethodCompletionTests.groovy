@@ -22,23 +22,15 @@ import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.ast.stmt.ReturnStatement
 import org.codehaus.groovy.ast.stmt.Statement
-import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.core.compiler.CharOperation
 import org.eclipse.jdt.internal.codeassist.impl.AssistOptions
 import org.eclipse.jdt.ui.PreferenceConstants
-import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.contentassist.ICompletionProposal
-import org.junit.Before
 import org.junit.Test
 
 final class MethodCompletionTests extends CompletionTestSuite {
-
-    @Before
-    void setUp() {
-        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.PARAMETER_GUESSING, false)
-    }
 
     private List<MethodNode> delegateTestParameterNames(GroovyCompilationUnit unit) {
         waitForIndex()
@@ -404,7 +396,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'comp'))
         proposalExists(proposals, 'compile', 2)
 
-        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'compile(String regex)'), '''\
+        applyProposalAndCheck(findFirstProposal(proposals, 'compile(String regex)'), '''\
             |import static java.util.regex.Pattern.compile
             |
             |compile(regex)
@@ -433,7 +425,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'comp'))
         proposalExists(proposals, 'compile', 2)
 
-        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'compile(String regex)'), '''\
+        applyProposalAndCheck(findFirstProposal(proposals, 'compile(String regex)'), '''\
             |import static java.util.regex.Pattern.compile
             |
             |compile(regex)
@@ -451,7 +443,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
             ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'comp'))
             proposalExists(proposals, 'compile', 2)
 
-            applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'compile(String regex)'), '''\
+            applyProposalAndCheck(findFirstProposal(proposals, 'compile(String regex)'), '''\
                 |import java.util.regex.Pattern
                 |
                 |Pattern.compile(regex)
@@ -472,7 +464,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'comp'))
         proposalExists(proposals, 'compile', 2)
 
-        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'compile(String regex)'), '''\
+        applyProposalAndCheck(findFirstProposal(proposals, 'compile(String regex)'), '''\
             java.util.regex.Pattern.compile(regex)
             '''.stripIndent())
     }
@@ -483,27 +475,16 @@ final class MethodCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'isE'))
         proposalExists(proposals, 'isEmpty', 1)
 
-        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'isEmpty'), 'String.&isEmpty')
+        applyProposalAndCheck(findFirstProposal(proposals, 'isEmpty'), 'String.&isEmpty')
     }
 
     @Test
     void testMethodPointer2() {
-        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.PARAMETER_GUESSING, true)
-
-        String contents = 'String.&isE'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'isE'))
-        proposalExists(proposals, 'isEmpty', 1)
-
-        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'isEmpty'), 'String.&isEmpty')
-    }
-
-    @Test
-    void testMethodPointer3() {
         String contents = 'String.&  isE'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'isE'))
         proposalExists(proposals, 'isEmpty', 1)
 
-        applyProposalAndCheck(new Document(contents), findFirstProposal(proposals, 'isEmpty'), 'String.&  isEmpty')
+        applyProposalAndCheck(findFirstProposal(proposals, 'isEmpty'), 'String.&  isEmpty')
     }
 
     @Test

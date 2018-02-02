@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import org.eclipse.jdt.internal.corext.util.JavaConventionsUtil;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.InputDialog;
+import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.ListEditor;
 import org.eclipse.jface.window.Window;
@@ -40,6 +41,8 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.eclipse.ui.dialogs.PreferenceLinkArea;
+import org.eclipse.ui.preferences.IWorkbenchPreferenceContainer;
 
 public class ContentAssistPreferencesPage extends FieldEditorOverlayPage implements IWorkbenchPreferencePage {
 
@@ -203,8 +206,6 @@ public class ContentAssistPreferencesPage extends FieldEditorOverlayPage impleme
 
         addField(new BooleanFieldEditor(GroovyContentAssist.NAMED_ARGUMENTS,
             "Use named arguments for method calls", fieldGroup));
-        addField(new BooleanFieldEditor(GroovyContentAssist.PARAMETER_GUESSING,
-            "Use guessed arguments for method calls", fieldGroup));
         addField(new BooleanFieldEditor(GroovyContentAssist.CLOSURE_BRACKETS,
             "Use closure literals for closure arguments", fieldGroup));
         addField(new BooleanFieldEditor(GroovyContentAssist.CLOSURE_NOPARENS,
@@ -215,12 +216,15 @@ public class ContentAssistPreferencesPage extends FieldEditorOverlayPage impleme
 
         addField(new CompletionFilterListEditor("Filtered DGMs",
             "Default Groovy Methods that will be filtered from content assist", fieldGroup));
+
+        //
+        insertPageLink("org.eclipse.jdt.ui.preferences.CodeAssistPreferencePage",
+            "Additional preferences are inherited from <a>Java Content Assist</a>");
     }
 
     private Composite createFieldGroup(String label) {
         Group group = new Group(getFieldEditorParent(), SWT.SHADOW_NONE);
-        group.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-        ((GridData) group.getLayoutData()).horizontalSpan = 2;
+        GridDataFactory.fillDefaults().align(SWT.FILL, SWT.TOP).grab(true, false).span(2, 1).applyTo(group);
         group.setFont(group.getParent().getFont());
         group.setLayout(new GridLayout());
         group.setText(label);
@@ -229,5 +233,11 @@ public class ContentAssistPreferencesPage extends FieldEditorOverlayPage impleme
         Composite panel = new Composite(group, SWT.NONE);
         panel.setLayoutData(new GridData(GridData.FILL_BOTH));
         return panel;
+    }
+
+    private void insertPageLink(String page, String text) {
+        PreferenceLinkArea linkArea = new PreferenceLinkArea(getFieldEditorParent(),
+            SWT.WRAP, page, text, (IWorkbenchPreferenceContainer) getContainer(), null);
+        GridDataFactory.fillDefaults().indent(0, 8).applyTo(linkArea.getControl());
     }
 }

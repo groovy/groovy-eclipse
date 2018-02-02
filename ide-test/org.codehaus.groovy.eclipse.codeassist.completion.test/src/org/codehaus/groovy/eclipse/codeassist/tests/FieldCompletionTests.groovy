@@ -19,7 +19,6 @@ import groovy.transform.NotYetImplemented
 
 import org.eclipse.jdt.internal.codeassist.impl.AssistOptions
 import org.eclipse.jdt.ui.PreferenceConstants
-import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Test
 
@@ -404,7 +403,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
             meth(B)
             '''.stripIndent()
         ICompletionProposal proposal = checkUniqueProposal(contents, 'B', 'BLACK')
-        applyProposalAndCheck(new Document(contents), proposal, '''\
+        applyProposalAndCheck(proposal, '''\
             |import static tree.node.Color.BLACK
             |
             |def meth(tree.node.Color c) { }
@@ -426,7 +425,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'BL'))
         proposalExists(proposals, 'BLACK', 2)
 
-        applyProposalAndCheck(new Document(contents), orderByRelevance(proposals)[0], '''\
+        applyProposalAndCheck(orderByRelevance(proposals)[0], '''\
             |import static a.b.c.D.BLACK
             |
             |import tree.node.Color
@@ -496,7 +495,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
             '''.stripIndent()
         ICompletionProposal proposal = checkUniqueProposal(contents, 'DOT', 'DOTALL')
 
-        applyProposalAndCheck(new Document(contents), proposal, '''\
+        applyProposalAndCheck(proposal, '''\
             |import static java.util.regex.Pattern.DOTALL
             |
             |DOTALL
@@ -512,7 +511,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
             '''.stripIndent()
         ICompletionProposal proposal = checkUniqueProposal(contents, 'DOT', 'DOTALL')
 
-        applyProposalAndCheck(new Document(contents), proposal, '''\
+        applyProposalAndCheck(proposal, '''\
             |import static java.util.regex.Pattern.DOTALL
             |
             |DOTALL
@@ -529,7 +528,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
                 '''.stripIndent()
             ICompletionProposal proposal = checkUniqueProposal(contents, 'DOT', 'DOTALL')
 
-            applyProposalAndCheck(new Document(contents), proposal, '''\
+            applyProposalAndCheck(proposal, '''\
                 |import java.util.regex.Pattern
                 |
                 |Pattern.DOTALL
@@ -549,7 +548,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
             '''.stripIndent()
         ICompletionProposal proposal = checkUniqueProposal(contents, 'DOT', 'DOTALL')
 
-        applyProposalAndCheck(new Document(contents), proposal, '''\
+        applyProposalAndCheck(proposal, '''\
             java.util.regex.Pattern.DOTALL
             '''.stripIndent())
     }

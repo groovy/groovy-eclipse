@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,6 @@ import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.creators.FieldProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.creators.MethodProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.processors.AbstractGroovyCompletionProcessor;
-import org.codehaus.groovy.eclipse.codeassist.processors.GroovyCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.processors.IGroovyCompletionProcessor;
 import org.codehaus.groovy.eclipse.codeassist.processors.PackageCompletionProcessor;
 import org.codehaus.groovy.eclipse.codeassist.processors.TypeCompletionProcessor;
@@ -255,7 +254,7 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
             protected final ICompletionProposal newEnumTypeProposal(ClassNode enumType) {
                 String signature = GroovyUtils.getTypeSignatureWithoutGenerics(enumType, true, true);
 
-                GroovyCompletionProposal proposal = new GroovyCompletionProposal(CompletionProposal.TYPE_REF, 0);
+                CompletionProposal proposal = CompletionProposal.create(CompletionProposal.TYPE_REF, 0);
                 proposal.setSignature(signature.toCharArray());
                 proposal.setFlags(enumType.getModifiers());
 
