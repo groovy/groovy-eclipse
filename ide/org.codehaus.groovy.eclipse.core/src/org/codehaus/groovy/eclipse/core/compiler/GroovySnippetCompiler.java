@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,11 +50,16 @@ public class GroovySnippetCompiler {
 
     private INameEnvironment nameEnvironment;
 
-    public GroovySnippetCompiler(GroovyProjectFacade project) {
+    @Deprecated // retained for backwards compatibility
+    public GroovySnippetCompiler(org.codehaus.groovy.eclipse.core.model.GroovyProjectFacade facade) {
+        this((GroovyProjectFacade) facade);
+    }
+
+    public GroovySnippetCompiler(GroovyProjectFacade facade) {
         try {
-            nameEnvironment = new SearchableEnvironment((JavaProject) project.getProject(), (WorkingCopyOwner) null);
+            nameEnvironment = new SearchableEnvironment((JavaProject) facade.getProject(), (WorkingCopyOwner) null);
         } catch (JavaModelException e) {
-            GroovyCore.logException("Problem initializing snippet compiler for project " + project.getProject().getElementName(), e);
+            GroovyCore.logException("Problem initializing snippet compiler for project " + facade.getProject().getElementName(), e);
         }
     }
 
