@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,11 +27,10 @@ public class ProposalFormattingOptions {
 
         final boolean noParensAroundClosures = prefs.getBoolean(GroovyContentAssist.CLOSURE_NOPARENS);
         final boolean useBracketsForClosures = prefs.getBoolean(GroovyContentAssist.CLOSURE_BRACKETS);
-        final boolean doParameterGuessing = prefs.getBoolean(GroovyContentAssist.PARAMETER_GUESSING);
         final boolean useNamedArguments = prefs.getBoolean(GroovyContentAssist.NAMED_ARGUMENTS);
         final boolean noParensInChains = false;
 
-        return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, useNamedArguments, doParameterGuessing, noParensInChains);
+        return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, useNamedArguments, noParensInChains);
     }
 
     public final boolean noParensAroundClosures;
@@ -40,21 +39,17 @@ public class ProposalFormattingOptions {
 
     public final boolean useNamedArguments;
 
-    public final boolean doParameterGuessing;
-
     // used for DSL command expressions
     public final boolean noParens;
 
-    public ProposalFormattingOptions(
+    private ProposalFormattingOptions(
             boolean noParensAroundArgs,
             boolean useBracketsForClosures,
             boolean useNamedArguments,
-            boolean doParameterGuessing,
             boolean noParens) {
         this.noParensAroundClosures = noParensAroundArgs;
         this.useBracketsForClosures = useBracketsForClosures;
         this.useNamedArguments = useNamedArguments;
-        this.doParameterGuessing = doParameterGuessing;
         this.noParens = noParens;
     }
 
@@ -62,9 +57,9 @@ public class ProposalFormattingOptions {
         // For named args if overridden, always use named args
         // if not a constructor and not overridden, never use named args
         if (overrideUseNamedArgs || overrideNoParens) {
-            return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, overrideUseNamedArgs, doParameterGuessing, overrideNoParens);
+            return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, overrideUseNamedArgs, overrideNoParens);
         } else if (useNamedArguments && !(method instanceof ConstructorNode)) {
-            return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, false, doParameterGuessing, overrideNoParens);
+            return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, false, overrideNoParens);
         } else {
             return this;
         }

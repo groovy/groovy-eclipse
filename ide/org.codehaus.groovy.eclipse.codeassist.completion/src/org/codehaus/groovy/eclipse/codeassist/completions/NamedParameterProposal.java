@@ -19,7 +19,6 @@ import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.eclipse.core.runtime.Adapters;
-import org.eclipse.jdt.core.CompletionContext;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaModelException;
@@ -28,8 +27,10 @@ import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.javaeditor.EditorHighlightingSynchronizer;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposal;
+import org.eclipse.jdt.ui.PreferenceConstants;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.BadPositionCategoryException;
 import org.eclipse.jface.text.IDocument;
@@ -62,10 +63,6 @@ public class NamedParameterProposal extends JavaCompletionProposal {
 
     private IRegion selectedRegion;
 
-    private final CompletionContext coreContext;
-
-    private final boolean tryParamGuessing;
-
     private ICompletionProposal[] choices;
 
     private Position paramNamePosition;
@@ -85,14 +82,11 @@ public class NamedParameterProposal extends JavaCompletionProposal {
         StyledString displayString,
         int relevance,
         boolean inJavadoc,
-        JavaContentAssistInvocationContext invocationContext,
-        boolean tryParamGuessing) {
+        JavaContentAssistInvocationContext javaContext) {
 
-        super(computeReplacementString(paramName), replacementOffset, replacementLength, image, displayString, relevance, inJavadoc, invocationContext);
+        super(computeReplacementString(paramName), replacementOffset, replacementLength, image, displayString, relevance, inJavadoc, javaContext);
         this.paramName = paramName;
         this.paramSignature = paramSignature;
-        this.tryParamGuessing = tryParamGuessing;
-        coreContext = invocationContext.getCoreContext();
         this.setTriggerCharacters(ProposalUtils.VAR_TRIGGER);
     }
 
@@ -131,32 +125,37 @@ public class NamedParameterProposal extends JavaCompletionProposal {
      * @return {@code true} iff parameter guessing should be performed
      */
     private boolean shouldDoGuessing() {
-        return tryParamGuessing && coreContext.isExtended();
+        if (fInvocationContext.getCoreContext().isExtended()) {
+            IPreferenceStore prefs = JavaPlugin.getDefault().getPreferenceStore();
+            return (prefs.getBoolean(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES) &&
+                    prefs.getBoolean(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS));
+        }
+        return false;
     }
 
     private ICompletionProposal[] guessParameters(char[] parameterName) throws JavaModelException {
         if (paramSignature == null) {
             return NO_COMPLETIONS;
         }
+
         String type = Signature.toString(paramSignature);
         IJavaElement[] assignableElements = getAssignableElements();
         Position position = new Position(selectedRegion.getOffset(), selectedRegion.getLength());
-        ICompletionProposal[] argumentProposals = new ParameterGuesserDelegate(getEnclosingElement(), fInvocationContext).parameterProposals(type, paramName, position, assignableElements, tryParamGuessing);
-        if (argumentProposals.length == 0) {
-            argumentProposals = new ICompletionProposal[] {
+
+        ParameterGuesserDelegate guesser = new ParameterGuesserDelegate(
+            fInvocationContext.getCoreContext().getEnclosingElement(), fInvocationContext);
+        ICompletionProposal[] guesses = guesser.parameterProposals(type, paramName, position, assignableElements, true);
+        if (guesses.length == 0) {
+            guesses = new ICompletionProposal[] {
                 new JavaCompletionProposal(paramName, 0, paramName.length(), null, paramName, 0)
             };
         }
         paramNamePosition = position;
-        return choices = argumentProposals;
-    }
-
-    private IJavaElement getEnclosingElement() {
-        return coreContext.getEnclosingElement();
+        return (choices = guesses);
     }
 
     private IJavaElement[] getAssignableElements() {
-        return coreContext.getVisibleElements(paramSignature);
+        return fInvocationContext.getCoreContext().getVisibleElements(paramSignature);
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,16 +24,17 @@ import org.eclipse.jface.viewers.StyledString;
 
 public class GroovyJavaFieldCompletionProposal extends JavaCompletionProposal {
 
-    private final CompletionProposal proposal;
-
     public GroovyJavaFieldCompletionProposal(CompletionProposal proposal, StyledString displayString, JavaContentAssistInvocationContext javaContext) {
-        super(String.valueOf(proposal.getName()), proposal.getReplaceStart(), proposal.getReplaceEnd() - proposal.getReplaceStart(),
-            ProposalUtils.getImage(proposal), displayString, proposal.getRelevance(), false, javaContext);
-        this.setProposalInfo(new FieldProposalInfo(javaContext.getProject(), (this.proposal = proposal)));
-        this.setTriggerCharacters(ProposalUtils.VAR_TRIGGER);
-    }
+        super(String.valueOf(proposal.getName()), // replacementString
+            proposal.getReplaceStart(), // replacementOffset
+            proposal.getReplaceEnd() - proposal.getReplaceStart(), // replacementLength
+            ProposalUtils.getImage(proposal),
+            displayString,
+            proposal.getRelevance(),
+            false, // inJavadoc
+            javaContext);
 
-    public CompletionProposal getProposal() {
-        return proposal;
+        setProposalInfo(new FieldProposalInfo(javaContext.getProject(), proposal));
+        setTriggerCharacters(ProposalUtils.VAR_TRIGGER);
     }
 }

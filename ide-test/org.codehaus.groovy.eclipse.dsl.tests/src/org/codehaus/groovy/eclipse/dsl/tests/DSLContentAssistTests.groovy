@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,13 +17,12 @@ package org.codehaus.groovy.eclipse.dsl.tests
 
 import static org.junit.Assume.assumeTrue
 
-import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.codehaus.groovy.eclipse.codeassist.tests.CompletionTestSuite
 import org.codehaus.groovy.eclipse.dsl.DSLPreferencesInitializer
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IProject
-import org.eclipse.jface.text.Document
+import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
 import org.junit.BeforeClass
@@ -59,7 +58,6 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @BeforeClass
     static void setUpTests() {
-        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.PARAMETER_GUESSING, true)
         GroovyDSLCoreActivator.default.preferenceStore.setValue(DSLPreferencesInitializer.AUTO_ADD_DSL_SUPPORT, false)
     }
 
@@ -71,6 +69,9 @@ final class DSLContentAssistTests extends CompletionTestSuite {
             GroovyDSLCoreActivator.default.contextStoreManager.initialize(project, true)
           //GroovyDSLCoreActivator.default.contextStoreManager.ignoreProject(project)
         }
+
+        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'true')
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'true')
     }
 
     private String[] createDsls(String... dsls) {
@@ -129,10 +130,8 @@ final class DSLContentAssistTests extends CompletionTestSuite {
             def val = new Inner()
             val.fla
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.fla'))
-        proposalExists(proposals, 'flart', 1)
-        ICompletionProposal proposal = findFirstProposal(proposals, 'flart', false)
-        applyProposalAndCheck(new Document(contents), proposal, contents.replace('val.fla', 'val.flart'))
+        ICompletionProposal proposal = checkUniqueProposal(contents, '.fla', 'flart', 'flart()')
+        applyProposalAndCheck(proposal, contents.replace('val.fla', 'val.flart()'))
     }
 
     @Test
@@ -143,10 +142,8 @@ final class DSLContentAssistTests extends CompletionTestSuite {
             def val = new Inner()
             val.flart foo fl
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, ' fl'))
-        proposalExists(proposals, 'flart', 1)
-        ICompletionProposal proposal = findFirstProposal(proposals, 'flart', false)
-        applyProposalAndCheck(new Document(contents), proposal, contents.replace(' fl', ' flart'))
+        ICompletionProposal proposal = checkUniqueProposal(contents, ' fl', 'flart', 'flart()')
+        applyProposalAndCheck(proposal, contents.replace(' fl', ' flart()'))
     }
 
     @Test
@@ -157,10 +154,8 @@ final class DSLContentAssistTests extends CompletionTestSuite {
             def val = new Inner()
             val.flart foo, baz fl
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, ' fl'))
-        proposalExists(proposals, 'flart', 1)
-        ICompletionProposal proposal = findFirstProposal(proposals, 'flart', false)
-        applyProposalAndCheck(new Document(contents), proposal, contents.replace(' fl', ' flart'))
+        ICompletionProposal proposal = checkUniqueProposal(contents, ' fl', 'flart', 'flart()')
+        applyProposalAndCheck(proposal, contents.replace(' fl', ' flart()'))
     }
 
     @Test
@@ -171,10 +166,9 @@ final class DSLContentAssistTests extends CompletionTestSuite {
             def val = new Inner()
             val.flart foo, baz fl
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, ' fl'))
-        proposalExists(proposals, 'flart', 1)
-        ICompletionProposal proposal = findFirstProposal(proposals, 'flart', false)
-        applyProposalAndCheck(new Document(contents), proposal, contents.replace(' fl', ' flart 0 '))
+
+        ICompletionProposal proposal = checkUniqueProposal(contents, ' fl', 'flart', 'flart 0')
+        applyProposalAndCheck(proposal, contents.replace(' fl', ' flart 0'))
     }
 
     @Test
@@ -185,10 +179,8 @@ final class DSLContentAssistTests extends CompletionTestSuite {
             def val = new Inner()
             val.flart foo, baz fl
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, ' fl'))
-        proposalExists(proposals, 'flart', 1)
-        ICompletionProposal proposal = findFirstProposal(proposals, 'flart', false)
-        applyProposalAndCheck(new Document(contents), proposal, contents.replace(' fl', ' flart 0, "" '))
+        ICompletionProposal proposal = checkUniqueProposal(contents, ' fl', 'flart', 'flart 0, ""')
+        applyProposalAndCheck(proposal, contents.replace(' fl', ' flart 0, ""'))
     }
 
     @Test
@@ -203,9 +195,8 @@ final class DSLContentAssistTests extends CompletionTestSuite {
             def val = new Inner()
             val.bl
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'val.bl'))
-        ICompletionProposal proposal = findFirstProposal(proposals, 'blart', false)
-        applyProposalAndCheck(new Document(contents), proposal, contents.replace('val.bl', 'val.blart val, val, val '))
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'val.bl', 'blart', 'blart val, val, val')
+        applyProposalAndCheck(proposal, contents.replace('val.bl', 'val.blart val, val, val'))
     }
 
     @Test
@@ -220,9 +211,8 @@ final class DSLContentAssistTests extends CompletionTestSuite {
             def val = new Inner()
             val.fl
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'val.fl'))
-        ICompletionProposal proposal = findFirstProposal(proposals, 'flart', false)
-        applyProposalAndCheck(new Document(contents), proposal, contents.replace('val.fl', 'val.flart val '))
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'val.fl', 'flart', 'flart val')
+        applyProposalAndCheck(proposal, contents.replace('val.fl', 'val.flart val'))
     }
 
     @Test

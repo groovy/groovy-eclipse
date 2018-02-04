@@ -16,13 +16,13 @@
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
 import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.createTypeSignature;
+import static org.codehaus.groovy.eclipse.codeassist.processors.StatementAndExpressionCompletionProcessor.METHOD_POINTER_COMPLETION;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
-import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaGuessingCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyJavaMethodCompletionProposal;
 import org.codehaus.groovy.eclipse.codeassist.completions.NamedArgsMethodNode;
 import org.codehaus.groovy.eclipse.codeassist.processors.GroovyCompletionProposal;
@@ -84,9 +84,27 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
 
     @Override
     public IJavaCompletionProposal createJavaProposal(ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
-        int kind = (context.location == ContentAssistLocation.ANNOTATION_BODY ? CompletionProposal.ANNOTATION_ATTRIBUTE_REF : CompletionProposal.METHOD_REF);
+        int kind;
+        switch (context.location) {
+        case ANNOTATION_BODY:
+            kind = CompletionProposal.ANNOTATION_ATTRIBUTE_REF;
+            break;
+        case IMPORT:
+            kind = CompletionProposal.METHOD_NAME_REFERENCE;
+            break;
+        case EXPRESSION:
+            if (METHOD_POINTER_COMPLETION.matcher(context.fullCompletionExpression).matches()) {
+                kind = CompletionProposal.METHOD_NAME_REFERENCE;
+                break;
+            }
+        default:
+            kind = CompletionProposal.METHOD_REF;
+        }
+
         GroovyCompletionProposal proposal = new GroovyCompletionProposal(kind, context.completionLocation);
 
+        // if location is METHOD_CONTEXT, then the type must be MethodInfoContentAssistContext
+        // ...but there are other times when the type is MethodInfoContentAssistContext as well
         if (context.location == ContentAssistLocation.METHOD_CONTEXT) {
             // only show context information and only for methods that exactly match the name
             // this happens when we are at the start of an argument or an open paren
@@ -94,8 +112,8 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
             if (!methodContext.methodName.equals(method.getName())) {
                 return null;
             }
-            proposal.setReplaceRange(context.completionLocation, context.completionLocation);
             proposal.setCompletion(CharOperation.NO_CHAR);
+            proposal.setReplaceRange(context.completionLocation, context.completionLocation);
         } else { // this is a normal method proposal
             boolean parens = (kind == CompletionProposal.ANNOTATION_ATTRIBUTE_REF ? false : !isParens(context, javaContext));
             proposal.setCompletion(completionName(parens));
@@ -155,23 +173,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
             lazyProposal = new LazyJavaCompletionProposal(proposal, javaContext);
             lazyProposal.setProposalInfo(new AnnotationAtttributeProposalInfo(javaContext.getProject(), proposal));
         } else {
-            if (getProposalFormattingOptions().doParameterGuessing) {
-                lazyProposal = GroovyJavaGuessingCompletionProposal.createProposal(proposal, javaContext, true, contributor, getProposalFormattingOptions());
-            }
-            if (lazyProposal == null) {
-                lazyProposal = new GroovyJavaMethodCompletionProposal(proposal, javaContext, getProposalFormattingOptions(), contributor);
-                // if location is METHOD_CONTEXT, then the type must be MethodInfoContentAssistContext
-                // ...but there are other times when the type is MethodInfoContentAssistContext as well
-                if (context.location == ContentAssistLocation.METHOD_CONTEXT) {
-                    ((GroovyJavaMethodCompletionProposal) lazyProposal).contextOnly();
-                }
-            }
-            if (context.location == ContentAssistLocation.METHOD_CONTEXT) { // NOTE: I've seen STATEMENT for 'assertNu|' and EXPRESSION for 'Assert.assertNu|'
-                // attempt to find the location immediately after the opening paren
-                // if this is wrong, no big deal, but the context information will not be properly highlighted
-                // assume that there is the method name, and then an opening paren (or a space) and then the arguments
-                lazyProposal.setContextInformationPosition(((MethodInfoContentAssistContext) context).methodNameEnd + 1);
-            }
+            lazyProposal = new GroovyJavaMethodCompletionProposal(proposal, getProposalFormattingOptions(), javaContext, contributor);
         }
         return lazyProposal;
     }

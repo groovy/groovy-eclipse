@@ -46,6 +46,7 @@ import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.contentassist.ICompletionProposal
+import org.eclipse.jface.text.contentassist.ICompletionProposalExtension2
 import org.junit.After
 import org.junit.AfterClass
 import org.junit.Before
@@ -90,7 +91,9 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     protected ICompletionProposal[] performContentAssist(ICompilationUnit unit, int offset, Class<? extends IJavaCompletionProposalComputer> computerClass) {
         JavaEditor editor = openInEditor(unit)
         SynchronizationUtils.waitForIndexingToComplete(unit)
-        JavaSourceViewer viewer = (JavaSourceViewer) editor.viewer
+        JavaSourceViewer viewer = editor.viewer
+        viewer.setSelectedRange(offset, 0)
+
         JavaContentAssistInvocationContext context = new JavaContentAssistInvocationContext(viewer, offset, editor)
         SimpleProgressMonitor monitor = new SimpleProgressMonitor("Create completion proposals for $unit.elementName")
         List<ICompletionProposal> proposals = computerClass.newInstance().computeCompletionProposals(context, monitor)
@@ -162,13 +165,28 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
         int i = indexOfProposal(proposals, name, 0, isType)
         if (i != -1)
             return proposals[i]
-        fail("Expected at least one proposal that matches '$name', but found none")
+        fail("Expected at least one proposal that matches '$name', but found none.")
     }
 
     protected void applyProposalAndCheck(IDocument document, ICompletionProposal proposal, String expected) {
         proposal.apply(document)
         String expect = expected.normalize()
         String actual = document.get().normalize()
+        assertEquals('Completion proposal applied but different results found.', expect, actual)
+    }
+
+    /**
+     * Applies the specified completion proposal to the active editor and checks
+     * against the expected result. Assumes performContentAssist(...) was called
+     * by some means to get {@code proposal}.
+     */
+    protected void applyProposalAndCheck(ICompletionProposal proposal, String expected, char trigger = 0, int stateMask = 0) {
+        assert proposal instanceof ICompletionProposalExtension2
+        JavaContentAssistInvocationContext context = proposal.@fInvocationContext
+        proposal.apply(context.viewer, trigger, stateMask, context.invocationOffset)
+
+        String expect = expected.normalize()
+        String actual = context.document.get().normalize()
         assertEquals('Completion proposal applied but different results found.', expect, actual)
     }
 
@@ -308,7 +326,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
 
     private String elementsToNames(IJavaElement[] visibleElements) {
         String[] names = new String[visibleElements.length]
-        for (int i = 0; i < names.length; i++) {
+        for (int i = 0; i < names.length; i += 1) {
             names[i] = visibleElements[i].elementName
         }
         return Arrays.toString(names)

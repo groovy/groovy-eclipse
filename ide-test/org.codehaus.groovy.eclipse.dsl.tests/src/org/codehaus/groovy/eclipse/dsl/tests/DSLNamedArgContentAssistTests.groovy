@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import org.codehaus.groovy.eclipse.codeassist.tests.CompletionTestSuite
 import org.codehaus.groovy.eclipse.dsl.DSLPreferencesInitializer
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
 import org.eclipse.core.resources.IProject
+import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
 import org.junit.BeforeClass
@@ -31,11 +32,6 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
 
     @BeforeClass
     static void setUpTests() {
-        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS,   true)
-        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS,   true)
-        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.NAMED_ARGUMENTS,    true)
-        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.PARAMETER_GUESSING, true)
-
         GroovyDSLCoreActivator.default.preferenceStore.setValue(DSLPreferencesInitializer.AUTO_ADD_DSL_SUPPORT, false)
     }
 
@@ -47,6 +43,12 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
             GroovyDSLCoreActivator.default.contextStoreManager.initialize(project, true)
           //GroovyDSLCoreActivator.default.contextStoreManager.ignoreProject(project)
         }
+
+        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'true')
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'true')
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.NAMED_ARGUMENTS, true)
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS, true)
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
     }
 
     private void createDSL(String contents) {
@@ -297,60 +299,60 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     @Test
     void testClostureOp1() {
         createDSL(CLOSURE_DSLD)
-        checkProposalApplicationNonType(closureContents, closureContents + '1 {', closureContents.length(), 'test1')
+        checkProposalApplicationNonType(closureContents, closureContents + '1 {  }', closureContents.length(), 'test1')
     }
 
     @Test
     void testClostureOp2() {
         createDSL(CLOSURE_DSLD)
-        checkProposalApplicationNonType(closureContents, closureContents + '2("") {', closureContents.length(), 'test2')
+        checkProposalApplicationNonType(closureContents, closureContents + '2("") {  }', closureContents.length(), 'test2')
     }
 
     @Test
     void testClostureOp3() {
         createDSL(CLOSURE_DSLD)
-        checkProposalApplicationNonType(closureContents, closureContents + '3(op:{  })', closureContents.length(), 'test3')
+        checkProposalApplicationNonType(closureContents, closureContents + '3(op: {  })', closureContents.length(), 'test3')
     }
 
     @Test
     void testClostureOp4() {
         createDSL(CLOSURE_DSLD)
-        checkProposalApplicationNonType(closureContents, closureContents + '4(first:"", op:{  })', closureContents.length(), 'test4')
+        checkProposalApplicationNonType(closureContents, closureContents + '4(first: "", op: {  })', closureContents.length(), 'test4')
     }
 
     @Test
     void testClostureOp5() {
         createDSL(CLOSURE_DSLD)
-        checkProposalApplicationNonType(closureContents, closureContents + '5("", op:{  })', closureContents.length(), 'test5')
+        checkProposalApplicationNonType(closureContents, closureContents + '5(op: {  }, "")', closureContents.length(), 'test5')
     }
 
     @Test
     void testClostureOp6() {
         createDSL(CLOSURE_DSLD)
-        checkProposalApplicationNonType(closureContents, closureContents + '6(first:"") {', closureContents.length(), 'test6')
+        checkProposalApplicationNonType(closureContents, closureContents + '6(first: "") {  }', closureContents.length(), 'test6')
     }
 
     @Test
     void testClostureOp7() {
         createDSL(CLOSURE_DSLD)
-        checkProposalApplicationNonType(closureContents, closureContents + '7(first:"", other:"") {', closureContents.length(), 'test7')
+        checkProposalApplicationNonType(closureContents, closureContents + '7(first: "", other: "") {  }', closureContents.length(), 'test7')
     }
 
     @Test
     void testClostureOp8() {
         createDSL(CLOSURE_DSLD)
-        checkProposalApplicationNonType(closureContents, closureContents + '8("", first:"") {', closureContents.length(), 'test8')
+        checkProposalApplicationNonType(closureContents, closureContents + '8(first: "", "") {  }', closureContents.length(), 'test8')
     }
 
     @Test
     void testClostureOp9() {
         createDSL(CLOSURE_DSLD)
-        checkProposalApplicationNonType(closureContents, closureContents + '9("", {  }, "", first:"")', closureContents.length(), 'test9')
+        checkProposalApplicationNonType(closureContents, closureContents + '9(first: "", "", {  }, "")', closureContents.length(), 'test9')
     }
 
     @Test
     void testClostureOp0() {
         createDSL(CLOSURE_DSLD)
-        checkProposalApplicationNonType(closureContents, closureContents + '0("", {  }, "", first:"") {', closureContents.length(), 'test0')
+        checkProposalApplicationNonType(closureContents, closureContents + '0(first: "", "", {  }, "") {  }', closureContents.length(), 'test0')
     }
 }

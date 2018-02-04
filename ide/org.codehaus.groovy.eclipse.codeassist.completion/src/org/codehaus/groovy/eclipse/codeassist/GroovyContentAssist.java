@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,15 +27,13 @@ public class GroovyContentAssist extends AbstractUIPlugin {
 
     public static final String PLUGIN_ID = "org.codehaus.groovy.eclipse.codeassist.completion";
 
-    // comma-separated list of method names to hide
+    /** Comma-separated list of method names to hide. */
     public static final String FILTERED_DGMS = PLUGIN_ID + ".filtereddgms";
-    // if true use named arguments for method calls
+    /** If {@code true}, named arguments are used in method calls. */
     public static final String NAMED_ARGUMENTS = PLUGIN_ID + ".arguments.named";
-    // if true use parameter guessing proposals
-    public static final String PARAMETER_GUESSING = PLUGIN_ID + ".arguments.guess";
-    // if true use brackets for closure args
+    /** If {@code true}, literals are used for closure args in method calls. */
     public static final String CLOSURE_BRACKETS = PLUGIN_ID + ".closures.literals";
-    // if true do not use parens around methods
+    /** If {@code true}, trailing closures are placed after method call parens. */
     public static final String CLOSURE_NOPARENS = PLUGIN_ID + ".closures.noparens";
 
     private static GroovyContentAssist plugin;

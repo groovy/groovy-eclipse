@@ -16,8 +16,7 @@
 package org.codehaus.groovy.eclipse.codeassist.tests
 
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
-import org.eclipse.jface.text.Document
-import org.eclipse.jface.text.IDocument
+import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Assert
 import org.junit.Before
@@ -27,9 +26,10 @@ final class GuessingCompletionTests extends CompletionTestSuite {
 
     @Before
     void setUp() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'true')
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'true')
         GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS, true)
         GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
-        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.PARAMETER_GUESSING, true)
     }
 
     @Test
@@ -83,22 +83,14 @@ final class GuessingCompletionTests extends CompletionTestSuite {
         // GroovyExtendedCompletionContext.computeVisibleElements(String)
         String contents = '''\
             Closure yyy
-            def zzz = { }
+            def zzz = { -> }
             def xxx(Closure c) { }
             xxx
             '''.stripIndent()
         String[][] expectedChoices = [
             ['zzz', 'yyy', '{  }'] as String[]
         ]
-        try {
-            checkProposalChoices(contents, 'xxx', 'xxx {', expectedChoices)
-        } catch (AssertionError e) {
-            try {
-                checkProposalChoices(contents, 'xxx', 'xxx yyy', expectedChoices)
-            } catch (AssertionError e2) {
-                checkProposalChoices(contents, 'xxx', 'xxx zzz', expectedChoices)
-            }
-        }
+        checkProposalChoices(contents, 'xxx', 'xxx {  }', expectedChoices)
     }
 
     @Test
@@ -116,11 +108,10 @@ final class GuessingCompletionTests extends CompletionTestSuite {
             |
             |pack.Util.ut
             |'''.stripMargin()
-        IDocument document = new Document(contents)
         ICompletionProposal proposal = checkUniqueProposal(contents, 'ut', 'util', 'util(MILLIS)')
 
         // apply initial proposal to generate parameter proposals
-        applyProposalAndCheck(document, proposal, '''\
+        applyProposalAndCheck(proposal, '''\
             |import static java.util.concurrent.TimeUnit.MILLISECONDS as MILLIS
             |
             |pack.Util.util(MILLIS)
@@ -132,7 +123,7 @@ final class GuessingCompletionTests extends CompletionTestSuite {
             choices*.displayString.join('\n'))
 
         // TODO: Something below is not matching the real editor's application of the parameter proposal
-        /*applyProposalAndCheck(document, choices[1], '''\
+        /*applyProposalAndCheck(choices[1], '''\
             |import static java.util.concurrent.TimeUnit.DAYS
             |import static java.util.concurrent.TimeUnit.MILLISECONDS as MILLIS
             |

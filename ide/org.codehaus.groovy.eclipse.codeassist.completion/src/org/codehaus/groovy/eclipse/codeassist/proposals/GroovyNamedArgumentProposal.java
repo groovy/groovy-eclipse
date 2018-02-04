@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,9 +59,8 @@ public class GroovyNamedArgumentProposal implements IGroovyProposal {
         StyledString displayString = createDisplayString();
         int relevance = Relevance.VERY_HIGH.getRelevance();
         boolean inJavadoc = false;
-        boolean tryParameterGuessing = ProposalFormattingOptions.newFromOptions().doParameterGuessing;
 
-        return new NamedParameterProposal(paramName, paramSignature, offset, length, image, displayString, relevance, inJavadoc, javaContext, tryParameterGuessing);
+        return new NamedParameterProposal(paramName, paramSignature, offset, length, image, displayString, relevance, inJavadoc, javaContext);
     }
 
     protected StyledString createDisplayString() {
