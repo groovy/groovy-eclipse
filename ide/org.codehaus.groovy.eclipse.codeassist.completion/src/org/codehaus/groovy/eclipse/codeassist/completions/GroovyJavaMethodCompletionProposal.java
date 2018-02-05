@@ -126,12 +126,16 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
             super.apply(document, trigger, offset);
 
-            if (getContextInformationPosition() > 0) {
+            if (fContextInformationPosition > 0) {
                 // change offset from relative to absolute
-                setContextInformationPosition(getContextInformationPosition() + getReplacementOffset());
-            }
-            if (fPositions != null && !fPositions.isEmpty()) {
-                fSelectedRegion = new Region(fPositions.get(0).getOffset(), fPositions.get(0).getLength());
+                setContextInformationPosition(getReplacementOffset() + fContextInformationPosition);
+
+                // coordinate editor selection with context display and linking mode
+                if (fPositions == null || fPositions.isEmpty()) {
+                    fSelectedRegion = new Region(fContextInformationPosition, 0);
+                } else {
+                    fSelectedRegion = new Region(fPositions.get(0).getOffset(), fPositions.get(0).getLength());
+                }
             }
         } catch (Exception e) {
             GroovyContentAssist.logError(e);
@@ -220,8 +224,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                 buffer.append(SPACE);
             }
 
-            setCursorPosition(buffer.length()); // position cursor inside parentheses
-            setContextInformationPosition(getCursorPosition());
+            setContextInformationPosition(buffer.length());
 
             if (!fPreferences.bCommandChaining)
                 buffer.append(RPAREN);
@@ -258,7 +261,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
             setContextInformationPosition(buffer.length());
 
-            // now add the parameters; named parameters go first
+            // add the parameters; named parameters precede positional parameters
             char[][] namedParameterNames = ((GroovyCompletionProposal) fProposal).getNamedParameterNames();
             char[][] regularParameterNames = ((GroovyCompletionProposal) fProposal).getRegularParameterNames();
             int namedCount = namedParameterNames.length, totalCount = regularParameterNames.length + namedCount;
@@ -437,29 +440,30 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     }
 
     @Override
-    protected boolean needsLinkedMode() {
-        return (fPositions != null);
-    }
-
-    @Override
     protected void setUpLinkedMode(IDocument document, char closingCharacter) {
         if (getTextViewer() != null) {
             try {
                 int baseOffset = getReplacementOffset();
                 LinkedModeModel model = new LinkedModeModel();
-                for (int i = 0; i < fPositions.size(); i += 1) {
-                    Position position = fPositions.get(i);
-                    // change offset from relative to absolute
-                    position.setOffset(baseOffset + position.getOffset());
+                if (fPositions == null) {
                     LinkedPositionGroup group = new LinkedPositionGroup();
-                    if (fProposals.size() <= i || fProposals.get(i).length < 2) {
-                        group.addPosition(new LinkedPosition(document, position.getOffset(), position.getLength(), LinkedPositionGroup.NO_STOP));
-                    } else {
-                        ensurePositionCategoryInstalled(document, model);
-                        document.addPosition(fPositionCategory, position);
-                        group.addPosition(new ProposalPosition(document, position.getOffset(), position.getLength(), LinkedPositionGroup.NO_STOP, fProposals.get(i)));
-                    }
+                    group.addPosition(new LinkedPosition(document, baseOffset + fContextInformationPosition, 0));
                     model.addGroup(group);
+                } else {
+                    for (int i = 0, n = fPositions.size(); i < n; i += 1) {
+                        Position position = fPositions.get(i);
+                        // change offset from relative to absolute
+                        position.setOffset(baseOffset + position.getOffset());
+                        LinkedPositionGroup group = new LinkedPositionGroup();
+                        if (fProposals.size() <= i || fProposals.get(i).length <= 1) {
+                            group.addPosition(new LinkedPosition(document, position.getOffset(), position.getLength(), LinkedPositionGroup.NO_STOP));
+                        } else {
+                            ensurePositionCategoryInstalled(document, model);
+                            document.addPosition(fPositionCategory, position);
+                            group.addPosition(new ProposalPosition(document, position.getOffset(), position.getLength(), LinkedPositionGroup.NO_STOP, fProposals.get(i)));
+                        }
+                        model.addGroup(group);
+                    }
                 }
                 JavaEditor editor = getJavaEditor();
                 if (editor != null) {
