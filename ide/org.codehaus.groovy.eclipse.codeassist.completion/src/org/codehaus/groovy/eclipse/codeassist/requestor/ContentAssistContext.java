@@ -23,14 +23,18 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
+import org.codehaus.groovy.eclipse.codeassist.completions.GroovyExtendedCompletionContext;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.jdt.core.CompletionContext;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.ITypeRequestor.VisitStatus;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.VariableScope;
+import org.eclipse.jdt.internal.codeassist.InternalCompletionContext;
 import org.eclipse.jdt.ui.PreferenceConstants;
 
 public class ContentAssistContext {
@@ -124,6 +128,14 @@ public class ContentAssistContext {
         this.unit = unit;
         this.containingDeclaration = containingDeclaration;
         this.completionEnd = completionEnd;
+    }
+
+    public final void extend(CompletionContext that, VariableScope scope) {
+        if (that != null && !that.isExtended()) {
+            if (scope == null) scope = getPerceivedCompletionScope();
+            ReflectionUtils.setPrivateField(InternalCompletionContext.class, "isExtended", that, Boolean.TRUE);
+            ReflectionUtils.setPrivateField(InternalCompletionContext.class, "extendedContext", that, new GroovyExtendedCompletionContext(this, scope));
+        }
     }
 
     public IType getEnclosingType() {

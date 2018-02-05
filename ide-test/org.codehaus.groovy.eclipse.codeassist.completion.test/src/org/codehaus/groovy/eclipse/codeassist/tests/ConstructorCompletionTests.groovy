@@ -41,6 +41,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
     void testConstructorCompletion1() {
         String contents = 'class YYY { YYY() { } }\nnew YY\nkkk'
         String expected = 'class YYY { YYY() { } }\nnew YYY()\nkkk'
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
     }
 
@@ -48,6 +49,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
     void testConstructorCompletion2() {
         String contents = 'class YYY { YYY() { } }\nnew YY()\nkkk' // trailing parens
         String expected = 'class YYY { YYY() { } }\nnew YYY()\nkkk'
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
     }
 
@@ -55,6 +57,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
     void testConstructorCompletion3() {
         String contents = 'class YYY { YYY(x) { } }\nnew YY\nkkk'
         String expected = 'class YYY { YYY(x) { } }\nnew YYY(x)\nkkk'
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
     }
 
@@ -62,6 +65,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
     void testConstructorCompletion4() {
         String contents = 'class YYY { YYY(x, y) { } }\nnew YY\nkkk'
         String expected = 'class YYY { YYY(x, y) { } }\nnew YYY(x, y)\nkkk'
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
     }
 
@@ -69,6 +73,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
     void testConstructorCompletionWithGenerics1() {
         String contents = 'List<String> list = new ArrayL'
         String expected = 'List<String> list = new ArrayList()'
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new ArrayL'), 'ArrayList()')
     }
 
@@ -78,6 +83,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             '	Aaa() {\n@Override int foo() {\nnew YY\n}\n}\nint foo() {\n	}\n}'
         String expected = 'class YYY { YYY() { } }\nenum F {\n' +
             '	Aaa() {\n@Override int foo() {\nnew YYY()\n}\n}\nint foo() {\n	}\n}'
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
     }
 
@@ -87,6 +93,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             '	Aaa {\n@Override int foo() {\nnew YY\n}\n}\nint foo() {\n	}\n}'
         String expected = 'class YYY { YYY() { } }\nenum F {\n' +
             '	Aaa {\n@Override int foo() {\nnew YYY()\n}\n}\nint foo() {\n	}\n}'
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
     }
 
@@ -106,6 +113,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         String expected = '''\
             def a = new java.text.Annotation(value)
             '''.stripIndent()
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'Anno'), 'Annotation')
     }
 
@@ -115,10 +123,11 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             def a = new Anno
             '''.stripIndent()
         String expected = '''\
-            import java.text.Annotation
-
-            def a = new Annotation(value)
-            '''.stripIndent()
+            |import java.text.Annotation
+            |
+            |def a = new Annotation(value)
+            |'''.stripMargin()
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new Anno'), 'Annotation')
     }
 

@@ -41,7 +41,6 @@ import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
-import org.codehaus.groovy.eclipse.codeassist.completions.GroovyExtendedCompletionContext;
 import org.codehaus.groovy.eclipse.codeassist.creators.AbstractProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.creators.CategoryProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.creators.FieldProposalCreator;
@@ -53,12 +52,10 @@ import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jdt.core.CompletionContext;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
@@ -67,7 +64,6 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
-import org.eclipse.jdt.internal.codeassist.InternalCompletionContext;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
@@ -454,7 +450,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             GroovyContentAssist.logError("Exception accessing proposal provider registry", e);
         }
 
-        fillInExtendedContext(requestor);
+        getContext().extend(getJavaContext().getCoreContext(), requestor.currentScope);
 
         // extra filtering and sorting provided by third parties
         try {
@@ -504,16 +500,6 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             boolean isPrimary = (context.location == ContentAssistLocation.STATEMENT);
             groovyProposals.addAll(
                 creator.findAllProposals(completionType, categories, expression, isStatic, isPrimary));
-        }
-    }
-
-    private void fillInExtendedContext(ExpressionCompletionRequestor requestor) {
-        JavaContentAssistInvocationContext javaContext = getJavaContext();
-        CompletionContext coreContext = javaContext.getCoreContext();
-        if (coreContext != null && !coreContext.isExtended()) {
-            // must use reflection to set the fields
-            ReflectionUtils.setPrivateField(InternalCompletionContext.class, "isExtended", coreContext, true);
-            ReflectionUtils.setPrivateField(InternalCompletionContext.class, "extendedContext", coreContext, new GroovyExtendedCompletionContext(getContext(), requestor.currentScope));
         }
     }
 

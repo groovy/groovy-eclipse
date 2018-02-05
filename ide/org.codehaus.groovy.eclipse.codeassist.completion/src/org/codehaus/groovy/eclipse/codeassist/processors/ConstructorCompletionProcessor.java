@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,6 +57,7 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
         char[] constructorText; int constructorStart;
         switch (context.location) {
         case CONSTRUCTOR:
+            context.extend(getJavaContext().getCoreContext(), null);
             constructorText = context.fullCompletionExpression.replaceFirst("^new\\s+", "").toCharArray();
             constructorStart = context.completionLocation - CharOperation.lastSegment(constructorText, '.').length;
             break;
