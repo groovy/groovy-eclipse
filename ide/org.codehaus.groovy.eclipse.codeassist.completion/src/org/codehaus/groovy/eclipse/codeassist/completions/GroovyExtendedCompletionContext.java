@@ -43,34 +43,6 @@ import org.eclipse.jdt.internal.core.SourceField;
 
 public class GroovyExtendedCompletionContext extends InternalExtendedCompletionContext {
 
-    private static class PropertyVariant extends SourceField implements IField {
-        private final IMethod baseMethod;
-
-        PropertyVariant(IMethod method) {
-            super((JavaElement) method.getParent(), toFieldName(method));
-            baseMethod = method;
-        }
-
-        @Override
-        public boolean exists() {
-            return true;
-        }
-
-        @Override
-        public String getTypeSignature() throws JavaModelException {
-            return baseMethod.getReturnType();
-        }
-
-        @Override
-        public int getFlags() throws JavaModelException {
-            return baseMethod.getFlags();
-        }
-    }
-
-    private static String toFieldName(IMethod method) {
-        return ProposalUtils.createMockFieldName(method.getElementName());
-    }
-
     private final ContentAssistContext context;
 
     private final VariableScope currentScope;
@@ -90,6 +62,11 @@ public class GroovyExtendedCompletionContext extends InternalExtendedCompletionC
     }
 
     @Override
+    public boolean canUseDiamond(String[] parameterTypes, char[] fullyQualifiedTypeName) {
+        return true;
+    }
+
+    @Override
     public IJavaElement getEnclosingElement() {
         if (enclosingElement == null) {
             try {
@@ -101,21 +78,12 @@ public class GroovyExtendedCompletionContext extends InternalExtendedCompletionC
                 enclosingElement = context.unit;
             }
         }
-
         return enclosingElement;
     }
 
     @Override
     public IJavaElement[] getVisibleElements(String typeSignature) {
-        // let's not work with parameterized sigs
-        typeSignature = Signature.getTypeErasure(typeSignature);
-
-        IJavaElement[] elements = visibleElements.get(typeSignature);
-        if (elements == null) {
-            elements = computeVisibleElements(typeSignature);
-            visibleElements.put(typeSignature, elements);
-        }
-        return elements;
+        return visibleElements.computeIfAbsent(Signature.getTypeErasure(typeSignature), this::computeVisibleElements);
     }
 
     private IJavaElement[] computeVisibleElements(String typeSignature) {
@@ -178,7 +146,7 @@ public class GroovyExtendedCompletionContext extends InternalExtendedCompletionC
         return visibleElements.values().toArray(new IJavaElement[0]);
     }
 
-    public void addFields(ClassNode targetType, Map<String, IJavaElement> visibleElements, IType type)
+    protected void addFields(ClassNode targetType, Map<String, IJavaElement> visibleElements, IType type)
             throws JavaModelException {
         for (IField field : type.getFields()) {
             ClassNode fieldTypeClassNode = toClassNode(field.getTypeSignature());
@@ -243,6 +211,34 @@ public class GroovyExtendedCompletionContext extends InternalExtendedCompletionC
         } catch (NullPointerException e) {
             // ignore; likely DSL support not available
             return VariableScope.OBJECT_CLASS_NODE;
+        }
+    }
+
+    private static String toFieldName(IMethod method) {
+        return ProposalUtils.createMockFieldName(method.getElementName());
+    }
+
+    private static class PropertyVariant extends SourceField implements IField {
+        private final IMethod baseMethod;
+
+        PropertyVariant(IMethod method) {
+            super((JavaElement) method.getParent(), toFieldName(method));
+            baseMethod = method;
+        }
+
+        @Override
+        public boolean exists() {
+            return true;
+        }
+
+        @Override
+        public String getTypeSignature() throws JavaModelException {
+            return baseMethod.getReturnType();
+        }
+
+        @Override
+        public int getFlags() throws JavaModelException {
+            return baseMethod.getFlags();
         }
     }
 }

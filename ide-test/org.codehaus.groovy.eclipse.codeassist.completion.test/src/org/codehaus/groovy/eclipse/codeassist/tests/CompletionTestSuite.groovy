@@ -380,10 +380,8 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
 
     protected void checkProposalChoices(String contents, String completion, String replacementString, String[][] expectedChoices) {
         ICompletionProposal proposal = checkUniqueProposal(contents, completion, completion, replacementString)
-        proposal.replacementString // instantiate the guesses
-
-        ICompletionProposal[][] choices = proposal.choices
-        assertEquals(expectedChoices.length, choices.length)
+        List<ICompletionProposal[]> choices = proposal.choices
+        assertEquals(expectedChoices.length, choices.size())
         for (int i = 0; i < expectedChoices.length; i += 1) {
             assertEquals(expectedChoices[i].length, choices[i].length)
 

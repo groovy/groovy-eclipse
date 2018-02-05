@@ -130,4 +130,27 @@ final class GuessingCompletionTests extends CompletionTestSuite {
             |pack.Util.util(DAYS)
             |'''.stripMargin())*/
     }
+
+    @Test
+    void testCtorParamGuessing() {
+        addGroovySource '''\
+            class C {
+              C(java.lang.String string, java.util.concurrent.TimeUnit units) {
+              }
+            }
+            '''.stripIndent(), 'C', 'p'
+
+        String contents = '''\
+            import static java.util.concurrent.TimeUnit.MILLISECONDS as MILLIS
+            String s = ''
+            new p.C
+            '''.stripIndent()
+
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'new p.C', 'C', '(s, MILLIS)')
+        List<ICompletionProposal[]> choices = proposal.choices
+
+        assert choices.size() == 2
+        assert choices[0]*.displayString == ['s', '""']
+        assert choices[1]*.displayString == ['MILLIS', 'DAYS', 'HOURS', 'MINUTES', 'SECONDS', 'MILLISECONDS', 'MICROSECONDS', 'NANOSECONDS', 'null']
+    }
 }
