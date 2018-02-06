@@ -589,12 +589,18 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
 
     private ICompletionProposal proposeConstructor(char[] simpleTypeName, int parameterCount, char[] signature, char[][] parameterTypes, char[][] parameterNames, int modifiers, char[] packageName, int typeModifiers, int accessibility, char[] fullyQualifiedName, boolean isQualified, int extraFlags) {
         char[] completionExpressionChars = completionExpression.toCharArray();
-        // only show context information and only for constructors that exactly match the name
-        if (contextOnly && !CharOperation.equals(completionExpressionChars, simpleTypeName) && !CharOperation.equals(completionExpressionChars, fullyQualifiedName)) {
-            return null;
+        int completionOffset = offset - 1, kind = CompletionProposal.CONSTRUCTOR_INVOCATION;
+        if (contextOnly) {
+            // only show context information and only for constructors that exactly match the name
+            if (!CharOperation.equals(completionExpressionChars, simpleTypeName) &&
+                    !CharOperation.equals(completionExpressionChars, fullyQualifiedName)) {
+                return null;
+            }
+            kind = CompletionProposal.METHOD_REF;
+            completionOffset = ((MethodInfoContentAssistContext) context).methodNameEnd;
         }
 
-        GroovyCompletionProposal proposal = createProposal(contextOnly ? CompletionProposal.METHOD_REF : CompletionProposal.CONSTRUCTOR_INVOCATION, offset - 1);
+        GroovyCompletionProposal proposal = createProposal(kind, completionOffset);
         proposal.setIsContructor(true);
         proposal.setName(simpleTypeName);
         proposal.setTypeName(simpleTypeName);

@@ -82,36 +82,36 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
         this.options = options;
     }
 
-    @Override
+    @Override @SuppressWarnings("incomplete-switch")
     public IJavaCompletionProposal createJavaProposal(ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
-        int kind;
+        int completionOffset = context.completionLocation, kind = CompletionProposal.METHOD_REF;
         switch (context.location) {
         case ANNOTATION_BODY:
             kind = CompletionProposal.ANNOTATION_ATTRIBUTE_REF;
             break;
-        case IMPORT:
-            kind = CompletionProposal.METHOD_NAME_REFERENCE;
-            break;
         case EXPRESSION:
             if (METHOD_POINTER_COMPLETION.matcher(context.fullCompletionExpression).matches()) {
                 kind = CompletionProposal.METHOD_NAME_REFERENCE;
-                break;
             }
-        default:
-            kind = CompletionProposal.METHOD_REF;
-        }
-
-        GroovyCompletionProposal proposal = new GroovyCompletionProposal(kind, context.completionLocation);
-
-        // if location is METHOD_CONTEXT, then the type must be MethodInfoContentAssistContext
-        // ...but there are other times when the type is MethodInfoContentAssistContext as well
-        if (context.location == ContentAssistLocation.METHOD_CONTEXT) {
+            break;
+        case IMPORT:
+            kind = CompletionProposal.METHOD_NAME_REFERENCE;
+            break;
+        case METHOD_CONTEXT:
+            // if location is METHOD_CONTEXT, then the type must be MethodInfoContentAssistContext
+            // ...but there are other times when the type is MethodInfoContentAssistContext as well
+            MethodInfoContentAssistContext methodContext = (MethodInfoContentAssistContext) context;
             // only show context information and only for methods that exactly match the name
             // this happens when we are at the start of an argument or an open paren
-            MethodInfoContentAssistContext methodContext = (MethodInfoContentAssistContext) context;
             if (!methodContext.methodName.equals(method.getName())) {
                 return null;
             }
+            completionOffset = methodContext.methodNameEnd;
+        }
+
+        GroovyCompletionProposal proposal = new GroovyCompletionProposal(kind, completionOffset);
+
+        if (context.location == ContentAssistLocation.METHOD_CONTEXT) {
             proposal.setCompletion(CharOperation.NO_CHAR);
             proposal.setReplaceRange(context.completionLocation, context.completionLocation);
         } else { // this is a normal method proposal

@@ -130,11 +130,13 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                 // change offset from relative to absolute
                 setContextInformationPosition(getReplacementOffset() + fContextInformationPosition);
 
-                // coordinate editor selection with context display and linking mode
-                if (fPositions == null || fPositions.isEmpty()) {
-                    fSelectedRegion = new Region(fContextInformationPosition, 0);
-                } else {
-                    fSelectedRegion = new Region(fPositions.get(0).getOffset(), fPositions.get(0).getLength());
+                if (fProposal.getCompletion() != null && fProposal.getCompletion().length > 0) {
+                    // coordinate editor selection with linking mode
+                    if (fPositions == null || fPositions.isEmpty()) {
+                        fSelectedRegion = new Region(fContextInformationPosition, 0);
+                    } else {
+                        fSelectedRegion = new Region(fPositions.get(0).getOffset(), fPositions.get(0).getLength());
+                    }
                 }
             }
         } catch (Exception e) {
@@ -147,10 +149,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     protected IContextInformation computeContextInformation() {
         if (hasParameters() && (fProposal.getKind() == CompletionProposal.METHOD_REF ||
                                 fProposal.getKind() == CompletionProposal.CONSTRUCTOR_INVOCATION)) {
-            ProposalContextInformation contextInformation = new ProposalContextInformation(fProposal);
-            if (fContextInformationPosition != 0 && fProposal.getCompletion().length == 0)
-                contextInformation.setContextInformationPosition(fContextInformationPosition);
-            return contextInformation;
+            return new ProposalContextInformation(fProposal);
         }
         return super.computeContextInformation();
     }
@@ -177,6 +176,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     @Override
     protected String computeReplacementString() {
         if (fProposal.getCompletion() == null || fProposal.getCompletion().length == 0) {
+            setContextInformationPosition(1);
             return "";
         }
 
@@ -514,7 +514,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
             } else {
                 StringBuilder buffer = new StringBuilder();
 
-                if (fPreferences.isEnabled(GroovyContentAssist.CLOSURE_BRACKETS) && CharOperation.equals(type, CLOSURE_TYPE_SIGNATURE)) {
+                if (fPreferences.isEnabled(GroovyContentAssist.CLOSURE_BRACKETS) && CharOperation.equals(CLOSURE_TYPE_SIGNATURE, type, 1, type.length)) {
                     buffer.append("{");
                     if (fPreferences.isEnabled(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_OPENING_BRACE_IN_ARRAY_INITIALIZER)) {
                         buffer.append(SPACE);
@@ -627,7 +627,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         int n = parameterSignatures.length;
         if (n > 0) {
             char[] lastType = Signature.getTypeErasure(parameterSignatures[n - 1]);
-            if (CharOperation.equals(lastType, CLOSURE_TYPE_SIGNATURE)) {
+            if (CharOperation.equals(CLOSURE_TYPE_SIGNATURE, lastType, 1, lastType.length)) {
                 return true;
             }
         }
@@ -649,7 +649,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     }
 
     protected static final char[] CLOSURE_TYPE_NAME = "Closure".toCharArray();
-    protected static final char[] CLOSURE_TYPE_SIGNATURE = "Lgroovy.lang.Closure;".toCharArray();
+    protected static final char[] CLOSURE_TYPE_SIGNATURE = "groovy.lang.Closure;".toCharArray();
 
     //--------------------------------------------------------------------------
 
