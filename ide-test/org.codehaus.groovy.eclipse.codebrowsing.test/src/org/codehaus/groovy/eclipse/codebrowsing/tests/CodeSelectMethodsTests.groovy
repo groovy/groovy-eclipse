@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
 
+import static org.eclipse.jdt.core.IJavaElement.TYPE
+
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedBinaryMethod
 import org.eclipse.jdt.core.ICompilationUnit
@@ -468,6 +470,39 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
         assertConstructor('new Foo()', 'Foo')
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/452
+    void testCodeSelectConstuctorMapStyle() {
+        addGroovySource('class Bean { Number number; String string }', 'Bean', 'p')
+
+        ICompilationUnit unit = addGroovySource('def bean = new Bean(number: 0, string: "")', nextUnitName(), 'p')
+        prepareForCodeSelect(unit)
+
+        IJavaElement[] elems = unit.codeSelect(unit.source.lastIndexOf('Bean'), 4)
+        assert elems[0].elementName == 'Bean'
+        assert elems[0].elementType == TYPE
+    }
+
+    @Test
+    void testCodeSelectConstuctorMapStyle2() {
+        addGroovySource('class Bean2 {\n Bean2() {}\n Number number; String string\n }', 'Bean2', 'p')
+        assertConstructor('def bean = new Bean2(number: 0, string: "")', 'Bean2')
+    }
+
+    @Test
+    void testCodeSelectConstuctorNamedArgs() {
+        addGroovySource '''\
+            class Classy {
+              Classy(Number n, String s) {
+                ;
+              }
+            }
+            '''.stripIndent(), 'Classy', 'p'
+
+        // NOTE: I don't think this is correct syntax for calling the 2-arg constructor
+        IMethod method = assertConstructor('def c = new Classy(n: 0, s: "")', 'Classy')
+        assert method.parameters.length == 2
+    }
+
     @Test
     void testCodeSelectConstuctorMultipleConstructors() {
         addGroovySource('class Foo { Foo() { }\nFoo(a) { } }', nextUnitName(), 'p')
@@ -503,7 +538,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
         ICompilationUnit unit = addGroovySource(contents, nextUnitName(), 'p')
         prepareForCodeSelect(unit)
 
-        IJavaElement[] elems = unit.codeSelect(unit.getSource().lastIndexOf(toSearch), toSearch.length())
+        IJavaElement[] elems = unit.codeSelect(unit.source.lastIndexOf(toSearch), toSearch.length())
         assert elems.length == 1 : 'Should have found a selection'
         String elementName = toSearch.substring(toSearch.lastIndexOf('.') + 1)
         assert elems[0].elementName == elementName : "Should have found constructor '$elementName'"

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,8 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
@@ -178,7 +180,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
             }
         } else if (requestedNode instanceof ConstructorNode) {
             if (nodeToLookFor instanceof ConstructorCallExpression &&
-                    selectRegion.getOffset() >= ((ConstructorCallExpression) nodeToLookFor).getArguments().getStart()) {
+                    isSelectionInArguments((ConstructorCallExpression) nodeToLookFor)) {
                 requestedNode = null; // ignore selections beyond the type name
             } else {
                 requestedNode = ((ConstructorNode) requestedNode).getDeclaringClass();
@@ -515,6 +517,19 @@ public class CodeSelectRequestor implements ITypeRequestor {
         }
 
         return GroovyUtils.isAnonymous(node.getDeclaringClass());
+    }
+
+    private boolean isSelectionInArguments(ConstructorCallExpression expr) {
+        int selectOffset = selectRegion.getOffset(), startOffset = Integer.MAX_VALUE;
+        if (expr.getArguments().getStart() > 0) {
+            startOffset = expr.getArguments().getStart();
+        } else if (expr.getArguments() instanceof TupleExpression) {
+            List<Expression> args = ((TupleExpression) expr.getArguments()).getExpressions();
+            if (!args.isEmpty() && args.get(0).getStart() > 0) {
+                startOffset = args.get(0).getStart();
+            }
+        }
+        return (selectOffset >= startOffset);
     }
 
     /**
