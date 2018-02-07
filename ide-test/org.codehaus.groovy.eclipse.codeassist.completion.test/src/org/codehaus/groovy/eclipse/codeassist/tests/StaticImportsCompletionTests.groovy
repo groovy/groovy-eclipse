@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,19 +49,5 @@ final class StaticImportsCompletionTests extends CompletionTestSuite {
         String contents = "import static javax.swing.text.html.HTML.*\ngetAttributeKey"
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, "getAttributeKey"))
         proposalExists(proposals, "getAttributeKey", 1)
-    }
-
-    @Test
-    void testStaticFieldImport() {
-        String contents = "import static java.lang.Boolean.FA"
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, "FA"))
-        proposalExists(proposals, "FALSE", 1)
-    }
-
-    @Test
-    void testStaticMethodImport() {
-        String contents = "import static java.lang.Boolean.pa"
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, "pa"))
-        proposalExists(proposals, "parseBoolean", 1)
     }
 }

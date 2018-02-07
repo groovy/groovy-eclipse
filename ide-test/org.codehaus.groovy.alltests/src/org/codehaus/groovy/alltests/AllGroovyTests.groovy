@@ -39,6 +39,7 @@ import org.junit.runners.Suite
     org.codehaus.groovy.eclipse.codeassist.tests.GuessingCompletionTests,
     org.codehaus.groovy.eclipse.codeassist.tests.InferencingCompletionTests,
     org.codehaus.groovy.eclipse.codeassist.tests.InnerTypeCompletionTests,
+    org.codehaus.groovy.eclipse.codeassist.tests.ImportCompletionTests,
     org.codehaus.groovy.eclipse.codeassist.tests.LocalVariableCompletionTests,
     org.codehaus.groovy.eclipse.codeassist.tests.MethodCompletionTests,
     org.codehaus.groovy.eclipse.codeassist.tests.NewFieldCompletionTests,

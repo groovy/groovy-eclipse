@@ -59,9 +59,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.IProblem;
-import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.core.search.SearchPattern;
-import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.codeassist.CompletionEngine;
@@ -74,6 +72,7 @@ import org.eclipse.jdt.internal.compiler.util.HashtableOfObject;
 import org.eclipse.jdt.internal.compiler.util.ObjectVector;
 import org.eclipse.jdt.internal.core.NameLookup;
 import org.eclipse.jdt.internal.corext.util.TypeFilter;
+import org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.JavaTypeCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaTypeCompletionProposal;
@@ -330,6 +329,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         initializeRelevanceRule(resolver);
 
         List<ICompletionProposal> proposals = new LinkedList<>();
+        boolean qualified = (completionExpression.indexOf('.') > 0);
         try {
             HashtableOfObject onDemandFound = new HashtableOfObject();
 
@@ -362,18 +362,18 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                     initializeImportArrays(resolver.getScope());
                 }
 
-                if (imports != null) {
+                if (imports != null && !qualified) {
                     // check to see if this type is imported explicitly
                     for (char[][] importName : imports) {
                         if (CharOperation.equals(typeName, importName[0])) {
                             // potentially use fully qualified type name if there is already something else with the same simple name imported
-                            proposals.add(proposeType(packageName, simpleTypeName, modifiers, accessibility, typeName, fullyQualifiedName, !CharOperation.equals(fullyQualifiedName, importName[1])));
+                            proposals.add(proposeType(packageName, simpleTypeName, modifiers, accessibility, typeName, fullyQualifiedName, !CharOperation.equals(fullyQualifiedName, importName[1]))); // TODO: This last test fails to handle aliased imports
                             continue next;
                         }
                     }
                 }
 
-                if ((enclosingTypeNames == null || enclosingTypeNames.length == 0) && isCurrentPackage(packageName)) {
+                if (qualified || (enclosingTypeNames == null || enclosingTypeNames.length == 0) && isCurrentPackage(packageName)) {
                     proposals.add(proposeType(packageName, simpleTypeName, modifiers, accessibility, typeName, fullyQualifiedName, false));
                 } else if (((AcceptedType) onDemandFound.get(simpleTypeName)) == null && onDemandImports != null) {
                     char[] fullyQualifiedEnclosingTypeOrPackageName = null;
@@ -392,8 +392,8 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                             continue next;
                         }
                     }
-                    char[] packName = fullyQualifiedEnclosingTypeOrPackageName != null ? fullyQualifiedEnclosingTypeOrPackageName : packageName;
-                    proposals.add(proposeType(packName, simpleTypeName, modifiers, accessibility, typeName, fullyQualifiedName, true));
+                    char[] qualifier = (fullyQualifiedEnclosingTypeOrPackageName != null ? fullyQualifiedEnclosingTypeOrPackageName : packageName);
+                    proposals.add(proposeType(qualifier, simpleTypeName, modifiers, accessibility, typeName, fullyQualifiedName, true));
                 }
             }
 
@@ -417,53 +417,34 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
     }
 
     private ICompletionProposal proposeType(char[] packageName, char[] simpleTypeName, int modifiers, int accessibility, char[] qualifiedTypeName, char[] fullyQualifiedName, boolean isQualified) {
-        return isImport
-            ? proposeNoImportType(packageName, simpleTypeName, modifiers, accessibility, qualifiedTypeName, fullyQualifiedName, isQualified)
-            : proposeImportableType(packageName, simpleTypeName, modifiers, accessibility, qualifiedTypeName, fullyQualifiedName, isQualified);
-    }
+        int completionExpressionLength = context.completionExpression.length(), completionOffset = context.completionLocation - completionExpressionLength;
 
-    private ICompletionProposal proposeNoImportType(char[] packageName, char[] simpleTypeName, int modifiers, int accessibility, char[] qualifiedTypeName, char[] fullyQualifiedName, boolean isQualified) {
-        char[] completion = isQualified ? fullyQualifiedName : simpleTypeName;
-        String completionString = String.valueOf(completion);
-
-        GroovyCompletionProposal proposal = createProposal(CompletionProposal.TYPE_REF, context.completionLocation - offset);
-        proposal.setAccessibility(accessibility);
-        proposal.setCompletion(completion);
-        proposal.setDeclarationSignature(packageName);
-        proposal.setFlags(modifiers);
-        proposal.setPackageName(packageName);
-        proposal.setRelevance(computeRelevanceForTypeProposal(fullyQualifiedName, accessibility, modifiers));
-        proposal.setReplaceRange(offset, offset + replaceLength);
-        proposal.setSignature(CompletionEngine.createNonGenericTypeSignature(packageName, simpleTypeName));
-        proposal.setTokenRange(offset, context.completionLocation);
-        proposal.setTypeName(simpleTypeName);
-
-        JavaTypeCompletionProposal javaProposal = new JavaTypeCompletionProposal(completionString, null, offset, replaceLength, ProposalUtils.getImage(proposal), ProposalUtils.createDisplayString(proposal), proposal.getRelevance(), completionString, javaContext);
-        javaProposal.setTriggerCharacters(ProposalUtils.TYPE_TRIGGERS);
-        javaProposal.setRelevance(proposal.getRelevance());
-        return javaProposal;
-    }
-
-    private ICompletionProposal proposeImportableType(char[] packageName, char[] simpleTypeName, int modifiers, int accessibility, char[] qualifiedTypeName, char[] fullyQualifiedName, boolean isQualified) {
-        GroovyCompletionProposal proposal = createProposal(CompletionProposal.TYPE_REF, context.completionLocation - offset);
+        GroovyCompletionProposal proposal = createProposal(CompletionProposal.TYPE_REF, completionOffset);
         proposal.setAccessibility(accessibility);
         proposal.setCompletion(isQualified ? fullyQualifiedName : simpleTypeName);
         proposal.setDeclarationSignature(packageName);
         proposal.setFlags(modifiers);
         proposal.setPackageName(packageName);
         proposal.setRelevance(computeRelevanceForTypeProposal(fullyQualifiedName, accessibility, modifiers));
-        proposal.setReplaceRange(offset, offset + replaceLength);
-        proposal.setSignature(CompletionEngine.createNonGenericTypeSignature(packageName, simpleTypeName));
-        proposal.setTokenRange(offset, context.completionLocation);
+        proposal.setReplaceRange(completionOffset, context.completionLocation);
+        proposal.setSignature(Signature.createCharArrayTypeSignature(fullyQualifiedName, true));
+        proposal.setTokenRange(completionOffset, context.completionLocation);
         proposal.setTypeName(simpleTypeName);
 
-        LazyJavaTypeCompletionProposal javaProposal = new LazyJavaTypeCompletionProposal(proposal, javaContext);
+        if (qualifiedTypeName.length != simpleTypeName.length) {
+            char[] outerTypeName = CharOperation.subarray(qualifiedTypeName, 0, qualifiedTypeName.length - simpleTypeName.length - 1);
+            proposal.setDeclarationSignature(Signature.createCharArrayTypeSignature(CharOperation.concat(packageName, outerTypeName, '.'), true));
+        }
+
+        AbstractJavaCompletionProposal javaProposal;
+        if (isImport) {
+            javaProposal = new JavaTypeCompletionProposal(String.valueOf(proposal.getCompletion()), null, completionOffset, completionExpressionLength,
+                ProposalUtils.getImage(proposal), ProposalUtils.createDisplayString(proposal), proposal.getRelevance(), String.valueOf(fullyQualifiedName), javaContext);
+        } else {
+            javaProposal = new LazyJavaTypeCompletionProposal(proposal, javaContext);
+        }
         javaProposal.setTriggerCharacters(ProposalUtils.TYPE_TRIGGERS);
         javaProposal.setRelevance(proposal.getRelevance());
-        ImportRewrite r = groovyRewriter.getImportRewrite(monitor);
-        if (r != null) {
-            ReflectionUtils.setPrivateField(LazyJavaTypeCompletionProposal.class, "fImportRewrite", javaProposal, r);
-        }
         return javaProposal;
     }
 
@@ -682,37 +663,22 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
 
             char[] typeCompletion = simpleTypeName;
             if (context.fullCompletionExpression.indexOf('.') == -1 && !isCurrentPackage(packageName)) {
-                boolean imported = false;
-                if (imports != null) {
-                    // check to see if this type is imported explicitly
-                    for (char[][] importName : imports) {
-                        if (CharOperation.equals(typeCompletion, importName[0])) {
-                            imported = true;
-                            break;
-                        }
-                    }
-                    if (!imported && onDemandImports != null) {
-                        for (char[] importPack : onDemandImports) {
-                            if (CharOperation.equals(fullyQualifiedName, CharOperation.concat(importPack, simpleTypeName, '.'))) {
-                                imported = true;
-                                break;
-                            }
-                        }
-                    }
+                // check to see if this type is imported explicitly
+                if (!isImported(packageName, simpleTypeName)) {
+                    typeCompletion = fullyQualifiedName;
                 }
-                if (!imported) typeCompletion = fullyQualifiedName;
             }
 
             GroovyCompletionProposal typeProposal = createProposal(CompletionProposal.TYPE_REF, context.completionLocation - 1);
-            typeProposal.setSignature(proposal.getDeclarationSignature());
-            typeProposal.setReplaceRange(offset, offset + replaceLength);
-            typeProposal.setTokenRange(offset, offset + replaceLength);
             typeProposal.setCompletion(typeCompletion);
+            typeProposal.setReplaceRange(offset, offset + replaceLength);
+            typeProposal.setSignature(proposal.getDeclarationSignature());
 
             //typeProposal.setFlags(typeModifiers);
             //typeProposal.setTypeName(simpleTypeName);
             //typeProposal.setPackageName(packageName);
             //typeProposal.setDeclarationSignature(declarationSignature);
+            //typeProposal.setTokenRange(offset, offset + replaceLength);
             //typeProposal.setRelevance(computeRelevanceForTypeProposal(fullyQualifiedName, accessibility, augmentedModifiers));
 
             proposal.setRequiredProposals(new CompletionProposal[] {typeProposal});
@@ -843,6 +809,31 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         }
 
         return isCurrentPackage;
+    }
+
+    private boolean isImported(char[] packName, char[] typeName) {
+        boolean imported = false, conflict = false;
+        if (imports != null) {
+            for (char[][] importSpec : imports) {
+                if (CharOperation.equals(typeName, importSpec[0])) {
+                    if (CharOperation.equals(packName, importSpec[1], 0, CharOperation.lastIndexOf('.', importSpec[1]))) {
+                        imported = true;
+                    } else {
+                        conflict = true;
+                    }
+                    break;
+                }
+            }
+        }
+        if (!imported && !conflict && !isCurrentPackage(packName) && onDemandImports != null) {
+            for (char[] importPack : onDemandImports) {
+                if (CharOperation.equals(packName, importPack)) {
+                    imported = true;
+                    break;
+                }
+            }
+        }
+        return imported;
     }
 
     private static char[] getImportName(ImportBinding binding) {

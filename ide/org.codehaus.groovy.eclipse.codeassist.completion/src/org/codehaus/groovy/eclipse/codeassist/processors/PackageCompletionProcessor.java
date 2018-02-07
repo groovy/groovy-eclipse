@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,21 +21,27 @@ import java.util.List;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
+import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaConventions;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.groovy.search.ITypeResolver;
+import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 public class PackageCompletionProcessor extends AbstractGroovyCompletionProcessor implements ITypeResolver {
 
+    protected ModuleNode module;
     protected JDTResolver resolver;
 
     public PackageCompletionProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
@@ -44,6 +50,7 @@ public class PackageCompletionProcessor extends AbstractGroovyCompletionProcesso
 
     @Override
     public void setResolverInformation(ModuleNode module, JDTResolver resolver) {
+        this.module = module;
         this.resolver = resolver;
     }
 
@@ -51,8 +58,8 @@ public class PackageCompletionProcessor extends AbstractGroovyCompletionProcesso
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
         ContentAssistContext context = getContext();
 
-        char[] packageCompletionText = getPackageCompletionText(context.fullCompletionExpression);
-        if (packageCompletionText == null || packageCompletionText.length == 0 || !mightBePackage(packageCompletionText)) {
+        char[] completionChars = getPackageCompletion(context.fullCompletionExpression);
+        if (completionChars == null || completionChars.length == 0 || !mightBePackage(completionChars)) {
             return Collections.emptyList();
         }
 
@@ -64,52 +71,49 @@ public class PackageCompletionProcessor extends AbstractGroovyCompletionProcesso
             }
         }
 
-        int expressionStart = context.completionLocation - context.fullCompletionExpression.trim().length();
+        int expressionStart = context.completionLocation - context.fullCompletionExpression.trim().length(),
+            replacementLength = context.completionEnd - expressionStart;
+        SearchableEnvironment environment = getNameEnvironment();
         GroovyProposalTypeSearchRequestor requestor = new GroovyProposalTypeSearchRequestor(
-            context, getJavaContext(), expressionStart, context.completionEnd - expressionStart, getNameEnvironment().nameLookup, monitor);
-        getNameEnvironment().findPackages(packageCompletionText, requestor);
+            context, getJavaContext(), expressionStart, replacementLength, environment.nameLookup, monitor);
+        environment.findPackages(completionChars, requestor);
+
+        //
         List<ICompletionProposal> proposals = requestor.processAcceptedPackages();
 
-        boolean alsoLookForTypes = shouldLookForTypes(packageCompletionText);
-        if (alsoLookForTypes) {
-            getNameEnvironment().findTypes(packageCompletionText,
-                true /* find all member types, should be false when in constructor*/,
-                true /* camel case match */, getSearchFor(), requestor, monitor);
+        if (lookForTypes(completionChars)) {
+            // not sure about findMembers; javadoc says method does not find member types
+            boolean findMembers = true;  boolean camelCaseMatch = true;  int searchFor = getSearchFor();
+            environment.findTypes(completionChars, findMembers, camelCaseMatch, searchFor, requestor, monitor);
+
+            // check for member types
+            char[] qualifier = CharOperation.subarray(completionChars, 0, CharOperation.lastIndexOf('.', completionChars));
+            if (!environment.nameLookup.isPackage(CharOperation.toStrings(CharOperation.splitOn('.', qualifier)))) {
+                String fullyQualifiedName = resolver.resolve(String.valueOf(qualifier)).getName();
+                IType outer = environment.nameLookup.findType(fullyQualifiedName, false, 0);
+                String prefix = String.valueOf(CharOperation.lastSegment(completionChars, '.'));
+                try {
+                    for (IType inner : outer.getTypes()) {
+                        if (ProposalUtils.looselyMatches(prefix, inner.getElementName()) && isAcceptable(inner, searchFor)) {
+                            requestor.acceptType(inner.getPackageFragment().getElementName().toCharArray(), inner.getElementName().toCharArray(),
+                                CharOperation.splitOn('$', outer.getTypeQualifiedName().toCharArray()), inner.getFlags(), ProposalUtils.getTypeAccessibility(inner));
+                        }
+                    }
+                } catch (JavaModelException e) {
+                    GroovyContentAssist.logError(e);
+                }
+            }
+
+            //
             proposals.addAll(requestor.processAcceptedTypes(resolver));
         }
         return proposals;
     }
 
     /**
-     * Do not look for types if there is no '.'.  In this case,
-     * type searching is handled by {@link TypeCompletionProcessor}.
+     * Removes whitespace and does a fail-fast if a non-java identifier is found.
      */
-    private boolean shouldLookForTypes(char[] packageCompletionText) {
-        return CharOperation.indexOf('.', packageCompletionText) > -1;
-    }
-
-    /**
-     * more complete search to see if this is a valid package name
-     */
-    private boolean mightBePackage(char[] packageCompletionText) {
-        String text = String.valueOf(packageCompletionText);
-        String[] splits = text.split("\\.");
-        for (String split : splits) {
-            // use 1.7 because backwards compatibility ensures that nothing is missed.
-            if (split.length() > 0) {
-                IStatus status = JavaConventions.validateIdentifier(split, "1.7", "1.7");
-                if (status.getSeverity() >= IStatus.ERROR) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    /**
-     * removes whitespace and does a fail-fast if a non-java identifier is found
-     */
-    private char[] getPackageCompletionText(String fullCompletionExpression) {
+    protected char[] getPackageCompletion(String fullCompletionExpression) {
         List<Character> chars = new LinkedList<>();
         if (fullCompletionExpression == null) {
             return CharOperation.NO_CHAR;
@@ -134,7 +138,31 @@ public class PackageCompletionProcessor extends AbstractGroovyCompletionProcesso
         return res;
     }
 
-    private int getSearchFor() {
+    /**
+     * Do not look for types if there is no '.'.  In this case,
+     * type searching is handled by {@link TypeCompletionProcessor}.
+     */
+    protected boolean lookForTypes(char[] packageCompletion) {
+        return CharOperation.contains('.', packageCompletion);
+    }
+
+    /**
+     * More complete search to see if this is a valid package name.
+     */
+    protected boolean mightBePackage(char[] packageCompletion) {
+        for (char[] segment : CharOperation.splitOn('.', packageCompletion)) {
+            if (segment.length > 0) {
+                // use 1.7 because backwards compatibility ensures that nothing is missed
+                IStatus status = JavaConventions.validateIdentifier(String.valueOf(segment), "1.7", "1.7");
+                if (status.getSeverity() >= IStatus.ERROR) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    protected int getSearchFor() {
         switch(getContext().location) {
         case EXTENDS:
             return IJavaSearchConstants.CLASS;
@@ -145,5 +173,21 @@ public class PackageCompletionProcessor extends AbstractGroovyCompletionProcesso
         default:
             return IJavaSearchConstants.TYPE;
         }
+    }
+
+    protected boolean isAcceptable(IType type, int searchFor) throws JavaModelException {
+        if (searchFor == IJavaSearchConstants.TYPE) {
+            return true;
+        }
+        int kind = TypeDeclaration.kind(type.getFlags());
+        switch (kind) {
+        case TypeDeclaration.ENUM_DECL:
+        case TypeDeclaration.CLASS_DECL:
+        case TypeDeclaration.ANNOTATION_TYPE_DECL:
+            return (searchFor == IJavaSearchConstants.CLASS);
+        case TypeDeclaration.INTERFACE_DECL:
+            return (searchFor == IJavaSearchConstants.INTERFACE);
+        }
+        return false;
     }
 }
