@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -111,8 +111,7 @@ public class ProposalUtils {
         try {
             IClasspathEntry entry = root.getResolvedClasspathEntry();
             // Alternative:
-            // entry = ((JavaProject) typeProject).getClasspathEntryFor(root
-            // .getPath());
+            // entry = ((JavaProject) typeProject).getClasspathEntryFor(root.getPath());
             if (entry instanceof ClasspathEntry) {
                 AccessRuleSet accessRuleSet = ((ClasspathEntry) entry).getAccessRuleSet();
                 if (accessRuleSet != null) {

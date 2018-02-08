@@ -49,9 +49,9 @@ public abstract class AbstractGroovyCompletionProcessor implements IGroovyComple
 
     protected IProposalCreator[] getAllProposalCreators() {
         return new IProposalCreator[] {
-            new MethodProposalCreator(),
             new FieldProposalCreator(),
-            new CategoryProposalCreator(),
+            new MethodProposalCreator(),
+            new CategoryProposalCreator()
         };
     }
 
