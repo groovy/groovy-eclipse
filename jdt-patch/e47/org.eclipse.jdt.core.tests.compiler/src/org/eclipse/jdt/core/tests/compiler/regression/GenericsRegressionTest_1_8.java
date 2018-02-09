@@ -1235,12 +1235,7 @@ public void testBug425493() {
 		"	^^^^^^^^^^^^\n" + 
 		"The method addAttribute(Test.Attribute<T>, T) in the type Test is not applicable for the arguments (Test.Attribute<capture#1-of ?>, capture#2-of ?)\n" + 
 		"----------\n" + 
-		"2. ERROR in Test.java (at line 3)\n" + 
-		"	addAttribute(java.util.Objects.requireNonNull(attribute, \"\"),\n" + 
-		"	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-		"Type mismatch: cannot convert from Test.Attribute<capture#1-of ?> to Test.Attribute<T>\n" + 
-		"----------\n" + 
-		"3. ERROR in Test.java (at line 5)\n" + 
+		"2. ERROR in Test.java (at line 5)\n" + 
 		"	addAttribute(attribute, attribute.getDefault());\n" + 
 		"	^^^^^^^^^^^^\n" + 
 		"The method addAttribute(Test.Attribute<T>, T) in the type Test is not applicable for the arguments (Test.Attribute<capture#3-of ?>, capture#4-of ?)\n" + 
@@ -7011,11 +7006,6 @@ public void testBug502350() {
 		"	Stuff.func(Comparator.naturalOrder());\n" + 
 		"	      ^^^^\n" + 
 		"The method func(Comparator<T>) in the type Stuff is not applicable for the arguments (Comparator<Comparable<Comparable<B>>>)\n" + 
-		"----------\n" + 
-		"2. ERROR in makeCompilerFreeze\\EclipseJava8Bug.java (at line 20)\n" + 
-		"	Stuff.func(Comparator.naturalOrder());\n" + 
-		"	           ^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-		"Type mismatch: cannot convert from Comparator<Comparable<Comparable<B>>> to Comparator<T>\n" + 
 		"----------\n"
 	);
 }
@@ -8539,5 +8529,41 @@ public void testBug508834_comment0() {
 			"	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
 			"Type safety: The expression of type Action[] needs unchecked conversion to conform to Action<S2>[]\n" + 
 			"----------\n");
+	}
+	public void testBug519147() {
+		runConformTest(
+			new String[] {
+				"Main.java",
+				"import java.util.HashMap;\n" + 
+				"import java.util.HashSet;\n" + 
+				"import java.util.Set;\n" + 
+				"\n" + 
+				"public class Main<MyKey, MyValue> {\n" + 
+				"\n" + 
+				"    static class MyMap<K, V> extends HashMap<K, V> {\n" + 
+				"        public MyMap<K, V> putAllReturning(MyMap<K, V> c) { putAll(c); return this; }\n" + 
+				"        public MyMap<K, V> putReturning(K key, V value) { put(key, value); return this; }\n" + 
+				"    }\n" + 
+				"\n" + 
+				"    public Main() {\n" + 
+				"        Set<MyValue> values = new HashSet<>(); // actually something better\n" + 
+				"        final MyMap<MyKey, MyValue> myMap =\n" + 
+				"                values.stream()\n" + 
+				"                    .reduce(\n" + 
+				"                        new MyMap<MyKey, MyValue>(),\n" + 
+				"                        (map, value) -> {\n" + 
+				"                            Set<MyKey> keys = new HashSet<>(); // actually something better\n" + 
+				"\n" + 
+				"                            return keys.stream()\n" + 
+				"                                .reduce(\n" + 
+				"                                    map, // this would work syntactically: new MyMap<MyKey, MyValue>(),\n" + 
+				"                                    (map2, key) -> map2.putReturning(key, value),\n" + 
+				"                                    MyMap::putAllReturning);\n" + 
+				"                        },\n" + 
+				"                        MyMap::putAllReturning\n" + 
+				"                    );\n" + 
+				"    }\n" + 
+				"}\n"
+			});
 	}
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011, 2017 IBM Corporation and others.
+ * Copyright (c) 2011, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1585,7 +1585,7 @@ public void test055() {
 		  "}\n" +
 		  "public class X {\n" +
 		  "	public static void main(String[] args) {\n" +
-		  "		X x = null;\n" +
+		  "		X x = new X();\n" +
 		  "		I i = x::foo;\n" +
 		  "	}\n" +
 		  "	int foo(int x) {\n" +
@@ -1607,8 +1607,8 @@ public void test056() {
 		  "public class X {\n" +
 		  "	public static void main(String[] args) {\n" +
 		  "		X x = null;\n" +
-		  "		I i = x::foo;\n" +
 		  "		try {\n" +
+		  "			I i = x::foo;\n" +
 		  "			i.foo(10);\n" +
 		  "		} catch (NullPointerException npe) {\n" +
 		  "			System.out.println(npe.getMessage());\n" +
@@ -6698,6 +6698,72 @@ public void testBug522469a() {
 		"	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
 		"The target type of this expression is not a well formed parameterized type due to bound(s) mismatch\n" + 
 		"----------\n");
+}
+public void testBug521182() {
+	runConformTest(
+		new String[] {
+			"MethodRef.java",
+			"import java.util.function.Supplier;\n" + 
+			"public class MethodRef {\n" + 
+			"  public static void m(Supplier<?> s) {\n" + 
+			"  }\n" + 
+			"  public static void main(String[] args) {\n" + 
+			"    Object ref = null;\n" +
+			"	 try {\n" +
+			"    	m(ref::toString);\n" +
+			"	    System.out.println(\"A NPE should have been thrown !!!!!\");\n" + 
+			"	 } catch (NullPointerException e) {\n" +
+			"		System.out.println(\"Success\");\n" +
+			"	 }\n" +
+			"  }\n" + 
+			"}"
+		},
+		"Success");
+}
+public void testBug521182a() {
+	runConformTest(
+		new String[] {
+			"MethodRef.java",
+			"import java.util.function.Supplier;\n" + 
+			"public class MethodRef {\n" +
+			"	Object field = null;\n" +
+			"  public static void m(Supplier<?> s) {\n" + 
+			"  }\n" + 
+			"  public static void main(String[] args) {\n" + 
+			"	 try {\n" +
+			"		MethodRef ref = new MethodRef();\n" +
+			"    	m(ref.field::toString);\n" +
+			"	    System.out.println(\"A NPE should have been thrown !!!!!\");\n" + 
+			"	 } catch (NullPointerException e) {\n" +
+			"		System.out.println(\"Success\");\n" +
+			"	 }\n" +
+			"  }\n" + 
+			"}"
+		},
+		"Success");
+}
+public void testBug521182b() {
+	runConformTest(
+		new String[] {
+			"MethodRef.java",
+			"import java.util.function.Supplier;\n" + 
+			"public class MethodRef {\n" +
+			"  public static void m(Supplier<?> s) {\n" + 
+			"  }\n" + 
+			"  public static Object get() {\n" +
+			"	 return null;\n" +
+			"  }\n" +
+			"  public static void main(String[] args) {\n" + 
+			"	 try {\n" +
+			"    	m(get()::toString);\n" +
+			"	    System.out.println(\"A NPE should have been thrown !!!!!\");\n" + 
+			"	 } catch (NullPointerException e) {\n" +
+			"		System.out.println(\"Success\");\n" +
+			"	 }\n" +
+			"  }\n" + 
+			"}"
+		},
+		"Success");
 }
 public static Class testClass() {
 	return LambdaExpressionsTest.class;

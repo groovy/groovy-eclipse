@@ -503,6 +503,9 @@ public class TypeSystem {
 	
 	public void updateCaches(UnresolvedReferenceBinding unresolvedType, ReferenceBinding resolvedType) {
 		final int unresolvedTypeId = unresolvedType.id;
+		if (resolvedType.id != TypeIds.NoId) {
+			unresolvedType.id = resolvedType.id;
+		}
 		if (unresolvedTypeId != TypeIds.NoId) {
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=432977
 			TypeBinding[] derivedTypes = this.types[unresolvedTypeId];
@@ -510,7 +513,8 @@ public class TypeSystem {
 				if (derivedTypes[i] == null)
 					break;
 				if (derivedTypes[i] == unresolvedType) { //$IDENTITY-COMPARISON$
-					resolvedType.id = unresolvedTypeId;
+					if(resolvedType.id == TypeIds.NoId)
+						resolvedType.id = unresolvedTypeId;
 					derivedTypes[i] = resolvedType;
 				}
 			}

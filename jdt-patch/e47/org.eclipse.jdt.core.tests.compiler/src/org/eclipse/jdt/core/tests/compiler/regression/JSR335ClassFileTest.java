@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2016 Jesper Steen Moller, IBM and others.
+ * Copyright (c) 2013, 2018 Jesper Steen Moller, IBM and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -426,41 +426,45 @@ public void test004() throws Exception {
 			"    constant #15 utf8: \"SUCCESS\"\n" + 
 			"    constant #16 field_ref: #1.#17 X.s Ljava/lang/String;\n" + 
 			"    constant #17 name_and_type: #5.#6 s Ljava/lang/String;\n" + 
-			"    constant #18 name_and_type: #19.#20 produce (Ljava/lang/String;)LStringProducer;\n" + 
-			"    constant #19 utf8: \"produce\"\n" + 
-			"    constant #20 utf8: \"(Ljava/lang/String;)LStringProducer;\"\n" + 
-			"    constant #21 invoke dynamic: #0 #18 produce (Ljava/lang/String;)LStringProducer;\n" + 
-			"    constant #22 field_ref: #1.#23 X.referenceExpression LStringProducer;\n" + 
-			"    constant #23 name_and_type: #7.#8 referenceExpression LStringProducer;\n" + 
-			"    constant #24 utf8: \"LineNumberTable\"\n" + 
-			"    constant #25 utf8: \"LocalVariableTable\"\n" + 
-			"    constant #26 utf8: \"this\"\n" + 
-			"    constant #27 utf8: \"LX;\"\n" + 
-			"    constant #28 utf8: \"SourceFile\"\n" + 
-			"    constant #29 utf8: \"X.java\"\n" + 
-			"    constant #30 utf8: \"BootstrapMethods\"\n" + 
-			"    constant #31 method_ref: #32.#34 java/lang/invoke/LambdaMetafactory.metafactory (Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;\n" + 
-			"    constant #32 class: #33 java/lang/invoke/LambdaMetafactory\n" + 
-			"    constant #33 utf8: \"java/lang/invoke/LambdaMetafactory\"\n" + 
-			"    constant #34 name_and_type: #35.#36 metafactory (Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;\n" + 
-			"    constant #35 utf8: \"metafactory\"\n" + 
-			"    constant #36 utf8: \"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;\"\n" + 
-			"    constant #37 method handle: invokestatic (6) #31 \n" + 
-			"    constant #38 utf8: \"()Ljava/lang/String;\"\n" + 
-			"    constant #39 method type: #38 ()Ljava/lang/String;\n" + 
-			"    constant #40 method_ref: #41.#43 java/lang/String.toString ()Ljava/lang/String;\n" + 
-			"    constant #41 class: #42 java/lang/String\n" + 
-			"    constant #42 utf8: \"java/lang/String\"\n" + 
-			"    constant #43 name_and_type: #44.#38 toString ()Ljava/lang/String;\n" + 
-			"    constant #44 utf8: \"toString\"\n" + 
-			"    constant #45 method handle: invokevirtual (5) #40 \n" + 
-			"    constant #46 method type: #38 ()Ljava/lang/String;\n" + 
-			"    constant #47 utf8: \"InnerClasses\"\n" + 
-			"    constant #48 class: #49 java/lang/invoke/MethodHandles$Lookup\n" + 
-			"    constant #49 utf8: \"java/lang/invoke/MethodHandles$Lookup\"\n" + 
-			"    constant #50 class: #51 java/lang/invoke/MethodHandles\n" + 
-			"    constant #51 utf8: \"java/lang/invoke/MethodHandles\"\n" + 
-			"    constant #52 utf8: \"Lookup\"\n" + 
+			"    constant #18 method_ref: #3.#19 java/lang/Object.getClass ()Ljava/lang/Class;\n" + 
+			"    constant #19 name_and_type: #20.#21 getClass ()Ljava/lang/Class;\n" + 
+			"    constant #20 utf8: \"getClass\"\n" + 
+			"    constant #21 utf8: \"()Ljava/lang/Class;\"\n" + 
+			"    constant #22 name_and_type: #23.#24 produce (Ljava/lang/String;)LStringProducer;\n" + 
+			"    constant #23 utf8: \"produce\"\n" + 
+			"    constant #24 utf8: \"(Ljava/lang/String;)LStringProducer;\"\n" + 
+			"    constant #25 invoke dynamic: #0 #22 produce (Ljava/lang/String;)LStringProducer;\n" + 
+			"    constant #26 field_ref: #1.#27 X.referenceExpression LStringProducer;\n" + 
+			"    constant #27 name_and_type: #7.#8 referenceExpression LStringProducer;\n" + 
+			"    constant #28 utf8: \"LineNumberTable\"\n" + 
+			"    constant #29 utf8: \"LocalVariableTable\"\n" + 
+			"    constant #30 utf8: \"this\"\n" + 
+			"    constant #31 utf8: \"LX;\"\n" + 
+			"    constant #32 utf8: \"SourceFile\"\n" + 
+			"    constant #33 utf8: \"X.java\"\n" + 
+			"    constant #34 utf8: \"BootstrapMethods\"\n" + 
+			"    constant #35 method_ref: #36.#38 java/lang/invoke/LambdaMetafactory.metafactory (Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;\n" + 
+			"    constant #36 class: #37 java/lang/invoke/LambdaMetafactory\n" + 
+			"    constant #37 utf8: \"java/lang/invoke/LambdaMetafactory\"\n" + 
+			"    constant #38 name_and_type: #39.#40 metafactory (Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;\n" + 
+			"    constant #39 utf8: \"metafactory\"\n" + 
+			"    constant #40 utf8: \"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;\"\n" + 
+			"    constant #41 method handle: invokestatic (6) #35 \n" + 
+			"    constant #42 utf8: \"()Ljava/lang/String;\"\n" + 
+			"    constant #43 method type: #42 ()Ljava/lang/String;\n" + 
+			"    constant #44 method_ref: #45.#47 java/lang/String.toString ()Ljava/lang/String;\n" + 
+			"    constant #45 class: #46 java/lang/String\n" + 
+			"    constant #46 utf8: \"java/lang/String\"\n" + 
+			"    constant #47 name_and_type: #48.#42 toString ()Ljava/lang/String;\n" + 
+			"    constant #48 utf8: \"toString\"\n" + 
+			"    constant #49 method handle: invokevirtual (5) #44 \n" + 
+			"    constant #50 method type: #42 ()Ljava/lang/String;\n" + 
+			"    constant #51 utf8: \"InnerClasses\"\n" + 
+			"    constant #52 class: #53 java/lang/invoke/MethodHandles$Lookup\n" + 
+			"    constant #53 utf8: \"java/lang/invoke/MethodHandles$Lookup\"\n" + 
+			"    constant #54 class: #55 java/lang/invoke/MethodHandles\n" + 
+			"    constant #55 utf8: \"java/lang/invoke/MethodHandles\"\n" + 
+			"    constant #56 utf8: \"Lookup\"\n" + 
 			"  \n" + 
 			"  // Field descriptor #6 Ljava/lang/String;\n" + 
 			"  java.lang.String s;\n" + 
@@ -469,7 +473,7 @@ public void test004() throws Exception {
 			"  public StringProducer referenceExpression;\n" + 
 			"  \n" + 
 			"  // Method descriptor #10 ()V\n" + 
-			"  // Stack: 2, Locals: 1\n" + 
+			"  // Stack: 3, Locals: 1\n" + 
 			"  public X();\n" + 
 			"     0  aload_0 [this]\n" + 
 			"     1  invokespecial java.lang.Object() [12]\n" + 
@@ -479,27 +483,29 @@ public void test004() throws Exception {
 			"    10  aload_0 [this]\n" + 
 			"    11  aload_0 [this]\n" + 
 			"    12  getfield X.s : java.lang.String [16]\n" + 
-			"    15  invokedynamic 0 produce(java.lang.String) : StringProducer [21]\n" + 
-			"    20  putfield X.referenceExpression : StringProducer [22]\n" + 
-			"    23  return\n" + 
+			"    15  dup\n" + 
+			"    16  invokevirtual java.lang.Object.getClass() : java.lang.Class [18]\n" + 
+			"    19  pop\n" + 
+			"    20  invokedynamic 0 produce(java.lang.String) : StringProducer [25]\n" + 
+			"    25  putfield X.referenceExpression : StringProducer [26]\n" + 
+			"    28  return\n" + 
 			"      Line numbers:\n" + 
 			"        [pc: 0, line: 1]\n" + 
 			"        [pc: 4, line: 2]\n" + 
 			"        [pc: 10, line: 3]\n" + 
-			"        [pc: 23, line: 1]\n" + 
+			"        [pc: 28, line: 1]\n" + 
 			"      Local variable table:\n" + 
-			"        [pc: 0, pc: 24] local: this index: 0 type: X\n" + 
+			"        [pc: 0, pc: 29] local: this index: 0 type: X\n" + 
 			"\n" + 
 			"  Inner classes:\n" + 
-			"    [inner class info: #48 java/lang/invoke/MethodHandles$Lookup, outer class info: #50 java/lang/invoke/MethodHandles\n" + 
-			"     inner name: #52 Lookup, accessflags: 25 public static final]\n" + 
+			"    [inner class info: #52 java/lang/invoke/MethodHandles$Lookup, outer class info: #54 java/lang/invoke/MethodHandles\n" + 
+			"     inner name: #56 Lookup, accessflags: 25 public static final]\n" + 
 			"Bootstrap methods:\n" + 
-			"  0 : # 37 invokestatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;" + 
-			"Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;\n" + 
+			"  0 : # 41 invokestatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;\n" + 
 			"	Method arguments:\n" + 
-			"		#39 ()Ljava/lang/String;\n" + 
-			"		#45 java/lang/String.toString:()Ljava/lang/String;\n" + 
-			"		#46 ()Ljava/lang/String;\n" + 
+			"		#43 ()Ljava/lang/String;\n" + 
+			"		#49 java/lang/String.toString:()Ljava/lang/String;\n" + 
+			"		#50 ()Ljava/lang/String;\n" + 
 			"}";
 
 	verifyClassFile(expectedOutput, "X.class", ClassFileBytesDisassembler.SYSTEM);

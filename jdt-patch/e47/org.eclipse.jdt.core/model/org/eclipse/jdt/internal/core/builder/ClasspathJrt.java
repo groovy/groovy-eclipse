@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2017 IBM Corporation and others.
+ * Copyright (c) 2016, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -181,7 +181,8 @@ public boolean equals(Object o) {
 	if (this == o) return true;
 	if (!(o instanceof ClasspathJrt)) return false;
 	ClasspathJrt jar = (ClasspathJrt) o;
-	return this.zipFilename.endsWith(jar.zipFilename);
+
+	return this.zipFilename.endsWith(jar.zipFilename) && areAllModuleOptionsEqual(jar);
 }
 
 @Override

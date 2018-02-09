@@ -612,8 +612,8 @@ public TypeBinding resolveTypeArgument(ClassScope classScope, ReferenceBinding g
 	boolean pauseHierarchyCheck = false;
 	try {
 		if (ref.isHierarchyBeingConnected()) {
+			pauseHierarchyCheck = (ref.tagBits & TagBits.PauseHierarchyCheck) == 0;
 			ref.tagBits |= TagBits.PauseHierarchyCheck;
-			pauseHierarchyCheck = true;
 		}
 	    return resolveType(classScope, Binding.DefaultLocationTypeArgument);
 	} finally {

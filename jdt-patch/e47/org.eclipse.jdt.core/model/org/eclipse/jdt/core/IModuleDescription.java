@@ -24,6 +24,6 @@ package org.eclipse.jdt.core;
  * @noimplement This interface is not intended to be implemented by clients.
  * @since 3.14
  */
-public interface IModuleDescription extends IMember {
+public interface IModuleDescription extends IMember, IAnnotatable {
 	// empty block
 }

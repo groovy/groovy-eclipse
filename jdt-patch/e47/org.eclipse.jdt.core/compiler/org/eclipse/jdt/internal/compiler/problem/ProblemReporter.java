@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -81,6 +81,7 @@ import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
@@ -163,9 +164,12 @@ import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.flow.FlowInfo;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
+import org.eclipse.jdt.internal.compiler.impl.StringConstant;
+import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.CaptureBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ElementValuePair;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.InvocationSite;
@@ -243,6 +247,11 @@ public static int getIrritant(int problemID) {
 		case IProblem.UsingDeprecatedMethod :
 		case IProblem.UsingDeprecatedConstructor :
 		case IProblem.UsingDeprecatedField :
+		case IProblem.OverridingDeprecatedSinceVersionMethod :
+		case IProblem.UsingDeprecatedSinceVersionType :
+		case IProblem.UsingDeprecatedSinceVersionMethod :
+		case IProblem.UsingDeprecatedSinceVersionConstructor :
+		case IProblem.UsingDeprecatedSinceVersionField :
 			return CompilerOptions.UsingDeprecatedAPI;
 
 		case IProblem.OverridingTerminallyDeprecatedMethod :
@@ -250,6 +259,11 @@ public static int getIrritant(int problemID) {
 		case IProblem.UsingTerminallyDeprecatedMethod :
 		case IProblem.UsingTerminallyDeprecatedConstructor :
 		case IProblem.UsingTerminallyDeprecatedField :
+		case IProblem.OverridingTerminallyDeprecatedSinceVersionMethod :
+		case IProblem.UsingTerminallyDeprecatedSinceVersionType :
+		case IProblem.UsingTerminallyDeprecatedSinceVersionMethod :
+		case IProblem.UsingTerminallyDeprecatedSinceVersionConstructor :
+		case IProblem.UsingTerminallyDeprecatedSinceVersionField :
 			return CompilerOptions.UsingTerminallyDeprecatedAPI;
 
 		case IProblem.LocalVariableIsNeverUsed :
@@ -1709,20 +1723,37 @@ public void defaultModifierIllegallySpecified(int sourceStart, int sourceEnd) {
 		sourceStart, sourceEnd);
 }
 
-public void deprecatedField(FieldBinding field, ASTNode location) {
-	this.handle(
-		(field.tagBits & TagBits.AnnotationTerminallyDeprecated) == 0 ? IProblem.UsingDeprecatedField : IProblem.UsingTerminallyDeprecatedField,
-		new String[] {new String(field.declaringClass.readableName()), new String(field.name)},
-		new String[] {new String(field.declaringClass.shortReadableName()), new String(field.name)},
-		nodeSourceStart(field, location),
-		nodeSourceEnd(field, location));
+public void deprecatedField(final FieldBinding field, ASTNode location) {
+	String fieldName = new String(field.name);
+	int sourceStart = nodeSourceStart(field, location);
+	int sourceEnd = nodeSourceEnd(field, location);
+	String sinceValue = deprecatedSinceValue(() -> field.getAnnotations());
+	if (sinceValue != null) {
+		this.handle(
+			(field.tagBits & TagBits.AnnotationTerminallyDeprecated) == 0 ? IProblem.UsingDeprecatedSinceVersionField : IProblem.UsingTerminallyDeprecatedSinceVersionField,
+			new String[] {new String(field.declaringClass.readableName()), fieldName, sinceValue},
+			new String[] {new String(field.declaringClass.shortReadableName()), fieldName, sinceValue},
+			sourceStart, sourceEnd);
+	} else {
+		this.handle(
+			(field.tagBits & TagBits.AnnotationTerminallyDeprecated) == 0 ? IProblem.UsingDeprecatedField : IProblem.UsingTerminallyDeprecatedField,
+			new String[] {new String(field.declaringClass.readableName()), fieldName},
+			new String[] {new String(field.declaringClass.shortReadableName()), fieldName},
+			sourceStart, sourceEnd);
+	}
 }
 
-public void deprecatedMethod(MethodBinding method, ASTNode location) {
+public void deprecatedMethod(final MethodBinding method, ASTNode location) {
+	// common arguments:
+	String readableClassName = new String(method.declaringClass.readableName());
+	String shortReadableClassName = new String(method.declaringClass.shortReadableName());
+	String selector = new String(method.selector);
+	String signature = typesAsString(method, false);
+	String shortSignature = typesAsString(method, true);
+	
 	boolean isConstructor = method.isConstructor();
-	boolean terminally = (method.tagBits & TagBits.AnnotationTerminallyDeprecated) != 0;
+	int start = -1;
 	if (isConstructor) {
-		int start = -1;
 		if(location instanceof AllocationExpression) {
 			// omit the new keyword from the warning marker
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=300031
@@ -1732,25 +1763,50 @@ public void deprecatedMethod(MethodBinding method, ASTNode location) {
 			}
 			start = allocationExpression.type.sourceStart;
 		}
-		this.handle(
-			terminally ? IProblem.UsingTerminallyDeprecatedConstructor : IProblem.UsingDeprecatedConstructor,
-			new String[] {new String(method.declaringClass.readableName()), typesAsString(method, false)},
-			new String[] {new String(method.declaringClass.shortReadableName()), typesAsString(method, true)},
-			(start == -1) ? location.sourceStart : start,
-			location.sourceEnd);
 	} else {
-		int start = -1;
 		if (location instanceof MessageSend) {
 			// start the warning marker from the location where the name of the method starts
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=300031
 			start = (int) (((MessageSend)location).nameSourcePosition >>> 32);
 		}
-		this.handle(
-			terminally ? IProblem.UsingTerminallyDeprecatedMethod : IProblem.UsingDeprecatedMethod,
-			new String[] {new String(method.declaringClass.readableName()), new String(method.selector), typesAsString(method, false)},
-			new String[] {new String(method.declaringClass.shortReadableName()), new String(method.selector), typesAsString(method, true)},
-			(start == -1) ? location.sourceStart : start,
-			location.sourceEnd);
+	}
+	int sourceStart = (start == -1) ? location.sourceStart : start;
+	int sourceEnd = location.sourceEnd;
+
+	// discriminate:
+	boolean terminally = (method.tagBits & TagBits.AnnotationTerminallyDeprecated) != 0;
+	String sinceValue = deprecatedSinceValue(() -> method.getAnnotations());
+	if (sinceValue == null && method.isConstructor()) {
+		sinceValue = deprecatedSinceValue(() -> method.declaringClass.getAnnotations()); // for default ctor
+	}
+	if (sinceValue != null) {
+		if (isConstructor) {
+			this.handle(
+				terminally ? IProblem.UsingTerminallyDeprecatedSinceVersionConstructor : IProblem.UsingDeprecatedSinceVersionConstructor,
+				new String[] {readableClassName, signature, sinceValue},
+				new String[] {shortReadableClassName, shortSignature, sinceValue},
+				sourceStart, sourceEnd);
+		} else {
+			this.handle(
+				terminally ? IProblem.UsingTerminallyDeprecatedSinceVersionMethod : IProblem.UsingDeprecatedSinceVersionMethod,
+				new String[] {readableClassName, selector, signature, sinceValue},
+				new String[] {shortReadableClassName, selector, shortSignature, sinceValue},
+				sourceStart, sourceEnd);
+		}
+	} else {
+		if (isConstructor) {
+			this.handle(
+				terminally ? IProblem.UsingTerminallyDeprecatedConstructor : IProblem.UsingDeprecatedConstructor,
+				new String[] {readableClassName, signature},
+				new String[] {shortReadableClassName, shortSignature},
+				sourceStart, sourceEnd);
+		} else {
+			this.handle(
+				terminally ? IProblem.UsingTerminallyDeprecatedMethod : IProblem.UsingDeprecatedMethod,
+				new String[] {readableClassName, selector, signature},
+				new String[] {shortReadableClassName, selector, shortSignature},
+				sourceStart, sourceEnd);
+		}
 	}
 }
 public void deprecatedType(TypeBinding type, ASTNode location) {
@@ -1760,7 +1816,7 @@ public void deprecatedType(TypeBinding type, ASTNode location) {
 // a deprecated type in a qualified reference (see bug 292510)
 public void deprecatedType(TypeBinding type, ASTNode location, int index) {
 	if (location == null) return; // 1G828DN - no type ref for synthetic arguments
-	type = type.leafComponentType();
+	final TypeBinding leafType = type.leafComponentType();
 	int sourceStart = -1;
 	if (location instanceof QualifiedTypeReference) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=300031
 		QualifiedTypeReference ref = (QualifiedTypeReference) location;
@@ -1768,12 +1824,36 @@ public void deprecatedType(TypeBinding type, ASTNode location, int index) {
 			sourceStart = (int) (ref.sourcePositions[index] >> 32);
 		}
 	}
-	this.handle(
-		((type.tagBits & TagBits.AnnotationTerminallyDeprecated) == 0) ? IProblem.UsingDeprecatedType : IProblem.UsingTerminallyDeprecatedType,
-		new String[] {new String(type.readableName())},
-		new String[] {new String(type.shortReadableName())},
-		(sourceStart == -1) ? location.sourceStart : sourceStart,
-		nodeSourceEnd(null, location, index));
+	String sinceValue = deprecatedSinceValue(() -> leafType.getAnnotations());
+	if (sinceValue != null) {
+		this.handle(
+			((leafType.tagBits & TagBits.AnnotationTerminallyDeprecated) == 0) ? IProblem.UsingDeprecatedSinceVersionType : IProblem.UsingTerminallyDeprecatedSinceVersionType,
+			new String[] {new String(leafType.readableName()), sinceValue},
+			new String[] {new String(leafType.shortReadableName()), sinceValue},
+			(sourceStart == -1) ? location.sourceStart : sourceStart,
+			nodeSourceEnd(null, location, index));
+	} else {
+		this.handle(
+			((leafType.tagBits & TagBits.AnnotationTerminallyDeprecated) == 0) ? IProblem.UsingDeprecatedType : IProblem.UsingTerminallyDeprecatedType,
+			new String[] {new String(leafType.readableName())},
+			new String[] {new String(leafType.shortReadableName())},
+			(sourceStart == -1) ? location.sourceStart : sourceStart,
+			nodeSourceEnd(null, location, index));
+	}
+}
+String deprecatedSinceValue(Supplier<AnnotationBinding[]> annotations) {
+	if (this.options != null && this.options.complianceLevel >= ClassFileConstants.JDK9) {
+		for (AnnotationBinding annotationBinding : annotations.get()) {
+			if (annotationBinding.getAnnotationType().id == TypeIds.T_JavaLangDeprecated) {
+				for (ElementValuePair elementValuePair : annotationBinding.getElementValuePairs()) {
+					if (CharOperation.equals(elementValuePair.getName(), TypeConstants.SINCE) && elementValuePair.value instanceof StringConstant)
+						return ((StringConstant) elementValuePair.value).stringValue();
+				}
+				break;
+			}
+		}
+	}
+	return null;
 }
 public void disallowedTargetForAnnotation(Annotation annotation) {
 	this.handle(
@@ -6979,25 +7059,45 @@ public void operatorOnlyValidOnNumericType(CompoundAssignment  assignment, TypeB
 		assignment.sourceEnd);
 }
 public void overridesDeprecatedMethod(MethodBinding localMethod, MethodBinding inheritedMethod) {
-	this.handle(
-		(inheritedMethod.tagBits & TagBits.AnnotationTerminallyDeprecated) != 0
+	String localMethodName = new String(
+								CharOperation.concat(
+									localMethod.declaringClass.readableName(),
+									localMethod.readableName(),
+									'.'));
+	String localMethodShortName = new String(
+									CharOperation.concat(
+										localMethod.declaringClass.shortReadableName(),
+										localMethod.shortReadableName(),
+										'.'));
+	String sinceValue = deprecatedSinceValue(() -> inheritedMethod.getAnnotations());
+	if (sinceValue != null) {
+		this.handle(
+			(inheritedMethod.tagBits & TagBits.AnnotationTerminallyDeprecated) != 0
+				? IProblem.OverridingTerminallyDeprecatedSinceVersionMethod : IProblem.OverridingDeprecatedSinceVersionMethod,
+			new String[] {
+				localMethodName,
+				new String(inheritedMethod.declaringClass.readableName()),
+				sinceValue},
+			new String[] {
+				localMethodShortName,
+				new String(inheritedMethod.declaringClass.shortReadableName()),
+				sinceValue},
+			localMethod.sourceStart(),
+			localMethod.sourceEnd());
+		
+	} else {
+		this.handle(
+			(inheritedMethod.tagBits & TagBits.AnnotationTerminallyDeprecated) != 0
 				? IProblem.OverridingTerminallyDeprecatedMethod : IProblem.OverridingDeprecatedMethod,
-		new String[] {
-			new String(
-					CharOperation.concat(
-						localMethod.declaringClass.readableName(),
-						localMethod.readableName(),
-						'.')),
-			new String(inheritedMethod.declaringClass.readableName())},
-		new String[] {
-			new String(
-					CharOperation.concat(
-						localMethod.declaringClass.shortReadableName(),
-						localMethod.shortReadableName(),
-						'.')),
-			new String(inheritedMethod.declaringClass.shortReadableName())},
-		localMethod.sourceStart(),
-		localMethod.sourceEnd());
+			new String[] {
+				localMethodName,
+				new String(inheritedMethod.declaringClass.readableName())},
+			new String[] {
+				localMethodShortName,
+				new String(inheritedMethod.declaringClass.shortReadableName())},
+			localMethod.sourceStart(),
+			localMethod.sourceEnd());
+	}
 }
 public void overridesMethodWithoutSuperInvocation(MethodBinding localMethod) {
 	this.handle(

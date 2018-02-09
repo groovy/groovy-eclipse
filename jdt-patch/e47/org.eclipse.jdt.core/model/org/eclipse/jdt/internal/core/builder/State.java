@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -17,6 +17,8 @@ import org.eclipse.core.runtime.*;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
+import org.eclipse.jdt.internal.compiler.env.IUpdatableModule;
+import org.eclipse.jdt.internal.compiler.env.IUpdatableModule.*;
 import org.eclipse.jdt.internal.compiler.env.AccessRule;
 import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 import org.eclipse.jdt.internal.compiler.util.Util;
@@ -25,6 +27,8 @@ import org.eclipse.jdt.internal.core.JavaModelManager;
 
 import java.io.*;
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class State {
@@ -281,6 +285,38 @@ static State read(IProject project, DataInputStream in) throws IOException {
 					newState.binaryLocations[i] = ClasspathLocation.forLibrary(root.getFile(new Path(in.readUTF())),
 							readRestriction(in), new Path(in.readUTF()), in.readBoolean());
 		}
+		ClasspathLocation loc = newState.binaryLocations[i];
+		char[] patchName = readName(in);
+		loc.patchModuleName = patchName.length > 0 ? new String(patchName) : null;
+		int limitSize = in.readInt();
+		if (limitSize != 0) {
+			loc.limitModuleNames = new HashSet<>(limitSize);
+			for (int j = 0; j < limitSize; j++) {
+				loc.limitModuleNames.add(in.readUTF());
+			}
+		} else {
+			loc.limitModuleNames = null;
+		}
+		IUpdatableModule.UpdatesByKind updates = new IUpdatableModule.UpdatesByKind();
+		List<Consumer<IUpdatableModule>> packageUpdates = null;
+		int packageUpdatesSize = in.readInt();
+		if (packageUpdatesSize != 0) {
+			packageUpdates = updates.getList(UpdateKind.PACKAGE, true);
+			for (int j = 0; j < packageUpdatesSize; j++) {
+				char[] pkgName = readName(in);
+				char[][] targets = readNames(in);
+				packageUpdates.add(new AddExports(pkgName, targets));
+			}
+		}
+		List<Consumer<IUpdatableModule>> moduleUpdates = null;
+		int moduleUpdatesSize = in.readInt();
+		if (moduleUpdatesSize != 0) {
+			moduleUpdates = updates.getList(UpdateKind.MODULE, true);
+			char[] modName = readName(in);
+			moduleUpdates.add(new AddReads(modName));
+		}
+		if (packageUpdates != null || moduleUpdates != null)
+			loc.updates = updates;
 	}
 
 	newState.structuralBuildTimes = new SimpleLookupTable(length = in.readInt());
@@ -443,14 +479,14 @@ void write(DataOutputStream out) throws IOException {
  * String		path(s)
 */
 	out.writeInt(length = this.binaryLocations.length);
-	next : for (int i = 0; i < length; i++) {
+	for (int i = 0; i < length; i++) {
 		ClasspathLocation c = this.binaryLocations[i];
 		if (c instanceof ClasspathMultiDirectory) {
 			out.writeByte(SOURCE_FOLDER);
 			for (int j = 0, m = this.sourceLocations.length; j < m; j++) {
 				if (this.sourceLocations[j] == c) {
 					out.writeInt(j);
-					continue next;
+					//continue next;
 				}
 			}
 		} else if (c instanceof ClasspathDirectory) {
@@ -481,6 +517,55 @@ void write(DataOutputStream out) throws IOException {
 			out.writeLong(-1);
 			writeRestriction(null, out);
 			out.writeUTF(""); //$NON-NLS-1$
+		}
+		char[] patchName = c.patchModuleName == null ? CharOperation.NO_CHAR : c.patchModuleName.toCharArray();
+		writeName(patchName, out);
+		if (c.limitModuleNames != null) {
+			out.writeInt(c.limitModuleNames.size());
+			for (String name : c.limitModuleNames) {
+				out.writeUTF(name);
+			}
+		} else {
+			out.writeInt(0);
+		}
+		if (c.updates != null) {
+			List<Consumer<IUpdatableModule>> pu = c.updates.getList(UpdateKind.PACKAGE, false);
+			if (pu != null) {
+				Map<String, List<Consumer<IUpdatableModule>>> map = pu.stream().
+						collect(Collectors.groupingBy(
+								update -> CharOperation.charToString(((IUpdatableModule.AddExports)update).getName())));
+				out.writeInt(map.size());
+				map.entrySet().stream().forEach(entry -> {
+					String pkgName = entry.getKey();
+					try {
+						writeName(pkgName.toCharArray(), out);
+						char[][] targetModules = entry.getValue().stream()
+								.map(consumer -> ((IUpdatableModule.AddExports) consumer).getTargetModules())
+								.filter(targets -> targets != null)
+								.reduce((f,s) -> CharOperation.arrayConcat(f,s))
+								.orElse(null);
+						writeNames(targetModules, out);
+					} catch (IOException e) {
+						// ignore
+					}
+					
+				});
+			} else {
+				out.writeInt(0);
+			}
+			List<Consumer<IUpdatableModule>> mu = c.updates.getList(UpdateKind.MODULE, false);
+			if (mu != null) {
+				out.writeInt(mu.size());
+				for (Consumer<IUpdatableModule> cons : mu) {
+					AddReads m = (AddReads) cons;
+					writeName(m.getTarget(), out);
+				}
+			} else {
+				out.writeInt(0);
+			}
+		} else {
+			out.writeInt(0);
+			out.writeInt(0);
 		}
 	}
 

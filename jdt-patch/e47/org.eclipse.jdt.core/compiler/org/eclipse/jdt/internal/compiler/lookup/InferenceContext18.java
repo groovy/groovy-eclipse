@@ -1648,9 +1648,12 @@ public class InferenceContext18 {
 	 * unless the given candidate is tolerable to be compatible with buggy javac.
 	 */
 	public MethodBinding getReturnProblemMethodIfNeeded(TypeBinding expectedType, MethodBinding method) {
-		if (InferenceContext18.SIMULATE_BUG_JDK_8026527 && expectedType != null 
+		if (InferenceContext18.SIMULATE_BUG_JDK_8026527 && expectedType != null
+				&& !(method.original() instanceof SyntheticFactoryMethodBinding)
 				&& (method.returnType instanceof ReferenceBinding || method.returnType instanceof ArrayBinding)) {
-			if (method.returnType.erasure().isCompatibleWith(expectedType))
+			if (!expectedType.isProperType(true))
+				return null; // not ready
+			if (this.environment.convertToRawType(method.returnType.erasure(), false).isCompatibleWith(expectedType))
 				return method; // don't count as problem.
 		}
 		/* We used to check if expected type is null and if so return method, but that is wrong - it injects an incompatible method into overload resolution.

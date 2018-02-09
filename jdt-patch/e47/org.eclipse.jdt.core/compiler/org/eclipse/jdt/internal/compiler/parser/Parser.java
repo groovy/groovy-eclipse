@@ -5984,6 +5984,8 @@ protected void consumePackageDeclaration() {
 	// flush comments defined prior to import statements
 	impt.declarationEnd = this.endStatementPosition;
 	impt.declarationSourceEnd = flushCommentsDefinedPriorTo(impt.declarationSourceEnd);
+	if (this.firstToken == TokenNameQUESTION)
+		this.unstackedAct = ACCEPT_ACTION; // force termination at goal
 }
 protected void consumePackageDeclarationName() {
 	// PackageDeclarationName ::= PackageComment 'package' Name RejectTypeAnnotations
@@ -11668,6 +11670,10 @@ try {
 			this.unstackedAct = ntAction(this.stack[this.stateStackTop], lhs[act]);
 			consumeRule(act);
 			act = this.unstackedAct;
+
+			if (act == ACCEPT_ACTION) {
+				break ProcessTerminals;
+			}
 
 			if (DEBUG_AUTOMATON) {
 				if (act <= NUM_RULES) {

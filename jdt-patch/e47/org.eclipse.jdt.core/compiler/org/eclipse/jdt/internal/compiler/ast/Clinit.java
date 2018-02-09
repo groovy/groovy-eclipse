@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -16,6 +16,7 @@ package org.eclipse.jdt.internal.compiler.ast;
 import org.eclipse.jdt.internal.compiler.ASTVisitor;
 import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.BranchLabel;
 import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
 import org.eclipse.jdt.internal.compiler.codegen.ConstantPool;
@@ -210,13 +211,14 @@ public class Clinit extends AbstractMethodDeclaration {
 			jumpLabel.place();
 			codeStream.fieldAccess(Opcodes.OPC_putstatic, this.assertionSyntheticFieldBinding, null /* default declaringClass */);
 		}
+		boolean isJava9 = classScope.compilerOptions().complianceLevel >= ClassFileConstants.JDK9;
 		// generate static fields/initializers/enum constants
 		final FieldDeclaration[] fieldDeclarations = declaringType.fields;
 		int sourcePosition = -1;
 		int remainingFieldCount = 0;
 		if (TypeDeclaration.kind(declaringType.modifiers) == TypeDeclaration.ENUM_DECL) {
 			int enumCount = declaringType.enumConstantsCounter;
-			if (enumCount > ENUM_CONSTANTS_THRESHOLD) {
+			if (!isJava9 && enumCount > ENUM_CONSTANTS_THRESHOLD) {
 				// generate synthetic methods to initialize all the enum constants
 				int begin = -1;
 				int count = 0;
@@ -323,6 +325,9 @@ public class Clinit extends AbstractMethodDeclaration {
 							break;
 					}
 				}
+			}
+			if (isJava9) {
+				declaringType.binding.generateSyntheticFinalFieldInitialization(codeStream);
 			}
 		}
 

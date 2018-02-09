@@ -2975,6 +2975,7 @@ protected void reportMatching(ModuleDeclaration module, IJavaElement parent, int
 	}
 	if (moduleDesc == null) // could theoretically happen if openable is ICompilationUnit, but logically having a module should prevent this from happening
 		return;
+	reportMatching(module.annotations, moduleDesc, null, module.binding, nodeSet, true, true);
 	if (accuracy > -1) { // report module declaration
 		SearchMatch match = this.patternLocator.newDeclarationMatch(module, moduleDesc, module.binding, accuracy, module.moduleName.length, this);
 		report(match);

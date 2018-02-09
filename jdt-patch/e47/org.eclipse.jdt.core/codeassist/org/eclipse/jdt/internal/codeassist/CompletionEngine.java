@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -712,7 +712,7 @@ public final class CompletionEngine
 	private INameEnvironment noCacheNameEnvironment;
 	char[] source;
 	ModuleDeclaration moduleDeclaration;
-	boolean isPackageVisibilityCompletion = false;
+	boolean skipDefaultPackage = false;
 	char[] completionToken;
 
 	char[] qualifiedCompletionToken;
@@ -1335,7 +1335,7 @@ public final class CompletionEngine
 
 		if (!isValidPackageName(packageName)) return;
 		
-		if (this.isPackageVisibilityCompletion &&
+		if (this.skipDefaultPackage &&
 			CharOperation.equals(packageName, CharOperation.NO_CHAR))
 			return;
 
@@ -2052,7 +2052,7 @@ public final class CompletionEngine
 						buildContext(parsedUnit.moduleDeclaration, null, parsedUnit, null, null);
 						//this.requestor.setIgnored(CompletionProposal.MODULE_DECLARATION, false); //TODO: Hack until ui fixes this issue.
 						if(!this.requestor.isIgnored(CompletionProposal.MODULE_DECLARATION)) {
-							findModuleName(parsedUnit);
+							proposeModuleName(parsedUnit);
 						}
 						debugPrintf(); 
 						return;
@@ -2114,6 +2114,7 @@ public final class CompletionEngine
 								TypeReference implementation = implementations[j];
 								if (implementation instanceof CompletionOnProvidesImplementationsSingleTypeReference ||
 										implementation instanceof CompletionOnProvidesImplementationsQualifiedTypeReference) {
+									this.skipDefaultPackage = true;
 									contextAccepted = checkForCNF(implementation, parsedUnit, false);
 									return;
 								} else if (implementation instanceof CompletionOnKeyword) {
@@ -2145,6 +2146,8 @@ public final class CompletionEngine
 											e.scope,
 											e.insideTypeAnnotation);
 						}
+					} finally {
+						this.skipDefaultPackage = false;
 					}
 				}
 				// scan the package & import statements first
@@ -2327,6 +2330,8 @@ public final class CompletionEngine
 		this.lookupEnvironment.buildTypeBindings(parsedUnit, null);
 		this.lookupEnvironment.completeTypeBindings(parsedUnit, true);
 		parsedUnit.resolve();
+		this.startPosition = ref.sourceStart;
+		this.endPosition = ref.sourceEnd > ref.sourceStart ? ref.sourceEnd : ref.sourceStart;
 		if ((this.unitScope = parsedUnit.scope) != null) {
 			if (showAll) {
 				char[][] tokens = ref.getTypeName();
@@ -2346,7 +2351,7 @@ public final class CompletionEngine
 	private boolean completeOnPackageVisibilityStatements(boolean contextAccepted,
 			CompilationUnitDeclaration parsedUnit, PackageVisibilityStatement[] pvsStmts) {
 		try {
-			this.isPackageVisibilityCompletion = true;
+			this.skipDefaultPackage = true;
 			for (int i = 0, l = pvsStmts.length; i < l; ++i) {
 				PackageVisibilityStatement pvs = pvsStmts[i];
 				if (pvs instanceof CompletionOnKeywordModuleInfo) { // dummy pvs statement
@@ -2387,7 +2392,7 @@ public final class CompletionEngine
 				}
 			}
 		} finally {
-			this.isPackageVisibilityCompletion = false;
+			this.skipDefaultPackage = false;
 		}
 		return contextAccepted;
 	}
@@ -10661,20 +10666,22 @@ public final class CompletionEngine
 		}
 	}
 
-	private void findModuleName(CompilationUnitDeclaration parsedUnit) {
-		char[] fileName1 = parsedUnit.getFileName();
-		if (fileName1 == null || !CharOperation.endsWith(fileName1, MODULE_INFO_FILE_NAME)) return;
-		int lastFileSeparatorIndex = fileName1.length - (MODULE_INFO_FILE_NAME.length + 1);
-		if (lastFileSeparatorIndex  <= 0) return;
-		int prevFileSeparatorIndex = CharOperation.lastIndexOf(fileName1[lastFileSeparatorIndex], fileName1, 0, lastFileSeparatorIndex - 1);
-		prevFileSeparatorIndex = prevFileSeparatorIndex < 0 ? 0 : prevFileSeparatorIndex + 1;
-		char[] moduleName = CharOperation.subarray(fileName1, prevFileSeparatorIndex, lastFileSeparatorIndex);
-		if (moduleName == null || moduleName.length == 0) return;
+	private void proposeModuleName(CompilationUnitDeclaration parsedUnit) {
+		String projectName = this.javaProject.getElementName();
+		char[] moduleName = projectName.toCharArray();
+		if (moduleName.length > 0) {// do not propose invalid names
+			if (!Character.isJavaIdentifierStart(moduleName[0])) return;
+			for (char c : moduleName) {
+				if (!Character.isJavaIdentifierPart(c) && c != '.') return; 
+			}
+		}
 		this.completionToken = CharOperation.concatWith(this.moduleDeclaration.tokens, '.');
+		setSourceRange(this.moduleDeclaration.sourceStart, this.moduleDeclaration.bodyStart);
 		if (this.completionToken.length > 0 && !CharOperation.prefixEquals(this.completionToken, moduleName)) return;
 
 		InternalCompletionProposal proposal =  createProposal(CompletionProposal.MODULE_DECLARATION, this.actualCompletionPosition);
 		proposal.setName(moduleName);
+		proposal.setDeclarationSignature(moduleName);
 		proposal.setCompletion(moduleName);
 		proposal.setReplaceRange((this.startPosition < 0) ? 0 : this.startPosition - this.offset, this.endPosition - this.offset);
 		proposal.setTokenRange((this.tokenStart < 0) ? 0 : this.tokenStart - this.offset, this.tokenEnd - this.offset);
@@ -12996,6 +13003,12 @@ public final class CompletionEngine
 				break;
 			case CompletionProposal.METHOD_REF_WITH_CASTED_RECEIVER :
 				buffer.append("METHOD_REF_WITH_CASTED_RECEIVER"); //$NON-NLS-1$
+				break;
+			case CompletionProposal.MODULE_DECLARATION :
+				buffer.append("MODULE_DECLARATION"); //$NON-NLS-1$
+				break;
+			case CompletionProposal.MODULE_REF :
+				buffer.append("MODULE_REF"); //$NON-NLS-1$
 				break;
 			case CompletionProposal.PACKAGE_REF :
 				buffer.append("PACKAGE_REF"); //$NON-NLS-1$

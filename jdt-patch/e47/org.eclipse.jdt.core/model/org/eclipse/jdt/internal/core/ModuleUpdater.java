@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017 GK Software AG, and others.
+ * Copyright (c) 2017, 2018 GK Software AG, and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -62,7 +62,7 @@ public class ModuleUpdater {
 						String modName = value.substring(0, slash);
 						char[] packName = value.substring(slash+1, equals).toCharArray();
 						char[][] targets = CharOperation.splitOn(',', value.substring(equals+1).toCharArray());
-						addModuleUpdate(modName, m -> m.addExports(packName, targets), UpdateKind.PACKAGE);
+						addModuleUpdate(modName, new IUpdatableModule.AddExports(packName, targets), UpdateKind.PACKAGE);
 					} else {
 						Util.log(IStatus.WARNING, "Invalid argument to add-exports: "+value); //$NON-NLS-1$
 					}
@@ -73,7 +73,7 @@ public class ModuleUpdater {
 					if (equals != -1) {
 						String srcMod = value.substring(0, equals);
 						char[] targetMod = value.substring(equals+1).toCharArray();
-						addModuleUpdate(srcMod, m -> m.addReads(targetMod), UpdateKind.MODULE);
+						addModuleUpdate(srcMod, new IUpdatableModule.AddReads(targetMod), UpdateKind.MODULE);
 					} else {
 						Util.log(IStatus.WARNING, "Invalid argument to add-reads: "+value); //$NON-NLS-1$
 					}
@@ -107,5 +107,8 @@ public class ModuleUpdater {
 					update.accept(compilerModule);
 			}
 		}
+	}
+	public UpdatesByKind getUpdates(String moduleName) {
+		return this.moduleUpdates.get(moduleName);
 	}
 }

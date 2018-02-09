@@ -114,4 +114,9 @@ public class AutomaticModuleNamingTest extends AbstractRegressionTest {
 				new String(determineAutomaticModuleNameFromFileName("CLASSES12.ZIP", true, true)));
 	}
 
+	public void testBug529680() throws Exception {
+		assertEquals("hibernate.jpa", new String(
+				determineAutomaticModuleNameFromFileName("hibernate-jpa-2.1-api-1.0.0.Final.jar", true, true)));
+	}
+
 }

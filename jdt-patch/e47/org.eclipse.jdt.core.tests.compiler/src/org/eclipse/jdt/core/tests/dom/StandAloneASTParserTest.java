@@ -40,6 +40,7 @@ import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.ModuleDeclaration;
 import org.eclipse.jdt.core.dom.NodeFinder;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
@@ -72,6 +73,29 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 		parser.setCompilerOptions(getCompilerOptions());
 		parser.setUnitName(unitName);
 		return parser.createAST(null);
+	}
+	public void testBug529654_001() {
+		String contents =
+				"module m {\n" + 
+				"}";
+		ASTParser parser = ASTParser.newParser(AST_JLS_LATEST);
+		parser.setSource(contents.toCharArray());
+		parser.setEnvironment(null, null, null, true);
+		parser.setResolveBindings(true);
+		parser.setStatementsRecovery(true);
+		parser.setBindingsRecovery(true);
+		parser.setUnitName("module-info.java");
+		Map<String, String> options = getCompilerOptions();
+		options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_9);
+		options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_9);
+		options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_9);
+		parser.setCompilerOptions(options);
+
+		ASTNode node = parser.createAST(null);
+		assertTrue("Should be a compilation unit", node instanceof CompilationUnit);
+		CompilationUnit unit = (CompilationUnit) node;
+		ModuleDeclaration module = unit.getModule();
+		assertTrue("Incorrect Module Name", module.getName().getFullyQualifiedName().equals("m"));
 	}
 	public void test1() {
 		String contents =

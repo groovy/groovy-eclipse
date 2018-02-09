@@ -54,6 +54,7 @@ import org.eclipse.jdt.internal.compiler.ast.TypeReference.AnnotationPosition;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.codegen.CodeStream;
 import org.eclipse.jdt.internal.compiler.codegen.ConstantPool;
+import org.eclipse.jdt.internal.compiler.codegen.Opcodes;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.flow.FieldInitsFakingFlowContext;
 import org.eclipse.jdt.internal.compiler.flow.FlowContext;
@@ -337,6 +338,13 @@ public class ReferenceExpression extends FunctionalExpression implements IPolyEx
 		buffer.append('(');
 		if (this.haveReceiver) {
 			this.lhs.generateCode(currentScope, codeStream, true);
+			if (isMethodReference() && !this.lhs.isThis() && !this.lhs.isSuper()) {
+				MethodBinding mb = currentScope.getJavaLangObject().getExactMethod(TypeConstants.GETCLASS,
+						Binding.NO_PARAMETERS, currentScope.compilationUnitScope());
+				codeStream.dup();
+				codeStream.invoke(Opcodes.OPC_invokevirtual, mb, mb.declaringClass);
+				codeStream.pop();
+			}
 			if (this.lhs.isSuper() && !this.actualMethodBinding.isPrivate()) {
 				if (this.lhs instanceof QualifiedSuperReference) {
 					QualifiedSuperReference qualifiedSuperReference = (QualifiedSuperReference) this.lhs;

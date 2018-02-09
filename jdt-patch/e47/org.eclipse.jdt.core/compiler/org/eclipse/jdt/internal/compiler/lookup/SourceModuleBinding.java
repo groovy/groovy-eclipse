@@ -110,7 +110,7 @@ public class SourceModuleBinding extends ModuleBinding {
 		return retrieveAnnotations(this);
 	}
 	public AnnotationHolder retrieveAnnotationHolder(Binding binding, boolean forceInitialization) {
-		SimpleLookupTable store = storedAnnotations(forceInitialization);
+		SimpleLookupTable store = storedAnnotations(forceInitialization, false);
 		return store == null ? null : (AnnotationHolder) store.get(binding);
 	}
 
@@ -119,30 +119,30 @@ public class SourceModuleBinding extends ModuleBinding {
 		return holder == null ? Binding.NO_ANNOTATIONS : holder.getAnnotations();
 	}
 
-	public void setAnnotations(AnnotationBinding[] annotations) {
-		storeAnnotations(this, annotations);
+	public void setAnnotations(AnnotationBinding[] annotations, boolean forceStore) {
+		storeAnnotations(this, annotations, forceStore);
 	}
 	void storeAnnotationHolder(Binding binding, AnnotationHolder holder) {
 		if (holder == null) {
-			SimpleLookupTable store = storedAnnotations(false);
+			SimpleLookupTable store = storedAnnotations(false, false);
 			if (store != null)
 				store.removeKey(binding);
 		} else {
-			SimpleLookupTable store = storedAnnotations(true);
+			SimpleLookupTable store = storedAnnotations(true, false);
 			if (store != null)
 				store.put(binding, holder);
 		}
 	}
 
-	void storeAnnotations(Binding binding, AnnotationBinding[] annotations) {
+	void storeAnnotations(Binding binding, AnnotationBinding[] annotations, boolean forceStore) {
 		AnnotationHolder holder = null;
 		if (annotations == null || annotations.length == 0) {
-			SimpleLookupTable store = storedAnnotations(false);
+			SimpleLookupTable store = storedAnnotations(false, forceStore);
 			if (store != null)
 				holder = (AnnotationHolder) store.get(binding);
 			if (holder == null) return; // nothing to delete
 		} else {
-			SimpleLookupTable store = storedAnnotations(true);
+			SimpleLookupTable store = storedAnnotations(true, forceStore);
 			if (store == null) return; // not supported
 			holder = (AnnotationHolder) store.get(binding);
 			if (holder == null)
@@ -151,11 +151,11 @@ public class SourceModuleBinding extends ModuleBinding {
 		storeAnnotationHolder(binding, holder.setAnnotations(annotations));
 	}
 
-	SimpleLookupTable storedAnnotations(boolean forceInitialize) {
+	SimpleLookupTable storedAnnotations(boolean forceInitialize, boolean forceStore) {
 		if (forceInitialize && this.storedAnnotations == null && this.scope != null) { // scope null when no annotation cached, and type got processed fully (159631)
 			this.scope.referenceCompilationUnit().compilationResult.hasAnnotations = true;
 			final CompilerOptions globalOptions = this.scope.environment().globalOptions;
-			if (!globalOptions.storeAnnotations)
+			if (!globalOptions.storeAnnotations && !forceStore)
 				return null; // not supported during this compile
 			this.storedAnnotations = new SimpleLookupTable(3);
 		}

@@ -6905,8 +6905,8 @@ public void test443467() throws Exception {
 		"----------\n" + 
 		"1. ERROR in BuildIdeMain.java (at line 9)\n" + 
 		"	filter2.map(p -> new SimpleEntry<>(updateToFile.get(p), p->ideFiles.get(p)));\n" + 
-		"	                                                        ^^^^^^^^^^^^^^^^^^\n" + 
-		"The target type of this expression must be a functional interface\n" + 
+		"	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+		"Cannot infer type arguments for SimpleEntry<>\n" + 
 		"----------\n");
 }
 public void testBug445227() {

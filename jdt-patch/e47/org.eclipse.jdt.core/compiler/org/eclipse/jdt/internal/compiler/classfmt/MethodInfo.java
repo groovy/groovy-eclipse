@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,6 +20,7 @@ import org.eclipse.jdt.internal.compiler.codegen.ConstantPool;
 import org.eclipse.jdt.internal.compiler.env.IBinaryAnnotation;
 import org.eclipse.jdt.internal.compiler.env.IBinaryMethod;
 import org.eclipse.jdt.internal.compiler.env.IBinaryTypeAnnotation;
+import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 
 @SuppressWarnings("rawtypes")
 public class MethodInfo extends ClassFileStruct implements IBinaryMethod, Comparable {
@@ -35,9 +36,10 @@ public class MethodInfo extends ClassFileStruct implements IBinaryMethod, Compar
 	protected int signatureUtf8Offset;
 	protected long tagBits;
 	protected char[][] argumentNames;
+	protected long version;
 
-public static MethodInfo createMethod(byte classFileBytes[], int offsets[], int offset) {
-	MethodInfo methodInfo = new MethodInfo(classFileBytes, offsets, offset);
+public static MethodInfo createMethod(byte classFileBytes[], int offsets[], int offset, long version) {
+	MethodInfo methodInfo = new MethodInfo(classFileBytes, offsets, offset, version);
 	int attributesCount = methodInfo.u2At(6);
 	int readOffset = 8;
 	AnnotationInfo[] annotations = null;
@@ -146,22 +148,25 @@ static AnnotationInfo[] decodeMethodAnnotations(int offset, boolean runtimeVisib
 	if (numberOfAnnotations > 0) {
 		AnnotationInfo[] annos = decodeAnnotations(offset + 8, runtimeVisible, numberOfAnnotations, methodInfo);
 		if (runtimeVisible){
-			int numStandardAnnotations = 0;
+			int numRetainedAnnotations = 0;
 			for( int i=0; i<numberOfAnnotations; i++ ){
 				long standardAnnoTagBits = annos[i].standardAnnotationTagBits;
 				methodInfo.tagBits |= standardAnnoTagBits;
 				if(standardAnnoTagBits != 0){
-					annos[i] = null;
-					numStandardAnnotations ++;
+					if (methodInfo.version < ClassFileConstants.JDK9 || (standardAnnoTagBits & TagBits.AnnotationDeprecated) == 0) { // must retain enhanced deprecation
+						annos[i] = null;
+						continue;
+					}
 				}
+				numRetainedAnnotations++;
 			}
 
-			if( numStandardAnnotations != 0 ){
-				if( numStandardAnnotations == numberOfAnnotations )
+			if(numRetainedAnnotations != numberOfAnnotations){
+				if(numRetainedAnnotations == 0)
 					return null;
 
 				// need to resize
-				AnnotationInfo[] temp = new AnnotationInfo[numberOfAnnotations - numStandardAnnotations ];
+				AnnotationInfo[] temp = new AnnotationInfo[numRetainedAnnotations];
 				int tmpIndex = 0;
 				for (int i = 0; i < numberOfAnnotations; i++)
 					if (annos[i] != null)
@@ -213,11 +218,13 @@ static AnnotationInfo[][] decodeParamAnnotations(int offset, boolean runtimeVisi
  * @param classFileBytes byte[]
  * @param offsets int[]
  * @param offset int
+ * @param version class file version 
  */
-protected MethodInfo (byte classFileBytes[], int offsets[], int offset) {
+protected MethodInfo (byte classFileBytes[], int offsets[], int offset, long version) {
 	super(classFileBytes, offsets, offset);
 	this.accessFlags = -1;
 	this.signatureUtf8Offset = -1;
+	this.version = version;
 }
 public int compareTo(Object o) {
 	MethodInfo otherMethod = (MethodInfo) o;

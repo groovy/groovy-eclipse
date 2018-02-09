@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2016 IBM Corporation and others.
+ * Copyright (c) 2005, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -2854,7 +2854,221 @@ public void test410892_6() {
 			options);
 	}
 }
-
+public void test526911() {
+	String [] sourceFiles = 
+		new String[] {
+		"Main.java",
+		"public class Main {\n" + 
+		"	public static void main(String[] args) {\n" + 
+		"		new Main().run();\n" + 
+		"	}\n" + 
+		"	\n" + 
+		"	private void run() {\n" + 
+		"		V v = new VA();\n" + 
+		"		I i = I.create(v);\n" + 
+		"		System.out.printf(\"%d %d\", i.m1(), i.m2());\n" + 
+		"	}\n" + 
+		"}\n",
+		"XI.java",
+		"public class XI implements I {\n" + 
+		"	V v;\n" + 
+		"	public XI(V v) {\n" + 
+		"		this.v = v;\n" + 
+		"	}\n" + 
+		"	@Override\n" + 
+		"	public int m1() {\n" + 
+		"		return 1;\n" + 
+		"	}\n" + 
+		"	@Override\n" + 
+		"	public int m2() {\n" + 
+		"		return 11;\n" + 
+		"	}\n" + 
+		"}\n",
+		"YI.java",
+		"public class YI implements I {\n" + 
+		"	V v;\n" + 
+		"	public YI(V v) {\n" + 
+		"		this.v = v;\n" + 
+		"	}\n" + 
+		"	@Override\n" + 
+		"	public int m1() {\n" + 
+		"		return 2;\n" + 
+		"	}\n" + 
+		"	@Override\n" + 
+		"	public int m2() {\n" + 
+		"		return 22;\n" + 
+		"	}\n" + 
+		"}\n",
+		"V.java",
+		"public class V {\n" + 
+		"	public enum T { A, B, C }\n" + 
+		"	private T t;\n" + 
+		"	public V(T t) {\n" + 
+		"		this.t = t;\n" + 
+		"	}\n" + 
+		"	public T getT() { return t; }\n" + 
+		"}\n" +
+		"class VA extends V {\n" + 
+		"	VA() {\n" + 
+		"		super(T.A);\n" + 
+		"	}\n" + 
+		"}",
+		"I.java",
+		"enum H { X, Y }\n" + 
+		"public interface I {\n" + 
+		"	public static final int i = 0;\n" + 
+		"	public int m1();\n" + 
+		"	public int m2();\n" + 
+		"	public static I create(V v) { \n" + 
+		"		V.T t = v.getT();\n" + 
+		"		H h = getH(t);\n" + 
+		"		switch (h) { // depending on H i need different implementations of I. XI and YI provide them\n" + 
+		"		case X:\n" + 
+		"			return new XI(v);\n" + 
+		"		case Y:\n" + 
+		"			return new YI(v);\n" + 
+		"		default:\n" + 
+		"			throw new Error();\n" + 
+		"		}	\n" + 
+		"	}\n" + 
+		"	static H getH(V.T t) { // different T's require different H's to handle them\n" + 
+		"		switch (t) {\n" + 
+		"		case A:\n" + 
+		"			return H.X;\n" + 
+		"		case B:\n" + 
+		"		case C:\n" + 
+		"			return H.Y;\n" + 
+		"		}\n" + 
+		"		throw new Error();\n" + 
+		"	}\n" + 
+		"}",
+		"X.java",
+		"public class X {\n" + 
+		"   static {\n" + 
+		"        int var1 = 0;\n" + 
+		"        int var2 = 0;\n" + 
+		"        String s = \"Test2\";\n" + 
+		"        switch (s) {\n" + 
+		"        case \"test\": \n" + 
+		"            var2 = ++var1 % 2;\n" + 
+		"            break;\n" + 
+		"        }\n" + 
+		"   }\n" + 
+		"}",
+	};
+	if (this.complianceLevel >= ClassFileConstants.JDK1_8) {
+		this.runConformTest(sourceFiles, "1 11");
+	}
+}
+public void test526911a() {
+	// target 1.8, run with 9, should work fine 
+	if (this.complianceLevel < ClassFileConstants.JDK9)
+		return;
+	Map options = getCompilerOptions();
+	options.put(CompilerOptions.OPTION_TargetPlatform, CompilerOptions.VERSION_1_8);
+	String [] sourceFiles = 
+		new String[] {
+		"Main.java",
+		"public class Main {\n" + 
+		"	public static void main(String[] args) {\n" + 
+		"		new Main().run();\n" + 
+		"	}\n" + 
+		"	\n" + 
+		"	private void run() {\n" + 
+		"		V v = new VA();\n" + 
+		"		I i = I.create(v);\n" + 
+		"		System.out.printf(\"%d %d\", i.m1(), i.m2());\n" + 
+		"	}\n" + 
+		"}\n",
+		"XI.java",
+		"public class XI implements I {\n" + 
+		"	V v;\n" + 
+		"	public XI(V v) {\n" + 
+		"		this.v = v;\n" + 
+		"	}\n" + 
+		"	@Override\n" + 
+		"	public int m1() {\n" + 
+		"		return 1;\n" + 
+		"	}\n" + 
+		"	@Override\n" + 
+		"	public int m2() {\n" + 
+		"		return 11;\n" + 
+		"	}\n" + 
+		"}\n",
+		"YI.java",
+		"public class YI implements I {\n" + 
+		"	V v;\n" + 
+		"	public YI(V v) {\n" + 
+		"		this.v = v;\n" + 
+		"	}\n" + 
+		"	@Override\n" + 
+		"	public int m1() {\n" + 
+		"		return 2;\n" + 
+		"	}\n" + 
+		"	@Override\n" + 
+		"	public int m2() {\n" + 
+		"		return 22;\n" + 
+		"	}\n" + 
+		"}\n",
+		"V.java",
+		"public class V {\n" + 
+		"	public enum T { A, B, C }\n" + 
+		"	private T t;\n" + 
+		"	public V(T t) {\n" + 
+		"		this.t = t;\n" + 
+		"	}\n" + 
+		"	public T getT() { return t; }\n" + 
+		"}\n" +
+		"class VA extends V {\n" + 
+		"	VA() {\n" + 
+		"		super(T.A);\n" + 
+		"	}\n" + 
+		"}",
+		"I.java",
+		"enum H { X, Y }\n" + 
+		"public interface I {\n" + 
+		"	public static final int i = 0;\n" + 
+		"	public int m1();\n" + 
+		"	public int m2();\n" + 
+		"	public static I create(V v) { \n" + 
+		"		V.T t = v.getT();\n" + 
+		"		H h = getH(t);\n" + 
+		"		switch (h) { // depending on H i need different implementations of I. XI and YI provide them\n" + 
+		"		case X:\n" + 
+		"			return new XI(v);\n" + 
+		"		case Y:\n" + 
+		"			return new YI(v);\n" + 
+		"		default:\n" + 
+		"			throw new Error();\n" + 
+		"		}	\n" + 
+		"	}\n" + 
+		"	static H getH(V.T t) { // different T's require different H's to handle them\n" + 
+		"		switch (t) {\n" + 
+		"		case A:\n" + 
+		"			return H.X;\n" + 
+		"		case B:\n" + 
+		"		case C:\n" + 
+		"			return H.Y;\n" + 
+		"		}\n" + 
+		"		throw new Error();\n" + 
+		"	}\n" + 
+		"}",
+		"X.java",
+		"public class X {\n" + 
+		"   static {\n" + 
+		"        int var1 = 0;\n" + 
+		"        int var2 = 0;\n" + 
+		"        String s = \"Test2\";\n" + 
+		"        switch (s) {\n" + 
+		"        case \"test\": \n" + 
+		"            var2 = ++var1 % 2;\n" + 
+		"            break;\n" + 
+		"        }\n" + 
+		"   }\n" + 
+		"}",
+	};
+	this.runConformTest(sourceFiles, "1 11", options);
+}
 public static Class testClass() {
 	return SwitchTest.class;
 }

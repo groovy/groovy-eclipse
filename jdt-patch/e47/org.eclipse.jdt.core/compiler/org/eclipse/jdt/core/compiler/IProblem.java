@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1935,6 +1935,7 @@ void setSourceStart(int sourceStart);
 	/** @since 3.14 */
 	int DuplicateResource = Internal + 1251;
 
+	// terminally
 	/** @since 3.14 */
 	int UsingTerminallyDeprecatedType = TypeRelated + 1400;
 	/** @since 3.14 */
@@ -1945,7 +1946,30 @@ void setSourceStart(int sourceStart);
 	int UsingTerminallyDeprecatedField = FieldRelated + 1403;
 	/** @since 3.14 */
 	int OverridingTerminallyDeprecatedMethod = MethodRelated + 1404;
+	// with since
+	/** @since 3.13 */
+	int UsingDeprecatedSinceVersionType = TypeRelated + 1405;
+	/** @since 3.13 */
+	int UsingDeprecatedSinceVersionMethod = MethodRelated + 1406;
+	/** @since 3.13 */
+	int UsingDeprecatedSinceVersionConstructor = MethodRelated + 1407;
+	/** @since 3.13 */
+	int UsingDeprecatedSinceVersionField = FieldRelated + 1408;
+	/** @since 3.13 */
+	int OverridingDeprecatedSinceVersionMethod = MethodRelated + 1409;
+	// terminally with since
+	/** @since 3.13 */
+	int UsingTerminallyDeprecatedSinceVersionType = TypeRelated + 1410;
+	/** @since 3.13 */
+	int UsingTerminallyDeprecatedSinceVersionMethod = MethodRelated + 1411;
+	/** @since 3.13 */
+	int UsingTerminallyDeprecatedSinceVersionConstructor = MethodRelated + 1412;
+	/** @since 3.13 */
+	int UsingTerminallyDeprecatedSinceVersionField = FieldRelated + 1413;
+	/** @since 3.13 */
+	int OverridingTerminallyDeprecatedSinceVersionMethod = MethodRelated + 1414;
 
+	
 	/** @since 3.14 */
 	int NotAccessibleType = TypeRelated + 1450;
 	/** @since 3.14 */

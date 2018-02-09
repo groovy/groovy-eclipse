@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -136,10 +136,10 @@ public boolean equals(Object o) {
 	if (this.accessRuleSet != dir.accessRuleSet)
 		if (this.accessRuleSet == null || !this.accessRuleSet.equals(dir.accessRuleSet))
 			return false;
-	if (this.module != dir.module)
-		if (this.module == null || !this.module.equals(dir.module))
-			return false;
-	return this.binaryFolder.equals(dir.binaryFolder);
+	if (this.isOnModulePath != dir.isOnModulePath)
+		return false;
+
+	return this.binaryFolder.equals(dir.binaryFolder) && areAllModuleOptionsEqual(dir);
 }
 public NameEnvironmentAnswer findClass(String binaryFileName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName, boolean asBinaryOnly) {
 	if (!doesFileExist(binaryFileName, qualifiedPackageName, qualifiedBinaryFileName)) return null; // most common case

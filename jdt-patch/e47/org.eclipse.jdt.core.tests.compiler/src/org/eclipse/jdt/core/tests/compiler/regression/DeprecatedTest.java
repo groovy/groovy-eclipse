@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,22 +10,70 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.compiler.regression;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
+import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 
 import junit.framework.Test;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class DeprecatedTest extends AbstractRegressionTest {
+
+static {
+//	TESTS_NAMES = new String[] { "test008a" };
+}
+
+protected char[][] invisibleType;
+
 public DeprecatedTest(String name) {
 	super(name);
 }
 public static Test suite() {
 	return buildAllCompliancesTestSuite(testClass());
 }
+
+@Override
+protected void tearDown() throws Exception {
+	this.invisibleType = null;
+	super.tearDown();
+}
+
+@Override
+protected INameEnvironment getNameEnvironment(final String[] testFiles, String[] classPaths) {
+	// constructs a name environment that is able to hide a type of name 'this.invisibleType':
+	this.classpaths = classPaths == null ? getDefaultClassPaths() : classPaths;
+	return new InMemoryNameEnvironment(testFiles, getClassLibs(classPaths == null)) {
+		@Override
+		public NameEnvironmentAnswer findType(char[][] compoundTypeName) {
+			if (DeprecatedTest.this.invisibleType != null && CharOperation.equals(DeprecatedTest.this.invisibleType, compoundTypeName))
+				return null;
+			return super.findType(compoundTypeName);
+		}
+		@Override
+		public NameEnvironmentAnswer findType(char[] typeName, char[][] packageName) {
+			if (DeprecatedTest.this.invisibleType != null && DeprecatedTest.this.invisibleType.length == packageName.length+1) {
+				char[][] packName = CharOperation.subarray(DeprecatedTest.this.invisibleType, 0, DeprecatedTest.this.invisibleType.length-1);
+				if (CharOperation.equals(packageName, packName)) {
+					char[] simpleName = DeprecatedTest.this.invisibleType[DeprecatedTest.this.invisibleType.length-1];
+					if (CharOperation.equals(simpleName, typeName))
+						return null;
+				}
+			}
+			return super.findType(typeName, packageName);
+		}
+	};
+}
+
 public void test001() {
 	this.runNegativeTest(new String[] {
 		"p/B.java",
@@ -315,6 +363,47 @@ public void test008() {
 		null,
 		false, // flush previous output dir content
 		null);  // custom options
+}
+// variation of test008 on behalf of Bug 526335 - [9][hovering] Deprecation warning should show the new 'since' deprecation value
+// verify that we don't attempt to access java.lang.Deprecated in a 1.4 based compilation.
+public void test008a() throws IOException {
+	String jarPath = LIB_DIR+File.separator+"p008"+File.separator+"x.jar";
+	Util.createJar(new String[] {
+			"X.java",
+			"package p008;\n" +
+			"@Deprecated\n" +
+			"public class X {\n" +
+			"}\n",
+		},
+		jarPath,
+		"1.5");
+
+	Runner runner = new Runner();
+	runner.testFiles =
+		new String[] {
+			"Y.java",
+			"public class Y {\n" +
+			"  void foo() {\n" +
+			"    p008.X x;\n" +
+			"  }\n" +
+			"}\n",
+		};
+	String[] libs = getDefaultClassPaths();
+	libs = Arrays.copyOf(libs, libs.length+1);
+	libs[libs.length-1] = jarPath;
+	runner.classLibraries = libs;
+	runner.expectedCompilerLog =
+		"----------\n" +
+		"1. WARNING in Y.java (at line 3)\n" + 
+		"	p008.X x;\n" + 
+		"	     ^\n" + 
+		"The type X is deprecated\n" + 
+		"----------\n";
+	if (this.complianceLevel < ClassFileConstants.JDK1_5) {
+		// simulate we were running on a JRE without java.lang.Deprecated
+		this.invisibleType = TypeConstants.JAVA_LANG_DEPRECATED;
+	}
+	runner.runWarningTest();
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=88124 - variation
 public void test009() {

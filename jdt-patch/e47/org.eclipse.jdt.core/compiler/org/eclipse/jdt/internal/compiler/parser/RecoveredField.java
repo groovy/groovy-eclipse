@@ -249,7 +249,14 @@ public FieldDeclaration updatedFieldDeclaration(int depth, Set<TypeDeclaration> 
 					}
 				}
 			}
-			if (this.anonymousTypeCount > 0) this.fieldDeclaration.bits |= ASTNode.HasLocalType;
+			if (this.anonymousTypeCount > 0) {
+				this.fieldDeclaration.bits |= ASTNode.HasLocalType;
+				if (recoveredInitializers != null) {
+					recoveredInitializers.sourceStart = this.anonymousTypes[0].typeDeclaration.sourceStart;
+					recoveredInitializers.sourceEnd = this.anonymousTypes[this.anonymousTypeCount-1].
+							typeDeclaration.sourceEnd;
+				}
+			}
 		}
 		else if(this.fieldDeclaration.getKind() == AbstractVariableDeclaration.ENUM_CONSTANT) {
 			// fieldDeclaration is an enum constant

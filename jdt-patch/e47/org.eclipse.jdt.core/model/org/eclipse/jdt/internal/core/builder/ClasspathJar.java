@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -207,7 +207,8 @@ public boolean equals(Object o) {
 			return false;
 	return this.zipFilename.equals(jar.zipFilename) 
 			&& lastModified() == jar.lastModified()
-			&& this.isOnModulePath == jar.isOnModulePath;
+			&& this.isOnModulePath == jar.isOnModulePath
+			&& areAllModuleOptionsEqual(jar);
 }
 
 public NameEnvironmentAnswer findClass(String binaryFileName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName, boolean asBinaryOnly) {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1341,7 +1341,11 @@ public final class ASTRewriteAnalyzer extends ASTVisitor {
 	 * Next token is a left brace. Returns the offset after the brace. For incomplete code, return the start offset.
 	 */
 	private int getPosAfterLeftBrace(int pos) {
-		return getPosAfterToken(pos, TerminalTokens.TokenNameLBRACE);
+		try {
+			return getPosAfterToken(pos, TerminalTokens.TokenNameLBRACE);
+		} catch (IllegalArgumentException e) {
+			return pos;
+		}
 	}
 
 	/*

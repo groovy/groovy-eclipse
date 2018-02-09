@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -981,8 +981,8 @@ final public AnnotationBinding[] getTypeAnnotations() {
 public void setTypeAnnotations(AnnotationBinding[] annotations) {
 	this.typeAnnotations = annotations;
 }
-public void setAnnotations(AnnotationBinding[] annotations) {
-	this.declaringClass.storeAnnotations(this, annotations);
+public void setAnnotations(AnnotationBinding[] annotations, boolean forceStore) {
+	this.declaringClass.storeAnnotations(this, annotations, forceStore);
 }
 public void setAnnotations(AnnotationBinding[] annotations, AnnotationBinding[][] parameterAnnotations, Object defaultValue, LookupEnvironment optionalEnv) {
 	this.declaringClass.storeAnnotationHolder(this,  AnnotationHolder.storeAnnotations(annotations, parameterAnnotations, defaultValue, optionalEnv));

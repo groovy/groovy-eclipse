@@ -312,7 +312,7 @@ public ClassFileReader(byte[] classFileBytes, char[] fileName, boolean fullyInit
 			FieldInfo field;
 			this.fields = new FieldInfo[this.fieldsCount];
 			for (int i = 0; i < this.fieldsCount; i++) {
-				field = FieldInfo.createField(this.reference, this.constantPoolOffsets, readOffset);
+				field = FieldInfo.createField(this.reference, this.constantPoolOffsets, readOffset, this.version);
 				this.fields[i] = field;
 				readOffset += field.sizeInBytes();
 			}
@@ -325,8 +325,8 @@ public ClassFileReader(byte[] classFileBytes, char[] fileName, boolean fullyInit
 			boolean isAnnotationType = (this.accessFlags & ClassFileConstants.AccAnnotation) != 0;
 			for (int i = 0; i < this.methodsCount; i++) {
 				this.methods[i] = isAnnotationType
-					? AnnotationMethodInfo.createAnnotationMethod(this.reference, this.constantPoolOffsets, readOffset)
-					: MethodInfo.createMethod(this.reference, this.constantPoolOffsets, readOffset);
+					? AnnotationMethodInfo.createAnnotationMethod(this.reference, this.constantPoolOffsets, readOffset, this.version)
+					: MethodInfo.createMethod(this.reference, this.constantPoolOffsets, readOffset, this.version);
 				readOffset += this.methods[i].sizeInBytes();
 			}
 		}
@@ -486,11 +486,12 @@ private void decodeAnnotations(int offset, boolean runtimeVisible) {
 			long standardTagBits = newInfo.standardAnnotationTagBits;
 			if (standardTagBits != 0) {
 				this.tagBits |= standardTagBits;
-			} else {
-				if (newInfos == null)
-					newInfos = new AnnotationInfo[numberOfAnnotations - i];
-				newInfos[newInfoCount++] = newInfo;
+				if (this.version < ClassFileConstants.JDK9 || (standardTagBits & TagBits.AnnotationDeprecated) == 0)
+					continue;
 			}
+			if (newInfos == null)
+				newInfos = new AnnotationInfo[numberOfAnnotations - i];
+			newInfos[newInfoCount++] = newInfo;
 		}
 		if (newInfos == null)
 			return; // nothing to record in this.annotations
