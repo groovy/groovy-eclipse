@@ -40,7 +40,8 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProcessor implements ITypeResolver {
 
-    private JDTResolver resolver;
+    protected ModuleNode module;
+    protected JDTResolver resolver;
 
     public ConstructorCompletionProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
         super(context, javaContext, nameEnvironment);
@@ -48,36 +49,38 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
 
     @Override
     public void setResolverInformation(ModuleNode module, JDTResolver resolver) {
+        this.module = module;
         this.resolver = resolver;
     }
 
     @Override
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
         ContentAssistContext context = getContext();
-        char[] constructorText; int constructorStart;
+        char[] completionChars; int completionStart;
         switch (context.location) {
         case CONSTRUCTOR:
             context.extend(getJavaContext().getCoreContext(), null);
-            constructorText = context.fullCompletionExpression.replaceFirst("^new\\s+", "").toCharArray();
-            constructorStart = context.completionLocation - CharOperation.lastSegment(constructorText, '.').length;
+            completionChars = context.fullCompletionExpression.replaceAll("^new|\\s+", "").toCharArray();
+            completionStart = context.completionLocation - CharOperation.lastSegment(completionChars, '.').length;
             break;
         case METHOD_CONTEXT:
-            constructorText = ((MethodInfoContentAssistContext) context).methodName.toCharArray();
-            constructorStart = ((MethodInfoContentAssistContext) context).methodNameEnd - CharOperation.lastSegment(constructorText, '.').length;;
+            completionChars = ((MethodInfoContentAssistContext) context).methodName.replace('$', '.').toCharArray();
+            completionStart = ((MethodInfoContentAssistContext) context).methodNameEnd - CharOperation.lastSegment(completionChars, '.').length;
             break;
         default:
             throw new IllegalStateException("Invalid constructor completion location: " + context.location.name());
         }
 
-        GroovyProposalTypeSearchRequestor requestor = new GroovyProposalTypeSearchRequestor(context, getJavaContext(),
-                constructorStart, context.completionEnd - constructorStart, getNameEnvironment().nameLookup, monitor);
-
-        getNameEnvironment().findConstructorDeclarations(constructorText, true, requestor, monitor);
+        SearchableEnvironment environment = getNameEnvironment();
+        int replacementLength = context.completionEnd - completionStart;
+        GroovyProposalTypeSearchRequestor requestor = new GroovyProposalTypeSearchRequestor(
+            context, getJavaContext(), completionStart, replacementLength, environment.nameLookup, monitor);
+        environment.findConstructorDeclarations(completionChars, requestor.options.camelCaseMatch, requestor, monitor);
 
         return requestor.processAcceptedConstructors(findUsedParameters(context), resolver);
     }
 
-    private Set<String> findUsedParameters(ContentAssistContext context) {
+    protected static Set<String> findUsedParameters(ContentAssistContext context) {
         if (context.location != ContentAssistLocation.METHOD_CONTEXT) {
             return Collections.emptySet();
         }
@@ -95,13 +98,10 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
                     }
                 }
             }
-
             // now remove the arguments that are already written
             if (arguments instanceof MapExpression) {
-                // Do extra filtering to determine what parameters are still
-                // available
-                MapExpression enclosingCallArgs = (MapExpression) arguments;
-                for (MapEntryExpression entry : enclosingCallArgs.getMapEntryExpressions()) {
+                // do extra filtering to determine what parameters are still available
+                for (MapEntryExpression entry : ((MapExpression) arguments).getMapEntryExpressions()) {
                     usedParams.add(entry.getKeyExpression().getText());
                 }
             }

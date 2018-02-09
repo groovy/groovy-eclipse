@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,28 +20,36 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
+import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.codeassist.CharArraySourceBuffer;
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
+import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.codehaus.groovy.eclipse.core.util.ExpressionFinder;
 import org.codehaus.groovy.eclipse.core.util.ExpressionFinder.NameAndLocation;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.groovy.search.ITypeResolver;
+import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
+import org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor implements ITypeResolver {
 
-    private static final Set<String> FIELD_MODIFIERS = Collections.unmodifiableSet(
-        new HashSet<>(Arrays.asList("private", "protected", "public", "static", "final")));
-
+    protected ModuleNode module;
     protected JDTResolver resolver;
 
     public TypeCompletionProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
@@ -50,26 +58,100 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor i
 
     @Override
     public void setResolverInformation(ModuleNode module, JDTResolver resolver) {
+        this.module = module;
         this.resolver = resolver;
     }
 
     @Override
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
         ContentAssistContext context = getContext();
-        String prefix = context.completionExpression.replaceFirst("^new\\s+", "");
-        if (!canProposeTypes(context, prefix)) {
+
+        String expression = context.getQualifiedCompletionExpression();
+        if (!doTypeCompletion(context, expression)) {
             return Collections.emptyList();
         }
 
-        int replacementLength = prefix.length();
-        int replacementOffset = context.completionLocation - replacementLength;
-        GroovyProposalTypeSearchRequestor requestor = new GroovyProposalTypeSearchRequestor(
-            context, getJavaContext(), replacementOffset, replacementLength, getNameEnvironment().nameLookup, monitor);
+        int replacementStart;
+        switch (context.location) {
+        case ANNOTATION:
+        case CONSTRUCTOR:
+        case METHOD_CONTEXT:
+            // skip over "new " for constructor invocation
+            replacementStart = context.completionNode.getStart();
+            break;
+        default:
+            replacementStart = (context.completionLocation - context.fullCompletionExpression.replaceFirst("^\\s+", "").length());
+        }
 
-        boolean findMembers = true /*should be false when in constructor*/, camelCaseMatch = true;
-        getNameEnvironment().findTypes(prefix.toCharArray(), findMembers, camelCaseMatch, getSearchFor(), requestor, monitor);
+        SearchableEnvironment environment = getNameEnvironment();
+        int replacementLength = (context.completionEnd - replacementStart);
+        GroovyProposalTypeSearchRequestor requestor = new GroovyProposalTypeSearchRequestor(
+            context, getJavaContext(), replacementStart, replacementLength, environment.nameLookup, monitor);
+
+        int lastDotIndex = expression.lastIndexOf('.');
+        // check for free variable or fully-qualified (by packages) expression
+        if (lastDotIndex < 0 || environment.nameLookup.isPackage(expression.substring(0, lastDotIndex).split("\\."))) {
+            boolean findMembers = true; // not sure about findMembers; javadoc says method does not find member types
+            environment.findTypes(expression.toCharArray(), findMembers, requestor.options.camelCaseMatch, getSearchFor(), requestor, monitor);
+        } else {
+            // qualified expression; requires manual inner types checking
+
+            String qualifier = expression.substring(0, lastDotIndex);
+            String pattern   = expression.substring(lastDotIndex + 1, expression.length());
+
+            Consumer<IType> checker = (IType outerType) -> {
+                if (outerType != null && outerType.exists() && qualifier.endsWith(outerType.getElementName()))
+                try {
+                    for (IType innerType : outerType.getTypes()) {
+                        if (isAcceptable(innerType, getSearchFor()) && matches(pattern, innerType.getElementName(), requestor.options.camelCaseMatch)) {
+                            requestor.acceptType(innerType.getPackageFragment().getElementName().toCharArray(), innerType.getElementName().toCharArray(),
+                                CharOperation.splitOn('$', outerType.getTypeQualifiedName().toCharArray()), innerType.getFlags(), ProposalUtils.getTypeAccessibility(innerType));
+                        }
+                    }
+                } catch (JavaModelException e) {
+                    GroovyContentAssist.logError(e);
+                }
+            };
+
+            ClassNode outerTypeNode = resolver.resolve(qualifier);
+            if (!ClassHelper.DYNAMIC_TYPE.equals(outerTypeNode)) {
+                checker.accept(environment.nameLookup.findType(outerTypeNode.getName(), false, 0));
+            } else if (qualifier.indexOf('.') < 0) {
+                // unknown qualifier; search for types with exact matching
+                environment.findTypes(qualifier.toCharArray(), true, false, 0, requestor, monitor);
+                List<ICompletionProposal> proposals = requestor.processAcceptedTypes(resolver);
+                for (ICompletionProposal proposal : proposals) {
+                    if (proposal instanceof AbstractJavaCompletionProposal) {
+                        checker.accept((IType) ((AbstractJavaCompletionProposal) proposal).getJavaElement());
+                    }
+                }
+            }
+        }
 
         return requestor.processAcceptedTypes(resolver);
+    }
+
+    /**
+     * Don't show types...
+     * <ul>
+     * <li>if there is no previous text (except for imports or annotations)
+     * <li>if completing a constructor, method, for loop or catch parameter name
+     * <li>when in a class body and there is a type declaration immediately before
+     * </ul>
+     */
+    protected boolean doTypeCompletion(ContentAssistContext context, String expression) {
+        if (expression.isEmpty()) {
+            return (context.location == ContentAssistLocation.ANNOTATION || context.location == ContentAssistLocation.IMPORT);
+        }
+        // check for parameter name completion
+        if (context.location == ContentAssistLocation.PARAMETER) {
+            AnnotatedNode completionNode = (AnnotatedNode) context.completionNode;
+            if (completionNode.getStart() < completionNode.getNameStart() &&
+                    context.completionLocation >= completionNode.getNameStart()) {
+                return false;
+            }
+        }
+        return !isBeforeTypeName(context);
     }
 
     protected int getSearchFor() {
@@ -87,33 +169,23 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor i
         }
     }
 
-    /**
-     * Don't show types...
-     * <ul>
-     * <li>if there is no previous text (except for imports or annotations)
-     * <li>if completing a method or constructor parameter name
-     * <li>if there is a '.'
-     * <li>when in a class body and there is a type declaration immediately before
-     * </ul>
-     */
-    private static boolean canProposeTypes(ContentAssistContext context, String prefix) {
-        if (prefix.length() == 0) {
-            return (context.location == ContentAssistLocation.ANNOTATION || context.location == ContentAssistLocation.IMPORT);
+    protected boolean isAcceptable(IType type, int searchFor) throws JavaModelException {
+        if (searchFor == IJavaSearchConstants.TYPE) {
+            return true;
         }
-        if (context.location == ContentAssistLocation.PARAMETER) {
-            AnnotatedNode completionNode = (AnnotatedNode) context.completionNode;
-            if (completionNode.getStart() < completionNode.getNameStart() &&
-                    context.completionLocation >= completionNode.getNameStart()) {
-                return false;
-            }
+        int kind = TypeDeclaration.kind(type.getFlags());
+        switch (kind) {
+        case TypeDeclaration.ENUM_DECL:
+        case TypeDeclaration.CLASS_DECL:
+        case TypeDeclaration.ANNOTATION_TYPE_DECL:
+            return (searchFor == IJavaSearchConstants.CLASS);
+        case TypeDeclaration.INTERFACE_DECL:
+            return (searchFor == IJavaSearchConstants.INTERFACE);
         }
-        if (context.fullCompletionExpression.contains(".")) {
-            return false;
-        }
-        return !isBeforeTypeName(context);
+        return false;
     }
 
-    private static boolean isBeforeTypeName(ContentAssistContext context) {
+    protected static boolean isBeforeTypeName(ContentAssistContext context) {
         if (context.location != ContentAssistLocation.CLASS_BODY) {
             return false;
         }
@@ -127,4 +199,7 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor i
         }
         return !FIELD_MODIFIERS.contains(nameAndLocation.name.trim());
     }
+
+    protected static final Set<String> FIELD_MODIFIERS = Collections.unmodifiableSet(
+        new HashSet<>(Arrays.asList("private", "protected", "public", "static", "final")));
 }

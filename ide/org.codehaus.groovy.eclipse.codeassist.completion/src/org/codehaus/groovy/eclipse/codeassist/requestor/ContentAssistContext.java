@@ -191,6 +191,10 @@ public class ContentAssistContext {
         return completionExpression;
     }
 
+    public String getQualifiedCompletionExpression() {
+        return fullCompletionExpression.replaceAll("^(?:@|new\\b)|\\s+", "");
+    }
+
     public VariableScope getPerceivedCompletionScope() {
         if (currentScope == null && completionNode != null) {
             new TypeInferencingVisitorFactory().createVisitor(unit).visitCompilationUnit(

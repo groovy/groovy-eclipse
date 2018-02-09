@@ -32,18 +32,18 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 public class MethodInfoContentAssistContext extends ContentAssistContext {
 
     /**
-     * the end of the method name for this context
-     * use instead of completionEnd for getting the method context proposal
-     */
-    public final int methodNameEnd;
-
-    /**
      * The expression corresponding to call.getExpression()
      * use instead of completionExpression for getting the method context
      * proposal. In the case of {@link ConstructorCallExpression}s, this
      * value is the {@link ClassNode} for the type of the call expression.
      */
     public final AnnotatedNode methodExpression;
+
+    /**
+     * the end of the method name for this context
+     * use instead of completionEnd for getting the method context proposal
+     */
+    public final int methodNameEnd;
 
     /**
      * The name of the method (use instead of completionExpression for getting
@@ -66,8 +66,8 @@ public class MethodInfoContentAssistContext extends ContentAssistContext {
             int methodNameEnd) {
 
         super(completionLocation, completionExpression, fullCompletionExpression, completionNode, containingCodeBlock, lhsNode, ContentAssistLocation.METHOD_CONTEXT, unit, containingDeclaration, completionEnd);
-        this.methodNameEnd = methodNameEnd;
         this.methodExpression = methodExpression;
+        this.methodNameEnd = methodNameEnd;
         this.methodName = methodName;
     }
 
