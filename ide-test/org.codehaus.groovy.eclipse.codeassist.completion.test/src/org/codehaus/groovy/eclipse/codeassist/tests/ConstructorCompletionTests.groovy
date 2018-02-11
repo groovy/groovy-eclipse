@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import groovy.transform.NotYetImplemented
+
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.contentassist.ICompletionProposal
@@ -45,7 +47,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
     }
 
-    @Test
+    @Test @NotYetImplemented // do this with Ctrl triggering of constructor proposal
     void testConstructorCompletion2() {
         String contents = 'class YYY { YYY() { } }\nnew YY()\nkkk' // trailing parens
         String expected = 'class YYY { YYY() { } }\nnew YYY()\nkkk'
@@ -103,6 +105,218 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length());
         proposalExists(proposals, 'AnnotationVisitor', 0)
         proposalExists(proposals, 'Annotation', 1)
+    }
+
+    @Test
+    void testConstructorCompletionInnerClass1() {
+        addGroovySource '''\
+            class Outer {
+              static class Inner {
+                Inner() {}
+              }
+            }
+            '''.stripIndent(), 'Outer', 'a'
+
+        String contents = '''\
+            new a.Outer.Inn
+            '''.stripIndent()
+        applyProposalAndCheck(checkUniqueProposal(contents, 'Inn', 'Inner() - a.Outer.Inner', '()'), contents.replace('Inn', 'Inner()'))
+    }
+
+    @Test
+    void testConstructorCompletionInnerClass2() {
+        addGroovySource '''\
+            class Outer {
+              static class Inner {
+                Inner() {}
+              }
+            }
+            '''.stripIndent(), 'Outer', 'b'
+
+        String contents = '''\
+            new Outer.Inn
+            '''.stripIndent()
+        applyProposalAndCheck(checkUniqueProposal(contents, 'Inn', 'Inner() - b.Outer.Inner', '()'), '''\
+            |import b.Outer
+            |
+            |new Outer.Inner()
+            |'''.stripMargin())
+    }
+
+    @Test
+    void testConstructorCompletionInnerClass3() {
+        addGroovySource '''\
+            class Outer {
+              static class Inner {
+                Inner() {}
+              }
+            }
+            '''.stripIndent(), 'Outer', 'c'
+
+        String contents = '''\
+            new Outer.Inn
+            '''.stripIndent()
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+        applyProposalAndCheck(checkUniqueProposal(contents, 'Inn', 'Inner() - c.Outer.Inner', '()'), '''\
+            |new c.Outer.Inner()
+            |'''.stripMargin())
+    }
+
+    @Test @NotYetImplemented // qualifier missing Outer
+    void testConstructorCompletionInnerClass4() {
+        addGroovySource '''\
+            class Outer {
+              static class XyzInner {
+                XyzInner() {}
+              }
+            }
+            '''.stripIndent(), 'Outer', 'd'
+
+        String contents = '''\
+            new XyzInn
+            '''.stripIndent()
+        applyProposalAndCheck(checkUniqueProposal(contents, 'XyzInn', 'XyzInner() - d.Outer.XyzInner', '()'), '''\
+            |import d.Outer.XyzInner
+            |
+            |new Outer.XyzInner()
+            |'''.stripMargin())
+    }
+
+    @Test @NotYetImplemented // qualifier missing Outer
+    void testConstructorCompletionInnerClass5() {
+        addGroovySource '''\
+            class Outer {
+              static class XyzInner {
+                XyzInner() {}
+              }
+            }
+            '''.stripIndent(), 'Outer', 'e'
+
+        String contents = '''\
+            new XyzInn
+            '''.stripIndent()
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+        applyProposalAndCheck(checkUniqueProposal(contents, 'XyzInn', 'XyzInner() - e.Outer.Inner', '()'), '''\
+            |new e.Outer.XyzInner()
+            |'''.stripMargin())
+    }
+
+    @Test
+    void testConstructorCompletionInnerClass6() {
+        addGroovySource '''\
+            class Outer {
+              static class Inner {
+                Inner() {}
+              }
+            }
+            '''.stripIndent(), 'Outer', 'f'
+
+        String contents = '''\
+            import f.Outer
+            new Outer.Inn
+            '''.stripIndent()
+        applyProposalAndCheck(checkUniqueProposal(contents, 'Inn', 'Inner() - f.Outer.Inner', '()'), '''\
+            |import f.Outer
+            |new Outer.Inner()
+            |'''.stripMargin())
+    }
+
+    @Test
+    void testConstructorCompletionInnerClass7() {
+        addGroovySource '''\
+            class Outer {
+              static class Inner {
+                Inner() {}
+              }
+            }
+            '''.stripIndent(), 'Outer', 'g'
+
+        String contents = '''\
+            import g.Outer
+            new Outer.Inn
+            '''.stripIndent()
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+        applyProposalAndCheck(checkUniqueProposal(contents, 'Inn', 'Inner() - g.Outer.Inner', '()'), '''\
+            |import g.Outer
+            |new Outer.Inner()
+            |'''.stripMargin())
+    }
+
+    @Test
+    void testConstructorCompletionInnerClass8() {
+        addGroovySource '''\
+            class Outer {
+              static class Inner {
+                Inner() {}
+              }
+            }
+            '''.stripIndent(), 'Outer', 'h'
+
+        String contents = '''\
+            import h.*
+            new Outer.Inn
+            '''.stripIndent()
+        applyProposalAndCheck(checkUniqueProposal(contents, 'Inn', 'Inner() - h.Outer.Inner', '()'), '''\
+            |import h.*
+            |new Outer.Inner()
+            |'''.stripMargin())
+    }
+
+    @Test
+    void testConstructorCompletionInnerClass9() {
+        addGroovySource '''\
+            class Outer {
+              static class Inner {
+                Inner() {}
+              }
+            }
+            '''.stripIndent(), 'Outer', 'i'
+
+        String contents = '''\
+            import i.*
+            new Outer.Inn
+            '''.stripIndent()
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+        applyProposalAndCheck(checkUniqueProposal(contents, 'Inn', 'Inner() - i.Outer.Inner', '()'), '''\
+            |import i.*
+            |new Outer.Inner()
+            |'''.stripMargin())
+    }
+
+    @Test
+    void testConstructorCompletionInnerClass10() {
+        addGroovySource '''\
+            class Outer {
+              static class Inner {
+                Inner(Number number, String string) {}
+              }
+            }
+            '''.stripIndent(), 'Outer', 'j'
+
+        String contents = '''\
+            new j.Outer.Inn
+            '''.stripIndent()
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        applyProposalAndCheck(checkUniqueProposal(contents, 'Inn', 'Inner(Number number, String string) - j.Outer.Inner', '(number, string)'), contents.replace('Inn', 'Inner(number, string)'))
+    }
+
+    @Test
+    void testConstructorCompletionInnerClass11() {
+        addGroovySource '''\
+            class Outer {
+              static class Inner {
+                Inner(Number number, String string) {}
+              }
+            }
+            '''.stripIndent(), 'Outer', 'k'
+
+        String contents = '''\
+            new k.Outer.Inner()
+            '''.stripIndent()
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false') // TODO: Should not need to remove the qualifier
+        applyProposalAndCheck(checkUniqueProposal(contents, '(', 'Inner(Number number, String string) - k.Outer.Inner' - ~/k.Outer./, ''), contents) // context display
     }
 
     @Test
@@ -344,6 +558,46 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'a'))
         proposalExists(proposals, 'aaa : __', 1)
         proposalExists(proposals, 'xyz : __', 0)
+    }
+
+    @Test
+    void testNamedArgs15() {
+        addGroovySource '''\
+            class Outer {
+              static class Inner {
+                Number number
+                String string
+                Inner() {}
+              }
+            }
+            '''.stripIndent(), 'Outer', 'pack'
+
+        String contents = '''\
+            new pack.Outer.Inner()
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'number : __', 1)
+        proposalExists(proposals, 'string : __', 1)
+    }
+
+    @Test @NotYetImplemented // https://github.com/groovy/groovy-eclipse/issues/404
+    void testNamedArgs16() {
+        addGroovySource '''\
+            class Outer {
+              static class Inner {
+                Number number
+                String string
+              }
+            }
+            '''.stripIndent(), 'Outer', 'qual'
+
+        String contents = '''\
+            import qual.Outer
+            new Outer.Inner()
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'number : __', 1)
+        proposalExists(proposals, 'string : __', 1)
     }
 
     @Test
