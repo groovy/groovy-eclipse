@@ -116,11 +116,11 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
             }
             Outer.Inn
             '''.stripIndent()
-        assertProposalCreated(contents, 'Inn', 'Inner - Outer')
+        applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - Outer'), contents.replaceFirst(/Inn\b/, 'Inner'))
     }
 
     @Test
-    void testInnerClass3a() {
+    void testInnerClass4() {
         String contents = '''\
             Map.Ent
             '''.stripIndent()
@@ -128,13 +128,13 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testInnerClass3b() {
+    void testInnerClass5() {
         setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
-        testInnerClass3a() // no difference; no qualifier should be inserted
+        testInnerClass4() // no difference; no qualifier should be inserted
     }
 
     @Test
-    void testInnerClass4() {
+    void testInnerClass6() {
         addGroovySource '''\
             class Outer {
               class Inner {
@@ -150,7 +150,7 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testInnerClass5() {
+    void testInnerClass7() {
         addGroovySource '''\
             class Outer {
               class Inner {
@@ -165,7 +165,7 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testInnerClass6() {
+    void testInnerClass8() {
         addGroovySource '''\
             class Outer {
               class Inner {
@@ -181,7 +181,7 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testInnerClass6a() {
+    void testInnerClass9() {
         addGroovySource '''\
             class Outer {
               class Inner {
@@ -198,7 +198,7 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testInnerClass7() {
+    void testInnerClass10() {
         addGroovySource '''\
             class Outer {
               interface Inner {
@@ -215,7 +215,7 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testInnerClass7a() {
+    void testInnerClass11() {
         addGroovySource '''\
             class Outer {
               interface Inner {
@@ -231,7 +231,44 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testInnerClass8() {
+    void testInnerClass12() {
+        addGroovySource '''\
+            class Outer {
+              class Inner {
+              }
+            }
+            ''', 'Outer', 'v'
+
+        String contents = '''\
+            Outer.Inn
+            '''.stripIndent()
+        applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - v.Outer'), '''\
+            |import v.Outer
+            |
+            |Outer.Inner
+            |'''.stripMargin())
+    }
+
+    @Test
+    void testInnerClass13() {
+        addGroovySource '''\
+            class Outer {
+              class Inner {
+              }
+            }
+            ''', 'Outer', 'w'
+
+        String contents = '''\
+            Outer.Inn
+            '''.stripIndent()
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+        applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - w.Outer'), '''\
+            |w.Outer.Inner
+            |'''.stripMargin())
+    }
+
+    @Test
+    void testInnerClass14() {
         addGroovySource '''\
             class Outer {
               class Inner {
@@ -239,12 +276,49 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
                 }
               }
             }
-            ''', 'Outer', 'q'
+            ''', 'Outer', 'x'
 
         String contents = '''\
-            q.Outer.Inner.N
+            x.Outer.Inner.N
             '''.stripIndent()
-        applyProposalAndCheck(assertProposalCreated(contents, 'N', 'Nucleus - q.Outer.Inner'), contents.replace('N', 'Nucleus'))
+        applyProposalAndCheck(assertProposalCreated(contents, 'N', 'Nucleus - x.Outer.Inner'), contents.replace('N', 'Nucleus'))
+    }
+
+    @Test
+    void testInnerClass15() {
+        addGroovySource '''\
+            class Outer {
+              class Inner {
+              }
+            }
+            ''', 'Outer', 'y'
+
+        String contents = '''\
+            Inn
+            '''.stripIndent()
+        applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - y.Outer'), '''\
+            |import y.Outer.Inner
+            |
+            |Inner
+            |'''.stripMargin())
+    }
+
+    @Test
+    void testInnerClass16() {
+        addGroovySource '''\
+            class Outer {
+              class Inner {
+              }
+            }
+            ''', 'Outer', 'z'
+
+        String contents = '''\
+            Inn
+            '''.stripIndent()
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+        applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - z.Outer'), '''\
+            |z.Outer.Inner
+            |'''.stripMargin())
     }
 
     //

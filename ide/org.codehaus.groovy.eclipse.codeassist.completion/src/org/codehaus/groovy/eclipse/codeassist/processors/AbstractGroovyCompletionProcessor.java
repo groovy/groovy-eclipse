@@ -20,6 +20,7 @@ import org.codehaus.groovy.eclipse.codeassist.creators.FieldProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.creators.IProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.creators.MethodProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
+import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 
@@ -35,15 +36,15 @@ public abstract class AbstractGroovyCompletionProcessor implements IGroovyComple
         this.javaContext = javaContext;
     }
 
-    public ContentAssistContext getContext() {
+    public final ContentAssistContext getContext() {
         return context;
     }
 
-    public SearchableEnvironment getNameEnvironment() {
+    public final SearchableEnvironment getNameEnvironment() {
         return nameEnvironment;
     }
 
-    public JavaContentAssistInvocationContext getJavaContext() {
+    public final JavaContentAssistInvocationContext getJavaContext() {
         return javaContext;
     }
 
@@ -59,5 +60,12 @@ public abstract class AbstractGroovyCompletionProcessor implements IGroovyComple
         GroovyCompletionProposal proposal = new GroovyCompletionProposal(kind, completionOffset);
         proposal.setNameLookup(nameEnvironment.nameLookup);
         return proposal;
+    }
+
+    protected static boolean matches(String prefix, String candidate, boolean camelCaseMatch) {
+        if (!camelCaseMatch) {
+            return candidate.startsWith(prefix);
+        }
+        return SearchPattern.camelCaseMatch(prefix, candidate);
     }
 }

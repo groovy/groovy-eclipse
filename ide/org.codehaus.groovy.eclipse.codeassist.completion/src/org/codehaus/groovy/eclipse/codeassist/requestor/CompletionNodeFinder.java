@@ -520,15 +520,9 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
             // completing constructor argument (https://github.com/groovy/groovy-eclipse/issues/331)
         }
 
-        // GRECLIPSE-1235: completion invocation offset is outside of type name and argument expressions; it is probably after opening paren or separating comma
+        // completion invocation offset is outside of type name and argument expressions; it is probably after opening paren or separating comma
 
-        int offset = expression.getNameStart(), length = expression.getNameEnd() - offset + 1;
-        String constructorText = constructorType.getNameWithoutPackage();
-        if (constructorText.length() < length) {
-            constructorText = constructorType.getName();
-        }
-
-        createContextForCallContext(expression, constructorType, constructorText);
+        createContextForCallContext(expression, constructorType, constructorType.getUnresolvedName());
     }
 
     @Override

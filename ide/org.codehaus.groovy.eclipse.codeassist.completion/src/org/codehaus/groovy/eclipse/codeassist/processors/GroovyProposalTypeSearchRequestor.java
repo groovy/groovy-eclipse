@@ -90,6 +90,7 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
 
     private static final char[] NO_TYPE_NAME = {'.'};
+    private static final char[] _AS_ = {' ','a','s',' '};
     private static final int CHECK_CANCEL_FREQUENCY = 50;
 
     private int foundTypesCount = 0;
@@ -130,8 +131,8 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
     // instead of inserting text, show context information only for constructors
     private boolean contextOnly;
 
-    private final ContentAssistContext context;
-    private final        AssistOptions options;
+    final ContentAssistContext context;
+    final        AssistOptions options;
 
     public GroovyProposalTypeSearchRequestor(
             ContentAssistContext context,
@@ -154,7 +155,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         // if contextOnly then do not insert any text, only show context information
         this.contextOnly = (context.location == ContentAssistLocation.METHOD_CONTEXT);
         this.shouldAcceptConstructors = (context.location == ContentAssistLocation.METHOD_CONTEXT || context.location == ContentAssistLocation.CONSTRUCTOR);
-        this.completionExpression = (contextOnly ? ((MethodInfoContentAssistContext) context).methodName : context.fullCompletionExpression.replaceFirst("^new\\s+", ""));
+        this.completionExpression = (contextOnly ? ((MethodInfoContentAssistContext) context).methodName.replace('$', '.') : context.getQualifiedCompletionExpression());
 
         this.groovyRewriter = new GroovyImportRewriteFactory(this.unit, this.module);
         this.options = new AssistOptions(javaContext.getProject().getOptions(true));
@@ -182,75 +183,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         if (acceptedPackages == null)
             acceptedPackages = new HashSet<>();
         acceptedPackages.add(String.valueOf(packageName));
-    }
-
-    @Override
-    public void acceptConstructor(
-            int modifiers,
-            char[] simpleTypeName,
-            int parameterCount,
-            char[] signature,
-            char[][] parameterTypes,
-            char[][] parameterNames,
-            int typeModifiers,
-            char[] packageName,
-            int extraFlags,
-            String path,
-            AccessRestriction accessRestriction) {
-
-        if (shouldAcceptConstructors) {
-            // do not check cancellation for every ctor to avoid performance loss
-            if ((foundConstructorsCount % (CHECK_CANCEL_FREQUENCY)) == 0)
-                checkCancel();
-            foundConstructorsCount += 1;
-
-            // do not propose enum constructors
-            if (Flags.isEnum(typeModifiers)) {
-                return;
-            }
-            if (TypeFilter.isFiltered(packageName, simpleTypeName)) {
-                return;
-            }
-            if (this.options.checkDeprecation && (typeModifiers & Flags.AccDeprecated) != 0) {
-                return;
-            }
-
-            if (this.options.checkVisibility) {
-                if ((typeModifiers & Flags.AccPublic) == 0) {
-                    if ((typeModifiers & Flags.AccPrivate) != 0)
-                        return;
-
-                    if (!CharOperation.equals(packageName, CharOperation.concatWith(unit.getPackageName(), '.')))
-                        return;
-                }
-            }
-
-            int accessibility = IAccessRule.K_ACCESSIBLE;
-            if (accessRestriction != null) {
-                switch (accessRestriction.getProblemId()) {
-                case IProblem.DiscouragedReference:
-                    if (options.checkDiscouragedReference) {
-                        return;
-                    }
-                    accessibility = IAccessRule.K_DISCOURAGED;
-                    break;
-                case IProblem.ForbiddenReference:
-                    if (options.checkForbiddenReference) {
-                        return;
-                    }
-                    accessibility = IAccessRule.K_NON_ACCESSIBLE;
-                    break;
-                }
-            }
-
-            if (signature == null) {
-                //signature = Signature.createArraySignature(typeSignature, arrayCount)
-            }
-
-            if (acceptedConstructors == null)
-                acceptedConstructors = new ObjectVector();
-            acceptedConstructors.add(new AcceptedCtor(modifiers, simpleTypeName, parameterCount, signature, parameterTypes, parameterNames, typeModifiers, packageName, extraFlags, accessibility));
-        }
     }
 
     @Override
@@ -307,10 +239,90 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         acceptedTypes.add(new AcceptedType(packageName, simpleTypeName, enclosingTypeNames, modifiers, accessibility));
     }
 
+    @Override
+    public void acceptConstructor(int modifiers, char[] simpleTypeName, int parameterCount, char[] signature, char[][] parameterTypes,
+        char[][] parameterNames, int typeModifiers, char[] packageName, int extraFlags, String path, AccessRestriction accessRestriction) {
+
+        if (shouldAcceptConstructors) {
+            // do not check cancellation for every ctor to avoid performance loss
+            if ((foundConstructorsCount % (CHECK_CANCEL_FREQUENCY)) == 0)
+                checkCancel();
+            foundConstructorsCount += 1;
+
+            // do not propose enum constructors
+            if (Flags.isEnum(typeModifiers)) {
+                return;
+            }
+            if (TypeFilter.isFiltered(packageName, simpleTypeName)) {
+                return;
+            }
+            if (this.options.checkDeprecation && (typeModifiers & Flags.AccDeprecated) != 0) {
+                return;
+            }
+
+            if (this.options.checkVisibility) {
+                if ((typeModifiers & Flags.AccPublic) == 0) {
+                    if ((typeModifiers & Flags.AccPrivate) != 0)
+                        return;
+
+                    if (!CharOperation.equals(packageName, CharOperation.concatWith(unit.getPackageName(), '.')))
+                        return;
+                }
+            }
+
+            int accessibility = IAccessRule.K_ACCESSIBLE;
+            if (accessRestriction != null) {
+                switch (accessRestriction.getProblemId()) {
+                case IProblem.DiscouragedReference:
+                    if (options.checkDiscouragedReference) {
+                        return;
+                    }
+                    accessibility = IAccessRule.K_DISCOURAGED;
+                    break;
+                case IProblem.ForbiddenReference:
+                    if (options.checkForbiddenReference) {
+                        return;
+                    }
+                    accessibility = IAccessRule.K_NON_ACCESSIBLE;
+                    break;
+                }
+            }
+
+            if (acceptedConstructors == null)
+                acceptedConstructors = new ObjectVector();
+            acceptedConstructors.add(new AcceptedCtor(modifiers, simpleTypeName, parameterCount, signature, parameterTypes, parameterNames, typeModifiers, packageName, extraFlags, accessibility));
+        }
+    }
+
     private void checkCancel() {
         if (monitor != null && monitor.isCanceled()) {
             throw new OperationCanceledException();
         }
+    }
+
+    //--------------------------------------------------------------------------
+
+    List<ICompletionProposal> processAcceptedPackages() {
+        checkCancel();
+        List<ICompletionProposal> proposals = new LinkedList<>();
+        if (acceptedPackages != null && acceptedPackages.size() > 0) {
+            for (String packageNameStr : acceptedPackages) {
+                char[] packageName = packageNameStr.toCharArray();
+                GroovyCompletionProposal proposal = createProposal(CompletionProposal.PACKAGE_REF, context.completionLocation);
+                proposal.setDeclarationSignature(packageName);
+                proposal.setPackageName(packageName);
+                proposal.setCompletion(packageName);
+                proposal.setReplaceRange(offset, context.completionLocation);
+                proposal.setTokenRange(offset, context.completionLocation);
+                proposal.setRelevance(Relevance.LOWEST.getRelevance());
+
+                LazyJavaCompletionProposal javaProposal = new LazyJavaCompletionProposal(proposal, javaContext);
+                javaProposal.setTriggerCharacters(ProposalUtils.TYPE_TRIGGERS);
+                javaProposal.setRelevance(proposal.getRelevance());
+                proposals.add(javaProposal);
+            }
+        }
+        return proposals;
     }
 
     /**
@@ -339,62 +351,61 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                     checkCancel();
                 }
 
-                AcceptedType acceptedType = (AcceptedType) acceptedTypes.elementAt(i);
-                char[] packageName = acceptedType.packageName;
-                char[] simpleTypeName = acceptedType.simpleTypeName;
-                char[][] enclosingTypeNames = acceptedType.enclosingTypeNames;
-                int modifiers = acceptedType.modifiers;
-                int accessibility = acceptedType.accessibility;
+                AcceptedType type = (AcceptedType) acceptedTypes.elementAt(i);
+                char[] packageName = type.packageName;
+                char[] simpleTypeName = type.simpleTypeName;
+                char[][] enclosingTypeNames = type.enclosingTypeNames;
 
-                char[] typeName;
-                char[] flatEnclosingTypeNames;
                 if (enclosingTypeNames == null || enclosingTypeNames.length == 0) {
-                    flatEnclosingTypeNames = null;
-                    typeName = simpleTypeName;
+                    type.qualifiedTypeName = simpleTypeName;
                 } else {
-                    flatEnclosingTypeNames = CharOperation.concatWith(acceptedType.enclosingTypeNames, '$');
-                    typeName = CharOperation.concat(flatEnclosingTypeNames, simpleTypeName, '$');
+                    type.qualifiedTypeName = CharOperation.concatWith(type.enclosingTypeNames, simpleTypeName, '$');
                 }
-                char[] fullyQualifiedName = CharOperation.concat(packageName, typeName, '.');
+                type.fullyQualifiedName = CharOperation.concat(packageName, type.qualifiedTypeName, '.');
 
-                // get this imports from the module node
+                if (isImport) {
+                    proposals.add(proposeType(type));
+                    continue next;
+                }
+
+
                 if (imports == null && resolver.getScope() != null) {
                     initializeImportArrays(resolver.getScope());
                 }
 
                 if (imports != null && !qualified) {
-                    // check to see if this type is imported explicitly
-                    for (char[][] importName : imports) {
-                        if (CharOperation.equals(typeName, importName[0])) {
-                            // potentially use fully qualified type name if there is already something else with the same simple name imported
-                            proposals.add(proposeType(packageName, simpleTypeName, modifiers, accessibility, typeName, fullyQualifiedName, !CharOperation.equals(fullyQualifiedName, importName[1]))); // TODO: This last test fails to handle aliased imports
+                    char[] fullName = CharOperation.replaceOnCopy(type.fullyQualifiedName, '$', '.');
+                    for (char[][] importSpec : imports) {
+                        // check to see if this type name is imported explicitly
+                        if (CharOperation.equals(simpleTypeName, importSpec[0])) {
+                            int end = CharOperation.indexOf(_AS_, importSpec[1], true);
+                            // use qualified name if there is already something with the same simple name imported
+                            type.mustBeQualified = !CharOperation.equals(fullName, importSpec[1], 0, end > 0 ? end : importSpec[1].length);
+                            proposals.add(proposeType(type));
                             continue next;
                         }
                     }
                 }
 
-                if (qualified || (enclosingTypeNames == null || enclosingTypeNames.length == 0) && isCurrentPackage(packageName)) {
-                    proposals.add(proposeType(packageName, simpleTypeName, modifiers, accessibility, typeName, fullyQualifiedName, false));
-                } else if (((AcceptedType) onDemandFound.get(simpleTypeName)) == null && onDemandImports != null) {
-                    char[] fullyQualifiedEnclosingTypeOrPackageName = null;
-                    for (char[] importFlatName : onDemandImports) {
-                        if (fullyQualifiedEnclosingTypeOrPackageName == null) {
-                            if (enclosingTypeNames != null && enclosingTypeNames.length != 0) {
-                                fullyQualifiedEnclosingTypeOrPackageName = CharOperation.concat(packageName, flatEnclosingTypeNames, '.');
-                            } else {
-                                fullyQualifiedEnclosingTypeOrPackageName = packageName;
-                            }
-                        }
-                        if (CharOperation.equals(fullyQualifiedEnclosingTypeOrPackageName, importFlatName)) {
-                            acceptedType.qualifiedTypeName = typeName;
-                            acceptedType.fullyQualifiedName = fullyQualifiedName;
-                            onDemandFound.put(simpleTypeName, acceptedType);
+                // check for star import if expression is not qualified and type name not seen already and
+                if (!qualified && onDemandImports != null && !onDemandFound.containsKey(simpleTypeName) &&
+                        // type is an inner class or is not from the same package as the current compilation unit
+                        ((enclosingTypeNames != null && enclosingTypeNames.length > 0) || !isCurrentPackage(packageName))) {
+                    char[] qualifier = packageName;
+                    if (enclosingTypeNames != null && enclosingTypeNames.length > 0) {
+                        qualifier = CharOperation.concatWith(packageName, type.enclosingTypeNames, '.');
+                    }
+
+                    for (char[] importName : onDemandImports) {
+                        if (CharOperation.equals(qualifier, importName)) {
+                            onDemandFound.put(simpleTypeName, type);
                             continue next;
                         }
                     }
-                    char[] qualifier = (fullyQualifiedEnclosingTypeOrPackageName != null ? fullyQualifiedEnclosingTypeOrPackageName : packageName);
-                    proposals.add(proposeType(qualifier, simpleTypeName, modifiers, accessibility, typeName, fullyQualifiedName, true));
+
+                    type.mustBeQualified = true;
                 }
+                proposals.add(proposeType(type));
             }
 
             char[][] keys = onDemandFound.keyTable;
@@ -405,7 +416,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                 if (keys[i] != null) {
                     AcceptedType value = (AcceptedType) vals[i];
                     if (value != null) {
-                        proposals.add(proposeType(value.packageName, value.simpleTypeName, value.modifiers, value.accessibility, value.qualifiedTypeName, value.fullyQualifiedName, value.mustBeQualified));
+                        proposals.add(proposeType(value));
                     }
                 }
             }
@@ -416,59 +427,60 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         return proposals;
     }
 
-    private ICompletionProposal proposeType(char[] packageName, char[] simpleTypeName, int modifiers, int accessibility, char[] qualifiedTypeName, char[] fullyQualifiedName, boolean isQualified) {
-        int completionExpressionLength = context.completionExpression.length(), completionOffset = context.completionLocation - completionExpressionLength;
+    private ICompletionProposal proposeType(AcceptedType type) {
+        int completionOffset = (isImport || type.mustBeQualified ? offset :
+            context.completionLocation - context.completionExpression.length());
 
         GroovyCompletionProposal proposal = createProposal(CompletionProposal.TYPE_REF, completionOffset);
-        proposal.setAccessibility(accessibility);
-        proposal.setCompletion(isQualified ? fullyQualifiedName : simpleTypeName);
-        proposal.setDeclarationSignature(packageName);
-        proposal.setFlags(modifiers);
-        proposal.setPackageName(packageName);
-        proposal.setRelevance(computeRelevanceForTypeProposal(fullyQualifiedName, accessibility, modifiers));
+        proposal.setAccessibility(type.accessibility);
+        proposal.setCompletion(!type.mustBeQualified ? type.simpleTypeName :
+            CharOperation.replaceOnCopy(type.fullyQualifiedName, '$', '.'));
+        proposal.setDeclarationSignature(type.packageName);
+        proposal.setFlags(type.modifiers);
+        proposal.setPackageName(type.packageName);
+        proposal.setRelevance(computeRelevanceForTypeProposal(type.fullyQualifiedName, type.accessibility, type.modifiers));
         proposal.setReplaceRange(completionOffset, context.completionLocation);
-        proposal.setSignature(Signature.createCharArrayTypeSignature(fullyQualifiedName, true));
+        proposal.setSignature(Signature.createCharArrayTypeSignature(type.fullyQualifiedName, true));
         proposal.setTokenRange(completionOffset, context.completionLocation);
-        proposal.setTypeName(simpleTypeName);
+        proposal.setTypeName(type.qualifiedTypeName);
 
-        if (qualifiedTypeName.length != simpleTypeName.length) {
-            char[] outerTypeName = CharOperation.subarray(qualifiedTypeName, 0, qualifiedTypeName.length - simpleTypeName.length - 1);
-            proposal.setDeclarationSignature(Signature.createCharArrayTypeSignature(CharOperation.concat(packageName, outerTypeName, '.'), true));
+        if (type.qualifiedTypeName.length != type.simpleTypeName.length) {
+            char[] outerTypeName = CharOperation.subarray(type.qualifiedTypeName, 0, type.qualifiedTypeName.length - type.simpleTypeName.length - 1);
+            proposal.setDeclarationSignature(Signature.createCharArrayTypeSignature(CharOperation.concat(type.packageName, outerTypeName, '.'), true));
+            proposal.setDeclarationPackageName(type.packageName);
+            proposal.setDeclarationTypeName(outerTypeName);
         }
 
         AbstractJavaCompletionProposal javaProposal;
         if (isImport) {
-            javaProposal = new JavaTypeCompletionProposal(String.valueOf(proposal.getCompletion()), null, completionOffset, completionExpressionLength,
-                ProposalUtils.getImage(proposal), ProposalUtils.createDisplayString(proposal), proposal.getRelevance(), String.valueOf(fullyQualifiedName), javaContext);
+            String fullyQualifiedName = String.valueOf(type.fullyQualifiedName).replace('$', '.'); // as it would appear in an import statement
+            javaProposal = new JavaTypeCompletionProposal(fullyQualifiedName, null, completionOffset, context.completionLocation - completionOffset,
+                ProposalUtils.getImage(proposal), ProposalUtils.createDisplayString(proposal), proposal.getRelevance(), fullyQualifiedName, javaContext);
         } else {
             javaProposal = new LazyJavaTypeCompletionProposal(proposal, javaContext);
+
+            // check for required supporting type reference
+            if (type.qualifiedTypeName.length != type.simpleTypeName.length) {
+                int lastDotIndex = context.fullCompletionExpression.lastIndexOf('.');
+                if (lastDotIndex > 0 && !context.getQualifiedCompletionExpression().startsWith(String.valueOf(firstSegment(type.packageName, '.')) + '.')) {
+                    char[] typeName = CharOperation.subarray(type.qualifiedTypeName, 0, CharOperation.lastIndexOf('$', type.qualifiedTypeName));
+
+                    // expression is partially-qualified; check type name availability
+                    char[][] parts = qualifierAndSimpleTypeName(type.packageName, typeName);
+                    if (!isImported(parts[0], parts[1])) {
+                        GroovyCompletionProposal typeProposal = createProposal(CompletionProposal.TYPE_REF, offset);
+                        typeProposal.setCompletion(CharOperation.concat(type.packageName, typeName, '.'));
+                        typeProposal.setReplaceRange(offset, offset + lastDotIndex);
+                        typeProposal.setSignature(Signature.createCharArrayTypeSignature(typeProposal.getCompletion(), true));
+
+                        proposal.setRequiredProposals(new CompletionProposal[] {typeProposal});
+                    }
+                }
+            }
         }
         javaProposal.setTriggerCharacters(ProposalUtils.TYPE_TRIGGERS);
         javaProposal.setRelevance(proposal.getRelevance());
         return javaProposal;
-    }
-
-    List<ICompletionProposal> processAcceptedPackages() {
-        checkCancel();
-        List<ICompletionProposal> proposals = new LinkedList<>();
-        if (acceptedPackages != null && acceptedPackages.size() > 0) {
-            for (String packageNameStr : acceptedPackages) {
-                char[] packageName = packageNameStr.toCharArray();
-                GroovyCompletionProposal proposal = createProposal(CompletionProposal.PACKAGE_REF, context.completionLocation);
-                proposal.setDeclarationSignature(packageName);
-                proposal.setPackageName(packageName);
-                proposal.setCompletion(packageName);
-                proposal.setReplaceRange(offset, context.completionLocation);
-                proposal.setTokenRange(offset, context.completionLocation);
-                proposal.setRelevance(Relevance.LOWEST.getRelevance());
-
-                LazyJavaCompletionProposal javaProposal = new LazyJavaCompletionProposal(proposal, javaContext);
-                javaProposal.setTriggerCharacters(ProposalUtils.TYPE_TRIGGERS);
-                javaProposal.setRelevance(proposal.getRelevance());
-                proposals.add(javaProposal);
-            }
-        }
-        return proposals;
     }
 
     List<ICompletionProposal> processAcceptedConstructors(Set<String> usedParams, JDTResolver resolver) {
@@ -500,57 +512,43 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                     checkCancel();
                 }
 
-                AcceptedCtor acceptedConstructor = (AcceptedCtor) acceptedConstructors.elementAt(i);
+                AcceptedCtor ctor = (AcceptedCtor) acceptedConstructors.elementAt(i);
 
-                final int typeModifiers = acceptedConstructor.typeModifiers;
+                int typeModifiers = ctor.typeModifiers;
                 if (Flags.isInterface(typeModifiers) || Flags.isAnnotation(typeModifiers) || Flags.isEnum(typeModifiers)) {
                     continue;
                 }
-
-                final char[] packageName = acceptedConstructor.packageName;
-                final char[] simpleTypeName = acceptedConstructor.simpleTypeName;
-                final int modifiers = acceptedConstructor.modifiers;
-                final int parameterCount = acceptedConstructor.parameterCount;
-                final char[] signature = acceptedConstructor.signature;
-                final char[][] parameterTypes = acceptedConstructor.parameterTypes;
-                final char[][] parameterNames = acceptedConstructor.parameterNames;
-                final int extraFlags = acceptedConstructor.extraFlags;
-                final int accessibility = acceptedConstructor.accessibility;
-                char[] fullyQualifiedName = CharOperation.concat(packageName, simpleTypeName, '.');
 
                 if (imports == null && resolver.getScope() != null) {
                     initializeImportArrays(resolver.getScope());
                 }
 
-                // propose all constructors regardless of package, but ignore enums
-                if (!Flags.isEnum(typeModifiers)) {
-                    ICompletionProposal constructorProposal = proposeConstructor(simpleTypeName, parameterCount, signature, parameterTypes, parameterNames, modifiers, packageName, typeModifiers, accessibility, fullyQualifiedName, false, extraFlags);
-                    if (constructorProposal != null) {
-                        proposals.add(constructorProposal);
+                ICompletionProposal constructorProposal = proposeConstructor(ctor);
+                if (constructorProposal != null) {
+                    proposals.add(constructorProposal);
 
-                        if (contextOnly) {
-                            // also add all of the constructor arguments for constructors with no args and when it is the only constructor in the class
-                            ClassNode resolved = resolver.resolve(String.valueOf(fullyQualifiedName));
-                            if (resolved != null) {
-                                List<ConstructorNode> constructors = resolved.getDeclaredConstructors();
-                                if (constructors != null && constructors.size() == 1) {
-                                    ConstructorNode constructor = constructors.get(0);
-                                    Parameter[] parameters = constructor.getParameters();
-                                    if (parameters == null || parameters.length == 0) {
-                                        // instead of proposing no-arg constructor, propose type's properties as named arguments
-                                        proposals.remove(constructorProposal);
-                                        for (PropertyNode prop : resolved.getProperties()) { String name = prop.getName();
-                                            if (!"metaClass".equals(name) && !usedParams.contains(name) && isCamelCaseMatch(context.completionExpression, name)) {
-                                                GroovyNamedArgumentProposal namedArgument = new GroovyNamedArgumentProposal(name, prop.getType(), null, String.valueOf(simpleTypeName));
-                                                proposals.add(namedArgument.createJavaProposal(context, javaContext));
-                                            }
+                    if (contextOnly) {
+                        // also add all of the constructor arguments for constructors with no args and when it is the only constructor in the class
+                        ClassNode resolved = resolver.resolve(String.valueOf(ctor.fullyQualifiedName));
+                        if (resolved != null) {
+                            List<ConstructorNode> constructors = resolved.getDeclaredConstructors();
+                            if (constructors != null && constructors.size() == 1) {
+                                ConstructorNode constructor = constructors.get(0);
+                                Parameter[] parameters = constructor.getParameters();
+                                if (parameters == null || parameters.length == 0) {
+                                    // instead of proposing no-arg constructor, propose type's properties as named arguments
+                                    proposals.remove(constructorProposal);
+                                    for (PropertyNode prop : resolved.getProperties()) { String name = prop.getName();
+                                        if (!"metaClass".equals(name) && !usedParams.contains(name) && isCamelCaseMatch(context.completionExpression, name)) {
+                                            GroovyNamedArgumentProposal namedArgument = new GroovyNamedArgumentProposal(name, prop.getType(), null, String.valueOf(ctor.simpleTypeName));
+                                            proposals.add(namedArgument.createJavaProposal(context, javaContext));
                                         }
-                                        for (MethodNode meth : resolved.getMethods()) {
-                                            if (!meth.isStatic() && AccessorSupport.isSetter(meth)) { String name = Introspector.decapitalize(meth.getName().substring(3));
-                                                if (!"metaClass".equals(name) && !usedParams.contains(name) && resolved.getProperty(name) == null && isCamelCaseMatch(context.completionExpression, name)) {
-                                                    GroovyNamedArgumentProposal namedArgument = new GroovyNamedArgumentProposal(name, meth.getParameters()[0].getType(), null, String.valueOf(simpleTypeName));
-                                                    proposals.add(namedArgument.createJavaProposal(context, javaContext));
-                                                }
+                                    }
+                                    for (MethodNode meth : resolved.getMethods()) {
+                                        if (!meth.isStatic() && AccessorSupport.isSetter(meth)) { String name = Introspector.decapitalize(meth.getName().substring(3));
+                                            if (!"metaClass".equals(name) && !usedParams.contains(name) && resolved.getProperty(name) == null && isCamelCaseMatch(context.completionExpression, name)) {
+                                                GroovyNamedArgumentProposal namedArgument = new GroovyNamedArgumentProposal(name, meth.getParameters()[0].getType(), null, String.valueOf(ctor.simpleTypeName));
+                                                proposals.add(namedArgument.createJavaProposal(context, javaContext));
                                             }
                                         }
                                     }
@@ -560,7 +558,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                     }
                 }
             }
-
         } finally {
             acceptedTypes = null;
             relevanceRule = null;
@@ -568,13 +565,12 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         return proposals;
     }
 
-    private ICompletionProposal proposeConstructor(char[] simpleTypeName, int parameterCount, char[] signature, char[][] parameterTypes, char[][] parameterNames, int modifiers, char[] packageName, int typeModifiers, int accessibility, char[] fullyQualifiedName, boolean isQualified, int extraFlags) {
+    private ICompletionProposal proposeConstructor(AcceptedCtor ctor) {
         char[] completionExpressionChars = completionExpression.toCharArray();
         int completionOffset = offset - 1, kind = CompletionProposal.CONSTRUCTOR_INVOCATION;
         if (contextOnly) {
-            // only show context information and only for constructors that exactly match the name
-            if (!CharOperation.equals(completionExpressionChars, simpleTypeName) &&
-                    !CharOperation.equals(completionExpressionChars, fullyQualifiedName)) {
+            // only show context information and only for constructors that exactly match
+            if (!CharOperation.equals(ctor.simpleTypeName, CharOperation.lastSegment(completionExpressionChars, '.'))) {
                 return null;
             }
             kind = CompletionProposal.METHOD_REF;
@@ -583,22 +579,22 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
 
         GroovyCompletionProposal proposal = createProposal(kind, completionOffset);
         proposal.setIsContructor(true);
-        proposal.setName(simpleTypeName);
-        proposal.setTypeName(simpleTypeName);
-        proposal.setPackageName(packageName);
-        proposal.setDeclarationTypeName(simpleTypeName);
-        proposal.setDeclarationPackageName(packageName);
-        proposal.setDeclarationSignature(CompletionEngine.createNonGenericTypeSignature(packageName, simpleTypeName));
-        proposal.setFlags(Flags.isDeprecated(typeModifiers) ? modifiers | Flags.AccDeprecated : modifiers);
-        proposal.setAdditionalFlags(extraFlags);
-        proposal.setAccessibility(accessibility);
+        proposal.setName(ctor.simpleTypeName);
+        proposal.setTypeName(ctor.qualifiedTypeName);
+        proposal.setPackageName(ctor.packageName);
+        proposal.setDeclarationTypeName(ctor.qualifiedTypeName);
+        proposal.setDeclarationPackageName(ctor.packageName);
+        proposal.setDeclarationSignature(CompletionEngine.createNonGenericTypeSignature(ctor.packageName, ctor.qualifiedTypeName));
+        proposal.setFlags(Flags.isDeprecated(ctor.typeModifiers) ? ctor.modifiers | Flags.AccDeprecated : ctor.modifiers);
+        proposal.setAdditionalFlags(ctor.extraFlags);
+        proposal.setAccessibility(ctor.accessibility);
 
-        populateParameterInfo(proposal, parameterCount, parameterNames, parameterTypes, signature, isQualified);
-        populateReplacementInfo(proposal, packageName, simpleTypeName, fullyQualifiedName); // deals with context-only and imports
+        populateParameterInfo(proposal, ctor.parameterCount, ctor.parameterNames, ctor.parameterTypes, ctor.signature);
+        populateReplacementInfo(proposal, ctor.packageName, ctor.simpleTypeName, ctor.fullyQualifiedName); // deals with context-only and imports
 
         // TODO: Leverage IRelevanceRule for this?
-        float relevanceMultiplier = (accessibility == IAccessRule.K_ACCESSIBLE) ? 3 : 0;
-        relevanceMultiplier += computeRelevanceForCaseMatching(completionExpressionChars, simpleTypeName);
+        float relevanceMultiplier = (ctor.accessibility == IAccessRule.K_ACCESSIBLE) ? 3 : 0;
+        relevanceMultiplier += computeRelevanceForCaseMatching(completionExpressionChars, ctor.simpleTypeName);
         proposal.setRelevance(Relevance.MEDIUM_HIGH.getRelevance(relevanceMultiplier));
 
         GroovyJavaMethodCompletionProposal lazyProposal = new GroovyJavaMethodCompletionProposal(proposal, getProposalOptions(), javaContext, null);
@@ -606,7 +602,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         return lazyProposal;
     }
 
-    private void populateParameterInfo(GroovyCompletionProposal proposal, int parameterCount, char[][] parameterNames, char[][] parameterTypes, char[] signature, boolean isQualified) {
+    private void populateParameterInfo(GroovyCompletionProposal proposal, int parameterCount, char[][] parameterNames, char[][] parameterTypes, char[] signature) {
         if (parameterCount == -1) {
             // default constructor
             parameterNames = CharOperation.NO_CHAR_CHAR;
@@ -618,7 +614,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             }
         }
         if (signature == null) {
-            proposal.setSignature(createConstructorSignature(parameterTypes, isQualified));
+            proposal.setSignature(createConstructorSignature(parameterTypes, true));
         } else {
             proposal.setSignature(CharOperation.replaceOnCopy(signature, '/', '.'));
         }
@@ -673,13 +669,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             typeProposal.setCompletion(typeCompletion);
             typeProposal.setReplaceRange(offset, offset + replaceLength);
             typeProposal.setSignature(proposal.getDeclarationSignature());
-
-            //typeProposal.setFlags(typeModifiers);
-            //typeProposal.setTypeName(simpleTypeName);
-            //typeProposal.setPackageName(packageName);
-            //typeProposal.setDeclarationSignature(declarationSignature);
-            //typeProposal.setTokenRange(offset, offset + replaceLength);
-            //typeProposal.setRelevance(computeRelevanceForTypeProposal(fullyQualifiedName, accessibility, augmentedModifiers));
 
             proposal.setRequiredProposals(new CompletionProposal[] {typeProposal});
         }
@@ -826,8 +815,8 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             }
         }
         if (!imported && !conflict && !isCurrentPackage(packName) && onDemandImports != null) {
-            for (char[] importPack : onDemandImports) {
-                if (CharOperation.equals(packName, importPack)) {
+            for (char[] importName : onDemandImports) {
+                if (CharOperation.equals(packName, importName)) {
                     imported = true;
                     break;
                 }
@@ -850,6 +839,31 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         return binding.compoundName[binding.compoundName.length - 1];
     }
 
+    /**
+     * @see CharOperation#lastSegment
+     */
+    private static char[] firstSegment(char[] arr, char sep) {
+        int pos = CharOperation.indexOf(sep, arr);
+        if (pos < 0) {
+            return arr;
+        }
+        return CharOperation.subarray(arr, 0, pos);
+    }
+
+    /**
+     * "java.lang", "Object" -> "java.lang", "Object"
+     * "java.util", "Map$Entry" -> "java.util.Map", "Entry"
+     */
+    private static char[][] qualifierAndSimpleTypeName(char[] packName, char[] typeName) {
+        int pos = CharOperation.lastIndexOf('$', typeName);
+        if (pos > 0) {
+            char[] typeQual = CharOperation.subarray(typeName, 0, pos);
+            typeName = CharOperation.subarray(typeName, pos + 1, typeName.length);
+            packName = CharOperation.concat(packName, CharOperation.replaceOnCopy(typeQual, '$', '.'), '.');
+        }
+        return new char[][] {packName, typeName};
+    }
+
     //--------------------------------------------------------------------------
 
     private static class AcceptedCtor {
@@ -864,6 +878,9 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         public int extraFlags;
         public int accessibility;
 
+        public final char[] qualifiedTypeName;
+        public final char[] fullyQualifiedName;
+
         public AcceptedCtor(
             int modifiers,
             char[] simpleTypeName,
@@ -877,7 +894,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             int accessibility) {
 
             this.modifiers = modifiers;
-            this.simpleTypeName = simpleTypeName;
+            this.simpleTypeName = CharOperation.lastSegment(simpleTypeName, '$');
             this.parameterCount = parameterCount;
             this.signature = signature;
             this.parameterTypes = parameterTypes;
@@ -886,16 +903,18 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             this.packageName = packageName;
             this.extraFlags = extraFlags;
             this.accessibility = accessibility;
+
+            this.qualifiedTypeName = simpleTypeName;
+            this.fullyQualifiedName = CharOperation.concat(packageName, qualifiedTypeName, '.');
         }
 
         @Override
         public String toString() {
             StringBuilder buffer = new StringBuilder();
             buffer.append('{');
-            buffer.append(packageName);
-            buffer.append(',');
-            buffer.append(simpleTypeName);
+            buffer.append(fullyQualifiedName);
             buffer.append('}');
+
             return buffer.toString();
         }
     }
@@ -906,9 +925,9 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         public char[][] enclosingTypeNames;
         public int modifiers;
         public int accessibility;
-        public boolean mustBeQualified = false;
-        public char[] fullyQualifiedName = null;
-        public char[] qualifiedTypeName = null;
+        public boolean mustBeQualified;
+        public char[] fullyQualifiedName;
+        public char[] qualifiedTypeName;
 
         AcceptedType(
             char[] packageName,
@@ -928,12 +947,14 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         public String toString() {
             StringBuilder buffer = new StringBuilder();
             buffer.append('{');
-            buffer.append(packageName);
-            buffer.append(',');
-            buffer.append(simpleTypeName);
-            buffer.append(',');
-            buffer.append(CharOperation.concatWith(enclosingTypeNames, '$'));
+            if (fullyQualifiedName != null) {
+                buffer.append(fullyQualifiedName);
+            } else {
+                buffer.append(packageName).append('.');
+                buffer.append(CharOperation.concatWith(enclosingTypeNames, simpleTypeName, '$'));
+            }
             buffer.append('}');
+
             return buffer.toString();
         }
     }
