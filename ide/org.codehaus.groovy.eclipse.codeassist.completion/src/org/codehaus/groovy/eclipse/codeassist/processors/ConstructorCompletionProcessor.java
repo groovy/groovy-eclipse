@@ -15,26 +15,36 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
+import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
+import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
-import org.codehaus.groovy.eclipse.codeassist.requestor.MethodInfoContentAssistContext;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jdt.core.Flags;
+import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.search.ITypeResolver;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
+import org.eclipse.jdt.internal.ui.text.java.AbstractJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
@@ -60,22 +70,70 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
         switch (context.location) {
         case CONSTRUCTOR:
             context.extend(getJavaContext().getCoreContext(), null);
-            completionChars = context.fullCompletionExpression.replaceAll("^new|\\s+", "").toCharArray();
-            completionStart = context.completionLocation - CharOperation.lastSegment(completionChars, '.').length;
+            completionStart = context.completionNode.getStart(); // skip "new "
+            completionChars = context.getQualifiedCompletionExpression().toCharArray();
             break;
         case METHOD_CONTEXT:
-            completionChars = ((MethodInfoContentAssistContext) context).methodName.replace('$', '.').toCharArray();
-            completionStart = ((MethodInfoContentAssistContext) context).methodNameEnd - CharOperation.lastSegment(completionChars, '.').length;
+            completionStart = ((Expression) context.completionNode).getNameStart();
+            completionChars = ((Expression) context.completionNode).getType().getName().replace('$', '.').toCharArray();
             break;
         default:
             throw new IllegalStateException("Invalid constructor completion location: " + context.location.name());
         }
 
         SearchableEnvironment environment = getNameEnvironment();
-        int replacementLength = context.completionEnd - completionStart;
         GroovyProposalTypeSearchRequestor requestor = new GroovyProposalTypeSearchRequestor(
-            context, getJavaContext(), completionStart, replacementLength, environment.nameLookup, monitor);
-        environment.findConstructorDeclarations(completionChars, requestor.options.camelCaseMatch, requestor, monitor);
+            context, getJavaContext(), completionStart, -1, environment.nameLookup, monitor);
+
+        int lastDotIndex = CharOperation.lastIndexOf('.', completionChars);
+        // check for unqualified or fully-qualified (by packages) expression
+        if (lastDotIndex < 0 || environment.nameLookup.isPackage(CharOperation.toStrings(CharOperation.splitOn('.', completionChars, 0, lastDotIndex)))) {
+
+            environment.findConstructorDeclarations(completionChars, requestor.options.camelCaseMatch, requestor, monitor);
+        } else {
+            // qualified expression; requires manual inner types checking
+
+            String qualifier = String.valueOf(completionChars, 0, lastDotIndex);
+            String pattern   = String.valueOf(completionChars, lastDotIndex + 1, completionChars.length - lastDotIndex - 1);
+
+            Consumer<IType> checker = (IType outerType) -> {
+                if (outerType != null && outerType.exists() && qualifier.endsWith(outerType.getElementName()))
+                try {
+                    for (IType innerType : outerType.getTypes()) {
+                        if (matches(pattern, innerType.getElementName(), requestor.options.camelCaseMatch)) {
+                            for (IMethod m : innerType.getMethods()) { // TODO: not returning default no-arg ctor...
+                                if (!m.isConstructor() || Flags.isStatic(m.getFlags()) || Flags.isSynthetic(m.getFlags())) {
+                                    continue;
+                                }
+                                int extraFlags = 0; // see ConstructorPattern.encodeExtraFlags(int)
+                                char[][] parameterNames = CharOperation.toCharArrays(Arrays.asList(m.getParameterNames()));
+                                char[][] parameterTypes = null; //CharOperation.toCharArrays(Arrays.asList(m.getParameterTypes()));
+
+                                requestor.acceptConstructor(m.getFlags(), innerType.getTypeQualifiedName().toCharArray(),
+                                    m.getNumberOfParameters(), m.getSignature().toCharArray(), parameterTypes, parameterNames, innerType.getFlags(),
+                                    innerType.getPackageFragment().getElementName().toCharArray(), extraFlags, innerType.getPath().toString(), ProposalUtils.getTypeAccessibility(innerType));
+                            }
+                        }
+                    }
+                } catch (JavaModelException e) {
+                    GroovyContentAssist.logError(e);
+                }
+            };
+
+            ClassNode outerTypeNode = resolver.resolve(qualifier);
+            if (!ClassHelper.DYNAMIC_TYPE.equals(outerTypeNode)) {
+                checker.accept(environment.nameLookup.findType(outerTypeNode.getName(), false, 0));
+            } else if (qualifier.indexOf('.') < 0) {
+                // unknown qualifier; search for types with exact matching
+                environment.findTypes(qualifier.toCharArray(), true, false, 0, requestor, monitor);
+                List<ICompletionProposal> proposals = requestor.processAcceptedTypes(resolver);
+                for (ICompletionProposal proposal : proposals) {
+                    if (proposal instanceof AbstractJavaCompletionProposal) {
+                        checker.accept((IType) ((AbstractJavaCompletionProposal) proposal).getJavaElement());
+                    }
+                }
+            }
+        }
 
         return requestor.processAcceptedConstructors(findUsedParameters(context), resolver);
     }
