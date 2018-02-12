@@ -165,13 +165,17 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
                         completionType, Collections.EMPTY_SET, context.completionExpression, true, true));
                 }
                 for (IGroovyProposal groovyProposal : groovyProposals) {
-                    FieldNode fieldNode = ((GroovyFieldProposal) groovyProposal).getField();
-                    if (fieldNode.isStatic() && fieldNode.isFinal() && fieldNode.getType().equals(memberType)) {
-                        if (fieldNode.isEnum() && isNotStaticImported(fieldNode)) {
-                            ((GroovyFieldProposal) groovyProposal).setRequiredStaticImport(
-                                fieldNode.getDeclaringClass().getName() + '.' + fieldNode.getName());
+                    if (groovyProposal instanceof GroovyFieldProposal) {
+                        FieldNode fieldNode = ((GroovyFieldProposal) groovyProposal).getField();
+                        if (fieldNode.isStatic() && fieldNode.isFinal() && memberType.equals(fieldNode.getType())) { String declTypeName;
+                            // add static import reference for enum fields or references within type annotations (a.k.a. outside the declaring scope)
+                            if ((fieldNode.isEnum() || (fieldNode.getDeclaringClass().equals(context.containingDeclaration) && isTypeAnnotation())) &&
+                                    isNotStaticImported(fieldNode.getName(), declTypeName = fieldNode.getDeclaringClass().getName().replace('$', '.'))) {
+                                String staticImport = (declTypeName + '.' + fieldNode.getName());
+                                ((GroovyFieldProposal) groovyProposal).setRequiredStaticImport(staticImport);
+                            }
+                            proposals.add(groovyProposal.createJavaProposal(context, getJavaContext()));
                         }
-                        proposals.add(groovyProposal.createJavaProposal(context, getJavaContext()));
                     }
                 }
 
@@ -239,16 +243,23 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
                 return (valueMember != null);
             }
 
-            protected final boolean isNotStaticImported(FieldNode fieldNode) {
+            protected final boolean isNotStaticImported(String memberName, String declaringTypeName) {
                 ModuleNode moduleNode = getContext().unit.getModuleNode();
-                if (moduleNode.getStaticImports().get(fieldNode.getName()) != null) {
-                    ImportNode importNode = moduleNode.getStaticImports().get(fieldNode.getName());
-                    return !importNode.getClassName().equals(fieldNode.getDeclaringClass().getName());
+                if (moduleNode.getStaticImports().containsKey(memberName)) {
+                    ImportNode importNode = moduleNode.getStaticImports().get(memberName);
+                    return !importNode.getClassName().equals(declaringTypeName);
                 }
-                if (moduleNode.getStaticStarImports().get(fieldNode.getDeclaringClass().getName()) != null) {
+                if (moduleNode.getStaticStarImports().containsKey(declaringTypeName)) {
                     return false;
                 }
                 return true;
+            }
+
+            protected final boolean isTypeAnnotation() {
+                if (context.containingDeclaration instanceof ClassNode) {
+                    return (getAnnotation().getEnd() < ((ClassNode) context.containingDeclaration).getNameStart());
+                }
+                return false;
             }
 
             protected final ICompletionProposal newEnumTypeProposal(ClassNode enumType) {
