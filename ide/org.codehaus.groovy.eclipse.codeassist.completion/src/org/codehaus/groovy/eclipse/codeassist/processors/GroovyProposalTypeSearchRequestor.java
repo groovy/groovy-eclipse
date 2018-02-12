@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
@@ -47,13 +48,18 @@ import org.codehaus.groovy.eclipse.codeassist.requestor.MethodInfoContentAssistC
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitScope;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.CompletionRequestor;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IAccessRule;
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
@@ -243,14 +249,13 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                 checkCancel();
             foundConstructorsCount += 1;
 
-            // do not propose enum constructors
-            if (Flags.isEnum(typeModifiers)) {
-                return;
-            }
-            if (TypeFilter.isFiltered(packageName, simpleTypeName)) {
+            if (Flags.isEnum(typeModifiers) || Flags.isInterface(typeModifiers) || Flags.isAnnotation(typeModifiers)) {
                 return;
             }
             if (this.options.checkDeprecation && (typeModifiers & Flags.AccDeprecated) != 0) {
+                return;
+            }
+            if (TypeFilter.isFiltered(packageName, simpleTypeName)) {
                 return;
             }
 
@@ -279,6 +284,31 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                     }
                     accessibility = IAccessRule.K_NON_ACCESSIBLE;
                     break;
+                }
+            }
+
+            String typeName; // TODO: Figure out why inner types are found from Groovy but not Java
+            if (!CharOperation.contains('$', simpleTypeName) &&
+                    (path.lastIndexOf(typeName = String.valueOf(simpleTypeName)) < 0 ||
+                    !path.matches(".+\\b" + Pattern.quote(typeName) + "(?:\\.\\w+)?"))) {
+                try {
+                    IResource r = ResourcesPlugin.getWorkspace().getRoot().findMember(new Path(path));
+                    if (r != null) {
+                        IJavaElement el = r.getAdapter(IJavaElement.class);
+                        if (el != null && el.getElementType() == IJavaElement.COMPILATION_UNIT) {
+                            ICompilationUnit cu = (ICompilationUnit) el;
+                            for (IType type : cu.getAllTypes()) {
+                                if (type.getElementName().equals(typeName)) {
+                                    if (type.isMember()) {
+                                        simpleTypeName = type.getTypeQualifiedName().toCharArray();
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    GroovyContentAssist.logError(e);
                 }
             }
 
@@ -494,11 +524,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                 }
 
                 AcceptedCtor ctor = (AcceptedCtor) acceptedConstructors.elementAt(i);
-
-                int typeModifiers = ctor.typeModifiers;
-                if (Flags.isInterface(typeModifiers) || Flags.isAnnotation(typeModifiers) || Flags.isEnum(typeModifiers)) {
-                    continue;
-                }
 
                 if (imports == null && resolver.getScope() != null) {
                     initializeImportArrays(resolver.getScope());
