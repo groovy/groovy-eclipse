@@ -101,16 +101,23 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
                 try {
                     for (IType innerType : outerType.getTypes()) {
                         if (matches(pattern, innerType.getElementName(), requestor.options.camelCaseMatch)) {
-                            for (IMethod m : innerType.getMethods()) { // TODO: not returning default no-arg ctor...
+                            int extraFlags = 0; //ConstructorPattern.decodeExtraFlags(innerType.getFlags())
+
+                            boolean hasConstructor = false;
+                            for (IMethod m : innerType.getMethods()) { hasConstructor = hasConstructor || m.isConstructor();
                                 if (!m.isConstructor() || Flags.isStatic(m.getFlags()) || Flags.isSynthetic(m.getFlags())) {
                                     continue;
                                 }
-                                int extraFlags = 0; // see ConstructorPattern.encodeExtraFlags(int)
                                 char[][] parameterNames = CharOperation.toCharArrays(Arrays.asList(m.getParameterNames()));
                                 char[][] parameterTypes = null; //CharOperation.toCharArrays(Arrays.asList(m.getParameterTypes()));
 
                                 requestor.acceptConstructor(m.getFlags(), innerType.getTypeQualifiedName().toCharArray(),
                                     m.getNumberOfParameters(), m.getSignature().toCharArray(), parameterTypes, parameterNames, innerType.getFlags(),
+                                    innerType.getPackageFragment().getElementName().toCharArray(), extraFlags, innerType.getPath().toString(), ProposalUtils.getTypeAccessibility(innerType));
+                            }
+                            if (!hasConstructor) { // adapted from BinarySearchEngine (circa line 772)
+                                requestor.acceptConstructor(Flags.AccPublic, innerType.getTypeQualifiedName().toCharArray(),
+                                    -1, null, CharOperation.NO_CHAR_CHAR, CharOperation.NO_CHAR_CHAR, innerType.getFlags(),
                                     innerType.getPackageFragment().getElementName().toCharArray(), extraFlags, innerType.getPath().toString(), ProposalUtils.getTypeAccessibility(innerType));
                             }
                         }

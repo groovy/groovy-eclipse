@@ -580,7 +580,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'string : __', 1)
     }
 
-    @Test @NotYetImplemented // https://github.com/groovy/groovy-eclipse/issues/404
+    @Test // https://github.com/groovy/groovy-eclipse/issues/404
     void testNamedArgs16() {
         addGroovySource '''\
             class Outer {
