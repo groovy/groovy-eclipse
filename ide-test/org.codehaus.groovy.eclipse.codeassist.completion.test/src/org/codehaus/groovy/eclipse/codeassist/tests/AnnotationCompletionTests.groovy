@@ -225,16 +225,15 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testAnnoAttrConst() {
+    void testAnnoAttrPacks() {
         String contents = '''\
-            @SuppressWarnings(value=V)
+            @SuppressWarnings(value=jav)
             class C {
-              public static final String VALUE = ''
             }
             '''.stripIndent()
-        def proposals = getProposals(contents, '=V')
+        def proposals = getProposals(contents, '=jav')
 
-        assertThat(proposals).includes('VALUE')
+        assertThat(proposals).includes('java.lang', 'java.util')
     }
 
     @Test
@@ -250,15 +249,16 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testAnnoAttrPacks() {
+    void testAnnoAttrConst() {
         String contents = '''\
-            @SuppressWarnings(value=jav)
+            @SuppressWarnings(value=V)
             class C {
+              public static final String VALUE = ''
             }
             '''.stripIndent()
-        def proposals = getProposals(contents, '=jav')
+        def proposals = getProposals(contents, '=V')
 
-        assertThat(proposals).includes('java.lang', 'java.util')
+        assertThat(proposals).includes('VALUE')
     }
 
     @Test
@@ -602,7 +602,7 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
         checkProposalApplication(contents, expected, contents.indexOf('Ch') + 2, 'TypeChecked', true)
     }
 
-    @Test @NotYetImplemented
+    @Test // https://github.com/groovy/groovy-eclipse/issues/365
     void testQualifierForTypeAnnoScope() {
         String contents = '''\
             @SuppressWarnings(V)
