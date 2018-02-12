@@ -494,8 +494,8 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                     if (!isImported(parts[0], parts[1])) {
                         GroovyCompletionProposal typeProposal = createProposal(CompletionProposal.TYPE_REF, offset);
                         typeProposal.setCompletion(CharOperation.concat(type.packageName, typeName, '.'));
-                        typeProposal.setReplaceRange(offset, offset + lastDotIndex);
                         typeProposal.setSignature(Signature.createCharArrayTypeSignature(typeProposal.getCompletion(), true));
+                        typeProposal.setReplaceRange(offset, context.completionLocation - (context.fullCompletionExpression.length() - lastDotIndex));
 
                         proposal.setRequiredProposals(new CompletionProposal[] {typeProposal});
                     }

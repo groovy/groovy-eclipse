@@ -140,13 +140,13 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
               class Inner {
               }
             }
-            ''', 'Outer', 'p'
+            ''', 'Outer', 'f'
 
         String contents = '''\
-            import p.Outer
+            import f.Outer
             Outer.Inn
             '''.stripIndent()
-        applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - p.Outer'), contents.replace('Inn', 'Inner'))
+        applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - f.Outer'), contents.replace('Inn', 'Inner'))
     }
 
     @Test
@@ -156,12 +156,12 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
               class Inner {
               }
             }
-            ''', 'Outer', 'q'
+            ''', 'Outer', 'g'
 
         String contents = '''\
-            q.Outer.Inn
+            g.Outer.Inn
             '''.stripIndent()
-        applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - q.Outer'), contents.replace('Inn', 'Inner'))
+        applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - g.Outer'), contents.replace('Inn', 'Inner'))
     }
 
     @Test
@@ -171,13 +171,13 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
               class Inner {
               }
             }
-            ''', 'Outer', 'r'
+            ''', 'Outer', 'h'
 
         String contents = '''\
-            import r.Outer
+            import h.Outer
             class Foo extends Outer.Inn
             '''.stripIndent()
-        applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - r.Outer'), contents.replace('Inn', 'Inner'))
+        applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - h.Outer'), contents.replace('Inn', 'Inner'))
     }
 
     @Test
@@ -187,7 +187,7 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
               class Inner {
               }
             }
-            ''', 'Outer', 's'
+            ''', 'Outer', 'i'
 
         String contents = '''\
             import s.Outer
@@ -204,10 +204,10 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
               interface Inner {
               }
             }
-            ''', 'Outer', 't'
+            ''', 'Outer', 'j'
 
         String contents = '''\
-            import t.Outer
+            import j.Outer
             class Foo extends Outer.Inn
             '''.stripIndent()
         def proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'Inn'))
@@ -221,13 +221,13 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
               interface Inner {
               }
             }
-            ''', 'Outer', 'u'
+            ''', 'Outer', 'k'
 
         String contents = '''\
-            import u.Outer
+            import k.Outer
             class Foo implements Outer.Inn
             '''.stripIndent()
-            applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - u.Outer'), contents.replace('Inn', 'Inner'))
+            applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - k.Outer'), contents.replace('Inn', 'Inner'))
     }
 
     @Test
@@ -237,13 +237,13 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
               class Inner {
               }
             }
-            ''', 'Outer', 'v'
+            ''', 'Outer', 'l'
 
         String contents = '''\
             Outer.Inn
             '''.stripIndent()
-        applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - v.Outer'), '''\
-            |import v.Outer
+        applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - l.Outer'), '''\
+            |import l.Outer
             |
             |Outer.Inner
             |'''.stripMargin())
@@ -256,14 +256,14 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
               class Inner {
               }
             }
-            ''', 'Outer', 'w'
+            ''', 'Outer', 'm'
 
         String contents = '''\
             Outer.Inn
             '''.stripIndent()
         setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
-        applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - w.Outer'), '''\
-            |w.Outer.Inner
+        applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - m.Outer'), '''\
+            |m.Outer.Inner
             |'''.stripMargin())
     }
 
@@ -276,12 +276,12 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
                 }
               }
             }
-            ''', 'Outer', 'x'
+            ''', 'Outer', 'n'
 
         String contents = '''\
-            x.Outer.Inner.N
+            n.Outer.Inner.N
             '''.stripIndent()
-        applyProposalAndCheck(assertProposalCreated(contents, 'N', 'Nucleus - x.Outer.Inner'), contents.replace('N', 'Nucleus'))
+        applyProposalAndCheck(assertProposalCreated(contents, 'N', 'Nucleus - n.Outer.Inner'), contents.replace('N', 'Nucleus'))
     }
 
     @Test
@@ -291,13 +291,13 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
               class Inner {
               }
             }
-            ''', 'Outer', 'y'
+            ''', 'Outer', 'o'
 
         String contents = '''\
             Inn
             '''.stripIndent()
-        applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - y.Outer'), '''\
-            |import y.Outer.Inner
+        applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - o.Outer'), '''\
+            |import o.Outer.Inner
             |
             |Inner
             |'''.stripMargin())
@@ -310,14 +310,51 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
               class Inner {
               }
             }
-            ''', 'Outer', 'z'
+            ''', 'Outer', 'p'
 
         String contents = '''\
             Inn
             '''.stripIndent()
         setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
-        applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - z.Outer'), '''\
-            |z.Outer.Inner
+        applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - p.Outer'), '''\
+            |p.Outer.Inner
+            |'''.stripMargin())
+    }
+
+    @Test
+    void testInnerClass17() {
+        addGroovySource '''\
+            class Outer {
+              class Inner {
+              }
+            }
+            ''', 'Outer', 'q'
+
+        String contents = '''\
+            new Outer.Inn
+            '''.stripIndent()
+        applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - q.Outer'), '''\
+            |import q.Outer
+            |
+            |new Outer.Inner
+            |'''.stripMargin())
+    }
+
+    @Test
+    void testInnerClass18() {
+        addGroovySource '''\
+            class Outer {
+              class Inner {
+              }
+            }
+            ''', 'Outer', 'r'
+
+        String contents = '''\
+            new Outer.Inn
+            '''.stripIndent()
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+        applyProposalAndCheck(assertProposalCreated(contents, 'Inn', 'Inner - r.Outer'), '''\
+            |new r.Outer.Inner
             |'''.stripMargin())
     }
 
