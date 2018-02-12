@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -114,37 +114,50 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     @Test
     void testStatement14() {
         String contents = 'def x = { a.g(    c,b) }'
-        assertLocation(contents, contents.indexOf('c') + 1, ContentAssistLocation.STATEMENT)
+        assertLocation(contents, getLastIndexOf(contents, 'c'), ContentAssistLocation.STATEMENT)
     }
 
     @Test
     void testStatement15() {
         String contents = 'def x = { a.g a, b }'
-        assertLocation(contents, contents.indexOf('b') + 1, ContentAssistLocation.STATEMENT)
+        assertLocation(contents, getLastIndexOf(contents, 'b'), ContentAssistLocation.STATEMENT)
     }
 
     @Test
     void testStatement16() {
         String contents = 'a.g a, b'
-        assertLocation(contents, contents.indexOf('b') + 1, ContentAssistLocation.STATEMENT)
+        assertLocation(contents, getLastIndexOf(contents, 'b'), ContentAssistLocation.STATEMENT)
     }
 
     @Test
     void testStatement17() {
         String contents = 'a()'
-        assertLocation(contents, contents.indexOf('a') + 1, ContentAssistLocation.STATEMENT)
+        assertLocation(contents, getLastIndexOf(contents, 'a'), ContentAssistLocation.STATEMENT)
     }
 
     @Test
     void testStatement18() {
         String contents = 'b a()'
-        assertLocation(contents, contents.indexOf('a') + 1, ContentAssistLocation.STATEMENT)
+        assertLocation(contents, getLastIndexOf(contents, 'a'), ContentAssistLocation.STATEMENT)
     }
 
     @Test
     void testStatement19() {
         String contents = 'new ArrayList(a,b)'
-        assertLocation(contents, contents.indexOf(')') + 1, ContentAssistLocation.STATEMENT)
+        assertLocation(contents, getLastIndexOf(contents, ')'), ContentAssistLocation.STATEMENT)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/409
+    void testStatement20() {
+        String contents = '''\
+            class Bean {
+              private String foo
+              String getFoo() {}
+            }
+            def bean1 = new Bean()
+            def bean2 = new Bean(foo: bea)
+            '''.stripIndent()
+        assertLocation(contents, getLastIndexOf(contents, 'bea'), ContentAssistLocation.STATEMENT)
     }
 
     @Test
@@ -258,10 +271,9 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
         assertLocation(contents, contents.indexOf(',') + 1, ContentAssistLocation.METHOD_CONTEXT)
     }
 
-    @Test
+    @Test // see https://github.com/groovy/groovy-eclipse/issues/331
     void testMethodContext13() {
         String contents = 'new ArrayList(a,b)'
-        // see https://github.com/groovy/groovy-eclipse/issues/331
         assertLocation(contents, contents.indexOf('b') + 1, ContentAssistLocation.METHOD_CONTEXT)
     }
 
@@ -311,6 +323,19 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     void testMethodContext21() {
         String contents = 'foo (a, )\nh'
         assertLocation(contents, contents.indexOf(', ') + 1, ContentAssistLocation.METHOD_CONTEXT)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/409
+    void testMethodContext22() {
+        String contents = '''\
+            class Bean {
+              private String foo
+              String getFoo() {}
+            }
+            def bean1 = new Bean()
+            def bean2 = new Bean(foo: bea)
+            '''.stripIndent()
+        assertLocation(contents, getLastIndexOf(contents, 'foo'), ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test @NotYetImplemented
