@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
     private static final String CONTENTS = 'class LocalsClass { public LocalsClass() {\n }\n void doNothing(int x) { def xxx\n def xx\n def y = { t -> print t\n }\n } }'
     private static final String SCRIPTCONTENTS = 'def xx = 9\ndef xxx\ndef y = { t -> print t\n }\n'
     private static final String SCRIPTCONTENTS2 = 'def xx = 9\ndef xxx\ndef y = { t -> print t\n.toString() }\n'
-    private static final String SELFREFERENCINGSCRIPT = 'def xx = 9\nxx = xx\nxx.abs()'
 
     private ICompilationUnit createJava() {
         addJavaSource(CONTENTS, nextUnitName())
@@ -44,10 +43,6 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
 
     private ICompilationUnit createGroovyForScript2() {
         addGroovySource(SCRIPTCONTENTS2, nextUnitName())
-    }
-
-    private ICompilationUnit createGroovyForSelfReferencingScript() {
-        addGroovySource(SELFREFERENCINGSCRIPT, nextUnitName())
     }
 
     //
@@ -97,7 +92,7 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'y', 0)
     }
 
-    @Test// should find local vars here
+    @Test // should find local vars here
     void testLocalVarsInClosureInMethod() {
         ICompilationUnit unit = createGroovy()
         ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'print t\n'))
@@ -106,50 +101,43 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'y', 1)
     }
 
-    @Test // GRECLIPSE-369
-    void testSelfReferencingLocalVar() {
-        ICompilationUnit unit = createGroovyForSelfReferencingScript()
-        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getLastIndexOf(SELFREFERENCINGSCRIPT, 'xx.'))
-        proposalExists(proposals, 'abs', 1)
-    }
-
     @Test // GRECLIPSE-1267
-    void testClsoureVar1() {
+    void testClosureVar1() {
         String contents = 'def x = { o }'
         String expected = 'def x = { owner }'
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, '{ o'), 'owner')
     }
 
     @Test // GRECLIPSE-1267
-    void testClsoureVar2() {
+    void testClosureVar2() {
         String contents = 'def x = { d }'
         String expected = 'def x = { delegate }'
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, '{ d'), 'delegate')
     }
 
     @Test // GRECLIPSE-1267
-    void testClsoureVar3() {
+    void testClosureVar3() {
         String contents = 'def x = { getO }'
         String expected = 'def x = { getOwner() }'
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, '{ getO'), 'getOwner')
     }
 
     @Test // GRECLIPSE-1267
-    void testClsoureVar4() {
+    void testClosureVar4() {
         String contents = 'def x = { getD }'
         String expected = 'def x = { getDelegate() }'
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, '{ getD'), 'getDelegate')
     }
 
     @Test // GRECLIPSE-1387
-    void testClsoureVar4a() {
+    void testClosureVar4a() {
         String contents = 'def x = { thisO }'
         String expected = 'def x = { thisObject }'
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, '{ thisO'), 'thisObject')
     }
 
     @Test // GRECLIPSE-1267
-    void testClsoureVar5() {
+    void testClosureVar5() {
         String contents = 'o\nd\nge'
         ICompilationUnit unit = addGroovySource(contents, nextUnitName())
         ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(contents, 'o'))
@@ -162,9 +150,45 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testDeclaredVar() {
+    void testDeclaredVar1() {
         String contents = 'def xxx = new ArrayList(xx)'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'xx'))
         proposalExists(proposals, 'xxx', 0) // declared variable should not be proposed within its own initializer
+    }
+
+    @Test // GRECLIPSE-369
+    void testDeclaredVar2() {
+        String contents = '''\
+            def xx = 9
+            xx = xx
+            xx.abs()
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'xx.'))
+        proposalExists(proposals, 'abs', 1)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/409
+    void testNamedArgumentCompletion() {
+        String contents = '''\
+            import java.util.regex.Pattern
+            import groovy.transform.Field
+            class Bean {
+              private Pattern foo
+              Pattern getFoo() {}
+            }
+            @Field String  beanie
+            @Field Pattern beanis
+            def bean1 = new Bean()
+            def bean2 = new Bean(foo: bea)
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'bea'))
+        proposalExists(proposals, 'beanie', 1)
+        proposalExists(proposals, 'beanis', 1)
+        proposalExists(proposals, 'bean1',  1)
+        proposalExists(proposals, 'bean2',  0)
+
+        // Pattern field is more relevant
+        proposals = orderByRelevance(proposals)
+        assertProposalOrdering(proposals, 'beanis', 'beanie')
     }
 }

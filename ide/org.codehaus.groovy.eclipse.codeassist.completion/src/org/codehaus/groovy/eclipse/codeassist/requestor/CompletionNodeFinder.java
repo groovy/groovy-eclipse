@@ -344,7 +344,6 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         }
 
         if (!doContext) {
-            blockStack.add(call);
             // outer receiver is irrelevant within argument list
             final ASTNode lhs = lhsNode; lhsNode = null;
 
@@ -352,7 +351,6 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
             args.visit(this);
 
             lhsNode = lhs;
-            blockStack.removeLast();
         }
         if (args instanceof TupleExpression) {
             argumentListStack.removeLast();
@@ -514,10 +512,11 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
             // see comments in visitMethodCallExpression
             visitArguments(arguments, expression);
         } catch (VisitCompleteException e) {
-            if (context.location != ContentAssistLocation.STATEMENT) {
+            // see https://github.com/groovy/groovy-eclipse/issues/331 and https://github.com/groovy/groovy-eclipse/issues/409
+            if (context.location != ContentAssistLocation.STATEMENT || lhsNode instanceof ConstantExpression) {
                 throw e;
             }
-            // completing constructor argument (https://github.com/groovy/groovy-eclipse/issues/331)
+            // completing constructor argument
         }
 
         // completion invocation offset is outside of type name and argument expressions; it is probably after opening paren or separating comma
