@@ -162,7 +162,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             |'''.stripMargin())
     }
 
-    @Test @NotYetImplemented // qualifier missing Outer
+    @Test
     void testConstructorCompletionInnerClass4() {
         addGroovySource '''\
             class Outer {
@@ -178,11 +178,11 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         applyProposalAndCheck(checkUniqueProposal(contents, 'XyzInn', 'XyzInner() - d.Outer.XyzInner', '()'), '''\
             |import d.Outer.XyzInner
             |
-            |new Outer.XyzInner()
+            |new XyzInner()
             |'''.stripMargin())
     }
 
-    @Test @NotYetImplemented // qualifier missing Outer
+    @Test
     void testConstructorCompletionInnerClass5() {
         addGroovySource '''\
             class Outer {
@@ -196,7 +196,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             new XyzInn
             '''.stripIndent()
         setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
-        applyProposalAndCheck(checkUniqueProposal(contents, 'XyzInn', 'XyzInner() - e.Outer.Inner', '()'), '''\
+        applyProposalAndCheck(checkUniqueProposal(contents, 'XyzInn', 'XyzInner() - e.Outer.XyzInner', '()'), '''\
             |new e.Outer.XyzInner()
             |'''.stripMargin())
     }
