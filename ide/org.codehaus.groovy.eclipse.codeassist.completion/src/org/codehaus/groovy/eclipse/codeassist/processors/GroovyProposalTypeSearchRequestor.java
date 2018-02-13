@@ -66,6 +66,7 @@ import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.groovy.core.util.CharArraySequence;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.codeassist.CompletionEngine;
@@ -97,6 +98,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
     private static final char[] NO_TYPE_NAME = {'.'};
     private static final char[] _AS_ = {' ','a','s',' '};
     private static final int CHECK_CANCEL_FREQUENCY = 50;
+    private static final Pattern CLOSURE_INNER_TYPE = Pattern.compile("_closure\\d+$");
 
     private int foundTypesCount = 0;
     private int foundConstructorsCount = 0;
@@ -193,19 +195,17 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         foundTypesCount += 1;
 
         // do not propose synthetic types
-        if (CharOperation.contains('$', simpleTypeName)) {
+        if (CharOperation.contains('$', simpleTypeName) || (enclosingTypeNames.length > 0 &&
+                CLOSURE_INNER_TYPE.matcher(new CharArraySequence(simpleTypeName)).find())) {
             return;
         }
-        if (TypeFilter.isFiltered(packageName, simpleTypeName)) {
+
+        if (context.location == ContentAssistLocation.EXTENDS && (modifiers & Flags.AccFinal) != 0) {
             return;
         }
         if (options.checkDeprecation && (modifiers & Flags.AccDeprecated) != 0) {
             return;
         }
-        if (context.location == ContentAssistLocation.EXTENDS && (modifiers & Flags.AccFinal) != 0) {
-            return;
-        }
-
         if (options.checkVisibility) {
             if ((modifiers & Flags.AccPublic) == 0) {
                 if ((modifiers & Flags.AccPrivate) != 0)
@@ -214,6 +214,10 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                 if (!CharOperation.equals(packageName, CharOperation.concatWith(unit.getPackageName(), '.')))
                     return;
             }
+        }
+
+        if (TypeFilter.isFiltered(packageName, CharOperation.concatWith(enclosingTypeNames, simpleTypeName, '.'))) {
+            return;
         }
 
         int accessibility = IAccessRule.K_ACCESSIBLE;

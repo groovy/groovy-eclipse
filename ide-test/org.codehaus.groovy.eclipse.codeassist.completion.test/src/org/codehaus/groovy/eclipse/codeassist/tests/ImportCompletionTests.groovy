@@ -147,6 +147,26 @@ final class ImportCompletionTests extends CompletionTestSuite {
     }
 
     @Test
+    void testType4() {
+        String contents = '''\
+            import org.codehaus.groovy.transform.tailrec.
+            '''.stripIndent()
+        def proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, '_closure1', 0)
+        proposalExists(proposals, '_closure2', 0)
+    }
+
+    @Test
+    void testType4a() {
+        String contents = '''\
+            import static org.codehaus.groovy.transform.tailrec.
+            '''.stripIndent()
+        def proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, '_closure1', 0)
+        proposalExists(proposals, '_closure2', 0)
+    }
+
+    @Test
     void testStaticField1() {
         String contents = '''\
             import java.lang.Boolean.FA
