@@ -615,10 +615,8 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
         // if we get here, then we still want to do the context
         // we are either at a paren, at a comma, or at a start of an expression
-        createContextForCallContext(expression, methodExpression,
-            /*call.isImplicitThis() ? methodExpression : objectExpression,*/
+        createContextForCallContext(expression, methodExpression, methodExpression.getText());
             // this is not exactly right since it will fail on funky kinds of method calls, like those that are called by a GString
-            methodExpression.getText());
     }
 
     @Override
@@ -657,10 +655,13 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         visitArguments(expression.getArguments(), expression);
 
         // the method itself is not an expression, but only a string
-
-        if (check(expression)) {
+        Expression methodName = new ConstantExpression(expression.getMethod());
+        methodName.setStart(expression.getNameStart());
+        methodName.setEnd(expression.getNameEnd());
+        if (check(methodName)) {
             createContext(expression, blockStack.getLast(), expressionOrStatement());
         }
+        createContextForCallContext(expression, expression, expression.getMethod(), expression.getNameEnd());
     }
 
     @Override
@@ -752,15 +753,16 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         throw new VisitCompleteException();
     }
 
-    /**
-     * In this case, we are really completing on the method name and not inside the parens so change the information.
-     */
-    private void createContextForCallContext(Expression origExpression, AnnotatedNode methodExpr, String methodName) {
+    private void createContextForCallContext(Expression expression, AnnotatedNode methodExpr, String methodName) {
+        createContextForCallContext(expression, methodExpr, methodName, methodExpr.getEnd());
+    }
+
+    private void createContextForCallContext(Expression expression, AnnotatedNode methodExpr, String methodName, int methodNameEnd) {
         context = new MethodInfoContentAssistContext(
             completionOffset,
             completionExpression,
             fullCompletionExpression,
-            origExpression,
+            expression,
             blockStack.getLast(),
             lhsNode,
             unit,
@@ -768,7 +770,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
             completionEnd,
             methodExpr,
             methodName,
-            methodExpr.getEnd());
+            methodNameEnd);
         throw new VisitCompleteException();
     }
 
