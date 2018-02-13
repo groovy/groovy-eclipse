@@ -230,6 +230,31 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
         assertEquals("Should find no matches", 0, matches.size());
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/468
+    public void testCoercion1() throws Exception {
+        String firstContents =
+            "package a\n" +
+            "interface First {\n" +
+            "  void meth();\n" +
+            "}\n";
+
+        String secondContents =
+            "package a\n" +
+            "class Second {\n" +
+            "  def m() {\n" +
+            "    return {->\n" +
+            "    } as First\n" +
+            "  }\n" +
+            "}\n";
+
+        List<SearchMatch> matches = getAllMatches(firstContents, secondContents, "a", "a", false);
+        assertEquals("Wrong count", 1, matches.size());
+
+        SearchMatch match = matches.get(0);
+        assertEquals("Wrong length", "First".length(), match.getLength());
+        assertEquals("Wrong offset", secondContents.indexOf("First"), match.getOffset());
+    }
+
     @Test // https://github.com/groovy/groovy-eclipse/issues/442
     public void testGenerics1() throws Exception {
         String firstContents =

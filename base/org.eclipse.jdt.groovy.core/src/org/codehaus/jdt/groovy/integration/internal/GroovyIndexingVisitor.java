@@ -124,7 +124,8 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
     @Override
     public void visitCastExpression(CastExpression expression) {
         // NOTE: expression.getType() may refer to ClassNode behind "this" or "super"
-        if (expression.getEnd() > 0 && expression.getStart() == expression.getType().getStart()) {
+        if (expression.getEnd() > 0 && (/*cast:*/expression.getStart() == expression.getType().getStart() ||
+                                        /*coerce:*/expression.getEnd() == expression.getType().getEnd())) {
             visitTypeReference(expression.getType(), false, true);
         }
         super.visitCastExpression(expression);
