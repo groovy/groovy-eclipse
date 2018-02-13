@@ -256,77 +256,125 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     @Test
     void testMethodContext10() {
         String contents = 'new ArrayList()'
-        assertLocation(contents, contents.indexOf('(') + 1, ContentAssistLocation.METHOD_CONTEXT)
+        assertLocation(contents, getLastIndexOf(contents, '('), ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
     void testMethodContext11() {
         String contents = 'new ArrayList(a)'
-        assertLocation(contents, contents.indexOf('(') + 1, ContentAssistLocation.METHOD_CONTEXT)
+        assertLocation(contents, getLastIndexOf(contents, '('), ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
     void testMethodContext12() {
         String contents = 'new ArrayList(a,b)'
-        assertLocation(contents, contents.indexOf(',') + 1, ContentAssistLocation.METHOD_CONTEXT)
+        assertLocation(contents, getLastIndexOf(contents, ','), ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test // see https://github.com/groovy/groovy-eclipse/issues/331
     void testMethodContext13() {
         String contents = 'new ArrayList(a,b)'
-        assertLocation(contents, contents.indexOf('b') + 1, ContentAssistLocation.METHOD_CONTEXT)
+        assertLocation(contents, getLastIndexOf(contents, 'b'), ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
     void testMethodContext14() {
         String contents = 'new ArrayList<String>()'
-        assertLocation(contents, contents.indexOf('(') + 1, ContentAssistLocation.METHOD_CONTEXT)
+        assertLocation(contents, getLastIndexOf(contents, '('), ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
     void testMethodContext15() {
         String contents = 'new ArrayList<String>(a)'
-        assertLocation(contents, contents.indexOf('(') + 1, ContentAssistLocation.METHOD_CONTEXT)
+        assertLocation(contents, getLastIndexOf(contents, '('), ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
     void testMethodContext16() {
         String contents = 'new ArrayList<String>(a,b)'
-        assertLocation(contents, contents.indexOf(',') + 1, ContentAssistLocation.METHOD_CONTEXT)
+        assertLocation(contents, getLastIndexOf(contents, ','), ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
     void testMethodContext17() {
         String contents = 'foo \nh'
-        assertLocation(contents, contents.indexOf('foo ') + 4, ContentAssistLocation.METHOD_CONTEXT)
+        assertLocation(contents, getLastIndexOf(contents, 'foo '), ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
     void testMethodContext18() {
         String contents = 'foo a, \nh'
-        assertLocation(contents, contents.indexOf(', ') + 2, ContentAssistLocation.METHOD_CONTEXT)
+        assertLocation(contents, getLastIndexOf(contents, ', '), ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
     void testMethodContext19() {
         String contents = 'foo a, b \nh'
-        assertLocation(contents, contents.indexOf('b ') + 2, ContentAssistLocation.METHOD_CONTEXT)
+        assertLocation(contents, getLastIndexOf(contents, 'b '), ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
     void testMethodContext20() {
         String contents = 'foo (a, b )\nh'
-        assertLocation(contents, contents.indexOf('b ') + 2, ContentAssistLocation.METHOD_CONTEXT)
+        assertLocation(contents, getLastIndexOf(contents, 'b '), ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test
     void testMethodContext21() {
         String contents = 'foo (a, )\nh'
-        assertLocation(contents, contents.indexOf(', ') + 1, ContentAssistLocation.METHOD_CONTEXT)
+        assertLocation(contents, getLastIndexOf(contents, ','), ContentAssistLocation.METHOD_CONTEXT)
+    }
+
+    @Test
+    void testMethodContext22() {
+        String contents = '''\
+            import static java.util.regex.Pattern.compile
+            compile()
+            '''.stripIndent()
+        assertLocation(contents, getLastIndexOf(contents, '('), ContentAssistLocation.METHOD_CONTEXT)
+    }
+
+    @Test
+    void testMethodContext23() {
+        String contents = '''\
+            import static java.util.regex.Pattern.compile
+            compile(/[a-z0-9]/)
+            '''.stripIndent()
+        assertLocation(contents, getLastIndexOf(contents, '('), ContentAssistLocation.METHOD_CONTEXT)
+    }
+
+    @Test
+    void testMethodContext24() {
+        String contents = '''\
+            import static java.util.regex.Pattern.compile
+            def regexp = /[a-z0-9]/
+            compile(regexp)
+            '''.stripIndent()
+        assertLocation(contents, getLastIndexOf(contents, '('), ContentAssistLocation.METHOD_CONTEXT)
+    }
+
+    @Test
+    void testMethodContext25() {
+        String contents = '''\
+            import static java.util.regex.Pattern.compile
+            def regexp = /[a-z0-9]/
+            compile(regexp, )
+            '''.stripIndent()
+        assertLocation(contents, getLastIndexOf(contents, ','), ContentAssistLocation.METHOD_CONTEXT)
+    }
+
+    @Test
+    void testMethodContext26() {
+        String contents = '''\
+            import static java.util.regex.Pattern.compile
+            def regexp = /[a-z0-9]/
+            compile(regexp, 0)
+            '''.stripIndent()
+        assertLocation(contents, getLastIndexOf(contents, ','), ContentAssistLocation.METHOD_CONTEXT)
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/409
-    void testMethodContext22() {
+    void testMethodContext27() {
         String contents = '''\
             class Bean {
               private String foo
