@@ -581,7 +581,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             }
             kind = CompletionProposal.METHOD_REF;
             completionOffset = ((MethodInfoContentAssistContext) context).methodNameEnd;
-            // TODO: Parameter context information is appearing before opening parenthesis
         }
 
         GroovyCompletionProposal proposal = createProposal(kind, completionOffset);
@@ -598,7 +597,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
 
         if (contextOnly) {
             proposal.setCompletion(CharOperation.NO_CHAR);
-            proposal.setTokenRange(context.completionLocation, context.completionLocation);
             proposal.setReplaceRange(context.completionLocation, context.completionLocation);
         } else {
             proposal.setCompletion(new char[] {'(', ')'});

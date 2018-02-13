@@ -81,6 +81,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
     public GroovyJavaMethodCompletionProposal(CompletionProposal proposal, ProposalFormattingOptions options, JavaContentAssistInvocationContext context, String contributor) {
         super(proposal, context);
+        fContextInformationPosition = -1;
         fContributor = (contributor == null ? "" : contributor.trim());
         fPreferences = new ReplacementPreferences(options, getFormatterPrefs(), context.getProject());
     }
@@ -126,7 +127,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
             super.apply(document, trigger, offset);
 
-            if (fContextInformationPosition > 0) {
+            if (fContextInformationPosition >= 0) {
                 // change offset from relative to absolute
                 setContextInformationPosition(getReplacementOffset() + fContextInformationPosition);
 
@@ -176,7 +177,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     @Override
     protected String computeReplacementString() {
         if (fProposal.getCompletion() == null || fProposal.getCompletion().length == 0) {
-            setContextInformationPosition(1);
+            setContextInformationPosition(0);
             return "";
         }
 
