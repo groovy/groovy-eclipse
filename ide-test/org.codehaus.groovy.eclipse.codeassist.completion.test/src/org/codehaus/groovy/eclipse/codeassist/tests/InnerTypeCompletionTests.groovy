@@ -358,6 +358,138 @@ final class InnerTypeCompletionTests extends CompletionTestSuite {
             |'''.stripMargin())
     }
 
+    @Test
+    void testInnerClass19() {
+        addGroovySource '''\
+            class Outer {
+              class Inner {
+              }
+            }
+            ''', 'Outer', 's'
+
+        def unit = addGroovySource '''\
+            class Other {
+              Inn
+            }
+            '''.stripIndent(), nextUnitName(), 's'
+
+        def proposals = createProposalsAtOffset(unit, getLastIndexOf(String.valueOf(unit.contents), 'Inn'))
+        applyProposalAndCheck(findFirstProposal(proposals, 'Inner - s.Outer'), '''\
+            |package s;
+            |
+            |import s.Outer.Inner
+            |
+            |class Other {
+            |  Inner
+            |}
+            |'''.stripMargin())
+    }
+
+    @Test
+    void testInnerClass20() {
+        addGroovySource '''\
+            class Outer {
+              class Inner {
+              }
+            }
+            ''', 'Outer', 't'
+
+        def unit = addGroovySource '''\
+            class Other {
+              Outer.Inn
+            }
+            '''.stripIndent(), nextUnitName(), 't'
+
+        def proposals = createProposalsAtOffset(unit, getLastIndexOf(String.valueOf(unit.contents), 'Inn'))
+        applyProposalAndCheck(findFirstProposal(proposals, 'Inner - t.Outer'), '''\
+            |package t;
+            |
+            |class Other {
+            |  Outer.Inner
+            |}
+            |'''.stripMargin())
+    }
+
+    @Test
+    void testInnerClass21() {
+        def unit = addGroovySource '''\
+            class Outer {
+              class Inner {
+                class Point {
+                }
+                Poi p
+              }
+            }
+            '''.stripIndent(), 'Outer', 'u'
+
+        def proposals = createProposalsAtOffset(unit, getLastIndexOf(String.valueOf(unit.contents), 'Poi'))
+        applyProposalAndCheck(findFirstProposal(proposals, 'Point - u.Outer.Inner'), '''\
+            |package u;
+            |
+            |class Outer {
+            |  class Inner {
+            |    class Point {
+            |    }
+            |    Point p
+            |  }
+            |}
+            |'''.stripMargin())
+    }
+
+    @Test
+    void testInnerClass22() {
+        def unit = addGroovySource '''\
+            class Outer {
+              class Inner {
+                class Point {
+                }
+              }
+              Poi p
+            }
+            '''.stripIndent(), 'Outer', 'v'
+
+        def proposals = createProposalsAtOffset(unit, getLastIndexOf(String.valueOf(unit.contents), 'Poi'))
+        applyProposalAndCheck(findFirstProposal(proposals, 'Point - v.Outer.Inner'), '''\
+            |package v;
+            |
+            |import v.Outer.Inner.Point
+            |
+            |class Outer {
+            |  class Inner {
+            |    class Point {
+            |    }
+            |  }
+            |  Point p
+            |}
+            |'''.stripMargin())
+    }
+
+    @Test
+    void testInnerClass23() {
+        def unit = addGroovySource '''\
+            class Outer {
+              class Inner {
+                class Point {
+                }
+              }
+              Inner.Poi p
+            }
+            '''.stripIndent(), 'Outer', 'w'
+
+        def proposals = createProposalsAtOffset(unit, getLastIndexOf(String.valueOf(unit.contents), 'Poi'))
+        applyProposalAndCheck(findFirstProposal(proposals, 'Point - w.Outer.Inner'), '''\
+            |package w;
+            |
+            |class Outer {
+            |  class Inner {
+            |    class Point {
+            |    }
+            |  }
+            |  Inner.Point p
+            |}
+            |'''.stripMargin())
+    }
+
     //
 
     @Test

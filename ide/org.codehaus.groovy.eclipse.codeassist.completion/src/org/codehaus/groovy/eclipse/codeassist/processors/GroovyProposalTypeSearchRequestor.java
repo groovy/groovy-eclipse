@@ -66,6 +66,7 @@ import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.groovy.core.util.CharArraySequence;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.groovy.search.VariableScope;
@@ -415,10 +416,8 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                     }
                 }
 
-                // check for star import if expression is not qualified and type name not seen already and
-                if (!qualified && onDemandImports != null && !onDemandFound.containsKey(simpleTypeName) &&
-                        // type is an inner class or is not from the same package as the current compilation unit
-                        ((enclosingTypeNames != null && enclosingTypeNames.length > 0) || !isCurrentPackage(packageName))) {
+                // check for star import if expression is not qualified and type name not seen already
+                if (!qualified && onDemandImports != null && !onDemandFound.containsKey(simpleTypeName)) {
                     char[] qualifier = packageName;
                     if (enclosingTypeNames != null && enclosingTypeNames.length > 0) {
                         qualifier = CharOperation.concatWith(packageName, type.enclosingTypeNames, '.');
@@ -645,7 +644,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                         outerTypeProposal.setCompletion(Signature.toCharArray(outerTypeProposal.getSignature()));
                     }
                 }
-            } else if (lastDotIndex < 0 && !isImported(ctor.packageName, ctor.simpleTypeName)) {
+            } else if (lastDotIndex < 0 && !isImported(qualifierAndSimpleTypeName(ctor.packageName, ctor.qualifiedTypeName)[0], ctor.simpleTypeName)) {
                 typeProposal.setCompletion(Signature.toCharArray(typeProposal.getSignature()));
             }
         }
@@ -770,9 +769,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
 
     /**
      * Fills in {@link #imports} and {@link #onDemandimports} from the compilation unit.
-     *
-     * NOTE: The original implementation of this method did not add "java.lang" to star
-     * imports. Adding it to the array may result in extra type proposals. Not sure...
      */
     private void initializeImportArrays(GroovyCompilationUnitScope scope) {
         int i, n = (scope.imports != null) ? scope.imports.length : 0, s, t;
@@ -785,6 +781,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                 }
             }
         }
+        s += 1;
 
         char[][] starImports = new char[s][];
         char[][][] typeImports = new char[t][][];
@@ -797,6 +794,15 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                 }
             }
         }
+        starImports[s++] = CharOperation.concatWith(scope.currentPackageName, '.');
+
+        // add star import for each enclosing type to prevent unnecessary import/qualifier insertions
+        ClassNode enclosingType = context.getEnclosingGroovyType();
+        while (enclosingType != null) {
+            char[] typeName = enclosingType.getName().replace('$', '.').toCharArray();
+            starImports = (char[][]) ArrayUtils.add(starImports, s, typeName);
+            enclosingType = enclosingType.getOuterClass();
+        }
 
         imports = typeImports;
         onDemandImports = starImports;
@@ -807,19 +813,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             return true;
         }
         return SearchPattern.camelCaseMatch(pattern, candidate);
-    }
-
-    private boolean isCurrentPackage(char[] packageName) {
-        boolean isCurrentPackage = false;
-
-        String currentPackage = module.getPackageName();
-        if (currentPackage == null) {
-            isCurrentPackage = (packageName == null || packageName.length == 0);
-        } else if ((currentPackage.length() - 1) == packageName.length) { // getPackageName() includes trailing '.'
-            isCurrentPackage = CharOperation.equals(packageName, currentPackage.toCharArray(), 0, currentPackage.length() - 1);
-        }
-
-        return isCurrentPackage;
     }
 
     private boolean isImported(char[] packName, char[] typeName) {
@@ -836,7 +829,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                 }
             }
         }
-        if (!imported && !conflict && !isCurrentPackage(packName) && onDemandImports != null) {
+        if (!imported && !conflict && onDemandImports != null) {
             for (char[] importName : onDemandImports) {
                 if (CharOperation.equals(packName, importName)) {
                     imported = true;
