@@ -468,7 +468,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         proposal.setRelevance(computeRelevanceForTypeProposal(type.fullyQualifiedName, type.accessibility, type.modifiers));
         proposal.setReplaceRange(completionOffset, context.completionLocation);
         proposal.setSignature(Signature.createCharArrayTypeSignature(type.fullyQualifiedName, true));
-        proposal.setTokenRange(completionOffset, context.completionLocation);
+        proposal.setTokenRange(completionOffset, context.completionEnd);
         proposal.setTypeName(type.qualifiedTypeName);
 
         if (type.qualifiedTypeName.length != type.simpleTypeName.length) {
@@ -595,7 +595,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         proposal.setDeclarationTypeName(ctor.qualifiedTypeName);
         proposal.setDeclarationSignature(CompletionEngine.createNonGenericTypeSignature(ctor.packageName, ctor.qualifiedTypeName));
         proposal.setFlags(Flags.isDeprecated(ctor.typeModifiers) ? ctor.modifiers | Flags.AccDeprecated : ctor.modifiers);
-        proposal.setAdditionalFlags(ctor.extraFlags);
         proposal.setAccessibility(ctor.accessibility);
 
         if (contextOnly) {
@@ -743,8 +742,8 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             ClassNode lhsType = ((Variable) context.lhsNode).getType();
             if (VariableScope.CLASS_CLASS_NODE.equals(lhsType) && lhsType.isUsingGenerics()) {
                 GenericsType target = lhsType.getGenericsTypes()[0];
-                if (target.getLowerBound() == null && target.getUpperBounds().length == 1 &&
-                        VariableScope.OBJECT_CLASS_NODE.equals(target.getUpperBounds()[0])) {
+                if (target.getLowerBound() == null && target.getUpperBounds() == null ||
+                        (target.getUpperBounds().length == 1 && VariableScope.OBJECT_CLASS_NODE.equals(target.getUpperBounds()[0]))) {
                     return;
                 }
                 // create a relevance rule that will boost types compatible with the target type
@@ -890,7 +889,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         public char[][] parameterNames;
         public int typeModifiers;
         public char[] packageName;
-        public int extraFlags;
+        //public int extraFlags;
         public int accessibility;
 
         public final char[] qualifiedTypeName;
@@ -916,7 +915,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             this.parameterNames = parameterNames;
             this.typeModifiers = typeModifiers;
             this.packageName = packageName;
-            this.extraFlags = extraFlags;
+            //this.extraFlags = extraFlags;
             this.accessibility = accessibility;
 
             this.qualifiedTypeName = simpleTypeName;

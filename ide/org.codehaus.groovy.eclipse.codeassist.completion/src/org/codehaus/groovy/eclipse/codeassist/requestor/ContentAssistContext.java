@@ -21,6 +21,7 @@ import java.util.TreeSet;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
+import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.completions.GroovyExtendedCompletionContext;
@@ -151,11 +152,18 @@ public class ContentAssistContext {
     }
 
     public ClassNode getEnclosingGroovyType() {
-        if (containingDeclaration instanceof ClassNode) {
-            return (ClassNode) containingDeclaration;
+        ClassNode containingTypeDecl;
+        if (!(containingDeclaration instanceof ClassNode)) {
+            containingTypeDecl = containingDeclaration.getDeclaringClass();
         } else {
-            return containingDeclaration.getDeclaringClass();
+            containingTypeDecl = (ClassNode) containingDeclaration;
+            // check for type annotation (sits outside of declaration)
+            if (containingCodeBlock instanceof AnnotationNode &&
+                    containingCodeBlock.getEnd() < containingTypeDecl.getNameStart()) {
+                containingTypeDecl = containingTypeDecl.getOuterClass();
+            }
         }
+        return containingTypeDecl;
     }
 
     /**
