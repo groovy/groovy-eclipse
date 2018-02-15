@@ -20,6 +20,7 @@ import static org.eclipse.jdt.ui.PreferenceConstants.TYPEFILTER_ENABLED
 import groovy.transform.NotYetImplemented
 
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions
+import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Assert
 import org.junit.Before
@@ -599,11 +600,11 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
             |class C {
             |}
             |'''.stripMargin()
-        checkProposalApplication(contents, expected, contents.indexOf('Ch') + 2, 'TypeChecked', true)
+        checkProposalApplication(contents, expected, getIndexOf(contents, 'Ch'), 'TypeChecked', true)
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/365
-    void testQualifierForTypeAnnoScope() {
+    void testQualifierForTypeAnnoScope1() {
         String contents = '''\
             @SuppressWarnings(V)
             class C {
@@ -616,7 +617,34 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
               public static final String VALUE = 'nls'
             }
             '''.stripIndent()
-        checkProposalApplication(contents, expected, contents.indexOf('(V') + 2, 'VALUE', false)
+        checkProposalApplication(contents, expected, getIndexOf(contents, '(V'), 'VALUE', false)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/478
+    void testQualifierForTypeAnnoScope2() {
+        addJavaSource '''\
+            package a;
+            import java.lang.annotation.*;
+            @Target(ElementType.TYPE)
+            public @interface B {
+              Class<?> value();
+            }
+            ''', 'B', 'a'
+
+        String contents = '''\
+            @a.B(Nes)
+            class C {
+              static class Nested {}
+            }
+            '''.stripIndent()
+        String expected = '''\
+            @a.B(C.Nested)
+            class C {
+              static class Nested {}
+            }
+            '''.stripIndent()
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+        checkProposalApplication(contents, expected, getIndexOf(contents, '(Nes'), 'Nested - C', true)
     }
 
     //--------------------------------------------------------------------------
