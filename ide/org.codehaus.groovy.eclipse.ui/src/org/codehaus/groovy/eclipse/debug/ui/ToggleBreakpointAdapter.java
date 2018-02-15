@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -120,7 +120,7 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
     }
 
     public void toggleLineBreakpoints(IWorkbenchPart part, ISelection selection, boolean bestMatch) {
-        Job job = new Job("Toggle Line Breakpoint") { //$NON-NLS-1$
+        Job job = new Job("Toggle Line Breakpoint") {
             @Override
             public boolean belongsTo(Object family) {
                 return family == TOGGLE_BREAKPOINT_FAMILY;
@@ -149,8 +149,7 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
                             if (classFile instanceof IOrdinaryClassFile) {
                                 type = ((IOrdinaryClassFile) classFile).getType();
                                 // bug 34856 - if this is an inner type, ensure
-                                // the breakpoint is not
-                                // being added to the outer type
+                                // the breakpoint is not being added to the outer type
                                 if (type.getDeclaringType() != null) {
                                     ISourceRange sourceRange = type.getSourceRange();
                                     int start = sourceRange.getOffset();
@@ -158,7 +157,7 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
                                     if (offset < start || offset > end) {
                                         // not in the inner type
                                         IStatusLineManager statusLine = editorPart.getEditorSite().getActionBars().getStatusLineManager();
-                                        statusLine.setErrorMessage(NLS.bind("Breakpoints can only be created within the type associated with the editor: {0}.", new String[] { type.getTypeQualifiedName() }));
+                                        statusLine.setErrorMessage(NLS.bind("Breakpoints can only be created within the type associated with the editor: {0}.", new Object[] {type.getTypeQualifiedName()}));
                                         Display.getCurrent().beep();
                                         return Status.OK_STATUS;
                                     }
@@ -172,29 +171,27 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
                         if (type == null) {
                             resource = getResource(editorPart);
                             if (editorPart instanceof ITextEditor) {
-                                ModuleNode node = getModuleNode((ITextEditor) editorPart);
-                                if (node != null) {  // can be null if not on build path
+                                ModuleNode node = Adapters.adapt(editorInput, ModuleNode.class);
+                                if (node != null) { // can be null if not on build path
                                     for (ClassNode clazz : (Iterable<ClassNode>) node.getClasses()) {
-                                        int begin = clazz.getStart();
-                                        int end = clazz.getEnd();
-                                        if (offset >= begin && offset <= end && !clazz.isInterface()) {
+                                        if (offset >= clazz.getStart() && offset <= clazz.getEnd() && !clazz.isInterface()) {
                                             typeName = clazz.getName();
                                             break;
                                         }
                                     }
                                 }
                             }
-                            if(typeName == null) {
+                            if (typeName == null) {
                                 ICompilationUnit unit = JavaCore.createCompilationUnitFrom((IFile) resource);
-                                if(unit != null) {
+                                if (unit != null) {
                                     IType[] types = unit.getAllTypes();
-                                    for (int i = 0; i < types.length; i++) {
-                                         int begin = types[i].getSourceRange().getOffset();
-                                         int end = begin + types[i].getSourceRange().getLength();
-                                         if (offset >= begin && offset <= end && !types[i].isInterface()) {
-                                             typeName = types[i].getPackageFragment().getElementName() + "." + types[i].getTypeQualifiedName(); //$NON-NLS-1$
-                                             break;
-                                         }
+                                    for (int i = 0; i < types.length; i += 1) {
+                                        int begin = types[i].getSourceRange().getOffset();
+                                        int end = begin + types[i].getSourceRange().getLength();
+                                        if (offset >= begin && offset <= end && !types[i].isInterface()) {
+                                            typeName = types[i].getPackageFragment().getElementName() + '.' + types[i].getTypeQualifiedName();
+                                            break;
+                                        }
                                     }
                                 }
                             }
@@ -248,14 +245,6 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
         new BreakpointLocationVerifierJob(breakpoint, lineNumber, typeName, type, resource, editorPart).schedule();
     }
 
-    protected ModuleNode getModuleNode(ITextEditor editor) throws CoreException {
-        ModuleNode moduleNode = Adapters.adapt(editor.getEditorInput(), ModuleNode.class);
-        /*if (moduleNode == null) {
-            throw new CoreException(Status.CANCEL_STATUS);
-        }*/
-        return moduleNode;
-    }
-
     protected IType getType(ITextSelection selection) {
         IMember member = ActionDelegateHelper.getDefault().getCurrentMember(selection);
         IType type = null;
@@ -264,8 +253,8 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
         } else if (member != null) {
             type = member.getDeclaringType();
         }
-        // bug 52385: we don't want local and anonymous types from compilation
-        // unit, we are getting 'not-always-correct' names for them.
+        // bug 52385: don't want local and anonymous types from compilation unit
+        // we are getting 'not-always-correct' names for them
         try {
             while (type != null && !type.isBinary() && type.isLocal()) {
                 type = type.getDeclaringType();
@@ -280,15 +269,11 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
         DebugPlugin.getDefault().getBreakpointManager().removeBreakpoint(breakpoint, delete);
     }
 
-    protected void report(final String message, final IWorkbenchPart part) {
+    protected void report(String message, IWorkbenchPart part) {
         JDIDebugUIPlugin.getStandardDisplay().asyncExec(() -> {
             IEditorStatusLine statusLine = Adapters.adapt(part, IEditorStatusLine.class);
             if (statusLine != null) {
-                if (message != null) {
-                    statusLine.setMessage(true, message, null);
-                } else {
-                    statusLine.setMessage(true, null, null);
-                }
+                statusLine.setMessage(true, message, null);
             }
             if (message != null && JDIDebugUIPlugin.getActiveWorkbenchShell() != null) {
                 JDIDebugUIPlugin.getActiveWorkbenchShell().getDisplay().beep();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,8 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.texteditor.IEditorStatusLine;
 
 /**
- * Job used to verify the position of a breakpoint
+ * Verifies the position of a breakpoint.
+ * <p>
  * Somewhat based on org.eclipse.jdt.internal.debug.ui.actions.BreakpointLocationVerifierJob
  */
 public class BreakpointLocationVerifierJob extends Job {
@@ -98,15 +99,14 @@ public class BreakpointLocationVerifierJob extends Job {
     @Override
     public IStatus run(IProgressMonitor monitor) {
         try {
-            ModuleNode node = Adapters.adapt(fResource, ModuleNode.class);
-            if (node == null) {
+            ModuleNode module = Adapters.adapt(fResource, ModuleNode.class);
+            if (module == null) {
                 return new Status(IStatus.WARNING, JDIDebugUIPlugin.getUniqueIdentifier(), ActionMessages.BreakpointLocationVerifierJob_not_valid_location);
             }
             if (fBreakpoint != null) {
                 DebugPlugin.getDefault().getBreakpointManager().removeBreakpoint(fBreakpoint, true);
             }
-            ValidBreakpointLocationFinder finder = new ValidBreakpointLocationFinder(fLineNumber);
-            ASTNode valid = finder.findValidBreakpointLocation(node);
+            ASTNode valid = new BreakpointLocationFinder(module).findBreakpointLocation(fLineNumber);
             if (valid instanceof MethodNode && ((MethodNode) valid).getNameEnd() > 0) {
                 createNewMethodBreakpoint((MethodNode) valid, fTypeName);
                 return new Status(IStatus.OK, JDIDebugUIPlugin.getUniqueIdentifier(), ActionMessages.BreakpointLocationVerifierJob_breakpoint_set);

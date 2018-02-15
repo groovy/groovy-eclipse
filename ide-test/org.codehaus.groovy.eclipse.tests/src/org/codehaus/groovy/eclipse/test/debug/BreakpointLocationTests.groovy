@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 package org.codehaus.groovy.eclipse.test.debug
 
 import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.eclipse.debug.ui.ValidBreakpointLocationFinder
+import org.codehaus.groovy.eclipse.debug.ui.BreakpointLocationFinder
 import org.eclipse.jface.text.Document
 import org.junit.Test
 
@@ -29,10 +29,9 @@ final class BreakpointLocationTests extends BreakpointTestSuite {
         def document = new Document(String.valueOf(unit.contents))
         int location = document.get().indexOf('// ' + i) - 3
         int line = document.getLineOfOffset(location) + 1
-        ValidBreakpointLocationFinder finder = new ValidBreakpointLocationFinder(line)
-        ASTNode node = finder.findValidBreakpointLocation(unit.moduleNode)
-        assert node != null : 'Could not find a breakpoint for line ' + line
-        assert node.getLineNumber() == line : 'Wrong expected line number'
+
+        ASTNode node = new BreakpointLocationFinder(unit.moduleNode).findBreakpointLocation(line)
+        assert node?.lineNumber == line
     }
 
     @Test

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,20 +74,17 @@ public class BreakpointUpdater implements IMarkerUpdater {
         try {
             Object attribute = marker.getAttribute(IMarker.LINE_NUMBER);
             if (attribute != null) {
-                ValidBreakpointLocationFinder finder = new ValidBreakpointLocationFinder(
-                        ((Integer) attribute).intValue());
-                ASTNode validNode = finder.findValidBreakpointLocation(unit.getModuleNode());
-                if (validNode == null) {
+                ASTNode node = new BreakpointLocationFinder(unit.getModuleNode()).findBreakpointLocation(((Integer) attribute).intValue());
+                if (node == null) {
                     return false;
                 }
-                int line = validNode.getLineNumber();
+                int line = node.getLineNumber();
                 MarkerUtilities.setLineNumber(marker, line);
-                if(isLineBreakpoint(marker)) {
+                if (isLineBreakpoint(marker)) {
                     ensureRanges(document, marker, line);
-                    return lineBreakpointExists(marker.getResource(), ((IJavaLineBreakpoint)breakpoint).getTypeName(), line, marker) == null;
+                    return lineBreakpointExists(marker.getResource(), ((IJavaLineBreakpoint) breakpoint).getTypeName(), line, marker) == null;
                 }
             }
-
             return true;
         } catch (CoreException e) {
             GroovyCore.logException("Error updating breakpoint", e);
