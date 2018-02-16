@@ -167,6 +167,17 @@ final class ImportCompletionTests extends CompletionTestSuite {
     }
 
     @Test
+    void testExtraMembers() {
+        String contents = '''\
+            import static org.
+            '''.stripIndent()
+        def proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, 'clone()', 0)
+        proposalExists(proposals, 'notify()', 0)
+        proposalExists(proposals, 'registerNatives()', 0)
+    }
+
+    @Test
     void testStaticField1() {
         String contents = '''\
             import java.lang.Boolean.FA

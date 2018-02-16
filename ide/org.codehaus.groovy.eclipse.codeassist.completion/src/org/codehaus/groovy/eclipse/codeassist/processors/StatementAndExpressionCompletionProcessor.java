@@ -47,12 +47,14 @@ import org.codehaus.groovy.eclipse.codeassist.creators.CategoryProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.creators.FieldProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.creators.IProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.creators.MethodProposalCreator;
+import org.codehaus.groovy.eclipse.codeassist.proposals.AbstractGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.ISourceReference;
@@ -437,8 +439,16 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 ImportNode importNode = (ImportNode) node;
                 if (importNode.isStatic()) {
                     containingClass = importNode.getType();
-                    groovyProposals.addAll(new FieldProposalCreator().findAllProposals(containingClass, VariableScope.ALL_DEFAULT_CATEGORIES, context.getPerceivedCompletionExpression(), true, isPrimary));
-                    groovyProposals.addAll(new MethodProposalCreator().findAllProposals(containingClass, VariableScope.ALL_DEFAULT_CATEGORIES, context.getPerceivedCompletionExpression(), true, isPrimary));
+                    groovyProposals.addAll(new FieldProposalCreator().findAllProposals(containingClass, Collections.EMPTY_SET, context.getPerceivedCompletionExpression(), true, isPrimary));
+                    groovyProposals.addAll(new MethodProposalCreator().findAllProposals(containingClass, Collections.EMPTY_SET, context.getPerceivedCompletionExpression(), true, isPrimary));
+
+                    groovyProposals.removeIf(proposal -> {
+                        if (proposal instanceof AbstractGroovyProposal) {
+                            int flags = ((AbstractGroovyProposal) proposal).getAssociatedNodeFlags();
+                            return (!Flags.isStatic(flags) || Flags.isPrivate(flags) || Flags.isSynthetic(flags));
+                        }
+                        return false;
+                    });
                 }
             }
         }
