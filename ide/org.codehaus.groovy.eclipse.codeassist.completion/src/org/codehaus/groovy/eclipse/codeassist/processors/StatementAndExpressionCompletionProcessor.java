@@ -35,6 +35,7 @@ import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.MethodPointerExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
@@ -56,6 +57,7 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
@@ -164,8 +166,10 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         }
 
         private ClassNode findResultingType(TypeLookupResult result, boolean derefList) {
+            ContentAssistContext context = getContext();
             // if completing on a method call with an implicit 'this'.
-            ClassNode candidate = getContext().location == ContentAssistLocation.METHOD_CONTEXT ? result.declaringType : result.type;
+            ClassNode candidate = (context.location == ContentAssistLocation.METHOD_CONTEXT ? result.declaringType : result.type);
+
             if (derefList) {
                 for (int i = 0; i < derefCount; i += 1) {
                     // GRECLIPSE-742: does the LHS type have a 'getAt' method?
@@ -177,7 +181,6 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                             getAtFound = true;
                         }
                     }
-
                     if (!getAtFound) {
                         if (VariableScope.MAP_CLASS_NODE.equals(candidate)) {
                             // for maps, always use the type of value
@@ -191,15 +194,23 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 }
             }
 
-            // now look at spread expressions
-            // might be part of a spread operation
             boolean extractElementType = false; // for spread operations
+
             ASTNode enclosing = result.scope.getEnclosingNode();
-            if (enclosing instanceof MethodCallExpression) {
-                extractElementType = ((MethodCallExpression) enclosing).isSpreadSafe();
-            } else if (enclosing instanceof PropertyExpression) {
+            if (enclosing instanceof PropertyExpression) {
+                // if enclosing is method pointer expression, result type is Closure<T>, not just T
+                if (((PropertyExpression) enclosing).getObjectExpression() instanceof MethodPointerExpression) {
+                    ClassNode closureType = VariableScope.clonedClosure();
+                    Parameter[] parameters = (result.declaration instanceof MethodNode ?
+                        ((MethodNode) result.declaration).getParameters() : Parameter.EMPTY_ARRAY);
+                    GroovyUtils.updateClosureWithInferredTypes(closureType, candidate, parameters);
+                    return closureType;
+                }
                 extractElementType = ((PropertyExpression) enclosing).isSpreadSafe();
+            } else if (enclosing instanceof MethodCallExpression) {
+                extractElementType = ((MethodCallExpression) enclosing).isSpreadSafe();
             }
+
             if (extractElementType) {
                 candidate = VariableScope.extractElementType(candidate);
             }

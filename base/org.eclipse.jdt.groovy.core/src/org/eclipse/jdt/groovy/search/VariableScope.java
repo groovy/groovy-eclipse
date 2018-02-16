@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -891,6 +891,12 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
 
     public static ClassNode clonedRange() {
         ClassNode clone = clone(RANGE_CLASS_NODE);
+        cleanGenerics(clone.getGenericsTypes()[0]);
+        return clone;
+    }
+
+    public static ClassNode clonedClosure() {
+        ClassNode clone = clone(CLOSURE_CLASS_NODE);
         cleanGenerics(clone.getGenericsTypes()[0]);
         return clone;
     }
