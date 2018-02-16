@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,23 @@ public abstract class AbstractGroovyProposal implements IGroovyProposal {
      */
     public AnnotatedNode getAssociatedNode() {
         return null;
+    }
+
+    public int getAssociatedNodeFlags() {
+        AnnotatedNode node = getAssociatedNode();
+        if (node instanceof ClassNode) {
+            return ((ClassNode) node).getModifiers();
+        }
+        if (node instanceof FieldNode) {
+            return ((FieldNode) node).getModifiers();
+        }
+        if (node instanceof MethodNode) {
+            return ((MethodNode) node).getModifiers();
+        }
+        if (node instanceof PropertyNode) {
+            return ((PropertyNode) node).getModifiers();
+        }
+        return 0;
     }
 
     private float relevanceMultiplier = 1;

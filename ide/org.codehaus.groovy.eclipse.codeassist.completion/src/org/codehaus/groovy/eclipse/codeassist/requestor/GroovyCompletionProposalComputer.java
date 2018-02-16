@@ -119,7 +119,7 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
         locationFactories.put(ContentAssistLocation.IMPORT, Collections.unmodifiableList(Arrays.asList(
             new TypeCompletionProcessorFactory(),
             new PackageCompletionProcessorFactory(),
-            new ExpressionCompletionProcessorFactory()
+            new ExpressionCompletionProcessorFactory() // for static members
         )));
 
         locationFactories.put(ContentAssistLocation.METHOD_CONTEXT, Collections.unmodifiableList(Arrays.asList(
