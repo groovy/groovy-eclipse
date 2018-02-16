@@ -472,19 +472,19 @@ final class MethodCompletionTests extends CompletionTestSuite {
     @Test
     void testMethodPointer1() {
         String contents = 'String.&isE'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'isE'))
-        proposalExists(proposals, 'isEmpty', 1)
-
-        applyProposalAndCheck(findFirstProposal(proposals, 'isEmpty'), 'String.&isEmpty')
+        applyProposalAndCheck(checkUniqueProposal(contents, 'isE', 'isEmpty'), contents + 'mpty')
     }
 
     @Test
     void testMethodPointer2() {
         String contents = 'String.&  isE'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'isE'))
-        proposalExists(proposals, 'isEmpty', 1)
+        applyProposalAndCheck(checkUniqueProposal(contents, 'isE', 'isEmpty'), contents + 'mpty')
+    }
 
-        applyProposalAndCheck(findFirstProposal(proposals, 'isEmpty'), 'String.&  isEmpty')
+    @Test
+    void testMethodPointer3() {
+        String contents = 'String.&isEmpty.mem'
+        applyProposalAndCheck(checkUniqueProposal(contents, 'mem', 'memoize()'), contents + 'oize()')
     }
 
     @Test
