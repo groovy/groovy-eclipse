@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -224,21 +224,15 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
     protected void checkPublicTypeNameMatchesFilename(TypeDeclaration typeDecl) {
     }
 
+    /**
+     * Checks expected package against actual package declaration.
+     */
     @Override
     protected boolean reportPackageIsNotExpectedPackage(CompilationUnitDeclaration compUnitDecl) {
-        // Code that could be used to police package declarations.
-        // Rule: if there is a package declaration it must match the location on disk. If
-        // there is no package declaration, let them get away with it
-
-        // where we should be:
-        if (!isScript && compUnitDecl != null && compUnitDecl.compilationResult != null
-                && compUnitDecl.compilationResult.compilationUnit != null) {
-            char[][] packageName = compUnitDecl.compilationResult.compilationUnit.getPackageName();
-            String shouldBe = packageName == null ? "" : CharOperation.toString(packageName);
-            // where we are declared:
-            String actuallyIs = compUnitDecl.currentPackage == null ? "" : CharOperation
-                    .toString(compUnitDecl.currentPackage.tokens);
-            if (actuallyIs.length() > 0 && !shouldBe.equals(actuallyIs)) {
+        if (compUnitDecl != null && compUnitDecl.compilationResult != null && compUnitDecl.compilationResult.compilationUnit != null) {
+            char[][] expectedPackage = compUnitDecl.compilationResult.compilationUnit.getPackageName();
+            if (expectedPackage != null && !CharOperation.equals(expectedPackage,
+                    compUnitDecl.currentPackage != null ? compUnitDecl.currentPackage.tokens : CharOperation.NO_CHAR_CHAR)) {
                 problemReporter().packageIsNotExpectedPackage(compUnitDecl);
                 return true;
             }
