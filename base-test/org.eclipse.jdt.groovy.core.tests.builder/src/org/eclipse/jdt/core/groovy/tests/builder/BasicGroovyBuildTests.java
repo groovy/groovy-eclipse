@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1829,8 +1829,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         env.setOutputFolder(projectPath, "bin");
 
         // q.X declared in p.X
-        IPath path = env.addGroovyClass(root, "p", "X", "package q\n"
-                + "class X {}");
+        IPath path = env.addGroovyClass(root, "p", "X", "package q\n" + "class X {}");
 
         incrementalBuild(projectPath);
 
@@ -1871,13 +1870,12 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         IPath root = env.addPackageFragmentRoot(projectPath, "src");
         env.setOutputFolder(projectPath, "bin");
 
-        // in p.q.r.X but has no package decl - should be OK
-        env.addGroovyClass(root, "p.q.r", "X", "print 'abc'");
+        // in p.q.r.X but has no package decl
+        IPath path = env.addGroovyClass(root, "p.q.r", "X", "print 'abc'");
 
         incrementalBuild(projectPath);
 
-        expectingNoProblems();
-        executeClass(projectPath, "X", "abc", "");
+        expectingSpecificProblemFor(path, new Problem("p/q/r/X", "The declared package \"\" does not match the expected package \"p.q.r\"", path, 0, 1, 60, IMarker.SEVERITY_ERROR));
     }
 
     @Test
@@ -2008,37 +2006,39 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         IPath root = env.addPackageFragmentRoot(projectPath, "src");
         env.setOutputFolder(projectPath, "bin");
 
-        env.addClass(root, "", "Launch", "public class Launch {\n"
-                + "  public static void main(String[]argv) {\n"
-                + "    Runner.run(3);\n" + "  }\n" + "}\n");
+        env.addClass(root, "", "Launch",
+            "public class Launch {\n" +
+            "  public static void main(String[] args) {\n" +
+            "    Runner.run(3);\n" +
+            "  }\n" +
+            "}\n");
 
-        env.addGroovyClass(root, "", "Runner", "def static run(int n) { \n"
-                + "  OtherGroovy.iterate (4) {\n" + "  print it*2\n" + "  }\n"
-                + "}\n");
+        env.addGroovyClass(root, "", "Runner",
+            "def static run(int n) { \n" +
+            "  OtherGroovy.iterate(4) {\n" +
+            "    print it*2\n" +
+            "  }\n" +
+            "}\n");
 
-        // FIXASC this variant of the above seemed to crash groovy:
-        // "def run(n) \n"+
-        // "  OtherGroovy.iterate (3) {\n"+
-        // "  print it*2\n"+
-        // "  }\n");
-
-        env.addGroovyClass(root, "pkg", "OtherGroovy",
-                "def static iterate(Integer n, closure) {\n"
-                        + "  1.upto(n) {\n" + "    closure(it);\n" + "  }\n"
-                        + "}\n");
+        env.addGroovyClass(root, "", "OtherGroovy",
+            "def static iterate(Integer n, closure) {\n" +
+            "  1.upto(n) {\n" +
+            "    closure(it);\n" +
+            "  }\n" +
+            "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClasses("OtherGroovy",
-                "OtherGroovy$_iterate_closure1", "Runner",
-                "Runner$_run_closure1", "Launch");
+        expectingCompiledClasses("OtherGroovy", "OtherGroovy$_iterate_closure1", "Runner", "Runner$_run_closure1", "Launch");
         expectingNoProblems();
         executeClass(projectPath, "Launch", "2468", "");
 
         // modify the body of the closure
-        env.addGroovyClass(root, "", "Runner", "def static run(int n) { \n"
-                + "  OtherGroovy.iterate (4) {\n" + "  print it\n" + // change
-                                                                        // here
-                "  }\n" + "}\n");
+        env.addGroovyClass(root, "", "Runner",
+            "def static run(int n) { \n" +
+            "  OtherGroovy.iterate (4) {\n" +
+            "  print it\n" + // change here
+            "  }\n" +
+            "}\n");
 
         incrementalBuild(projectPath);
         expectingCompiledClasses("Runner", "Runner$_run_closure1");
@@ -2046,28 +2046,28 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         executeClass(projectPath, "Launch", "1234", "");
 
         // modify how the closure is called
-        env.addGroovyClass(root, "pkg", "OtherGroovy",
-                "def static iterate(Integer n, closure) {\n"
-                        + "  1.upto(n*2) {\n" + // change here
-                        "    closure(it);\n" + "  }\n" + "}\n");
+        env.addGroovyClass(root, "", "OtherGroovy",
+            "def static iterate(Integer n, closure) {\n" +
+            "  1.upto(n*2) {\n" + // change here
+            "    closure(it);\n" +
+            "  }\n" +
+            "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClasses("OtherGroovy",
-                "OtherGroovy$_iterate_closure1");
+        expectingCompiledClasses("OtherGroovy", "OtherGroovy$_iterate_closure1");
         expectingNoProblems();
         executeClass(projectPath, "Launch", "12345678", "");
 
-        // change the iterate method signature from Integer to int - should
-        // trigger build of Runner
-        env.addGroovyClass(root, "pkg", "OtherGroovy",
-                "def static iterate(int n, closure) {\n" + "  1.upto(n*2) {\n" + // change
-                                                                                    // here
-                        "    closure(it);\n" + "  }\n" + "}\n");
+        // change the iterate method signature from Integer to int - should trigger build of Runner
+        env.addGroovyClass(root, "", "OtherGroovy",
+            "def static iterate(int n, closure) {\n" +
+            "  1.upto(n*2) {\n" + // change here
+            "    closure(it);\n" +
+            "  }\n" +
+            "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClasses("OtherGroovy",
-                "OtherGroovy$_iterate_closure1", "Runner",
-                "Runner$_run_closure1");
+        expectingCompiledClasses("OtherGroovy", "OtherGroovy$_iterate_closure1", "Runner", "Runner$_run_closure1");
         expectingNoProblems();
         executeClass(projectPath, "Launch", "12345678", "");
 
@@ -3331,12 +3331,13 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         env.setOutputFolder(projectPath, "bin");
 
         env.addGroovyClass(root, "p", "Named",
-                "trait Named {\n" +
-                "    String name() { 'name' }" +
-                "}\n");
+            "package p\n" +
+            "trait Named {\n" +
+            "    String name() { 'name' }" +
+            "}\n");
 
         incrementalBuild(projectPath);
-        expectingCompiledClasses("Named", "Named$Trait$Helper");
+        expectingCompiledClasses("p.Named", "p.Named$Trait$Helper");
         expectingNoProblems();
     }
 
