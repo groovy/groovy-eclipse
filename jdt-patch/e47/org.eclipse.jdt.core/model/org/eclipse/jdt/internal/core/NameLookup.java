@@ -1153,9 +1153,10 @@ public class NameLookup implements SuffixConstants {
 	
 	private void seekModuleAwarePartialPackageFragments(String name, IJavaElementRequestor requestor, IPackageFragmentRoot[] moduleContext) {
 		boolean allPrefixMatch = CharOperation.equals(name.toCharArray(), CharOperation.ALL_PREFIX);
+		String lName = name.toLowerCase();
 		Arrays.stream(this.packageFragments.keyTable)
 		.filter(k -> k != null)
-		.filter(k -> allPrefixMatch || Util.concatWith((String[])k, '.').startsWith(name))
+		.filter(k -> allPrefixMatch || Util.concatWith((String[])k, '.').toLowerCase().startsWith(lName))
 		.forEach(k -> {
 			checkModulePackages(requestor, moduleContext, this.packageFragments.getIndex(k));
 		});

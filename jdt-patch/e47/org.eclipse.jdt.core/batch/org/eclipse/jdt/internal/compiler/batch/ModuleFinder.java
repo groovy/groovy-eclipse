@@ -93,8 +93,8 @@ public class ModuleFinder {
 						break;
 					case IModule.MODULE_INFO_JAVA:
 						module = ModuleFinder.extractModuleFromSource(new File(file, fileName), parser, modulePath);
-						String modName = new String(module.name());
-						if (!modName.equals(file.getName())) {
+						String modName = (module == null ? null : String.valueOf(module.name()));
+						if (!file.getName().equals(modName)) {
 							throw new IllegalArgumentException("module name " + modName + " does not match expected name " + file.getName()); //$NON-NLS-1$ //$NON-NLS-2$
 						}
 						break;
