@@ -25,7 +25,7 @@ import org.eclipse.jface.viewers.StyledString;
 public class GroovyJavaFieldCompletionProposal extends JavaCompletionProposal {
 
     public GroovyJavaFieldCompletionProposal(CompletionProposal proposal, StyledString displayString, JavaContentAssistInvocationContext javaContext) {
-        super(String.valueOf(proposal.getName()), // replacementString
+        super(String.valueOf(proposal.getCompletion()), // replacementString
             proposal.getReplaceStart(), // replacementOffset
             proposal.getReplaceEnd() - proposal.getReplaceStart(), // replacementLength
             ProposalUtils.getImage(proposal),

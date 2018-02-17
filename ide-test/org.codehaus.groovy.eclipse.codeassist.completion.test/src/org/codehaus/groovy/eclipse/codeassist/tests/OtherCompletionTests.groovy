@@ -134,33 +134,35 @@ final class OtherCompletionTests extends CompletionTestSuite {
     @Test // GRECLIPSE-706
     void testContentAssistInStaticInitializers1() {
         String contents = 'class A { static { aa }\n static aaaa }'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'aa'))
-        proposalExists(proposals, 'aaaa', 1)
+        applyProposalAndCheck(checkUniqueProposal(contents, '{ aa', 'aaaa'), contents.replace('{ aa }', '{ aaaa }'));
     }
 
     @Test // GRECLIPSE-706
     void testContentAssistInStaticInitializers2() {
         String contents = 'class A { static {  }\n static aaaa }'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'static { '))
-        proposalExists(proposals, 'aaaa', 1)
+        applyProposalAndCheck(checkUniqueProposal(contents, 'static { ', 'aaaa'), contents.replace('{  }', '{ aaaa }'));
     }
 
     @Test
     void testContentAssistInStaticInitializers3() {
         String contents = 'class A { static { getCan } }'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'getCan'))
-        proposalExists(proposals, 'getCanonicalName', 1)
+        applyProposalAndCheck(checkUniqueProposal(contents, 'getCan', 'getCanonicalName()'), contents.replace('getCan', 'getCanonicalName()'));
     }
 
     @Test
     void testContentAssistInStaticInitializers4() {
-        String contents = 'class A { public static String NAME = getCan }'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'getCan'))
-        proposalExists(proposals, 'getCanonicalName', 1)
+        String contents = 'class A { public static final String NAME = getCan }'
+        applyProposalAndCheck(checkUniqueProposal(contents, 'getCan', 'getCanonicalName()'), contents.replace('getCan', 'getCanonicalName()'));
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/374
+    void testContentAssistInStaticInitializers5() {
+        String contents = 'class A { public static final String NAME = canNam }'
+        applyProposalAndCheck(checkUniqueProposal(contents, 'canNam', 'canonicalName', 'this.canonicalName'), contents.replace('canNam', 'this.canonicalName'));
     }
 
     @Test
-    void testContentAssistInStaticInitializers5() {
+    void testContentAssistInStaticInitializers6() {
         String contents = 'class A { static { getMeta } }'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'get'))
         proposalExists(proposals, 'getMetaPropertyValues', 1)

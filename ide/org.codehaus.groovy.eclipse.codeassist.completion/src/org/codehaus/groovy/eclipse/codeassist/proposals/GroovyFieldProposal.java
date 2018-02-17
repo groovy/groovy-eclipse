@@ -24,6 +24,8 @@ import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.eclipse.jdt.core.CompletionFlags;
 import org.eclipse.jdt.core.CompletionProposal;
+import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.codeassist.impl.AssistOptions;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
@@ -53,10 +55,18 @@ public class GroovyFieldProposal extends AbstractGroovyProposal {
         }
 
         GroovyCompletionProposal proposal = new GroovyCompletionProposal(CompletionProposal.METHOD_REF, context.completionLocation);
-        proposal.setCompletion(proposal.getName());
+        proposal.setName(field.getName().toCharArray());
+
+        char[] completion = proposal.getName();
+        if (context.location == ContentAssistLocation.STATEMENT &&
+            field.getDeclaringClass().equals(VariableScope.CLASS_CLASS_NODE)) {
+            // qualifier is required for references to members of java.lang.Class
+            completion = CharOperation.concat("this.".toCharArray(), completion);
+        }
+
+        proposal.setCompletion(completion);
         proposal.setDeclarationSignature(ProposalUtils.createTypeSignature(field.getDeclaringClass()));
         proposal.setFlags(field.getModifiers());
-        proposal.setName(field.getName().toCharArray());
         proposal.setRelevance(computeRelevance(context));
         proposal.setReplaceRange(context.completionLocation - context.completionExpression.length(), context.completionEnd);
         proposal.setSignature(ProposalUtils.createTypeSignature(field.getType()));
