@@ -164,9 +164,9 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         this.options = new AssistOptions(javaContext.getProject().getOptions(true));
 
         try {
-            this.allTypesInUnit = this.unit.getAllTypes();
+            this.allTypesInUnit = unit.getAllTypes();
         } catch (JavaModelException e) {
-            GroovyContentAssist.logError("Problem with type completion", e);
+            GroovyContentAssist.logError(e);
             this.allTypesInUnit = new IType[0];
         }
     }
@@ -504,7 +504,12 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                     }
                 }
             }
+
+            if (context.location == ContentAssistLocation.EXCEPTIONS && isThrowableType((IType) javaProposal.getJavaElement())) {
+                proposal.setRelevance(proposal.getRelevance() + 50);
+            }
         }
+
         javaProposal.setTriggerCharacters(ProposalUtils.TYPE_TRIGGERS);
         javaProposal.setRelevance(proposal.getRelevance());
         return javaProposal;
@@ -694,13 +699,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         proposal.setParameterTypeNames(parameterTypes);
     }
 
-    private ProposalFormattingOptions getProposalOptions() {
-        if (groovyProposalPrefs == null) {
-            groovyProposalPrefs = ProposalFormattingOptions.newFromOptions();
-        }
-        return groovyProposalPrefs;
-    }
-
     private char[] createConstructorSignature(char[][] parameterTypes, boolean isQualified) {
         char[][] parameterTypeSigs;
         if (parameterTypes == null) {
@@ -721,6 +719,24 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         GroovyCompletionProposal proposal = new GroovyCompletionProposal(kind, completionOffset);
         proposal.setNameLookup(nameLookup);
         return proposal;
+    }
+
+    private ProposalFormattingOptions getProposalOptions() {
+        if (groovyProposalPrefs == null) {
+            groovyProposalPrefs = ProposalFormattingOptions.newFromOptions();
+        }
+        return groovyProposalPrefs;
+    }
+
+    private boolean isThrowableType(IType type) {
+        try {
+            if (type != null && type.isClass() && type.newSupertypeHierarchy(null)
+                    .contains(unit.getJavaProject().findType("java.lang.Throwable"))) {
+                return true;
+            }
+        } catch (Exception e) {
+        }
+        return false;
     }
 
     private int computeRelevanceForCaseMatching(char[] token, char[] proposalName) {
@@ -807,13 +823,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         onDemandImports = starImports;
     }
 
-    private static boolean isCamelCaseMatch(String pattern, String candidate) {
-        if (pattern == null || pattern.length() == 0) {
-            return true;
-        }
-        return SearchPattern.camelCaseMatch(pattern, candidate);
-    }
-
     private boolean isImported(char[] packName, char[] typeName) {
         boolean imported = false, conflict = false;
         if (imports != null) {
@@ -851,6 +860,13 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             return binding.reference.getSimpleName();
         }
         return binding.compoundName[binding.compoundName.length - 1];
+    }
+
+    private static boolean isCamelCaseMatch(String pattern, String candidate) {
+        if (pattern == null || pattern.length() == 0) {
+            return true;
+        }
+        return SearchPattern.camelCaseMatch(pattern, candidate);
     }
 
     /**

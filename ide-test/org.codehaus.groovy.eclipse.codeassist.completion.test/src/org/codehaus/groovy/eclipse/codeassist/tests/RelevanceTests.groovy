@@ -15,8 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
-import groovy.transform.NotYetImplemented
-
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Ignore
 import org.junit.Test
@@ -411,7 +409,7 @@ final class RelevanceTests extends CompletionTestSuite {
         assertProposalOrdering(proposals, 'String - java.lang', 'StringBuffer - java.lang', 'StringBuilder - java.lang', 'Stack - java.util')
     }
 
-    @Test @NotYetImplemented
+    @Test
     void testCatchParameterType() {
         String contents = '''\
             try {

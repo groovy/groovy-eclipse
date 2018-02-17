@@ -318,7 +318,8 @@ public class SourceUnit extends ProcessingUnit {
         // GRECLIPSE end
     }
 
-    //---------------------------------------------------------------------------    // SOURCE SAMPLING
+    //---------------------------------------------------------------------------
+    // SOURCE SAMPLING
 
     /**
      * Returns a sampling of the source at the specified line and column,
