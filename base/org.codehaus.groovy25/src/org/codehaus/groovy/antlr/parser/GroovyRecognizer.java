@@ -9306,77 +9306,95 @@ inputState.guessing--;
         AST id_AST = null;
         Token first = LT(1);
         
-        nls();
-        {
-        switch ( LA(1)) {
-        case FINAL:
-        {
-            AST tmp227_AST = null;
-            tmp227_AST = astFactory.create(LT(1));
-            astFactory.addASTChild(currentAST, tmp227_AST);
-            match(FINAL);
-            break;
-        }
-        case LITERAL_def:
-        case IDENT:
-        case NLS:
-        {
-            break;
-        }
-        default:
-        {
-            throw new NoViableAltException(LT(1), getFilename());
-        }
-        }
-        }
-        {
-        switch ( LA(1)) {
-        case LITERAL_def:
-        {
-            AST tmp228_AST = null;
-            tmp228_AST = astFactory.create(LT(1));
-            astFactory.addASTChild(currentAST, tmp228_AST);
-            match(LITERAL_def);
-            break;
-        }
-        case IDENT:
-        case NLS:
-        {
-            break;
-        }
-        default:
-        {
-            throw new NoViableAltException(LT(1), getFilename());
-        }
-        }
-        }
-        {
-        if ((LA(1)==IDENT||LA(1)==NLS) && (_tokenSet_80.member(LA(2)))) {
-            multicatch_types();
-            m_AST = (AST)returnAST;
-            astFactory.addASTChild(currentAST, returnAST);
-        }
-        else if ((LA(1)==IDENT) && (LA(2)==RPAREN)) {
-        }
-        else {
-            throw new NoViableAltException(LT(1), getFilename());
-        }
-        
-        }
-        id = LT(1);
-        id_AST = astFactory.create(id);
-        match(IDENT);
-        if ( inputState.guessing==0 ) {
+        try {      // for error handling
+            nls();
+            {
+            switch ( LA(1)) {
+            case FINAL:
+            {
+                AST tmp227_AST = null;
+                tmp227_AST = astFactory.create(LT(1));
+                astFactory.addASTChild(currentAST, tmp227_AST);
+                match(FINAL);
+                break;
+            }
+            case LITERAL_def:
+            case IDENT:
+            case NLS:
+            {
+                break;
+            }
+            default:
+            {
+                throw new NoViableAltException(LT(1), getFilename());
+            }
+            }
+            }
+            {
+            switch ( LA(1)) {
+            case LITERAL_def:
+            {
+                AST tmp228_AST = null;
+                tmp228_AST = astFactory.create(LT(1));
+                astFactory.addASTChild(currentAST, tmp228_AST);
+                match(LITERAL_def);
+                break;
+            }
+            case IDENT:
+            case NLS:
+            {
+                break;
+            }
+            default:
+            {
+                throw new NoViableAltException(LT(1), getFilename());
+            }
+            }
+            }
+            {
+            if ((LA(1)==IDENT||LA(1)==NLS) && (_tokenSet_80.member(LA(2)))) {
+                multicatch_types();
+                m_AST = (AST)returnAST;
+                astFactory.addASTChild(currentAST, returnAST);
+            }
+            else if ((LA(1)==IDENT) && (LA(2)==RPAREN)) {
+            }
+            else {
+                throw new NoViableAltException(LT(1), getFilename());
+            }
+            
+            }
+            id = LT(1);
+            id_AST = astFactory.create(id);
+            match(IDENT);
+            if ( inputState.guessing==0 ) {
+                multicatch_AST = (AST)currentAST.root;
+                
+                multicatch_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(MULTICATCH,"MULTICATCH",first,LT(1))).add(m_AST).add(id_AST));
+                
+                currentAST.root = multicatch_AST;
+                currentAST.child = multicatch_AST!=null &&multicatch_AST.getFirstChild()!=null ?
+                    multicatch_AST.getFirstChild() : multicatch_AST;
+                currentAST.advanceChildToEnd();
+            }
             multicatch_AST = (AST)currentAST.root;
-            
-            multicatch_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(MULTICATCH,"MULTICATCH",first,LT(1))).add(m_AST).add(id_AST));
-            
-            currentAST.root = multicatch_AST;
-            currentAST.child = multicatch_AST!=null &&multicatch_AST.getFirstChild()!=null ?
-                multicatch_AST.getFirstChild() : multicatch_AST;
-            currentAST.advanceChildToEnd();
         }
-        multicatch_AST = (AST)currentAST.root;
+        catch (RecognitionException e) {
+            if (inputState.guessing==0) {
+                
+                // finish invalid member-value pair if the closing parenthesis is next
+                if (m_AST != null && LT(1).getType() == RPAREN) {
+                reportError(e);
+                id_AST = missingIdentifier(first, LT(1));
+                multicatch_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(MULTICATCH,"MULTICATCH",first,LT(1))).add(m_AST).add(id_AST));
+                } else {
+                throw e;
+                }
+                
+            } else {
+                throw e;
+            }
+        }
         returnAST = multicatch_AST;
     }
     

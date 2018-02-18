@@ -288,12 +288,15 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
         // check parameter type
         if (check(node.getType()) || (check(node) && completionOffset < node.getNameStart())) {
-            createContext(node, blockStack.getLast(), ContentAssistLocation.PARAMETER);
+            boolean isCatchParam = (blockStack.getLast() instanceof CatchStatement);
+            createContext(node, blockStack.getLast(), isCatchParam ? ContentAssistLocation.EXCEPTIONS : ContentAssistLocation.PARAMETER);
         }
 
         // check parameter name
         if (node.getNameStart() <= completionOffset && completionOffset <= node.getNameEnd()) {
-            createContext(node, blockStack.getLast(), ContentAssistLocation.PARAMETER);
+            boolean isCatchParam = (blockStack.getLast() instanceof CatchStatement &&
+                (node.getStart() == node.getNameStart() || node.getName().equals("?")));
+            createContext(node, blockStack.getLast(), isCatchParam ? ContentAssistLocation.EXCEPTIONS : ContentAssistLocation.PARAMETER);
         }
 
         // check for default value expression (that was moved during verification)

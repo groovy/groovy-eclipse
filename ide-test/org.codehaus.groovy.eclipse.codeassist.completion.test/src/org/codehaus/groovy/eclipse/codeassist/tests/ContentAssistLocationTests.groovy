@@ -24,11 +24,11 @@ import org.junit.Test
 
 final class ContentAssistLocationTests extends CompletionTestSuite {
 
-    private void assertLocation(String contents, int offset, ContentAssistLocation location) {
+    private void assertLocation(String contents, int offset, ContentAssistLocation expectedLocation) {
         def unit = addGroovySource(contents, nextUnitName())
         def context = new GroovyCompletionProposalComputer().createContentAssistContext(unit, offset, new Document(unit.buffer.contents))
 
-        assert context.location == location : "Invalid location at index $offset in text:\n$contents"
+        assert context.location == expectedLocation
     }
 
     @Test
@@ -536,29 +536,89 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     @Test
     void testExceptions1() {
         String contents = 'class A { void t(v y = hh) throws Ex {} }'
-        int loc = contents.indexOf('Ex') + 1
-        assertLocation(contents, loc, ContentAssistLocation.EXCEPTIONS)
+        assertLocation(contents, getLastIndexOf(contents, 'Ex'), ContentAssistLocation.EXCEPTIONS)
     }
 
     @Test
     void testExceptions2() {
         String contents = 'class A { void t(v y = hh) throws T {} }'
-        int loc = contents.indexOf('ws ') + 4
-        assertLocation(contents, loc, ContentAssistLocation.EXCEPTIONS)
+        assertLocation(contents, getLastIndexOf(contents, 'T'), ContentAssistLocation.EXCEPTIONS)
     }
 
     @Test
     void testExceptions3() {
         String contents = 'class A { void t(v y = hh) throws Ex, T {} }'
-        int loc = contents.indexOf(', ') + 3
-        assertLocation(contents, loc, ContentAssistLocation.EXCEPTIONS)
+        assertLocation(contents, getLastIndexOf(contents, 'T'), ContentAssistLocation.EXCEPTIONS)
     }
 
     @Test
     void testExceptions4() {
         String contents = 'class A { void t(v y = hh) throws Ex, Th {} }'
-        int loc = contents.indexOf('Th') + 2
-        assertLocation(contents, loc, ContentAssistLocation.EXCEPTIONS)
+        assertLocation(contents, getLastIndexOf(contents, 'Th'), ContentAssistLocation.EXCEPTIONS)
+    }
+
+    @Test
+    void testExceptions5() {
+        String contents = '''\
+            class A {
+              void m() {
+                try {
+                  ;
+                } catch (Th) {
+                }
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents, getLastIndexOf(contents, 'Th'), ContentAssistLocation.EXCEPTIONS)
+    }
+
+    @Test
+    void testExceptions5a() {
+        String contents = '''\
+            class A {
+              void m() {
+                try {
+                  ;
+                } catch (Th any) {
+                }
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents, getLastIndexOf(contents, 'Th'), ContentAssistLocation.EXCEPTIONS)
+        assertLocation(contents, getLastIndexOf(contents, 'any'), ContentAssistLocation.PARAMETER)
+    }
+
+    @Test
+    void testExceptions6() {
+        String contents = '''\
+            class A {
+              void m() {
+                try {
+                  ;
+                } catch (Ex | Th) {
+                }
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents, getLastIndexOf(contents, 'Ex'), ContentAssistLocation.EXCEPTIONS)
+        assertLocation(contents, getLastIndexOf(contents, 'Th'), ContentAssistLocation.EXCEPTIONS)
+    }
+
+    @Test
+    void testExceptions7() {
+        String contents = '''\
+            class A {
+              void m() {
+                try {
+                  ;
+                } catch (Ex | Th any) {
+                }
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents, getLastIndexOf(contents, 'Ex'), ContentAssistLocation.EXCEPTIONS)
+        assertLocation(contents, getLastIndexOf(contents, 'Th'), ContentAssistLocation.EXCEPTIONS)
+        assertLocation(contents, getLastIndexOf(contents, 'any'), ContentAssistLocation.PARAMETER)
     }
 
     @Test

@@ -1982,8 +1982,21 @@ multicatch
 {Token first = LT(1);}
     :   nls! (FINAL)? ("def")? (m:multicatch_types)? id:IDENT!
         {
-          #multicatch = #(create(MULTICATCH,"MULTICATCH",first, LT(1)),m,id);
+          #multicatch = #(create(MULTICATCH,"MULTICATCH",first,LT(1)),m,id);
         }
+        // GRECLIPSE add
+        exception
+        catch [RecognitionException e] {
+            // finish invalid member-value pair if the closing parenthesis is next
+            if (#m != null && LT(1).getType() == RPAREN) {
+                reportError(e);
+                #id = missingIdentifier(first, LT(1));
+                #multicatch = #(create(MULTICATCH,"MULTICATCH",first,LT(1)),m,id);
+            } else {
+                throw e;
+            }
+        }
+        // GRECLIPSE end
     ;
 
 /*OBS*
