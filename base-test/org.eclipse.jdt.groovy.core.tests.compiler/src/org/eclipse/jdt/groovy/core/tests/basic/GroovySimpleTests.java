@@ -1152,21 +1152,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         );
     }
 
-    @Test
-    public void testBrokenPackage() {
-        runNegativeTest(new String[] {
-            "Foo.groovy",
-            "package \n"+
-            "class Name { }\n",
-        },
-        "----------\n" +
-        "1. ERROR in Foo.groovy (at line 1)\n" +
-        "\tpackage \n" +
-        "\t ^\n" +
-        "Groovy:Invalid package specification @ line 1, column 1.\n" +
-        "----------\n");
-    }
-
     @Test // GROOVY-4219
     public void testGRE637() {
         runConformTest(new String[] {
@@ -1269,44 +1254,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "\t                       ^^^^^^^\n" +
         "The import java.util.regex.Pattern conflicts with a type defined in the same file\n" +
         "----------\n");
-    }
-
-    @Test
-    public void testBrokenPackage2() {
-        runNegativeTest(new String[] {
-            "Foo.groovy",
-            "package ;\n"+
-            "class Name { }\n",
-        },
-        "----------\n" +
-        "1. ERROR in Foo.groovy (at line 1)\n" +
-        "\tpackage ;\n" +
-        "\t ^\n" +
-        "Groovy:Invalid package specification @ line 1, column 1.\n" +
-        "----------\n");
-    }
-
-    // does the second error now get reported after the package problem
-    @Test
-    public void testBrokenPackage3() {
-        runNegativeTest(new String[] {
-                "Foo.groovy",
-                "package ;\n"+
-                "class Name { \n" +
-                "  asdf\n"+
-                "}\n",
-            },
-            "----------\n" +
-            "1. ERROR in Foo.groovy (at line 1)\n" +
-            "\tpackage ;\n" +
-            "\t ^\n" +
-            "Groovy:Invalid package specification @ line 1, column 1.\n" +
-            "----------\n" +
-            "2. ERROR in Foo.groovy (at line 3)\n" +
-            "\tasdf\n" +
-            "\t^\n" +
-            "Groovy:unexpected token: asdf @ line 3, column 3.\n" +
-            "----------\n");
     }
 
     @Test
@@ -5296,8 +5243,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             assertTrue((tds[3].bits&ASTNode.IsSecondaryType)!=0);
     }
 
-    // FIXASC test varargs with default parameter values (methods/ctors)
-
     @Test // static imports
     public void testStaticImports_JtoG() {
         runConformTest(new String[] {
@@ -5451,27 +5396,79 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testParsingBlankImport_538() throws Exception {
+    public void testParsingBlankPackage() {
         runNegativeTest(new String[] {
-                "A.groovy",
-                "import "
-            },
-            "----------\n" +
-            "1. ERROR in A.groovy (at line 1)\n" +
-            "\timport \n" +
-            "\t ^\n" +
-            "Groovy:Invalid import specification @ line 1, column 1.\n" +
-            "----------\n");
+            "Foo.groovy",
+            "package \n"+
+            "class Name { }\n",
+        },
+        "----------\n" +
+        "1. ERROR in Foo.groovy (at line 1)\n" +
+        "\tpackage \n" +
+        "\t^\n" +
+        "Groovy:Invalid package specification @ line 1, column 0.\n" +
+        "----------\n");
+    }
+
+    @Test
+    public void testParsingBlankPackage2() {
+        runNegativeTest(new String[] {
+            "Foo.groovy",
+            "package ;\n"+
+            "class Name { }\n",
+        },
+        "----------\n" +
+        "1. ERROR in Foo.groovy (at line 1)\n" +
+        "\tpackage ;\n" +
+        "\t^\n" +
+        "Groovy:Invalid package specification @ line 1, column 0.\n" +
+        "----------\n");
+    }
+
+    @Test // does the second error now get reported after the package problem
+    public void testParsingBlankPackage3() {
+        runNegativeTest(new String[] {
+            "Foo.groovy",
+            "package ;\n"+
+            "class Name { \n" +
+            "  asdf\n"+
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in Foo.groovy (at line 1)\n" +
+        "\tpackage ;\n" +
+        "\t^\n" +
+        "Groovy:Invalid package specification @ line 1, column 0.\n" +
+        "----------\n" +
+        "2. ERROR in Foo.groovy (at line 3)\n" +
+        "\tasdf\n" +
+        "\t^\n" +
+        "Groovy:unexpected token: asdf @ line 3, column 3.\n" +
+        "----------\n");
+    }
+
+    @Test
+    public void testParsingBlankImport_538() {
+        runNegativeTest(new String[] {
+            "A.groovy",
+            "import "
+        },
+        "----------\n" +
+        "1. ERROR in A.groovy (at line 1)\n" +
+        "\timport \n" +
+        "\t^^^^^^^\n" +
+        "Groovy:unable to resolve class ?\n" +
+        "----------\n");
 
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);
         assertFalse(mn.encounteredUnrecoverableError());
 
         List<ImportNode> imports = mn.getImports();
-        ImportNode brokenImportNode = imports.get(0);
-        assertEquals(0, brokenImportNode.getStart());
-        assertEquals(6, brokenImportNode.getEnd());
-        assertEquals("java.lang.Object", brokenImportNode.getType().getName());
+        ImportNode recoveredImport = imports.get(0);
+        assertEquals(0, recoveredImport.getStart());
+        assertEquals(7, recoveredImport.getEnd());
+        assertEquals("?", recoveredImport.getType().getName());
 
         ClassNode cn = mn.getClasses().get(0);
         assertNotNull(cn);
@@ -5479,25 +5476,53 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testParsingDotTerminatedImport_538() throws Exception {
+    public void testParsingBlankImport2_538() {
         runNegativeTest(new String[] {
-                "A.groovy",
-                "import foo."
-            },
-            "----------\n" +
-            "1. ERROR in A.groovy (at line 1)\n" +
-            "\timport foo.\n" +
-            "\t        ^\n" +
-            "Groovy:Invalid import @ line 1, column 8.\n" +
-            "----------\n");
+            "A.groovy",
+            "import ;"
+        },
+        "----------\n" +
+        "1. ERROR in A.groovy (at line 1)\n" +
+        "\timport ;\n" +
+        "\t^^^^^^^\n" +
+        "Groovy:unable to resolve class ?\n" +
+        "----------\n");
+
+        ModuleNode mn = getModuleNode("A.groovy");
+        assertNotNull(mn);
+        assertFalse(mn.encounteredUnrecoverableError());
+
+        List<ImportNode> imports = mn.getImports();
+        ImportNode recoveredImport = imports.get(0);
+        assertEquals(0, recoveredImport.getStart());
+        assertEquals(7, recoveredImport.getEnd());
+        assertEquals("?", recoveredImport.getType().getName());
+
+        ClassNode cn = mn.getClasses().get(0);
+        assertNotNull(cn);
+        assertTrue(cn.getName().equals("A"));
+    }
+
+    @Test
+    public void testParsingDotTerminatedImport_538() {
+        runNegativeTest(new String[] {
+            "A.groovy",
+            "import foo."
+        },
+        "----------\n" +
+        "1. ERROR in A.groovy (at line 1)\n" +
+        "\timport foo.\n" +
+        "\t        ^\n" +
+        "Groovy:Invalid import @ line 1, column 8.\n" +
+        "----------\n");
 
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);
         assertFalse(mn.encounteredUnrecoverableError());
 
         List<ImportNode> imports = mn.getStarImports();
-        ImportNode brokenImportNode = imports.get(0);
-        assertEquals("foo.", brokenImportNode.getPackageName());
+        ImportNode recoveredImport = imports.get(0);
+        assertEquals("foo.", recoveredImport.getPackageName());
 
         ClassNode cn = mn.getClasses().get(0);
         assertNotNull(cn);
@@ -5505,25 +5530,28 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testParsingBlankImportStatic_538() throws Exception {
+    public void testParsingBlankImportStatic_538() {
         runNegativeTest(new String[] {
-                "A.groovy",
-                "import static \n"
-            },
-            "----------\n" +
-            "1. ERROR in A.groovy (at line 1)\n" +
-            "\timport static \n" +
-            "\t ^\n" +
-            "Groovy:Invalid import static specification @ line 1, column 1.\n" +
-            "----------\n");
+            "A.groovy",
+            "import static \n"
+        },
+        "----------\n" +
+        "1. ERROR in A.groovy (at line 1)\n" +
+        "\timport static \n" +
+        "\t^^^^^^^^^^^^^^\n" +
+        "Groovy:unable to resolve class ?\n" +
+        "----------\n");
 
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);
         assertFalse(mn.encounteredUnrecoverableError());
 
-        Map<String, ImportNode> imports = mn.getStaticImports();
-        ImportNode brokenImportNode = imports.get("");
-        assertEquals("java.lang.Object", brokenImportNode.getType().getName());
+        List<ImportNode> imports = mn.getImports();
+        ImportNode recoveredImport = imports.get(0);
+        assertEquals(0, recoveredImport.getStart());
+        assertEquals(14, recoveredImport.getEnd());
+        assertEquals("?", recoveredImport.getType().getName());
+        assertTrue(mn.getStaticImports().isEmpty());
 
         ClassNode cn = mn.getClasses().get(0);
         assertNotNull(cn);
@@ -5531,30 +5559,59 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testParsingDotTerminatedImportStatic_538() throws Exception {
+    public void testParsingBlankImportStatic2_538() {
         runNegativeTest(new String[] {
-                "A.groovy",
-                "import static foo.Bar."
-            },
-            "----------\n" +
-            "1. ERROR in A.groovy (at line 1)\n" +
-            "\timport static foo.Bar.\n" +
-            "\t              ^^^^^^^\n" +
-            "Groovy:unable to resolve class foo.Bar\n" +
-            "----------\n" +
-            "2. ERROR in A.groovy (at line 1)\n" +
-            "\timport static foo.Bar.\n" +
-            "\t               ^\n" +
-            "Groovy:Invalid import @ line 1, column 15.\n" +
-            "----------\n");
+            "A.groovy",
+            "import static ;\n"
+        },
+        "----------\n" +
+        "1. ERROR in A.groovy (at line 1)\n" +
+        "\timport static ;\n" +
+        "\t^^^^^^^^^^^^^^\n" +
+        "Groovy:unable to resolve class ?\n" +
+        "----------\n");
+
+        ModuleNode mn = getModuleNode("A.groovy");
+        assertNotNull(mn);
+        assertFalse(mn.encounteredUnrecoverableError());
+
+        List<ImportNode> imports = mn.getImports();
+        ImportNode recoveredImport = imports.get(0);
+        assertEquals(0, recoveredImport.getStart());
+        assertEquals(14, recoveredImport.getEnd());
+        assertEquals("?", recoveredImport.getType().getName());
+        assertTrue(mn.getStaticImports().isEmpty());
+
+        ClassNode cn = mn.getClasses().get(0);
+        assertNotNull(cn);
+        assertTrue(cn.getName().equals("A"));
+    }
+
+    @Test
+    public void testParsingDotTerminatedImportStatic_538() {
+        runNegativeTest(new String[] {
+            "A.groovy",
+            "import static foo.Bar."
+        },
+        "----------\n" +
+        "1. ERROR in A.groovy (at line 1)\n" +
+        "\timport static foo.Bar.\n" +
+        "\t              ^^^^^^^\n" +
+        "Groovy:unable to resolve class foo.Bar\n" +
+        "----------\n" +
+        "2. ERROR in A.groovy (at line 1)\n" +
+        "\timport static foo.Bar.\n" +
+        "\t               ^\n" +
+        "Groovy:Invalid import @ line 1, column 15.\n" +
+        "----------\n");
 
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);
         assertFalse(mn.encounteredUnrecoverableError());
 
         Map<String, ImportNode> imports = mn.getStaticStarImports();
-        ImportNode brokenImportNode = imports.get("foo.Bar");
-        assertEquals("foo.Bar", brokenImportNode.getType().getName());
+        ImportNode recoveredImport = imports.get("foo.Bar");
+        assertEquals("foo.Bar", recoveredImport.getType().getName());
 
         ClassNode cn = mn.getClasses().get(0);
         assertNotNull(cn);
@@ -5562,27 +5619,27 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testParsingDotTerminatedImportFollowedByClassDeclaration_538() throws Exception {
+    public void testParsingDotTerminatedImportFollowedByClassDeclaration_538() {
         runNegativeTest(new String[] {
-                "A.groovy",
-                "import foo.\n"+
-                "\n"+
-                "class Wibble {}\n"
-            },
-            "----------\n" +
-            "1. ERROR in A.groovy (at line 1)\n" +
-            "\timport foo.\n" +
-            "\t        ^\n" +
-            "Groovy:Invalid import @ line 1, column 8.\n" +
-            "----------\n");
+            "A.groovy",
+            "import foo.\n"+
+            "\n"+
+            "class Wibble {}\n"
+        },
+        "----------\n" +
+        "1. ERROR in A.groovy (at line 1)\n" +
+        "\timport foo.\n" +
+        "\t        ^\n" +
+        "Groovy:Invalid import @ line 1, column 8.\n" +
+        "----------\n");
 
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);
         assertFalse(mn.encounteredUnrecoverableError());
 
         List<ImportNode> imports = mn.getStarImports();
-        ImportNode brokenImportNode = imports.get(0);
-        assertEquals("foo.", brokenImportNode.getPackageName());
+        ImportNode recoveredImport = imports.get(0);
+        assertEquals("foo.", recoveredImport.getPackageName());
 
         ClassNode cn = mn.getClasses().get(0);
         assertNotNull(cn);
@@ -5590,27 +5647,27 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testParsingDotTerminatedImportFollowedByModifierAndClassDeclaration_538() throws Exception {
+    public void testParsingDotTerminatedImportFollowedByModifierAndClassDeclaration_538() {
         runNegativeTest(new String[] {
-                "A.groovy",
-                "import foo.\n"+
-                "\n"+
-                "public class Wibble {}\n"
-            },
-            "----------\n" +
-            "1. ERROR in A.groovy (at line 1)\n" +
-            "\timport foo.\n" +
-            "\t        ^\n" +
-            "Groovy:Invalid import @ line 1, column 8.\n" +
-            "----------\n");
+            "A.groovy",
+            "import foo.\n"+
+            "\n"+
+            "public class Wibble {}\n"
+        },
+        "----------\n" +
+        "1. ERROR in A.groovy (at line 1)\n" +
+        "\timport foo.\n" +
+        "\t        ^\n" +
+        "Groovy:Invalid import @ line 1, column 8.\n" +
+        "----------\n");
 
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);
         assertFalse(mn.encounteredUnrecoverableError());
 
         List<ImportNode> imports = mn.getStarImports();
-        ImportNode brokenImportNode = imports.get(0);
-        assertEquals("foo.", brokenImportNode.getPackageName());
+        ImportNode recoveredImport = imports.get(0);
+        assertEquals("foo.", recoveredImport.getPackageName());
 
         ClassNode cn = mn.getClasses().get(0);
         assertNotNull(cn);
@@ -5618,27 +5675,27 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testParsingBlankImportFollowedByClassDeclaration_538() throws Exception {
+    public void testParsingBlankImportFollowedByClassDeclaration_538() {
         runNegativeTest(new String[] {
-                "A.groovy",
-                "import\n"+
-                "\n"+
-                "public class Wibble {}\n"
-            },
-            "----------\n" +
-            "1. ERROR in A.groovy (at line 1)\n" +
-            "\timport\n" +
-            "\t ^\n" +
-            "Groovy:Invalid import specification @ line 1, column 1.\n" +
-            "----------\n");
+            "A.groovy",
+            "import\n"+
+            "\n"+
+            "public class Wibble {}\n"
+        },
+        "----------\n" +
+        "1. ERROR in A.groovy (at line 1)\n" +
+        "\timport\n" +
+        "\t^^^^^^\n" +
+        "Groovy:unable to resolve class ?\n" +
+        "----------\n");
 
         ModuleNode mn = getModuleNode("A.groovy");
         assertNotNull(mn);
         assertFalse(mn.encounteredUnrecoverableError());
 
         List<ImportNode> imports = mn.getImports();
-        ImportNode brokenImportNode = imports.get(0);
-        assertEquals("java.lang.Object", brokenImportNode.getType().getName());
+        ImportNode recoveredImport = imports.get(0);
+        assertEquals("?", recoveredImport.getType().getName());
 
         ClassNode cn = mn.getClasses().get(0);
         assertNotNull(cn);
@@ -5646,24 +5703,24 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testParsingIncompleteClassDeclaration_495() throws Exception {
+    public void testParsingIncompleteClassDeclaration_495() {
         runNegativeTest(new String[] {
-                "A.groovy",
-                "class Bar {}\n"+
-                "class FooTest extends Bar { }\n" +
-                "class BBB extends FooTes"
-            },
-            "----------\n" +
-            "1. ERROR in A.groovy (at line 3)\n" +
-            "\tclass BBB extends FooTes\n" +
-            "\t                  ^^^^^^\n" +
-            "Groovy:unable to resolve class FooTes \n" +
-            "----------\n" +
-            "2. ERROR in A.groovy (at line 3)\n" +
-            "\tclass BBB extends FooTes\n" +
-            "\t                       ^\n" +
-            "Groovy:Malformed class declaration @ line 3, column 24.\n" +
-            "----------\n");
+            "A.groovy",
+            "class Bar {}\n"+
+            "class FooTest extends Bar { }\n" +
+            "class BBB extends FooTes"
+        },
+        "----------\n" +
+        "1. ERROR in A.groovy (at line 3)\n" +
+        "\tclass BBB extends FooTes\n" +
+        "\t                  ^^^^^^\n" +
+        "Groovy:unable to resolve class FooTes \n" +
+        "----------\n" +
+        "2. ERROR in A.groovy (at line 3)\n" +
+        "\tclass BBB extends FooTes\n" +
+        "\t                       ^\n" +
+        "Groovy:Malformed class declaration @ line 3, column 24.\n" +
+        "----------\n");
 
         // missing end curly, but that shouldn't cause us to discard what we successfully parsed
         ModuleNode mn = getModuleNode("A.groovy");
@@ -5682,7 +5739,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testInnerClass1() throws Exception {
+    public void testInnerClass1() {
         runConformTest(new String[] {
             "A.groovy",
             "def foo = new Runnable() {\n" +
@@ -5695,7 +5752,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testInnerClass2() throws Exception {
+    public void testInnerClass2() {
         runConformTest(new String[] {
             "A.groovy",
             "def foo = new Runnable() {\n" +
@@ -5713,7 +5770,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testInnerClass3() throws Exception {
+    public void testInnerClass3() {
         runConformTest(new String[] {
             "A.groovy",
             "def foo() {\n" +
@@ -5728,7 +5785,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testInnerClass4() throws Exception {
+    public void testInnerClass4() {
         runConformTest(new String[] {
             "A.groovy",
             "class Foo {\n" +
@@ -5743,7 +5800,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testInnerClass5() throws Exception {
+    public void testInnerClass5() {
         runNegativeTest(new String[] {
             "A.groovy",
             "def foo = new Runnable() {\n" +

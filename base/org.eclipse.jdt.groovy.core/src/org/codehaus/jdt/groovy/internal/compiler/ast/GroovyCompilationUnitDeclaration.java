@@ -953,7 +953,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 ImportReference ref = new ImportReference(splits, positions, true, Flags.AccDefault);
                 ref.annotations = createAnnotations(packageNode.getAnnotations());
                 ref.declarationEnd = ref.sourceEnd + trailerLength(packageNode);
-                ref.declarationSourceStart = ref.sourceStart - 8; // "package ".length()
+                ref.declarationSourceStart = Math.max(0, ref.sourceStart - "package ".length());
                 ref.declarationSourceEnd = ref.sourceEnd;
 
                 unitDeclaration.currentPackage = ref;
