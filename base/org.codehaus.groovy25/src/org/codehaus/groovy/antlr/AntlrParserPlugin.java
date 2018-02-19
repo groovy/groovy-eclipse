@@ -432,22 +432,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             processAnnotations(annotations, node);
             node = node.getNextSibling();
         }
-        // GRECLIPSE add
-        // cope with a parsed 'null' package (GRE439)
-        if (node == null) return;
-        // GRECLIPSE end
         String name = qualifiedName(node);
         // TODO should we check package node doesn't already exist? conflict?
+        PackageNode packageNode = setPackage(name, annotations);
         // GRECLIPSE edit
-        //PackageNode packageNode = setPackage(name, annotations);
         //configureAST(packageNode, packageDef);
-        setPackageName(name);
-        if (name != null && !name.isEmpty()) {
-            name += '.';
-        }
-        PackageNode packageNode = new PackageNode(name);
-        packageNode.addAnnotations(annotations);
-        output.setPackage(packageNode);
         configureAST(packageNode, node);
         // GRECLIPSE end
     }
@@ -477,24 +466,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 alias = identifier(aliasNode);
             }
 
-            // GRECLIPSE add
-            // node == null means it is a broken entry and the parser recovered.  The error will be already
-            // be recorded against the file
-            if (node == null) {
-                if (isStatic) {
-                    addStaticImport(ClassHelper.OBJECT_TYPE, "", null, annotations);
-                } else {
-                    addImport(ClassHelper.OBJECT_TYPE, "", null, annotations);
-                }
-                return;
-            }
-            // GRECLIPSE end
-
             if (node.getNumberOfChildren() == 0) {
                 String name = identifier(node);
                 // import is like  "import Foo"
                 ClassNode type = ClassHelper.make(name);
-                assert !(type instanceof ImmutableClassNode);
                 configureAST(type, importNode);
                 addImport(type, name, alias, annotations);
                 return;

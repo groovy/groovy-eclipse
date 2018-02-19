@@ -361,6 +361,8 @@ tokens {
         ident.setText("?");
         ident.setLine(line);
         ident.setColumn(column);
+        ident.setLineLast(line);
+        ident.setColumnLast(column + 1);
         return #(create(ident.getType(), ident.getText(), ident, next));
     }
 
@@ -453,37 +455,33 @@ tokens {
         Token lt = null;
         try { lt = LT(1); }
         catch (TokenStreamException e) { }
-        if (lt == null)  lt = Token.badToken;
-
-        Map row = new HashMap();
-        row.put("error",    message);
-        row.put("filename", getFilename());
-        row.put("line",     Integer.valueOf(lt.getLine()));
-        row.put("column",   Integer.valueOf(lt.getColumn()));
-        errorList.add(row);
-    }
-
-    /**
-     * Report a recovered error and specify the token.
-     */
-    public void reportError(String message, Token lt) {
-        Map row = new HashMap();
-        row.put("error",    message);
-        row.put("filename", getFilename());
-        row.put("line",     Integer.valueOf(lt.getLine()));
-        row.put("column",   Integer.valueOf(lt.getColumn()));
-        errorList.add(row);
+        if (lt == null) lt = Token.badToken;
+        reportError(message, lt.getLine(), lt.getColumn());
     }
 
     /**
      * Report a recovered error and specify the node.
      */
     public void reportError(String message, AST ln) {
+        reportError(message, ln.getLine(), ln.getColumn());
+    }
+
+    /**
+     * Report a recovered error and specify the token.
+     */
+    public void reportError(String message, Token lt) {
+        reportError(message, lt.getLine(), lt.getColumn());
+    }
+
+    /**
+     * Report a recovered error and specify the line and column.
+     */
+    public void reportError(String message, int line, int column) {
         Map row = new HashMap();
         row.put("error",    message);
         row.put("filename", getFilename());
-        row.put("line",     Integer.valueOf(ln.getLine()));
-        row.put("column",   Integer.valueOf(ln.getColumn()));
+        row.put("line",     Integer.valueOf(line));
+        row.put("column",   Integer.valueOf(column));
         errorList.add(row);
     }
 
@@ -647,60 +645,42 @@ snippetUnit
     :   nls! blockBody[EOF]
     ;
 
-
-// Package statement: optional annotations followed by "package" then the package identifier.
+// Package statement: optional annotations followed by "package" then the package identifier
 packageDefinition
         {Token first = LT(1);}
-    // GRECLIPSE edit
+    // GRECLIPSE edit -- recovery for missing identifier
     //:   an:annotationsOpt! "package"! id:identifier!
     //    {#packageDefinition = #(create(PACKAGE_DEF,"package",first,LT(1)),an,id);}
     :   an:annotationsOpt! "package"! (id:identifier!)?
-        { // error recovery for missing package name
+        {
             if (#id == null) {
-                reportError("Invalid package specification", LT(0));
-            } else {
-                #packageDefinition = #(create(PACKAGE_DEF,"package",first,LT(1)),an,id);
+                #id = missingIdentifier(LT(0), null);
+                reportError("Invalid package specification", LT(0).getLine(), LT(0).getColumn()-1);
             }
+            #packageDefinition = #(create(PACKAGE_DEF,"package",first,LT(1)),an,id);
         }
     // GRECLIPSE end
     ;
 
-
 // Import statement: import followed by a package or class name
 importStatement
-        //TODO? options {defaultErrorHandler = true;}
-        { Token first = LT(1); boolean isStatic = false; }
-    // GRECLIPSE edit
+        {Token first = LT(1); boolean isStatic = false;}
+    // GRECLIPSE edit -- recovery for missing identifier
     //:   an:annotationsOpt "import"! ( "static"! {isStatic=true;} )? is:identifierStar!
     //    {if (isStatic)
     //        #importStatement = #(create(STATIC_IMPORT,"static_import",first,LT(1)),an,is);
     //     else
     //        #importStatement = #(create(IMPORT,"import",first,LT(1)),an,is);}
-    /* RECOVERY: NOTES:
-     * The aim here is just to allow for the type to be optional.  If not specified
-     * it is clearly an error but we want to recover and continue parsing the file.
-     * Here if the type is missing (is_AST==null) then we report an error and create
-     * a fake import statement with a null type reference.  There is a corresponding
-     * change in AntlrParserPlugin that deals with a null type reference and constructs
-     * a suitable 'fake' ImportNode.
-     */
-    :   an:annotationsOpt "import"! ( "static"! {isStatic=true;} )? (is:identifierStar!)?
+    :   an:annotationsOpt "import"! ("static"! {isStatic=true;})? (is:identifierStar!)?
         {
-          if (isStatic) {
             if (#is == null) {
-              reportError("Invalid import static specification", first);
-              #importStatement = #(create(STATIC_IMPORT,"static_import",first,null),an,is);
-            } else {
-              #importStatement = #(create(STATIC_IMPORT,"static_import",first,LT(1)),an,is);
+                #is = missingIdentifier(LT(0), null);
             }
-          } else {
-            if (#is == null) {
-              reportError("Invalid import specification", LT(0));
-              #importStatement = #(create(IMPORT,"import",first,null),an,is);
+            if (!isStatic) {
+                #importStatement = #(create(IMPORT,"import",first,LT(1)),an,is);
             } else {
-              #importStatement = #(create(IMPORT,"import",first,LT(1)),an,is);
+                #importStatement = #(create(STATIC_IMPORT,"static_import",first,LT(1)),an,is);
             }
-          }
         }
     // GRECLIPSE end
     ;
@@ -1987,7 +1967,6 @@ multicatch
         // GRECLIPSE add
         exception
         catch [RecognitionException e] {
-            // finish invalid member-value pair if the closing parenthesis is next
             if (#m != null && LT(1).getType() == RPAREN) {
                 reportError(e);
                 #id = missingIdentifier(first, LT(1));

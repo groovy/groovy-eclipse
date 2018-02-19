@@ -386,22 +386,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             processAnnotations(annotations, node);
             node = node.getNextSibling();
         }
-        // GRECLIPSE add
-        // cope with a parsed 'null' package (GRE439)
-        if (node == null) return;
-        // GRECLIPSE end
         String name = qualifiedName(node);
         // TODO should we check package node doesn't already exist? conflict?
+        PackageNode packageNode = setPackage(name, annotations);
         // GRECLIPSE edit
-        //PackageNode packageNode = setPackage(name, annotations);
         //configureAST(packageNode, packageDef);
-        setPackageName(name);
-        if (name != null && !name.isEmpty()) {
-            name += '.';
-        }
-        PackageNode packageNode = new PackageNode(name);
-        packageNode.addAnnotations(annotations);
-        output.setPackage(packageNode);
         configureAST(packageNode, node);
         // GRECLIPSE end
     }
@@ -430,19 +419,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 /*GRECLIPSE AST*/ aliasNode = node.getNextSibling();
                 alias = identifier(aliasNode);
             }
-
-            // GRECLIPSE add
-            // node == null means it is a broken entry and the parser recovered.  The error will be already
-            // be recorded against the file
-            if (node == null) {
-                if (isStatic) {
-                    addStaticImport(ClassHelper.OBJECT_TYPE, "", null, annotations);
-                } else {
-                    addImport(ClassHelper.OBJECT_TYPE, "", null, annotations);
-                }
-                return;
-            }
-            // GRECLIPSE end
 
             if (node.getNumberOfChildren() == 0) {
                 String name = identifier(node);
@@ -3454,7 +3430,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             ret.add(gt);
             typeParameter = typeParameter.getNextSibling();
         }
-        return (GenericsType[]) ret.toArray(new GenericsType[0]);
+        return (GenericsType[]) ret.toArray(new GenericsType[ret.size()]);
     }
 
     protected ClassNode makeType(AST typeNode) {
@@ -3700,7 +3676,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         System.out.println("Type: " + getTokenName(node) + " text: " + node.getText());
     }
 
-    // GRECLIPSE add
+  // GRECLIPSE add
     private void fixModuleNodeLocations() {
         // only occurs if in a script
 
@@ -3827,5 +3803,5 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
         node.setEnd(node.getEnd() - 1); // Eclipse wants this for error reporting
     }
-    // GRECLIPSE end
+  // GRECLIPSE end
 }

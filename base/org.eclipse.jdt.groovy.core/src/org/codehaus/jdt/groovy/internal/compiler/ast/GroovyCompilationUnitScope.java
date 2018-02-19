@@ -231,8 +231,8 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
     protected boolean reportPackageIsNotExpectedPackage(CompilationUnitDeclaration compUnitDecl) {
         if (compUnitDecl != null && compUnitDecl.compilationResult != null && compUnitDecl.compilationResult.compilationUnit != null) {
             char[][] expectedPackage = compUnitDecl.compilationResult.compilationUnit.getPackageName();
-            if (expectedPackage != null && !CharOperation.equals(expectedPackage,
-                    compUnitDecl.currentPackage != null ? compUnitDecl.currentPackage.tokens : CharOperation.NO_CHAR_CHAR)) {
+            char[][] declaredPackage = compUnitDecl.currentPackage != null ? compUnitDecl.currentPackage.tokens : CharOperation.NO_CHAR_CHAR;
+            if (expectedPackage != null && !CharOperation.equals(declaredPackage, expectedPackage) && !CharOperation.equals(declaredPackage, new char[][] {new char[] {'?'}})) {
                 problemReporter().packageIsNotExpectedPackage(compUnitDecl);
                 return true;
             }

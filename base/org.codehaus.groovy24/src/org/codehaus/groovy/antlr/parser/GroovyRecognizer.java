@@ -325,6 +325,8 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
         ident.setText("?");
         ident.setLine(line);
         ident.setColumn(column);
+        ident.setLineLast(line);
+        ident.setColumnLast(column + 1);
         return (AST)astFactory.make( (new ASTArray(1)).add(create(ident.getType(),ident.getText(),ident,next)));
     }
 
@@ -417,37 +419,33 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
         Token lt = null;
         try { lt = LT(1); }
         catch (TokenStreamException e) { }
-        if (lt == null)  lt = Token.badToken;
-
-        Map row = new HashMap();
-        row.put("error",    message);
-        row.put("filename", getFilename());
-        row.put("line",     Integer.valueOf(lt.getLine()));
-        row.put("column",   Integer.valueOf(lt.getColumn()));
-        errorList.add(row);
-    }
-
-    /**
-     * Report a recovered error and specify the token.
-     */
-    public void reportError(String message, Token lt) {
-        Map row = new HashMap();
-        row.put("error",    message);
-        row.put("filename", getFilename());
-        row.put("line",     Integer.valueOf(lt.getLine()));
-        row.put("column",   Integer.valueOf(lt.getColumn()));
-        errorList.add(row);
+        if (lt == null) lt = Token.badToken;
+        reportError(message, lt.getLine(), lt.getColumn());
     }
 
     /**
      * Report a recovered error and specify the node.
      */
     public void reportError(String message, AST ln) {
+        reportError(message, ln.getLine(), ln.getColumn());
+    }
+
+    /**
+     * Report a recovered error and specify the token.
+     */
+    public void reportError(String message, Token lt) {
+        reportError(message, lt.getLine(), lt.getColumn());
+    }
+
+    /**
+     * Report a recovered error and specify the line and column.
+     */
+    public void reportError(String message, int line, int column) {
         Map row = new HashMap();
         row.put("error",    message);
         row.put("filename", getFilename());
-        row.put("line",     Integer.valueOf(ln.getLine()));
-        row.put("column",   Integer.valueOf(ln.getColumn()));
+        row.put("line",     Integer.valueOf(line));
+        row.put("column",   Integer.valueOf(column));
         errorList.add(row);
     }
 
@@ -1004,12 +1002,12 @@ inputState.guessing--;
         }
         if ( inputState.guessing==0 ) {
             packageDefinition_AST = (AST)currentAST.root;
-            // error recovery for missing package name
+            
             if (id_AST == null) {
-            reportError("Invalid package specification", LT(0));
-            } else {
-            packageDefinition_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(PACKAGE_DEF,"package",first,LT(1))).add(an_AST).add(id_AST));
+            id_AST = missingIdentifier(LT(0), null);
+            reportError("Invalid package specification", LT(0).getLine(), LT(0).getColumn()-1);
             }
+            packageDefinition_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(PACKAGE_DEF,"package",first,LT(1))).add(an_AST).add(id_AST));
             
             currentAST.root = packageDefinition_AST;
             currentAST.child = packageDefinition_AST!=null &&packageDefinition_AST.getFirstChild()!=null ?
@@ -1944,20 +1942,13 @@ inputState.guessing--;
         if ( inputState.guessing==0 ) {
             importStatement_AST = (AST)currentAST.root;
             
-            if (isStatic) {
             if (is_AST == null) {
-            reportError("Invalid import static specification", first);
-            importStatement_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(STATIC_IMPORT,"static_import",first,null)).add(an_AST).add(is_AST));
+            is_AST = missingIdentifier(LT(0), null);
+            }
+            if (!isStatic) {
+            importStatement_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(IMPORT,"import",first,LT(1))).add(an_AST).add(is_AST));
             } else {
             importStatement_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(STATIC_IMPORT,"static_import",first,LT(1))).add(an_AST).add(is_AST));
-            }
-            } else {
-            if (is_AST == null) {
-            reportError("Invalid import specification", LT(0));
-            importStatement_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(IMPORT,"import",first,null)).add(an_AST).add(is_AST));
-            } else {
-            importStatement_AST = (AST)astFactory.make( (new ASTArray(3)).add(create(IMPORT,"import",first,LT(1))).add(an_AST).add(is_AST));
-            }
             }
             
             currentAST.root = importStatement_AST;
@@ -9270,7 +9261,6 @@ inputState.guessing--;
         catch (RecognitionException e) {
             if (inputState.guessing==0) {
                 
-                // finish invalid member-value pair if the closing parenthesis is next
                 if (m_AST != null && LT(1).getType() == RPAREN) {
                 reportError(e);
                 id_AST = missingIdentifier(first, LT(1));

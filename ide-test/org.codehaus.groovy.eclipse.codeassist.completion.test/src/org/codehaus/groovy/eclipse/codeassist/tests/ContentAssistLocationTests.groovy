@@ -386,32 +386,40 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
         assertLocation(contents, getLastIndexOf(contents, 'foo'), ContentAssistLocation.METHOD_CONTEXT)
     }
 
-    @Test @NotYetImplemented
-    void testImport1() {
-        String contents = 'import '
-        int loc = contents.indexOf('import ') + 'import '.length()
-        assertLocation(contents, loc, ContentAssistLocation.IMPORT)
-    }
-
     @Test
-    void testImport2() {
-        String contents = 'import T'
-        int loc = contents.indexOf('import T') + 'import T'.length()
-        assertLocation(contents, loc, ContentAssistLocation.IMPORT)
-    }
-
-    @Test @NotYetImplemented
-    void testImport3() {
+    void testPackage0() {
         String contents = 'package '
-        int loc = contents.indexOf('package ') + 'package '.length()
-        assertLocation(contents, loc, ContentAssistLocation.IMPORT)
+        assertLocation(contents, contents.length(), ContentAssistLocation.PACKAGE)
     }
 
     @Test
-    void testImport4() {
-        String contents = 'package T'
-        int loc = contents.indexOf('package T') + 'package T'.length()
-        assertLocation(contents, loc, ContentAssistLocation.PACKAGE)
+    void testPackage1() {
+        String contents = 'package p'
+        assertLocation(contents, contents.length(), ContentAssistLocation.PACKAGE)
+    }
+
+    @Test
+    void testImport0() {
+        String contents = 'import '
+        assertLocation(contents, contents.length(), ContentAssistLocation.IMPORT)
+    }
+
+    @Test
+    void testImport1() {
+        String contents = 'import T'
+        assertLocation(contents, contents.length(), ContentAssistLocation.IMPORT)
+    }
+
+    @Test
+    void testImportStatic0() {
+        String contents = 'import static '
+        assertLocation(contents, contents.length(), ContentAssistLocation.IMPORT)
+    }
+
+    @Test
+    void testImportStatic1() {
+        String contents = 'import static T'
+        assertLocation(contents, contents.length(), ContentAssistLocation.IMPORT)
     }
 
     @Test
