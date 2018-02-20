@@ -741,7 +741,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         @Override
         public ClassNode getType() {
             MethodNode member = parent.getClassNode().getMethod(getName(), Parameter.EMPTY_ARRAY);
-            return member.getReturnType();
+            return (member != null ? member.getReturnType() : null);
         }
 
         @Override

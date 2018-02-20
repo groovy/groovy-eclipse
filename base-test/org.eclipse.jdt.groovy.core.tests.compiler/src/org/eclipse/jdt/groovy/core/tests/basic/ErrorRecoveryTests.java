@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -219,7 +219,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         "1. ERROR in X.groovy (at line 2)\n" +
         "\tif (f.\n" +
         "\t     ^\n" +
-        "Groovy:Expecting an identifier, found a trailing '.' instead. @ line 2, column 6.\n" +
+        "Groovy:unexpected token:  @ line 2, column 6.\n" +
         "----------\n");
 
         ModuleNode mn = getModuleNode("X.groovy");
@@ -266,7 +266,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         "1. ERROR in X.groovy (at line 1)\n" +
         "\tTest.\n" +
         "\t    ^\n" +
-        "Groovy:Expecting an identifier, found a trailing '.' instead. @ line 1, column 5.\n" +
+        "Groovy:unexpected token:  @ line 1, column 5.\n" +
         "----------\n");
 
         ModuleNode mn = getModuleNode("X.groovy");
@@ -452,7 +452,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         "\tif (f.\n" +
         "\n" +
         "\t      ^\n" +
-        "Groovy:Expecting an identifier, found a trailing \'.\' instead. @ line 2, column 7.\n" +
+        "Groovy:unexpected token:  @ line 2, column 7.\n" +
         "----------\n");
     }
 
@@ -469,7 +469,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         "\tpanel.add (textField, BorderLayout.\n" +
         "\n" +
         "\t                                   ^\n" +
-        "Groovy:Expecting an identifier, found a trailing \'.\' instead. @ line 2, column 36.\n" +
+        "Groovy:unexpected token:  @ line 2, column 36.\n" +
         "----------\n" +
         "2. ERROR in X.groovy (at line 2)\n" +
         "\tpanel.add (textField, BorderLayout.\n" +
@@ -492,7 +492,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         "\tString s = (\'foo\' + BorderLayout.\n" +
         "\n" +
         "\t                                 ^\n" +
-        "Groovy:Expecting an identifier, found a trailing \'.\' instead. @ line 2, column 34.\n" +
+        "Groovy:unexpected token:  @ line 2, column 34.\n" +
         "----------\n" +
         "2. ERROR in X.groovy (at line 2)\n" +
         "\tString s = (\'foo\' + BorderLayout.\n" +

@@ -15,20 +15,29 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
-import groovy.transform.NotYetImplemented
+import groovy.transform.stc.ClosureParams
+import groovy.transform.stc.SimpleType
 
+import org.codehaus.groovy.ast.AnnotationNode
+import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer
+import org.codehaus.groovy.runtime.DefaultGroovyMethods
 import org.eclipse.jface.text.Document
 import org.junit.Test
 
 final class ContentAssistLocationTests extends CompletionTestSuite {
 
-    private void assertLocation(String contents, int offset, ContentAssistLocation expectedLocation) {
+    private void assertLocation(String contents, int offset, ContentAssistLocation expectedLocation,
+        @ClosureParams(value=SimpleType, options=['org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext']) @DelegatesTo(value=ContentAssistContext, strategy=Closure.DELEGATE_FIRST) Closure withContext = null) {
+
         def unit = addGroovySource(contents, nextUnitName())
-        def context = new GroovyCompletionProposalComputer().createContentAssistContext(unit, offset, new Document(unit.buffer.contents))
+        ContentAssistContext context = new GroovyCompletionProposalComputer().createContentAssistContext(unit, offset, new Document(unit.buffer.contents))
 
         assert context.location == expectedLocation
+        if (withContext != null) {
+            DefaultGroovyMethods.with(context, false, withContext)
+        }
     }
 
     @Test
@@ -748,17 +757,19 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
         assertLocation(contents, loc, ContentAssistLocation.ANNOTATION_BODY)
     }
 
-    @Test @NotYetImplemented
+    @Test
     void testAnnotationBody8() {
         String contents = '@A(value = Object.) class A { }'
-        int loc = contents.indexOf('.)') + 1
-        assertLocation(contents, loc, ContentAssistLocation.ANNOTATION_BODY)
+        assertLocation(contents, getLastIndexOf(contents, '.'), ContentAssistLocation.EXPRESSION) {
+            assert containingCodeBlock instanceof AnnotationNode
+        }
     }
 
-    @Test @NotYetImplemented
-    void testAnnotationBody8a() {
+    @Test
+    void testAnnotationBody9() {
         String contents = '@A(value = java.lang.Object.) class A { }'
-        int loc = contents.indexOf('.)') + 1
-        assertLocation(contents, loc, ContentAssistLocation.ANNOTATION_BODY)
+        assertLocation(contents, getLastIndexOf(contents, '.'), ContentAssistLocation.EXPRESSION) {
+            assert containingCodeBlock instanceof AnnotationNode
+        }
     }
 }
