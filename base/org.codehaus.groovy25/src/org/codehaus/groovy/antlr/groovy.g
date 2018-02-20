@@ -2762,16 +2762,6 @@ pathExpression[int lc_stmt]
             nlsWarn!
             apb:appendedBlock[prefix]!
             { prefix = #apb; }
-        // GRECLIPSE add
-        |
-            // RECOVERY:
-            // Ignore error of dot followed by no match: 'a.' and 'a.b.' and '].' and '}.' and ').' etc.
-            // Report it, but continue compiling. The dot is thrown away.
-            // NOTE: emp - if anyone knows a better/proper way to do this, please tell me. In the other error recovery
-            // in rule pathElement, the .* is ignored. Here we want to keep the prefix and ignore the '.'.
-            (DOT! | SPREAD_DOT! | OPTIONAL_DOT)
-            { reportError("Expecting an identifier, found a trailing '.' instead."); }
-        // GRECLIPSE end
         )*
         {
             #pathExpression = prefix;
@@ -2794,16 +2784,21 @@ pathElement[AST prefix] {Token operator = LT(1);}
             )
         ) nls!
         (ta:typeArguments!)?
-        np:namePart!
-        { #pathElement = #(create(operator.getType(),operator.getText(),prefix,LT(1)),prefix,ta,np); }
-        // GRECLIPSE add
-        // RECOVERY: a.{
-        exception
-        catch [RecognitionException e] {
-            if (#pathElement == null) {
-                throw e;
+        // GRECLIPSE edit -- recovery for missing identifier
+        //np:namePart!
+        //{ #pathElement = #(create(operator.getType(),operator.getText(),prefix,LT(1)),prefix,ta,np); }
+        (np:namePart!)?
+        {
+            if (#np == null) {
+                GroovySourceToken ident = new GroovySourceToken(IDENT);
+                ident.setLine(((SourceInfo) LT(0)).getLineLast());
+                ident.setColumn(((SourceInfo) LT(0)).getColumnLast());
+                ident.setLineLast(((SourceInfo) LT(0)).getLineLast());
+                ident.setColumnLast(((SourceInfo) LT(0)).getColumnLast());
+                #np = #(create(ident.getType(),ident.getText(),ident,null));
+                reportError(new NoViableAltException(LT(1), getFilename()));
             }
-            reportError(e);
+            #pathElement = #(create(operator.getType(),operator.getText(),prefix,LT(1)),prefix,ta,np);
         }
         // GRECLIPSE end
     |

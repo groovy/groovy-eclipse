@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
@@ -150,7 +151,7 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
                 } else {
                     completionTypes.add(context.containingDeclaration.getDeclaringClass());
                 }
-                ClassNode memberType = member.getReturnType();
+                ClassNode memberType = (member != null ? member.getReturnType() : ClassHelper.VOID_TYPE);
                 if (memberType.isArray()) memberType = memberType.getComponentType();
                 if (memberType.isEnum()) {
                     completionTypes.add(memberType);
