@@ -256,7 +256,7 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
             boolean zzz
             flar()
             '''.stripIndent()
-        checkProposalChoices(contents, 'flar(', 'aaa', 'aaa: __, ', 'yyy', '0')
+        checkProposalChoices(contents, 'flar(', 'aaa', 'aaa: __', 'yyy', '0')
     }
 
     @Test
@@ -274,7 +274,7 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
               flar()
             }
             '''.stripIndent()
-        checkProposalChoices(contents, 'flar(', 'aaa', 'aaa: __, ', 'iii', 'yyy', '0')
+        checkProposalChoices(contents, 'flar(', 'aaa', 'aaa: __', 'iii', 'yyy', '0')
     }
 
     // tests application of closures with and without named parameters
