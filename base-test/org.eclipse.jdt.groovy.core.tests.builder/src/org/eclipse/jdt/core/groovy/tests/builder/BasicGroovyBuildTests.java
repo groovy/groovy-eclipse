@@ -48,11 +48,13 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.CompilerUtils;
+import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.builder.AbstractImageBuilder;
@@ -1816,17 +1818,15 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     }
 
     @Test
-    public void testPackageNames_GRE342_1() throws Exception {
+    public void testPackageNames1() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
         fullBuild(projectPath);
 
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, "");
-
-        IPath root = env.addPackageFragmentRoot(projectPath, "src");
         env.setOutputFolder(projectPath, "bin");
+        env.removePackageFragmentRoot(projectPath, "");
+        IPath root = env.addPackageFragmentRoot(projectPath, "src");
 
         // q.X declared in p.X
         IPath path = env.addGroovyClass(root, "p", "X", "package q\n" + "class X {}");
@@ -1837,17 +1837,15 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     }
 
     @Test
-    public void testPackageNames_GRE342_2() throws Exception {
+    public void testPackageNames2() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
         fullBuild(projectPath);
 
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, "");
-
-        IPath root = env.addPackageFragmentRoot(projectPath, "src");
         env.setOutputFolder(projectPath, "bin");
+        env.removePackageFragmentRoot(projectPath, "");
+        IPath root = env.addPackageFragmentRoot(projectPath, "src");
 
         // q.X declared in p.X
         IPath path = env.addGroovyClass(root, "p.q.r", "X", "package p.s.r.q\n" + "class X {}");
@@ -1858,17 +1856,15 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     }
 
     @Test
-    public void testPackageNames_GRE342_3() throws Exception {
+    public void testPackageNames3() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
         fullBuild(projectPath);
 
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, "");
-
-        IPath root = env.addPackageFragmentRoot(projectPath, "src");
         env.setOutputFolder(projectPath, "bin");
+        env.removePackageFragmentRoot(projectPath, "");
+        IPath root = env.addPackageFragmentRoot(projectPath, "src");
 
         // in p.q.r.X but has no package decl
         IPath path = env.addGroovyClass(root, "p.q.r", "X", "print 'abc'");
@@ -1876,6 +1872,29 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         incrementalBuild(projectPath);
 
         expectingSpecificProblemFor(path, new Problem("p/q/r/X", "The declared package \"\" does not match the expected package \"p.q.r\"", path, 0, 1, 60, IMarker.SEVERITY_ERROR));
+    }
+
+    @Test // script with no package statement should not have package problem marker
+    public void testPackageNames4() throws Exception {
+        IEclipsePreferences groovyPrefs = Activator.getInstancePreferences();
+        groovyPrefs.putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, true);
+        groovyPrefs.put(Activator.GROOVY_SCRIPT_FILTERS, "src/**/*.groovy,y");
+        try {
+            IPath projectPath = env.addProject("Project");
+            env.addExternalJars(projectPath, Util.getJavaClassLibs());
+            env.addGroovyJars(projectPath);
+            fullBuild(projectPath);
+
+            env.setOutputFolder(projectPath, "bin");
+            env.removePackageFragmentRoot(projectPath, "");
+            IPath root = env.addPackageFragmentRoot(projectPath, "src");
+            IPath path = env.addGroovyClass(root, "p.q.r", "Script", "print 'abc'");
+
+            incrementalBuild(projectPath);
+            expectingNoProblemsFor(path);
+        } finally {
+            groovyPrefs.putBoolean(Activator.GROOVY_SCRIPT_FILTERS_ENABLED, false);
+        }
     }
 
     @Test

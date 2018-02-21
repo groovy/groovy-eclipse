@@ -325,10 +325,10 @@ public class CompilerUtils {
 				if (path.segmentCount() == 1) {
 					// the path is actually to the project root
 					IPath rawPath = project.getRawLocation();
-					if (rawPath == null) {
-						Util.log(null, "getRawLocation() against the project: " + project + " failed"); //$NON-NLS-1$ //$NON-NLS-2$
+					if (rawPath != null) {
+						realLocation = rawPath.toOSString();
 					} else {
-						realLocation = project.getRawLocation().toOSString();
+						realLocation = project.getLocation().toOSString();
 					}
 				} else {
 					IPath rawLocation = project.getFile(path.removeFirstSegments(1)).getRawLocation();

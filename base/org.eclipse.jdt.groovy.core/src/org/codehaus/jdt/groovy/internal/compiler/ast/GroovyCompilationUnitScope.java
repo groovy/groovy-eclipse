@@ -224,18 +224,13 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
     protected void checkPublicTypeNameMatchesFilename(TypeDeclaration typeDecl) {
     }
 
-    /**
-     * Checks expected package against actual package declaration.
-     */
     @Override
     protected boolean reportPackageIsNotExpectedPackage(CompilationUnitDeclaration compUnitDecl) {
-        if (compUnitDecl != null && compUnitDecl.compilationResult != null && compUnitDecl.compilationResult.compilationUnit != null) {
-            char[][] expectedPackage = compUnitDecl.compilationResult.compilationUnit.getPackageName();
-            char[][] declaredPackage = compUnitDecl.currentPackage != null ? compUnitDecl.currentPackage.tokens : CharOperation.NO_CHAR_CHAR;
-            if (expectedPackage != null && !CharOperation.equals(declaredPackage, expectedPackage) && !CharOperation.equals(declaredPackage, new char[][] {new char[] {'?'}})) {
-                problemReporter().packageIsNotExpectedPackage(compUnitDecl);
-                return true;
-            }
+        // check for parser recovery of an incomplete package statement or a script with no package statement before reporting name mismatch
+        char[][] declaredPackage = (compUnitDecl.currentPackage != null ? compUnitDecl.currentPackage.tokens : CharOperation.NO_CHAR_CHAR);
+        if (!CharOperation.equals(declaredPackage, new char[][] {new char[] {'?'}}) && !(declaredPackage.length == 0 && isScript)) {
+            problemReporter().packageIsNotExpectedPackage(compUnitDecl);
+            return true;
         }
         return false;
     }
