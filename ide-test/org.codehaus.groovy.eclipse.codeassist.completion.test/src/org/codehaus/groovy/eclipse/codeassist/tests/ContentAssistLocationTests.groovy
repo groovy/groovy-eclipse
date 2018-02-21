@@ -36,7 +36,7 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
 
         assert context.location == expectedLocation
         if (withContext != null) {
-            DefaultGroovyMethods.with(context, false, withContext)
+            DefaultGroovyMethods.with(context, withContext)
         }
     }
 

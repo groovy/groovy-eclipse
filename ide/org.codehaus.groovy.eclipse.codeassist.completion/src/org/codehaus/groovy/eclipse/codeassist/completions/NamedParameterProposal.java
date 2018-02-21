@@ -15,11 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.completions;
 
-import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
-import org.eclipse.core.runtime.Adapters;
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
@@ -27,6 +24,7 @@ import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.javaeditor.EditorHighlightingSynchronizer;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposal;
+import org.eclipse.jdt.internal.ui.text.template.contentassist.PositionBasedCompletionProposal;
 import org.eclipse.jdt.ui.PreferenceConstants;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -44,10 +42,12 @@ import org.eclipse.jface.text.link.ILinkedModeListener;
 import org.eclipse.jface.text.link.InclusivePositionUpdater;
 import org.eclipse.jface.text.link.LinkedModeModel;
 import org.eclipse.jface.text.link.LinkedModeUI;
+import org.eclipse.jface.text.link.LinkedModeUI.ExitFlags;
 import org.eclipse.jface.text.link.LinkedPosition;
 import org.eclipse.jface.text.link.LinkedPositionGroup;
 import org.eclipse.jface.text.link.ProposalPosition;
 import org.eclipse.jface.viewers.StyledString;
+import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Shell;
@@ -59,19 +59,12 @@ import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
  */
 public class NamedParameterProposal extends JavaCompletionProposal {
 
-    private static final ICompletionProposal[] NO_COMPLETIONS = new ICompletionProposal[0];
-
+    private ICompletionProposal[] choices;
+    private IPositionUpdater updater;
     private IRegion selectedRegion;
 
-    private ICompletionProposal[] choices;
-
-    private Position paramNamePosition;
-
-    private IPositionUpdater updater;
-
-    private String paramSignature;
-
     private final String paramName;
+    private final String paramSignature;
 
     public NamedParameterProposal(
         String paramName,
@@ -85,40 +78,26 @@ public class NamedParameterProposal extends JavaCompletionProposal {
         JavaContentAssistInvocationContext javaContext) {
 
         super(computeReplacementString(paramName), replacementOffset, replacementLength, image, displayString, relevance, inJavadoc, javaContext);
+
         this.paramName = paramName;
         this.paramSignature = paramSignature;
         this.setTriggerCharacters(ProposalUtils.VAR_TRIGGER);
     }
 
-    private String computeReplacementChoices(String name) {
-        if (shouldDoGuessing()) {
-            try {
-                choices = guessParameters(paramName.toCharArray());
-            } catch (JavaModelException e) {
-                paramNamePosition = null;
-                choices = null;
-                GroovyContentAssist.logError(e);
-                openErrorDialog(e);
-            }
-        }
-        return computeReplacementString(name);
-    }
-
     private static String computeReplacementString(String name) {
-        return name + ": __, ";
+        return (name + ": __");
     }
 
     private IRegion calculateArgumentRegion() {
         String repl = getReplacementString();
         int replOffset = getReplacementOffset();
         int start = replOffset + repl.indexOf(": ") + 2;
-        int end = replOffset + repl.indexOf(",");
+        int end = replOffset + repl.lastIndexOf("_") + 1;
         if (start > 0 && end > 0) {
             return new Region(start, end - start);
-        } else {
-            // couldn't find region
-            return null;
         }
+        // couldn't find region
+        return null;
     }
 
     /**
@@ -133,29 +112,37 @@ public class NamedParameterProposal extends JavaCompletionProposal {
         return false;
     }
 
-    private ICompletionProposal[] guessParameters(char[] parameterName) throws JavaModelException {
-        if (paramSignature == null) {
-            return NO_COMPLETIONS;
+    private ICompletionProposal[] doGuessing(Position position) {
+        if (paramName == null || paramSignature == null) {
+            return ProposalUtils.NO_COMPLETIONS;
         }
 
-        String type = Signature.toString(paramSignature);
-        IJavaElement[] assignableElements = getAssignableElements();
-        Position position = new Position(selectedRegion.getOffset(), selectedRegion.getLength());
-
-        ParameterGuesserDelegate guesser = new ParameterGuesserDelegate(
-            fInvocationContext.getCoreContext().getEnclosingElement(), fInvocationContext);
-        ICompletionProposal[] guesses = guesser.parameterProposals(type, paramName, position, assignableElements, true);
-        if (guesses.length == 0) {
+        IJavaElement[] visibleElements = fInvocationContext.getCoreContext().getVisibleElements(paramSignature);
+        ParameterGuesserDelegate guesser = new ParameterGuesserDelegate(fInvocationContext.getCoreContext().getEnclosingElement(), fInvocationContext);
+        ICompletionProposal[] guesses = guesser.parameterProposals(Signature.toString(paramSignature), paramName, position, visibleElements, true);
+        if (guesses != null && guesses.length > 0) {
+            for (int i = 0; i < guesses.length; i += 1) {
+                guesses[i] = new PositionBasedCompletionProposal(guesses[i].getDisplayString(), position, guesses[i].getSelection(null).x - position.getOffset(), guesses[i].getImage(), guesses[i].getDisplayString(), guesses[i].getContextInformation(), null, ((PositionBasedCompletionProposal) guesses[i]).getTriggerCharacters()) {
+                    @Override
+                    public void apply(ITextViewer viewer, char trigger, int stateMask, int offset) {
+                        super.apply(viewer, trigger, stateMask, offset);
+                        if (trigger > 0)
+                        try {
+                            offset += getDisplayString().length();
+                            viewer.getDocument().replace(offset, 0, String.valueOf(trigger));
+                        } catch (BadLocationException e) {
+                            e.printStackTrace();
+                        }
+                        // TODO: exit linked mode
+                    }
+                };
+            }
+        } else {
             guesses = new ICompletionProposal[] {
                 new JavaCompletionProposal(paramName, 0, paramName.length(), null, paramName, 0)
             };
         }
-        paramNamePosition = position;
-        return (choices = guesses);
-    }
-
-    private IJavaElement[] getAssignableElements() {
-        return fInvocationContext.getCoreContext().getVisibleElements(paramSignature);
+        return guesses;
     }
 
     @Override
@@ -166,14 +153,6 @@ public class NamedParameterProposal extends JavaCompletionProposal {
             selectedRegion = calculateArgumentRegion();
         }
 
-        // refresh so the AST is ready for subsequent named argument content assists
-        try {
-            ICompilationUnit unit = Adapters.adapt(getJavaEditor(), ICompilationUnit.class);
-            unit.reconcile(0, 0, null, null);
-        } catch (JavaModelException e) {
-            GroovyPlugin.getDefault().logError("Failed to reconcile after application of named argument proposal", e);
-        }
-
         setUpLinkedMode(document, ',');
     }
 
@@ -181,45 +160,50 @@ public class NamedParameterProposal extends JavaCompletionProposal {
     protected void setUpLinkedMode(IDocument document, char closingCharacter) {
         ITextViewer textViewer = getTextViewer();
         if (textViewer != null) {
-            int baseOffset = getReplacementOffset();
-            String replacement = computeReplacementChoices(paramName);
             try {
                 LinkedModeModel model = new LinkedModeModel();
-                IRegion argRegion = calculateArgumentRegion();
                 LinkedPositionGroup group = new LinkedPositionGroup();
                 if (shouldDoGuessing()) {
+                    Position position = new Position(selectedRegion.getOffset(), selectedRegion.getLength());
                     ensurePositionCategoryInstalled(document, model);
-                    document.addPosition(getCategory(), paramNamePosition);
-                    group.addPosition(new ProposalPosition(document, paramNamePosition.getOffset(), paramNamePosition.getLength(), LinkedPositionGroup.NO_STOP, choices));
+                    document.addPosition(getCategory(), position);
+                    choices = doGuessing(position);
+
+                    group.addPosition(new ProposalPosition(document, position.getOffset(), position.getLength(), LinkedPositionGroup.NO_STOP, choices));
                 } else {
+                    IRegion argRegion = calculateArgumentRegion();
                     group.addPosition(new LinkedPosition(document, argRegion.getOffset(), argRegion.getLength(), LinkedPositionGroup.NO_STOP));
                 }
                 model.addGroup(group);
 
-                model.forceInstall();
                 JavaEditor editor = getJavaEditor();
                 if (editor != null) {
                     model.addLinkingListener(new EditorHighlightingSynchronizer(editor));
                 }
+                model.forceInstall();
 
                 LinkedModeUI ui = new EditorLinkedModeUI(model, textViewer);
                 ui.setCyclingMode(LinkedModeUI.CYCLE_WHEN_NO_PARENT);
                 ui.setDoContextInfo(true);
-                ui.setExitPolicy(new ExitPolicy(closingCharacter, document));
-                ui.setExitPosition(textViewer, baseOffset + replacement.length(), 0, Integer.MAX_VALUE);
+                ui.setExitPolicy((LinkedModeModel m, VerifyEvent e, int off, int len) -> {
+                    if (e.character == closingCharacter) {
+                        return new ExitFlags(ILinkedModeListener.UPDATE_CARET, true);
+                    } else if (e.character == ';' || e.character == '\r') {
+                        return new ExitFlags(ILinkedModeListener.EXIT_ALL, true);
+                    }
+                    return null;
+                });
+                ui.setExitPosition(textViewer, getReplacementOffset() + getReplacementString().length(), 0, Integer.MAX_VALUE);
                 ui.setSimpleMode(true);
                 ui.enter();
 
                 selectedRegion = ui.getSelectedRegion();
 
-            } catch (BadLocationException e) {
+            } catch (Exception e) {
                 ensurePositionCategoryRemoved(document);
                 GroovyContentAssist.logError(e);
                 openErrorDialog(e);
-            } catch (BadPositionCategoryException e) {
-                ensurePositionCategoryRemoved(document);
-                GroovyContentAssist.logError(e);
-                openErrorDialog(e);
+                choices = null;
             }
         }
     }
@@ -284,11 +268,12 @@ public class NamedParameterProposal extends JavaCompletionProposal {
                 // ignore
             }
             document.removePositionUpdater(updater);
+            updater = null;
         }
     }
 
     private String getCategory() {
-        return "ParameterGuessingProposal_" + toString(); //$NON-NLS-1$
+        return "ParameterGuessingProposal_" + toString();
     }
 
     /**
@@ -296,6 +281,6 @@ public class NamedParameterProposal extends JavaCompletionProposal {
      */
     public ICompletionProposal[] getChoices() throws JavaModelException {
         selectedRegion = calculateArgumentRegion();
-        return guessParameters(paramName.toCharArray());
+        return doGuessing(new Position(selectedRegion.getOffset(), selectedRegion.getLength()));
     }
 }

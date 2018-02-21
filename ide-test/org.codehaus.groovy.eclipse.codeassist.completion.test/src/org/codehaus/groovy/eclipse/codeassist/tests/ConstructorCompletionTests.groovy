@@ -19,6 +19,7 @@ import groovy.transform.NotYetImplemented
 
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.eclipse.jdt.ui.PreferenceConstants
+import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
 import org.junit.Test
@@ -638,6 +639,35 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
     }
 
     @Test
+    void testNamedArgumentTrigger1() {
+        addGroovySource '''\
+            class Foo {
+              Number number
+              String string
+            }
+            '''.stripIndent()
+
+        String contents = 'new Foo()'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        applyProposalAndCheck(findFirstProposal(proposals, 'number : __'), 'new Foo(number: __,)', ',' as char)
+    }
+
+    @Test @NotYetImplemented
+    void testNamedArgumentTrigger2() {
+        addGroovySource '''\
+            class Foo {
+              Number number
+              String string
+            }
+            '''.stripIndent()
+
+        String contents = 'new Foo()'
+        setJavaPreference(PreferenceConstants.EDITOR_SMART_SEMICOLON, 'true')
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        applyProposalAndCheck(findFirstProposal(proposals, 'number : __'), 'new Foo(number: __);', ';' as char)
+    }
+
+    @Test
     void testParamGuessing1() {
         addGroovySource('''\
             class Flar {
@@ -656,7 +686,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             '''.stripIndent()
 
         String[] expectedChoices = [ 'yyy', '0' ]
-        checkProposalChoices(contents, 'Flar(', 'bbb', 'bbb: __, ', expectedChoices)
+        checkProposalChoices(contents, 'Flar(', 'bbb', 'bbb: __', expectedChoices)
     }
 
     @Test
@@ -677,7 +707,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             '''.stripIndent()
 
         String[] expectedChoices = [ 'yyy', '0' ]
-        checkProposalChoices(contents, 'Flar(', 'bbb', 'bbb: __, ', expectedChoices)
+        checkProposalChoices(contents, 'Flar(', 'bbb', 'bbb: __', expectedChoices)
     }
 
     @Test
@@ -699,7 +729,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             '''.stripIndent()
 
         String[] expectedChoices = [ 'yyy', '0' ]
-        checkProposalChoices(contents, 'Flar(', 'bbb', 'bbb: __, ', expectedChoices)
+        checkProposalChoices(contents, 'Flar(', 'bbb', 'bbb: __', expectedChoices)
     }
 
     @Test
@@ -721,7 +751,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             '''.stripIndent()
 
         String[] expectedChoices = [ 'yyy', '0' ]
-        checkProposalChoices(contents, 'Flar(', 'bbb', 'bbb: __, ', expectedChoices)
+        checkProposalChoices(contents, 'Flar(', 'bbb', 'bbb: __', expectedChoices)
     }
 
     @Test
@@ -743,7 +773,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             '''.stripIndent()
 
         String[] expectedChoices = [ 'yyy', '0' ]
-        checkProposalChoices(contents, 'Flar(', 'bbb', 'bbb: __, ', expectedChoices)
+        checkProposalChoices(contents, 'Flar(', 'bbb', 'bbb: __', expectedChoices)
     }
 
     @Test
@@ -765,7 +795,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             '''.stripIndent()
 
         String[] expectedChoices = [ 'xxx', '""' ]
-        checkProposalChoices(contents, 'Flar(', 'aaa', 'aaa: __, ', expectedChoices)
+        checkProposalChoices(contents, 'Flar(', 'aaa', 'aaa: __', expectedChoices)
     }
 
     @Test
@@ -787,6 +817,22 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             '''.stripIndent()
 
         String[] expectedChoices = [ 'xxx', '{  }' ]
-        checkProposalChoices(contents, 'Flar(', 'aaa', 'aaa: __, ', expectedChoices)
+        checkProposalChoices(contents, 'Flar(', 'aaa', 'aaa: __', expectedChoices)
+    }
+
+    @Test
+    void testParamGuessTrigger1() {
+        addGroovySource '''\
+            class Foo {
+              Number number
+              String string
+            }
+            '''.stripIndent()
+
+        def proposal = checkUniqueProposal('new Foo()', 'new Foo(', 'number', 'number: __')
+
+        applyProposalAndCheck(proposal, 'new Foo(number: __)')
+        //TODO:applyProposalAndCheck(proposal.choices[0], 'new Foo(number: null,)', ',' as char)
+        applyProposalAndCheck(new Document('new Foo(number: __)'), proposal.choices[0], 'new Foo(number: null)')
     }
 }
