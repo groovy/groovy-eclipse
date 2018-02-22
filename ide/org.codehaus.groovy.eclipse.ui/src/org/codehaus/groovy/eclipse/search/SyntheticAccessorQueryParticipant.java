@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,10 +25,10 @@ import org.eclipse.jdt.core.search.FieldReferenceMatch;
 import org.eclipse.jdt.core.search.LocalVariableDeclarationMatch;
 import org.eclipse.jdt.core.search.LocalVariableReferenceMatch;
 import org.eclipse.jdt.core.search.MethodReferenceMatch;
+import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchParticipant;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
-import org.eclipse.jdt.internal.core.search.JavaSearchParticipant;
 import org.eclipse.jdt.internal.ui.search.JavaElementMatch;
 import org.eclipse.jdt.ui.JavaElementLabelProvider;
 import org.eclipse.jdt.ui.search.ElementQuerySpecification;
@@ -47,7 +47,46 @@ import org.eclipse.ui.PartInitException;
  */
 public class SyntheticAccessorQueryParticipant implements IQueryParticipant {
 
-    class UISearchRequestor implements org.codehaus.groovy.eclipse.core.search.ISearchRequestor {
+    @Override
+    public int estimateTicks(QuerySpecification specification) {
+        if (!(specification instanceof ElementQuerySpecification)) {
+            return 0;
+        }
+        return 3;
+    }
+
+    @Override
+    public IMatchPresentation getUIParticipant() {
+        return new IMatchPresentation() {
+            @Override
+            public ILabelProvider createLabelProvider() {
+                return new JavaElementLabelProvider();
+            }
+
+            @Override
+            public void showMatch(Match match, int currentOffset, int currentLength, boolean activate) throws PartInitException {
+                // no-op
+            }
+        };
+    }
+
+    @Override
+    public void search(ISearchRequestor requestor, QuerySpecification querySpecification, IProgressMonitor monitor) throws CoreException {
+        if (querySpecification instanceof ElementQuerySpecification) {
+            SyntheticAccessorSearchRequestor accessorRequestor = new SyntheticAccessorSearchRequestor();
+            IJavaElement element = ((ElementQuerySpecification) querySpecification).getElement();
+            accessorRequestor.findSyntheticMatches(element,
+                querySpecification.getLimitTo(),
+                new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
+                querySpecification.getScope(),
+                new UISearchRequestor(requestor, element.getOpenable() instanceof GroovyCompilationUnit),
+                monitor);
+        }
+    }
+
+    //--------------------------------------------------------------------------
+
+    static class UISearchRequestor implements org.codehaus.groovy.eclipse.core.search.ISearchRequestor {
         private final ISearchRequestor requestor;
         private final boolean targetIsGroovy;
 
@@ -110,48 +149,5 @@ public class SyntheticAccessorQueryParticipant implements IQueryParticipant {
                 enclosingElement, rule, offset, length, accuracy, isReadAccess, isWriteAccess, insideDocComment, isSuperInvocation
             });
         }
-    }
-
-    SyntheticAccessorSearchRequestor accessorRequestor;
-
-    @Override
-    public void search(ISearchRequestor requestor, QuerySpecification querySpecification, IProgressMonitor monitor) throws CoreException {
-        if (querySpecification instanceof ElementQuerySpecification) {
-            accessorRequestor = new SyntheticAccessorSearchRequestor();
-            IJavaElement element = ((ElementQuerySpecification) querySpecification).getElement();
-            accessorRequestor.findSyntheticMatches(element,
-                querySpecification.getLimitTo(),
-                getSearchParticipants(),
-                querySpecification.getScope(),
-                new UISearchRequestor(requestor, element.getOpenable() instanceof GroovyCompilationUnit),
-                monitor);
-        }
-    }
-
-    private SearchParticipant[] getSearchParticipants() {
-        return new SearchParticipant[] { new JavaSearchParticipant() };
-    }
-
-    @Override
-    public int estimateTicks(QuerySpecification specification) {
-        if (!(specification instanceof ElementQuerySpecification)) {
-            return 0;
-        }
-        return 3;
-    }
-
-    @Override
-    public IMatchPresentation getUIParticipant() {
-        return new IMatchPresentation() {
-            @Override
-            public ILabelProvider createLabelProvider() {
-                return new JavaElementLabelProvider();
-            }
-
-            @Override
-            public void showMatch(Match match, int currentOffset, int currentLength, boolean activate) throws PartInitException {
-                // no-op
-            }
-        };
     }
 }

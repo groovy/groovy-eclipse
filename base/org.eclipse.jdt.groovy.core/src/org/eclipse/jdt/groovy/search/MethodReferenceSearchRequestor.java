@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -111,8 +112,8 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
         declaringTypeName = String.valueOf(declaringQualifiedName);
         parameterTypeNames = getParameterTypeNames(pattern, parameterTypeSignatures, declaringType);
 
-        findDeclarations = (Boolean) ReflectionUtils.getPrivateField(MethodPattern.class, "findDeclarations", pattern);
         findReferences = (Boolean) ReflectionUtils.getPrivateField(MethodPattern.class, "findReferences", pattern);
+        findDeclarations = (Boolean) ReflectionUtils.getPrivateField(MethodPattern.class, "findDeclarations", pattern);
     }
 
     protected static String[] getParameterTypeNames(MethodPattern pattern, String[] parameterTypeSignatures, IType declaringType) {
@@ -199,22 +200,21 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
             return VisitStatus.CONTINUE;
         }
 
-        boolean isConstructorCall = false; // FIXADE hmmm...not capturing constructor calls here
         boolean isDeclaration = (node instanceof MethodNode);
         int start = 0;
         int end = 0;
 
         if (result.declaration instanceof MethodNode) {
             if (methodName.equals(((MethodNode) result.declaration).getName())) {
-                if (isDeclaration) {
-                    start = ((MethodNode) node).getNameStart();
-                    end = ((MethodNode) node).getNameEnd() + 1;
-                } else if (node.getText().equals(methodName)) { // guard against synthetic match like 'foo.bar' instead of 'foo.getBar()'
-                    start = node.getStart();
-                    end = node.getEnd();
-                } else if (node instanceof StaticMethodCallExpression && node.getText().contains("." + methodName + "(")) {
-                    start = ((StaticMethodCallExpression) node).getStart();
-                    end = start + methodName.length();
+                if (isDeclaration || node instanceof StaticMethodCallExpression) {
+                    start = ((AnnotatedNode) node).getNameStart();
+                    end = ((AnnotatedNode) node).getNameEnd() + 1;
+                } else {
+                    String text = node.getText(); // check for non-synthetic match; SyntheticAccessorSearchRequestor matches "foo.bar" to "getBar()" w/o backing field
+                    if (methodName.equals(text) || result.declaringType.getField(text) != null) {
+                        start = node.getStart();
+                        end = node.getEnd();
+                    }
                 }
             }
         }
@@ -233,7 +233,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
                     if (isDeclaration && findDeclarations) {
                         match = new MethodDeclarationMatch(enclosingElement, getAccuracy(result.confidence), start, end - start, participant, enclosingElement.getResource());
                     } else if (!isDeclaration && findReferences) {
-                        match = new MethodReferenceMatch(enclosingElement, getAccuracy(result.confidence), start, end - start, isConstructorCall, false, false, false, participant, enclosingElement.getResource());
+                        match = new MethodReferenceMatch(enclosingElement, getAccuracy(result.confidence), start, end - start, false, false, false, false, participant, enclosingElement.getResource());
                     }
                     if (match != null) {
                         try {
