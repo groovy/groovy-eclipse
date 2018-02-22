@@ -1,5 +1,50 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/*
+ * Copyright 2009-2018 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/*
+ * Copyright 2009-2018 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/*
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,10 +79,10 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
         def gUnit = addGroovySource '''\
             class G {
               boolean prop
-              public def notProp
-              def getExplicitGetter() { }
-              void getExplicitSetter(def toSet) { }
-              def getExplicitIsser() { }
+              public def field
+              def getExplicit() { }
+              boolean isExplicit() { }
+              void setExplicit(def value) { }
             }
             '''.stripIndent(), 'G', 'p'
 
@@ -66,55 +111,55 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
     @Test
     void testSearchInGroovy2() {
         String contents = '''\
-            new p.G().explicitGetter
-            new p.G().isExplicitGetter()
-            new p.G().getExplicitGetter()
-            new p.G().setExplicitGetter()
+            new p.G().explicit
+            new p.G().isExplicit()
+            new p.G().getExplicit()
+            new p.G().setExplicit()
             '''.stripIndent()
         addGroovySource(contents, nextUnitName())
-        List<SearchMatch> matches = performSearch('getExplicitGetter')
+        List<SearchMatch> matches = performSearch('getExplicit')
 
         assertNumMatch(1, matches)
-        assertMatch('run', 'explicitGetter', contents, matches)
-        assertNoMatch('run', 'isExplicitGetter', contents, matches)
-        assertNoMatch('run', 'getExplicitGetter', contents, matches)
-        assertNoMatch('run', 'setExplicitGetter', contents, matches)
+        assertMatch('run', 'explicit', contents, matches)
+        assertNoMatch('run', 'isExplicit', contents, matches)
+        assertNoMatch('run', 'getExplicit', contents, matches)
+        assertNoMatch('run', 'setExplicit', contents, matches)
     }
 
     @Test
     void testSearchInGroovy3() {
         String contents = '''\
-            new p.G().explicitSetter
-            new p.G().isExplicitSetter()
-            new p.G().getExplicitSetter()
-            new p.G().setExplicitSetter()
+            new p.G().explicit
+            new p.G().isExplicit()
+            new p.G().getExplicit()
+            new p.G().setExplicit()
             '''.stripIndent()
         addGroovySource(contents, nextUnitName())
-        List<SearchMatch> matches = performSearch('getExplicitSetter')
+        List<SearchMatch> matches = performSearch('setExplicit')
 
         assertNumMatch(1, matches)
-        assertMatch('run', 'explicitSetter', contents, matches)
-        assertNoMatch('run', 'isExplicitSetter', contents, matches)
-        assertNoMatch('run', 'getExplicitSetter', contents, matches)
-        assertNoMatch('run', 'setExplicitSetter', contents, matches)
+        assertMatch('run', 'explicit', contents, matches)
+        assertNoMatch('run', 'isExplicit', contents, matches)
+        assertNoMatch('run', 'getExplicit', contents, matches)
+        assertNoMatch('run', 'setExplicit', contents, matches)
     }
 
     @Test
     void testSearchInGroovy4() {
         String contents = '''\
-            new p.G().explicitIsser
-            new p.G().isExplicitIsser()
-            new p.G().getExplicitIsser()
-            new p.G().setExplicitIsser()
+            new p.G().explicit
+            new p.G().isExplicit()
+            new p.G().getExplicit()
+            new p.G().setExplicit()
             '''.stripIndent()
         addGroovySource(contents, nextUnitName())
-        List<SearchMatch> matches = performSearch('getExplicitIsser')
+        List<SearchMatch> matches = performSearch('isExplicit')
 
         assertNumMatch(1, matches)
-        assertMatch('run', 'explicitIsser', contents, matches)
-        assertNoMatch('run', 'isExplicitIsser', contents, matches)
-        assertNoMatch('run', 'getExplicitIsser', contents, matches)
-        assertNoMatch('run', 'setExplicitIsser', contents, matches)
+        assertMatch('run', 'explicit', contents, matches)
+        assertNoMatch('run', 'isExplicit', contents, matches)
+        assertNoMatch('run', 'getExplicit', contents, matches)
+        assertNoMatch('run', 'setExplicit', contents, matches)
     }
 
     @Test // GRECLIPSE-1369
@@ -168,21 +213,21 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
         String contents = '''\
             class ClassC {
               void run() {
-                new p.G().explicitGetter = null;
-                new p.G().isExplicitGetter();
-                new p.G().getExplicitGetter();
-                new p.G().setExplicitGetter(null);
+                new p.G().explicit = null;
+                new p.G().isExplicit();
+                new p.G().getExplicit();
+                new p.G().setExplicit(null);
               }
             }
             '''.stripIndent()
         addJavaSource(contents, 'ClassC')
-        List<SearchMatch> matches = performSearch('getExplicitGetter')
+        List<SearchMatch> matches = performSearch('getExplicit')
 
         assertNumMatch(1, matches)
-        assertMatch('run', 'explicitGetter', contents, matches)
-        assertNoMatch('run', 'isExplicitGetter', contents, matches)
-        assertNoMatch('run', 'getExplicitGetter', contents, matches)
-        assertNoMatch('run', 'setExplicitGetter', contents, matches)
+        assertMatch('run', 'explicit', contents, matches)
+        assertNoMatch('run', 'isExplicit', contents, matches)
+        assertNoMatch('run', 'getExplicit', contents, matches)
+        assertNoMatch('run', 'setExplicit', contents, matches)
     }
 
     @Test // has a compile error, but still informative for searching
@@ -190,21 +235,21 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
         String contents = '''\
             class ClassD {
               void run() {
-                new p.G().explicitSetter = null;
-                new p.G().isExplicitSetter();
-                new p.G().getExplicitSetter();
-                new p.G().setExplicitSetter(null);
+                new p.G().explicit = null;
+                new p.G().isExplicit();
+                new p.G().getExplicit();
+                new p.G().setExplicit(null);
               }
             }
             '''.stripIndent()
         addJavaSource(contents, 'ClassD')
-        List<SearchMatch> matches = performSearch('getExplicitSetter')
+        List<SearchMatch> matches = performSearch('setExplicit')
 
         assertNumMatch(1, matches)
-        assertMatch('run', 'explicitSetter', contents, matches)
-        assertNoMatch('run', 'isExplicitSetter', contents, matches)
-        assertNoMatch('run', 'getExplicitSetter', contents, matches)
-        assertNoMatch('run', 'setExplicitSetter', contents, matches)
+        assertMatch('run', 'explicit', contents, matches)
+        assertNoMatch('run', 'isExplicit', contents, matches)
+        assertNoMatch('run', 'getExplicit', contents, matches)
+        assertNoMatch('run', 'setExplicit', contents, matches)
     }
 
     @Test // has a compile error, but still informative for searching
@@ -212,21 +257,21 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
         String contents = '''\
             class ClassE {
               void run() {
-                new p.G().explicitIsser = null;
-                new p.G().isExplicitIsser();
-                new p.G().getExplicitIsser();
-                new p.G().setExplicitIsser(null);
+                new p.G().explicit = true;
+                new p.G().isExplicit();
+                new p.G().getExplicit();
+                new p.G().setExplicit(null);
               }
             }
             '''.stripIndent()
         addJavaSource(contents, 'ClassE')
-        List<SearchMatch> matches = performSearch('getExplicitIsser')
+        List<SearchMatch> matches = performSearch('isExplicit')
 
         assertNumMatch(1, matches)
-        assertMatch('run', 'explicitIsser', contents, matches)
-        assertNoMatch('run', 'isExplicitIsser', contents, matches)
-        assertNoMatch('run', 'getExplicitIsser', contents, matches)
-        assertNoMatch('run', 'setExplicitIsser', contents, matches)
+        assertMatch('run', 'explicit', contents, matches)
+        assertNoMatch('run', 'isExplicit', contents, matches)
+        assertNoMatch('run', 'getExplicit', contents, matches)
+        assertNoMatch('run', 'setExplicit', contents, matches)
     }
 
     //--------------------------------------------------------------------------

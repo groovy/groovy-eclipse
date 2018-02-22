@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.jdt.groovy.model.GroovyClassFileWorkingCopy;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.search.FieldDeclarationMatch;
 import org.eclipse.jdt.core.search.FieldReferenceMatch;
 import org.eclipse.jdt.core.search.SearchMatch;
@@ -43,32 +42,29 @@ import org.eclipse.jface.text.Position;
 
 public class FieldReferenceSearchRequestor implements ITypeRequestor {
 
-    private final SearchRequestor requestor;
-    private final SearchParticipant participant;
+    protected final SearchRequestor requestor;
+    protected final SearchParticipant participant;
 
-    private final char[] name;
-    private final String declaringQualifiedName;
-    private final boolean readAccess;
-    private final boolean writeAccess;
-    private final boolean findDeclarations;
-    private final boolean findReferences;
-
-    private final Set<Position> acceptedPositions = new HashSet<>();
+    protected final String fieldName, declaringQualifiedName;
+    protected final Set<Position> acceptedPositions = new HashSet<>();
+    protected final boolean readAccess, writeAccess, findReferences, findDeclarations;
 
     public FieldReferenceSearchRequestor(FieldPattern pattern, SearchRequestor requestor, SearchParticipant participant) {
         this.requestor = requestor;
         this.participant = participant;
-        name = (char[]) ReflectionUtils.getPrivateField(VariablePattern.class, "name", pattern);
-        char[] arr = (char[]) ReflectionUtils.getPrivateField(FieldPattern.class, "declaringSimpleName", pattern);
-        String declaringSimpleName = arr == null ? "" : String.valueOf(arr);
+
+        char[] arr = (char[]) ReflectionUtils.getPrivateField(VariablePattern.class, "name", pattern);
+        fieldName = String.valueOf(arr);
+        arr = (char[]) ReflectionUtils.getPrivateField(FieldPattern.class, "declaringSimpleName", pattern);
+        String declaringSimpleName = ((arr == null || arr.length == 0) ? "" : String.valueOf(arr));
         arr = (char[]) ReflectionUtils.getPrivateField(FieldPattern.class, "declaringQualification", pattern);
         String declaringQualification = ((arr == null || arr.length == 0) ? "" : (String.valueOf(arr) + "."));
         declaringQualifiedName = declaringQualification + declaringSimpleName;
 
         readAccess = (Boolean) ReflectionUtils.getPrivateField(VariablePattern.class, "readAccess", pattern);
         writeAccess = (Boolean) ReflectionUtils.getPrivateField(VariablePattern.class, "writeAccess", pattern);
-        findDeclarations = (Boolean) ReflectionUtils.getPrivateField(VariablePattern.class, "findDeclarations", pattern);
         findReferences = (Boolean) ReflectionUtils.getPrivateField(VariablePattern.class, "findReferences", pattern);
+        findDeclarations = (Boolean) ReflectionUtils.getPrivateField(VariablePattern.class, "findDeclarations", pattern);
     }
 
     @Override
@@ -79,47 +75,41 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
         int start = 0;
         int end = 0;
 
-        // include method calls here because of closures
         if (node instanceof ConstantExpression) {
-            String cName = ((ConstantExpression) node).getText();
-            if (cName != null && CharOperation.equals(name, cName.toCharArray())) {
+            // check for "foo.bar" where "bar" refers to "getBar()" or "setBar(...)" with backing field or property
+            if (fieldName.equals(((ConstantExpression) node).getText()) && (result.confidence == TypeConfidence.UNKNOWN ||
+                    result.declaringType.getField(fieldName) != null || result.declaringType.getProperty(fieldName) != null)) {
                 doCheck = true;
-                if (EqualityVisitor.checkForAssignment(node, result.enclosingAssignment)) {
-                    isAssignment = true;
-                }
+                isAssignment = EqualityVisitor.checkForAssignment(node, result.enclosingAssignment);
                 start = node.getStart();
                 end = node.getEnd();
             }
         } else if (node instanceof FieldExpression) {
-            if (CharOperation.equals(name, ((FieldExpression) node).getFieldName().toCharArray())) {
+            if (fieldName.equals(((FieldExpression) node).getFieldName())) {
                 doCheck = true;
-                if (EqualityVisitor.checkForAssignment(node, result.enclosingAssignment)) {
-                    isAssignment = true;
-                }
-                // fully qualified field expressions in static contexts will have an sloc of the entire qualified name
+                isAssignment = EqualityVisitor.checkForAssignment(node, result.enclosingAssignment);
+                // fully-qualified field expressions in static contexts will have an sloc of the entire qualified name
+                start = end - fieldName.length();
                 end = node.getEnd();
-                start = end - name.length;
             }
         } else if (node instanceof FieldNode) {
             FieldNode fnode = (FieldNode) node;
-            if (CharOperation.equals(name, fnode.getName().toCharArray())) {
+            if (fieldName.equals(fnode.getName())) {
                 doCheck = true;
-                isDeclaration = true;
-                // assume all fieldNodes are assignments. Not true if there is no initializer, but we can't know this at this point
-                // since the initializer has already been moved to the <init>
+                // assume all FieldNodes are assignments -- not true if there is no initializer, but we
+                // can't know this at this point since initializer has already been moved to the <init>
                 isAssignment = true;
+                isDeclaration = true;
                 start = fnode.getNameStart();
                 end = fnode.getNameEnd() + 1; // arrrgh...why +1?
             }
         } else if (node instanceof VariableExpression) {
-            VariableExpression vnode = (VariableExpression) node;
-            if (CharOperation.equals(name, vnode.getName().toCharArray())) {
+            String vname = ((VariableExpression) node).getName();
+            if (fieldName.equals(vname)) {
                 doCheck = true;
-                if (EqualityVisitor.checkForAssignment(node, result.enclosingAssignment)) {
-                    isAssignment = true;
-                }
-                start = vnode.getStart();
-                end = start + vnode.getName().length();
+                isAssignment = EqualityVisitor.checkForAssignment(node, result.enclosingAssignment);
+                start = node.getStart();
+                end = start + vname.length();
             }
         }
 
@@ -158,7 +148,7 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
         if (declaringType == null) {
             // no declaring type; probably a variable declaration
             return false;
-        } else if (declaringQualifiedName == null || declaringQualifiedName.equals("")) {
+        } else if (declaringQualifiedName.isEmpty()) {
             // no type specified, accept all
             return true;
         } else if (declaringType.getName().equals(declaringQualifiedName)) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -387,6 +387,49 @@ public final class MethodReferenceSearchTests extends SearchTestSuite {
 
         assertEquals(1, searchRequestor.getMatches().size());
         assertLocation(searchRequestor.getMatch(0), contents.lastIndexOf("bar"), "bar".length());
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/489
+    public void testExplicitPropertySetterSearch() throws Exception {
+        GroovyCompilationUnit bar = createUnit("foo", "Bar",
+            "package foo\n" +
+            "class Bar {\n" +
+            "  String string\n" +
+            "  void setString(String string) {\n" +
+            "    this.string = (string ?: '')\n" +
+            "  }\n" +
+            "}");
+        GroovyCompilationUnit baz = createUnit("foo", "Baz",
+            "package foo\n" +
+            "def bar = new Bar(string: null)\n" + // exact
+            "bar.setString(null)\n" + // exact
+            "bar.'setString'(null)\n" + // exact
+            "bar.string = null\n" + // potential
+            "def str = bar.string" +
+            "bar.@string = null\n" +
+            "bar.&setString\n" + // potential
+            "");
+
+        IMethod method = bar.getType("Bar").getMethods()[0];
+        new SearchEngine().search(
+            SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES),
+            new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()},
+            SearchEngine.createJavaSearchScope(new IJavaElement[] {bar.getPackageFragmentRoot()}, false),
+            searchRequestor, new NullProgressMonitor());
+
+        List<SearchMatch> matches = searchRequestor.getMatches();
+
+        assertEquals(5, matches.size());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(0).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("string:"), matches.get(0).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(1).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("setString"), matches.get(1).getOffset());
+        assertEquals(SearchMatch.A_ACCURATE, matches.get(2).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("'setString'"), matches.get(2).getOffset());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(3).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).indexOf("string = "), matches.get(3).getOffset());
+        assertEquals(SearchMatch.A_INACCURATE, matches.get(4).getAccuracy());
+        assertEquals(String.valueOf(baz.getContents()).lastIndexOf("setString"), matches.get(4).getOffset());
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/402
