@@ -16,6 +16,7 @@
 package org.codehaus.groovy.eclipse.codeassist.tests
 
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
+import org.eclipse.jdt.internal.codeassist.impl.AssistOptions
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Assert
@@ -95,6 +96,9 @@ final class GuessingCompletionTests extends CompletionTestSuite {
 
     @Test
     void testParamGuessing5() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+        setJavaPreference(AssistOptions.OPTION_SuggestStaticImports, AssistOptions.DISABLED)
+
         addGroovySource '''\
             import java.util.concurrent.TimeUnit
             class Util {
@@ -122,13 +126,11 @@ final class GuessingCompletionTests extends CompletionTestSuite {
         Assert.assertEquals(['MILLIS', 'DAYS', 'HOURS', 'MINUTES', 'SECONDS', 'MILLISECONDS', 'MICROSECONDS', 'NANOSECONDS', 'null'].join('\n'),
             choices*.displayString.join('\n'))
 
-        // TODO: Something below is not matching the real editor's application of the parameter proposal
-        /*applyProposalAndCheck(choices[1], '''\
-            |import static java.util.concurrent.TimeUnit.DAYS
+        applyProposalAndCheck(choices[1], '''\
             |import static java.util.concurrent.TimeUnit.MILLISECONDS as MILLIS
             |
-            |pack.Util.util(DAYS)
-            |'''.stripMargin())*/
+            |pack.Util.util(java.util.concurrent.TimeUnit.DAYS)
+            |'''.stripMargin())
     }
 
     @Test

@@ -183,7 +183,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     protected void applyProposalAndCheck(ICompletionProposal proposal, String expected, char trigger = 0, int stateMask = 0) {
         assert proposal instanceof ICompletionProposalExtension2
         JavaContentAssistInvocationContext context = proposal.@fInvocationContext
-        proposal.apply(context.viewer, trigger, stateMask, context.invocationOffset)
+        proposal.apply(context.viewer, trigger, stateMask, proposal.replacementOffset)
 
         String expect = expected.normalize()
         String actual = context.document.get().normalize()
