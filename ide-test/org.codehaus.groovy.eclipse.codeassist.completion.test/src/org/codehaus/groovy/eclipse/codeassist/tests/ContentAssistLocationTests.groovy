@@ -15,10 +15,13 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import groovy.transform.NotYetImplemented
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 
 import org.codehaus.groovy.ast.AnnotationNode
+import org.codehaus.groovy.ast.expr.ClassExpression
+import org.codehaus.groovy.ast.expr.VariableExpression
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer
@@ -169,19 +172,44 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
         assertLocation(contents, getLastIndexOf(contents, 'bea'), ContentAssistLocation.STATEMENT)
     }
 
+    @Test @NotYetImplemented
+    void testStatement21() {
+        String contents = '''\
+            def a, b
+            def x = true ? _
+            if (x) println(x)
+            '''.stripIndent()
+        assertLocation(contents.replace('_', ''), contents.indexOf('_'), ContentAssistLocation.STATEMENT)
+    }
+
+    @Test
+    void testStatement22() {
+        String contents = '''\
+            def a, b
+            def x = true ? y
+            if (x) println(x)
+            '''.stripIndent()
+        assertLocation(contents, getIndexOf(contents, 'y'), ContentAssistLocation.STATEMENT) {
+            assert completionNode instanceof VariableExpression
+        }
+    }
+
     @Test
     void testExpression1() {
-        assertLocation('a.a', 3, ContentAssistLocation.EXPRESSION)
+        String contents = 'a.a'
+        assertLocation(contents, contents.length(), ContentAssistLocation.EXPRESSION)
     }
 
     @Test
     void testExpression2() {
-        assertLocation('a.', 2, ContentAssistLocation.EXPRESSION)
+        String contents ='a.'
+        assertLocation(contents, contents.length(), ContentAssistLocation.EXPRESSION)
     }
 
     @Test
     void testExpression3() {
-        assertLocation('a.\n', 3, ContentAssistLocation.EXPRESSION)
+        String contents = 'a.\n'
+        assertLocation(contents, contents.length(), ContentAssistLocation.EXPRESSION)
     }
 
     @Test
@@ -193,25 +221,61 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     @Test
     void testExpression5() {
         String contents = 'a.g(b.)// \n'
-        assertLocation(contents, contents.indexOf('b.') + 2, ContentAssistLocation.EXPRESSION)
+        assertLocation(contents, getIndexOf(contents, 'b.'), ContentAssistLocation.EXPRESSION)
     }
 
     @Test
     void testExpression6() {
         String contents = 'a.g a, a.b'
-        assertLocation(contents, contents.indexOf('b') + 1, ContentAssistLocation.EXPRESSION)
+        assertLocation(contents, getIndexOf(contents, 'b'), ContentAssistLocation.EXPRESSION)
     }
 
     @Test
     void testExpression7() {
         String contents = 'def x = { a.g(    z.c,\nb) }'
-        assertLocation(contents, contents.indexOf('c') + 1, ContentAssistLocation.EXPRESSION)
+        assertLocation(contents, getIndexOf(contents, 'c'), ContentAssistLocation.EXPRESSION)
     }
 
     @Test
     void testExpression8() {
         String contents = 'def x = { a.g(    c,\nz.b) }'
-        assertLocation(contents, contents.indexOf('b') + 1, ContentAssistLocation.EXPRESSION)
+        assertLocation(contents, getIndexOf(contents, 'b'), ContentAssistLocation.EXPRESSION)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/359
+    void testExpression9() {
+        String contents = '''\
+            def a, b
+            def x = true ? String.val
+            def y, z
+            '''.stripIndent()
+        assertLocation(contents, getIndexOf(contents, 'val'), ContentAssistLocation.EXPRESSION) {
+            assert completionNode instanceof ClassExpression
+        }
+    }
+
+    @Test
+    void testExpression10() {
+        String contents = '''\
+            def a, b
+            def x = false ? a : String.val
+            def y, z
+            '''.stripIndent()
+        assertLocation(contents, getIndexOf(contents, 'val'), ContentAssistLocation.EXPRESSION) {
+            assert completionNode instanceof ClassExpression
+        }
+    }
+
+    @Test
+    void testExpression11() {
+        String contents = '''\
+            def a, b
+            def x = a ?: String.val
+            def y, z
+            '''.stripIndent()
+        assertLocation(contents, getIndexOf(contents, 'val'), ContentAssistLocation.EXPRESSION) {
+            assert completionNode instanceof ClassExpression
+        }
     }
 
     @Test

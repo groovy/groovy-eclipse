@@ -3044,6 +3044,17 @@ conditionalExpression[int lc_stmt]
         (
           (nls! ELVIS_OPERATOR)=> nls! ELVIS_OPERATOR^ nls! conditionalExpression[0]
           | (nls! QUESTION)=> nls! QUESTION^ nls! assignmentExpression[0] nls! COLON! nls! conditionalExpression[0]
+            // GRECLIPSE add
+            exception
+            catch [RecognitionException e] {
+                // keep AST if recognition failed at or after ':'
+                if (currentAST.root.getNumberOfChildren() > 1) {
+                    reportError(e);
+                } else {
+                    throw e;
+                }
+            }
+            // GRECLIPSE end
         )?
     ;
 
