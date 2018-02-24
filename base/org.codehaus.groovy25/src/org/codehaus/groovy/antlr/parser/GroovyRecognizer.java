@@ -5285,19 +5285,35 @@ inputState.guessing--;
 inputState.guessing--;
             }
             if ( synPredMatched463 ) {
-                nls();
-                AST tmp151_AST = null;
-                tmp151_AST = astFactory.create(LT(1));
-                astFactory.makeASTRoot(currentAST, tmp151_AST);
-                match(QUESTION);
-                nls();
-                assignmentExpression(0);
-                astFactory.addASTChild(currentAST, returnAST);
-                nls();
-                match(COLON);
-                nls();
-                conditionalExpression(0);
-                astFactory.addASTChild(currentAST, returnAST);
+                try {      // for error handling
+                    nls();
+                    AST tmp151_AST = null;
+                    tmp151_AST = astFactory.create(LT(1));
+                    astFactory.makeASTRoot(currentAST, tmp151_AST);
+                    match(QUESTION);
+                    nls();
+                    assignmentExpression(0);
+                    astFactory.addASTChild(currentAST, returnAST);
+                    nls();
+                    match(COLON);
+                    nls();
+                    conditionalExpression(0);
+                    astFactory.addASTChild(currentAST, returnAST);
+                }
+                catch (RecognitionException e) {
+                    if (inputState.guessing==0) {
+                        
+                        // keep AST if recognition failed at or after ':'
+                        if (currentAST.root.getNumberOfChildren() > 1) {
+                        reportError(e);
+                        } else {
+                        throw e;
+                        }
+                        
+                    } else {
+                        throw e;
+                    }
+                }
             }
             else if ((_tokenSet_53.member(LA(1))) && (_tokenSet_54.member(LA(2)))) {
             }
