@@ -68,8 +68,6 @@ import org.codehaus.groovy.runtime.IOGroovyMethods;
 import org.codehaus.groovy.runtime.ProcessGroovyMethods;
 import org.codehaus.groovy.runtime.ResourceGroovyMethods;
 import org.codehaus.groovy.runtime.StringGroovyMethods;
-import org.codehaus.groovy.runtime.SwingGroovyMethods;
-import org.codehaus.groovy.runtime.XmlGroovyMethods;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
@@ -119,8 +117,6 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     public static final ClassNode DGM_CLASS_NODE = ClassHelper.make(DefaultGroovyMethods.class);
     public static final ClassNode EGM_CLASS_NODE = ClassHelper.make(EncodingGroovyMethods.class);
     public static final ClassNode PGM_CLASS_NODE = ClassHelper.make(ProcessGroovyMethods.class);
-    public static final ClassNode SGM_CLASS_NODE = ClassHelper.make(SwingGroovyMethods.class);
-    public static final ClassNode XGM_CLASS_NODE = ClassHelper.make(XmlGroovyMethods.class);
     public static final ClassNode DATE_GM_CLASS_NODE = ClassHelper.make(DateGroovyMethods.class);
     public static final ClassNode DGSM_CLASS_NODE = ClassHelper.make(DefaultGroovyStaticMethods.class);
     public static final ClassNode IO_GROOVY_METHODS = ClassHelper.make(IOGroovyMethods.class);
@@ -141,8 +137,6 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         dgm_classes.add(IO_GROOVY_METHODS);
         dgm_classes.add(EGM_CLASS_NODE);
         dgm_classes.add(PGM_CLASS_NODE);
-        dgm_classes.add(SGM_CLASS_NODE);
-        dgm_classes.add(XGM_CLASS_NODE);
         dgm_classes.add(DATE_GM_CLASS_NODE);
         dgm_classes.add(DGSM_CLASS_NODE);
         dgm_classes.add(DGM_CLASS_NODE);

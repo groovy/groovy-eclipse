@@ -165,7 +165,7 @@ public class CompileStack implements Opcodes {
         }
     }
 
-    private class ExceptionTableEntry {
+    private static class ExceptionTableEntry {
         Label start,end,goal;
         String sig;
     }
@@ -775,6 +775,7 @@ public class CompileStack implements Opcodes {
         blocks.removeAll(blocksToRemove);
         applyBlockRecorder(blocks);
     }
+
 
     private void applyBlockRecorder(List<BlockRecorder> blocks) {
         if (blocks.isEmpty() || blocks.size() == visitedBlocks.size()) return;

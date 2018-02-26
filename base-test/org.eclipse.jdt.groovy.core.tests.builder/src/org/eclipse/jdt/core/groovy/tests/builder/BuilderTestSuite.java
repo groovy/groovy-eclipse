@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.codehaus.groovy.activator.GroovyActivator;
+import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
 import org.codehaus.groovy.runtime.StringGroovyMethods;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper;
@@ -234,9 +234,9 @@ public abstract class BuilderTestSuite {
 
     protected void expectingSpecificProblemsFor(IPath root, Problem[] problems) {
         Problem[] rootProblems = env.getProblemsFor(root);
-        next : for (int i = 0; i < problems.length; i++) {
+        next : for (int i = 0; i < problems.length; i += 1) {
             Problem problem = problems[i];
-            for (int j = 0; j < rootProblems.length; j++) {
+            for (int j = 0; j < rootProblems.length; j += 1) {
                 Problem rootProblem = rootProblems[j];
                 if (rootProblem != null) {
                     if (problem.equals(rootProblem)) {
@@ -305,7 +305,7 @@ public abstract class BuilderTestSuite {
             try {
                 IProject project = getProject(projectName);
                 IProjectDescription description = project.getDescription();
-                description.setNatureIds(new String[] { JavaCore.NATURE_ID, GroovyNature.GROOVY_NATURE });
+                description.setNatureIds(new String[] {JavaCore.NATURE_ID, GroovyNature.GROOVY_NATURE});
                 project.setDescription(description, null);
             } catch (CoreException e) {
                 handleCoreException(e);
@@ -316,7 +316,7 @@ public abstract class BuilderTestSuite {
             try {
                 IProject project = getProject(projectName);
                 IProjectDescription description = project.getDescription();
-                description.setNatureIds(new String[] { JavaCore.NATURE_ID });
+                description.setNatureIds(new String[] {JavaCore.NATURE_ID});
                 project.setDescription(description, null);
             } catch (CoreException e) {
                 handleCoreException(e);
@@ -324,7 +324,7 @@ public abstract class BuilderTestSuite {
         }
 
         public void addGroovyJars(IPath projectPath) throws Exception {
-            addExternalJar(projectPath, GroovyActivator.GROOVY_ALL_JAR_URL.getFile());
+            addExternalJar(projectPath, CompilerUtils.getExportedGroovyAllJar().toOSString());
         }
 
         public void addJar(IPath projectPath, String path) throws Exception {

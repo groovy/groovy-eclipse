@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +15,17 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import java.lang.reflect.Modifier;
 import java.net.URL;
-import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
+import org.codehaus.groovy.control.CompilationUnit;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jdt.core.JavaCore;
@@ -503,12 +500,14 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources);
 
-        GroovyCompilationUnitDeclaration unit = getCUDeclFor("SomeValueObject.groovy");
-        ClassNode classNode = unit.getCompilationUnit().getClassNode("b.SomeValueObject");
-        FieldNode field = classNode.getField("id");
-        ClassNode type = field.getType();
-        List<AnnotationNode> annotations = type.getAnnotations(ClassHelper.make(groovy.transform.Immutable.class));
-        assertEquals(1, annotations.size());
+        CompilationUnit unit = getCUDeclFor("SomeValueObject.groovy").getCompilationUnit();
+        ClassNode fieldType = unit.getClassNode("b.SomeValueObject").getField("id").getType();
+        Optional<AnnotationNode> anno = fieldType.getAnnotations().stream().filter(node -> {
+            String name = node.getClassNode().getName();
+            return (name.equals("groovy.transform.Immutable") ||
+                name.equals("groovy.transform.KnownImmutable"));
+        }).findFirst();
+        assertTrue(anno.isPresent());
     }
 
     @Test
@@ -848,7 +847,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "2. ERROR in Foo.groovy (at line 5)\n" +
             "\tprintln \"Did you spot the error in this ${message.toUppercase()}?\"\n" +
             "\t                                         ^^^^^^^^^^^^^^^^^^^^^^^\n" +
-            "Groovy:[Static type checking] - Cannot find matching method java.lang.String#toUppercase(). Please check if the declared type is right and if the method exists.\n" +
+            "Groovy:[Static type checking] - Cannot find matching method java.lang.String#toUppercase(). Please check if the declared type is correct and if the method exists.\n" +
             "----------\n");
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,17 +18,12 @@ package dsld
 import java.awt.*
 import javax.swing.*
 
-import groovy.model.DefaultTableColumn
-import groovy.swing.impl.*
-
-import org.codehaus.groovy.binding.*
-
 /**
  * This is the DSLD for SwingBuilder
  *
  * @author Andrew Eisenberg
  */
-contribute(currentType(groovy.swing.SwingBuilder)) {
+contribute(currentType('groovy.swing.SwingBuilder')) {
     provider = '{@link groovy.swing.SwingBuilder SwingBuilder} DSL'
 
     method  name: 'action',
@@ -62,7 +57,7 @@ contribute(currentType(groovy.swing.SwingBuilder)) {
                 <p> see <a href="http://groovy.codehaus.org/SwingBuilder.frame">http://groovy.codehaus.org/SwingBuilder.frame</a>
                 '''.stripIndent()
 
-    def add = { String name, Class type ->
+    def add = { String name, type ->
         String doc = "See <a href=\"http://groovy.codehaus.org/SwingBuilder.${name}\">SwingBuilder.${name}</a>"
         method name: name, type: type, doc: doc
     }
@@ -70,7 +65,7 @@ contribute(currentType(groovy.swing.SwingBuilder)) {
     // and so on...
     add('actions', List)
     add('bean', Void)
-    add('bind', FullBinding)
+    add('bind', 'org.codehaus.groovy.binding.FullBinding')
     add('borderLayout', BorderLayout)
     add('boundedRangeModel', DefaultBoundedRangeModel)
     add('box', Box)
@@ -80,7 +75,7 @@ contribute(currentType(groovy.swing.SwingBuilder)) {
     add('cardLayout', CardLayout)
     add('checkBox', JCheckBox)
     add('checkBoxMenuItem', JCheckBoxMenuItem)
-    add('closureColumn', DefaultTableColumn)
+    add('closureColumn', 'groovy.model.DefaultTableColumn')
     add('compoundBorder', border.CompoundBorder)
     add('colorChooser', JColorChooser)
     add('comboBox', JComboBox)
@@ -136,15 +131,15 @@ contribute(currentType(groovy.swing.SwingBuilder)) {
     add('tabbedPane', JTabbedPane)
     add('table', JTable)
     add('tableColumn', table.TableColumn)
-    add('tableLayout', TableLayoutRow)
+    add('tableLayout', 'groovy.swing.impl.TableLayoutRow')
     add('tableModel', table.TableModel)
-    add('td', TableLayoutCell)
+    add('td', 'groovy.swing.impl.TableLayoutCell')
     add('textArea', JTextArea)
     add('textField', JTextField)
     add('textPane', JTextPane)
     add('toggleButton', JToggleButton)
     add('toolbar', JToolBar)
-    add('tr', TableLayoutRow)
+    add('tr', 'groovy.swing.impl.TableLayoutRow')
     add('tree', JTree)
     add('vbox', Box)
     add('vglue', Component)

@@ -18,11 +18,6 @@
  */
 package org.codehaus.groovy.classgen;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.List;
-import java.util.Map;
-
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
@@ -44,6 +39,11 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.vmplugin.VMPluginFactory;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.List;
+import java.util.Map;
 
 /**
  * An Annotation visitor responsible for:
@@ -261,15 +261,10 @@ public class AnnotationVisitor {
         if (attrType.isArray()) {
             checkReturnType(attrType.getComponentType(), node);
         } else if (ClassHelper.isPrimitiveType(attrType)) {
-            return;
         } else if (ClassHelper.STRING_TYPE.equals(attrType)) {
-            return;
         } else if (ClassHelper.CLASS_Type.equals(attrType)) {
-            return;
         } else if (attrType.isDerivedFrom(ClassHelper.Enum_Type)) {
-            return;
         } else if (isValidAnnotationClass(attrType)) {
-            return;
         } else {
             addError("Unexpected return type " + attrType.getName(), node);
         }

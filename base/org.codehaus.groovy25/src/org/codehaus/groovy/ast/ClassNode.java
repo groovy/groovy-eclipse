@@ -18,12 +18,15 @@
  */
 package org.codehaus.groovy.ast;
 
+import org.apache.groovy.ast.tools.ClassNodeUtils;
 import org.codehaus.groovy.GroovyBugError;
-import org.codehaus.groovy.ast.expr.*;
+import org.codehaus.groovy.ast.expr.BinaryExpression;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.FieldExpression;
+import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
-import org.codehaus.groovy.ast.tools.ClassNodeUtils;
 import org.codehaus.groovy.ast.tools.ParameterUtils;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.transform.ASTTransformation;
@@ -35,8 +38,8 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -118,7 +121,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
         public void put(Object key, MethodNode value) {
             if (map == null) {
-                 map = new HashMap<Object, List<MethodNode>>();
+                 map = new LinkedHashMap<Object, List<MethodNode>>();
             }
             if (map.containsKey(key)) {
                 get(key).add(value);
@@ -437,7 +440,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         if (redirect!=null) return redirect().getFields();
         lazyClassInit();
         if (fields == null)
-            fields = new LinkedList<FieldNode> ();
+            fields = new LinkedList<FieldNode>();
         return fields;
     }
 
@@ -517,15 +520,8 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public Map<String, MethodNode> getDeclaredMethodsMap() {
-        // Start off with the methods from the superclass.
-        ClassNode parent = getSuperClass();
-        Map<String, MethodNode> result;
-        if (parent != null) {
-            result = parent.getDeclaredMethodsMap();
-        } else {
-            result = new HashMap<String, MethodNode>();
-        }
-        ClassNodeUtils.addInterfaceMethods(this, result);
+        Map<String, MethodNode> result = ClassNodeUtils.getDeclaredMethodsFromSuper(this);
+        ClassNodeUtils.addDeclaredMethodsFromInterfaces(this, result);
 
         // And add in the methods implemented in this class.
         for (MethodNode method : getMethods()) {
@@ -566,7 +562,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         r.ensurePropertiesInitialized();
         // GRECLIPSE end
         if (r.properties == null)
-            r.properties = new ArrayList<PropertyNode> ();
+            r.properties = new ArrayList<PropertyNode>();
         return r.properties;
     }
 
@@ -574,7 +570,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         if (redirect != null) return redirect().getDeclaredConstructors();
         lazyClassInit();
         if (constructors == null)
-            constructors = new ArrayList<ConstructorNode> ();
+            constructors = new ArrayList<ConstructorNode>();
         return constructors;
     }
 
@@ -626,7 +622,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         if (r.fields == null)
             r.fields = new LinkedList<>();
         if (r.fieldIndex == null)
-            r.fieldIndex = new HashMap<>();
+            r.fieldIndex = new LinkedHashMap<>();
 
         if (isFirst)
             r.fields.addFirst(node);
@@ -656,7 +652,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         addField(field);
         final ClassNode r = redirect();
         if (r.properties == null)
-            r.properties = new ArrayList<PropertyNode> ();
+            r.properties = new ArrayList<PropertyNode>();
         r.properties.add(node);
     }
 
@@ -701,7 +697,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         node.setDeclaringClass(this);
         final ClassNode r = redirect();
         if (r.constructors == null)
-            r.constructors = new ArrayList<ConstructorNode> ();
+            r.constructors = new ArrayList<ConstructorNode>();
         r.constructors.add(node);
     }
 
@@ -897,7 +893,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
     public List<Statement> getObjectInitializerStatements() {
         if (objectInitializers == null)
-            objectInitializers = new LinkedList<Statement> ();
+            objectInitializers = new LinkedList<Statement>();
         return objectInitializers;
     }
 
@@ -1287,21 +1283,21 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         if (isArray()) {
             return componentType.toString(showRedirect)+"[]";
         }
-        String ret = getName();
-        if (placeholder) ret = getUnresolvedName();
+        StringBuilder ret = new StringBuilder(getName());
+        if (placeholder) ret = new StringBuilder(getUnresolvedName());
         if (!placeholder && genericsTypes != null) {
-            ret += " <";
+            ret.append(" <");
             for (int i = 0; i < genericsTypes.length; i++) {
-                if (i != 0) ret += ", ";
+                if (i != 0) ret.append(", ");
                 GenericsType genericsType = genericsTypes[i];
-                ret += genericTypeAsString(genericsType);
+                ret.append(genericTypeAsString(genericsType));
             }
-            ret += ">";
+            ret.append(">");
         }
         if (redirect != null && showRedirect) {
-            ret += " -> " + redirect().toString();
+            ret.append(" -> ").append(redirect().toString());
         }
-        return ret;
+        return ret.toString();
     }
 
     /**
@@ -1311,27 +1307,27 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * @return the string representing the generic type
      */
     private String genericTypeAsString(GenericsType genericsType) {
-        String ret = genericsType.getName();
+        StringBuilder ret = new StringBuilder(genericsType.getName());
         if (genericsType.getUpperBounds() != null) {
-            ret += " extends ";
+            ret.append(" extends ");
             for (int i = 0; i < genericsType.getUpperBounds().length; i++) {
                 ClassNode classNode = genericsType.getUpperBounds()[i];
                 if (classNode.equals(this)) {
-                    ret += classNode.getName();
+                    ret.append(classNode.getName());
                 } else {
-                    ret += classNode.toString(false);
+                    ret.append(classNode.toString(false));
                 }
-                if (i + 1 < genericsType.getUpperBounds().length) ret += " & ";
+                if (i + 1 < genericsType.getUpperBounds().length) ret.append(" & ");
             }
         } else if (genericsType.getLowerBound() !=null) {
             ClassNode classNode = genericsType.getLowerBound();
             if (classNode.equals(this)) {
-                ret += " super " + classNode.getName();
+                ret.append(" super ").append(classNode.getName());
             } else {
-                ret += " super " + classNode;
+                ret.append(" super ").append(classNode);
             }
         }
-        return ret;
+        return ret.toString();
     }
 
     /**
@@ -1453,12 +1449,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         return componentType;
     }
 
-    // GRECLIPSE add
-    public boolean hasClass() {
-        return redirect().clazz != null;
-    }
-    // GRECLIPSE end
-
     /**
      * Returns the concrete class this classnode relates to. However, this method
      * is inherently unsafe as it may return null depending on the compile phase you are
@@ -1570,17 +1560,17 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public void renameField(String oldName, String newName) {
-        ClassNode r = redirect ();
+        ClassNode r = redirect();
         if (r.fieldIndex == null)
-            r.fieldIndex = new HashMap<String,FieldNode> ();
+            r.fieldIndex = new LinkedHashMap<String,FieldNode>();
         final Map<String,FieldNode> index = r.fieldIndex;
         index.put(newName, index.remove(oldName));
     }
     
     public void removeField(String oldName) {
-        ClassNode r = redirect ();
+        ClassNode r = redirect();
         if (r.fieldIndex == null)
-            r.fieldIndex = new HashMap<String,FieldNode> ();
+            r.fieldIndex = new LinkedHashMap<String,FieldNode>();
         final Map<String,FieldNode> index = r.fieldIndex;
         r.fields.remove(index.get(oldName));
         index.remove(oldName);
@@ -1605,22 +1595,26 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public String getClassInternalName() {
-        return isRedirectNode() ? redirect().getClassInternalName() : null;
+        return (isRedirectNode() ? redirect().getClassInternalName() : null);
+    }
+
+    public boolean hasClass() {
+        return (redirect().clazz != null);
     }
 
     public boolean isPrimitive() {
-        return (clazz != null) ? clazz.isPrimitive() : false;
+        return (clazz != null && clazz.isPrimitive());
     }
 
     /**
      * @return true if this classnode might have inners, conservatively it says yes if it is unsure.
      */
     public boolean mightHaveInners() {
-        ClassNode redirect = redirect();
-        if (redirect.hasClass()) {
+        ClassNode r = redirect();
+        if (r.hasClass()) {
             return true;
         }
-        return redirect.innerClasses != null && !redirect.innerClasses.isEmpty();
+        return (r.innerClasses != null && !r.innerClasses.isEmpty());
     }
     // GRECLIPSE end
 
@@ -1628,7 +1622,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         if(transformInstances == null){
             transformInstances = new EnumMap<CompilePhase, Map<Class <? extends ASTTransformation>, Set<ASTNode>>>(CompilePhase.class);
             for (CompilePhase phase : CompilePhase.values()) {
-                transformInstances.put(phase, new HashMap<Class <? extends ASTTransformation>, Set<ASTNode>>());
+                transformInstances.put(phase, new LinkedHashMap<Class <? extends ASTTransformation>, Set<ASTNode>>());
             }
         }
         return transformInstances;

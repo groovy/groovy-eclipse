@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ final class ClasspathContainerTests extends GroovyEclipseTestSuite {
         GroovyRuntime.ensureGroovyClasspathContainer(packageFragmentRoot.javaProject, true)
 
         IClasspathEntry[] entries = container.classpathEntries
-        List<IClasspathEntry> groovyAllEntries = entries.findAll { it.path.toPortableString().contains('groovy-all') }
+        List<IClasspathEntry> groovyAllEntries = entries.findAll { it.path.toPortableString() =~ /\bgroovy(-all)?-\d/ }
         List<IClasspathEntry> nonPluginEntries = entries.findAll { !it.path.toPortableString().contains('/org.codehaus.groovy') }
 
         assert groovyAllEntries.size() == 1 : "Mutiple groovy-all found in the Groovy classpath container: $groovyAllEntries"
@@ -68,7 +68,7 @@ final class ClasspathContainerTests extends GroovyEclipseTestSuite {
         GroovyRuntime.ensureGroovyClasspathContainer(packageFragmentRoot.javaProject, false)
 
         IClasspathEntry[] entries = container.classpathEntries
-        List<IClasspathEntry> groovyAllEntries = entries.findAll { it.path.toPortableString().contains('groovy-all') }
+        List<IClasspathEntry> groovyAllEntries = entries.findAll { it.path.toPortableString() =~ /\bgroovy(-all)?-\d/ }
 
         assert groovyAllEntries.size() == 1 : "Mutiple groovy-all found in the Groovy classpath container: $groovyAllEntries"
         assert entries.any { it.path.toPortableString().contains('ivy-2') } : 'ivy.jar (for Grab support) should be included'

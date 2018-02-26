@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -486,16 +486,16 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGM47() {
+    public void testDGM47() throws Throwable {
         String contents = "java.util.regex.Pattern[] pats = [~/one/, ~/two/]\n" +
             "pats.eachWithIndex { pat, idx ->\n" +
             "  \n" +
-            "}.collect {\n" + // T <T> collect(Object self, Closure<T> task)
+            "}.collect {\n" + // <T> List<T> collect(Object self, Closure<T> xform)
             "  it\n" +
             "}\n";
         int start = contents.indexOf("collect");
         int end = start + "collect".length();
-        assertType(contents, start, end, "java.util.List<T>"); // better than 'unknown'
+        assertTypeOneOf(contents, start, end, "java.util.List", "java.util.List<T>", "java.util.List<java.lang.Object<T>>");
     }
 
     @Test

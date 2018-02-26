@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ public class GroovyShellLauncherTab extends JavaMainTab {
     protected void createMainTypeEditor(Composite parent, String text) {
         super.createMainTypeEditor(parent, text);
         fMainText.getParent().setVisible(false);
-        fMainText.setText(org.codehaus.groovy.tools.shell.Main.class.getName());
+        fMainText.setText("org.codehaus.groovy.tools.shell.Main");
         Button fSearchButton = (Button) ReflectionUtils.getPrivateField(SharedJavaMainTab.class, "fSearchButton", this);
         fSearchButton.setVisible(false);
         Button fSearchExternalJarsCheckButton = (Button) ReflectionUtils.getPrivateField(JavaMainTab.class,

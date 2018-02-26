@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
-import org.codehaus.groovy.tools.shell.Main;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.Adapters;
 import org.eclipse.debug.core.DebugPlugin;
@@ -99,7 +98,7 @@ public class GroovyShellLaunchShortcut implements ILaunchShortcut {
             String launchName = getLaunchManager().generateLaunchConfigurationName(project.getProject().getName());
             ILaunchConfigurationWorkingCopy launchConfig = getGroovyLaunchConfigType().newInstance(null, launchName);
 
-            launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, Main.class.getName());
+            launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_MAIN_TYPE_NAME, "org.codehaus.groovy.tools.shell.Main");
             launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, project.getElementName());
             launchConfig.setAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, "-Djline.terminal=jline.UnsupportedTerminal");
             List<String> classpath = new ArrayList<>(Arrays.asList(JavaRuntime.computeDefaultRuntimeClassPath(project)));

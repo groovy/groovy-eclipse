@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -128,14 +128,18 @@ public abstract class GroovyCompilerTestSuite {
                     URL groovyJar = null;
                     for (String groovyVer : groovyVersions) {
                         groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-all-" + groovyVer + ".jar");
-                        if (groovyJar != null) break;
+                        if (groovyJar == null)
+                            groovyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/groovy-" + groovyVer + ".jar");
+                        if (groovyJar != null)
+                            break;
                     }
                     newcps[newcps.length-3] = resolve(groovyJar);
 
                     URL ivyJar = null;
                     for (String ivyVer : ivyVersions) {
                         ivyJar = Platform.getBundle("org.codehaus.groovy").getEntry("lib/ivy-" + ivyVer + ".jar");
-                        if (ivyJar != null) break;
+                        if (ivyJar != null)
+                            break;
                     }
                     newcps[newcps.length-2] = resolve(ivyJar);
 

@@ -789,15 +789,15 @@ final class AddImportOnSelectionTests extends GroovyEditorTestSuite {
     @Test
     void testAddImportOnUnqualifiedAnnotation1() {
         addImportOnSelection """\
-            @Generated${CARET}
-            class C {
+            @Documented${CARET}
+            @interface A {
             }
             """
         assertEditorContents """\
-            import javax.annotation.Generated
+            import java.lang.annotation.Documented
 
-            @Generated
-            class C {
+            @Documented
+            @interface A {
             }
             """.stripIndent()
     }

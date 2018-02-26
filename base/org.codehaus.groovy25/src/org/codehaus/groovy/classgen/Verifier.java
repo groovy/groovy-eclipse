@@ -21,8 +21,24 @@ package org.codehaus.groovy.classgen;
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyObject;
 import groovy.lang.MetaClass;
+import groovy.transform.Generated;
+import org.apache.groovy.ast.tools.ClassNodeUtils;
 import org.codehaus.groovy.GroovyBugError;
-import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.CodeVisitorSupport;
+import org.codehaus.groovy.ast.ConstructorNode;
+import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GenericsType;
+import org.codehaus.groovy.ast.GroovyClassVisitor;
+import org.codehaus.groovy.ast.GroovyCodeVisitor;
+import org.codehaus.groovy.ast.InnerClassNode;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.VariableScope;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
@@ -38,18 +54,17 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
-import org.codehaus.groovy.ast.tools.ClassNodeUtils;
 import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.ast.tools.PropertyNodeUtils;
 import org.codehaus.groovy.classgen.asm.BytecodeHelper;
 import org.codehaus.groovy.classgen.asm.MopWriter;
 import org.codehaus.groovy.classgen.asm.OptimizingStatementWriter.ClassNodeSkip;
 import org.codehaus.groovy.classgen.asm.WriterController;
+import org.codehaus.groovy.reflection.ClassInfo;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.RuntimeParserException;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
-import org.codehaus.groovy.reflection.ClassInfo;
 import org.codehaus.groovy.transform.trait.Traits;
 import groovyjarjarasm.asm.Label;
 import groovyjarjarasm.asm.MethodVisitor;
@@ -123,6 +138,8 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
     private static final Parameter[] SET_METACLASS_PARAMS = new Parameter[]{
             new Parameter(ClassHelper.METACLASS_TYPE, "mc")
     };
+
+    private static final Class GENERATED_ANNOTATION = Generated.class;
 
     private ClassNode classNode;
     private MethodNode methodNode;
@@ -260,7 +277,8 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
 
             @Override
             public void variableNotAlwaysInitialized(final VariableExpression var) {
-                throw new RuntimeParserException("The variable [" + var.getName() + "] may be uninitialized", var);
+                if (Modifier.isFinal(var.getAccessedVariable().getModifiers()))
+                    throw new RuntimeParserException("The variable [" + var.getName() + "] may be uninitialized", var);
             }
         };
     }
@@ -351,7 +369,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                         if (BytecodeHelper.isClassLiteralPossible(node) || BytecodeHelper.isSameCompilationUnit(classNode, node)) {
                             BytecodeHelper.visitClassLiteral(mv, node);
                         } else {
-                            mv.visitMethodInsn(INVOKESTATIC, classInternalName, "$get$$class$" + classInternalName.replaceAll("\\/", "\\$"), "()Ljava/lang/Class;", false);
+                            mv.visitMethodInsn(INVOKESTATIC, classInternalName, "$get$$class$" + classInternalName.replaceAll("/", "\\$"), "()Ljava/lang/Class;", false);
                         }
                         Label l1 = new Label();
                         mv.visitJumpInsn(IF_ACMPEQ, l1);
@@ -390,9 +408,12 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         if (!node.isDerivedFromGroovyObject()) node.addInterface(ClassHelper.make(GroovyObject.class));
         FieldNode metaClassField = getMetaClassField(node);
 
+        boolean shouldAnnotate = classNode.getModule().getContext() != null;
+        AnnotationNode generatedAnnotation = shouldAnnotate ? new AnnotationNode(ClassHelper.make(GENERATED_ANNOTATION)) : null;
+
         if (!node.hasMethod("getMetaClass", Parameter.EMPTY_ARRAY)) {
             metaClassField = setMetaClassFieldIfNotExists(node, metaClassField);
-            addMethod(node, !isAbstract(node.getModifiers()),
+            MethodNode methodNode = addMethod(node, !isAbstract(node.getModifiers()),
                     "getMetaClass",
                     ACC_PUBLIC,
                     ClassHelper.METACLASS_TYPE,
@@ -431,6 +452,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                         }
                     })
             );
+            if (shouldAnnotate) methodNode.addAnnotation(generatedAnnotation);
         }
 
         Parameter[] parameters = new Parameter[]{new Parameter(ClassHelper.METACLASS_TYPE, "mc")};
@@ -459,12 +481,13 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                 setMetaClassCode = new BytecodeSequence(list);
             }
 
-            addMethod(node, !isAbstract(node.getModifiers()),
+            MethodNode methodNode = addMethod(node, !isAbstract(node.getModifiers()),
                     "setMetaClass",
                     ACC_PUBLIC, ClassHelper.VOID_TYPE,
                     SET_METACLASS_PARAMS, ClassNode.EMPTY_ARRAY,
                     setMetaClassCode
             );
+            if (shouldAnnotate) methodNode.addAnnotation(generatedAnnotation);
         }
 
         if (!node.hasMethod("invokeMethod", INVOKE_METHOD_PARAMS)) {
@@ -474,7 +497,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             blockScope.putReferencedLocalVariable(vMethods);
             blockScope.putReferencedLocalVariable(vArguments);
 
-            addMethod(node, !isAbstract(node.getModifiers()),
+            MethodNode methodNode = addMethod(node, !isAbstract(node.getModifiers()),
                     "invokeMethod",
                     ACC_PUBLIC,
                     ClassHelper.OBJECT_TYPE, INVOKE_METHOD_PARAMS,
@@ -491,10 +514,11 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                         }
                     })
             );
+            if (shouldAnnotate) methodNode.addAnnotation(generatedAnnotation);
         }
 
         if (!node.hasMethod("getProperty", GET_PROPERTY_PARAMS)) {
-            addMethod(node, !isAbstract(node.getModifiers()),
+            MethodNode methodNode = addMethod(node, !isAbstract(node.getModifiers()),
                     "getProperty",
                     ACC_PUBLIC,
                     ClassHelper.OBJECT_TYPE,
@@ -511,10 +535,11 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                         }
                     })
             );
+            if (shouldAnnotate) methodNode.addAnnotation(generatedAnnotation);
         }
 
         if (!node.hasMethod("setProperty", SET_PROPERTY_PARAMS)) {
-            addMethod(node, !isAbstract(node.getModifiers()),
+            MethodNode methodNode = addMethod(node, !isAbstract(node.getModifiers()),
                     "setProperty",
                     ACC_PUBLIC,
                     ClassHelper.VOID_TYPE,
@@ -532,6 +557,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                         }
                     })
             );
+            if (shouldAnnotate) methodNode.addAnnotation(generatedAnnotation);
         }
     }
 
@@ -540,12 +566,12 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
      * call will either be made to ClassNode.addSyntheticMethod() or ClassNode.addMethod(). If a non-synthetic method
      * is to be added the ACC_SYNTHETIC modifier is removed if it has been accidentally supplied.
      */
-    protected void addMethod(ClassNode node, boolean shouldBeSynthetic, String name, int modifiers, ClassNode returnType, Parameter[] parameters,
-                             ClassNode[] exceptions, Statement code) {
+    protected MethodNode addMethod(ClassNode node, boolean shouldBeSynthetic, String name, int modifiers, ClassNode returnType, Parameter[] parameters,
+                                   ClassNode[] exceptions, Statement code) {
         if (shouldBeSynthetic) {
-            node.addSyntheticMethod(name, modifiers, returnType, parameters, exceptions, code);
+            return node.addSyntheticMethod(name, modifiers, returnType, parameters, exceptions, code);
         } else {
-            node.addMethod(name, modifiers & ~ACC_SYNTHETIC, returnType, parameters, exceptions, code);
+            return node.addMethod(name, modifiers & ~ACC_SYNTHETIC, returnType, parameters, exceptions, code);
         }
     }
 
@@ -984,6 +1010,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                 }
             }
         }
+
         if (!Traits.isTrait(node)) {
             for (FieldNode fn : node.getFields()) {
                 addFieldInitialization(statements, staticStatements, fn, isEnum,
@@ -1209,9 +1236,9 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         Map genericsSpec = new HashMap();
 
         // unimplemented abstract methods from interfaces
-        Map<String, MethodNode> abstractMethods = ClassNodeUtils.getDeclaredMethodMapsFromInterfaces(classNode);
+        Map<String, MethodNode> abstractMethods = ClassNodeUtils.getDeclaredMethodsFromInterfaces(classNode);
         Map<String, MethodNode> allInterfaceMethods = new HashMap<String, MethodNode>(abstractMethods);
-        ClassNodeUtils.addDeclaredMethodMapsFromSuperInterfaces(classNode, allInterfaceMethods);
+        ClassNodeUtils.addDeclaredMethodsFromAllInterfaces(classNode, allInterfaceMethods);
 
         List<MethodNode> declaredMethods = new ArrayList<MethodNode>(classNode.getMethods());
         // remove all static, private and package private methods
@@ -1362,10 +1389,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         MethodNode newMethod = new MethodNode(
                 oldMethod.getName(),
                 overridingMethod.getModifiers() | ACC_SYNTHETIC | ACC_BRIDGE,
-                // GRECLIPSE edit
-                //oldMethod.getReturnType().getPlainNodeReference(),
-                GenericsUtils.nonGeneric(oldMethod.getReturnType()),
-                // GRECLIPSE end
+                cleanType(oldMethod.getReturnType()),
                 cleanParameters(oldMethod.getParameters()),
                 oldMethod.getExceptions(),
                 null

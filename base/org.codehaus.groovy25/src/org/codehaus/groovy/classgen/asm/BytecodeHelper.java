@@ -18,8 +18,14 @@
  */
 package org.codehaus.groovy.classgen.asm;
 
-import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.CompileUnit;
+import org.codehaus.groovy.ast.GenericsType;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.decompiled.DecompiledClassNode;
+import org.codehaus.groovy.classgen.asm.util.TypeDescriptionUtil;
 import org.codehaus.groovy.reflection.ReflectionCache;
 import org.codehaus.groovy.runtime.typehandling.DefaultTypeTransformation;
 import groovyjarjarasm.asm.Label;
@@ -27,6 +33,16 @@ import groovyjarjarasm.asm.MethodVisitor;
 import groovyjarjarasm.asm.Opcodes;
 
 import java.lang.reflect.Modifier;
+
+import static org.codehaus.groovy.ast.ClassHelper.VOID_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.boolean_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.byte_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.char_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.double_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.float_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.int_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.long_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.short_TYPE;
 
 /**
  * A helper class for bytecode generation with AsmClassGenerator.
@@ -74,9 +90,10 @@ public class BytecodeHelper implements Opcodes {
     }
 
     public static String getMethodDescriptor(ClassNode returnType, Parameter[] parameters) {
-        StringBuilder buffer = new StringBuilder("(");
-        for (int i = 0; i < parameters.length; i++) {
-            buffer.append(getTypeDescription(parameters[i].getType()));
+        StringBuilder buffer = new StringBuilder(100);
+        buffer.append("(");
+        for (Parameter parameter : parameters) {
+            buffer.append(getTypeDescription(parameter.getType()));
         }
         buffer.append(")");
         buffer.append(getTypeDescription(returnType));
@@ -98,9 +115,10 @@ public class BytecodeHelper implements Opcodes {
      */
     public static String getMethodDescriptor(Class returnType, Class[] paramTypes) {
         // lets avoid class loading
-        StringBuilder buffer = new StringBuilder("(");
-        for (int i = 0; i < paramTypes.length; i++) {
-            buffer.append(getTypeDescription(paramTypes[i]));
+        StringBuilder buffer = new StringBuilder(100);
+        buffer.append("(");
+        for (Class paramType : paramTypes) {
+            buffer.append(getTypeDescription(paramType));
         }
         buffer.append(")");
         buffer.append(getTypeDescription(returnType));
@@ -123,24 +141,15 @@ public class BytecodeHelper implements Opcodes {
      * @return the ASM type description for class loading
      */
     public static String getClassLoadingTypeDescription(ClassNode c) {
-        StringBuilder buf = new StringBuilder();
-        boolean array = false;
-        while (true) {
-            if (c.isArray()) {
-                buf.append('[');
-                c = c.getComponentType();
-                array = true;
-            } else {
-                if (ClassHelper.isPrimitiveType(c)) {
-                    buf.append(getTypeDescription(c));
-                } else {
-                    if (array) buf.append('L');
-                    buf.append(c.getName());
-                    if (array) buf.append(';');
-                }
-                return buf.toString();
+        String desc = TypeDescriptionUtil.getDescriptionByType(c);
+
+        if (!c.isArray()) {
+            if (desc.startsWith("L") && desc.endsWith(";")) {
+                desc = desc.substring(1, desc.length() - 1); // remove "L" and ";"
             }
         }
+
+        return desc.replace('/', '.');
     }
 
     /**
@@ -162,49 +171,20 @@ public class BytecodeHelper implements Opcodes {
      * @return the ASM type description
      */
     private static String getTypeDescription(ClassNode c, boolean end) {
-        StringBuilder buf = new StringBuilder();
         ClassNode d = c;
-        while (true) {
-            if (ClassHelper.isPrimitiveType(d.redirect())) {
-                d = d.redirect();
-                char car;
-                if (d == ClassHelper.int_TYPE) {
-                    car = 'I';
-                } else if (d == ClassHelper.VOID_TYPE) {
-                    car = 'V';
-                } else if (d == ClassHelper.boolean_TYPE) {
-                    car = 'Z';
-                } else if (d == ClassHelper.byte_TYPE) {
-                    car = 'B';
-                } else if (d == ClassHelper.char_TYPE) {
-                    car = 'C';
-                } else if (d == ClassHelper.short_TYPE) {
-                    car = 'S';
-                } else if (d == ClassHelper.double_TYPE) {
-                    car = 'D';
-                } else if (d == ClassHelper.float_TYPE) {
-                    car = 'F';
-                } else /* long */ {
-                    car = 'J';
-                }
-                buf.append(car);
-                return buf.toString();
-            } else if (d.isArray()) {
-                buf.append('[');
-                d = d.getComponentType();
-            } else {
-                buf.append('L');
-                String name = d.getName();
-                int len = name.length();
-                for (int i = 0; i < len; ++i) {
-                    char car = name.charAt(i);
-                    buf.append(car == '.' ? '/' : car);
-                }
-                if (end) buf.append(';');
-                return buf.toString();
-            }
+        if (ClassHelper.isPrimitiveType(d.redirect())) {
+            d = d.redirect();
         }
+
+        String desc = TypeDescriptionUtil.getDescriptionByType(d);
+
+        if (!end && desc.endsWith(";")) {
+            desc = desc.substring(0, desc.length() - 1);
+        }
+
+        return desc;
     }
+
 
     /**
      * @return an array of ASM internal names of the type
@@ -244,7 +224,7 @@ public class BytecodeHelper implements Opcodes {
                 } else if (value >= Short.MIN_VALUE && value <= Short.MAX_VALUE) {
                     mv.visitIntInsn(SIPUSH, value);
                 } else {
-                    mv.visitLdcInsn(Integer.valueOf(value));
+                    mv.visitLdcInsn(value);
                 }
         }
     }
@@ -286,16 +266,7 @@ public class BytecodeHelper implements Opcodes {
             return "java.lang.Object;";
         }
 
-        if (name.equals("int")
-                || name.equals("long")
-                || name.equals("short")
-                || name.equals("float")
-                || name.equals("double")
-                || name.equals("byte")
-                || name.equals("char")
-                || name.equals("boolean")
-                || name.equals("void")
-                ) {
+        if (TypeDescriptionUtil.isPrimitiveType(name)) {
             return name;
         }
 
@@ -315,56 +286,16 @@ public class BytecodeHelper implements Opcodes {
         if (name.endsWith("[]")) { // todo need process multi
             prefix = "[";
             name = name.substring(0, name.length() - 2);
-            if (name.equals("int")) {
-                return prefix + "I";
-            } else if (name.equals("long")) {
-                return prefix + "J";
-            } else if (name.equals("short")) {
-                return prefix + "S";
-            } else if (name.equals("float")) {
-                return prefix + "F";
-            } else if (name.equals("double")) {
-                return prefix + "D";
-            } else if (name.equals("byte")) {
-                return prefix + "B";
-            } else if (name.equals("char")) {
-                return prefix + "C";
-            } else if (name.equals("boolean")) {
-                return prefix + "Z";
-            } else {
-                return prefix + "L" + name.replace('/', '.') + ";";
-            }
-        }
-        return name.replace('/', '.');
 
+            return prefix + TypeDescriptionUtil.getDescriptionByName(name);
+        }
+
+        return name.replace('/', '.');
     }
 
     /*public void dup() {
         mv.visitInsn(DUP);
     }*/
-
-    public static void doReturn(MethodVisitor mv, ClassNode returnType) {
-        if (returnType == ClassHelper.double_TYPE) {
-            mv.visitInsn(DRETURN);
-        } else if (returnType == ClassHelper.float_TYPE) {
-            mv.visitInsn(FRETURN);
-        } else if (returnType == ClassHelper.long_TYPE) {
-            mv.visitInsn(LRETURN);
-        } else if (
-                returnType == ClassHelper.boolean_TYPE
-                        || returnType == ClassHelper.char_TYPE
-                        || returnType == ClassHelper.byte_TYPE
-                        || returnType == ClassHelper.int_TYPE
-                        || returnType == ClassHelper.short_TYPE) {
-            //byte,short,boolean,int are all IRETURN
-            mv.visitInsn(IRETURN);
-        } else if (returnType == ClassHelper.VOID_TYPE) {
-            mv.visitInsn(RETURN);
-        } else {
-            mv.visitInsn(ARETURN);
-        }
-
-    }
 
     private static boolean hasGenerics(Parameter[] param) {
         if (param.length == 0) return false;
@@ -518,29 +449,9 @@ public class BytecodeHelper implements Opcodes {
         ret.append(end);
     }
 
-    public static void load(MethodVisitor mv, ClassNode type, int idx) {
-        if (type == ClassHelper.double_TYPE) {
-            mv.visitVarInsn(DLOAD, idx);
-        } else if (type == ClassHelper.float_TYPE) {
-            mv.visitVarInsn(FLOAD, idx);
-        } else if (type == ClassHelper.long_TYPE) {
-            mv.visitVarInsn(LLOAD, idx);
-        } else if (
-                type == ClassHelper.boolean_TYPE
-                        || type == ClassHelper.char_TYPE
-                        || type == ClassHelper.byte_TYPE
-                        || type == ClassHelper.int_TYPE
-                        || type == ClassHelper.short_TYPE) {
-            mv.visitVarInsn(ILOAD, idx);
-        } else {
-            mv.visitVarInsn(ALOAD, idx);
-        }
-    }
-    
-
     public static void doCast(MethodVisitor mv, ClassNode type) {
         if (type == ClassHelper.OBJECT_TYPE) return;
-        if (ClassHelper.isPrimitiveType(type) && type != ClassHelper.VOID_TYPE) {
+        if (ClassHelper.isPrimitiveType(type) && type != VOID_TYPE) {
             unbox(mv, type);
         } else {
             mv.visitTypeInsn(
@@ -686,5 +597,252 @@ public class BytecodeHelper implements Opcodes {
             h = 31 * h + chars[i];
         }
         return h;
+    }
+
+    /**
+     * Converts a primitive type to boolean.
+     *
+     * @param mv method visitor
+     * @param type primitive type to convert
+     */
+    public static void convertPrimitiveToBoolean(MethodVisitor mv, ClassNode type) {
+        if (type == boolean_TYPE) {
+            return;
+        }
+        // Special handling is done for floating point types in order to
+        // handle checking for 0 or NaN values.
+        if (type == double_TYPE) {
+            convertDoubleToBoolean(mv);
+            return;
+        } else if (type == float_TYPE) {
+            convertFloatToBoolean(mv);
+            return;
+        }
+        Label trueLabel = new Label();
+        Label falseLabel = new Label();
+        // Convert long to int for IFEQ comparison using LCMP
+        if (type== long_TYPE) {
+            mv.visitInsn(LCONST_0);
+            mv.visitInsn(LCMP);
+        }
+        // This handles byte, short, char and int
+        mv.visitJumpInsn(IFEQ, falseLabel);
+        mv.visitInsn(ICONST_1);
+        mv.visitJumpInsn(GOTO, trueLabel);
+        mv.visitLabel(falseLabel);
+        mv.visitInsn(ICONST_0);
+        mv.visitLabel(trueLabel);
+    }
+
+    private static void convertDoubleToBoolean(MethodVisitor mv) {
+        Label trueLabel = new Label();
+        Label falseLabel = new Label();
+        Label falseLabelWithPop = new Label();
+        mv.visitInsn(DUP2); // will need the extra for isNaN call if required
+        mv.visitInsn(DCONST_0);
+        mv.visitInsn(DCMPL);
+        mv.visitJumpInsn(IFEQ, falseLabelWithPop);
+        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Double", "isNaN", "(D)Z", false);
+        mv.visitJumpInsn(IFNE, falseLabel);
+        mv.visitInsn(ICONST_1);
+        mv.visitJumpInsn(GOTO, trueLabel);
+        mv.visitLabel(falseLabelWithPop);
+        mv.visitInsn(POP2);
+        mv.visitLabel(falseLabel);
+        mv.visitInsn(ICONST_0);
+        mv.visitLabel(trueLabel);
+    }
+
+    private static void convertFloatToBoolean(MethodVisitor mv) {
+        Label trueLabel = new Label();
+        Label falseLabel = new Label();
+        Label falseLabelWithPop = new Label();
+        mv.visitInsn(DUP); // will need the extra for isNaN call if required
+        mv.visitInsn(FCONST_0);
+        mv.visitInsn(FCMPL);
+        mv.visitJumpInsn(IFEQ, falseLabelWithPop);
+        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Float", "isNaN", "(F)Z", false);
+        mv.visitJumpInsn(IFNE, falseLabel);
+        mv.visitInsn(ICONST_1);
+        mv.visitJumpInsn(GOTO, trueLabel);
+        mv.visitLabel(falseLabelWithPop);
+        mv.visitInsn(POP);
+        mv.visitLabel(falseLabel);
+        mv.visitInsn(ICONST_0);
+        mv.visitLabel(trueLabel);
+    }
+
+    public static void doReturn(MethodVisitor mv, ClassNode type) {
+        new ReturnVarHandler(mv, type).handle();
+    }
+
+    public static void load(MethodVisitor mv, ClassNode type, int idx) {
+        new LoadVarHandler(mv, type, idx).handle();
+    }
+
+    public static void store(MethodVisitor mv, ClassNode type, int idx) {
+        new StoreVarHandler(mv, type, idx).handle();
+    }
+
+    private static class ReturnVarHandler extends PrimitiveTypeHandler {
+        private MethodVisitor mv;
+
+        public ReturnVarHandler(MethodVisitor mv, ClassNode type) {
+            super(type);
+            this.mv = mv;
+        }
+
+        @Override
+        protected void handleDoubleType() {
+            mv.visitInsn(DRETURN);
+        }
+
+        @Override
+        protected void handleFloatType() {
+            mv.visitInsn(FRETURN);
+        }
+
+        @Override
+        protected void handleLongType() {
+            mv.visitInsn(LRETURN);
+        }
+
+        @Override
+        protected void handleIntType() {
+            mv.visitInsn(IRETURN);
+        }
+
+        @Override
+        protected void handleVoidType() {
+            mv.visitInsn(RETURN);
+        }
+
+        @Override
+        protected void handleRefType() {
+            mv.visitInsn(ARETURN);
+        }
+    }
+
+    private static class LoadVarHandler extends PrimitiveTypeHandler {
+        private MethodVisitor mv;
+        private int idx;
+
+        public LoadVarHandler(MethodVisitor mv, ClassNode type, int idx) {
+            super(type);
+            this.mv = mv;
+            this.idx = idx;
+        }
+
+        @Override
+        protected void handleDoubleType() {
+            mv.visitVarInsn(DLOAD, idx);
+        }
+
+        @Override
+        protected void handleFloatType() {
+            mv.visitVarInsn(FLOAD, idx);
+        }
+
+        @Override
+        protected void handleLongType() {
+            mv.visitVarInsn(LLOAD, idx);
+        }
+
+        @Override
+        protected void handleIntType() {
+            mv.visitVarInsn(ILOAD, idx);
+        }
+
+        @Override
+        protected void handleVoidType() {
+            // do nothing
+        }
+
+        @Override
+        protected void handleRefType() {
+            mv.visitVarInsn(ALOAD, idx);
+        }
+    }
+
+    private static class StoreVarHandler extends PrimitiveTypeHandler {
+        private MethodVisitor mv;
+        private int idx;
+
+        public StoreVarHandler(MethodVisitor mv, ClassNode type, int idx) {
+            super(type);
+            this.mv = mv;
+            this.idx = idx;
+        }
+
+        @Override
+        protected void handleDoubleType() {
+            mv.visitVarInsn(DSTORE, idx);
+        }
+
+        @Override
+        protected void handleFloatType() {
+            mv.visitVarInsn(FSTORE, idx);
+        }
+
+        @Override
+        protected void handleLongType() {
+            mv.visitVarInsn(LSTORE, idx);
+        }
+
+        @Override
+        protected void handleIntType() {
+            mv.visitVarInsn(ISTORE, idx);
+        }
+
+        @Override
+        protected void handleVoidType() {
+            // do nothing
+        }
+
+        @Override
+        protected void handleRefType() {
+            mv.visitVarInsn(ASTORE, idx);
+        }
+    }
+
+    private static abstract class PrimitiveTypeHandler {
+        private ClassNode type;
+
+        public PrimitiveTypeHandler(ClassNode type) {
+            this.type = type;
+        }
+
+        public void handle() {
+            if (type == double_TYPE) {
+                handleDoubleType();
+            } else if (type == float_TYPE) {
+                handleFloatType();
+            } else if (type == long_TYPE) {
+                handleLongType();
+            } else if (
+                    type == boolean_TYPE
+                            || type == char_TYPE
+                            || type == byte_TYPE
+                            || type == int_TYPE
+                            || type == short_TYPE) {
+                handleIntType();
+            } else if (type == VOID_TYPE) {
+                handleVoidType();
+            } else {
+                handleRefType();
+            }
+        }
+
+        protected abstract void handleDoubleType();
+        protected abstract void handleFloatType();
+        protected abstract void handleLongType();
+
+        /**
+         * boolean, char, byte, int, short types are handle in the same way
+         */
+        protected abstract void handleIntType();
+
+        protected abstract void handleVoidType();
+        protected abstract void handleRefType();
     }
 }

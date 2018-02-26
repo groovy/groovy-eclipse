@@ -18,8 +18,18 @@
  */
 package org.codehaus.groovy.ast;
 
-import groovy.lang.*;
-
+import groovy.lang.Binding;
+import groovy.lang.Closure;
+import groovy.lang.GString;
+import groovy.lang.GroovyInterceptable;
+import groovy.lang.GroovyObject;
+import groovy.lang.GroovyObjectSupport;
+import groovy.lang.MetaClass;
+import groovy.lang.Range;
+import groovy.lang.Reference;
+import groovy.lang.Script;
+import org.apache.groovy.util.Maps;
+import org.codehaus.groovy.classgen.asm.util.TypeDescriptionUtil;
 import org.codehaus.groovy.runtime.GeneratedClosure;
 import org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport;
 import org.codehaus.groovy.transform.trait.Traits;
@@ -30,14 +40,14 @@ import groovyjarjarasm.asm.Opcodes;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
+import java.lang.ref.SoftReference;
+import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-import java.lang.ref.SoftReference;
-import java.lang.reflect.Modifier;
 
 /**
  * This class is a Helper for ClassNode and classes handling ClassNodes.
@@ -236,6 +246,18 @@ public class ClassHelper {
         return makeWithoutCaching(name);
     }
 
+    private static final Map<ClassNode, ClassNode> PRIMITIVE_TYPE_TO_WRAPPER_TYPE_MAP = Maps.of(
+            boolean_TYPE, Boolean_TYPE,
+            byte_TYPE, Byte_TYPE,
+            char_TYPE, Character_TYPE,
+            short_TYPE, Short_TYPE,
+            int_TYPE, Integer_TYPE,
+            long_TYPE, Long_TYPE,
+            float_TYPE, Float_TYPE,
+            double_TYPE, Double_TYPE,
+            VOID_TYPE, void_WRAPPER_TYPE
+    );
+
     /**
      * Creates a ClassNode containing the wrapper of a ClassNode
      * of primitive type. Any ClassNode representing a primitive
@@ -256,51 +278,29 @@ public class ClassHelper {
     public static ClassNode getWrapper(ClassNode cn) {
         cn = cn.redirect();
         if (!isPrimitiveType(cn)) return cn;
-        if (cn == boolean_TYPE) {
-            return Boolean_TYPE;
-        } else if (cn == byte_TYPE) {
-            return Byte_TYPE;
-        } else if (cn == char_TYPE) {
-            return Character_TYPE;
-        } else if (cn == short_TYPE) {
-            return Short_TYPE;
-        } else if (cn == int_TYPE) {
-            return Integer_TYPE;
-        } else if (cn == long_TYPE) {
-            return Long_TYPE;
-        } else if (cn == float_TYPE) {
-            return Float_TYPE;
-        } else if (cn == double_TYPE) {
-            return Double_TYPE;
-        } else if (cn == VOID_TYPE) {
-            return void_WRAPPER_TYPE;
-        } else {
-            return cn;
+
+        ClassNode result = PRIMITIVE_TYPE_TO_WRAPPER_TYPE_MAP.get(cn);
+
+        if (null != result) {
+            return result;
         }
+
+        return cn;
     }
+
+    private static final Map<ClassNode, ClassNode> WRAPPER_TYPE_TO_PRIMITIVE_TYPE_MAP = Maps.inverse(PRIMITIVE_TYPE_TO_WRAPPER_TYPE_MAP);
 
     public static ClassNode getUnwrapper(ClassNode cn) {
         cn = cn.redirect();
         if (isPrimitiveType(cn)) return cn;
-        if (cn == Boolean_TYPE) {
-            return boolean_TYPE;
-        } else if (cn == Byte_TYPE) {
-            return byte_TYPE;
-        } else if (cn == Character_TYPE) {
-            return char_TYPE;
-        } else if (cn == Short_TYPE) {
-            return short_TYPE;
-        } else if (cn == Integer_TYPE) {
-            return int_TYPE;
-        } else if (cn == Long_TYPE) {
-            return long_TYPE;
-        } else if (cn == Float_TYPE) {
-            return float_TYPE;
-        } else if (cn == Double_TYPE) {
-            return double_TYPE;
-        } else {
-            return cn;
+
+        ClassNode result = WRAPPER_TYPE_TO_PRIMITIVE_TYPE_MAP.get(cn);
+
+        if (null != result) {
+            return result;
         }
+
+        return cn;
     }
 
 
@@ -315,15 +315,7 @@ public class ClassHelper {
      * @see #make(String)
      */
     public static boolean isPrimitiveType(ClassNode cn) {
-        return cn == boolean_TYPE ||
-                cn == char_TYPE ||
-                cn == byte_TYPE ||
-                cn == short_TYPE ||
-                cn == int_TYPE ||
-                cn == long_TYPE ||
-                cn == float_TYPE ||
-                cn == double_TYPE ||
-                cn == VOID_TYPE;
+        return TypeDescriptionUtil.isPrimitiveType(cn);
     }
 
     /**
@@ -393,7 +385,14 @@ public class ClassHelper {
     public static MethodNode findSAM(ClassNode type) {
         if (!Modifier.isAbstract(type.getModifiers())) return null;
         if (type.isInterface()) {
-            List<MethodNode> methods = type.getMethods();
+            List<MethodNode> methods;
+            if (type.isInterface()) {
+                // e.g. BinaryOperator extends BiFunction, BinaryOperator contains no abstract method, but it is really a SAM
+                methods = type.redirect().getAllDeclaredMethods();
+            } else {
+                methods = type.getMethods();
+            }
+
             MethodNode found = null;
             for (MethodNode mi : methods) {
                 // ignore methods, that are not abstract and from Object

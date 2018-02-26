@@ -26,6 +26,7 @@ import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
 import org.junit.BeforeClass
+import org.junit.Ignore
 import org.junit.Test
 
 final class DSLContentAssistTests extends CompletionTestSuite {
@@ -350,7 +351,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         assertProposalOrdering(proposals, 'getInstance', 'getIjk')
     }
 
-    @Test
+    @Test @Ignore('groovy-swing not included by default since 2.5')
     void testSwingBuilder1() {
         String contents = '''\
             import groovy.swing.SwingBuilder
@@ -363,7 +364,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         assertProposalOrdering(proposals, 'frame', 'find')
     }
 
-    @Test
+    @Test @Ignore('groovy-swing not included by default since 2.5')
     void testSwingBuilder2() {
         String contents = '''\
             import groovy.swing.SwingBuilder
@@ -376,7 +377,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         assertProposalOrdering(proposals, 'frame', 'FrameFactory - groovy.swing.factory')
     }
 
-    @Test // proposals should not exist since not applied to 'this'
+    @Test @Ignore('groovy-swing not included by default since 2.5')
     void testSwingBuilder3() {
         String contents = '''\
             import groovy.swing.SwingBuilder
@@ -385,6 +386,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
             }
             '''.stripIndent()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this.'))
+        // proposals should not exist since not applied to 'this'
         proposalExists(proposals, 'frame', 0)
         proposalExists(proposals, 'registerBinding', 0)
     }

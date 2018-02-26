@@ -417,6 +417,6 @@ final class RelevanceTests extends CompletionTestSuite {
             }
             '''.stripIndent()
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'St')))
-        assertProposalOrdering(proposals, 'StringWriterIOException - groovy.lang', 'StackOverflowError - java.lang', 'StringTestUtil - groovy.util')
+        assertProposalOrdering(proposals, 'StringWriterIOException - groovy.lang', 'StackOverflowError - java.lang', 'Stack - java.util')
     }
 }

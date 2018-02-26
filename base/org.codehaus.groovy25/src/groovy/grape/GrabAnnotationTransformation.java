@@ -326,7 +326,7 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
                         if (member == null) {
                             addError("The missing attribute \"" + s + "\" is required in @" + node.getClassNode().getNameWithoutPackage() + " annotations", node);
                             continue grabExcludeAnnotationLoop;
-                        } else if (member != null && !(member instanceof ConstantExpression)) {
+                        } else if (!(member instanceof ConstantExpression)) {
                             addError("Attribute \"" + s + "\" has value " + member.getText() + " but should be an inline constant in @" + node.getClassNode().getNameWithoutPackage() + " annotations", node);
                             continue grabExcludeAnnotationLoop;
                         }
@@ -584,8 +584,9 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
             // assume gradle syntax
             // see: http://www.gradle.org/latest/docs/userguide/dependency_management.html#sec:how_to_declare_your_dependencies
             Map<String, Object> parts = GrapeUtil.getIvyParts(allstr);
-            for (String key : parts.keySet()) {
-                String value = parts.get(key).toString();
+            for (Map.Entry<String, Object> entry : parts.entrySet()) {
+                String key = entry.getKey();
+                String value = entry.getValue().toString();
                 if (!key.equals("version") || !value.equals("*") || !exclude) {
                     node.addMember(key, constX(value));
                 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.core.IPackageFragmentRoot
 import org.eclipse.jdt.core.JavaCore
+import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -226,7 +227,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
         assertType(*findRange(contents, 'comparatorByValue'), 'java.util.Comparator', 'Sortable AST transform')
     }
 
-    @Test
+    @Test @Ignore('groovy-swing not included by default since 2.5')
     void testSwingBuilder1() {
         String contents = 'new groovy.swing.SwingBuilder().edt { frame }'
 
@@ -234,7 +235,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
         assertType(*findRange(contents, 'frame'), 'javax.swing.JFrame', 'SwingBuilder')
     }
 
-    @Test
+    @Test @Ignore('groovy-swing not included by default since 2.5')
     void testSwingBuilder2() {
         String contents = 'groovy.swing.SwingBuilder.edtBuilder { frame }'
 

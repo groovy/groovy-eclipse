@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -200,16 +200,16 @@ public class CompilerUtils {
     }
 
     /**
-     * Returns the groovy-all-x.y.z.jar that is used in the Eclipse project.
+     * Returns the Groovy jar that is used in the Eclipse project.
      */
     public static IPath getExportedGroovyAllJar() {
         Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
-        for (URL jarUrl : Collections.list(groovyBundle.findEntries("lib", "groovy-all-*.jar", false))) {
-            if (!jarUrl.getFile().endsWith("-javadoc.jar") && !jarUrl.getFile().endsWith("-sources.jar")) {
+        for (URL jarUrl : Collections.list(groovyBundle.findEntries("lib", "groovy-*.jar", false))) {
+            if (jarUrl.getFile().matches(".+/groovy(?:-all)?-\\d+\\.\\d+\\.\\d+(?:-indy)?\\.jar")) {
                 return toFilePath(jarUrl);
             }
         }
-        throw new RuntimeException("Could not find groovy-all jar");
+        throw new RuntimeException("Could not find groovy jar");
     }
 
     /**
@@ -219,11 +219,12 @@ public class CompilerUtils {
         List<IPath> jarPaths = new ArrayList<>();
         Bundle groovyBundle = CompilerUtils.getActiveGroovyBundle();
         for (URL jarUrl : Collections.list(groovyBundle.findEntries("lib", "*.jar", false))) {
-            if (!jarUrl.getFile().contains("/groovy-all-") && (!jarUrl.getFile().contains("/servlet-") || includeServlet()) &&
-                    !jarUrl.getFile().endsWith("-javadoc.jar") && !jarUrl.getFile().endsWith("-sources.jar")) {
+            if (!jarUrl.getFile().endsWith("-javadoc.jar") && !jarUrl.getFile().endsWith("-sources.jar") &&
+                    (!jarUrl.getFile().contains("/servlet-") || includeServlet())) {
                 jarPaths.add(toFilePath(jarUrl));
             }
         }
+        jarPaths.remove(getExportedGroovyAllJar());
         return jarPaths;
     }
 
@@ -277,7 +278,9 @@ public class CompilerUtils {
         return new File[0];
     }
 
-    /** Converts "bundleentry:/514.fwk1995952705/lib/groovy-all-x.y.z.jar" to file path. */
+    /**
+     * Converts "bundleentry:/514.fwk1995952705/lib/groovy-all-x.y.z.jar" to file path.
+     */
     private static IPath toFilePath(URL url) {
         try {
             url = FileLocator.toFileURL(url);
