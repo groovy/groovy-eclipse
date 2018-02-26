@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ public enum SpecifiedVersion {
     _23(2, 3, "23"),
     _24(2, 4, "24"),
     _25(2, 5, "25"),
+    _26(2, 6, "26"),
     DONT_CARE(0, 0, "-1"),
     UNSPECIFIED(0, 0, "0");
 
@@ -101,6 +102,8 @@ public enum SpecifiedVersion {
                                     return _24;
                                 case 5:
                                     return _25;
+                                case 6:
+                                    return _26;
                             }
                             break;
                     }
@@ -146,6 +149,9 @@ public enum SpecifiedVersion {
         if ("25".equals(compilerLevel) || "2.5".equals(compilerLevel)) {
             return _25;
         }
+        if ("26".equals(compilerLevel) || "2.6".equals(compilerLevel)) {
+            return _26;
+        }
         if ("0".equals(compilerLevel)) {
             return UNSPECIFIED;
         }
@@ -154,7 +160,7 @@ public enum SpecifiedVersion {
         }
 
         System.out.println("Invalid Groovy compiler level specified: " + compilerLevel +
-            "\nMust be one of 16, 1.6, 17, 1.7, 18, 1.8, 19, 1.9, 20, 2.0, 21, 2.1, 22, 2.2, 23, 2.3, 24, 2.4, 25 or 2.5");
+            "\nMust be one of 16, 1.6, 17, 1.7, 18, 1.8, 19, 1.9, 20, 2.0, 21, 2.1, 22, 2.2, 23, 2.3, 24, 2.4, 25, 2.5, 26 or 2.6");
 
         return UNSPECIFIED;
     }
@@ -185,6 +191,8 @@ public enum SpecifiedVersion {
                         return _24;
                     case 5:
                         return _25;
+                    case 6:
+                        return _26;
                 }
         }
         return UNSPECIFIED;
