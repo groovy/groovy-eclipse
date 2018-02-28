@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -331,7 +331,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         if (!lastGString.includes(offset)) {
             if (isNumber(expr.getType())) {
                 pos = new HighlightedTypedPosition(offset, length, HighlightKind.NUMBER);
-            } else if (expr.getEnd() <= unitLength()) {
+            } else if (offset < unitLength() && expr.getEnd() <= unitLength()) {
                 // check for /.../ or $/.../$ form of string literal (usually a regex literal)
                 boolean slashy = contents[offset] == '/' && contents[expr.getEnd() - 1] == '/';
                 boolean dollar = !slashy && contents[offset] == '$' && contents[offset + 1] == '/' &&
