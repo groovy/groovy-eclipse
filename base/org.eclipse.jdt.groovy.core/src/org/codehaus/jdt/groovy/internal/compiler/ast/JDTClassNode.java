@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,9 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
+import static java.beans.Introspector.decapitalize;
+
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,6 +38,7 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration.FieldDeclarationWithInitializer;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.impl.BooleanConstant;
@@ -87,8 +91,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     //--------------------------------------------------------------------------
 
     /** Configuration flags */
-    private int bits;
-
+    private volatile int bits;
     private boolean beingInitialized;
     private boolean anyGenericsInitialized;
 
@@ -169,46 +172,11 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         }
     }
 
-    public void setUpGenerics() {
-        if (anyGenericsInitialized) {
-            return;
-        }
-        try {
-            if (jdtBinding instanceof RawTypeBinding) {
-                // nothing to do
-            } else if (jdtBinding instanceof ParameterizedTypeBinding) {
-                GenericsType[] gts = new JDTClassNodeBuilder(this.resolver).configureTypeArguments(((ParameterizedTypeBinding) jdtBinding).arguments);
-                setGenericsTypes(gts);
-            } else {
-                // SourceTB, BinaryTB, TypeVariableB, WildcardB
-                TypeVariableBinding[] typeVariables = jdtBinding.typeVariables();
-                GenericsType[] generics = new JDTClassNodeBuilder(this.resolver).configureTypeVariables(typeVariables);
-                if (generics != null) {
-                    this.setGenericsTypes(generics);
-                }
-            }
-        } finally {
-            anyGenericsInitialized = true;
-        }
-    }
-
-    // JDTClassNodes are created because of a JDT Reference Binding file so are always 'resolved' (although not initialized on creation)
-    @Override
-    public boolean isResolved() {
-        return true;
-    }
-
-    @Override
-    public void setGenericsTypes(GenericsType[] genericsTypes) {
-        this.anyGenericsInitialized = true;
-        super.setGenericsTypes(genericsTypes);
-    }
-
     /**
      * Basic initialization of the node - try and do most resolution lazily but some elements are worth getting correct up front: superclass, superinterfaces
      */
     // FIXASC confusing (and problematic?) that the superclass is setup after the generics information
-    void initialize() {
+    private void initialize() {
         if (beingInitialized) {
             return;
         }
@@ -341,11 +309,6 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         }
     }
 
-    @Override
-    public boolean mightHaveInners() {
-        return (jdtBinding.memberTypes().length != 0);
-    }
-
     /**
      * Convert a JDT MethodBinding to a Groovy MethodNode
      */
@@ -434,24 +397,6 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         return back;
     }
 
-    @Override
-    public GenericsType[] getGenericsTypes() {
-        ensureGenericsInitialized();
-        return genericsTypes;
-    }
-
-    @Override
-    public boolean isUsingGenerics() {
-        ensureGenericsInitialized();
-        return super.isUsingGenerics();
-    }
-
-    private void ensureGenericsInitialized() {
-        if (!anyGenericsInitialized) {
-            setUpGenerics();
-        }
-    }
-
     private ConstructorNode constructorBindingToConstructorNode(MethodBinding methodBinding) {
         int modifiers = methodBinding.modifiers;
         Parameter[] parameters = makeParameters(methodBinding.parameters);
@@ -511,10 +456,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         return fNode;
     }
 
-    @Override
-    public boolean isReallyResolved() {
-        return true;
-    }
+    //--------------------------------------------------------------------------
 
     @Override
     public String getClassInternalName() {
@@ -522,171 +464,122 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     }
 
     @Override
-    public boolean isPrimitive() {
-        // FIXASC (M3) verify always true. Think it is a jdtReferenceBinding is a
-        // reference binding and not a typebinding
-        return false;
-    }
-
-    /**
-     * Annotations on a JDTClassNode are initialized lazily when requested.
-     */
-    @Override
     public List<AnnotationNode> getAnnotations() {
-        ensureAnnotationsInitialized();
-        return super.getAnnotations();
+        if ((bits & ANNOTATIONS_INITIALIZED) == 0) {
+            synchronized (this) {
+                if ((bits & ANNOTATIONS_INITIALIZED) == 0) {
+                    if (jdtBinding instanceof SourceTypeBinding) {
+                        @SuppressWarnings("unused") // ensure resolved
+                        long tagBits = ((SourceTypeBinding) jdtBinding).getAnnotationTagBits();
+                    }
+                    for (AnnotationBinding annotationBinding : jdtBinding.getAnnotations()) {
+                        addAnnotation(new JDTAnnotationNode(annotationBinding, resolver));
+                    }
+                    bits |= ANNOTATIONS_INITIALIZED;
+                }
+            }
+        }
+        return Collections.unmodifiableList(super.getAnnotations());
     }
 
     @Override
     public List<AnnotationNode> getAnnotations(ClassNode type) {
-        ensureAnnotationsInitialized();
-        return super.getAnnotations(type);
-    }
-
-    private synchronized void ensureAnnotationsInitialized() {
         if ((bits & ANNOTATIONS_INITIALIZED) == 0) {
-            if ((jdtBinding instanceof SourceTypeBinding)) {
-                // ensure resolved
-                ((SourceTypeBinding) jdtBinding).getAnnotationTagBits();
-            }
-            AnnotationBinding[] annotationBindings = jdtBinding.getAnnotations();
-            for (AnnotationBinding annotationBinding : annotationBindings) {
-                addAnnotation(new JDTAnnotationNode(annotationBinding, this.resolver));
-            }
-            bits |= ANNOTATIONS_INITIALIZED;
+            @SuppressWarnings("unused") // ensure initialized
+            List<AnnotationNode> annotations = getAnnotations();
         }
+        return Collections.unmodifiableList(super.getAnnotations(type));
     }
 
     @Override
-    protected void ensurePropertiesInitialized() {
-        if ((bits & PROPERTIES_INITIALIZED) == 0) {
-            initializeProperties();
+    public GenericsType[] getGenericsTypes() {
+        if (!anyGenericsInitialized) {
+            setUpGenerics();
         }
+        return super.getGenericsTypes();
     }
 
-    protected synchronized void initializeProperties() {
-        if ((bits & PROPERTIES_INITIALIZED) == 0) {
-            lazyClassInit();
-            // getX methods
-            // make it behave like groovy - no property nodes unless it is groovy source
-            if (groovyTypeDecl != null) {
-                Set<String> existing = new HashSet<>();
-                for (MethodNode methodNode : getMethods()) {
-                    if (isGetter(methodNode)) {
-                        // STS-2628 be careful not to double-add properties if there is a getter and an isser variant
-                        String propertyName = convertToPropertyName(methodNode.getName());
-                        if (!existing.contains(propertyName)) {
-                            existing.add(propertyName);
-                            // Adding a real field for these accessors can trip up CompileStatic which
-                            // will attempt to access it as a real field
-                            super.addPropertyWithoutField(createPropertyNodeForMethodNode(methodNode, propertyName));
-                            // super.addProperty(createPropertyNodeForMethodNode(methodNode, propertyName));
-                        }
-                    }
+    @Override
+    public boolean isUsingGenerics() {
+        if (!anyGenericsInitialized) {
+            setUpGenerics();
+        }
+        return super.isUsingGenerics();
+    }
+
+    @Override
+    public void setGenericsTypes(GenericsType[] genericsTypes) {
+        anyGenericsInitialized = true;
+        super.setGenericsTypes(genericsTypes);
+    }
+
+    void setUpGenerics() {
+        if (!anyGenericsInitialized)
+        try {
+            if (jdtBinding instanceof RawTypeBinding) {
+                // nothing to do
+            } else if (jdtBinding instanceof ParameterizedTypeBinding) {
+                GenericsType[] gts = new JDTClassNodeBuilder(resolver).configureTypeArguments(((ParameterizedTypeBinding) jdtBinding).arguments);
+                setGenericsTypes(gts);
+            } else {
+                // SourceTB, BinaryTB, TypeVariableB, WildcardB
+                TypeVariableBinding[] typeVariables = jdtBinding.typeVariables();
+                GenericsType[] generics = new JDTClassNodeBuilder(resolver).configureTypeVariables(typeVariables);
+                if (generics != null) {
+                    setGenericsTypes(generics);
                 }
-                // fields - FIXASC nyi for fields
-                // for (FieldNode fieldNode : getFields()) {
-                // super.addProperty(createPropertyNodeFromFieldNode(fieldNode));
-                // }
             }
-            bits |= PROPERTIES_INITIALIZED;
+        } finally {
+            anyGenericsInitialized = true;
         }
-    }
-
-    private PropertyNode createPropertyNodeForMethodNode(MethodNode methodNode, String propertyName) {
-        ClassNode propertyType = methodNode.getReturnType();
-
-        int mods = methodNode.getModifiers();
-        FieldNode field = this.getField(propertyName);
-        if (field == null) {
-            field = new FieldNode(propertyName, mods, propertyType, this, null);
-            field.setDeclaringClass(this);
-        } else {
-            // field already exists
-            // must remove this field since when "addProperty" is called
-            // later on, it will add it again. We do not want dups.
-            this.removeField(propertyName);
-        }
-        PropertyNode property = new PropertyNode(field, mods, null, null);
-        property.setDeclaringClass(this);
-        return property;
-    }
-
-    /**
-     * Converts from a method get/set/is name to a property name.
-     * Assumes that methodName is more than 4/3 characters long and starts with a proper prefix.
-     */
-    private String convertToPropertyName(String methodName) {
-        StringBuilder propertyName = new StringBuilder();
-        int prefixLen;
-        if (methodName.startsWith("is")) {
-            prefixLen = 2;
-        } else {
-            prefixLen = 3;
-        }
-        propertyName.append(Character.toLowerCase(methodName.charAt(prefixLen)));
-        if (methodName.length() > prefixLen + 1) {
-            propertyName.append(methodName.substring(prefixLen + 1));
-        }
-        String name = propertyName.toString();
-        return name;
-    }
-
-    /**
-     * @return {@code true} if the methodNode looks like a setter method for a property:
-     *         method starting set<Something> with a void return type and taking one parameter
-     */
-    @SuppressWarnings("unused")
-    private boolean isSetter(MethodNode methodNode) {
-        return methodNode.getReturnType() == ClassHelper.VOID_TYPE &&
-            methodNode.getParameters().length == 1 &&
-            methodNode.getName().startsWith("set") &&
-            methodNode.getName().length() > 3;
-    }
-
-    /**
-     * @return {@code true} if the methodNode looks like a getter method for a property:
-     *         method starting get<Something> with a non void return type and taking no parameters
-     */
-    private boolean isGetter(MethodNode methodNode) {
-        return methodNode.getReturnType() != ClassHelper.VOID_TYPE &&
-            methodNode.getParameters().length == 0 &&
-            ((methodNode.getName().startsWith("get") && methodNode.getName().length() > 3) ||
-                (methodNode.getName().startsWith("is") && methodNode.getName().length() > 2));
-    }
-
-    @Override
-    public List<PropertyNode> getProperties() {
-        ensurePropertiesInitialized();
-        return super.getProperties();
-    }
-
-    @Override
-    public PropertyNode getProperty(String name) {
-        ensurePropertiesInitialized();
-        return super.getProperty(name);
-    }
-
-    @Override
-    public boolean hasProperty(String name) {
-        ensurePropertiesInitialized();
-        return super.hasProperty(name);
     }
 
     @Override
     public void addProperty(PropertyNode node) {
-        new RuntimeException("JDTClassNode is immutable, should not be called to add property: " + node.getName()).printStackTrace();
+        throw new UnsupportedOperationException("JDTClassNode is immutable, should not be called to add property: " + node.getName());
     }
 
     @Override
     public PropertyNode addProperty(String name, int modifiers, ClassNode type, Expression initialValueExpression, Statement getterBlock, Statement setterBlock) {
-        new RuntimeException("JDTClassNode is immutable, should not be called to add property: " + name).printStackTrace();
-        return null;
+        throw new UnsupportedOperationException("JDTClassNode is immutable, should not be called to add property: " + name);
     }
 
     @Override
-    public boolean isDeprecated() {
-        return jdtBinding.isDeprecated();
+    public List<PropertyNode> getProperties() {
+        if ((bits & PROPERTIES_INITIALIZED) == 0) {
+            synchronized (this) {
+                if ((bits & PROPERTIES_INITIALIZED) == 0) {
+                    lazyClassInit();
+                    if (groovyTypeDecl != null) {
+                        Set<String> names = new HashSet<>();
+                        List<PropertyNode> nodes = super.getProperties();
+                        getMethods().stream().filter(AccessorSupport::isGetter).forEach(methodNode -> {
+                            String methodName = methodNode.getName();
+                            String propertyName = decapitalize(methodName.substring(methodName.startsWith("is") ? 2 : 3));
+
+                            // STS-2628: don't double-add properties if there is a getter and an isser variant
+                            if (names.add(propertyName)) {
+                                FieldNode field = getField(propertyName);
+                                boolean synth = (field == null);
+                                if (synth) {
+                                    field = new FieldNode(propertyName, methodNode.getModifiers(), methodNode.getReturnType(), this, null);
+                                    field.setDeclaringClass(this);
+                                    field.setSynthetic(true);
+                                }
+                                PropertyNode property = new PropertyNode(field, methodNode.getModifiers(), null, null);
+                                property.setDeclaringClass(this);
+                                property.setSynthetic(synth);
+
+                                nodes.add(property);
+                            }
+                        });
+                    }
+                    bits |= PROPERTIES_INITIALIZED;
+                }
+            }
+        }
+
+        return Collections.unmodifiableList(super.getProperties());
     }
 
     /**
@@ -702,14 +595,39 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         }
         ClassLoader transformLoader = resolver.compilationUnit.getTransformLoader();
         if (transformLoader != null) {
-            // What about array types
+            // TODO: What about array types?
             try {
-                clazz = Class.forName(this.getName(), false, transformLoader);
+                clazz = Class.forName(getName(), false, transformLoader);
                 return clazz;
             } catch (ClassNotFoundException e) {
                 unfindable = true;
             }
         }
         throw new GroovyBugError("JDTClassNode.getTypeClass() cannot locate class for " + getName() + " using transform loader " + transformLoader);
+    }
+
+    @Override
+    public boolean isDeprecated() {
+        return jdtBinding.isDeprecated();
+    }
+
+    @Override
+    public boolean isPrimitive() {
+        return false; // FIXASC (M3) verify always true. Think it is a jdtReferenceBinding is a reference binding and not a typebinding
+    }
+
+    @Override
+    public boolean isResolved() {
+        return true; // JDTClassNodes are created because of a JDT Reference Binding file so are always 'resolved' (although not initialized upon creation)
+    }
+
+    @Override
+    public boolean isReallyResolved() {
+        return true;
+    }
+
+    @Override
+    public boolean mightHaveInners() {
+        return (jdtBinding.memberTypes().length != 0);
     }
 }
