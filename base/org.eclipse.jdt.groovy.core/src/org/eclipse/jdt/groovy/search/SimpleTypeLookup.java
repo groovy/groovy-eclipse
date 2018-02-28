@@ -172,7 +172,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             // method call without an object expression; requires same handling as a free variable
             ClassNode ownerType;
             if (scope.getEnclosingClosure() != null) {
-                ownerType = scope.getOwner();
+                ownerType = getBaseDeclaringType(scope.getOwner());
             } else {
                 ownerType = scope.getEnclosingTypeDeclaration();
             }
@@ -183,7 +183,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             if (var != null && !(var instanceof Parameter || var instanceof VariableExpression)) {
                 ClassNode ownerType;
                 if (scope.getEnclosingClosure() != null) {
-                    ownerType = scope.getOwner();
+                    ownerType = getBaseDeclaringType(scope.getOwner());
                 } else {
                     ownerType = scope.getEnclosingTypeDeclaration();
                 }

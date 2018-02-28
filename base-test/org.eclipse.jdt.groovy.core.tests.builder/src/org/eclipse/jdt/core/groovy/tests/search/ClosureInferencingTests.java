@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -110,10 +110,10 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "this",        "Bar");
-        assertExprType(contents, "super",       "Foo");
-        assertExprType(contents, "owner",       "Bar");
-        assertExprType(contents, "delegate",    "Bar");
+        assertExprType(contents, "this",     "Bar");
+        assertExprType(contents, "super",    "Foo");
+        assertExprType(contents, "owner",    "Bar");
+        assertExprType(contents, "delegate", "Bar");
     }
 
     @Test // closure with non-default resolve strategy
@@ -130,10 +130,10 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "this",        "Bar");
-        assertExprType(contents, "super",       "java.lang.Object");
-        assertExprType(contents, "owner",       "Bar");
-        assertExprType(contents, "delegate",    "Foo");
+        assertExprType(contents, "this",     "Bar");
+        assertExprType(contents, "super",    "java.lang.Object");
+        assertExprType(contents, "owner",    "Bar");
+        assertExprType(contents, "delegate", "Foo");
     }
 
     @Test // closure within static scope wrt owner
@@ -148,8 +148,24 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "owner",       "java.lang.Class<Bar>");
-        assertExprType(contents, "delegate",    "java.lang.Class<Bar>");
+        assertExprType(contents, "owner",    "java.lang.Class<Bar>");
+        assertExprType(contents, "delegate", "java.lang.Class<Bar>");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/502
+    public void testClosure9a() {
+        String contents =
+            "class Foo {\n" +
+            "  static long bar(String arg) {\n" +
+            "  }\n" +
+            "  static void baz() {\n" +
+            "    String a = 'bc'\n" +
+            "    def closure = {\n" +
+            "      bar(a)\n" + // call static method from closure within static scope
+            "    }\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "bar", "java.lang.Long");
     }
 
     @Test
@@ -340,9 +356,9 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}";
-        assertExprType(contents, "this", "B");
-        assertExprType(contents, "super", "A");
-        assertExprType(contents, "owner", "B");
+        assertExprType(contents, "this",     "B");
+        assertExprType(contents, "super",    "A");
+        assertExprType(contents, "owner",    "B");
         assertExprType(contents, "delegate", "B");
     }
 
