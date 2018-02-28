@@ -216,7 +216,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     /**
      * Returns the ClassNode this ClassNode is redirecting to.
      */
-    public ClassNode redirect(){
+    public ClassNode redirect() {
         if (redirect==null) return this;
         return redirect.redirect();
     }
@@ -562,15 +562,10 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         redirect().modifiers = modifiers;
     }
 
-    // GRECLIPSE add -- overridable method for JDTClassNode
-    protected void ensurePropertiesInitialized() {
-    }
-    // GRECLIPSE end
-
     public List<PropertyNode> getProperties() {
         final ClassNode r = redirect();
         // GRECLIPSE add
-        r.ensurePropertiesInitialized();
+        if (r != this) return r.getProperties();
         // GRECLIPSE end
         if (r.properties == null)
             r.properties = new ArrayList<PropertyNode> ();
@@ -642,24 +637,19 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         r.fieldIndex.put(node.getName(), node);
     }
 
-    // GRECLIPSE add
-    public void addPropertyWithoutField(PropertyNode node) {
-        ClassNode r = redirect();
-        node.setDeclaringClass(r);
-        if (r.properties == null)
-            r.properties = new ArrayList<PropertyNode>();
-        r.properties.add(node);
-    }
-    // GRECLIPSE end
-
     public void addProperty(PropertyNode node) {
+        // GRECLIPSE add
+        getProperties().add(node);
+        // GRECLIPSE end
         node.setDeclaringClass(redirect());
         FieldNode field = node.getField();
         addField(field);
+        /* GRECLIPSE edit
         final ClassNode r = redirect();
         if (r.properties == null)
             r.properties = new ArrayList<PropertyNode> ();
         r.properties.add(node);
+        */
     }
 
     public PropertyNode addProperty(String name,

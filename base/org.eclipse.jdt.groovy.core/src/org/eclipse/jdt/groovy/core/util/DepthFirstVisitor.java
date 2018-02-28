@@ -59,6 +59,7 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ExpressionTransformer;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.GStringExpression;
+import org.codehaus.groovy.ast.expr.LambdaExpression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.ast.expr.MapExpression;
@@ -478,6 +479,10 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         visitExpressions(expression.getStrings());
         visitExpressions(expression.getValues());
         visitExpression(expression);
+    }
+
+    public void visitLambdaExpression(LambdaExpression expression) {
+        visitClosureExpression(expression);
     }
 
     @Override

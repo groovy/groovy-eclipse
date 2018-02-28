@@ -15,8 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
-import groovy.transform.NotYetImplemented
-
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.preference.IPreferenceStore
@@ -339,27 +337,45 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
         checkUniqueProposal((SCRIPTCONTENTS - ~/\s*$/) + '.', 'new Foo().', 'method3', 'method3(arg: arg, c1: { it }) { it }')
     }
 
-    @NotYetImplemented @Test // GRECLIPSE-268
+    @Test
     void testGString1() {
         ICompletionProposal[] proposals = createProposalsAtOffset('""""""', 3)
         assert proposals.length == 0 : 'Should not have found any proposals, but found:\n' + printProposals(proposals)
     }
 
-    @Test // GRECLIPSE-268
+    @Test
     void testGString2() {
-        ICompletionProposal[] proposals = createProposalsAtOffset('"""${this}"""', 3)
+        ICompletionProposal[] proposals = createProposalsAtOffset('"""${Groo}"""', 3)
         assert proposals.length == 0 : 'Should not have found any proposals, but found:\n' + printProposals(proposals)
     }
 
-    @Test // GRECLIPSE-268
+    @Test
     void testGString3() {
-        ICompletionProposal[] proposals = createProposalsAtOffset('"""this"""', '"""this'.length())
+        ICompletionProposal[] proposals = createProposalsAtOffset('"""${Groo}"""', '"""${Groo'.length())
+        assert proposals.length > 0 : 'Should not have found any proposals, but found:\n' + printProposals(proposals)
+    }
+
+    @Test
+    void testGString4() {
+        ICompletionProposal[] proposals = createProposalsAtOffset('"""Groo"""', '"""Groo'.length())
         assert proposals.length == 0 : 'Should not have found any proposals, but found:\n' + printProposals(proposals)
     }
 
-    @Test // GRECLIPSE-268
-    void testGString4() {
-        String contents = 'def flarb;\n"""${flarb}"""'
-        checkUniqueProposal(contents, '${flarb', 'flarb')
+    @Test
+    void testGString5() {
+        String contents = '''\
+            def flarb
+            """$flar"""
+            '''.stripIndent()
+        checkUniqueProposal(contents, '$flar', 'flarb')
+    }
+
+    @Test
+    void testGString6() {
+        String contents = '''\
+            def flarb
+            """${flar}"""
+            '''.stripIndent()
+        checkUniqueProposal(contents, '${flar', 'flarb')
     }
 }

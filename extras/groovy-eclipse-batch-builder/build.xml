@@ -155,6 +155,13 @@
     </target>
 
 
+    <target name="-init26" if="do-26-build">
+        <echo message="Building groovy 2.6.x"/>
+        <property name="version" value="${version2.6}"/>
+        <property name="groovy.folder" value="org.codehaus.groovy26"/>
+    </target>
+
+
     <target name="-check-build-version">
         <property file="build.properties"/>
         <condition property="no-version-specified">
@@ -162,6 +169,7 @@
             <or>
                 <isset property="do-24-build"/>
                 <isset property="do-25-build"/>
+                <isset property="do-26-build"/>
             </or>
             </not>
         </condition>
@@ -169,7 +177,7 @@
 
 
     <target name="-fail-if-no-version-specified" depends="-check-build-version" if="no-version-specified">
-        <fail message="You must set exactly one of do-18-build, ... do-25-build to specify a groovy version to build"/>
+        <fail message="You must set exactly one of do-XX-build to specify a groovy version to build"/>
     </target>
 
 </project>

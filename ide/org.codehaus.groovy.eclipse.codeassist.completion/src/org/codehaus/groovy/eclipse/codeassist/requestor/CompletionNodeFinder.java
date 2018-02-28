@@ -21,6 +21,7 @@ import java.util.List;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.DynamicVariable;
 import org.codehaus.groovy.ast.FieldNode;
@@ -492,7 +493,11 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
             createContext(expression, blockStack.getLast(), ContentAssistLocation.ANNOTATION);
         }
         if (check(expression)) {
-            createContext(expression, blockStack.getLast(), expressionOrStatement());
+            if (isStringLiteral(expression)) {
+                throw new VisitCompleteException();
+            } else {
+                createContext(expression, blockStack.getLast(), expressionOrStatement());
+            }
         }
         super.visitConstantExpression(expression);
     }
@@ -869,5 +874,12 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         } else {
             return false;
         }
+    }
+
+    private static boolean isStringLiteral(ConstantExpression expr) {
+        if (ClassHelper.STRING_TYPE.equals(expr.getType())) {
+            return (expr.getLength() > expr.getText().length());
+        }
+        return false;
     }
 }
