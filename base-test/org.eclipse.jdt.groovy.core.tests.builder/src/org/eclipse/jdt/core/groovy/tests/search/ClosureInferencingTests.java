@@ -168,6 +168,24 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         assertExprType(contents, "bar", "java.lang.Long");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/502
+    public void testClosure9b() {
+        String contents =
+            "class Foo {\n" +
+            "  static long bar(String arg) {\n" +
+            "  }\n" +
+            "  static void baz() {\n" +
+            "    String a = 'bc'\n" +
+            "    def closure = {\n" +
+            "      [].each {\n" +
+            "        bar(a)\n" + // call static method from closure within closure within static scope
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        assertExprType(contents, "bar", "java.lang.Long");
+    }
+
     @Test
     public void testClosure10() {
         String contents =
