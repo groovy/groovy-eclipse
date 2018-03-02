@@ -39,22 +39,19 @@
             <fileset dir="${extract.loc}">
                 <exclude name="**/*.g"/>
                 <exclude name="**/*.groovy"/>
+                <exclude name="**/*.html"/>
                 <exclude name="**/*.jar"/>
                 <exclude name="**/*.java"/>
                 <exclude name="**/*.smap"/>
 
-                <exclude name="about_files/**"/>
-                <exclude name="ant_tasks/**"/>
-
                 <exclude name=".api_description"/>
                 <exclude name=".options"/>
-                <exclude name="about.html"/>
-                <exclude name="overview.html"/>
-                <exclude name="overviewj.html"/>
-                <exclude name="**/package.html"/>
-                <exclude name="plugin.properties"/>
-                <exclude name="plugin.xml"/>
-
+                <exclude name="about_files/**"/>
+                <exclude name="ant_tasks/**"/>
+                <exclude name="plugin.*"/>
+                <exclude name="org/codehaus/groovy/activator/**"/>
+                <exclude name="script.js"/>
+                <exclude name="stylesheet.css"/>
                 <exclude name="META-INF/eclipse.inf"/>
                 <exclude name="META-INF/maven/**"/>
                 <exclude name="META-INF/*.RSA"/>
