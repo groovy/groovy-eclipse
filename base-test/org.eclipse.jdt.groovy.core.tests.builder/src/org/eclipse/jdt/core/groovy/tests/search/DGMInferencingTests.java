@@ -558,30 +558,26 @@ public final class DGMInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testDGMDeclaring() {
-        // With groovy 2.0, there are some new DGM classes.  Need to ensure that we are using those classes as the declaring type, but only for 2.0 or later.
         String contents = "\"\".eachLine";
-        String str = "eachLine";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.StringGroovyMethods");
+        String target = "eachLine";
+        int start = contents.lastIndexOf(target), until = start + target.length();
+        assertDeclaringType(contents, start, until, "org.codehaus.groovy.runtime.StringGroovyMethods");
     }
 
     @Test
     public void testDGMDeclaring2() {
         String contents = "new File().eachLine";
-        String str = "eachLine";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.ResourceGroovyMethods");
+        String target = "eachLine";
+        int start = contents.lastIndexOf(target), until = start + target.length();
+        assertDeclaringType(contents, start, until, "org.codehaus.groovy.runtime.ResourceGroovyMethods");
     }
 
     @Test
     public void testDGMDeclaring3() {
-        String contents = "Writer w\nw.leftShift";
-        String str = "leftShift";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.IOGroovyMethods");
+        String contents = "Writer w; w.leftShift";
+        String target = "leftShift";
+        int start = contents.lastIndexOf(target), until = start + target.length();
+        assertDeclaringType(contents, start, until, "org.codehaus.groovy.runtime.IOGroovyMethods");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/372
@@ -602,10 +598,26 @@ public final class DGMInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testDGSMDeclaring3() {
+        String contents = "sleep 42";
+        String target = "sleep";
+        int start = contents.lastIndexOf(target), until = start + target.length();
+        assertDeclaringType(contents, start, until, "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
+    }
+
+    @Test
+    public void testDGSMDeclaring4() {
         String contents = "Date.getLastMatcher()";
         String target = "getLastMatcher";
         int start = contents.lastIndexOf(target), until = start + target.length();
         assertUnknownConfidence(contents, start, until, "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods", false);
+    }
+
+    @Test
+    public void testDGSMDeclaring5() {
+        String contents = "java.util.regex.Matcher.getLastMatcher()";
+        String target = "getLastMatcher";
+        int start = contents.lastIndexOf(target), until = start + target.length();
+        assertDeclaringType(contents, start, until, "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
     }
 
     @Test
@@ -616,7 +628,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         assertDeclaringType(contents, start, until, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
         target = "echo";
         start = contents.lastIndexOf(target); until = start + target.length();
-        //assertDeclaringType(contents, start, until, "Parrot"); // added to String usinf DGM.mixin(Class)
+        //assertDeclaringType(contents, start, until, "Parrot"); // added to String using DGM.mixin(Class)
     }
 
     @Test
