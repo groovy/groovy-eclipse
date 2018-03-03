@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -106,7 +106,8 @@ public class CategoryTypeLookup implements ITypeLookup {
             Parameter[] paramters = method.getParameters();
             if (paramters != null && paramters.length > 0) {
                 ClassNode parameterType = paramters[0].getType();
-                if (VariableScope.DGSM_CLASS_NODE.equals(method.getDeclaringClass())) {
+                if (VariableScope.CLASS_CLASS_NODE.equals(firstArgumentType) &&
+                        VariableScope.DGSM_CLASS_NODE.equals(method.getDeclaringClass())) {
                     parameterType = VariableScope.newClassClassNode(parameterType);
                 }
                 if (isTypeCompatible(firstArgumentType, parameterType)) {
