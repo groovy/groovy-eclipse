@@ -402,6 +402,39 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('x'), 1, VARIABLE))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/512
+    void testNotCategoryMethod2() {
+        addGroovySource '''\
+            import java.lang.reflect.*
+            class Reflections {
+              static Method findMethod(String methodName, Class<?> targetClass, Class<?>... paramTypes) {
+              }
+              static Object invokeMethod(Method method, Object target, Object... params) {
+              }
+            }
+            '''.stripIndent(), 'Reflections'
+
+        String contents = '''\
+            static void setThreadLocalProperty(String key, Object val) { Class target = null // redacted
+              def setter = Reflections.findMethod('setThreadLocalProperty', target, String, Object)
+              Reflections.invokeMethod(setter, target, key, val)
+            }
+            '''.stripIndent()
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('setThreadLocalProperty'), 'setThreadLocalProperty'.length(), STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('key'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('val'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('target'), 6, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('setter'), 6, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('findMethod'), 'findMethod'.length(), STATIC_CALL),
+            new HighlightedTypedPosition(contents.indexOf('target,'), 6, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('invokeMethod'), 'invokeMethod'.length(), STATIC_CALL), // not DGM
+            new HighlightedTypedPosition(contents.lastIndexOf('setter'), 6, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('target'), 6, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('key'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('val'), 3, PARAMETER))
+    }
+
     @Test
     void testVariadicMehtods() {
         String contents = '''\
