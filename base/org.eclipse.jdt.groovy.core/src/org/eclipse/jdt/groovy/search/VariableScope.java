@@ -15,6 +15,11 @@
  */
 package org.eclipse.jdt.groovy.search;
 
+import static org.codehaus.groovy.ast.tools.GeneralUtils.castX;
+import static org.codehaus.groovy.ast.tools.GenericsUtils.parseClassNodesFromString;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.evaluateExpression;
+
+import java.beans.Introspector;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
@@ -60,6 +65,7 @@ import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
+import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.runtime.DateGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyStaticMethods;
@@ -234,32 +240,26 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                                         Expression delegatesToGenericTypeIndex = annotation.getMember("genericTypeIndex");
 
                                         Integer strategy = null, generics = null;
-                                        /*if (delegatesToStrategy != null) {
-                                            strategy = (Integer) org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.evaluateExpression(org.codehaus.groovy.ast.tools.GeneralUtils.castX(INTEGER_CLASS_NODE, delegatesToStrategy), enclosingModule.getUnit().getConfig());
+                                        if (delegatesToStrategy != null) {
+                                            strategy = (Integer) evaluateExpression(castX(INTEGER_CLASS_NODE, delegatesToStrategy), enclosingModule.getUnit().getConfig());
                                         }
                                         if (delegatesToGenericTypeIndex != null) {
-                                            strategy = (Integer) org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.evaluateExpression(org.codehaus.groovy.ast.tools.GeneralUtils.castX(INTEGER_CLASS_NODE, delegatesToGenericTypeIndex), enclosingModule.getUnit().getConfig());
-                                        }*/
-                                        if (delegatesToStrategy instanceof ConstantExpression) {
-                                            strategy = Integer.valueOf(delegatesToStrategy.getText());
-                                        }
-                                        if (delegatesToGenericTypeIndex instanceof ConstantExpression) {
-                                            generics = Integer.valueOf(delegatesToGenericTypeIndex.getText());
+                                            generics = (Integer) evaluateExpression(castX(INTEGER_CLASS_NODE, delegatesToGenericTypeIndex), enclosingModule.getUnit().getConfig());
                                         }
 
                                         // handle three modes: @DelegatesTo(Type.class), @DelegatesTo(type="pack.Type"), @DelegatesTo(target="name", genericTypeIndex=i)
                                         if (delegatesToValue instanceof ClassExpression && !delegatesToValue.getType().getName().equals("groovy.lang.DelegatesTo$Target")) {
                                             addDelegatesToClosure(closure, delegatesToValue.getType(), strategy);
 
-                                        } else if (delegatesToType instanceof ConstantExpression && !"".equals(delegatesToType.getText())) {
-                                            //ClassNode[] resolved = org.codehaus.groovy.ast.tools.GenericsUtils.parseClassNodesFromString(delegatesToType.getText(), enclosingModule.getContext(), an org.codehaus.groovy.control.CompilationUnit, methodNode, delegatesToType);
-                                            //addDelegatesToClosure(closure, resolved[0], strategy);
+                                        } else if (delegatesToType instanceof ConstantExpression && !"".equals(delegatesToType.getText())) { CompilationUnit compilationUnit = null; // TODO
+                                            ClassNode[] resolved = parseClassNodesFromString(delegatesToType.getText(), enclosingModule.getContext(), compilationUnit, methodNode, delegatesToType);
+                                            addDelegatesToClosure(closure, resolved[0], strategy);
 
                                         } else if (delegatesToValue == null || (delegatesToValue instanceof ClassExpression && delegatesToValue.getType().getName().equals("groovy.lang.DelegatesTo$Target"))) {
                                             int j = indexOfDelegatesToTarget(parameters, delegatesToTarget.getText());
                                             if (j >= 0 && j < arguments.size()) {
                                                 Expression target = arguments.get(j);
-                                                ClassNode targetType = target.getType(); // TODO: lookup expression type (unless j is 0 and it's a category method)
+                                                ClassNode targetType = target.getType(); // TODO: Look up expression type (unless j is 0 and it's a category method).
                                                 if (generics != null && generics >= 0 && targetType.isUsingGenerics()) {
                                                     targetType.getGenericsTypes()[generics].getType();
                                                 }
@@ -270,6 +270,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                                 }
                             }
                         }
+                        // TODO: Remove when minimum supported Groovy runtime is 2.5
                         if (delegatesTo == null) {
                             if (arguments.get(0) instanceof ClosureExpression &&
                                     methodNode.getName().matches("build|do(Later|Outside)|edt(Builder)?") &&
@@ -367,29 +368,29 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     }
 
     /**
-     * Null for the top level scope
+     * Null for the top level scope.
      */
     private VariableScope parent;
 
     /**
-     * Shared with parent scopes
+     * State shared with all scopes.
      */
     private SharedState shared;
 
     /**
-     * AST node for this scope, typically, a block, closure, or body declaration
+     * AST node for this scope, typically, a block, closure, or body declaration.
      */
     /*package*/ ASTNode scopeNode;
 
     /**
-     * number of parameters of current method call or -1 if not a method call
+     * Is the current node not the RHS of a dotted expression?
      */
     private boolean isPrimaryNode;
 
     private final boolean isStaticScope;
 
     /**
-     * Category that will be declared in the next scope
+     * Category that will be declared in the next scope.
      */
     private ClassNode categoryBeingDeclared;
 
@@ -409,8 +410,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
             (getEnclosingClosureScope() == null); // if in a closure, items may be found on delegate or owner
 
         // determine if scope belongs to script body
-        if (enclosingNode instanceof ClassNode ||
-                enclosingNode instanceof FieldNode) {
+        if (enclosingNode instanceof ClassNode || enclosingNode instanceof FieldNode) {
             this.shared.isRunMethod = false;
         } else if (enclosingNode instanceof MethodNode) {
             this.shared.isRunMethod = ((MethodNode) enclosingNode).isScriptBody();
@@ -671,20 +671,11 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         return null;
     }
 
+    // NOTE: JDTClassNode contains very similar methods
     private static PropertyNode createPropertyNodeForMethodNode(MethodNode methodNode) {
-        ClassNode propertyType = methodNode.getReturnType();
         String methodName = methodNode.getName();
-        StringBuffer propertyName = new StringBuffer();
-        propertyName.append(Character.toLowerCase(methodName.charAt(3)));
-        if (methodName.length() > 4) {
-            propertyName.append(methodName.substring(4));
-        }
-        int mods = methodNode.getModifiers();
-        ClassNode declaringClass = methodNode.getDeclaringClass();
-        PropertyNode property = new PropertyNode(propertyName.toString(), mods, propertyType, declaringClass, null, null, null);
-        property.setDeclaringClass(declaringClass);
-        property.getField().setDeclaringClass(declaringClass);
-        return property;
+        String propertyName = Introspector.decapitalize(methodName.substring(methodName.startsWith("is") ? 2 : 3));
+        return new PropertyNode(propertyName, methodNode.getModifiers(), methodNode.getReturnType(), methodNode.getDeclaringClass(), null, null, null);
     }
 
     private static void initializeProperties(ClassNode node) {
@@ -700,7 +691,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
      * Updates the type info of this variable if it already exists in scope, or just adds it if it doesn't
      */
     public void updateOrAddVariable(String name, ClassNode type, ClassNode declaringType) {
-        if (!internalUpdateVariable(name, type, declaringType)) {
+        if (!updateVariableImpl(name, type, declaringType)) {
             addVariable(name, type, declaringType);
         }
     }
@@ -711,25 +702,23 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
      * @param name identifier to update
      * @param type type of identifier
      * @param declaringType declaring type of identifier
-     * @return true iff the variable exists in scope and was updated
      */
-    public boolean updateVariable(String name, ClassNode type, ClassNode declaringType) {
-        return internalUpdateVariable(name, type, declaringType);
+    public void updateVariable(String name, ClassNode type, ClassNode declaringType) {
+       updateVariableImpl(name, type, declaringType);
     }
 
     /**
-     * Return true if the type has been udpated, false otherwise
+     * @return {@code true} if the type has been udpated, {@code false} otherwise
      */
-    private boolean internalUpdateVariable(String name, ClassNode type, ClassNode declaringType) {
+    private boolean updateVariableImpl(String name, ClassNode type, ClassNode declaringType) {
         VariableInfo info = lookupNameInCurrentScope(name);
         if (info != null) {
-            nameVariableMap.put(name, new VariableInfo(name, type, declaringType == null ? info.declaringType : declaringType));
+            nameVariableMap.put(name, new VariableInfo(name, type, declaringType != null ? declaringType : info.declaringType));
             return true;
         } else if (parent != null) {
-            return parent.internalUpdateVariable(name, type, declaringType);
-        } else {
-            return false;
+            return parent.updateVariableImpl(name, type, declaringType);
         }
+        return false;
     }
 
     public static ClassNode resolveTypeParameterization(GenericsMapper mapper, ClassNode type) {
@@ -1162,11 +1151,10 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         ClassNode typeToResolve = null;
         if (iterator == null && collectionType.isInterface()) {
             // could be a type that implements List
-            if (collectionType.implementsInterface(LIST_CLASS_NODE) && collectionType.getGenericsTypes() != null
-                    && collectionType.getGenericsTypes().length == 1) {
+            if (collectionType.implementsInterface(LIST_CLASS_NODE) && collectionType.getGenericsTypes() != null && collectionType.getGenericsTypes().length == 1) {
                 typeToResolve = collectionType;
-            } else if (collectionType.declaresInterface(ITERATOR_CLASS) || collectionType.equals(ITERATOR_CLASS)
-                    || collectionType.declaresInterface(ENUMERATION_CLASS) || collectionType.equals(ENUMERATION_CLASS)) {
+            } else if (collectionType.declaresInterface(ITERATOR_CLASS) || collectionType.equals(ITERATOR_CLASS) ||
+                    collectionType.declaresInterface(ENUMERATION_CLASS) || collectionType.equals(ENUMERATION_CLASS)) {
                 // if the type is an iterator or an enumeration, then resolve the type parameter
                 typeToResolve = collectionType;
             } else if (collectionType.declaresInterface(MAP_CLASS_NODE) || collectionType.equals(MAP_CLASS_NODE)) {
@@ -1194,8 +1182,8 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         }
 
         // this is hardcoded from DGM
-        if (collectionType.declaresInterface(INPUT_STREAM_CLASS) || collectionType.declaresInterface(DATA_INPUT_STREAM_CLASS)
-                || collectionType.equals(INPUT_STREAM_CLASS) || collectionType.equals(DATA_INPUT_STREAM_CLASS)) {
+        if (collectionType.declaresInterface(INPUT_STREAM_CLASS) || collectionType.declaresInterface(DATA_INPUT_STREAM_CLASS) ||
+                collectionType.equals(INPUT_STREAM_CLASS) || collectionType.equals(DATA_INPUT_STREAM_CLASS)) {
             return BYTE_CLASS_NODE;
         }
 
@@ -1223,8 +1211,6 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     }
 
     public static boolean isVoidOrObject(ClassNode type) {
-        return type != null && (type.getName().equals(VOID_CLASS_NODE.getName()) ||
-                type.getName().equals(VOID_WRAPPER_CLASS_NODE.getName()) ||
-                type.getName().equals(OBJECT_CLASS_NODE.getName()));
+        return VOID_CLASS_NODE.equals(type) || OBJECT_CLASS_NODE.equals(type);
     }
 }
