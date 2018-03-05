@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1116,6 +1116,18 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('a'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('b'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('$a') + 1, 1, VARIABLE))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/511
+    void testGString4() {
+        String contents = '''\
+            import static java.net.URLEncoder.encode
+            def url = "/${encode('head','UTF-8')}/tail"
+            '''.stripIndent()
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('url'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('encode'), 'encode'.length(), DEPRECATED),
+            new HighlightedTypedPosition(contents.lastIndexOf('encode'), 'encode'.length(), STATIC_CALL))
     }
 
     @Test

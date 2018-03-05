@@ -263,8 +263,8 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
     }
 
     private HighlightedTypedPosition handleMethodReference(StaticMethodCallExpression expr) {
-        int offset = expr.getStart(),
-            length = expr.getMethod().length();
+        int offset = expr.getNameStart(),
+            length = expr.getNameEnd() - expr.getNameStart() + 1;
 
         return new HighlightedTypedPosition(offset, length, HighlightKind.STATIC_CALL);
     }
