@@ -1130,6 +1130,21 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('encode'), 'encode'.length(), STATIC_CALL))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/511
+    void testGString5() {
+        String contents = '''\
+            import static java.net.URLEncoder.encode
+            @groovy.transform.CompileStatic
+            class SC {
+              def url = "/${encode('head','UTF-8')}/tail"
+            }
+            '''.stripIndent()
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('url'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('encode'), 'encode'.length(), DEPRECATED),
+            new HighlightedTypedPosition(contents.lastIndexOf('encode'), 'encode'.length(), STATIC_CALL))
+    }
+
     @Test
     void testRegex() {
         String contents = '/fdsfasdfas/'
