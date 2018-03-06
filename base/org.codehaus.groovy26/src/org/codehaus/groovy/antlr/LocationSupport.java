@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2009-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,7 @@
 package org.codehaus.groovy.antlr;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Maps lines/columns to offsets in a text file.  Assumes '\n' is the newline
@@ -30,50 +31,49 @@ import java.util.List;
  * <li> "a\nb" -> [0,2], [2,1]
  * <li> "a\nbc\n" -> [0,2], [2,3], [5,0]
  * </ul>
- *
- * @author Andrew Eisenberg
  */
 public class LocationSupport {
 
-    public static final LocationSupport NO_LOCATIONS = new LocationSupport();
+    private final int[] lineEndings;
 
     private static final int[] NO_LINE_ENDINGS = new int[0];
 
-    private final int[] lineEndings;
+    public static final LocationSupport NO_LOCATIONS = new LocationSupport();
 
     public LocationSupport() {
-        lineEndings = NO_LINE_ENDINGS;
+        this(NO_LINE_ENDINGS);
     }
 
     public LocationSupport(int[] lineEndings) {
-        this.lineEndings = lineEndings;
+        this.lineEndings = Objects.requireNonNull(lineEndings);
     }
 
     public LocationSupport(List<StringBuffer> lines) {
-        if (lines != null) {
-            lineEndings = processLineEndings(lines);
-        } else {
-            lineEndings = NO_LINE_ENDINGS;
-        }
+        this(lines != null ? processLineEndings(lines) : NO_LINE_ENDINGS);
     }
 
-    private int[] processLineEndings(List<? extends CharSequence> lines) {
-        int[] newLineEndings = new int[lines.size() + 1]; // last index stores end of file
+    private static int[] processLineEndings(List<? extends CharSequence> lines) {
+        int[] lineEndings = new int[lines.size() + 1]; // last index stores end of file
         int total = 0;
         int current = 1;
         for (CharSequence line : lines) {
-            newLineEndings[current++] = (total += (line.length()));
+            lineEndings[current++] = (total += line.length());
         }
-        return newLineEndings;
+        return lineEndings;
     }
 
-    // TODO: Maybe should throw exception if out of bounds?
     public int findOffset(int row, int col) {
-        return row <= lineEndings.length && row > 0 ? lineEndings[row - 1] + col - 1 : 0;
+        if (row > 0 && row <= lineEndings.length) {
+            return lineEndings[row - 1] + col - 1;
+        }
+        return 0;
     }
 
     public int getEnd() {
-        return lineEndings.length > 0 ? lineEndings[lineEndings.length - 1] : 0;
+        if (lineEndings.length > 0) {
+            return lineEndings[lineEndings.length - 1];
+        }
+        return 0;
     }
 
     public int getEndColumn() {
@@ -81,13 +81,15 @@ public class LocationSupport {
             return lineEndings[lineEndings.length - 1] - lineEndings[lineEndings.length - 2];
         } else if (lineEndings.length > 0) {
             return lineEndings[0];
-        } else {
-            return 0;
         }
+        return 0;
     }
 
     public int getEndLine() {
-        return lineEndings.length > 0 ? lineEndings.length - 1 : 0;  // last index contains length of document
+        if (lineEndings.length > 0) {
+            return lineEndings.length - 1;
+        }
+        return 0;
     }
 
     public int[] getRowCol(int offset) {
@@ -96,11 +98,10 @@ public class LocationSupport {
                 return new int[] {i, offset - lineEndings[i - 1] + 1};
             }
         }
-        // after end of document
-        throw new RuntimeException("Location is after end of document.  Offset : " + offset);
+        throw new RuntimeException("Location is after end of document.  Offset: " + offset);
     }
 
     public boolean isPopulated() {
-        return lineEndings.length > 0;
+        return (lineEndings.length > 0);
     }
 }
