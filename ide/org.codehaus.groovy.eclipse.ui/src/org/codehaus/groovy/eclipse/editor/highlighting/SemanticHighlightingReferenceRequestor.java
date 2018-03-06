@@ -289,7 +289,16 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             kind = HighlightKind.STATIC_CALL;
         }
 
-        return new HighlightedTypedPosition(expr.getStart(), expr.getLength(), kind);
+        int offset, length;
+        if (expr.getNameEnd() < 1) {
+            offset = expr.getStart();
+            length = expr.getLength();
+        } else {
+            offset = expr.getNameStart();
+            length = expr.getNameEnd() - expr.getNameStart() + 1;
+        }
+
+        return new HighlightedTypedPosition(offset, length, kind);
     }
 
     private HighlightedTypedPosition handleVariableExpression(Parameter expr, VariableScope scope) {
