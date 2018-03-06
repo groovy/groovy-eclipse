@@ -819,12 +819,12 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      * tagging Closure -> SAM type as an inexact match.
      */
     protected static boolean isLooseMatch(List<ClassNode> arguments, Parameter[] parameters) {
-        final int argCount = (arguments == null ? -1 : arguments.size());
-        if (parameters.length != argCount) {
+        int argCount = (arguments == null ? -1 : arguments.size());
+        if (parameters.length != argCount && !(parameters.length < argCount && GenericsMapper.isVargs(parameters))) {
             return true;
         } else if (argCount > 0 && arguments.get(argCount - 1).equals(VariableScope.CLOSURE_CLASS_NODE)) {
-            ClassNode last = parameters[argCount - 1].getType();
-            if (!GroovyUtils.getBaseType(last).equals(VariableScope.CLOSURE_CLASS_NODE)) {
+            ClassNode lastType = GroovyUtils.getBaseType(parameters[parameters.length - 1].getType());
+            if (!lastType.equals(VariableScope.CLOSURE_CLASS_NODE)) {
                 return true;
             }
         }
