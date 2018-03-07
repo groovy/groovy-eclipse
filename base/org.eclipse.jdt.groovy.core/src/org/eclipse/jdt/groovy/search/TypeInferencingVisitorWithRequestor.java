@@ -1209,7 +1209,16 @@ assert primaryExprType != null && dependentExprType != null;
                 }
             }
             if (handleParameterList(node.getParameters())) {
-                super.visitConstructorOrMethod(node, isConstructor);
+                visitAnnotations(node);
+                if (!isConstructor || !(node.getCode() instanceof BlockStatement)) {
+                    visitClassCodeContainer(node.getCode());
+                } else {
+                    for (Statement stmt : ((BlockStatement) node.getCode()).getStatements()) {
+                        if (stmt.getEnd() > 0) { // skip inlined initialization expressions
+                            stmt.visit(this);
+                        }
+                    }
+                }
             }
             // fall through
         case CANCEL_BRANCH:
@@ -1911,11 +1920,8 @@ assert primaryExprType != null && dependentExprType != null;
                     throw new VisitCompleted(status);
                 }
 
-                // visit the parameter type
-                visitClassReference(param.getOriginType());
-
                 visitAnnotations(param);
-
+                visitClassReference(param.getOriginType());
                 Expression init = param.getInitialExpression();
                 if (init != null) {
                     init.visit(this);

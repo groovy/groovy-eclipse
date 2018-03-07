@@ -1689,6 +1689,35 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testFieldInitExpr() {
+        addGroovySource '''\
+            abstract class A {
+              protected final String field
+              protected A(String field) {
+                this.field = field
+              }
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            class B extends A {
+              Map map = [key: field] // init added to ctor body, where "field" refers to param
+              B(String field) {
+                super(field)
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('map'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('key'), 3, MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('field'), 5, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('B(String '), 1, CTOR),
+            new HighlightedTypedPosition(contents.indexOf('field)'), 5, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('field'), 5, PARAMETER))
+    }
+
+    @Test
     void testMethodPointer() {
         String contents = '''\
             def x = ''.&length
