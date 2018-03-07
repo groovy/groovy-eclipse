@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,6 @@ import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
-import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
 
 public class GroovyClassScope extends ClassScope {
@@ -63,43 +62,30 @@ public class GroovyClassScope extends ClassScope {
         super(parent, typeDecl);
     }
 
-    @Override
-    protected boolean connectSuperInterfaces() {
-        boolean noProblems = super.connectSuperInterfaces();
-        return noProblems;
-    }
-
-    // FIXASC pull out into common util area (see GCUScope too)
-    char[] GROOVY = "groovy".toCharArray();
-    char[][] GROOVY_LANG_METACLASS = { GROOVY, TypeConstants.LANG, "MetaClass".toCharArray() };
-    char[][] GROOVY_LANG_GROOVYOBJECT = { GROOVY, TypeConstants.LANG, "GroovyObject".toCharArray() };
-
     public final ReferenceBinding getGroovyLangMetaClassBinding() {
         CompilationUnitScope unitScope = compilationUnitScope();
-        unitScope.recordQualifiedReference(GROOVY_LANG_METACLASS);
-        return unitScope.environment.getResolvedType(GROOVY_LANG_METACLASS, this);
+        unitScope.recordQualifiedReference(GroovyCompilationUnitScope.GROOVY_LANG_METACLASS);
+        return unitScope.environment.getResolvedType(GroovyCompilationUnitScope.GROOVY_LANG_METACLASS, this);
     }
 
     /**
-     * Add any groovy specific method bindings to the set determined by the compiler. These
+     * Adds any Groovy-specific method bindings to the set determined by the compiler.
      */
     @Override
     protected MethodBinding[] augmentMethodBindings(MethodBinding[] methodBindings) {
-        // Don't add these methods to annotations
-        SourceTypeBinding binding = this.referenceContext.binding;
+        // don't add these methods to annotations
+        SourceTypeBinding binding = referenceContext.binding;
         if (binding != null && (binding.isAnnotationType() || binding.isInterface())) {
             return methodBindings;
         }
         boolean implementsGroovyLangObject = false;
 
-        ReferenceBinding[] superInterfaces = binding.superInterfaces;
-        if (superInterfaces != null) {
-            for (int i = 0, max = superInterfaces.length; i < max; i++) {
-                char[][] interfaceName = superInterfaces[i].compoundName;
-                if (CharOperation.equals(interfaceName, GROOVY_LANG_GROOVYOBJECT)) {
-                    implementsGroovyLangObject = true;
-                    break;
-                }
+        ReferenceBinding[] superInterfaces = binding.superInterfaces != null ? binding.superInterfaces : new ReferenceBinding[0];
+        for (int i = 0, n = superInterfaces.length; i < n; i += 1) {
+            char[][] interfaceName = superInterfaces[i].compoundName;
+            if (CharOperation.equals(interfaceName, GroovyCompilationUnitScope.GROOVY_LANG_GROOVYOBJECT)) {
+                implementsGroovyLangObject = true;
+                break;
             }
         }
 
@@ -108,30 +94,27 @@ public class GroovyClassScope extends ClassScope {
         // If we don't then a supertype did and these methods do not have to be added here
         if (implementsGroovyLangObject) {
             if (debugListener != null) {
-                debugListener.record("augment: type " + new String(referenceContext.name) + " having GroovyObject methods added");
+                debugListener.record("augment: type " + String.valueOf(referenceContext.name) + " having GroovyObject methods added");
             }
             TypeBinding bindingJLO = getJavaLangObject();
             TypeBinding bindingJLS = getJavaLangString();
             TypeBinding bindingGLM = getGroovyLangMetaClassBinding();
 
             // Now add the groovy.lang.GroovyObject methods:
-            //
-            // Object invokeMethod(String name, Object args);
-            // Object getProperty(String propertyName);
-            // void setProperty(String propertyName, Object newValue);
-            // MetaClass getMetaClass();
-            // void setMetaClass(MetaClass metaClass);
+            //   Object invokeMethod(String name, Object args);
+            //   Object getProperty(String propertyName);
+            //   void setProperty(String propertyName, Object newValue);
+            //   MetaClass getMetaClass();
+            //   void setMetaClass(MetaClass metaClass);
 
-            // Note on synthetic
-            // javac/ecj don't see synthetic methods when considering if a type implements an interface. So don't make these
-            // synthetic
+            // Note on synthetic: javac/ecj doesn't see synthetic methods when considering if a type implements an interface; so don't make these synthetic
 
-            // Visibility is public and possibly static/abstract depending on the containing type
-            createMethod("invokeMethod", false, "", new TypeBinding[] { bindingJLS, bindingJLO }, bindingJLO, groovyMethods, methodBindings, null);
-            createMethod("getProperty", false, "", new TypeBinding[] { bindingJLS }, bindingJLO, groovyMethods, methodBindings, null);
-            createMethod("setProperty", false, "", new TypeBinding[] { bindingJLS, bindingJLO }, TypeBinding.VOID, groovyMethods, methodBindings, null);
+            // visibility is public and possibly static/abstract depending on the containing type
+            createMethod("invokeMethod", false, "", new TypeBinding[] {bindingJLS, bindingJLO}, bindingJLO, groovyMethods, methodBindings, null);
+            createMethod("getProperty", false, "", new TypeBinding[] {bindingJLS}, bindingJLO, groovyMethods, methodBindings, null);
+            createMethod("setProperty", false, "", new TypeBinding[] {bindingJLS, bindingJLO}, TypeBinding.VOID, groovyMethods, methodBindings, null);
             createMethod("getMetaClass", false, "", null, bindingGLM, groovyMethods, methodBindings, null);
-            createMethod("setMetaClass", false, "", new TypeBinding[] { bindingGLM }, TypeBinding.VOID, groovyMethods, methodBindings, null);
+            createMethod("setMetaClass", false, "", new TypeBinding[] {bindingGLM}, TypeBinding.VOID, groovyMethods, methodBindings, null);
         }
         // FIXASC decide what difference this makes - should we not be adding anything at all?
         // will not be an instance of GroovyTypeDeclaration if created through SourceTypeConverter
@@ -150,13 +133,13 @@ public class GroovyClassScope extends ClassScope {
                     // null binding indicates there was a problem resolving its type
                     if (fBinding != null && !(fBinding.type instanceof MissingTypeBinding)) {
                         String getterName = "get" + MetaClassHelper.capitalize(name);
-                        createMethod(getterName, property.isStatic(), "", /* TypeBinding.NO_TYPES */null, fBinding.type, groovyMethods, methodBindings, typeDeclaration);
+                        createMethod(getterName, property.isStatic(), "", null, fBinding.type, groovyMethods, methodBindings, typeDeclaration);
                         if (!fBinding.isFinal()) {
                             String setterName = "set" + MetaClassHelper.capitalize(name);
                             createMethod(setterName, property.isStatic(), "", new TypeBinding[] {fBinding.type}, TypeBinding.VOID, groovyMethods, methodBindings, typeDeclaration);
                         }
                         if (fBinding.type == TypeBinding.BOOLEAN) {
-                            createMethod("is" + MetaClassHelper.capitalize(name), property.isStatic(), "", /* TypeBinding.NO_TYPES, */ null, fBinding.type, groovyMethods, methodBindings, typeDeclaration);
+                            createMethod("is" + MetaClassHelper.capitalize(name), property.isStatic(), "", null, fBinding.type, groovyMethods, methodBindings, typeDeclaration);
                         }
                     }
                 }
@@ -182,10 +165,10 @@ public class GroovyClassScope extends ClassScope {
         }
 
         Map<String, MethodBinding> methodsMap = new HashMap<>();
-        for (ReferenceBinding i : superInterfaces) {
-            if (traitHelper.isTrait(i)) {
-                ReferenceBinding helperBinding = traitHelper.getHelperBinding(i);
-                for (MethodBinding method : i.availableMethods()) {
+        for (ReferenceBinding face : superInterfaces) {
+            if (traitHelper.isTrait(face)) {
+                ReferenceBinding helperBinding = traitHelper.getHelperBinding(face);
+                for (MethodBinding method : face.availableMethods()) {
                     if (method.isPrivate() || method.isStatic()) {
                         continue;
                     }
