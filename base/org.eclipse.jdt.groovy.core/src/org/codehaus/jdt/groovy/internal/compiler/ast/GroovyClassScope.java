@@ -92,14 +92,12 @@ public class GroovyClassScope extends ClassScope {
         }
         boolean implementsGroovyLangObject = false;
 
-        ReferenceBinding[] superInterfaces = binding.superInterfaces;
-        if (superInterfaces != null) {
-            for (int i = 0, max = superInterfaces.length; i < max; i++) {
-                char[][] interfaceName = superInterfaces[i].compoundName;
-                if (CharOperation.equals(interfaceName, GROOVY_LANG_GROOVYOBJECT)) {
-                    implementsGroovyLangObject = true;
-                    break;
-                }
+        ReferenceBinding[] superInterfaces = binding.superInterfaces != null ? binding.superInterfaces : new ReferenceBinding[0];
+        for (int i = 0, max = superInterfaces.length; i < max; i++) {
+            char[][] interfaceName = superInterfaces[i].compoundName;
+            if (CharOperation.equals(interfaceName, GROOVY_LANG_GROOVYOBJECT)) {
+                implementsGroovyLangObject = true;
+                break;
             }
         }
 
