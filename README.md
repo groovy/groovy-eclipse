@@ -12,7 +12,7 @@ Please report improvement idea's, possible bugs, etc. as [GitHub issues](https:/
 
 ## Questions and Answers
 
-Check out [groovy-eclipse](http://stackoverflow.com/search?q=groovy-eclipse&tab=newest) on stackoverflow.
+Check out [groovy-eclipse](https://stackoverflow.com/questions/tagged/groovy+eclipse?tab=newest) on stackoverflow.
 
 ## Contributors
 
