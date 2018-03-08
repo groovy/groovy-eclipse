@@ -529,11 +529,11 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
             }
         }
 
-        VariableInfo var = lookupNameInCurrentScope(name);
-        if (var == null && parent != null) {
-            var = parent.lookupName(name);
+        VariableInfo info = lookupNameInCurrentScope(name);
+        if (info == null && parent != null) {
+            info = parent.lookupName(name);
         }
-        return var;
+        return info;
     }
 
     /**

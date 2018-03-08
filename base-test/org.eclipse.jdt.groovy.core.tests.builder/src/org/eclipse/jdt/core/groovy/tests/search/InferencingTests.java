@@ -25,6 +25,7 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public final class InferencingTests extends InferencingTestSuite {
@@ -48,118 +49,14 @@ public final class InferencingTests extends InferencingTestSuite {
     //--------------------------------------------------------------------------
 
     @Test
-    public void testLocalVar1() {
-        String contents ="def x\nthis.x";
-        int start = contents.lastIndexOf("x");
-        int end = start + "x".length();
-        assertUnknownConfidence(contents, start, end, "Search", false);
-    }
-
-    @Test
-    public void testLocalVar2() {
-        String contents ="def x\ndef y = { this.x }";
-        int start = contents.lastIndexOf("x");
-        int end = start + "x".length();
-        assertUnknownConfidence(contents, start, end, "Search", false);
-    }
-
-    @Test
-    public void testLocalVar2a() {
-        String contents ="def x\ndef y = { this.x() }";
-        int start = contents.lastIndexOf("x");
-        int end = start + "x".length();
-        assertUnknownConfidence(contents, start, end, "Search", false);
-    }
-
-    @Test
-    public void testLocalVar3() {
-        String contents ="int x\ndef y = { x }";
-        int start = contents.lastIndexOf("x");
-        int end = start + "x".length();
-        assertType(contents, start, end, "java.lang.Integer");
-    }
-
-    @Test
-    public void testLocalVar4() {
-        String contents ="int x\ndef y = { x() }";
-        int start = contents.lastIndexOf("x");
-        int end = start + "x".length();
-        assertType(contents, start, end, "java.lang.Integer");
-    }
-
-    @Test
-    public void testLocalMethod1() {
-        String contents ="int x() { }\ndef y = { x() }";
-        int start = contents.lastIndexOf("x");
-        int end = start + "x".length();
-        assertType(contents, start, end, "java.lang.Integer");
-    }
-
-    @Test
-    public void testLocalMethod2() {
-        String contents ="int x() { }\ndef y = { x }";
-        int start = contents.lastIndexOf("x");
-        int end = start + "x".length();
-        assertType(contents, start, end, "java.lang.Integer");
-    }
-
-    @Test
-    public void testLocalMethod3() {
-        String contents ="int x() { }\ndef y = { def z = { x } }";
-        int start = contents.lastIndexOf("x");
-        int end = start + "x".length();
-        assertType(contents, start, end, "java.lang.Integer");
-    }
-
-    @Test
-    public void testLocalMethod4() {
-        String contents ="int x() { }\ndef y = { def z = { x() } }";
-        int start = contents.lastIndexOf("x");
-        int end = start + "x".length();
-        assertType(contents, start, end, "java.lang.Integer");
-    }
-
-    @Test
-    public void testLocalMethod5() {
-        String contents ="int x() { }\ndef y = { def z = { this.x() } }";
-        int start = contents.lastIndexOf("x");
-        int end = start + "x".length();
-        assertType(contents, start, end, "java.lang.Integer");
-    }
-
-    @Test
-    public void testLocalMethod6() {
-        String contents ="def x\ndef y = { delegate.x() }";
-        int start = contents.lastIndexOf("x");
-        int end = start + "x".length();
-        assertUnknownConfidence(contents, start, end, "Search", false);
-    }
-
-    @Test
-    public void testLocalMethod7() {
-        String contents ="def x\ndef y = { delegate.x }";
-        int start = contents.lastIndexOf("x");
-        int end = start + "x".length();
-        assertUnknownConfidence(contents, start, end, "Search", false);
-    }
-
-    @Test
     public void testNumber1() {
         assertType("10", "java.lang.Integer");
     }
 
     @Test
-    public void testNumber1a() {
+    public void testNumber2() {
         // same as above, but test that whitespace is not included
         assertType("10 ", 0, 2, "java.lang.Integer");
-    }
-
-    @Test
-    public void testNumber2() {
-        String contents ="def x = 1+2\nx";
-        int start = contents.lastIndexOf("x");
-        int end = start + "x".length();
-        assertType(contents, start, end, "java.lang.Integer");
     }
 
     @Test
@@ -180,9 +77,8 @@ public final class InferencingTests extends InferencingTestSuite {
     @Test
     public void testNumber6() {
         String contents = "(x <=> y).intValue()";
-        int start = contents.indexOf("intValue");
-        int end = start + "intValue".length();
-        assertType(contents, start, end, "java.lang.Integer");
+        int offset = contents.indexOf("intValue");
+        assertType(contents, offset, offset + "intValue".length(), "java.lang.Integer");
     }
 
     @Test
@@ -198,15 +94,369 @@ public final class InferencingTests extends InferencingTestSuite {
     @Test
     public void testString3() {
         String contents = "def x = '10'";
-        assertType(contents, contents.indexOf('\''), contents.lastIndexOf('\'')+1, "java.lang.String");
+        assertExprType(contents, "'10'", "java.lang.String");
     }
 
     @Test
-    public void testString4() {
-        String contents = "def x = false ? '' : ''\nx";
+    public void testLocalVar1() {
+        String contents = "def x; this.x";
+        int offset = contents.lastIndexOf("x");
+        assertUnknownConfidence(contents, offset, offset + 1, "Search", false);
+    }
+
+    @Test
+    public void testLocalVar2() {
+        String contents = "def x; def y = { this.x }";
+        int offset = contents.lastIndexOf("x");
+        assertUnknownConfidence(contents, offset, offset + 1, "Search", false);
+    }
+
+    @Test
+    public void testLocalVar3() {
+        String contents = "def x; def y = { this.x() }";
+        int offset = contents.lastIndexOf("x");
+        assertUnknownConfidence(contents, offset, offset + 1, "Search", false);
+    }
+
+    @Test
+    public void testLocalVar4() {
+        String contents = "int x; def y = { x }";
+        assertExprType(contents, "x", "java.lang.Integer");
+    }
+
+    @Test
+    public void testLocalVar5() {
+        String contents = "def x = predicate() ? 'literal' : something.toString()\n" +
+            "x";
+        assertExprType(contents, "x", "java.lang.String");
+    }
+
+    @Test
+    public void testLocalVar6() {
+        String contents = "def x\n" +
+            "x = 1\n" +
+            "x = 1.0d\n" +
+            "x = 1.00\n" +
+            "x";
+
+        int offset = contents.indexOf("x");
+        assertType(contents, offset, offset + 1, "java.lang.Object");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.Integer");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.Double");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.math.BigDecimal");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.math.BigDecimal");
+    }
+
+    @Test @Ignore("not yet implemented")
+    public void testLocalVar7() {
+        String contents = "def x\n" +
+            "x = 1\n" +
+            "if (predicate()) {\n" +
+            "  x = 1.0d\n" +
+            "}\n" +
+            "x";
+
+        int offset = contents.indexOf("x");
+        assertType(contents, offset, offset + 1, "java.lang.Object");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.Integer");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.Double");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.Number");
+    }
+
+    @Test @Ignore("not yet implemented")
+    public void testLocalVar7a() {
+        String contents = "def x\n" +
+            "x = 1\n" +
+            "if (predicate())\n" +
+            "  x = 1.0d\n" +
+            "x";
+
+        int offset = contents.indexOf("x");
+        assertType(contents, offset, offset + 1, "java.lang.Object");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.Integer");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.Double");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.Number");
+    }
+
+    @Test @Ignore("not yet implemented")
+    public void testLocalVar8() {
+        String contents = "def m() {" +
+            "  def x\n" +
+            "  x = 1\n" +
+            "  if (predicate()) {\n" +
+            "    x = 1.0d\n" +
+            "    return 0\n" +
+            "  }\n" +
+            "  x\n" +
+            "}";
+
+        int offset = contents.indexOf("x");
+        assertType(contents, offset, offset + 1, "java.lang.Object");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.Integer");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.Double");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.Integer");
+    }
+
+    @Test @Ignore("not yet implemented")
+    public void testLocalVar8a() {
+        String contents = "def m() {" +
+            "  def x\n" +
+            "  x = 1\n" +
+            "  if (predicate())\n" +
+            "    return (x = 1.0d)\n" +
+            "  x\n" +
+            "}";
+
+        int offset = contents.indexOf("x");
+        assertType(contents, offset, offset + 1, "java.lang.Object");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.Integer");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.Double");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.Integer");
+    }
+
+    @Test @Ignore("not yet implemented")
+    public void testLocalVar9() {
+        String contents = "def x\n" +
+            "x = ''\n" +
+            "if (predicate()) {\n" +
+            "  x = 1.0d\n" +
+            "} else {\n" +
+            "  x = 1.00\n" +
+            "}\n" +
+            "x";
+
+        int offset = contents.indexOf("x");
+        assertType(contents, offset, offset + 1, "java.lang.Object");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.String");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.Double");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.math.BigDecimal");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.Number");
+    }
+
+    @Test @Ignore("not yet implemented")
+    public void testLocalVar9a() {
+        String contents = "def x\n" +
+            "x = ''\n" +
+            "if (predicate())\n" +
+            "  x = 1.0d\n" +
+            "else\n" +
+            "  x = 1.00\n" +
+            "x";
+
+        int offset = contents.indexOf("x");
+        assertType(contents, offset, offset + 1, "java.lang.Object");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.String");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.Double");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.math.BigDecimal");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.Number");
+    }
+
+    @Test @Ignore("not yet implemented")
+    public void testLocalVar10() {
+        String contents = "def x\n" +
+            "x = ''\n" +
+            "if (predicate()) {\n" +
+            "  x = 1.0d\n" +
+            "} else if (predicate2()) {\n" +
+            "  x = 1.00\n" +
+            "}\n" +
+            "x";
+
+        int offset = contents.indexOf("x");
+        assertType(contents, offset, offset + 1, "java.lang.Object");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.String");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.Double");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.math.BigDecimal");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.io.Serializable"); // LUB of String, Double and BigDecimal
+    }
+
+    @Test @Ignore("not yet implemented")
+    public void testLocalVar10a() {
+        String contents = "def x\n" +
+            "x = ''\n" +
+            "if (predicate())\n" +
+            "  x = 1.0d\n" +
+            "else if (predicate2())\n" +
+            "  x = 1.00\n" +
+            "x";
+
+        int offset = contents.indexOf("x");
+        assertType(contents, offset, offset + 1, "java.lang.Object");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.String");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.Double");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.math.BigDecimal");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.io.Serializable"); // LUB of String, Double and BigDecimal
+    }
+
+    @Test @Ignore("not yet implemented")
+    public void testLocalVar11() {
+        String contents = "def x\n" +
+            "x = ''\n" +
+            "if (predicate()) {\n" +
+            "  x = 1.0d\n" +
+            "} else {\n" +
+            "  if (predicate2()) {\n" +
+            "    x = 1.00\n" +
+            "  }\n" +
+            "}\n" +
+            "x";
+
+        int offset = contents.indexOf("x");
+        assertType(contents, offset, offset + 1, "java.lang.Object");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.String");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.Double");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.math.BigDecimal");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.io.Serializable"); // LUB of String, Double and BigDecimal
+    }
+
+    @Test
+    public void testLocalVar12() {
+        String contents = "String x\n" +
+            "x";
+        assertExprType(contents, "x", "java.lang.String");
+    }
+
+    @Test
+    public void testLocalVar13() {
+        String contents = "String x = 7\n" +
+            "x";
+        assertExprType(contents, "x", "java.lang.String");
+    }
+
+    @Test
+    public void testLocalVar14() {
+        String contents = "String x\n" +
+            "x = 7\n" + // GroovyCastException at runtime
+            "x";
+        assertExprType(contents, "x", "java.lang.String");
+    }
+
+    @Test
+    public void testLocalMethod1() {
+        String contents = "int x() { }\ndef y = { x() }";
         int start = contents.lastIndexOf("x");
         int end = start + "x".length();
-        assertType(contents, start, end, "java.lang.String");
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+
+    @Test
+    public void testLocalMethod2() {
+        String contents = "int x() { }\ndef y = { x }";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+
+    @Test
+    public void testLocalMethod3() {
+        String contents = "int x() { }\ndef y = { def z = { x } }";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+
+    @Test
+    public void testLocalMethod4() {
+        String contents = "int x() { }\ndef y = { def z = { x() } }";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+
+    @Test
+    public void testLocalMethod5() {
+        String contents = "int x() { }\ndef y = { def z = { this.x() } }";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertType(contents, start, end, "java.lang.Integer");
+    }
+
+    @Test
+    public void testLocalMethod6() {
+        String contents = "def x\ndef y = { delegate.x() }";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertUnknownConfidence(contents, start, end, "Search", false);
+    }
+
+    @Test
+    public void testLocalMethod7() {
+        String contents = "def x\ndef y = { delegate.x }";
+        int start = contents.lastIndexOf("x");
+        int end = start + "x".length();
+        assertUnknownConfidence(contents, start, end, "Search", false);
     }
 
     @Test
@@ -1071,22 +1321,6 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testAssignementInInnerBlock() {
-        String contents = "def xxx\n if (true) { xxx = \"\" \n xxx} ";
-        int start = contents.lastIndexOf("xxx");
-        int end = start + "xxx".length();
-        assertType(contents, start, end, "java.lang.String");
-    }
-
-    @Test
-    public void testAssignementInInnerBlock2() {
-        String contents = "def xxx\n if (true) { xxx = \"\" \n }\n xxx";
-        int start = contents.lastIndexOf("xxx");
-        int end = start + "xxx".length();
-        assertType(contents, start, end, "java.lang.String");
-    }
-
-    @Test
     public void testGRECLIPSE731a() {
         String contents = "def foo() { } \nString xxx = foo()\nxxx";
         int start = contents.lastIndexOf("xxx");
@@ -1174,46 +1408,6 @@ public final class InferencingTests extends InferencingTestSuite {
         int start = catchString2.lastIndexOf("e");
         int end = start + 1;
         assertType(catchString2, start, end, "java.lang.Exception");
-    }
-
-    @Test
-    public void testAssignment1() {
-        String contents = "String x = 7\nx";
-        int start = contents.lastIndexOf("x");
-        int end = start + 1;
-        assertType(contents, start, end, "java.lang.String");
-    }
-
-    @Test
-    public void testAssignment2() {
-        String contents = "String x\nx";
-        int start = contents.lastIndexOf("x");
-        int end = start + 1;
-        assertType(contents, start, end, "java.lang.String");
-    }
-
-    @Test
-    public void testAssignment3() {
-        String contents = "String x\nx = 7\nx"; // will be a GroovyCastException at runtime
-        int start = contents.lastIndexOf("x");
-        int end = start + 1;
-        assertType(contents, start, end, "java.lang.String");
-    }
-
-    @Test
-    public void testAssignment4() {
-        String contents = "String x() { \ndef x = 9\n x}";
-        int start = contents.lastIndexOf("x");
-        int end = start + 1;
-        assertType(contents, start, end, "java.lang.Integer");
-    }
-
-    @Test
-    public void testAssignment5() {
-        String contents = "String x() { \ndef x\nx = 9\n x}";
-        int start = contents.lastIndexOf("x");
-        int end = start + 1;
-        assertType(contents, start, end, "java.lang.Integer");
     }
 
     @Test
@@ -2204,6 +2398,40 @@ public final class InferencingTests extends InferencingTestSuite {
         start = contents.indexOf("val", end + 1);
         end = start + "val".length();
         assertType(contents, start, end, "java.lang.Object");
+    }
+
+    @Test @Ignore("not yet implemented")
+    public void testInstanceOf11() {
+        String contents =
+            "def val = File.createTempDir()\n" +
+            "if (!val.exists()) val = ''.toURL()\n" +
+            "def str = val instanceof File ? val.canonicalPath : val.toString()";
+
+        int start = contents.indexOf("val");
+        int end = start + "val".length();
+        assertType(contents, start, end, "java.io.File");
+
+        // line 2
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.io.File");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.net.URL"); // LUB
+
+        // line 3
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.net.URL"); // LUB
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.io.File");
+
+        start = contents.indexOf("val", end + 1);
+        end = start + "val".length();
+        assertType(contents, start, end, "java.net.URL"); // LUB
     }
 
     @Test // GRECLIPSE-554
