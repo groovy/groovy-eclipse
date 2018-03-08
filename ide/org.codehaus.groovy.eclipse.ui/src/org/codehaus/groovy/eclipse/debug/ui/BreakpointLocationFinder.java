@@ -34,8 +34,8 @@ public class BreakpointLocationFinder {
     protected final Iterable<ASTNode> nodes;
 
     public BreakpointLocationFinder(ModuleNode module) {
-        TreeSet<ASTNode> nodes = new TreeSet<>(
-            Comparator.comparing(ASTNode::getLineNumber).thenComparing(ASTNode::getStart).thenComparing(ASTNode::getEnd));
+        TreeSet<ASTNode> nodes = new TreeSet<>(Comparator.comparing(ASTNode::getLineNumber).thenComparing(ASTNode::getColumnNumber)
+            .thenComparing(Comparator.comparing(ASTNode::getLastLineNumber).thenComparing(ASTNode::getLastColumnNumber).reversed()));
 
         new DepthFirstVisitor() {
             @Override
@@ -80,6 +80,7 @@ public class BreakpointLocationFinder {
                 break;
             }
         }
+
         return bestMatch;
     }
 }
