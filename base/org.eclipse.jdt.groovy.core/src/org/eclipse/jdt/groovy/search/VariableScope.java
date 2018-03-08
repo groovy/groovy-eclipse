@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -48,6 +49,7 @@ import groovy.lang.Tuple;
 import groovy.transform.stc.ClosureParams;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -65,6 +67,9 @@ import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.ast.stmt.ReturnStatement;
+import org.codehaus.groovy.ast.stmt.ThrowStatement;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.runtime.DateGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
@@ -83,8 +88,6 @@ import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
  * Maps variable names to types in a hierarchy.
  */
 public class VariableScope implements Iterable<VariableScope.VariableInfo> {
-
-    public static final VariableScope[] EMPTY_ARRAY = new VariableScope[0];
 
     public static final ClassNode NULL_TYPE = new ImmutableClassNode(Object.class);
     public static final ClassNode VOID_CLASS_NODE = ClassHelper.make(void.class);
@@ -150,14 +153,6 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         ALL_DEFAULT_CATEGORIES = Collections.unmodifiableSet(dgm_classes);
     }
 
-    // don't cache because we have to add properties
-    public static final ClassNode CLASS_CLASS_NODE = ClassHelper.makeWithoutCaching(Class.class);
-    static {
-        initializeProperties(CLASS_CLASS_NODE);
-    }
-
-    public static final ClassNode CLASS_ARRAY_CLASS_NODE = CLASS_CLASS_NODE.makeArray();
-
     // primitive wrapper classes
     public static final ClassNode BOOLEAN_CLASS_NODE = ClassHelper.Boolean_TYPE;
     public static final ClassNode CHARACTER_CLASS_NODE = ClassHelper.Character_TYPE;
@@ -167,6 +162,20 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     public static final ClassNode LONG_CLASS_NODE = ClassHelper.Long_TYPE;
     public static final ClassNode FLOAT_CLASS_NODE = ClassHelper.Float_TYPE;
     public static final ClassNode DOUBLE_CLASS_NODE = ClassHelper.Double_TYPE;
+
+    // don't cache because we have to add properties
+    public static final ClassNode CLASS_CLASS_NODE = initializeProperties(ClassHelper.makeWithoutCaching(Class.class));
+
+    public static final ClassNode CLASS_ARRAY_CLASS_NODE = CLASS_CLASS_NODE.makeArray();
+
+    // NOTE: JDTClassNode contains very similar method
+    private static ClassNode initializeProperties(ClassNode node) {
+        node.getMethods().stream().filter(AccessorSupport::isGetter).forEach(methodNode -> {
+            String propertyName = Introspector.decapitalize(methodNode.getName().substring(methodNode.getName().startsWith("is") ? 2 : 3));
+            node.addProperty(new PropertyNode(propertyName, methodNode.getModifiers(), methodNode.getReturnType(), methodNode.getDeclaringClass(), null, null, null));
+        });
+        return node;
+    }
 
     //--------------------------------------------------------------------------
 
@@ -184,7 +193,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
 
         private VariableInfo(VariableInfo info, ASTNode node) {
             this(info.name, info.type, info.declaringType);
-            this.scopeNode = node;
+            this.scopeNode = (info.scopeNode != null ? info.scopeNode : node);
         }
 
         public String getTypeSignature() {
@@ -380,7 +389,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     /**
      * AST node for this scope, typically, a block, closure, or body declaration.
      */
-    /*package*/ ASTNode scopeNode;
+    private ASTNode scopeNode;
 
     /**
      * Is the current node not the RHS of a dotted expression?
@@ -393,6 +402,11 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
      * Category that will be declared in the next scope.
      */
     private ClassNode categoryBeingDeclared;
+
+    /**
+     * Variables from parent scopes that have been updated in this or a child scope.
+     */
+    private Set<String> dirtyNames;
 
     private int enclosingCallStackDepth;
     private List<ClassNode> methodCallArgumentTypes;
@@ -595,14 +609,6 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         return (!isOwnerStatic() && getEnclosingClosureScope() == null);
     }
 
-    public void addVariable(String name, ClassNode type, ClassNode declaringType) {
-        nameVariableMap.put(name, new VariableInfo(name, type, declaringType != null ? declaringType : OBJECT_CLASS_NODE));
-    }
-
-    public void addVariable(Variable var) {
-        addVariable(var.getName(), var.getType(), var.getOriginType());
-    }
-
     public ModuleNode getEnclosingModuleNode() {
         if (scopeNode instanceof ModuleNode) {
             return (ModuleNode) scopeNode;
@@ -671,24 +677,32 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         return null;
     }
 
-    // NOTE: JDTClassNode contains very similar methods
-    private static PropertyNode createPropertyNodeForMethodNode(MethodNode methodNode) {
-        String methodName = methodNode.getName();
-        String propertyName = Introspector.decapitalize(methodName.substring(methodName.startsWith("is") ? 2 : 3));
-        return new PropertyNode(propertyName, methodNode.getModifiers(), methodNode.getReturnType(), methodNode.getDeclaringClass(), null, null, null);
-    }
-
-    private static void initializeProperties(ClassNode node) {
-        // getX methods
-        for (MethodNode methodNode : node.getMethods()) {
-            if (AccessorSupport.isGetter(methodNode)) {
-                node.addProperty(createPropertyNodeForMethodNode(methodNode));
-            }
-        }
+    /**
+     * Adds specified variable declaration to this scope.
+     */
+    public void addVariable(Variable var) {
+        addVariable(var.getName(), var.getType(), ((AnnotatedNode) var).getDeclaringClass());
     }
 
     /**
-     * Updates the type info of this variable if it already exists in scope, or just adds it if it doesn't
+     * Adds specified variable declaration to this scope.
+     *
+     * @param name name of variable
+     * @param type type of variable
+     * @param declaringType enclosing type declaration of variable
+     */
+    public void addVariable(String name, ClassNode type, ClassNode declaringType) {
+        if (declaringType == null) declaringType = getEnclosingTypeDeclaration();
+        nameVariableMap.put(name, new VariableInfo(name, type, declaringType));
+    }
+
+    /**
+     * Updates the type info of the given variable if it already exists in this
+     * or an enclosing scope, or adds it if it doesn't.
+     *
+     * @param name name of variable
+     * @param type type of variable
+     * @param declaringType enclosing type declaration of variable
      */
     public void updateOrAddVariable(String name, ClassNode type, ClassNode declaringType) {
         if (!updateVariableImpl(name, type, declaringType)) {
@@ -697,28 +711,70 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     }
 
     /**
-     * Updates the identifier if it exists in this scope or a parent scope. Otherwise does nothing
+     * Updates the type info of the given variable if it already exists in this
+     * or an enclosing scope.
      *
-     * @param name identifier to update
-     * @param type type of identifier
-     * @param declaringType declaring type of identifier
+     * @param name name of variable
+     * @param type type of variable
+     * @param declaringType enclosing type declaration of variable
      */
     public void updateVariable(String name, ClassNode type, ClassNode declaringType) {
        updateVariableImpl(name, type, declaringType);
     }
 
     /**
+     * @param name name of variable
+     * @param type type of variable
+     * @param declaringType enclosing type declaration of variable
      * @return {@code true} if the type has been udpated, {@code false} otherwise
      */
     private boolean updateVariableImpl(String name, ClassNode type, ClassNode declaringType) {
-        VariableInfo info = lookupNameInCurrentScope(name);
+        VariableInfo info = nameVariableMap.get(name);
+        if (info == null && parent != null) {
+            info = parent.lookupName(name);
+        }
         if (info != null) {
-            nameVariableMap.put(name, new VariableInfo(name, type, declaringType != null ? declaringType : info.declaringType));
+            nameVariableMap.put(name, merge(info, type, declaringType));
+            // if variable is declared in a parent scope, mark it dirty
+            if (info.scopeNode != this.scopeNode) {
+                if (dirtyNames == null)
+                    dirtyNames = new HashSet<>();
+                dirtyNames.add(name);
+            }
             return true;
-        } else if (parent != null) {
-            return parent.updateVariableImpl(name, type, declaringType);
         }
         return false;
+    }
+
+    /**
+     * Updates the type info of the given variable in this scope but not in any
+     * enclosing scopes.  This is useful for exposing an inferred type, like an
+     * instanceof expression might yield.
+     *
+     * @param name name of variable
+     * @param type type of variable
+     */
+    /*package*/ void updateVariableSoft(String name, ClassNode type) {
+        VariableInfo info = merge(parent.lookupName(name), type, null);
+        info = nameVariableMap.put(name, info);
+        assert info == null;
+    }
+
+    private static VariableInfo merge(VariableInfo base, ClassNode type, ClassNode declaringType) {
+        if (declaringType == null) declaringType = base.declaringType;
+        VariableInfo info = new VariableInfo(base.name, type, declaringType);
+        info.scopeNode = base.scopeNode; // preserve declaring scope
+        return info;
+    }
+
+    void bubbleUpdates() {
+        if (dirtyNames != null && !dirtyNames.isEmpty() && !isTerminal() && !isTopLevel()) {
+            for (String name : dirtyNames) {
+                VariableInfo info = nameVariableMap.get(name);
+                parent.updateVariable(name, info.type, info.declaringType);
+            }
+            dirtyNames = null;
+        }
     }
 
     public static ClassNode resolveTypeParameterization(GenericsMapper mapper, ClassNode type) {
@@ -994,10 +1050,6 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         enclosingCallStackDepth -= 1;
     }
 
-    public boolean isTopLevel() {
-        return parent == null;
-    }
-
     /**
      * Does the following name exist in this scope (does not recur up to parent scopes).
      *
@@ -1007,7 +1059,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         return nameVariableMap.containsKey(name);
     }
 
-    void setMethodCallArgumentTypes(List<ClassNode> methodCallArgumentTypes) {
+    /*package*/ void setMethodCallArgumentTypes(List<ClassNode> methodCallArgumentTypes) {
         this.methodCallArgumentTypes = methodCallArgumentTypes;
     }
 
@@ -1015,7 +1067,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         return methodCallArgumentTypes;
     }
 
-    void setMethodCallGenericsTypes(GenericsType[] methodCallGenericsTypes) {
+    /*package*/ void setMethodCallGenericsTypes(GenericsType[] methodCallGenericsTypes) {
         this.methodCallGenericsTypes = methodCallGenericsTypes;
     }
 
@@ -1027,12 +1079,40 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
      * If visiting the identifier of a method call expression, this field will
      * be equal to the number of arguments to the method call.
      */
-    int getMethodCallNumberOfArguments() {
-        return isMethodCall() ? methodCallArgumentTypes.size() : 0;
+    public int getMethodCallNumberOfArguments() {
+        return (isMethodCall() ? methodCallArgumentTypes.size() : 0);
     }
 
     public boolean isMethodCall() {
-        return methodCallArgumentTypes != null;
+        return (methodCallArgumentTypes != null);
+    }
+
+    /**
+     * @return {@code true} if scope is enclosed by the implicit run method of a script
+     */
+    public boolean inScriptRunMethod() {
+        return shared.isRunMethod;
+    }
+
+    /**
+     * @return {@code true} if scope contains an unconditional return
+     */
+    public boolean isTerminal() {
+        if (scopeNode instanceof BlockStatement ) {
+            return ((BlockStatement) scopeNode).getStatements().stream()
+                .filter(s -> s instanceof ReturnStatement).findAny().isPresent();
+        }
+        if (scopeNode instanceof ReturnStatement) {
+            return true;
+        }
+        if (scopeNode instanceof ThrowStatement ) {
+            // TODO: What about throw? Could be caught by outer scope...
+        }
+        return false;
+    }
+
+    public boolean isTopLevel() {
+        return (parent == null);
     }
 
     @Override
@@ -1189,13 +1269,6 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
 
         // else assume collection of size 1 (itself)
         return collectionType;
-    }
-
-    /**
-     * @return true iff the current scope is the implicit run method of a script
-     */
-    public boolean inScriptRunMethod() {
-        return shared.isRunMethod;
     }
 
     public static boolean isPlainClosure(ClassNode type) {

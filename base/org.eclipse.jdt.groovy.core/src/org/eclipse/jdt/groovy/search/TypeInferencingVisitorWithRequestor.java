@@ -442,8 +442,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         try {
                             visitClassCodeContainer(method.getCode());
                         } finally {
-                            scopes.removeLast();
                             enclosingDeclarationNode = node;
+                            scopes.removeLast().bubbleUpdates();
                         }
                     }
                 }
@@ -456,7 +456,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 throw vc;
             }
         } finally {
-            scopes.removeLast();
+            scopes.removeLast().bubbleUpdates();
             enclosingElement = enclosingElement0;
             enclosingDeclarationNode = enclosingDeclaration0;
         }
@@ -495,7 +495,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         throw vc;
                     }
                 } finally {
-                    scopes.removeLast();
+                    scopes.removeLast().bubbleUpdates();
                     enclosingDeclarationNode = enclosingDeclarationNode0;
                 }
             }
@@ -524,7 +524,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         } catch (Exception e) {
             log(e, "Error visiting method %s in class %s", method.getElementName(), method.getParent().getElementName());
         } finally {
-            scopes.removeLast();
+            scopes.removeLast().bubbleUpdates();
             enclosingElement = enclosingElement0;
             enclosingDeclarationNode = enclosingDeclaration0;
         }
@@ -689,7 +689,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                             try {
                                 expr.getRightExpression().visit(this);
                             } finally {
-                                scopes.removeLast();
+                                scopes.removeLast().bubbleUpdates();
                             }
                         }
                     }
@@ -764,7 +764,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 throw vc;
             }
         } finally {
-            scopes.removeLast();
+            scopes.removeLast().bubbleUpdates();
             enclosingDeclarationNode = enclosingDeclaration0;
         }
     }
@@ -785,7 +785,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 }
             }
         } finally {
-            scopes.removeLast();
+            scopes.removeLast().bubbleUpdates();
             enclosingElement = enclosingElement0;
             enclosingDeclarationNode = enclosingDeclaration0;
         }
@@ -983,7 +983,7 @@ assert primaryExprType != null && dependentExprType != null;
         if (shouldContinue) {
             super.visitBlockStatement(block);
         }
-        scopes.removeLast();
+        scopes.removeLast().bubbleUpdates();
     }
 
     @Override
@@ -1019,7 +1019,7 @@ assert primaryExprType != null && dependentExprType != null;
             handleParameterList(new Parameter[] {param});
         }
         super.visitCatchStatement(node);
-        scopes.removeLast();
+        scopes.removeLast().bubbleUpdates();
     }
 
     @Override
@@ -1173,7 +1173,7 @@ assert primaryExprType != null && dependentExprType != null;
                         }
                     }
                 } finally {
-                    scopes.removeLast();
+                    scopes.removeLast().bubbleUpdates();
                     enclosingElement = enclosingElement0;
                     enclosingDeclarationNode = enclosingDeclaration0;
                 }
@@ -1290,7 +1290,7 @@ assert primaryExprType != null && dependentExprType != null;
                 throw new VisitCompleted(status);
             }
         } finally {
-            scopes.removeLast();
+            scopes.removeLast().bubbleUpdates();
             enclosingDeclarationNode = enclosingDeclaration0;
         }
     }
@@ -1319,7 +1319,7 @@ assert primaryExprType != null && dependentExprType != null;
 
         node.getLoopBlock().visit(this);
 
-        scopes.removeLast();
+        scopes.removeLast().bubbleUpdates();
     }
 
     private void visitGenericTypes(ClassNode node) {
@@ -1360,28 +1360,31 @@ assert primaryExprType != null && dependentExprType != null;
 
     @Override
     public void visitIfElse(IfStatement node) {
+        // TODO: Assignment within expression may be conditional or unconditional due to short-circuit evaluation.
         node.getBooleanExpression().visit(this);
 
-            VariableScope[] scopes = inferInstanceOfType(node.getBooleanExpression(), this.scopes.getLast());
-            if (scopes.length > 0 && scopes[0] != null) {
-                this.scopes.add(scopes[0]);
+            Map<String, ClassNode[]> types = inferInstanceOfType(node.getBooleanExpression(), scopes.getLast());
+            scopes.add(new VariableScope(scopes.getLast(), node.getIfBlock(), false));
+            for (Map.Entry<String, ClassNode[]> entry : types.entrySet()) {
+                if (entry.getValue().length > 0 && entry.getValue()[0] != null) {
+                    scopes.getLast().updateVariableSoft(entry.getKey(), entry.getValue()[0]);
+                }
             }
 
         node.getIfBlock().visit(this);
 
-            if (scopes.length > 0) {
-                if (scopes[0] != null)
-                    this.scopes.removeLast();
-                if (scopes.length > 1 && scopes[1] != null) {
-                    this.scopes.add(scopes[1]);
+            scopes.removeLast().bubbleUpdates();
+
+            scopes.add(new VariableScope(scopes.getLast(), node.getElseBlock(), false));
+            for (Map.Entry<String, ClassNode[]> entry : types.entrySet()) {
+                if (entry.getValue().length > 1 && entry.getValue()[1] != null) {
+                    scopes.getLast().updateVariableSoft(entry.getKey(), entry.getValue()[1]);
                 }
             }
 
         node.getElseBlock().visit(this);
 
-            if (scopes.length > 1 && scopes[1] != null) {
-                this.scopes.removeLast();
-            }
+            scopes.removeLast().bubbleUpdates();
     }
 
     @Override
@@ -1751,9 +1754,12 @@ assert primaryExprType != null && dependentExprType != null;
 
         node.getBooleanExpression().visit(this);
 
-            VariableScope[] scopes = inferInstanceOfType(node.getBooleanExpression(), this.scopes.getLast());
-            if (scopes.length > 0 && scopes[0] != null) {
-                this.scopes.add(scopes[0]);
+            Map<String, ClassNode[]> types = inferInstanceOfType(node.getBooleanExpression(), scopes.getLast());
+            scopes.add(new VariableScope(scopes.getLast(), node.getTrueExpression(), false));
+            for (Map.Entry<String, ClassNode[]> entry : types.entrySet()) {
+                if (entry.getValue().length > 0 && entry.getValue()[0] != null) {
+                    scopes.getLast().updateVariableSoft(entry.getKey(), entry.getValue()[0]);
+                }
             }
 
         node.getTrueExpression().visit(this);
@@ -1761,20 +1767,19 @@ assert primaryExprType != null && dependentExprType != null;
         // to hold the type of the ternary expression
         ClassNode exprType = primaryTypeStack.removeLast();
 
-            if (scopes.length > 0) {
-                if (scopes[0] != null)
-                    this.scopes.removeLast();
-                if (scopes.length > 1 && scopes[1] != null) {
-                    this.scopes.add(scopes[1]);
+            scopes.removeLast().bubbleUpdates();
+
+            scopes.add(new VariableScope(scopes.getLast(), node.getFalseExpression(), false));
+            for (Map.Entry<String, ClassNode[]> entry : types.entrySet()) {
+                if (entry.getValue().length > 1 && entry.getValue()[1] != null) {
+                    scopes.getLast().updateVariableSoft(entry.getKey(), entry.getValue()[1]);
                 }
             }
 
         node.getFalseExpression().visit(this);
         completeExpressionStack.removeLast();
 
-            if (scopes.length > 1 && scopes[1] != null) {
-                this.scopes.removeLast();
-            }
+            scopes.removeLast().bubbleUpdates();
 
         // if the ternary expression is a primary expression
         // of a larger expression, use the exprType as the
@@ -2762,10 +2767,10 @@ assert primaryExprType != null && dependentExprType != null;
         return inferredTypes;
     }
 
-    private static VariableScope[] inferInstanceOfType(BooleanExpression node, VariableScope scope) {
+    private static Map<String, ClassNode[]> inferInstanceOfType(BooleanExpression condition, VariableScope scope) {
         // check for "if (x instanceof y) { ... }" flow typing
-        if (node.getExpression() instanceof BinaryExpression) {
-            BinaryExpression be = (BinaryExpression) node.getExpression();
+        if (condition.getExpression() instanceof BinaryExpression) {
+            BinaryExpression be = (BinaryExpression) condition.getExpression();
             // check for "if (x == null || x instanceof y) { .. }" or
             //  "if (x != null && x instanceof y) { .. }" flow typing
             BinaryExpression nsbe = nullSafeBinaryExpression(be);
@@ -2777,19 +2782,20 @@ assert primaryExprType != null && dependentExprType != null;
                 VariableExpression ve = (VariableExpression) be.getLeftExpression();
                 VariableScope.VariableInfo vi = scope.lookupName(ve.getName());
                 if (vi != null && GroovyUtils.isAssignable(be.getRightExpression().getType(), vi.type)) {
-                    VariableScope vs = new VariableScope(scope, vi.scopeNode /*use the same node*/, false);
-                    vs.addVariable(ve.getName(), be.getRightExpression().getType(), ve.getDeclaringClass());
-                    return new VariableScope[] {vs, null};
+                    return Collections.singletonMap(vi.name, new ClassNode[] {be.getRightExpression().getType(), null});
                 }
             }
-        }/* else if (node.getExpression() instanceof NotExpression) {
+        }/* else if (condition.getExpression() instanceof NotExpression) {
             // check for "if (!(x instanceof y)) { ... } else { ... }"
-            VariableScope[] scopes = inferInstanceOfType((NotExpression) node.getExpression(), scope);
-            if (scopes.length > 0) {
-                return new VariableScope[] {scopes[1], scopes[0]};
+            Map<String, ClassNode[]> types = inferInstanceOfType((NotExpression) condition.getExpression(), scope);
+            if (!types.isEmpty()) {
+                for (Map.Entry<String, ClassNode[]>entry : types.entrySet()) {
+                    entry.setValue(new ClassNode[] {entry.getValue()[1], entry.getValue()[0]});
+                }
+                return types;
             }
         }*/
-        return VariableScope.EMPTY_ARRAY;
+        return Collections.EMPTY_MAP;
     }
 
     private static boolean isEnumInit(MethodCallExpression node) {

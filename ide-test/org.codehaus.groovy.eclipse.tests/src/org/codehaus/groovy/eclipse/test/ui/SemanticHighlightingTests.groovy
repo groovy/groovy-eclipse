@@ -754,8 +754,8 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('loop'), 'loop'.length(), METHOD),
-            new HighlightedTypedPosition(contents.indexOf('x'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('loop'),  4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('x : '),  1, VARIABLE),
             new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, VARIABLE))
     }
 
@@ -773,8 +773,28 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('loop'), 'loop'.length(), METHOD),
-            new HighlightedTypedPosition(contents.indexOf('x'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('loop'),  4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('x in '), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, VARIABLE))
+    }
+
+    @Test // assign within terminal scope
+    void testForEachInParamWithReturn() {
+        // don't want PARAMETER
+        String contents = '''\
+            class X {
+              def loop() {
+                for (x in []) {
+                    x = ''
+                    return
+                }
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('loop'),  4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('x in '), 1, VARIABLE),
             new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, VARIABLE))
     }
 

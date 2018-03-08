@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -478,7 +478,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
             "}";
 
         int start = contents.lastIndexOf("xxx"), end = start + "xxx".length();
-        assertDeclaration(contents, start, end, "java.lang.Object", "xxx", DeclarationKind.VARIABLE);
+        assertDeclaration(contents, start, end, "Foo", "xxx", DeclarationKind.VARIABLE);
     }
 
     @Test
@@ -492,7 +492,7 @@ public final class DeclarationInferencingTests extends InferencingTestSuite {
             "}";
 
         int start = contents.lastIndexOf("xxx"), end = start + "xxx".length();
-        assertDeclaration(contents, start, end, "java.lang.Object", "xxx", DeclarationKind.VARIABLE);
+        assertDeclaration(contents, start, end, "Foo", "xxx", DeclarationKind.VARIABLE);
     }
 
     @Test

@@ -198,9 +198,9 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 1, "java.lang.Number");
     }
 
-    @Test @Ignore("not yet implemented")
+    @Test
     public void testLocalVar8() {
-        String contents = "def m() {" +
+        String contents = "def m() {\n" +
             "  def x\n" +
             "  x = 1\n" +
             "  if (predicate()) {\n" +
@@ -223,9 +223,9 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 1, "java.lang.Integer");
     }
 
-    @Test @Ignore("not yet implemented")
+    @Test
     public void testLocalVar8a() {
-        String contents = "def m() {" +
+        String contents = "def m() {\n" +
             "  def x\n" +
             "  x = 1\n" +
             "  if (predicate())\n" +
@@ -383,20 +383,55 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testLocalVar12() {
+        String contents = "def x\n" +
+            "x = ''\n" +
+            "def cl = { ->\n" +
+            "  x = 1.0d\n" +
+            "}\n" +
+            "x\n" +
+            "x = 1.0\n" +
+            "x";
+
+        int offset = contents.indexOf("x");
+        assertType(contents, offset, offset + 1, "java.lang.Object");
+
+        // line 2
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.String");
+
+        // line 4
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.Double");
+
+        // line 6
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.lang.String");
+
+        // line 7
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.math.BigDecimal");
+
+        // line 8
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.math.BigDecimal");
+    }
+
+    @Test
+    public void testLocalVar13() {
         String contents = "String x\n" +
             "x";
         assertExprType(contents, "x", "java.lang.String");
     }
 
     @Test
-    public void testLocalVar13() {
+    public void testLocalVar14() {
         String contents = "String x = 7\n" +
             "x";
         assertExprType(contents, "x", "java.lang.String");
     }
 
     @Test
-    public void testLocalVar14() {
+    public void testLocalVar15() {
         String contents = "String x\n" +
             "x = 7\n" + // GroovyCastException at runtime
             "x";
