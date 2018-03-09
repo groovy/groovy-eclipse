@@ -121,7 +121,10 @@ public class SourceModuleBinding extends ModuleBinding {
 	}
 	@Override
 	public long getAnnotationTagBits() {
-		//TODO: This code is untested as we don't yet get a scope in ModuleBinding
+		ensureAnnotationsResolved();
+		return this.tagBits;
+	}
+	protected void ensureAnnotationsResolved() {
 		if ((this.tagBits & TagBits.AnnotationResolved) == 0 && this.scope != null) {
 			ModuleDeclaration module = this.scope.referenceContext.moduleDeclaration;
 			ASTNode.resolveAnnotations(module.scope, module.annotations, this);
@@ -131,10 +134,10 @@ public class SourceModuleBinding extends ModuleBinding {
 			}
 			this.tagBits |= TagBits.AnnotationResolved;
 		}
-		return this.tagBits;
 	}
 	@Override
 	public AnnotationBinding[] getAnnotations() {
+		ensureAnnotationsResolved();
 		return retrieveAnnotations(this);
 	}
 	public AnnotationHolder retrieveAnnotationHolder(Binding binding, boolean forceInitialization) {

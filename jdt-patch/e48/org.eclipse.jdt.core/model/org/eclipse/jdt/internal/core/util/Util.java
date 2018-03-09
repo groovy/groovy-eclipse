@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -752,7 +752,7 @@ public class Util {
 	}
 
 	private static IClassFile getClassFile(char[] fileName) {
-		int jarSeparator = CharOperation.lastIndexOf(IDependent.JAR_FILE_ENTRY_SEPARATOR, fileName);
+		int jarSeparator = CharOperation.indexOf(IDependent.JAR_FILE_ENTRY_SEPARATOR, fileName);
 		int pkgEnd = CharOperation.lastIndexOf('/', fileName); // pkgEnd is exclusive
 		if (pkgEnd == -1)
 			pkgEnd = CharOperation.lastIndexOf(File.separatorChar, fileName);
@@ -1485,7 +1485,7 @@ public class Util {
 		if (referenceBinding.isLocalType() || referenceBinding.isAnonymousType()) {
 			// local or anonymous type
 			if (org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(fileName)) {
-				int jarSeparator = CharOperation.lastIndexOf(IDependent.JAR_FILE_ENTRY_SEPARATOR, fileName);
+				int jarSeparator = CharOperation.indexOf(IDependent.JAR_FILE_ENTRY_SEPARATOR, fileName);
 				int pkgEnd = CharOperation.lastIndexOf('/', fileName); // pkgEnd is exclusive
 				if (pkgEnd == -1)
 					pkgEnd = CharOperation.lastIndexOf(File.separatorChar, fileName);

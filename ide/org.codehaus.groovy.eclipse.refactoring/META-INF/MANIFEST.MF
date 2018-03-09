@@ -4,32 +4,14 @@ Bundle-SymbolicName: org.codehaus.groovy.eclipse.refactoring; singleton:=true
 Bundle-Name: Groovy Refactoring
 Bundle-Vendor: Codehaus.org
 Bundle-Version: 3.0.0.qualifier
-Export-Package: org.codehaus.groovy.eclipse.refactoring;
-  uses:="org.eclipse.jface.resource,
-   org.eclipse.ui.plugin,org.osgi.framework",
+Export-Package: org.codehaus.groovy.eclipse.refactoring,
  org.codehaus.groovy.eclipse.refactoring.core.convert,
  org.codehaus.groovy.eclipse.refactoring.core.extract,
  org.codehaus.groovy.eclipse.refactoring.core.rename,
- org.codehaus.groovy.eclipse.refactoring.core.utils;
-  uses:="org.eclipse.jface.text,
-   org.eclipse.text.edits,
-   org.eclipse.core.runtime,
-   org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner,
-   org.codehaus.groovy.ast.stmt,
-   org.codehaus.groovy.antlr,
-   org.codehaus.groovy.eclipse.refactoring.core,
-   org.codehaus.groovy.eclipse.refactoring.core.rename.renameLocal,
-   org.eclipse.ltk.core.refactoring,
-   org.codehaus.groovy.ast,
-   org.codehaus.groovy.ast.expr",
+ org.codehaus.groovy.eclipse.refactoring.core.utils,
  org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner,
  org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner.predicates,
- org.codehaus.groovy.eclipse.refactoring.formatter;
-  uses:="org.eclipse.jface.text,
-   org.eclipse.jface.preference,
-   org.eclipse.text.edits,
-   antlr,
-   org.codehaus.groovy.ast",
+ org.codehaus.groovy.eclipse.refactoring.formatter,
  org.codehaus.groovy.eclipse.refactoring.ui.extract
 Require-Bundle: org.codehaus.groovy;bundle-version="2.1.9",
  org.codehaus.groovy.eclipse.codebrowsing;bundle-version="3.0.0",
@@ -38,16 +20,16 @@ Require-Bundle: org.codehaus.groovy;bundle-version="2.1.9",
  org.eclipse.core.resources,
  org.eclipse.core.runtime,
  org.eclipse.jdt.core,
- org.eclipse.jdt.core.manipulation,
+ org.eclipse.jdt.core.manipulation;visibility:=reexport,
  org.eclipse.jdt.groovy.core;bundle-version="3.0.0",
- org.eclipse.jdt.ui,
+ org.eclipse.jdt.ui;visibility:=reexport,
  org.eclipse.jface;visibility:=reexport,
  org.eclipse.jface.text;visibility:=reexport,
  org.eclipse.ltk.core.refactoring;visibility:=reexport,
- org.eclipse.ltk.ui.refactoring,
+ org.eclipse.ltk.ui.refactoring;visibility:=reexport,
  org.eclipse.ui,
- org.eclipse.ui.editors;bundle-version="3.5.0",
- org.eclipse.ui.workbench.texteditor;bundle-version="3.5.0"
+ org.eclipse.ui.editors,
+ org.eclipse.ui.workbench.texteditor
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.eclipse.refactoring.Activator
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8

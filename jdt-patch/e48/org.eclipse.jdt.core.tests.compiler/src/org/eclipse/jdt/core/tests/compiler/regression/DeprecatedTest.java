@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.compiler.regression;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -366,9 +367,10 @@ public void test008() {
 // variation of test008 on behalf of Bug 526335 - [9][hovering] Deprecation warning should show the new 'since' deprecation value
 // verify that we don't attempt to access java.lang.Deprecated in a 1.4 based compilation.
 public void test008a() throws IOException {
-	String jarPath = LIB_DIR+"/x.jar";
+	String jarPath = LIB_DIR+File.separator+"p008"+File.separator+"x.jar";
 	Util.createJar(new String[] {
 			"X.java",
+			"package p008;\n" +
 			"@Deprecated\n" +
 			"public class X {\n" +
 			"}\n",
@@ -382,7 +384,7 @@ public void test008a() throws IOException {
 			"Y.java",
 			"public class Y {\n" +
 			"  void foo() {\n" +
-			"    X x;\n" +
+			"    p008.X x;\n" +
 			"  }\n" +
 			"}\n",
 		};
@@ -393,8 +395,8 @@ public void test008a() throws IOException {
 	runner.expectedCompilerLog =
 		"----------\n" +
 		"1. WARNING in Y.java (at line 3)\n" + 
-		"	X x;\n" + 
-		"	^\n" + 
+		"	p008.X x;\n" + 
+		"	     ^\n" + 
 		"The type X is deprecated\n" + 
 		"----------\n";
 	if (this.complianceLevel < ClassFileConstants.JDK1_5) {

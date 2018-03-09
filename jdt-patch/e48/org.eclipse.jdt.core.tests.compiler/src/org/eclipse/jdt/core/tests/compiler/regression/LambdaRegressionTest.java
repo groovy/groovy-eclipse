@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015, 2017 IBM Corporation and others.
+ * Copyright (c) 2015, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,6 +11,9 @@
  *								Bug 446691 - [1.8][null][compiler] NullPointerException in SingleNameReference.analyseCode
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.compiler.regression;
+
+import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest.JavacTestOptions.EclipseHasABug;
+import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest.JavacTestOptions.JavacHasABug;
 
 import junit.framework.Test;
 @SuppressWarnings({ "rawtypes" })
@@ -65,6 +68,8 @@ public void test001() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=446317, java.lang.VerifyError: Bad type on operand stack with Lambdas and/or inner classes 
 public void test002() {
 	this.runNegativeTest(
+			false,
+			EclipseHasABug.EclipseBug529197,
 			new String[] {
 				"X.java",
 				"import java.util.function.Consumer;\n" +
@@ -129,6 +134,8 @@ public void test003() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=446317, java.lang.VerifyError: Bad type on operand stack with Lambdas and/or inner classes
 public void test004() {
 	this.runConformTest(
+		false,
+		JavacHasABug.JavacThrowsAnException,
 		new String[] {
 			"Y.java", 
 			"import java.util.function.Supplier;\n" + 
@@ -150,7 +157,8 @@ public void test004() {
 			"		new Y();\n" + 
 			"	}\n" + 
 			"}"
-	});
+	},
+	null);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=448724, [1.8] [compiler] Wrong resolution of overloaded method when irrelevant type parameter is present and lambda is used as parameter
 public void test448724() {
@@ -960,7 +968,10 @@ public void testBug477888() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=472648
 // [compiler][1.8] Lambda expression referencing method with generic type has incorrect compile errors
 public void testBug472648() {
-	runNegativeTest(new String [] {
+	runNegativeTest(
+		false,
+		JavacHasABug.JavacBugFixed_901,
+		new String [] {
 		"Test.java",
 		"import java.util.ArrayList;\n" + 
 		"import java.util.List;\n" + 

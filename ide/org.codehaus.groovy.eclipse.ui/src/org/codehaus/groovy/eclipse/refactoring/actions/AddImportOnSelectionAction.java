@@ -57,7 +57,6 @@ import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.internal.corext.CorextMessages;
-import org.eclipse.jdt.internal.corext.ValidateEditException;
 import org.eclipse.jdt.internal.corext.codemanipulation.AddImportsOperation.IChooseImportQuery;
 import org.eclipse.jdt.internal.corext.codemanipulation.CodeGenerationMessages;
 import org.eclipse.jdt.internal.corext.util.Messages;
@@ -319,12 +318,9 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
      * @param cu the compilation unit to apply the edit to
      * @param edit the edit to apply
      * @param save if set, save the CU after the edit has been applied
-     * @param monitor the progress monitor to use
-     * @throws CoreException Thrown when the access to the CU failed
-     * @throws ValidateEditException if validate edit fails
      */
-    // copied from JavaModelUtil (moved to JavaElementUtil circa Eclipse 4.7)
-    protected static void applyEdit(ICompilationUnit cu, TextEdit edit, boolean save, IProgressMonitor monitor) throws CoreException, ValidateEditException {
+    // copied from JavaModelUtil (moved to JavaElementUtil circa Eclipse 4.7 and back to JavaModelUtil in Eclipse 4.8m6)
+    protected static void applyEdit(ICompilationUnit cu, TextEdit edit, boolean save, IProgressMonitor monitor) throws CoreException {
         SubMonitor subMonitor = SubMonitor.convert(monitor, CorextMessages.JavaModelUtil_applyedit_operation, 2);
         IFile file = (IFile) cu.getResource();
         if (!save || !file.exists()) {
@@ -332,7 +328,7 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
         } else {
             IStatus status = Resources.makeCommittable(file, null);
             if (!status.isOK()) {
-                throw new ValidateEditException(status);
+                throw new CoreException(status);
             }
             cu.applyTextEdit(edit, subMonitor.split(1));
             cu.save(subMonitor.split(1), true);

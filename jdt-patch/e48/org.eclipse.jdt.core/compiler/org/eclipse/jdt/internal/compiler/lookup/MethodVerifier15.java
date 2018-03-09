@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -83,9 +83,8 @@ void checkConcreteInheritedMethod(MethodBinding concreteMethod, MethodBinding[] 
 	AbstractMethodDeclaration srcMethod = null;
 	if (analyseNullAnnotations && this.type.equals(concreteMethod.declaringClass)) // is currentMethod from the current type?
 		srcMethod = concreteMethod.sourceMethod();
-	boolean useTypeAnnotations = this.environment.usesNullTypeAnnotations();
-	boolean hasReturnNonNullDefault = analyseNullAnnotations && concreteMethod.hasNonNullDefaultFor(Binding.DefaultLocationReturnType, useTypeAnnotations, srcMethod);
-	boolean hasParameterNonNullDefault = analyseNullAnnotations && concreteMethod.hasNonNullDefaultFor(Binding.DefaultLocationParameter, useTypeAnnotations, srcMethod);
+	boolean hasReturnNonNullDefault = analyseNullAnnotations && concreteMethod.hasNonNullDefaultForReturnType(srcMethod);
+	ParameterNonNullDefaultProvider hasParameterNonNullDefault = analyseNullAnnotations ? concreteMethod.hasNonNullDefaultForParameter(srcMethod): ParameterNonNullDefaultProvider.FALSE_PROVIDER;
 
 	for (int i = 0, l = abstractMethods.length; i < l; i++) {
 		MethodBinding abstractMethod = abstractMethods[i];
@@ -404,9 +403,8 @@ void checkAgainstInheritedMethods(MethodBinding currentMethod, MethodBinding[] m
 		AbstractMethodDeclaration srcMethod = null;
 		if (this.type.equals(currentMethod.declaringClass)) // is currentMethod from the current type?
 			srcMethod = currentMethod.sourceMethod();
-		boolean useTypeAnnotations = this.environment.usesNullTypeAnnotations();
-		boolean hasReturnNonNullDefault = currentMethod.hasNonNullDefaultFor(Binding.DefaultLocationReturnType, useTypeAnnotations, srcMethod);
-		boolean hasParameterNonNullDefault = currentMethod.hasNonNullDefaultFor(Binding.DefaultLocationParameter, useTypeAnnotations, srcMethod);
+		boolean hasReturnNonNullDefault = currentMethod.hasNonNullDefaultForReturnType(srcMethod);
+		ParameterNonNullDefaultProvider hasParameterNonNullDefault = currentMethod.hasNonNullDefaultForParameter(srcMethod);
 		for (int i = length; --i >= 0;)
 			if (!currentMethod.isStatic() && !methods[i].isStatic())
 				checkNullSpecInheritance(currentMethod, srcMethod, hasReturnNonNullDefault, hasParameterNonNullDefault, true, methods[i], methods, this.type.scope, null);
@@ -415,10 +413,10 @@ void checkAgainstInheritedMethods(MethodBinding currentMethod, MethodBinding[] m
 
 @Override
 void checkNullSpecInheritance(MethodBinding currentMethod, AbstractMethodDeclaration srcMethod, 
-		boolean hasReturnNonNullDefault, boolean hasParameterNonNullDefault, boolean complain, MethodBinding inheritedMethod, MethodBinding[] allInherited, Scope scope, InheritedNonNullnessInfo[] inheritedNonNullnessInfos)
+		boolean hasReturnNonNullDefault, ParameterNonNullDefaultProvider hasParameterNonNullDefault, boolean complain, MethodBinding inheritedMethod, MethodBinding[] allInherited, Scope scope, InheritedNonNullnessInfo[] inheritedNonNullnessInfos)
 {
 	complain &= !currentMethod.isConstructor();
-	if (!hasReturnNonNullDefault && !hasParameterNonNullDefault && !complain && !this.environment.globalOptions.inheritNullAnnotations) {
+	if (!hasReturnNonNullDefault && !hasParameterNonNullDefault.hasAnyNonNullDefault() && !complain && !this.environment.globalOptions.inheritNullAnnotations) {
 		// nothing to be done, take the shortcut
 		currentMethod.tagBits |= TagBits.IsNullnessKnown;
 		return;

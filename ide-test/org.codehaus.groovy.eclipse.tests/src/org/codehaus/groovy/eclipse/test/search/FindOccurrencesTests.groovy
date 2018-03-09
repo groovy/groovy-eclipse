@@ -18,7 +18,6 @@ package org.codehaus.groovy.eclipse.test.search
 import org.codehaus.groovy.eclipse.search.GroovyOccurrencesFinder
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
-import org.eclipse.jdt.internal.core.manipulation.search.IOccurrencesFinder.OccurrenceLocation
 import org.junit.Assert
 import org.junit.Ignore
 import org.junit.Test
@@ -32,17 +31,18 @@ public final class FindOccurrencesTests extends GroovyEclipseTestSuite {
         GroovyCompilationUnit unit = addGroovySource(contents)
         unit.becomeWorkingCopy(null)
         try {
-            GroovyOccurrencesFinder finder = new GroovyOccurrencesFinder()
-            finder.setGroovyCompilationUnit(unit)
-            finder.initialize(null, start, length)
-            OccurrenceLocation[] actual = finder.getOccurrences()
+            def actual = new GroovyOccurrencesFinder().with {
+                groovyCompilationUnit = unit
+                initialize(null, start, length)
+                return occurrences
+            }
 
             final int n = actual.length
-            if (n != expected.length/2) {
+            if (n != expected.length / 2) {
                 Assert.fail('Wrong number of occurrences found. expecting:\n' + Arrays.toString(expected) + '\nbut found:\n' + printOccurrences(actual, n))
             }
             for (int i = 0; i < n; i += 1) {
-                OccurrenceLocation o = actual[i]
+                def o = actual[i]
                 int off = o.offset, len = o.length
                 if (off != expected[2 * i] || len != expected[(2 * i) + 1]) {
                     Assert.fail('Problem in Occurrence ' + i + ' expecting:\n' + Arrays.toString(expected) + '\nbut found:\n' + printOccurrences(actual, n))
@@ -53,7 +53,7 @@ public final class FindOccurrencesTests extends GroovyEclipseTestSuite {
         }
     }
 
-    private String printOccurrences(OccurrenceLocation[] array, int length) {
+    private String printOccurrences(array, int length) {
         StringBuilder sb = new StringBuilder()
         for (int i = 0; i < length; i += 1) {
             sb.append(array[i]).append('\n')

@@ -1971,6 +1971,23 @@ void setSourceStart(int sourceStart);
 	/** @since 3.14 */
 	int OverridingTerminallyDeprecatedSinceVersionMethod = MethodRelated + 1414;
 
+	// deprecation of package / module:
+	/** @since 3.14 */
+	int UsingDeprecatedPackage = ModuleRelated + 1425;
+	/** @since 3.14 */
+	int UsingDeprecatedSinceVersionPackage = ModuleRelated + 1426;
+	/** @since 3.14 */
+	int UsingTerminallyDeprecatedPackage = ModuleRelated + 1427;
+	/** @since 3.14 */
+	int UsingTerminallyDeprecatedSinceVersionPackage = ModuleRelated + 1428;
+	/** @since 3.14 */
+	int UsingDeprecatedModule = ModuleRelated + 1429;
+	/** @since 3.14 */
+	int UsingDeprecatedSinceVersionModule = ModuleRelated + 1430;
+	/** @since 3.14 */
+	int UsingTerminallyDeprecatedModule = ModuleRelated + 1431;
+	/** @since 3.14 */
+	int UsingTerminallyDeprecatedSinceVersionModule = ModuleRelated + 1432;
 	
 	/** @since 3.14 */
 	int NotAccessibleType = TypeRelated + 1450;
@@ -1994,6 +2011,8 @@ void setSourceStart(int sourceStart);
 	int MissingRequiresTransitiveForTypeInAPI = ModuleRelated + 1459;
 	/** @since  3.14 */
 	int UnnamedPackageInNamedModule = ModuleRelated + 1460;
+	/** @since  3.14 */
+	int UnstableAutoModuleName = ModuleRelated + 1461;
 
 	/** @since 3.13 */
 	int RedundantNullDefaultAnnotationLocal = Internal + 1062;

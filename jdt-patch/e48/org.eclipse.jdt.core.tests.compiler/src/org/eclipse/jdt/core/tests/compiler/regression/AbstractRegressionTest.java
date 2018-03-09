@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -95,6 +95,11 @@ import org.osgi.framework.Bundle;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public abstract class AbstractRegressionTest extends AbstractCompilerTest implements StopableTestCase {
+
+	static final String[] env = System.getenv().entrySet().stream()
+		.filter(e -> !"JAVA_TOOL_OPTIONS".equals(e.getKey()))
+		.map(e -> e.getKey() + "=" + e.getValue())
+		.toArray(String[]::new);
 
 	protected class Runner {
 		boolean shouldFlushOutputDirectory = true;
@@ -254,7 +259,7 @@ static class JavacCompiler {
 	static String getVersion(String javacPathName) throws IOException, InterruptedException {
 		Process fetchVersionProcess = null;
 		try {
-			fetchVersionProcess = Runtime.getRuntime().exec(javacPathName + " -version", null, null);
+			fetchVersionProcess = Runtime.getRuntime().exec(javacPathName + " -version", env, null);
 		    Logger versionStdErrLogger = new Logger(fetchVersionProcess.getErrorStream(), ""); // for javac <= 1.8
 		    Logger versionStdOutLogger = new Logger(fetchVersionProcess.getInputStream(), ""); // for javac >= 9
 		    versionStdErrLogger.start();
@@ -373,7 +378,7 @@ static class JavacCompiler {
 			} else {
 				cmdLineAsString = cmdLine.toString();
 			}
-			compileProcess = Runtime.getRuntime().exec(cmdLineAsString, null, directory);
+			compileProcess = Runtime.getRuntime().exec(cmdLineAsString, env, directory);
 			Logger errorLogger = new Logger(compileProcess.getErrorStream(),
 					"ERROR", log == null ? new StringBuffer() : log);
 			errorLogger.start();
@@ -425,7 +430,7 @@ static class JavaRuntime {
 			cmdLine.append(options);
 			cmdLine.append(' ');
 			cmdLine.append(className);
-			executionProcess = Runtime.getRuntime().exec(cmdLine.toString(), null, directory);
+			executionProcess = Runtime.getRuntime().exec(cmdLine.toString(), env, directory);
 			Logger outputLogger = new Logger(executionProcess.getInputStream(),
 					"RUNTIME OUTPUT", stdout == null ? new StringBuffer() : stdout);
 			outputLogger.start();
@@ -450,6 +455,11 @@ protected static class JavacTestOptions {
 			return true;
 		}
 	};
+	public static class SuppressWarnings extends JavacTestOptions {
+		public SuppressWarnings(String token) {
+			setCompilerOptions("-Xlint:-"+token);
+		}
+	}
 	// TODO (maxime) enable selective javac output dir manipulations between
 	//      tests steps
 	// some tests manipulate the OUTPUT_DIR explicitly between run*Test calls;
@@ -590,7 +600,13 @@ protected static class JavacTestOptions {
 						new EclipseHasABug(MismatchType.EclipseErrorsJavacNone) : null,
 			EclipseBug428061 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=428061
 								new EclipseHasABug(MismatchType.JavacErrorsEclipseNone |
-										MismatchType.JavacErrorsEclipseWarnings) : null;
+										MismatchType.JavacErrorsEclipseWarnings) : null,
+			EclipseBug510528 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=510528
+				new EclipseHasABug(MismatchType.JavacErrorsEclipseNone) : null,
+			EclipseBug531531 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=531531
+					new EclipseHasABug(MismatchType.EclipseErrorsJavacNone) : null,
+			EclipseBug529197 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=529197
+					new EclipseHasABug(MismatchType.EclipseErrorsJavacNone) : null;
 	}
 	// Justification based upon:
 	// - Eclipse bugs opened to investigate differences and closed as INVALID
@@ -670,7 +686,9 @@ protected static class JavacTestOptions {
 			EclipseBug235543 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=235543
 				new EclipseJustification(MismatchType.EclipseErrorsJavacNone) : null,
 			EclipseBug235546 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=235546
-				new EclipseJustification(MismatchType.JavacErrorsEclipseNone) : null;
+				new EclipseJustification(MismatchType.JavacErrorsEclipseNone) : null,
+			EclipseBug449063 = RUN_JAVAC ? // https://bugs.eclipse.org/bugs/show_bug.cgi?id=449063
+					 new EclipseJustification(MismatchType.StandardOutputMismatch) : null;
 		public static final EclipseJustification
 			EclipseJustification0001 = RUN_JAVAC ?
 					new EclipseJustification(MismatchType.EclipseErrorsJavacNone) : null;
@@ -791,7 +809,9 @@ protected static class JavacTestOptions {
 					MismatchType.JavacErrorsEclipseNone,
 					ClassFileConstants.JDK1_6, 10 /* 1.6.0_10_b08 or better - maybe before */) : null,
 			JavacBug8033810 = RUN_JAVAC ? // https://bugs.openjdk.java.net/browse/JDK-8033810
-				new JavacHasABug(MismatchType.EclipseErrorsJavacNone) : null;
+				new JavacHasABug(MismatchType.EclipseErrorsJavacNone) : null,
+			JavacBug8144673 = RUN_JAVAC ? // https://bugs.openjdk.java.net/browse/JDK-8144673
+				new JavacHasABug(MismatchType.JavacErrorsEclipseNone, ClassFileConstants.JDK9, 0100) : null;
 
 		// bugs that have been fixed but that we've not identified
 		public static JavacHasABug
@@ -806,7 +826,11 @@ protected static class JavacTestOptions {
 			JavacBugFixed_7 = RUN_JAVAC ?
 				new JavacHasABug(
 					0 /* all */,
-					ClassFileConstants.JDK1_7, 0 /* 1.7.0_b24 or better - maybe before */) : null;
+					ClassFileConstants.JDK1_7, 0 /* 1.7.0_b24 or better - maybe before */) : null,
+			JavacBugFixed_901 = RUN_JAVAC ?
+				new JavacHasABug(
+					0 /* all */,
+					ClassFileConstants.JDK9, 0100 /* 9.0.1 or better */) : null;
 		// bugs that have neither been fixed nor formally identified but which outcomes are obvious enough to clear any doubts
 		public static JavacHasABug
 			JavacGeneratesByteCodeUponWhichJavaThrowsAnException = RUN_JAVAC ?
@@ -1378,7 +1402,13 @@ protected static class JavacTestOptions {
 		for (int i = 0; i < testFiles.length; i += 2) {
 			System.out.print(testFiles[i]);
 			System.out.println(" ["); //$NON-NLS-1$
-			System.out.println(testFiles[i + 1]);
+			String content = testFiles[i + 1];
+			if (content.length() > 10000) {
+				System.out.println(content.substring(0, 10000));
+				System.out.println("...(truncated)"); //$NON-NLS-1$
+			} else {
+				System.out.println(content);
+			}
 			System.out.println("]"); //$NON-NLS-1$
 		}
 	}
@@ -1393,7 +1423,13 @@ protected static class JavacTestOptions {
 	protected void printFiles(String[] testFiles) {
 		for (int i=0, length=testFiles.length; i<length; i++) {
 			System.out.println(testFiles[i++]);
-			System.out.println(testFiles[i]);
+			String content = testFiles[i];
+			if (content.length() > 10000) {
+				System.out.println(content.substring(0, 10000));
+				System.out.println("...(truncated)"); //$NON-NLS-1$
+			} else {
+				System.out.println(content);
+			}
 		}
 		System.out.println("");
 	}
@@ -1771,7 +1807,7 @@ protected static class JavacTestOptions {
 
 			// Launch process
 			compileProcess = Runtime.getRuntime().exec(
-				cmdLine.toString(), null, this.outputTestDirectory);
+				cmdLine.toString(), env, this.outputTestDirectory);
 
 			// Log errors
       Logger errorLogger = new Logger(compileProcess.getErrorStream(), "ERROR");
@@ -1836,7 +1872,7 @@ protected static class JavacTestOptions {
 						javaCmdLine.append(cp);
 						javaCmdLine.append(' ').append(testFiles[0].substring(0, testFiles[0].indexOf('.')));
 							// assume executable class is name of first test file - PREMATURE check if this is also the case in other test fwk classes
-						execProcess = Runtime.getRuntime().exec(javaCmdLine.toString(), null, this.outputTestDirectory);
+						execProcess = Runtime.getRuntime().exec(javaCmdLine.toString(), env, this.outputTestDirectory);
 						Logger logger = new Logger(execProcess.getInputStream(), "");
 						// PREMATURE implement consistent error policy
 	     				logger.start();
@@ -1925,7 +1961,7 @@ protected static class JavacTestOptions {
 			// Launch process
 			File currentDirectory = new File(currentDirectoryPath);
 			compileProcess = Runtime.getRuntime().exec(
-				cmdLine.toString(), null, currentDirectory);
+				cmdLine.toString(), env, currentDirectory);
 
 			// Log errors
 			Logger errorLogger = new Logger(compileProcess.getErrorStream(), "ERROR");
@@ -2912,12 +2948,7 @@ protected void runNegativeTest(boolean skipJavac, JavacTestOptions javacTestOpti
 					if (execOutputString != null && execOutputString.length() > 0) {
 						System.out.println("[OUT]:"+execOutputString); //$NON-NLS-1$
 					}
-					for (int i = 0; i < testFiles.length; i += 2) {
-						System.out.print(testFiles[i]);
-						System.out.println(" ["); //$NON-NLS-1$
-						System.out.println(testFiles[i + 1]);
-						System.out.println("]"); //$NON-NLS-1$
-					}
+					logTestFiles(false, testFiles);
 					assertEquals(this.verifier.failureReason, expectedErrorString == null ? "" : expectedErrorString, execErrorString);
 					assertEquals(this.verifier.failureReason, expectedOutputString == null ? "" : expectedOutputString, execOutputString);
 				}
@@ -2970,7 +3001,7 @@ protected void runNegativeTest(boolean skipJavac, JavacTestOptions javacTestOpti
 		}
 
 		@Override
-		public void configureFromPlatform(Compiler compiler, Object compilationUnitLocator, Object javaProject) {
+		public void configureFromPlatform(Compiler compiler, Object compilationUnitLocator, Object javaProject, boolean isTestCode) {
 			// Nothing to do here
 		}
 		@SupportedAnnotationTypes("*")
@@ -3425,6 +3456,10 @@ protected void runNegativeTest(
 		File outputDir = new File(OUTPUT_DIR);
 		if (outputDir.exists()) {
 			Util.flushDirectoryContent(outputDir);
+		}
+		File libDir = new File(LIB_DIR);
+		if (libDir.exists()) {
+			Util.flushDirectoryContent(libDir);
 		}
 		super.tearDown();
 		if (RUN_JAVAC) {

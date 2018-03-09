@@ -12,18 +12,27 @@ package org.eclipse.jdt.internal.core.builder;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystemNotFoundException;
+import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.zip.ZipFile;
 
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
@@ -38,24 +47,35 @@ import org.eclipse.jdt.internal.compiler.util.JRTUtil;
 import org.eclipse.jdt.internal.compiler.util.SimpleSet;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
 import org.eclipse.jdt.internal.core.JavaProject;
+import org.eclipse.jdt.internal.core.util.Util;
 
 public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry {
 
 //private HashMap<String, SimpleSet> packagesInModule = null;
 private static HashMap<String, HashMap<String, SimpleSet>> PackageCache = new HashMap<>();
 private static HashMap<String, Set<IModule>> ModulesCache = new HashMap<>();
-private String externalAnnotationPath;
+String externalAnnotationPath;
 private ZipFile annotationZipFile;
 String zipFilename; // keep for equals
 AccessRuleSet accessRuleSet;
+String compliance = null;
+private Path releasePath = null;
+private String[] subReleases = null;
+private java.nio.file.FileSystem fs = null;
 
 static final Set<String> NO_LIMIT_MODULES = new HashSet<>();
 
-public ClasspathJrt(String zipFilename, AccessRuleSet accessRuleSet, IPath externalAnnotationPath) {
+public ClasspathJrt(String zipFilename, AccessRuleSet accessRuleSet, IPath externalAnnotationPath, String compliance) {
 	this.zipFilename = zipFilename;
 	this.accessRuleSet = accessRuleSet;
 	if (externalAnnotationPath != null)
 		this.externalAnnotationPath = externalAnnotationPath.toString();
+	if (compliance != null && compliance.length() == 0) {
+		this.compliance = null;
+	} else {
+		this.compliance = compliance;
+	}
+	initialize();
 	loadModules(this);
 }
 /**
@@ -73,7 +93,7 @@ static HashMap<String, SimpleSet> findPackagesInModules(final ClasspathJrt jrt) 
 	PackageCache.put(zipFileName, packagesInModule);
 	try {
 		final File imageFile = new File(zipFileName);
-		org.eclipse.jdt.internal.compiler.util.JRTUtil.walkModuleImage(imageFile, 
+		org.eclipse.jdt.internal.compiler.util.JRTUtil.walkModuleImage(imageFile,
 				new org.eclipse.jdt.internal.compiler.util.JRTUtil.JrtFileVisitor<Path>() {
 			SimpleSet packageSet = null;
 			@Override
@@ -150,8 +170,69 @@ public static void loadModules(final ClasspathJrt jrt) {
 //		}
 	}
 }
+public void initialize() {
+	if (this.compliance == null) {
+		return;
+	}
+	this.compliance = getReleaseOptionFromCompliance(this.compliance);
+	Path lib = Paths.get(this.zipFilename).getParent();
+	Path filePath = Paths.get(lib.toString(),  "ct.sym"); //$NON-NLS-1$
+	URI t = filePath.toUri();
+	if (!Files.exists(filePath)) {
+		return;
+	}
+	URI uri = URI.create("jar:file:" + t.getRawPath()); //$NON-NLS-1$
+	try {
+		this.fs = FileSystems.getFileSystem(uri);
+	} catch(FileSystemNotFoundException fne) {
+		// Ignore and move on
+	}
+	if (this.fs == null) {
+		HashMap<String, ?> env = new HashMap<>();
+		try {
+			this.fs = FileSystems.newFileSystem(uri, env);
+		} catch (IOException e) {
+			this.compliance = null;
+			return;
+		}
+	}
+	this.releasePath = this.fs.getPath("/"); //$NON-NLS-1$
+	if (!Files.exists(this.fs.getPath(this.compliance))
+			|| Files.exists(this.fs.getPath(this.compliance, "system-modules"))) { //$NON-NLS-1$
+		this.compliance = null;
+	}
+	if (this.compliance != null) {
+		List<String> sub = new ArrayList<>();
+		try (DirectoryStream<java.nio.file.Path> stream = Files.newDirectoryStream(this.releasePath)) {
+			for (final java.nio.file.Path subdir: stream) {
+				String rel = subdir.getFileName().toString();
+				if (rel.contains(this.compliance)) {
+					sub.add(rel);
+				} else {
+					continue;
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			// Rethrow
+		}
+		this.subReleases = sub.toArray(new String[sub.size()]);
+	}
+}
+private String getReleaseOptionFromCompliance(String comp) {
+	if (JavaCore.compareJavaVersions(comp, JavaCore.VERSION_1_5) <= 0) {
+		// For a JDK 9 and above, the minimum release we support is "6"
+		return "6"; //$NON-NLS-1$
+	}
+	int index = comp.indexOf("1."); //$NON-NLS-1$
+	if (index != -1) {
+		return comp.substring(index + 2, comp.length());
+	} else {
+		return comp;
+	}
+}
 void acceptModule(byte[] content) {
-	if (content == null) 
+	if (content == null)
 		return;
 	ClassFileReader reader = null;
 	try {
@@ -186,6 +267,9 @@ public boolean equals(Object o) {
 	if (this == o) return true;
 	if (!(o instanceof ClasspathJrt)) return false;
 	ClasspathJrt jar = (ClasspathJrt) o;
+	if (!Util.equalOrNull(this.compliance, jar.compliance)) {
+		return false;
+	}
 	if (this.accessRuleSet != jar.accessRuleSet)
 		if (this.accessRuleSet == null || !this.accessRuleSet.equals(jar.accessRuleSet))
 			return false;
@@ -193,13 +277,30 @@ public boolean equals(Object o) {
 }
 
 @Override
-public NameEnvironmentAnswer findClass(String binaryFileName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName, boolean asBinaryOnly) {
+public NameEnvironmentAnswer findClass(String binaryFileName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName,
+										boolean asBinaryOnly, Predicate<String> moduleNameFilter) {
 	if (!isPackage(qualifiedPackageName, moduleName)) return null; // most common case
 
 	try {
-		IBinaryType reader = ClassFileReader.readFromModule(new File(this.zipFilename), moduleName, qualifiedBinaryFileName);
+		IBinaryType reader = null;
+		byte[] content = null;
+		String fileNameWithoutExtension = qualifiedBinaryFileName.substring(0, qualifiedBinaryFileName.length() - SuffixConstants.SUFFIX_CLASS.length);
+		if (this.subReleases != null && this.subReleases.length > 0) {
+			qualifiedBinaryFileName = qualifiedBinaryFileName.replace(".class", ".sig"); //$NON-NLS-1$ //$NON-NLS-2$
+			for (String rel : this.subReleases) {
+				Path p = this.fs.getPath(rel, qualifiedBinaryFileName);
+				if (Files.exists(p)) {
+					content = Files.readAllBytes(p);
+					if (content != null) {
+						reader = new ClassFileReader(content, qualifiedBinaryFileName.toCharArray());
+						break;
+					}
+				}
+			}
+		} else {
+			reader = ClassFileReader.readFromModule(new File(this.zipFilename), moduleName, qualifiedBinaryFileName, moduleNameFilter);
+		}
 		if (reader != null) {
-			String fileNameWithoutExtension = qualifiedBinaryFileName.substring(0, qualifiedBinaryFileName.length() - SuffixConstants.SUFFIX_CLASS.length);
 			if (this.externalAnnotationPath != null) {
 				try {
 					if (this.annotationZipFile == null) {
@@ -212,12 +313,12 @@ public NameEnvironmentAnswer findClass(String binaryFileName, String qualifiedPa
 			}
 			if (this.accessRuleSet == null)
 				return new NameEnvironmentAnswer(reader, null, reader.getModule());
-			return new NameEnvironmentAnswer(reader, 
-					this.accessRuleSet.getViolatedRestriction(fileNameWithoutExtension.toCharArray()), 
+			return new NameEnvironmentAnswer(reader,
+					this.accessRuleSet.getViolatedRestriction(fileNameWithoutExtension.toCharArray()),
 					reader.getModule());
 		}
-	} catch (IOException e) { // treat as if class file is missing
 	} catch (ClassFormatException e) { // treat as if class file is missing
+	} catch (IOException e) { // treat as if class file is missing
 	}
 	return null;
 }
@@ -234,7 +335,7 @@ public int hashCode() {
 @Override
 public char[][] getModulesDeclaringPackage(String qualifiedPackageName, String moduleName) {
 	List<String> moduleNames = JRTUtil.getModulesDeclaringPackage(new File(this.zipFilename), qualifiedPackageName, moduleName);
-	return CharOperation.toCharArrays(moduleNames); 
+	return CharOperation.toCharArrays(moduleNames);
 }
 @Override
 public boolean hasCompilationUnit(String qualifiedPackageName, String moduleName) {
@@ -256,9 +357,10 @@ public String debugPathString() {
 	return this.zipFilename;
 }
 @Override
-public NameEnvironmentAnswer findClass(char[] typeName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName, boolean asBinaryOnly) {
+public NameEnvironmentAnswer findClass(char[] typeName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName,
+		boolean asBinaryOnly, Predicate<String> moduleNameFilter) {
 	String fileName = new String(typeName);
-	return findClass(fileName, qualifiedPackageName, moduleName, qualifiedBinaryFileName, asBinaryOnly);
+	return findClass(fileName, qualifiedPackageName, moduleName, qualifiedBinaryFileName, asBinaryOnly, moduleNameFilter);
 }
 @Override
 public boolean hasModule() {
@@ -313,8 +415,8 @@ private void addRequired(String mod, Set<String> allModules) {
 }
 @Override
 public NameEnvironmentAnswer findClass(String typeName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName) {
-	// 
-	return findClass(typeName, qualifiedPackageName, moduleName, qualifiedBinaryFileName, false);
+	//
+	return findClass(typeName, qualifiedPackageName, moduleName, qualifiedBinaryFileName, false, null);
 }
 /** TEST ONLY */
 public static void resetCaches() {

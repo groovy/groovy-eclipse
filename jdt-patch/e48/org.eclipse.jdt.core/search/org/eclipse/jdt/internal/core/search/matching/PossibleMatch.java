@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -37,6 +37,7 @@ public SearchDocument document;
 private String sourceFileName;
 private char[] source;
 private PossibleMatch similarMatch;
+public String autoModuleName;
 
 public PossibleMatch(MatchLocator locator, IResource resource, Openable openable, SearchDocument document, boolean mustResolve) {
 	this.resource = resource;
@@ -86,6 +87,10 @@ public char[] getContents() {
 					}
 				}
 			}
+		} else if (this.autoModuleName != null) { // fab a module
+			contents = new String("module " + this.autoModuleName + "{}").toCharArray();  //$NON-NLS-1$//$NON-NLS-2$
+			this.sourceFileName = "module-info.java"; //$NON-NLS-1$
+			this.compoundName = new char[][] { "module-info".toCharArray()}; //$NON-NLS-1$
 		} else {
 			contents = this.document.getCharContents();
 		}

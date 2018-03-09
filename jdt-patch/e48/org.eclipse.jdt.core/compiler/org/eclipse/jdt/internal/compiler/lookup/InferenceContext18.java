@@ -414,7 +414,8 @@ public class InferenceContext18 {
 			if (SHOULD_WORKAROUND_BUG_JDK_8153748) { // "before 18.5.2", but should not spill into b3 ... (heuristically)
 				ReductionResult jdk8153748result = addJDK_8153748ConstraintsFromInvocation(this.invocationArguments, method, new InferenceSubstitution(this));
 				if (jdk8153748result != null) {
-					this.currentBounds.incorporate(this);
+					if (!this.currentBounds.incorporate(this))
+						return null;
 				}
 			}
 

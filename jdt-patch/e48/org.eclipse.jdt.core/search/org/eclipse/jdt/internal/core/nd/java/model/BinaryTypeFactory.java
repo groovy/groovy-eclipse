@@ -24,10 +24,11 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.IJavaModelStatusConstants;
+import org.eclipse.jdt.core.IOrdinaryClassFile;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
@@ -93,7 +94,7 @@ public class BinaryTypeFactory {
 				workspacePath.toString().toCharArray(), indexPath.toCharArray());
 	}
 
-	public static BinaryTypeDescriptor createDescriptor(IClassFile classFile) {
+	public static BinaryTypeDescriptor createDescriptor(IOrdinaryClassFile classFile) {
 		ClassFile concreteClass = (ClassFile)classFile;
 		PackageFragment parent = (PackageFragment) classFile.getParent();
 
@@ -104,7 +105,7 @@ public class BinaryTypeFactory {
 		return createDescriptor(type.getClassFile());
 	}
 
-	public static IBinaryType create(IClassFile classFile, IProgressMonitor monitor) throws JavaModelException, ClassFormatException {
+	public static IBinaryType create(IOrdinaryClassFile classFile, IProgressMonitor monitor) throws JavaModelException, ClassFormatException {
 		BinaryTypeDescriptor descriptor = createDescriptor(classFile);
 		return readType(descriptor, monitor);
 	}
@@ -151,27 +152,29 @@ public class BinaryTypeFactory {
 			return null;
 		}
 		if (descriptor.isInJarFile()) {
-			ZipFile zip = null;
-			try {
-				zip = JavaModelManager.getJavaModelManager().getZipFile(new Path(new String(descriptor.workspacePath)),
-						useInvalidArchiveCache);
-				char[] entryNameCharArray = CharArrayUtils.concat(
-						JavaNames.fieldDescriptorToBinaryName(descriptor.fieldDescriptor), SuffixConstants.SUFFIX_class);
-				String entryName = new String(entryNameCharArray);
-				ZipEntry ze = zip.getEntry(entryName);
-				if (ze != null) {
-					byte contents[];
-					try {
-						contents = org.eclipse.jdt.internal.compiler.util.Util.getZipEntryByteContent(ze, zip);
-					} catch (IOException ioe) {
-						throw new JavaModelException(ioe, IJavaModelStatusConstants.IO_EXCEPTION);
+			if (CharOperation.indexOf("jrt-fs.jar".toCharArray(), descriptor.location, false) == -1) { //$NON-NLS-1$
+				ZipFile zip = null;
+				try {
+					zip = JavaModelManager.getJavaModelManager().getZipFile(new Path(new String(descriptor.workspacePath)),
+							useInvalidArchiveCache);
+					char[] entryNameCharArray = CharArrayUtils.concat(
+							JavaNames.fieldDescriptorToBinaryName(descriptor.fieldDescriptor), SuffixConstants.SUFFIX_class);
+					String entryName = new String(entryNameCharArray);
+					ZipEntry ze = zip.getEntry(entryName);
+					if (ze != null) {
+						byte contents[];
+						try {
+							contents = org.eclipse.jdt.internal.compiler.util.Util.getZipEntryByteContent(ze, zip);
+						} catch (IOException ioe) {
+							throw new JavaModelException(ioe, IJavaModelStatusConstants.IO_EXCEPTION);
+						}
+						return new ClassFileReader(contents, descriptor.indexPath, fullyInitialize);
 					}
-					return new ClassFileReader(contents, descriptor.indexPath, fullyInitialize);
+				} catch (CoreException e) {
+					throw new JavaModelException(e);
+				} finally {
+					JavaModelManager.getJavaModelManager().closeZipFile(zip);
 				}
-			} catch (CoreException e) {
-				throw new JavaModelException(e);
-			} finally {
-				JavaModelManager.getJavaModelManager().closeZipFile(zip);
 			}
 		} else {
 			IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(new String(descriptor.workspacePath)));

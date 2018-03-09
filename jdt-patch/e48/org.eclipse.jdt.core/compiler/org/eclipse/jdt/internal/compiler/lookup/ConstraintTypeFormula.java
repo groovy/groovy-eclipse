@@ -102,7 +102,7 @@ class ConstraintTypeFormula extends ConstraintFormula {
 				if (!checkIVFreeTVmatch(this.left, this.right))
 					checkIVFreeTVmatch(this.right, this.left);
 			// 18.2.4:
-			return reduceTypeEquality(inferenceContext.object);
+			return reduceTypeEquality(inferenceContext.object, inferenceContext);
 		case TYPE_ARGUMENT_CONTAINED:
 			// 18.2.3:
 			if (this.right.kind() != Binding.WILDCARD_TYPE) { // "If T is a type" ... all alternatives require "wildcard"
@@ -161,7 +161,7 @@ class ConstraintTypeFormula extends ConstraintFormula {
 		return false;
 	}
 
-	private Object reduceTypeEquality(TypeBinding object) {
+	private Object reduceTypeEquality(TypeBinding object, InferenceContext18 inferenceContext) {
 		// 18.2.4
 		if (this.left.kind() == Binding.WILDCARD_TYPE) {
 			if (this.right.kind() == Binding.WILDCARD_TYPE) {
@@ -214,13 +214,25 @@ class ConstraintTypeFormula extends ConstraintFormula {
 					}
 					return constraints;
 				}
-				if (this.left.isArrayType() && this.right.isArrayType() && this.left.dimensions() == this.right.dimensions()) {
-					// checking dimensions already now is an optimization over reducing one dim at a time
-					return ConstraintTypeFormula.create(this.left.leafComponentType(), this.right.leafComponentType(), SAME, this.isSoft);
+				if (this.left.isArrayType() && this.right.isArrayType()) {
+					if (this.left.dimensions() == this.right.dimensions()) {
+						// checking dimensions in one step is an optimization over reducing one dim at a time
+						return ConstraintTypeFormula.create(this.left.leafComponentType(), this.right.leafComponentType(), SAME, this.isSoft);
+					} else if (this.left.dimensions() > 0 && this.right.dimensions() > 0) {
+						TypeBinding leftPrime = peelOneDimension(this.left, inferenceContext.environment);
+						TypeBinding rightPrime = peelOneDimension(this.right, inferenceContext.environment);
+						return ConstraintTypeFormula.create(leftPrime, rightPrime, SAME, this.isSoft);
+					}
 				}
 			}
 		}
 		return FALSE;
+	}
+
+	private TypeBinding peelOneDimension(TypeBinding arrayType, LookupEnvironment env) {
+		if (arrayType.dimensions() == 1)
+			return arrayType.leafComponentType();
+		return env.createArrayType(arrayType.leafComponentType(), arrayType.dimensions()-1);
 	}
 
 	private Object reduceSubType(Scope scope, TypeBinding subCandidate, TypeBinding superCandidate) {

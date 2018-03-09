@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -26,6 +26,7 @@ import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
+import org.eclipse.jdt.internal.compiler.util.HashtableOfInteger;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObject;
 import org.eclipse.jdt.internal.compiler.util.Util;
 /**
@@ -43,6 +44,7 @@ public class ConstantPool implements ClassFileConstants, TypeIds {
 	public static final int NAMEANDTYPE_INITIAL_SIZE = 272;
 	public static final int CONSTANTPOOL_INITIAL_SIZE = 2000;
 	public static final int CONSTANTPOOL_GROW_SIZE = 6000;
+	public static final int DYNAMIC_INITIAL_SIZE = 10;
 	protected DoubleCache doubleCache;
 	protected FloatCache floatCache;
 	protected IntegerCache intCache;
@@ -54,6 +56,7 @@ public class ConstantPool implements ClassFileConstants, TypeIds {
 	protected CharArrayCache moduleCache;
 	protected CharArrayCache packageCache;
 	protected HashtableOfObject nameAndTypeCacheForFieldsAndMethods;
+	protected HashtableOfInteger dynamicCache;
 	public byte[] poolContent;
 	public int currentIndex = 1;
 	public int currentOffset;
@@ -311,6 +314,7 @@ public class ConstantPool implements ClassFileConstants, TypeIds {
 		this.moduleCache = new CharArrayCache(5);
 		this.packageCache = new CharArrayCache(5);
 		this.nameAndTypeCacheForFieldsAndMethods = new HashtableOfObject(NAMEANDTYPE_INITIAL_SIZE);
+		this.dynamicCache = new HashtableOfInteger(DYNAMIC_INITIAL_SIZE);
 		this.offsets = new int[5];
 		initialize(classFile);
 	}
@@ -889,17 +893,33 @@ public class ConstantPool implements ClassFileConstants, TypeIds {
 		return index;
 	}
 	public int literalIndexForInvokeDynamic(int bootStrapIndex, char[] selector, char[] descriptor) {
-		int nameAndTypeIndex = literalIndexForNameAndType(selector, descriptor);
-		int index = this.currentIndex++;
-		int length = this.offsets.length;
-		if (length <= index) {
-			// resize
-			System.arraycopy(this.offsets, 0, (this.offsets = new int[index * 2]), 0, length);
+		int index;
+		if ((index = putInDynamicCacheIfAbsent(bootStrapIndex, selector, descriptor, this.currentIndex)) < 0) {
+			this.currentIndex++;
+			if ((index = -index) > 0xFFFF){
+				this.classFile.referenceBinding.scope.problemReporter().noMoreAvailableSpaceInConstantPool(this.classFile.referenceBinding.scope.referenceType());
+			}
+			int length = this.offsets.length;
+			if (length <= index) {
+				// resize
+				System.arraycopy(this.offsets, 0, (this.offsets = new int[index * 2]), 0, length);
+			}
+			this.offsets[index] = this.currentOffset;
+
+			writeU1(InvokeDynamicTag);
+			int classIndexOffset = this.currentOffset;
+			if (this.currentOffset + 4 >= this.poolContent.length) {
+				resizePoolContents(4);
+			}
+			this.currentOffset+=4;
+
+			int nameAndTypeIndex = literalIndexForNameAndType(selector, descriptor);
+
+			this.poolContent[classIndexOffset++] = (byte) (bootStrapIndex >> 8);
+			this.poolContent[classIndexOffset++] = (byte) bootStrapIndex;
+			this.poolContent[classIndexOffset++] = (byte) (nameAndTypeIndex >> 8);
+			this.poolContent[classIndexOffset] = (byte) nameAndTypeIndex;
 		}
-		this.offsets[index] = this.currentOffset;
-		writeU1(InvokeDynamicTag);
-		writeU2(bootStrapIndex);
-		writeU2(nameAndTypeIndex);
 		return index;
 	}
 	public int literalIndexForField(char[] declaringClass, char[] name, char[] signature) {
@@ -1072,6 +1092,47 @@ public class ConstantPool implements ClassFileConstants, TypeIds {
 		}
 		return index;
 	}
+	
+	/**
+	 * @param bootstrapIndex the given bootstrap index
+	 * @param selector the given method selector
+	 * @param descriptor the given signature
+	 * @param value the new index
+	 * @return the given index
+	 */	private int putInDynamicCacheIfAbsent(int bootstrapIndex, final char[] selector, final char[] descriptor, final int value) {
+		int index;
+		HashtableOfObject key1Value = (HashtableOfObject) this.dynamicCache.get(bootstrapIndex);
+		if (key1Value == null) {
+			key1Value = new HashtableOfObject();
+			this.dynamicCache.put(bootstrapIndex, key1Value);
+			CachedIndexEntry cachedIndexEntry = new CachedIndexEntry(descriptor, value);
+			index = -value;
+			key1Value.put(selector, cachedIndexEntry);
+		} else {
+			Object key2Value = key1Value.get(selector);
+			if (key2Value == null) {
+				CachedIndexEntry cachedIndexEntry = new CachedIndexEntry(descriptor, value);
+				index = -value;
+				key1Value.put(selector, cachedIndexEntry);
+			} else if (key2Value instanceof CachedIndexEntry) {
+				// adding a second entry
+				CachedIndexEntry entry = (CachedIndexEntry) key2Value;
+				if (CharOperation.equals(descriptor, entry.signature)) {
+					index = entry.index;
+				} else {
+					CharArrayCache charArrayCache = new CharArrayCache();
+					charArrayCache.putIfAbsent(entry.signature, entry.index);
+					index = charArrayCache.putIfAbsent(descriptor, value);
+					key1Value.put(selector, charArrayCache);
+				}
+			} else {
+				CharArrayCache charArrayCache = (CharArrayCache) key2Value;
+				index = charArrayCache.putIfAbsent(descriptor, value);
+			}
+		}
+		return index;
+	}
+
 	/**
 	 * @param key1 the given declaring class name
 	 * @param key2 the given field name or method selector
@@ -1177,6 +1238,7 @@ public class ConstantPool implements ClassFileConstants, TypeIds {
 		this.packageCache.clear();
 		this.moduleCache.clear();
 		this.nameAndTypeCacheForFieldsAndMethods.clear();
+		this.dynamicCache.clear();
 		this.currentIndex = 1;
 		this.currentOffset = 0;
 	}

@@ -180,9 +180,13 @@ public class ClassFile implements TypeConstants, TypeIds {
 	 * @param unitResult org.eclipse.jdt.internal.compiler.CompilationUnitResult
 	 */
 	public static void createProblemType(TypeDeclaration typeDeclaration, CompilationResult unitResult) {
+		createProblemType(typeDeclaration, null, unitResult);
+	}
+
+	private static void createProblemType(TypeDeclaration typeDeclaration, ClassFile parentClassFile, CompilationResult unitResult) {
 		SourceTypeBinding typeBinding = typeDeclaration.binding;
 		ClassFile classFile = ClassFile.getNewInstance(typeBinding);
-		classFile.initialize(typeBinding, null, true);
+		classFile.initialize(typeBinding, parentClassFile, true);
 
 		if (typeBinding.hasMemberTypes()) {
 			// see bug 180109
@@ -257,7 +261,7 @@ public class ClassFile implements TypeConstants, TypeIds {
 			for (int i = 0, max = typeDeclaration.memberTypes.length; i < max; i++) {
 				TypeDeclaration memberType = typeDeclaration.memberTypes[i];
 				if (memberType.binding != null) {
-					ClassFile.createProblemType(memberType, unitResult);
+					ClassFile.createProblemType(memberType, classFile, unitResult);
 				}
 			}
 		}

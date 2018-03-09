@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2015, 2017 Google, Inc and others.
+ * Copyright (c) 2015, 2018 Google, Inc and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -196,7 +196,9 @@ public class IndexBasedJavaSearchEnvironment implements INameEnvironment, Suffix
 						sourceFileName, // doesn't include the file extension
 						qPackageName,
 						null, // TODO(SHMOD): don't have a module name, but while looking in unindexed classpath locations, this is probably OK
-						qSourceFileName);  // doesn't include the file extension
+						qSourceFileName,  // doesn't include the file extension
+						false,
+						null /*no module filtering on source dir*/);
 				}
 			} else {
 				if (binaryFileName == null) {
@@ -214,7 +216,9 @@ public class IndexBasedJavaSearchEnvironment implements INameEnvironment, Suffix
 						binaryFileName,
 						qPackageName,
 						null,  // TODO(SHMOD): don't have a module name, but while looking in unindexed classpath locations, this is probably OK
-						qBinaryFileName);
+						qBinaryFileName,
+						false,
+						null /*no module filtering, this env is not module aware*/);
 			}
 			if (answer != null) {
 				if (!answer.ignoreIfBetter()) {

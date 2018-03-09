@@ -30,6 +30,11 @@ import org.eclipse.jdt.core.tests.util.Util;
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public abstract class LocalVMLauncher implements RuntimeConstants {
 
+	static final String[] env = System.getenv().entrySet().stream()
+		.filter(e -> !"JAVA_TOOL_OPTIONS".equals(e.getKey()))
+		.map(e -> e.getKey() + "=" + e.getValue())
+		.toArray(String[]::new);
+
 	/**
 	 * Whether the target has a file system and thus whether it supports writing
 	 * class files to disk. See org.eclipse.jdt.core.tests.eval.target.CodeSnippetRunner for more
@@ -130,7 +135,7 @@ protected Process execCommandLine() throws TargetException {
 		// Use Runtime.exec(String[]) with tokens because Runtime.exec(String) with commandLineString
 		// does not properly handle spaces in arguments on Unix/Linux platforms.
 		String[] commandLine = getCommandLine();
-		vmProcess= Runtime.getRuntime().exec(commandLine);
+		vmProcess= Runtime.getRuntime().exec(commandLine, env);
 	} catch (IOException e) {
 		throw new TargetException("Error launching VM at " + this.vmPath);
 	}

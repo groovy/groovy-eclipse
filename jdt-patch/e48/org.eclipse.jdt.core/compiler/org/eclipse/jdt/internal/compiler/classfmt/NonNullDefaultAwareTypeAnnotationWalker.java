@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014, 2017 GK Software AG.
+ * Copyright (c) 2014, 2018 GK Software AG.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -234,5 +234,45 @@ public class NonNullDefaultAwareTypeAnnotationWalker extends TypeAnnotationWalke
 		if (this.isEmpty)
 			return restrict(this.matches, this.pathPtr);
 		return super.toNextArrayDimension();
+	}
+
+	public static ITypeAnnotationWalker updateWalkerForParamNonNullDefault(ITypeAnnotationWalker walker,
+			int defaultNullness, LookupEnvironment environment) {
+		if (environment.globalOptions.isAnnotationBasedNullAnalysisEnabled) {
+			if (defaultNullness != Binding.NO_NULL_DEFAULT) {
+				if (defaultNullness == Binding.NULL_UNSPECIFIED_BY_DEFAULT) {
+					if (walker instanceof NonNullDefaultAwareTypeAnnotationWalker) {
+						NonNullDefaultAwareTypeAnnotationWalker nonNullDefaultAwareTypeAnnotationWalker = (NonNullDefaultAwareTypeAnnotationWalker) walker;
+						return new TypeAnnotationWalker(nonNullDefaultAwareTypeAnnotationWalker.typeAnnotations,
+								nonNullDefaultAwareTypeAnnotationWalker.matches,
+								nonNullDefaultAwareTypeAnnotationWalker.pathPtr);
+					} else {
+						return walker;
+					}
+				} else {
+					if (walker instanceof TypeAnnotationWalker) {
+						TypeAnnotationWalker typeAnnotationWalker = (TypeAnnotationWalker) walker;
+						
+						IBinaryAnnotation nonNullAnnotation2;
+						if (walker instanceof NonNullDefaultAwareTypeAnnotationWalker) {
+							NonNullDefaultAwareTypeAnnotationWalker nonNullDefaultAwareTypeAnnotationWalker = (NonNullDefaultAwareTypeAnnotationWalker) walker;
+							if(nonNullDefaultAwareTypeAnnotationWalker.isEmpty) {
+								return new NonNullDefaultAwareTypeAnnotationWalker(defaultNullness, environment);								
+							}
+							nonNullAnnotation2 = nonNullDefaultAwareTypeAnnotationWalker.nonNullAnnotation;
+						} else {
+							nonNullAnnotation2 = getNonNullAnnotation(environment);
+						}
+						return new NonNullDefaultAwareTypeAnnotationWalker(typeAnnotationWalker.typeAnnotations,
+								typeAnnotationWalker.matches, typeAnnotationWalker.pathPtr, defaultNullness,
+								nonNullAnnotation2, false, false, environment, false);
+					} else {
+						// empty or walker from ExternalAnnotationProvider
+						return new NonNullDefaultAwareTypeAnnotationWalker(defaultNullness, environment);
+					}
+				}
+			}
+		}
+		return walker;
 	}
 }

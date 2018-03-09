@@ -34,7 +34,7 @@ public class ClasspathJep247 extends ClasspathLocation {
 	private Path releasePath = null;
 	private File file = null;
 	private Set<String> packageCache;
-	
+
 	public ClasspathJep247(File jdkHome, String release, AccessRuleSet accessRuleSet) {
 		super(accessRuleSet, null);
 		this.release = release;
@@ -63,7 +63,7 @@ public class ClasspathJep247 extends ClasspathLocation {
 					Path p = this.fs.getPath(rel, qualifiedBinaryFileName);
 					if (Files.exists(p)) {
 						content = Files.readAllBytes(p);
-						if (content != null) 
+						if (content != null)
 							break;
 					}
 				}
@@ -101,7 +101,7 @@ public class ClasspathJep247 extends ClasspathLocation {
 		if (!Files.exists(filePath)) {
 			return;
 		}
-		URI uri = URI.create("jar:file:" + t.getPath()); //$NON-NLS-1$
+		URI uri = URI.create("jar:file:" + t.getRawPath()); //$NON-NLS-1$
 		try {
 			this.fs = FileSystems.getFileSystem(uri);
 		} catch(FileSystemNotFoundException fne) {
@@ -182,6 +182,7 @@ public class ClasspathJep247 extends ClasspathLocation {
 	@Override
 	public void reset() {
 		try {
+			super.reset();
 			this.fs.close();
 		} catch (IOException e) {
 			// Move on

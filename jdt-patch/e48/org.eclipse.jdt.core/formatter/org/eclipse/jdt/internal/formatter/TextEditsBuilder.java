@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014, 2016 Mateusz Matela and others.
+ * Copyright (c) 2014, 2018 Mateusz Matela and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -173,8 +173,7 @@ public class TextEditsBuilder extends TokenTraverser {
 		} else if (index == 0 && this.parent == null) {
 			bufferIndent(token, index);
 		} else {
-			bufferAlign(token, index);
-			if (isSpaceBefore() && token.getAlign() == 0)
+			if (!bufferAlign(token, index) && isSpaceBefore())
 				this.buffer.append(' ');
 		}
 	}
@@ -278,10 +277,16 @@ public class TextEditsBuilder extends TokenTraverser {
 		target.append(indentChars);
 	}
 
-	private void bufferAlign(Token token, int index) {
+	private boolean bufferAlign(Token token, int index) {
 		int align = token.getAlign();
+		int alignmentChar = this.alignChar;
+		if (align == 0 && getLineBreaksBefore() == 0 && this.parent != null) {
+			align = token.getIndent();
+			token.setAlign(align);
+			alignmentChar = DefaultCodeFormatterOptions.SPACE;
+		}
 		if (align == 0)
-			return;
+			return false;
 
 		int currentPositionInLine = 0;
 		if (getLineBreaksBefore() > 0) {
@@ -291,11 +296,11 @@ public class TextEditsBuilder extends TokenTraverser {
 			currentPositionInLine = this.tm.getPositionInLine(index - 1);
 			currentPositionInLine += this.tm.getLength(this.tm.get(index - 1), currentPositionInLine);
 		}
-		if (isSpaceBefore())
-			align = Math.max(align, currentPositionInLine + 1);
+		if (currentPositionInLine >= align)
+			return false;
 
 		final int tabSize = this.options.tab_size;
-		switch (this.alignChar) {
+		switch (alignmentChar) {
 			case DefaultCodeFormatterOptions.SPACE:
 				while (currentPositionInLine++ < align) {
 					this.buffer.append(' ');
@@ -317,8 +322,9 @@ public class TextEditsBuilder extends TokenTraverser {
 				}
 				break;
 			default:
-				throw new IllegalStateException("Unrecognized align char: " + this.alignChar); //$NON-NLS-1$
+				throw new IllegalStateException("Unrecognized align char: " + alignmentChar); //$NON-NLS-1$
 		}
+		return true;
 	}
 
 	private void flushBuffer(int currentPosition) {

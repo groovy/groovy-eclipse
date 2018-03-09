@@ -972,9 +972,29 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 			return;
 		}
 		int length = sourceAnnotations.length;
+
+		int defaultNullness = 0;
+		Annotation lastNNBDAnnotation = null;
 		for (int i = 0; i < length; i++) {
 			Annotation annotation = sourceAnnotations[i];
-			annotation.handleNonNullByDefault(scope, localDeclaration);
+			long value = annotation.handleNonNullByDefault(scope);
+			if (value != 0) {
+				defaultNullness |= value;
+				lastNNBDAnnotation = annotation;
+			}
+		}
+		if (defaultNullness != 0) {
+			// the actual localDeclaration.binding is not set yet. fake one for problemreporter.
+			LocalVariableBinding binding = new LocalVariableBinding(localDeclaration, null, 0, false);
+			Binding target = scope.checkRedundantDefaultNullness(defaultNullness, localDeclaration.sourceStart);
+			boolean recorded = scope.recordNonNullByDefault(binding, defaultNullness, lastNNBDAnnotation,
+					lastNNBDAnnotation.sourceStart, localDeclaration.declarationSourceEnd);
+			if (recorded) {
+				if (target != null) {
+					scope.problemReporter().nullDefaultAnnotationIsRedundant(localDeclaration,
+							new Annotation[] { lastNNBDAnnotation }, target);
+				}
+			}
 		}
 	}
 

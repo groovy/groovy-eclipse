@@ -15,6 +15,7 @@ package org.eclipse.jdt.internal.core.builder;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -36,7 +37,8 @@ public abstract class ClasspathLocation {
 	protected String patchModuleName = null;
 	// In the following signatures, passing a null moduleName signals "don't care":
 	abstract public NameEnvironmentAnswer findClass(String typeName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName);
-	abstract public NameEnvironmentAnswer findClass(String typeName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName, boolean asBinaryOnly);
+	abstract public NameEnvironmentAnswer findClass(String typeName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName,
+													boolean asBinaryOnly, Predicate<String> moduleNameFilter);
 	abstract public boolean isPackage(String qualifiedPackageName, String moduleName);
 	public char[][] getModulesDeclaringPackage(String qualifiedPackageName, String moduleName) {
 		return singletonModuleNameIf(isPackage(qualifiedPackageName, moduleName));
@@ -44,9 +46,10 @@ public abstract class ClasspathLocation {
 	public boolean hasModule() { return getModule() != null; }
 	abstract public boolean hasCompilationUnit(String pkgName, String moduleName);
 
-	public NameEnvironmentAnswer findClass(char[] typeName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName, boolean asBinaryOnly) {
+	public NameEnvironmentAnswer findClass(char[] typeName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName,
+											boolean asBinaryOnly, Predicate<String> moduleNameFilter) {
 		String fileName = new String(typeName);
-		return findClass(fileName, qualifiedPackageName, moduleName, qualifiedBinaryFileName, asBinaryOnly);
+		return findClass(fileName, qualifiedPackageName, moduleName, qualifiedBinaryFileName, asBinaryOnly, moduleNameFilter);
 	}
 	public void setModule (IModule mod) {
 		this.module = mod;
@@ -123,18 +126,22 @@ static ClasspathLocation forLibrary(String libraryPathname,
 										long lastModified, 
 										AccessRuleSet accessRuleSet, 
 										IPath annotationsPath,
-										boolean autoModule) {
+										boolean autoModule,
+										String compliance) {
 	return Util.isJrt(libraryPathname) ?
-			new ClasspathJrt(libraryPathname, accessRuleSet, annotationsPath) :
+			new ClasspathJrt(libraryPathname, accessRuleSet, annotationsPath, compliance) :
 				Util.archiveFormat(libraryPathname) == Util.JMOD_FILE ?
 					new ClasspathJMod(libraryPathname, lastModified, accessRuleSet, annotationsPath) :
 			new ClasspathJar(libraryPathname, lastModified, accessRuleSet, annotationsPath, autoModule);
 
 }
+static ClasspathJrt forJrtSystem(String jdkHome, AccessRuleSet accessRuleSet, IPath annotationsPath, String release) {
+	return new ClasspathJrt(jdkHome, accessRuleSet, annotationsPath, release);
+}
 
 public static ClasspathLocation forLibrary(String libraryPathname, AccessRuleSet accessRuleSet, IPath annotationsPath,
-											boolean autoModule) {
-	return forLibrary(libraryPathname, 0, accessRuleSet, annotationsPath, autoModule);
+											boolean autoModule, String compliance) {
+	return forLibrary(libraryPathname, 0, accessRuleSet, annotationsPath, autoModule, compliance);
 }
 
 static ClasspathLocation forLibrary(IFile library, AccessRuleSet accessRuleSet, IPath annotationsPath,

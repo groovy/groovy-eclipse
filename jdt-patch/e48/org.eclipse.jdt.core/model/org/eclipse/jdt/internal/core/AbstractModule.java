@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
+import java.util.Arrays;
+
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IModuleDescription;
 import org.eclipse.jdt.core.ITypeRoot;
@@ -28,8 +30,11 @@ public interface AbstractModule extends IModuleDescription {
 	 */
 	static class AutoModule extends NamedMember implements AbstractModule {
 	
-		public AutoModule(JavaElement parent, String name) {
+		private boolean nameFromManifest;
+
+		public AutoModule(JavaElement parent, String name, boolean nameFromManifest) {
 			super(parent, name);
+			this.nameFromManifest = nameFromManifest;
 		}
 		@Override
 		public IJavaElement[] getChildren() throws JavaModelException {
@@ -38,6 +43,13 @@ public interface AbstractModule extends IModuleDescription {
 		@Override
 		public int getFlags() throws JavaModelException {
 			return 0;
+		}
+		@Override
+		public boolean isAutoModule() {
+			return true;
+		}
+		public boolean isAutoNameFromManifest() {
+			return this.nameFromManifest;
 		}
 		@Override
 		public char getHandleMementoDelimiter() {
@@ -78,6 +90,11 @@ public interface AbstractModule extends IModuleDescription {
 	}
 	default IPackageExport[] getOpenedPackages() throws JavaModelException {
 		return getModuleInfo().opens();
+	}
+	@Override
+	default String[] getRequiredModuleNames() throws JavaModelException {
+		IModuleReference[] references = getRequiredModules();
+		return Arrays.stream(references).map(ref -> String.valueOf(ref.name())).toArray(String[]::new);
 	}
 
 	default String toString(String lineDelimiter) {

@@ -98,7 +98,7 @@ public String[] getCategories() throws JavaModelException {
 	SourceMapper mapper= getSourceMapper();
 	if (mapper != null) {
 		// ensure the class file's buffer is open so that categories are computed
-		((ClassFile)getClassFile()).getBuffer();
+		getClassFile().getBuffer();
 
 		if (mapper.categories != null) {
 			String[] categories = (String[]) mapper.categories.get(this);
@@ -143,7 +143,7 @@ public ISourceRange getSourceRange() throws JavaModelException {
 	SourceMapper mapper= getSourceMapper();
 	if (mapper != null) {
 		// ensure the class file's buffer is open so that source ranges are computed
-		((ClassFile)getClassFile()).getBuffer();
+		getClassFile().getBuffer();
 
 		return mapper.getSourceRange(this);
 	} else {

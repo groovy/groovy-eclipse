@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -83,7 +84,7 @@ public class ModuleCompilationTests extends AbstractBatchCompilerTest {
 			boolean shouldFlushOutputDirectory)
 	{
 		runConformModuleTest(testFileNames, commandLine,
-				expectedFailureOutOutputString, expectedFailureErrOutputString, shouldFlushOutputDirectory, OUTPUT_DIR);
+				expectedFailureOutOutputString, expectedFailureErrOutputString, shouldFlushOutputDirectory, OUTPUT_DIR + File.separator + "javac");
 	}
 
 	void runConformModuleTest(List<String> testFileNames, StringBuffer commandLine,
@@ -150,7 +151,7 @@ public class ModuleCompilationTests extends AbstractBatchCompilerTest {
 			String expectedFailureOutOutputString, String expectedFailureErrOutputString,
 			boolean shouldFlushOutputDirectory, String javacErrorMatch) {
 		runNegativeModuleTest(testFileNames, commandLine, expectedFailureOutOutputString,
-				expectedFailureErrOutputString, shouldFlushOutputDirectory, javacErrorMatch, OUTPUT_DIR);
+				expectedFailureErrOutputString, shouldFlushOutputDirectory, javacErrorMatch, OUTPUT_DIR + File.separator + "javac");
 	}
 
 	void runNegativeModuleTest(List<String> testFileNames, StringBuffer commandLine,
@@ -225,6 +226,10 @@ public class ModuleCompilationTests extends AbstractBatchCompilerTest {
 			}
 			if (tokens[i].trim().equals("-9")) {
 				buf.append(" -source 9 ");
+				continue;
+			}
+			if (tokens[i].trim().equals("-8")) {
+				buf.append(" -source 1.8 ");
 				continue;
 			}
 			if (tokens[i].startsWith("-warn") || tokens[i].startsWith("-err") || tokens[i].startsWith("-info")) {
@@ -849,8 +854,7 @@ public class ModuleCompilationTests extends AbstractBatchCompilerTest {
 			.append(Util.getJavaClassLibsAsString())
 			.append(modDir + File.separator + "mod.one.jar").append(File.pathSeparator)
 			.append(modDir + File.separator + "mod.two").append(File.pathSeparator)
-			.append("\" ")
-			.append(" --module-source-path " + "\"" + srcDir + "\"");
+			.append("\" ");
 		runConformModuleTest(files,
 				buffer, 
 				"",
@@ -1981,6 +1985,7 @@ public class ModuleCompilationTests extends AbstractBatchCompilerTest {
 			.append(Util.getJavaClassLibsAsString()).append("\" ")
 			.append("-p \"")
 			.append(LIB_DIR).append("\" ")
+			.append(" -warn:-module ")
 			.append(" --module-source-path " + "\"" + directory + "\"");
 		runConformModuleTest(files, 
 				buffer,
@@ -2613,7 +2618,7 @@ public class ModuleCompilationTests extends AbstractBatchCompilerTest {
 				"",
 				"The package pm is accessible from more than one module: mod.y, mod.x\n",
 				false,
-				"package conflict");
+				"reads package pm from both");
 		buffer = new StringBuffer();
 		buffer.append("-d " + OUTPUT_DIR + File.separator + out )
 			.append(" -9 ")
@@ -2627,7 +2632,7 @@ public class ModuleCompilationTests extends AbstractBatchCompilerTest {
 				"",
 				"invalid module name: mod.z\n",
 				false,
-				"invalid module");
+				"module not found");
 	}
 	public void testPackageConflict6() {
 		File outputDirectory = new File(OUTPUT_DIR);
@@ -2755,8 +2760,7 @@ public class ModuleCompilationTests extends AbstractBatchCompilerTest {
 				"",
 				"The package pm is accessible from more than one module: mod.y, mod.x\n",
 				false,
-				"package conflict",
-				OUTPUT_DIR);
+				"reads package pm from both");
 	}
 	public void testPackageTypeConflict1() {
 		File outputDirectory = new File(OUTPUT_DIR);
@@ -2829,8 +2833,7 @@ public class ModuleCompilationTests extends AbstractBatchCompilerTest {
 			.append(" -9 ")
 			.append(" -classpath \"")
 			.append(Util.getJavaClassLibsAsString())
-			.append("\" ")
-			.append(" --module-source-path " + "\"" + directory + "\"");
+			.append("\" ");
 
 		runNegativeModuleTest(files, 
 				buffer,
@@ -2843,7 +2846,7 @@ public class ModuleCompilationTests extends AbstractBatchCompilerTest {
 				"----------\n" +
 				"1 problem (1 error)\n",
 				false,
-				"not in a module");
+				"does not exist");
 	}
 	public void testMixedSourcepath() {
 		File outputDirectory = new File(OUTPUT_DIR);
@@ -3262,8 +3265,7 @@ public class ModuleCompilationTests extends AbstractBatchCompilerTest {
 			.append(" -classpath \"")
 			.append(Util.getJavaClassLibsAsString())
 			.append("\" ")
-			.append(" -err:exports")
-			.append(" --module-source-path " + "\"" + directory + "\"");
+			.append(" -err:exports");
 
 		runConformModuleTest(files, buffer,
 				"",
@@ -3294,13 +3296,12 @@ public class ModuleCompilationTests extends AbstractBatchCompilerTest {
 		.append("-classNames mod.one/p.XYZ")
 		.append(" --module-source-path " + "\"" + srcDir + "\"");
 
-		runNegativeModuleTest(files,
-				buffer,
+		files.forEach(name -> buffer.append(" \"" + name + "\""));
+		runNegativeTest(new String[0],
+				buffer.toString(),
 				"",
 				"invalid class name: mod.one/p.XYZ\n",
-				false,
-				"", // not expected pass with Javac
-				outDir);
+				false);
 	}
 	public void testBug518295b() {
 		Util.flushDirectoryContent(new File(OUTPUT_DIR));
@@ -3326,13 +3327,12 @@ public class ModuleCompilationTests extends AbstractBatchCompilerTest {
 		.append("-classNames mod.xyz/p.X")
 		.append(" --module-source-path " + "\"" + srcDir + "\"");
 
-		runNegativeModuleTest(files,
-				buffer,
+		files.forEach(name -> buffer.append(" \"" + name + "\""));
+		runNegativeTest(new String[0],
+				buffer.toString(),
 				"",
 				"invalid module name: mod.xyz\n",
-				false,
-				"", // not expected pass with Javac
-				outDir);
+				false);
 	}
 	public void testBug518295c() {
 		Util.flushDirectoryContent(new File(OUTPUT_DIR));
@@ -3433,12 +3433,19 @@ public class ModuleCompilationTests extends AbstractBatchCompilerTest {
 			.append(" -classpath \"")
 			.append(Util.getJavaClassLibsAsString())
 			.append("\" ")
+			.append(" -info:+module ")
 			.append(" --module-path " + "\"" + jarPath + "\"");
 
 		runConformModuleTest(files, 
 			buffer,
 			"",
-			"",
+			"----------\n" + 
+			"1. INFO in ---OUTPUT_DIR_PLACEHOLDER---/src/mod.one/module-info.java (at line 2)\n" + 
+			"	requires lib.x;\n" + 
+			"	         ^^^^^\n" + 
+			"Name of automatic module \'lib.x\' is unstable, it is derived from the module\'s file name.\n" + 
+			"----------\n" + 
+			"1 problem (1 info)\n",
 			false,
 			OUTPUT_DIR + File.separator + out);
 	}
@@ -3471,7 +3478,7 @@ public class ModuleCompilationTests extends AbstractBatchCompilerTest {
 				"",
 				"module name mod._3_ does not match expected name mod.three\n",
 				false,
-				outDir);
+				"does not match expected name");
 	}
 	/*
 	 * Disabled because the parser seem to take the module path as mod and not mod.e 
@@ -3700,12 +3707,7 @@ public void testBug521362_emptyFile() {
 			.append(moduleLoc + File.separator + "module-info.java");
 
 		Set<String> classFiles = runConformModuleTest(
-				new String[] {
-					"mod.one/module-info.java",
-					"module mod.one { \n" +
-					"	requires java.sql;\n" +
-					"}"
-				},
+				new String[0],
 				buffer.toString(),
 				"",
 				"",
@@ -3729,10 +3731,10 @@ public void testBug521362_emptyFile() {
 						"}");
 		StringBuffer buffer = new StringBuffer();
 		buffer.append("-d " + OUTPUT_DIR + File.separator + out )
+			.append(" -8")
 			.append(" -classpath \"")
 			.append(Util.getJavaClassLibsAsString())
-			.append("\" ")
-			.append(" --module-source-path " + "\"" + directory + "\"");
+			.append("\" ");
 
 		runNegativeModuleTest(files, 
 				buffer,
@@ -3760,7 +3762,7 @@ public void testBug521362_emptyFile() {
 				"----------\n" + 
 				"4 problems (4 errors)\n",
 				false,
-				OUTPUT_DIR + File.separator + out);
+				"modules are not supported");
 	}
 	public void testBug522472c() {
 		File outputDirectory = new File(OUTPUT_DIR);
@@ -4251,7 +4253,7 @@ public void testBug521362_emptyFile() {
 				"----------\n" + 
 				"1 problem (1 error)\n",
 				false,
-				"is not accessible to clients");
+				"module not found");
 	}
 	public void testLimitModules2() {
 		File outputDirectory = new File(OUTPUT_DIR);
@@ -4290,7 +4292,7 @@ public void testBug521362_emptyFile() {
 				"----------\n" + 
 				"1 problem (1 error)\n",
 				false,
-				"is not accessible to clients");
+				"is not visible");
 	}
 	public void testLimitModules3() {
 		File outputDirectory = new File(OUTPUT_DIR);
@@ -4523,9 +4525,9 @@ public void testBug521362_emptyFile() {
 			.append(" -classpath \"")
 			.append(Util.getJavaClassLibsAsString())
 			.append("\" ");
-
-		runConformModuleTest(files,
-				buffer, 
+		files.forEach(name -> buffer.append(" \"" + name + "\""));
+		runConformTest(new String[0],
+				buffer.toString(), 
 				"",
 				"",
 				false);
@@ -4548,5 +4550,298 @@ public void testBug521362_emptyFile() {
 				"\n" + 
 				"}";
 		checkDisassembledClassFile(OUTPUT_DIR + File.separator + out + File.separator + "module-info.class", "module-info", expectedOutput);
+	}
+	public void testBug520858() {
+		Util.flushDirectoryContent(new File(OUTPUT_DIR));
+		String outDir = OUTPUT_DIR + File.separator + "bin";
+		String srcDir = OUTPUT_DIR + File.separator + "src";
+		String moduleLoc = srcDir + File.separator + "test";
+		List<String> files = new ArrayList<>(); 
+		writeFileCollecting(files, moduleLoc, "module-info.java", 
+						"module test {\n" +
+						"	requires org.astro;\n" +
+						"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "p", "Test.java", 
+			"package p;\n" +
+			"import org.astro.World;\n" + 
+			"public class Test {\n" +
+			"	World w = null;\n" +
+			"}");
+		moduleLoc = srcDir + File.separator + "org.astro";
+		writeFileCollecting(files, moduleLoc, "module-info.java", 
+				"module org.astro {\n" +
+				"	exports org.astro;\n" +
+				"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "org" + File.separator + "astro", "World.java", 
+			"package org.astro;\n" +
+			"public interface World {\n" + 
+			"	public static String name() {\n" + 
+			"		return \"\";\n" + 
+			"	}\n" + 
+			"}");
+		StringBuffer buffer = new StringBuffer();
+		buffer.append("-d " + outDir )
+			.append(" -source 9 ")
+			.append(" --module-source-path " + "\"" + srcDir + "\" ");
+		runConformModuleTest(files, buffer,
+				"",
+				"",
+				false);
+	}
+	public void testBug520858a() {
+		Util.flushDirectoryContent(new File(OUTPUT_DIR));
+		String outDir = OUTPUT_DIR + File.separator + "bin";
+		String srcDir = OUTPUT_DIR + File.separator + "src";
+		String moduleLoc = srcDir + File.separator + "test";
+		List<String> files = new ArrayList<>(); 
+		writeFileCollecting(files, moduleLoc, "module-info.java", 
+						"module test {\n" +
+						"	requires org.astro;\n" +
+						"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "p", "Test.java", 
+			"package p;\n" +
+			"import org.astro.World;\n" + 
+			"public class Test {\n" +
+			"	World w = null;\n" +
+			"}");
+		moduleLoc = srcDir + File.separator + "org.astro";
+		writeFileCollecting(files, moduleLoc, "module-info.java", 
+				"module org.astro {\n" +
+				"	exports org.astro;\n" +
+				"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "org" + File.separator + "astro", "World.java", 
+			"package org.astro;\n" +
+			"public interface World {\n" + 
+			"	public static String name() {\n" + 
+			"		return \"\";\n" + 
+			"	}\n" + 
+			"}");
+		StringBuffer buffer = new StringBuffer();
+		buffer.append("-d " + outDir )
+			.append(" -source 9 ")
+			.append(" --module-source-path " + "\"" + srcDir + "\" ")
+			.append(srcDir + File.separator + "test" + File.separator + "p" + File.separator + "Test.java");
+		runConformModuleTest(Collections.emptyList(), buffer,
+				"",
+				"",
+				false);
+	}
+	public void testBug520858b() {
+		Util.flushDirectoryContent(new File(OUTPUT_DIR));
+		String outDir = OUTPUT_DIR + File.separator + "bin";
+		String srcDir = OUTPUT_DIR + File.separator + "src";
+		String moduleLoc = srcDir + File.separator + "test";
+		List<String> files = new ArrayList<>(); 
+		writeFileCollecting(files, moduleLoc, "module-info.java", 
+						"module test {\n" +
+						"	requires org.astro;\n" +
+						"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "p", "Test.java", 
+			"package p;\n" +
+			"import org.astro.World;\n" + 
+			"public class Test {\n" +
+			"	World w = null;\n" +
+			"}");
+		moduleLoc = srcDir + File.separator + "org.astro";
+		writeFileCollecting(files, moduleLoc, "module-info.java", 
+				"module org.astro {\n" +
+				"	exports org.astro;\n" +
+				"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "org" + File.separator + "astro", "World.java", 
+			"package org.astro;\n" +
+			"public interface World {\n" + 
+			"	public static String name() {\n" + 
+			"		return \"\";\n" + 
+			"	}\n" + 
+			"}");
+		StringBuffer buffer = new StringBuffer();
+		buffer.append("-d " + outDir )
+			.append(" -source 9 ")
+			.append(" --module-source-path " + "\"" + srcDir + "\" ")
+			.append(srcDir + File.separator + "test" + File.separator + "p" + File.separator + "Test.java ")
+			.append(srcDir + File.separator + "test" + File.separator + "module-info.java ")
+			.append(srcDir + File.separator + "org.astro" + File.separator + "org" + File.separator + "astro" + File.separator + "World.java");
+		runConformModuleTest(Collections.emptyList(), buffer,
+				"",
+				"",
+				false);
+	}
+	public void testBug520858c() {
+		Util.flushDirectoryContent(new File(OUTPUT_DIR));
+		String outDir = OUTPUT_DIR + File.separator + "bin";
+		String srcDir = OUTPUT_DIR + File.separator + "src";
+		String moduleLoc = srcDir + File.separator + "test";
+		List<String> files = new ArrayList<>(); 
+
+		writeFileCollecting(files, moduleLoc + File.separator + "p", "Test.java", 
+			"package p;\n" +
+			"import org.astro.World;\n" + 
+			"public class Test {\n" +
+			"	World w = null;\n" +
+			"}");
+		moduleLoc = srcDir + File.separator + "org.astro";
+		writeFileCollecting(files, moduleLoc, "module-info.java", 
+				"module org.astro {\n" +
+				"	exports org.astro;\n" +
+				"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "org" + File.separator + "astro", "World.java", 
+			"package org.astro;\n" +
+			"public interface World {\n" + 
+			"	public static String name() {\n" + 
+			"		return \"\";\n" + 
+			"	}\n" + 
+			"}");
+		StringBuffer buffer = new StringBuffer();
+		buffer.append("-d " + outDir )
+			.append(" -source 9 ")
+			.append(" --module-source-path " + "\"" + srcDir + "\" ");
+		runNegativeModuleTest(files, buffer,
+				"",
+				"\'---OUTPUT_DIR_PLACEHOLDER---/src/test/p/Test.java\' does not belong to a module on the module source path\n", 
+				false,
+				"not in a module on the module source path");
+	}
+	public void testBug520858d() {
+		Util.flushDirectoryContent(new File(OUTPUT_DIR));
+		String outDir = OUTPUT_DIR + File.separator + "bin";
+		String srcDir = OUTPUT_DIR + File.separator + "src";
+		String moduleLoc = srcDir + File.separator + "test";
+		List<String> files = new ArrayList<>(); 
+
+		writeFileCollecting(files, moduleLoc + File.separator + "p", "Test.java", 
+			"package p;\n" +
+			"import org.astro.World;\n" + 
+			"public class Test {\n" +
+			"	World w = null;\n" +
+			"}");
+		moduleLoc = srcDir + File.separator + "org.astro";
+		writeFileCollecting(files, moduleLoc, "module-info.java", 
+				"module org.astro {\n" +
+				"	exports org.astro;\n" +
+				"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "org" + File.separator + "astro", "World.java", 
+			"package org.astro;\n" +
+			"public interface World {\n" + 
+			"	public static String name() {\n" + 
+			"		return \"\";\n" + 
+			"	}\n" + 
+			"}");
+		StringBuffer buffer = new StringBuffer();
+		buffer.append("-d " + outDir )
+			.append(" -source 9 ")
+			.append(" --module-source-path " + "\"" + srcDir + "\" ")
+			.append(srcDir + File.separator + "org.astro" + File.separator + "org" + File.separator + "astro" + File.separator + "World.java ")
+			.append(srcDir + File.separator + "test" + File.separator + "p" + File.separator + "Test.java");
+		runNegativeModuleTest(Collections.emptyList(), buffer,
+			"",
+			"\'---OUTPUT_DIR_PLACEHOLDER---/src/test/p/Test.java\' does not belong to a module on the module source path\n", 
+			false,
+			"not in a module on the module source path");
+	}
+	public void testBug520858e() {
+		Util.flushDirectoryContent(new File(OUTPUT_DIR));
+		String outDir = OUTPUT_DIR + File.separator + "bin";
+		String srcDir = OUTPUT_DIR + File.separator + "src";
+		String moduleLoc = srcDir + File.separator + "test";
+		List<String> files = new ArrayList<>(); 
+
+		writeFileCollecting(files, moduleLoc + File.separator + "p", "Test.java", 
+			"package p;\n" +
+			"import org.astro.World;\n" + 
+			"public class Test {\n" +
+			"	World w = null;\n" +
+			"}");
+		moduleLoc = srcDir + File.separator + "org.astro";
+		writeFileCollecting(files, moduleLoc, "module-info.java", 
+				"module org.astro {\n" +
+				"	exports org.astro;\n" +
+				"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "org" + File.separator + "astro", "World.java", 
+			"package org.astro;\n" +
+			"public interface World {\n" + 
+			"	public static String name() {\n" + 
+			"		return \"\";\n" + 
+			"	}\n" + 
+			"}");
+		StringBuffer buffer = new StringBuffer();
+		buffer.append("-d " + outDir )
+			.append(" -source 9 ")
+			.append(" --module-source-path " + "\"" + srcDir + "\" ")
+			.append(srcDir + File.separator + "org.astro" + File.separator + "org" + File.separator + "astro" + File.separator + "World.java ")
+			.append(srcDir + File.separator + "org.astro" + File.separator + "module-info.java ")
+			.append(srcDir + File.separator + "test" + File.separator + "p" + File.separator + "Test.java");
+		runNegativeModuleTest(Collections.emptyList(), buffer,
+			"",
+			"\'---OUTPUT_DIR_PLACEHOLDER---/src/test/p/Test.java\' does not belong to a module on the module source path\n", 
+			false,
+			"not in a module on the module source path");
+	}
+	public void testBug530575() {
+		File outputDirectory = new File(OUTPUT_DIR);
+		Util.flushDirectoryContent(outputDirectory);
+		String out = "bin";
+		String directory = OUTPUT_DIR + File.separator + "src";
+		File srcDir = new File(directory);
+
+		String moduleLoc = directory + File.separator + "mod.x";
+		List<String> files = new ArrayList<>(); 
+		writeFileCollecting(files, moduleLoc, "module-info.java", 
+						"module mod.x { \n" +
+						"	exports px;\n" +
+						"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "px", "C1.java", 
+						"package px;\n" +
+						"public class C1 {\n" +
+						"}\n");
+
+		moduleLoc = directory + File.separator + "mod.y";
+		writeFileCollecting(files, moduleLoc, "module-info.java", 
+						"module mod.y { \n" +
+						"	exports py;\n" +
+						"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "py", "C1.java", 
+						"package py;\n" +
+						"public class C1 {\n" +
+						"}\n");
+
+		StringBuffer buffer = new StringBuffer();
+		buffer.append("-d " + OUTPUT_DIR + File.separator + out )
+			.append(" -9 ")
+			.append(" -classpath \"")
+			.append(Util.getJavaClassLibsAsString())
+			.append("\" ")
+			.append(" --module-source-path " + "\"" + directory + "\"");
+		for (String fileName : files)
+			buffer.append(" \"").append(fileName).append("\"");
+		runConformTest(new String[0], 
+				buffer.toString(),
+				"",
+				"",
+				false);
+		Util.flushDirectoryContent(srcDir);
+		files.clear();
+		writeFileCollecting(files, directory, "module-info.java", 
+				"module test { \n" +
+				"	requires mod.x;\n" +
+				"	requires mod.y;\n" +
+				"}");
+		writeFileCollecting(files, directory + File.separator + "p", "X.java", 
+						"package p;\n" +
+						"public class X extends px.C1 { \n" +
+						"	py.C1 c = null;\n" +
+						"}");
+		buffer = new StringBuffer();
+		buffer.append("-d " + OUTPUT_DIR + File.separator + out )
+			.append(" -9 ")
+			.append(" -classpath \"")
+			.append(Util.getJavaClassLibsAsString())
+			.append("\" ")
+			.append(" --module-path " + "\"" + OUTPUT_DIR + File.separator + out + File.separator + "mod.x" + File.pathSeparator + OUTPUT_DIR + File.separator + out + File.separator + "mod.y" + "\"");
+		runConformModuleTest(files, 
+				buffer,
+				"",
+				"",
+				false,
+				OUTPUT_DIR + "javac");
 	}
 }

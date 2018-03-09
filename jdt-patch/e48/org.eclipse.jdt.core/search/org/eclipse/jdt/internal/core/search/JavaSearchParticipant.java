@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,8 +12,10 @@ package org.eclipse.jdt.internal.core.search;
 
 import org.eclipse.core.runtime.*;
 import org.eclipse.jdt.core.search.*;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.core.index.IndexLocation;
 import org.eclipse.jdt.internal.core.search.indexing.BinaryIndexer;
+import org.eclipse.jdt.internal.core.search.indexing.ManifestIndexer;
 import org.eclipse.jdt.internal.core.search.indexing.SourceIndexer;
 import org.eclipse.jdt.internal.core.search.matching.MatchLocator;
 
@@ -66,6 +68,8 @@ public class JavaSearchParticipant extends SearchParticipant {
 			this.sourceIndexer.indexDocument();
 		} else if (org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(documentPath)) {
 			new BinaryIndexer(document).indexDocument();
+		} else if (documentPath.endsWith(TypeConstants.AUTOMATIC_MODULE_NAME)) {
+			new ManifestIndexer(document).indexDocument();
 		}
 	}
 

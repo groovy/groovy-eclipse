@@ -186,7 +186,7 @@ public class RequiresDirective extends ModuleDirective {
 		for (Iterator it = modifiers().iterator(); it.hasNext(); ) {
 			Object x = it.next();
 			if (x instanceof ModuleModifier) {
-				computedModifierFlags |= ((Modifier) x).getKeyword().toFlagValue();
+				computedModifierFlags |= ((ModuleModifier) x).getKeyword().toFlagValue();
 			}
 		}
 		return computedModifierFlags;

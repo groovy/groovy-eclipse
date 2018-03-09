@@ -1228,4 +1228,12 @@ public interface IType extends IMember, IAnnotatable {
 	 * @since 3.10
 	 */
 	public boolean isLambda();
+
+	/**
+	 * Strengthen the contract of the inherited method to signal that the returned class file
+	 * is always an {@link IOrdinaryClassFile}.
+	 * @since 3.14
+	 */
+	@Override
+	IOrdinaryClassFile getClassFile();
 }

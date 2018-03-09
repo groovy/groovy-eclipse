@@ -344,7 +344,7 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 			if (mapper != null) {
 				try {
 					// ensure the class file's buffer is open so that source ranges are computed
-					ClassFile classFile = (ClassFile)getClassFile();
+					IClassFile classFile = getClassFile();
 					if (classFile != null) {
 						classFile.getBuffer();
 						return mapper.getFlags(this);
@@ -383,7 +383,7 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 			if (mapper != null) {
 				try {
 					// ensure the class file's buffer is open so that source ranges are computed
-					ClassFile classFile = (ClassFile)getClassFile();
+					IClassFile classFile = getClassFile();
 					if (classFile != null) {
 						classFile.getBuffer();
 						return mapper.getNameRange(this);
@@ -440,7 +440,7 @@ public class LocalVariable extends SourceRefElement implements ILocalVariable {
 			SourceMapper mapper= getSourceMapper();
 			if (mapper != null) {
 				// ensure the class file's buffer is open so that source ranges are computed
-				ClassFile classFile = (ClassFile)getClassFile();
+				IClassFile classFile = getClassFile();
 				if (classFile != null) {
 					classFile.getBuffer();
 					return mapper.getSourceRange(this);

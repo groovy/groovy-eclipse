@@ -299,7 +299,7 @@ public class ReferenceExpression extends FunctionalExpression implements IPolyEx
 				TypeBinding descType = descriptorParams[i + offset];
 				TypeBinding origDescType = origDescParams[i + offset];
 				if (descType.isIntersectionType18() || 
-						(descType.isTypeVariable() && ((TypeVariableBinding) descType).otherUpperBounds() != null)) {
+						(descType.isTypeVariable() && ((TypeVariableBinding) descType).boundsCount() > 1)) {
 					return CharOperation.equals(origDescType.signature(), origParams[i].signature());
 				}
 			}

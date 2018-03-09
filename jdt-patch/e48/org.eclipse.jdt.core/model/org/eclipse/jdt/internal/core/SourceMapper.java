@@ -39,13 +39,13 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.Flags;
-import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IModuleDescription;
+import org.eclipse.jdt.core.IOrdinaryClassFile;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.IType;
@@ -863,6 +863,11 @@ public class SourceMapper
 	
 		// module type modifiers
 		this.moduleModifiers = moduleInfo.modifiers;
+
+		if (this.binaryTypeOrModule instanceof IModuleDescription) {
+			// categories
+			addCategories(this.binaryTypeOrModule, moduleInfo.categories);
+		}
 	}
 
 	@Override
@@ -940,7 +945,7 @@ public class SourceMapper
 				IType declaringType = currentType.getDeclaringType();
 				String declaringTypeName = declaringType.getElementName();
 				if (declaringTypeName.length() == 0) {
-					IClassFile classFile = declaringType.getClassFile();
+					IOrdinaryClassFile classFile = declaringType.getClassFile();
 					int length = parameterTypes != null ? parameterTypes.length : 0;
 					char[][] newParameterTypes = new char[length+1][];
 					declaringTypeName = classFile.getElementName();

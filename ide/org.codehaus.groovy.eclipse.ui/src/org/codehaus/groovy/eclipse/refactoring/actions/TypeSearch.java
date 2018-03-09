@@ -33,8 +33,9 @@ import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.TypeNameMatch;
+import org.eclipse.jdt.core.search.TypeNameMatchRequestor;
 import org.eclipse.jdt.internal.core.BinaryType;
-import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector;
+import org.eclipse.jdt.internal.corext.util.TypeFilter;
 
 public class TypeSearch {
     /**
@@ -80,11 +81,18 @@ public class TypeSearch {
         for (String simpleName : missingTypes.keySet()) {
             allTypes[i++] = simpleName.toCharArray();
         }
-        final List<TypeNameMatch> typesFound = new ArrayList<>();
-        TypeNameMatchCollector collector = new TypeNameMatchCollector(typesFound);
+        List<TypeNameMatch> typesFound = new ArrayList<>();
+        TypeNameMatchRequestor requestor = new TypeNameMatchRequestor() {
+            @Override
+            public void acceptTypeNameMatch(TypeNameMatch match) {
+                if (!TypeFilter.isFiltered(match)) {
+                    typesFound.add(match);
+                }
+            }
+        };
         IJavaSearchScope scope = SearchEngine.createJavaSearchScope(new IJavaElement[] {unit.getJavaProject()});
         int policy = (monitor == null ? IJavaSearchConstants.CANCEL_IF_NOT_READY_TO_SEARCH : IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH);
-        new SearchEngine().searchAllTypeNames(null, allTypes, scope, collector, policy, monitor);
+        new SearchEngine().searchAllTypeNames(null, allTypes, scope, requestor, policy, monitor);
 
         for (TypeNameMatch match : typesFound) {
             UnresolvedTypeData data = missingTypes.get(match.getSimpleTypeName());

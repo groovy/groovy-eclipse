@@ -1155,27 +1155,17 @@ public boolean hasMemberTypes() {
  * for 1.8 check if the default is applicable to the given kind of location.
  */
 // pre: null annotation analysis is enabled
-boolean hasNonNullDefaultFor(int location, boolean useTypeAnnotations, int sourceStart) {
+boolean hasNonNullDefaultFor(int location, int sourceStart) {
 	// Note, STB overrides for correctly handling local types
 	ReferenceBinding currentType = this;
 	while (currentType != null) {
-		if (useTypeAnnotations) {
-			int nullDefault = ((ReferenceBinding)currentType.original()).getNullDefault();
-			if (nullDefault != 0)
-				return (nullDefault & location) != 0;
-		} else {
-			if ((currentType.tagBits & TagBits.AnnotationNonNullByDefault) != 0)
-				return true;
-			if ((currentType.tagBits & TagBits.AnnotationNullUnspecifiedByDefault) != 0)
-				return false;
-		}
+		int nullDefault = ((ReferenceBinding)currentType.original()).getNullDefault();
+		if (nullDefault != 0)
+			return (nullDefault & location) != 0;
 		currentType = currentType.enclosingType();
 	}
 	// package
-	if (useTypeAnnotations)
-		return (this.getPackage().getDefaultNullness() & location) != 0;
-	else
-		return this.getPackage().getDefaultNullness() == NONNULL_BY_DEFAULT;
+	return (this.getPackage().getDefaultNullness() & location) != 0;
 }
 
 int getNullDefault() {

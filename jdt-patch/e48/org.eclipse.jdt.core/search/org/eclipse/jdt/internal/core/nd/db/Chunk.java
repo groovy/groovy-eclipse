@@ -385,7 +385,7 @@ final class Chunk {
 	 * Returns a dirtied, writable version of this chunk whose identity won't change until the write lock is released.
 	 */
 	public Chunk getWritableChunk() {
-		Chunk result = this.fDatabase.getChunk(this.fSequenceNumber * Database.CHUNK_SIZE);
+		Chunk result = this.fDatabase.getChunk((long) this.fSequenceNumber * Database.CHUNK_SIZE);
 		result.makeDirty();
 		return result;
 	}

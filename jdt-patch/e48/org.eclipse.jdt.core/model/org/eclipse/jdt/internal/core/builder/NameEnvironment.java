@@ -115,8 +115,9 @@ private void computeClasspathLocations(
 	ArrayList bLocations = new ArrayList(classpathEntries.length);
 	ArrayList sLocationsForTest = new ArrayList(classpathEntries.length);
 	Map<String, IModulePathEntry> moduleEntries = null;
-	if (CompilerOptions.versionToJdkLevel(javaProject.getOption(JavaCore.COMPILER_COMPLIANCE, true)) >= ClassFileConstants.JDK9) {
-		moduleEntries = new HashMap<>(classpathEntries.length);
+	String compliance = javaProject.getOption(JavaCore.COMPILER_COMPLIANCE, true);
+	if (CompilerOptions.versionToJdkLevel(compliance) >= ClassFileConstants.JDK9) {
+		moduleEntries = new LinkedHashMap<>(classpathEntries.length);
 		this.moduleUpdater = new ModuleUpdater(javaProject);
 		if (this.compilationGroup == CompilationGroup.TEST) {
 			this.moduleUpdater.addReadUnnamedForNonEmptyClasspath(javaProject, classpathEntries);
@@ -302,7 +303,10 @@ private void computeClasspathLocations(
 							&& JavaCore.IGNORE.equals(javaProject.getOption(JavaCore.COMPILER_PB_DISCOURAGED_REFERENCE, true)))
 								? null
 								: entry.getAccessRuleSet();
-					ClasspathLocation bLocation = ClasspathLocation.forLibrary(path.toOSString(), accessRuleSet, externalAnnotationPath, isOnModulePath);
+					if (JavaCore.DISABLED.equals(javaProject.getOption(JavaCore.COMPILER_RELEASE, true))) {
+						compliance = null;
+					}
+					ClasspathLocation bLocation = ClasspathLocation.forLibrary(path.toOSString(), accessRuleSet, externalAnnotationPath, isOnModulePath, compliance);
 					bLocations.add(bLocation);
 					if (moduleEntries != null) {
 						Set<String> libraryLimitModules = (limitModules == null && projectModule != null) ? ClasspathJrt.NO_LIMIT_MODULES : limitModules;
@@ -513,7 +517,8 @@ private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeNam
 		if (modulePathEntry instanceof ModulePathEntry) {
 			relevantLocations = ((ModulePathEntry) modulePathEntry).getClasspathLocations();
 		} else if (modulePathEntry instanceof ClasspathLocation) {
-			return ((ClasspathLocation) modulePathEntry).findClass(typeName, qPackageName, moduleName, qBinaryFileName, false);
+			return ((ClasspathLocation) modulePathEntry).findClass(typeName, qPackageName, moduleName, qBinaryFileName, false,
+																	null/*module already checked*/);
 		} else {
 			return null;
 		}
@@ -525,13 +530,9 @@ private NameEnvironmentAnswer findClass(String qualifiedTypeName, char[] typeNam
 		if (!strategy.matches(classpathLocation, ClasspathLocation::hasModule)) {
 			continue;
 		}
-		NameEnvironmentAnswer answer = classpathLocation.findClass(binaryFileName, qPackageName, moduleName, qBinaryFileName, false);
+		NameEnvironmentAnswer answer = classpathLocation.findClass(binaryFileName, qPackageName, moduleName, qBinaryFileName, false,
+																	this.modulePathEntries != null ? this.modulePathEntries::containsKey : null);
 		if (answer != null) {
-			char[] answerMod = answer.moduleName();
-			if (answerMod != null && this.modulePathEntries != null) {
-				if (!this.modulePathEntries.containsKey(String.valueOf(answerMod)))
-					continue; // assumed to be filtered out by --limit-modules
-			}
 			if (!answer.ignoreIfBetter()) {
 				if (answer.isBetter(suggestedAnswer))
 					return answer;

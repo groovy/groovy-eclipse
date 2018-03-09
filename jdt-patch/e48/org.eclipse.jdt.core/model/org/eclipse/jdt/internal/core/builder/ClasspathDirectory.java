@@ -11,6 +11,7 @@
 package org.eclipse.jdt.internal.core.builder;
 
 import java.io.IOException;
+import java.util.function.Predicate;
 import java.util.zip.ZipFile;
 
 import org.eclipse.core.resources.IContainer;
@@ -144,7 +145,7 @@ public boolean equals(Object o) {
 	return this.binaryFolder.equals(dir.binaryFolder) && areAllModuleOptionsEqual(dir);
 }
 @Override
-public NameEnvironmentAnswer findClass(String binaryFileName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName, boolean asBinaryOnly) {
+public NameEnvironmentAnswer findClass(String binaryFileName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName, boolean asBinaryOnly, Predicate<String> moduleNameFilter) {
 	if (!doesFileExist(binaryFileName, qualifiedPackageName, qualifiedBinaryFileName)) return null; // most common case
 
 	IBinaryType reader = null;
@@ -247,7 +248,7 @@ public String debugPathString() {
 @Override
 public NameEnvironmentAnswer findClass(String typeName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName) {
 	// 
-	return findClass(typeName, qualifiedPackageName, moduleName, qualifiedBinaryFileName, false);
+	return findClass(typeName, qualifiedPackageName, moduleName, qualifiedBinaryFileName, false, null);
 }
 
 }

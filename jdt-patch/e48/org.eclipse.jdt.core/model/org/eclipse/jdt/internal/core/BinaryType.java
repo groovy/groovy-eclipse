@@ -195,7 +195,7 @@ public IJavaElement[] getChildrenForCategory(String category) throws JavaModelEx
 	SourceMapper mapper= getSourceMapper();
 	if (mapper != null) {
 		// ensure the class file's buffer is open so that categories are computed
-		((ClassFile)getClassFile()).getBuffer();
+		getClassFile().getBuffer();
 
 		HashMap categories = mapper.categories;
 		IJavaElement[] result = new IJavaElement[length];
@@ -221,13 +221,15 @@ public IJavaElement[] getChildrenForCategory(String category) throws JavaModelEx
 	return NO_ELEMENTS;
 }
 protected ClassFileInfo getClassFileInfo() throws JavaModelException {
-	ClassFile cf = (ClassFile)this.parent;
-	return (ClassFileInfo) cf.getElementInfo();
+	return (ClassFileInfo) this.parent.getElementInfo();
 }
-
+@Override
+public IOrdinaryClassFile getClassFile() {
+	return (IOrdinaryClassFile) super.getClassFile();
+}
 @Override
 public IType getDeclaringType() {
-	IClassFile classFile = getClassFile();
+	IOrdinaryClassFile classFile = getClassFile();
 	if (classFile.isOpen()) {
 		try {
 			char[] enclosingTypeName = ((IBinaryType) getElementInfo()).getEnclosingTypeName();

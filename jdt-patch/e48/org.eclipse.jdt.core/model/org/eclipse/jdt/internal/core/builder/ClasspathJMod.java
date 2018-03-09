@@ -12,6 +12,7 @@ package org.eclipse.jdt.internal.core.builder;
 
 import java.io.IOException;
 import java.util.Enumeration;
+import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -61,8 +62,11 @@ public class ClasspathJMod extends ClasspathJar {
 	}
 
 	@Override
-	public NameEnvironmentAnswer findClass(String binaryFileName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName, boolean asBinaryOnly) {
+	public NameEnvironmentAnswer findClass(String binaryFileName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName,
+											boolean asBinaryOnly, Predicate<String> moduleNameFilter) {
 		if (!isPackage(qualifiedPackageName, moduleName)) return null; // most common case
+		if (moduleNameFilter != null && this.module != null && !moduleNameFilter.test(String.valueOf(this.module.name())))
+			return null;
 
 		try {
 			qualifiedBinaryFileName = new String(CharOperation.append(CLASSES_FOLDER, qualifiedBinaryFileName.toCharArray()));

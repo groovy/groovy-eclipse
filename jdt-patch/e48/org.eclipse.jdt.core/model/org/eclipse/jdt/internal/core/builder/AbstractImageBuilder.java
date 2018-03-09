@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -60,7 +60,7 @@ protected boolean compiledAllAtOnce;
 private boolean inCompiler;
 
 protected boolean keepStoringProblemMarkers;
-protected SimpleSet filesWithAnnotations = null;
+protected Set<SourceFile> filesWithAnnotations = null;
 
 //2000 is best compromise between space used and speed
 public static int MAX_AT_ONCE = Integer.getInteger(JavaModelManager.MAX_COMPILED_UNITS_AT_ONCE, 2000).intValue();
@@ -90,10 +90,12 @@ public final static Integer S_INFO = Integer.valueOf(IMarker.SEVERITY_INFO);
 public final static Integer P_HIGH = Integer.valueOf(IMarker.PRIORITY_HIGH);
 public final static Integer P_NORMAL = Integer.valueOf(IMarker.PRIORITY_NORMAL);
 public final static Integer P_LOW = Integer.valueOf(IMarker.PRIORITY_LOW);
+private CompilationGroup compilationGroup;
 
 protected AbstractImageBuilder(JavaBuilder javaBuilder, boolean buildStarting, State newState, CompilationGroup compilationGroup) {
 	// local copies
 	this.javaBuilder = javaBuilder;
+	this.compilationGroup = compilationGroup;
 	this.nameEnvironment = compilationGroup == CompilationGroup.TEST ? javaBuilder.testNameEnvironment : javaBuilder.nameEnvironment;
 	this.sourceLocations = this.nameEnvironment.sourceLocations;
 	this.notifier = javaBuilder.notifier;
@@ -111,7 +113,7 @@ protected AbstractImageBuilder(JavaBuilder javaBuilder, boolean buildStarting, S
 					// initialize this set so the builder knows to gather CUs that define Annotation types
 					// each Annotation processor participant is then asked to process these files AFTER
 					// the compile loop. The normal dependency loop will then recompile all affected types
-					this.filesWithAnnotations = new SimpleSet(1);
+					this.filesWithAnnotations = new HashSet<>(1);
 					break;
 				}
 			}
@@ -309,7 +311,7 @@ protected void cleanUp() {
 * if they are affected by the changes.
 */
 protected void compile(SourceFile[] units) {
-	if (this.filesWithAnnotations != null && this.filesWithAnnotations.elementSize > 0)
+	if (this.filesWithAnnotations != null && this.filesWithAnnotations.size() > 0)
 		// will add files that have annotations in acceptResult() & then processAnnotations() before exitting this method
 		this.filesWithAnnotations.clear();
 
@@ -519,7 +521,7 @@ public ICompilationUnit fromIFile(IFile file) {
 protected void initializeAnnotationProcessorManager(Compiler newCompiler) {
 	AbstractAnnotationProcessorManager annotationManager = JavaModelManager.getJavaModelManager().createAnnotationProcessorManager();
 	if (annotationManager != null) {
-		annotationManager.configureFromPlatform(newCompiler, this, this.javaBuilder.javaProject);
+		annotationManager.configureFromPlatform(newCompiler, this, this.javaBuilder.javaProject, this.compilationGroup == CompilationGroup.TEST);
 		annotationManager.setErr(new PrintWriter(System.err));
 		annotationManager.setOut(new PrintWriter(System.out));
 	}
@@ -595,7 +597,7 @@ protected Compiler newCompiler() {
 protected CompilationParticipantResult[] notifyParticipants(SourceFile[] unitsAboutToCompile) {
 	CompilationParticipantResult[] results = new CompilationParticipantResult[unitsAboutToCompile.length];
 	for (int i = unitsAboutToCompile.length; --i >= 0;)
-		results[i] = new CompilationParticipantResult(unitsAboutToCompile[i]);
+		results[i] = new CompilationParticipantResult(unitsAboutToCompile[i], this.compilationGroup == CompilationGroup.TEST);
 
 	// TODO (kent) do we expect to have more than one participant?
 	// and if so should we pass the generated files from the each processor to the others to process?
@@ -625,7 +627,7 @@ protected CompilationParticipantResult[] notifyParticipants(SourceFile[] unitsAb
 						uniqueFiles.add(unitsAboutToCompile[f]);
 				}
 				if (uniqueFiles.addIfNotIncluded(sourceFile) == sourceFile) {
-					CompilationParticipantResult newResult = new CompilationParticipantResult(sourceFile);
+					CompilationParticipantResult newResult = new CompilationParticipantResult(sourceFile, this.compilationGroup == CompilationGroup.TEST);
 					// is there enough room to add all the addedGeneratedFiles.length ?
 					if (toAdd == null) {
 						toAdd = new CompilationParticipantResult[addedGeneratedFiles.length];
@@ -635,6 +637,7 @@ protected CompilationParticipantResult[] notifyParticipants(SourceFile[] unitsAb
 							System.arraycopy(toAdd, 0, toAdd = new CompilationParticipantResult[length + addedGeneratedFiles.length], 0, length);
 					}
 					toAdd[added++] = newResult;
+					this.workQueue.add(sourceFile);
 				}
 			}
 		}
@@ -656,9 +659,9 @@ protected void processAnnotations(CompilationParticipantResult[] results) {
 		hasAnnotationProcessor = this.javaBuilder.participants[i].isAnnotationProcessor();
 	if (!hasAnnotationProcessor) return;
 
-	boolean foundAnnotations = this.filesWithAnnotations != null && this.filesWithAnnotations.elementSize > 0;
+	boolean foundAnnotations = this.filesWithAnnotations != null && this.filesWithAnnotations.size() > 0;
 	for (int i = results.length; --i >= 0;)
-		results[i].reset(foundAnnotations && this.filesWithAnnotations.includes(results[i].sourceFile));
+		results[i].reset(foundAnnotations && this.filesWithAnnotations.contains(results[i].sourceFile));
 
 	// even if no files have annotations, must still tell every annotation processor in case the file used to have them
 	for (int i = 0, l = this.javaBuilder.participants.length; i < l; i++)

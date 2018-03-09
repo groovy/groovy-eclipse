@@ -481,4 +481,5 @@ public interface TypeConstants {
 	// java.base module name
 	char[] JAVA_BASE = "java.base".toCharArray(); //$NON-NLS-1$
 	String META_INF_MANIFEST_MF = "META-INF/MANIFEST.MF"; //$NON-NLS-1$
+	String AUTOMATIC_MODULE_NAME = "Automatic-Module-Name";  //$NON-NLS-1$
 }

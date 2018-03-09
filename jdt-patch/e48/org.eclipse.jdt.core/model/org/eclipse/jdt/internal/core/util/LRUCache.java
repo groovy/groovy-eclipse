@@ -671,8 +671,7 @@ public class LRUCache<K, V> implements Cloneable {
 	protected String toStringContents() {
 		StringBuffer result = new StringBuffer();
 		ToStringSorter<K> sorter = new ToStringSorter<>(o -> o instanceof JavaElement ? ((JavaElement) o).getElementName() : o.toString());
-		sorter.sort(this.entryTable.keySet());
-		List<Pair<K>> sortedObjects = sorter.sortedObjects;
+		List<Pair<K>> sortedObjects = sorter.sort(this.entryTable.keySet());
 		for (Pair<K> pair : sortedObjects) {
 			String toString = pair.string;
 			V value = get(pair.object);

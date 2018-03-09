@@ -14,9 +14,10 @@ package org.eclipse.jdt.internal.core;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Set;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
@@ -31,6 +32,8 @@ import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.env.IModule;
+import org.eclipse.jdt.internal.compiler.env.IModule.IModuleReference;
+import org.eclipse.jdt.internal.compiler.env.IModule.IPackageExport;
 import org.eclipse.jdt.internal.compiler.env.IModuleAwareNameEnvironment;
 import org.eclipse.jdt.internal.compiler.env.ISourceType;
 import org.eclipse.jdt.internal.compiler.env.IUpdatableModule;
@@ -245,12 +248,59 @@ public class SearchableEnvironment
 	 * The packages found are passed to:
 	 *    ISearchRequestor.acceptPackage(char[][] packageName)
 	 */
-	public void findPackages(char[] prefix, ISearchRequestor requestor, IPackageFragmentRoot[] moduleContext) {
+	public void findPackages(char[] prefix, ISearchRequestor requestor, IPackageFragmentRoot[] moduleContext, boolean followRequires) {
 		this.nameLookup.seekPackageFragments(
 			new String(prefix),
 			true,
 			new SearchableEnvironmentRequestor(requestor), moduleContext);
+	if (followRequires && this.knownModuleLocations != null) {
+		try {
+			boolean isMatchAllPrefix = CharOperation.equals(CharOperation.ALL_PREFIX, prefix);
+			Set<IModuleDescription> modDescs = new HashSet<>();
+			for (IPackageFragmentRoot root : moduleContext) {
+				IModuleDescription desc = root.getJavaProject().getModuleDescription();
+				if (desc instanceof AbstractModule)
+					modDescs.add(desc);
+			}
+			for (IModuleDescription md : modDescs) {
+				IModuleReference[] reqModules = ((AbstractModule) md).getRequiredModules();
+				char[] modName = md.getElementName().toCharArray();
+				for (IModuleReference moduleReference : reqModules) {
+					findPackagesFromRequires(prefix, isMatchAllPrefix, requestor, moduleReference, modName);
+				}
+			}
+		} catch (JavaModelException e) {
+			// silent
+		}
 	}
+}
+
+private void findPackagesFromRequires(char[] prefix, boolean isMatchAllPrefix, ISearchRequestor requestor, IModuleReference moduleReference, char[] clientModuleName) {
+	IPackageFragmentRoot[] fragmentRoots = findModuleContext(moduleReference.name());
+	if (fragmentRoots == null) return;
+	for (IPackageFragmentRoot root : fragmentRoots) {
+		IJavaProject requiredProject = root.getJavaProject();
+		try {
+			IModuleDescription module = requiredProject.getModuleDescription();
+			if (module instanceof AbstractModule) {
+				AbstractModule requiredModule = (AbstractModule) module;
+				for (IPackageExport packageExport : requiredModule.getExportedPackages()) {
+					if (!packageExport.isQualified() || CharOperation.containsEqual(packageExport.targets(), clientModuleName)) {
+						char[] exportName = packageExport.name();
+						if (isMatchAllPrefix || CharOperation.prefixEquals(prefix, exportName))
+							requestor.acceptPackage(exportName);
+					}
+				}
+				for (IModuleReference moduleRef2 : requiredModule.getRequiredModules()) {
+					if (moduleRef2.isTransitive())
+						findPackagesFromRequires(prefix, isMatchAllPrefix, requestor, moduleRef2, clientModuleName);
+				}
+			}
+		} catch (JavaModelException e) {
+			// silent
+		}
+	}
+}
 	/**
 	 * Find the top-level types that are defined
 	 * in the current environment and whose simple name matches the given name.

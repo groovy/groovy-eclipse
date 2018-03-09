@@ -214,7 +214,7 @@ public void evaluateCodeSnippet(
 			}
 		} else {
 			// try to retrieve imports from the source
-			SourceMapper sourceMapper = ((ClassFile) declaringType.getClassFile()).getSourceMapper();
+			SourceMapper sourceMapper = ((AbstractClassFile) declaringType.getClassFile()).getSourceMapper();
 			if (sourceMapper != null) {
 				char[][] imports = sourceMapper.getImports((BinaryType) declaringType);
 				if (imports != null) {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014, 2017 Mateusz Matela and others.
+ * Copyright (c) 2014, 2018 Mateusz Matela and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -161,6 +161,8 @@ public class CommentWrapExecutor extends TokenTraverser {
 			}
 		}
 
+		if (index > 1 && getNext() != null && (token.getAlign() + token.getIndent()) > 0)
+			this.counter = Math.max(this.counter, getStartingPosition(token));
 		this.counter += this.tm.getLength(token, this.counter);
 		this.counterIfWrapped += this.tm.getLength(token, this.counterIfWrapped);
 		this.counterIfWrappedSubstitute += this.tm.getLength(token, this.counterIfWrappedSubstitute);

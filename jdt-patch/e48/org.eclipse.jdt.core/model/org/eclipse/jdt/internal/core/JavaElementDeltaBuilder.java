@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -312,32 +312,37 @@ private void findContentChange(JavaElementInfo oldInfo, JavaElementInfo newInfo,
 					|| !equals(oldSourceTypeInfo.getTypeParameterBounds(), newSourceTypeInfo.getTypeParameterBounds())) {
 				this.delta.changed(newElement, IJavaElementDelta.F_CONTENT);
 			}
-			HashMap oldTypeCategories = oldSourceTypeInfo.categories;
-			HashMap newTypeCategories = newSourceTypeInfo.categories;
-			if (oldTypeCategories != null) {
-				// take the union of old and new categories elements (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=125675)
-				Set elements;
-				if (newTypeCategories != null) {
-					elements = new HashSet(oldTypeCategories.keySet());
-					elements.addAll(newTypeCategories.keySet());
-				} else
-					elements = oldTypeCategories.keySet();
-				Iterator iterator = elements.iterator();
-				while (iterator.hasNext()) {
-					IJavaElement element = (IJavaElement) iterator.next();
-					String[] oldCategories = (String[]) oldTypeCategories.get(element);
-					String[] newCategories = newTypeCategories == null ? null : (String[]) newTypeCategories.get(element);
-					if (!Util.equalArraysOrNull(oldCategories, newCategories)) {
-						this.delta.changed(element, IJavaElementDelta.F_CATEGORIES);
-					}
-				}
-			} else if (newTypeCategories != null) {
-				Iterator elements = newTypeCategories.keySet().iterator();
-				while (elements.hasNext()) {
-					IJavaElement element = (IJavaElement) elements.next();
-					this.delta.changed(element, IJavaElementDelta.F_CATEGORIES); // all categories for this element were removed
-				}
+			findCategoryChange(oldSourceTypeInfo.categories, newSourceTypeInfo.categories);
+		} else if (oldInfo instanceof ModuleDescriptionInfo && newInfo instanceof ModuleDescriptionInfo) {
+			ModuleDescriptionInfo oldSourceModuleInfo = (ModuleDescriptionInfo)oldInfo;
+			ModuleDescriptionInfo newSourceModuleInfo = (ModuleDescriptionInfo)newInfo;
+			findCategoryChange(oldSourceModuleInfo.getCategories(), newSourceModuleInfo.getCategories());
+		}
+	}
+}
+private void findCategoryChange(Map<IJavaElement, String[]> oldCategoriesMap, Map<IJavaElement, String[]> newCategoriesMap) {
+	if (oldCategoriesMap != null) {
+		// take the union of old and new categories elements (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=125675)
+		Set elements;
+		if (newCategoriesMap != null) {
+			elements = new HashSet(oldCategoriesMap.keySet());
+			elements.addAll(newCategoriesMap.keySet());
+		} else
+			elements = oldCategoriesMap.keySet();
+		Iterator iterator = elements.iterator();
+		while (iterator.hasNext()) {
+			IJavaElement element = (IJavaElement) iterator.next();
+			String[] oldCategories = oldCategoriesMap.get(element);
+			String[] newCategories = newCategoriesMap == null ? null : (String[]) newCategoriesMap.get(element);
+			if (!Util.equalArraysOrNull(oldCategories, newCategories)) {
+				this.delta.changed(element, IJavaElementDelta.F_CATEGORIES);
 			}
+		}
+	} else if (newCategoriesMap != null) {
+		Iterator elements = newCategoriesMap.keySet().iterator();
+		while (elements.hasNext()) {
+			IJavaElement element = (IJavaElement) elements.next();
+			this.delta.changed(element, IJavaElementDelta.F_CATEGORIES); // all categories for this element were removed
 		}
 	}
 }

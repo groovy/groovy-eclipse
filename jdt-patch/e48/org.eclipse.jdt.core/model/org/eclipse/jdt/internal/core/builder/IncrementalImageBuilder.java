@@ -39,9 +39,9 @@ public class IncrementalImageBuilder extends AbstractImageBuilder {
 
 protected LinkedHashSet<SourceFile> sourceFiles;
 protected LinkedHashSet<SourceFile> previousSourceFiles;
-protected StringSet qualifiedStrings;
-protected StringSet simpleStrings;
-protected StringSet rootStrings;
+protected Set<String> qualifiedStrings;
+protected Set<String> simpleStrings;
+protected Set<String> rootStrings;
 protected SimpleLookupTable secondaryTypesToRemove;
 protected boolean hasStructuralChanges;
 protected boolean makeOutputFolderConsistent;
@@ -217,22 +217,22 @@ protected void buildAfterBatchBuild() {
 }
 
 protected void addAffectedSourceFiles() {
-	if (this.qualifiedStrings.elementSize == 0 && this.simpleStrings.elementSize == 0) return;
+	if (this.qualifiedStrings.size() == 0 && this.simpleStrings.size() == 0) return;
 	if(this.testImageBuilder != null) {
 		this.testImageBuilder.addAffectedSourceFiles(this.qualifiedStrings, this.simpleStrings, this.rootStrings, null);
 	}
 	addAffectedSourceFiles(this.qualifiedStrings, this.simpleStrings, this.rootStrings, null);
 }
 
-protected void addAffectedSourceFiles(StringSet qualifiedSet, StringSet simpleSet, StringSet rootSet, StringSet affectedTypes) {
+protected void addAffectedSourceFiles(Set<String> qualifiedSet, Set<String> simpleSet, Set<String> rootSet, Set<String> affectedTypes) {
 	// the qualifiedStrings are of the form 'p1/p2' & the simpleStrings are just 'X'
 	char[][][] internedQualifiedNames = ReferenceCollection.internQualifiedNames(qualifiedSet);
 	// if a well known qualified name was found then we can skip over these
-	if (internedQualifiedNames.length < qualifiedSet.elementSize)
+	if (internedQualifiedNames.length < qualifiedSet.size())
 		internedQualifiedNames = null;
 	char[][] internedSimpleNames = ReferenceCollection.internSimpleNames(simpleSet, true);
 	// if a well known name was found then we can skip over these
-	if (internedSimpleNames.length < simpleSet.elementSize)
+	if (internedSimpleNames.length < simpleSet.size())
 		internedSimpleNames = null;
 	char[][] internedRootNames = ReferenceCollection.internSimpleNames(rootSet, false);
 
@@ -241,7 +241,7 @@ protected void addAffectedSourceFiles(StringSet qualifiedSet, StringSet simpleSe
 	next : for (int i = 0, l = valueTable.length; i < l; i++) {
 		String typeLocator = (String) keyTable[i];
 		if (typeLocator != null) {
-			if (affectedTypes != null && !affectedTypes.includes(typeLocator)) continue next;
+			if (affectedTypes != null && !affectedTypes.contains(typeLocator)) continue next;
 			ReferenceCollection refs = (ReferenceCollection) valueTable[i];
 			if (refs.includes(internedQualifiedNames, internedSimpleNames, internedRootNames)) {
 				IFile file = this.javaBuilder.currentProject.getFile(typeLocator);
@@ -263,7 +263,7 @@ protected void addDependentsOf(IPath path, boolean isStructuralChange) {
 	addDependentsOf(path, isStructuralChange, this.qualifiedStrings, this.simpleStrings, this.rootStrings);
 }
 
-protected void addDependentsOf(IPath path, boolean isStructuralChange, StringSet qualifiedNames, StringSet simpleNames, StringSet rootNames) {
+protected void addDependentsOf(IPath path, boolean isStructuralChange, Set<String> qualifiedNames, Set<String> simpleNames, Set<String> rootNames) {
 	path = path.setDevice(null);
 	if (isStructuralChange) {
 		String last = path.lastSegment();
@@ -833,9 +833,9 @@ protected void resetCollections() {
 	if (this.sourceFiles == null) {
 		this.sourceFiles = new LinkedHashSet<>(33);
 		this.previousSourceFiles = null;
-		this.qualifiedStrings = new StringSet(3);
-		this.simpleStrings = new StringSet(3);
-		this.rootStrings = new StringSet(3);
+		this.qualifiedStrings = new HashSet<>(3);
+		this.simpleStrings = new HashSet<>(3);
+		this.rootStrings = new HashSet<>(3);
 		this.hasStructuralChanges = false;
 	} else {
 		this.previousSourceFiles = this.sourceFiles.isEmpty() ? null : (LinkedHashSet) this.sourceFiles.clone();

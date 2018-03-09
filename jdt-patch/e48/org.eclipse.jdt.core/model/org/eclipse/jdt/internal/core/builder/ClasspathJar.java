@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.function.Predicate;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -234,7 +235,7 @@ public boolean equals(Object o) {
 }
 
 @Override
-public NameEnvironmentAnswer findClass(String binaryFileName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName, boolean asBinaryOnly) {
+public NameEnvironmentAnswer findClass(String binaryFileName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName, boolean asBinaryOnly, Predicate<String> moduleNameFilter) {
 	if (!isPackage(qualifiedPackageName, moduleName)) return null; // most common case
 
 	try {
@@ -359,7 +360,7 @@ public IModule getModule() {
 @Override
 public NameEnvironmentAnswer findClass(String typeName, String qualifiedPackageName, String moduleName, String qualifiedBinaryFileName) {
 	// 
-	return findClass(typeName, qualifiedPackageName, moduleName, qualifiedBinaryFileName, false);
+	return findClass(typeName, qualifiedPackageName, moduleName, qualifiedBinaryFileName, false, null);
 }
 public Manifest getManifest() {
 	scanContent(); // ensure zipFile is initialized

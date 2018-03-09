@@ -37,6 +37,7 @@ public class ModuleInfo extends ClassFileStruct implements IBinaryModule {
 	IModule.IService[] provides;
 
 	protected AnnotationInfo[] annotations;
+	private long tagBits;
 
 
 	@Override
@@ -85,6 +86,10 @@ public class ModuleInfo extends ClassFileStruct implements IBinaryModule {
 	@Override
 	public IBinaryAnnotation[] getAnnotations() {
 		return this.annotations;
+	}
+	@Override
+	public long getTagBits() {
+		return this.tagBits;
 	}
 	@Override
 	public void addReads(char[] modName) {
@@ -281,8 +286,9 @@ public class ModuleInfo extends ClassFileStruct implements IBinaryModule {
 			}
 		}
 	}
-	void setAnnotations(AnnotationInfo[] annotationInfos, boolean fullyInitialize) {
+	void setAnnotations(AnnotationInfo[] annotationInfos, long tagBits, boolean fullyInitialize) {
 		this.annotations = annotationInfos;
+		this.tagBits = tagBits;
 		if (fullyInitialize) {
 			for (int i = 0, max = annotationInfos.length; i < max; i++) {
 				annotationInfos[i].initialize();

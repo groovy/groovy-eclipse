@@ -8197,7 +8197,11 @@ public final class CompletionEngine
 			setSourceRange(
 				importReference.sourceStart,
 				importReference.declarationSourceEnd);
-			this.nameEnvironment.findPackages(importName, this);
+			try {
+				this.nameEnvironment.findPackages(importName, this, this.javaProject.getAllPackageFragmentRoots(), true);
+			} catch (JavaModelException e) {
+				// silent
+			}
 			setSourceRange(
 				oldStart,
 				oldEnd - 1,
@@ -10795,7 +10799,7 @@ public final class CompletionEngine
 	private void findPackagesInCurrentModule() {
 		try {
 			IPackageFragmentRoot[] moduleRoots = SearchableEnvironment.getOwnedPackageFragmentRoots(this.javaProject);
-			this.nameEnvironment.findPackages(CharOperation.toLowerCase(this.completionToken), this, moduleRoots);
+			this.nameEnvironment.findPackages(CharOperation.toLowerCase(this.completionToken), this, moduleRoots, false);
 		} catch (JavaModelException e) {
 			// silent
 		}
@@ -10807,7 +10811,11 @@ public final class CompletionEngine
 		setSourceRange(packageStatement.sourceStart, packageStatement.sourceEnd);
 		long completionPosition = packageStatement.sourcePositions[packageStatement.sourcePositions.length - 1];
 		setTokenRange((int) (completionPosition >>> 32), (int) completionPosition);
-		this.nameEnvironment.findPackages(CharOperation.toLowerCase(this.completionToken), this);
+		try {
+			this.nameEnvironment.findPackages(CharOperation.toLowerCase(this.completionToken), this, this.javaProject.getAllPackageFragmentRoots(), true);
+		} catch (JavaModelException e) {
+			// silent
+		}
 	}
 
 	private void findParameterizedType(TypeReference ref, Scope scope) {

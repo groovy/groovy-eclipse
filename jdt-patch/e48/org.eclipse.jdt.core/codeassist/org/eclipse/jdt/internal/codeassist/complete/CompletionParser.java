@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -657,10 +657,22 @@ protected void attachOrphanCompletionNode(){
 		}
 	}
 }
+
+private static class SavedState {
+	final ASTNode assistNodeParent;
+	final int parserCursorLocation;
+	final int scannerCursorLocation;
+
+	public SavedState(int parserCursorLocation, int scannerCursorLocation, ASTNode assistNodeParent) {
+		this.parserCursorLocation = parserCursorLocation;
+		this.scannerCursorLocation = scannerCursorLocation;
+		this.assistNodeParent = assistNodeParent;
+	}	
+}
 @Override
 public Object becomeSimpleParser() {
 	CompletionScanner completionScanner = (CompletionScanner)this.scanner;
-	int[] parserState = new int[] {this.cursorLocation, completionScanner.cursorLocation};
+	SavedState parserState = new SavedState(this.cursorLocation, completionScanner.cursorLocation, this.assistNodeParent);
 	
 	this.cursorLocation = Integer.MAX_VALUE;
 	completionScanner.cursorLocation = Integer.MAX_VALUE;
@@ -5470,12 +5482,13 @@ public void resetAfterCompletion() {
 }
 @Override
 public void restoreAssistParser(Object parserState) { 	
-	int[] state = (int[]) parserState;
+	SavedState state = (SavedState) parserState;
 	
 	CompletionScanner completionScanner = (CompletionScanner)this.scanner;
 	
-	this.cursorLocation = state[0];
-	completionScanner.cursorLocation = state[1];
+	this.cursorLocation = state.parserCursorLocation;
+	completionScanner.cursorLocation = state.scannerCursorLocation;
+	this.assistNodeParent = state.assistNodeParent;
 }
 @Override
 protected int resumeOnSyntaxError() {

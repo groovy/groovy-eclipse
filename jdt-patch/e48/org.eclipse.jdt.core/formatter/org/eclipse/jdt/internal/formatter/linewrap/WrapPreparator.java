@@ -899,6 +899,9 @@ public class WrapPreparator extends ASTVisitor {
 		assert this.wrapParentIndex >= 0 && this.wrapParentIndex < this.wrapIndexes.get(0);
 		assert this.wrapGroupEnd >= this.wrapIndexes.get(this.wrapIndexes.size() - 1);
 
+		while (this.tm.get(this.wrapParentIndex).isComment() && this.wrapParentIndex > 0)
+			this.wrapParentIndex--;
+
 		float penalty = this.wrapPenalties.isEmpty() ? 1 : this.wrapPenalties.get(0);
 		WrapPolicy policy = getWrapPolicy(wrappingOption, penalty, true, parentNode);
 

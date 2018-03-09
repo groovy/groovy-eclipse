@@ -2620,7 +2620,7 @@ public class ASTMatcher {
 	 * @since 3.14
 	 */
 	public boolean match(UsesDirective node, Object other) {
-		if (!(other instanceof UnionType)) {
+		if (!(other instanceof UsesDirective)) {
 			return false;
 		}
 		UsesDirective o = (UsesDirective) other;

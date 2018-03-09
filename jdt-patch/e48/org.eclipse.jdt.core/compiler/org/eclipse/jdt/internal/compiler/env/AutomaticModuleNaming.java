@@ -62,6 +62,22 @@ public class AutomaticModuleNaming {
 	}
 
 	/**
+	 * Determine the automatic module name of a given jar or project as defined by an Automatic-Module-Name
+	 * header in its manifest.
+	 * @param manifest representation of the META-INF/MANIFEST.MF entry within the given source (jar or project), or <code>null</code>
+	 * @return the derived module name or <code>null</code>
+	 */
+	public static char[] determineAutomaticModuleNameFromManifest(Manifest manifest) {
+		if (manifest != null) {
+			String automaticModuleName = manifest.getMainAttributes().getValue(AUTOMATIC_MODULE_NAME);
+			if (automaticModuleName != null) {
+				return automaticModuleName.toCharArray();
+			}
+		}
+		return null;
+	}
+
+	/**
 	 * Determine the automatic module name if no "Automatic-Module-Name" was found in the Manifest, as specified in
 	 * {@link <a href=
 	 * "http://download.java.net/java/jdk9/docs/api/java/lang/module/ModuleFinder.html#of-java.nio.file.Path...-">ModuleFinder.of</a>}

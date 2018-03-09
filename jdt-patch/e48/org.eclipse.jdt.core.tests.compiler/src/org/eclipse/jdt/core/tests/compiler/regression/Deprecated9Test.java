@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017 GK Software AG, and others.
+ * Copyright (c) 2017, 2018 GK Software SE, and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,7 +18,7 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 import junit.framework.Test;
 
-public class Deprecated9Test extends AbstractRegressionTest {
+public class Deprecated9Test extends AbstractRegressionTest9 {
 	public Deprecated9Test(String name) {
 		super(name);
 	}
@@ -350,6 +350,7 @@ public class Deprecated9Test extends AbstractRegressionTest {
 		Runner runner = new Runner();
 		runner.customOptions = new HashMap<>();
 		runner.customOptions.put(JavaCore.COMPILER_PB_DEPRECATION, CompilerOptions.WARNING);
+		runner.customOptions.put(JavaCore.COMPILER_PB_DEPRECATION_WHEN_OVERRIDING_DEPRECATED_METHOD, CompilerOptions.ENABLED);
 		runner.customOptions.put(JavaCore.COMPILER_PB_TERMINAL_DEPRECATION, CompilerOptions.ERROR);
 		runner.testFiles =
 			new String[] {
@@ -412,6 +413,11 @@ public class Deprecated9Test extends AbstractRegressionTest {
 			"	class E03 extends E01 {\n" + 
 			"	      ^^^\n" + 
 			"The constructor E01() is deprecated since version 3.0.0\n" + 
+			"----------\n" + 
+			"8. WARNING in test1\\E02.java (at line 11)\n" + 
+			"	protected void old() {}\n" + 
+			"	               ^^^^^\n" + 
+			"The method E02.E03.old() overrides a method from E01 that is deprecated since version 4-SNAPSHOT\n" + 
 			"----------\n";
 		runner.runWarningTest();
 	}
@@ -419,6 +425,7 @@ public class Deprecated9Test extends AbstractRegressionTest {
 		Runner runner = new Runner();
 		runner.customOptions = new HashMap<>();
 		runner.customOptions.put(JavaCore.COMPILER_PB_DEPRECATION, CompilerOptions.WARNING);
+		runner.customOptions.put(JavaCore.COMPILER_PB_DEPRECATION_WHEN_OVERRIDING_DEPRECATED_METHOD, CompilerOptions.ENABLED);
 		runner.customOptions.put(JavaCore.COMPILER_PB_TERMINAL_DEPRECATION, CompilerOptions.ERROR);
 		runner.testFiles =
 			new String[] {
@@ -487,6 +494,11 @@ public class Deprecated9Test extends AbstractRegressionTest {
 			"	class E03 extends E01 {\n" + 
 			"	      ^^^\n" + 
 			"The constructor E01() is deprecated since version 3.0.0\n" + 
+			"----------\n" + 
+			"8. WARNING in test1\\E02.java (at line 11)\n" + 
+			"	protected void old() {}\n" + 
+			"	               ^^^^^\n" + 
+			"The method E02.E03.old() overrides a method from E01 that is deprecated since version 4-SNAPSHOT\n" + 
 			"----------\n";
 		runner.runWarningTest();
 	}
@@ -494,6 +506,7 @@ public class Deprecated9Test extends AbstractRegressionTest {
 		Runner runner = new Runner();
 		runner.customOptions = new HashMap<>();
 		runner.customOptions.put(JavaCore.COMPILER_PB_DEPRECATION, CompilerOptions.WARNING);
+		runner.customOptions.put(JavaCore.COMPILER_PB_DEPRECATION_WHEN_OVERRIDING_DEPRECATED_METHOD, CompilerOptions.ENABLED);
 		runner.customOptions.put(JavaCore.COMPILER_PB_TERMINAL_DEPRECATION, CompilerOptions.ERROR);
 		runner.testFiles =
 			new String[] {
@@ -556,10 +569,287 @@ public class Deprecated9Test extends AbstractRegressionTest {
 			"	class E03 extends E01 {\n" + 
 			"	      ^^^\n" + 
 			"The constructor E01() has been deprecated since version 3.0.0 and marked for removal\n" + 
+			"----------\n" + 
+			"8. ERROR in test1\\E02.java (at line 11)\n" + 
+			"	protected void old() {}\n" + 
+			"	               ^^^^^\n" + 
+			"The method E02.E03.old() overrides a method from E01 that has been deprecated since version 4-SNAPSHOT and marked for removal\n" + 
 			"----------\n";
 		runner.javacTestOptions =
 			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError;
 		runner.runNegativeTest();
+	}
+	public void testDeprecatedPackageExport() {
+		associateToModule("mod1",
+				"p1/package-info.java", "p1/C1.java",
+				"p2/package-info.java", "p2/C2.java",
+				"p3/package-info.java", "p3/C3.java",
+				"p4/package-info.java", "p4/C4.java");
+		Runner runner = new Runner();
+		runner.customOptions = new HashMap<>();
+		runner.customOptions.put(JavaCore.COMPILER_PB_DEPRECATION, CompilerOptions.WARNING);
+		runner.customOptions.put(JavaCore.COMPILER_PB_TERMINAL_DEPRECATION, CompilerOptions.ERROR);
+		runner.testFiles =
+			new String[] {
+				"p1/package-info.java",
+				"@Deprecated package p1;\n",
+				"p1/C1.java",
+				"package p1; public class C1 {}\n",
+				"p2/package-info.java",
+				"@Deprecated(since=\"13\") package p2;\n",
+				"p2/C2.java",
+				"package p2; public class C2 {}\n",
+				"p3/package-info.java",
+				"@Deprecated(since=\"13\",forRemoval=true) package p3;\n",
+				"p3/C3.java",
+				"package p3; public class C3 {}\n",
+				"p4/package-info.java",
+				"@Deprecated(since=\"14\",forRemoval=true) package p4;\n",
+				"p4/C4.java",
+				"package p4; public class C4 {}\n",
+				"module-info.java",
+				"module mod1 {\n" +
+				"	exports p1;\n" +
+				"	exports p2;\n" +
+				"	exports p3;\n" +
+				"	opens p4;\n" +
+				"}\n"
+			};
+		runner.expectedCompilerLog =
+				"----------\n" + 
+				"1. WARNING in module-info.java (at line 2)\n" +
+				"	exports p1;\n" + 
+				"	        ^^\n" + 
+				"The package p1 is deprecated\n" + 
+				"----------\n" + 
+				"2. WARNING in module-info.java (at line 3)\n" + 
+				"	exports p2;\n" + 
+				"	        ^^\n" + 
+				"The package p2 is deprecated since version 13\n" +
+				"----------\n" + 
+				"3. ERROR in module-info.java (at line 4)\n" + 
+				"	exports p3;\n" + 
+				"	        ^^\n" + 
+				"The package p3 has been deprecated since version 13 and marked for removal\n" +
+				"----------\n" + 
+				"4. ERROR in module-info.java (at line 5)\n" + 
+				"	opens p4;\n" + 
+				"	      ^^\n" + 
+				"The package p4 has been deprecated since version 14 and marked for removal\n" +
+				"----------\n";
+		runner.runNegativeTest();
+	}
+	public void testDeprecatedModule() {
+		Runner runner = new Runner();
+		runner.customOptions = new HashMap<>();
+		runner.customOptions.put(JavaCore.COMPILER_PB_DEPRECATION, CompilerOptions.WARNING);
+		runner.customOptions.put(JavaCore.COMPILER_PB_TERMINAL_DEPRECATION, CompilerOptions.ERROR);
+		runner.testFiles =
+			new String[] {
+				"folder0/module-info.java",
+				"@Deprecated module mod.dep {}\n",
+				"folder1/module-info.java",
+				"@Deprecated(since=\"42\") module mod.dep.since {}\n",
+				"folder2/module-info.java",
+				"@Deprecated(forRemoval=true) module mod.dep.terminally {}\n",
+				"folder3/module-info.java",
+				"@Deprecated(since=\"42\",forRemoval=true) module mod.dep.since.terminally {}\n",
+				"module-info.java",
+				"module mod1 {\n" +
+				"	requires mod.dep;\n" +
+				"	requires mod.dep.since;\n" +
+				"	requires mod.dep.terminally;\n" +
+				"	requires mod.dep.since.terminally;\n" +
+				"}\n"
+			};
+		runner.expectedCompilerLog =
+			"----------\n" + 
+			"1. WARNING in module-info.java (at line 2)\n" + 
+			"	requires mod.dep;\n" + 
+			"	         ^^^^^^^\n" + 
+			"The module mod.dep is deprecated\n" + 
+			"----------\n" + 
+			"2. WARNING in module-info.java (at line 3)\n" + 
+			"	requires mod.dep.since;\n" + 
+			"	         ^^^^^^^^^^^^^\n" + 
+			"The module mod.dep.since is deprecated since version 42\n" + 
+			"----------\n" + 
+			"3. ERROR in module-info.java (at line 4)\n" + 
+			"	requires mod.dep.terminally;\n" + 
+			"	         ^^^^^^^^^^^^^^^^^^\n" + 
+			"The module mod.dep.terminally has been deprecated and marked for removal\n" + 
+			"----------\n" + 
+			"4. ERROR in module-info.java (at line 5)\n" + 
+			"	requires mod.dep.since.terminally;\n" + 
+			"	         ^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+			"The module mod.dep.since.terminally has been deprecated since version 42 and marked for removal\n" + 
+			"----------\n";
+		runner.runNegativeTest();
+	}
+	public void testDeprecatedProvidedServices() {
+		associateToModule("mod0", "p1/IServiceDep.java", "p1/IServiceDepSince.java", "p1/IServiceTermDep.java", "p1/IServiceTermDepSince.java");
+		associateToModule("mod1", "p1impl/ServiceDep.java", "p1impl/ServiceDepSince.java", "p1impl/ServiceTermDep.java", "p1impl/ServiceTermDepSince.java");
+		Runner runner = new Runner();
+		runner.customOptions = new HashMap<>();
+		runner.customOptions.put(JavaCore.COMPILER_PB_DEPRECATION, CompilerOptions.INFO);
+		runner.customOptions.put(JavaCore.COMPILER_PB_TERMINAL_DEPRECATION, CompilerOptions.WARNING);
+		runner.testFiles =
+			new String[] {
+				"p1/IServiceDep.java",
+				"package p1;\n" +
+				"@Deprecated\n" +
+				"public interface IServiceDep {}\n",
+				"p1/IServiceDepSince.java",
+				"package p1;\n" +
+				"@Deprecated(since=\"2\")\n" +
+				"public interface IServiceDepSince {}\n",
+				"p1/IServiceTermDep.java",
+				"package p1;\n" +
+				"@Deprecated(forRemoval=true)\n" +
+				"public interface IServiceTermDep {}\n",
+				"p1/IServiceTermDepSince.java",
+				"package p1;\n" +
+				"@Deprecated(since=\"3\",forRemoval=true)\n" +
+				"public interface IServiceTermDepSince {}\n",
+				"module-info.java",
+				"module mod0 {\n" +
+				"	exports p1;\n" +
+				"}\n",
+				"p1impl/ServiceDep.java",
+				"package p1impl;\n" +
+				"@Deprecated\n" +
+				"public class ServiceDep implements p1.IServiceDep {}\n",
+				"p1impl/ServiceDepSince.java",
+				"package p1impl;\n" +
+				"@Deprecated(since=\"2\")\n" +
+				"public class ServiceDepSince implements p1.IServiceDepSince {}\n",
+				"p1impl/ServiceTermDep.java",
+				"package p1impl;\n" +
+				"@Deprecated(forRemoval=true)\n" +
+				"public class ServiceTermDep implements p1.IServiceTermDep {}\n",
+				"p1impl/ServiceTermDepSince.java",
+				"package p1impl;\n" +
+				"@Deprecated(since=\"3\",forRemoval=true)\n" +
+				"public class ServiceTermDepSince implements p1.IServiceTermDepSince {}\n",
+				"folder2/module-info.java",
+				"module mod1 {\n" +
+				"	requires mod0;\n" +
+				"	provides p1.IServiceDep with p1impl.ServiceDep;\n" +
+				"	provides p1.IServiceDepSince with p1impl.ServiceDepSince;\n" +
+				"	provides p1.IServiceTermDep with p1impl.ServiceTermDep;\n" +
+				"	provides p1.IServiceTermDepSince with p1impl.ServiceTermDepSince;\n" +
+				"}\n"
+			};
+		runner.expectedCompilerLog =
+			"----------\n" + 
+			"1. INFO in folder2\\module-info.java (at line 3)\n" + 
+			"	provides p1.IServiceDep with p1impl.ServiceDep;\n" + 
+			"	            ^^^^^^^^^^^\n" + 
+			"The type IServiceDep is deprecated\n" + 
+			"----------\n" + 
+			"2. INFO in folder2\\module-info.java (at line 3)\n" + 
+			"	provides p1.IServiceDep with p1impl.ServiceDep;\n" + 
+			"	                                    ^^^^^^^^^^\n" + 
+			"The type ServiceDep is deprecated\n" + 
+			"----------\n" + 
+			"3. INFO in folder2\\module-info.java (at line 4)\n" + 
+			"	provides p1.IServiceDepSince with p1impl.ServiceDepSince;\n" + 
+			"	            ^^^^^^^^^^^^^^^^\n" + 
+			"The type IServiceDepSince is deprecated since version 2\n" + 
+			"----------\n" + 
+			"4. INFO in folder2\\module-info.java (at line 4)\n" + 
+			"	provides p1.IServiceDepSince with p1impl.ServiceDepSince;\n" + 
+			"	                                         ^^^^^^^^^^^^^^^\n" + 
+			"The type ServiceDepSince is deprecated since version 2\n" + 
+			"----------\n" + 
+			"5. WARNING in folder2\\module-info.java (at line 5)\n" + 
+			"	provides p1.IServiceTermDep with p1impl.ServiceTermDep;\n" + 
+			"	            ^^^^^^^^^^^^^^^\n" + 
+			"The type IServiceTermDep has been deprecated and marked for removal\n" + 
+			"----------\n" + 
+			"6. WARNING in folder2\\module-info.java (at line 5)\n" + 
+			"	provides p1.IServiceTermDep with p1impl.ServiceTermDep;\n" + 
+			"	                                        ^^^^^^^^^^^^^^\n" + 
+			"The type ServiceTermDep has been deprecated and marked for removal\n" + 
+			"----------\n" + 
+			"7. WARNING in folder2\\module-info.java (at line 6)\n" + 
+			"	provides p1.IServiceTermDepSince with p1impl.ServiceTermDepSince;\n" + 
+			"	            ^^^^^^^^^^^^^^^^^^^^\n" + 
+			"The type IServiceTermDepSince has been deprecated since version 3 and marked for removal\n" + 
+			"----------\n" + 
+			"8. WARNING in folder2\\module-info.java (at line 6)\n" + 
+			"	provides p1.IServiceTermDepSince with p1impl.ServiceTermDepSince;\n" + 
+			"	                                             ^^^^^^^^^^^^^^^^^^^\n" + 
+			"The type ServiceTermDepSince has been deprecated since version 3 and marked for removal\n" + 
+			"----------\n";
+		runner.runWarningTest();
+	}
+	public void testDeprecatedUsedServices() {
+		associateToModule("mod0", "p1/IServiceDep.java", "p1/IServiceDepSince.java", "p1/IServiceTermDep.java", "p1/IServiceTermDepSince.java");
+		Runner runner = new Runner();
+		runner.customOptions = new HashMap<>();
+		runner.customOptions.put(JavaCore.COMPILER_PB_DEPRECATION, CompilerOptions.INFO);
+		runner.customOptions.put(JavaCore.COMPILER_PB_TERMINAL_DEPRECATION, CompilerOptions.WARNING);
+		runner.testFiles =
+			new String[] {
+				"p1/IServiceDep.java",
+				"package p1;\n" +
+				"@Deprecated\n" +
+				"public interface IServiceDep {}\n",
+				"p1/IServiceDepSince.java",
+				"package p1;\n" +
+				"@Deprecated(since=\"2\")\n" +
+				"public interface IServiceDepSince {}\n",
+				"p1/IServiceTermDep.java",
+				"package p1;\n" +
+				"@Deprecated(forRemoval=true)\n" +
+				"public interface IServiceTermDep {}\n",
+				"p1/IServiceTermDepSince.java",
+				"package p1;\n" +
+				"@Deprecated(since=\"3\",forRemoval=true)\n" +
+				"public interface IServiceTermDepSince {}\n",
+				"module-info.java",
+				"module mod0 {\n" +
+				"	exports p1;\n" +
+				"}\n",
+			};
+		runner.runConformTest();
+		
+		runner.shouldFlushOutputDirectory = false;
+		runner.testFiles =
+			new String[] {
+				"module-info.java",
+				"module mod2 {\n" +
+				"	requires mod0;\n" +
+				"	uses p1.IServiceDep;\n" +
+				"	uses p1.IServiceDepSince;\n" +
+				"	uses p1.IServiceTermDep;\n" +
+				"	uses p1.IServiceTermDepSince;\n" +
+				"}\n"
+			};
+		runner.expectedCompilerLog =
+			"----------\n" + 
+			"1. INFO in module-info.java (at line 3)\n" + 
+			"	uses p1.IServiceDep;\n" + 
+			"	        ^^^^^^^^^^^\n" + 
+			"The type IServiceDep is deprecated\n" + 
+			"----------\n" + 
+			"2. INFO in module-info.java (at line 4)\n" + 
+			"	uses p1.IServiceDepSince;\n" + 
+			"	        ^^^^^^^^^^^^^^^^\n" + 
+			"The type IServiceDepSince is deprecated since version 2\n" + 
+			"----------\n" + 
+			"3. WARNING in module-info.java (at line 5)\n" + 
+			"	uses p1.IServiceTermDep;\n" + 
+			"	        ^^^^^^^^^^^^^^^\n" + 
+			"The type IServiceTermDep has been deprecated and marked for removal\n" + 
+			"----------\n" + 
+			"4. WARNING in module-info.java (at line 6)\n" + 
+			"	uses p1.IServiceTermDepSince;\n" + 
+			"	        ^^^^^^^^^^^^^^^^^^^^\n" + 
+			"The type IServiceTermDepSince has been deprecated since version 3 and marked for removal\n" + 
+			"----------\n";
+		runner.runWarningTest();
 	}
 	public static Class<?> testClass() {
 		return Deprecated9Test.class;

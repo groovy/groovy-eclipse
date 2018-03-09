@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2009 IBM Corporation and others.
+ * Copyright (c) 2005, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -22,9 +22,11 @@ public class CompilationParticipantResult extends BuildContext {
 	protected IFile[] deletedFiles; // previously generated source files that should be deleted
 	protected CategorizedProblem[] problems; // new problems to report against this compilationUnit
 	protected String[] dependencies; // fully-qualified type names of any new dependencies, each name is of the form 'p1.p2.A.B'
+	private boolean isTestCode;
 
-protected CompilationParticipantResult(SourceFile sourceFile) {
+protected CompilationParticipantResult(SourceFile sourceFile, boolean isTestCode) {
 	this.sourceFile = sourceFile;
+	this.isTestCode = isTestCode;
 	this.hasAnnotations = false;
 	this.addedFiles = null;
 	this.deletedFiles = null;
@@ -152,4 +154,8 @@ public String toString() {
 	return this.sourceFile.toString();
 }
 
+@Override
+public boolean isTestCode() {
+	return this.isTestCode;
+}
 }

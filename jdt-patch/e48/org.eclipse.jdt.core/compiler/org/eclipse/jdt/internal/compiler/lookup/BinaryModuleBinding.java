@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017 GK Software AG, and others.
+ * Copyright (c) 2017, 2018 GK Software SE, and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -28,13 +28,20 @@ public class BinaryModuleBinding extends ModuleBinding {
 	
 	private static class AutomaticModuleBinding extends ModuleBinding {
 
+		boolean autoNameFromManifest;
+
 		public AutomaticModuleBinding(IModule module, LookupEnvironment existingEnvironment) {
 			super(module.name(), existingEnvironment);
 			existingEnvironment.root.knownModules.put(this.moduleName, this);
 			this.isAuto = true;
+			this.autoNameFromManifest = module.isAutoNameFromManifest();
 			this.requires = Binding.NO_MODULES;
 			this.requiresTransitive = Binding.NO_MODULES;
 			this.exportedPackages = Binding.NO_PACKAGES;
+		}
+		@Override
+		public boolean hasUnstableAutoName() {
+			return !this.autoNameFromManifest;
 		}
 		@Override
 		public ModuleBinding[] getRequiresTransitive() {
@@ -118,7 +125,6 @@ public class BinaryModuleBinding extends ModuleBinding {
 
 		IBinaryAnnotation[] annotations = binaryModule.getAnnotations();
 		if (annotations != null) {
-			long annotationBit = 0L;
 			int nullness = NO_NULL_DEFAULT;
 			int length = annotations.length;
 			for (int i = 0; i < length; i++) {
@@ -128,23 +134,10 @@ public class BinaryModuleBinding extends ModuleBinding {
 				int typeBit = this.environment.getNullAnnotationBit(BinaryTypeBinding.signature2qualifiedTypeName(annotationTypeName));
 				if (typeBit == TypeIds.BitNonNullByDefaultAnnotation) {
 					// using NonNullByDefault we need to inspect the details of the value() attribute:
-					nullness = BinaryTypeBinding.getNonNullByDefaultValue(annotations[i], this.environment);
-					if (nullness == NULL_UNSPECIFIED_BY_DEFAULT) {
-						annotationBit = TagBits.AnnotationNullUnspecifiedByDefault;
-					} else if (nullness != 0) {
-						annotationBit = TagBits.AnnotationNonNullByDefault;
-						if (nullness == Binding.NONNULL_BY_DEFAULT && this.environment.usesNullTypeAnnotations()) {
-							// reading a decl-nnbd in a project using type annotations, mimic corresponding semantics by enumerating:
-							nullness |= Binding.DefaultLocationParameter | Binding.DefaultLocationReturnType | Binding.DefaultLocationField;
-						}
-					}
-					this.defaultNullness = nullness;
-					break;
+					nullness |= BinaryTypeBinding.getNonNullByDefaultValue(annotations[i], this.environment);
 				}
 			}
-			if (annotationBit != 0L) {
-				this.tagBits |= annotationBit;
-			}
+			this.defaultNullness = nullness;
 		}
 	}
 

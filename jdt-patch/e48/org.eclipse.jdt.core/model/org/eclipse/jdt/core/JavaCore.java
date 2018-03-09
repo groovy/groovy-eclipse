@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -110,13 +110,21 @@
 
 package org.eclipse.jdt.core;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.zip.ZipFile;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -153,6 +161,11 @@ import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.TypeNameRequestor;
 import org.eclipse.jdt.core.util.IAttributeNamesConstants;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
+import org.eclipse.jdt.internal.compiler.env.AutomaticModuleNaming;
+import org.eclipse.jdt.internal.compiler.env.IModule;
+import org.eclipse.jdt.internal.compiler.env.IModule.IModuleReference;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
 import org.eclipse.jdt.internal.core.BatchOperation;
@@ -168,6 +181,7 @@ import org.eclipse.jdt.internal.core.JavaCorePreferenceInitializer;
 import org.eclipse.jdt.internal.core.JavaModel;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.JavaProject;
+import org.eclipse.jdt.internal.core.PackageFragmentRoot;
 import org.eclipse.jdt.internal.core.Region;
 import org.eclipse.jdt.internal.core.SetContainerOperation;
 import org.eclipse.jdt.internal.core.SetVariablesOperation;
@@ -1618,6 +1632,27 @@ public final class JavaCore extends Plugin {
 	public static final String COMPILER_PB_API_LEAKS = PLUGIN_ID + ".compiler.problem.APILeak"; //$NON-NLS-1$
 	
 	/**
+	 * Compiler option ID: Reporting when a module requires an auto module with an unstable name.
+	 * <p>
+	 * The name of an auto module name is considered unstable when it is derived from a file name rather than
+	 * being declared in the module's MANIFEST.MF.
+	 * <p>
+	 * When enabled, the compiler will issue an error or warning when a module references an auto module
+	 * with an unstable name in its 'requires' clause.
+	 * <dl>
+	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.problem.unstableAutoModuleName"</code></dd>
+	 * <dt>Possible values:</dt>
+	 * <dd><code>{ "error", "warning", "info", "ignore" }</code></dd>
+	 * <dt>Default:</dt><dd><code>"warning"</code></dd>
+	 * </dl>
+	 * 
+	 * @since 3.14
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_PB_UNSTABLE_AUTO_MODULE_NAME = PLUGIN_ID + ".compiler.problem.unstableAutoModuleName"; //$NON-NLS-1$
+
+	
+	/**
 	 * Compiler option ID: Annotation-based Null Analysis.
 	 * <p>This option controls whether the compiler will use null annotations for
 	 *    improved analysis of (potential) null references.</p>
@@ -2050,6 +2085,22 @@ public final class JavaCore extends Plugin {
 	 * @see #setComplianceOptions(String, Map)
 	 */
 	public static final String COMPILER_COMPLIANCE = PLUGIN_ID + ".compiler.compliance"; //$NON-NLS-1$
+	/**
+	 * Compiler option ID: Use system libraries from release.
+	 * <p>When enabled, the compiler will compile against the system libraries from release
+	 * of the specified compliance level</p>
+	 * <p>Setting this option sets the {@link #COMPILER_CODEGEN_TARGET_PLATFORM}) and {@link #COMPILER_SOURCE} to
+	 * the same level as the compiler compliance. This option is available to a project only when a supporting 
+	 * JDK is found in the project's build path</p>
+	 * <dl>
+	 * <dt>Option id:</dt><dd><code>"org.eclipse.jdt.core.compiler.release"</code></dd>
+	 * <dt>Possible values:</dt><dd><code>{ "enabled", "disabled" }</code></dd>
+	 * <dt>Default:</dt><dd><code>"disabled"</code></dd>
+	 * </dl>
+	 * @since 3.14
+	 * @category CompilerOptionID
+	 */
+	public static final String COMPILER_RELEASE = PLUGIN_ID + ".compiler.release"; //$NON-NLS-1$
 	/**
 	 * Compiler option ID: Defining the Automatic Task Priorities.
 	 * <p>In parallel with the Automatic Task Tags, this list defines the priorities (high, normal or low)
@@ -5986,6 +6037,43 @@ public final class JavaCore extends Plugin {
 	}
 
 	/**
+	 * Returns the <code>IModuleDescription</code> that the given java element contains 
+	 * when regarded as an automatic module. The element must be an <code>IPackageFragmentRoot</code>
+	 * or an <code>IJavaProject</code>.
+	 * 
+	 * <p>The returned module descriptor has a name (<code>getElementName()</code>) following
+	 * the specification of <code>java.lang.module.ModuleFinder.of(Path...)</code>, but it
+	 * contains no other useful information.</p>
+	 * 
+	 * @return the <code>IModuleDescription</code> representing this java element as an automatic module,
+	 * 		never <code>null</code>.
+	 * @throws JavaModelException
+	 * @throws IllegalArgumentException if the provided element is neither <code>IPackageFragmentRoot</code>
+	 * 	nor <code>IJavaProject</code>
+	 * @since 3.14
+	 */
+	public static IModuleDescription getAutomaticModuleDescription(IJavaElement element) throws JavaModelException, IllegalArgumentException {
+		switch (element.getElementType()) {
+			case IJavaElement.JAVA_PROJECT:
+				return ((JavaProject) element).getAutomaticModuleDescription();
+			case IJavaElement.PACKAGE_FRAGMENT_ROOT:
+				return ((PackageFragmentRoot) element).getAutomaticModuleDescription();
+			default:
+				throw new IllegalArgumentException("Illegal kind of java element: "+element.getElementType()); //$NON-NLS-1$
+		}
+	}
+
+	/**
+	 * Filter the given set of system roots by the rules for root modules from JEP 261.
+	 * @param allSystemRoots all physically available system modules, represented by their package fragment roots
+	 * @return the list of names of default root modules
+	 * @since 3.14
+	 */
+	public static List<String> defaultRootModules(Iterable<IPackageFragmentRoot> allSystemRoots) {
+		return JavaProject.defaultRootModules(allSystemRoots);
+	}
+
+	/**
 	 * Compile the given module description in the context of its enclosing Java project
 	 * and add class file attributes using the given map of attribute values.
 	 * <p>In this map, the following keys are supported</p>
@@ -6018,6 +6106,71 @@ public final class JavaCore extends Plugin {
 	{
 		return new ModuleInfoBuilder().compileWithAttributes(module, classFileAttributes);
 	}
+
+	/**
+	 * Returns the module name computed for a jar. If the file is a jar and contains a module-info.class, the name
+	 * specified in it is used, otherwise, the algorithm for automatic module naming is used, which first looks for a
+	 * module name in the Manifest.MF and as last resort computes it from the file name.
+	 * 
+	 * @param file the jar to examine
+	 * @return null if file is not a file, otherwise the module name.
+	 * @since 3.14
+	 */
+	public static String getModuleNameFromJar(File file) {
+		if (!file.isFile()) {
+			return null;
+		}
+
+		char[] moduleName = null;
+		try (ZipFile zipFile = new ZipFile(file)) {
+			IModule module = null;
+			ClassFileReader reader = ClassFileReader.read(zipFile, IModule.MODULE_INFO_CLASS);
+			if (reader != null) {
+				module = reader.getModuleDeclaration();
+				if (module != null) {
+					moduleName = module.name();
+				}
+			}
+		} catch (ClassFormatException | IOException ex) {
+			Util.log(ex);
+		}
+		if (moduleName == null) {
+			moduleName = AutomaticModuleNaming.determineAutomaticModuleName(file.getAbsolutePath());
+		}
+		return new String(moduleName);
+	}
+	
+	/**
+	 * Returns the names of the modules required by the module-info.class in the jar. If the file is not jar or a jar
+	 * that has no module-info.class is present, the empty set is returned.
+	 * 
+	 * @param file the jar to examine
+	 * @return set of module names.
+	 * @since 3.14
+	 */
+	public static Set<String> getRequiredModulesFromJar(File file) {
+		if (!file.isFile()) {
+			return Collections.emptySet();
+		}
+		try (ZipFile zipFile = new ZipFile(file)) {
+			IModule module = null;
+			ClassFileReader reader = ClassFileReader.read(zipFile, IModule.MODULE_INFO_CLASS);
+			if (reader != null) {
+				module = reader.getModuleDeclaration();
+				if (module != null) {
+					IModuleReference[] moduleRefs = module.requires();
+					if (moduleRefs != null) {
+						return Stream.of(moduleRefs).map(m -> new String(m.name()))
+								.collect(Collectors.toCollection(LinkedHashSet::new));
+					}
+				}
+			}
+		} catch (ClassFormatException | IOException ex) {
+			Util.log(ex);
+		}
+		return Collections.emptySet();
+	}
+
 
 	/* (non-Javadoc)
 	 * Shutdown the JavaCore plug-in.

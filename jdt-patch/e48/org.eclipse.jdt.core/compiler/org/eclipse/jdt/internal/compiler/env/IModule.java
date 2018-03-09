@@ -79,14 +79,19 @@ public interface IModule {
 	public default boolean isAutomatic() {
 		return false;
 	}
+	public default boolean isAutoNameFromManifest() {
+		return false;
+	}
 	public abstract boolean isOpen();
 
 
-	public static IModule createAutomatic(char[] moduleName) {
+	public static IModule createAutomatic(char[] moduleName, boolean fromManifest) {
 		final class AutoModule implements IModule {
 			char[] name;
-			public AutoModule(char[] name) {
+			boolean nameFromManifest;
+			public AutoModule(char[] name, boolean nameFromManifest) {
 				this.name = name;
+				this.nameFromManifest = nameFromManifest;
 			}
 			@Override
 			public char[] name() {
@@ -123,14 +128,24 @@ public interface IModule {
 				return true;
 			}
 			@Override
+			public boolean isAutoNameFromManifest() {
+				return this.nameFromManifest;
+			}
+			@Override
 			public boolean isOpen() {
 				return false;
 			}
 		}
-		return new AutoModule(moduleName);
+		return new AutoModule(moduleName, fromManifest);
 	}
 
 	public static IModule createAutomatic(String fileName, boolean isFile, Manifest manifest) {
-		return createAutomatic(AutomaticModuleNaming.determineAutomaticModuleName(fileName, isFile, manifest));
+		boolean fromManifest = true;
+		char[] inferredName = AutomaticModuleNaming.determineAutomaticModuleNameFromManifest(manifest);
+		if (inferredName == null) {
+			fromManifest = false;
+			inferredName = AutomaticModuleNaming.determineAutomaticModuleNameFromFileName(fileName, true, isFile);
+		}
+		return createAutomatic(inferredName, fromManifest);
 	}
 }
