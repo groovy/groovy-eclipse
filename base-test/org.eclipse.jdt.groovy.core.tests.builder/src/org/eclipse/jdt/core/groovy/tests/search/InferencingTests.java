@@ -25,7 +25,6 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public final class InferencingTests extends InferencingTestSuite {
@@ -155,51 +154,8 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 1, "java.math.BigDecimal");
     }
 
-    @Test @Ignore("not yet implemented")
-    public void testLocalVar7() {
-        String contents = "def x\n" +
-            "x = 1\n" +
-            "if (predicate()) {\n" +
-            "  x = 1.0d\n" +
-            "}\n" +
-            "x";
-
-        int offset = contents.indexOf("x");
-        assertType(contents, offset, offset + 1, "java.lang.Object");
-
-        offset = contents.indexOf("x", offset + 1);
-        assertType(contents, offset, offset + 1, "java.lang.Integer");
-
-        offset = contents.indexOf("x", offset + 1);
-        assertType(contents, offset, offset + 1, "java.lang.Double");
-
-        offset = contents.indexOf("x", offset + 1);
-        assertType(contents, offset, offset + 1, "java.lang.Number");
-    }
-
-    @Test @Ignore("not yet implemented")
-    public void testLocalVar7a() {
-        String contents = "def x\n" +
-            "x = 1\n" +
-            "if (predicate())\n" +
-            "  x = 1.0d\n" +
-            "x";
-
-        int offset = contents.indexOf("x");
-        assertType(contents, offset, offset + 1, "java.lang.Object");
-
-        offset = contents.indexOf("x", offset + 1);
-        assertType(contents, offset, offset + 1, "java.lang.Integer");
-
-        offset = contents.indexOf("x", offset + 1);
-        assertType(contents, offset, offset + 1, "java.lang.Double");
-
-        offset = contents.indexOf("x", offset + 1);
-        assertType(contents, offset, offset + 1, "java.lang.Number");
-    }
-
     @Test
-    public void testLocalVar8() {
+    public void testLocalVar7() {
         String contents = "def m() {\n" +
             "  def x\n" +
             "  x = 1\n" +
@@ -224,7 +180,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testLocalVar8a() {
+    public void testLocalVar7a() {
         String contents = "def m() {\n" +
             "  def x\n" +
             "  x = 1\n" +
@@ -246,14 +202,56 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 1, "java.lang.Integer");
     }
 
-    @Test @Ignore("not yet implemented")
+    @Test
+    public void testLocalVar8() {
+        String contents = "def x\n" +
+            "x = [] as List\n" +
+            "if (predicate()) {\n" +
+            "  x = [] as Set\n" +
+            "}\n" +
+            "x";
+
+        int offset = contents.indexOf("x");
+        assertType(contents, offset, offset + 1, "java.lang.Object");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.util.List");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.util.Set");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.util.Collection<java.lang.Object>");
+    }
+
+    @Test
+    public void testLocalVar8a() {
+        String contents = "def x\n" +
+            "x = [] as List\n" +
+            "if (predicate())\n" +
+            "  x = [] as Set\n" +
+            "x";
+
+        int offset = contents.indexOf("x");
+        assertType(contents, offset, offset + 1, "java.lang.Object");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.util.List");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.util.Set");
+
+        offset = contents.indexOf("x", offset + 1);
+        assertType(contents, offset, offset + 1, "java.util.Collection<java.lang.Object>");
+    }
+
+    @Test
     public void testLocalVar9() {
         String contents = "def x\n" +
-            "x = ''\n" +
             "if (predicate()) {\n" +
-            "  x = 1.0d\n" +
+            "  x = new String()\n" +
             "} else {\n" +
-            "  x = 1.00\n" +
+            "  x = new StringBuffer()\n" +
             "}\n" +
             "x";
 
@@ -264,23 +262,19 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 1, "java.lang.String");
 
         offset = contents.indexOf("x", offset + 1);
-        assertType(contents, offset, offset + 1, "java.lang.Double");
+        assertType(contents, offset, offset + 1, "java.lang.StringBuffer");
 
         offset = contents.indexOf("x", offset + 1);
-        assertType(contents, offset, offset + 1, "java.math.BigDecimal");
-
-        offset = contents.indexOf("x", offset + 1);
-        assertType(contents, offset, offset + 1, "java.lang.Number");
+        assertType(contents, offset, offset + 1, "java.lang.Object"); // TODO: java.lang.CharSequence
     }
 
-    @Test @Ignore("not yet implemented")
+    @Test
     public void testLocalVar9a() {
         String contents = "def x\n" +
-            "x = ''\n" +
             "if (predicate())\n" +
-            "  x = 1.0d\n" +
+            "  x = new String()\n" +
             "else\n" +
-            "  x = 1.00\n" +
+            "  x = new StringBuffer()\n" +
             "x";
 
         int offset = contents.indexOf("x");
@@ -290,16 +284,13 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 1, "java.lang.String");
 
         offset = contents.indexOf("x", offset + 1);
-        assertType(contents, offset, offset + 1, "java.lang.Double");
+        assertType(contents, offset, offset + 1, "java.lang.StringBuffer");
 
         offset = contents.indexOf("x", offset + 1);
-        assertType(contents, offset, offset + 1, "java.math.BigDecimal");
-
-        offset = contents.indexOf("x", offset + 1);
-        assertType(contents, offset, offset + 1, "java.lang.Number");
+        assertType(contents, offset, offset + 1, "java.lang.Object"); // TODO: java.lang.CharSequence
     }
 
-    @Test @Ignore("not yet implemented")
+    @Test
     public void testLocalVar10() {
         String contents = "def x\n" +
             "x = ''\n" +
@@ -323,10 +314,10 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 1, "java.math.BigDecimal");
 
         offset = contents.indexOf("x", offset + 1);
-        assertType(contents, offset, offset + 1, "java.io.Serializable"); // LUB of String, Double and BigDecimal
+        assertType(contents, offset, offset + 1, "java.io.Serializable<?>"); // LUB of String, Double, and BigDecimal
     }
 
-    @Test @Ignore("not yet implemented")
+    @Test
     public void testLocalVar10a() {
         String contents = "def x\n" +
             "x = ''\n" +
@@ -349,10 +340,10 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 1, "java.math.BigDecimal");
 
         offset = contents.indexOf("x", offset + 1);
-        assertType(contents, offset, offset + 1, "java.io.Serializable"); // LUB of String, Double and BigDecimal
+        assertType(contents, offset, offset + 1, "java.io.Serializable<?>"); // LUB of String, Double, and BigDecimal
     }
 
-    @Test @Ignore("not yet implemented")
+    @Test
     public void testLocalVar11() {
         String contents = "def x\n" +
             "x = ''\n" +
@@ -378,7 +369,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + 1, "java.math.BigDecimal");
 
         offset = contents.indexOf("x", offset + 1);
-        assertType(contents, offset, offset + 1, "java.io.Serializable"); // LUB of String, Double and BigDecimal
+        assertType(contents, offset, offset + 1, "java.io.Serializable<?>"); // LUB of String, Double, and BigDecimal
     }
 
     @Test
@@ -2435,7 +2426,7 @@ public final class InferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "java.lang.Object");
     }
 
-    @Test @Ignore("not yet implemented")
+    @Test
     public void testInstanceOf11() {
         String contents =
             "def val = File.createTempDir()\n" +
@@ -2453,12 +2444,12 @@ public final class InferencingTests extends InferencingTestSuite {
 
         start = contents.indexOf("val", end + 1);
         end = start + "val".length();
-        assertType(contents, start, end, "java.net.URL"); // LUB
+        assertType(contents, start, end, "java.net.URL");
 
         // line 3
         start = contents.indexOf("val", end + 1);
         end = start + "val".length();
-        assertType(contents, start, end, "java.net.URL"); // LUB
+        assertType(contents, start, end, "java.io.Serializable");
 
         start = contents.indexOf("val", end + 1);
         end = start + "val".length();
@@ -2466,11 +2457,11 @@ public final class InferencingTests extends InferencingTestSuite {
 
         start = contents.indexOf("val", end + 1);
         end = start + "val".length();
-        assertType(contents, start, end, "java.net.URL"); // LUB
+        assertType(contents, start, end, "java.io.Serializable");
     }
 
     @Test // GRECLIPSE-554
-    public void testMapEntries1() {
+    public void testMapEntries() {
         String contents =
             "def map = [:]\n" +
             "map.foo = 1\n" +
@@ -2494,7 +2485,7 @@ public final class InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testThisInInnerClass1() {
+    public void testThisInInnerClass() {
         String contents =
             "class A {\n" +
             "    String source = null\n" +
@@ -2545,33 +2536,6 @@ public final class InferencingTests extends InferencingTestSuite {
         assertExprType(contents, "cal", "domain.Calendar");
     }
 
-    @Test // https://github.com/groovy/groovy-eclipse/issues/405
-    public void testMethodOverloadsAndImperfectArgumentMatching() {
-        createJavaUnit("MyEnum", "enum MyEnum { A, B }");
-
-        String contents = "class Issue405 {\n" +
-            "  void meth(String s, MyEnum e) {\n" +
-            "    def d1, d2\n" +
-            "    switch (e) {\n" +
-            "    case MyEnum.A:\n" +
-            "      d1 = new Date()\n" +
-            "      d2 = new Date()\n" +
-            "      break\n" +
-            "    case MyEnum.B:\n" +
-            "      d1 = null\n" +
-            "      d2 = null\n" +
-            "      break\n" +
-            "    }\n" +
-            "    meth(s, d1, d2)\n" +
-            "  }\n" +
-            "  void meth(String s, Date d1, Date d2) {\n" +
-            "  }\n" +
-            "}";
-        int offset = contents.indexOf("meth(s");
-        MethodNode m = assertDeclaration(contents, offset, offset + 4, "Issue405", "meth", DeclarationKind.METHOD);
-        assertEquals("Expected 'meth(String, Date, Date)' but was 'meth(String, MyEnum)'", 3, m.getParameters().length);
-    }
-
     @Test
     public void testMethodOverloadsAndPerfectArgumentMatching() {
         createJavaUnit("MyEnum", "enum MyEnum { A, B }");
@@ -2600,5 +2564,32 @@ public final class InferencingTests extends InferencingTestSuite {
         MethodNode m = assertDeclaration(contents, offset, offset + 4, "Issue405", "meth", DeclarationKind.METHOD);
         assertTrue("Expected 'meth(String, Object, Object)' but was 'meth(String, MyEnum)' or 'meth(String, Date, Date)'",
             m.getParameters().length == 3 && m.getParameters()[2].getType().getNameWithoutPackage().equals("Object"));
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/405
+    public void testMethodOverloadsAndImperfectArgumentMatching() {
+        createJavaUnit("MyEnum", "enum MyEnum { A, B }");
+
+        String contents = "class Issue405 {\n" +
+            "  void meth(String s, MyEnum e) {\n" +
+            "    def d1, d2\n" +
+            "    switch (e) {\n" +
+            "    case MyEnum.A:\n" +
+            "      d1 = new Date()\n" +
+            "      d2 = new Date()\n" +
+            "      break\n" +
+            "    case MyEnum.B:\n" +
+            "      d1 = null\n" +
+            "      d2 = null\n" +
+            "      break\n" +
+            "    }\n" +
+            "    meth(s, d1, d2)\n" +
+            "  }\n" +
+            "  void meth(String s, Date d1, Date d2) {\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.indexOf("meth(s");
+        MethodNode m = assertDeclaration(contents, offset, offset + 4, "Issue405", "meth", DeclarationKind.METHOD);
+        assertEquals("Expected 'meth(String, Date, Date)' but was 'meth(String, MyEnum)'", 3, m.getParameters().length);
     }
 }

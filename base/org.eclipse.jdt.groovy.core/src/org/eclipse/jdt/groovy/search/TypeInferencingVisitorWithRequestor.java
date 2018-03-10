@@ -1360,6 +1360,14 @@ assert primaryExprType != null && dependentExprType != null;
 
     @Override
     public void visitIfElse(IfStatement node) {
+            scopes.add(new VariableScope(scopes.getLast(), node, false) {
+                @Override
+                public void updateVariable(String name, ClassNode type, ClassNode declaringType) {
+                    type = WideningCategories.lowestUpperBound(type, lookupName(name).type);
+                    super.updateVariable(name, type, declaringType);
+                }
+            });
+
         // TODO: Assignment within expression may be conditional or unconditional due to short-circuit evaluation.
         node.getBooleanExpression().visit(this);
 
@@ -1373,7 +1381,7 @@ assert primaryExprType != null && dependentExprType != null;
 
         node.getIfBlock().visit(this);
 
-            scopes.removeLast().bubbleUpdates();
+            VariableScope trueScope = scopes.removeLast();
 
             scopes.add(new VariableScope(scopes.getLast(), node.getElseBlock(), false));
             for (Map.Entry<String, ClassNode[]> entry : types.entrySet()) {
@@ -1382,8 +1390,14 @@ assert primaryExprType != null && dependentExprType != null;
                 }
             }
 
+        // TODO: If the else block sets unconditionally, exclude current type from the LUB computation.
         node.getElseBlock().visit(this);
 
+            VariableScope falseScope = scopes.removeLast();
+
+            // apply variable updates
+            trueScope.bubbleUpdates();
+            falseScope.bubbleUpdates();
             scopes.removeLast().bubbleUpdates();
     }
 
