@@ -63,7 +63,6 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
-import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
@@ -71,6 +70,7 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.ThrowStatement;
 import org.codehaus.groovy.control.CompilationUnit;
+import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.runtime.DateGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyStaticMethods;
@@ -241,6 +241,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                                     if (annotation.getClassNode().getName().equals(DELEGATES_TO.getName()) &&
                                             i < arguments.size() && arguments.get(i) instanceof ClosureExpression) {
                                         ClosureExpression closure = (ClosureExpression) arguments.get(i);
+                                        CompilerConfiguration config = enclosingModule.getUnit().getConfig();
 
                                         Expression delegatesToType = annotation.getMember("type");
                                         Expression delegatesToValue = annotation.getMember("value");
@@ -248,24 +249,27 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                                         Expression delegatesToStrategy = annotation.getMember("strategy");
                                         Expression delegatesToGenericTypeIndex = annotation.getMember("genericTypeIndex");
 
-                                        Integer strategy = null, generics = null;
+                                        String typeName = null; Integer strategy = null, generics = null;
+                                        if (delegatesToType != null) {
+                                            typeName = (String) evaluateExpression(castX(STRING_CLASS_NODE, delegatesToType), config);
+                                        }
                                         if (delegatesToStrategy != null) {
-                                            strategy = (Integer) evaluateExpression(castX(INTEGER_CLASS_NODE, delegatesToStrategy), enclosingModule.getUnit().getConfig());
+                                            strategy = (Integer) evaluateExpression(castX(INTEGER_CLASS_NODE, delegatesToStrategy), config);
                                         }
                                         if (delegatesToGenericTypeIndex != null) {
-                                            generics = (Integer) evaluateExpression(castX(INTEGER_CLASS_NODE, delegatesToGenericTypeIndex), enclosingModule.getUnit().getConfig());
+                                            generics = (Integer) evaluateExpression(castX(INTEGER_CLASS_NODE, delegatesToGenericTypeIndex), config);
                                         }
 
                                         // handle three modes: @DelegatesTo(Type.class), @DelegatesTo(type="pack.Type"), @DelegatesTo(target="name", genericTypeIndex=i)
                                         if (delegatesToValue instanceof ClassExpression && !delegatesToValue.getType().getName().equals("groovy.lang.DelegatesTo$Target")) {
                                             addDelegatesToClosure(closure, delegatesToValue.getType(), strategy);
 
-                                        } else if (delegatesToType instanceof ConstantExpression && !"".equals(delegatesToType.getText())) { CompilationUnit compilationUnit = null; // TODO
-                                            ClassNode[] resolved = parseClassNodesFromString(delegatesToType.getText(), enclosingModule.getContext(), compilationUnit, methodNode, delegatesToType);
+                                        } else if (typeName != null && !typeName.isEmpty()) { CompilationUnit compilationUnit = null; // TODO
+                                            ClassNode[] resolved = parseClassNodesFromString(typeName, enclosingModule.getContext(), compilationUnit, methodNode, delegatesToType);
                                             addDelegatesToClosure(closure, resolved[0], strategy);
 
                                         } else if (delegatesToValue == null || (delegatesToValue instanceof ClassExpression && delegatesToValue.getType().getName().equals("groovy.lang.DelegatesTo$Target"))) {
-                                            int j = indexOfDelegatesToTarget(parameters, delegatesToTarget.getText());
+                                            int j = indexOfDelegatesToTarget(parameters, (String) evaluateExpression(castX(STRING_CLASS_NODE, delegatesToTarget), config), config);
                                             if (j >= 0 && j < arguments.size()) {
                                                 Expression target = arguments.get(j);
                                                 ClassNode targetType = target.getType(); // TODO: Look up expression type (unless j is 0 and it's a category method).
@@ -334,17 +338,15 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         /**
          * Finds param with DelegatesTo.Target annotation that has matching value string.
          */
-        private int indexOfDelegatesToTarget(Parameter[] parameters, String target) {
+        private static int indexOfDelegatesToTarget(Parameter[] parameters, String target, CompilerConfiguration config) {
             for (int i = 0, n = parameters.length; i < n; i += 1) {
                 List<AnnotationNode> annotations = parameters[i].getAnnotations();
                 if (annotations != null && !annotations.isEmpty()) {
                     for (AnnotationNode annotation : annotations) {
                         if (annotation.getClassNode().getName().equals("groovy.lang.DelegatesTo$Target")) {
-                            if (annotation.getMember("value") instanceof ConstantExpression) {
-                                String value = annotation.getMember("value").getText();
-                                if (value.equals(target)) {
-                                    return i;
-                                }
+                            String value = (String) evaluateExpression(castX(STRING_CLASS_NODE, annotation.getMember("value")), config);
+                            if (value.equals(target)) {
+                                return i;
                             }
                         }
                     }
@@ -773,8 +775,8 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                 VariableInfo info = nameVariableMap.get(name);
                 parent.updateVariable(name, info.type, info.declaringType);
             }
-            dirtyNames = null;
         }
+        dirtyNames = null;
     }
 
     public static ClassNode resolveTypeParameterization(GenericsMapper mapper, ClassNode type) {

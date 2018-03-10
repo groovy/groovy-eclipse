@@ -120,6 +120,34 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
         assertDeclaringType(contents, offset, offset + 1, "B");
     }
 
+    @Test // uses constant instead of literal for target
+    public void testDelegatesToTarget1a() {
+        createUnit("C", "import groovy.lang.DelegatesTo.Target\n" +
+            "class C {\n" +
+            "  private static final String SELF = 'self'\n" +
+            "  static def cat(\n" +
+            "    @Target(C.SELF) Object self,\n" + // getText() will not work with qualifier
+            "    @DelegatesTo(target=SELF, strategy=Closure.DELEGATE_FIRST) Closure code\n" +
+            "   ) { }\n" +
+            "}");
+
+        String contents = "class A { def x }\n" +
+            "class B { def x, y\n" +
+            "  def m(A a) {\n" +
+            "    use (C) {\n" +
+            "      a.cat {" + // delegate is A, owner is B
+            "        x\n" +
+            "        y\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf('x');
+        assertDeclaringType(contents, offset, offset + 1, "A");
+        offset = contents.lastIndexOf('y');
+        assertDeclaringType(contents, offset, offset + 1, "B");
+    }
+
     @Test
     public void testDelegatesToTarget2() {
         createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
@@ -212,10 +240,24 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/415
-    public void testDelegatesToTypeName() {
+    public void testDelegatesToTypeName1() {
         String contents =
             "def meth(int x, int y, @DelegatesTo(type='java.util.List') Closure c) { }\n" +
             "meth 1, 2, { delegate }";
+
+        String toFind = "delegate";
+        int offset = contents.lastIndexOf(toFind);
+        assertType(contents, offset, offset + toFind.length(), "java.util.List");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/415
+    public void testDelegatesToTypeName2() {
+        String contents =
+            "class C {\n" +
+            "  private static final String LIST = 'java.util.List'\n" +
+            "  static void meth(int x, int y, @DelegatesTo(type=LIST) Closure c) { }\n" +
+            "}\n" +
+            "C.meth 1, 2, { delegate }";
 
         String toFind = "delegate";
         int offset = contents.lastIndexOf(toFind);
