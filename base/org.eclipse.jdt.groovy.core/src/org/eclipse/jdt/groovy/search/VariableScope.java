@@ -1101,8 +1101,8 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
      */
     public boolean isTerminal() {
         if (scopeNode instanceof BlockStatement ) {
-            return ((BlockStatement) scopeNode).getStatements().stream()
-                .filter(s -> s instanceof ReturnStatement).findAny().isPresent();
+            return ((BlockStatement) scopeNode).getStatements()
+                .stream().anyMatch(s -> s instanceof ReturnStatement);
         }
         if (scopeNode instanceof ReturnStatement) {
             return true;
@@ -1251,10 +1251,8 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         }
 
         if (typeToResolve != null) {
-            typeToResolve = clone(typeToResolve);
-            ClassNode unresolvedCollectionType = collectionType.redirect();
-            GenericsMapper mapper = GenericsMapper.gatherGenerics(collectionType, unresolvedCollectionType);
-            ClassNode resolved = resolveTypeParameterization(mapper, typeToResolve);
+            GenericsMapper mapper = GenericsMapper.gatherGenerics(collectionType, collectionType.redirect());
+            ClassNode resolved = resolveTypeParameterization(mapper, clone(typeToResolve));
 
             // the first type parameter of resolvedReturn should be what we want
             GenericsType[] resolvedReturnGenerics = resolved.getGenericsTypes();

@@ -15,8 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.editor.highlighting;
 
-import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.UNKNOWN;
-
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -102,7 +100,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         }
 
         HighlightedTypedPosition pos = null;
-        if (result.confidence == UNKNOWN && node.getEnd() > 0) {
+        if (result.confidence == TypeLookupResult.TypeConfidence.UNKNOWN && node.getEnd() > 0) {
             // GRECLIPSE-1327: check to see if this is a synthetic call() on a closure reference
             if (isRealASTNode(node)) {
                 Position p = getPosition(node);

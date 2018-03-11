@@ -1037,76 +1037,75 @@ assert primaryExprType != null && dependentExprType != null;
         VariableScope scope = new VariableScope(parent, node, false);
         scopes.add(scope);
 
-            ClassNode[] inferredParamTypes = inferClosureParamTypes(node, scope);
-            Parameter[] parameters = node.getParameters(); final int n;
-            if (parameters != null && (n = parameters.length) > 0) {
-                handleParameterList(parameters);
-                // TODO: If this is moved above handleParameterList, the inferred type will be available to the param nodes as well.
-                for (int i = 0; i < n; i += 1) {
-                    Parameter parameter = parameters[i];
-                    // only reset the type of the parametrers if it is not explicitly defined
-                    if (inferredParamTypes[i] != VariableScope.OBJECT_CLASS_NODE && parameter.isDynamicTyped()) {
-                        parameter.setType(inferredParamTypes[i]);
-                        scope.addVariable(parameter);
-                    }
+        ClassNode[] inferredParamTypes = inferClosureParamTypes(node, scope);
+        Parameter[] parameters = node.getParameters(); final int n;
+        if (parameters != null && (n = parameters.length) > 0) {
+            handleParameterList(parameters);
+            // TODO: If this is moved above handleParameterList, the inferred type will be available to the param nodes as well.
+            for (int i = 0; i < n; i += 1) {
+                Parameter parameter = parameters[i];
+                // only reset the type of the parametrers if it is not explicitly defined
+                if (inferredParamTypes[i] != VariableScope.OBJECT_CLASS_NODE && parameter.isDynamicTyped()) {
+                    parameter.setType(inferredParamTypes[i]);
+                    scope.addVariable(parameter);
                 }
-            } else
-            // it variable only exists if there are no explicit parameters
-            if (inferredParamTypes[0] != VariableScope.OBJECT_CLASS_NODE && !scope.containsInThisScope("it")) {
-                scope.addVariable("it", inferredParamTypes[0], VariableScope.OBJECT_CLASS_NODE);
             }
-            if (scope.lookupNameInCurrentScope("it") == null) {
-                inferItType(node, scope);
+        } else
+        // it variable only exists if there are no explicit parameters
+        if (inferredParamTypes[0] != VariableScope.OBJECT_CLASS_NODE && !scope.containsInThisScope("it")) {
+            scope.addVariable("it", inferredParamTypes[0], VariableScope.OBJECT_CLASS_NODE);
+        }
+        if (scope.lookupNameInCurrentScope("it") == null) {
+            inferItType(node, scope);
+        }
+
+        // if enclosing closure, owner type is 'Closure', otherwise it's 'typeof(this)'
+        if (parent.getEnclosingClosure() != null) {
+            ClassNode closureType = GenericsUtils.nonGeneric(VariableScope.CLOSURE_CLASS_NODE);
+            closureType.putNodeMetaData("outer.scope", parent.getEnclosingClosureScope());
+
+            scope.addVariable("owner", closureType, VariableScope.CLOSURE_CLASS_NODE);
+            scope.addVariable("getOwner", closureType, VariableScope.CLOSURE_CLASS_NODE);
+        } else {
+            ClassNode ownerType = scope.getThis();
+            // GRECLIPSE-1348: if someone is silly enough to have a variable named "owner"; don't override it
+            VariableScope.VariableInfo inf = scope.lookupName("owner");
+            if (inf == null || inf.scopeNode instanceof ClosureExpression) {
+                scope.addVariable("owner", ownerType, VariableScope.CLOSURE_CLASS_NODE);
             }
+            scope.addVariable("getOwner", ownerType, VariableScope.CLOSURE_CLASS_NODE);
 
-            // if enclosing closure, owner type is 'Closure', otherwise it's 'typeof(this)'
-            if (parent.getEnclosingClosure() != null) {
-                ClassNode closureType = GenericsUtils.nonGeneric(VariableScope.CLOSURE_CLASS_NODE);
-                closureType.putNodeMetaData("outer.scope", parent.getEnclosingClosureScope());
+            // only do this if we are not already in a closure; no need to add twice
+            scope.addVariable("thisObject", VariableScope.OBJECT_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
+            scope.addVariable("getThisObject", VariableScope.OBJECT_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
+            scope.addVariable("directive", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
+            scope.addVariable("getDirective", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
+            scope.addVariable("resolveStrategy", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
+            scope.addVariable("getResolveStrategy", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
+            scope.addVariable("parameterTypes", VariableScope.CLASS_ARRAY_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
+            scope.addVariable("getParameterTypes", VariableScope.CLASS_ARRAY_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
+            scope.addVariable("maximumNumberOfParameters", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
+            scope.addVariable("getMaximumNumberOfParameters", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
+        }
 
-                scope.addVariable("owner", closureType, VariableScope.CLOSURE_CLASS_NODE);
-                scope.addVariable("getOwner", closureType, VariableScope.CLOSURE_CLASS_NODE);
-            } else {
-                ClassNode ownerType = scope.getThis();
-                // GRECLIPSE-1348: if someone is silly enough to have a variable named "owner"; don't override it
-                VariableScope.VariableInfo inf = scope.lookupName("owner");
-                if (inf == null || inf.scopeNode instanceof ClosureExpression) {
-                    scope.addVariable("owner", ownerType, VariableScope.CLOSURE_CLASS_NODE);
-                }
-                scope.addVariable("getOwner", ownerType, VariableScope.CLOSURE_CLASS_NODE);
-
-                // only do this if we are not already in a closure; no need to add twice
-                scope.addVariable("thisObject", VariableScope.OBJECT_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
-                scope.addVariable("getThisObject", VariableScope.OBJECT_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
-                scope.addVariable("directive", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
-                scope.addVariable("getDirective", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
-                scope.addVariable("resolveStrategy", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
-                scope.addVariable("getResolveStrategy", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
-                scope.addVariable("parameterTypes", VariableScope.CLASS_ARRAY_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
-                scope.addVariable("getParameterTypes", VariableScope.CLASS_ARRAY_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
-                scope.addVariable("maximumNumberOfParameters", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
-                scope.addVariable("getMaximumNumberOfParameters", VariableScope.INTEGER_CLASS_NODE, VariableScope.CLOSURE_CLASS_NODE);
-            }
-
-            // if enclosing method call, delegate type can be specified by the method, otherwise it's 'typeof(owner)'
-            VariableScope.CallAndType cat = scope.getEnclosingMethodCallExpression();
-            if (cat != null && cat.getDelegateType(node) != null) {
-                ClassNode delegateType = cat.getDelegateType(node);
+        // if enclosing method call, delegate type can be specified by the method, otherwise it's 'typeof(owner)'
+        VariableScope.CallAndType cat = scope.getEnclosingMethodCallExpression();
+        if (cat != null && cat.getDelegateType(node) != null) {
+            ClassNode delegateType = cat.getDelegateType(node);
+            scope.addVariable("delegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
+            scope.addVariable("getDelegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
+        } else {
+            ClassNode delegateType = scope.getOwner();
+            // GRECLIPSE-1348: if someone is silly enough to have a variable named "delegate"; don't override it
+            VariableScope.VariableInfo inf = scope.lookupName("delegate");
+            if (inf == null || inf.scopeNode instanceof ClosureExpression) {
                 scope.addVariable("delegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
-                scope.addVariable("getDelegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
-            } else {
-                ClassNode delegateType = scope.getOwner();
-                // GRECLIPSE-1348: if someone is silly enough to have a variable named "delegate"; don't override it
-                VariableScope.VariableInfo inf = scope.lookupName("delegate");
-                if (inf == null || inf.scopeNode instanceof ClosureExpression) {
-                    scope.addVariable("delegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
-                }
-                scope.addVariable("getDelegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
             }
+            scope.addVariable("getDelegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
+        }
 
-            super.visitClosureExpression(node);
-            handleSimpleExpression(node);
-
+        super.visitClosureExpression(node);
+        handleSimpleExpression(node);
         scopes.removeLast();
     }
 
@@ -1520,10 +1519,10 @@ assert primaryExprType != null && dependentExprType != null;
         node.getObjectExpression().visit(this);
 
         if (node.isSpreadSafe()) {
-            // must find the component type of the object expression type
-            ClassNode objType = primaryTypeStack.removeLast();
-            primaryTypeStack.add(VariableScope.extractElementType(objType));
+            // method call targets the element type of the object expression
+            primaryTypeStack.add(VariableScope.extractElementType(primaryTypeStack.removeLast()));
         }
+        ClassNode primaryType = primaryTypeStack.getLast();
 
         if (node.isUsingGenerics()) {
             visitGenericTypes(node.getGenericsTypes(), null);
@@ -1556,6 +1555,20 @@ assert primaryExprType != null && dependentExprType != null;
         ClassNode type;
         if (isEnumInit(node) && GroovyUtils.isAnonymous(type = node.getType().redirect())) {
             visitMethodOverrides(type);
+        }
+
+        MethodNode meth; // if return type depends on any Closure argument return types, deal with that now
+        if (t.declaration instanceof MethodNode && (meth = (MethodNode) t.declaration).getGenericsTypes() != null &&
+                Arrays.stream(meth.getParameters()).anyMatch(p -> p.getType().equals(VariableScope.CLOSURE_CLASS_NODE))) {
+            scope.setMethodCallArgumentTypes(getMethodCallArgumentTypes(node));
+            scope.setMethodCallGenericsTypes(getMethodCallGenericsTypes(node));
+            try {
+                boolean isStatic = (node.getObjectExpression() instanceof ClassExpression);
+                returnType = lookupExpressionType(node.getMethod(), primaryType, isStatic, scope).type;
+            } finally {
+                scope.setMethodCallArgumentTypes(null);
+                scope.setMethodCallGenericsTypes(null);
+            }
         }
 
         // if this method call is the primary of a larger expression, then pass the inferred type onwards
