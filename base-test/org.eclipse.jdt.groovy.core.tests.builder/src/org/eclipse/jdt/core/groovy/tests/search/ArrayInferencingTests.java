@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,32 +40,59 @@ public final class ArrayInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testArray3() {
-        String contents = "def x = [\"1\", \"2\"] as CharSequence[]; x";
+        String contents = "def x = ['1', '2'] as CharSequence[]; x";
         assertExprType(contents, "x", "java.lang.CharSequence[]");
     }
 
     @Test
     public void testArray4() {
-        String contents = "def x = [\"1\", \"2\"] as CharSequence[]; x[0]";
+        String contents = "def x = ['1', '2'] as CharSequence[]; x[0]";
         assertExprType(contents, "x[0]", "java.lang.CharSequence");
     }
 
     @Test
     public void testArray5() {
-        String contents = "def x = [\"1\", \"2\"] as CharSequence[]; x[0].length";
+        String contents = "def x = ['1', '2'] as CharSequence[]; x[0].length";
         assertExprType(contents, "length", "java.lang.Integer");
     }
 
     @Test
     public void testArray6() {
-        String contents = "int i = 0; def x = [\"1\", \"2\"] as CharSequence[]; x[i]";
+        String contents = "int i = 0; def x = ['1', '2'] as CharSequence[]; x[i]";
         assertExprType(contents, "x[i]", "java.lang.CharSequence");
     }
 
     @Test
     public void testArray7() {
-        String contents = "int i = 0; def x = [\"1\", \"2\"] as CharSequence[]; x[i].length";
+        String contents = "int i = 0; def x = ['1', '2'] as CharSequence[]; x[i].length";
         assertExprType(contents, "length", "java.lang.Integer");
+    }
+
+    @Test
+    public void testArrayLength1() {
+        String contents = "int[] x = [1, 2]; x.length";
+        assertExprType(contents, "length", "java.lang.Integer");
+
+        int offset = contents.indexOf("length");
+        assertDeclaringType(contents, offset, offset + "length".length(), "int[]");
+    }
+
+    @Test
+    public void testArrayLength2() {
+        String contents = "String[] x = ['1', '2']; x.length";
+        assertExprType(contents, "length", "java.lang.Integer");
+
+        int offset = contents.indexOf("length");
+        assertDeclaringType(contents, offset, offset + "length".length(), "java.lang.String[]");
+    }
+
+    @Test
+    public void testArrayLength3() {
+        String contents = "String[][] x = ['1', '2']; x.length";
+        assertExprType(contents, "length", "java.lang.Integer");
+
+        int offset = contents.indexOf("length");
+        assertDeclaringType(contents, offset, offset + "length".length(), "java.lang.String[][]");
     }
 
     @Test

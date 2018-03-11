@@ -37,7 +37,7 @@ public final class FindOccurrencesTests extends GroovyEclipseTestSuite {
                 return occurrences
             }
 
-            final int n = actual.length
+            int n = actual.length
             if (n != expected.length / 2) {
                 Assert.fail('Wrong number of occurrences found. expecting:\n' + Arrays.toString(expected) + '\nbut found:\n' + printOccurrences(actual, n))
             }
