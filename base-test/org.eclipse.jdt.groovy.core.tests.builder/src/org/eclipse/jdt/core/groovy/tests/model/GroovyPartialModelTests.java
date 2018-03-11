@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,33 +45,33 @@ public final class GroovyPartialModelTests  extends GroovyTypeRootTestSuite {
     @Test // tests that a static field's initializer is not erased during a reconcile
     public void testStaticFieldInitializerIsNotMoved1() throws Exception {
         findFieldInitializer("package p1\n"+
-                "public class Hello {\n"+
-                "  static aStatic = []\n" +
-                "}\n", ListExpression.class);
+            "public class Hello {\n"+
+            "  static aStatic = []\n" +
+            "}\n", ListExpression.class);
     }
 
     @Test // tests that a static field's initializer is not erased during a reconcile
     public void testStaticFieldInitializerIsNotMoved2() throws Exception {
         findFieldInitializer("package p1\n"+
-                "public class Hello {\n"+
-                "  static aStatic = {}\n" +
-                "}\n", ClosureExpression.class);
+            "public class Hello {\n"+
+            "  static aStatic = {}\n" +
+            "}\n", ClosureExpression.class);
     }
 
     @Test @Ignore // tests that a non-static field initializer is not erased during a reconcile
     public void testFieldInitializerIsNotMoved1() throws Exception {
         findFieldInitializer("package p1\n"+
-                "public class Hello {\n"+
-                "  def aStatic = []\n" +
-                "}\n", ListExpression.class);
+            "public class Hello {\n"+
+            "  def aStatic = []\n" +
+            "}\n", ListExpression.class);
     }
 
     @Test @Ignore // tests that a non-static field initializer is not erased during a reconcile
     public void testFieldInitializerIsNotMoved2() throws Exception {
         findFieldInitializer("package p1\n"+
-                "public class Hello {\n"+
-                "  def aStatic = {}\n" +
-                "}\n", ClosureExpression.class);
+            "public class Hello {\n"+
+            "  def aStatic = {}\n" +
+            "}\n", ClosureExpression.class);
     }
 
     @Test
