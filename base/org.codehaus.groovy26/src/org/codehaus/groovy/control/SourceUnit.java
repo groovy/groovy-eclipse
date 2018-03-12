@@ -44,6 +44,7 @@ import java.io.Reader;
 import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -88,13 +89,13 @@ public class SourceUnit extends ProcessingUnit {
     // GRECLIPSE add
     public boolean isReconcile;
 
-    private List<Comment> comments;
     public List<Comment> getComments() {
         return comments;
     }
     public void setComments(List<Comment> comments) {
         this.comments = comments;
     }
+    private List<Comment> comments = Collections.emptyList();
     // GRECLIPSE end
 
     /**
