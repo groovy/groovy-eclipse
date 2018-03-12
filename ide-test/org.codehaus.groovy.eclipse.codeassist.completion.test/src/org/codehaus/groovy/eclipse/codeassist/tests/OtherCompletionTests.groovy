@@ -324,7 +324,7 @@ final class OtherCompletionTests extends CompletionTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/371
-    void testCompileStaticCompletion() {
+    void testCompileStaticCompletion1() {
         String contents = '''\
             import groovy.transform.*
             class Bean {

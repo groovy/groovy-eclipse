@@ -15,16 +15,11 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.util.Comparator;
 import java.util.List;
 
-import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
+import org.junit.Assert;
 import org.junit.Test;
 
 public final class InferencingTests extends InferencingTestSuite {
@@ -32,17 +27,6 @@ public final class InferencingTests extends InferencingTestSuite {
     private void assertExprType(String source, String target, String type) {
         final int offset = source.lastIndexOf(target);
         assertType(source, offset, offset + target.length(), type);
-    }
-
-    private void assertNoUnknowns(String source) {
-        GroovyCompilationUnit unit = createUnit("Search", source);
-
-        TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
-        visitor.DEBUG = true;
-        UnknownTypeRequestor requestor = new UnknownTypeRequestor();
-        visitor.visitCompilationUnit(requestor);
-        List<ASTNode> unknownNodes = requestor.getUnknownNodes();
-        assertTrue("Should not have found any AST nodes with unknown confidence, but instead found:\n" + unknownNodes, unknownNodes.isEmpty());
     }
 
     //--------------------------------------------------------------------------
@@ -1595,7 +1579,7 @@ public final class InferencingTests extends InferencingTestSuite {
         int offset = contents.lastIndexOf("sort");
         assertType(contents, offset, offset + 4, "java.util.List<java.lang.Object>");
         MethodNode m = assertDeclaration(contents, offset, offset + 4, "org.codehaus.groovy.runtime.DefaultGroovyMethods", "sort", DeclarationKind.METHOD);
-        assertEquals("Should resolve to sort(Iterable,Closure) since Collection version is deprecated", "java.lang.Iterable<java.lang.Object>", printTypeName(m.getParameters()[0].getType()));
+        Assert.assertEquals("Should resolve to sort(Iterable,Closure) since Collection version is deprecated", "java.lang.Iterable<java.lang.Object>", printTypeName(m.getParameters()[0].getType()));
     }
 
     @Test
@@ -1631,7 +1615,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "}";
         int offset = contents.indexOf("a.remove") + 2;
         MethodNode m = assertDeclaration(contents, offset, offset + "remove".length(), "java.util.List", "remove", DeclarationKind.METHOD);
-        assertEquals("Should resolve to remove(int) due to return type of inner call", "int", printTypeName(m.getParameters()[0].getType()));
+        Assert.assertEquals("Should resolve to remove(int) due to return type of inner call", "int", printTypeName(m.getParameters()[0].getType()));
     }
 
     @Test // GRECLIPSE-1013
@@ -2562,7 +2546,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "}";
         int offset = contents.indexOf("meth(s");
         MethodNode m = assertDeclaration(contents, offset, offset + 4, "Issue405", "meth", DeclarationKind.METHOD);
-        assertTrue("Expected 'meth(String, Object, Object)' but was 'meth(String, MyEnum)' or 'meth(String, Date, Date)'",
+        Assert.assertTrue("Expected 'meth(String, Object, Object)' but was 'meth(String, MyEnum)' or 'meth(String, Date, Date)'",
             m.getParameters().length == 3 && m.getParameters()[2].getType().getNameWithoutPackage().equals("Object"));
     }
 
@@ -2590,6 +2574,6 @@ public final class InferencingTests extends InferencingTestSuite {
             "}";
         int offset = contents.indexOf("meth(s");
         MethodNode m = assertDeclaration(contents, offset, offset + 4, "Issue405", "meth", DeclarationKind.METHOD);
-        assertEquals("Expected 'meth(String, Date, Date)' but was 'meth(String, MyEnum)'", 3, m.getParameters().length);
+        Assert.assertEquals("Expected 'meth(String, Date, Date)' but was 'meth(String, MyEnum)'", 3, m.getParameters().length);
     }
 }

@@ -1592,9 +1592,11 @@ assert primaryExprType != null && dependentExprType != null;
         boolean shouldContinue = handleSimpleExpression(node);
         if (shouldContinue) {
             completeExpressionStack.add(node);
+            scopes.getLast().setCurrentNode(node);
             super.visitMethodPointerExpression(node);
 
             // clean up the stacks
+            scopes.getLast().forgetCurrentNode();
             completeExpressionStack.removeLast();
             ClassNode returnType = dependentTypeStack.removeLast();
             Tuple callParamTypes = dependentDeclarationStack.removeLast();
@@ -2422,8 +2424,7 @@ assert primaryExprType != null && dependentExprType != null;
         boolean staticObjectExpression = false;
         if (!completeExpressionStack.isEmpty()) {
             ASTNode complete = completeExpressionStack.getLast();
-            // MethodPointerExpression is non-static, so skip this checking
-            if (complete instanceof PropertyExpression || complete instanceof MethodCallExpression) {
+            if (complete instanceof PropertyExpression || complete instanceof MethodCallExpression || complete instanceof MethodPointerExpression) {
                 // call getObjectExpression and isImplicitThis w/o common interface
                 Expression objectExpression = null;
                 boolean isImplicitThis = false;
@@ -2436,6 +2437,9 @@ assert primaryExprType != null && dependentExprType != null;
                     MethodCallExpression call = (MethodCallExpression) complete;
                     objectExpression = call.getObjectExpression();
                     isImplicitThis = call.isImplicitThis();
+                } else if (complete instanceof MethodPointerExpression) {
+                    MethodPointerExpression expr = (MethodPointerExpression) complete;
+                    objectExpression = expr.getExpression();
                 }
 
                 if (objectExpression == null && isImplicitThis) {

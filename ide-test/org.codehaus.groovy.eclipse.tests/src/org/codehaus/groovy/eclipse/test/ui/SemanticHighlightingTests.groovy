@@ -1754,14 +1754,14 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     @Test
     void testMethodPointer2() {
         String contents = '''\
-            def c = String.class
-            def f = c.&toLowerCase
+            def s = 'SoMeThInG'
+            def f = s.&toLowerCase
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('c ='), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('s ='), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('f ='), 1, VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('c.&'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('s.&'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('toLowerCase'), 'toLowerCase'.length(), METHOD_CALL))
     }
 

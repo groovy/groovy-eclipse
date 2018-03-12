@@ -27,6 +27,7 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.AttributeExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.MethodPointerExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.reflection.ParameterTypes;
 import org.codehaus.groovy.runtime.MetaClassHelper;
@@ -95,8 +96,11 @@ public class CategoryTypeLookup implements ITypeLookup {
     }
 
     protected static boolean isCompatibleConstantExpression(Expression node, VariableScope scope) {
-        if (node instanceof ConstantExpression && !(scope.getEnclosingNode() instanceof AttributeExpression)) {
-            return VariableScope.STRING_CLASS_NODE.equals(node.getType()) && node.getLength() <= node.getText().length();
+        if (node instanceof ConstantExpression) {
+            org.codehaus.groovy.ast.ASTNode enclosingNode = scope.getEnclosingNode();
+            if (!(enclosingNode instanceof AttributeExpression || enclosingNode instanceof MethodPointerExpression)) {
+                return (VariableScope.STRING_CLASS_NODE.equals(node.getType()) && node.getLength() <= node.getText().length());
+            }
         }
         return false;
     }
