@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2017 IBM Corporation and others.
+ * Copyright (c) 2016, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -391,5 +391,25 @@ public class InterfaceMethodsTest_9 extends AbstractComparableTest {
 			"	                           ^^^\n" + 
 			"This static method of interface X.I can only be accessed as X.I.foo\n" + 
 			"----------\n" );
+	}
+	public void testBug518272() {
+		runConformTest(
+			new String[] {
+				"GeneratedAccessorBug.java",
+				"public interface GeneratedAccessorBug {\n" + 
+				"  void hello();\n" + 
+				"  private static void foo() {}\n" + 
+				"  public static void bar() {\n" + 
+				"    new GeneratedAccessorBug() {\n" + 
+				"      public void hello() {\n" + 
+				"        foo();\n" + 
+				"      }\n" + 
+				"    }.hello();\n" + 
+				"  }\n" + 
+				"  public static void main(String[] args) {\n" + 
+				"    GeneratedAccessorBug.bar();\n" + 
+				"  }\n" + 
+				"}"
+		});
 	}
 }

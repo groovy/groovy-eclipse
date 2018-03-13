@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2017 IBM Corporation and others.
+ * Copyright (c) 2016, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.env;
 
-import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.compiler.CharOperation;
 
 /**
@@ -78,11 +77,6 @@ public interface IModulePathEntry {
 	 * @return true if this is an automatic module, false otherwise
 	 */
 	public default boolean isAutomaticModule() {
-		return false;
-	}
-
-	/** Tests whether the current entry represents the given java project. */
-	public default boolean equalsProject(IJavaProject project) {
 		return false;
 	}
 }

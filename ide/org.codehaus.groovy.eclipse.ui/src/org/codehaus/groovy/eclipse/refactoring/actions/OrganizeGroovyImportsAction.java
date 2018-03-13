@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,9 @@ package org.codehaus.groovy.eclipse.refactoring.actions;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.ISourceRange;
+import org.eclipse.jdt.core.search.TypeNameMatch;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
-import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery;
 import org.eclipse.jdt.internal.corext.util.Messages;
 import org.eclipse.jdt.internal.ui.actions.ActionMessages;
 import org.eclipse.jdt.internal.ui.actions.CleanUpAction;
@@ -105,7 +106,10 @@ public class OrganizeGroovyImportsAction extends OrganizeImportsAction {
         return override;
     }
 
-    protected IChooseImportQuery newChooseImportQuery(JavaEditor editor) {
-        return (IChooseImportQuery) ReflectionUtils.executePrivateMethod(OrganizeImportsAction.class, "createChooseImportQuery", new Class[] {JavaEditor.class}, this, new Object[] {editor});
+    protected OrganizeGroovyImports.IChooseImportQuery newChooseImportQuery(JavaEditor editor) {
+        return (TypeNameMatch[][] choices, ISourceRange[] ranges) -> {
+            return (TypeNameMatch[]) ReflectionUtils.executePrivateMethod(OrganizeImportsAction.class, "doChooseImports",
+                new Class[] {TypeNameMatch[][].class, ISourceRange[].class, JavaEditor.class}, this, new Object[] {choices, ranges, editor});
+        };
     }
 }

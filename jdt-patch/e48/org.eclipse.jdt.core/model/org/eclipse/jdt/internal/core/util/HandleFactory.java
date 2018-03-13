@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -38,6 +38,7 @@ import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObjectToInt;
 import org.eclipse.jdt.internal.core.*;
 import org.eclipse.jdt.internal.core.search.AbstractJavaSearchScope;
@@ -85,11 +86,12 @@ public class HandleFactory {
 			// path to a class file inside a jar
 			// Optimization: cache package fragment root handle and package handles
 			int rootPathLength;
+			PackageFragmentRoot root = null;
 			if (this.lastPkgFragmentRootPath == null
 					|| (rootPathLength = this.lastPkgFragmentRootPath.length()) != resourcePath.length()
 					|| !resourcePath.regionMatches(0, this.lastPkgFragmentRootPath, 0, rootPathLength)) {
 				String jarPath= resourcePath.substring(0, separatorIndex);
-				PackageFragmentRoot root= getJarPkgFragmentRoot(resourcePath, separatorIndex, jarPath, scope);
+				root= getJarPkgFragmentRoot(resourcePath, separatorIndex, jarPath, scope);
 				if (root == null)
 					return null; // match is outside classpath
 				this.lastPkgFragmentRootPath= jarPath;
@@ -104,6 +106,8 @@ public class HandleFactory {
 						(separatorIndex = resourcePath.lastIndexOf(IJavaSearchScope.JAR_FILE_ENTRY_SEPARATOR)));
 			}
 			String classFilePath= resourcePath.substring(separatorIndex + 1);
+			if (classFilePath.endsWith(TypeConstants.AUTOMATIC_MODULE_NAME))
+				return root;
 			String[] simpleNames = new Path(classFilePath).segments();
 			String[] pkgName;
 			int length = simpleNames.length-1;

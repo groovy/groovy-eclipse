@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2009 IBM Corporation and others.
+ * Copyright (c) 2006, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,7 +21,7 @@ public abstract class AbstractAnnotationProcessorManager {
 	/**
 	 * Configure the receiver using the given batch compiler and the given options.
 	 * The parameter batchCompiler is expected to be an instance of the batch compiler. This method is
-	 * only used for the batch mode. For the IDE mode, please see {@link #configureFromPlatform(Compiler, Object, Object)}.
+	 * only used for the batch mode. For the IDE mode, please see {@link #configureFromPlatform(Compiler, Object, Object, boolean)}.
 	 *
 	 * @param batchCompiler the given batch compiler object
 	 * @param options the given options
@@ -35,8 +35,9 @@ public abstract class AbstractAnnotationProcessorManager {
 	 * @param compiler the given compiler
 	 * @param compilationUnitLocator the given compilation unit locator
 	 * @param javaProject the given java project
+	 * @param isTestCode 
 	 */
-	public abstract void configureFromPlatform(Compiler compiler, Object compilationUnitLocator, Object javaProject);
+	public abstract void configureFromPlatform(Compiler compiler, Object compilationUnitLocator, Object javaProject, boolean isTestCode);
 
 	/**
 	 * Set the print writer for the standard output.

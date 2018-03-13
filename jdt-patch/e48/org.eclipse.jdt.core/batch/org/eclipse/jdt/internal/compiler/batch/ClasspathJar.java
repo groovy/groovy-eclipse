@@ -259,6 +259,7 @@ public boolean hasCompilationUnit(String qualifiedPackageName, String moduleName
 }
 @Override
 public void reset() {
+	super.reset();
 	if (this.closeZipFileAtEnd) {
 		if (this.zipFile != null) {
 			try {

@@ -23,11 +23,22 @@ import org.junit.Test;
 
 public final class DGMInferencingTests extends InferencingTestSuite {
 
+    private void assertDeclType(String source, String target, String type) {
+        final int offset = source.lastIndexOf(target);
+        assertDeclaringType(source, offset, offset + target.length(), type);
+    }
+
+    private void assertExprType(String source, String target, String type) {
+        final int offset = source.lastIndexOf(target);
+        assertType(source, offset, offset + target.length(), type);
+    }
+
+    //--------------------------------------------------------------------------
+
     @Test
     public void testDGM1() {
         String contents = "1.with { it.intValue() }";
-        int start = contents.lastIndexOf("it");
-        assertType(contents, start, start + 2, "java.lang.Integer");
+        assertExprType(contents, "it", "java.lang.Integer");
     }
 
     @Test
@@ -42,8 +53,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             "    y.with { value }\n" +
             "  }\n" +
             "}";
-        int start = contents.lastIndexOf("value");
-        assertType(contents, start, start + 5, "java.lang.String");
+        assertExprType(contents, "value", "java.lang.String");
     }
 
     @Test
@@ -58,374 +68,253 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             "    y.with { println \"Value: $value\" }\n" + // another enclosing method call
             "  }\n" +
             "}";
-        int start = contents.lastIndexOf("value");
-        assertType(contents, start, start + 5, "java.lang.String");
+        assertExprType(contents, "value", "java.lang.String");
     }
 
     @Test
     public void testDGM3() {
         String contents = "[1].collectNested { it }";
-        int start = contents.lastIndexOf("it");
-        assertType(contents, start, start + 2, "java.lang.Integer");
+        assertExprType(contents, "it", "java.lang.Integer");
     }
 
     @Test
     public void testDGM4() {
         String contents = "[1].collectNested { it }";
-        int start = contents.lastIndexOf("it");
-        assertType(contents, start, start + 2, "java.lang.Integer");
+        assertExprType(contents, "it", "java.lang.Integer");
     }
 
     @Test
     public void testDGM5() {
         String contents = "[key:1].every { key, value -> key.toUpperCase() + value.intValue() }";
-        String str = "key";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.String");
+        assertExprType(contents, "key", "java.lang.String");
     }
 
     @Test
     public void testDGM6() {
         String contents = "[key:1].any { key, value -> key.toUpperCase() + value.intValue() }";
-        String str = "value";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        assertExprType(contents, "value", "java.lang.Integer");
     }
 
     @Test
     public void testDGM7() {
         String contents = "[key:1].every { key, value -> key.toUpperCase() + value.intValue() }";
-        String str = "key";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.String");
+        assertExprType(contents, "key", "java.lang.String");
     }
 
     @Test
     public void testDGM8() {
         String contents = "[key:1].any { key, value -> key.toUpperCase() + value.intValue() }";
-        String str = "value";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        assertExprType(contents, "value", "java.lang.Integer");
     }
 
     @Test
     public void testDGM9() {
         String contents = "[1].collectMany { [it.intValue()] }";
-        String str = "it";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        assertExprType(contents, "it", "java.lang.Integer");
     }
 
-    @Test @Ignore
+    @Test @Ignore("Inferencing Engine gets tripped up with the different variants of 'metaClass'")
     public void testDGM10() {
-        // this one is not working since Inferencing Engine gets tripped up with the different variants of 'metaClass'
         String contents = "Integer.metaClass { this }";
-        String str = "this";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "groovy.lang.MetaClass");
+        assertExprType(contents, "this", "groovy.lang.MetaClass");
     }
 
     @Test
     public void testDGM11() {
         String contents = "([1] ).collectEntries { index -> index.intValue() }";
-        String str = "index";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        assertExprType(contents, "index", "java.lang.Integer");
     }
 
     @Test
     public void testDGM12() {
         String contents = "[key:1].findResult(1) { key, value -> key.toUpperCase() + value.intValue() }";
-        String str = "key";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.String");
+        assertExprType(contents, "key", "java.lang.String");
     }
 
     @Test
     public void testDGM13() {
         String contents = "[key:1].findResult(1) { key, value -> key.toUpperCase() + value.intValue() }";
-        String str = "value";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        assertExprType(contents, "value", "java.lang.Integer");
     }
 
     @Test
     public void testDGM14() {
         String contents = "[1].findResults { it.intValue() }";
-        String str = "it";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        assertExprType(contents, "it", "java.lang.Integer");
     }
 
     @Test
     public void testDGM15() {
         String contents = "[key:1].findResults { it.getKey().toUpperCase() + it.getValue().intValue() }";
-        String str = "it";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.util.Map$Entry<java.lang.String,java.lang.Integer>");
+        assertExprType(contents, "it", "java.util.Map$Entry<java.lang.String,java.lang.Integer>");
     }
 
     @Test
     public void testDGM16() {
         String contents = "[key:1].findResults { key, value -> key.toUpperCase() + value.intValue() }";
-        String str = "key";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.String");
+        assertExprType(contents, "key", "java.lang.String");
     }
 
     @Test
     public void testDGM17() {
         String contents = "[key:1].findResults { key, value -> key.toUpperCase() + value.intValue() }";
-        String str = "value";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        assertExprType(contents, "value", "java.lang.Integer");
     }
 
     @Test
     public void testDGM18() {
         String contents = "[key:1].findAll { key, value -> key.toUpperCase() + value.intValue() }";
-        String str = "key";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.String");
+        assertExprType(contents, "key", "java.lang.String");
     }
 
     @Test
     public void testDGM19() {
         String contents = "[key:1].findAll { key, value -> key.toUpperCase() + value.intValue() }";
-        String str = "value";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        assertExprType(contents, "value", "java.lang.Integer");
     }
 
     @Test
     public void testDGM20() {
         String contents = "[key:1].groupBy { key, value -> key.toUpperCase() + value.intValue() }";
-        String str = "key";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.String");
+        assertExprType(contents, "key", "java.lang.String");
     }
 
     @Test
     public void testDGM21() {
         String contents = "[key:1].groupBy { key, value -> key.toUpperCase() + value.intValue() }";
-        String str = "value";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        assertExprType(contents, "value", "java.lang.Integer");
     }
 
     @Test
     public void testDGM22() {
         String contents = "([1]).countBy { it.intValue() }";
-        String str = "it";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        assertExprType(contents, "it", "java.lang.Integer");
     }
 
     @Test
     public void testDGM23() {
         String contents = "[key:1].groupEntriesBy { key, value -> key.toUpperCase() + value.intValue() }";
-        String str = "key";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.String");
+        assertExprType(contents, "key", "java.lang.String");
     }
 
     @Test
     public void testDGM24() {
         String contents = "[key:1].groupEntriesBy { key, value -> key.toUpperCase() + value.intValue() }";
-        String str = "value";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        assertExprType(contents, "value", "java.lang.Integer");
     }
 
     @Test
     public void testDGM25() {
         String contents = "[key:1].inject(1) { key, value -> key.toUpperCase() + value.intValue() }";
-        String str = "key";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.String");
+        assertExprType(contents, "key", "java.lang.String");
     }
 
     @Test
     public void testDGM26() {
         String contents = "[key:1].inject(1) { key, value -> key.toUpperCase() + value.intValue() }";
-        String str = "value";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        assertExprType(contents, "value", "java.lang.Integer");
     }
 
     @Test
     public void testDGM27() {
         String contents = "[key:1].withDefault { key, value -> key.toUpperCase() + value.intValue() }";
-        String str = "key";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.String");
+        assertExprType(contents, "key", "java.lang.String");
     }
 
     @Test
     public void testDGM28() {
         String contents = "[key:1].withDefault { key, value -> key.toUpperCase() + value.intValue() }";
-        String str = "value";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        assertExprType(contents, "value", "java.lang.Integer");
     }
 
     @Test
     public void testDGM29() {
         String contents = "new FileOutputStream().withStream { it }";
-        String str = "it";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.io.OutputStream");
+        assertExprType(contents, "it", "java.io.OutputStream");
     }
 
     @Test
     public void testDGM30() {
         String contents = "new File(\"test\").eachFileMatch(FileType.FILES, 1) { it.getName() }";
-        String str = "it";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.io.File");
+        assertExprType(contents, "it", "java.io.File");
     }
 
     @Test
     public void testDGM31() {
         String contents = "new File(\"test\").eachDirMatch(FileType.FILES, 1) { it.getName() }";
-        String str = "it";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.io.File");
+        assertExprType(contents, "it", "java.io.File");
     }
 
     @Test
     public void testDGM32() {
         String contents = "new File(\"test\").withReader { it.reset() }";
-        String str = "it";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.io.BufferedReader");
+        assertExprType(contents, "it", "java.io.BufferedReader");
     }
 
     @Test
     public void testDGM33() {
         String contents = "new FileReader(new File(\"test\")).filterLine(new FileWriter(new File(\"test\"))) { it.toUpperCase() }";
-        String str = "it";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.String");
+        assertExprType(contents, "it", "java.lang.String");
     }
 
     @Test
     public void testDGM34() {
         String contents = "new File(\"test\").withOutputStream { it.flush() }";
-        String str = "it";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.io.OutputStream");
+        assertExprType(contents, "it", "java.io.OutputStream");
     }
 
     @Test
     public void testDGM35() {
         String contents = "new File(\"test\").withInputStream { it.flush() }";
-        String str = "it";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.io.InputStream");
+        assertExprType(contents, "it", "java.io.InputStream");
     }
 
     @Test
     public void testDGM36() {
         String contents = "new File(\"test\").withDataOutputStream { it.flush() }";
-        String str = "it";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.io.DataOutputStream");
+        assertExprType(contents, "it", "java.io.DataOutputStream");
     }
 
     @Test
     public void testDGM37() {
         String contents = "new File(\"test\").withDataInputStream { it.flush() }";
-        String str = "it";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.io.DataInputStream");
+        assertExprType(contents, "it", "java.io.DataInputStream");
     }
 
     @Test
     public void testDGM38() {
         String contents = "new File(\"test\").withWriter { it.flush() }";
-        String str = "it";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.io.BufferedWriter");
+        assertExprType(contents, "it", "java.io.BufferedWriter");
     }
 
     @Test
     public void testDGM39() {
         String contents = "new File(\"test\").withWriterAppend { it.flush() }";
-        String str = "it";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.io.BufferedWriter");
+        assertExprType(contents, "it", "java.io.BufferedWriter");
     }
 
     @Test
     public void testDGM40() {
         String contents = "new File(\"test\").withPrintWriter { it.flush() }";
-        String str = "it";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.io.PrintWriter");
+        assertExprType(contents, "it", "java.io.PrintWriter");
     }
 
     @Test
     public void testDGM41() {
         String contents = "new FileReader(new File(\"test\")).transformChar(new FileWriter(new File(\"test\"))) { it.toUpperCase() }";
-        String str = "it";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.String");
+        assertExprType(contents, "it", "java.lang.String");
     }
 
     @Test
     public void testDGM42() {
         String contents = "new FileReader(new File(\"test\")).transformLine(new FileWriter(new File(\"test\"))) { it.toUpperCase() }";
-        String str = "it";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.String");
+        assertExprType(contents, "it", "java.lang.String");
     }
 
     @Test
     public void testDGM43() {
         String contents = "\"\".eachMatch(\"\") { it.toLowerCase() }";
-        String str = "it";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertType(contents, start, end, "java.lang.String");
+        assertExprType(contents, "it", "java.lang.String");
     }
 
     @Test // GRECLIPSE-1695
@@ -436,8 +325,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             "}.each {\n" +
             "  it\n" +
             "}\n";
-        int offset = contents.lastIndexOf("it");
-        assertType(contents, offset, offset + 2, "java.lang.String");
+        assertExprType(contents, "it", "java.lang.String");
     }
 
     @Test // GRECLIPSE-1695 redux
@@ -449,8 +337,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             "}.each {\n" +
             "  it\n" +
             "}\n";
-        int offset = contents.lastIndexOf("it");
-        assertType(contents, offset, offset + 2, "java.lang.String");
+        assertExprType(contents, "it", "java.lang.String");
     }
 
     @Test
@@ -470,8 +357,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             "} as Comparator).each {\n" +
             "  it\n" +
             "}\n";
-        int offset = contents.lastIndexOf("it");
-        assertType(contents, offset, offset + 2, jdkListSort ? "java.lang.Void" : "java.lang.String");
+        assertExprType(contents, "it", jdkListSort ? "java.lang.Void" : "java.lang.String");
     }
 
     @Test
@@ -480,9 +366,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             "pats.eachWithIndex { pat, idx ->\n" + // T <T> eachWithIndex(T self, Closure task)
             "  \n" +
             "}\n";
-        int start = contents.indexOf("eachWithIndex");
-        int end = start + "eachWithIndex".length();
-        assertType(contents, start, end, "java.util.regex.Pattern[]");
+        assertExprType(contents, "eachWithIndex", "java.util.regex.Pattern[]");
     }
 
     @Test
@@ -493,9 +377,8 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             "}.collect {\n" + // <T> List<T> collect(Object self, Closure<T> xform)
             "  it\n" +
             "}\n";
-        int start = contents.indexOf("collect");
-        int end = start + "collect".length();
-        assertTypeOneOf(contents, start, end, "java.util.List", "java.util.List<T>", "java.util.List<java.lang.Object<T>>");
+        int start = contents.lastIndexOf("collect"), until = start + "collect".length();
+        assertTypeOneOf(contents, start, until, "java.util.List", "java.util.List<T>", "java.util.List<java.lang.Object<T>>");
     }
 
     @Test
@@ -504,9 +387,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             "String dgm(Object[] arr) { null }\n" +
             "Object dgm(Object obj) { null }\n" +
             "def result = dgm(ints)\n";
-        int start = contents.indexOf("result");
-        int end = start + "result".length();
-        assertType(contents, start, end, "java.lang.Object");
+        assertExprType(contents, "result", "java.lang.Object");
     }
 
     @Test
@@ -516,9 +397,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             "Object dgm(Object obj) { null }\n" +
             "String dgm(Object[] arr) { null }\n" +
             "def result = dgm(ints)\n";
-        int start = contents.indexOf("result");
-        int end = start + "result".length();
-        assertType(contents, start, end, "java.lang.String");
+        assertExprType(contents, "result", "java.lang.String");
     }
 
     @Test
@@ -528,9 +407,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             "Integer dgm(Integer[] arr) { null }\n" +
             "Object dgm(Object obj) { null }\n" +
             "def result = dgm(ints)\n";
-        int start = contents.indexOf("result");
-        int end = start + "result".length();
-        assertType(contents, start, end, "java.lang.Object");
+        assertExprType(contents, "result", "java.lang.Object");
     }
 
     @Test
@@ -540,9 +417,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         String contents = "int[] ints = [1, 2, 3]\n" +
             "Number dgm(Number[] arr) { null }\n" +
             "def result = dgm(ints)\n";
-        int start = contents.indexOf("result");
-        int end = start + "result".length();
-        assertType(contents, start, end, "java.lang.Number");
+        assertExprType(contents, "result", "java.lang.Number");
         //assertUnknownConfidence(contents, start, end, "java.lang.Object", false);
     }
 
@@ -551,79 +426,86 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         String contents = "Integer[] ints = [1, 2, 3]\n" +
             "Number dgm(Number[] arr) { null }\n" +
             "def result = dgm(ints)\n";
-        int start = contents.indexOf("result");
-        int end = start + "result".length();
-        assertType(contents, start, end, "java.lang.Number");
+        assertExprType(contents, "result", "java.lang.Number");
     }
 
     @Test
     public void testDGMDeclaring() {
-        // With groovy 2.0, there are some new DGM classes.  Need to ensure that we are using those classes as the declaring type, but only for 2.0 or later.
         String contents = "\"\".eachLine";
-        String str = "eachLine";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.StringGroovyMethods");
+        assertDeclType(contents, "eachLine", "org.codehaus.groovy.runtime.StringGroovyMethods");
     }
 
     @Test
     public void testDGMDeclaring2() {
         String contents = "new File().eachLine";
-        String str = "eachLine";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.ResourceGroovyMethods");
+        assertDeclType(contents, "eachLine", "org.codehaus.groovy.runtime.ResourceGroovyMethods");
     }
 
     @Test
     public void testDGMDeclaring3() {
-        String contents = "Writer w\nw.leftShift";
-        String str = "leftShift";
-        int start = contents.lastIndexOf(str);
-        int end = start + str.length();
-        assertDeclaringType(contents, start, end, "org.codehaus.groovy.runtime.IOGroovyMethods");
+        String contents = "Writer w; w.leftShift";
+        assertDeclType(contents, "leftShift", "org.codehaus.groovy.runtime.IOGroovyMethods");
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/372
     public void testDGSMDeclaring() {
         String contents = "Date.parse('format', 'value')";
-        String target = "parse";
-        int start = contents.lastIndexOf(target), until = start + target.length();
-        assertDeclaringType(contents, start, until, "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
+        assertDeclType(contents, "parse", "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
     }
 
     @Test
     public void testDGSMDeclaring2() {
         String contents = "Date.sleep(42)";
-        String target = "sleep";
-        int start = contents.lastIndexOf(target), until = start + target.length();
-        assertDeclaringType(contents, start, until, "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
+        assertDeclType(contents, "sleep", "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
     }
 
     @Test
     public void testDGSMDeclaring3() {
+        String contents = "sleep 42";
+        assertDeclType(contents, "sleep", "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
+    }
+
+    @Test
+    public void testDGSMDeclaring4() {
         String contents = "Date.getLastMatcher()";
-        String target = "getLastMatcher";
-        int start = contents.lastIndexOf(target), until = start + target.length();
+        int start = contents.lastIndexOf("getLastMatcher"), until = start + "getLastMatcher".length();
         assertUnknownConfidence(contents, start, until, "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods", false);
+    }
+
+    @Test
+    public void testDGSMDeclaring5() {
+        String contents = "java.util.regex.Matcher.getLastMatcher()";
+        assertDeclType(contents, "getLastMatcher", "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
     }
 
     @Test
     public void testStaticMixinDGM() {
         String contents = "class Parrot { static void echo(String self) { println \"Parrot says: $self\" } }\nString.mixin(Parrot)\n'sqwak'.echo()";
-        String target = "mixin";
-        int start = contents.lastIndexOf(target), until = start + target.length();
-        assertDeclaringType(contents, start, until, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
-        target = "echo";
-        start = contents.lastIndexOf(target); until = start + target.length();
-        //assertDeclaringType(contents, start, until, "Parrot"); // added to String usinf DGM.mixin(Class)
+        assertDeclType(contents, "mixin", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+      //assertDeclType(contents, "echo", "Parrot"); // added to String using DGM.mixin(Class)
     }
 
     @Test
     public void testStaticWithDGM() {
         String contents = "Date.with { delegate }"; // type of delegate checked in ClosureInferencingTests
-        String target = "with";
-        int start = contents.lastIndexOf(target), until = start + target.length();
-        assertDeclaringType(contents, start, until, "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+        assertDeclType(contents, "with", "org.codehaus.groovy.runtime.DefaultGroovyMethods");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/512
+    public void testConflictWithDGM() {
+        createUnit("Reflections", "import java.lang.reflect.*\n" +
+            "class Reflections {\n" +
+            "  static Method findMethod(String methodName, Class<?> targetClass, Class<?>... paramTypes) {\n" +
+            "  }\n" +
+            "  static Object invokeMethod(Method method, Object target, Object... params) {\n" +
+            "  }\n" +
+            "}\n");
+
+        String contents =
+            "static void setThreadLocalProperty(String key, Object val) { Class target = null // redacted\n" +
+            "  def setter = Reflections.findMethod('setThreadLocalProperty', target, String, Object)\n" +
+            "  Reflections.invokeMethod(setter, target, key, val)\n" +
+            "}\n";
+        assertDeclType(contents, "invokeMethod", "Reflections"); // not DefaultGroovyMethods
     }
 }

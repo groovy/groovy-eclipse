@@ -26,7 +26,6 @@ import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.groovy.tests.ReconcilerUtils
 import org.eclipse.jdt.core.search.TypeNameMatch
 import org.eclipse.jdt.core.tests.util.Util
-import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.Document
 import org.eclipse.text.edits.DeleteEdit
@@ -104,7 +103,9 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
         def unit = addGroovySource(contents, nextUnitName())
         ReconcilerUtils.reconcile(unit)
 
-        OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, new NoChoiceQuery())
+        OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, { TypeNameMatch[][] matches, ISourceRange[] range ->
+            Assert.fail("Should not have a choice, but found $matches[0][0] and $matches[0][1]")
+        })
         TextEdit edit = organize.calculateMissingImports()
         if (expectedImports == null) {
             Assert.assertNull('Expected null due to a compile error in the contents', edit)
@@ -154,7 +155,9 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
         def unit = addGroovySource(originalContents.stripIndent(), nextUnitName(), 'main')
         ReconcilerUtils.reconcile(unit)
 
-        OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, new NoChoiceQuery())
+        OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, { TypeNameMatch[][] matches, ISourceRange[] range ->
+            Assert.fail("Should not have a choice, but found $matches[0][0] and $matches[0][1]")
+        })
         TextEdit edit = organize.calculateMissingImports()
         // NOTE: Must match TestProject.createGroovyType()!
         String prefix = "package main;\n\n"
@@ -177,26 +180,15 @@ abstract class OrganizeImportsTestSuite extends GroovyEclipseTestSuite {
         def unit = addGroovySource(contents.stripIndent(), nextUnitName())
         ReconcilerUtils.reconcile(unit)
 
-        def query = new ChoiceQuery()
-        OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, query)
+        List<String> choices
+        OrganizeGroovyImports organize = new OrganizeGroovyImports(unit, { TypeNameMatch[][] matches, ISourceRange[] range ->
+            choices = matches[0].collect { it.type.fullyQualifiedName }
+            return new TypeNameMatch[0]
+        })
         organize.calculateMissingImports()
         for (choice in expectedChoices) {
-            Assert.assertTrue("Should have found $choice in choices", query.choices.contains(choice))
+            Assert.assertTrue("Should have found $choice in choices", choices.contains(choice))
         }
-        Assert.assertEquals("Wrong number of choices found.  Expecting:\n$expectedChoices\nFound:\n$query.choices", query.choices.size(), expectedChoices.size())
-    }
-}
-
-class NoChoiceQuery implements IChooseImportQuery {
-    public TypeNameMatch[] chooseImports(TypeNameMatch[][] matches, ISourceRange[] range) {
-        Assert.fail("Should not have a choice, but found $matches[0][0] and $matches[0][1]")
-    }
-}
-
-class ChoiceQuery implements IChooseImportQuery {
-    List<String> choices
-    public TypeNameMatch[] chooseImports(TypeNameMatch[][] matches, ISourceRange[] range) {
-        choices = matches[0].collect { it.type.fullyQualifiedName }
-        return []
+        Assert.assertEquals("Wrong number of choices found.  Expecting:\n$expectedChoices\nFound:\n$choices", choices.size(), expectedChoices.size())
     }
 }

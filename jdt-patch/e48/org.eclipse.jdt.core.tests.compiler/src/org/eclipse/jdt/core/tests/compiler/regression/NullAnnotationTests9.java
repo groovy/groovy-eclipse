@@ -75,7 +75,7 @@ public class NullAnnotationTests9 extends AbstractNullAnnotationTest {
 				"	exports org.eclipse.jdt.annotation;\n" +
 				"}\n",
 
-				"org/eclipse.jdt.annotation/DefaultLocation.java",
+				"org/eclipse/jdt/annotation/DefaultLocation.java",
 				"package org.eclipse.jdt.annotation;\n" + 
 				"\n" + 
 				"public enum DefaultLocation {\n" + 
@@ -162,19 +162,15 @@ public class NullAnnotationTests9 extends AbstractNullAnnotationTest {
 		}
 		// record module information in CUs:
 		CompilationUnit[] compilationUnits = Util.compilationUnits(testFiles);
-		CompilationUnit modCU = null;
 		for (int i = 0; i < compilationUnits.length; i++) {
 			char[] fileName = compilationUnits[i].getFileName();
 			String fileNameString = String.valueOf(compilationUnits[i].getFileName());
 			if (CharOperation.endsWith(fileName, TypeConstants.MODULE_INFO_FILE_NAME)) {
-				modCU = compilationUnits[i];
-				compilationUnits[i].module = moduleFiles.get(fileNameString);
+				compilationUnits[i].module = moduleFiles.get(fileNameString.replace(File.separator, "/"));
 			} else {
-				String modName = this.file2module.get(fileNameString);
+				String modName = this.file2module.get(fileNameString.replace(File.separator, "/"));
 				if (modName != null) {
 					compilationUnits[i].module = modName.toCharArray();
-					if (modCU != null)
-						compilationUnits[i].setModule(modCU);
 				}
 			}
 		}

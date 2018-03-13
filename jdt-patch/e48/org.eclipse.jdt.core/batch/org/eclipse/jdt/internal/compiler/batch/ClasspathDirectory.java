@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -123,15 +123,13 @@ private NameEnvironmentAnswer findClassInternal(char[] typeName, String qualifie
 		CompilationUnit unit = new CompilationUnit(null, fullSourcePath, this.encoding, this.destinationPath);
 		unit.module = this.module == null ? null : this.module.name();
 		if (!binaryExists)
-			return new NameEnvironmentAnswer(new CompilationUnit(null,
-					fullSourcePath, this.encoding, this.destinationPath),
+			return new NameEnvironmentAnswer(unit,
 					fetchAccessRestriction(qualifiedBinaryFileName));
 		String fullBinaryPath = this.path + qualifiedBinaryFileName;
 		long binaryModified = new File(fullBinaryPath).lastModified();
 		long sourceModified = new File(fullSourcePath).lastModified();
 		if (sourceModified > binaryModified)
-			return new NameEnvironmentAnswer(new CompilationUnit(null,
-					fullSourcePath, this.encoding, this.destinationPath),
+			return new NameEnvironmentAnswer(unit,
 					fetchAccessRestriction(qualifiedBinaryFileName));
 	}
 	if (binaryExists) {
@@ -330,6 +328,7 @@ public boolean hasCUDeclaringPackage(String qualifiedPackageName, Function<Compi
 }
 @Override
 public void reset() {
+	super.reset();
 	this.directoryCache = new Hashtable(11);
 }
 @Override

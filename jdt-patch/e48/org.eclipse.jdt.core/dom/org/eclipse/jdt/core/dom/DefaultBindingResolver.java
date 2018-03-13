@@ -318,14 +318,15 @@ class DefaultBindingResolver extends BindingResolver {
 
 	@Override
 	synchronized IPackageBinding getPackageBinding(org.eclipse.jdt.internal.compiler.lookup.PackageBinding packageBinding) {
-		if (packageBinding == null || packageBinding instanceof ProblemPackageBinding) {
+		if (packageBinding == null) {
 			return null;
 		}
 		IPackageBinding binding = (IPackageBinding) this.bindingTables.compilerBindingsToASTBindings.get(packageBinding);
 		if (binding != null) {
 			return binding;
 		}
-		binding = new PackageBinding(packageBinding, this);
+		binding = packageBinding instanceof ProblemPackageBinding ? new RecoveredPackageBinding(packageBinding, this) :
+				new PackageBinding(packageBinding, this);
 		this.bindingTables.compilerBindingsToASTBindings.put(packageBinding, binding);
 		return binding;
 	}

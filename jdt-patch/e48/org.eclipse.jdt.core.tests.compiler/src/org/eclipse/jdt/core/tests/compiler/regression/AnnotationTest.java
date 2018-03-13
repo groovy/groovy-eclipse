@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -27,8 +27,11 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -96,6 +99,21 @@ public class AnnotationTest extends AbstractComparableTest {
 			options.put(CompilerOptions.OPTION_ReportMissingJavadocComments, this.reportMissingJavadocComments);
 		return options;
 	}
+	static class CustomFileSystem extends FileSystem {
+		// make protected constructor accessible
+		CustomFileSystem(Collection<String> limitModules) {
+			super(Util.getJavaClassLibs(), new String[0], null, limitModules);
+		}
+	}
+	@Override
+	protected INameEnvironment getNameEnvironment(String[] testFiles, String[] classPaths) {
+		if (this.javaClassLib != null) {
+			this.classpaths = classPaths == null ? getDefaultClassPaths() : classPaths;
+			return new InMemoryNameEnvironment(testFiles, new INameEnvironment[] {this.javaClassLib });
+		}
+		return super.getNameEnvironment(testFiles, classPaths);
+	}
+
 	/* (non-Javadoc)
 	 * @see junit.framework.TestCase#setUp()
 	 */
@@ -110,6 +128,7 @@ public class AnnotationTest extends AbstractComparableTest {
 		". Only annotation types marked @Repeatable can be used multiple times at one target.\n"
 		:
 		". Repeated annotations are allowed only at source level 1.8 or above\n";
+		this.javaClassLib = null; // use only in selected tests
 	}
 
 	public void test001() {
@@ -10293,13 +10312,22 @@ public void testBug365437b() {
 			"	               ^^^^^^^\n" + 
 			"The method foo3a() from the type A is never used locally\n" + 
 			"----------\n";
-	runNegativeTest(
-			true,
-			testFiles,
-			null, 
-			customOptions,
-			expectedErrorString,
-			JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
+	INameEnvironment save = this.javaClassLib;
+	try {
+		if (isJRE9) {
+			List<String> limitModules = Arrays.asList("java.se", "java.xml.ws.annotation");
+			this.javaClassLib = new CustomFileSystem(limitModules);
+		}
+		runNegativeTest(
+				true,
+				testFiles,
+				null,
+				customOptions,
+				expectedErrorString,
+				JavacTestOptions.Excuse.EclipseWarningConfiguredAsError);
+	} finally {
+		this.javaClassLib = save;
+	}
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=365437
 // @SafeVarargs
@@ -10834,41 +10862,49 @@ public void _testBug386356_1() {
 // Bug 386356 - Type mismatch error with annotations and generics
 // test case from comment 6
 public void testBug386356_2() {
-	runConformTest(
-		new String[] {
-			"com/ermahgerd/Ermahgerd.java",
-			"package com.ermahgerd;\n" + 
-			"\n" + 
-			"public class Ermahgerd {\n" + 
-			"}",
+	INameEnvironment save = this.javaClassLib;
+	try {
+		if (isJRE9) {
+			List<String> limitModules = Arrays.asList("java.se", "java.xml.bind");
+			this.javaClassLib = new CustomFileSystem(limitModules);
+		}
+		runConformTest(
+			new String[] {
+				"com/ermahgerd/Ermahgerd.java",
+				"package com.ermahgerd;\n" +
+				"\n" +
+				"public class Ermahgerd {\n" +
+				"}",
 
-			"com/ermahgerd/package-info.java",
-			"@XmlJavaTypeAdapters({ @XmlJavaTypeAdapter(value = ErmahgerdXmlAdapter.class, type = Ermahgerd.class) })\n" + 
-			"package com.ermahgerd;\n" + 
-			"import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;\n" + 
-			"import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapters;",
-			
-			"com/ermahgerd/ErmahgerdXmlAdapter.java",
-			"package com.ermahgerd;\n" + 
-			"\n" + 
-			"import javax.xml.bind.annotation.adapters.XmlAdapter;\n" + 
-			"\n" + 
-			"public class ErmahgerdXmlAdapter extends XmlAdapter<String,Ermahgerd> {\n" + 
-			"\n" + 
-			"	@Override\n" + 
-			"	public String marshal(Ermahgerd arg0) throws Exception {\n" + 
-			"		// TODO Auto-generated method stub\n" + 
-			"		return null;\n" + 
-			"	}\n" + 
-			"\n" + 
-			"	@Override\n" + 
-			"	public Ermahgerd unmarshal(String arg0) throws Exception {\n" + 
-			"		// TODO Auto-generated method stub\n" + 
-			"		return null;\n" + 
-			"	}\n" + 
-			"}"
-			
-		});
+				"com/ermahgerd/package-info.java",
+				"@XmlJavaTypeAdapters({ @XmlJavaTypeAdapter(value = ErmahgerdXmlAdapter.class, type = Ermahgerd.class) })\n" +
+				"package com.ermahgerd;\n" +
+				"import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;\n" +
+				"import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapters;",
+				
+				"com/ermahgerd/ErmahgerdXmlAdapter.java",
+				"package com.ermahgerd;\n" +
+				"\n" +
+				"import javax.xml.bind.annotation.adapters.XmlAdapter;\n" +
+				"\n" +
+				"public class ErmahgerdXmlAdapter extends XmlAdapter<String,Ermahgerd> {\n" +
+				"\n" +
+				"	@Override\n" +
+				"	public String marshal(Ermahgerd arg0) throws Exception {\n" +
+				"		// TODO Auto-generated method stub\n" +
+				"		return null;\n" +
+				"	}\n" +
+				"\n" +
+				"	@Override\n" +
+				"	public Ermahgerd unmarshal(String arg0) throws Exception {\n" +
+				"		// TODO Auto-generated method stub\n" +
+				"		return null;\n" +
+				"	}\n" +
+				"}"
+			});
+	} finally {
+		this.javaClassLib = save;
+	}
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=398657
 public void test398657() throws Exception {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017 IBM Corporation.
+ * Copyright (c) 2017, 2018 IBM Corporation.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -25,5 +25,20 @@ package org.eclipse.jdt.core;
  * @since 3.14
  */
 public interface IModuleDescription extends IMember, IAnnotatable {
-	// empty block
+
+	/**
+	 * Answer the names of all modules directly required from this module.
+	 * @return a non-null array of module names
+	 * @since 3.14
+	 */
+	String[] getRequiredModuleNames() throws JavaModelException;
+	
+	/**
+	 * 
+	 * @return true if automatic module, else false
+	 * @since 3.14
+	 */
+	default boolean isAutoModule() {
+		return false;
+	}
 }

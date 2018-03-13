@@ -18,43 +18,39 @@
  */
 package org.codehaus.groovy.control.messages;
 
-import java.io.PrintWriter;
-
 import org.codehaus.groovy.control.Janitor;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.syntax.CSTNode;
 
-
+import java.io.PrintWriter;
 
 /**
  *  A base class for compilation messages.
  *
  *  @author <a href="mailto:cpoirier@dreaming.org">Chris Poirier</a>
  */
-
 public class LocatedMessage extends SimpleMessage
 {
     protected CSTNode context;  // The CSTNode that indicates the location to which the message applies
-    
+
     public LocatedMessage( String message, CSTNode context, SourceUnit source ) 
     {
         super( message, source );
         this.context = context;
     }
-    
-    
+
     public LocatedMessage( String message, Object data, CSTNode context, SourceUnit source ) 
     {
         super( message, data, source );
         this.context = context;
     }
-    
+
     // GRECLIPSE add
     public CSTNode getContext() {
         return context;
     }
     // GRECLIPSE end
-    
+
     public void write( PrintWriter writer, Janitor janitor )
     {
         if (owner instanceof SourceUnit) {
@@ -77,9 +73,4 @@ public class LocatedMessage extends SimpleMessage
             writer.println("");
         }
     }
-    
 }
-
-
-
-

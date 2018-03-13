@@ -24,7 +24,6 @@ import java.util.function.Function;
  */
 public class ToStringSorter <T> {
 	private final Function<T, String> toString;
-	List<Pair <T>> sortedObjects;
 
 	public ToStringSorter(Function<T, String> toString) {
 		this.toString = toString;
@@ -47,11 +46,12 @@ public class ToStringSorter <T> {
 	/**
 	 *  Return a new sorted collection from this unsorted collection.
 	 */
-	public void sort(Collection<T> unSorted) {
+	public List<Pair<T>> sort(Collection<T> unSorted) {
 		int size = unSorted.size();
 		//copy the list so can return a new sorted collection
-		this.sortedObjects = new ArrayList<>(size);
-		unSorted.forEach(k -> this.sortedObjects.add(new Pair<>(k, this.toString.apply(k))));
-		Collections.sort(this.sortedObjects);
+		List<Pair <T>> sortedObjects = new ArrayList<>(size);
+		unSorted.forEach(k -> sortedObjects.add(new Pair<>(k, this.toString.apply(k))));
+		Collections.sort(sortedObjects);
+		return sortedObjects;
 	}
 }

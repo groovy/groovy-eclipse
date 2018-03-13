@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -438,6 +438,7 @@ public class ToolFactory {
 	 * @see org.eclipse.jdt.core.compiler.IScanner
 	 * @see #createScanner(boolean, boolean, boolean, String, String)
 	 */
+	@SuppressWarnings("javadoc") // references deprecated TokenNameIdentifier
 	public static IScanner createScanner(boolean tokenizeComments, boolean tokenizeWhiteSpace, boolean assertMode, boolean recordLineSeparator){
 		// use default workspace compliance
 		long complianceLevelValue = CompilerOptions.versionToJdkLevel(JavaCore.getOption(JavaCore.COMPILER_COMPLIANCE));
@@ -492,6 +493,7 @@ public class ToolFactory {
 	 * @see #createScanner(boolean, boolean, boolean, String, String)
 	 * @since 3.0
 	 */
+	@SuppressWarnings("javadoc") // references deprecated TokenNameIdentifier
 	public static IScanner createScanner(boolean tokenizeComments, boolean tokenizeWhiteSpace, boolean recordLineSeparator, String sourceLevel) {
 		// use default workspace compliance
 		long complianceLevelValue = CompilerOptions.versionToJdkLevel(JavaCore.getOption(JavaCore.COMPILER_COMPLIANCE));
@@ -546,6 +548,7 @@ public class ToolFactory {
 	 *
 	 * @since 3.1
 	 */
+	@SuppressWarnings("javadoc") // references deprecated TokenNameIdentifier
 	public static IScanner createScanner(boolean tokenizeComments, boolean tokenizeWhiteSpace, boolean recordLineSeparator, String sourceLevel, String complianceLevel) {
 		PublicScanner scanner = null;
 		long sourceLevelValue = CompilerOptions.versionToJdkLevel(sourceLevel);

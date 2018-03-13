@@ -59,7 +59,6 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
@@ -154,72 +153,67 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 derefList = success = doTestForAfterArrayAccess(node);
             }
             if (success) {
-                maybeRememberTypeOfLHS(result);
-                categories = result.scope.getCategoryNames();
-                resultingType = findResultingType(result, derefList);
                 visitSuccessful = true;
-                isStatic = node instanceof StaticMethodCallExpression ||
-                    // if we are completing on '.class' then never static context
-                    (node instanceof ClassExpression && !resultingType.equals(VariableScope.CLASS_CLASS_NODE));
                 currentScope = result.scope;
+                maybeRememberTypeOfLHS(result);
+                setResultingType(result, derefList);
+                categories = result.scope.getCategoryNames();
+                isStatic = (node instanceof StaticMethodCallExpression ||
+                    // if we are completing on '.class' then never static context
+                    (node instanceof ClassExpression && !VariableScope.CLASS_CLASS_NODE.equals(resultingType)));
                 return VisitStatus.STOP_VISIT;
             }
             return VisitStatus.CONTINUE;
         }
 
-        private ClassNode findResultingType(TypeLookupResult result, boolean derefList) {
+        private void setResultingType(TypeLookupResult result, boolean derefList) {
             ContentAssistContext context = getContext();
-            // if completing on a method call with an implicit 'this'.
-            ClassNode candidate = (context.location == ContentAssistLocation.METHOD_CONTEXT ? result.declaringType : result.type);
+
+            if (context.location == ContentAssistLocation.METHOD_CONTEXT ||
+                    (result.declaration == null && result.declaringType != null)) {
+                resultingType = result.declaringType;
+            } else {
+                resultingType = result.type;
+            }
 
             if (derefList) {
                 for (int i = 0; i < derefCount; i += 1) {
                     // GRECLIPSE-742: does the LHS type have a 'getAt' method?
                     boolean getAtFound = false;
-                    List<MethodNode> getAts = candidate.getMethods("getAt");
+                    List<MethodNode> getAts = resultingType.getMethods("getAt");
                     for (MethodNode getAt : getAts) {
                         if (getAt.getParameters() != null && getAt.getParameters().length == 1) {
-                            candidate = getAt.getReturnType();
+                            resultingType = getAt.getReturnType();
                             getAtFound = true;
                         }
                     }
                     if (!getAtFound) {
-                        if (VariableScope.MAP_CLASS_NODE.equals(candidate)) {
+                        if (VariableScope.MAP_CLASS_NODE.equals(resultingType)) {
                             // for maps, always use the type of value
-                            candidate = candidate.getGenericsTypes()[1].getType();
+                            resultingType = resultingType.getGenericsTypes()[1].getType();
                         } else {
                             for (int j = 0; j < derefCount; j += 1) {
-                                candidate = VariableScope.extractElementType(candidate);
+                                resultingType = VariableScope.extractElementType(resultingType);
                             }
                         }
                     }
                 }
             }
 
-            boolean extractElementType = false; // for spread operations
-
             ASTNode enclosing = result.scope.getEnclosingNode();
             if (enclosing instanceof PropertyExpression) {
                 // if enclosing is method pointer expression, result type is Closure<T>, not just T
                 if (((PropertyExpression) enclosing).getObjectExpression() instanceof MethodPointerExpression) {
-                    ClassNode closureType = VariableScope.clonedClosure();
-                    Parameter[] parameters = (result.declaration instanceof MethodNode ?
-                        ((MethodNode) result.declaration).getParameters() : Parameter.EMPTY_ARRAY);
-                    GroovyUtils.updateClosureWithInferredTypes(closureType, candidate, parameters);
-                    return closureType;
+                    resultingType = result.declaringType;
+                } else if (((PropertyExpression) enclosing).isSpreadSafe()) {
+                    resultingType = VariableScope.extractElementType(resultingType);
                 }
-                extractElementType = ((PropertyExpression) enclosing).isSpreadSafe();
-            } else if (enclosing instanceof MethodCallExpression) {
-                extractElementType = ((MethodCallExpression) enclosing).isSpreadSafe();
+            } else if (enclosing instanceof MethodCallExpression && ((MethodCallExpression) enclosing).isSpreadSafe()) {
+                resultingType = VariableScope.extractElementType(resultingType);
             }
-
-            if (extractElementType) {
-                candidate = VariableScope.extractElementType(candidate);
+            if (ClassHelper.isPrimitiveType(resultingType)) {
+                resultingType = ClassHelper.getWrapper(resultingType);
             }
-            if (ClassHelper.isPrimitiveType(candidate)) {
-                candidate = ClassHelper.getWrapper(candidate);
-            }
-            return candidate;
         }
 
         /**

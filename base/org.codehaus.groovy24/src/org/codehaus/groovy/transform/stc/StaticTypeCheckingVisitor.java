@@ -42,7 +42,36 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
-import org.codehaus.groovy.ast.expr.*;
+import org.codehaus.groovy.ast.expr.ArgumentListExpression;
+import org.codehaus.groovy.ast.expr.AttributeExpression;
+import org.codehaus.groovy.ast.expr.BinaryExpression;
+import org.codehaus.groovy.ast.expr.BitwiseNegationExpression;
+import org.codehaus.groovy.ast.expr.CastExpression;
+import org.codehaus.groovy.ast.expr.ClassExpression;
+import org.codehaus.groovy.ast.expr.ClosureExpression;
+import org.codehaus.groovy.ast.expr.ClosureListExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
+import org.codehaus.groovy.ast.expr.DeclarationExpression;
+import org.codehaus.groovy.ast.expr.EmptyExpression;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.FieldExpression;
+import org.codehaus.groovy.ast.expr.ListExpression;
+import org.codehaus.groovy.ast.expr.MapEntryExpression;
+import org.codehaus.groovy.ast.expr.MapExpression;
+import org.codehaus.groovy.ast.expr.MethodCall;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.PostfixExpression;
+import org.codehaus.groovy.ast.expr.PrefixExpression;
+import org.codehaus.groovy.ast.expr.PropertyExpression;
+import org.codehaus.groovy.ast.expr.RangeExpression;
+import org.codehaus.groovy.ast.expr.SpreadExpression;
+import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
+import org.codehaus.groovy.ast.expr.TernaryExpression;
+import org.codehaus.groovy.ast.expr.TupleExpression;
+import org.codehaus.groovy.ast.expr.UnaryMinusExpression;
+import org.codehaus.groovy.ast.expr.UnaryPlusExpression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.CaseStatement;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.EmptyStatement;
@@ -89,7 +118,47 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.codehaus.groovy.ast.ClassHelper.*;
+import static org.codehaus.groovy.ast.ClassHelper.BigDecimal_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.BigInteger_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.Boolean_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.Byte_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.CLASS_Type;
+import static org.codehaus.groovy.ast.ClassHelper.CLOSURE_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.Character_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.DYNAMIC_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.Double_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.Float_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.GROOVY_OBJECT_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.GSTRING_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.Integer_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.Iterator_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.LIST_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.Long_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.MAP_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.Number_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.OBJECT_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.PATTERN_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.RANGE_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.STRING_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.Short_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.VOID_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.boolean_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.byte_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.char_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.double_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.findSAM;
+import static org.codehaus.groovy.ast.ClassHelper.float_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.getNextSuperClass;
+import static org.codehaus.groovy.ast.ClassHelper.getUnwrapper;
+import static org.codehaus.groovy.ast.ClassHelper.getWrapper;
+import static org.codehaus.groovy.ast.ClassHelper.int_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.isNumberType;
+import static org.codehaus.groovy.ast.ClassHelper.isPrimitiveType;
+import static org.codehaus.groovy.ast.ClassHelper.isSAMType;
+import static org.codehaus.groovy.ast.ClassHelper.long_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.make;
+import static org.codehaus.groovy.ast.ClassHelper.short_TYPE;
+import static org.codehaus.groovy.ast.ClassHelper.void_WRAPPER_TYPE;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.binX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
@@ -126,7 +195,54 @@ import static org.codehaus.groovy.syntax.Types.MINUS_MINUS;
 import static org.codehaus.groovy.syntax.Types.MOD;
 import static org.codehaus.groovy.syntax.Types.MOD_EQUAL;
 import static org.codehaus.groovy.syntax.Types.PLUS_PLUS;
-import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.*;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.ArrayList_TYPE;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.Collection_TYPE;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.Matcher_TYPE;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.NUMBER_OPS;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.UNKNOWN_PARAMETER_TYPE;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.addMethodLevelDeclaredGenerics;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.allParametersAndArgumentsMatch;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.applyGenericsConnections;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.applyGenericsContext;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.applyGenericsContextToParameterClass;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.boundUnboundedWildcards;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.checkCompatibleAssignmentTypes;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.checkPossibleLossOfPrecision;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.chooseBestMethod;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.evaluateExpression;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.extractGenericsConnections;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.extractGenericsParameterMapOfThis;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findDGMMethodsByNameAndArguments;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findSetters;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findTargetVariable;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.fullyResolveType;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.getGenericsWithoutArray;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.getOperationName;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isArrayOp;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isAssignableTo;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isAssignment;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isBeingCompiled;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isBitOperator;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isBoolIntrinsicOp;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isClassClassNodeWrappingConcreteType;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isCompareToBoolean;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isOperationInGroup;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isParameterizedWithGStringOrGStringString;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isParameterizedWithString;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isPowerOperator;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isShiftOperation;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isTraitSelf;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isUsingGenericsOrIsArrayUsingGenerics;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isVargs;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.isWildcardLeftHandSide;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.lastArgMatchesVarg;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.missesGenericsTypes;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.prettyPrintType;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.resolveClassNodeGenerics;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.toMethodParametersString;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.typeCheckMethodArgumentWithGenerics;
+import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.typeCheckMethodsWithGenerics;
 
 /**
  * The main class code visitor responsible for static type checking. It will perform various inspections like checking
@@ -2466,7 +2582,14 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 // implicit it
                 blockParameterTypes = parameterTypesForSAM;
             } else {
-                blockParameterTypes = extractTypesFromParameters(p);
+                blockParameterTypes = new ClassNode[p.length];
+                for (int i = 0; i < p.length; i++) {
+                    if (p[i] != null && !p[i].isDynamicTyped()) {
+                        blockParameterTypes[i] = p[i].getType();
+                    } else {
+                        blockParameterTypes[i] = typeOrNull(parameterTypesForSAM, i);
+                    }
+                }
             }
         }
         for (int i=0; i<blockParameterTypes.length; i++) {
@@ -4101,19 +4224,22 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
     }
 
-    protected ClassNode getType(ASTNode exp) {
+    protected ClassNode getType(final ASTNode exp) {
         ClassNode cn = exp.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE);
-        if (cn != null) return cn;
+        if (cn != null) {
+            return cn;
+        }
         if (exp instanceof ClassExpression) {
             ClassNode node = CLASS_Type.getPlainNodeReference();
             node.setGenericsTypes(new GenericsType[]{
                     new GenericsType(((ClassExpression) exp).getType())
             });
             return node;
-        } else if (exp instanceof VariableExpression) {
-            VariableExpression vexp = (VariableExpression) exp;
+        }
+        if (exp instanceof VariableExpression) {
+            final VariableExpression vexp = (VariableExpression) exp;
             ClassNode selfTrait = isTraitSelf(vexp);
-            if (selfTrait!=null) return makeSelf(selfTrait);
+            if (selfTrait != null) return makeSelf(selfTrait);
             if (vexp == VariableExpression.THIS_EXPRESSION) return makeThis();
             if (vexp == VariableExpression.SUPER_EXPRESSION) return makeSuper();
             final Variable variable = vexp.getAccessedVariable();
@@ -4134,24 +4260,22 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 }
                 // now check for closure override
                 TypeCheckingContext.EnclosingClosure enclosingClosure = typeCheckingContext.getEnclosingClosure();
-                ClassNode[] closureParamTypes = (ClassNode[])(enclosingClosure!=null?enclosingClosure.getClosureExpression().getNodeMetaData(StaticTypesMarker.CLOSURE_ARGUMENTS):null);
-                if (type==null && enclosingClosure !=null && "it".equals(variable.getName()) && closureParamTypes!=null) {
-                    final Parameter[] parameters = enclosingClosure.getClosureExpression().getParameters();
-                    if (parameters.length == 0 && temporaryTypesForExpression == null && closureParamTypes.length != 0) {
-                        type = closureParamTypes[0];
-                    }
+                if (type == null && enclosingClosure != null && temporaryTypesForExpression == null) {
+                    type = getTypeFromClosureArguments(parameter, enclosingClosure);
                 }
                 if (type != null) {
-                    storeType((VariableExpression)exp, type);
+                    storeType(vexp, type);
                     return type;
                 }
                 return getType((Parameter) variable);
             }
+            return vexp.getOriginType();
         }
 
         if (exp instanceof ListExpression) {
             return inferListExpressionType((ListExpression) exp);
-        } else if (exp instanceof MapExpression) {
+        }
+        if (exp instanceof MapExpression) {
             return inferMapExpressionType((MapExpression) exp);
         }
         if (exp instanceof ConstructorCallExpression) {
@@ -4163,15 +4287,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             }
             ClassNode ret = getInferredReturnType(exp);
             return ret != null ? ret : ((MethodNode) exp).getReturnType();
-        }
-        if (exp instanceof ClosureExpression) {
-            ClassNode irt = getInferredReturnType(exp);
-            if (irt != null) {
-                irt = wrapTypeIfNecessary(irt);
-                ClassNode result = CLOSURE_TYPE.getPlainNodeReference();
-                result.setGenericsTypes(new GenericsType[]{new GenericsType(irt)});
-                return result;
-            }
         }
         if (exp instanceof RangeExpression) {
             ClassNode plain = ClassHelper.RANGE_TYPE.getPlainNodeReference();
@@ -4198,12 +4313,6 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (exp instanceof BitwiseNegationExpression) {
             return getType(((BitwiseNegationExpression) exp).getExpression());
         }
-        if (exp instanceof MethodCall) {
-            MethodNode target = (MethodNode) exp.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
-            if (target!=null) {
-                return getType(target);
-            }
-        }
         if (exp instanceof Parameter) {
             return ((Parameter) exp).getOriginType();
         }
@@ -4215,7 +4324,41 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             PropertyNode pn = (PropertyNode) exp;
             return getGenericsResolvedTypeOfFieldOrProperty(pn, pn.getOriginType());
         }
-        return exp instanceof VariableExpression ? ((VariableExpression) exp).getOriginType() : ((Expression) exp).getType();
+        if (exp instanceof ClosureExpression) {
+            ClassNode irt = getInferredReturnType(exp);
+            if (irt != null) {
+                irt = wrapTypeIfNecessary(irt);
+                ClassNode result = CLOSURE_TYPE.getPlainNodeReference();
+                result.setGenericsTypes(new GenericsType[]{new GenericsType(irt)});
+                return result;
+            }
+        } else if (exp instanceof MethodCall) {
+            MethodNode target = (MethodNode) exp.getNodeMetaData(StaticTypesMarker.DIRECT_METHOD_CALL_TARGET);
+            if (target != null) {
+                return getType(target);
+            }
+        }
+        return ((Expression) exp).getType();
+    }
+
+    private ClassNode getTypeFromClosureArguments(Parameter parameter, TypeCheckingContext.EnclosingClosure enclosingClosure) {
+        ClosureExpression closureExpression = enclosingClosure.getClosureExpression();
+        ClassNode[] closureParamTypes = (ClassNode[]) closureExpression.getNodeMetaData(StaticTypesMarker.CLOSURE_ARGUMENTS);
+        if (closureParamTypes == null) return null;
+        final Parameter[] parameters = closureExpression.getParameters();
+        String name = parameter.getName();
+
+        if (parameters.length == 0) {
+            return "it".equals(name) && closureParamTypes.length != 0 ? closureParamTypes[0] : null;
+        }
+
+        for (int index = 0; index < parameters.length; index++) {
+            if (name.equals(parameters[index].getName())) {
+                return closureParamTypes.length > index ? closureParamTypes[index] : null;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -4785,7 +4928,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         if (isClassClassNodeWrappingConcreteType(receiver)) {
             receiver = receiver.getGenericsTypes()[0].getType();
         }
-        addStaticTypeError("Cannot find matching method " + receiver.getText() + "#" + toMethodParametersString(name, args) + ". Please check if the declared type is right and if the method exists.", call);
+        addStaticTypeError("Cannot find matching method " + receiver.getText() + "#" + toMethodParametersString(name, args) + ". Please check if the declared type is correct and if the method exists.", call);
     }
 
     protected void addAmbiguousErrorMessage(final List<MethodNode> foundMethods, final String name, final ClassNode[] args, final Expression expr) {

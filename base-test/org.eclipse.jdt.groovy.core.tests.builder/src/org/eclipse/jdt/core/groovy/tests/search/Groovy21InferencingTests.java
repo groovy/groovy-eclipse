@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,9 +37,8 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "meth { delegate }";
 
         String toFind = "delegate";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "Other");
+        int offset = contents.lastIndexOf(toFind);
+        assertType(contents, offset, offset + toFind.length(), "Other");
     }
 
     @Test
@@ -50,9 +49,8 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "meth { delegate }";
 
         String toFind = "delegate";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "Other");
+        int offset = contents.lastIndexOf(toFind);
+        assertType(contents, offset, offset + toFind.length(), "Other");
     }
 
     @Test
@@ -63,9 +61,8 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "meth { xxx }";
 
         String toFind = "xxx";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Integer");
+        int offset = contents.lastIndexOf(toFind);
+        assertType(contents, offset, offset + toFind.length(), "java.lang.Integer");
     }
 
     @Test
@@ -75,9 +72,8 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "meth { delegate }";
 
         String toFind = "delegate";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.util.List");
+        int offset = contents.lastIndexOf(toFind);
+        assertType(contents, offset, offset + toFind.length(), "java.util.List");
     }
 
     @Test
@@ -87,9 +83,8 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "meth 1, 2, { delegate }";
 
         String toFind = "delegate";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.util.List");
+        int offset = contents.lastIndexOf(toFind);
+        assertType(contents, offset, offset + toFind.length(), "java.util.List");
     }
 
     @Test // expected to be broken (due to missing closing angle bracket on type)
@@ -99,15 +94,42 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
             "meth { delegate }";
 
         String toFind = "delegate";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "Search");
+        int offset = contents.lastIndexOf(toFind);
+        assertType(contents, offset, offset + toFind.length(), "Search");
     }
 
     @Test
     public void testDelegatesToTarget1() {
         createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
             "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.DELEGATE_FIRST) Closure code) { } }");
+
+        String contents = "class A { def x }\n" +
+            "class B { def x, y\n" +
+            "  def m(A a) {\n" +
+            "    use (C) {\n" +
+            "      a.cat {" + // delegate is A, owner is B
+            "        x\n" +
+            "        y\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf('x');
+        assertDeclaringType(contents, offset, offset + 1, "A");
+        offset = contents.lastIndexOf('y');
+        assertDeclaringType(contents, offset, offset + 1, "B");
+    }
+
+    @Test // uses constant instead of literal for target
+    public void testDelegatesToTarget1a() {
+        createUnit("C", "import groovy.lang.DelegatesTo.Target\n" +
+            "class C {\n" +
+            "  private static final String SELF = 'self'\n" +
+            "  static def cat(\n" +
+            "    @Target(C.SELF) Object self,\n" + // getText() will not work with qualifier
+            "    @DelegatesTo(target=SELF, strategy=Closure.DELEGATE_FIRST) Closure code\n" +
+            "   ) { }\n" +
+            "}");
 
         String contents = "class A { def x }\n" +
             "class B { def x, y\n" +
@@ -217,6 +239,31 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
         assertUnknownConfidence(contents, offset, offset + 1, "B", false);
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/415
+    public void testDelegatesToTypeName1() {
+        String contents =
+            "def meth(int x, int y, @DelegatesTo(type='java.util.List') Closure c) { }\n" +
+            "meth 1, 2, { delegate }";
+
+        String toFind = "delegate";
+        int offset = contents.lastIndexOf(toFind);
+        assertType(contents, offset, offset + toFind.length(), "java.util.List");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/415
+    public void testDelegatesToTypeName2() {
+        String contents =
+            "class C {\n" +
+            "  private static final String LIST = 'java.util.List'\n" +
+            "  static void meth(int x, int y, @DelegatesTo(type=LIST) Closure c) { }\n" +
+            "}\n" +
+            "C.meth 1, 2, { delegate }";
+
+        String toFind = "delegate";
+        int offset = contents.lastIndexOf(toFind);
+        assertType(contents, offset, offset + toFind.length(), "java.util.List");
+    }
+
     @Test // https://github.com/groovy/groovy-eclipse/issues/389
     public void testEnumOverrides() {
         String contents =
@@ -294,12 +341,11 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
                 "    robot.move \"left\"\n" +
                 "}";
 
-            int start = contents.lastIndexOf("move");
-            int end = start + "move".length();
-            assertType(contents, start, end, "java.lang.Void");
-            start = contents.lastIndexOf("robot");
-            end = start + "robot".length();
-            assertType(contents, start, end, "Robot");
+            int offset = contents.lastIndexOf("move");
+            assertType(contents, offset, offset + "move".length(), "java.lang.Void");
+
+            offset = contents.lastIndexOf("robot");
+            assertType(contents, offset, offset + "robot".length(), "Robot");
 
             // also, just make sure no problems
             env.fullBuild(project.getFullPath());

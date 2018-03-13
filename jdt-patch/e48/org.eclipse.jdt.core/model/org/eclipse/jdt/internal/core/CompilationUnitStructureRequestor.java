@@ -542,6 +542,7 @@ private org.eclipse.jdt.internal.core.ModuleDescriptionInfo createModuleInfo(Mod
 	info.setFlags(modInfo.modifiers);
 	info.setNameSourceStart(modInfo.nameSourceStart);
 	info.setNameSourceEnd(modInfo.nameSourceEnd);
+	info.addCategories(handle, modInfo.categories);
 	if (modInfo.annotations != null) {
 		int length = modInfo.annotations.length;
 		for (int i = 0; i < length; i++) {

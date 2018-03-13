@@ -38,6 +38,7 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.Annotation;
 import org.eclipse.jdt.internal.compiler.ast.Argument;
 import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
@@ -495,13 +496,18 @@ public final char[] constantPoolName() {
 
 /**
  * After method verifier has finished, fill in missing @NonNull specification from the applicable default.
+ * @param needToApplyParameterNonNullDefault 
+ * @param needToApplyReturnNonNullDefault 
  */
-protected void fillInDefaultNonNullness(AbstractMethodDeclaration sourceMethod) {
+protected void fillInDefaultNonNullness(AbstractMethodDeclaration sourceMethod, boolean needToApplyReturnNonNullDefault, ParameterNonNullDefaultProvider needToApplyParameterNonNullDefault) {
 	if (this.parameterNonNullness == null)
 		this.parameterNonNullness = new Boolean[this.parameters.length];
 	boolean added = false;
 	int length = this.parameterNonNullness.length;
 	for (int i = 0; i < length; i++) {
+		if(!needToApplyParameterNonNullDefault.hasNonNullDefaultForParam(i)) {
+			continue;
+		}
 		if (this.parameters[i].isBaseType())
 			continue;
 		if (this.parameterNonNullness[i] == null) {
@@ -516,6 +522,8 @@ protected void fillInDefaultNonNullness(AbstractMethodDeclaration sourceMethod) 
 	}
 	if (added)
 		this.tagBits |= TagBits.HasParameterAnnotations;
+	if(!needToApplyReturnNonNullDefault)
+		return;
 	if (   this.returnType != null
 		&& !this.returnType.isBaseType()
 		&& (this.tagBits & TagBits.AnnotationNullMASK) == 0)
@@ -532,10 +540,13 @@ protected void fillInDefaultNonNullness18(AbstractMethodDeclaration sourceMethod
 	if(original == null) {
 		return;
 	}
-	if (hasNonNullDefaultFor(DefaultLocationParameter, true, sourceMethod)) {
+	ParameterNonNullDefaultProvider hasNonNullDefaultForParameter = hasNonNullDefaultForParameter(sourceMethod);
+	if (hasNonNullDefaultForParameter.hasAnyNonNullDefault()) {
 		boolean added = false;
 		int length = this.parameters.length;
 		for (int i = 0; i < length; i++) {
+			if (!hasNonNullDefaultForParameter.hasNonNullDefaultForParam(i))
+				continue;
 			TypeBinding parameter = this.parameters[i];
 			if (!original.parameters[i].acceptsNonNullDefault())
 				continue;
@@ -555,7 +566,7 @@ protected void fillInDefaultNonNullness18(AbstractMethodDeclaration sourceMethod
 		if (added)
 			this.tagBits |= TagBits.HasParameterAnnotations;
 	}
-	if (original.returnType != null && hasNonNullDefaultFor(DefaultLocationReturnType, true, sourceMethod) && original.returnType.acceptsNonNullDefault()) {
+	if (original.returnType != null && hasNonNullDefaultForReturnType(sourceMethod) && original.returnType.acceptsNonNullDefault()) {
 		if ((this.returnType.tagBits & TagBits.AnnotationNullMASK) == 0) {
 			this.returnType = env.createAnnotatedType(this.returnType, new AnnotationBinding[]{env.getNonNullAnnotation()});
 		} else if (sourceMethod instanceof MethodDeclaration && (this.returnType.tagBits & TagBits.AnnotationNonNull) != 0 
@@ -654,20 +665,11 @@ public long getAnnotationTagBits() {
 				ASTNode.resolveAnnotations(methodDecl.scope, methodDecl.annotations, originalMethod);
 			CompilerOptions options = scope.compilerOptions();
 			if (options.isAnnotationBasedNullAnalysisEnabled) {
-				boolean usesNullTypeAnnotations = scope.environment().usesNullTypeAnnotations();
-				long nullDefaultBits = usesNullTypeAnnotations ? this.defaultNullness
-						: this.tagBits & (TagBits.AnnotationNonNullByDefault|TagBits.AnnotationNullUnspecifiedByDefault);
+				long nullDefaultBits = this.defaultNullness;
 				if (nullDefaultBits != 0 && this.declaringClass instanceof SourceTypeBinding) {
-					if (usesNullTypeAnnotations) {
-						Binding target = scope.checkRedundantDefaultNullness(this.defaultNullness, typeDecl.declarationSourceStart);
-						if (target != null) {
-							methodDecl.scope.problemReporter().nullDefaultAnnotationIsRedundant(methodDecl, methodDecl.annotations, target);
-						}
-					} else {
-						SourceTypeBinding declaringSourceType = (SourceTypeBinding) this.declaringClass;
-						if (declaringSourceType.checkRedundantNullnessDefaultOne(methodDecl, methodDecl.annotations, nullDefaultBits, usesNullTypeAnnotations)) {
-							declaringSourceType.checkRedundantNullnessDefaultRecurse(methodDecl, methodDecl.annotations, nullDefaultBits, usesNullTypeAnnotations);
-						}
+					Binding target = scope.checkRedundantDefaultNullness(this.defaultNullness, typeDecl.declarationSourceStart);
+					if (target != null) {
+						methodDecl.scope.problemReporter().nullDefaultAnnotationIsRedundant(methodDecl, methodDecl.annotations, target);
 					}
 				}
 			}
@@ -1319,19 +1321,86 @@ public TypeVariableBinding[] typeVariables() {
 	return this.typeVariables;
 }
 //pre: null annotation analysis is enabled
-public boolean hasNonNullDefaultFor(int location, boolean useTypeAnnotations, AbstractMethodDeclaration srcMethod) {
+public boolean hasNonNullDefaultForReturnType(AbstractMethodDeclaration srcMethod) {
+	return hasNonNullDefaultFor(Binding.DefaultLocationReturnType, srcMethod, srcMethod == null ? -1 : srcMethod.declarationSourceStart);
+}
+
+static int getNonNullByDefaultValue(AnnotationBinding annotation) {
+	ElementValuePair[] elementValuePairs = annotation.getElementValuePairs();
+	if (elementValuePairs == null || elementValuePairs.length == 0 ) {
+		// no argument: apply default default
+		ReferenceBinding annotationType = annotation.getAnnotationType();
+		if (annotationType == null) return 0;
+		MethodBinding[] annotationMethods = annotationType.methods();
+		if (annotationMethods != null && annotationMethods.length == 1) {
+			Object value = annotationMethods[0].getDefaultValue();
+			return Annotation.nullLocationBitsFromAnnotationValue(value);
+		}
+		return DefaultLocationsForTrueValue; // custom unconfigurable NNBD
+	} else if (elementValuePairs.length > 0) {
+		// evaluate the contained EnumConstantSignatures:
+		int nullness = 0;
+		for (int i = 0; i < elementValuePairs.length; i++)
+			nullness |= Annotation.nullLocationBitsFromAnnotationValue(elementValuePairs[i].getValue());
+		return nullness;
+	} else {
+		// empty argument: cancel all defaults from enclosing scopes
+		return NULL_UNSPECIFIED_BY_DEFAULT;
+	}
+}
+
+
+//pre: null annotation analysis is enabled
+public ParameterNonNullDefaultProvider hasNonNullDefaultForParameter(AbstractMethodDeclaration srcMethod) {
+	int len = this.parameters.length;
+	boolean[] result = new boolean[len];
+	boolean trueFound = false;
+	boolean falseFound = false;
+	for (int i = 0; i < len; i++) {
+		int start = srcMethod == null || srcMethod.arguments == null || srcMethod.arguments.length == 0 ? -1
+				: srcMethod.arguments[i].declarationSourceStart;
+		int nonNullByDefaultValue = srcMethod != null && start >= 0
+				? srcMethod.scope.localNonNullByDefaultValue(start)
+				: 0;
+		if (nonNullByDefaultValue == 0) {
+			AnnotationBinding[][] parameterAnnotations = getParameterAnnotations();
+			if (parameterAnnotations != null) {
+				AnnotationBinding[] annotationBindings = parameterAnnotations[i];
+				for (AnnotationBinding annotationBinding : annotationBindings) {
+					ReferenceBinding annotationType = annotationBinding.getAnnotationType();
+					if (!annotationType.hasNullBit(TypeIds.BitNonNullByDefaultAnnotation)) {
+						continue;
+					}
+					nonNullByDefaultValue |= getNonNullByDefaultValue(annotationBinding);
+				}
+			}
+		}
+		boolean b;
+		if (nonNullByDefaultValue != 0) {
+			// parameter specific NNBD found
+			b = (nonNullByDefaultValue & Binding.DefaultLocationParameter) != 0;
+		} else {
+			b = hasNonNullDefaultFor(Binding.DefaultLocationParameter, srcMethod, start);
+		}
+		if (b) {
+			trueFound = true;
+		} else {
+			falseFound = true;
+		}
+		result[i] = b;
+	}
+		if (trueFound && falseFound) {
+			return new ParameterNonNullDefaultProvider.MixedProvider(result);
+		}
+		return trueFound ? ParameterNonNullDefaultProvider.TRUE_PROVIDER : ParameterNonNullDefaultProvider.FALSE_PROVIDER;
+	}
+//pre: null annotation analysis is enabled
+private boolean hasNonNullDefaultFor(int location, AbstractMethodDeclaration srcMethod, int start) {
 	if ((this.modifiers & ExtraCompilerModifiers.AccIsDefaultConstructor) != 0)
 		return false;
-	if (useTypeAnnotations) {
-		if (this.defaultNullness != 0)
-			return (this.defaultNullness & location) != 0;
-	} else {
-		if ((this.tagBits & TagBits.AnnotationNonNullByDefault) != 0)
-			return true;
-		if ((this.tagBits & TagBits.AnnotationNullUnspecifiedByDefault) != 0)
-			return false;
-	}
-	return this.declaringClass.hasNonNullDefaultFor(location, useTypeAnnotations, srcMethod == null ? -1 : srcMethod.declarationSourceStart);
+	if (this.defaultNullness != 0)
+		return (this.defaultNullness & location) != 0;
+	return this.declaringClass.hasNonNullDefaultFor(location, start);
 }
 
 public boolean redeclaresPublicObjectMethod(Scope scope) {

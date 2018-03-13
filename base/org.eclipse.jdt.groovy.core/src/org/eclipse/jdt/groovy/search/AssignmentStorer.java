@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -144,8 +144,7 @@ public class AssignmentStorer {
 
     protected void handleSingleAssignment(Expression lhs, VariableScope scope, ClassNode rhsType) {
         if (lhs instanceof PropertyExpression) {
-            lhs = ((PropertyExpression) lhs).getProperty();
-            handleSingleAssignment(lhs, scope, rhsType);
+            handleSingleAssignment(((PropertyExpression) lhs).getProperty(), scope, rhsType);
 
         } else if (lhs instanceof VariableExpression) {
             VariableExpression var = (VariableExpression) lhs;
@@ -172,20 +171,20 @@ public class AssignmentStorer {
      */
     private boolean isInterestingOperation(BinaryExpression assign) {
         switch (assign.getOperation().getType()) {
-            case Types.EQUALS:
-                // should we handle other cases too?
-                // case Types.PLUS_EQUAL:
-                // case Types.MINUS_EQUAL:
-                // case Types.LEFT_SHIFT:
-                // case Types.BITWISE_AND_EQUAL:
-                // case Types.BITWISE_OR_EQUAL:
-                // case Types.BITWISE_XOR_EQUAL:
-                // case Types.DIVIDE_EQUAL:
-                // case Types.LOGICAL_AND_EQUAL:
-                // case Types.LOGICAL_OR_EQUAL:
-                return true;
-            default:
-                return false;
+        case Types.EQUALS:
+        // TODO: Should we handle other cases too?
+        //case Types.PLUS_EQUAL:
+        //case Types.MINUS_EQUAL:
+        //case Types.LEFT_SHIFT:
+        //case Types.BITWISE_AND_EQUAL:
+        //case Types.BITWISE_OR_EQUAL:
+        //case Types.BITWISE_XOR_EQUAL:
+        //case Types.DIVIDE_EQUAL:
+        //case Types.LOGICAL_AND_EQUAL:
+        //case Types.LOGICAL_OR_EQUAL:
+            return true;
+        default:
+            return false;
         }
     }
 

@@ -10,6 +10,9 @@
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.compiler.regression;
 
+import java.util.Iterator;
+import java.util.Map.Entry;
+
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.batch.FileSystem;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
@@ -33,7 +36,21 @@ public class DefaultJavaRuntimeEnvironment extends FileSystem {
 	public void cleanup() {
 		// reset output folder only, which is the last entry on the classpath list
 		// see #getDefaultClassPaths()
-		this.classpaths[this.classpaths.length - 1].reset();
+		Classpath outputFolder = this.classpaths[this.classpaths.length - 1];
+		// and remove the path from cached module locations:
+		for (Iterator<Entry<String, Classpath>> iterator = this.moduleLocations.entrySet().iterator(); iterator.hasNext();) {
+			Entry<String, Classpath> entry = iterator.next();
+			if (entry.getValue().equals(outputFolder))
+				iterator.remove();
+		}
+		outputFolder.reset();
+	}
+	
+	public static void cleanUpDefaultJreClassLibs() {
+		if (defaultJreClassLibs != null && defaultJreClassLibs.length > 0) {
+			if (defaultJreClassLibs[0] instanceof DefaultJavaRuntimeEnvironment)
+				defaultJreClassLibs[0].cleanup();
+		}
 	}
 
 	private static String[] javaLibsAndOutputDir;

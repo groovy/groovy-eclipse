@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,6 +13,7 @@ package org.eclipse.jdt.internal.core.search.indexing;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipError;
@@ -23,9 +24,12 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchParticipant;
+import org.eclipse.jdt.internal.compiler.env.AutomaticModuleNaming;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 import org.eclipse.jdt.internal.compiler.util.Util;
 import org.eclipse.jdt.internal.core.JavaModelManager;
@@ -217,6 +221,7 @@ class AddJarFileToIndex extends BinaryContainer {
 				if ((indexLocation = index.getIndexLocation()) != null) {
 					indexPath = new Path(indexLocation.getCanonicalFilePath());
 				}
+				boolean hasModuleInfoClass = false;
 				for (Enumeration e = zip.entries(); e.hasMoreElements();) {
 					if (this.isCancelled) {
 						if (JobManager.VERBOSE)
@@ -229,11 +234,20 @@ class AddJarFileToIndex extends BinaryContainer {
 					String zipEntryName = ze.getName();
 					if (Util.isClassFileName(zipEntryName) && 
 							isValidPackageNameForClassOrisModule(zipEntryName)) {
+						hasModuleInfoClass |= zipEntryName.contains(TypeConstants.MODULE_INFO_NAME_STRING);
 						// index only classes coming from valid packages - https://bugs.eclipse.org/bugs/show_bug.cgi?id=293861
 						final byte[] classFileBytes = org.eclipse.jdt.internal.compiler.util.Util.getZipEntryByteContent(ze, zip);
 						JavaSearchDocument entryDocument = new JavaSearchDocument(ze, zipFilePath, classFileBytes, participant);
 						this.manager.indexDocument(entryDocument, participant, index, indexPath);
 					}
+				}
+				if (!hasModuleInfoClass) {
+					char[] autoModuleName = AutomaticModuleNaming.determineAutomaticModuleName(this.containerPath.toOSString());
+					final char[] contents = CharOperation.append(CharOperation.append(TypeConstants.AUTOMATIC_MODULE_NAME.toCharArray(), ':'), autoModuleName);
+					// adding only the automatic module entry here - can be extended in the future to include other fields.
+					ZipEntry ze = new ZipEntry(TypeConstants.AUTOMATIC_MODULE_NAME);
+					JavaSearchDocument entryDocument = new JavaSearchDocument(ze, zipFilePath, new String(contents).getBytes(Charset.defaultCharset()), participant);
+					this.manager.indexDocument(entryDocument, participant, index, indexPath);
 				}
 				if(this.forceIndexUpdate) {
 					this.manager.savePreBuiltIndex(index);

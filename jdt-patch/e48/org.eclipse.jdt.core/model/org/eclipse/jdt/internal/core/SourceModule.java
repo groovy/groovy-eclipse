@@ -10,7 +10,11 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
+import java.util.Map;
+
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.compiler.CharOperation;
 
 public class SourceModule extends NamedMember implements AbstractModule {
 	public SourceModule(JavaElement parent, String name) {
@@ -24,6 +28,15 @@ public class SourceModule extends NamedMember implements AbstractModule {
 	@Override
 	public char getHandleMementoDelimiter() {
 		return JavaElement.JEM_MODULE;
+	}
+	@Override
+	public String[] getCategories() throws JavaModelException {
+		ModuleDescriptionInfo info = (ModuleDescriptionInfo) getElementInfo();
+		Map<IJavaElement,String[]> map = info.getCategories();
+		if (map == null) return CharOperation.NO_STRINGS;
+		String[] categories = map.get(this);
+		if (categories == null) return CharOperation.NO_STRINGS;
+		return categories;
 	}
 	@Override
 	public String toString(String lineDelimiter) {

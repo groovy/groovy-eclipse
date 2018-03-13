@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -157,16 +157,13 @@ public class ExpressionFinder {
     }
 
     public String[] splitForCompletionNoTrim(String expression) {
-       String[] ret = new String[2];
+        String[] ret = {"", null};
 
-        if (expression == null || expression.trim().length() < 1 ){
-            ret[0] = "";
-            ret[1] = null;
+        if (expression == null || expression.trim().length() < 1) {
             return ret;
         }
 
-        StringSourceBuffer sb = new StringSourceBuffer(expression);
-        TokenStream stream = new TokenStream(sb, expression.length() - 1);
+        TokenStream stream = new TokenStream(new StringSourceBuffer(expression), expression.length() - 1);
         Token token0, token1, token2;
         try {
             skipLineBreaksAndComments(stream);
@@ -184,15 +181,10 @@ public class ExpressionFinder {
                 ret[1] = expression.substring(token0.startOffset, expression.length());
             } else if (token0.isType(Token.Type.IDENT)) {
                 ret[0] = expression;
-            } else {
-                ret = new String[] { "", null };
             }
-        } catch (TokenStreamException e) {
-            ret = new String[] { "", null };
-        } catch (IllegalStateException e) {
-            ret = new String[] { "", null };
+        } catch (IllegalStateException | TokenStreamException e) {
+            // fall through
         }
-
         return ret;
     }
 
@@ -238,10 +230,9 @@ public class ExpressionFinder {
         }
         // don't allow newline chars, but do allow [] and whitespace
         StringBuilder sb = new StringBuilder();
-        while (current >= 0
-                && (Character.isWhitespace(buffer.charAt(current)) || buffer.charAt(current) == '[' || buffer.charAt(current) == ']')
-                && buffer.charAt(current) != '\n' && buffer.charAt(current) != '\r') {
-            // current--;
+        while (current >= 0 &&
+                (Character.isWhitespace(buffer.charAt(current)) || buffer.charAt(current) == '[' || buffer.charAt(current) == ']') &&
+                buffer.charAt(current) != '\n' && buffer.charAt(current) != '\r') {
             sb.append(buffer.charAt(current--));
         }
 

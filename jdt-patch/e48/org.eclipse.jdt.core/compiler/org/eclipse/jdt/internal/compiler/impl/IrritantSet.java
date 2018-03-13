@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -71,6 +71,7 @@ public class IrritantSet {
 	public static final IrritantSet RESOURCE = new IrritantSet(CompilerOptions.UnclosedCloseable);
 	public static final IrritantSet UNLIKELY_ARGUMENT_TYPE = new IrritantSet(CompilerOptions.UnlikelyCollectionMethodArgumentType);
 	public static final IrritantSet API_LEAK = new IrritantSet(CompilerOptions.APILeak);
+	public static final IrritantSet MODULE = new IrritantSet(CompilerOptions.UnstableAutoModuleName);
 
 	public static final IrritantSet JAVADOC = new IrritantSet(CompilerOptions.InvalidJavadoc);
 	public static final IrritantSet COMPILER_DEFAULT_ERRORS = new IrritantSet(0); // no optional error by default	
@@ -129,7 +130,8 @@ public class IrritantSet {
 				|CompilerOptions.NonNullTypeVariableFromLegacyInvocation
 				|CompilerOptions.UnlikelyCollectionMethodArgumentType
 				|CompilerOptions.UsingTerminallyDeprecatedAPI
-				|CompilerOptions.APILeak);
+				|CompilerOptions.APILeak
+				|CompilerOptions.UnstableAutoModuleName);
 		// default errors IF AnnotationBasedNullAnalysis is enabled:
 		COMPILER_DEFAULT_ERRORS.set(
 				CompilerOptions.NullSpecViolation

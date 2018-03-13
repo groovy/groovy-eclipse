@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -402,6 +402,39 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('x'), 1, VARIABLE))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/512
+    void testNotCategoryMethod2() {
+        addGroovySource '''\
+            import java.lang.reflect.*
+            class Reflections {
+              static Method findMethod(String methodName, Class<?> targetClass, Class<?>... paramTypes) {
+              }
+              static Object invokeMethod(Method method, Object target, Object... params) {
+              }
+            }
+            '''.stripIndent(), 'Reflections'
+
+        String contents = '''\
+            static void setThreadLocalProperty(String key, Object val) { Class target = null // redacted
+              def setter = Reflections.findMethod('setThreadLocalProperty', target, String, Object)
+              Reflections.invokeMethod(setter, target, key, val)
+            }
+            '''.stripIndent()
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('setThreadLocalProperty'), 'setThreadLocalProperty'.length(), STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('key'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('val'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('target'), 6, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('setter'), 6, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('findMethod'), 'findMethod'.length(), STATIC_CALL),
+            new HighlightedTypedPosition(contents.indexOf('target,'), 6, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('invokeMethod'), 'invokeMethod'.length(), STATIC_CALL), // not DGM
+            new HighlightedTypedPosition(contents.lastIndexOf('setter'), 6, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('target'), 6, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('key'), 3, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('val'), 3, PARAMETER))
+    }
+
     @Test
     void testVariadicMehtods() {
         String contents = '''\
@@ -721,8 +754,8 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('loop'), 'loop'.length(), METHOD),
-            new HighlightedTypedPosition(contents.indexOf('x'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('loop'),  4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('x : '),  1, VARIABLE),
             new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, VARIABLE))
     }
 
@@ -740,8 +773,28 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('loop'), 'loop'.length(), METHOD),
-            new HighlightedTypedPosition(contents.indexOf('x'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('loop'),  4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('x in '), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, VARIABLE))
+    }
+
+    @Test // assign within terminal scope
+    void testForEachInParamWithReturn() {
+        // don't want PARAMETER
+        String contents = '''\
+            class X {
+              def loop() {
+                for (x in []) {
+                    x = ''
+                    return
+                }
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('loop'),  4, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('x in '), 1, VARIABLE),
             new HighlightedTypedPosition(contents.lastIndexOf('x'), 1, VARIABLE))
     }
 
@@ -1116,6 +1169,33 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('a'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('b'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('$a') + 1, 1, VARIABLE))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/511
+    void testGString4() {
+        String contents = '''\
+            import static java.net.URLEncoder.encode
+            def url = "/${encode('head','UTF-8')}/tail"
+            '''.stripIndent()
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('url'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('encode'), 'encode'.length(), DEPRECATED),
+            new HighlightedTypedPosition(contents.lastIndexOf('encode'), 'encode'.length(), STATIC_CALL))
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/511
+    void testGString5() {
+        String contents = '''\
+            import static java.net.URLEncoder.encode
+            @groovy.transform.CompileStatic
+            class SC {
+              def url = "/${encode('head','UTF-8')}/tail"
+            }
+            '''.stripIndent()
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('url'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('encode'), 'encode'.length(), DEPRECATED),
+            new HighlightedTypedPosition(contents.lastIndexOf('encode'), 'encode'.length(), STATIC_CALL))
     }
 
     @Test
@@ -1629,6 +1709,35 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testFieldInitExpr() {
+        addGroovySource '''\
+            abstract class A {
+              protected final String field
+              protected A(String field) {
+                this.field = field
+              }
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            class B extends A {
+              Map map = [key: field] // init added to ctor body, where "field" refers to param
+              B(String field) {
+                super(field)
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('map'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('key'), 3, MAP_KEY),
+            new HighlightedTypedPosition(contents.indexOf('field'), 5, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('B(String '), 1, CTOR),
+            new HighlightedTypedPosition(contents.indexOf('field)'), 5, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('field'), 5, PARAMETER))
+    }
+
+    @Test
     void testMethodPointer() {
         String contents = '''\
             def x = ''.&length
@@ -1645,14 +1754,14 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     @Test
     void testMethodPointer2() {
         String contents = '''\
-            def c = String.class
-            def f = c.&toLowerCase
+            def s = 'SoMeThInG'
+            def f = s.&toLowerCase
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('c ='), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('s ='), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('f ='), 1, VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('c.&'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('s.&'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('toLowerCase'), 'toLowerCase'.length(), METHOD_CALL))
     }
 

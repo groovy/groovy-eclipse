@@ -479,8 +479,8 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         super.visitClosureExpression(expression);
         blockStack.removeLast();
 
-        // sometimes the code block does not end at the closing '}', but at the end of the last statement
-        // the closure itself ends at the last '}'.  So, do that test here.
+        // sometimes the code block does not end at the closing '}', but at the
+        // end of the last statement the closure itself ends at the last '}'
         if (check(expression)) {
             createContext(expression, expression.getCode(), expressionOrStatement());
         }
@@ -492,12 +492,9 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
             // ex: @interface X { Y default @Y(...) } -- expression is "@Y(...)"
             createContext(expression, blockStack.getLast(), ContentAssistLocation.ANNOTATION);
         }
-        if (check(expression)) {
-            if (isStringLiteral(expression)) {
-                throw new VisitCompleteException();
-            } else {
-                createContext(expression, blockStack.getLast(), expressionOrStatement());
-            }
+        if (completionOffset > expression.getStart() && completionOffset <= expression.getEnd()) {
+            if (isStringLiteral(expression)) throw new VisitCompleteException();
+            createContext(expression, blockStack.getLast(), expressionOrStatement());
         }
         super.visitConstantExpression(expression);
     }

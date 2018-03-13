@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1033,11 +1033,61 @@ public class DefaultCodeFormatterConstants {
 	 *     - possible values:   { TRUE, FALSE }
 	 *     - default:           TRUE
 	 * </pre>
+	 * 
+	 * Note that at most one of these options can be set to {@code TRUE}:
+	 * <li>{@code FORMATTER_COMMENT_INDENT_ROOT_TAGS},
+	 * <li>{@code FORMATTER_COMMENT_ALIGN_TAGS_NAMES_DESCRIPTIONS},
+	 * <li>{@code FORMATTER_COMMENT_ALIGN_TAGS_DESCREIPTIONS_GROUPED}.
+	 * 
 	 * @see #TRUE
 	 * @see #FALSE
+	 * @see #FORMATTER_COMMENT_ALIGN_TAGS_NAMES_DESCRIPTIONS
+	 * @see #FORMATTER_COMMENT_ALIGN_TAGS_DESCREIPTIONS_GROUPED
 	 * @since 3.1
 	 */
 	public final static String FORMATTER_COMMENT_INDENT_ROOT_TAGS = "org.eclipse.jdt.core.formatter.comment.indent_root_tags"; //$NON-NLS-1$
+
+	/**
+	 * <pre>
+	 * FORMATTER / Option to control whether names and descriptions in Javadoc root tags should be aligned.
+	 *     - option id:         "org.eclipse.jdt.core.formatter.comment.align_tags_names_descriptions"
+	 *     - possible values:   { TRUE, FALSE }
+	 *     - default:           TRUE
+	 * </pre>
+	 * 
+	 * Note that at most one of these options can be set to {@code TRUE}:
+	 * <li>{@code FORMATTER_COMMENT_INDENT_ROOT_TAGS},
+	 * <li>{@code FORMATTER_COMMENT_ALIGN_TAGS_NAMES_DESCRIPTIONS},
+	 * <li>{@code FORMATTER_COMMENT_ALIGN_TAGS_DESCREIPTIONS_GROUPED}.
+	 * 
+	 * @see #TRUE
+	 * @see #FALSE
+	 * @see #FORMATTER_COMMENT_INDENT_ROOT_TAGS
+	 * @see #FORMATTER_COMMENT_ALIGN_TAGS_DESCREIPTIONS_GROUPED
+	 * @since 3.14
+	 */
+	public static final String FORMATTER_COMMENT_ALIGN_TAGS_NAMES_DESCRIPTIONS = "org.eclipse.jdt.core.formatter.comment.align_tags_names_descriptions"; //$NON-NLS-1$
+
+	/**
+	 * <pre>
+	 * FORMATTER / Option to control whether descriptions and names in Javadoc root tags, should be aligned and grouped by tag type.
+	 *     - option id:         "org.eclipse.jdt.core.formatter.comment.align_tags_descriptions_grouped"
+	 *     - possible values:   { TRUE, FALSE }
+	 *     - default:           TRUE
+	 * </pre>
+	 * 
+	 * Note that at most one of these options can be set to {@code TRUE}:
+	 * <li>{@code FORMATTER_COMMENT_INDENT_ROOT_TAGS},
+	 * <li>{@code FORMATTER_COMMENT_ALIGN_TAGS_NAMES_DESCRIPTIONS},
+	 * <li>{@code FORMATTER_COMMENT_ALIGN_TAGS_DESCREIPTIONS_GROUPED}.
+	 * 
+	 * @see #TRUE
+	 * @see #FALSE
+	 * @see #FORMATTER_COMMENT_INDENT_ROOT_TAGS
+	 * @see #FORMATTER_COMMENT_ALIGN_TAGS_NAMES_DESCRIPTIONS
+	 * @since 3.14
+	 */
+	public static final String FORMATTER_COMMENT_ALIGN_TAGS_DESCREIPTIONS_GROUPED = "org.eclipse.jdt.core.formatter.comment.align_tags_descriptions_grouped"; //$NON-NLS-1$
 
 	/**
 	 * <pre>

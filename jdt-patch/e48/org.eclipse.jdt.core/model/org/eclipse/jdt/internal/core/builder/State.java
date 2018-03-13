@@ -54,7 +54,7 @@ private long previousStructuralBuildTime;
 private StringSet structurallyChangedTypes;
 public static int MaxStructurallyChangedTypes = 100; // keep track of ? structurally changed types, otherwise consider all to be changed
 
-public static final byte VERSION = 0x001F;
+public static final byte VERSION = 0x0020;
 
 static final byte SOURCE_FOLDER = 1;
 static final byte BINARY_FOLDER = 2;
@@ -282,12 +282,14 @@ static State read(IProject project, DataInputStream in) throws IOException {
 				break;
 			case EXTERNAL_JAR :
 				String jarPath = in.readUTF();
+				boolean jrt = Util.isJrt(jarPath);
 				newState.binaryLocations[i] = ClasspathLocation.forLibrary(jarPath, in.readLong(),
-							readRestriction(in), new Path(in.readUTF()), Util.isJrt(jarPath) ? false : in.readBoolean());
+							readRestriction(in), new Path(in.readUTF()), jrt ? false : in.readBoolean(), jrt ? in.readUTF() : ""); //$NON-NLS-1$
 				break;
 			case INTERNAL_JAR :
 					newState.binaryLocations[i] = ClasspathLocation.forLibrary(root.getFile(new Path(in.readUTF())),
 							readRestriction(in), new Path(in.readUTF()), in.readBoolean());
+					break;
 		}
 		ClasspathLocation loc = newState.binaryLocations[i];
 		char[] patchName = readName(in);
@@ -354,12 +356,14 @@ static State read(IProject project, DataInputStream in) throws IOException {
 				break;
 			case EXTERNAL_JAR :
 				String jarPath = in.readUTF();
+				boolean jrt = Util.isJrt(jarPath);
 				newState.testBinaryLocations[i] = ClasspathLocation.forLibrary(jarPath, in.readLong(),
-							readRestriction(in), new Path(in.readUTF()), Util.isJrt(jarPath) ? false : in.readBoolean());
+							readRestriction(in), new Path(in.readUTF()), jrt ? false : in.readBoolean(), jrt ? in.readUTF() : ""); //$NON-NLS-1$
 				break;
 			case INTERNAL_JAR :
 					newState.testBinaryLocations[i] = ClasspathLocation.forLibrary(root.getFile(new Path(in.readUTF())),
 							readRestriction(in), new Path(in.readUTF()), in.readBoolean());
+					break;
 		}
 	}
 
@@ -559,8 +563,9 @@ void write(DataOutputStream out) throws IOException {
 			out.writeByte(EXTERNAL_JAR);
 			out.writeUTF(jrt.zipFilename);
 			out.writeLong(-1);
-			writeRestriction(null, out);
-			out.writeUTF(""); //$NON-NLS-1$
+			writeRestriction(jrt.accessRuleSet, out);
+			out.writeUTF(jrt.externalAnnotationPath != null ? jrt.externalAnnotationPath : ""); //$NON-NLS-1$
+			out.writeUTF(jrt.compliance != null ? jrt.compliance : ""); //$NON-NLS-1$
 		}
 		char[] patchName = c.patchModuleName == null ? CharOperation.NO_CHAR : c.patchModuleName.toCharArray();
 		writeName(patchName, out);
@@ -670,8 +675,9 @@ void write(DataOutputStream out) throws IOException {
 				out.writeByte(EXTERNAL_JAR);
 				out.writeUTF(jrt.zipFilename);
 				out.writeLong(-1);
-				writeRestriction(null, out);
-				out.writeUTF(""); //$NON-NLS-1$
+				writeRestriction(jrt.accessRuleSet, out);
+				out.writeUTF(jrt.externalAnnotationPath != null ? jrt.externalAnnotationPath : ""); //$NON-NLS-1$
+				out.writeUTF(jrt.compliance != null ? jrt.compliance : ""); //$NON-NLS-1$
 			}
 		}
 

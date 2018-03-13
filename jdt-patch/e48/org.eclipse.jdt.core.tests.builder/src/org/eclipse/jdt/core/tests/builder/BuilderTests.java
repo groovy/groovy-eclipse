@@ -531,6 +531,8 @@ public class BuilderTests extends TestCase {
 			GetResourcesTests.class,
 			FriendDependencyTests.class,
 			TestAttributeBuilderTests.class,
+			Bug530366Test.class,
+			Bug531382Test.class,
 		};
 
 		if ((AbstractCompilerTest.getPossibleComplianceLevels()  & AbstractCompilerTest.F_1_5) != 0) {

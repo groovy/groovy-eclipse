@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,6 +14,14 @@ package org.eclipse.jdt.core.compiler;
 import org.eclipse.jdt.core.compiler.InvalidInputException;
 
  /**
+  * <p>
+  * <strong>Caveat:</strong> With the introduction of "restricted keywords" in Java 9
+  * it is impossible to classify a token without the help of a parser.
+  * For that reason, this interface is not suitable for scanning a modular compilation unit
+  * ("module-info.java").
+  * It is the client's responsibility to pass only source from ordinary compilation units.
+  * For lack of a file name the scanner cannot check this.
+  * </p>
   * Definition of a Java scanner, as returned by the <code>ToolFactory</code>.
   * The scanner is responsible for tokenizing a given source, providing information about
   * the nature of the token read, its positions and source equivalent.
@@ -22,7 +30,7 @@ import org.eclipse.jdt.core.compiler.InvalidInputException;
   * ITerminalSymbols#TokenNameEOF</code>.
   * </p><p>
   * When encountering lexical errors, an <code>InvalidInputException</code> is thrown.
- * </p>
+  * </p>
   *
   * @see org.eclipse.jdt.core.ToolFactory
   * @see ITerminalSymbols

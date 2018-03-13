@@ -62,7 +62,7 @@ public final class NdLinkedList<T> {
 
 	public static <T> ITypeFactory<NdLinkedList<T>> getFactoryFor(
 			final ITypeFactory<T> elementFactory, final int recordsInFirstBlock, final int recordsInSubsequentBlocks) {
-		return getFactoryFor(elementFactory, recordsInSubsequentBlocks, 0);
+		return getFactoryFor(elementFactory, recordsInFirstBlock, recordsInSubsequentBlocks, 0);
 	}
 
 	public static <T> ITypeFactory<NdLinkedList<T>> getFactoryFor(

@@ -99,10 +99,10 @@ public void test001() throws Exception {
 		"    constant #9 utf8: \"Code\"\n" + 
 		"    constant #10 method_ref: #3.#11 java/lang/Object.<init> ()V\n" + 
 		"    constant #11 name_and_type: #7.#8 <init> ()V\n" + 
-		"    constant #12 name_and_type: #13.#14 run ()Ljava/lang/Runnable;\n" + 
-		"    constant #13 utf8: \"run\"\n" + 
-		"    constant #14 utf8: \"()Ljava/lang/Runnable;\"\n" + 
-		"    constant #15 invoke dynamic: #0 #12 run ()Ljava/lang/Runnable;\n" + 
+		"    constant #12 invoke dynamic: #0 #13 run ()Ljava/lang/Runnable;\n" + 
+		"    constant #13 name_and_type: #14.#15 run ()Ljava/lang/Runnable;\n" + 
+		"    constant #14 utf8: \"run\"\n" + 
+		"    constant #15 utf8: \"()Ljava/lang/Runnable;\"\n" + 
 		"    constant #16 field_ref: #1.#17 X.referenceExpression Ljava/lang/Runnable;\n" + 
 		"    constant #17 name_and_type: #5.#6 referenceExpression Ljava/lang/Runnable;\n" + 
 		"    constant #18 utf8: \"LineNumberTable\"\n" + 
@@ -143,7 +143,7 @@ public void test001() throws Exception {
 		"     0  aload_0 [this]\n" + 
 		"     1  invokespecial java.lang.Object() [10]\n" + 
 		"     4  aload_0 [this]\n" + 
-		"     5  invokedynamic 0 run() : java.lang.Runnable [15]\n" + 
+		"     5  invokedynamic 0 run() : java.lang.Runnable [12]\n" + 
 		"    10  putfield X.referenceExpression : java.lang.Runnable [16]\n" + 
 		"    13  return\n" + 
 		"      Line numbers:\n" + 
@@ -206,10 +206,10 @@ public void test002() throws Exception {
 			"    constant #9 utf8: \"Code\"\n" + 
 			"    constant #10 method_ref: #3.#11 java/lang/Object.<init> ()V\n" + 
 			"    constant #11 name_and_type: #7.#8 <init> ()V\n" + 
-			"    constant #12 name_and_type: #13.#14 consume ()LObjectConsumer;\n" + 
-			"    constant #13 utf8: \"consume\"\n" + 
-			"    constant #14 utf8: \"()LObjectConsumer;\"\n" + 
-			"    constant #15 invoke dynamic: #0 #12 consume ()LObjectConsumer;\n" + 
+			"    constant #12 invoke dynamic: #0 #13 consume ()LObjectConsumer;\n" + 
+			"    constant #13 name_and_type: #14.#15 consume ()LObjectConsumer;\n" + 
+			"    constant #14 utf8: \"consume\"\n" + 
+			"    constant #15 utf8: \"()LObjectConsumer;\"\n" + 
 			"    constant #16 field_ref: #1.#17 X.referenceExpression LObjectConsumer;\n" + 
 			"    constant #17 name_and_type: #5.#6 referenceExpression LObjectConsumer;\n" + 
 			"    constant #18 utf8: \"LineNumberTable\"\n" + 
@@ -251,7 +251,7 @@ public void test002() throws Exception {
 			"     0  aload_0 [this]\n" + 
 			"     1  invokespecial java.lang.Object() [10]\n" + 
 			"     4  aload_0 [this]\n" + 
-			"     5  invokedynamic 0 consume() : ObjectConsumer [15]\n" + 
+			"     5  invokedynamic 0 consume() : ObjectConsumer [12]\n" + 
 			"    10  putfield X.referenceExpression : ObjectConsumer [16]\n" + 
 			"    13  return\n" + 
 			"      Line numbers:\n" + 
@@ -315,10 +315,10 @@ public void test003() throws Exception {
 			"    constant #9 utf8: \"Code\"\n" + 
 			"    constant #10 method_ref: #3.#11 java/lang/Object.<init> ()V\n" + 
 			"    constant #11 name_and_type: #7.#8 <init> ()V\n" + 
-			"    constant #12 name_and_type: #13.#14 makeString ()LObjectToString;\n" + 
-			"    constant #13 utf8: \"makeString\"\n" + 
-			"    constant #14 utf8: \"()LObjectToString;\"\n" + 
-			"    constant #15 invoke dynamic: #0 #12 makeString ()LObjectToString;\n" + 
+			"    constant #12 invoke dynamic: #0 #13 makeString ()LObjectToString;\n" + 
+			"    constant #13 name_and_type: #14.#15 makeString ()LObjectToString;\n" + 
+			"    constant #14 utf8: \"makeString\"\n" + 
+			"    constant #15 utf8: \"()LObjectToString;\"\n" + 
 			"    constant #16 field_ref: #1.#17 X.referenceExpression LObjectToString;\n" + 
 			"    constant #17 name_and_type: #5.#6 referenceExpression LObjectToString;\n" + 
 			"    constant #18 utf8: \"LineNumberTable\"\n" + 
@@ -359,7 +359,7 @@ public void test003() throws Exception {
 			"     0  aload_0 [this]\n" + 
 			"     1  invokespecial java.lang.Object() [10]\n" + 
 			"     4  aload_0 [this]\n" + 
-			"     5  invokedynamic 0 makeString() : ObjectToString [15]\n" + 
+			"     5  invokedynamic 0 makeString() : ObjectToString [12]\n" + 
 			"    10  putfield X.referenceExpression : ObjectToString [16]\n" + 
 			"    13  return\n" + 
 			"      Line numbers:\n" + 
@@ -430,10 +430,10 @@ public void test004() throws Exception {
 			"    constant #19 name_and_type: #20.#21 getClass ()Ljava/lang/Class;\n" + 
 			"    constant #20 utf8: \"getClass\"\n" + 
 			"    constant #21 utf8: \"()Ljava/lang/Class;\"\n" + 
-			"    constant #22 name_and_type: #23.#24 produce (Ljava/lang/String;)LStringProducer;\n" + 
-			"    constant #23 utf8: \"produce\"\n" + 
-			"    constant #24 utf8: \"(Ljava/lang/String;)LStringProducer;\"\n" + 
-			"    constant #25 invoke dynamic: #0 #22 produce (Ljava/lang/String;)LStringProducer;\n" + 
+			"    constant #22 invoke dynamic: #0 #23 produce (Ljava/lang/String;)LStringProducer;\n" + 
+			"    constant #23 name_and_type: #24.#25 produce (Ljava/lang/String;)LStringProducer;\n" + 
+			"    constant #24 utf8: \"produce\"\n" + 
+			"    constant #25 utf8: \"(Ljava/lang/String;)LStringProducer;\"\n" + 
 			"    constant #26 field_ref: #1.#27 X.referenceExpression LStringProducer;\n" + 
 			"    constant #27 name_and_type: #7.#8 referenceExpression LStringProducer;\n" + 
 			"    constant #28 utf8: \"LineNumberTable\"\n" + 
@@ -486,7 +486,7 @@ public void test004() throws Exception {
 			"    15  dup\n" + 
 			"    16  invokevirtual java.lang.Object.getClass() : java.lang.Class [18]\n" + 
 			"    19  pop\n" + 
-			"    20  invokedynamic 0 produce(java.lang.String) : StringProducer [25]\n" + 
+			"    20  invokedynamic 0 produce(java.lang.String) : StringProducer [22]\n" + 
 			"    25  putfield X.referenceExpression : StringProducer [26]\n" + 
 			"    28  return\n" + 
 			"      Line numbers:\n" + 
@@ -546,10 +546,10 @@ public void test005() throws Exception {
 			"    constant #7 utf8: \"<clinit>\"\n" + 
 			"    constant #8 utf8: \"()V\"\n" + 
 			"    constant #9 utf8: \"Code\"\n" + 
-			"    constant #10 name_and_type: #11.#12 produce ()LMainProducer;\n" + 
-			"    constant #11 utf8: \"produce\"\n" + 
-			"    constant #12 utf8: \"()LMainProducer;\"\n" + 
-			"    constant #13 invoke dynamic: #0 #10 produce ()LMainProducer;\n" + 
+			"    constant #10 invoke dynamic: #0 #11 produce ()LMainProducer;\n" + 
+			"    constant #11 name_and_type: #12.#13 produce ()LMainProducer;\n" + 
+			"    constant #12 utf8: \"produce\"\n" + 
+			"    constant #13 utf8: \"()LMainProducer;\"\n" + 
 			"    constant #14 field_ref: #1.#15 X.allocatorExpression LMainProducer;\n" + 
 			"    constant #15 name_and_type: #5.#6 allocatorExpression LMainProducer;\n" + 
 			"    constant #16 utf8: \"LineNumberTable\"\n" + 
@@ -589,7 +589,7 @@ public void test005() throws Exception {
 			"  // Method descriptor #8 ()V\n" + 
 			"  // Stack: 1, Locals: 0\n" + 
 			"  static {};\n" + 
-			"    0  invokedynamic 0 produce() : MainProducer [13]\n" + 
+			"    0  invokedynamic 0 produce() : MainProducer [10]\n" + 
 			"    5  putstatic X.allocatorExpression : MainProducer [14]\n" + 
 			"    8  return\n" + 
 			"      Line numbers:\n" + 
@@ -662,10 +662,10 @@ public void test006() throws Exception {
 			"    constant #9 utf8: \"<clinit>\"\n" + 
 			"    constant #10 utf8: \"()V\"\n" + 
 			"    constant #11 utf8: \"Code\"\n" + 
-			"    constant #12 name_and_type: #13.#14 apply ()LFunction2;\n" + 
-			"    constant #13 utf8: \"apply\"\n" + 
-			"    constant #14 utf8: \"()LFunction2;\"\n" + 
-			"    constant #15 invoke dynamic: #0 #12 apply ()LFunction2;\n" + 
+			"    constant #12 invoke dynamic: #0 #13 apply ()LFunction2;\n" + 
+			"    constant #13 name_and_type: #14.#15 apply ()LFunction2;\n" + 
+			"    constant #14 utf8: \"apply\"\n" + 
+			"    constant #15 utf8: \"()LFunction2;\"\n" + 
 			"    constant #16 field_ref: #1.#17 X.producer LFunction2;\n" + 
 			"    constant #17 name_and_type: #5.#6 producer LFunction2;\n" + 
 			"    constant #18 utf8: \"LineNumberTable\"\n" + 
@@ -709,7 +709,7 @@ public void test006() throws Exception {
 			"  // Method descriptor #10 ()V\n" + 
 			"  // Stack: 1, Locals: 0\n" + 
 			"  static {};\n" + 
-			"    0  invokedynamic 0 apply() : Function2 [15]\n" + 
+			"    0  invokedynamic 0 apply() : Function2 [12]\n" + 
 			"    5  putstatic X.producer : Function2 [16]\n" + 
 			"    8  return\n" + 
 			"      Line numbers:\n" + 
@@ -773,10 +773,10 @@ public void test007() throws Exception {
 			"    constant #9 utf8: \"Code\"\n" + 
 			"    constant #10 method_ref: #3.#11 java/lang/Object.<init> ()V\n" + 
 			"    constant #11 name_and_type: #7.#8 <init> ()V\n" + 
-			"    constant #12 name_and_type: #13.#14 run ()Ljava/lang/Runnable;\n" + 
-			"    constant #13 utf8: \"run\"\n" + 
-			"    constant #14 utf8: \"()Ljava/lang/Runnable;\"\n" + 
-			"    constant #15 invoke dynamic: #0 #12 run ()Ljava/lang/Runnable;\n" + 
+			"    constant #12 invoke dynamic: #0 #13 run ()Ljava/lang/Runnable;\n" + 
+			"    constant #13 name_and_type: #14.#15 run ()Ljava/lang/Runnable;\n" + 
+			"    constant #14 utf8: \"run\"\n" + 
+			"    constant #15 utf8: \"()Ljava/lang/Runnable;\"\n" + 
 			"    constant #16 field_ref: #1.#17 X.referenceExpression Ljava/lang/Runnable;\n" + 
 			"    constant #17 name_and_type: #5.#6 referenceExpression Ljava/lang/Runnable;\n" + 
 			"    constant #18 utf8: \"LineNumberTable\"\n" + 
@@ -829,7 +829,7 @@ public void test007() throws Exception {
 			"     0  aload_0 [this]\n" + 
 			"     1  invokespecial java.lang.Object() [10]\n" + 
 			"     4  aload_0 [this]\n" + 
-			"     5  invokedynamic 0 run() : java.lang.Runnable [15]\n" + 
+			"     5  invokedynamic 0 run() : java.lang.Runnable [12]\n" + 
 			"    10  putfield X.referenceExpression : java.lang.Runnable [16]\n" + 
 			"    13  return\n" + 
 			"      Line numbers:\n" + 
@@ -896,10 +896,10 @@ public void test007a() throws Exception {
 			"    constant #9 utf8: \"Code\"\n" + 
 			"    constant #10 method_ref: #3.#11 java/lang/Object.<init> ()V\n" + 
 			"    constant #11 name_and_type: #7.#8 <init> ()V\n" + 
-			"    constant #12 name_and_type: #13.#14 run ()Ljava/lang/Runnable;\n" + 
-			"    constant #13 utf8: \"run\"\n" + 
-			"    constant #14 utf8: \"()Ljava/lang/Runnable;\"\n" + 
-			"    constant #15 invoke dynamic: #0 #12 run ()Ljava/lang/Runnable;\n" + 
+			"    constant #12 invoke dynamic: #0 #13 run ()Ljava/lang/Runnable;\n" + 
+			"    constant #13 name_and_type: #14.#15 run ()Ljava/lang/Runnable;\n" + 
+			"    constant #14 utf8: \"run\"\n" + 
+			"    constant #15 utf8: \"()Ljava/lang/Runnable;\"\n" + 
 			"    constant #16 field_ref: #1.#17 X.referenceExpression Ljava/lang/Runnable;\n" + 
 			"    constant #17 name_and_type: #5.#6 referenceExpression Ljava/lang/Runnable;\n" + 
 			"    constant #18 utf8: \"LineNumberTable\"\n" + 
@@ -952,7 +952,7 @@ public void test007a() throws Exception {
 			"     0  aload_0 [this]\n" + 
 			"     1  invokespecial java.lang.Object() [10]\n" + 
 			"     4  aload_0 [this]\n" + 
-			"     5  invokedynamic 0 run() : java.lang.Runnable [15]\n" + 
+			"     5  invokedynamic 0 run() : java.lang.Runnable [12]\n" + 
 			"    10  putfield X.referenceExpression : java.lang.Runnable [16]\n" + 
 			"    13  return\n" + 
 			"      Line numbers:\n" + 
@@ -1020,10 +1020,10 @@ public void test008() throws Exception {
 			"    constant #11 utf8: \"Code\"\n" + 
 			"    constant #12 method_ref: #3.#13 java/lang/Object.<init> ()V\n" + 
 			"    constant #13 name_and_type: #9.#10 <init> ()V\n" + 
-			"    constant #14 name_and_type: #15.#16 get ()Ljava/util/function/Supplier;\n" + 
-			"    constant #15 utf8: \"get\"\n" + 
-			"    constant #16 utf8: \"()Ljava/util/function/Supplier;\"\n" + 
-			"    constant #17 invoke dynamic: #0 #14 get ()Ljava/util/function/Supplier;\n" + 
+			"    constant #14 invoke dynamic: #0 #15 get ()Ljava/util/function/Supplier;\n" + 
+			"    constant #15 name_and_type: #16.#17 get ()Ljava/util/function/Supplier;\n" + 
+			"    constant #16 utf8: \"get\"\n" + 
+			"    constant #17 utf8: \"()Ljava/util/function/Supplier;\"\n" + 
 			"    constant #18 field_ref: #1.#19 X.lambda Ljava/util/function/Supplier;\n" + 
 			"    constant #19 name_and_type: #5.#6 lambda Ljava/util/function/Supplier;\n" + 
 			"    constant #20 utf8: \"LineNumberTable\"\n" + 
@@ -1067,7 +1067,7 @@ public void test008() throws Exception {
 			"     0  aload_0 [this]\n" + 
 			"     1  invokespecial java.lang.Object() [12]\n" + 
 			"     4  aload_0 [this]\n" + 
-			"     5  invokedynamic 0 get() : java.util.function.Supplier [17]\n" + 
+			"     5  invokedynamic 0 get() : java.util.function.Supplier [14]\n" + 
 			"    10  putfield X.lambda : java.util.function.Supplier [18]\n" + 
 			"    13  return\n" + 
 			"      Line numbers:\n" + 
@@ -1139,10 +1139,10 @@ public void test009() throws Exception {
 			"    constant #11 utf8: \"Code\"\n" + 
 			"    constant #12 method_ref: #3.#13 java/lang/Object.<init> ()V\n" + 
 			"    constant #13 name_and_type: #9.#10 <init> ()V\n" + 
-			"    constant #14 name_and_type: #15.#16 apply ()LFunction2;\n" + 
-			"    constant #15 utf8: \"apply\"\n" + 
-			"    constant #16 utf8: \"()LFunction2;\"\n" + 
-			"    constant #17 invoke dynamic: #0 #14 apply ()LFunction2;\n" + 
+			"    constant #14 invoke dynamic: #0 #15 apply ()LFunction2;\n" + 
+			"    constant #15 name_and_type: #16.#17 apply ()LFunction2;\n" + 
+			"    constant #16 utf8: \"apply\"\n" + 
+			"    constant #17 utf8: \"()LFunction2;\"\n" + 
 			"    constant #18 field_ref: #1.#19 X.concat LFunction2;\n" + 
 			"    constant #19 name_and_type: #5.#6 concat LFunction2;\n" + 
 			"    constant #20 utf8: \"LineNumberTable\"\n" + 
@@ -1206,7 +1206,7 @@ public void test009() throws Exception {
 			"     0  aload_0 [this]\n" + 
 			"     1  invokespecial java.lang.Object() [12]\n" + 
 			"     4  aload_0 [this]\n" + 
-			"     5  invokedynamic 0 apply() : Function2 [17]\n" + 
+			"     5  invokedynamic 0 apply() : Function2 [14]\n" + 
 			"    10  putfield X.concat : Function2 [18]\n" + 
 			"    13  return\n" + 
 			"      Line numbers:\n" + 
@@ -1298,10 +1298,10 @@ public void test010() throws Exception {
 			"    constant #18 method_ref: #14.#19 java/lang/String.<init> (Ljava/lang/String;)V\n" + 
 			"    constant #19 name_and_type: #9.#20 <init> (Ljava/lang/String;)V\n" + 
 			"    constant #20 utf8: \"(Ljava/lang/String;)V\"\n" + 
-			"    constant #21 name_and_type: #22.#23 apply (Ljava/lang/String;)LFunction2;\n" + 
-			"    constant #22 utf8: \"apply\"\n" + 
-			"    constant #23 utf8: \"(Ljava/lang/String;)LFunction2;\"\n" + 
-			"    constant #24 invoke dynamic: #0 #21 apply (Ljava/lang/String;)LFunction2;\n" + 
+			"    constant #21 invoke dynamic: #0 #22 apply (Ljava/lang/String;)LFunction2;\n" + 
+			"    constant #22 name_and_type: #23.#24 apply (Ljava/lang/String;)LFunction2;\n" + 
+			"    constant #23 utf8: \"apply\"\n" + 
+			"    constant #24 utf8: \"(Ljava/lang/String;)LFunction2;\"\n" + 
 			"    constant #25 field_ref: #1.#26 X.concat LFunction2;\n" + 
 			"    constant #26 name_and_type: #5.#6 concat LFunction2;\n" + 
 			"    constant #27 utf8: \"LineNumberTable\"\n" + 
@@ -1369,7 +1369,7 @@ public void test010() throws Exception {
 			"    13  astore_1 [s0]\n" + 
 			"    14  aload_0 [this]\n" + 
 			"    15  aload_1 [s0]\n" + 
-			"    16  invokedynamic 0 apply(java.lang.String) : Function2 [24]\n" + 
+			"    16  invokedynamic 0 apply(java.lang.String) : Function2 [21]\n" + 
 			"    21  putfield X.concat : Function2 [25]\n" + 
 			"    24  return\n" + 
 			"      Line numbers:\n" + 
@@ -1466,10 +1466,10 @@ public void test011() throws Exception {
 			"    constant #18 method_ref: #14.#19 java/lang/String.<init> (Ljava/lang/String;)V\n" + 
 			"    constant #19 name_and_type: #9.#20 <init> (Ljava/lang/String;)V\n" + 
 			"    constant #20 utf8: \"(Ljava/lang/String;)V\"\n" + 
-			"    constant #21 name_and_type: #22.#23 apply (Ljava/lang/String;)LFunction2;\n" + 
-			"    constant #22 utf8: \"apply\"\n" + 
-			"    constant #23 utf8: \"(Ljava/lang/String;)LFunction2;\"\n" + 
-			"    constant #24 invoke dynamic: #0 #21 apply (Ljava/lang/String;)LFunction2;\n" + 
+			"    constant #21 invoke dynamic: #0 #22 apply (Ljava/lang/String;)LFunction2;\n" + 
+			"    constant #22 name_and_type: #23.#24 apply (Ljava/lang/String;)LFunction2;\n" + 
+			"    constant #23 utf8: \"apply\"\n" + 
+			"    constant #24 utf8: \"(Ljava/lang/String;)LFunction2;\"\n" + 
 			"    constant #25 field_ref: #1.#26 X.concat LFunction2;\n" + 
 			"    constant #26 name_and_type: #5.#6 concat LFunction2;\n" + 
 			"    constant #27 utf8: \"LineNumberTable\"\n" + 
@@ -1537,7 +1537,7 @@ public void test011() throws Exception {
 			"    13  astore_1 [s0]\n" + 
 			"    14  aload_0 [this]\n" + 
 			"    15  aload_1 [s0]\n" + 
-			"    16  invokedynamic 0 apply(java.lang.String) : Function2 [24]\n" + 
+			"    16  invokedynamic 0 apply(java.lang.String) : Function2 [21]\n" + 
 			"    21  putfield X.concat : Function2 [25]\n" + 
 			"    24  return\n" + 
 			"      Line numbers:\n" + 
@@ -1629,10 +1629,10 @@ public void test012() throws Exception {
 			"    constant #13 utf8: \"LX;\"\n" + 
 			"    constant #14 utf8: \"main\"\n" + 
 			"    constant #15 utf8: \"([Ljava/lang/String;)V\"\n" + 
-			"    constant #16 name_and_type: #17.#18 doit ([Ljava/lang/String;II)LI;\n" + 
-			"    constant #17 utf8: \"doit\"\n" + 
-			"    constant #18 utf8: \"([Ljava/lang/String;II)LI;\"\n" + 
-			"    constant #19 invoke dynamic: #0 #16 doit ([Ljava/lang/String;II)LI;\n" + 
+			"    constant #16 invoke dynamic: #0 #17 doit ([Ljava/lang/String;II)LI;\n" + 
+			"    constant #17 name_and_type: #18.#19 doit ([Ljava/lang/String;II)LI;\n" + 
+			"    constant #18 utf8: \"doit\"\n" + 
+			"    constant #19 utf8: \"([Ljava/lang/String;II)LI;\"\n" + 
 			"    constant #20 utf8: \"args\"\n" + 
 			"    constant #21 utf8: \"[Ljava/lang/String;\"\n" + 
 			"    constant #22 utf8: \"local1\"\n" + 
@@ -1691,7 +1691,7 @@ public void test012() throws Exception {
 			"     4  aload_0 [args]\n" + 
 			"     5  iload_1 [local1]\n" + 
 			"     6  iload_2 [local2]\n" + 
-			"     7  invokedynamic 0 doit(java.lang.String[], int, int) : I [19]\n" + 
+			"     7  invokedynamic 0 doit(java.lang.String[], int, int) : I [16]\n" + 
 			"    12  astore_3 [i]\n" + 
 			"    13  return\n" + 
 			"      Line numbers:\n" + 
@@ -1791,10 +1791,10 @@ public void test013() throws Exception {
 			"    constant #13 utf8: \"LX;\"\n" + 
 			"    constant #14 utf8: \"main\"\n" + 
 			"    constant #15 utf8: \"([Ljava/lang/String;)V\"\n" + 
-			"    constant #16 name_and_type: #17.#18 doit ()LI;\n" + 
-			"    constant #17 utf8: \"doit\"\n" + 
-			"    constant #18 utf8: \"()LI;\"\n" + 
-			"    constant #19 invoke dynamic: #0 #16 doit ()LI;\n" + 
+			"    constant #16 invoke dynamic: #0 #17 doit ()LI;\n" + 
+			"    constant #17 name_and_type: #18.#19 doit ()LI;\n" + 
+			"    constant #18 utf8: \"doit\"\n" + 
+			"    constant #19 utf8: \"()LI;\"\n" + 
 			"    constant #20 utf8: \"args\"\n" + 
 			"    constant #21 utf8: \"[Ljava/lang/String;\"\n" + 
 			"    constant #22 utf8: \"i\"\n" + 
@@ -1842,7 +1842,7 @@ public void test013() throws Exception {
 			"  // Method descriptor #15 ([Ljava/lang/String;)V\n" + 
 			"  // Stack: 1, Locals: 2\n" + 
 			"  public static void main(java.lang.String[] args);\n" + 
-			"    0  invokedynamic 0 doit() : I [19]\n" + 
+			"    0  invokedynamic 0 doit() : I [16]\n" + 
 			"    5  astore_1 [i]\n" + 
 			"    6  return\n" + 
 			"      Line numbers:\n" + 
@@ -1926,10 +1926,10 @@ public void test014() throws Exception {
 			"    constant #9 utf8: \"Code\"\n" + 
 			"    constant #10 method_ref: #3.#11 java/lang/Object.<init> ()V\n" + 
 			"    constant #11 name_and_type: #7.#8 <init> ()V\n" + 
-			"    constant #12 name_and_type: #13.#14 doit ()LI;\n" + 
-			"    constant #13 utf8: \"doit\"\n" + 
-			"    constant #14 utf8: \"()LI;\"\n" + 
-			"    constant #15 invoke dynamic: #0 #12 doit ()LI;\n" + 
+			"    constant #12 invoke dynamic: #0 #13 doit ()LI;\n" + 
+			"    constant #13 name_and_type: #14.#15 doit ()LI;\n" + 
+			"    constant #14 utf8: \"doit\"\n" + 
+			"    constant #15 utf8: \"()LI;\"\n" + 
 			"    constant #16 field_ref: #1.#17 X.i LI;\n" + 
 			"    constant #17 name_and_type: #5.#6 i LI;\n" + 
 			"    constant #18 utf8: \"LineNumberTable\"\n" + 
@@ -1938,9 +1938,9 @@ public void test014() throws Exception {
 			"    constant #21 utf8: \"LX;\"\n" + 
 			"    constant #22 utf8: \"main\"\n" + 
 			"    constant #23 utf8: \"([Ljava/lang/String;)V\"\n" + 
-			"    constant #24 name_and_type: #13.#25 doit ([Ljava/lang/String;II)LI;\n" + 
-			"    constant #25 utf8: \"([Ljava/lang/String;II)LI;\"\n" + 
-			"    constant #26 invoke dynamic: #1 #24 doit ([Ljava/lang/String;II)LI;\n" + 
+			"    constant #24 invoke dynamic: #1 #25 doit ([Ljava/lang/String;II)LI;\n" + 
+			"    constant #25 name_and_type: #14.#26 doit ([Ljava/lang/String;II)LI;\n" + 
+			"    constant #26 utf8: \"([Ljava/lang/String;II)LI;\"\n" + 
 			"    constant #27 utf8: \"args\"\n" + 
 			"    constant #28 utf8: \"[Ljava/lang/String;\"\n" + 
 			"    constant #29 utf8: \"local1\"\n" + 
@@ -1991,7 +1991,7 @@ public void test014() throws Exception {
 			"     0  aload_0 [this]\n" + 
 			"     1  invokespecial java.lang.Object() [10]\n" + 
 			"     4  aload_0 [this]\n" + 
-			"     5  invokedynamic 0 doit() : I [15]\n" + 
+			"     5  invokedynamic 0 doit() : I [12]\n" + 
 			"    10  putfield X.i : I [16]\n" + 
 			"    13  return\n" + 
 			"      Line numbers:\n" + 
@@ -2011,7 +2011,7 @@ public void test014() throws Exception {
 			"     4  aload_0 [args]\n" + 
 			"     5  iload_1 [local1]\n" + 
 			"     6  iload_2 [local2]\n" + 
-			"     7  invokedynamic 1 doit(java.lang.String[], int, int) : I [26]\n" + 
+			"     7  invokedynamic 1 doit(java.lang.String[], int, int) : I [24]\n" + 
 			"    12  astore_3 [i]\n" + 
 			"    13  return\n" + 
 			"      Line numbers:\n" + 
@@ -2124,10 +2124,10 @@ public void test015() throws Exception {
 			"    constant #13 utf8: \"LX;\"\n" + 
 			"    constant #14 utf8: \"main\"\n" + 
 			"    constant #15 utf8: \"([Ljava/lang/String;)V\"\n" + 
-			"    constant #16 name_and_type: #17.#18 foo ()LI;\n" + 
-			"    constant #17 utf8: \"foo\"\n" + 
-			"    constant #18 utf8: \"()LI;\"\n" + 
-			"    constant #19 invoke dynamic: #0 #16 foo ()LI;\n" + 
+			"    constant #16 invoke dynamic: #0 #17 foo ()LI;\n" + 
+			"    constant #17 name_and_type: #18.#19 foo ()LI;\n" + 
+			"    constant #18 utf8: \"foo\"\n" + 
+			"    constant #19 utf8: \"()LI;\"\n" + 
 			"    constant #20 utf8: \"args\"\n" + 
 			"    constant #21 utf8: \"[Ljava/lang/String;\"\n" + 
 			"    constant #22 utf8: \"i\"\n" + 
@@ -2164,7 +2164,7 @@ public void test015() throws Exception {
 			"    constant #53 method_ref: #28.#54 java/lang/invoke/SerializedLambda.getFunctionalInterfaceMethodName ()Ljava/lang/String;\n" + 
 			"    constant #54 name_and_type: #55.#32 getFunctionalInterfaceMethodName ()Ljava/lang/String;\n" + 
 			"    constant #55 utf8: \"getFunctionalInterfaceMethodName\"\n" + 
-			"    constant #56 string: #17 \"foo\"\n" + 
+			"    constant #56 string: #18 \"foo\"\n" + 
 			"    constant #57 method_ref: #28.#58 java/lang/invoke/SerializedLambda.getFunctionalInterfaceMethodSignature ()Ljava/lang/String;\n" + 
 			"    constant #58 name_and_type: #59.#32 getFunctionalInterfaceMethodSignature ()Ljava/lang/String;\n" + 
 			"    constant #59 utf8: \"getFunctionalInterfaceMethodSignature\"\n" + 
@@ -2176,37 +2176,36 @@ public void test015() throws Exception {
 			"    constant #65 method_ref: #28.#66 java/lang/invoke/SerializedLambda.getImplMethodSignature ()Ljava/lang/String;\n" + 
 			"    constant #66 name_and_type: #67.#32 getImplMethodSignature ()Ljava/lang/String;\n" + 
 			"    constant #67 utf8: \"getImplMethodSignature\"\n" + 
-			"    constant #68 invoke dynamic: #0 #16 foo ()LI;\n" + 
-			"    constant #69 class: #70 java/lang/IllegalArgumentException\n" + 
-			"    constant #70 utf8: \"java/lang/IllegalArgumentException\"\n" + 
-			"    constant #71 string: #72 \"Invalid lambda deserialization\"\n" + 
-			"    constant #72 utf8: \"Invalid lambda deserialization\"\n" + 
-			"    constant #73 method_ref: #69.#74 java/lang/IllegalArgumentException.<init> (Ljava/lang/String;)V\n" + 
-			"    constant #74 name_and_type: #5.#75 <init> (Ljava/lang/String;)V\n" + 
-			"    constant #75 utf8: \"(Ljava/lang/String;)V\"\n" + 
-			"    constant #76 utf8: \"StackMapTable\"\n" + 
-			"    constant #77 utf8: \"SourceFile\"\n" + 
-			"    constant #78 utf8: \"X.java\"\n" + 
-			"    constant #79 utf8: \"BootstrapMethods\"\n" + 
-			"    constant #80 method_ref: #81.#83 java/lang/invoke/LambdaMetafactory.altMetafactory (Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;\n" + 
-			"    constant #81 class: #82 java/lang/invoke/LambdaMetafactory\n" + 
-			"    constant #82 utf8: \"java/lang/invoke/LambdaMetafactory\"\n" + 
-			"    constant #83 name_and_type: #84.#85 altMetafactory (Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;\n" + 
-			"    constant #84 utf8: \"altMetafactory\"\n" + 
-			"    constant #85 utf8: \"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;\"\n" + 
-			"    constant #86 method handle: invokestatic (6) #80 \n" + 
-			"    constant #87 method type: #6 ()V\n" + 
-			"    constant #88 method_ref: #1.#89 X.lambda$0 ()V\n" + 
-			"    constant #89 name_and_type: #24.#6 lambda$0 ()V\n" + 
-			"    constant #90 method handle: invokestatic (6) #88 \n" + 
-			"    constant #91 method type: #6 ()V\n" + 
-			"    constant #92 integer: 1\n" + 
-			"    constant #93 utf8: \"InnerClasses\"\n" + 
-			"    constant #94 class: #95 java/lang/invoke/MethodHandles$Lookup\n" + 
-			"    constant #95 utf8: \"java/lang/invoke/MethodHandles$Lookup\"\n" + 
-			"    constant #96 class: #97 java/lang/invoke/MethodHandles\n" + 
-			"    constant #97 utf8: \"java/lang/invoke/MethodHandles\"\n" + 
-			"    constant #98 utf8: \"Lookup\"\n" + 
+			"    constant #68 class: #69 java/lang/IllegalArgumentException\n" + 
+			"    constant #69 utf8: \"java/lang/IllegalArgumentException\"\n" + 
+			"    constant #70 string: #71 \"Invalid lambda deserialization\"\n" + 
+			"    constant #71 utf8: \"Invalid lambda deserialization\"\n" + 
+			"    constant #72 method_ref: #68.#73 java/lang/IllegalArgumentException.<init> (Ljava/lang/String;)V\n" + 
+			"    constant #73 name_and_type: #5.#74 <init> (Ljava/lang/String;)V\n" + 
+			"    constant #74 utf8: \"(Ljava/lang/String;)V\"\n" + 
+			"    constant #75 utf8: \"StackMapTable\"\n" + 
+			"    constant #76 utf8: \"SourceFile\"\n" + 
+			"    constant #77 utf8: \"X.java\"\n" + 
+			"    constant #78 utf8: \"BootstrapMethods\"\n" + 
+			"    constant #79 method_ref: #80.#82 java/lang/invoke/LambdaMetafactory.altMetafactory (Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;\n" + 
+			"    constant #80 class: #81 java/lang/invoke/LambdaMetafactory\n" + 
+			"    constant #81 utf8: \"java/lang/invoke/LambdaMetafactory\"\n" + 
+			"    constant #82 name_and_type: #83.#84 altMetafactory (Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;\n" + 
+			"    constant #83 utf8: \"altMetafactory\"\n" + 
+			"    constant #84 utf8: \"(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;\"\n" + 
+			"    constant #85 method handle: invokestatic (6) #79 \n" + 
+			"    constant #86 method type: #6 ()V\n" + 
+			"    constant #87 method_ref: #1.#88 X.lambda$0 ()V\n" + 
+			"    constant #88 name_and_type: #24.#6 lambda$0 ()V\n" + 
+			"    constant #89 method handle: invokestatic (6) #87 \n" + 
+			"    constant #90 method type: #6 ()V\n" + 
+			"    constant #91 integer: 1\n" + 
+			"    constant #92 utf8: \"InnerClasses\"\n" + 
+			"    constant #93 class: #94 java/lang/invoke/MethodHandles$Lookup\n" + 
+			"    constant #94 utf8: \"java/lang/invoke/MethodHandles$Lookup\"\n" + 
+			"    constant #95 class: #96 java/lang/invoke/MethodHandles\n" + 
+			"    constant #96 utf8: \"java/lang/invoke/MethodHandles\"\n" + 
+			"    constant #97 utf8: \"Lookup\"\n" + 
 			"  \n" + 
 			"  // Method descriptor #6 ()V\n" + 
 			"  // Stack: 1, Locals: 1\n" + 
@@ -2222,7 +2221,7 @@ public void test015() throws Exception {
 			"  // Method descriptor #15 ([Ljava/lang/String;)V\n" + 
 			"  // Stack: 1, Locals: 2\n" + 
 			"  public static void main(java.lang.String[] args);\n" + 
-			"    0  invokedynamic 0 foo() : I [19]\n" + 
+			"    0  invokedynamic 0 foo() : I [16]\n" + 
 			"    5  astore_1 [i]\n" + 
 			"    6  return\n" + 
 			"      Line numbers:\n" + 
@@ -2289,12 +2288,12 @@ public void test015() throws Exception {
 			"    121  ldc <String \"()V\"> [60]\n" + 
 			"    123  invokevirtual java.lang.Object.equals(java.lang.Object) : boolean [52]\n" + 
 			"    126  ifeq 135\n" + 
-			"    129  invokedynamic 0 foo() : I [68]\n" + 
+			"    129  invokedynamic 0 foo() : I [16]\n" + 
 			"    134  areturn\n" + 
-			"    135  new java.lang.IllegalArgumentException [69]\n" + 
+			"    135  new java.lang.IllegalArgumentException [68]\n" + 
 			"    138  dup\n" + 
-			"    139  ldc <String \"Invalid lambda deserialization\"> [71]\n" + 
-			"    141  invokespecial java.lang.IllegalArgumentException(java.lang.String) [73]\n" + 
+			"    139  ldc <String \"Invalid lambda deserialization\"> [70]\n" + 
+			"    141  invokespecial java.lang.IllegalArgumentException(java.lang.String) [72]\n" + 
 			"    144  athrow\n" + 
 			"      Line numbers:\n" + 
 			"        [pc: 0, line: 1]\n" + 
@@ -2305,15 +2304,15 @@ public void test015() throws Exception {
 			"        [pc: 135, chop 2 local(s)]\n" + 
 			"\n" + 
 			"  Inner classes:\n" + 
-			"    [inner class info: #94 java/lang/invoke/MethodHandles$Lookup, outer class info: #96 java/lang/invoke/MethodHandles\n" + 
-			"     inner name: #98 Lookup, accessflags: 25 public static final]\n" + 
+			"    [inner class info: #93 java/lang/invoke/MethodHandles$Lookup, outer class info: #95 java/lang/invoke/MethodHandles\n" + 
+			"     inner name: #97 Lookup, accessflags: 25 public static final]\n" + 
 			"Bootstrap methods:\n" + 
-			"  0 : # 86 invokestatic java/lang/invoke/LambdaMetafactory.altMetafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;\n" + 
+			"  0 : # 85 invokestatic java/lang/invoke/LambdaMetafactory.altMetafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;\n" + 
 			"	Method arguments:\n" + 
-			"		#87 ()V\n" + 
-			"		#90 invokestatic X.lambda$0:()V\n" + 
-			"		#91 ()V\n" + 
-			"		#92 1\n" + 
+			"		#86 ()V\n" + 
+			"		#89 invokestatic X.lambda$0:()V\n" + 
+			"		#90 ()V\n" + 
+			"		#91 1\n" + 
 			"}";
 
 	verifyClassFile(expectedOutput, "X.class", ClassFileBytesDisassembler.SYSTEM);
@@ -2373,14 +2372,14 @@ public void test016() throws Exception {
 			"    constant #20 utf8: \"()Ljava/lang/Object;\"\n" + 
 			"    constant #21 utf8: \"Signature\"\n" + 
 			"    constant #22 utf8: \"()TT;\"\n" + 
-			"    constant #23 name_and_type: #24.#25 doit ()LI;\n" + 
-			"    constant #24 utf8: \"doit\"\n" + 
-			"    constant #25 utf8: \"()LI;\"\n" + 
-			"    constant #26 invoke dynamic: #0 #23 doit ()LI;\n" + 
+			"    constant #23 invoke dynamic: #0 #24 doit ()LI;\n" + 
+			"    constant #24 name_and_type: #25.#26 doit ()LI;\n" + 
+			"    constant #25 utf8: \"doit\"\n" + 
+			"    constant #26 utf8: \"()LI;\"\n" + 
 			"    constant #27 interface_method_ref: #28.#30 I.doit ()V\n" + 
 			"    constant #28 class: #29 I\n" + 
 			"    constant #29 utf8: \"I\"\n" + 
-			"    constant #30 name_and_type: #24.#14 doit ()V\n" + 
+			"    constant #30 name_and_type: #25.#14 doit ()V\n" + 
 			"    constant #31 utf8: \"lambda$0\"\n" + 
 			"    constant #32 field_ref: #33.#35 java/lang/System.out Ljava/io/PrintStream;\n" + 
 			"    constant #33 class: #34 java/lang/System\n" + 
@@ -2449,7 +2448,7 @@ public void test016() throws Exception {
 			"  // Signature: ()TT;\n" + 
 			"  // Stack: 1, Locals: 1\n" + 
 			"  java.lang.Object goo();\n" + 
-			"     0  invokedynamic 0 doit() : I [26]\n" + 
+			"     0  invokedynamic 0 doit() : I [23]\n" + 
 			"     5  invokeinterface I.doit() : void [27] [nargs: 1]\n" + 
 			"    10  aconst_null\n" + 
 			"    11  areturn\n" + 
@@ -2550,14 +2549,14 @@ public void test017() throws Exception {
 			"    constant #20 utf8: \"()Ljava/lang/Object;\"\n" + 
 			"    constant #21 utf8: \"Signature\"\n" + 
 			"    constant #22 utf8: \"()TT;\"\n" + 
-			"    constant #23 name_and_type: #24.#25 doit ()LI;\n" + 
-			"    constant #24 utf8: \"doit\"\n" + 
-			"    constant #25 utf8: \"()LI;\"\n" + 
-			"    constant #26 invoke dynamic: #0 #23 doit ()LI;\n" + 
+			"    constant #23 invoke dynamic: #0 #24 doit ()LI;\n" + 
+			"    constant #24 name_and_type: #25.#26 doit ()LI;\n" + 
+			"    constant #25 utf8: \"doit\"\n" + 
+			"    constant #26 utf8: \"()LI;\"\n" + 
 			"    constant #27 interface_method_ref: #28.#30 I.doit ()V\n" + 
 			"    constant #28 class: #29 I\n" + 
 			"    constant #29 utf8: \"I\"\n" + 
-			"    constant #30 name_and_type: #24.#14 doit ()V\n" + 
+			"    constant #30 name_and_type: #25.#14 doit ()V\n" + 
 			"    constant #31 utf8: \"lambda$0\"\n" + 
 			"    constant #32 field_ref: #33.#35 java/lang/System.out Ljava/io/PrintStream;\n" + 
 			"    constant #33 class: #34 java/lang/System\n" + 
@@ -2626,7 +2625,7 @@ public void test017() throws Exception {
 			"  // Signature: ()TT;\n" + 
 			"  // Stack: 1, Locals: 1\n" + 
 			"  java.lang.Object goo();\n" + 
-			"     0  invokedynamic 0 doit() : I [26]\n" + 
+			"     0  invokedynamic 0 doit() : I [23]\n" + 
 			"     5  invokeinterface I.doit() : void [27] [nargs: 1]\n" + 
 			"    10  aconst_null\n" + 
 			"    11  areturn\n" + 
@@ -2964,10 +2963,10 @@ public void test430035() throws IOException, ClassFormatException {
 						"    constant #13 utf8: \"LX;\"\n" + 
 						"    constant #14 utf8: \"main\"\n" + 
 						"    constant #15 utf8: \"([Ljava/lang/String;)V\"\n" + 
-						"    constant #16 name_and_type: #17.#18 foo ()LK;\n" + 
-						"    constant #17 utf8: \"foo\"\n" + 
-						"    constant #18 utf8: \"()LK;\"\n" + 
-						"    constant #19 invoke dynamic: #0 #16 foo ()LK;\n" + 
+						"    constant #16 invoke dynamic: #0 #17 foo ()LK;\n" + 
+						"    constant #17 name_and_type: #18.#19 foo ()LK;\n" + 
+						"    constant #18 utf8: \"foo\"\n" + 
+						"    constant #19 utf8: \"()LK;\"\n" + 
 						"    constant #20 string: #21 \"direct\"\n" + 
 						"    constant #21 utf8: \"direct\"\n" + 
 						"    constant #22 string: #23 \" call\"\n" + 
@@ -2975,7 +2974,7 @@ public void test430035() throws IOException, ClassFormatException {
 						"    constant #24 interface_method_ref: #25.#27 K.foo (Ljava/lang/String;Ljava/lang/String;)V\n" + 
 						"    constant #25 class: #26 K\n" + 
 						"    constant #26 utf8: \"K\"\n" + 
-						"    constant #27 name_and_type: #17.#28 foo (Ljava/lang/String;Ljava/lang/String;)V\n" + 
+						"    constant #27 name_and_type: #18.#28 foo (Ljava/lang/String;Ljava/lang/String;)V\n" + 
 						"    constant #28 utf8: \"(Ljava/lang/String;Ljava/lang/String;)V\"\n" + 
 						"    constant #29 string: #30 \"bridge\"\n" + 
 						"    constant #30 utf8: \"bridge\"\n" + 
@@ -2984,14 +2983,14 @@ public void test430035() throws IOException, ClassFormatException {
 						"    constant #33 interface_method_ref: #34.#36 J.foo (Ljava/lang/Object;Ljava/lang/String;)V\n" + 
 						"    constant #34 class: #35 J\n" + 
 						"    constant #35 utf8: \"J\"\n" + 
-						"    constant #36 name_and_type: #17.#37 foo (Ljava/lang/Object;Ljava/lang/String;)V\n" + 
+						"    constant #36 name_and_type: #18.#37 foo (Ljava/lang/Object;Ljava/lang/String;)V\n" + 
 						"    constant #37 utf8: \"(Ljava/lang/Object;Ljava/lang/String;)V\"\n" + 
 						"    constant #38 string: #39 \" method(i)\"\n" + 
 						"    constant #39 utf8: \" method(i)\"\n" + 
 						"    constant #40 interface_method_ref: #41.#43 I.foo (Ljava/lang/String;Ljava/lang/Object;)V\n" + 
 						"    constant #41 class: #42 I\n" + 
 						"    constant #42 utf8: \"I\"\n" + 
-						"    constant #43 name_and_type: #17.#44 foo (Ljava/lang/String;Ljava/lang/Object;)V\n" + 
+						"    constant #43 name_and_type: #18.#44 foo (Ljava/lang/String;Ljava/lang/Object;)V\n" + 
 						"    constant #44 utf8: \"(Ljava/lang/String;Ljava/lang/Object;)V\"\n" + 
 						"    constant #45 utf8: \"x\"\n" + 
 						"    constant #46 utf8: \"[Ljava/lang/String;\"\n" + 
@@ -3077,7 +3076,7 @@ public void test430035() throws IOException, ClassFormatException {
 						"  // Method descriptor #15 ([Ljava/lang/String;)V\n" + 
 						"  // Stack: 3, Locals: 4\n" + 
 						"  public static void main(java.lang.String... x);\n" + 
-						"     0  invokedynamic 0 foo() : K [19]\n" + 
+						"     0  invokedynamic 0 foo() : K [16]\n" + 
 						"     5  astore_1 [k]\n" + 
 						"     6  aload_1 [k]\n" + 
 						"     7  ldc <String \"direct\"> [20]\n" + 

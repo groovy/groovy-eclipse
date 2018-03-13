@@ -253,8 +253,8 @@ public class ModificationLog {
 	}
 
 	private static int getBufferEntriesFor(int sizeInMegs) {
-		int sizeOfABufferEntry = 8 + 4 + 1; // size, in bytes, of one long, one int, and one byte 
-		return sizeInMegs * 1024 * 1024 / sizeOfABufferEntry;
+		long sizeOfABufferEntry = 8 + 4 + 1; // size, in bytes, of one long, one int, and one byte 
+		return (int) (sizeInMegs * 1024L * 1024L / sizeOfABufferEntry);
 	}
 
 	public int getBufferEntries() {
@@ -367,6 +367,35 @@ public class ModificationLog {
 
 		if (this.currentEntries < this.buffer0.length) {
 			this.currentEntries++;
+		}
+	}
+
+	// prints count number of last log records to stdout
+	// may be useful when troubleshooting heap corruption
+	public void printLog(int count) {
+		for (int i = 0; i < count; i++) {
+			int pos = (this.insertionPosition - count + i) % this.buffer0.length;
+			byte opcode = this.operation[pos];
+			switch (opcode) {
+				case FREE_OPERATION:
+					System.out.printf("FREE_OPERATION(address=%x, size=%d)\n", this.buffer0[pos], this.buffer1[pos]); //$NON-NLS-1$
+					break;
+				case MALLOC_OPERATION:
+					System.out.printf("MALLOC_OPERATION(address=%x, size=%d)\n", this.buffer0[pos], this.buffer1[pos]); //$NON-NLS-1$
+					break;
+				case WRITE_OPERATION:
+					System.out.printf("WRITE_OPERATION(address=%x, size=%d)\n", this.buffer0[pos], this.buffer1[pos]); //$NON-NLS-1$
+					break;
+				case PUSH_OPERATION:
+					System.out.printf("PUSH_OPERATION(tag=%s)\n", activeTags.get(this.buffer1[pos])); //$NON-NLS-1$
+					break;
+				case POP_OPERATION:
+					System.out.printf("POP_OPERATION(tag=%s)\n", activeTags.get(this.buffer1[pos])); //$NON-NLS-1$
+					break;
+				default:
+					System.out.printf("UNKNOWN(opcode=%d, arg0=%d, arg1=%d)\n", opcode, this.buffer0[pos], this.buffer1[pos]); //$NON-NLS-1$
+					break;
+			}
 		}
 	}
 

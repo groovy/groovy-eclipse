@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2017 IBM Corporation and others.
+ * Copyright (c) 2016, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -107,7 +107,7 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 	private SimpleSetOfCharArray packageNames;
 	public int modifiers;
 	public LookupEnvironment environment;
-	public int tagBits;
+	public long tagBits;
 	public int defaultNullness = NO_NULL_DEFAULT;
 	ModuleBinding[] requiredModules = null;
 	boolean isAuto = false;
@@ -826,7 +826,9 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 		return (this.modifiers & ClassFileConstants.ACC_OPEN) != 0;
 	}
 	public boolean isDeprecated() {
-		// TODO(SHMOD) implement deprecation for modules
+		return (this.tagBits & TagBits.AnnotationDeprecated) != 0;
+	}
+	public boolean hasUnstableAutoName() {
 		return false;
 	}
 	public boolean isTransitivelyRequired(ModuleBinding otherModule) {

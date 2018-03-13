@@ -24,6 +24,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
+import org.codehaus.groovy.ast.expr.AttributeExpression;
 import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
@@ -31,9 +32,13 @@ import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.NamedArgumentListExpression;
+import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
+import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.eclipse.jdt.groovy.core.util.DepthFirstVisitor;
+import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
 
 /**
@@ -149,7 +154,7 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
             requestor.acceptFieldReference(constName, expression.getStart());
             // also could be a method reference
             // we don't know how many arguments the method has, so go up to 7
-            for (int i = 0; i < 7; i += 1) {
+            for (int i = 0; i <= 7; i += 1) {
                 requestor.acceptMethodReference(constName, i, expression.getStart());
             }
         }
@@ -160,12 +165,20 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
     public void visitConstructorCallExpression(ConstructorCallExpression expression) {
         char[] typeName = expression.getType().getName().toCharArray();
         // we don't know how many arguments the ctor has, so go up to 9
-        for (int i = 0; i < 10; i += 1) {
+        for (int i = 0; i <= 9; i += 1) {
             requestor.acceptConstructorReference(typeName, i, expression.getStart());
         }
-        //if (!expression.isUsingAnonymousInnerClass()) {
-        //    visitTypeReference(call.getType(), false);
-        //}
+
+        // handle idiomatic constructor call like "new Foo(bar:..., 'baz':...)" -- index references to "setBar", etc.
+        ((TupleExpression) expression.getArguments()).getExpressions()
+            .stream().filter(e -> e instanceof NamedArgumentListExpression)
+            .flatMap(e -> ((NamedArgumentListExpression) e).getMapEntryExpressions().stream())
+            .forEach(kv -> {
+                if (kv.getKeyExpression() instanceof ConstantExpression) {
+                    visitNameReference(AccessorSupport.SETTER, kv.getKeyExpression().getText(), kv.getKeyExpression().getStart());
+                }
+            });
+
         super.visitConstructorCallExpression(expression);
     }
 
@@ -191,7 +204,7 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
             // also could be a field reference
             requestor.acceptFieldReference(methodName, expression.getStart());
             // we don't know how many arguments the method has, so go up to 7
-            for (int i = 0; i < 7; i += 1) {
+            for (int i = 0; i <= 7; i += 1) {
                 requestor.acceptMethodReference(methodName, i, expression.getStart());
             }
         }
@@ -199,6 +212,19 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
             visitTypeParameters(expression.getGenericsTypes(), null);
         }
         super.visitMethodCallExpression(expression);
+    }
+
+    @Override
+    public void visitPropertyExpression(PropertyExpression expression) {
+        if (!(expression instanceof AttributeExpression) &&
+                expression.getProperty() instanceof ConstantExpression) {
+            int offset = expression.getProperty().getStart();
+            String name = expression.getProperty().getText();
+            visitNameReference(AccessorSupport.ISSER , name, offset);
+            visitNameReference(AccessorSupport.GETTER, name, offset);
+            visitNameReference(AccessorSupport.SETTER, name, offset);
+        }
+        super.visitPropertyExpression(expression);
     }
 
     @Override
@@ -217,6 +243,14 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
     }
 
     //--------------------------------------------------------------------------
+
+    private void visitNameReference(AccessorSupport kind, String name, int offset) {
+        String methodName = kind.createAccessorName(name);
+        if (methodName != null) {
+            int params = (kind == AccessorSupport.SETTER ? 1 : 0);
+            requestor.acceptMethodReference(methodName.toCharArray(), params, offset);
+        }
+    }
 
     private void visitTypeReference(ClassNode type, boolean isAnnotation, boolean useQualifiedName) {
         if (isAnnotation) {

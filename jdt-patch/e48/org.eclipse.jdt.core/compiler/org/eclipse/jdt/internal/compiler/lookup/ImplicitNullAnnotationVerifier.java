@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012, 2017 GK Software AG, IBM Corporation and others.
+ * Copyright (c) 2012, 2018 GK Software AG, IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -86,10 +86,10 @@ public class ImplicitNullAnnotationVerifier {
 			}
 			boolean usesTypeAnnotations = scope.environment().usesNullTypeAnnotations();
 			boolean needToApplyReturnNonNullDefault =
-					currentMethod.hasNonNullDefaultFor(Binding.DefaultLocationReturnType, usesTypeAnnotations, srcMethod);
-			boolean needToApplyParameterNonNullDefault =
-					currentMethod.hasNonNullDefaultFor(Binding.DefaultLocationParameter, usesTypeAnnotations, srcMethod);
-			boolean needToApplyNonNullDefault = needToApplyReturnNonNullDefault | needToApplyParameterNonNullDefault;
+					currentMethod.hasNonNullDefaultForReturnType(srcMethod);
+			ParameterNonNullDefaultProvider needToApplyParameterNonNullDefault =
+					currentMethod.hasNonNullDefaultForParameter(srcMethod);
+			boolean needToApplyNonNullDefault = needToApplyReturnNonNullDefault | needToApplyParameterNonNullDefault.hasAnyNonNullDefault();
 			// compatibility & inheritance do not consider constructors / static methods:
 			boolean isInstanceMethod = !currentMethod.isConstructor() && !currentMethod.isStatic();
 			complain &= isInstanceMethod;
@@ -160,7 +160,7 @@ public class ImplicitNullAnnotationVerifier {
 			}
 			if (needToApplyNonNullDefault) {
 				if (!usesTypeAnnotations)
-					currentMethod.fillInDefaultNonNullness(srcMethod);
+					currentMethod.fillInDefaultNonNullness(srcMethod, needToApplyReturnNonNullDefault, needToApplyParameterNonNullDefault);
 				else
 					currentMethod.fillInDefaultNonNullness18(srcMethod, scope.environment());
 			}
@@ -236,7 +236,7 @@ public class ImplicitNullAnnotationVerifier {
 	 *   Index position 0 is used for the return type, positions i+1 for argument i.
 	 */
 	void checkNullSpecInheritance(MethodBinding currentMethod, AbstractMethodDeclaration srcMethod, 
-			boolean hasReturnNonNullDefault, boolean hasParameterNonNullDefault, boolean shouldComplain,
+			boolean hasReturnNonNullDefault, ParameterNonNullDefaultProvider hasParameterNonNullDefault, boolean shouldComplain,
 			MethodBinding inheritedMethod, MethodBinding[] allInheritedMethods, Scope scope, InheritedNonNullnessInfo[] inheritedNonNullnessInfos) 
 	{
 		if(currentMethod.declaringClass.id == TypeIds.T_JavaLangObject) {
@@ -359,7 +359,7 @@ public class ImplicitNullAnnotationVerifier {
 				// unspecified, may fill in either from super or from default
 				if (inheritedNonNullNess != null) {
 					if (shouldInherit) {
-						if (hasParameterNonNullDefault) {
+						if (hasParameterNonNullDefault.hasNonNullDefaultForParam(i)) {
 							// both inheritance and default: check for conflict?
 							if (shouldComplain
 									&& inheritedNonNullNess == Boolean.FALSE
@@ -382,7 +382,7 @@ public class ImplicitNullAnnotationVerifier {
 						continue; // compatible by construction, skip complain phase below
 					}
 				}
-				if (hasParameterNonNullDefault) { // conflict with inheritance already checked
+				if (hasParameterNonNullDefault.hasNonNullDefaultForParam(i)) { // conflict with inheritance already checked
 					currentNonNullNess = Boolean.TRUE;
 					if (!useTypeAnnotations)
 						recordArgNonNullness(currentMethod, length, i, currentArgument, Boolean.TRUE);

@@ -351,7 +351,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
     private ClassNode findDeclaringType(TypeLookupResult result) {
         ClassNode declaringType = null;
         if (result.declaringType != null) {
-            declaringType = GroovyUtils.getBaseType(result.declaringType);
+            declaringType = result.declaringType;
         } else if (result.declaration instanceof ClassNode) {
             declaringType = GroovyUtils.getBaseType((ClassNode) result.declaration);
         } else if (result.declaration instanceof FieldNode) {

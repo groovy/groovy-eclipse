@@ -488,6 +488,12 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
+    void testMethodPointer4() {
+        String contents = '(String.&isEmpty).mem'
+        applyProposalAndCheck(checkUniqueProposal(contents, 'mem', 'memoize()'), contents + 'oize()')
+    }
+
+    @Test
     void testIncompleteMethodCall() {
         String contents = '''\
             class Foo {

@@ -200,9 +200,7 @@ public FlowInfo analyseCode(BlockScope currentScope, FlowContext flowContext, Fl
 	public void resolve(BlockScope scope) {
 
 		// prescan NNBD
-		if (scope.environment().usesNullTypeAnnotations()) {
-			handleNonNullByDefault(scope, this.annotations, this);
-		}
+		handleNonNullByDefault(scope, this.annotations, this);
 
 		// create a binding and add it to the scope
 		TypeBinding variableType = this.type.resolveType(scope, true /* check bounds*/);

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -858,6 +858,7 @@ public void test012b(){
         "							methods\n" + 
         "      missingJavadocCommentsVisibility(<visibility>)  specify visibility\n" + 
         "							modifier for missing javadoc comments warnings\n" + 
+        "      module             + module related problems.\n" + 
         "      nls                  string literal lacking non-nls tag //$NON-NLS-<n>$\n" + 
         "      noEffectAssign     + assignment without effect\n" + 
         "      null                 potential missing or redundant null check\n" + 
@@ -1108,6 +1109,7 @@ public void test012b(){
 			"		<option key=\"org.eclipse.jdt.core.compiler.problem.unnecessaryElse\" value=\"ignore\"/>\n" + 
 			"		<option key=\"org.eclipse.jdt.core.compiler.problem.unnecessaryTypeCheck\" value=\"ignore\"/>\n" + 
 			"		<option key=\"org.eclipse.jdt.core.compiler.problem.unqualifiedFieldAccess\" value=\"ignore\"/>\n" + 
+			"		<option key=\"org.eclipse.jdt.core.compiler.problem.unstableAutoModuleName\" value=\"warning\"/>\n" + 
 			"		<option key=\"org.eclipse.jdt.core.compiler.problem.unusedDeclaredThrownException\" value=\"ignore\"/>\n" + 
 			"		<option key=\"org.eclipse.jdt.core.compiler.problem.unusedDeclaredThrownExceptionExemptExceptionAndThrowable\" value=\"enabled\"/>\n" + 
 			"		<option key=\"org.eclipse.jdt.core.compiler.problem.unusedDeclaredThrownExceptionIncludeDocCommentReference\" value=\"enabled\"/>\n" + 
@@ -1127,6 +1129,7 @@ public void test012b(){
 			"		<option key=\"org.eclipse.jdt.core.compiler.problem.unusedWarningToken\" value=\"warning\"/>\n" + 
 			"		<option key=\"org.eclipse.jdt.core.compiler.problem.varargsArgumentNeedCast\" value=\"warning\"/>\n" + 
 			"		<option key=\"org.eclipse.jdt.core.compiler.processAnnotations\" value=\"disabled\"/>\n" + 
+			"		<option key=\"org.eclipse.jdt.core.compiler.release\" value=\"disabled\"/>\n" + 
 			"		<option key=\"org.eclipse.jdt.core.compiler.source\" value=\"1.5\"/>\n" + 
 			"		<option key=\"org.eclipse.jdt.core.compiler.storeAnnotations\" value=\"disabled\"/>\n" +
 			"		<option key=\"org.eclipse.jdt.core.compiler.taskCaseSensitive\" value=\"enabled\"/>\n" + 
@@ -13080,5 +13083,56 @@ public void testReleaseOption() throws Exception {
 	     "",
 	     "option --release is supported only when run with JDK 9 or above\n",
 	     true);
+}
+
+public void testBug531579() throws Exception {
+	if (!isJRE9) return;
+	// these types replace inaccessible types from JRE/javax.xml.bind: 
+	runConformTest(new String[] {
+			"src/javax/xml/bind/JAXBContext.java",
+			"package javax.xml.bind;\n" +
+			"public abstract class JAXBContext {\n" + 
+			"	public static JAXBContext newInstance( String contextPath )\n" + 
+			"		throws JAXBException {\n" +
+			"		return null;\n" +
+			"	}\n" +
+			"}\n",
+			"src/javax/xml/bind/JAXBException.java",
+			"package javax.xml.bind;\n" +
+			"public class JAXBException extends Exception {}\n"
+		},
+		"\"" + OUTPUT_DIR +  File.separator + "src/javax/xml/bind/JAXBContext.java\""
+		+ " \"" + OUTPUT_DIR +  File.separator + "src/javax/xml/bind/JAXBException.java\""
+		+ " -sourcepath \"" + OUTPUT_DIR +  File.separator + "src\""
+		+ " -1.8"
+		+ " -warn:none"
+		+ " -d \"" + OUTPUT_DIR + File.separator + "bin\" ",
+		"",
+		"",
+		true);
+		
+	runConformTest(new String[] {
+			"src/p1/ImportJAXBType.java", 
+			"package p1;\n" + 
+			"\n" + 
+			"import javax.xml.bind.JAXBContext;\n" + 
+			"\n" + 
+			"public class ImportJAXBType {\n" + 
+			"\n" + 
+			"	public static void main(String[] args) throws Exception {\n" + 
+			"		JAXBContext context = JAXBContext.newInstance(\"\");\n" + 
+			"	}\n" + 
+			"\n" + 
+			"}\n"
+		},	
+		"\"" + OUTPUT_DIR +  File.separator + "src/p1/ImportJAXBType.java\""
+		+ " -cp \"" + OUTPUT_DIR + File.separator + "bin\" "
+		+ " -sourcepath \"" + OUTPUT_DIR +  File.separator + "src\""
+		+ " -1.9"
+		+ " -warn:none"
+		+ " -d \"" + OUTPUT_DIR + File.separator + "bin\" ",
+		"",
+		"",
+		false);
 }
 }

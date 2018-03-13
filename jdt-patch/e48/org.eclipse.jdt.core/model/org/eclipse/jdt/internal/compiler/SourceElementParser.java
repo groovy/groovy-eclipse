@@ -298,6 +298,13 @@ protected void consumeClassHeaderName1() {
 		rememberCategories();
 }
 @Override
+protected void consumeModuleHeader() {
+	int currentAstPtr = this.astPtr;
+	super.consumeModuleHeader();
+	if (this.astPtr > currentAstPtr) // if ast node was pushed on the ast stack
+		rememberCategories();
+}
+@Override
 protected void consumeClassInstanceCreationExpressionWithTypeArguments() {
 	boolean previousFlag = this.reportReferenceInfo;
 	this.reportReferenceInfo = false; // not to see the type reference reported in super call to getTypeReference(...)

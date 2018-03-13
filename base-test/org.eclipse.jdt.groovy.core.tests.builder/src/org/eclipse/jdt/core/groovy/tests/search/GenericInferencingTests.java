@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,21 +38,20 @@ public final class GenericInferencingTests extends InferencingTestSuite {
             "Blah<Some> farb\n" +
             "farb.something().AA.other\n" +
             "enum Some {\n" +
-            "    AA(List)\n" +
-            "    public final Class<List<String>> other\n" +
-            "    public Some(Class<List<String>> other) {\n" +
-            "        this.other = other\n" +
-            "    }\n" +
+            "  AA(List)\n" +
+            "  public final Class<List<String>> other\n" +
+            "  public Some(Class<List<String>> other) {\n" +
+            "    this.other = other\n" +
+            "  }\n" +
             "}\n" +
             "class Blah<K> {\n" +
-            "    K something() {\n" +
-            "    }\n" +
+            "  K something() {\n" +
+            "  }\n" +
             "}";
 
         int start = contents.indexOf("other");
         int end = start + "other".length();
         assertType(contents, start, end, "java.lang.Class<java.util.List<java.lang.String>>");
-
     }
 
     @Test
@@ -253,8 +252,6 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
-    // not working yet since our approach to determining the type of a map only looks at the static types of the
-    // first elements.  It does not try to infer the type of these elements.
     @Test
     public void testMapOfList4() {
         String contents = "def x = [1: [1]]\nx.entrySet().iterator().next().value.iterator().next()";
@@ -639,8 +636,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "java.lang.Float");
     }
 
-    // GRECLIPSE-997
-    @Test
+    @Test // GRECLIPSE-997
     public void testNestedGenerics1() {
         String contents =
             "class MyMap extends HashMap<String,Class> { }\n" +
@@ -652,8 +648,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "java.lang.Class");
     }
 
-    // GRECLIPSE-997
-    @Test
+    @Test // GRECLIPSE-997
     public void testNestedGenerics2() {
         String contents =
             "class MyMap extends HashMap<String,Class> { }\n" +
@@ -665,8 +660,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.Class>>");
     }
 
-    // GRECLIPSE-997
-    @Test
+    @Test // GRECLIPSE-997
     public void testNestedGenerics3() {
         String contents =
             "import java.lang.ref.WeakReference\n" +
@@ -679,8 +673,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.ref.WeakReference<java.lang.Class>>>");
     }
 
-    // GRECLIPSE-997
-    @Test
+    @Test // GRECLIPSE-997
     public void testNestedGenerics4() {
         String contents =
             "import java.lang.ref.WeakReference\n" +
@@ -694,8 +687,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.ref.WeakReference<java.lang.Class>>>");
     }
 
-    // GRECLIPSE-997
-    @Test
+    @Test // GRECLIPSE-997
     public void testNestedGenerics5() {
         String contents =
             "import java.lang.ref.WeakReference\n" +
@@ -711,8 +703,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "java.util.Map<java.lang.Integer,java.lang.Class>");
     }
 
-    // GRECLIPSE-997
-    @Test
+    @Test // GRECLIPSE-997
     public void testNestedGenerics6() {
         String contents =
             "import java.lang.ref.WeakReference\n" +
@@ -726,8 +717,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "java.util.Set<java.util.Map$Entry<java.lang.String,java.lang.ref.WeakReference<java.util.List<java.lang.String>>>>");
     }
 
-    // GRECLIPSE-997
-    @Test
+    @Test // GRECLIPSE-997
     public void testNestedGenerics7() {
         String contents =
             "class MyMap<K,V> extends HashMap<V,K>{ }\n" +
@@ -739,8 +729,8 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
-    // GRECLIPSE-997
-    @Test
+
+    @Test // GRECLIPSE-997
     public void testNestedGenerics8() {
         String contents =
             "class MyMap<K,V> extends HashMap<K,V>{\n" +
@@ -753,8 +743,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "java.util.Map<java.lang.Class,java.lang.Class<java.lang.Integer>>");
     }
 
-    // GRECLIPSE-1131
-    @Test
+    @Test // GRECLIPSE-1131
     public void testEachOnNonIterables1() {
         String contents = "1.each { it }";
         String toFind = "it";
@@ -763,8 +752,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "java.lang.Integer");
     }
 
-    // GRECLIPSE-1131
-    @Test
+    @Test // GRECLIPSE-1131
     public void testEachOnNonIterables2() {
         String contents = "each { it }";
         String toFind = "it";
@@ -773,8 +761,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "Search");
     }
 
-    // GRECLIPSE-1131
-    @Test
+    @Test // GRECLIPSE-1131
     public void testEachOnNonIterables3() {
         String contents = "1.reverseEach { it }";
         String toFind = "it";
@@ -927,8 +914,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "java.lang.String");
     }
 
-    // Generic method type inference without @CompileStatic
-    @Test
+    @Test // Generic method type inference without @CompileStatic
     public void testMethod2() {
         String contents =
             "class A {\n" +
@@ -946,8 +932,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "java.lang.String");
     }
 
-    // Generic method without object type inference with @CompileStatic
-    @Test
+    @Test // Generic method without object type inference with @CompileStatic
     public void testMethod3() {
         String contents =
             "import groovy.transform.CompileStatic\n" +
@@ -966,8 +951,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "java.lang.String");
     }
 
-    // Generic method type without object inference without @CompileStatic
-    @Test
+    @Test // Generic method type without object inference without @CompileStatic
     public void testMethod4() {
         String contents =
             "class A {\n" +
@@ -984,9 +968,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "java.lang.String");
     }
 
-    // GRECLIPSE-1129
-    // Static generic method type inference with @CompileStatic
-    @Test
+    @Test // GRECLIPSE-1129: Static generic method type inference with @CompileStatic
     public void testStaticMethod1() {
         String contents =
             "class A {\n" +
@@ -1004,8 +986,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "java.lang.String");
     }
 
-    // Static generic method type inference without @CompileStatic
-    @Test
+    @Test // Static generic method type inference without @CompileStatic
     public void testStaticMethod2() {
         String contents =
             "class A {\n" +
@@ -1022,8 +1003,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "java.lang.String");
     }
 
-    // Static generic method without class type inference with @CompileStatic
-    @Test
+    @Test // Static generic method without class type inference with @CompileStatic
     public void testStaticMethod3() {
         String contents =
             "class A {\n" +
@@ -1041,8 +1021,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "java.lang.String");
     }
 
-    // Static generic method without class type inference without @CompileStatic
-    @Test
+    @Test // Static generic method without class type inference without @CompileStatic
     public void testStaticMethod4() {
         String contents =
             "class A {\n" +
@@ -1059,8 +1038,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "java.lang.String");
     }
 
-    // Test according GRECLIPSE-1129 description
-    @Test
+    @Test // GRECLIPSE-1129
     public void testStaticMethod5() {
         String contents =
             "class A {}\n" +
@@ -1074,9 +1052,7 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "B");
     }
 
-    // Additional test according comment to PR #75
-    // Actually type should not be inferred for fields with type def
-    @Test
+    @Test // Actually type should not be inferred for fields with type def
     public void testStaticMethod6() {
         String contents =
             "class A {}\n" +

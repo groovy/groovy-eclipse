@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,9 +24,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.search.TypeNameMatch;
-import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery;
 import org.eclipse.jdt.internal.corext.fix.CleanUpConstants;
 import org.eclipse.jdt.internal.corext.fix.FixMessages;
 import org.eclipse.jdt.internal.corext.fix.ImportsFix;
@@ -69,7 +67,7 @@ public class GroovyImportsCleanUp extends AbstractGroovyCleanUp {
         }
         RefactoringStatus groovyStatus = super.checkPreConditions(project, groovyUnits.toArray(new ICompilationUnit[groovyUnits.size()]), monitor);
         //RefactoringStatus otherStatus = javaCleanUp.checkPreConditions(project, otherUnits.toArray(new ICompilationUnit[otherUnits.size()]), monitor);
-                javaCleanUp.checkPreConditions(project, new ICompilationUnit[0], monitor);
+        javaCleanUp.checkPreConditions(project, new ICompilationUnit[0], monitor);
         return groovyStatus;
     }
 
@@ -86,15 +84,10 @@ public class GroovyImportsCleanUp extends AbstractGroovyCleanUp {
         }
 
         final boolean hasAmbiguity[] = new boolean[] {false};
-        IChooseImportQuery query = new IChooseImportQuery() {
-            @Override
-            public TypeNameMatch[] chooseImports(TypeNameMatch[][] openChoices, ISourceRange[] ranges) {
-                hasAmbiguity[0] = true;
-                return new TypeNameMatch[0];
-            }
-        };
-
-        OrganizeGroovyImports op = new OrganizeGroovyImports((GroovyCompilationUnit) unit, query);
+        OrganizeGroovyImports op = new OrganizeGroovyImports((GroovyCompilationUnit) unit, (choices, ranges) -> {
+            hasAmbiguity[0] = true;
+            return new TypeNameMatch[0];
+        });
         final TextEdit edit = op.calculateMissingImports();
         if (status == null) {
             status = new RefactoringStatus();

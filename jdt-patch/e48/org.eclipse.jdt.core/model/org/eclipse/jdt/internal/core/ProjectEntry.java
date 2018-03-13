@@ -27,6 +27,13 @@ import org.eclipse.jdt.internal.compiler.env.IModulePathEntry;
  */
 public class ProjectEntry implements IModulePathEntry {
 
+	static boolean representsProject(IModulePathEntry entry, IJavaProject otherProject) {
+		if (entry instanceof ProjectEntry) {
+			return ((ProjectEntry) entry).project.equals(otherProject);
+		}
+		return false;
+	}
+
 	JavaProject project;
 	
 	public ProjectEntry(JavaProject project) {
@@ -44,11 +51,6 @@ public class ProjectEntry implements IModulePathEntry {
 			// Proceed with null;
 		}
 		return null;
-	}
-
-	@Override
-	public boolean equalsProject(IJavaProject otherProject) {
-		return this.project.equals(otherProject);
 	}
 
 	@Override

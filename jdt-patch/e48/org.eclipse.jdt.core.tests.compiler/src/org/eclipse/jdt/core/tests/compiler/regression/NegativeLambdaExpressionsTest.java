@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011, 2017 IBM Corporation and others.
+ * Copyright (c) 2011, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -6545,7 +6545,7 @@ public void test406614() {
 public void test406588() {
 	this.runNegativeTest(
 			false /* skipJavac */,
-			JavacTestOptions.Excuse.JavacCompilesIncorrectSource,
+			null,
 			new String[] {
 				"X.java",
 				"interface I {\n" +
@@ -6638,6 +6638,8 @@ public void test406773() {
 		compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
 		compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
 		this.runNegativeTest(
+			false,
+			JavacTestOptions.SKIP, /* skip, because we are using custom error settings here */
 			new String[] {
 					"X.java", 
 					"interface I {\n" +
@@ -9923,7 +9925,9 @@ public void testBug487390b() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=458332, [1.8][compiler] only 409 method references/lambda expressions per class possible
 public void testBug458332() {
-	runNegativeTest(
+	runConformTest(
+		false,
+		null,
 		new String[] {
 			"Test.java",
 			"import java.io.Serializable;\n" + 
@@ -10017,12 +10021,8 @@ public void testBug458332() {
 			"	}\n" + 
 			"}\n"
 		},
-		"----------\n" + 
-		"1. ERROR in Test.java (at line 10)\n" + 
-		"	private static class Data {\n" + 
-		"	                     ^^^^\n" + 
-		"The code of method $deserializeLambda$(SerializedLambda) is exceeding the 65535 bytes limit\n" + 
-		"----------\n");
+		"450\n" +
+		"250");
 }
 public void testBug521808() {
 	runNegativeTest(

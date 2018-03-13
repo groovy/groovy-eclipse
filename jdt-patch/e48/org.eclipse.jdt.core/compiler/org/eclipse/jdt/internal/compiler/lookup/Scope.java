@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -109,17 +109,33 @@ public abstract class Scope {
 	public Scope parent;
 	
 	private static class NullDefaultRange {
-		final int value;
-		final Annotation annotation;
 		final int start, end;
-		final Binding target;
+		int value;
+		private Annotation[] annotations;
+		Binding target;
 
 		NullDefaultRange(int value, Annotation annotation, int start, int end, Binding target) {
-			this.value = value;
-			this.annotation = annotation;
 			this.start = start;
 			this.end = end;
+			this.value = value;
+			this.annotations = new Annotation[] { annotation };
 			this.target = target;
+		}
+
+		boolean contains(Annotation annotation) {
+			for (Annotation annotation2 : this.annotations) {
+				if (annotation2 == annotation)
+					return true;
+			}
+			return false;
+		}
+
+		void merge(int nextValue, Annotation nextAnnotation, Binding nextTarget) {
+			int len = this.annotations.length;
+			System.arraycopy(this.annotations, 0, this.annotations = new Annotation[len + 1], 0, len);
+			this.annotations[len] = nextAnnotation;
+			this.target = nextTarget;
+			this.value |= nextValue;
 		}
 	}
 
@@ -3708,11 +3724,19 @@ public abstract class Scope {
 				MethodScope methodScope = methodScope();
 				if (!methodScope.isInsideInitializer()){
 					// check method modifiers to see if deprecated
-					ReferenceContext referenceContext = methodScope.referenceContext;
-					MethodBinding context = referenceContext instanceof AbstractMethodDeclaration ?
-							((AbstractMethodDeclaration)referenceContext).binding : ((LambdaExpression)referenceContext).binding;
-					if (context != null && context.isViewedAsDeprecated())
-						return true;
+					ReferenceContext referenceContext = methodScope.referenceContext();
+					if (referenceContext instanceof AbstractMethodDeclaration) {
+						MethodBinding context = ((AbstractMethodDeclaration) referenceContext).binding;
+						if (context != null && context.isViewedAsDeprecated())
+							return true;
+					} else if (referenceContext instanceof LambdaExpression) {
+						MethodBinding context = ((LambdaExpression) referenceContext).binding;
+						if (context != null && context.isViewedAsDeprecated())
+							return true;
+					} else if (referenceContext instanceof ModuleDeclaration) {
+						ModuleBinding context = ((ModuleDeclaration) referenceContext).binding;
+						return context != null && context.isDeprecated();
+					}
 				} else if (methodScope.initializedField != null && methodScope.initializedField.isViewedAsDeprecated()) {
 					// inside field declaration ? check field modifier to see if deprecated
 					return true;
@@ -5189,12 +5213,14 @@ public abstract class Scope {
 			this.nullDefaultRanges=new ArrayList<>(3);
 		}
 		for (NullDefaultRange nullDefaultRange : this.nullDefaultRanges) {
-			if (nullDefaultRange.annotation == annotation
-					&& nullDefaultRange.start== scopeStart
-					&& nullDefaultRange.end==scopeEnd
-					&& nullDefaultRange.value==value) {
-				// annotation data already recorded
-				return false;
+			if (nullDefaultRange.start== scopeStart && nullDefaultRange.end==scopeEnd) {
+				if (nullDefaultRange.contains(annotation)) {
+					// annotation data already recorded
+					return false;
+				} else {
+					nullDefaultRange.merge(value, annotation, target);
+					return true;
+				}
 			}
 		}
 		this.nullDefaultRanges.add(new NullDefaultRange(value, annotation, scopeStart, scopeEnd, target));
@@ -5229,7 +5255,7 @@ public abstract class Scope {
 	/*
 	 * helper for hasDefaultNullnessFor(..) which inspects only ranges recorded within this scope.
 	 */
-	final protected int localNonNullByDefaultValue(int start) {
+	public final int localNonNullByDefaultValue(int start) {
 		NullDefaultRange nullDefaultRange = nullDefaultRangeForPosition(start);
 		return nullDefaultRange != null ? nullDefaultRange.value : 0;
 	}

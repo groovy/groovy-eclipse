@@ -70,8 +70,11 @@ public abstract class Binding {
 
 	// Nullness defaults:
 	public static final int NO_NULL_DEFAULT = 0;
-	// SE5 style:
-	public static final int NONNULL_BY_DEFAULT = 1;
+
+	// not used any longer (was in the old implementation when NonNullByDefault only supported a boolean arg)
+	// corresponds to #DefaultLocationsForTrueValue
+	// public static final int NONNULL_BY_DEFAULT = 1;
+
 	public static final int NULL_UNSPECIFIED_BY_DEFAULT = 2;
 	// JSR308 style:
 	/**
@@ -102,6 +105,8 @@ public abstract class Binding {
 	 * Bit in defaultNullness bit vectors, representing the enum constant DefaultLocation#ARRAY_CONTENTS
 	 */
 	public static final int DefaultLocationArrayContents = ASTNode.Bit10;
+
+	public static final int DefaultLocationsForTrueValue = DefaultLocationParameter | DefaultLocationReturnType | DefaultLocationField;
 
 	public static final int NullnessDefaultMASK = 
 			NULL_UNSPECIFIED_BY_DEFAULT | // included to terminate search up the parent chain

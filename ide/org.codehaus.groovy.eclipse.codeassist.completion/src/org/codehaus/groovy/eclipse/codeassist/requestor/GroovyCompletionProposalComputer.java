@@ -314,8 +314,7 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
         if (completionExpressions[1] == null) {
             return -1;
         }
-        int end = invocationOffset - fullCompletionText.length() + completionExpressions[0].length();
-        return end;
+        return (invocationOffset - fullCompletionText.length() + completionExpressions[0].length());
     }
 
     @Override

@@ -96,7 +96,7 @@ public class SourceElementNotifier {
 	LocalDeclarationVisitor localDeclarationVisitor = null;
 
 	HashtableOfObjectToInt sourceEnds;
-	Map nodesToCategories;
+	Map<ASTNode,char[][]> nodesToCategories;
 
 	int initialPosition;
 	int eofPosition;
@@ -311,7 +311,7 @@ protected void notifySourceElementRequestor(AbstractMethodDeclaration methodDecl
 			methodInfo.exceptionTypes = thrownExceptionTypes;
 			methodInfo.typeParameters = getTypeParameterInfos(methodDeclaration.typeParameters());
 			methodInfo.parameterInfos = parameterInfos;
-			methodInfo.categories = (char[][]) this.nodesToCategories.get(methodDeclaration);
+			methodInfo.categories = this.nodesToCategories.get(methodDeclaration);
 			methodInfo.annotations = methodDeclaration.annotations;
 			methodInfo.declaringPackageName = currentPackage == null ? CharOperation.NO_CHAR : CharOperation.concatWith(currentPackage.tokens, '.');
 			methodInfo.declaringTypeModifiers = declaringType.modifiers;
@@ -370,7 +370,7 @@ protected void notifySourceElementRequestor(AbstractMethodDeclaration methodDecl
 		methodInfo.exceptionTypes = thrownExceptionTypes;
 		methodInfo.typeParameters = getTypeParameterInfos(methodDeclaration.typeParameters());
 		methodInfo.parameterInfos = parameterInfos;
-		methodInfo.categories = (char[][]) this.nodesToCategories.get(methodDeclaration);
+		methodInfo.categories = this.nodesToCategories.get(methodDeclaration);
 		methodInfo.annotations = methodDeclaration.annotations;
 		methodInfo.node = methodDeclaration;
 		methodInfo.enclosingType = declaringType;
@@ -533,7 +533,7 @@ protected void notifySourceElementRequestor(FieldDeclaration fieldDeclaration, T
 				fieldInfo.type = typeName;
 				fieldInfo.nameSourceStart = fieldDeclaration.sourceStart;
 				fieldInfo.nameSourceEnd = fieldDeclaration.sourceEnd;
-				fieldInfo.categories = (char[][]) this.nodesToCategories.get(fieldDeclaration);
+				fieldInfo.categories = this.nodesToCategories.get(fieldDeclaration);
 				fieldInfo.annotations = fieldDeclaration.annotations;
 				fieldInfo.node = fieldDeclaration;
 				this.requestor.enterField(fieldInfo);
@@ -607,6 +607,7 @@ protected void notifySourceElementRequestor(ModuleDeclaration moduleDeclaration)
 		info.moduleName = moduleDeclaration.moduleName;
 		info.annotations = moduleDeclaration.annotations;
 		info.node = moduleDeclaration;
+		info.categories = this.nodesToCategories.get(moduleDeclaration);
 		fillModuleInfo(moduleDeclaration, info);
 		this.requestor.enterModule(info);
 		this.requestor.exitModule(moduleDeclaration.declarationSourceEnd);
@@ -665,7 +666,7 @@ protected void notifySourceElementRequestor(TypeDeclaration typeDeclaration, boo
 			typeInfo.superclass = superclassName;
 			typeInfo.superinterfaces = interfaceNames;
 			typeInfo.typeParameters = getTypeParameterInfos(typeDeclaration.typeParameters);
-			typeInfo.categories = (char[][]) this.nodesToCategories.get(typeDeclaration);
+			typeInfo.categories = this.nodesToCategories.get(typeDeclaration);
 			typeInfo.secondary = typeDeclaration.isSecondary();
 			typeInfo.anonymousMember = typeDeclaration.allocation != null && typeDeclaration.allocation.enclosingInstance != null;
 			typeInfo.annotations = typeDeclaration.annotations;

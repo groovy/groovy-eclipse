@@ -11,6 +11,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.builder;
 
+import java.util.Set;
+
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 
@@ -196,6 +198,20 @@ static {
 		InternedSimpleNames[i] = new NameSet(37);
 }
 
+//TODO: remove once ReferenceCollection.internQualifiedNames(StringSet) is adapted to use java.util.Set, so that git history is preserved
+public static char[][][] internQualifiedNames(Set<String> qualifiedStrings) {
+	if (qualifiedStrings == null) return EmptyQualifiedNames;
+	int length = qualifiedStrings.size();
+	if (length == 0) return EmptyQualifiedNames;
+
+	char[][][] result = new char[length][][];
+	for (String qualifiedString : qualifiedStrings)
+		if (qualifiedString != null)
+			result[--length] = CharOperation.splitOn('/', qualifiedString.toCharArray());
+	return internQualifiedNames(result, false);
+}
+
+//TODO: remove once PDE API Tools has been adapted to also use java.util.Set, so that git history is preserved
 public static char[][][] internQualifiedNames(StringSet qualifiedStrings) {
 	if (qualifiedStrings == null) return EmptyQualifiedNames;
 	int length = qualifiedStrings.elementSize;
@@ -252,10 +268,24 @@ public static char[][][] internQualifiedNames(char[][][] qualifiedNames, boolean
 /**
  * @deprecated
  */
-public static char[][] internSimpleNames(StringSet simpleStrings) {
+public static char[][] internSimpleNames(Set<String> simpleStrings) {
 	return internSimpleNames(simpleStrings, true);
 }
 
+// TODO: remove once ReferenceCollection.internSimpleNames(StringSet, boolean) is adapted to use java.util.Set, so that git history is preserved
+public static char[][] internSimpleNames(Set<String> simpleStrings, boolean removeWellKnown) {
+	if (simpleStrings == null) return EmptySimpleNames;
+	int length = simpleStrings.size();
+	if (length == 0) return EmptySimpleNames;
+
+	char[][] result = new char[length][];
+	for (String simpleString : simpleStrings)
+		if (simpleString != null)
+			result[--length] = simpleString.toCharArray();
+	return internSimpleNames(result, removeWellKnown);
+}
+
+//TODO: adjust to use java.util.Set once PDE API Tools have been adapted to use the set version, so that git history is preserved
 public static char[][] internSimpleNames(StringSet simpleStrings, boolean removeWellKnown) {
 	if (simpleStrings == null) return EmptySimpleNames;
 	int length = simpleStrings.elementSize;

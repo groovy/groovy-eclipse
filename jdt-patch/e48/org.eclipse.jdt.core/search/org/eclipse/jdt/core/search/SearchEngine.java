@@ -298,6 +298,31 @@ public class SearchEngine {
 	 * The Java elements resulting from a search with this scope will
 	 * be children of the given elements.
 	 *
+	 * <p>If an element is an {@link IJavaProject}, then the project's source folders,
+	 * its jars (external and internal) and - if specified - its referenced projects
+	 * (with their source folders and jars, recursively) will be included.</p>
+	 * <p>If an element is an {@link IPackageFragmentRoot}, then only the package fragments of
+	 * this package fragment root will be included.</p>
+	 * <p>If an element is an {@link IPackageFragment}, then only the compilation unit and class
+	 * files of this package fragment will be included. Subpackages will NOT be
+	 * included.</p>
+	 *
+	 * @param excludeTestCode if true, test code we be excluded
+	 * @param elements the Java elements the scope is limited to
+	 * @param includeReferencedProjects a flag indicating if referenced projects must be
+	 * 									 recursively included
+	 * @return a new Java search scope
+	 * @since 3.14
+	 */
+	public static IJavaSearchScope createJavaSearchScope(boolean excludeTestCode, IJavaElement[] elements, boolean includeReferencedProjects) {
+		return BasicSearchEngine.createJavaSearchScope(excludeTestCode, elements, includeReferencedProjects);
+	}
+
+	/**
+	 * Returns a Java search scope limited to the given Java elements.
+	 * The Java elements resulting from a search with this scope will
+	 * be children of the given elements.
+	 *
 	 * <p>If an element is an IJavaProject, then it includes:</p>
 	 * <ul>
 	 * <li>its source folders if {@link IJavaSearchScope#SOURCES} is specified,</li>
@@ -328,6 +353,44 @@ public class SearchEngine {
 	 */
 	public static IJavaSearchScope createJavaSearchScope(IJavaElement[] elements, int includeMask) {
 		return BasicSearchEngine.createJavaSearchScope(elements, includeMask);
+	}
+
+	/**
+	 * Returns a Java search scope limited to the given Java elements.
+	 * The Java elements resulting from a search with this scope will
+	 * be children of the given elements.
+	 *
+	 * <p>If an element is an IJavaProject, then it includes:</p>
+	 * <ul>
+	 * <li>its source folders if {@link IJavaSearchScope#SOURCES} is specified,</li>
+	 * <li>its application libraries (internal and external jars, class folders that are on the raw classpath,
+	 *   or the ones that are coming from a classpath path variable,
+	 *   or the ones that are coming from a classpath container with the K_APPLICATION kind)
+	 *   if {@link IJavaSearchScope#APPLICATION_LIBRARIES} is specified</li>
+	 * <li>its system libraries (internal and external jars, class folders that are coming from an
+	 *   IClasspathContainer with the K_SYSTEM kind)
+	 *   if {@link IJavaSearchScope#SYSTEM_LIBRARIES} is specified</li>
+	 * <li>its referenced projects (with their source folders and jars, recursively)
+	 *   if {@link IJavaSearchScope#REFERENCED_PROJECTS} is specified.</li>
+	 * </ul>
+	 * <p>If an element is an {@link IPackageFragmentRoot}, then only the package fragments of
+	 * this package fragment root will be included.</p>
+	 * <p>If an element is an {@link IPackageFragment}, then only the compilation unit and class
+	 * files of this package fragment will be included. Subpackages will NOT be
+	 * included.</p>
+	 *
+	 * @param excludeTestCode
+	 * @param elements the Java elements the scope is limited to
+	 * @param includeMask the bit-wise OR of all include types of interest
+	 * @return a new Java search scope
+	 * @see IJavaSearchScope#SOURCES
+	 * @see IJavaSearchScope#APPLICATION_LIBRARIES
+	 * @see IJavaSearchScope#SYSTEM_LIBRARIES
+	 * @see IJavaSearchScope#REFERENCED_PROJECTS
+	 * @since 3.14
+	 */
+	public static IJavaSearchScope createJavaSearchScope(boolean excludeTestCode, IJavaElement[] elements, int includeMask) {
+		return BasicSearchEngine.createJavaSearchScope(excludeTestCode, elements, includeMask);
 	}
 
 	/**

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2017 IBM Corporation.
+ * Copyright (c) 2016, 2018 IBM Corporation.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -19,8 +19,10 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.zip.ZipFile;
 
@@ -44,7 +46,7 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 	protected ZipFile annotationZipFile;
 	protected boolean closeZipFileAtEnd;
 	private static HashMap<String, Map<String,IModule>> ModulesCache = new HashMap<>();
-	public HashMap<String, Path> modulePathMap;
+	public final Set<String> moduleNamesCache;
 	//private Set<String> packageCache;
 	protected List<String> annotationPaths;
 
@@ -53,7 +55,7 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 		super(accessRuleSet, destinationPath);
 		this.file = file;
 		this.closeZipFileAtEnd = closeZipFileAtEnd;
-		this.modulePathMap = new HashMap<>();
+		this.moduleNamesCache = new HashSet<>();
 	}
 
 	@Override
@@ -79,7 +81,7 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 			return null; // most common case
 
 		try {
-			IBinaryType reader = ClassFileReader.readFromModule(this.file, moduleName, qualifiedBinaryFileName);
+			IBinaryType reader = ClassFileReader.readFromModule(this.file, moduleName, qualifiedBinaryFileName, this.moduleNamesCache::contains);
 
 			if (reader != null) {
 				searchPaths:
@@ -217,7 +219,7 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 					public FileVisitResult visitModule(Path mod) throws IOException {
 						try {
 							ClasspathJrt.this.acceptModule(JRTUtil.getClassfileContent(ClasspathJrt.this.file, IModule.MODULE_INFO_CLASS, mod.toString()));
-							ClasspathJrt.this.modulePathMap.put(mod.getFileName().toString(), mod);
+							ClasspathJrt.this.moduleNamesCache.add(mod.getFileName().toString());
 						} catch (ClassFormatException e) {
 							e.printStackTrace();
 						}
@@ -227,6 +229,8 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 			} catch (IOException e) {
 				// TODO: Java 9 Should report better
 			}
+		} else {
+			this.moduleNamesCache.addAll(cache.keySet());
 		}
 	}
 	void acceptModule(ClassFileReader reader) {

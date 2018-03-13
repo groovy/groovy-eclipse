@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.editor.highlighting;
-
-import static org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence.UNKNOWN;
 
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -102,7 +100,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         }
 
         HighlightedTypedPosition pos = null;
-        if (result.confidence == UNKNOWN && node.getEnd() > 0) {
+        if (result.confidence == TypeLookupResult.TypeConfidence.UNKNOWN && node.getEnd() > 0) {
             // GRECLIPSE-1327: check to see if this is a synthetic call() on a closure reference
             if (isRealASTNode(node)) {
                 Position p = getPosition(node);
@@ -263,8 +261,8 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
     }
 
     private HighlightedTypedPosition handleMethodReference(StaticMethodCallExpression expr) {
-        int offset = expr.getStart(),
-            length = expr.getMethod().length();
+        int offset = expr.getNameStart(),
+            length = expr.getNameEnd() - expr.getNameStart() + 1;
 
         return new HighlightedTypedPosition(offset, length, HighlightKind.STATIC_CALL);
     }
@@ -289,7 +287,16 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             kind = HighlightKind.STATIC_CALL;
         }
 
-        return new HighlightedTypedPosition(expr.getStart(), expr.getLength(), kind);
+        int offset, length;
+        if (expr.getNameEnd() < 1) {
+            offset = expr.getStart();
+            length = expr.getLength();
+        } else {
+            offset = expr.getNameStart();
+            length = expr.getNameEnd() - expr.getNameStart() + 1;
+        }
+
+        return new HighlightedTypedPosition(offset, length, kind);
     }
 
     private HighlightedTypedPosition handleVariableExpression(Parameter expr, VariableScope scope) {
@@ -331,7 +338,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         if (!lastGString.includes(offset)) {
             if (isNumber(expr.getType())) {
                 pos = new HighlightedTypedPosition(offset, length, HighlightKind.NUMBER);
-            } else if (expr.getEnd() <= unitLength()) {
+            } else if (offset < unitLength() && expr.getEnd() <= unitLength()) {
                 // check for /.../ or $/.../$ form of string literal (usually a regex literal)
                 boolean slashy = contents[offset] == '/' && contents[expr.getEnd() - 1] == '/';
                 boolean dollar = !slashy && contents[offset] == '$' && contents[offset + 1] == '/' &&

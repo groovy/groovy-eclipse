@@ -43,6 +43,7 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.parser.ScannerHelper;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfObjectToInt;
 import org.eclipse.jdt.internal.compiler.util.SuffixConstants;
+import org.eclipse.jdt.internal.core.AbstractModule.AutoModule;
 import org.eclipse.jdt.internal.core.util.HashtableOfArrayToObject;
 import org.eclipse.jdt.internal.core.util.Messages;
 import org.eclipse.jdt.internal.core.util.Util;
@@ -859,8 +860,9 @@ public class NameLookup implements SuffixConstants {
 						return ((ModularClassFile) parent).getBinaryModuleInfo();
 				} else if (moduleDesc instanceof SourceModule) {
 					return (IModule)((SourceModule) moduleDesc).getElementInfo();
-				} else {
-					return IModule.createAutomatic(moduleDesc.getElementName().toCharArray());
+				} else if (moduleDesc instanceof AutoModule) {
+					boolean nameFromManifest = ((AutoModule) moduleDesc).isAutoNameFromManifest();
+					return IModule.createAutomatic(moduleDesc.getElementName().toCharArray(), nameFromManifest);
 				}
 			} catch (JavaModelException e) {
 				if (!e.isDoesNotExist())
@@ -1155,9 +1157,10 @@ public class NameLookup implements SuffixConstants {
 	
 	private void seekModuleAwarePartialPackageFragments(String name, IJavaElementRequestor requestor, IPackageFragmentRoot[] moduleContext) {
 		boolean allPrefixMatch = CharOperation.equals(name.toCharArray(), CharOperation.ALL_PREFIX);
+		String lName = name.toLowerCase();
 		Arrays.stream(this.packageFragments.keyTable)
 		.filter(k -> k != null)
-		.filter(k -> allPrefixMatch || Util.concatWith((String[])k, '.').startsWith(name))
+		.filter(k -> allPrefixMatch || Util.concatWith((String[])k, '.').toLowerCase().startsWith(lName))
 		.forEach(k -> {
 			checkModulePackages(requestor, moduleContext, this.packageFragments.getIndex(k));
 		});

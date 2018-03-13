@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2013 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -26,6 +26,15 @@ public interface ITerminalSymbols {
 	int TokenNameCOMMENT_BLOCK = 1002;
 	int TokenNameCOMMENT_JAVADOC = 1003;
 
+	/**
+	 * @deprecated With the introduction of "restricted keywords" in Java 9, classification of tokens 
+	 * 	 by a scanner is inherently unreliable. Any token classified as an identifier could still
+	 *   be a "restricted keyword". Future versions of Java will introduce more words that have
+	 *   special syntactical meaning in specific contexts.
+	 *   For reliably detecting an identifier the only real solution is to use a parser instead 
+	 *   (see also the caveat at the top of the	interface documentation of {@link IScanner}).
+	 */
+	@Deprecated
 	int TokenNameIdentifier = 5;
 	int TokenNameabstract = 98;
 

@@ -18,8 +18,8 @@
  */
 package org.codehaus.groovy.antlr;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A simple buffer that provides line/col access to chunks of source code
@@ -70,9 +70,9 @@ public class SourceBuffer {
         if (endLine > lines.size()) { endLine = lines.size(); }
 
         // obtain the snippet from the buffer within specified bounds
-        StringBuffer snippet = new StringBuffer();
+        StringBuilder snippet = new StringBuilder();
         for (int i = startLine - 1; i < endLine;i++) {
-            String line = lines.get(i).toString();
+            String line = ((StringBuilder)lines.get(i)).toString();
             if (startLine == endLine) {
                 // reset any out of bounds requests (again)
                 if (startColumn > line.length()) { startColumn = line.length();}

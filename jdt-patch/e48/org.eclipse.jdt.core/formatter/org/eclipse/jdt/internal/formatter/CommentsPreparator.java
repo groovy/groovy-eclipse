@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014, 2016 Mateusz Matela and others.
+ * Copyright (c) 2014, 2018 Mateusz Matela and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -39,6 +39,7 @@ import org.eclipse.jdt.core.dom.LineComment;
 import org.eclipse.jdt.core.dom.MemberRef;
 import org.eclipse.jdt.core.dom.MethodRef;
 import org.eclipse.jdt.core.dom.QualifiedName;
+import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.TagElement;
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -549,6 +550,9 @@ public class CommentsPreparator extends ASTVisitor {
 		this.commentStructure = commentToken.getInternalStructure();
 		this.commentIndent = this.tm.toIndent(commentToken.getIndent(), true);
 		this.ctm = new TokenManager(commentToken.getInternalStructure(), this.tm);
+
+		handleJavadocTagAlignment(node);
+
 		return true;
 	}
 
@@ -585,16 +589,10 @@ public class CommentsPreparator extends ASTVisitor {
 				Token token = this.ctm.get(startIndex + 2);
 				token.breakBefore();
 			}
-
-			if (this.options.comment_indent_root_tags) {
-				int indent = this.ctm.getLength(this.ctm.get(startIndex), 0) + 1;
-				if (isParamTag && this.options.comment_indent_parameter_description)
-					indent += this.options.indentation_size;
-				for (int i = startIndex + 1; i <= endIndex; i++) {
+			if (isParamTag && this.options.comment_indent_parameter_description) {
+				for (int i = startIndex + 2; i <= endIndex; i++) {
 					Token token = this.ctm.get(i);
-					token.setIndent(indent);
-					// indent is used temporarily, tokens that are actually first in line
-					// will have this changed to align (indent is reserved for code inside <pre> tags)
+					token.setIndent(token.getIndent() + this.options.indentation_size);
 				}
 			}
 
@@ -623,6 +621,108 @@ public class CommentsPreparator extends ASTVisitor {
 
 		if (TagElement.TAG_SEE.equals(tagName))
 			handleStringLiterals(this.tm.toString(node), node.getStartPosition());
+
+		if (PARAM_TAGS.contains(tagName) && this.options.comment_indent_parameter_description) {
+			// tokens in the first line should not be indented
+			int startIndex = this.ctm.firstIndexIn(node, -1);
+			int endIndex = this.ctm.lastIndexIn(node, -1);
+			int range = this.options.indentation_size;
+			for (int i = startIndex + 2; i <= endIndex && range > 0; i++) {
+				Token token = this.ctm.get(i);
+				if (token.getLineBreaksBefore() > 0)
+					break;
+				assert token.getIndent() >= this.options.indentation_size;
+				token.setIndent(token.getIndent() - this.options.indentation_size);
+				if (token.getLineBreaksAfter() > 0)
+					break;
+				range -= this.ctm.getLength(token, 0) + (token.isSpaceBefore() ? 1 : 0);
+			}
+		}
+	}
+
+	private void handleJavadocTagAlignment(Javadoc node) {
+		// Lists of tag tokens: index 0 for tag name, index 1 for param name (may be null), the rest for description
+		List<List<Token>> javadocRootTags = new ArrayList<>();
+		List<TagElement> tagElements = node.tags();
+		for (TagElement tagElement : tagElements) {
+			String tagName = tagElement.getTagName();
+			if (tagName == null || tagName.length() <= 1)
+				continue;
+			int startIndex = tokenStartingAt(tagElement.getStartPosition());
+			int nodeEnd = tagElement.getStartPosition() + tagElement.getLength() - 1;
+			while (ScannerHelper.isWhitespace(this.ctm.charAt(nodeEnd)))
+				nodeEnd--;
+			int endIndex = tokenEndingAt(nodeEnd);
+
+			List<Token> tagTokens = new ArrayList<>();
+			tagTokens.add(this.ctm.get(startIndex));
+			if (!PARAM_TAGS.contains(tagName) || tagElement.fragments().isEmpty()
+					|| !(tagElement.fragments().get(0) instanceof SimpleName)) {
+				tagTokens.add(null);
+			}
+			for (int i = startIndex + 1; i <= endIndex; i++) {
+				tagTokens.add(this.ctm.get(i));
+			}
+			javadocRootTags.add(tagTokens);
+		}
+		
+		// indent is used temporarily, tokens that are actually first in line
+		// will have this changed to align (indent is reserved for code inside <pre> tags)
+		if (this.options.comment_align_tags_names_descriptions) {
+			int maxTagNameLength = 0;
+			int maxParamNameLength = 0;
+			for (List<Token> tagTokens : javadocRootTags) {
+				Token tagName = tagTokens.get(0);
+				Token paramName = tagTokens.get(1);
+				maxTagNameLength = Math.max(maxTagNameLength, this.tm.getLength(tagName, 0));
+				if (paramName != null)
+					maxParamNameLength = Math.max(maxParamNameLength, this.tm.getLength(paramName, 0));
+			}
+			int paramNameAlign = maxTagNameLength + 1;
+			int descriptionAlign = paramNameAlign;
+			if (maxParamNameLength > 0)
+				descriptionAlign += maxParamNameLength + 1;
+			for (List<Token> tagTokens : javadocRootTags) {
+				if (tagTokens.get(1) != null)
+					tagTokens.get(1).setIndent(paramNameAlign);
+				for (int i = 2; i < tagTokens.size(); i++)
+					tagTokens.get(i).setIndent(descriptionAlign);
+			}
+		} else if (this.options.comment_align_tags_descriptions_grouped) {
+			int groupStart = 0;
+			String groupTagName = null;
+			int descriptionAlign = 0;
+			for (int i = 0; i < javadocRootTags.size(); i++) {
+				List<Token> tagTokens = javadocRootTags.get(i);
+				String tagName = this.ctm.toString(tagTokens.get(0));
+				if (!tagName.equals(groupTagName)) {
+					for (int j = groupStart; j < i; j++) {
+						List<Token> tokens = javadocRootTags.get(j);
+						for (int k = 2; k < tokens.size(); k++)
+							tokens.get(k).setIndent(descriptionAlign);
+					}
+					groupStart = i;
+					groupTagName = tagName;
+					descriptionAlign = 0;
+				}
+				int indent = tagName.length() + 1;
+				if (tagTokens.get(1) != null)
+					indent += 1 + this.ctm.getLength(tagTokens.get(1), 0);
+				descriptionAlign = Math.max(descriptionAlign, indent);
+			}
+			for (int j = groupStart; j < javadocRootTags.size(); j++) {
+				List<Token> tokens = javadocRootTags.get(j);
+				for (int k = 2; k < tokens.size(); k++)
+					tokens.get(k).setIndent(descriptionAlign);
+			}
+		} else if (this.options.comment_indent_root_tags) {
+			for (List<Token> tagTokens : javadocRootTags) {
+				Token tagName = tagTokens.get(0);
+				int indent = this.ctm.getLength(tagName, 0) + 1;
+				for (int i = 2; i < tagTokens.size(); i++)
+					tagTokens.get(i).setIndent(indent);
+			}
+		}
 	}
 
 	private void handleHtml(TagElement node) {
@@ -1030,11 +1130,13 @@ public class CommentsPreparator extends ASTVisitor {
 	}
 
 	private void addSubstituteWraps() {
-		int commentStart = this.ctm.get(0).originalStart;
+		Token previous = this.ctm.get(0);
+		int commentStart = previous.originalStart;
 		for (int i = 1; i < this.ctm.size() - 1; i++) {
 			Token token = this.ctm.get(i);
 			boolean touchesPrevious = token.originalStart == this.ctm.get(i - 1).originalEnd + 1;
-			if (touchesPrevious && token.getWrapPolicy() == null && token.getLineBreaksBefore() == 0) {
+			if (touchesPrevious && token.getLineBreaksBefore() == 0 && previous.getLineBreaksAfter() == 0
+					&& token.getWrapPolicy() == null) {
 				boolean allowWrap = this.allowSubstituteWrapping[token.originalStart - commentStart];
 				token.setWrapPolicy(allowWrap ? WrapPolicy.SUBSTITUTE_ONLY : WrapPolicy.DISABLE_WRAP);
 			}
@@ -1047,6 +1149,7 @@ public class CommentsPreparator extends ASTVisitor {
 					this.ctm.get(tokenStartingAt(pos + 1)).setWrapPolicy(WrapPolicy.SUBSTITUTE_ONLY);
 				}
 			}
+			previous = token;
 		}
 	}
 

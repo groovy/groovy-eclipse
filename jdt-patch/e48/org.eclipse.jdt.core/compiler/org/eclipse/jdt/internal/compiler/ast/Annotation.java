@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -432,14 +432,19 @@ public abstract class Annotation extends Expression {
 			if (methods != null && methods.length == 1)
 				value = methods[0].getDefaultValue();
 			else
-				tagBits |= TagBits.AnnotationNonNullByDefault; // custom unconfigurable NNBD
+				tagBits |= Binding.DefaultLocationsForTrueValue; // custom unconfigurable NNBD
 		}
 		if (value instanceof BooleanConstant) {
 			// boolean value is used for declaration annotations, signal using the annotation tag bit:
-			tagBits |= ((BooleanConstant)value).booleanValue() ? TagBits.AnnotationNonNullByDefault : TagBits.AnnotationNullUnspecifiedByDefault;
+			tagBits |= ((BooleanConstant)value).booleanValue() ? Binding.DefaultLocationsForTrueValue : Binding.NULL_UNSPECIFIED_BY_DEFAULT;
 		} else if (value != null) {
 			// non-boolean value signals type annotations, evaluate from DefaultLocation[] to bitvector a la Binding#NullnessDefaultMASK:
 			tagBits |= nullLocationBitsFromAnnotationValue(value);
+		} else {
+			int result = BinaryTypeBinding.evaluateTypeQualifierDefault(annotationType);
+			if(result != 0) {
+				return result;
+			}
 		}
 		return tagBits;
 	}
@@ -474,7 +479,7 @@ public abstract class Annotation extends Expression {
 		} else if (value instanceof ElementValuePair.UnresolvedEnumConstant) {
 			name = ((ElementValuePair.UnresolvedEnumConstant) value).getEnumConstantName();
 		} else if (value instanceof BooleanConstant) {
-			return ((BooleanConstant)value).booleanValue() ? Binding.NONNULL_BY_DEFAULT : Binding.NULL_UNSPECIFIED_BY_DEFAULT;
+			return ((BooleanConstant)value).booleanValue() ? Binding.DefaultLocationsForTrueValue : Binding.NULL_UNSPECIFIED_BY_DEFAULT;
 		}
 		if (name != null) {
 			switch (name.length) {
@@ -508,6 +513,50 @@ public abstract class Annotation extends Expression {
 		}
 		return 0;
 	}
+	
+	public static int nullLocationBitsFromElementTypeAnnotationValue(Object value) {
+		if (value instanceof Object[]) {
+			if (((Object[]) value).length == 0) {					// ({})
+				return Binding.NULL_UNSPECIFIED_BY_DEFAULT;
+			} else {												// ({vals...})
+				int bits = 0;
+				for (Object single : (Object[])value)
+					bits |= evaluateElementTypeNullnessLocation(single);
+				return bits;
+			}
+		} else {													// (val)
+			return evaluateElementTypeNullnessLocation(value);
+		}
+	}
+
+	private static int evaluateElementTypeNullnessLocation(Object value) {
+		char[] name = null;
+		if (value instanceof FieldBinding) {
+			name = ((FieldBinding) value).name;
+		} else if (value instanceof EnumConstantSignature) {
+			name = ((EnumConstantSignature) value).getEnumConstantName();
+		} else if (value instanceof ElementValuePair.UnresolvedEnumConstant) {
+			name = ((ElementValuePair.UnresolvedEnumConstant) value).getEnumConstantName();
+		}
+		if (name != null) {
+			switch (name.length) {
+				case 5:
+					if (CharOperation.equals(name, TypeConstants.UPPER_FIELD))
+						return Binding.DefaultLocationField;
+					break;
+				case 6:
+					if (CharOperation.equals(name, TypeConstants.UPPER_METHOD))
+						return Binding.DefaultLocationReturnType;
+					break;
+				case 9:
+					if (CharOperation.equals(name, TypeConstants.UPPER_PARAMETER))
+						return Binding.DefaultLocationParameter;
+					break;
+			}
+		}
+		return 0;
+	}
+
 	
 	static String getRetentionName(long tagBits) {
 		if ((tagBits & TagBits.AnnotationRuntimeRetention) == TagBits.AnnotationRuntimeRetention) {
@@ -938,6 +987,10 @@ public abstract class Annotation extends Expression {
 					case Binding.MODULE :
 						SourceModuleBinding module = (SourceModuleBinding) this.recipient;
 						module.tagBits |= tagBits;
+						if ((tagBits & TagBits.AnnotationSuppressWarnings) != 0) {
+							ModuleDeclaration moduleDeclaration =  module.scope.referenceContext.moduleDeclaration;
+							recordSuppressWarnings(scope, 0, moduleDeclaration.declarationSourceEnd, compilerOptions.suppressWarnings);
+						}
 						module.defaultNullness |= defaultNullness;
 						break;
 					case Binding.PACKAGE :
@@ -992,7 +1045,11 @@ public abstract class Annotation extends Expression {
 						if (defaultNullness != 0) {
 							sourceType = (SourceTypeBinding) sourceField.declaringClass;
 							FieldDeclaration fieldDeclaration = sourceType.scope.referenceContext.declarationOf(sourceField);
-							Binding target = scope.checkRedundantDefaultNullness(defaultNullness, fieldDeclaration.sourceStart);
+							// test merged value of defaultNullness contributed by this annotation and previous annotations on same target is redundant w.r.t. containing value
+							// (for targets other than fields the resulting value is tested only once after processing all annotations, but this is hard to do for fields)
+							Binding target = scope.parent.checkRedundantDefaultNullness(
+									defaultNullness | scope.localNonNullByDefaultValue(fieldDeclaration.sourceStart),
+									fieldDeclaration.sourceStart);
 							scope.recordNonNullByDefault(fieldDeclaration.binding, defaultNullness, this, fieldDeclaration.declarationSourceStart, fieldDeclaration.declarationSourceEnd);
 							if (target != null) {
 								scope.problemReporter().nullDefaultAnnotationIsRedundant(fieldDeclaration, new Annotation[]{this}, target);
@@ -1030,23 +1087,23 @@ public abstract class Annotation extends Expression {
 		return this.resolvedType;
 	}
 
-	public void handleNonNullByDefault(BlockScope scope, LocalDeclaration localDeclaration) {
+	public long handleNonNullByDefault(BlockScope scope) {
 		TypeBinding typeBinding = this.resolvedType;
 		if (typeBinding == null) {
 			typeBinding = this.type.resolveType(scope);
 			if (typeBinding == null) {
-				return;
+				return 0;
 			}
 			this.resolvedType = typeBinding;
 		}
 		if (!typeBinding.isAnnotationType()) {
-			return;
+			return 0;
 		}
 
 		ReferenceBinding annotationType = (ReferenceBinding) typeBinding;
 		
 		if (!annotationType.hasNullBit(TypeIds.BitNonNullByDefaultAnnotation)) {
-			return;
+			return 0;
 		}
 
 		MethodBinding[] methods = annotationType.methods();
@@ -1073,19 +1130,7 @@ public abstract class Annotation extends Expression {
 		}
 		// recognize standard annotations ?
 		long tagBits = determineNonNullByDefaultTagBits(annotationType, valueAttribute);
-		int defaultNullness = (int)(tagBits & Binding.NullnessDefaultMASK);
-
-		if (defaultNullness != 0) {
-			// the actual localDeclaration.binding is not set yet. fake one for problemreporter.			
-			LocalVariableBinding binding = new LocalVariableBinding(localDeclaration, null, 0, false);
-			Binding target = scope.checkRedundantDefaultNullness(defaultNullness, localDeclaration.sourceStart);
-			boolean recorded = scope.recordNonNullByDefault(binding, defaultNullness, this, this.sourceStart, localDeclaration.declarationSourceEnd);
-			 if (recorded) {
-				if (target != null) {
-					scope.problemReporter().nullDefaultAnnotationIsRedundant(localDeclaration, new Annotation[]{this}, target);
-				}
-			}
-		} 
+		return (int) (tagBits & Binding.NullnessDefaultMASK);
 	}
 	
 	public enum AnnotationTargetAllowed {

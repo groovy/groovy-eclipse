@@ -190,4 +190,9 @@ public abstract class ClasspathLocation implements FileSystem.Classpath,
 			return new char[][] { this.module.name() };
 		return new char[][] { ModuleBinding.UNNAMED };
 	}
+	
+	@Override
+	public void reset() {
+		this.module = null;	
+	}
 }

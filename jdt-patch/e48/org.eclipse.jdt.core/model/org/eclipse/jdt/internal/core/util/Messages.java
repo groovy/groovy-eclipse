@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -221,7 +221,6 @@ public final class Messages extends NLS {
 	public static String convention_module_nameWithBlanks;
 	public static String convention_module_consecutiveDotsName;
 	public static String convention_module_uppercaseName;
-	public static String convention_module_terminalDigits;
 	public static String convention_module_javaName;
 	public static String dom_cannotDetail;
 	public static String dom_nullTypeParameter;

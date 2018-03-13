@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -40,7 +40,6 @@ public final class JavaConventions {
 
 	private static final char DOT= '.';
     private static final Pattern DOT_DOT = Pattern.compile("(\\.)(\\1)+"); //$NON-NLS-1$
-    private static final Pattern TERMINAL_DIGIT = Pattern.compile("\\d$"); //$NON-NLS-1$
     private static final Pattern PREFIX_JAVA = Pattern.compile("java$"); //$NON-NLS-1$
 	private static final Scanner SCANNER = new Scanner(false /*comment*/, true /*whitespace*/, false /*nls*/, ClassFileConstants.JDK1_3 /*sourceLevel*/, null/*taskTag*/, null/*taskPriorities*/, true /*taskCaseSensitive*/);
 
@@ -627,9 +626,6 @@ public final class JavaConventions {
 			}
 			if (firstToken && PREFIX_JAVA.matcher(segment).find()) {
 				warningStatus = new Status(IStatus.WARNING, JavaCore.PLUGIN_ID, -1, Messages.bind(Messages.convention_module_javaName), null);
-			}
-			if (TERMINAL_DIGIT.matcher(segment).find()) {
-				warningStatus = new Status(IStatus.WARNING, JavaCore.PLUGIN_ID, -1, Messages.convention_module_terminalDigits, null);
 			}
 			IStatus status = workspace.validateName(new String(scannedID), IResource.FOLDER);
 			if (!status.isOK()) {

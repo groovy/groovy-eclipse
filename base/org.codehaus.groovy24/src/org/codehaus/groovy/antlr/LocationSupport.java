@@ -30,20 +30,17 @@ import java.util.List;
  * <li> "a\nb" -> [0,2], [2,1]
  * <li> "a\nbc\n" -> [0,2], [2,3], [5,0]
  * </ul>
- *
- * @author Andrew Eisenberg
- * @created Jun 4, 2009
  */
 public class LocationSupport {
+
+    private final int[] lineEndings;
 
     private static final int[] NO_LINE_ENDINGS = new int[0];
 
     public static final LocationSupport NO_LOCATIONS = new LocationSupport();
 
-    private final int[] lineEndings;
-
     public LocationSupport() {
-        lineEndings = NO_LINE_ENDINGS;
+        this(NO_LINE_ENDINGS);
     }
 
     public LocationSupport(int[] lineEndings) {
@@ -51,59 +48,31 @@ public class LocationSupport {
     }
 
     public LocationSupport(List<StringBuffer> lines) {
-        if (lines != null) {
-            lineEndings = processLineEndings(lines);
-        } else {
-            lineEndings = NO_LINE_ENDINGS;
-        }
+        this(lines != null ? processLineEndings(lines) : NO_LINE_ENDINGS);
     }
 
-    private int[] processLineEndings(List<? extends CharSequence> lines) {
-        int[] newLineEndings = new int[lines.size() + 1]; // last index stores end of file
+    private static int[] processLineEndings(List<? extends CharSequence> lines) {
+        int[] lineEndings = new int[lines.size() + 1]; // last index stores end of file
         int total = 0;
         int current = 1;
         for (CharSequence line : lines) {
-            newLineEndings[current++] = (total += (line.length()));
+            lineEndings[current++] = (total += line.length());
         }
-        return newLineEndings;
+        return lineEndings;
     }
 
-//    public LocationSupport(char[] contents) {
-//        if (contents != null) {
-//            lineEndings = processLineEndings(contents);
-//        } else {
-//            lineEndings = NO_LINE_ENDINGS;
-//        }
-//    }
-
-//    private int[] processLineEndings(char[] contents) {
-//        List<Integer> l = new ArrayList<Integer>();
-//        for (int i = 0; i < contents.length; i++) {
-//
-//            if (contents[i] == '\n') {
-//                l.add(i);
-//            } else if (contents[i] == '\r') {
-//                l.add(i);
-//                if (i < contents.length && contents[i] == '\n') {
-//                    i++;
-//                }
-//            }
-//        }
-//        int[] newLineEndings = new int[l.size()];
-//        int i = 0;
-//        for (Integer integer : l) {
-//            newLineEndings[i] = integer.intValue();
-//        }
-//        return newLineEndings;
-//    }
-
-    // TODO: Maybe should throw exception if out of bounds?
     public int findOffset(int row, int col) {
-        return row <= lineEndings.length && row > 0 ? lineEndings[row - 1] + col - 1 : 0;
+        if (row > 0 && row <= lineEndings.length) {
+            return lineEndings[row - 1] + col - 1;
+        }
+        return 0;
     }
 
     public int getEnd() {
-        return lineEndings.length > 0 ? lineEndings[lineEndings.length - 1] : 0;
+        if (lineEndings.length > 0) {
+            return lineEndings[lineEndings.length - 1];
+        }
+        return 0;
     }
 
     public int getEndColumn() {
@@ -111,26 +80,27 @@ public class LocationSupport {
             return lineEndings[lineEndings.length - 1] - lineEndings[lineEndings.length - 2];
         } else if (lineEndings.length > 0) {
             return lineEndings[0];
-        } else {
-            return 0;
         }
+        return 0;
     }
 
     public int getEndLine() {
-        return lineEndings.length > 0 ? lineEndings.length - 1 : 0;  // last index contains length of document
+        if (lineEndings.length > 0) {
+            return lineEndings.length - 1;
+        }
+        return 0;
     }
 
     public int[] getRowCol(int offset) {
-        for (int i = 1; i < lineEndings.length; i++) {
+        for (int i = 1, n = lineEndings.length; i < n; i += 1) {
             if (lineEndings[i] > offset) {
                 return new int[] {i, offset - lineEndings[i - 1] + 1};
             }
         }
-        // after end of document
-        throw new RuntimeException("Location is after end of document.  Offset : " + offset);
+        throw new RuntimeException("Location is after end of document.  Offset: " + offset);
     }
 
     public boolean isPopulated() {
-        return lineEndings.length > 0;
+        return (lineEndings.length > 0);
     }
 }

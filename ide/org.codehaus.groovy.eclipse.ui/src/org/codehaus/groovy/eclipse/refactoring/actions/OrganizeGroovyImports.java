@@ -68,7 +68,6 @@ import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.groovy.core.util.DepthFirstVisitor;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.internal.core.search.JavaSearchTypeNameMatch;
-import org.eclipse.jdt.internal.corext.codemanipulation.OrganizeImportsOperation.IChooseImportQuery;
 import org.eclipse.jdt.ui.CodeStyleConfiguration;
 import org.eclipse.text.edits.TextEdit;
 
@@ -78,8 +77,6 @@ import org.eclipse.text.edits.TextEdit;
 public class OrganizeGroovyImports {
 
     // TODO: Handle import and package annotations
-
-    private static final ClassNode SCRIPT_FIELD_CLASS_NODE = ClassHelper.make(Field.class);
 
     private class FindUnresolvedReferencesVisitor extends DepthFirstVisitor {
 
@@ -386,6 +383,18 @@ public class OrganizeGroovyImports {
 
     private static final Pattern ALIASED_IMPORT = Pattern.compile("\\sas\\s");
     private static final Pattern STATIC_CONSTANT = Pattern.compile("[A-Z][A-Z0-9_]+");
+    private static final ClassNode SCRIPT_FIELD_CLASS_NODE = ClassHelper.make(Field.class);
+
+    @FunctionalInterface
+    public interface IChooseImportQuery {
+        /**
+         * Selects imports from a list of choices.
+         * @param openChoices From each array, a type reference has to be selected
+         * @param ranges For each choice the range of the corresponding  type reference.
+         * @return Returns {@code null} to cancel the operation, or the selected imports.
+         */
+        TypeNameMatch[] chooseImports(TypeNameMatch[][] openChoices, ISourceRange[] ranges);
+    }
 
     //--------------------------------------------------------------------------
 

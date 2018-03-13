@@ -22,7 +22,6 @@ import org.eclipse.jdt.internal.compiler.env.ISourceType;
 /**
  * Element info for an IType element that originated from source.
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
 public class SourceTypeElementInfo extends AnnotatableInfo implements ISourceType {
 
 	protected static final ISourceImport[] NO_IMPORTS = new ISourceImport[0];
@@ -62,19 +61,19 @@ public class SourceTypeElementInfo extends AnnotatableInfo implements ISourceTyp
 	/*
 	 * A map from an IJavaElement (this type or a child of this type) to a String[] (the categories of this element)
 	 */
-	protected HashMap categories;
+	protected HashMap<IJavaElement,String[]> categories;
 
 protected void addCategories(IJavaElement element, char[][] elementCategories) {
 	if (elementCategories == null) return;
 	if (this.categories == null)
-		this.categories = new HashMap();
+		this.categories = new HashMap<>();
 	this.categories.put(element, CharOperation.toStrings(elementCategories));
 }
 
 /*
  * Return a map from an IJavaElement (this type or a child of this type) to a String[] (the categories of this element)
  */
-public HashMap getCategories() {
+public HashMap<IJavaElement, String[]> getCategories() {
 	return this.categories;
 }
 

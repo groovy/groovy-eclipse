@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
@@ -155,8 +156,8 @@ public class JRTUtil {
 	public static ClassFileReader getClassfile(File jrt, String fileName, IModule module) throws IOException, ClassFormatException {
 		return getJrtSystem(jrt).getClassfile(fileName, module);
 	}
-	public static ClassFileReader getClassfile(File jrt, String fileName, String module) throws IOException, ClassFormatException {
-		return getJrtSystem(jrt).getClassfile(fileName, module);
+	public static ClassFileReader getClassfile(File jrt, String fileName, String module, Predicate<String> moduleNameFilter) throws IOException, ClassFormatException {
+		return getJrtSystem(jrt).getClassfile(fileName, module, moduleNameFilter);
 	}
 	public static List<String> getModulesDeclaringPackage(File jrt, String qName, String moduleName) {
 		return getJrtSystem(jrt).getModulesDeclaringPackage(qName, moduleName);
@@ -282,11 +283,13 @@ class JrtFileSystem {
 		}
 		return null;
 	}
-	private ClassFileReader getClassfile(String fileName) throws IOException, ClassFormatException {
+	private ClassFileReader getClassfile(String fileName, Predicate<String> moduleNameFilter) throws IOException, ClassFormatException {
 		String[] modules = getModules(fileName);
 		byte[] content = null;
 		String module = null;
 		for (String mod : modules) {
+			if (moduleNameFilter != null && !moduleNameFilter.test(mod))
+				continue;
 			try {
 				content = Files.readAllBytes(this.jrtSystem.getPath(JRTUtil.MODULES_SUBDIR, mod, fileName));
 				if (content != null) {
@@ -333,10 +336,10 @@ class JrtFileSystem {
 		}
 		return content;
 	}
-	public ClassFileReader getClassfile(String fileName, String module) throws IOException, ClassFormatException {
+	public ClassFileReader getClassfile(String fileName, String module, Predicate<String> moduleNameFilter) throws IOException, ClassFormatException {
 		ClassFileReader reader = null;
 		if (module == null) {
-			reader = getClassfile(fileName);
+			reader = getClassfile(fileName, moduleNameFilter);
 		} else {
 			byte[] content = getClassfileBytes(fileName, module);
 			if (content != null) {
@@ -349,7 +352,7 @@ class JrtFileSystem {
 	public ClassFileReader getClassfile(String fileName, IModule module) throws IOException, ClassFormatException {
 		ClassFileReader reader = null;
 		if (module == null) {
-			reader = getClassfile(fileName);
+			reader = getClassfile(fileName, (Predicate<String>)null);
 		} else {
 			byte[] content = getClassfileBytes(fileName, new String(module.name()));
 			if (content != null) {

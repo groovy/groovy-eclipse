@@ -10,6 +10,9 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IModuleDescription;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -45,6 +48,7 @@ public class ModuleDescriptionInfo extends AnnotatableInfo implements ISourceMod
 	IModuleDescription handle;
 	char[] name;
 	boolean isOpen = false;
+	private Map<IJavaElement,String[]> categories;
 
 	static class ModuleReferenceInfo extends MemberElementInfo implements IModule.IModuleReference {
 		char[] name;
@@ -269,6 +273,17 @@ public class ModuleDescriptionInfo extends AnnotatableInfo implements ISourceMod
 	@Override
 	public IPackageExport[] opens() {
 		return this.opens;
+	}
+
+	public void addCategories(IJavaElement element, char[][] elementCategories) {
+		if (elementCategories == null) return;
+		if (this.categories == null)
+			this.categories = new HashMap<>();
+		this.categories.put(element, CharOperation.toStrings(elementCategories));
+	}
+
+	public Map<IJavaElement, String[]> getCategories() {
+		return this.categories;
 	}
 
 	@Override

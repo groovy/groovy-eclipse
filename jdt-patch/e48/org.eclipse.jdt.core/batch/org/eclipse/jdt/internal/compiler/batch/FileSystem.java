@@ -162,7 +162,7 @@ public class FileSystem implements IModuleAwareNameEnvironment, SuffixConstants 
 	protected boolean annotationsFromClasspath; // should annotation files be read from the classpath (vs. explicit separate path)?
 	private static HashMap<File, Classpath> JRT_CLASSPATH_CACHE = null;
 	
-	Map<String,Classpath> moduleLocations = new HashMap<>();
+	protected Map<String,Classpath> moduleLocations = new HashMap<>();
 
 	/** Tasks resulting from --add-reads or --add-exports command line options. */
 	Map<String,UpdatesByKind> moduleUpdates = new HashMap<>();
@@ -172,6 +172,9 @@ public class FileSystem implements IModuleAwareNameEnvironment, SuffixConstants 
 	initialFileNames is a collection is Strings, the trailing '.java' will be removed if its not already.
 */
 public FileSystem(String[] classpathNames, String[] initialFileNames, String encoding) {
+	this(classpathNames, initialFileNames, encoding, null);
+}
+protected FileSystem(String[] classpathNames, String[] initialFileNames, String encoding, Collection<String> limitModules) {
 	final int classpathSize = classpathNames.length;
 	this.classpaths = new Classpath[classpathSize];
 	int counter = 0;
@@ -179,7 +182,7 @@ public FileSystem(String[] classpathNames, String[] initialFileNames, String enc
 		Classpath classpath = getClasspath(classpathNames[i], encoding, null, null);
 		try {
 			classpath.initialize();
-			for (String moduleName : classpath.getModuleNames(null))
+			for (String moduleName : classpath.getModuleNames(limitModules))
 				this.moduleLocations.put(moduleName, classpath);
 			this.classpaths[counter++] = classpath;
 		} catch (IOException e) {
@@ -443,6 +446,8 @@ private NameEnvironmentAnswer internalFindClass(String qualifiedTypeName, char[]
 				continue;
 			NameEnvironmentAnswer answer = this.classpaths[i].findClass(typeName, qualifiedPackageName, null, qualifiedBinaryFileName, asBinaryOnly);
 			if (answer != null) {
+				if (answer.moduleName() != null && !this.moduleLocations.containsKey(String.valueOf(answer.moduleName())))
+					continue; // type belongs to an unobservable module
 				if (!answer.ignoreIfBetter()) {
 					if (answer.isBetter(suggestedAnswer))
 						return answer;
@@ -461,6 +466,8 @@ private NameEnvironmentAnswer internalFindClass(String qualifiedTypeName, char[]
 				? p.findClass(typeName, qualifiedPackageName, null, qualifiedBinaryFileName, asBinaryOnly)
 				: p.findClass(typeName, qp2, null, qb2, asBinaryOnly);
 			if (answer != null) {
+				if (answer.moduleName() != null && !this.moduleLocations.containsKey(String.valueOf(answer.moduleName())))
+					continue; // type belongs to an unobservable module
 				if (!answer.ignoreIfBetter()) {
 					if (answer.isBetter(suggestedAnswer))
 						return answer;

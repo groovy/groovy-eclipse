@@ -17,7 +17,6 @@ package org.eclipse.jdt.internal.compiler.lookup;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
-import org.eclipse.jdt.internal.compiler.ast.Annotation;
 import org.eclipse.jdt.internal.compiler.ast.CaseStatement;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
@@ -106,26 +105,6 @@ public ReferenceBinding anonymousOriginalSuperType() {
 		}
 	}
 	return this.superclass; // default answer
-}
-
-@Override
-protected void checkRedundantNullnessDefaultRecurse(ASTNode location, Annotation[] annotations, long nullBits, boolean useNullTypeAnnotations) {
-	
-	if (!isPrototype()) throw new IllegalStateException();
-	
-	long outerDefault = 0;
-	if (this.enclosingMethod != null) {
-		outerDefault = useNullTypeAnnotations 
-				? this.enclosingMethod.defaultNullness 
-				: this.enclosingMethod.tagBits & (TagBits.AnnotationNonNullByDefault|TagBits.AnnotationNullUnspecifiedByDefault);
-	}
-	if (outerDefault != 0) {
-		if (outerDefault == nullBits) {
-			this.scope.problemReporter().nullDefaultAnnotationIsRedundant(location, annotations, this.enclosingMethod);
-		}
-		return;
-	}
-	super.checkRedundantNullnessDefaultRecurse(location, annotations, nullBits, useNullTypeAnnotations);
 }
 
 @Override

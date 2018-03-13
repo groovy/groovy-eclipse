@@ -16,4 +16,5 @@ Import-Package: org.codehaus.groovy.eclipse.codeassist.tests,
  org.codehaus.groovy.eclipse.refactoring.test.extract,
  org.codehaus.groovy.eclipse.refactoring.test.formatter,
  org.codehaus.groovy.eclipse.refactoring.test.rename
-Require-Bundle: org.codehaus.groovy.eclipse.tests;bundle-version="3.0.0"
+Require-Bundle: org.codehaus.groovy.eclipse.tests;bundle-version="3.0.0",
+ org.codehaus.groovy.eclipse.compilerResolver;bundle-version="3.0.0"

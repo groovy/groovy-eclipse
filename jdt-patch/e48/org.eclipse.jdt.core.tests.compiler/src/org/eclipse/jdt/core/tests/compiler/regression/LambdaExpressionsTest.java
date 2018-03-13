@@ -19,6 +19,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.jdt.core.ToolFactory;
+import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest.JavacTestOptions.EclipseHasABug;
+import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest.JavacTestOptions.EclipseJustification;
+import org.eclipse.jdt.core.tests.compiler.regression.AbstractRegressionTest.JavacTestOptions.JavacHasABug;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.IAttributeNamesConstants;
 import org.eclipse.jdt.core.util.IClassFileAttribute;
@@ -1166,6 +1169,8 @@ public void test043() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=406773, [1.8][compiler][codegen] "java.lang.IncompatibleClassChangeError" caused by attempted invocation of private constructor
 public void test044() {
 	this.runConformTest(
+			false,
+			JavacHasABug.JavacBugFixed_901,
 			new String[] {
 					"X.java",
 					"interface I {\n" +
@@ -1461,10 +1466,12 @@ public void test050() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=406773, [1.8][compiler][codegen] "java.lang.IncompatibleClassChangeError" caused by attempted invocation of private constructor
 public void test051() {
 	this.runConformTest(
+			false /* skipJavac*/,
+			JavacHasABug.JavacBugFixed_901,
 			new String[] {
 					"p2/B.java",
 					"package p2;\n" +
-					"import p1.*;								\n" +
+					"import p1.*;\n" +
 					"interface I {\n" +
 					"	void foo();\n" +
 					"}\n" +
@@ -3357,6 +3364,8 @@ public void test428261() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=428261, [1.8][compiler] Incorrect error: No enclosing instance of the type X is accessible in scope
 public void test428261a() {
 	this.runConformTest(
+			false,
+			JavacHasABug.JavacBugFixed_901,
 			new String[] {
 				"X.java",
 				"interface I {\n" +
@@ -3923,6 +3932,8 @@ public void test430035c() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=430035, [1.8][compiler][codegen] Bridge methods are not generated for lambdas/method references 
 public void test430035d() { // 8b131 complains of ambiguity.
 	this.runConformTest(
+			false,
+			EclipseHasABug.EclipseBug510528,
 			new String[] {
 				"X.java",
 				"interface I<T> {\n" +
@@ -3951,6 +3962,8 @@ public void test430035d() { // 8b131 complains of ambiguity.
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=430035, [1.8][compiler][codegen] Bridge methods are not generated for lambdas/method references 
 public void test430035e() { // 8b131 complains of ambiguity in call.
 	this.runConformTest(
+			false,
+			EclipseHasABug.EclipseBug510528,
 			new String[] {
 				"X.java",
 				"interface I<T> {\n" +
@@ -4658,6 +4671,8 @@ public void test441929() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=437781, [1.8][compiler] Eclipse accepts code rejected by javac because of ambiguous method reference
 public void test437781() {
 	this.runConformTest(
+		false,
+		EclipseHasABug.EclipseBug510528,
 		new String[] {
 			"X.java",
 			"import java.util.function.Consumer;\n" +
@@ -5173,6 +5188,7 @@ public void test449063() {
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_LambdaGenericSignature, CompilerOptions.GENERATE);
 	this.runConformTest(
+		false,
 		new String[] {
 			"Test.java",
 			"import java.io.Serializable;\n" + 
@@ -5201,18 +5217,23 @@ public void test449063() {
 			"    }\n" + 
 			"}"
 			},
-			(isJRE9
-			? "Test$Tuple<java.lang.Integer, java.lang.String>\n" +
-			  "Test$Tuple<java.lang.String, java.lang.Double>"
-			: "Test.Test$Tuple<java.lang.Integer, java.lang.String>\n" +
-			  "Test.Test$Tuple<java.lang.String, java.lang.Double>"),
-			customOptions);
+		null,
+		customOptions,
+		null,
+		(isJRE9
+		? "Test$Tuple<java.lang.Integer, java.lang.String>\n" +
+		  "Test$Tuple<java.lang.String, java.lang.Double>"
+		: "Test.Test$Tuple<java.lang.Integer, java.lang.String>\n" +
+		  "Test.Test$Tuple<java.lang.String, java.lang.Double>"),
+		null,
+		EclipseJustification.EclipseBug449063);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=449063, [1.8][compiler] Bring back generic signatures for Lambda Expressions 
 public void test449063a() {
 	Map customOptions = getCompilerOptions();
 	customOptions.put(CompilerOptions.OPTION_LambdaGenericSignature, CompilerOptions.GENERATE);
 	this.runConformTest(
+		false,
 		new String[] {
 			"Test.java",
 			"import java.io.Serializable;\n" + 
@@ -5272,12 +5293,16 @@ public void test449063a() {
 			"    }\n" + 
 			"}"
 			},
-			(isJRE9
-			? "Test$Tuple<java.lang.Integer, java.lang.String>\n" +
-			  "Test$Tuple<java.lang.String, java.lang.Double>"
-			: "Test.Test$Tuple<java.lang.Integer, java.lang.String>\n" +
-			  "Test.Test$Tuple<java.lang.String, java.lang.Double>"),
-			customOptions);
+		null,
+		customOptions,
+		null,
+		(isJRE9
+		? "Test$Tuple<java.lang.Integer, java.lang.String>\n" +
+		  "Test$Tuple<java.lang.String, java.lang.Double>"
+		: "Test.Test$Tuple<java.lang.Integer, java.lang.String>\n" +
+		  "Test.Test$Tuple<java.lang.String, java.lang.Double>"),
+		null,
+		EclipseJustification.EclipseBug449063);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=449063, [1.8][compiler] Bring back generic signatures for Lambda Expressions 
 public void test449063b() {
@@ -5706,6 +5731,8 @@ public void test467825a() {
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=461004 Multiple spurious errors compiling FunctionalJava project
 public void test461004() {
 	this.runConformTest(
+		false /* skipJavac */,
+		JavacHasABug.JavacBugFixed_901,
 		new String[] {
 			"Ice.java",
 			"import java.util.function.BiPredicate;\n" + 
@@ -5728,7 +5755,7 @@ public void test461004() {
 			"    someMethod(create( String::equalsIgnoreCase ));\n" + 
 			"  }\n" + 
 			"}\n"
-	});
+	}, null);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=478533 [compiler][1.8][lambda] check visibility of target context is broken
 public void test478533() {
@@ -5833,6 +5860,8 @@ public void test477263() {
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=477263 [1.8][compiler] No enclosing instance of the type Outer is accessible in scope for method reference
 public void test477263a() {
 	this.runConformTest(
+		false,
+		JavacHasABug.JavacBug8144673,
 		new String[] {
 			"X.java",
 			"interface I {\n" + 
@@ -6900,6 +6929,38 @@ public void testBug516833() {
 			"}\n"
 		},
 		"[java.lang.String arg0, java.lang.String arg1]", options);
+}
+public void testBug531093comment1() {
+	runConformTest(
+		new String[] {
+			"bug/Bug.java",
+			"package bug;\n" +
+			"\n" +
+			"import java.lang.reflect.Method;\n" +
+			"import java.util.Arrays;\n" +
+			"import java.util.Optional;\n" +
+			"import java.util.function.Function;\n" +
+			"\n" +
+			"public class Bug {\n" +
+			"	public static <E extends Number> Function<E, Optional<String>> useMethodRef() {\n" +
+			"		return Bug::getMapper;\n" +
+			"	}\n" +
+			"\n" +
+			"	private static Optional<String> getMapper(Number event) {\n" +
+			"		return null;\n" +
+			"	}\n" +
+			"\n" +
+			"	public static void main(String[] args) {\n" +
+			"		Method[] methods = Bug.class.getDeclaredMethods();\n" +
+			"		for (Method method : methods) {\n" +
+		"				Arrays.asList(method.getParameters()).toString();\n" +
+			"		}\n" +
+			"	}\n" +
+			"}\n" +
+			"",
+		}, 
+		""
+	);
 }
 public static Class testClass() {
 	return LambdaExpressionsTest.class;

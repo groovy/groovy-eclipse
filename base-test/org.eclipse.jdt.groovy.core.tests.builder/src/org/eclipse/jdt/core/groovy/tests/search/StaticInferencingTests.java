@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,29 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.eclipse.jdt.groovy.search.TypeLookupResult;
+import org.junit.Assert;
 import org.junit.Test;
 
 public final class StaticInferencingTests extends InferencingTestSuite {
+
+    private void assertKnown(String source, String target, String declaringType, String expressionType) {
+        int offset = source.lastIndexOf(target);
+        GroovyCompilationUnit unit = createUnit("Search", source);
+        SearchRequestor requestor = doVisit(offset, offset + target.length(), unit, false);
+
+        Assert.assertNotEquals(TypeLookupResult.TypeConfidence.UNKNOWN, requestor.result.confidence);
+        Assert.assertEquals(declaringType, requestor.result.declaringType.getName());
+        Assert.assertEquals(expressionType, printTypeName(requestor.result.type));
+    }
+
+    private void assertUnknown(String source, String target) {
+        int offset = source.lastIndexOf(target);
+        assertUnknownConfidence(source, offset, offset + target.length(), "N/A", false);
+    }
+
+    //--------------------------------------------------------------------------
 
     @Test
     public void testClassReference1() {
@@ -82,51 +102,84 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     @Test
     public void testClassReference10() {
         String contents = "String.getClass()"; // same as "(String.class).getClass()"
-        int start = contents.indexOf("getClass"), until = start + "getClass".length();
-        assertType(contents, start, until, "java.lang.Class<?>");
+        assertKnown(contents, "getClass", "java.lang.Object", "java.lang.Class<?>");
     }
-
-    //
 
     @Test
     public void testClassReference11() {
         String contents = "String.class.getCanonicalName()";
-        int start = contents.indexOf("getCanonicalName");
-        int until = start + "getCanonicalName".length();
-        assertType(contents, start, until, "java.lang.String");
+        assertKnown(contents, "getCanonicalName", "java.lang.Class", "java.lang.String");
     }
 
     @Test
     public void testClassReference12() {
         String contents = "String.getCanonicalName()";
-        int start = contents.indexOf("getCanonicalName");
-        int until = start + "getCanonicalName".length();
-        assertType(contents, start, until, "java.lang.String");
+        assertKnown(contents, "getCanonicalName", "java.lang.Class", "java.lang.String");
     }
 
     @Test
     public void testClassReference13() {
         String contents = "String.class.canonicalName";
-        int start = contents.indexOf("canonicalName");
-        int until = start + "canonicalName".length();
-        assertType(contents, start, until, "java.lang.String");
+        assertKnown(contents, "canonicalName", "java.lang.Class", "java.lang.String");
     }
 
     @Test
     public void testClassReference14() {
         String contents = "String.canonicalName";
-        int start = contents.indexOf("canonicalName");
-        int until = start + "canonicalName".length();
-        assertType(contents, start, until, "java.lang.String");
+        assertKnown(contents, "canonicalName", "java.lang.Class", "java.lang.String");
     }
 
     @Test // Class members may be accessed directly from static initializers
     public void testClassReference15() {
         String contents = "class S { static { getCanonicalName() } }";
-        int start = contents.indexOf("getCanonicalName");
-        int until = start + "getCanonicalName".length();
-        assertType(contents, start, until, "java.lang.String");
-        assertDeclaringType(contents, start, until, "java.lang.Class<S>");
+        assertKnown(contents, "getCanonicalName", "java.lang.Class", "java.lang.String");
+    }
+
+    //
+
+    @Test
+    public void testStaticReference1() {
+        String contents = "class GGG { static int length }\nGGG.length";
+        assertKnown(contents, "length", "GGG", "java.lang.Integer");
+    }
+
+    @Test // GRECLIPSE-1544
+    public void testStaticReference2() {
+        String contents = "package p\n" +
+            "@groovy.transform.TypeChecked\n" +
+            "public class BugClass {\n" +
+            "  static BugClass getInstance() { null }\n" +
+            "  void showBug() {\n" +
+            "    BugClass.getInstance();  \n" +
+            "  }\n" +
+            "}";
+        assertKnown(contents, "getInstance", "p.BugClass", "p.BugClass");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/525
+    public void testStaticReference3() {
+        // name clashes with methods available from java.lang.Class and org.codehaus.groovy.runtime.DefaultGroovyMethods
+        String contents = "String[] arr; String str = Arrays.toString(arr)";
+        assertKnown(contents, "toString", "java.util.Arrays", "java.lang.String");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/525
+    public void testStaticReference4() {
+        // name clashes with methods available from java.lang.Class and org.codehaus.groovy.runtime.DefaultGroovyMethods
+        String contents = "def stringify = Arrays.&toString";
+        assertKnown(contents, "toString", "java.util.Arrays", "java.lang.String");
+    }
+
+    @Test
+    public void testStaticReference5() {
+        String contents = "def search = Arrays.&binarySearch";
+        assertKnown(contents, "binarySearch", "java.util.Arrays", "java.lang.Integer");
+    }
+
+    @Test
+    public void testStaticReference6() {
+        String contents = "Arrays.&mixin";
+        assertUnknown(contents, "mixin");
     }
 
     //
@@ -134,172 +187,125 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     @Test // GRECLIPSE-855: should be able to find the type, but with unknown confidence
     public void testNonStaticReference1() {
         String contents = "String.length()";
-        int start = contents.indexOf("length");
-        int until = start + "length".length();
-        assertUnknownConfidence(contents, start, until, "java.lang.String", false);
+        assertUnknown(contents, "length");
     }
 
     @Test
     public void testNonStaticReference2() {
         String contents = "String.length";
-        int start = contents.indexOf("length");
-        int until = start + "length".length();
-        assertUnknownConfidence(contents, start, until, "java.lang.String", false);
+        assertUnknown(contents, "length");
     }
 
     @Test
     public void testNonStaticReference3() {
         String contents = "class GGG { int length }\nGGG.length";
-        int start = contents.lastIndexOf("length");
-        int until = start + "length".length();
-        assertUnknownConfidence(contents, start, until, "GGG", false);
+        assertUnknown(contents, "length");
     }
 
     @Test
     public void testNonStaticReference4() {
         String contents = "class GGG { int length }\nGGG.@length";
-        int start = contents.lastIndexOf("length");
-        int until = start + "length".length();
-        assertUnknownConfidence(contents, start, until, "GGG", false);
+        assertUnknown(contents, "length");
     }
 
     @Test
     public void testNonStaticReference5() {
         String contents = "class GGG { int length() { } }\nGGG.length()";
-        int start = contents.lastIndexOf("length");
-        int until = start + "length".length();
-        assertUnknownConfidence(contents, start, until, "GGG", false);
+        assertUnknown(contents, "length");
     }
 
     @Test
     public void testNonStaticReference6() {
         String contents = "class GGG { def length = { } }\nGGG.length()";
-        int start = contents.lastIndexOf("length");
-        int until = start + "length".length();
-        assertUnknownConfidence(contents, start, until, "GGG", false);
+        assertUnknown(contents, "length");
     }
 
     @Test
     public void testNonStaticReference7() {
         String contents = "class GGG { int length() { } \nstatic {\nlength() } }";
-        int start = contents.lastIndexOf("length");
-        int until = start + "length".length();
-        assertUnknownConfidence(contents, start, until, "GGG", false);
+        assertUnknown(contents, "length");
     }
 
     @Test
     public void testNonStaticReference8() {
         String contents = "class GGG { def length = { } \nstatic {\nlength() } }";
-        int start = contents.lastIndexOf("length");
-        int until = start + "length".length();
-        assertUnknownConfidence(contents, start, until, "GGG", false);
+        assertUnknown(contents, "length");
     }
 
-    @Test
-    public void testStaticReference1() {
-        String contents = "class GGG { static int length }\nGGG.length";
-        int start = contents.lastIndexOf("length");
-        int until = start + "length".length();
-        assertType(contents, start, until, "java.lang.Integer", false);
-    }
+    //
 
     @Test
     public void testStaticImport1() throws Exception {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+
         String contents = "import static p.Other.FOO";
-        int start = contents.lastIndexOf("FOO");
-        int until = start + "FOO".length();
-        assertType(contents, start, until, "java.lang.Integer", false);
+        assertKnown(contents, "FOO", "p.Other", "java.lang.Integer");
     }
 
     @Test
     public void testStaticImport2() throws Exception {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+
         String contents = "import static p.Other.FOO as BAR";
-        int start = contents.lastIndexOf("FOO");
-        int until = start + "FOO".length();
-        assertType(contents, start, until, "java.lang.Integer", false);
+        assertKnown(contents, "FOO", "p.Other", "java.lang.Integer");
     }
 
     @Test
     public void testStaticImport3() throws Exception {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+
         String contents = "import static p.Other.FOO\nFOO";
-        int start = contents.lastIndexOf("FOO");
-        int until = start + "FOO".length();
-        assertType(contents, start, until, "java.lang.Integer", false);
+        assertKnown(contents, "FOO", "p.Other", "java.lang.Integer");
     }
 
     @Test
     public void testStaticImport4() throws Exception {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+
         String contents = "import static p.Other.FOO as BAR\nFOO";
-        int start = contents.lastIndexOf("FOO");
-        int until = start + "FOO".length();
-        assertUnknownConfidence(contents, start, until, "Search", false);
+        assertUnknown(contents, "FOO");
     }
 
     @Test
     public void testStaticImport5() throws Exception {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+
         String contents = "import static p.Other.FO";
-        int start = contents.lastIndexOf("FO");
-        int until = start + "FO".length();
-        assertUnknownConfidence(contents, start, until, "Search", false);
+        assertUnknown(contents, "FO");
     }
 
     @Test
     public void testStaticImport6() throws Exception {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+
         String contents = "import static p.Other.BAR\nBAR";
-        int start = contents.indexOf("BAR");
-        int until = start + "BAR".length();
-        assertType(contents, start, until, "java.lang.Boolean", false);
-        start = contents.lastIndexOf("BAR");
-        until = start + "BAR".length();
-        assertType(contents, start, until, "java.lang.Boolean", false);
+        int offset = contents.indexOf("BAR");
+        assertType(contents, offset, offset + "BAR".length(), "java.lang.Boolean", false);
+        offset = contents.lastIndexOf("BAR");
+        assertType(contents, offset, offset + "BAR".length(), "java.lang.Boolean", false);
     }
 
     @Test
     public void testStaticImport7() throws Exception {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+
         String contents = "import static p.Other.FOO\nFOO";
-        int start = contents.lastIndexOf("p.Other");
-        int until = start + "p.Other".length();
-        assertType(contents, start, until, "p.Other", false);
+        assertKnown(contents, "p.Other", "p.Other", "p.Other");
     }
 
     @Test
     public void testStaticImport8() throws Exception {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+
         String contents = "import static p.Other.FOO as BAR\nFOO";
-        int start = contents.lastIndexOf("p.Other");
-        int until = start + "p.Other".length();
-        assertType(contents, start, until, "p.Other", false);
+        assertKnown(contents, "p.Other", "p.Other", "p.Other");
     }
 
     @Test
     public void testStaticImport9() throws Exception {
         createUnit("p", "Other", "package p\nclass Other { static int FOO\n static boolean BAR() { } }");
+
         String contents = "import static p.Other.*\nFOO";
-        int start = contents.lastIndexOf("p.Other");
-        int until = start + "p.Other".length();
-        assertType(contents, start, until, "p.Other", false);
-    }
-
-    @Test // GRECLIPSE-1544
-    public void testSTCAndClassInstance() {
-        String contents = "package pkg0\n" +
-            "@groovy.transform.TypeChecked\n" +
-            "public class BugClass {\n" +
-            "    public void showBug() {\n" +
-            "        BugClass.getInstance();  \n" +
-            "    }\n" +
-            "    static BugClass getInstance() { return null }\n" +
-            "}";
-
-        int start = contents.indexOf("getInstance");
-        int until = start + "getInstance".length();
-        assertType(contents, start, until, "pkg0.BugClass", false);
+        assertKnown(contents, "p.Other", "p.Other", "p.Other");
     }
 }

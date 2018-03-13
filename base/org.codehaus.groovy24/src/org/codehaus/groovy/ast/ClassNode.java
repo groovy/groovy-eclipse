@@ -444,7 +444,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         if (!redirect().lazyInitDone) redirect().lazyClassInit();
         if (redirect!=null) return redirect().getFields();
         if (fields == null)
-            fields = new LinkedList<FieldNode> ();
+            fields = new LinkedList<FieldNode>();
         return fields;
     }
 
@@ -568,7 +568,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         if (r != this) return r.getProperties();
         // GRECLIPSE end
         if (r.properties == null)
-            r.properties = new ArrayList<PropertyNode> ();
+            r.properties = new ArrayList<PropertyNode>();
         return r.properties;
     }
 
@@ -576,7 +576,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         if (!redirect().lazyInitDone) redirect().lazyClassInit();
         final ClassNode r = redirect();
         if (r.constructors == null)
-            r.constructors = new ArrayList<ConstructorNode> ();
+            r.constructors = new ArrayList<ConstructorNode>();
         return r.constructors;
     }
 
@@ -618,9 +618,9 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         node.setDeclaringClass(r);
         node.setOwner(r);
         if (r.fields == null)
-            r.fields = new LinkedList<FieldNode> ();
+            r.fields = new LinkedList<FieldNode>();
         if (r.fieldIndex == null)
-            r.fieldIndex = new LinkedHashMap<String,FieldNode> ();
+            r.fieldIndex = new LinkedHashMap<String,FieldNode>();
         r.fields.add(node);
         r.fieldIndex.put(node.getName(), node);
     }
@@ -630,9 +630,9 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         node.setDeclaringClass(r);
         node.setOwner(r);
         if (r.fields == null)
-            r.fields = new LinkedList<FieldNode> ();
+            r.fields = new LinkedList<FieldNode>();
         if (r.fieldIndex == null)
-            r.fieldIndex = new LinkedHashMap<String,FieldNode> ();
+            r.fieldIndex = new LinkedHashMap<String,FieldNode>();
         r.fields.addFirst(node);
         r.fieldIndex.put(node.getName(), node);
     }
@@ -647,7 +647,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         /* GRECLIPSE edit
         final ClassNode r = redirect();
         if (r.properties == null)
-            r.properties = new ArrayList<PropertyNode> ();
+            r.properties = new ArrayList<PropertyNode>();
         r.properties.add(node);
         */
     }
@@ -840,9 +840,9 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      */
     public FieldNode getDeclaredField(String name) {
         if (!redirect().lazyInitDone) redirect().lazyClassInit();
-        ClassNode r = redirect ();
+        ClassNode r = redirect();
         if (r.fieldIndex == null)
-            r.fieldIndex = new LinkedHashMap<String,FieldNode> ();
+            r.fieldIndex = new LinkedHashMap<String,FieldNode>();
         return r.fieldIndex.get(name);
     }
 
@@ -888,7 +888,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
     public List<Statement> getObjectInitializerStatements() {
         if (objectInitializers == null)
-            objectInitializers = new LinkedList<Statement> ();
+            objectInitializers = new LinkedList<Statement>();
         return objectInitializers;
     }
 
@@ -1276,21 +1276,21 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         if (isArray()) {
             return componentType.toString(showRedirect)+"[]";
         }
-        String ret = getName();
-        if (placeholder) ret = getUnresolvedName();
+        StringBuilder ret = new StringBuilder(getName());
+        if (placeholder) ret = new StringBuilder(getUnresolvedName());
         if (!placeholder && genericsTypes != null) {
-            ret += " <";
+            ret.append(" <");
             for (int i = 0; i < genericsTypes.length; i++) {
-                if (i != 0) ret += ", ";
+                if (i != 0) ret.append(", ");
                 GenericsType genericsType = genericsTypes[i];
-                ret += genericTypeAsString(genericsType);
+                ret.append(genericTypeAsString(genericsType));
             }
-            ret += ">";
+            ret.append(">");
         }
         if (redirect != null && showRedirect) {
-            ret += " -> " + redirect().toString();
+            ret.append(" -> ").append(redirect().toString());
         }
-        return ret;
+        return ret.toString();
     }
 
     /**
@@ -1300,27 +1300,27 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * @return the string representing the generic type
      */
     private String genericTypeAsString(GenericsType genericsType) {
-        String ret = genericsType.getName();
+        StringBuilder ret = new StringBuilder(genericsType.getName());
         if (genericsType.getUpperBounds() != null) {
-            ret += " extends ";
+            ret.append(" extends ");
             for (int i = 0; i < genericsType.getUpperBounds().length; i++) {
                 ClassNode classNode = genericsType.getUpperBounds()[i];
                 if (classNode.equals(this)) {
-                    ret += classNode.getName();
+                    ret.append(classNode.getName());
                 } else {
-                    ret += classNode.toString(false);
+                    ret.append(classNode.toString(false));
                 }
-                if (i + 1 < genericsType.getUpperBounds().length) ret += " & ";
+                if (i + 1 < genericsType.getUpperBounds().length) ret.append(" & ");
             }
         } else if (genericsType.getLowerBound() !=null) {
             ClassNode classNode = genericsType.getLowerBound();
             if (classNode.equals(this)) {
-                ret += " super " + classNode.getName();
+                ret.append(" super ").append(classNode.getName());
             } else {
-                ret += " super " + classNode;
+                ret.append(" super ").append(classNode);
             }
         }
-        return ret;
+        return ret.toString();
     }
 
     /**
@@ -1494,7 +1494,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         Class c = redirect().clazz;
         if (c!=null) return c;
         ClassNode component = redirect().componentType;
-        if (component!=null && component.isResolved()){
+        if (component!=null && component.isResolved()) {
             ClassNode cn = component.makeArray();
             setRedirect(cn);
             return redirect().clazz;
@@ -1507,7 +1507,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         throw new GroovyBugError("ClassNode#getTypeClass for "+getName()+" is called before the type class is set ");
     }
 
-    public boolean hasPackageName(){
+    public boolean hasPackageName() {
         return redirect().name.indexOf('.')>0;
     }
 
@@ -1616,17 +1616,17 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public void renameField(String oldName, String newName) {
-        ClassNode r = redirect ();
+        ClassNode r = redirect();
         if (r.fieldIndex == null)
-            r.fieldIndex = new LinkedHashMap<String,FieldNode> ();
+            r.fieldIndex = new LinkedHashMap<String,FieldNode>();
         final Map<String,FieldNode> index = r.fieldIndex;
         index.put(newName, index.remove(oldName));
     }
-    
+
     public void removeField(String oldName) {
-        ClassNode r = redirect ();
+        ClassNode r = redirect();
         if (r.fieldIndex == null)
-            r.fieldIndex = new LinkedHashMap<String,FieldNode> ();
+            r.fieldIndex = new LinkedHashMap<String,FieldNode>();
         final Map<String,FieldNode> index = r.fieldIndex;
         r.fields.remove(index.get(oldName));
         index.remove(oldName);
@@ -1671,7 +1671,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     // GRECLIPSE end
 
     private Map<CompilePhase, Map<Class<? extends ASTTransformation>, Set<ASTNode>>> getTransformInstances() {
-        if(transformInstances == null){
+        if (transformInstances == null) {
             transformInstances = new EnumMap<CompilePhase, Map<Class <? extends ASTTransformation>, Set<ASTNode>>>(CompilePhase.class);
             for (CompilePhase phase : CompilePhase.values()) {
                 transformInstances.put(phase, new LinkedHashMap<Class <? extends ASTTransformation>, Set<ASTNode>>());

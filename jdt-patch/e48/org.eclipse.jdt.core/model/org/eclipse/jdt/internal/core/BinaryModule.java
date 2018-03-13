@@ -14,12 +14,15 @@ import java.net.URL;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.jdt.core.IAnnotation;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
+import org.eclipse.jdt.internal.compiler.env.IBinaryAnnotation;
 import org.eclipse.jdt.internal.compiler.env.IBinaryModule;
 import org.eclipse.jdt.internal.compiler.env.IModule;
+import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.core.JavaModelManager.PerProjectInfo;
 
 public class BinaryModule extends BinaryMember implements AbstractModule {
@@ -43,9 +46,13 @@ public class BinaryModule extends BinaryMember implements AbstractModule {
 		}
 		return this.info;
 	}
-	/*
-	 * @see IParent#getChildren()
-	 */
+	@Override
+	public IAnnotation[] getAnnotations() throws JavaModelException {
+		IBinaryModule moduleInfo = (IBinaryModule) getModuleInfo();
+		IBinaryAnnotation[] binaryAnnotations = moduleInfo.getAnnotations();
+		long tagBits = moduleInfo.getTagBits() & ~TagBits.AnnotationDeprecated; // TODO: kludge to avoid duplication of real annotation and tagBit induced standard annotation
+		return getAnnotations(binaryAnnotations, tagBits);
+	}
 	@Override
 	public IJavaElement[] getChildren() throws JavaModelException {
 		return NO_ELEMENTS;

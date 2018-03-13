@@ -225,6 +225,7 @@ public interface IBinding {
 	 * <li>the constructor of an anonymous class</li>
 	 * <li>member value pairs</li>
 	 * <li>synthetic bindings</li>
+	 * <li>problem package bindings (since Java 9)</li>
 	 * </ul>
 	 * For all other kind of type, method, variable, annotation and package bindings,
 	 * this method returns non-<code>null</code>.

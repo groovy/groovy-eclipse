@@ -30,9 +30,9 @@ public class GroovyActivator extends Plugin {
 
     public static final String PLUGIN_ID = "org.codehaus.groovy";
 
-    public static final String GROOVY_ALL_JAR = "lib/groovy-all-2.4.13.jar";
+    public static final String GROOVY_ALL_JAR = "lib/groovy-all-2.4.14.jar";
 
-    public static URL GROOVY_ALL_JAR_URL;
+    public static URL GROOVY_ALL_JAR_URL, GROOVY_JAR_URL;
 
     private static GroovyActivator DEFAULT;
 
@@ -51,7 +51,7 @@ public class GroovyActivator extends Plugin {
             throw new RuntimeException(
                 "Couldn't find '" + GROOVY_ALL_JAR + "' in bundle " + bundle.getSymbolicName() + " " + bundle.getVersion());
         }
-        GROOVY_ALL_JAR_URL = FileLocator.resolve(entry);
+        GROOVY_ALL_JAR_URL = GROOVY_JAR_URL = FileLocator.resolve(entry);
     }
 
     //--------------------------------------------------------------------------

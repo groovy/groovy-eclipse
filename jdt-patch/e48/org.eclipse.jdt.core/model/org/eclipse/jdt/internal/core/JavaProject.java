@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -852,7 +852,7 @@ public class JavaProject
 				JrtPackageFragmentRoot root = this.modNames2Roots.get(moduleName);
 				if (root != null) {
 					try {
-						ClassFileReader classFile = JRTUtil.getClassfile(this.jrtFile, TypeConstants.MODULE_INFO_CLASS_NAME_STRING, root.moduleName);
+						ClassFileReader classFile = JRTUtil.getClassfile(this.jrtFile, TypeConstants.MODULE_INFO_CLASS_NAME_STRING, root.moduleName, null);
 						result = classFile.getModuleDeclaration();
 						this.modules.put(moduleName, result);
 					} catch (IOException | ClassFormatException e) {
@@ -924,6 +924,17 @@ public class JavaProject
 			}, JRTUtil.NOTIFY_MODULES);
 		} catch (IOException e) {
 			Util.log(IStatus.ERROR, "Error reading modules from " + imagePath.toOSString()); //$NON-NLS-1$
+		}
+	}
+
+	@Override
+	public IPackageFragmentRoot[] findUnfilteredPackageFragmentRoots(IClasspathEntry entry) {
+		try {
+			IClasspathEntry[] resolvedEntries = resolveClasspath(new IClasspathEntry[]{ entry });
+			return computePackageFragmentRoots(resolvedEntries, false /* not exported roots */, false /* don't filter! */, null /* no reverse map */);
+		} catch (JavaModelException e) {
+			// according to comment in findPackageFragmentRoots() we assume that this is caused by the project no longer existing
+			return new IPackageFragmentRoot[] {};
 		}
 	}
 
@@ -1778,13 +1789,7 @@ public class JavaProject
 		return computePackageFragmentRoots(getResolvedClasspath(), true/*retrieveExportedRoots*/, true/*filterModuleRoots*/, rootToResolvedEntries, excludeTestCode);
 	}
 
-	/**
-	 * Returns the classpath entry that refers to the given path
-	 * or <code>null</code> if there is no reference to the path.
-	 * @param path IPath
-	 * @return IClasspathEntry
-	 * @throws JavaModelException
-	 */
+	@Override
 	public IClasspathEntry getClasspathEntryFor(IPath path) throws JavaModelException {
 		getResolvedClasspath(); // force resolution
 		PerProjectInfo perProjectInfo = getPerProjectInfo();
@@ -3705,8 +3710,13 @@ public class JavaProject
 	}
 
 	public IModuleDescription getAutomaticModuleDescription() throws JavaModelException {
-		char[] moduleName = AutomaticModuleNaming.determineAutomaticModuleName(getElementName(), false, getManifest());
-		return new AbstractModule.AutoModule(this, String.valueOf(moduleName));
+		boolean nameFromManifest = true;
+		char[] moduleName = AutomaticModuleNaming.determineAutomaticModuleNameFromManifest(getManifest());
+		if (moduleName == null) {
+			nameFromManifest = false;
+			moduleName = AutomaticModuleNaming.determineAutomaticModuleNameFromFileName(getElementName(), true, false);
+		}
+		return new AbstractModule.AutoModule(this, String.valueOf(moduleName), nameFromManifest);
 	}
 
 	public void setModuleDescription(IModuleDescription module) throws JavaModelException {
@@ -3748,4 +3758,8 @@ public class JavaProject
 		return null;
 	}
 
+	@Override
+	public Set<String> determineModulesOfProjectsWithNonEmptyClasspath() throws JavaModelException {
+		return ModuleUpdater.determineModulesOfProjectsWithNonEmptyClasspath(this, getExpandedClasspath());
+	}
 }

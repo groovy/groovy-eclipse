@@ -15,9 +15,6 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
-import org.eclipse.jdt.internal.compiler.ast.ASTNode;
-import org.eclipse.jdt.internal.compiler.ast.Annotation;
-
 public abstract class NestedTypeBinding extends SourceTypeBinding {
 
 	public SourceTypeBinding enclosingType;
@@ -124,19 +121,6 @@ public SyntheticArgumentBinding addSyntheticArgumentAndField(ReferenceBinding ta
 	if (synthLocal.matchingField == null)
 		synthLocal.matchingField = addSyntheticFieldForInnerclass(targetEnclosingType);
 	return synthLocal;
-}
-
-@Override
-protected void checkRedundantNullnessDefaultRecurse(ASTNode location, Annotation[] annotations, long nullBits, boolean useNullTypeAnnotations) {
-	if (!isPrototype()) throw new IllegalStateException();
-	ReferenceBinding currentType = this.enclosingType;
-	do {
-		if (!((SourceTypeBinding)currentType).checkRedundantNullnessDefaultOne(location, annotations, nullBits, useNullTypeAnnotations)) {
-			return;
-		}
-		currentType = currentType.enclosingType();
-	} while (currentType instanceof SourceTypeBinding);
-	super.checkRedundantNullnessDefaultRecurse(location, annotations, nullBits, useNullTypeAnnotations);
 }
 
 /* Answer the receiver's enclosing type... null if the receiver is a top level type.

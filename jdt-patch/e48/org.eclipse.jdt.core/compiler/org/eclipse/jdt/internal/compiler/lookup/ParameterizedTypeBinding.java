@@ -810,8 +810,7 @@ public class ParameterizedTypeBinding extends ReferenceBinding implements Substi
 			}
 		}
 		this.tagBits |= someType.tagBits & (TagBits.IsLocalType| TagBits.IsMemberType | TagBits.IsNestedType | TagBits.ContainsNestedTypeReferences
-				 | TagBits.HasMissingType | TagBits.AnnotationNullMASK
-				 | TagBits.AnnotationNonNullByDefault | TagBits.AnnotationNullUnspecifiedByDefault | TagBits.HasCapturedWildcard);
+				 | TagBits.HasMissingType | TagBits.AnnotationNullMASK | TagBits.HasCapturedWildcard);
 		this.tagBits &= ~(TagBits.AreFieldsComplete|TagBits.AreMethodsComplete);
 	}
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -18,10 +18,10 @@ import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.core.IBuffer;
-import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IOpenable;
+import org.eclipse.jdt.core.IOrdinaryClassFile;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
@@ -65,6 +65,7 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
+import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.lookup.ArrayBinding;
 import org.eclipse.jdt.internal.compiler.lookup.BaseTypeBinding;
@@ -104,6 +105,7 @@ import org.eclipse.jdt.internal.compiler.util.ObjectVector;
 import org.eclipse.jdt.internal.core.BinaryTypeConverter;
 import org.eclipse.jdt.internal.core.ClassFile;
 import org.eclipse.jdt.internal.core.JavaModelManager;
+import org.eclipse.jdt.internal.core.JrtPackageFragmentRoot;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.internal.core.SelectionRequestor;
 import org.eclipse.jdt.internal.core.SourceType;
@@ -1539,16 +1541,23 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 					typeDeclaration = new ASTNodeFinder(parsedUnit).findType(context);
 				}
 			} else { // binary type
-				IClassFile iClassFile = context.getClassFile();
+				IOrdinaryClassFile iClassFile = context.getClassFile();
 				if (iClassFile instanceof ClassFile) {
 					ClassFile classFile = (ClassFile) iClassFile;
-					BinaryTypeDescriptor descriptor = BinaryTypeFactory.createDescriptor(classFile);
 					ClassFileReader reader = null;
-					try {
-						reader = BinaryTypeFactory.rawReadType(descriptor, false/*don't fully initialize so as to keep constant pool (used below)*/);
-					} catch (ClassFormatException e) {
-						if (JavaCore.getPlugin().isDebugging()) {
-							e.printStackTrace(System.err);
+					if (classFile.getPackageFragmentRoot() instanceof JrtPackageFragmentRoot) {
+						IBinaryType binaryTypeInfo = classFile.getBinaryTypeInfo();
+						if (binaryTypeInfo instanceof ClassFileReader) {
+							reader = (ClassFileReader) binaryTypeInfo;
+						}
+					} else {
+						BinaryTypeDescriptor descriptor = BinaryTypeFactory.createDescriptor(classFile);
+						try {
+							reader = BinaryTypeFactory.rawReadType(descriptor, false/*don't fully initialize so as to keep constant pool (used below)*/);
+						} catch (ClassFormatException e) {
+							if (JavaCore.getPlugin().isDebugging()) {
+								e.printStackTrace(System.err);
+							}
 						}
 					}
 					if (reader == null) {

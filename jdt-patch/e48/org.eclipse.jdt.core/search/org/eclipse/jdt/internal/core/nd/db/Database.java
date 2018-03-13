@@ -435,6 +435,7 @@ public class Database {
 	 * @throws IndexException
 	 */
 	public Chunk getChunk(long offset) throws IndexException {
+		assert offset >= 0;
 		assertLocked();
 		if (offset < CHUNK_SIZE) {
 			this.fMostRecentlyFetchedChunk = this.fHeaderChunk;
@@ -513,7 +514,7 @@ public class Database {
 	public void memcpy(long dest, long source, int numBytes) {
 		assert numBytes >= 0;
 		long endAddress = source + numBytes;
-		assert endAddress <= this.fChunksUsed * CHUNK_SIZE;
+		assert endAddress <= (long) this.fChunksUsed * CHUNK_SIZE;
 		// TODO: make use of lower-level System.arrayCopy
 		for (int count = 0; count < numBytes; count++) {
 			putByte(dest + count, getByte(source + count));
@@ -677,7 +678,7 @@ public class Database {
 
 			if (numChunks < neededChunks) {
 				throw describeProblem()
-					.addProblemAddress("chunk header", freeBlockChunkNum * CHUNK_SIZE, INT_SIZE) //$NON-NLS-1$
+					.addProblemAddress("chunk header", (long) freeBlockChunkNum * CHUNK_SIZE, INT_SIZE) //$NON-NLS-1$
 					.build("A block in the free space trie was too small or wasn't actually free. Reported size = " //$NON-NLS-1$
 							+ numChunks + " chunks, requested size = " + neededChunks + " chunks");  //$NON-NLS-1$//$NON-NLS-2$
 			}
@@ -685,8 +686,8 @@ public class Database {
 			int footer = getBlockFooterForChunkBefore(freeBlockChunkNum + numChunks);
 			if (footer != numChunks) {
 				throw describeProblem()
-					.addProblemAddress("chunk header", freeBlockChunkNum * CHUNK_SIZE, INT_SIZE) //$NON-NLS-1$
-					.addProblemAddress("chunk footer", (freeBlockChunkNum + numChunks) * CHUNK_SIZE - INT_SIZE, INT_SIZE) //$NON-NLS-1$
+					.addProblemAddress("chunk header", (long) freeBlockChunkNum * CHUNK_SIZE, INT_SIZE) //$NON-NLS-1$
+					.addProblemAddress("chunk footer", (long) (freeBlockChunkNum + numChunks) * CHUNK_SIZE - INT_SIZE, INT_SIZE) //$NON-NLS-1$
 					.build("The header and footer didn't match for a block in the free space trie. Expected " //$NON-NLS-1$
 							+ numChunks + " but found " + footer); //$NON-NLS-1$
 			}
@@ -733,18 +734,18 @@ public class Database {
 	 * @param freeBlockChunkNum chunk number of the block to be unlinked
 	 */
 	private void unlinkFreeBlock(int freeBlockChunkNum) {
-		long freeBlockAddress = freeBlockChunkNum * CHUNK_SIZE;
+		long freeBlockAddress = (long) freeBlockChunkNum * CHUNK_SIZE;
 		int anotherBlockOfSameSize = 0;
 		int nextBlockChunkNum = getInt(freeBlockAddress + LargeBlock.NEXT_BLOCK_OFFSET);
 		int prevBlockChunkNum = getInt(freeBlockAddress + LargeBlock.PREV_BLOCK_OFFSET);
 		// Relink the linked list
 		if (nextBlockChunkNum != 0) {
 			anotherBlockOfSameSize = nextBlockChunkNum;
-			putInt(nextBlockChunkNum * CHUNK_SIZE + LargeBlock.PREV_BLOCK_OFFSET, prevBlockChunkNum);
+			putInt((long) nextBlockChunkNum * CHUNK_SIZE + LargeBlock.PREV_BLOCK_OFFSET, prevBlockChunkNum);
 		}
 		if (prevBlockChunkNum != 0) {
 			anotherBlockOfSameSize = prevBlockChunkNum;
-			putInt(prevBlockChunkNum * CHUNK_SIZE + LargeBlock.NEXT_BLOCK_OFFSET, nextBlockChunkNum);
+			putInt((long) prevBlockChunkNum * CHUNK_SIZE + LargeBlock.NEXT_BLOCK_OFFSET, nextBlockChunkNum);
 		}
 
 		/**
@@ -765,7 +766,7 @@ public class Database {
 			int difference = currentSize ^ freeBlockSize;
 			if (difference != 0) {
 				int firstDifference = LargeBlock.SIZE_OF_SIZE_FIELD * 8 - Integer.numberOfLeadingZeros(difference) - 1;
-				long locationOfChildPointer = parentChunkNum * CHUNK_SIZE + LargeBlock.CHILD_TABLE_OFFSET
+				long locationOfChildPointer = (long) parentChunkNum * CHUNK_SIZE + LargeBlock.CHILD_TABLE_OFFSET
 						+ (firstDifference * INT_SIZE);
 				int childChunkNum = getInt(locationOfChildPointer);
 				if (childChunkNum == freeBlockChunkNum) {
@@ -936,7 +937,7 @@ public class Database {
 	}
 
 	private void verifyNotInLargeBlockFreeSpaceTrie(int targetChunkNum, int chunkNum, int parent) {
-		long chunkStart = chunkNum * CHUNK_SIZE;
+		long chunkStart = (long) chunkNum * CHUNK_SIZE;
 
 		for (int testPosition = 0; testPosition < LargeBlock.ENTRIES_IN_CHILD_TABLE; testPosition++) {
 			long chunkAddress = chunkStart + LargeBlock.CHILD_TABLE_OFFSET + (testPosition * INT_SIZE);
@@ -1008,7 +1009,7 @@ public class Database {
 					+ " appeared twice in the free space tree"); //$NON-NLS-1$
 		}
 
-		long chunkStart = chunkNum * CHUNK_SIZE;
+		long chunkStart = (long) chunkNum * CHUNK_SIZE;
 		int parentChunk = getInt(chunkStart + LargeBlock.PARENT_OFFSET);
 		if (parentChunk != parent) {
 			throw describeProblem()
@@ -1137,9 +1138,9 @@ public class Database {
 		assert headerContent != 0;
 		assert firstChunkNum < this.fChunksUsed;
 		int numBlocks = Math.abs(headerContent);
-		long firstChunkAddress = firstChunkNum * CHUNK_SIZE;
+		long firstChunkAddress = (long) firstChunkNum * CHUNK_SIZE;
 		putInt(firstChunkAddress, headerContent);
-		putInt(firstChunkAddress + (numBlocks * CHUNK_SIZE) - LargeBlock.FOOTER_SIZE, headerContent);
+		putInt(firstChunkAddress + ((long) numBlocks * CHUNK_SIZE) - LargeBlock.FOOTER_SIZE, headerContent);
 	}
 
 	/**
