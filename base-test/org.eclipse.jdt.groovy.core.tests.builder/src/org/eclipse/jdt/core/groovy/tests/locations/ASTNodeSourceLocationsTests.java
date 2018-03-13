@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -254,12 +254,12 @@ public final class ASTNodeSourceLocationsTests extends BuilderTestSuite {
             "[:] + [:]");
     }
 
-    @Test // Not right!!! ending whitespace is included, but shouldm't be.
+    @Test
     public void testBinaryExpr7() throws Exception {
         checkBinaryExprSLocs(
             "  a = b   ",
             new BinaryExpressionSLocTester(),
-            "a = b   ");
+            Boolean.getBoolean("groovy.antlr4") ? "a = b" : "a = b   ");
     }
 
     @Test

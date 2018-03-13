@@ -48,7 +48,7 @@ public class LocationSupport {
         this.lineEndings = Objects.requireNonNull(lineEndings);
     }
 
-    public LocationSupport(List<StringBuffer> lines) {
+    public LocationSupport(List<? extends CharSequence> lines) {
         this(lines != null ? processLineEndings(lines) : NO_LINE_ENDINGS);
     }
 

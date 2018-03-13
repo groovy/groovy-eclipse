@@ -3722,8 +3722,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             // openning '{', but shouldn't.  If the new sloc is larger than the
             // one being set, then ignore it and don't reset.  Also numbers can
             // result in an expression node that includes trailing whitespaces.
-            if ((node instanceof VariableExpression ||
-                  (node instanceof ConstantExpression && ast.getType() == EXPR)) &&
+            if ((node instanceof VariableExpression || (node instanceof ConstantExpression && ast.getType() == EXPR)) &&
                     node.getEnd() > 0 && startoffset <= node.getStart() && endoffset >= node.getEnd()) {
                 return;
             }
