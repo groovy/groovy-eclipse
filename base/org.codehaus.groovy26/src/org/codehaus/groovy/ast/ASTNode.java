@@ -55,9 +55,9 @@ public class ASTNode implements NodeMetaDataHandler {
     private int lastColumnNumber = -1;
     // GRECLIPSE add
     private int start = 0;
-    private int end = 0;
+    private int stop = 0;
     // GRECLIPSE end
-    private Map metaDataMap = null;
+    private Map metaDataMap;
     private NodeMetaDataHandlerHelper helper = new NodeMetaDataHandlerHelper(this);
 
     public void visit(GroovyCodeVisitor visitor) {
@@ -104,17 +104,17 @@ public class ASTNode implements NodeMetaDataHandler {
     public int getStart() {
         return start;
     }
-    public void setStart(int start) {
-        this.start = start;
+    public void setStart(int offset) {
+        start = offset;
     }
     public int getEnd() {
-        return end;
+        return stop;
     }
-    public void setEnd(int end) {
-        this.end = end;
+    public void setEnd(int offset) {
+        stop = offset;
     }
     public int getLength() {
-        return end >= 0 && start >= 0 ? end - start : -1;
+        return (stop > 0 && start >= 0 ? stop - start : -1);
     }
     // GRECLIPSE end
 
@@ -133,7 +133,7 @@ public class ASTNode implements NodeMetaDataHandler {
         this.lineNumber = node.getLineNumber();
         // GRECLIPSE add
         this.start = node.getStart();
-        this.end = node.getEnd();
+        this.stop = node.getEnd();
         // GRECLIPSE end
     }
 

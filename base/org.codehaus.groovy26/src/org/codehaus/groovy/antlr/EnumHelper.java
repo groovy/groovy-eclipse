@@ -55,11 +55,10 @@ public class EnumHelper {
     }
 
     // GRECLIPSE edit
-    public static void addEnumConstant(ClassNode enumClass, String name, Expression init) {
-        addEnumConstant(enumClass, enumClass, name, init, -1, -1);
+    public static FieldNode addEnumConstant(ClassNode enumClass, String name, Expression init) {
+        return addEnumConstant(enumClass, enumClass, name, init, -1, -1);
     }
 
-    // modified to return the FieldNode it creates, so that we can fix up the position
     public static FieldNode addEnumConstant(ClassNode enumClassType, ClassNode enumClassOwner, String name, Expression init, int lineNumber, int colNumber) {
         int modifiers = PUBLIC_FS | Opcodes.ACC_ENUM;
         if (init != null && !(init instanceof ListExpression)) {

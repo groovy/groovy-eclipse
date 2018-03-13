@@ -33,8 +33,8 @@ public class AnnotatedNode extends ASTNode {
     ClassNode declaringClass;
     private boolean hasNoRealSourcePositionFlag;
     // GRECLIPSE add
-    private int nameEnd;
     private int nameStart;
+    private int nameStop;
     // GRECLIPSE end
 
     public AnnotatedNode() {
@@ -119,16 +119,16 @@ public class AnnotatedNode extends ASTNode {
         return nameStart;
     }
 
-    public void setNameStart(int nameStart) {
-        this.nameStart = nameStart;
+    public void setNameStart(int offset) {
+        nameStart = offset;
     }
 
     public int getNameEnd() {
-        return nameEnd;
+        return nameStop;
     }
 
-    public void setNameEnd(int nameEnd) {
-        this.nameEnd = nameEnd;
+    public void setNameEnd(int offset) {
+        nameStop = offset;
     }
 
     @Override
