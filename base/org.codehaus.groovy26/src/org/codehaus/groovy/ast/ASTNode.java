@@ -54,11 +54,10 @@ public class ASTNode implements NodeMetaDataHandler {
     private int lastLineNumber = -1;
     private int lastColumnNumber = -1;
     // GRECLIPSE add
-    private int start = 0;
-    private int stop = 0;
+    private final int[] offsets = new int[2];
     // GRECLIPSE end
     private Map metaDataMap;
-    private NodeMetaDataHandlerHelper helper = new NodeMetaDataHandlerHelper(this);
+    private final NodeMetaDataHandlerHelper helper = new NodeMetaDataHandlerHelper(this);
 
     public void visit(GroovyCodeVisitor visitor) {
         throw new RuntimeException("No visit() method implemented for class: " + getClass().getName());
@@ -102,19 +101,19 @@ public class ASTNode implements NodeMetaDataHandler {
 
     // GRECLIPSE add
     public int getStart() {
-        return start;
+        return offsets[0];
     }
     public void setStart(int offset) {
-        start = offset;
+        offsets[0] = offset;
     }
     public int getEnd() {
-        return stop;
+        return offsets[1];
     }
     public void setEnd(int offset) {
-        stop = offset;
+        offsets[1] = offset;
     }
     public int getLength() {
-        return (stop > 0 && start >= 0 ? stop - start : -1);
+        return (offsets[1] >= 0 && offsets[0] >= 0 ? offsets[1] - offsets[0] : -1);
     }
     // GRECLIPSE end
 
@@ -132,8 +131,8 @@ public class ASTNode implements NodeMetaDataHandler {
         this.lastColumnNumber = node.getLastColumnNumber();
         this.lineNumber = node.getLineNumber();
         // GRECLIPSE add
-        this.start = node.getStart();
-        this.stop = node.getEnd();
+        this.offsets[0] = node.getStart();
+        this.offsets[1] = node.getEnd();
         // GRECLIPSE end
     }
 
@@ -185,10 +184,12 @@ public class ASTNode implements NodeMetaDataHandler {
         this.metaDataMap = metaDataMap;
     }
 
+    /* GRECLIPSE edit
     @Override
     public boolean equals(Object o) {
         return this == o;
     }
+    */
 
     @Override
     public int hashCode() {
