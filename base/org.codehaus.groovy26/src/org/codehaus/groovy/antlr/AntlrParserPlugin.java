@@ -1024,12 +1024,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 }
             }
         }
-        // GRECLIPSE edit
-        //FieldNode enumField = EnumHelper.addEnumConstant(classNode, identifier, init);
-        ClassNode nonDeclaredTypeOfEnumValue =
-            ClassHelper.make(classNode.getName());
-        nonDeclaredTypeOfEnumValue.setRedirect(classNode);
-        FieldNode enumField = EnumHelper.addEnumConstant(nonDeclaredTypeOfEnumValue, classNode, identifier, init, savedLine, savedColumn);
+        FieldNode enumField = EnumHelper.addEnumConstant(classNode, identifier, init);
+        // GRECLIPSE add
+        enumField.setLineNumber(savedLine);
+        enumField.setColumnNumber(savedColumn);
         enumField.setNameStart(locations.findOffset(savedLine, savedColumn));
         enumField.setNameEnd(enumField.getNameStart() + identifier.length() - 1);
         // GRECLIPSE end
