@@ -532,11 +532,99 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         }
 
         // GRECLIPSE add
+        moduleNode.setLineNumber(1);
+        moduleNode.setColumnNumber(1);
         moduleNode.setEnd(locationSupport.getEnd());
+        moduleNode.setLastLineNumber(locationSupport.getEndLine());
+        moduleNode.setLastColumnNumber(locationSupport.getEndColumn());
+        BlockStatement blockStatement = moduleNode.getStatementBlock();
+        boolean hasScriptStatements = blockStatement != null && asBoolean(blockStatement.getStatements());
+        if (hasScriptStatements || asBoolean(moduleNode.getMethods())) {
+            ASTNode alpha = findAlpha(blockStatement, moduleNode.getMethods());
+            ASTNode omega = findOmega(blockStatement, moduleNode.getMethods());
+            if (hasScriptStatements) {
+                blockStatement.setStart(alpha.getStart());
+                blockStatement.setLineNumber(alpha.getLineNumber());
+                blockStatement.setColumnNumber(alpha.getColumnNumber());
+                blockStatement.setEnd(omega.getEnd());
+                blockStatement.setLastLineNumber(omega.getLastLineNumber());
+                blockStatement.setLastColumnNumber(omega.getLastColumnNumber());
+            }
+            if (asBoolean(moduleNode.getClasses())) {
+                ClassNode scriptClass = moduleNode.getClasses().get(0);
+                scriptClass.setStart(alpha.getStart());
+                scriptClass.setLineNumber(alpha.getLineNumber());
+                scriptClass.setColumnNumber(alpha.getColumnNumber());
+                scriptClass.setEnd(omega.getEnd());
+                scriptClass.setLastLineNumber(omega.getLastLineNumber());
+                scriptClass.setLastColumnNumber(omega.getLastColumnNumber());
+
+                // fix the run method to contain the start and end locations of the statement block
+                MethodNode runMethod = scriptClass.getDeclaredMethod("run", Parameter.EMPTY_ARRAY);
+                runMethod.setStart(alpha.getStart());
+                runMethod.setLineNumber(alpha.getLineNumber());
+                runMethod.setColumnNumber(alpha.getColumnNumber());
+                runMethod.setEnd(omega.getEnd());
+                runMethod.setLastLineNumber(omega.getLastLineNumber());
+                runMethod.setLastColumnNumber(omega.getLastColumnNumber());
+            }
+        }
         // GRECLIPSE end
 
         return moduleNode;
     }
+
+    // GRECLIPSE add
+    /** Returns the first method or statement node in the script. */
+    private ASTNode findAlpha(BlockStatement blockStatement, List<MethodNode> methods) {
+        MethodNode method = (asBoolean(methods) ? methods.get(0) : null);
+        Statement statement = (blockStatement != null && asBoolean(blockStatement.getStatements()) ? blockStatement.getStatements().get(0) : null);
+        if (method == null && (statement == null || (statement.getStart() == 0 && statement.getLength() == 0))) {
+            // a script with no methods or statements; use a synthetic statement after the end of the package declaration/import statements
+            statement = createEmptyScriptStatement();
+        }
+        int statementStart = (statement != null ? statement.getStart() : Integer.MAX_VALUE);
+        int methodStart = (method != null ? method.getStart() : Integer.MAX_VALUE);
+        return (statementStart <= methodStart ? statement : method);
+    }
+
+    /** Returns the final method or statement node in the script. */
+    private ASTNode findOmega(BlockStatement blockStatement, List<MethodNode> methods) {
+        MethodNode method = (asBoolean(methods) ? last(methods) : null);
+        Statement statement = (blockStatement != null && asBoolean(blockStatement.getStatements()) ? last(blockStatement.getStatements()) : null);
+        if (method == null && (statement == null || (statement.getStart() == 0 && statement.getLength() == 0))) {
+            // a script with no methods or statements; add a synthetic statement after the end of the package declaration/import statements
+            statement = createEmptyScriptStatement();
+        }
+        int statementStart = (statement != null ? statement.getEnd() : Integer.MIN_VALUE);
+        int methodStart = (method != null ? method.getStart() : Integer.MIN_VALUE);
+        return (statementStart >= methodStart ? statement : method);
+    }
+
+    private Statement createEmptyScriptStatement() {
+        Statement statement = ReturnStatement.RETURN_NULL_OR_VOID;
+        ASTNode target = null;
+        if (asBoolean(moduleNode.getImports())) {
+            target = last(moduleNode.getImports());
+        } else if (moduleNode.hasPackage()) {
+            target = moduleNode.getPackage();
+        }
+        if (target != null) {
+            // import/package nodes do not include trailing semicolon, so use end of line instead of end of node
+            int off = Math.min(locationSupport.findOffset(target.getLastLineNumber() + 1, 1), locationSupport.getEnd() - 1);
+            int[] row_col = locationSupport.getRowCol(off);
+
+            statement = new ReturnStatement(ConstantExpression.NULL);
+            statement.setStart(off);
+            statement.setEnd(off);
+            statement.setLineNumber(row_col[0]);
+            statement.setColumnNumber(row_col[1]);
+            statement.setLastLineNumber(row_col[0]);
+            statement.setLastColumnNumber(row_col[1]);
+        }
+        return statement;
+    }
+    // GRECLIPSE end
 
     @Override
     public List<ASTNode> visitStatements(StatementsContext ctx) {
@@ -1297,7 +1385,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         configureAST(classNode, ctx);
         // GRECLIPSE add
         ASTNode nameNode = configureAST(new ConstantExpression(className), ctx.identifier());
-        classNode.setNameStart(nameNode.getStart()); classNode.setNameEnd(nameNode.getEnd()-1);
+        classNode.setNameStart(nameNode.getStart()); classNode.setNameEnd(nameNode.getEnd() - 1);
         // GRECLIPSE end
         classNode.putNodeMetaData(CLASS_NAME, className);
         classNode.setSyntheticPublic(syntheticPublic);
@@ -1714,6 +1802,10 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         }
 
         configureAST(methodNode, ctx);
+        // GRECLIPSE add
+        ASTNode nameNode = configureAST(new ConstantExpression(methodName), ctx.methodName());
+        methodNode.setNameStart(nameNode.getStart()); methodNode.setNameEnd(nameNode.getEnd() - 1);
+        // GRECLIPSE end
 
         validateMethodDeclaration(ctx, methodNode, modifierManager, classNode);
 
@@ -2385,38 +2477,61 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             Expression namePartExpr = this.visitNamePart(ctx.namePart());
             GenericsType[] genericsTypes = this.visitNonWildcardTypeArguments(ctx.nonWildcardTypeArguments());
 
-
+            // GRECLIPSE add
+            Expression expression = null;
+            // GRECLIPSE end
             if (asBoolean(ctx.DOT())) {
                 boolean isSafeChain = isTrue(baseExpr, PATH_EXPRESSION_BASE_EXPR_SAFE_CHAIN);
-
-                return createDotExpression(ctx, baseExpr, namePartExpr, genericsTypes, isSafeChain);
+                // GRECLIPSE edit
+                //return createDotExpression(ctx, baseExpr, namePartExpr, genericsTypes, isSafeChain);
+                expression = createDotExpression(ctx, baseExpr, namePartExpr, genericsTypes, isSafeChain);
+                // GRECLIPSE end
             } else if (asBoolean(ctx.SAFE_DOT())) {
-                return createDotExpression(ctx, baseExpr, namePartExpr, genericsTypes, true);
+                // GRECLIPSE edit
+                //return createDotExpression(ctx, baseExpr, namePartExpr, genericsTypes, true);
+                expression = createDotExpression(ctx, baseExpr, namePartExpr, genericsTypes, true);
+                // GRECLIPSE end
             } else if (asBoolean(ctx.SAFE_CHAIN_DOT())) { // e.g. obj??.a  OR obj??.@a
-                Expression expression = createDotExpression(ctx, baseExpr, namePartExpr, genericsTypes, true);
+                // GRECLIPSE edit
+                /*Expression*/ expression = createDotExpression(ctx, baseExpr, namePartExpr, genericsTypes, true);
                 expression.putNodeMetaData(PATH_EXPRESSION_BASE_EXPR_SAFE_CHAIN, true);
-
-                return expression;
+                //return expression;
+                // GRECLIPSE end
             }  else if (asBoolean(ctx.METHOD_POINTER())) { // e.g. obj.&m
-                return configureAST(new MethodPointerExpression(baseExpr, namePartExpr), ctx);
+                // GRECLIPSE edit
+                //return configureAST(new MethodPointerExpression(baseExpr, namePartExpr), ctx);
+                expression = configureAST(new MethodPointerExpression(baseExpr, namePartExpr), ctx);
+                // GRECLIPSE end
             } else if (asBoolean(ctx.METHOD_REFERENCE())) { // e.g. obj::m
-                return configureAST(new MethodReferenceExpression(baseExpr, namePartExpr), ctx);
+                // GRECLIPSE edit
+                //return configureAST(new MethodReferenceExpression(baseExpr, namePartExpr), ctx);
+                expression = configureAST(new MethodReferenceExpression(baseExpr, namePartExpr), ctx);
+                // GRECLIPSE end
             } else if (asBoolean(ctx.SPREAD_DOT())) {
                 if (asBoolean(ctx.AT())) { // e.g. obj*.@a
                     AttributeExpression attributeExpression = new AttributeExpression(baseExpr, namePartExpr, true);
-
                     attributeExpression.setSpreadSafe(true);
-
-                    return configureAST(attributeExpression, ctx);
+                    // GRECLIPSE edit
+                    //return configureAST(attributeExpression, ctx);
+                    expression = configureAST(attributeExpression, ctx);
+                    // GRECLIPSE end
                 } else { // e.g. obj*.p
                     PropertyExpression propertyExpression = new PropertyExpression(baseExpr, namePartExpr, true);
                     propertyExpression.putNodeMetaData(PATH_EXPRESSION_BASE_EXPR_GENERICS_TYPES, genericsTypes);
-
                     propertyExpression.setSpreadSafe(true);
-
-                    return configureAST(propertyExpression, ctx);
+                    // GRECLIPSE edit
+                    expression = configureAST(propertyExpression, ctx);
+                    // GRECLIPSE end
                 }
             }
+            // GRECLIPSE add
+            if (expression != null) {
+                expression.setColumnNumber(baseExpr.getColumnNumber());
+                expression.setLineNumber(baseExpr.getLineNumber());
+                expression.setStart(baseExpr.getStart());
+                return expression;
+            }
+            // GRECLIPSE end
         }
 
         if (asBoolean(ctx.indexPropertyArgs())) { // e.g. list[1, 3, 5]
@@ -3878,6 +3993,10 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             List<Parameter> list = new ArrayList<>();
             for (FormalParameterContext formalParameterContext : formalParameterList) {
                 Parameter parameter = visitFormalParameter(formalParameterContext);
+                // GRECLIPSE add
+                ASTNode nameNode = configureAST(new ConstantExpression(parameter.getName()), formalParameterContext.variableDeclaratorId());
+                parameter.setNameStart(nameNode.getStart()); parameter.setNameEnd(nameNode.getEnd());
+                // GRECLIPSE end
                 list.add(parameter);
             }
             parameterList.addAll(list);
