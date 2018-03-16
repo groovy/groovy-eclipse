@@ -2151,6 +2151,12 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             configureAST(fieldNode, variableExpression, initialValue);
             configureAST(propertyNode, variableExpression, initialValue);
         }
+        // GRECLIPSE add
+        fieldNode.setNameStart(variableExpression.getStart());
+        fieldNode.setNameEnd(variableExpression.getEnd() - 1);
+        propertyNode.setNameStart(variableExpression.getStart());
+        propertyNode.setNameEnd(variableExpression.getEnd() - 1);
+        // GRECLIPSE end
     }
 
     private void declareField(VariableDeclarationContext ctx, ModifierManager modifierManager, ClassNode variableType, ClassNode classNode, int i, VariableExpression variableExpression, String fieldName, int modifiers, Expression initialValue) {
@@ -2184,6 +2190,10 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         } else {
             configureAST(fieldNode, variableExpression, initialValue);
         }
+        // GRECLIPSE add
+        fieldNode.setNameStart(variableExpression.getStart());
+        fieldNode.setNameEnd(variableExpression.getEnd() - 1);
+        // GRECLIPSE end
     }
 
     private boolean isFieldDeclaration(ModifierManager modifierManager, ClassNode classNode) {
@@ -4608,7 +4618,11 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         if (asBoolean(ellipsis)) {
             // GRECLIPSE edit
             //classNode = configureAST(classNode.makeArray(), classNode);
-            classNode = configureAST(classNode.makeArray(), typeContext);
+            if (asBoolean(typeContext)) {
+                classNode = configureAST(classNode.makeArray(), typeContext);
+            } else {
+                classNode = configureAST(classNode.makeArray(), ellipsis);
+            }
             // GRECLIPSE end
         }
 
