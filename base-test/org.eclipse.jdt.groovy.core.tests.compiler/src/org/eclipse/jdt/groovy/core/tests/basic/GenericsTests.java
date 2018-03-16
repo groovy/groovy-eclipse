@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1526,7 +1526,7 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
             "----------\n" +
             "1. ERROR in p\\C.groovy (at line 2)\n" +
             "\tpublic class C implements Iii<String> {\n" +
-            "\t                          ^^^^^^^^^^^^\n" +
+            "\t                          ^^^\n" +
             "Groovy:The type String is not a valid substitute for the bounded parameter <T extends java.lang.Number>\n" +
             "----------\n");
     }
@@ -1638,10 +1638,9 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
     public void testHalfFinishedGenericsProgramWithCorrectSuppression() {
         String[] sources = {
             "Demo.groovy",
-            "public class Demo {\n"+
-            "\n"+
-            "@SuppressWarnings(\"rawtypes\")\n"+ // should cause no warnings
-            "List myList;\n"+
+            "class Demo {\n" +
+            "  @SuppressWarnings('rawtypes')\n" + // should suppress the warning
+            "  List myList\n" +
             "}",
         };
 
@@ -1652,10 +1651,9 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
     public void testHalfFinishedGenericsProgramWithCorrectSuppressionAtTheTypeLevel() {
         String[] sources = {
             "Demo.groovy",
-            "@SuppressWarnings(\"rawtypes\")\n"+ // should cause no warnings
-            "public class Demo {\n"+
-            "\n"+
-            "List myList;\n"+
+            "@SuppressWarnings('rawtypes')\n" + // should suppress the warning
+            "class Demo {\n"+
+            "  List myList\n"+
             "}",
         };
 
@@ -1666,17 +1664,16 @@ public final class GenericsTests extends GroovyCompilerTestSuite {
     public void testHalfFinishedGenericsProgramWithUnnecessarySuppression() {
         String[] sources = {
             "Demo.groovy",
-            "public class Demo {\n"+
-            "\n"+
-            "@SuppressWarnings(\"unchecked\")\n"+ // unnecessary suppression
-            "List<String> myList;\n"+
+            "class Demo {\n" +
+            "  @SuppressWarnings('unchecked')\n" + // unnecessary suppression
+            "  List<String> myList\n" +
             "}",
         };
 
         runNegativeTest(sources,
             "----------\n" +
-            "1. WARNING in Demo.groovy (at line 3)\n" +
-            "\t@SuppressWarnings(\"unchecked\")\n" +
+            "1. WARNING in Demo.groovy (at line 2)\n" +
+            "\t@SuppressWarnings('unchecked')\n" +
             "\t                  ^^^^^^^^^^^\n" +
             "Unnecessary @SuppressWarnings(\"unchecked\")\n" +
             "----------\n");

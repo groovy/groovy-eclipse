@@ -538,11 +538,10 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         moduleNode.setLastLineNumber(locationSupport.getEndLine());
         moduleNode.setLastColumnNumber(locationSupport.getEndColumn());
         BlockStatement blockStatement = moduleNode.getStatementBlock();
-        boolean hasScriptStatements = blockStatement != null && asBoolean(blockStatement.getStatements());
-        if (hasScriptStatements || asBoolean(moduleNode.getMethods())) {
+        if (!blockStatement.isEmpty() || !moduleNode.getMethods().isEmpty()) {
             ASTNode alpha = findAlpha(blockStatement, moduleNode.getMethods());
             ASTNode omega = findOmega(blockStatement, moduleNode.getMethods());
-            if (hasScriptStatements) {
+            if (!blockStatement.isEmpty()) {
                 blockStatement.setStart(alpha.getStart());
                 blockStatement.setLineNumber(alpha.getLineNumber());
                 blockStatement.setColumnNumber(alpha.getColumnNumber());
@@ -550,7 +549,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 blockStatement.setLastLineNumber(omega.getLastLineNumber());
                 blockStatement.setLastColumnNumber(omega.getLastColumnNumber());
             }
-            if (asBoolean(moduleNode.getClasses())) {
+            if (!moduleNode.getClasses().isEmpty()) {
                 ClassNode scriptClass = moduleNode.getClasses().get(0);
                 scriptClass.setStart(alpha.getStart());
                 scriptClass.setLineNumber(alpha.getLineNumber());
@@ -577,8 +576,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     // GRECLIPSE add
     /** Returns the first method or statement node in the script. */
     private ASTNode findAlpha(BlockStatement blockStatement, List<MethodNode> methods) {
-        MethodNode method = (asBoolean(methods) ? methods.get(0) : null);
-        Statement statement = (blockStatement != null && asBoolean(blockStatement.getStatements()) ? blockStatement.getStatements().get(0) : null);
+        MethodNode method = (!methods.isEmpty() ? methods.get(0) : null);
+        Statement statement = (!blockStatement.isEmpty() ? blockStatement.getStatements().get(0) : null);
         if (method == null && (statement == null || (statement.getStart() == 0 && statement.getLength() == 0))) {
             // a script with no methods or statements; use a synthetic statement after the end of the package declaration/import statements
             statement = createEmptyScriptStatement();
@@ -590,8 +589,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     /** Returns the final method or statement node in the script. */
     private ASTNode findOmega(BlockStatement blockStatement, List<MethodNode> methods) {
-        MethodNode method = (asBoolean(methods) ? last(methods) : null);
-        Statement statement = (blockStatement != null && asBoolean(blockStatement.getStatements()) ? last(blockStatement.getStatements()) : null);
+        MethodNode method = (!methods.isEmpty() ? last(methods) : null);
+        Statement statement = (!blockStatement.isEmpty() ? last(blockStatement.getStatements()) : null);
         if (method == null && (statement == null || (statement.getStart() == 0 && statement.getLength() == 0))) {
             // a script with no methods or statements; add a synthetic statement after the end of the package declaration/import statements
             statement = createEmptyScriptStatement();

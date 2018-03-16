@@ -25,6 +25,7 @@ import groovyjarjarantlr.NoViableAltException;
 import groovyjarjarantlr.NoViableAltForCharException;
 import groovy.lang.GroovyClassLoader;
 import org.codehaus.groovy.GroovyBugError;
+import org.codehaus.groovy.activator.GroovyActivator;
 import org.codehaus.groovy.ast.Comment;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.control.io.FileReaderSource;
@@ -37,6 +38,8 @@ import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.codehaus.groovy.syntax.Reduction;
 import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.tools.Utilities;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 
 import java.io.File;
 import java.io.IOException;
@@ -139,7 +142,6 @@ public class SourceUnit extends ProcessingUnit {
         return name;
     }
 
-
     /**
      * Returns the Concrete Syntax Tree produced during parse()ing.
      */
@@ -154,7 +156,6 @@ public class SourceUnit extends ProcessingUnit {
     public ModuleNode getAST() {
         return this.ast;
     }
-
 
     /**
      * Convenience routine, primarily for use by the InteractiveShell,
@@ -191,10 +192,8 @@ public class SourceUnit extends ProcessingUnit {
         return token.getType() == groovyjarjarantlr.Token.EOF_TYPE;
     }
 
-
     //---------------------------------------------------------------------------
     // FACTORIES
-
 
     /**
      * A convenience routine to create a standalone SourceUnit on a String
@@ -363,4 +362,21 @@ public class SourceUnit extends ProcessingUnit {
     }
 
     public ReaderSource getSource() { return source; }
+
+    // GRECLIPSE add
+    public char[] readSourceRange(int offset, int length) {
+        try (Reader reader = getSource().getReader()) {
+            reader.skip(offset); int n = length;
+            final char[] code = new char[n];
+            while (n > 0) {
+                n -= reader.read(code, length - n, n);
+            }
+            return code;
+        } catch (Exception e) {
+            GroovyActivator.getDefault().getLog().log(
+                new Status(IStatus.ERROR, GroovyActivator.PLUGIN_ID, "Error reading Groovy source", e));
+        }
+        return null;
+    }
+    // GRECLIPSE end
 }
