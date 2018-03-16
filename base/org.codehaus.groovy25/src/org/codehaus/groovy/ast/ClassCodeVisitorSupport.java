@@ -198,14 +198,10 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
         int start = expr.getStart();
         int end = expr.getEnd() - 1;
         if (expr instanceof ClassNode) {
-            // assume we have a class declaration
             ClassNode cn = (ClassNode) expr;
             if (cn.getNameEnd() > 0) {
                 start = cn.getNameStart();
                 end = cn.getNameEnd();
-            } else if (cn.getComponentType() != null) {
-                // avoid extra whitespace after closing ]
-                end -= 1;
             }
         } else if (expr instanceof DeclarationExpression) {
             // assume that we just want to underline the variable declaration
@@ -213,7 +209,7 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
             Expression lhs = decl.getLeftExpression();
             start = lhs.getStart();
             // avoid extra space before = if a variable
-            end = lhs instanceof VariableExpression ? start + lhs.getText().length() -1: lhs.getEnd() -1;
+            end = lhs instanceof VariableExpression ? start + lhs.getText().length() - 1: lhs.getEnd() - 1;
         }
         // GRECLIPSE end
         SourceUnit source = getSourceUnit();

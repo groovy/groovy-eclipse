@@ -977,7 +977,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "2. ERROR in XXX.groovy (at line 1)\n" +
         "\tinterface XXX extends XXX {\n" +
-        "\t                      ^^^^\n" +
+        "\t                      ^^^\n" +
         "Cycle detected: the type XXX cannot extend/implement itself or one of its own member types\n" +
         "----------\n");
     }

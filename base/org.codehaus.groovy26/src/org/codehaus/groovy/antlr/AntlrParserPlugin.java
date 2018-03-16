@@ -131,6 +131,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
+
 /**
  * A parser plugin which adapts the JSR Antlr Parser to the Groovy runtime
  *
@@ -262,8 +265,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         return null; //new Reduction(Tpken.EOF);
     }
 
-    // GRECLIPSE: from private->protected
-    protected void outputASTInVariousFormsIfNeeded(SourceUnit sourceUnit, SourceBuffer sourceBuffer) {
+    private void outputASTInVariousFormsIfNeeded(SourceUnit sourceUnit, SourceBuffer sourceBuffer) {
         // straight xstream output of AST
         String formatProp = System.getProperty("ANTLR.AST".toLowerCase()); // uppercase to hide from jarjar
 
@@ -341,18 +343,17 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
             convertGroovy(ast);
 
-            // GRECLIPSE edit
-            //if (output.getStatementBlock().isEmpty() && output.getMethods().isEmpty() && output.getClasses().isEmpty()) {
-            // does it look broken (i.e. have we built a script for it containing rubbish)
-            boolean hasNoMethods = output.getMethods().isEmpty();
-            if (hasNoMethods && sourceUnit.getErrorCollector().hasErrors() && looksBroken(output)) {
+            // GRECLIPSE add -- does it look broken (i.e. have we built a script for it containing rubbish)
+            if (looksBroken(output) && output.getMethods().isEmpty() && sourceUnit.getErrorCollector().hasErrors()) {
                 output.setEncounteredUnrecoverableError(true);
             }
-            if (output.getStatementBlock().isEmpty() && hasNoMethods && output.getClasses().isEmpty()) {
+            // GRECLIPSE end
+            if (output.getStatementBlock().isEmpty() && output.getMethods().isEmpty() && output.getClasses().isEmpty()) {
+                // GRECLIPSE add
                 if (ast == null && sourceUnit.getErrorCollector().hasErrors()) {
                     output.setEncounteredUnrecoverableError(true);
                 }
-            // GRECLIPSE end
+                // GRECLIPSE end
                 output.addStatement(ReturnStatement.RETURN_NULL_OR_VOID);
             }
 
@@ -372,7 +373,43 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             }
 
             // GRECLIPSE add
-            fixModuleNodeLocations();
+            output.setStart(0);
+            output.setLineNumber(1);
+            output.setColumnNumber(1);
+            output.setEnd(locations.getEnd());
+            output.setLastLineNumber(locations.getEndLine());
+            output.setLastColumnNumber(locations.getEndColumn());
+            BlockStatement blockStatement = output.getStatementBlock();
+            if (!blockStatement.isEmpty() || !output.getMethods().isEmpty()) {
+                ASTNode first = getFirst(blockStatement, output.getMethods());
+                ASTNode last = getLast(blockStatement, output.getMethods());
+                if (!blockStatement.isEmpty()) {
+                    blockStatement.setStart(first.getStart());
+                    blockStatement.setLineNumber(first.getLineNumber());
+                    blockStatement.setColumnNumber(first.getColumnNumber());
+                    blockStatement.setEnd(last.getEnd());
+                    blockStatement.setLastLineNumber(last.getLastLineNumber());
+                    blockStatement.setLastColumnNumber(last.getLastColumnNumber());
+                }
+                if (!output.getClasses().isEmpty()) {
+                    ClassNode scriptClass = output.getClasses().get(0);
+                    scriptClass.setStart(first.getStart());
+                    scriptClass.setLineNumber(first.getLineNumber());
+                    scriptClass.setColumnNumber(first.getColumnNumber());
+                    scriptClass.setEnd(last.getEnd());
+                    scriptClass.setLastLineNumber(last.getLastLineNumber());
+                    scriptClass.setLastColumnNumber(last.getLastColumnNumber());
+
+                    // fix the run method to contain the start and end locations of the statement block
+                    MethodNode runMethod = scriptClass.getDeclaredMethod("run", Parameter.EMPTY_ARRAY);
+                    runMethod.setStart(first.getStart());
+                    runMethod.setLineNumber(first.getLineNumber());
+                    runMethod.setColumnNumber(first.getColumnNumber());
+                    runMethod.setEnd(last.getEnd());
+                    runMethod.setLastLineNumber(last.getLastLineNumber());
+                    runMethod.setLastColumnNumber(last.getLastColumnNumber());
+                }
+            }
             // GRECLIPSE end
         }
         catch (ASTRuntimeException e) {
@@ -385,31 +422,78 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     }
 
     // GRECLIPSE add
-    private boolean looksBroken(ModuleNode moduleNode) {
+    private static boolean looksBroken(ModuleNode moduleNode) {
         List<ClassNode> classes = moduleNode.getClasses();
         if (classes.size() != 1 || !classes.get(0).isScript()) {
             return false;
         }
-        BlockStatement statementBlock = moduleNode.getStatementBlock();
-        if (statementBlock.isEmpty()) {
+        if (moduleNode.getStatementBlock().isEmpty()) {
             return true;
         }
         // Is it just a constant expression containing the word error?
-        // do we need to change it from ERROR to something more unlikely?
-        List<Statement> statements = statementBlock.getStatements();
-        if (statements != null && statements.size() == 1) {
+        // TODO: Do we need to change it from ERROR to something more unlikely?
+        List<Statement> statements = moduleNode.getStatementBlock().getStatements();
+        if (statements.size() == 1) {
             Statement statement = statements.get(0);
             if (statement instanceof ExpressionStatement) {
                 Expression expression = ((ExpressionStatement) statement).getExpression();
-                if (expression instanceof ConstantExpression) {
-                    // ERROR node set at unknownAST
-                    if (expression.toString().equals("ConstantExpression[ERROR]")) {
-                        return true;
-                    }
+                if (expression instanceof ConstantExpression && expression.getText().equals("ERROR")) {
+                    return true;
                 }
             }
         }
         return false;
+    }
+
+    /** Returns the first ast node in the script, either a method or a statement. */
+    private ASTNode getFirst(BlockStatement blockStatement, List<MethodNode> methods) {
+        MethodNode method = (!methods.isEmpty() ? methods.get(0) : null);
+        Statement statement = (!blockStatement.isEmpty() ? blockStatement.getStatements().get(0) : null);
+        if (method == null && (statement == null || (statement.getStart() == 0 && statement.getLength() == 0))) {
+            // a script with no methods or statements; add a synthetic statement after the end of the package declaration/import statements
+            statement = createEmptyScriptStatement();
+        }
+        int statementStart = (statement != null ? statement.getStart() : Integer.MAX_VALUE);
+        int methodStart = (method != null ? method.getStart() : Integer.MAX_VALUE);
+        return (statementStart <= methodStart ? statement : method);
+    }
+
+    /** Returns the last ast node in the script, either a method or a statement. */
+    private ASTNode getLast(BlockStatement blockStatement, List<MethodNode> methods) {
+        MethodNode method = (!methods.isEmpty() ? last(methods) : null);
+        Statement statement = (!blockStatement.isEmpty() ? last(blockStatement.getStatements()) : null);
+        if (method == null && (statement == null || (statement.getStart() == 0 && statement.getLength() == 0))) {
+            // a script with no methods or statements; add a synthetic statement after the end of the package declaration/import statements
+            statement = createEmptyScriptStatement();
+        }
+        int statementStart = (statement != null ? statement.getEnd() : Integer.MIN_VALUE);
+        int methodStart = (method != null ? method.getStart() : Integer.MIN_VALUE);
+        return (statementStart >= methodStart ? statement : method);
+    }
+
+    /** Creates a synthetic statement that starts after the last import or package statement. */
+    private Statement createEmptyScriptStatement() {
+        Statement statement = ReturnStatement.RETURN_NULL_OR_VOID;
+        ASTNode target = null;
+        if (asBoolean(output.getImports())) {
+            target = last(output.getImports());
+        } else if (output.hasPackage()) {
+            target = output.getPackage();
+        }
+        if (target != null) {
+            // import/package nodes do not include trailing semicolon, so use end of line instead of end of node
+            int off = Math.min(locations.findOffset(target.getLastLineNumber() + 1, 1), locations.getEnd() - 1);
+            int[] row_col = locations.getRowCol(off);
+
+            statement = new ReturnStatement(ConstantExpression.NULL);
+            statement.setStart(off);
+            statement.setEnd(off);
+            statement.setLineNumber(row_col[0]);
+            statement.setColumnNumber(row_col[1]);
+            statement.setLastLineNumber(row_col[0]);
+            statement.setLastColumnNumber(row_col[1]);
+        }
+        return statement;
     }
     // GRECLIPSE end
 
@@ -1378,12 +1462,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     protected ClassNode[] interfaces(AST node) {
         List<ClassNode> interfaceList = new ArrayList<ClassNode>();
         for (AST implementNode = node.getFirstChild(); implementNode != null; implementNode = implementNode.getNextSibling()) {
-            // GRECLIPSE edit
-            //interfaceList.add(makeTypeWithArguments(implementNode));
-            ClassNode cn = makeTypeWithArguments(implementNode);
-            configureAST(cn, implementNode);
-            interfaceList.add(cn);
-            // GRECLIPSE end
+            interfaceList.add(makeTypeWithArguments(implementNode));
         }
         ClassNode[] interfaces = ClassNode.EMPTY_ARRAY;
         if (!interfaceList.isEmpty()) {
@@ -1607,6 +1686,27 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         return annotatedNode;
     }
 
+    // GRECLIPSE add
+    protected void configureAnnotationAST(AnnotationNode node, AST ast) {
+        if (ast == null) {
+            throw new ASTRuntimeException(ast, "PARSER BUG: Tried to configure " + node.getClass().getName() + " with null AST");
+        }
+        if (!(ast instanceof GroovySourceAST)) {
+            throw new ASTRuntimeException(ast, "PARSER BUG: Expected a GroovySourceAST node for annotation, but got: " + ast.getClass().getName());
+        }
+        // Structure of incoming parameter 'ast':
+        // ANNOTATION
+        // - down='annotationName' (IDENT:84)
+        configureAST(node, ast.getFirstChild());
+        configureAST(node.getClassNode(), ast.getFirstChild());
+        // save the full source range of the annotation for future use
+        long start = locations.findOffset(ast.getLine(), ast.getColumn());
+        long until = locations.findOffset(((GroovySourceAST) ast).getLineLast(), ((GroovySourceAST) ast).getColumnLast());
+        node.setNodeMetaData("source.offsets", (start << 32) | until); // pack the two offsets into one long integer value
+
+        node.setEnd(node.getEnd() - 1); // Eclipse wants this for error reporting
+    }
+    // GRECLIPSE end
 
     // Statements
     //-------------------------------------------------------------------------
@@ -2119,7 +2219,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         return whileStatement;
     }
 
-
     // Expressions
     //-------------------------------------------------------------------------
 
@@ -2610,16 +2709,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         return methodPointerExpression;
     }
 
-/*  commented out due to groovy.g non-determinisms
-  protected Expression defaultMethodPointerExpression(AST node) {
-        AST exprNode = node.getFirstChild();
-        String methodName = exprNode.toString();
-        MethodPointerExpression methodPointerExpression = new MethodPointerExpression(null, methodName);
-        configureAST(methodPointerExpression, node);
-        return methodPointerExpression;
-    }
-*/
-
     protected Expression listExpression(AST listNode) {
         List<Expression> expressions = new ArrayList<Expression>();
         AST elist = listNode.getFirstChild();
@@ -2707,7 +2796,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
     }
 
-
     protected Expression instanceofExpression(AST node) {
         AST leftNode = node.getFirstChild();
         Expression leftExpression = expression(leftNode);
@@ -2788,7 +2876,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // GRECLIPSE end
         return castExpression;
     }
-
 
     protected Expression indexExpression(AST indexNode) {
         AST bracket = indexNode.getFirstChild();
@@ -3486,11 +3573,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         List<GenericsType> typeArgumentList = getTypeArgumentsList(node);
         // a 0-length type argument list means we face the diamond operator
         basicType.setGenericsTypes(typeArgumentList.toArray(new GenericsType[typeArgumentList.size()]));
-        // GRECLIPSE add
-        // super type source locations is not right, so set them here
-        // GRECLIPSE: What to do about generics?
-        //configureAST(basicType, rootNode);
-        // GRECLIPSE end
         return basicType;
     }
 
@@ -3552,6 +3634,20 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 // GRECLIPSE edit
                 //answer = makeType(node).makeArray();
                 answer = makeTypeWithArguments(node).makeArray();
+
+                // check array node for trailing whitespace
+                GroovySourceAST root = (GroovySourceAST) node;
+                int start = locations.findOffset(root.getLine(), root.getColumn());
+                int until = locations.findOffset(root.getLineLast(), root.getColumnLast());
+                char[] sourceChars = getController().readSourceRange(start, until - start);
+                if (sourceChars != null) {
+                    int i = (sourceChars.length - 1);
+                    while (i >= 0 && Character.isWhitespace(sourceChars[i])) {
+                        i -= 1; until -= 1;
+                    }
+                    int[] row_col = locations.getRowCol(until);
+                    root.setLineLast(row_col[0]); root.setColumnLast(row_col[1]);
+                }
                 // GRECLIPSE end
             } else {
                 checkTypeArgs(node, false);
@@ -3581,17 +3677,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
         return seenTypeArgs;
     }
-
-    /**
-     * Performs a name resolution to see if the given name is a type from imports,
-     * aliases or newly created classes
-     */
-    /*protected String resolveTypeName(String name, boolean safe) {
-        if (name == null) {
-            return null;
-        }
-        return resolveNewClassOrName(name, safe);
-    }*/
 
     /**
      * Extracts an identifier from the Antlr AST and then performs a name resolution
@@ -3660,10 +3745,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         return identifier(node);
     }
 
-
     // Helper methods
     //-------------------------------------------------------------------------
-
 
     /**
      * Returns true if the modifiers flags contain a visibility modifier
@@ -3748,7 +3831,6 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         return child != null ? child.getText() : null;
     }
 
-
     public static boolean isType(int typeCode, AST node) {
         return node != null && node.getType() == typeCode;
     }
@@ -3801,133 +3883,4 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     protected void dump(AST node) {
         System.out.println("Type: " + getTokenName(node) + " text: " + node.getText());
     }
-
-  // GRECLIPSE add
-    private void fixModuleNodeLocations() {
-        // only occurs if in a script
-
-        output.setStart(0);
-        output.setEnd(locations.getEnd());
-        output.setLineNumber(1);
-        output.setColumnNumber(1);
-        output.setLastColumnNumber(locations.getEndColumn());
-        output.setLastLineNumber(locations.getEndLine());
-
-        // start location should be the start of either the first method or statement
-        // end location should be the end of either the last method or statement
-        BlockStatement statement = output.getStatementBlock();
-        List<MethodNode> methods = output.getMethods();
-        if (hasScriptStatements(statement) || hasScriptMethods(methods)) {
-            ASTNode first = getFirst(statement, methods);
-            ASTNode last = getLast(statement, methods);
-            if (hasScriptStatements(statement)) {
-                statement.setStart(first.getStart());
-                statement.setLineNumber(first.getLineNumber());
-                statement.setColumnNumber(first.getColumnNumber());
-                statement.setEnd(last.getEnd());
-                statement.setLastLineNumber(last.getLastLineNumber());
-                statement.setLastColumnNumber(last.getLastColumnNumber());
-            }
-            if (!output.getClasses().isEmpty()) {
-                ClassNode scriptClass = output.getClasses().get(0);
-                scriptClass.setStart(first.getStart());
-                scriptClass.setLineNumber(first.getLineNumber());
-                scriptClass.setColumnNumber(first.getColumnNumber());
-                scriptClass.setEnd(last.getEnd());
-                scriptClass.setLastLineNumber(last.getLastLineNumber());
-                scriptClass.setLastColumnNumber(last.getLastColumnNumber());
-
-                // fix the run method to contain the start and end locations of the statement block
-                MethodNode runMethod = scriptClass.getDeclaredMethod("run", Parameter.EMPTY_ARRAY);
-                runMethod.setStart(first.getStart());
-                runMethod.setLineNumber(first.getLineNumber());
-                runMethod.setColumnNumber(first.getColumnNumber());
-                runMethod.setEnd(last.getEnd());
-                runMethod.setLastLineNumber(last.getLastLineNumber());
-                runMethod.setLastColumnNumber(last.getLastColumnNumber());
-            }
-        }
-    }
-
-    private boolean hasScriptMethods(List<MethodNode> methods) {
-        return methods != null && !methods.isEmpty();
-    }
-
-    private boolean hasScriptStatements(BlockStatement statement) {
-        return statement != null && statement.getStatements() != null && !statement.getStatements().isEmpty();
-    }
-
-    /** Returns the first ast node in the script, either a method or a statement. */
-    private ASTNode getFirst(BlockStatement statement, List<MethodNode> methods) {
-        Statement firstStatement = hasScriptStatements(statement) ? statement.getStatements().get(0) : null;
-        MethodNode firstMethod = hasScriptMethods(methods) ? methods.get(0) : null;
-        if (firstMethod == null && (firstStatement == null || (firstStatement.getStart() == 0 && firstStatement.getLength() == 0))) {
-            // An empty script with no methods or statements.
-            // instead make a synthetic statement from the end of the package declaration/import statements
-            firstStatement = createSyntheticAfterImports();
-        }
-        int statementStart = firstStatement != null ? firstStatement.getStart() : Integer.MAX_VALUE;
-        int methodStart = firstMethod != null ? firstMethod.getStart() : Integer.MAX_VALUE;
-        return statementStart <= methodStart ? firstStatement : firstMethod;
-    }
-
-    /** Returns the last ast node in the script, either a method or a statement. */
-    private ASTNode getLast(BlockStatement statement, List<MethodNode> methods) {
-        Statement lastStatement = hasScriptStatements(statement) ? statement.getStatements().get(statement.getStatements().size() - 1) : null;
-        MethodNode lastMethod = hasScriptMethods(methods) ? methods.get(methods.size() - 1) : null;
-        if (lastMethod == null && (lastStatement == null || (lastStatement.getStart() == 0 && lastStatement.getLength() == 0))) {
-            // An empty script with no methods or statements.
-            // instead make a synthetic statement from the end of the package declaration/import statements
-            lastStatement = createSyntheticAfterImports();
-        }
-        int statementStart = lastStatement != null ? lastStatement.getEnd() : Integer.MIN_VALUE;
-        int methodStart = lastMethod != null ? lastMethod.getStart() : Integer.MIN_VALUE;
-        return statementStart >= methodStart ? lastStatement : lastMethod;
-    }
-
-    /** Creates a synthetic statement that starts after the last import or package statement. */
-    private Statement createSyntheticAfterImports() {
-        Statement synthetic = ReturnStatement.RETURN_NULL_OR_VOID;
-        ASTNode target = null;
-        if (output.getImports() != null && !output.getImports().isEmpty()) {
-            target = output.getImports().get(output.getImports().size() - 1);
-        } else if (output.hasPackage()) {
-            target = output.getPackage();
-        }
-        if (target != null) {
-            // import/package nodes do not include trailing semicolon, so use end of line instead of end of node
-            int off = Math.min(locations.findOffset(target.getLastLineNumber() + 1, 1), locations.getEnd() - 1);
-            int[] row_col = locations.getRowCol(off);
-
-            synthetic = new ReturnStatement(ConstantExpression.NULL);
-            synthetic.setStart(off);
-            synthetic.setEnd(off);
-            synthetic.setLineNumber(row_col[0]);
-            synthetic.setColumnNumber(row_col[1]);
-            synthetic.setLastLineNumber(row_col[0]);
-            synthetic.setLastColumnNumber(row_col[1]);
-        }
-        return synthetic;
-    }
-
-    protected void configureAnnotationAST(AnnotationNode node, AST ast) {
-        if (ast == null) {
-            throw new ASTRuntimeException(ast, "PARSER BUG: Tried to configure " + node.getClass().getName() + " with null AST");
-        }
-        if (!(ast instanceof GroovySourceAST)) {
-            throw new ASTRuntimeException(ast, "PARSER BUG: Expected a GroovySourceAST node for annotation, but got: " + ast.getClass().getName());
-        }
-        // Structure of incoming parameter 'ast':
-        // ANNOTATION
-        // - down='annotationName' (IDENT:84)
-        configureAST(node, ast.getFirstChild());
-        configureAST(node.getClassNode(), ast.getFirstChild());
-        // save the full source range of the annotation for future use
-        long start = locations.findOffset(ast.getLine(), ast.getColumn());
-        long until = locations.findOffset(((GroovySourceAST) ast).getLineLast(), ((GroovySourceAST) ast).getColumnLast());
-        node.setNodeMetaData("source.offsets", (start << 32) | until); // pack the two offsets into one long integer value
-
-        node.setEnd(node.getEnd() - 1); // Eclipse wants this for error reporting
-    }
-  // GRECLIPSE end
 }

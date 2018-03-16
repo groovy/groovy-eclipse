@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,147 +19,145 @@ import org.junit.Test;
 
 public final class LocalVariableReferenceSearchTests extends SearchTestSuite {
 
-    private static final String XXX = "xxx";
-
     @Test
-    public void testvarReference1() throws Exception {
+    public void testVarReference1() throws Exception {
         String contents = "def xxx";
-        int nameStart = contents.indexOf(XXX);
+        int nameStart = contents.indexOf("xxx");
         doTestForReferencesInScript(contents, createRegions(nameStart));
     }
 
     @Test
-    public void testvarReference2() throws Exception {
+    public void testVarReference2() throws Exception {
         String contents = "def xxx\nxxx";
-        int nameStart = contents.indexOf(XXX);
-        int nameStart2 = contents.indexOf(XXX, nameStart+1);
+        int nameStart = contents.indexOf("xxx");
+        int nameStart2 = contents.indexOf("xxx", nameStart + 1);
         doTestForReferencesInScript(contents, createRegions(nameStart, nameStart2));
     }
 
     @Test
-    public void testvarReference3() throws Exception {
+    public void testVarReference3() throws Exception {
         String contents = "def xxx() { \ndef xxx\n xxx\n xxx() }";
-        int nameStart = contents.indexOf(XXX, contents.indexOf('('));
-        int nameStart2 = contents.indexOf(XXX, nameStart+1);
-        int nameStart3 = contents.indexOf(XXX, nameStart2+1);
+        int nameStart = contents.indexOf("xxx", contents.indexOf('('));
+        int nameStart2 = contents.indexOf("xxx", nameStart + 1);
+        int nameStart3 = contents.indexOf("xxx", nameStart2 + 1);
         doTestForReferences(contents, 4, createRegions(nameStart, nameStart2, nameStart3));
     }
 
     @Test
-    public void testvarReference4() throws Exception {
+    public void testVarReference4() throws Exception {
         String contents = "def xxx(xxx) { \n xxx\n xxx() }";
-        int nameStart = contents.indexOf(XXX, contents.indexOf('('));
-        int nameStart2 = contents.indexOf(XXX, nameStart+1);
-        int nameStart3 = contents.indexOf(XXX, nameStart2+1);
+        int nameStart = contents.indexOf("xxx", contents.indexOf('('));
+        int nameStart2 = contents.indexOf("xxx", nameStart + 1);
+        int nameStart3 = contents.indexOf("xxx", nameStart2 + 1);
         doTestForReferences(contents, 4, createRegions(nameStart, nameStart2, nameStart3));
     }
 
     @Test
-    public void testvarReference5() throws Exception {
+    public void testVarReference5() throws Exception {
         String contents = "def xxx(int xxx) { \n xxx\n xxx() }";
-        int nameStart = contents.indexOf(XXX, contents.indexOf('('));
-        int nameStart2 = contents.indexOf(XXX, nameStart+1);
-        int nameStart3 = contents.indexOf(XXX, nameStart2+1);
+        int nameStart = contents.indexOf("xxx", contents.indexOf('('));
+        int nameStart2 = contents.indexOf("xxx", nameStart + 1);
+        int nameStart3 = contents.indexOf("xxx", nameStart2 + 1);
         doTestForReferences(contents, 4, createRegions(nameStart, nameStart2, nameStart3));
     }
 
     @Test
-    public void testvarReference6() throws Exception {
+    public void testVarReference6() throws Exception {
         String contents = "def xxx = {int xxx -> \n xxx\n xxx() }";
-        int nameStart = contents.indexOf(XXX, contents.indexOf('{'));
-        int nameStart2 = contents.indexOf(XXX, nameStart+1);
-        int nameStart3 = contents.indexOf(XXX, nameStart2+1);
+        int nameStart = contents.indexOf("xxx", contents.indexOf('{'));
+        int nameStart2 = contents.indexOf("xxx", nameStart + 1);
+        int nameStart3 = contents.indexOf("xxx", nameStart2 + 1);
         doTestForReferencesInScript(contents, createRegions(nameStart, nameStart2, nameStart3));
     }
 
     @Test
-    public void testvarReference7() throws Exception {
+    public void testVarReference7() throws Exception {
         String contents = "def xxx = {int xxx \n xxx\n xxx() }";
-        int nameStart = contents.indexOf(XXX, contents.indexOf('{'));
-        int nameStart2 = contents.indexOf(XXX, nameStart+1);
-        int nameStart3 = contents.indexOf(XXX, nameStart2+1);
+        int nameStart = contents.indexOf("xxx", contents.indexOf('{'));
+        int nameStart2 = contents.indexOf("xxx", nameStart + 1);
+        int nameStart3 = contents.indexOf("xxx", nameStart2 + 1);
         doTestForReferencesInScript(contents, createRegions(nameStart, nameStart2, nameStart3));
     }
 
     @Test
-    public void testvarReference8() throws Exception {
+    public void testVarReference8() throws Exception {
         String contents = "for (xxx in 0..7) \n { xxx }";
-        int nameStart = contents.indexOf(XXX, contents.indexOf('('));
-        int nameStart2 = contents.indexOf(XXX, nameStart+1);
+        int nameStart = contents.indexOf("xxx", contents.indexOf('('));
+        int nameStart2 = contents.indexOf("xxx", nameStart + 1);
         doTestForReferencesInScript(contents, createRegions(nameStart, nameStart2));
     }
 
     @Test
-    public void testvarReference9() throws Exception {
+    public void testVarReference9() throws Exception {
         String contents = "def x1(xxx) { xxx }\ndef x2(xxx) { xxx }";
-        int nameStart = contents.indexOf(XXX, contents.indexOf('}'));
-        int nameStart2 = contents.indexOf(XXX, nameStart+1);
+        int nameStart = contents.indexOf("xxx", contents.indexOf('}'));
+        int nameStart2 = contents.indexOf("xxx", nameStart + 1);
         doTestForReferences(contents, 5, createRegions(nameStart, nameStart2));
     }
 
     @Test
-    public void testvarReference10() throws Exception {
+    public void testVarReference10() throws Exception {
         String contents = "class First {\n def xxx \ndef x2(xxx) { xxx } }";
-        int nameStart = contents.indexOf(XXX, contents.indexOf('('));
-        int nameStart2 = contents.indexOf(XXX, nameStart+1);
+        int nameStart = contents.indexOf("xxx", contents.indexOf('('));
+        int nameStart2 = contents.indexOf("xxx", nameStart + 1);
         doTestForReferences(contents, 1, createRegions(nameStart, nameStart2));
     }
 
     @Test
-    public void testvarReferenceInGString1() throws Exception {
+    public void testVarReferenceInGString1() throws Exception {
         String contents = "def xxx\n\"${xxx}\"";
-        int nameStart = contents.indexOf(XXX);
-        int nameStart2 = contents.indexOf(XXX, nameStart+1);
+        int nameStart = contents.indexOf("xxx");
+        int nameStart2 = contents.indexOf("xxx", nameStart + 1);
         doTestForReferences(contents, 3, createRegions(nameStart, nameStart2));
     }
 
     @Test
-    public void testvarReferenceInGString2() throws Exception {
+    public void testVarReferenceInGString2() throws Exception {
         String contents = "def xxx\n\"${xxx.toString()}\"";
-        int nameStart = contents.indexOf(XXX);
-        int nameStart2 = contents.indexOf(XXX, nameStart+1);
+        int nameStart = contents.indexOf("xxx");
+        int nameStart2 = contents.indexOf("xxx", nameStart + 1);
         doTestForReferences(contents, 3, createRegions(nameStart, nameStart2));
     }
 
     @Test
-    public void testvarReferenceInGString3() throws Exception {
+    public void testVarReferenceInGString3() throws Exception {
         String contents = "def xxx\n\"${blah(xxx)}\"";
-        int nameStart = contents.indexOf(XXX);
-        int nameStart2 = contents.indexOf(XXX, nameStart+1);
+        int nameStart = contents.indexOf("xxx");
+        int nameStart2 = contents.indexOf("xxx", nameStart + 1);
         doTestForReferences(contents, 3, createRegions(nameStart, nameStart2));
     }
 
     @Test
-    public void testvarReferenceInGString4() throws Exception {
+    public void testVarReferenceInGString4() throws Exception {
         String contents = "def xxx\n\"${xxx} \"";
-        int nameStart = contents.indexOf(XXX);
-        int nameStart2 = contents.indexOf(XXX, nameStart+1);
+        int nameStart = contents.indexOf("xxx");
+        int nameStart2 = contents.indexOf("xxx", nameStart + 1);
         doTestForReferences(contents, 3, createRegions(nameStart, nameStart2));
     }
 
     @Test
-    public void testvarReferenceInGString5() throws Exception {
+    public void testVarReferenceInGString5() throws Exception {
         String contents = "def xxx\n\"${xxx }\"";
-        int nameStart = contents.indexOf(XXX);
-        int nameStart2 = contents.indexOf(XXX, nameStart+1);
+        int nameStart = contents.indexOf("xxx");
+        int nameStart2 = contents.indexOf("xxx", nameStart + 1);
         doTestForReferences(contents, 3, createRegions(nameStart, nameStart2));
     }
 
     //--------------------------------------------------------------------------
 
-    private MatchRegion[] createRegions(int...nameStarts) {
+    private MatchRegion[] createRegions(int... nameStarts) {
         MatchRegion[] regions = new MatchRegion[nameStarts.length];
-        for (int i = 0; i < nameStarts.length; i++) {
-            regions[i] = new MatchRegion(nameStarts[i], XXX.length());
+        for (int i = 0, n = nameStarts.length; i < n; i += 1) {
+            regions[i] = new MatchRegion(nameStarts[i], "xxx".length());
         }
         return regions;
     }
 
     private void doTestForReferencesInScript(String contents, MatchRegion[] matchLocations) throws Exception {
-        doTestForVarReferences(contents, 3, XXX, matchLocations[0].offset, matchLocations);
+        doTestForVarReferences(contents, 3, "xxx", matchLocations[0].offset, matchLocations);
     }
 
     private void doTestForReferences(String contents, int locationInParent, MatchRegion[] matchLocations) throws Exception {
-        doTestForVarReferences(contents, locationInParent, XXX, matchLocations[0].offset, matchLocations);
+        doTestForVarReferences(contents, locationInParent, "xxx", matchLocations[0].offset, matchLocations);
     }
 }
