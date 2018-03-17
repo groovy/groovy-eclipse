@@ -26,6 +26,7 @@ import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
@@ -381,8 +382,9 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
             // might have AST nodes with overlapping locations, so result may not be null
             if (this.result == null &&
                     visitorNode.getStart() == start && visitorNode.getEnd() == end &&
-                    !(visitorNode instanceof MethodNode /* ignore the run() method*/) &&
-                    !(visitorNode instanceof Statement /* ignore all statements */) &&
+                    !(visitorNode instanceof Statement /* ignore any statement */) &&
+                    !(visitorNode instanceof TupleExpression /* ignore wrapper */) &&
+                    !(visitorNode instanceof MethodNode /* ignore the run() method */) &&
                     !(visitorNode instanceof ClassNode && ((ClassNode) visitorNode).isScript() /* ignore the script */)) {
                 if (ClassHelper.isPrimitiveType(visitorResult.type)) {
                     this.result = new TypeLookupResult(ClassHelper.getWrapper(visitorResult.type), visitorResult.declaringType, visitorResult.declaration, visitorResult.confidence, visitorResult.scope, visitorResult.extraDoc);

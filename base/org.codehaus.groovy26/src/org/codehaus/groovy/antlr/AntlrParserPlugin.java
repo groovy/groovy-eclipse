@@ -74,6 +74,7 @@ import org.codehaus.groovy.ast.expr.GStringExpression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.ast.expr.MapExpression;
+import org.codehaus.groovy.ast.expr.MethodCall;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.MethodPointerExpression;
 import org.codehaus.groovy.ast.expr.NamedArgumentListExpression;
@@ -3038,6 +3039,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // GRECLIPSE add
         expression.setNameStart(expression.getStart());
         expression.setNameEnd(expression.getStart() + keywordLength - 1);
+
+        expression.setEnd(arguments.getEnd() + 1);
+        int[] row_col = locations.getRowCol(expression.getEnd());
+        expression.setLastLineNumber(row_col[0]); expression.setLastColumnNumber(row_col[1]);
         // GRECLIPSE end
         return expression;
     }
@@ -3793,7 +3798,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     node instanceof MapEntryExpression ||
                     node instanceof MapExpression ||
                     node instanceof CastExpression ||
-                    node instanceof MethodCallExpression) &&
+                    node instanceof MethodCall) &&
                     node.getStart() <= startoffset && node.getEnd() >= endoffset) {
                 // sloc has already been set and it is larger than this one
                 return;

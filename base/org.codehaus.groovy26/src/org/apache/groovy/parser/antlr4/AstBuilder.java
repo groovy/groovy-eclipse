@@ -922,9 +922,13 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         Parameter parameter = configureAST(
                 new Parameter(this.visitType(ctx.type()), this.visitVariableDeclaratorId(ctx.variableDeclaratorId()).getName()),
                 ctx.variableDeclaratorId());
-
-        // FIXME Groovy will ignore variableModifier of parameter in the for control
-        // In order to make the new parser behave same with the old one, we do not process variableModifier*
+        // GRECLIPSE add
+        parameter.setNameEnd(parameter.getEnd());
+        parameter.setNameStart(parameter.getStart());
+        parameter.setLineNumber(ctx.variableModifiersOpt().getStart().getLine());
+        parameter.setColumnNumber(ctx.variableModifiersOpt().getStart().getCharPositionInLine() + 1);
+        parameter.setStart(locationSupport.findOffset(parameter.getLineNumber(), parameter.getColumnNumber()));
+        // GRECLIPSE end
 
         return new Tuple2<>(parameter, (Expression) this.visit(ctx.expression()));
     }
@@ -1070,22 +1074,36 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
      */
     @Override
     public List<CatchStatement> visitCatchClause(CatchClauseContext ctx) {
-        // FIXME Groovy will ignore variableModifier of parameter in the catch clause
-        // In order to make the new parser behave same with the old one, we do not process variableModifier*
-
+        // GRECLIPSE add
+        ASTNode nameNode = null;
+        Parameter catchParameter = null;
+        // GRECLIPSE end
         List<CatchStatement> list = new ArrayList<>();
         for (ClassNode e : this.visitCatchType(ctx.catchType())) {
             CatchStatement catchStatement = configureAST(
                     new CatchStatement(
-                            // FIXME The old parser does not set location info for the parameter of the catch clause.
-                            // we could make it better
-                            //configureAST(new Parameter(e, this.visitIdentifier(ctx.identifier())), ctx.Identifier()),
-
                             new Parameter(e, this.visitIdentifier(ctx.identifier())),
                             this.visitBlock(ctx.block())),
                     ctx);
+            // GRECLIPSE add
+            catchParameter = configureAST(catchStatement.getVariable(), ctx.catchType() != null ? ctx.catchType() : ctx.identifier());
+            nameNode = configureAST(new ConstantExpression(catchParameter.getName()), ctx.identifier());
+            catchParameter.setNameStart(nameNode.getStart()); catchParameter.setNameEnd(nameNode.getEnd());
+            // GRECLIPSE end
             list.add(catchStatement);
         }
+        // GRECLIPSE add
+        if (catchParameter != null) {
+            catchParameter.setEnd(nameNode.getEnd());
+            catchParameter.setLastLineNumber(nameNode.getLastLineNumber());
+            catchParameter.setLastColumnNumber(nameNode.getLastColumnNumber());
+
+            catchParameter = list.get(0).getVariable();
+            catchParameter.setLineNumber(ctx.variableModifiersOpt().getStart().getLine());
+            catchParameter.setColumnNumber(ctx.variableModifiersOpt().getStart().getCharPositionInLine() + 1);
+            catchParameter.setStart(locationSupport.findOffset(catchParameter.getLineNumber(), catchParameter.getColumnNumber()));
+        }
+        // GRECLIPSE end
         return list;
     }
 
@@ -2155,6 +2173,14 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         fieldNode.setNameEnd(variableExpression.getEnd() - 1);
         propertyNode.setNameStart(variableExpression.getStart());
         propertyNode.setNameEnd(variableExpression.getEnd() - 1);
+        if (initialValue == null) {
+            fieldNode.setEnd(variableExpression.getEnd());
+            fieldNode.setLastLineNumber(variableExpression.getLastLineNumber());
+            fieldNode.setLastColumnNumber(variableExpression.getLastColumnNumber());
+            propertyNode.setEnd(variableExpression.getEnd());
+            propertyNode.setLastLineNumber(variableExpression.getLastLineNumber());
+            propertyNode.setLastColumnNumber(variableExpression.getLastColumnNumber());
+        }
         // GRECLIPSE end
     }
 
@@ -2192,6 +2218,11 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         // GRECLIPSE add
         fieldNode.setNameStart(variableExpression.getStart());
         fieldNode.setNameEnd(variableExpression.getEnd() - 1);
+        if (initialValue == null) {
+            fieldNode.setEnd(variableExpression.getEnd());
+            fieldNode.setLastLineNumber(variableExpression.getLastLineNumber());
+            fieldNode.setLastColumnNumber(variableExpression.getLastColumnNumber());
+        }
         // GRECLIPSE end
     }
 
@@ -2359,6 +2390,10 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                     configureAST(
                             this.createMethodCallExpression(baseExpr, arguments),
                             arguments);
+            // GRECLIPSE add
+            methodCallExpression.setNameStart(baseExpr.getStart());
+            methodCallExpression.setNameEnd(baseExpr.getEnd() - 1);
+            // GRECLIPSE end
         } else { // e.g. a[x] b, new A() b, etc.
             methodCallExpression = configureAST(this.createCallMethodCallExpression(baseExpr, arguments), arguments);
         }
@@ -2616,6 +2651,9 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                     || baseExpr instanceof GStringExpression
                     || (baseExpr instanceof ConstantExpression && isTrue(baseExpr, IS_STRING))) { // e.g. m(), "$m"(), "m"()
 
+                // GRECLIPSE add
+                Expression callExpr = null;
+                // GRECLIPSE end
                 String baseExprText = baseExpr.getText();
                 if (SUPER_STR.equals(baseExprText) || THIS_STR.equals(baseExprText)) { // e.g. this(...), super(...)
                     // class declaration is not allowed in the closure,
@@ -2623,7 +2661,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                     // e.g. src/test/org/codehaus/groovy/transform/MapConstructorTransformTest.groovy:
                     // @MapConstructor(pre={ super(args?.first, args?.last); args = args ?: [:] }, post = { first = first?.toUpperCase() })
                     if (visitingClosureCnt > 0) {
-                        return configureAST(
+                        // GRECLIPSE edit
+                        callExpr = /*return*/ configureAST(
                                 new MethodCallExpression(
                                         baseExpr,
                                         baseExprText,
@@ -2631,8 +2670,12 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                                 ),
                                 ctx);
                     }
+                    // GRECLIPSE add
+                    else
+                    // GRECLIPSE end
 
-                    return configureAST(
+                    // GRECLIPSE edit
+                    callExpr = /*return*/ configureAST(
                             new ConstructorCallExpression(
                                     SUPER_STR.equals(baseExprText)
                                             ? ClassNode.SUPER
@@ -2642,10 +2685,19 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                             ctx);
                 }
 
+                /* GRECLIPSE edit
                 MethodCallExpression methodCallExpression =
                         this.createMethodCallExpression(baseExpr, argumentsExpr);
 
                 return configureAST(methodCallExpression, ctx);
+                */
+                if (callExpr == null) {
+                    callExpr = configureAST(createMethodCallExpression(baseExpr, argumentsExpr), ctx);
+                }
+                callExpr.setNameStart(baseExpr.getStart());
+                callExpr.setNameEnd(baseExpr.getEnd() - 1);
+                return callExpr;
+                // GRECLIPSE end
             }
 
             // e.g. 1(), 1.1(), ((int) 1 / 2)(1, 2), {a, b -> a + b }(1, 2), m()()
@@ -3412,7 +3464,12 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
                 ConstructorCallExpression constructorCallExpression = new ConstructorCallExpression(anonymousInnerClassNode, arguments);
                 constructorCallExpression.setUsingAnonymousInnerClass(true);
-
+                // GRECLIPSE add
+                anonymousInnerClassNode.setNameStart(classNode.getStart());
+                anonymousInnerClassNode.setNameEnd(classNode.getEnd() - 1);
+                constructorCallExpression.setNameStart(classNode.getStart());
+                constructorCallExpression.setNameEnd(classNode.getEnd() - 1);
+                // GRECLIPSE end
                 return configureAST(constructorCallExpression, ctx);
             }
 
@@ -3544,8 +3601,9 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 classNode.setGenericsTypes(
                         this.visitTypeArgumentsOrDiamond(ctx.typeArgumentsOrDiamond()));
             }
-
-            classNode = configureAST(classNode, ctx);
+            // GRECLIPSE edit
+            //classNode = configureAST(classNode, ctx);
+            // GRECLIPSE end
         } else if (asBoolean(ctx.primitiveType())) {
             classNode = configureAST(
                     this.visitPrimitiveType(ctx.primitiveType()),
@@ -3896,13 +3954,29 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             Expression propertyExpression = configureAST(variableExpression, ctx.identifier());
             for (TerminalNode e : ctx.GStringPathPart()) {
                 Expression expression = configureAST((Expression) new ConstantExpression(e.getText().substring(1)), e);
+                // GRECLIPSE add
+                expression.setStart(expression.getStart() + 1);
+                int[] row_col = locationSupport.getRowCol(expression.getStart());
+                expression.setLineNumber(row_col[0]); expression.setColumnNumber(row_col[1]);
+                // GRECLIPSE end
                 propertyExpression = configureAST(new PropertyExpression(propertyExpression, expression), expression);
+                // GRECLIPSE add
+                propertyExpression.setStart(((PropertyExpression) propertyExpression).getObjectExpression().getStart());
+                propertyExpression.setLineNumber(((PropertyExpression) propertyExpression).getObjectExpression().getLineNumber());
+                propertyExpression.setColumnNumber(((PropertyExpression) propertyExpression).getObjectExpression().getColumnNumber());
+                // GRECLIPSE end
             }
 
-            return configureAST(propertyExpression, ctx);
+            // GRECLIPSE edit
+            //return configureAST(propertyExpression, ctx);
+            return propertyExpression;
+            // GRECLIPSE end
         }
 
-        return configureAST(variableExpression, ctx);
+        // GRECLIPSE edit
+        //return configureAST(variableExpression, ctx);
+        return variableExpression;
+        // GRECLIPSE end
     }
 // } gstring       --------------------------------------------------------------------
 

@@ -819,7 +819,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "}";
 
         int start = contents.indexOf("this()");
-        int end = start + "this(".length();
+        int end = start + "this()".length();
         assertType(contents, start, end, "java.lang.Object");
         assertDeclaringType(contents, start, end, "C");
     }
@@ -834,7 +834,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "}";
 
         int start = contents.indexOf("super()");
-        int end = start + "super(".length();
+        int end = start + "super()".length();
         assertType(contents, start, end, "java.lang.Object");
         assertDeclaringType(contents, start, end, "java.util.HashMap");
     }
@@ -855,8 +855,8 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test
     public void testStaticMethodCall3() {
-        String contents = "class Two {\n def other() { \n x() } \n static String x() {\n \"\" } } ";
-        String expr = "x() ";  // extra space b/c static method call expression end offset is wrong
+        String contents = "class Two {\n def other() { \n x(); } \n static String x() {\n \"\" } } ";
+        String expr = "x()";
         assertType(contents, contents.indexOf(expr), contents.indexOf(expr)+expr.length(), "java.lang.String");
     }
 
@@ -2005,7 +2005,7 @@ public final class InferencingTests extends InferencingTestSuite {
 
     @Test // GRECLIPSE-1304
     public void testNoGString() {
-        assertNoUnknowns("'$'\n'${}\n'${a}'\n'$a'");
+        assertNoUnknowns("'$'\n'${}'\n'${a}'\n'$a'");
     }
 
     @Test // GRECLIPSE-1341
