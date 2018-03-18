@@ -74,11 +74,10 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     @Test
     void testScriptFields2() {
         String contents = '''\
-              import groovy.transform.Field
-              @Field String one
-              @Field Integer two = 1234
-              @Field private Object three // four
-            }
+            import groovy.transform.Field
+            @Field String one
+            @Field Integer two = 1234
+            @Field private Object three // four
             '''.stripIndent()
 
         assertHighlighting(contents,
