@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -516,7 +517,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
         },
-        Boolean.getBoolean("groovy.antlr4") ? "" :
+        isParrotParser() ? "" :
         "----------\n" +
         "1. ERROR in foo\\X.groovy (at line 6)\n" +
         "\tdo {\n" +
@@ -549,7 +550,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n",
         },
-        Boolean.getBoolean("groovy.antlr4") ? "" :
+        isParrotParser() ? "" :
         "----------\n" +
         "1. ERROR in foo\\X.groovy (at line 7)\n" +
         "\tdo {\n" +

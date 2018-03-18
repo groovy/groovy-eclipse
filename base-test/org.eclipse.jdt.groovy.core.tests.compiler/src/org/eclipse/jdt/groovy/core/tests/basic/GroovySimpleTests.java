@@ -16,6 +16,7 @@
 package org.eclipse.jdt.groovy.core.tests.basic;
 
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -2331,12 +2332,13 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     public void testFailureWhilstAttemptingToReportError() {
         runNegativeTest(new String[] {
             "T.groovy",
-            "public class T{\n"+
-            "	def x () {\n"+
-            "		this \"\"\n"+
+            "public class T {\n" +
+            "	def x () {\n" +
+            "		this \"\"\n" + // not a ctor call
             "	}\n"+
-            "}\n"
+            "}\n",
         },
+        isParrotParser() ? "" :
         "----------\n" +
         "1. ERROR in T.groovy (at line 3)\n" +
         "\tthis \"\"\n" +
