@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.core.groovy.tests.locations;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -259,7 +260,7 @@ public final class ASTNodeSourceLocationsTests extends BuilderTestSuite {
         checkBinaryExprSLocs(
             "  a = b   ",
             new BinaryExpressionSLocTester(),
-            Boolean.getBoolean("groovy.antlr4") ? "a = b" : "a = b   ");
+            isParrotParser() ? "a = b" : "a = b   ");
     }
 
     @Test
