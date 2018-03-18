@@ -1651,6 +1651,12 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
             if (asBoolean(ctx.STATIC())) { // e.g. static { }
                 classNode.addStaticInitializerStatements(Collections.singletonList(statement), false);
+                // GRECLIPSE add
+                MethodNode clinit = classNode.getDeclaredMethod("<clinit>", Parameter.EMPTY_ARRAY);
+                if (clinit.getEnd() < 1) { // set source position for first initializer only
+                    configureAST(clinit, ctx.STATIC());
+                }
+                // GRECLIPSE end
             } else { // e.g.  { }
                 classNode.addObjectInitializerStatements(
                         configureAST(
@@ -2480,7 +2486,10 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         }
         expression.putNodeMetaData(INSIDE_PARENTHESES_LEVEL, insideParenLevel);
 
-        return configureAST(expression, ctx);
+        // GRECLIPSE edit
+        //return configureAST(expression, ctx);
+        return expression;
+        // GRECLIPSE end
     }
 
     @Override
@@ -2507,9 +2516,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     @Override
     public Expression visitPathExpression(PathExpressionContext ctx) {
-        return //configureAST(
-                this.createPathExpression((Expression) this.visit(ctx.primary()), ctx.pathElement());
-                //ctx);
+        return this.createPathExpression((Expression) this.visit(ctx.primary()), ctx.pathElement());
     }
 
     @Override
@@ -2632,9 +2639,11 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             }
 
             if (baseExpr instanceof PropertyExpression) { // e.g. obj.a(1, 2)
-                MethodCallExpression methodCallExpression =
-                        this.createMethodCallExpression((PropertyExpression) baseExpr, argumentsExpr);
-
+                MethodCallExpression methodCallExpression = this.createMethodCallExpression((PropertyExpression) baseExpr, argumentsExpr);
+                // GRECLIPSE add
+                methodCallExpression.setNameStart(((PropertyExpression) baseExpr).getProperty().getStart());
+                methodCallExpression.setNameEnd(((PropertyExpression) baseExpr).getProperty().getEnd() - 1);
+                // GRECLIPSE end
                 return configureAST(methodCallExpression, ctx);
             }
 
@@ -3414,7 +3423,10 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     @Override
     public Expression visitParenPrmrAlt(ParenPrmrAltContext ctx) {
-        return configureAST(this.visitParExpression(ctx.parExpression()), ctx);
+        // GRECLIPSE edit
+        //return configureAST(this.visitParExpression(ctx.parExpression()), ctx);
+        return visitParExpression(ctx.parExpression());
+        // GRECLIPSE end
     }
 
     @Override
@@ -3429,9 +3441,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     @Override
     public ListExpression visitListPrmrAlt(ListPrmrAltContext ctx) {
-        return configureAST(
-                this.visitList(ctx.list()),
-                ctx);
+        return configureAST(this.visitList(ctx.list()), ctx);
     }
 
     @Override
@@ -3473,9 +3483,16 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 return configureAST(constructorCallExpression, ctx);
             }
 
+            /* GRECLIPSE edit
             return configureAST(
                     new ConstructorCallExpression(classNode, arguments),
                     ctx);
+            */
+            ConstructorCallExpression constructorCallExpression = new ConstructorCallExpression(classNode, arguments);
+            ASTNode nameNode = configureAST(new ConstantExpression(classNode.getName()), ctx.createdName().qualifiedClassName());
+            constructorCallExpression.setNameStart(nameNode.getStart());
+            constructorCallExpression.setNameEnd(nameNode.getEnd() - 1);
+            return configureAST(constructorCallExpression, ctx);
         }
 
         if (asBoolean(ctx.LBRACK()) || asBoolean(ctx.dims())) { // create array
@@ -3682,7 +3699,10 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                                 expression);
             }
 
-            return configureAST(expression, ctx);
+            // GRECLIPSE edit
+            //return configureAST(expression, ctx);
+            return expression;
+            // GRECLIPSE end
         }
 
         throw createParsingFailedException("Unsupported map entry label: " + ctx.getText(), ctx);
