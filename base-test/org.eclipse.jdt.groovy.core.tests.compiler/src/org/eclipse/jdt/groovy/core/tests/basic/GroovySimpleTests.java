@@ -645,7 +645,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         },
         "works");
         // return type is a single char type (not in package and not primitive)
-        assertEquals("[[LZ;",getReturnTypeOfMethod("Z.groovy","zzz"));
+        assertEquals("[[LZ;", getReturnTypeOfMethod("Z.groovy", "zzz"));
     }
 
     @Test
@@ -666,7 +666,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         },
         "works");
         // return type is a primitive
-        assertEquals("[[I",getReturnTypeOfMethod("Z.groovy","zzz"));
+        assertEquals("[[I", getReturnTypeOfMethod("Z.groovy", "zzz"));
     }
 
     @Test
@@ -687,7 +687,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         },
         "works");
         // return type is a qualified java built in type
-        assertEquals("[[Ljava.lang.String;",getReturnTypeOfMethod("Z.groovy","zzz"));
+        assertEquals("[[Ljava.lang.String;", getReturnTypeOfMethod("Z.groovy", "zzz"));
     }
 
     @Test
@@ -696,19 +696,16 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "Foo.groovy",
             "class Foo {\n"+
             "  def foo () {\n"+
-            "    new java.lang.Runnable () {}//<--quick fix here\n"+
+            "    new java.lang.Runnable() {}\n"+
             "  }\n"+
             "}\n",
         },
         "----------\n" +
         "1. ERROR in Foo.groovy (at line 3)\n" +
-        "\tnew java.lang.Runnable () {}//<--quick fix here\n" +
-        "\t    ^^^^^^^^^^^^^^^^^^^\n" +
-        "Groovy:Can\'t have an abstract method in a non-abstract class. The class \'Foo$1\' must be declared abstract or the method \'void run()\' must be implemented.\n" +
+        "\tnew java.lang.Runnable() {}\n" +
+        "\t    ^^^^^^^^^^^^^^^^^^\n" +
+        "Groovy:Can\'t have an abstract method in a non-abstract class. The class 'Foo$1' must be declared abstract or the method 'void run()' must be implemented.\n" +
         "----------\n");
-        // return type is a qualified java built in type
-        ModuleNode mn = getModuleNode("Foo$1.class");
-        System.out.println(mn);
     }
 
     @Test

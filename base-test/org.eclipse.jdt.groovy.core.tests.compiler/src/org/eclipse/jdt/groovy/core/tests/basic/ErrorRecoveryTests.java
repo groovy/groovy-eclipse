@@ -505,68 +505,66 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     @Test
     public void testParsingRecovery_GRE1107_1() {
         runNegativeTest(new String[] {
-            "X.groovy",
-            "package foo\n"+
-            "\n"+
-            "class X {\n"+
-            "  public void foo() {\n"+
-            "    def blah = this\n"+
-            "    do {\n"+
-            "    } while (blah != null)\n"+
-            "\n"+
-            "    return null\n"+
-            "  }\n"+
+            "foo/X.groovy",
+            "package foo\n" +
+            "\n" +
+            "class X {\n" +
+            "  public void foo() {\n" +
+            "    def blah = this\n" +
+            "    do {\n" +
+            "    } while (blah != null)\n" +
+            "  }\n" +
             "}\n",
         },
+        Boolean.getBoolean("groovy.antlr4") ? "" :
         "----------\n" +
-        "1. ERROR in X.groovy (at line 6)\n" +
+        "1. ERROR in foo\\X.groovy (at line 6)\n" +
         "\tdo {\n" +
         "\t^\n" +
         "Groovy:unexpected token: do @ line 6, column 5.\n" +
         "----------\n");
 
         checkGCUDeclaration("X.groovy",
-            "package foo;\n"+
-            "public class X {\n"+
-            "  public X() {\n"+
-            "  }\n"+
-            "  public void foo() {\n"+
-            "  }\n"+
+            "package foo;\n" +
+            "public class X {\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "  public void foo() {\n" +
+            "  }\n" +
             "}\n");
     }
 
     @Test
     public void testParsingRecovery_GRE1107_2() {
         runNegativeTest(new String[] {
-            "X.groovy",
-            "package foo\n"+
-            "import java.io.Serializable;\n"+
-            "\n"+
-            "class X {\n"+
-            "  public void foo() {\n"+
-            "    def blah = this\n"+
-            "    do {\n"+
-            "    } while (blah != null)\n"+
-            "\n"+
-            "    return null\n"+
-            "  }\n"+
+            "foo/X.groovy",
+            "package foo\n" +
+            "import java.io.Serializable;\n" +
+            "\n" +
+            "class X {\n" +
+            "  public void foo() {\n" +
+            "    def blah = this\n" +
+            "    do {\n" +
+            "    } while (blah != null)\n" +
+            "  }\n" +
             "}\n",
         },
+        Boolean.getBoolean("groovy.antlr4") ? "" :
         "----------\n" +
-        "1. ERROR in X.groovy (at line 7)\n" +
+        "1. ERROR in foo\\X.groovy (at line 7)\n" +
         "\tdo {\n" +
         "\t^\n" +
         "Groovy:unexpected token: do @ line 7, column 5.\n" +
         "----------\n");
 
         checkGCUDeclaration("X.groovy",
-            "package foo;\n"+
-            "import java.io.Serializable;\n"+
-            "public class X {\n"+
-            "  public X() {\n"+
-            "  }\n"+
-            "  public void foo() {\n"+
-            "  }\n"+
+            "package foo;\n" +
+            "import java.io.Serializable;\n" +
+            "public class X {\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "  public void foo() {\n" +
+            "  }\n" +
             "}\n");
     }
 
