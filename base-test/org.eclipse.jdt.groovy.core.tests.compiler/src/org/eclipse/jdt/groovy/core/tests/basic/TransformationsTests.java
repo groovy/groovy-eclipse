@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -950,7 +951,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
     /**
      * Testing the code in the StaticTypeCheckingSupport.checkCompatibleAssignmentTypes.
      *
-     * That method does a lot of equality by == testing against classnode constants, which doesn't work so well for us...
+     * That method does a lot of == testing against ClassNode constants, which may not work so well for us.
      */
     @Test
     public void testCompileStatic2() {
@@ -1070,6 +1071,56 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
         };
 
         runNegativeTest(sources, "");
+    }
+
+    @Test // GROOVY-8509
+    public void testCompileStatic8() {
+        String[] sources = {
+            "p/Foo.groovy",
+            "package p\n" +
+            "class Foo {\n"+
+            "  protected void m() {}\n"+
+            "}\n",
+
+            "p/Bar.groovy",
+            "package p\n" +
+            "@groovy.transform.CompileStatic\n"+
+            "class Bar {\n" +
+            "  void testM() {\n" +
+            "    new Foo().m()\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testCompileStatic9() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        String[] sources = {
+            "q/Foo.groovy",
+            "package q\n" +
+            "class Foo {\n"+
+            "  protected void m() {}\n"+
+            "}\n",
+
+            "r/Bar.groovy",
+            "package r\n" +
+            "@groovy.transform.CompileStatic\n"+
+            "class Bar {\n" +
+            "  void testM() {\n" +
+            "    new q.Foo().m()\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runNegativeTest(sources, "----------\n" +
+            "1. ERROR in r\\Bar.groovy (at line 5)\n" +
+            "\tnew q.Foo().m()\n" +
+            "\t^^^^^^^^^^^\n" +
+            "Groovy:Method m is protected in q.Foo @ line 5, column 5.\n");
     }
 
     @Test
