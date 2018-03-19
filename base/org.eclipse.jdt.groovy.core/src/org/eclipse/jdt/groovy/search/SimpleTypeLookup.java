@@ -827,7 +827,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      */
     protected static boolean isLooseMatch(List<ClassNode> arguments, Parameter[] parameters) {
         int argCount = (arguments == null ? -1 : arguments.size());
-        if (parameters.length != argCount && !(parameters.length < argCount && GenericsMapper.isVargs(parameters))) {
+        if (parameters.length != argCount && !(GenericsMapper.isVargs(parameters) &&
+                (parameters.length - 1 == argCount || parameters.length < argCount))) {
             return true;
         } else if (argCount > 0 && arguments.get(argCount - 1).equals(VariableScope.CLOSURE_CLASS_NODE)) {
             ClassNode lastType = GroovyUtils.getBaseType(parameters[parameters.length - 1].getType());

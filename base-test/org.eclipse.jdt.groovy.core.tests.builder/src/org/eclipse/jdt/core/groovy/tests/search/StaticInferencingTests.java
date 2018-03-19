@@ -27,7 +27,8 @@ public final class StaticInferencingTests extends InferencingTestSuite {
         GroovyCompilationUnit unit = createUnit("Search", source);
         SearchRequestor requestor = doVisit(offset, offset + target.length(), unit, false);
 
-        Assert.assertNotEquals(TypeLookupResult.TypeConfidence.UNKNOWN, requestor.result.confidence);
+        Assert.assertNotEquals("Expected token '" + target + "' at offset " + offset + " to be recognized",
+            TypeLookupResult.TypeConfidence.UNKNOWN, requestor.result.confidence);
         Assert.assertEquals(declaringType, requestor.result.declaringType.getName());
         Assert.assertEquals(expressionType, printTypeName(requestor.result.type));
     }
@@ -133,6 +134,30 @@ public final class StaticInferencingTests extends InferencingTestSuite {
     public void testClassReference15() {
         String contents = "class S { static { getCanonicalName() } }";
         assertKnown(contents, "getCanonicalName", "java.lang.Class", "java.lang.String");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/538
+    public void testClassReference16() {
+        String contents = "String.getMethod('toLowerCase')";
+        assertKnown(contents, "getMethod", "java.lang.Class", "java.lang.reflect.Method");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/538
+    public void testClassReference16a() {
+        String contents = "String.class.getMethod('toLowerCase')";
+        assertKnown(contents, "getMethod", "java.lang.Class", "java.lang.reflect.Method");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/538
+    public void testClassReference17() {
+        String contents = "String.getConstructor()";
+        assertKnown(contents, "getConstructor", "java.lang.Class", "java.lang.reflect.Constructor<java.lang.String>");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/538
+    public void testClassReference17a() {
+        String contents = "String.class.getConstructor()";
+        assertKnown(contents, "getConstructor", "java.lang.Class", "java.lang.reflect.Constructor<java.lang.String>");
     }
 
     //
