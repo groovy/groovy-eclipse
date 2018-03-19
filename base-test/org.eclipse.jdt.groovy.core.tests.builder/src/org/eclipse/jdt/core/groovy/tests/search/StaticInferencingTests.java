@@ -333,4 +333,12 @@ public final class StaticInferencingTests extends InferencingTestSuite {
         String contents = "import static p.Other.*\nFOO";
         assertKnown(contents, "p.Other", "p.Other", "p.Other");
     }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/539
+    public void testStaticImport10() throws Exception {
+        createUnit("p", "Other", "package p\nclass Other { static void dump(Object o) { } }");
+
+        String contents = "import static p.Other.dump\n";
+        assertKnown(contents, "dump", "p.Other", "java.lang.Void");
+    }
 }

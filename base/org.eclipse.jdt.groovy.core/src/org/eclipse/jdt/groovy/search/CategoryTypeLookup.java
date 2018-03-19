@@ -96,7 +96,7 @@ public class CategoryTypeLookup implements ITypeLookup {
     }
 
     protected static boolean isCompatibleConstantExpression(Expression node, VariableScope scope) {
-        if (node instanceof ConstantExpression) {
+        if (node instanceof ConstantExpression && !scope.isTopLevel()) {
             org.codehaus.groovy.ast.ASTNode enclosingNode = scope.getEnclosingNode();
             if (!(enclosingNode instanceof AttributeExpression || enclosingNode instanceof MethodPointerExpression)) {
                 return (VariableScope.STRING_CLASS_NODE.equals(node.getType()) && node.getLength() <= node.getText().length());
