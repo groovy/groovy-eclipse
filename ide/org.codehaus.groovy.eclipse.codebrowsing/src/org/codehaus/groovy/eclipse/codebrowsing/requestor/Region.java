@@ -77,7 +77,7 @@ public class Region {
      * @return true iff the node's name range covers the region
      */
     public boolean regionIsCoveredByNameRange(AnnotatedNode node) {
-        return this.start >= node.getNameStart() && this.getEnd() <= node.getNameEnd()+1;
+        return this.start >= node.getNameStart() && this.getEnd() <= node.getNameEnd() + 1;
     }
 
     /**
@@ -92,15 +92,14 @@ public class Region {
      */
     public boolean regionIsGStringCoveredByNode(ASTNode node) {
         if (node instanceof VariableExpression) {
-            return this.start >= node.getStart()-1 && this.getEnd() <= node.getEnd();
+            return this.start >= node.getStart() - 1 && this.getEnd() <= node.getEnd();
         } else {
             return regionIsCoveredByNode(node);
         }
     }
 
     public boolean isNonOverlapping(ASTNode node) {
-        return (this.getEnd() <= node.getStart()) ||
-               (this.start >= node.getEnd());
+        return (this.getEnd() <= node.getStart()) || (this.start >= node.getEnd());
     }
 
     public boolean isSame(ASTNode node) {

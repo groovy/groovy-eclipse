@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,10 +65,10 @@ public class GroovyResolvedSourceField extends ResolvedSourceField implements IG
         try {
             return super.getElementInfo();
         } catch (JavaModelException jme) {
-            if (!jme.getJavaModelStatus().isDoesNotExist() ||
-                    !(inferredElement instanceof FieldNode)) {
+            if (!jme.getJavaModelStatus().isDoesNotExist() || !(inferredElement instanceof FieldNode)) {
                 throw jme;
             }
+            // @formatter:off
             return new org.eclipse.jdt.internal.core.SourceFieldElementInfo() {{
                 FieldNode field = (FieldNode) inferredElement;
 
@@ -79,6 +79,7 @@ public class GroovyResolvedSourceField extends ResolvedSourceField implements IG
                 setSourceRangeEnd(field.getEnd());
                 setFlags(field.getModifiers());
             }};
+            // @formatter:on
         }
     }
 }

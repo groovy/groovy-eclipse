@@ -69,7 +69,8 @@ public class ASTNodeFinder extends DepthFirstVisitor {
         result = null;
         try {
             visitModule(node);
-        } catch (VisitCompleteException done) {
+        } catch (VisitCompleteException e) {
+            // finished
         }
         return result;
     }
@@ -343,7 +344,7 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     protected void checkNameRange(AnnotatedNode node) {
         if (sloc.regionIsCoveredByNameRange(node)) {
             completeVisitation(node, new Region(
-                node.getNameStart(), (node.getNameEnd()+1) - node.getNameStart()));
+                node.getNameStart(), (node.getNameEnd() + 1) - node.getNameStart()));
         }
         if (node instanceof ClassNode) {
             checkGenerics((ClassNode) node);

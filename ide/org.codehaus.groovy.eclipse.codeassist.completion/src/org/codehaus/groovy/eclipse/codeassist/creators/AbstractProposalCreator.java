@@ -127,34 +127,34 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
     private static boolean leftIsMoreAccessible(FieldNode field, FieldNode existing) {
         int leftAcc;
         switch (field.getModifiers() & (Flags.AccPublic | Flags.AccPrivate | Flags.AccProtected)) {
-            case Flags.AccPublic:
-                leftAcc = 0;
-                break;
-            case Flags.AccProtected:
-                leftAcc = 1;
-                break;
-            case Flags.AccPrivate:
-                leftAcc = 3;
-                break;
-            default: // package-private
-                leftAcc = 2;
-                break;
+        case Flags.AccPublic:
+            leftAcc = 0;
+            break;
+        case Flags.AccProtected:
+            leftAcc = 1;
+            break;
+        case Flags.AccPrivate:
+            leftAcc = 3;
+            break;
+        default: // package-private
+            leftAcc = 2;
+            break;
         }
 
         int rightAcc;
         switch (existing.getModifiers() & (Flags.AccPublic | Flags.AccPrivate | Flags.AccProtected)) {
-            case Flags.AccPublic:
-                rightAcc = 0;
-                break;
-            case Flags.AccProtected:
-                rightAcc = 1;
-                break;
-            case Flags.AccPrivate:
-                rightAcc = 3;
-                break;
-            default: // package-private
-                rightAcc = 2;
-                break;
+        case Flags.AccPublic:
+            rightAcc = 0;
+            break;
+        case Flags.AccProtected:
+            rightAcc = 1;
+            break;
+        case Flags.AccPrivate:
+            rightAcc = 3;
+            break;
+        default: // package-private
+            rightAcc = 2;
+            break;
         }
 
         return (leftAcc < rightAcc);
@@ -167,7 +167,7 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
         set.add(type.getName());
         getAllSupersAsStrings(type.getSuperClass(), set);
         for (ClassNode inter : (Iterable<ClassNode>) type.getAllInterfaces()) {
-            if (! inter.getName().equals(type.getName())) {
+            if (!inter.getName().equals(type.getName())) {
                 getAllSupersAsStrings(inter, set);
             }
         }

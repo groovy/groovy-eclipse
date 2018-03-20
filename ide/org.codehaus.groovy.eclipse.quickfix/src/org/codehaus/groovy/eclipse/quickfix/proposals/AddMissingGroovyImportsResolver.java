@@ -50,64 +50,6 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
         super(problem);
     }
 
-    public static class AddMissingImportProposal extends AbstractGroovyQuickFixProposal {
-
-        private IType resolvedSuggestedType;
-        private GroovyCompilationUnit unit;
-
-        public AddMissingImportProposal(IType resolvedSuggestedType, GroovyCompilationUnit unit, QuickFixProblemContext problem, int relevance) {
-            super(problem, relevance);
-            this.resolvedSuggestedType = resolvedSuggestedType;
-            this.unit = unit;
-        }
-
-        public IType getSuggestedJavaType() {
-            return resolvedSuggestedType;
-        }
-
-        @Override
-        protected String getImageBundleLocation() {
-            return JavaPluginImages.IMG_OBJS_IMPDECL;
-        }
-
-        protected ImportRewrite getImportRewrite() {
-            ImportRewrite rewriter = null;
-            try {
-                rewriter = ImportRewrite.create(unit, true);
-            } catch (Exception e) {
-                GroovyQuickFixPlugin.log(e);
-            }
-            return rewriter;
-        }
-
-        @Override
-        public void apply(IDocument document) {
-            ImportRewrite rewrite = getImportRewrite();
-            if (rewrite != null) {
-                rewrite.addImport(getSuggestedJavaType().getFullyQualifiedName('.'));
-                try {
-                    TextEdit edit = rewrite.rewriteImports(null);
-                    if (edit != null) {
-                        unit.applyTextEdit(edit, null);
-                    }
-                } catch (Exception e) {
-                    GroovyQuickFixPlugin.log(e);
-                }
-            }
-        }
-
-        @Override
-        public String getDisplayString() {
-            IType declaringType = getSuggestedJavaType().getDeclaringType();
-            // For inner types, display the fully qualified top-level type as
-            // the declaration for the suggested type
-            String declaration = declaringType != null
-                ? declaringType.getFullyQualifiedName().replace('$', '.')
-                : getSuggestedJavaType().getPackageFragment().getElementName();
-            return "Import '" + getSuggestedJavaType().getElementName() + "' (" + declaration + ")";
-        }
-    }
-
     @Override
     protected ProblemType[] getTypes() {
         return new ProblemType[] {ProblemType.MISSING_IMPORTS_TYPE};
@@ -219,5 +161,63 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
 
     protected int getRelevance(IType type) {
         return (type == null ? 0 : IRelevanceRule.DEFAULT.getRelevance(type, getContextTypes()));
+    }
+
+    public static class AddMissingImportProposal extends AbstractGroovyQuickFixProposal {
+
+        private IType resolvedSuggestedType;
+        private GroovyCompilationUnit unit;
+
+        public AddMissingImportProposal(IType resolvedSuggestedType, GroovyCompilationUnit unit, QuickFixProblemContext problem, int relevance) {
+            super(problem, relevance);
+            this.resolvedSuggestedType = resolvedSuggestedType;
+            this.unit = unit;
+        }
+
+        public IType getSuggestedJavaType() {
+            return resolvedSuggestedType;
+        }
+
+        @Override
+        protected String getImageBundleLocation() {
+            return JavaPluginImages.IMG_OBJS_IMPDECL;
+        }
+
+        protected ImportRewrite getImportRewrite() {
+            ImportRewrite rewriter = null;
+            try {
+                rewriter = ImportRewrite.create(unit, true);
+            } catch (Exception e) {
+                GroovyQuickFixPlugin.log(e);
+            }
+            return rewriter;
+        }
+
+        @Override
+        public void apply(IDocument document) {
+            ImportRewrite rewrite = getImportRewrite();
+            if (rewrite != null) {
+                rewrite.addImport(getSuggestedJavaType().getFullyQualifiedName('.'));
+                try {
+                    TextEdit edit = rewrite.rewriteImports(null);
+                    if (edit != null) {
+                        unit.applyTextEdit(edit, null);
+                    }
+                } catch (Exception e) {
+                    GroovyQuickFixPlugin.log(e);
+                }
+            }
+        }
+
+        @Override
+        public String getDisplayString() {
+            IType declaringType = getSuggestedJavaType().getDeclaringType();
+            // For inner types, display the fully qualified top-level type as
+            // the declaration for the suggested type
+            String declaration = declaringType != null
+                ? declaringType.getFullyQualifiedName().replace('$', '.')
+                : getSuggestedJavaType().getPackageFragment().getElementName();
+            return "Import '" + getSuggestedJavaType().getElementName() + "' (" + declaration + ")";
+        }
     }
 }

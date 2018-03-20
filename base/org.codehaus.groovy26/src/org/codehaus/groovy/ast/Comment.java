@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ public abstract class Comment {
     private int kind;
 
     // set when the comment is associated with a source element
-    public boolean usedUp = false;
+    public boolean usedUp;
 
     // Start/Ends for line/columns
     // Lines are from 1..N
@@ -150,7 +150,7 @@ public abstract class Comment {
  */
 class SingleLineComment extends Comment {
 
-    public SingleLineComment(int sline, int scol, int eline, int ecol, String string) {
+    SingleLineComment(int sline, int scol, int eline, int ecol, String string) {
         super(LINE, sline, scol, eline, ecol, string);
         if (debug) {
             System.out.println("Lexer found SL comment: [" + string + "] at L" + sline + "C" + scol + ">L" + eline + "C" + ecol);
@@ -188,7 +188,7 @@ class SingleLineComment extends Comment {
  */
 class MultiLineComment extends Comment {
 
-    public MultiLineComment(int sline, int scol, int eline, int ecol, String string) {
+    MultiLineComment(int sline, int scol, int eline, int ecol, String string) {
         super(string.charAt(2) == '*' ? JAVADOC : BLOCK, sline, scol, eline, ecol, string);
         if (debug) {
             System.out.println("Lexer found ML comment: [" + string + "] at L" + sline + "C" + scol + ">L" + eline + "C" + ecol);

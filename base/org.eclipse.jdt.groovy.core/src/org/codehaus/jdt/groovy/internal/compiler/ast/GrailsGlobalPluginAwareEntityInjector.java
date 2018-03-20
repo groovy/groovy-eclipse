@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,39 +45,22 @@ public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOpera
         System.out.println(msg);
     }
 
-    private static class PluginInfo {
-
-        final String name;
-        final String version;
-
-        public PluginInfo(String name, String version) {
-            this.name = name;
-            this.version = version;
-        }
-
-        @Override
-        public String toString() {
-            return "Plugin(name=" + name + ", version=" + version + ")";
-        }
-
-    }
-
     private GroovyClassLoader groovyClassLoader;
 
     // If true then some part of injector has broken down so avoid trying again
-    private boolean broken = false;
+    private boolean broken;
 
     public GrailsGlobalPluginAwareEntityInjector(GroovyClassLoader groovyClassLoader) {
         this.groovyClassLoader = groovyClassLoader;
     }
 
     @Override
-    public void call(SourceUnit _sourceUnit, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
+    public void call(SourceUnit sourceUnit, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
         if (broken) {
             return;
         }
-        if (_sourceUnit instanceof EclipseSourceUnit) {
-            EclipseSourceUnit sourceUnit = (EclipseSourceUnit) _sourceUnit;
+        if (sourceUnit instanceof EclipseSourceUnit) {
+            EclipseSourceUnit eclipseSourceUnit = (EclipseSourceUnit) sourceUnit;
             try {
                 if (classNode.isAnnotationDefinition()) {
                     return;
@@ -88,7 +71,7 @@ public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOpera
                     return;
                 }
 
-                IFile file = sourceUnit.getEclipseFile();
+                IFile file = eclipseSourceUnit.getEclipseFile();
                 PluginInfo info = getInfo(file);
                 if (info != null) {
                     if (DEBUG) {
@@ -97,10 +80,9 @@ public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOpera
 
                     // The transform should be applied. (code below lifted from
                     // org.codehaus.groovy.grails.compiler.injection.GlobalPluginAwareEntityASTTransformation)
-                    Class<?> GrailsPlugin_class = Class.forName("org.codehaus.groovy.grails.plugins.metadata.GrailsPlugin", false,
-                            groovyClassLoader);
+                    Class<?> grailsPluginClass = Class.forName("org.codehaus.groovy.grails.plugins.metadata.GrailsPlugin", false, groovyClassLoader);
 
-                    final ClassNode annotation = new ClassNode(GrailsPlugin_class);
+                    final ClassNode annotation = new ClassNode(grailsPluginClass);
                     final List<?> list = classNode.getAnnotations(annotation);
                     if (!list.isEmpty()) {
                         return;
@@ -119,7 +101,7 @@ public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOpera
                     }
                 }
             } catch (Exception e) {
-                e.printStackTrace(System.err);
+                e.printStackTrace();
                 broken = true;
             }
         }
@@ -129,7 +111,7 @@ public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOpera
         ModuleNode module = classNode.getModule();
         if (module != null) {
             List<ClassNode> classes = module.getClasses();
-            if (classes != null && classes.size() > 0) {
+            if (classes != null && !classes.isEmpty()) {
                 return classes.get(0) == classNode;
             }
         }
@@ -143,7 +125,7 @@ public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOpera
         IPath path = file.getFullPath();
         // The path is expected to have this form
         // Example:
-        // /test-pro/.link_to_grails_plugins/audit-logging-0.5.4/grails-app/controllers/org/codehaus/groovy/grails/plugins/orm/auditable/AuditLogEventController.groovy
+        // /test-pro/.link_to_grails_plugins/audit-logging-0.5.4/grails-app/controllers/org/codehaus/groovy/grails/plugins/orm/EventController.groovy
         // Pattern:
         // /<project-name>/.link_to_grails_plugins/<plugin-name>-<plugin-version>/<the-rest-of-it>
 
@@ -154,7 +136,7 @@ public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOpera
         if (path != null) {
             if (path.segmentCount() > 3) {
                 String link = path.segment(1);
-                if (link.equals(".link_to_grails_plugins")) { // Same as in JDT SourceFile
+                if (".link_to_grails_plugins".equals(link)) { // Same as in JDT SourceFile
                     String pluginNameAndVersion = path.segment(2);
                     int split = findVersionDash(pluginNameAndVersion);
                     if (split >= 0) {
@@ -177,7 +159,7 @@ public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOpera
     }
 
     /**
-     * Find position of the dash separating plugin name from version.
+     * Finds position of the dash separating plugin name from version.
      *
      * @return position of dash or -1 if dash not found.
      */
@@ -187,5 +169,21 @@ public class GrailsGlobalPluginAwareEntityInjector extends PrimaryClassNodeOpera
             split = pluginNameAndVersion.lastIndexOf('-', split - 1);
         }
         return split;
+    }
+
+    private static class PluginInfo {
+
+        private final String name;
+        private final String version;
+
+        PluginInfo(String name, String version) {
+            this.name = name;
+            this.version = version;
+        }
+
+        @Override
+        public String toString() {
+            return "Plugin(name=" + name + ", version=" + version + ")";
+        }
     }
 }

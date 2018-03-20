@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ public class GrailsInjector extends PrimaryClassNodeOperation {
     private GroovyClassLoader groovyClassLoader;
 
     // If true then some part of the reflection has broken down so avoid trying again
-    private boolean broken = false;
+    private boolean broken;
 
     private Class<?> /* DefaultGrailsDomainClassInjector */injectorClazz;
     private Object/* DefaultGrailsDomainClassInjector */injectorInstance;
@@ -63,30 +63,25 @@ public class GrailsInjector extends PrimaryClassNodeOperation {
         if (injectorClazz == null) {
             // Attempt to load the grails class
             try {
-                injectorClazz = groovyClassLoader
-                        .loadClass("org.codehaus.groovy.grails.compiler.injection.DefaultGrailsDomainClassInjector");
+                injectorClazz = groovyClassLoader.loadClass("org.codehaus.groovy.grails.compiler.injection.DefaultGrailsDomainClassInjector");
                 injectorInstance = injectorClazz.newInstance();
             } catch (Throwable t) {
                 broken = true;
-                System.err
-                        .println("GrailsInjector: Unable to load and create 'org.codehaus.groovy.grails.compiler.injection.DefaultGrailsDomainClassInjector'");
+                System.err.println("GrailsInjector: Unable to load and create 'org.codehaus.groovy.grails.compiler.injection.DefaultGrailsDomainClassInjector'");
                 t.printStackTrace();
                 return;
             }
             try {
                 // retrieve the method we want
-                injectorMethod = injectorClazz.getDeclaredMethod("performInjection", new Class[] { SourceUnit.class,
-                        GeneratorContext.class, ClassNode.class });
+                injectorMethod = injectorClazz.getDeclaredMethod("performInjection", new Class[] {SourceUnit.class, GeneratorContext.class, ClassNode.class});
             } catch (SecurityException se) {
                 broken = true;
-                System.err
-                        .println("GrailsInjector: Cannot find correct performInjection method on 'org.codehaus.groovy.grails.compiler.injection.DefaultGrailsDomainClassInjector'");
+                System.err.println("GrailsInjector: Cannot find correct performInjection method on 'org.codehaus.groovy.grails.compiler.injection.DefaultGrailsDomainClassInjector'");
                 se.printStackTrace();
                 return;
             } catch (NoSuchMethodException nsme) {
                 broken = true;
-                System.err
-                        .println("GrailsInjector: Cannot find correct performInjection method on 'org.codehaus.groovy.grails.compiler.injection.DefaultGrailsDomainClassInjector'");
+                System.err.println("GrailsInjector: Cannot find correct performInjection method on 'org.codehaus.groovy.grails.compiler.injection.DefaultGrailsDomainClassInjector'");
                 nsme.printStackTrace();
                 return;
             }
@@ -101,13 +96,7 @@ public class GrailsInjector extends PrimaryClassNodeOperation {
             if (sourceUnit.getName().indexOf("grails-app/domain/") != -1) {
                 injectorMethod.invoke(injectorInstance, sourceUnit, context, classNode);
             }
-        } catch (IllegalArgumentException iae) {
-            System.err.println("GrailsInjector: Problem invoking performInjection");
-            iae.printStackTrace();
-        } catch (IllegalAccessException iae) {
-            System.err.println("GrailsInjector: Problem invoking performInjection");
-            iae.printStackTrace();
-        } catch (InvocationTargetException e) {
+        } catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
             System.err.println("GrailsInjector: Problem invoking performInjection");
             e.printStackTrace();
         }

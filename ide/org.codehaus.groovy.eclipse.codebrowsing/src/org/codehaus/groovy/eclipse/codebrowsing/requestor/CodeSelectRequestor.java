@@ -436,7 +436,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
             } else if (declaration instanceof MethodNode) {
                 MethodNode node = (MethodNode) declaration;
                 name = node.getName();
-                if (name.equals("<init>")) {
+                if ("<init>".equals(name)) {
                     name = jdtDeclaringType.getElementName();
                 }
                 // short-circuit if declaration exists in the Groovy model but not in the Java model
@@ -554,29 +554,29 @@ public class CodeSelectRequestor implements ITypeRequestor {
         // Create the Groovy Resolved Element, which is like a resolved element, but contains extraDoc, as
         // well as the inferred declaration (which may not be the same as the actual declaration)
         switch (maybeRequested.getElementType()) {
-            case IJavaElement.FIELD:
-                if (maybeRequested.isReadOnly()) {
-                    candidate = new GroovyResolvedBinaryField((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc, declaration);
-                } else {
-                    candidate = new GroovyResolvedSourceField((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc, declaration);
-                }
-                break;
-            case IJavaElement.METHOD:
-                if (maybeRequested.isReadOnly()) {
-                    candidate = new GroovyResolvedBinaryMethod((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), ((IMethod) maybeRequested).getParameterTypes(), uniqueKey, result.extraDoc, declaration);
-                } else {
-                    candidate = new GroovyResolvedSourceMethod((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), ((IMethod) maybeRequested).getParameterTypes(), uniqueKey, result.extraDoc, declaration);
-                }
-                break;
-            case IJavaElement.TYPE:
-                if (maybeRequested.isReadOnly()) {
-                    candidate = new GroovyResolvedBinaryType((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc, declaration);
-                } else {
-                    candidate = new GroovyResolvedSourceType((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc, declaration);
-                }
-                break;
-            default:
-                candidate = maybeRequested;
+        case IJavaElement.FIELD:
+            if (maybeRequested.isReadOnly()) {
+                candidate = new GroovyResolvedBinaryField((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc, declaration);
+            } else {
+                candidate = new GroovyResolvedSourceField((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc, declaration);
+            }
+            break;
+        case IJavaElement.METHOD:
+            if (maybeRequested.isReadOnly()) {
+                candidate = new GroovyResolvedBinaryMethod((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), ((IMethod) maybeRequested).getParameterTypes(), uniqueKey, result.extraDoc, declaration);
+            } else {
+                candidate = new GroovyResolvedSourceMethod((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), ((IMethod) maybeRequested).getParameterTypes(), uniqueKey, result.extraDoc, declaration);
+            }
+            break;
+        case IJavaElement.TYPE:
+            if (maybeRequested.isReadOnly()) {
+                candidate = new GroovyResolvedBinaryType((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc, declaration);
+            } else {
+                candidate = new GroovyResolvedSourceType((JavaElement) maybeRequested.getParent(), maybeRequested.getElementName(), uniqueKey, result.extraDoc, declaration);
+            }
+            break;
+        default:
+            candidate = maybeRequested;
         }
         requestedElement = candidate;
         return requestedElement;
@@ -629,7 +629,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
 
         // method name
         String methodName = node.getName();
-        if (methodName.equals("<init>"))
+        if ("<init>".equals(methodName))
             methodName = node.getDeclaringClass().getNameWithoutPackage();
         // BindingKeyParser fails if method name has 2 or more $s
         if (methodName.indexOf('$') != methodName.lastIndexOf('$')) {
@@ -687,7 +687,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
     private void appendUniqueKeyForGeneratedAccessor(StringBuilder sb, MethodNode node, ClassNode resolvedType, ClassNode resolvedDeclaringType, IField actualField) {
         appendUniqueKeyForClass(sb, node.getDeclaringClass(), resolvedDeclaringType);
         sb.append('.').append(actualField.getElementName()).append(')');
-        ClassNode typeOfField = node.getName().startsWith("set")  && node.getParameters() != null && node.getParameters().length > 0 ? node.getParameters()[0].getType(): resolvedType;
+        ClassNode typeOfField = node.getName().startsWith("set")  && node.getParameters() != null && node.getParameters().length > 0 ? node.getParameters()[0].getType() : resolvedType;
         appendUniqueKeyForResolvedClass(sb, typeOfField);
     }
 
@@ -728,7 +728,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
         if (text.equals(type.getElementName())) {
             return type;
         }
-        if (text.equals("<init>")) {
+        if ("<init>".equals(text)) {
             text = type.getElementName();
         }
 

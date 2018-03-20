@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,20 +49,20 @@ public enum ProblemType {
      * A bit of text that uniquely describes the groovy compiler problem
      * Only necessary because groovy problems do not have a unique id.
      */
-    public final String groovyProblemSnippets[];
+    public final String[] groovyProblemSnippets;
 
     public static final int GROOVY_PROBLEM_ID = 0;
 
     /** Constructor for groovy problems. Can only be distinguished by */
-    private ProblemType(String... groovyProblemSnippets) {
+    ProblemType(String... groovyProblemSnippets) {
         this(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, GROOVY_PROBLEM_ID, groovyProblemSnippets);
     }
 
-    private ProblemType(int problemID, String... groovyProblemSnippets) {
+    ProblemType(int problemID, String... groovyProblemSnippets) {
         this(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, problemID, groovyProblemSnippets);
     }
 
-    private ProblemType(String markerType, int problemID, String... groovyProblemSnippets) {
+    ProblemType(String markerType, int problemID, String... groovyProblemSnippets) {
         this.markerType = markerType;
         this.problemId = problemID;
         this.groovyProblemSnippets = groovyProblemSnippets;

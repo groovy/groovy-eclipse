@@ -61,9 +61,7 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
                 classpath.addEntry(JavaCore.newContainerEntry(
                     GroovyRuntime.DSLD_CONTAINER_ID,
                     null, // access rules
-                    new IClasspathAttribute[] {
-                        JavaCore.newClasspathAttribute("maven.pomderived", "true")
-                    },
+                    new IClasspathAttribute[] {JavaCore.newClasspathAttribute("maven.pomderived", "true")},
                     false // exported
                 ));
             }

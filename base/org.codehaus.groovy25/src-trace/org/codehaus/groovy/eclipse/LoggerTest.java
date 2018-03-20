@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,88 +15,88 @@
  */
 package org.codehaus.groovy.eclipse;
 
-import junit.framework.TestCase;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
- * Simple test to make sure that logs are added and removed properly.
- *
- * @author Andrew Eisenberg
+ * Ensures that logs are added and removed properly.
  */
-public class LoggerTest extends TestCase {
+public final class LoggerTest {
 
+    @Test
     public void testLoggers() throws Exception {
-        DefaultGroovyLogger l1 = new DefaultGroovyLogger();
-        DefaultGroovyLogger l2 = new DefaultGroovyLogger();
-        DefaultGroovyLogger l3 = new DefaultGroovyLogger();
-        DefaultGroovyLogger l4 = new DefaultGroovyLogger();
-        DefaultGroovyLogger l5 = new DefaultGroovyLogger();
+        DefaultGroovyLogger logger1 = new DefaultGroovyLogger();
+        DefaultGroovyLogger logger2 = new DefaultGroovyLogger();
+        DefaultGroovyLogger logger3 = new DefaultGroovyLogger();
+        DefaultGroovyLogger logger4 = new DefaultGroovyLogger();
+        DefaultGroovyLogger logger5 = new DefaultGroovyLogger();
 
-        assertTrue(GroovyLogManager.manager.addLogger(l1));
-        assertFalse(GroovyLogManager.manager.addLogger(l1));
-        assertTrue(GroovyLogManager.manager.addLogger(l2));
-        assertFalse(GroovyLogManager.manager.addLogger(l2));
-        assertTrue(GroovyLogManager.manager.addLogger(l3));
-        assertFalse(GroovyLogManager.manager.addLogger(l3));
-        assertTrue(GroovyLogManager.manager.addLogger(l4));
-        assertFalse(GroovyLogManager.manager.addLogger(l4));
-        assertTrue(GroovyLogManager.manager.addLogger(l5));
-        assertFalse(GroovyLogManager.manager.addLogger(l5));
+        Assert.assertTrue(GroovyLogManager.manager.addLogger(logger1));
+        Assert.assertFalse(GroovyLogManager.manager.addLogger(logger1));
+        Assert.assertTrue(GroovyLogManager.manager.addLogger(logger2));
+        Assert.assertFalse(GroovyLogManager.manager.addLogger(logger2));
+        Assert.assertTrue(GroovyLogManager.manager.addLogger(logger3));
+        Assert.assertFalse(GroovyLogManager.manager.addLogger(logger3));
+        Assert.assertTrue(GroovyLogManager.manager.addLogger(logger4));
+        Assert.assertFalse(GroovyLogManager.manager.addLogger(logger4));
+        Assert.assertTrue(GroovyLogManager.manager.addLogger(logger5));
+        Assert.assertFalse(GroovyLogManager.manager.addLogger(logger5));
 
-        assertTrue(GroovyLogManager.manager.removeLogger(l1));
-        assertFalse(GroovyLogManager.manager.removeLogger(l1));
-        assertTrue(GroovyLogManager.manager.removeLogger(l2));
-        assertFalse(GroovyLogManager.manager.removeLogger(l2));
-        assertTrue(GroovyLogManager.manager.removeLogger(l3));
-        assertFalse(GroovyLogManager.manager.removeLogger(l3));
-        assertTrue(GroovyLogManager.manager.removeLogger(l4));
-        assertFalse(GroovyLogManager.manager.removeLogger(l4));
-        assertTrue(GroovyLogManager.manager.removeLogger(l5));
-        assertFalse(GroovyLogManager.manager.removeLogger(l5));
+        Assert.assertTrue(GroovyLogManager.manager.removeLogger(logger1));
+        Assert.assertFalse(GroovyLogManager.manager.removeLogger(logger1));
+        Assert.assertTrue(GroovyLogManager.manager.removeLogger(logger2));
+        Assert.assertFalse(GroovyLogManager.manager.removeLogger(logger2));
+        Assert.assertTrue(GroovyLogManager.manager.removeLogger(logger3));
+        Assert.assertFalse(GroovyLogManager.manager.removeLogger(logger3));
+        Assert.assertTrue(GroovyLogManager.manager.removeLogger(logger4));
+        Assert.assertFalse(GroovyLogManager.manager.removeLogger(logger4));
+        Assert.assertTrue(GroovyLogManager.manager.removeLogger(logger5));
+        Assert.assertFalse(GroovyLogManager.manager.removeLogger(logger5));
 
         // now reverse order of removal
-        assertTrue(GroovyLogManager.manager.addLogger(l1));
-        assertFalse(GroovyLogManager.manager.addLogger(l1));
-        assertTrue(GroovyLogManager.manager.addLogger(l2));
-        assertFalse(GroovyLogManager.manager.addLogger(l2));
-        assertTrue(GroovyLogManager.manager.addLogger(l3));
-        assertFalse(GroovyLogManager.manager.addLogger(l3));
-        assertTrue(GroovyLogManager.manager.addLogger(l4));
-        assertFalse(GroovyLogManager.manager.addLogger(l4));
-        assertTrue(GroovyLogManager.manager.addLogger(l5));
-        assertFalse(GroovyLogManager.manager.addLogger(l5));
+        Assert.assertTrue(GroovyLogManager.manager.addLogger(logger1));
+        Assert.assertFalse(GroovyLogManager.manager.addLogger(logger1));
+        Assert.assertTrue(GroovyLogManager.manager.addLogger(logger2));
+        Assert.assertFalse(GroovyLogManager.manager.addLogger(logger2));
+        Assert.assertTrue(GroovyLogManager.manager.addLogger(logger3));
+        Assert.assertFalse(GroovyLogManager.manager.addLogger(logger3));
+        Assert.assertTrue(GroovyLogManager.manager.addLogger(logger4));
+        Assert.assertFalse(GroovyLogManager.manager.addLogger(logger4));
+        Assert.assertTrue(GroovyLogManager.manager.addLogger(logger5));
+        Assert.assertFalse(GroovyLogManager.manager.addLogger(logger5));
 
-        assertTrue(GroovyLogManager.manager.removeLogger(l5));
-        assertFalse(GroovyLogManager.manager.removeLogger(l5));
-        assertTrue(GroovyLogManager.manager.removeLogger(l4));
-        assertFalse(GroovyLogManager.manager.removeLogger(l4));
-        assertTrue(GroovyLogManager.manager.removeLogger(l3));
-        assertFalse(GroovyLogManager.manager.removeLogger(l3));
-        assertTrue(GroovyLogManager.manager.removeLogger(l2));
-        assertFalse(GroovyLogManager.manager.removeLogger(l2));
-        assertTrue(GroovyLogManager.manager.removeLogger(l1));
-        assertFalse(GroovyLogManager.manager.removeLogger(l1));
+        Assert.assertTrue(GroovyLogManager.manager.removeLogger(logger5));
+        Assert.assertFalse(GroovyLogManager.manager.removeLogger(logger5));
+        Assert.assertTrue(GroovyLogManager.manager.removeLogger(logger4));
+        Assert.assertFalse(GroovyLogManager.manager.removeLogger(logger4));
+        Assert.assertTrue(GroovyLogManager.manager.removeLogger(logger3));
+        Assert.assertFalse(GroovyLogManager.manager.removeLogger(logger3));
+        Assert.assertTrue(GroovyLogManager.manager.removeLogger(logger2));
+        Assert.assertFalse(GroovyLogManager.manager.removeLogger(logger2));
+        Assert.assertTrue(GroovyLogManager.manager.removeLogger(logger1));
+        Assert.assertFalse(GroovyLogManager.manager.removeLogger(logger1));
 
         // now removal from middle
-        assertTrue(GroovyLogManager.manager.addLogger(l1));
-        assertFalse(GroovyLogManager.manager.addLogger(l1));
-        assertTrue(GroovyLogManager.manager.addLogger(l2));
-        assertFalse(GroovyLogManager.manager.addLogger(l2));
-        assertTrue(GroovyLogManager.manager.addLogger(l3));
-        assertFalse(GroovyLogManager.manager.addLogger(l3));
-        assertTrue(GroovyLogManager.manager.addLogger(l4));
-        assertFalse(GroovyLogManager.manager.addLogger(l4));
-        assertTrue(GroovyLogManager.manager.addLogger(l5));
-        assertFalse(GroovyLogManager.manager.addLogger(l5));
+        Assert.assertTrue(GroovyLogManager.manager.addLogger(logger1));
+        Assert.assertFalse(GroovyLogManager.manager.addLogger(logger1));
+        Assert.assertTrue(GroovyLogManager.manager.addLogger(logger2));
+        Assert.assertFalse(GroovyLogManager.manager.addLogger(logger2));
+        Assert.assertTrue(GroovyLogManager.manager.addLogger(logger3));
+        Assert.assertFalse(GroovyLogManager.manager.addLogger(logger3));
+        Assert.assertTrue(GroovyLogManager.manager.addLogger(logger4));
+        Assert.assertFalse(GroovyLogManager.manager.addLogger(logger4));
+        Assert.assertTrue(GroovyLogManager.manager.addLogger(logger5));
+        Assert.assertFalse(GroovyLogManager.manager.addLogger(logger5));
 
-        assertTrue(GroovyLogManager.manager.removeLogger(l3));
-        assertFalse(GroovyLogManager.manager.removeLogger(l3));
-        assertTrue(GroovyLogManager.manager.removeLogger(l2));
-        assertFalse(GroovyLogManager.manager.removeLogger(l2));
-        assertTrue(GroovyLogManager.manager.removeLogger(l4));
-        assertFalse(GroovyLogManager.manager.removeLogger(l4));
-        assertTrue(GroovyLogManager.manager.removeLogger(l5));
-        assertFalse(GroovyLogManager.manager.removeLogger(l5));
-        assertTrue(GroovyLogManager.manager.removeLogger(l1));
-        assertFalse(GroovyLogManager.manager.removeLogger(l1));
+        Assert.assertTrue(GroovyLogManager.manager.removeLogger(logger3));
+        Assert.assertFalse(GroovyLogManager.manager.removeLogger(logger3));
+        Assert.assertTrue(GroovyLogManager.manager.removeLogger(logger2));
+        Assert.assertFalse(GroovyLogManager.manager.removeLogger(logger2));
+        Assert.assertTrue(GroovyLogManager.manager.removeLogger(logger4));
+        Assert.assertFalse(GroovyLogManager.manager.removeLogger(logger4));
+        Assert.assertTrue(GroovyLogManager.manager.removeLogger(logger5));
+        Assert.assertFalse(GroovyLogManager.manager.removeLogger(logger5));
+        Assert.assertTrue(GroovyLogManager.manager.removeLogger(logger1));
+        Assert.assertFalse(GroovyLogManager.manager.removeLogger(logger1));
     }
 }

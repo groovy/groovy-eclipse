@@ -51,7 +51,8 @@ public class GroovyActivator extends Plugin {
             throw new RuntimeException(
                 "Couldn't find '" + GROOVY_ALL_JAR + "' in bundle " + bundle.getSymbolicName() + " " + bundle.getVersion());
         }
-        GROOVY_ALL_JAR_URL = GROOVY_JAR_URL = FileLocator.resolve(entry);
+        GROOVY_ALL_JAR_URL = FileLocator.resolve(entry);
+        GROOVY_JAR_URL = GROOVY_ALL_JAR_URL;
     }
 
     //--------------------------------------------------------------------------

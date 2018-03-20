@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,31 +65,6 @@ public class GroovyQuickFixProcessor implements IQuickFixProcessor {
             }
         }
         return new IJavaCompletionProposal[0];
-
-//        if (!(context instanceof IQuickAssistInvocationContext)) {
-//            return new IJavaCompletionProposal[0];
-//        }
-//        try {
-//            IQuickAssistInvocationContext assistContext = (IQuickAssistInvocationContext) context;
-//            TemplateStore codeTemplates = GroovyQuickFixPlugin.getDefault().getTemplateStore();
-//            List<IJavaCompletionProposal> templates = new ArrayList<IJavaCompletionProposal>();
-//            Region region = new Region(assistContext.getOffset(), assistContext.getLength());
-//            ContextTypeRegistry templateContextRegistry= GroovyQuickFixPlugin.getDefault().getTemplateContextRegistry();
-//            TemplateContextType contextType= templateContextRegistry.getContextType(GroovyQuickFixPlugin.GROOVY_CONTEXT_TYPE);
-//            IDocument document = assistContext.getSourceViewer().getDocument();
-//            JavaContext templateContext = new GroovyContext(contextType, document,
-//                    region.getOffset(), region.getLength(), context.getCompilationUnit());
-//
-//            templateContext.setForceEvaluation(true);
-//            templateContext.setVariable("selection", document.get(region.getOffset(), region.getLength()));
-//            for (Template template : codeTemplates.getTemplates()) {
-//                templates.add(new TemplateProposal(template, templateContext, region, null));
-//            }
-//            return templates.toArray(new IJavaCompletionProposal[0]);
-//        } catch (BadLocationException e) {
-//            GroovyQuickFixPlugin.log(e);
-//            return new IJavaCompletionProposal[0];
-//        }
     }
 
     /**
@@ -159,8 +134,7 @@ public class GroovyQuickFixProcessor implements IQuickFixProcessor {
             IResource resource = unit.getResource();
             if (resource != null) {
                 IProject project = resource.getProject();
-                if (project != null && project.isAccessible()
-                        && GroovyNature.hasGroovyNature(project)) {
+                if (project != null && project.isAccessible() && GroovyNature.hasGroovyNature(project)) {
                     return true;
                 }
             }

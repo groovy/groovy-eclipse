@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,8 +33,6 @@ import java.util.Map;
 /**
  * Parser plugin using grammar which has error recovery enabled/implemented in
  * select places.
- *
- * @author empovazan
  */
 public class ErrorRecoveredCSTParserPlugin extends AntlrParserPlugin {
     private final ICSTReporter reporter;
@@ -120,7 +118,7 @@ public class ErrorRecoveredCSTParserPlugin extends AntlrParserPlugin {
         if (reporter != null) {
             if (cst != null)
                 reporter.generatedCST(sourceUnit.getName(), cst);
-            if (errorList.size() != 0)
+            if (!errorList.isEmpty())
                 // Unmodifiable necessary?
                 reporter.reportErrors(sourceUnit.getName(), Collections.unmodifiableList(errorList));
         } else {

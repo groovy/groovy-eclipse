@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,9 +37,8 @@ public class GroovyCompilerAdapter extends JDTCompilerAdapter implements Compile
         if (groovyFiles.length > 0) {
             // now log...
             for (int i = 0, n = groovyFiles.length; i < n; i += 1) {
-                javac.log("Compiling " + groovyFiles.length + " groovy source file"
-                        + (groovyFiles.length == 1 ? "" : "s")
-                        + (destDir != null ? " to " + destDir : ""));
+                javac.log("Compiling " + groovyFiles.length + " groovy source file" + (groovyFiles.length == 1 ? "" : "s") +
+                    (destDir != null ? " to " + destDir : ""));
                 String filename = groovyFiles[i].getAbsolutePath();
                 javac.log(filename);
             }
@@ -89,16 +88,13 @@ public class GroovyCompilerAdapter extends JDTCompilerAdapter implements Compile
     }
 }
 
-
 class GroovyFileNameMapper implements FileNameMapper {
 
     @Override
     public String[] mapFileName(String sourceFileName) {
         if (sourceFileName != null) {
             if (sourceFileName.endsWith(".groovy")) {
-                return new String[] {
-                    extractVariablePart(sourceFileName, ".groovy".length()) + ".class"
-                };
+                return new String[] {extractVariablePart(sourceFileName, ".groovy".length()) + ".class"};
             }
         }
         return null;

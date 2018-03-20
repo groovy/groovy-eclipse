@@ -228,7 +228,7 @@ public class GroovyParser {
 
         private BuildNotifier notifier;
 
-        public ProgressListenerImpl(BuildNotifier notifier) {
+        ProgressListenerImpl(BuildNotifier notifier) {
             this.notifier = notifier;
         }
 

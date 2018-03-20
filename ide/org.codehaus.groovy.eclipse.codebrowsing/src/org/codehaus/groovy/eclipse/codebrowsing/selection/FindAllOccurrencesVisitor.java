@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,54 +70,6 @@ import org.codehaus.groovy.eclipse.codebrowsing.fragments.MethodCallFragment;
  * Finds all occurrences of the passed in expression in the module.
  */
 public class FindAllOccurrencesVisitor extends ClassCodeVisitorSupport {
-
-    class FragmentMatcherVisitor extends FragmentVisitor {
-        private boolean matchWasFound = false;
-
-        @Override
-        public boolean previsit(IASTFragment fragment) {
-            IASTFragment matched = fragment.findMatchingSubFragment(toFind);
-            if (matched.kind() != ASTFragmentKind.EMPTY) {
-                // prevent double matching, which may occur in binary fragments when searching for a simple expression fragment
-                if (occurrences.size() == 0 ||
-                        occurrences.get(occurrences.size()-1).getStart() != matched.getStart()) {
-                    occurrences.add(matched);
-                    matchWasFound = true;
-                }
-            }
-
-            // only continue for binary fragments since there may be multiple
-            // matches inside of them
-            return fragment.kind() == ASTFragmentKind.BINARY;
-        }
-
-        boolean matchWasFound() {
-            boolean b = matchWasFound;
-            matchWasFound = false;
-            return b;
-        }
-    }
-
-    class AssociatedExpressionMatcher extends FragmentVisitor {
-        boolean ignoreNext = false;
-
-        @Override
-        public boolean previsit(IASTFragment fragment) {
-            if (! ignoreNext) {
-                fragment.getAssociatedExpression().visit(FindAllOccurrencesVisitor.this);
-            } else {
-                ignoreNext = false;
-            }
-            return true;
-        }
-
-        @Override
-        public boolean visit(MethodCallFragment fragment) {
-            fragment.getArguments().visit(FindAllOccurrencesVisitor.this);
-            return true;
-        }
-
-    }
 
     private IASTFragment toFind;
 
@@ -225,15 +177,14 @@ public class FindAllOccurrencesVisitor extends ClassCodeVisitorSupport {
         IASTFragment fragment = factory.createFragment(expression);
         fragment.accept(fragmentMatcher);
 
-        // If looking for a simple expression, then we have already visited the children
-        // don't visit twice
-//        if (toFind.kind() != ASTFragmentKind.SIMPLE_EXPRESSION) {
-            // don't visit children directly because that may result in
-            // unanticipated double matches
-            // Don't ignore the first fragment
-            associatedExpressionMatcher.ignoreNext = false;
-            fragment.accept(associatedExpressionMatcher);
-//        }
+        // If looking for a simple expression, then we have already visited the children don't visit twice
+        //if (toFind.kind() != ASTFragmentKind.SIMPLE_EXPRESSION) {
+        // don't visit children directly because that may result in
+        // unanticipated double matches
+        // Don't ignore the first fragment
+        associatedExpressionMatcher.ignoreNext = false;
+        fragment.accept(associatedExpressionMatcher);
+        //}
     }
 
     @Override
@@ -491,5 +442,51 @@ public class FindAllOccurrencesVisitor extends ClassCodeVisitorSupport {
         fragment.accept(fragmentMatcher);
         if (!fragmentMatcher.matchWasFound())
             super.visitUnaryPlusExpression(expression);
+    }
+
+    class FragmentMatcherVisitor extends FragmentVisitor {
+        private boolean matchWasFound;
+
+        @Override
+        public boolean previsit(IASTFragment fragment) {
+            IASTFragment matched = fragment.findMatchingSubFragment(toFind);
+            if (matched.kind() != ASTFragmentKind.EMPTY) {
+                // prevent double matching, which may occur in binary fragments when searching for a simple expression fragment
+                if (occurrences.isEmpty() || occurrences.get(occurrences.size() - 1).getStart() != matched.getStart()) {
+                    occurrences.add(matched);
+                    matchWasFound = true;
+                }
+            }
+
+            // only continue for binary fragments since there may be multiple
+            // matches inside of them
+            return fragment.kind() == ASTFragmentKind.BINARY;
+        }
+
+        boolean matchWasFound() {
+            boolean b = matchWasFound;
+            matchWasFound = false;
+            return b;
+        }
+    }
+
+    class AssociatedExpressionMatcher extends FragmentVisitor {
+        boolean ignoreNext;
+
+        @Override
+        public boolean previsit(IASTFragment fragment) {
+            if (!ignoreNext) {
+                fragment.getAssociatedExpression().visit(FindAllOccurrencesVisitor.this);
+            } else {
+                ignoreNext = false;
+            }
+            return true;
+        }
+
+        @Override
+        public boolean visit(MethodCallFragment fragment) {
+            fragment.getArguments().visit(FindAllOccurrencesVisitor.this);
+            return true;
+        }
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.tests;
-
-import javax.swing.text.html.HTML;
 
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -38,7 +36,7 @@ public class TestTypeLookup implements ITypeLookup {
 
     @Override
     public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
-        return new TypeLookupResult(ClassHelper.make(HTML.class), VariableScope.VOID_CLASS_NODE, VariableScope.STRING_CLASS_NODE.getMethod("toString", Parameter.EMPTY_ARRAY), TypeConfidence.LOOSELY_INFERRED, scope);
+        return new TypeLookupResult(ClassHelper.make(javax.swing.text.html.HTML.class), VariableScope.VOID_CLASS_NODE, VariableScope.STRING_CLASS_NODE.getMethod("toString", Parameter.EMPTY_ARRAY), TypeConfidence.LOOSELY_INFERRED, scope);
     }
 
     @Override

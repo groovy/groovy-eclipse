@@ -72,7 +72,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
 
         final boolean stopOnFirst;
 
-        public GroovyErrorHandlingPolicy(boolean stopOnFirst) {
+        GroovyErrorHandlingPolicy(boolean stopOnFirst) {
             this.stopOnFirst = stopOnFirst;
         }
 
@@ -448,12 +448,12 @@ public class GroovyCompilationUnit extends CompilationUnit {
     class CompilationUnitClone extends GroovyCompilationUnit {
         private char[] cachedContents;
 
-        public CompilationUnitClone(char[] cachedContents) {
+        CompilationUnitClone(char[] cachedContents) {
             this();
             this.cachedContents = cachedContents;
         }
 
-        public CompilationUnitClone() {
+        CompilationUnitClone() {
             super((PackageFragment) GroovyCompilationUnit.this.parent, GroovyCompilationUnit.this.name, GroovyCompilationUnit.this.owner);
         }
 

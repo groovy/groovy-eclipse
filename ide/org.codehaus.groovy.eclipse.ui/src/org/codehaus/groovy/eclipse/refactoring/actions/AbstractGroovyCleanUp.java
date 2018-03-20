@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,26 +29,21 @@ public abstract class AbstractGroovyCleanUp extends AbstractCleanUp {
     protected RefactoringStatus status;
 
     @Override
-    public RefactoringStatus checkPreConditions(IJavaProject project,
-            ICompilationUnit[] compilationUnits, IProgressMonitor monitor)
-            throws CoreException {
-
-        RefactoringStatus status = new RefactoringStatus();
-
+    public RefactoringStatus checkPreConditions(IJavaProject project, ICompilationUnit[] compilationUnits, IProgressMonitor monitor) throws CoreException {
+        RefactoringStatus stat = new RefactoringStatus();
         try {
             for (ICompilationUnit unit : compilationUnits) {
                 if (!(unit instanceof GroovyCompilationUnit)) {
-                    status.addError("Cannot use cleanup on a non-groovy compilation unit: " + unit.getElementName());
+                    stat.addError("Cannot use cleanup on a non-groovy compilation unit: " + unit.getElementName());
                 } else if (((GroovyCompilationUnit) unit).getModuleNode() == null) {
-                    status.addError("Cannot find module node for compilation unit: " + unit.getElementName());
+                    stat.addError("Cannot find module node for compilation unit: " + unit.getElementName());
                 }
             }
         } catch (Exception e) {
             GroovyCore.logException("Cannot perform cleanup.", e);
-            status.addFatalError("Cannot perform cleanup. See error log. " + e.getMessage());
+            stat.addFatalError("Cannot perform cleanup. See error log. " + e.getMessage());
         }
-
-        return status;
+        return stat;
     }
 
     @Override
