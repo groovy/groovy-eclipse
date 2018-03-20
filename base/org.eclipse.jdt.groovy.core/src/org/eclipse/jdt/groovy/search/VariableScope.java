@@ -31,6 +31,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -42,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
+import java.util.stream.Collectors;
 
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
@@ -71,14 +73,8 @@ import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.ThrowStatement;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilerConfiguration;
-import org.codehaus.groovy.runtime.DateGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyStaticMethods;
-import org.codehaus.groovy.runtime.EncodingGroovyMethods;
-import org.codehaus.groovy.runtime.IOGroovyMethods;
-import org.codehaus.groovy.runtime.ProcessGroovyMethods;
-import org.codehaus.groovy.runtime.ResourceGroovyMethods;
-import org.codehaus.groovy.runtime.StringGroovyMethods;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
@@ -122,31 +118,19 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     public static final ClassNode BUFFERED_WRITER_CLASS_NODE = ClassHelper.make(BufferedWriter.class);
     public static final ClassNode PRINT_WRITER_CLASS_NODE = ClassHelper.make(PrintWriter.class);
 
-    // standard category classes
-    public static final ClassNode DGM_CLASS_NODE = ClassHelper.make(DefaultGroovyMethods.class);
-    public static final ClassNode EGM_CLASS_NODE = ClassHelper.make(EncodingGroovyMethods.class);
-    public static final ClassNode PGM_CLASS_NODE = ClassHelper.make(ProcessGroovyMethods.class);
-    public static final ClassNode DATE_GM_CLASS_NODE = ClassHelper.make(DateGroovyMethods.class);
-    public static final ClassNode DGSM_CLASS_NODE = ClassHelper.make(DefaultGroovyStaticMethods.class);
-    public static final ClassNode IO_GROOVY_METHODS = ClassHelper.make(IOGroovyMethods.class);
-    public static final ClassNode STRING_GROOVY_METHODS = ClassHelper.make(StringGroovyMethods.class);
-    public static final ClassNode RESOURCE_GROOVY_METHODS = ClassHelper.make(ResourceGroovyMethods.class);
-
-    // only exists on 2.1 and later
+    // only exists on 2.1+
     public static final ClassNode CLOSURE_PARAMS = ClassHelper.make(ClosureParams.class);
     public static final ClassNode DELEGATES_TO = ClassHelper.make(DelegatesTo.class);
 
+    // standard category classes
+    public static final ClassNode DGM_CLASS_NODE = ClassHelper.make(DefaultGroovyMethods.class);
+    public static final ClassNode DGSM_CLASS_NODE = ClassHelper.make(DefaultGroovyStaticMethods.class);
+
     public static final Set<ClassNode> ALL_DEFAULT_CATEGORIES;
     static {
-        // add all of the known DGM classes. Order counts since we look up earlier in the list before later and need to
-        // ensure we don't accidentally place deprecated elements early in the list
-        Set<ClassNode> dgm_classes = new LinkedHashSet<>();
-        dgm_classes.add(STRING_GROOVY_METHODS);
-        dgm_classes.add(RESOURCE_GROOVY_METHODS);
-        dgm_classes.add(IO_GROOVY_METHODS);
-        dgm_classes.add(EGM_CLASS_NODE);
-        dgm_classes.add(PGM_CLASS_NODE);
-        dgm_classes.add(DATE_GM_CLASS_NODE);
+        Set<ClassNode> dgm_classes = Arrays.stream(DefaultGroovyMethods.DGM_LIKE_CLASSES)
+            .map(ClassHelper::make).collect(Collectors.toCollection(LinkedHashSet::new));
+        dgm_classes.remove(DGM_CLASS_NODE);
         dgm_classes.add(DGSM_CLASS_NODE);
         dgm_classes.add(DGM_CLASS_NODE);
 
@@ -488,26 +472,26 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     }
 
     /**
-     * The name of all categories in scope.
+     * @return all categories active in this scope
      */
     public Set<ClassNode> getCategoryNames() {
-        if (parent != null) {
-            Set<ClassNode> categories = parent.getCategoryNames();
-            // don't look at this scope's category, but the parent scope's
-            // category. This is because although current scope knows that it
-            // is a category scope, the category type is only available from parent
-            // scope
-            if (parent.isCategoryBeingDeclared()) {
-                categories.add(parent.categoryBeingDeclared);
-            }
-            return categories;
-        } else {
-            return new LinkedHashSet<>(ALL_DEFAULT_CATEGORIES);
+        if (parent == null) {
+            return ALL_DEFAULT_CATEGORIES;
         }
+
+        Set<ClassNode> categories = parent.getCategoryNames();
+        // look at the parent scope's category, not this scope's category
+        // if this scope represents a "use" block, category is not active
+        // until child scopes
+        if (parent.isCategoryBeingDeclared()) {
+            categories = new LinkedHashSet<>(categories);
+            categories.add(parent.categoryBeingDeclared);
+        }
+        return categories;
     }
 
     private boolean isCategoryBeingDeclared() {
-        return categoryBeingDeclared != null;
+        return (categoryBeingDeclared != null);
     }
 
     public void setCategoryBeingDeclared(ClassNode categoryBeingDeclared) {
