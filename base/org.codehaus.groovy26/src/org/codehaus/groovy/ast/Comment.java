@@ -57,10 +57,12 @@ public abstract class Comment {
     }
 
     public static Comment makeSingleLineComment(int sline, int scol, int eline, int ecol, String string) {
+        assert string != null && string.startsWith("//");
         return new SingleLineComment(sline, scol, eline, ecol, string);
     }
 
     public static Comment makeMultiLineComment(int sline, int scol, int eline, int ecol, String string) {
+        assert string != null && string.startsWith("/*") && string.endsWith("*/");
         return new MultiLineComment(sline, scol, eline, ecol, string);
     }
 

@@ -9,7 +9,20 @@
             <arguments>
                 <dictionary>
                     <key>LaunchConfigHandle</key>
-                    <value>&lt;project&gt;/.externalToolBuilders/Ant Builder.launch</value>
+                    <value>&lt;project&gt;/.externalToolBuilders/Antlr2 Builder.launch</value>
+                </dictionary>
+                <dictionary>
+                    <key>incclean</key>
+                    <value>true</value>
+                </dictionary>
+            </arguments>
+        </buildCommand>
+        <buildCommand>
+            <name>org.eclipse.ui.externaltools.ExternalToolBuilder</name>
+            <arguments>
+                <dictionary>
+                    <key>LaunchConfigHandle</key>
+                    <value>&lt;project&gt;/.externalToolBuilders/Antlr4 Builder.launch</value>
                 </dictionary>
                 <dictionary>
                     <key>incclean</key>

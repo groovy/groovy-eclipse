@@ -627,7 +627,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             return;
         }
         List<Comment> comments = groovySourceUnit.getComments();
-        if (comments == null) {
+        if (comments == null || comments.isEmpty()) {
             return;
         }
         char[][] taskTags = this.compilerOptions.taskTags;
