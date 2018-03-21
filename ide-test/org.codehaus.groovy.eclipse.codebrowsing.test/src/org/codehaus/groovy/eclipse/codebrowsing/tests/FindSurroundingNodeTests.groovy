@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
+
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
 
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.IASTFragment
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.Region
@@ -117,7 +119,7 @@ final class FindSurroundingNodeTests extends BrowsingTestSuite {
         unit = checkRegion(contents, unit, initialRegion, expectedRegion)
 
         initialRegion = expectedRegion
-        expectedRegion = new Region(contents.indexOf('{\n  def x'), '{\n  def x\n} '.length())
+        expectedRegion = new Region(contents.indexOf('{\n  def x'), (isParrotParser() ? '{\n  def x\n}' : '{\n  def x\n} ').length())
         unit = checkRegion(contents, initialRegion, expectedRegion)
 
         initialRegion = expectedRegion
@@ -133,7 +135,7 @@ final class FindSurroundingNodeTests extends BrowsingTestSuite {
         GroovyCompilationUnit unit = checkRegion(contents, initialRegion, expectedRegion)
 
         initialRegion = expectedRegion
-        expectedRegion = new Region(contents.indexOf('foo() '), 'foo() '.length())
+        expectedRegion = new Region(contents.indexOf('foo() '), (isParrotParser() ? 'foo()' : 'foo() ').length())
         unit = checkRegion(contents, unit, initialRegion, expectedRegion)
 
         initialRegion = expectedRegion

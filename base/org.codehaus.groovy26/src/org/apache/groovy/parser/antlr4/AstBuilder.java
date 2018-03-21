@@ -1829,6 +1829,12 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         // GRECLIPSE add
         ASTNode nameNode = configureAST(new ConstantExpression(methodName), ctx.methodName());
         methodNode.setNameStart(nameNode.getStart()); methodNode.setNameEnd(nameNode.getEnd() - 1);
+        // roll back stop for abstract/interface methods
+        if (ctx.getStop().getType() == GroovyParser.NL) {
+            methodNode.setLastLineNumber(last(ctx.nls()).getStart().getLine());
+            methodNode.setLastColumnNumber(last(ctx.nls()).getStart().getCharPositionInLine() + 1);
+            methodNode.setEnd(locationSupport.findOffset(methodNode.getLastLineNumber(), methodNode.getLastColumnNumber()));
+        }
         // GRECLIPSE end
 
         validateMethodDeclaration(ctx, methodNode, modifierManager, classNode);

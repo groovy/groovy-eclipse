@@ -16,6 +16,7 @@
 package org.eclipse.jdt.core.groovy.tests.locations;
 
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
@@ -26,7 +27,6 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMethod;
@@ -36,8 +36,8 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.SourceRange;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
-import org.eclipse.jdt.core.dom.AnnotationTypeMemberDeclaration;
 import org.eclipse.jdt.core.dom.BodyDeclaration;
+import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SimpleName;
@@ -46,19 +46,19 @@ import org.eclipse.jdt.core.groovy.tests.builder.BuilderTestSuite;
 import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.groovy.core.util.JavaConstants;
-import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.junit.Test;
 
 /**
  * Tests that source locations for groovy compilation units are computed properly.
- *
- * Source locations are deteremined by special marker comments in the code
+ * <p>
+ * Source locations are deteremined by special marker comments in the code:<pre>
  * markers /*m1s* / /*f1s* / /*t1s* / indicate start of method, field and type
  * markers /*m1e* / /*f1e* / /*t1e* / indicate end of method, field and type
  * markers /*m1sn* / /*f1sn* / /*t1sn* / indicate start of method, field and type names
  * markers /*m1en* / /*f1en* / /*t1en* / indicate end of method, field and type names
- * markers /*m1sb* / indicate the start of a method body
- * NOTE: the start of a type body is not being calculated correctly
+ * markers /*m1sb* / indicate the start of a method body</pre>
+ *
+ * NOTE: The start of a type body is not being calculated correctly.
  */
 public final class SourceLocationsTests extends BuilderTestSuite {
 
@@ -67,18 +67,18 @@ public final class SourceLocationsTests extends BuilderTestSuite {
 
         ASTParser newParser = ASTParser.newParser(JavaConstants.AST_LEVEL);
         newParser.setSource(unit);
-        org.eclipse.jdt.core.dom.CompilationUnit ast = (org.eclipse.jdt.core.dom.CompilationUnit) newParser.createAST(null);
-        int maxLength = ((CompilationUnit) unit).getContents().length-1;
+        CompilationUnit ast = (CompilationUnit) newParser.createAST(null);
         IType decl = unit.getTypes()[0];
         AbstractTypeDeclaration typeDecl = (AbstractTypeDeclaration) ast.types().get(0);
-        assertDeclaration(decl, typeDecl, 0, source, maxLength);
+
+        assertDeclaration(decl, typeDecl, 0, source);
 
         IJavaElement[] children = decl.getChildren();
         List<BodyDeclaration> bodyDecls = typeDecl.bodyDeclarations();
-        for (int i = 0, j= 0; i < children.length; i++, j++) {
+        for (int i = 0, j= 0; i < children.length; i += 1, j += 1) {
             // look for method variants that use default params
             if (i > 0 && (children[i] instanceof IMethod) && children[i].getElementName().equals(children[i-1].getElementName())) {
-                j--;
+                j -= 1;
             }
             // check for multiple declaration fragments inside a field declaration
             // start locations and end locations for fragments are not calculated entirely correctly
@@ -91,58 +91,60 @@ public final class SourceLocationsTests extends BuilderTestSuite {
                 IMember member = (IMember) children[i];
                 assertEquals(new SourceRange(0, 0), member.getSourceRange());
             } else {
-                assertDeclaration((IMember) children[i], bodyDecls.get(i), j, source, maxLength);
+                assertDeclaration((IMember) children[i], bodyDecls.get(i), j, source);
             }
         }
     }
 
-    private static void assertDeclaration(IMember decl, BodyDeclaration bd, int methodNumber, String source, int maxLength) throws Exception {
+    private static void assertDeclaration(IMember decl, BodyDeclaration bd, int memberNumber, String source) throws Exception {
         char astKind;
-         if (decl instanceof IMethod) {
+        switch (decl.getElementType()) {
+        case IJavaElement.METHOD:
             astKind = 'm';
-        } else if (decl instanceof IField) {
+            break;
+        case IJavaElement.FIELD:
             astKind = 'f';
-        } else {
+            break;
+        case IJavaElement.TYPE:
             astKind = 't';
+            break;
+        default:
+            astKind = '?';
         }
 
-        String startTag = "/*" + astKind + methodNumber + "s*/";
+        String startTag = "/*" + astKind + memberNumber + "s*/";
         int start = source.indexOf(startTag) + startTag.length();
-
-        String endTag = "/*" + astKind + methodNumber + "e*/";
-        int end = Math.min(source.indexOf(endTag) + endTag.length(), maxLength);
-
-        boolean ignore = false;
-        if (decl instanceof IField && (start == 6 || end == 6)) {
-             // a field with multiple variable declaration fragments
-             // this is not yet being calculated properly
-             ignore = true;
+        if (source.substring(start).startsWith("/*")) {
+            start = source.indexOf("*/", start) + 2;
         }
 
-
-        if (!ignore) {
-            ISourceRange declRange = decl.getSourceRange();
-            assertEquals(decl + "\nhas incorrect source start value", start, declRange.getOffset());
-            assertEquals(decl + "\nhas incorrect source end value", end, declRange.getOffset() + declRange.getLength());
-
-            // now check the AST
-            assertEquals(bd + "\nhas incorrect source start value", start, bd.getStartPosition());
-            int sourceEnd = bd.getStartPosition() + bd.getLength();
-            // It seems like field declarations should not include the trailing ';' in their source end if one exists
-            if (bd instanceof FieldDeclaration) sourceEnd --;
-            assertEquals(bd + "\nhas incorrect source end value", end, sourceEnd);
+        String endTag = "/*" + astKind + memberNumber + "e*/";
+        int end = source.indexOf(endTag) + (isParrotParser() ? 0 : endTag.length());
+        if (isParrotParser() && source.substring(0, end).endsWith("*/")) {
+            end = source.substring(0, end).lastIndexOf("/*");
         }
 
-        String nameStartTag = "/*" + astKind + methodNumber + "sn*/";
+        ISourceRange declRange = decl.getSourceRange();
+        assertEquals(decl + "\nhas incorrect source start value", start, declRange.getOffset());
+        assertEquals(decl + "\nhas incorrect source end value", end, declRange.getOffset() + declRange.getLength());
+
+        // now check the AST
+        assertEquals(bd + "\nhas incorrect source start value", start, bd.getStartPosition());
+        int sourceEnd = bd.getStartPosition() + bd.getLength();
+        // It seems like field declarations should not include the trailing ';' in their source end if one exists
+        if (bd instanceof FieldDeclaration) sourceEnd -= 1;
+        assertEquals(bd + "\nhas incorrect source end value", end, sourceEnd);
+
+        String nameStartTag = "/*" + astKind + memberNumber + "sn*/";
         int nameStart = source.indexOf(nameStartTag) + nameStartTag.length();
 
-        String nameEndTag = "/*" + astKind + methodNumber + "en*/";
+        String nameEndTag = "/*" + astKind + memberNumber + "en*/";
         int nameEnd = source.indexOf(nameEndTag);
         // because the name of the constructor is not stored in the Antlr AST,
         // we calculate offsets of the constructor name by looking at the end
         // of the modifiers and the start of the opening paren
-        if (decl instanceof IMethod && ((IMethod) decl).isConstructor()) {
-            nameEnd+= nameEndTag.length();
+        if (decl.getElementType() == IJavaElement.METHOD && ((IMethod) decl).isConstructor() && !isParrotParser()) {
+            nameEnd += nameEndTag.length();
         }
 
         ISourceRange nameDeclRange = decl.getNameRange();
@@ -151,22 +153,20 @@ public final class SourceLocationsTests extends BuilderTestSuite {
 
         // now check the AST
         if (bd instanceof FieldDeclaration) {
-            FieldDeclaration fd = (FieldDeclaration) bd;
-            SimpleName name = ((VariableDeclarationFragment) fd.fragments().get(0)).getName();
+            SimpleName name = ((VariableDeclarationFragment) ((FieldDeclaration) bd).fragments().get(0)).getName();
+
             assertEquals(bd + "\nhas incorrect source start value", nameStart, name.getStartPosition());
             assertEquals(bd + "\nhas incorrect source end value", nameEnd, name.getStartPosition() + name.getLength());
-        }
-        if (bd instanceof MethodDeclaration) {
-            MethodDeclaration md = (MethodDeclaration) bd;
-            SimpleName name = md.getName();
+        } else if (bd instanceof MethodDeclaration) {
+            SimpleName name = ((MethodDeclaration) bd).getName();
+
             assertEquals(bd + "\nhas incorrect source start value", nameStart, name.getStartPosition());
             assertEquals(bd + "\nhas incorrect source end value", nameEnd, name.getStartPosition() + name.getLength());
         }
 
-
-        if (decl.getElementType() == IJavaElement.METHOD) {
+        if (astKind == 'm') {
             // body start is only calculated for methods
-            String bodyStartTag = "/*" + astKind + methodNumber + "sb*/";
+            String bodyStartTag = "/*" + astKind + memberNumber + "sb*/";
             int bodyStart = source.indexOf(bodyStartTag) + bodyStartTag.length();
             if (bd instanceof MethodDeclaration) {
                 MethodDeclaration md = (MethodDeclaration) bd;
@@ -175,13 +175,12 @@ public final class SourceLocationsTests extends BuilderTestSuite {
                     int actualBodyStart = md.getBody().getStartPosition();
                     assertEquals(bd + "\nhas incorrect body start value", bodyStart, actualBodyStart);
                 }
-            } else if (bd instanceof AnnotationTypeMemberDeclaration) {
-                // no body start to check
             }
         }
     }
 
     private static void assertScript(String source, ICompilationUnit unit, String startText, String endText) throws Exception {
+        assertUnit(unit, source);
         IType script = unit.getTypes()[0];
         IMethod runMethod = script.getMethod("run", new String[0]);
         int start = source.indexOf(startText);
@@ -201,18 +200,14 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         IPath projectPath = env.addProject("Project", "1.5");
         env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
-        fullBuild(projectPath);
-
-        // remove old package fragment root so that names don't collide
         env.removePackageFragmentRoot(projectPath, "");
-
         IPath root = env.addPackageFragmentRoot(projectPath, "src");
         env.setOutputFolder(projectPath, "bin");
-
+        fullBuild(projectPath);
         return root;
     }
 
-    private ICompilationUnit createCompilationUnitFor(String pack, String name, String source) throws Exception {
+    private ICompilationUnit createCompUnit(String pack, String name, String source) throws Exception {
         IPath root = createGenericProject();
         IPath path = env.addGroovyClass(root, pack, name, source);
 
@@ -226,254 +221,239 @@ public final class SourceLocationsTests extends BuilderTestSuite {
 
     @Test
     public void testSourceLocations() throws Exception {
-        String source = "package p1;\n"+
-            "/*t0s*/public class /*t0sn*/Hello/*t0en*/ {\n"+
-            "   /*m0s*/public static void /*m0sn*/main/*m0en*/(String[] args) /*m0sb*/{\n"+
-            "      System.out.println(\"Hello world\");\n"+
-            "   }/*m0e*/\n"+
-            "   /*f1s*/int /*f1sn*/x/*f1en*/ = 9/*f1e*/;\n"+
+        String source = "package p1;\n" +
+            "/*t0s*/public class /*t0sn*/Hello/*t0en*/ {\n" +
+            "  /*m0s*/public static void /*m0sn*/main/*m0en*/(String[] args) /*m0sb*/{\n" +
+            "    System.out.println(\"Hello world\");\n" +
+            "  }/*m0e*/\n" +
+            "  /*f1s*/int /*f1sn*/x/*f1en*/ = 9/*f1e*/;\n" +
             "}/*t0e*/\n";
-        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
-        assertUnitWithSingleType(source, unit);
+        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }
 
     @Test
     public void testSourceLocationsNoSemiColons() throws Exception {
-        String source = "package p1;\n"+
-            "/*t0s*/public class /*t0sn*/Hello/*t0en*/ {\n"+
-            "   /*m0s*/public static void /*m0sn*/main/*m0en*/(String[] args) /*m0sb*/{\n"+
-            "      System.out.println(\"Hello world\");\n"+
-            "   }/*m0e*/\n"+
-            "   /*f1s*/int /*f1sn*/x/*f1en*/ = 9/*f1e*/\n"+
+        String source = "package p1;\n" +
+            "/*t0s*/public class /*t0sn*/Hello/*t0en*/ {\n" +
+            "  /*m0s*/public static void /*m0sn*/main/*m0en*/(String[] args) /*m0sb*/{\n" +
+            "    System.out.println(\"Hello world\");\n" +
+            "  }/*m0e*/\n" +
+            "  /*f1s*/int /*f1sn*/x/*f1en*/ = 9/*f1e*/\n" +
             "}/*t0e*/\n";
-        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
-        assertUnitWithSingleType(source, unit);
+        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }
 
     @Test
     public void testSourceLocationsNoModifiers() throws Exception {
-        String source = "package p1;\n"+
-            "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
-            "   /*m0s*/def /*m0sn*/main/*m0en*/(String[] args) /*m0sb*/{\n"+
-            "      System.out.println(\"Hello world\")\n"+
-            "   }/*m0e*/\n"+
-            "   /*f1s*/def /*f1sn*/x/*f1en*//*f1e*/\n"+
+        String source = "package p1;\n" +
+            "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n" +
+            "  /*m0s*/def /*m0sn*/main/*m0en*/(String[] args) /*m0sb*/{\n" +
+            "    System.out.println(\"Hello world\")\n" +
+            "  }/*m0e*/\n" +
+            "  /*f1s*/def /*f1sn*/x/*f1en*//*f1e*/\n" +
             "}/*t0e*/\n";
-        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
-        assertUnitWithSingleType(source, unit);
+        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }
 
     @Test
     public void testSourceLocationsMultipleVariableFragments() throws Exception {
-        String source = "package p1;\n"+
-            "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
-            "   int /*f0sn*/x/*f0en*/, /*f1sn*/y/*f1en*/, /*f2sn*/z/*f2en*/ = 7\n"+
+        String source = "package p1;\n" +
+            "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n" +
+            "  /*f0s*/int /*f0sn*/x/*f0en*/ = 1/*f0e*/, /*f1s*//*f1sn*/y/*f1en*/ = 2/*f1e*/, /*f2s*//*f2sn*/z/*f2en*/ = 3/*f2e*/\n" +
             "}/*t0e*/\n";
-        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
-        assertUnitWithSingleType(source, unit);
+        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }
 
     @Test
     public void testSourceLocationsNoParameterTypes() throws Exception {
-        String source = "package p1;\n"+
-            "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
-            "   /*m0s*/def /*m0sn*/main/*m0en*/(args, fargs, blargs) /*m0sb*/{\n"+
-            "      System.out.println(\"Hello world\")\n"+
-            "   }/*m0e*/\n"+
+        String source = "package p1;\n" +
+            "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n" +
+            "  /*m0s*/def /*m0sn*/main/*m0en*/(args, fargs, blargs) /*m0sb*/{\n" +
+            "    System.out.println(\"Hello world\")\n" +
+            "  }/*m0e*/\n" +
             "}/*t0e*/\n";
-        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
-        assertUnitWithSingleType(source, unit);
+        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }
 
     @Test
     public void testSourceLocationsNoParameters() throws Exception {
-        String source = "package p1;\n"+
-            "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
-            "   /*m0s*/def /*m0sn*/main/*m0en*/() /*m0sb*/{\n"+
-            "      System.out.println(\"Hello world\")\n"+
-            "   }/*m0e*/\n"+
-            "   /*m1s*/def /*m1sn*/main2/*m1en*/() /*m1sb*/{\n"+
-            "      System.out.println(\"Hello world\")\n"+
-            "   }/*m1e*/\n"+
-            "   /*m2s*/def /*m2sn*/main3/*m2en*/() /*m2sb*/{\n"+
-            "      System.out.println(\"Hello world\")\n"+
-            "   }/*m2e*/\n"+
+        String source = "package p1;\n" +
+            "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n" +
+            "  /*m0s*/def /*m0sn*/main/*m0en*/() /*m0sb*/{\n" +
+            "    System.out.println(\"Hello world\")\n" +
+            "  }/*m0e*/\n" +
+            "  /*m1s*/def /*m1sn*/main2/*m1en*/() /*m1sb*/{\n" +
+            "    System.out.println(\"Hello world\")\n" +
+            "  }/*m1e*/\n" +
+            "  /*m2s*/def /*m2sn*/main3/*m2en*/() /*m2sb*/{\n" +
+            "    System.out.println(\"Hello world\")\n" +
+            "  }/*m2e*/\n" +
             "}/*t0e*/\n";
-        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
-        assertUnitWithSingleType(source, unit);
+        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }
 
     @Test
     public void testSourceLocationsDefaultParameters() throws Exception {
-        String source = "package p1;\n"+
-            "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
-            "   /*m0s*/def /*m0sn*/main/*m0en*/(args = \"hi!\") /*m0sb*/{\n"+
-            "      System.out.println(\"Hello world\")\n"+
-            "   }/*m0e*/\n"+
-            "   /*m1s*/def /*m1sn*/main2/*m1en*/(args = \"hi!\", blargs = \"bye\") /*m1sb*/{\n"+
-            "      System.out.println(\"Hello world\")\n"+
-            "   }/*m1e*/\n"+
+        String source = "package p1;\n" +
+            "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n" +
+            "  /*m0s*/def /*m0sn*/main/*m0en*/(args = \"hi!\") /*m0sb*/{\n" +
+            "    System.out.println(\"Hello world\")\n" +
+            "  }/*m0e*/\n" +
+            "  /*m1s*/def /*m1sn*/main2/*m1en*/(args = \"hi!\", blargs = \"bye\") /*m1sb*/{\n" +
+            "    System.out.println(\"Hello world\")\n" +
+            "  }/*m1e*/\n" +
             "}/*t0e*/\n";
-        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
-        assertUnitWithSingleType(source, unit);
+        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }
 
     @Test
     public void testSourceLocationsConstructor() throws Exception {
-        String source = "package p1;\n"+
-            "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
-            "   /*m0s*/public /*m0sn*/Hello/*m0en*/() /*m0sb*/{\n"+
-            "      System.out.println(\"Hello world\")\n"+
-            "   }/*m0e*/\n"+
-            "   /*f1s*/def /*f1sn*/x/*f1en*//*f1e*/\n"+
+        String source = "package p1;\n" +
+            "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n" +
+            "  /*m0s*/public /*m0sn*/Hello/*m0en*/() /*m0sb*/{\n" +
+            "    System.out.println(\"Hello world\")\n" +
+            "  }/*m0e*/\n" +
             "}/*t0e*/\n";
-        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
-        assertUnitWithSingleType(source, unit);
+        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }
 
     @Test
     public void testSourceLocationsConstructorWithParam() throws Exception {
-        String source = "package p1;\n"+
-            "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
-            "   /*m0s*/public /*m0sn*/Hello/*m0en*/(String x) /*m0sb*/{\n"+
-            "      System.out.println(\"Hello world\")\n"+
-            "   }/*m0e*/\n"+
-            "   /*f1s*/def /*f1sn*/x/*f1en*//*f1e*/\n"+
+        String source = "package p1;\n" +
+            "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n" +
+            "  /*m0s*/public /*m0sn*/Hello/*m0en*/(String x) /*m0sb*/{\n" +
+            "    System.out.println(\"Hello world\")\n" +
+            "  }/*m0e*/\n" +
             "}/*t0e*/\n";
-        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
-        assertUnitWithSingleType(source, unit);
+        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }
 
     @Test
     public void testSourceLocationsConstructorWithParamNoType() throws Exception {
-        String source = "package p1;\n"+
-            "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
-            "   /*m0s*/public /*m0sn*/Hello/*m0en*/(x) /*m0sb*/{\n"+
-            "      System.out.println(\"Hello world\")\n"+
-            "   }/*m0e*/\n"+
-            "   /*f1s*/def /*f1sn*/x/*f1en*//*f1e*/\n"+
+        String source = "package p1;\n" +
+            "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n" +
+            "  /*m0s*/public /*m0sn*/Hello/*m0en*/(x) /*m0sb*/{\n" +
+            "    System.out.println(\"Hello world\")\n" +
+            "  }/*m0e*/\n" +
             "}/*t0e*/\n";
-        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
-        assertUnitWithSingleType(source, unit);
+        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }
 
     @Test
     public void testSourceLocationsConstructorWithDefaultParam() throws Exception {
-        String source = "package p1;\n"+
-            "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
-            "   /*m0s*/public /*m0sn*/Hello/*m0en*/(args = \"9\") /*m0sb*/{\n"+
-            "      System.out.println(\"Hello world\")\n"+
-            "   }/*m0e*/\n"+
-            "   /*f1s*/def /*f1sn*/x/*f1en*//*f1e*/\n"+
+        String source = "package p1;\n" +
+            "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n" +
+            "  /*m0s*/public /*m0sn*/Hello/*m0en*/(args = \"9\") /*m0sb*/{\n" +
+            "    System.out.println(\"Hello world\")\n" +
+            "  }/*m0e*/\n" +
             "}/*t0e*/\n";
-        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
-        assertUnitWithSingleType(source, unit);
+        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }
 
     @Test
     public void testSourceLocationsForScript1() throws Exception {
-        String source = "package p1;\n"+
+        String source = "package p1;\n" +
             "def x";
-        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
-        assertScript(source, unit, "def x", "def x");
-        assertUnit(unit, source);
+        assertScript(source, createCompUnit("p1", "Hello", source), "def x", "def x");
     }
 
     @Test
     public void testSourceLocationsForScript2() throws Exception {
-        String source = "package p1;\n"+
+        String source = "package p1;\n" +
             "def x() { }";
-        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
-        assertScript(source, unit, "def x", "{ }");
-        assertUnit(unit, source);
+        assertScript(source, createCompUnit("p1", "Hello", source), "def x", "{ }");
     }
 
     @Test
     public void testSourceLocationsForScript3() throws Exception {
-        String source = "package p1;\n"+
+        String source = "package p1;\n" +
             "x() \n def x() { }";
-        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
-        assertScript(source, unit, "x()", "{ }");
-        assertUnit(unit, source);
+        assertScript(source, createCompUnit("p1", "Hello", source), "x()", "{ }");
     }
 
     @Test
     public void testSourceLocationsForScript4() throws Exception {
-        String source = "package p1;\n"+
+        String source = "package p1;\n" +
             "def x() { }\nx()";
-        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
-        assertScript(source, unit, "def x", "x()");
-        assertUnit(unit, source);
+        assertScript(source, createCompUnit("p1", "Hello", source), "def x", "x()");
     }
 
     @Test
     public void testSourceLocationsForScript5() throws Exception {
-        String source = "package p1;\n"+
+        String source = "package p1;\n" +
             "def x() { }\nx()\ndef y() { }";
-        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
-        assertScript(source, unit, "def x", "def y() { }");
-        assertUnit(unit, source);
+        assertScript(source, createCompUnit("p1", "Hello", source), "def x", "def y() { }");
     }
 
     @Test
     public void testSourceLocationsForScript6() throws Exception {
-        String source = "package p1;\n"+
+        String source = "package p1;\n" +
             "x()\n def x() { }\n\ndef y() { }\ny()";
-        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
-        assertScript(source, unit, "x()", "\ny()");
-        assertUnit(unit, source);
+        assertScript(source, createCompUnit("p1", "Hello", source), "x()", "\ny()");
     }
 
     @Test
     public void testSourceLocationsConstructorWithDefaultParams() throws Exception {
-        String source = "package p1;\n"+
-            "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n"+
-            "   /*m0s*/public /*m0sn*/Hello/*m0en*/(args = \"9\", String blargs = \"8\") /*m0sb*/{\n"+
-            "      System.out.println(\"Hello world\")\n"+
-            "   }/*m0e*/\n"+
-            "   /*f1s*/def /*f1sn*/x/*f1en*//*f1e*/\n"+
+        String source = "package p1;\n" +
+            "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n" +
+            "  /*m0s*/public /*m0sn*/Hello/*m0en*/(args = \"9\", String blargs = \"8\") /*m0sb*/{\n" +
+            "    System.out.println(\"Hello world\")\n" +
+            "  }/*m0e*/\n" +
             "}/*t0e*/\n";
-        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
-        assertUnitWithSingleType(source, unit);
+        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }
 
     @Test
-    public void testSourceLocationsInterface() throws Exception {
-        String source = "package p1;\n"+
-            "/*t0s*/interface /*t0sn*/Hello/*t0en*/ {\n"+
-            "   /*m0s*/public /*m0sn*/hello/*m0en*/(args, String blargs)/*m0e*/\n"+
+    public void testSourceLocationsInterface1() throws Exception {
+        String source = "package p1;\n" +
+            "/*t0s*/interface /*t0sn*/Hello/*t0en*/ {\n" +
+            "  /*m0s*/public String /*m0sn*/hello/*m0en*/(args, String blargs)/*m0e*/\n" +
             "}/*t0e*/\n";
-        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
-        assertUnitWithSingleType(source, unit);
+        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }
 
     @Test
-    public void testSourceLocationsAbstractClass() throws Exception {
-        String source = "package p1;\n"+
-            "/*t0s*/abstract class /*t0sn*/Hello/*t0en*/ {\n"+
-            "   /*m0s*/public abstract /*m0sn*/hello/*m0en*/(args, String blargs)/*m0e*/\n"+
+    public void testSourceLocationsInterface2() throws Exception {
+        String source = "package p1;\n" +
+            "/*t0s*/interface /*t0sn*/Hello/*t0en*/ {\n" +
+            "  /*m0s*/String /*m0sn*/hello/*m0en*/(args, String blargs) throws Exception, Error/*m0e*/\n" +
             "}/*t0e*/\n";
-        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
-        assertUnitWithSingleType(source, unit);
+        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
+    }
+
+    @Test
+    public void testSourceLocationsAbstractClass1() throws Exception {
+        String source = "package p1;\n" +
+            "/*t0s*/abstract class /*t0sn*/Hello/*t0en*/ {\n" +
+            "  /*m0s*/public abstract /*m0sn*/hello/*m0en*/(args, String blargs)/*m0e*/\n" +
+            "}/*t0e*/\n";
+        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
+    }
+
+    @Test
+    public void testSourceLocationsAbstractClass2() throws Exception {
+        String source = "package p1;\n" +
+            "/*t0s*/abstract class /*t0sn*/Hello/*t0en*/ {\n" +
+            "  /*m0s*/abstract /*m0sn*/hello/*m0en*/(args, String blargs) throws Exception/*m0e*/\n" +
+            "}/*t0e*/\n";
+        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }
 
     @Test
     public void testSourceLocationsAnnotationDeclaration() throws Exception {
-        String source = "package p1;\n"+
-            "/*t0s*/@interface /*t0sn*/Hello/*t0en*/ {\n"+
-            "   /*m0s*/String /*m0sn*/val/*m0en*/()/*m0sb*//*m0e*/\n"+
+        String source = "package p1;\n" +
+            "/*t0s*/@interface /*t0sn*/Hello/*t0en*/ {\n" +
+            "  /*m0s*/String /*m0sn*/val/*m0en*/()/*m0e*/\n" +
             "}/*t0e*/\n";
-        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
-        assertUnitWithSingleType(source, unit);
+        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }
 
     @Test
     public void testSourceLocationsEnumDeclaration() throws Exception {
-        String source = "package p1;\n"+
-            "/*t0s*/enum /*t0sn*/Hello/*t0en*/ {\n"+
+        String source = "package p1;\n" +
+            "/*t0s*/enum /*t0sn*/Hello/*t0en*/ {\n" +
             "}/*t0e*/\n";
-        ICompilationUnit unit = createCompilationUnitFor("p1", "Hello", source);
-        assertUnitWithSingleType(source, unit);
+        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }
 
     @Test // STS-3878
@@ -485,7 +465,7 @@ public final class SourceLocationsTests extends BuilderTestSuite {
             "println a === b\n";
         IPath root = createGenericProject();
         IPath path = env.addGroovyClass(root, "", "Hello", source);
-        fullBuild();
+        incrementalBuild();
         expectingSpecificProblemFor(root, new Problem("p/Hello", "Groovy:Operator (\"===\" at 3:11:  \"===\" ) not supported @ line 3, column 11.", path, 34, 37, 60, IMarker.SEVERITY_ERROR));
     }
 }
