@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.dsl.contributions;
+
+import static java.beans.Introspector.decapitalize;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -227,7 +229,7 @@ public class DSLContributionGroup extends ContributionGroup {
             }
             return;
         }
-        if (!type.getName().equals(Object.class.getName())) {
+        if (!VariableScope.OBJECT_CLASS_NODE.equals(type)) {
             // use this to resolve parameterized types
             GenericsMapper mapper = GenericsMapper.gatherGenerics(type, type.redirect());
 
@@ -235,7 +237,7 @@ public class DSLContributionGroup extends ContributionGroup {
             // FIXADE why???
             List<IContributionElement> accessorContribs = new ArrayList<>(1);
             for (MethodNode method : type.getMethods()) {
-                if ((exceptions == null || !exceptions.contains(method.getName())) && !(method instanceof ConstructorNode) && ! method.getName().contains("$")) {
+                if ((exceptions == null || !exceptions.contains(method.getName())) && !(method instanceof ConstructorNode) && !method.getName().contains("$")) {
                     ClassNode resolvedReturnType = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(method.getReturnType()));
                     if (asCategory) {
                         delegateToCategoryMethod(useNamedArgs, isStatic, type, method, resolvedReturnType, isDeprecated, accessorContribs, noParens);
@@ -249,49 +251,38 @@ public class DSLContributionGroup extends ContributionGroup {
     }
 
     // FIXADE TODO combine with #delegateToCategoryMethod
-    private void delegateToNonCategoryMethod(boolean useNamedArgs, boolean isStatic, ClassNode type, MethodNode method, ClassNode resolvedReturnType, boolean isDeprecated,
-            List<IContributionElement> accessorContribs, boolean noParens) {
+    private void delegateToNonCategoryMethod(boolean useNamedArgs, boolean isStatic, ClassNode type, MethodNode method,
+            ClassNode resolvedReturnType, boolean isDeprecated, List<IContributionElement> accessorContribs, boolean noParens) {
         String name = method.getName();
-
-        contributions.add(new MethodContributionElement(name, toParameterContribution(method.getParameters()), NO_PARAMS,
-                NO_PARAMS, getTypeName(resolvedReturnType), getTypeName(type), (method.isStatic() || isStatic), provider, null,
-                useNamedArgs, noParens, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
-
+        contributions.add(new MethodContributionElement(name, toParameterContribution(method.getParameters()), NO_PARAMS, NO_PARAMS, getTypeName(resolvedReturnType), getTypeName(type), (method.isStatic() || isStatic), provider, null, useNamedArgs, noParens, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
         // also add the associated property if applicable
-        String prefix;
-        if ((prefix = isAccessor(method, name, false)) != null) {
-            accessorContribs.add(new PropertyContributionElement(Character.toLowerCase(name.charAt(prefix.length())) + name.substring(prefix.length()+1), getTypeName(resolvedReturnType),
-                    getTypeName(method.getDeclaringClass()), (method.isStatic() || isStatic), provider, null, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
+        if ((name = isAccessor(method, name, false)) != null) {
+            accessorContribs.add(new PropertyContributionElement(name, getTypeName(resolvedReturnType), getTypeName(method.getDeclaringClass()), (method.isStatic() || isStatic), provider, null, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
         }
     }
 
-    private void delegateToCategoryMethod(boolean useNamedArgs, boolean isStatic, ClassNode type, MethodNode method, ClassNode resolvedReturnType, boolean isDeprecated,
-            List<IContributionElement> accessorContribs, boolean noParens) {
+    private void delegateToCategoryMethod(boolean useNamedArgs, boolean isStatic, ClassNode type, MethodNode method,
+            ClassNode resolvedReturnType, boolean isDeprecated, List<IContributionElement> accessorContribs, boolean noParens) {
         String name = method.getName();
         if (method.getParameters() != null && method.getParameters().length > 0) {
             ClassNode firstType = method.getParameters()[0].getType();
-            if ((firstType.isInterface() && currentType.implementsInterface(firstType)) ||
-                    currentType.isDerivedFrom(firstType)) {
-                contributions.add(new MethodContributionElement(name, toParameterContributionRemoveFirst(method.getParameters()),
-                        NO_PARAMS, NO_PARAMS, getTypeName(resolvedReturnType), getTypeName(type), isStatic, provider, null,
-                        useNamedArgs, noParens, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
+            if ((firstType.isInterface() && currentType.implementsInterface(firstType)) || currentType.isDerivedFrom(firstType)) {
+                contributions.add(new MethodContributionElement(name, toParameterContributionRemoveFirst(method.getParameters()), NO_PARAMS, NO_PARAMS, getTypeName(resolvedReturnType), getTypeName(type), isStatic, provider, null, useNamedArgs, noParens, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
                 // also add the associated property if applicable
-                String prefix;
-                if ((prefix = isAccessor(method, name, true)) != null) {
-                    accessorContribs.add(new PropertyContributionElement(Character.toLowerCase(name.charAt(prefix.length())) + name.substring(prefix.length()+1), getTypeName(resolvedReturnType),
-                            getTypeName(method.getDeclaringClass()), (method.isStatic() || isStatic), provider, null, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
+                if ((name = isAccessor(method, name, true)) != null) {
+                    accessorContribs.add(new PropertyContributionElement(name, getTypeName(resolvedReturnType), getTypeName(method.getDeclaringClass()), (method.isStatic() || isStatic), provider, null, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
                 }
             }
         }
     }
 
+    // TODO: Move to AccessorSupport or replace with something from it?
     private String isAccessor(MethodNode method, String name, boolean isCategory) {
-        int paramCount = isCategory ? 1 : 0;
-        if (method.getParameters() == null || method.getParameters().length == paramCount) {
-            if (name.startsWith("get") && name.length() > 3) {
-                return "get";
-            } else if (name.startsWith("is") && name.length() > 2) {
-                return "is";
+        if (method.getParameters() == null || method.getParameters().length == (isCategory ? 1 : 0)) {
+            if (name.length() > 3 && name.startsWith("get")) {
+                return decapitalize(name.substring(3));
+            } else if (name.length() > 2 && name.startsWith("is")) {
+                return decapitalize(name.substring(2));
             }
         }
         return null;
@@ -300,7 +291,7 @@ public class DSLContributionGroup extends ContributionGroup {
     private ParameterContribution[] toParameterContribution(Parameter[] params) {
         if (params != null) {
             ParameterContribution[] contribs = new ParameterContribution[params.length];
-            for (int i = 0; i < contribs.length; i++) {
+            for (int i = 0; i < contribs.length; i += 1) {
                 contribs[i] = new ParameterContribution(params[i]);
             }
             return contribs;
@@ -312,7 +303,7 @@ public class DSLContributionGroup extends ContributionGroup {
     private ParameterContribution[] toParameterContributionRemoveFirst(Parameter[] params) {
         if (params != null) {
             ParameterContribution[] contribs = new ParameterContribution[params.length-1];
-            for (int i = 1; i < params.length; i++) {
+            for (int i = 1; i < params.length; i += 1) {
                 contribs[i-1] = new ParameterContribution(params[i]);
             }
             return contribs;
