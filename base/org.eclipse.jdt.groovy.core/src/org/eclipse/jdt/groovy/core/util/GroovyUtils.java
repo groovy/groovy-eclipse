@@ -112,9 +112,7 @@ public class GroovyUtils {
      */
     public static ASTNode lastElement(AnnotationNode node) {
         ASTNode result = node;
-        @SuppressWarnings("unchecked")
-        Iterable<AnnotationNode> more =
-            (Iterable<AnnotationNode>) node.getNodeMetaData("AnnotationCollector");
+        Iterable<AnnotationNode> more = node.getNodeMetaData("AnnotationCollector");
         if (more != null) {
             for (AnnotationNode an : more) {
                 result = an;
@@ -136,7 +134,7 @@ public class GroovyUtils {
      */
     public static int startOffset(AnnotationNode node) {
         int start = -1;
-        Long offsets = (Long) node.getNodeMetaData("source.offsets");
+        Long offsets = node.getNodeMetaData("source.offsets");
         if (offsets != null) {
             start = (int) (offsets >> 32);
         } else if (node.getEnd() > 0) {
@@ -150,7 +148,7 @@ public class GroovyUtils {
      */
     public static int endOffset(AnnotationNode node) {
         int end = -1;
-        Long offsets = (Long) node.getNodeMetaData("source.offsets");
+        Long offsets = node.getNodeMetaData("source.offsets");
         if (offsets != null) {
             end = (int) (offsets & 0xFFFFFFFF);
         } else {
@@ -310,8 +308,7 @@ public class GroovyUtils {
             Matcher m = Pattern.compile(".+__(\\p{javaJavaIdentifierPart}+)\\$[gs]et").matcher(call.getMethodAsString());
             if (m.matches()) {
                 String fieldName = m.group(1);
-                @SuppressWarnings("unchecked")
-                List<FieldNode> traitFields = (List<FieldNode>) call.getObjectExpression().getType().getOuterClass().getNodeMetaData("trait.fields");
+                List<FieldNode> traitFields = call.getObjectExpression().getType().getOuterClass().getNodeMetaData("trait.fields");
                 for (FieldNode field : traitFields) {
                     if (field.getName().equals(fieldName)) {
                         VariableExpression expr = new VariableExpression(field);

@@ -164,15 +164,13 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         node.visitContents(this);
 
         // visit trait members
-        @SuppressWarnings("unchecked")
-        List<FieldNode> traitFields = (List<FieldNode>) node.getNodeMetaData("trait.fields");
+        List<FieldNode> traitFields = node.getNodeMetaData("trait.fields");
         if (traitFields != null) {
             for (FieldNode field : traitFields) {
                 visitField(field);
             }
         }
-        @SuppressWarnings("unchecked")
-        List<MethodNode> traitMethods = (List<MethodNode>) node.getNodeMetaData("trait.methods");
+        List<MethodNode> traitMethods = node.getNodeMetaData("trait.methods");
         if (traitMethods != null) {
             for (MethodNode method : traitMethods) {
                 visitMethod(method);
@@ -640,13 +638,12 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
 
     //--------------------------------------------------------------------------
 
-    @SuppressWarnings("unchecked")
     protected void visitAnnotations(Collection<? extends AnnotationNode> nodes) {
         if (isNotEmpty(nodes)) {
             for (AnnotationNode node : nodes) {
                 if (node.isBuiltIn()) continue;
 
-                visitAnnotations((Collection<? extends AnnotationNode>) node.getNodeMetaData("AnnotationCollector"));
+                visitAnnotations(node.getNodeMetaData("AnnotationCollector"));
 
                 visitAnnotation(node);
             }
@@ -671,7 +668,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
     protected void visitExpression(Expression expression) {
         // check for an inlined constant (see ResolveVisitor.cloneConstantExpression)
         // or super ref (see MethodCallExpressionTransformer.transformToMopSuperCall)
-        visitIfPresent((Expression) expression.getNodeMetaData(ORIGINAL_EXPRESSION));
+        visitIfPresent(expression.getNodeMetaData(ORIGINAL_EXPRESSION));
     }
 
     protected void visitParameters(Parameter[] nodes) {
@@ -693,7 +690,7 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
     protected void visitVariable(Variable variable) {
         visitIfPresent(variable.getInitialExpression());
         if (variable instanceof Parameter) { // special case; see Verifier.addDefaultParameters
-            visitIfPresent((Expression) ((Parameter) variable).getNodeMetaData(Verifier.INITIAL_EXPRESSION));
+            visitIfPresent(((Parameter) variable).getNodeMetaData(Verifier.INITIAL_EXPRESSION));
         }
     }
 

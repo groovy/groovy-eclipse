@@ -408,15 +408,13 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         }
                     } else {
                         // visit fields and methods relocated by @Trait
-                        @SuppressWarnings("unchecked")
-                        List<FieldNode> traitFields = (List<FieldNode>) node.getNodeMetaData("trait.fields");
+                        List<FieldNode> traitFields = node.getNodeMetaData("trait.fields");
                         if (traitFields != null) {
                             for (FieldNode field : traitFields) {
                                 visitFieldInternal(field);
                             }
                         }
-                        @SuppressWarnings("unchecked")
-                        List<MethodNode> traitMethods = (List<MethodNode>) node.getNodeMetaData("trait.methods");
+                        List<MethodNode> traitMethods = node.getNodeMetaData("trait.methods");
                         if (traitMethods != null) {
                             for (MethodNode method : traitMethods) {
                                 visitMethodInternal(method, false);
@@ -1873,7 +1871,7 @@ assert primaryExprType != null && dependentExprType != null;
     @Override
     public void visitVariableExpression(VariableExpression node) {
         // check for transformed expression (see MethodCallExpressionTransformer.transformToMopSuperCall)
-        Expression orig = (Expression) node.getNodeMetaData(ORIGINAL_EXPRESSION);
+        Expression orig = node.getNodeMetaData(ORIGINAL_EXPRESSION);
         if (orig != null) {
             orig.visit(this);
         }

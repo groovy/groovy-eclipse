@@ -261,7 +261,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             return new TypeLookupResult(type, null, null, confidence, scope);
 
         } else if (node instanceof ClosureExpression && VariableScope.isPlainClosure(nodeType)) {
-            ClassNode returnType = (ClassNode) node.getNodeMetaData("returnType");
+            ClassNode returnType = node.getNodeMetaData("returnType");
             if (returnType != null && !VariableScope.isVoidOrObject(returnType))
                 GroovyUtils.updateClosureWithInferredTypes(nodeType, returnType, ((ClosureExpression) node).getParameters());
 
@@ -483,7 +483,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             candidate = findDeclaration(var.getName(), scope.getDelegate(), isLhsExpr, false, false, callArgs);
         }
         if (candidate == null && resolveStrategy < Closure.DELEGATE_ONLY) {
-            VariableScope outer = (VariableScope) owner.getNodeMetaData("outer.scope");
+            VariableScope outer = owner.getNodeMetaData("outer.scope");
             if (outer != null) { // owner is an enclosing closure
                 if (isLhsExpr) scope.getWormhole().put("lhs", var);
                 VariableScope.CallAndType cat = outer.getEnclosingMethodCallExpression();
@@ -710,7 +710,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             MethodNode target = ((MethodCallExpression) expr).getMethodTarget();
             return target;
         } else {
-            StatementMeta meta = (StatementMeta) expr.getNodeMetaData(StatementMeta.class);
+            StatementMeta meta = expr.getNodeMetaData(StatementMeta.class);
             if (meta != null) {
                 MethodNode target = (MethodNode) ReflectionUtils.getPrivateField(StatementMeta.class, "target", meta);
                 return target;
