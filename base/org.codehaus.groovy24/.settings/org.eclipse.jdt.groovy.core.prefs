@@ -1,4 +1,2 @@
 eclipse.preferences.version=1
 groovy.compiler.level=24
-groovy.script.filters=script/**/*.groovy,n
-org.codehaus.groovy.eclipse.preferences.compiler.project=true
