@@ -14,7 +14,7 @@
    <extension point="org.eclipse.core.contenttype.contentTypes">
       <content-type
            base-type="org.eclipse.jdt.core.javaSource"
-           file-extensions="groovy,grunit,gpp"
+           file-extensions="groovy,grunit"
            id="org.eclipse.jdt.groovy.core.groovySource"
            name="Groovy Source File"
            priority="high"
