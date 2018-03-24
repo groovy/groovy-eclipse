@@ -164,15 +164,24 @@
          <contentTypeBinding
                contentTypeId="org.eclipse.jdt.groovy.core.groovySource">
          </contentTypeBinding>
+         <contentTypeBinding
+               contentTypeId="org.eclipse.buildship.core.files.gradlebuildscript">
+         </contentTypeBinding>
       </editor>
    </extension>
 
    <extension point="org.eclipse.core.filebuffers.documentSetup"
-         id="org.codehaus.groovy.eclipse.editor.GroovyDocumentSetupParticipant"
-         name="GroovyDocumentSetupParticipant">
+         id="org.codehaus.groovy.eclipse.editor.GroovyDocumentSetupParticipant">
       <participant
             class="org.codehaus.groovy.eclipse.editor.GroovyDocumentSetupParticipant"
             contentTypeId="org.eclipse.jdt.groovy.core.groovySource">
+      </participant>
+   </extension>
+   <extension point="org.eclipse.core.filebuffers.documentSetup"
+         id="org.codehaus.groovy.eclipse.editor.GradleDocumentSetupParticipant">
+      <participant
+            class="org.codehaus.groovy.eclipse.editor.GroovyDocumentSetupParticipant"
+            contentTypeId="org.eclipse.buildship.core.files.gradlebuildscript">
       </participant>
    </extension>
 
