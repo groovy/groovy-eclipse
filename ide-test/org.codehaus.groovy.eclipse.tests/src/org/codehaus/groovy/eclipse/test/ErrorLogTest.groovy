@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,12 +31,13 @@ import org.osgi.framework.Version
 final class ErrorLogTest {
 
     private static final List<String> KNOWN_MSGS = [
-        'Could not locate the running profile instance.',
+        'Could not locate the running profile instance',
         'Listener failed',
         'Monitor UI start failed',
         'One or more bundles are not resolved',
         'org.eclipse.mylyn.tasks.core',
         'org.eclipse.test.performance.win32.translated_host_properties',
+        'The content type with id ".+" specified in the extension point does not exist',
         'The following is a complete list of bundles which are not resolved',
         'Unable to run embedded server'
     ].asImmutable()
