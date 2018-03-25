@@ -205,7 +205,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             for (ModuleNode module : groovyCompilationUnit.getAST().getModules()) {
                 for (ClassNode classNode : module.getClasses()) {
                     if (traitHelper.isTrait(classNode)) {
-                        GroovyParser.tidyCache();
+                        GroovyParser.clearCache();
                         break;
                     }
                 }

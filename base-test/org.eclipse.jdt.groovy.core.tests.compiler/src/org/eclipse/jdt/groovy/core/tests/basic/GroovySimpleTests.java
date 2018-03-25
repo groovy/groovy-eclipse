@@ -4027,7 +4027,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "}\n",
         },
         "",
-        "java.lang.ClassFormatError: Duplicate method name&signature in class file p/G");
+        "java.lang.ClassFormatError: Duplicate method name");
     }
 
     @Test

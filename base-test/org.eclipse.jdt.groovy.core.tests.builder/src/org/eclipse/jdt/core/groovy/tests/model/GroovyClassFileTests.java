@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,7 +65,7 @@ public final class GroovyClassFileTests  extends GroovyTypeRootTestSuite {
 
     @Test
     public void testCodeSelectInClassFile() throws Exception {
-        IProject project = createSimpleJavaProject().getProject();
+        IProject project = createSimpleGroovyProject().getProject();
         env.addJar(project.getFullPath(), "lib/code-select/test-project-for-code-select.jar");
         env.addGroovyNature(project.getName());
         IJavaProject javaProject = JavaCore.create(project);

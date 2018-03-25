@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,16 +19,15 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarFile;
+import java.util.stream.Stream;
 
 import groovy.lang.GroovyClassLoader;
 
-import org.apache.xbean.classloader.NonLockingJarFileClassLoader;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilationUnit.PrimaryClassNodeOperation;
@@ -55,7 +54,6 @@ import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.batch.FileSystem;
-import org.eclipse.jdt.internal.compiler.batch.FileSystem.Classpath;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
@@ -76,6 +74,7 @@ public class GroovyParser {
     private JDTResolver resolver;
     private String projectName;
     private String gclClasspath;
+    private GroovyClassLoader gclForBatch;
     private CompilationUnit compilationUnit;
     private CompilerOptions compilerOptions;
 
@@ -94,13 +93,66 @@ public class GroovyParser {
     private static Map<String, PathLoaderPair> projectToLoaderCache = new ConcurrentHashMap<>();
     private static Map<String, ScriptFolderSelector> scriptFolderSelectorCache = new ConcurrentHashMap<>();
 
-    static class PathLoaderPair {
+    private static class PathLoaderPair {
         String classpath;
         GroovyClassLoader groovyClassLoader;
 
-        PathLoaderPair(String classpath) {
+        private PathLoaderPair(String classpath) {
             this.classpath = classpath;
-            this.groovyClassLoader = new GroovyClassLoader(createConfigureLoader(classpath));
+            this.groovyClassLoader = new GroovyClassLoader(newClassLoader(classpath));
+        }
+
+        private static final boolean NONLOCKING = Boolean.getBoolean("greclipse.nonlocking");
+        static {
+            if (NONLOCKING) {
+                System.out.println("property set: greclipse.nonlocking: will try to avoid locking jars");
+            }
+        }
+
+        private static URLClassLoader newClassLoader(String path) {
+            URL[] urls = Stream.of(path.split(File.pathSeparator)).map(file -> {
+                try {
+                    return new File(file).toURI().toURL();
+                } catch (MalformedURLException ignore) {
+                    return null;
+                }
+            }).filter(Objects::nonNull).toArray(URL[]::new); // TODO: filter to unique
+
+            return newClassLoader(urls);
+        }
+
+        private static URLClassLoader newClassLoader(URL... urls) {
+            // TODO: Should this really use the compiler's classpath?
+            ClassLoader parent = GroovyParser.class.getClassLoader();
+
+            if (NONLOCKING) {
+                return new org.apache.xbean.classloader.NonLockingJarFileClassLoader("AST Transform loader", urls, parent);
+            } else {
+                return new URLClassLoader(urls, parent);
+            }
+        }
+    }
+
+    /**
+     * Clears cached class loaders for all caches. It helps to fix problems with cached trait helper classes.
+     */
+    protected static void clearCache() {
+        projectToLoaderCache.clear();
+    }
+
+    /**
+     * Removes all cached ClassLoaders for given project.
+     */
+    public static void clearCache(String projectName) {
+        // this orphans the loader on the heap
+        projectToLoaderCache.remove(projectName);
+        scriptFolderSelectorCache.remove(projectName);
+    }
+
+    public static void closeClassLoader(String projectName) {
+        PathLoaderPair pathLoaderPair = projectToLoaderCache.get(projectName);
+        if (pathLoaderPair != null) {
+            close(pathLoaderPair.groovyClassLoader);
         }
     }
 
@@ -109,7 +161,7 @@ public class GroovyParser {
      */
     public static void close(GroovyClassLoader groovyClassLoader) {
         try {
-            Object urlClasspath = ReflectionUtils.getPrivateField(java.net.URLClassLoader.class, "ucp", groovyClassLoader);
+            Object urlClasspath = ReflectionUtils.getPrivateField(URLClassLoader.class, "ucp", groovyClassLoader);
             Object[] jarLoaders = ((Collection<?>) ReflectionUtils.getPrivateField(urlClasspath.getClass(), "loaders", urlClasspath)).toArray();
             for (Object jarLoader : jarLoaders) {
                 try {
@@ -126,88 +178,6 @@ public class GroovyParser {
         } catch (Throwable t) {
             // Not the kind of VM we thought it was...
         }
-    }
-
-    /**
-     * Remove all cached classloaders for this project
-     */
-    public static void tidyCache(String projectName) {
-        // This will orphan the loader on the heap
-        projectToLoaderCache.remove(projectName);
-        scriptFolderSelectorCache.remove(projectName);
-    }
-
-    public static void closeClassLoader(String projectName) {
-        PathLoaderPair pathLoaderPair = projectToLoaderCache.get(projectName);
-        if (pathLoaderPair != null) {
-            close(pathLoaderPair.groovyClassLoader);
-        }
-    }
-
-    /**
-     * Clears cached class loaders for all caches. It helps to fix problems with cached trait helper classes.
-     */
-    static void tidyCache() {
-        projectToLoaderCache.clear();
-    }
-
-    private GroovyClassLoader gclForBatch = null;
-
-    private GroovyClassLoader getLoaderFor(String path) {
-        GroovyClassLoader gcl = null;
-        if (projectName == null && path == null) {
-            if (gclForBatch == null) {
-                try {
-                    // Batch compilation
-                    if (requestor instanceof Compiler) {
-                        LookupEnvironment lookupEnvironment = ((Compiler) requestor).lookupEnvironment;
-                        if (lookupEnvironment != null) {
-                            INameEnvironment nameEnvironment = lookupEnvironment.nameEnvironment;
-                            if (nameEnvironment instanceof FileSystem) {
-                                FileSystem fileSystem = (FileSystem) nameEnvironment;
-                                if (fileSystem != null) {
-                                    Classpath[] classpaths = (Classpath[]) ReflectionUtils.getPrivateField(FileSystem.class, "classpaths", fileSystem);
-                                    if (classpaths != null) {
-                                        gclForBatch = new GroovyClassLoader();
-                                        for (Classpath classpath : classpaths) {
-                                            gclForBatch.addClasspath(classpath.getPath());
-                                        }
-                                    } else {
-                                        System.err.println("Cannot find classpaths field on FileSystem class");
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    System.err.println("Unexpected problem computing classpath for ast transform loader:");
-                    e.printStackTrace(System.err);
-                }
-            }
-            return gclForBatch;
-        }
-        if (path != null) {
-            if (projectName == null) {
-                // throw new IllegalStateException("Cannot build without knowing project name");
-            } else {
-                PathLoaderPair pathAndLoader = projectToLoaderCache.get(projectName);
-                if (pathAndLoader == null) {
-                    if (GroovyLogManager.manager.hasLoggers()) {
-                        GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM, "Classpath for GroovyClassLoader (used to discover transforms): " + path);
-                    }
-                    pathAndLoader = new PathLoaderPair(path);
-                    projectToLoaderCache.put(projectName, pathAndLoader);
-                } else {
-                    if (!path.equals(pathAndLoader.classpath)) {
-                        // classpath change detected
-                        pathAndLoader = new PathLoaderPair(path);
-                        projectToLoaderCache.put(projectName, pathAndLoader);
-                    }
-                }
-                gcl = pathAndLoader.groovyClassLoader;
-            }
-        }
-        return gcl;
     }
 
     public GroovyParser(CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean allowTransforms, boolean isReconcile) {
@@ -241,90 +211,80 @@ public class GroovyParser {
         // with URLs when grab processing is running. This classloader is used as a last resort when resolving
         // types and is *only* called if a grab has occurred somewhere during compilation.
         // Currently it is not cached but created each time - we'll have to decide if there is a need to cache
-        GrapeAwareGroovyClassLoader grabbyLoader = new GrapeAwareGroovyClassLoader(gcl);
-        this.compilationUnit = makeCompilationUnit(grabbyLoader, gcl, isReconcile, allowTransforms);
+        this.compilationUnit = makeCompilationUnit(new GrapeAwareGroovyClassLoader(gcl), gcl, isReconcile, allowTransforms);
         this.compilationUnit.removeOutputPhaseOperation();
     }
 
     public void reset() {
         GroovyClassLoader gcl = getLoaderFor(gclClasspath);
-        this.compilationUnit = makeCompilationUnit(
-            new GrapeAwareGroovyClassLoader(gcl), gcl,
-            this.compilationUnit.isReconcile,
-            this.compilationUnit.allowTransforms);
+        this.compilationUnit = makeCompilationUnit(new GrapeAwareGroovyClassLoader(gcl), gcl, this.compilationUnit.isReconcile, this.compilationUnit.allowTransforms);
     }
 
-    static class GrapeAwareGroovyClassLoader extends GroovyClassLoader {
+    private GroovyClassLoader getLoaderFor(String path) {
+        if (path == null && projectName == null) {
+            if (gclForBatch == null) {
+                try {
+                    if (requestor instanceof Compiler) {
+                        LookupEnvironment lookupEnvironment = ((Compiler) requestor).lookupEnvironment;
+                        if (lookupEnvironment != null) {
+                            INameEnvironment nameEnvironment = lookupEnvironment.nameEnvironment;
+                            if (nameEnvironment.getClass().getName().endsWith("tests.compiler.regression.InMemoryNameEnvironment")) {
+                                nameEnvironment = ((INameEnvironment[]) ReflectionUtils.getPrivateField(nameEnvironment.getClass(), "classLibs", nameEnvironment))[0];
+                            }
+                            if (nameEnvironment instanceof FileSystem) {
+                                FileSystem.Classpath[] classpaths = (FileSystem.Classpath[]) ReflectionUtils.getPrivateField(FileSystem.class, "classpaths", nameEnvironment);
+                                if (classpaths != null) {
+                                    gclForBatch = new GroovyClassLoader();
+                                    for (FileSystem.Classpath classpath : classpaths) {
+                                        gclForBatch.addClasspath(classpath.getPath());
+                                    }
+                                } else {
+                                    System.err.println("Cannot find field 'classpaths' on FileSystem instance");
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    System.err.println("Unexpected problem computing classpath for AST transform loader:");
+                    e.printStackTrace();
+                }
+            }
+            return gclForBatch;
+        }
+
+        if (path != null && projectName != null) {
+            PathLoaderPair pathAndLoader = projectToLoaderCache.computeIfAbsent(projectName, key -> {
+                if (GroovyLogManager.manager.hasLoggers()) {
+                    GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM, "Classpath for GroovyClassLoader (used to discover transforms): " + path);
+                }
+                return new PathLoaderPair(path);
+            });
+            if (!path.equals(pathAndLoader.classpath)) {
+                // classpath change detected
+                pathAndLoader = new PathLoaderPair(path);
+                projectToLoaderCache.put(projectName, pathAndLoader);
+            }
+            return pathAndLoader.groovyClassLoader;
+        }
+
+        return null;
+    }
+
+    protected static class GrapeAwareGroovyClassLoader extends GroovyClassLoader {
 
         // Could be prodded to indicate a grab has occurred within this compilation unit
 
-        public boolean grabbed = false; // set to true if any grabbing is done
+        /** {@code true} if any grabbing is done */
+        protected boolean grabbed;
 
-        public GrapeAwareGroovyClassLoader(ClassLoader parent) {
-            super(parent != null ? parent : Thread.currentThread().getContextClassLoader());
+        protected GrapeAwareGroovyClassLoader(ClassLoader parent) {
+            super(parent);
         }
 
         @Override
         public void addURL(URL url) {
-            // System.out.println("Grape aware classloader was augmented with " + url);
             this.grabbed = true;
             super.addURL(url);
-        }
-    }
-
-    private static final boolean NONLOCKING = Boolean.getBoolean("greclipse.nonlocking");
-    static {
-        if (NONLOCKING) {
-            System.out.println("property set: greclipse.nonlocking: will try to avoid locking jars");
-        }
-    }
-
-    private static URLClassLoader createLoader(URL[] urls, ClassLoader parent) {
-        if (NONLOCKING) {
-            return new NonLockingJarFileClassLoader("AST Transform loader", urls, parent);
-        } else {
-            return new URLClassLoader(urls, parent);
-        }
-    }
-
-    private static URLClassLoader createConfigureLoader(String path) {
-        // GRECLIPSE-1090
-        ClassLoader pcl = GroovyParser.class.getClassLoader();
-        if (path == null) {
-            return createLoader(null, pcl);
-        }
-        List<URL> urls = new ArrayList<>();
-        if (path.indexOf(File.pathSeparator) != -1) {
-            int pos = 0;
-            while (pos != -1) {
-                int nextSep = path.indexOf(File.pathSeparator, pos);
-                if (nextSep == -1) {
-                    // last piece
-                    addNewURL(path.substring(pos), urls);
-                    pos = -1;
-                } else {
-                    addNewURL(path.substring(pos, nextSep), urls);
-                    pos = nextSep + 1;
-                }
-            }
-        } else {
-            addNewURL(path, urls);
-        }
-        return createLoader(urls.toArray(new URL[urls.size()]), pcl);
-    }
-
-    private static void addNewURL(String path, List<URL> existingURLs) {
-        try {
-            File f = new File(path);
-            URL newURL = f.toURI().toURL();
-            for (URL url : existingURLs) {
-                if (url.equals(newURL)) {
-                    return;
-                }
-            }
-            existingURLs.add(newURL);
-        } catch (MalformedURLException e) {
-            // It was a busted URL anyway
         }
     }
 
@@ -416,7 +376,7 @@ public class GroovyParser {
      *
      * Note: this does not move the progress bar, it merely updates the text
      */
-    static class ProgressListenerImpl implements ProgressListener {
+    private static class ProgressListenerImpl implements ProgressListener {
 
         private BuildNotifier notifier;
 

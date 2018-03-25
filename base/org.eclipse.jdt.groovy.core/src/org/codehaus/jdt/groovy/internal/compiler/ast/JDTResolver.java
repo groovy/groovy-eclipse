@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -280,8 +280,7 @@ public class JDTResolver extends ResolveVisitor {
                 return true;
             }
         }
-        // Rudimentary grab support - if the compilation unit has our special classloader and a
-        // grab has occurred, try and find the class through it
+        // Rudimentary grab support - if the compilation unit has our special classloader and as grab has occurred, try and find the class through it
         GroovyClassLoader loader = compilationUnit.getClassLoader();
         if (loader instanceof GrapeAwareGroovyClassLoader) {
             GrapeAwareGroovyClassLoader gagcl = (GrapeAwareGroovyClassLoader) loader;
@@ -289,9 +288,7 @@ public class JDTResolver extends ResolveVisitor {
                 Class<?> cls;
                 try {
                     cls = loader.loadClass(type.getName(), false, true);
-                } catch (ClassNotFoundException cnfe) {
-                    return false;
-                } catch (CompilationFailedException cfe) {
+                } catch (ClassNotFoundException | CompilationFailedException e) {
                     return false;
                 }
                 if (cls == null) {

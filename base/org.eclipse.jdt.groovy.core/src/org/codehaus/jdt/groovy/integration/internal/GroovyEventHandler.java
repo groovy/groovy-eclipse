@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,13 +28,13 @@ public class GroovyEventHandler implements EventHandler {
     public void handle(JavaProject javaProject, String event) {
         if (event.equals("cleanOutputFolders")) {
             if (javaProject != null) {
-                GroovyParser.tidyCache(javaProject.getProject().getName());
+                GroovyParser.clearCache(javaProject.getProject().getName());
             }
         } else if (event.equals("close")) {
             if (javaProject != null) {
                 String projectName = javaProject.getProject().getName();
                 GroovyParser.closeClassLoader(projectName);
-                GroovyParser.tidyCache(projectName);
+                GroovyParser.clearCache(projectName);
             }
         }
     }
