@@ -330,11 +330,9 @@ public class CompilationUnit extends ProcessingUnit {
         super.configure(configuration);
         this.debug = configuration.getDebug();
 
-        // GRECLIPSE edit
-        if (!this.configured && this.classLoader != null/*instanceof GroovyClassLoader*/) {
-            appendCompilerConfigurationClasspathToClassLoader(configuration, /*(GroovyClassLoader)*/ this.classLoader);
+        if (!this.configured && this.classLoader instanceof GroovyClassLoader) {
+            appendCompilerConfigurationClasspathToClassLoader(configuration, this.classLoader);
         }
-        // GRECLIPSE end
 
         this.configured = true;
     }
