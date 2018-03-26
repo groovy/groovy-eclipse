@@ -166,14 +166,7 @@ public class ModularClassFile extends AbstractClassFile implements IModularClass
 				String entryName = jarRoot.getClassFilePath(Util.concatWith(pkg.names, getElementName(), '/'));
 				byte[] contents = getClassFileContent(jarRoot, entryName);
 				if (contents != null) {
-					String fileName;
-					String rootPath = root.getPath().toOSString();
-					if (org.eclipse.jdt.internal.compiler.util.Util.isJrt(rootPath)) {
-						fileName = root.getHandleIdentifier() + IDependent.JAR_FILE_ENTRY_SEPARATOR + 
-								root.getElementName() + IDependent.JAR_FILE_ENTRY_SEPARATOR + entryName;
-					} else {
-						fileName = root.getHandleIdentifier() + IDependent.JAR_FILE_ENTRY_SEPARATOR + entryName;
-					}
+					String fileName = root.getHandleIdentifier() + IDependent.JAR_FILE_ENTRY_SEPARATOR + entryName;
 					ClassFileReader classFileReader = new ClassFileReader(contents, fileName.toCharArray(), false);
 					return classFileReader.getModuleDeclaration();
 				}

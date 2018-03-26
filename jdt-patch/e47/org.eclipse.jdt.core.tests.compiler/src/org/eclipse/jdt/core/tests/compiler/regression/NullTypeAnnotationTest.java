@@ -23,6 +23,7 @@ import java.util.Map;
 import junit.framework.Test;
 
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -15381,6 +15382,48 @@ public void testBug515292() {
 		}, 
 		getCompilerOptions(),
 		""
+	);
+}
+public void testBug531040() {
+	if (this.complianceLevel < ClassFileConstants.JDK10)
+		return;
+	runNegativeTestWithLibs(
+		new String[] {
+			"Test.java",
+			"import java.util.*;\n" + 
+			"\n" + 
+			"import org.eclipse.jdt.annotation.NonNull;\n" + 
+			"\n" + 
+			"public class Test {\n" + 
+			"	void test() {\n" + 
+			"		var list1 = new ArrayList<@NonNull String>();\n" + 
+			"		list1.add(null);\n" + 
+			"		@NonNull String val = \"\";\n" + 
+			"		var list2 = getList(val);\n" + 
+			"		list2.add(null);\n" + 
+			"	}\n" + 
+			"	<T> List<T> getList(T... in) {\n" + 
+			"		return Arrays.asList(in);\n" + 
+			"	}\n" + 
+			"}\n" + 
+			""
+		},
+		"----------\n" + 
+		"1. ERROR in Test.java (at line 8)\n" + 
+		"	list1.add(null);\n" + 
+		"	          ^^^^\n" + 
+		"Null type mismatch: required \'@NonNull String\' but the provided value is null\n" + 
+		"----------\n" + 
+		"2. ERROR in Test.java (at line 11)\n" + 
+		"	list2.add(null);\n" + 
+		"	          ^^^^\n" + 
+		"Null type mismatch: required \'@NonNull String\' but the provided value is null\n" + 
+		"----------\n" + 
+		"3. WARNING in Test.java (at line 13)\n" + 
+		"	<T> List<T> getList(T... in) {\n" + 
+		"	                         ^^\n" + 
+		"Type safety: Potential heap pollution via varargs parameter in\n" + 
+		"----------\n"
 	);
 }
 }

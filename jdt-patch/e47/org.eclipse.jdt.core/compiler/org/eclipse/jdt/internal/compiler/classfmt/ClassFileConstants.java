@@ -121,6 +121,7 @@ public interface ClassFileConstants {
 	int MAJOR_VERSION_1_7 = 51;
 	int MAJOR_VERSION_1_8 = 52;
 	int MAJOR_VERSION_9 = 53;
+	int MAJOR_VERSION_10 = 54;
 
 	int MINOR_VERSION_0 = 0;
 	int MINOR_VERSION_1 = 1;
@@ -139,6 +140,7 @@ public interface ClassFileConstants {
 	long JDK1_7 = ((long)ClassFileConstants.MAJOR_VERSION_1_7 << 16) + ClassFileConstants.MINOR_VERSION_0;
 	long JDK1_8 = ((long)ClassFileConstants.MAJOR_VERSION_1_8 << 16) + ClassFileConstants.MINOR_VERSION_0;
 	long JDK9 = ((long)ClassFileConstants.MAJOR_VERSION_9 << 16) + ClassFileConstants.MINOR_VERSION_0;
+	long JDK10 = ((long)ClassFileConstants.MAJOR_VERSION_10 << 16) + ClassFileConstants.MINOR_VERSION_0;
 
 	/*
 	 * cldc1.1 is 45.3, but we modify it to be different from JDK1_1.

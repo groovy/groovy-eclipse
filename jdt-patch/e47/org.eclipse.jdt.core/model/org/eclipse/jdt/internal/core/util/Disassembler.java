@@ -1000,6 +1000,8 @@ public class Disassembler extends ClassFileBytesDisassembler {
 				versionNumber = JavaCore.VERSION_1_8;
 			} else if (minorVersion == 0 && majorVersion == 53) {
 				versionNumber = JavaCore.VERSION_9;
+			} else if (minorVersion == 0 && majorVersion == 54) {
+				versionNumber = JavaCore.VERSION_10;
 			}
 			buffer.append(
 				Messages.bind(Messages.classfileformat_versiondetails,

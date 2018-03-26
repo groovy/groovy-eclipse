@@ -5,6 +5,10 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
+ * This is an implementation of an early-draft specification developed under the Java
+ * Community Process (JCP) and is made available for testing and evaluation purposes
+ * only. The code is not compatible with any specification of the JCP.
+ *
  * Contributors:
  *     Jesper Steen Moller - initial API and implementation
  *            Bug 416885 - [1.8][compiler]IncompatibleClassChange error (edit)
@@ -35,7 +39,9 @@ public JSR335ClassFileTest(String name) {
 // No need for a tearDown()
 protected void setUp() throws Exception {
 	super.setUp();
-	this.versionString = (this.complianceLevel < ClassFileConstants.JDK9) ? "version 1.8 : 52.0" : "version 9 : 53.0";
+	this.versionString = (this.complianceLevel < ClassFileConstants.JDK9)
+			? "version 1.8 : 52.0"
+			: (this.complianceLevel < ClassFileConstants.JDK10 ? "version 9 : 53.0" : "version 10 : 54.0");
 }
 
 /*

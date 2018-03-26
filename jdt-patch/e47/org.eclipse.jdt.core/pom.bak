@@ -18,7 +18,7 @@
   </parent>
   <groupId>org.eclipse.jdt</groupId>
   <artifactId>org.eclipse.jdt.core</artifactId>
-  <version>3.13.101-SNAPSHOT</version>
+  <version>3.13.102-SNAPSHOT</version>
   <packaging>eclipse-plugin</packaging>
 
   <properties>

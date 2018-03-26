@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,6 +14,8 @@
  *								Bug 456497 - [1.8][null] during inference nullness from target type is lost against weaker hint from applicability analysis
  *								Bug 456924 - StackOverflowError during compilation
  *								Bug 462790 - [null] NPE in Expression.computeConversion()
+ *     Jesper S Møller - Contributions for bug 381345 : [1.8] Take care of the Java 8 major version
+ *								Bug 527554 - [18.3] Compiler support for JEP 286 Local-Variable Type
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -450,6 +452,22 @@ public class CaptureBinding extends TypeVariableBinding {
 	@Override
 	public TypeBinding uncapture(Scope scope) {
 		return this.wildcard;
+	}
+
+	public ReferenceBinding downwardsProjection(Scope scope, TypeBinding[] mentionedTypeVariables) {
+		ReferenceBinding result = null;
+		if (enterRecursiveProjectionFunction()) {
+			for (int i = 0; i < mentionedTypeVariables.length; ++i) {
+				if (TypeBinding.equalsEquals(this, mentionedTypeVariables[i])) {
+					if (this.lowerBound != null) {
+						result = (ReferenceBinding) this.lowerBound.downwardsProjection(scope, mentionedTypeVariables);
+					}
+					break;
+				}
+			}
+			exitRecursiveProjectionFunction();
+		}
+		return result;
 	}
 
 	/*

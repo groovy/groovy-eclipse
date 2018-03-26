@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann <stephan@cs.tu-berlin.de> - Contributions for
@@ -34,6 +34,8 @@
  *								Bug 456487 - [1.8][null] @Nullable type variant of @NonNull-constrained type parameter causes grief
  *								Bug 462790 - [null] NPE in Expression.computeConversion()
  *								Bug 456532 - [1.8][null] ReferenceBinding.appendNullAnnotation() includes phantom annotations in error messages
+ *     Jesper S Møller <jesper@selskabet.org>  - Contributions for bug 381345 : [1.8] Take care of the Java 8 major version
+ *								Bug 527554 - [18.3] Compiler support for JEP 286 Local-Variable Type
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -586,7 +588,20 @@ public class TypeVariableBinding extends ReferenceBinding {
 	public void exitRecursiveFunction() {
 		this.inRecursiveFunction = false;
 	}
+
+	// to prevent infinite recursion when inspecting recursive generics:
+	boolean inRecursiveProjectionFunction = false;
 	
+	public boolean enterRecursiveProjectionFunction() {
+		if (this.inRecursiveProjectionFunction)
+			return false;
+		this.inRecursiveProjectionFunction = true;
+		return true;
+	}
+	public void exitRecursiveProjectionFunction() {
+		this.inRecursiveProjectionFunction = false;
+	}
+
 	public boolean isProperType(boolean admitCapture18) {
 		// handle recursive calls:
 		if (this.inRecursiveFunction) // be optimistic, since this node is not an inference variable
@@ -1091,4 +1106,42 @@ public class TypeVariableBinding extends ReferenceBinding {
 				&& this.environment.globalOptions.pessimisticNullAnalysisForFreeTypeVariablesEnabled 
 				&& (this.tagBits & TagBits.AnnotationNullMASK) == 0;	
 	}
+
+	public ReferenceBinding upwardsProjection(Scope scope, TypeBinding[] mentionedTypeVariables) {
+		if (enterRecursiveProjectionFunction()) {
+			try {
+				for (int i = 0; i < mentionedTypeVariables.length; ++i) {
+					if (TypeBinding.equalsEquals(this, mentionedTypeVariables[i])) {
+						TypeBinding upperBound = this.upperBound();
+						ReferenceBinding projectedUpper = ((ReferenceBinding)upperBound).upwardsProjection(scope, mentionedTypeVariables);
+						TypeBinding additionalBounds[] = this.additionalBounds();
+						if (additionalBounds == null || additionalBounds.length == 0) {
+							// Return upwards projection of upper bound 
+							return projectedUpper;
+						} else {
+							// If the type variable has more than one upper bound,
+							// we'll need to make an intersection type of projections of all bounds
+							int totalBounds = 1 + additionalBounds.length;
+							ReferenceBinding[] projectedTypes = new ReferenceBinding[totalBounds];
+							projectedTypes[0] = projectedUpper;
+							for (int j = 0; j < additionalBounds.length; ++j) {
+								projectedTypes[j+1] = (ReferenceBinding)additionalBounds[j].upwardsProjection(scope, mentionedTypeVariables);
+							}
+							return  (ReferenceBinding) scope.environment().createIntersectionType18(projectedTypes);
+						}
+					}
+				}
+				return this;
+			} finally {
+				exitRecursiveProjectionFunction();
+			}
+		} else {
+			return scope.getJavaLangObject();
+		}
+	}
+
+	public ReferenceBinding downwardsProjection(Scope scope, TypeBinding[] mentionedTypeVariables) {
+		return null;
+	}
+
 }

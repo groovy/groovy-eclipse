@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -235,14 +235,7 @@ private IBinaryType getJarBinaryTypeInfo() throws CoreException, IOException, Cl
 			String entryName = jarRoot.getClassFilePath(Util.concatWith(pkg.names, getElementName(), '/'));
 			byte[] contents = getClassFileContent(jarRoot, entryName);
 			if (contents != null) {
-				String fileName;
-				String rootPath = root.getPath().toOSString();
-				if (org.eclipse.jdt.internal.compiler.util.Util.isJrt(rootPath)) {
-					fileName = root.getHandleIdentifier() + IDependent.JAR_FILE_ENTRY_SEPARATOR + 
-							root.getElementName() + IDependent.JAR_FILE_ENTRY_SEPARATOR + entryName;
-				} else {
-					fileName = root.getHandleIdentifier() + IDependent.JAR_FILE_ENTRY_SEPARATOR + entryName;
-				}
+				String fileName = root.getHandleIdentifier() + IDependent.JAR_FILE_ENTRY_SEPARATOR + entryName;
 				result = new ClassFileReader(contents, fileName.toCharArray(), false);
 			}
 		} else {

@@ -2,8 +2,9 @@ jdtcore.jar=\
 	batch,\
 	codeassist,\
 	compiler,\
+	dom,\
 	eval,\
 	formatter,\
-	dom,\
+	groovy,\
 	model, \
 	search

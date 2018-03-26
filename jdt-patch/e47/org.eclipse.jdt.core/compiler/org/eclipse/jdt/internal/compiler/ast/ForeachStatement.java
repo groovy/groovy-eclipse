@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Stephan Herrmann - Contribution for
@@ -19,6 +19,7 @@
  *								Bug 415790 - [compiler][resource]Incorrect potential resource leak warning in for loop with close in try/catch
  *     Jesper S Moller -  Contribution for
  *								bug 401853 - Eclipse Java compiler creates invalid bytecode (java.lang.VerifyError)
+ *                               bug 527554 - [18.3] Compiler support for JEP 286 Local-Variable Type
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.ast;
 
@@ -414,12 +415,68 @@ public class ForeachStatement extends Statement {
 		return output;
 	}
 
+	private TypeBinding getCollectionElementType(TypeBinding collectionType) {
+		if (collectionType == null) return null;
+		
+		boolean isTargetJsr14 = this.scope.compilerOptions().targetJDK == ClassFileConstants.JDK1_4;
+		if (collectionType.isCapture()) {
+			TypeBinding upperBound = ((CaptureBinding)collectionType).firstBound;
+			if (upperBound != null && upperBound.isArrayType())
+				collectionType = upperBound; // partially anticipating the fix for https://bugs.openjdk.java.net/browse/JDK-8013843
+		}
+		if (collectionType.isArrayType()) { // for(E e : E[])
+			return ((ArrayBinding) collectionType).elementsType();
+		} else if (collectionType instanceof ReferenceBinding) {
+			ReferenceBinding iterableType = ((ReferenceBinding)collectionType).findSuperTypeOriginatingFrom(T_JavaLangIterable, false /*Iterable is not a class*/);
+			if (iterableType == null && isTargetJsr14) {
+				iterableType = ((ReferenceBinding)collectionType).findSuperTypeOriginatingFrom(T_JavaUtilCollection, false /*Iterable is not a class*/);
+			}
+			if (iterableType == null) return null;
+
+			TypeBinding[] arguments = null;
+			switch (iterableType.kind()) {
+				case Binding.RAW_TYPE : // for(Object o : Iterable)
+					return this.scope.getJavaLangObject();
+
+				case Binding.GENERIC_TYPE : // for (T t : Iterable<T>) - in case used inside Iterable itself
+					arguments = iterableType.typeVariables();
+					break;
+
+				case Binding.PARAMETERIZED_TYPE : // for(E e : Iterable<E>)
+					arguments = ((ParameterizedTypeBinding)iterableType).arguments;
+					break;
+
+				default:
+					return null;
+			}
+			// generic or parameterized case
+			if (arguments.length != 1) return null; // per construction can only be one
+			return arguments[0];
+		}
+		return null;
+	}
 	public void resolve(BlockScope upperScope) {
 		// use the scope that will hold the init declarations
 		this.scope = new BlockScope(upperScope);
 		this.elementVariable.resolve(this.scope); // collection expression can see itemVariable
 		TypeBinding elementType = this.elementVariable.type.resolvedType;
 		TypeBinding collectionType = this.collection == null ? null : this.collection.resolveType(upperScope);
+
+		// Patch the resolved type
+		if (this.elementVariable.isTypeNameVar(upperScope)) {
+			elementType = getCollectionElementType(collectionType);
+			if (this.elementVariable.type.dimensions() > 0 || this.elementVariable.type.extraDimensions() > 0) {
+				upperScope.problemReporter().varLocalCannotBeArray(this.elementVariable);
+			}
+			if (TypeBinding.equalsEquals(TypeBinding.NULL, collectionType)) {
+				upperScope.problemReporter().varLocalInitializedToNull(this.elementVariable);
+				elementType = collectionType;
+			} else if (TypeBinding.equalsEquals(TypeBinding.VOID, collectionType)) {
+				upperScope.problemReporter().varLocalInitializedToVoid(this.elementVariable);
+				elementType = collectionType;
+			}				
+			elementType = this.elementVariable.patchType(elementType);
+		}
 
 		TypeBinding expectedCollectionType = null;
 		if (elementType != null && collectionType != null) {

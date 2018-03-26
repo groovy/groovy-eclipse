@@ -12578,7 +12578,7 @@ public void test385780_warn_option() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=405225
 public void test405225_extdirs() {
-	if (AbstractCompilerTest.isJRE9)
+	if (AbstractCompilerTest.isJRE9Plus)
 		return;
 	this.runConformTest(
 		new String[] {

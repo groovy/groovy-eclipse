@@ -40275,7 +40275,7 @@ public void test1151() throws Exception {
 			"}\n"
 		},
 		//"java.lang.ref.Reference<X<java.lang.String>.Other<java.lang.Thread>.Deeply>##java.lang.ref.Reference<X<java.lang.String>.Other<java.lang.Thread>.Deeply$Inside<java.lang.Number>>"
-		(isJRE9 
+		(isJRE9Plus 
 		? "java.lang.ref.Reference<X<java.lang.String>$Other<java.lang.Thread>$Deeply>"
 		: "java.lang.ref.Reference<X<java.lang.String>.Other<java.lang.Thread>.Deeply>")
 	);
@@ -40391,7 +40391,7 @@ public void test1153() {
 			"}\n"
 		},
 		"java.lang.ref.Reference<p.X$Rather$Deeply>##java.lang.ref.Reference<p.X$Rather>##java.lang.ref.Reference<p.X$Rather$Deeply$Inside>##"+
-		(isJRE9 
+		(isJRE9Plus 
 		? "java.lang.ref.Reference<p.X<java.lang.String>$Other<java.lang.Thread>$Deeply>"
 		: "java.lang.ref.Reference<p.X<java.lang.String>.Other<java.lang.Thread>.Deeply>"),
 		null,
@@ -40473,7 +40473,7 @@ public void test1155() throws Exception {
 			"	}\n" +
 			"}\n"
 		},
-		(isJRE9
+		(isJRE9Plus
 		? "java.lang.ref.Reference<X<java.lang.String>$Other<java.lang.Thread>$Deeply>"
 		: "java.lang.ref.Reference<X<java.lang.String>.Other<java.lang.Thread>.Deeply>")	);
 

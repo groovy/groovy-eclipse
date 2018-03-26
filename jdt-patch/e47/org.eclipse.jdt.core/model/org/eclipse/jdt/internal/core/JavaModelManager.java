@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -415,7 +415,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 
 	public static class CompilationParticipants {
 
-		private final static int MAX_SOURCE_LEVEL = 9; // 1.1 to 1.8 and 9
+		private final static int MAX_SOURCE_LEVEL = 10 ; // 1.1 to 1.8 and 9, 10
 
 		/*
 		 * The registered compilation participants (a table from int (source level) to Object[])
@@ -565,6 +565,8 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 					return 7;
 				case ClassFileConstants.MAJOR_VERSION_9:
 					return 8;
+				case ClassFileConstants.MAJOR_VERSION_10:
+					return 9;
 				default:
 					// all other cases including ClassFileConstants.MAJOR_VERSION_1_1
 					return 0;

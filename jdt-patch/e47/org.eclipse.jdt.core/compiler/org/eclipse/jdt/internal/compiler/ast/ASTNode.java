@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Matt McCutchen - partial fix for https://bugs.eclipse.org/bugs/show_bug.cgi?id=122995
@@ -106,7 +106,7 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 	public final static int Bit20 = 0x80000;			// contains syntax errors (method declaration, type declaration, field declarations, initializer), typeref: <> name ref: lambda capture)
 	public final static int Bit21 = 0x100000;
 	public final static int Bit22 = 0x200000;			// parenthesis count (expression) | used (import reference) shadows outer local (local declarations)
-	public final static int Bit23 = 0x400000;			// parenthesis count (expression)
+	public final static int Bit23 = 0x400000;			// parenthesis count (expression) | second or later declarator in declaration (local declarations)
 	public final static int Bit24 = 0x800000;			// parenthesis count (expression)
 	public final static int Bit25 = 0x1000000;		// parenthesis count (expression)
 	public final static int Bit26 = 0x2000000;		// parenthesis count (expression)
@@ -176,6 +176,7 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 	public static final int IsLocalDeclarationReachable = Bit31;
 	public static final int IsForeachElementVariable = Bit5;
 	public static final int ShadowsOuterLocal = Bit22;
+	public static final int IsAdditionalDeclarator = Bit23;
 
 	// for name refs or local decls
 	public static final int FirstAssignmentToLocal = Bit4;

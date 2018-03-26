@@ -1,9 +1,13 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2017 IBM Corporation and others.
+ * Copyright (c) 2010, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * This is an implementation of an early-draft specification developed under the Java
+ * Community Process (JCP) and is made available for testing and evaluation purposes
+ * only. The code is not compatible with any specification of the JCP.
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -43,6 +47,7 @@ import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.ModuleDeclaration;
 import org.eclipse.jdt.core.dom.NodeFinder;
 import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
@@ -54,7 +59,7 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 		super(name);
 	}
 	
-	private static final int AST_JLS_LATEST = AST.JLS9;
+	private static final int AST_JLS_LATEST = AST.JLS10;
 
 	public ASTNode runConversion(
 			int astLevel,
@@ -638,6 +643,7 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 		assertTrue("should have parsed a CUD", ast instanceof CompilationUnit);
 	}
 
+	@Deprecated
 	public void testBug465048() {
 		String source =
 				"class A {\n" +
@@ -670,6 +676,7 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 	/**
 	 * Verifies that ASTParser doesn't throw an IllegalArgumentException when given
 	 * this valid input.
+	 * @deprecated
 	 */
 	public void testBug480545() {
 	    String input = "class Test2 { void f(Test2... xs) {} }";
@@ -680,6 +687,7 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 	    parser.setCompilerOptions(options);
 	    assertNotNull(parser.createAST(null));
 	}
+	@Deprecated
 	public void testBug493336_001() {
 	    String input = "public class X implements á¼³ {\n" +
 	    			   "  public static final class if {\n"+
@@ -701,6 +709,7 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 	    parser.setCompilerOptions(options1);
 	    assertNotNull(parser.createAST(null));
 	}
+	@Deprecated
 	public void testBug526996_001() {
 		File rootDir = new File(System.getProperty("java.io.tmpdir"));
 		String contents = 
@@ -795,5 +804,32 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 			file.delete();
 			fileY.delete();
 		}
+	}
+	public void testBug530299_001() {
+		String contents =
+				"public class X {\n" +
+				"	public static void main(String[] args) {\n" +
+				"		var x = new X();\n" +
+				"       for (var i = 0; i < 10; ++i) {}\n" +
+				"	}\n" +
+				"}";
+	    ASTParser parser = ASTParser.newParser(AST.JLS10);
+	    parser.setSource(contents.toCharArray());
+		parser.setStatementsRecovery(true);
+		parser.setBindingsRecovery(true);
+		parser.setKind(ASTParser.K_COMPILATION_UNIT);
+		parser.setEnvironment(null, new String[] {null}, null, true);
+		parser.setResolveBindings(true);		
+		ASTNode node = parser.createAST(null);
+		assertEquals("Not a compilation unit", ASTNode.COMPILATION_UNIT, node.getNodeType());
+		CompilationUnit cu = (CompilationUnit) node;
+		assertTrue("Problems in compilation", cu.getProblems().length == 0);
+		TypeDeclaration typeDeclaration = (TypeDeclaration) cu.types().get(0);
+		MethodDeclaration[] methods = typeDeclaration.getMethods();
+		MethodDeclaration methodDeclaration = methods[0];
+		VariableDeclarationStatement vStmt = (VariableDeclarationStatement) methodDeclaration.getBody().statements().get(0);
+		Type type = vStmt.getType();
+		assertNotNull(type);
+		assertTrue("not a var", type.isVar());
 	}
 }

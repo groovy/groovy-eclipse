@@ -1,18 +1,26 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
+ * This is an implementation of an early-draft specification developed under the Java
+ * Community Process (JCP) and is made available for testing and evaluation purposes
+ * only. The code is not compatible with any specification of the JCP.
+
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *      Jesper Steen Møller <jesper@selskabet.org> - Contributions for
+ *			bug 527554 - [18.3] Compiler support for JEP 286 Local-Variable Type
+ *
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.compiler.parser;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jdt.core.tests.compiler.regression.JEP286ReservedWordTest;
 import org.eclipse.jdt.core.tests.junit.extension.TestCase;
 import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
@@ -135,6 +143,26 @@ public static TestSuite getTestSuite(boolean addComplianceDiagnoseTest) {
 		TestCase.TESTS_RANGE = null;
 		TestCase.RUN_ONLY_ID = null;
 		all.addTest(AbstractCompilerTest.buildComplianceTestSuite(ClassFileConstants.JDK9, tests_9));
+	}
+	if ((possibleComplianceLevels & AbstractCompilerTest.F_10) != 0) {
+		ArrayList tests_10 = (ArrayList)testClasses.clone();
+		tests_10.addAll(TEST_CLASSES_1_5);
+		tests_10.add(ParserTest1_7.class);
+		tests_10.add(LambdaExpressionSyntaxTest.class);
+		tests_10.add(ReferenceExpressionSyntaxTest.class);
+		tests_10.add(TypeAnnotationSyntaxTest.class);
+		tests_10.add(CompletionParserTest18.class);
+		tests_10.add(SelectionParserTest18.class);
+		tests_10.add(SelectionParserTest9.class);
+		tests_10.add(ModuleDeclarationSyntaxTest.class);
+		tests_10.add(JEP286ReservedWordTest.class);
+		// Reset forgotten subsets tests
+		TestCase.TESTS_PREFIX = null;
+		TestCase.TESTS_NAMES = null;
+		TestCase.TESTS_NUMBERS= null;
+		TestCase.TESTS_RANGE = null;
+		TestCase.RUN_ONLY_ID = null;
+		all.addTest(AbstractCompilerTest.buildComplianceTestSuite(ClassFileConstants.JDK9, tests_10));
 	}
 	return all;
 }

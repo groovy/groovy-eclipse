@@ -5,7 +5,7 @@
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Benjamin Muskalla - Contribution for bug 239066
@@ -70,6 +70,7 @@
  *								bug 419209 - [1.8] Repeating container annotations should be rejected in the presence of annotation it contains
  *								Bug 429384 - [1.8][null] implement conformance rules for null-annotated lower / upper type bounds
  *								Bug 416182 - [1.8][compiler][null] Contradictory null annotations not rejected
+ *								bug 527554 - [18.3] Compiler support for JEP 286 Local-Variable Type
  *     Ulrich Grave <ulrich.grave@gmx.de> - Contributions for
  *                              bug 386692 - Missing "unused" warning on "autowired" fields
  ********************************************************************************/
@@ -9377,6 +9378,103 @@ public void variableTypeCannotBeVoid(AbstractVariableDeclaration varDecl) {
 		arguments,
 		varDecl.sourceStart,
 		varDecl.sourceEnd);
+}
+public void varLocalMultipleDeclarators(AbstractVariableDeclaration varDecl) {
+	this.handle(
+		IProblem.VarLocalMultipleDeclarators,
+		NoArgument,
+		NoArgument,
+		varDecl.sourceStart,
+		varDecl.sourceEnd);
+}
+public void varLocalCannotBeArray(AbstractVariableDeclaration varDecl) {
+	this.handle(
+		IProblem.VarLocalCannotBeArray,
+		NoArgument,
+		NoArgument,
+		varDecl.sourceStart,
+		varDecl.sourceEnd);
+}
+public void varLocalReferencesItself(AbstractVariableDeclaration varDecl) {
+	this.handle(
+		IProblem.VarLocalReferencesItself,
+		NoArgument,
+		NoArgument,
+		varDecl.sourceStart,
+		varDecl.sourceEnd);
+}
+public void varLocalWithoutInitizalier(AbstractVariableDeclaration varDecl) {
+	this.handle(
+		IProblem.VarLocalWithoutInitizalier,
+		NoArgument,
+		NoArgument,
+		varDecl.sourceStart,
+		varDecl.sourceEnd);
+}
+public void varLocalInitializedToNull(AbstractVariableDeclaration varDecl) {
+	this.handle(
+		IProblem.VarLocalInitializedToNull,
+		NoArgument,
+		NoArgument,
+		varDecl.sourceStart,
+		varDecl.sourceEnd);
+}
+public void varLocalInitializedToVoid(AbstractVariableDeclaration varDecl) {
+	this.handle(
+		IProblem.VarLocalInitializedToVoid,
+		NoArgument,
+		NoArgument,
+		varDecl.sourceStart,
+		varDecl.sourceEnd);
+}
+public void varLocalCannotBeArrayInitalizers(AbstractVariableDeclaration varDecl) {
+	this.handle(
+		IProblem.VarLocalCannotBeArrayInitalizers,
+		NoArgument,
+		NoArgument,
+		varDecl.sourceStart,
+		varDecl.sourceEnd);
+}
+public void varLocalCannotBeLambda(AbstractVariableDeclaration varDecl) {
+	this.handle(
+		IProblem.VarLocalCannotBeLambda,
+		NoArgument,
+		NoArgument,
+		varDecl.sourceStart,
+		varDecl.sourceEnd);
+}
+public void varLocalCannotBeMethodReference(AbstractVariableDeclaration varDecl) {
+	this.handle(
+		IProblem.VarLocalCannotBeMethodReference,
+		NoArgument,
+		NoArgument,
+		varDecl.sourceStart,
+		varDecl.sourceEnd);
+}
+public void varIsReservedTypeName(TypeDeclaration decl) {
+	this.handle(
+		IProblem.VarIsReserved,
+		NoArgument,
+		NoArgument,
+		decl.sourceStart,
+		decl.sourceEnd);
+}
+public void varIsReservedTypeNameInFuture(ASTNode decl) {
+	this.handle(
+		IProblem.VarIsReservedInFuture,
+		NoArgument,
+		NoArgument,
+		ProblemSeverities.Warning,
+		decl.sourceStart,
+		decl.sourceEnd);
+}
+public void varIsNotAllowedHere(ASTNode astNode) {
+	this.handle(
+		IProblem.VarIsNotAllowedHere,
+		NoArgument,
+		NoArgument,
+		astNode.sourceStart,
+		astNode.sourceEnd);
 }
 public void variableTypeCannotBeVoidArray(AbstractVariableDeclaration varDecl) {
 	this.handle(

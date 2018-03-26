@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -463,6 +463,12 @@ public void acceptLocalVariable(LocalVariableBinding binding, org.eclipse.jdt.in
 	}
 	LocalVariable localVar = null;
 	if(parent != null) {
+		String typeSig = null;
+		if (local.type == null || local.type.isTypeNameVar(binding.declaringScope)) {
+			typeSig = Signature.createTypeSignature(binding.type.signableName(), true);// : Util.typeSignature(local.type)
+		} else {
+			typeSig = Util.typeSignature(local.type);
+		}
 		localVar = new LocalVariable(
 				(JavaElement)parent,
 				new String(local.name),
@@ -470,7 +476,7 @@ public void acceptLocalVariable(LocalVariableBinding binding, org.eclipse.jdt.in
 				local.declarationSourceEnd,
 				local.sourceStart,
 				local.sourceEnd,
-				local.type == null ? Signature.createTypeSignature(binding.type.signableName(), true) : Util.typeSignature(local.type),
+				typeSig,
 				local.annotations,
 				local.modifiers,
 				local.getKind() == AbstractVariableDeclaration.PARAMETER);

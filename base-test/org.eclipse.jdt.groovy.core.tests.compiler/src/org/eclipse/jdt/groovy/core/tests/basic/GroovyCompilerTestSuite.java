@@ -64,11 +64,12 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public abstract class GroovyCompilerTestSuite {
 
-    protected static final long JDK6 = ClassFileConstants.JDK1_6;
-    protected static final long JDK7 = ClassFileConstants.JDK1_7;
-    protected static final long JDK8 = ClassFileConstants.JDK1_8;
-    protected static final long JDK9 = ClassFileConstants.JDK9;
-    protected static final List<Long> JDKs = Collections.unmodifiableList(Arrays.asList(JDK6, JDK7, JDK8, JDK9));
+    protected static final long JDK6  = ClassFileConstants.JDK1_6;
+    protected static final long JDK7  = ClassFileConstants.JDK1_7;
+    protected static final long JDK8  = ClassFileConstants.JDK1_8;
+    protected static final long JDK9  = ClassFileConstants.JDK9  ;
+    protected static final long JDK10 = ClassFileConstants.JDK10 ;
+    protected static final List<Long> JDKs = Collections.unmodifiableList(Arrays.asList(JDK6, JDK7, JDK8, JDK9, JDK10));
 
     @Parameters(name = "Java {1}")
     public static Iterable<Object[]> params() {

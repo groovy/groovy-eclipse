@@ -1,12 +1,14 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Jesper Steen Møller <jesper@selskabet.org> - contributions for:	
+ *         Bug 531046: [10] ICodeAssist#codeSelect support for 'var'
  *******************************************************************************/
 package org.eclipse.jdt.internal.codeassist.select;
 
@@ -588,7 +590,7 @@ protected void consumeEnterVariable() {
 
 	AbstractVariableDeclaration variable = (AbstractVariableDeclaration) this.astStack[this.astPtr];
 	if (variable.type == this.assistNode){
-		if (!this.diet){
+		if (!this.diet && ! variable.type.isTypeNameVar(null)) {
 			this.restartRecovery	= true;	// force to restart in recovery mode
 			this.lastIgnoredToken = -1;
 		}
@@ -601,11 +603,14 @@ protected void consumeExitVariableWithInitialization() {
 
 	// does not keep the initialization if selection is not inside
 	AbstractVariableDeclaration variable = (AbstractVariableDeclaration) this.astStack[this.astPtr];
-	int start = variable.initialization.sourceStart;
-	int end =  variable.initialization.sourceEnd;
-	if ((this.selectionStart < start) &&  (this.selectionEnd < start) ||
-			(this.selectionStart > end) && (this.selectionEnd > end)) {
+	int start = variable.declarationSourceStart;
+	int end =  variable.declarationSourceEnd;
+	// Keep the initialization intact, because that's the only way we are going to know the type
+	if (!variable.type.isTypeNameVar(null)) {
+		if ((this.selectionStart < start) &&  (this.selectionEnd < start) ||
+				(this.selectionStart > end) && (this.selectionEnd > end)) {
 			variable.initialization = null;
+		}
 	}
 	triggerRecoveryUponLambdaClosure(variable, false);
 }

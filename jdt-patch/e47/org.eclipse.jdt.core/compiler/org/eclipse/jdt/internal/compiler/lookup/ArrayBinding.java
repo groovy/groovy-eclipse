@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,6 +23,8 @@
  *								Bug 438458 - [1.8][null] clean up handling of null type annotations wrt type variables
  *								Bug 440759 - [1.8][null] @NonNullByDefault should never affect wildcards and uses of a type variable
  *								Bug 441693 - [1.8][null] Bogus warning for type argument annotated with @NonNull
+ *     Jesper S Møller - Contributions for bug 381345 : [1.8] Take care of the Java 8 major version
+ *								Bug 527554 - [18.3] Compiler support for JEP 286 Local-Variable Type
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -223,6 +225,17 @@ public TypeBinding erasure() {
         return this.environment.createArrayType(erasedType, this.dimensions);
     return this;
 }
+
+public ArrayBinding upwardsProjection(Scope scope, TypeBinding[] mentionedTypeVariables) {
+	TypeBinding leafType = this.leafComponentType.upwardsProjection(scope, mentionedTypeVariables);
+	return scope.environment().createArrayType(leafType, this.dimensions, this.typeAnnotations);
+}
+
+public ArrayBinding downwardsProjection(Scope scope, TypeBinding[] mentionedTypeVariables) {
+	TypeBinding leafType = this.leafComponentType.downwardsProjection(scope, mentionedTypeVariables);
+	return scope.environment().createArrayType(leafType, this.dimensions, this.typeAnnotations);
+}
+
 public LookupEnvironment environment() {
     return this.environment;
 }
