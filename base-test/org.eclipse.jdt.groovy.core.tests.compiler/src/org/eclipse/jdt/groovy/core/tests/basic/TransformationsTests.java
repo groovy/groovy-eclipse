@@ -706,7 +706,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
     public void testWithLogging() {
         Map<String, String> options = getCompilerOptions();
         // Taken from http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
-        options.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath, getJarPath("astTransformations/transforms.jar"));
+        options.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath, "###" + getJarPath("astTransformations/transforms.jar"));
         options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
 
         String[] sources = {

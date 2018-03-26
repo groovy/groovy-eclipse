@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +41,7 @@ import org.eclipse.jdt.internal.core.util.Util;
  * on the project. If the project is a groovy project it will set the right
  * options, and will also set the groovy classpath.
  */
+@SuppressWarnings("nls")
 public class CompilerUtils {
 
 	public static final int IsGrails = 0x1;
@@ -92,16 +93,16 @@ public class CompilerUtils {
 					// will need bit manipulation here when another flag added
 					optionMap.put(CompilerOptions.OPTIONG_GroovyFlags, Integer.toString(IsGrails));
 				} else {
-					optionMap.put(CompilerOptions.OPTIONG_GroovyFlags, "0"); //$NON-NLS-1$
+					optionMap.put(CompilerOptions.OPTIONG_GroovyFlags, "0");
 				}
 			} else {
 				optionMap.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.DISABLED);
-				optionMap.put(CompilerOptions.OPTIONG_GroovyFlags, "0"); //$NON-NLS-1$
+				optionMap.put(CompilerOptions.OPTIONG_GroovyFlags, "0");
 			}
 		} catch (CoreException e) {
-			Util.log(e, "configureOptionsBasedOnNature failed"); //$NON-NLS-1$
+			Util.log(e, "configureOptionsBasedOnNature failed");
 			optionMap.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.DISABLED);
-			optionMap.put(CompilerOptions.OPTIONG_GroovyFlags, "0"); //$NON-NLS-1$
+			optionMap.put(CompilerOptions.OPTIONG_GroovyFlags, "0");
 		}
 	}
 
@@ -112,7 +113,7 @@ public class CompilerUtils {
 	 */
 	private static boolean isProbablyGrailsProject(IProject project) {
 		try {
-			IFolder folder = project.getFolder("grails-app"); //$NON-NLS-1$
+			IFolder folder = project.getFolder("grails-app");
 			return folder.exists();
 		} catch (Exception e) {
 			return false;
@@ -140,25 +141,23 @@ public class CompilerUtils {
 	}
 
 	public static void setGroovyClasspath(Map<String, String> optionMap, IJavaProject javaProject) {
-		IFile file = javaProject.getProject().getFile("groovy.properties"); //$NON-NLS-1$
+		IFile file = javaProject.getProject().getFile("groovy.properties");
 		if (file.exists()) {
 			try {
 				PropertyResourceBundle prb = new PropertyResourceBundle(file.getContents());
 				for (String k : prb.keySet()) {
-					String v = fixup(prb.getString(k), javaProject);
 					if (k.equals(CompilerOptions.OPTIONG_GroovyClassLoaderPath)) {
-						optionMap.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath, v);
+						optionMap.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath, fixup(prb.getString(k), javaProject));
 					}
 				}
 			} catch (Throwable t) {
-				Util.log(t, "configuring groovy classloader classpath failed"); //$NON-NLS-1$
+				Util.log(t, "configuring groovy classpath (using groovy.properties) failed");
 			}
 		} else {
 			try {
-				String classpath = calculateClasspath(javaProject);
-				optionMap.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath, classpath);
+				optionMap.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath, calculateClasspath(javaProject));
 			} catch (Throwable t) {
-				Util.log(t, "configuring groovy classloader classpath (not using groovy.properties) failed"); //$NON-NLS-1$
+				Util.log(t, "configuring groovy classpath failed");
 			}
 		}
 		IProject project = javaProject.getProject();
@@ -167,26 +166,26 @@ public class CompilerUtils {
 			String defaultOutputLocation = pathToString(defaultOutputPath, project);
 			optionMap.put(CompilerOptions.OPTIONG_GroovyExcludeGlobalASTScan, defaultOutputLocation);
 		} catch (Throwable t) {
-			Util.log(t, "configuring exclude global AST scan failed"); //$NON-NLS-1$
+			Util.log(t, "configuring exclude global ast scan failed");
 		}
 		optionMap.put(CompilerOptions.OPTIONG_GroovyProjectName, project.getName());
 	}
 
 	private static String fixup(String someString, IJavaProject javaProject) {
-		if (someString.startsWith("%projhome%")) { //$NON-NLS-1$
-			someString = javaProject.getProject().getLocation().toOSString() + File.separator + someString.substring("%projhome%".length()); //$NON-NLS-1$
+		if (someString.startsWith("%projhome%")) {
+			someString = javaProject.getProject().getLocation().toOSString() + File.separator + someString.substring("%projhome%".length());
 		}
-		if (someString.equals("%projclasspath%")) { //$NON-NLS-1$
+		if (someString.equals("%projclasspath%")) {
 			someString = calculateClasspath(javaProject);
 		}
 		return someString;
 	}
 
 	/**
-	 * @return true if the project has the groovy nature
+	 * @return {@code true} if the project has the groovy nature
 	 */
 	private static boolean isGroovyNaturedProject(IProject project) throws CoreException {
-		return project.hasNature("org.eclipse.jdt.groovy.core.groovyNature"); //$NON-NLS-1$
+		return project.hasNature("org.eclipse.jdt.groovy.core.groovyNature");
 	}
 
 	/** Cache of results from {@link #calculateClasspath} used to prevent re-calculations. */
@@ -225,7 +224,7 @@ public class CompilerUtils {
 									pathElement = (ipath == null ? null : ipath.toOSString());
 								}
 							} catch (Throwable t) {
-								Util.log(t, "getting library path failed"); //$NON-NLS-1$
+								Util.log(t, "getting library path failed");
 							}
 						}
 						if (cpe.getEntryKind() == IClasspathEntry.CPE_PROJECT) {
@@ -257,16 +256,16 @@ public class CompilerUtils {
 						}
 					}
 				} catch (CoreException e) {
-					Util.log(e, "checking Groovy Nature failed"); //$NON-NLS-1$
+					Util.log(e, "checking Groovy Nature failed");
 				}
 
 				classpath = accumulatedPathEntries.stream().collect(Collectors.joining(File.pathSeparator));
 				CLASSPATH_CACHE.put(cpes, classpath);
 			}
 		} catch (JavaModelException e) {
-			Util.log(e, "determining classpath of project " + projectName + " failed"); //$NON-NLS-1$ //$NON-NLS-2$
+			Util.log(e, "determining classpath of project " + projectName + " failed");
 		}
-		return classpath != null ? classpath : ""; //$NON-NLS-1$
+		return classpath != null ? classpath : "";
 	}
 
 	/**
