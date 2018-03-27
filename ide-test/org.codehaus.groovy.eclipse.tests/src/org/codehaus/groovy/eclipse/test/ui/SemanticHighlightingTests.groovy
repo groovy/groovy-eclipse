@@ -258,6 +258,27 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('valueOf'), 'valueOf'.length(), STATIC_CALL))
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/545
+    void testStaticMethods5() {
+        addGroovySource '''\
+            class Util {
+              static def getSomething() { value }
+              static void setSomething(value) { }
+            }
+            ''', 'Util', 'pack'
+
+        String contents = '''\
+            import static pack.Util.*
+            def thing = something
+            something = null
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('thing'), 'thing'.length(), VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('something'), 'something'.length(), STATIC_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('something'), 'something'.length(), STATIC_CALL))
+    }
+
     @Test // GRECLIPSE-1138
     void testMultipleStaticMethods() {
         String contents = '''\
