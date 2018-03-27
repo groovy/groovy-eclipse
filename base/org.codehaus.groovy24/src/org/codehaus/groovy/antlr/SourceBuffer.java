@@ -28,17 +28,21 @@ import java.util.List;
  * @author <a href="mailto:groovy@ross-rayner.com">Jeremy Rayner</a>
  */
 public class SourceBuffer {
-    // GRECLIPSE edit
-    private final List<StringBuilder> lines = new ArrayList<StringBuilder>();
+    private final List<StringBuilder> lines;
+    private StringBuilder current;
+    // GRECLIPSE add
     private final List<Integer> lineEndings = new ArrayList<Integer>();
-    private StringBuilder current = new StringBuilder();
     // GRECLIPSE-805: Support for unicode escape sequences
     private UnicodeEscapingReader unescaper = new NoEscaper();
     // GRECLIPSE end
 
     public SourceBuffer() {
-        // GRECLIPSE edit
+        lines = new ArrayList<StringBuilder>();
+        //lines.add(new StringBuilder()); // dummy row for position [0] in the List
+
+        current = new StringBuilder();
         lines.add(current);
+        // GRECLIPSE add
         lineEndings.add(0);
         // GRECLIPSE end
     }
@@ -158,8 +162,6 @@ public class SourceBuffer {
 
 /**
  * GRECLIPSE-805: Support for unicode escape sequences
- * @author Andrew Eisenberg
- * @created Mar 3, 2011
  */
 class NoEscaper extends UnicodeEscapingReader {
     public NoEscaper() {

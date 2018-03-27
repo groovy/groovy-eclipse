@@ -8,9 +8,9 @@
 
 	<properties>
 		<!-- groovy-all version to use for tests: -->
-		<groovy.all.version>2.4.14</groovy.all.version>
+		<groovy.all.version>2.4.15</groovy.all.version>
 		<!-- groovy-batch version to use for tests: -->
-		<groovy.xx.version>2.4.14-01</groovy.xx.version>
+		<groovy.xx.version>2.4.15-01</groovy.xx.version>
 		<!-- maven-compiler version to use for tests: -->
 		<maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
 

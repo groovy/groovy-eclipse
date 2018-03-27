@@ -124,7 +124,7 @@ public abstract class GroovyCompilerTestSuite {
                 System.arraycopy(cps, 0, newcps, 0, cps.length);
 
                 String[] ivyVersions = {"2.5.0", "2.4.0"};
-                String[] groovyVersions = {"2.6.0-indy", "2.5.0-indy", "2.4.14"};
+                String[] groovyVersions = {"2.6.0-indy", "2.5.0-indy", "2.4.15"};
                 try {
                     URL groovyJar = null;
                     for (String groovyVer : groovyVersions) {
