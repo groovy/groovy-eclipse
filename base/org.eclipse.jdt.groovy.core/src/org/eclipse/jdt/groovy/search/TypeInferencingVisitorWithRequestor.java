@@ -24,7 +24,10 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -2102,7 +2105,7 @@ assert primaryExprType != null && dependentExprType != null;
                 // no match found, just return the first
                 return constructors.get(0);
             } else {
-                List<MethodNode> methods = clazz.getMethods(method.getElementName());
+                List<MethodNode> methods = findMethods(clazz, method.getElementName());
                 if (methods.isEmpty()) {
                     return null;
                 }
@@ -2151,6 +2154,19 @@ assert primaryExprType != null && dependentExprType != null;
         }
         // probably happened due to a syntax error in the code or an AST transformation
         return null;
+    }
+
+    private List<MethodNode> findMethods(ClassNode classNode, String methodName) {
+        List<MethodNode> methods = classNode.getMethods(methodName);
+        if (methods.isEmpty()) {
+            if (isNotEmpty(GroovyUtils.getAnnotations(classNode, "org.spockframework.runtime.model.SpecMetadata"))) {
+                methods = classNode.getMethods().stream().filter(mn -> {
+                    Optional<AnnotationNode> opt = GroovyUtils.getAnnotations(mn, "org.spockframework.runtime.model.FeatureMetadata").findFirst();
+                    return methodName.equals(opt.map(an -> an.getMember("name")).map(Expression::getText).orElse(null));
+                }).collect(Collectors.toList());
+            }
+        }
+        return methods;
     }
 
     private MethodNode findLazyMethod(String fieldName) {
@@ -2670,12 +2686,8 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     public static Expression findCategoryTarget(ClassNode node) {
-        for (AnnotationNode annotation : node.getAnnotations()) {
-            if ("groovy.lang.Category".equals(annotation.getClassNode().getName())) {
-                return annotation.getMember("value");
-            }
-        }
-        return null;
+        return GroovyUtils.getAnnotations(node, "groovy.lang.Category")
+            .findFirst().map(an -> an.getMember("value")).orElse(null);
     }
 
     private static ConstructorNode findDefaultConstructor(ClassNode node) {
@@ -2836,27 +2848,20 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     private static boolean isLazy(FieldNode fieldNode) {
-        for (AnnotationNode annotation : fieldNode.getAnnotations()) {
-            if (annotation.getClassNode().getName().equals("groovy.lang.Lazy")) {
-                return true;
-            }
-        }
-        return false;
+        return isNotEmpty(GroovyUtils.getAnnotations(fieldNode, "groovy.lang.Lazy"));
     }
 
     private static boolean isMetaAnnotation(ClassNode node) {
-        if (node.isAnnotated() && node.hasMethod("value", NO_PARAMETERS)) {
-            for (AnnotationNode annotation : node.getAnnotations()) {
-                if (annotation.getClassNode().getName().equals("groovy.transform.AnnotationCollector")) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return (node.isAnnotated() && node.hasMethod("value", NO_PARAMETERS) &&
+            isNotEmpty(GroovyUtils.getAnnotations(node, "groovy.transform.AnnotationCollector")));
     }
 
     private static boolean isNotEmpty(List<?> list) {
-        return list != null && !list.isEmpty();
+        return (list != null && !list.isEmpty());
+    }
+
+    private static boolean isNotEmpty(Stream<?> stream) {
+        return (stream != null && stream.anyMatch(x -> true));
     }
 
     private static VariableExpression isNotNullTest(Expression node) {

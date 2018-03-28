@@ -522,7 +522,7 @@ public class CompilationUnitResolver extends Compiler {
 					compilerOptions,
 					new DefaultProblemFactory()),
 				false,
-				2 /* comment recorder parser */);
+				LanguageSupportFactory.CommentRecorderParserVariant);
 		// GROOVY end
 		CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, compilerOptions.maxProblemsPerUnit);
 		CompilationUnitDeclaration compilationUnitDeclaration = parser.dietParse(sourceUnit, compilationResult);

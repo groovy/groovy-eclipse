@@ -68,17 +68,6 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
     private ClassNode classNode;
     private final GroovyClassLoader transformLoader;
 
-    // GRECLIPSE add
-    private boolean allowTransforms;
-    private List<String> localTransformsAllowed;
-
-    public ASTTransformationCollectorCodeVisitor(SourceUnit source, GroovyClassLoader transformLoader, boolean allowTransforms, List<String> localTransformsAllowed) {
-        this(source, transformLoader);
-        this.allowTransforms = allowTransforms;
-        this.localTransformsAllowed = localTransformsAllowed;
-    }
-    // GRECLIPSE end
-
     public ASTTransformationCollectorCodeVisitor(SourceUnit source, GroovyClassLoader transformLoader) {
         this.source = source;
         this.transformLoader = transformLoader;
@@ -135,9 +124,6 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
             }
             addTransformsToClassNode(annotation, transformClassAnnotation);
             */
-            if (!this.allowTransforms && !isAllowed(annotation.getClassNode().getName())) {
-                continue;
-            }
             String[] transformClassNames = getTransformClassNames(annotation.getClassNode());
             Class[] transformClasses = getTransformClasses(annotation.getClassNode());
             if (transformClassNames == null && transformClasses == null) {
@@ -559,37 +545,6 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
             }
             return getTransformClasses(transformClassAnnotation);
         }
-    }
-
-    /**
-     * Check the transform name against the allowed transforms.
-     *
-     * @param transformName the name of the transform
-     * @return {@code true} if it is allowed
-     */
-    private boolean isAllowed(String transformName) {
-        if (localTransformsAllowed == null ||
-                "groovy.transform.TypeChecked".equals(transformName) ||
-                "groovy.transform.CompileStatic".equals(transformName) ||
-                "grails.transaction.Transactional".equals(transformName)) {
-            return true;
-        }
-        for (String localTransformAllowed : localTransformsAllowed) {
-            if (localTransformAllowed.equals("*")) {
-                return true;
-            } else if (localTransformAllowed.endsWith("$")) {
-                // must be the last part of the name
-                if (transformName.endsWith(localTransformAllowed.substring(0, localTransformAllowed.length() - 1))) {
-                    return true;
-                }
-            } else {
-                // indexof is good enough
-                if (transformName.indexOf(localTransformAllowed) != -1) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
   // GRECLIPSE end
 }

@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import groovy.lang.GroovySystem;
 
@@ -165,6 +166,10 @@ public class GroovyUtils {
         int index = name.lastIndexOf('$');
         if (index == -1) index = name.lastIndexOf('.');
         return new String[] {name.substring(0, Math.max(0, index)), name.substring(index + 1)};
+    }
+
+    public static Stream<AnnotationNode> getAnnotations(AnnotatedNode node, String name) {
+        return node.getAnnotations().stream().filter(an -> an.getClassNode().getName().equals(name));
     }
 
     public static ClassNode getBaseType(ClassNode node) {

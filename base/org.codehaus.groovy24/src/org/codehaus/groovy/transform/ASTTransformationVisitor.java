@@ -212,8 +212,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
         compilationUnit.addPhaseOperation(new CompilationUnit.PrimaryClassNodeOperation() {
             public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
                 ASTTransformationCollectorCodeVisitor collector = 
-                    // GRECLIPSE added params
-                    new ASTTransformationCollectorCodeVisitor(source, compilationUnit.getTransformLoader(), compilationUnit.allowTransforms, compilationUnit.localTransformsToRunOnReconcile);
+                    new ASTTransformationCollectorCodeVisitor(source, compilationUnit.getTransformLoader());
                 collector.visitClass(classNode);
             }
         }, Phases.SEMANTIC_ANALYSIS);
@@ -298,8 +297,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                                                 null,
                                                 null);
                                     }
-                                // GRECLIPSE added condition
-                                } else if (compilationUnit.allowTransforms || globalTransformsAllowedInReconcile.contains(className)) {
+                                } else /*GRECLIPSE add*/if (compilationUnit.allowTransforms || globalTransformsAllowedInReconcile.contains(className))/*GRECLIPSE end*/{
                                     transformNames.put(className, service);
                                 }
                             }

@@ -61,7 +61,6 @@ import java.net.URL;
 import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -141,8 +140,7 @@ public class CompilationUnit extends ProcessingUnit {
      * security stuff and a class loader for loading classes.
      */
     public CompilationUnit(CompilerConfiguration configuration, CodeSource security, GroovyClassLoader loader) {
-        // GRECLIPSE added final three params
-        this(configuration, security, loader, null, true, null, null);
+        this(configuration, security, loader, null/*GRECLIPSE add*/, true, null/*GRECLIPSE end*/);
     }
 
     /**
@@ -158,12 +156,14 @@ public class CompilationUnit extends ProcessingUnit {
      * @param security        - security setting for the compilation
      * @param configuration   - compilation configuration
      */
-    // GRECLIPSE added final three params
     public CompilationUnit(CompilerConfiguration configuration, CodeSource security,
-                           GroovyClassLoader loader, GroovyClassLoader transformLoader,
-                           boolean allowTransforms, String localTransformsToRunOnReconcile, String excludeGlobalASTScan) {
+                           GroovyClassLoader loader, GroovyClassLoader transformLoader/*GRECLIPSE add*/, boolean allowTransforms, String excludeGlobalASTScan/*GRECLIPSE end*/) {
         super(configuration, loader, null);
 
+        // GRECLIPSE add
+        this.allowTransforms = allowTransforms;
+        this.excludeGlobalASTScan = excludeGlobalASTScan;
+        // GRECLIPSE end
         this.astTransformationsContext = new ASTTransformationsContext(this, transformLoader);
         this.names = new ArrayList<String>();
         this.queuedSources = new LinkedList<SourceUnit>();
@@ -179,17 +179,6 @@ public class CompilationUnit extends ProcessingUnit {
         this.resolveVisitor = new ResolveVisitor(this);
         this.staticImportVisitor = new StaticImportVisitor();
         this.optimizer = new OptimizerVisitor(this);
-        // GRECLIPSE add
-        this.allowTransforms = allowTransforms;
-        this.excludeGlobalASTScan = excludeGlobalASTScan;
-        this.localTransformsToRunOnReconcile = new ArrayList<>();
-        if (localTransformsToRunOnReconcile == null) {
-            this.localTransformsToRunOnReconcile.add("*");
-        } else {
-            String[] tokens = localTransformsToRunOnReconcile.split(",");
-            Collections.addAll(this.localTransformsToRunOnReconcile, tokens);
-        }
-        // GRECLIPSE end
 
         phaseOperations = new LinkedList[Phases.ALL + 1];
         newPhaseOperations = new LinkedList[Phases.ALL + 1];
@@ -238,8 +227,7 @@ public class CompilationUnit extends ProcessingUnit {
         }, Phases.CANONICALIZATION);
         addPhaseOperation(compileCompleteCheck, Phases.CANONICALIZATION);
         addPhaseOperation(classgen, Phases.CLASS_GENERATION);
-        // GRECLIPSE edit -- skip output phase
-        //addPhaseOperation(output);
+        addPhaseOperation(output);
 
         addPhaseOperation(new PrimaryClassNodeOperation() {
             @Override
@@ -852,7 +840,7 @@ public class CompilationUnit extends ProcessingUnit {
             // Prep the generator machinery
             //
             ClassVisitor visitor = createClassVisitor();
-            
+
             String sourceName = (source == null ? classNode.getModule().getDescription() : source.getName());
             // only show the file name and its extension like javac does in its stacktraces rather than the full path
             // also takes care of both \ and / depending on the host compiling environment
@@ -871,8 +859,7 @@ public class CompilationUnit extends ProcessingUnit {
             generator.visitClass(classNode);
 
             byte[] bytes = ((ClassWriter) visitor).toByteArray();
-            // GRECLIPSE added classNode, source
-            generatedClasses.add(new GroovyClass(classNode.getName(), bytes, classNode, source));
+            generatedClasses.add(new GroovyClass(classNode.getName(), bytes/*GRECLIPSE add*/, classNode, source/*GRECLIPSE end*/));
 
             //
             // Handle any callback that's been set
@@ -895,7 +882,7 @@ public class CompilationUnit extends ProcessingUnit {
         CompilerConfiguration config = getConfiguration();
         int computeMaxStackAndFrames = ClassWriter.COMPUTE_MAXS;
         if (CompilerConfiguration.isPostJDK7(config.getTargetBytecode())
-                || Boolean.TRUE.equals(config.getOptimizationOptions().get("indy"))) {
+                || Boolean.TRUE.equals(config.getOptimizationOptions().get(CompilerConfiguration.INVOKEDYNAMIC))) {
             computeMaxStackAndFrames += ClassWriter.COMPUTE_FRAMES;
         }
         return new ClassWriter(computeMaxStackAndFrames) {
@@ -937,7 +924,7 @@ public class CompilationUnit extends ProcessingUnit {
 
         };
     }
-    
+
     //---------------------------------------------------------------------------
     // PHASE HANDLING
 
@@ -1061,8 +1048,8 @@ public class CompilationUnit extends ProcessingUnit {
         if (!sort) return unsorted;
 
         int unsortedSize = unsorted.size();
-        // GRECLIPSE edit
-        /*int[] indexClass = new int[unsortedSize];
+        /* GRECLIPSE edit
+        int[] indexClass = new int[unsortedSize];
         int[] indexInterface = new int[unsortedSize];
         {
             int i = 0;
@@ -1283,14 +1270,13 @@ public class CompilationUnit extends ProcessingUnit {
         this.isReconcile = isReconcile;
     }
 
+    public boolean isReconcile;
+    private ProgressListener listener;
+    public final boolean allowTransforms;
     /**
      * Path to a directory that should be ignored when searching for manifest files that define global AST transforms.
      * See bug https://jira.codehaus.org/browse/GRECLIPSE-1762
      */
-    public String excludeGlobalASTScan;
-    public boolean allowTransforms = true;
-    public boolean isReconcile = false;
-    private ProgressListener listener;
-    public List<String> localTransformsToRunOnReconcile;
+    public final String excludeGlobalASTScan;
   // GRECLIPSE end
 }

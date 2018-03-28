@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,6 @@
  */
 package org.eclipse.jdt.core.groovy.tests.builder;
 
-import static org.junit.Assert.fail;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
@@ -27,11 +22,10 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.groovy.tests.ReconcilerUtils;
 import org.eclipse.jdt.core.tests.util.Util;
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -52,290 +46,94 @@ import org.junit.Test;
  */
 public final class FullProjectTests extends BuilderTestSuite {
 
-    private static void assertDoesNotContainMethod(ClassNode cn, String methodname) {
-        for (MethodNode mn : cn.getMethods()) {
-            if (mn.getName().equals(methodname)) {
-                fail("Found method named '" + methodname + "' in class '" + cn.getName() + "'");
-            }
-        }
-    }
-
-    private static void assertContainsMethod(ClassNode cn, String methodname) {
-        for (MethodNode mn : cn.getMethods()) {
-            if (mn.getName().equals(methodname)) {
-                return;
-            }
-        }
-        fail("Did not find method named '" + methodname + "' in class '" + cn.getName() + "'");
+    private static void assertContainsMethod(ClassNode classNode, String methodName) {
+        boolean found = classNode.getMethods().stream().map(MethodNode::getName).anyMatch(methodName::equals);
+        Assert.assertTrue("Did not find method named '" + methodName + "' in class '" + classNode.getName() + "'", found);
     }
 
     private static void assertContainsProblem(Set<IProblem> problems, String expected) {
-        for (IProblem problem : problems) {
-            if (problem.toString().contains(expected)) {
-                return;
-            }
-        }
-        fail("Expected '" + expected + "' in data '" + problems + "'");
+        boolean found = problems.stream().map(IProblem::toString).anyMatch(p -> p.contains(expected));
+        Assert.assertTrue("Expected '" + expected + "' in data '" + problems + "'", found);
     }
 
-    private static void setTransformsOption(IJavaProject javaproject, String transformsSpec) {
-        Map<String, String> m = new HashMap<>();
-        m.put(CompilerOptions.OPTIONG_GroovyTransformsToRunOnReconcile, transformsSpec);
-        javaproject.setOptions(m);
+    private IPath[] createGroovyProject() throws Exception {
+        IPath prj = env.addProject("Project");
+        env.addExternalJars(prj, Util.getJavaClassLibs());
+        env.addGroovyJars(prj);
+        env.setOutputFolder(prj, "bin");
+        env.removePackageFragmentRoot(prj, "");
+        return new IPath[] {prj, env.addPackageFragmentRoot(prj, "src")};
     }
 
     //--------------------------------------------------------------------------
 
-    @Test // Transforms during reconciling tests
-    public void testReconcilingWithTransforms_notransformallowed() throws Exception {
-        IPath projectPath = env.addProject("Project");
-        env.addExternalJars(projectPath, Util.getJavaClassLibs());
-        env.addGroovyJars(projectPath);
-        fullBuild(projectPath);
-        // Slight change in behavior from around groovy 2.1.8/groovy 2.2beta2 onwards. If you don't say anything
-        // they are all on. If you do say something it is obeyed. You can say '*'
-        setTransformsOption(env.getJavaProject(projectPath), "Foo");
-
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, "");
-
-        IPath root = env.addPackageFragmentRoot(projectPath, "src");
-        env.setOutputFolder(projectPath, "bin");
-
-        IPath path = env.addGroovyClass(root, "", "Foo",
-            "@Singleton\n"+
-            "class Foo {\n"+
-            "  void mone() {}\n"+
-            "}\n"
-        );
-
-        incrementalBuild(projectPath);
-
-        ICompilationUnit icu = env.getUnit(path);
-        icu.becomeWorkingCopy(null);
-
-        List<ClassNode> classes = ((GroovyCompilationUnit) icu).getModuleNode().getClasses();
-        ClassNode cn = classes.get(0);
-        assertDoesNotContainMethod(cn, "getInstance");
-    }
-
     @Test
-    public void testReconcilingWithTransforms_singletonallowed() throws Exception {
-        IPath projectPath = env.addProject("Project");
-        env.addExternalJars(projectPath, Util.getJavaClassLibs());
-        env.addGroovyJars(projectPath);
-        setTransformsOption(env.getJavaProject(projectPath), "Singleton");
-        fullBuild(projectPath);
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, "");
+    public void testReconcilingWithTransforms_single() throws Exception {
+        IPath[] paths = createGroovyProject();
 
-        IPath root = env.addPackageFragmentRoot(projectPath, "src");
-        env.setOutputFolder(projectPath, "bin");
+        IPath foo = env.addGroovyClass(paths[1], "", "Foo",
+            "@Singleton\n" +
+            "class Foo {\n" +
+            "  void mone() {}\n" +
+            "}\n");
 
-        IPath path = env.addGroovyClass(root, "", "Foo",
-            "@Singleton\n"+
-            "class Foo {\n"+
-            "  void mone() {}\n"+
-            "}\n"
-        );
-
-        incrementalBuild(projectPath);
-
-        ICompilationUnit icu = env.getUnit(path);
+        fullBuild(paths[0]);
+        ICompilationUnit icu = env.getUnit(foo);
         icu.becomeWorkingCopy(null);
 
-        List<ClassNode> classes = ((GroovyCompilationUnit) icu).getModuleNode().getClasses();
-        ClassNode cn = classes.get(0);
+        ClassNode cn = ((GroovyCompilationUnit) icu).getModuleNode().getClasses().get(0);
         assertContainsMethod(cn, "getInstance");
     }
 
     @Test
-    public void testReconcilingWithTransforms_singletonallowedspecialchar() throws Exception {
-        IPath projectPath = env.addProject("Project");
-        env.addExternalJars(projectPath, Util.getJavaClassLibs());
-        env.addGroovyJars(projectPath);
-        setTransformsOption(env.getJavaProject(projectPath), "Singleton$");
-        fullBuild(projectPath);
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, "");
+    public void testReconcilingWithTransforms_multiple() throws Exception {
+        IPath[] paths = createGroovyProject();
 
-        IPath root = env.addPackageFragmentRoot(projectPath, "src");
-        env.setOutputFolder(projectPath, "bin");
+        IPath foo = env.addGroovyClass(paths[1], "", "Foo",
+            "@Singleton\n" +
+            "class Foo {\n" +
+            "  @Delegate Bar b = new BarImpl();\n" +
+            "  void mone() {}\n" +
+            "}\n" +
+            "interface Bar { void method(); }\n" +
+            "class BarImpl implements Bar { void method() {} }\n");
 
-        IPath path = env.addGroovyClass(root, "", "Foo",
-            "@Singleton\n"+
-            "class Foo {\n"+
-            "  void mone() {}\n"+
-            "}\n"
-        );
-
-        incrementalBuild(projectPath);
-
-        ICompilationUnit icu = env.getUnit(path);
+        fullBuild(paths[0]);
+        ICompilationUnit icu = env.getUnit(foo);
         icu.becomeWorkingCopy(null);
 
-        List<ClassNode> classes = ((GroovyCompilationUnit) icu).getModuleNode().getClasses();
-        ClassNode cn = classes.get(0);
-        assertContainsMethod(cn, "getInstance");
-    }
-
-    @Test
-    public void testReconcilingWithTransforms_multipleButOnlyOneAllowed() throws Exception {
-        IPath projectPath = env.addProject("Project");
-        env.addExternalJars(projectPath, Util.getJavaClassLibs());
-        env.addGroovyJars(projectPath);
-
-        setTransformsOption(env.getJavaProject(projectPath), "Singleton");
-        fullBuild(projectPath);
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, "");
-
-        IPath root = env.addPackageFragmentRoot(projectPath, "src");
-        env.setOutputFolder(projectPath, "bin");
-
-        IPath path = env.addGroovyClass(root, "", "Foo",
-            "@Singleton\n"+
-            "class Foo {\n"+
-            "  @Delegate Bar b = new BarImpl();\n"+
-            "  void mone() {}\n"+
-            "}\n"+
-            "interface Bar { void method(); }\n"+
-            "class BarImpl implements Bar { void method() {};}\n"
-        );
-
-        incrementalBuild(projectPath);
-
-        ICompilationUnit icu = env.getUnit(path);
-        icu.becomeWorkingCopy(null);
-
-        List<ClassNode> classes = ((GroovyCompilationUnit) icu).getModuleNode().getClasses();
-        ClassNode cn = classes.get(0);
-        assertContainsMethod(cn, "getInstance");
-        assertDoesNotContainMethod(cn, "method");
-    }
-
-    @Test
-    public void testReconcilingWithTransforms_multipleAndBothAllowed() throws Exception {
-        IPath projectPath = env.addProject("Project");
-        env.addExternalJars(projectPath, Util.getJavaClassLibs());
-        env.addGroovyJars(projectPath);
-        fullBuild(projectPath);
-
-        setTransformsOption(env.getJavaProject(projectPath), "Singleton,Delegate");
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, "");
-
-        IPath root = env.addPackageFragmentRoot(projectPath, "src");
-        env.setOutputFolder(projectPath, "bin");
-
-        IPath path = env.addGroovyClass(root, "", "Foo",
-            "@Singleton\n"+
-            "class Foo {\n"+
-            "  @Delegate Bar b = new BarImpl();\n"+
-            "  void mone() {}\n"+
-            "}\n"+
-            "interface Bar { void method(); }\n"+
-            "class BarImpl implements Bar { void method() {};}\n"
-        );
-
-        incrementalBuild(projectPath);
-
-        ICompilationUnit icu = env.getUnit(path);
-        icu.becomeWorkingCopy(null);
-
-        List<ClassNode> classes = ((GroovyCompilationUnit) icu).getModuleNode().getClasses();
-        ClassNode cn = classes.get(0);
+        ClassNode cn = ((GroovyCompilationUnit) icu).getModuleNode().getClasses().get(0);
         assertContainsMethod(cn, "getInstance");
         assertContainsMethod(cn, "method");
-    }
-
-    @Test
-    public void testReconcilingWithTransforms_compileStatic() throws Exception {
-        IPath projectPath = env.addProject("Project");
-        env.addExternalJars(projectPath, Util.getJavaClassLibs());
-        env.addGroovyJars(projectPath);
-        fullBuild(projectPath);
-
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, "");
-
-        IPath root = env.addPackageFragmentRoot(projectPath, "src");
-        env.setOutputFolder(projectPath, "bin");
-
-        IPath path = env.addGroovyClass(root, "", "Foo",
-            "@groovy.transform.CompileStatic\n"+
-            "class Foo {\n"+
-            "  void xxx(int i) { xxx('abc');}\n"+
-            "}\n"
-        );
-
-        incrementalBuild(projectPath);
-        ICompilationUnit icu = env.getUnit(path);
-        Set<IProblem> problems = ReconcilerUtils.reconcile(icu);
-        assertContainsProblem(problems, "Cannot find matching method Foo#xxx");
     }
 
     @Test
     public void testReconcilingWithTransforms_typeChecked() throws Exception {
-        IPath projectPath = env.addProject("Project");
-        env.addExternalJars(projectPath, Util.getJavaClassLibs());
-        env.addGroovyJars(projectPath);
-        fullBuild(projectPath);
+        IPath[] paths = createGroovyProject();
 
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, "");
+        IPath foo = env.addGroovyClass(paths[1], "", "Foo",
+            "@groovy.transform.TypeChecked\n" +
+            "class Foo {\n" +
+            "  void xxx(int i) { xxx('abc') }\n" +
+            "}\n");
 
-        IPath root = env.addPackageFragmentRoot(projectPath, "src");
-        env.setOutputFolder(projectPath, "bin");
-
-        IPath path = env.addGroovyClass(root, "", "Foo",
-            "@groovy.transform.TypeChecked\n"+
-            "class Foo {\n"+
-            "  void xxx(int i) { xxx('abc');}\n"+
-            "}\n"
-        );
-
-        incrementalBuild(projectPath);
-
-        ICompilationUnit icu = env.getUnit(path);
-        Set<IProblem> problems = ReconcilerUtils.reconcile(icu);
+        fullBuild(paths[0]);
+        Set<IProblem> problems = ReconcilerUtils.reconcile(env.getUnit(foo));
         assertContainsProblem(problems, "Cannot find matching method Foo#xxx");
     }
 
     @Test
-    public void testReconcilingWithTransforms_multipleAndWildcard() throws Exception {
-        IPath projectPath = env.addProject("Project");
-        env.addExternalJars(projectPath, Util.getJavaClassLibs());
-        env.addGroovyJars(projectPath);
+    public void testReconcilingWithTransforms_compileStatic() throws Exception {
+        IPath[] paths = createGroovyProject();
 
-        IJavaProject p = env.getJavaProject(projectPath);
-        setTransformsOption(p, "*");
+        IPath foo = env.addGroovyClass(paths[1], "", "Foo",
+            "@groovy.transform.CompileStatic\n" +
+            "class Foo {\n" +
+            "  void xxx(int i) { xxx('abc') }\n" +
+            "}\n");
 
-        fullBuild(projectPath);
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, "");
-
-        IPath root = env.addPackageFragmentRoot(projectPath, "src");
-        env.setOutputFolder(projectPath, "bin");
-
-        IPath path = env.addGroovyClass(root, "", "Foo",
-            "@Singleton\n"+
-            "class Foo {\n"+
-            "  @Delegate Bar b = new BarImpl();\n"+
-            "  void mone() {}\n"+
-            "}\n"+
-            "interface Bar { void method(); }\n"+
-            "class BarImpl implements Bar { void method() {};}\n"
-        );
-
-        incrementalBuild(projectPath);
-
-        ICompilationUnit icu = env.getUnit(path);
-        icu.becomeWorkingCopy(null);
-
-        List<ClassNode> classes = ((GroovyCompilationUnit) icu).getModuleNode().getClasses();
-        ClassNode cn = classes.get(0);
-        assertContainsMethod(cn, "getInstance");
-        assertContainsMethod(cn, "method");
+        fullBuild(paths[0]);
+        Set<IProblem> problems = ReconcilerUtils.reconcile(env.getUnit(foo));
+        assertContainsProblem(problems, "Cannot find matching method Foo#xxx");
     }
 }

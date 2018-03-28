@@ -185,7 +185,6 @@ public class GroovyParser {
             classLoaders[0],
             classLoaders[1],
             allowTransforms,
-            compilerOptions.groovyTransformsToRunOnReconcile,
             compilerOptions.groovyExcludeGlobalASTScan);
         this.resolver = new JDTResolver(cu);
         cu.removeOutputPhaseOperation();

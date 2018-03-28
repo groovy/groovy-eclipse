@@ -18,10 +18,8 @@
  */
 package org.codehaus.groovy.ast;
 
-import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.util.ListHashMap;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
