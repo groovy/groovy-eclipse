@@ -15,22 +15,18 @@
  */
 package org.eclipse.jdt.core.groovy.tests.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import junit.framework.AssertionFailedError;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor;
 import org.eclipse.jdt.core.groovy.tests.builder.BuilderTestSuite;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
 import org.eclipse.jdt.internal.core.util.Util;
+import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -48,7 +44,7 @@ public final class GroovyContentTypeTests extends BuilderTestSuite {
             "\njavaLike: " + charCharToString(javaLikeExtensions) +
             "\ngroovyLike: " + charCharToString(groovyLikeExtensions) +
             "\njavaNotGroovyLike: " + charCharToString(javaButNotGroovyExtensions);
-        assertEquals(message, javaLikeExtensions.length, groovyLikeExtensions.length + javaButNotGroovyExtensions.length);
+        Assert.assertEquals(message, javaLikeExtensions.length, groovyLikeExtensions.length + javaButNotGroovyExtensions.length);
 
         charCharContains(javaLikeExtensions, "java");
         charCharContains(javaLikeExtensions, "javatest");
@@ -67,59 +63,50 @@ public final class GroovyContentTypeTests extends BuilderTestSuite {
     }
 
     @Test
-    public void testJavaOnlyProject() {
-        runMultipleTimes(proj -> {
-            env.removeGroovyNature(proj.getName());
-            env.fullBuild();
+    public void testJavaOnlyProject() throws Exception {
+        IProject proj = createProject();
+        env.removeGroovyNature(proj.getName());
 
-            checkJavaProject(proj);
-        });
+        checkJavaProject(proj);
     }
 
     @Test
-    public void testGroovyProject() {
-        runMultipleTimes(proj -> {
-            env.addGroovyJars(proj.getFullPath());
-            env.fullBuild();
+    public void testGroovyProject() throws Exception {
+        IProject proj = createProject();
+        env.addGroovyJars(proj.getFullPath());
 
-            checkGroovyProject(proj);
-        });
+        checkGroovyProject(proj);
     }
 
     @Test // a groovy project that is converted back to a plain java project will not have its groovy files compiled
-    public void testGroovyThenJavaProject() {
-        runMultipleTimes(proj -> {
-            env.addGroovyJars(proj.getFullPath());
-            env.fullBuild();
+    public void testGroovyThenJavaProject() throws Exception {
+        IProject proj = createProject();
+        env.addGroovyJars(proj.getFullPath());
 
-            checkGroovyProject(proj);
+        checkGroovyProject(proj);
 
-            env.removeGroovyNature(proj.getName());
-            fullBuild();
+        env.removeGroovyNature(proj.getName());
 
-            checkJavaProject(proj);
-        });
+        checkJavaProject(proj);
     }
 
     @Test // a groovy project that is converted back to a plain java project will not have its groovy files compiled
-    public void testJavaThenGroovyProject() {
-        runMultipleTimes(proj -> {
-            env.removeGroovyNature(proj.getName());
-            env.fullBuild();
+    public void testJavaThenGroovyProject() throws Exception {
+        IProject proj = createProject();
+        env.removeGroovyNature(proj.getName());
 
-            checkJavaProject(proj);
+        checkJavaProject(proj);
 
-            env.addGroovyNature(proj.getName());
-            env.addGroovyJars(proj.getFullPath());
-            fullBuild();
+        env.addGroovyNature(proj.getName());
+        env.addGroovyJars(proj.getFullPath());
 
-            checkGroovyProject(proj);
-        });
+        checkGroovyProject(proj);
     }
 
     //--------------------------------------------------------------------------
 
-    private void checkGroovyProject(IProject proj) throws CoreException {
+    private void checkGroovyProject(IProject proj) throws Exception {
+        cleanBuild(); fullBuild();
         expectingNoProblems();
 
         // check that all source files exist
@@ -128,27 +115,29 @@ public final class GroovyContentTypeTests extends BuilderTestSuite {
         IFile groovyClass = proj.getFile(new Path("bin/p1/HelloGroovy.class"));
         IFile groovyTestClass = proj.getFile(new Path("bin/p1/HelloGroovytest.class"));
 
-        assertTrue(javaClass + " should exist", javaClass.exists());
-        assertTrue(javaTestClass + " should exist", javaTestClass.exists());
-        assertTrue(groovyClass + " should exist", groovyClass.exists());
-        assertTrue(groovyTestClass + " should exist", groovyTestClass.exists());
+        Assert.assertTrue(javaClass + " should exist", javaClass.exists());
+        Assert.assertTrue(javaTestClass + " should exist", javaTestClass.exists());
+        Assert.assertTrue(groovyClass + " should exist", groovyClass.exists());
+        Assert.assertTrue(groovyTestClass + " should exist", groovyTestClass.exists());
 
         // touch all source files, rebuild and make sure that the same thing holds
-        proj.getFile(new Path("src/p1/HelloJava.java")).touch(null);
-        proj.getFile(new Path("src/p1/HelloJavatest.javatest")).touch(null);
-        proj.getFile(new Path("src/p1/HelloGroovy.groovy")).touch(null);
-        proj.getFile(new Path("src/p1/HelloGroovytest.groovytest")).touch(null);
+        IProgressMonitor monitor = new SimpleProgressMonitor("touch");
+        proj.getFile(new Path("src/p1/HelloJava.java")).touch(monitor);
+        proj.getFile(new Path("src/p1/HelloJavatest.javatest")).touch(monitor);
+        proj.getFile(new Path("src/p1/HelloGroovy.groovy")).touch(monitor);
+        proj.getFile(new Path("src/p1/HelloGroovytest.groovytest")).touch(monitor);
 
-        env.incrementalBuild();
+        incrementalBuild();
         expectingNoProblems();
 
-        assertTrue(javaClass + " should exist", javaClass.exists());
-        assertTrue(javaTestClass + " should exist", javaTestClass.exists());
-        assertTrue(groovyClass + " should exist", groovyClass.exists());
-        assertTrue(groovyTestClass + " should exist", groovyTestClass.exists());
+        Assert.assertTrue(javaClass + " should exist", javaClass.exists());
+        Assert.assertTrue(javaTestClass + " should exist", javaTestClass.exists());
+        Assert.assertTrue(groovyClass + " should exist", groovyClass.exists());
+        Assert.assertTrue(groovyTestClass + " should exist", groovyTestClass.exists());
     }
 
-    private void checkJavaProject(IProject proj) throws CoreException {
+    private void checkJavaProject(IProject proj) throws Exception {
+        cleanBuild(); fullBuild();
         expectingNoProblems();
 
         // check that HelloJava.class and HelloJavatest.class exist,
@@ -158,27 +147,28 @@ public final class GroovyContentTypeTests extends BuilderTestSuite {
         IFile groovyClass = proj.getFile(new Path("bin/p1/HelloGroovy.class"));
         IFile groovyTestClass = proj.getFile(new Path("bin/p1/HelloGroovytest.class"));
 
-        assertTrue(javaClass + " should exist", javaClass.exists());
-        assertTrue(javaTestClass + " should exist", javaTestClass.exists());
-        assertFalse(groovyClass + " should not exist", groovyClass.exists());
-        assertFalse(groovyTestClass + " should not exist", groovyTestClass.exists());
+        Assert.assertTrue(javaClass + " should exist", javaClass.exists());
+        Assert.assertTrue(javaTestClass + " should exist", javaTestClass.exists());
+        Assert.assertFalse(groovyClass + " should not exist", groovyClass.exists());
+        Assert.assertFalse(groovyTestClass + " should not exist", groovyTestClass.exists());
 
         // touch all source files, rebuild and make sure that the same thing holds
-        proj.getFile(new Path("src/p1/HelloJava.java")).touch(null);
-        proj.getFile(new Path("src/p1/HelloJavatest.javatest")).touch(null);
-        proj.getFile(new Path("src/p1/HelloGroovy.groovy")).touch(null);
-        proj.getFile(new Path("src/p1/HelloGroovytest.groovytest")).touch(null);
+        IProgressMonitor monitor = new SimpleProgressMonitor("touch");
+        proj.getFile(new Path("src/p1/HelloJava.java")).touch(monitor);
+        proj.getFile(new Path("src/p1/HelloJavatest.javatest")).touch(monitor);
+        proj.getFile(new Path("src/p1/HelloGroovy.groovy")).touch(monitor);
+        proj.getFile(new Path("src/p1/HelloGroovytest.groovytest")).touch(monitor);
 
-        env.incrementalBuild();
+        incrementalBuild();
         expectingNoProblems();
 
-        assertTrue(javaClass + " should exist", javaClass.exists());
-        assertTrue(javaTestClass + " should exist", javaTestClass.exists());
-        assertFalse(groovyClass + " should not exist", groovyClass.exists());
-        assertFalse(groovyTestClass + " should not exist", groovyTestClass.exists());
+        Assert.assertTrue(javaClass + " should exist", javaClass.exists());
+        Assert.assertTrue(javaTestClass + " should exist", javaTestClass.exists());
+        Assert.assertFalse(groovyClass + " should not exist", groovyClass.exists());
+        Assert.assertFalse(groovyTestClass + " should not exist", groovyTestClass.exists());
     }
 
-    private static IProject createProject() throws CoreException {
+    private static IProject createProject() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addExternalJars(projectPath, org.eclipse.jdt.core.tests.util.Util.getJavaClassLibs());
         env.removePackageFragmentRoot(projectPath, "");
@@ -230,45 +220,16 @@ public final class GroovyContentTypeTests extends BuilderTestSuite {
         if (CharOperation.containsEqual(charChar, containsStr.toCharArray())) {
             return; // found match
         }
-        fail("Should have found '" + containsStr + "' in '" + charCharToString(charChar) + "'");
+        Assert.fail("Should have found '" + containsStr + "' in '" + charCharToString(charChar) + "'");
     }
 
     private static void charCharNoContains(char[][] charChar, String containsStr) {
         if (CharOperation.containsEqual(charChar, containsStr.toCharArray())) {
-            fail("Should not have found '" + containsStr + "' in '" + charCharToString(charChar) + "'");
+            Assert.fail("Should not have found '" + containsStr + "' in '" + charCharToString(charChar) + "'");
         }
     }
 
     private static String charCharToString(char[][] charChar) {
         return String.valueOf(CharOperation.concatWith(charChar, ','));
-    }
-
-    private static void runMultipleTimes(Runner runner) {
-        try {
-            IProject proj = createProject();
-            AssertionFailedError failedAssertion = null;
-            for (int attempt = 1; attempt <= 5; attempt += 1) {
-                try {
-                    runner.run(proj);
-                    return; // success
-                } catch (AssertionFailedError e) {
-                    failedAssertion = e;
-                    System.out.println("Launch failed on attempt " + attempt + "; retrying.");
-                }
-                env.waitForManualRefresh();
-            }
-            if (failedAssertion != null) {
-                throw failedAssertion;
-            }
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @FunctionalInterface
-    private interface Runner {
-        void run(IProject p) throws Exception;
     }
 }
