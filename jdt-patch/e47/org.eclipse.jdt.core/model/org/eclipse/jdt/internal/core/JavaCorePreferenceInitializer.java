@@ -9,7 +9,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Harry Terkelsen (het@google.com) - Bug 449262 - Allow the use of third-party Java formatters
- *     Gábor Kövesdán - Contribution for Bug 350000 - [content assist] Include non-prefix matches in auto-complete suggestions
+ *     GÃ¡bor KÃ¶vesdÃ¡n - Contribution for Bug 350000 - [content assist] Include non-prefix matches in auto-complete suggestions
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
@@ -128,9 +128,7 @@ public class JavaCorePreferenceInitializer extends AbstractPreferenceInitializer
 		optionNames.add(CompilerOptions.OPTIONG_GroovyFlags);
 		optionNames.add(CompilerOptions.OPTIONG_BuildGroovyFiles);
 		optionNames.add(CompilerOptions.OPTIONG_GroovyProjectName);
-		optionNames.add(CompilerOptions.OPTIONG_GroovyClassLoaderPath);
 		optionNames.add(CompilerOptions.OPTIONG_GroovyCompilerConfigScript);
-		optionNames.add(CompilerOptions.OPTIONG_GroovyTransformsToRunOnReconcile);
 		// GROOVY end
 
 		// Initialize deprecated options
