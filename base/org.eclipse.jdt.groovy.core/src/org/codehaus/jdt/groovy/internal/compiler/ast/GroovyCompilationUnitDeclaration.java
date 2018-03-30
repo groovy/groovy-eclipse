@@ -2737,21 +2737,19 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
          * @throws IllegalStateException if the type reference is malformed
          */
         private static TypeReference verify(TypeReference toVerify) {
-            if (GroovyCheckingControl.checkTypeReferences) {
-                if (toVerify.getClass().equals(SingleTypeReference.class)) {
-                    SingleTypeReference str = (SingleTypeReference) toVerify;
-                    if (str.sourceStart == -1) {
-                        if (str.sourceEnd != -2) {
-                            throw new IllegalStateException("TypeReference '" + String.valueOf(str.token) + " should end at -2");
-                        }
-                    } else {
-                        if (str.sourceEnd < str.sourceStart) {
-                            throw new IllegalStateException("TypeReference '" + String.valueOf(str.token) + " should end at " + str.sourceStart + " or later");
-                        }
+            if (toVerify.getClass().equals(SingleTypeReference.class)) {
+                SingleTypeReference str = (SingleTypeReference) toVerify;
+                if (str.sourceStart == -1) {
+                    if (str.sourceEnd != -2) {
+                        throw new IllegalStateException("TypeReference '" + String.valueOf(str.token) + " should end at -2");
                     }
                 } else {
-                    throw new IllegalStateException("Cannot verify type reference of this class " + toVerify.getClass());
+                    if (str.sourceEnd < str.sourceStart) {
+                        throw new IllegalStateException("TypeReference '" + String.valueOf(str.token) + " should end at " + str.sourceStart + " or later");
+                    }
                 }
+            } else {
+                throw new IllegalStateException("Cannot verify type reference of this class " + toVerify.getClass());
             }
             return toVerify;
         }

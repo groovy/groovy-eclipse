@@ -201,13 +201,11 @@ public class CompilerOptions {
 	// GROOVY add
 	// This first one is the MASTER OPTION and if null, rather than ENABLED or DISABLED then the compiler will abort
 	// FIXASC (M3) aborting is just a short term action to enable us to ensure the right paths into the compiler configure it
-	public static final String OPTIONG_BuildGroovyFiles                 = "org.eclipse.jdt.core.compiler.groovy.buildGroovyFiles"; //$NON-NLS-1$
-	public static final String OPTIONG_GroovyFlags                      = "org.eclipse.jdt.core.compiler.groovy.projectFlags"; //$NON-NLS-1$
-	public static final String OPTIONG_GroovyProjectName                = "org.eclipse.jdt.core.compiler.groovy.groovyProjectName"; //$NON-NLS-1$
-	public static final String OPTIONG_GroovyClassLoaderPath            = "org.eclipse.jdt.core.compiler.groovy.groovyClassLoaderPath"; //$NON-NLS-1$
-	public static final String OPTIONG_GroovyCompilerConfigScript       = "org.eclipse.jdt.core.compiler.groovy.groovyCompilerConfigScript"; //$NON-NLS-1$
-	public static final String OPTIONG_GroovyExcludeGlobalASTScan       = "org.eclipse.jdt.core.compiler.groovy.groovyServiceScanExclude";  //$NON-NLS-1$
-	public static final String OPTIONG_GroovyTransformsToRunOnReconcile = "org.eclipse.jdt.core.compiler.groovy.groovyTransformsToRunOnReconcile"; //$NON-NLS-1$
+	public static final String OPTIONG_BuildGroovyFiles           = "org.eclipse.jdt.core.compiler.groovy.buildGroovyFiles"; //$NON-NLS-1$
+	public static final String OPTIONG_GroovyFlags                = "org.eclipse.jdt.core.compiler.groovy.projectFlags"; //$NON-NLS-1$
+	public static final String OPTIONG_GroovyProjectName          = "org.eclipse.jdt.core.compiler.groovy.groovyProjectName"; //$NON-NLS-1$
+	public static final String OPTIONG_GroovyCompilerConfigScript = "org.eclipse.jdt.core.compiler.groovy.groovyCompilerConfigScript"; //$NON-NLS-1$
+	public static final String OPTIONG_GroovyExcludeGlobalASTScan = "org.eclipse.jdt.core.compiler.groovy.groovyServiceScanExclude"; //$NON-NLS-1$
 	// GROOVY end
 
 	/**
@@ -479,10 +477,8 @@ public class CompilerOptions {
 	public int buildGroovyFiles; // 0=dontknow 1=no 2=yes
 	public int groovyFlags; // 0x01 == IsGrails
 	public String groovyProjectName;
-	public String groovyClassLoaderPath;
 	public String groovyCompilerConfigScript;
 	public String groovyExcludeGlobalASTScan;
-	public String groovyTransformsToRunOnReconcile;
 	// GROOVY end
 
 	// === Support for Null Annotations: ===
@@ -2051,19 +2047,11 @@ public class CompilerOptions {
 		if ((optionValue = optionsMap.get(OPTIONG_GroovyProjectName)) != null) {
 			this.groovyProjectName = optionValue;
 		}
-		if ((optionValue = optionsMap.get(OPTIONG_GroovyClassLoaderPath)) != null) {
-			this.groovyClassLoaderPath = optionValue;
-		}
 		if ((optionValue = optionsMap.get(OPTIONG_GroovyCompilerConfigScript)) != null) {
 			this.groovyCompilerConfigScript = optionValue;
 		}
 		if ((optionValue = optionsMap.get(OPTIONG_GroovyExcludeGlobalASTScan)) != null) {
 			this.groovyExcludeGlobalASTScan = optionValue;
-		}
-		if ((optionValue = optionsMap.get(OPTIONG_GroovyTransformsToRunOnReconcile)) != null && !optionValue.trim().isEmpty()) {
-			this.groovyTransformsToRunOnReconcile = optionValue;
-		} else if ((optionValue = System.getProperty("greclipse.transformsDuringReconcile")) != null) { //$NON-NLS-1$
-			this.groovyTransformsToRunOnReconcile = optionValue;
 		}
 		// GROOVY end
 	}
@@ -2092,8 +2080,6 @@ public class CompilerOptions {
 		// GROOVY add
 		buf.append("\n\t- build groovy files: ").append((this.buildGroovyFiles == 0 ? "dontknow" : (this.buildGroovyFiles == 1 ? "no" : "yes"))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		buf.append("\n\t- build groovy flags: ").append(Integer.toHexString(this.groovyFlags)); //$NON-NLS-1$
-		buf.append("\n\t- groovy project name: ").append(this.groovyProjectName); //$NON-NLS-1$
-		buf.append("\n\t- groovy loader path: ").append(this.groovyClassLoaderPath); //$NON-NLS-1$
 		buf.append("\n\t- groovy config script: ").append(this.groovyCompilerConfigScript); //$NON-NLS-1$
 		// GROOVY end
 		buf.append("\n\t- local variables debug attributes: ").append((this.produceDebugAttributes & ClassFileConstants.ATTR_VARS) != 0 ? "ON" : " OFF"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$

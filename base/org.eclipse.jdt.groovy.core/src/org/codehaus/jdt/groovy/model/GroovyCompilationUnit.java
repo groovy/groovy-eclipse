@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,6 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.groovy.core.util.JavaConstants;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.IErrorHandlingPolicy;
@@ -250,6 +249,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
 
             // compiler options
             Map<String, String> options = (project == null ? JavaCore.getOptions() : project.getOptions(true));
+            options.put(CompilerOptions.OPTIONG_GroovyProjectName, project.getElementName());
             options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
             if (!computeProblems) {
                 // disable compiler config script processing to streamline parsing
@@ -258,9 +258,6 @@ public class GroovyCompilationUnit extends CompilationUnit {
                 options.remove(CompilerOptions.OPTION_TaskTags);
             }
             CompilerOptions compilerOptions = new CompilerOptions(options);
-            if (project != null) {
-                CompilerUtils.setGroovyClasspath(compilerOptions, project);
-            }
 
             ProblemReporter reporter = new ProblemReporter(new GroovyErrorHandlingPolicy(!computeProblems), compilerOptions, new DefaultProblemFactory());
 

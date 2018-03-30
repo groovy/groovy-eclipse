@@ -26,7 +26,6 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -51,7 +50,6 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.core.tests.util.Util;
-import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.core.JavaModelManager;
@@ -3141,129 +3139,59 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         executeClass(paths[0], "StackTester", ">>class java.util.Stack\r\nHello world\r\n", "");
     }
 
-    /**
-     * Testing that the classpath computation works for multi dependent projects. This classpath will be used for the AST transform loader.
-     */
     @Test
-    public void testMultiProjectDependenciesAndAstTransformClasspath() throws Exception {
+    public void testMultiProjectDependencies() throws Exception {
         // Construct ProjectA
-        IPath[] paths = createSimpleProject("ProjectA", false);
+        IPath[] paths = createSimpleProject("ProjectA", true);
 
-        env.addClass(paths[1], "p1", "Hello",
-            "package p1;\n" +
-            "public class Hello {\n" +
-            "   public static void main(String[] args) {\n" +
-            "      System.out.println(\"Hello world\");\n" +
+        env.addGroovyClass(paths[1], "a", "Hello",
+            "package a\n" +
+            "class Hello {\n" +
+            "   static void main(String[] args) {\n" +
+            "      System.out.println('Hello world')\n" +
             "   }\n" +
             "}\n");
 
         IPath projectA = paths[0];
 
         // Construct ProjectB
-        paths = createSimpleProject("ProjectB", false);
-
-        env.addClass(paths[1], "p1", "Hello",
-            "package p1;\n" +
-            "public class Hello {\n" +
-            "   public static void main(String[] args) {\n" +
-            "      System.out.println(\"Hello world\");\n" +
-            "   }\n" +
-            "}\n");
-
-        IPath projectB = paths[0];
+        paths = createSimpleProject("ProjectB", true); IPath projectB = paths[0];
         env.addRequiredProject(projectB, projectA, /*include all:*/new IPath[0], /*exclude none:*/new IPath[0], true);
 
-        // Construct ProjectC
-        paths = createSimpleProject("ProjectC", false);
-
-        env.addClass(paths[1], "p1", "Hello",
-            "package p1;\n" +
-            "public class Hello {\n" +
-            "   public static void main(String[] args) {\n" +
-            "      System.out.println(\"Hello world\");\n" +
+        env.addGroovyClass(paths[1], "b", "Hello",
+            "package b\n" +
+            "class Hello {\n" +
+            "   static void main(String[] args) {\n" +
+            "      a.Hello.main(args)\n" +
             "   }\n" +
             "}\n");
 
-        IPath projectC = paths[0];
+        // Construct ProjectC
+        paths = createSimpleProject("ProjectC", true); IPath projectC = paths[0];
         env.addRequiredProject(projectC, projectB, /*include all:*/new IPath[0], /*exclude none:*/new IPath[0], true);
 
-        // Construct ProjectD
-        paths = createSimpleProject("ProjectD", false);
-
-        env.addClass(paths[1], "p1", "Hello",
-            "package p1;\n" +
-            "public class Hello {\n" +
-            "   public static void main(String[] args) {\n" +
-            "      System.out.println(\"Hello world\");\n" +
+        env.addGroovyClass(paths[1], "c", "Hello",
+            "package c\n" +
+            "class Hello {\n" +
+            "   static void main(String[] args) {\n" +
+            "      b.Hello.main(args)\n" +
             "   }\n" +
             "}\n");
 
-        IPath projectD = paths[0];
+        // Construct ProjectD
+        paths = createSimpleProject("ProjectD", true); IPath projectD = paths[0];
         env.addRequiredProject(projectD, projectC, /*include all:*/new IPath[0], /*exclude none:*/new IPath[0], true);
 
-        incrementalBuild(projectD);
-        expectingCompiledClasses("p1.Hello");
+        env.addGroovyClass(paths[1], "d", "Hello",
+            "package d\n" +
+            "class Hello {\n" +
+            "   static void main(String[] args) {\n" +
+            "      c.Hello.main(args)\n" +
+            "   }\n" +
+            "}\n");
+
+        fullBuild();
+        expectingCompiledClasses("a.Hello", "b.Hello", "c.Hello", "d.Hello");
         expectingNoProblems();
-
-        //
-        String classpathForProjectD = CompilerUtils.calculateClasspath(env.getJavaProject(projectD));
-        StringTokenizer st = new StringTokenizer(classpathForProjectD, File.pathSeparator);
-        // look at how project A and B manifest in this classpath
-        boolean foundAndCheckedA = false;
-        boolean foundAndCheckedB = false;
-        boolean foundAndCheckedC = false;
-        while (st.hasMoreElements()) {
-            String pathElement = st.nextToken();
-
-            // ProjectA is on ProjectDs classpath indirectly. It is on ProjectBs
-            // classpath and re-exported
-            if (pathElement.indexOf("ProjectA") != -1) {
-                // System.out.println("ProjectA element is ["+pathElement+"]");
-                if (pathElement.indexOf("ProjectA") == 1) {
-                    fail("Path element looks incorrect.  Path for ProjectA should be an absolute location, not [" +
-                        pathElement +
-                        "]");
-                }
-                if (!pathElement.endsWith("bin")) {
-                    fail("Expected pathelement to end with the output folder 'bin', but it did not: [" +
-                        pathElement +
-                        "]");
-                }
-                foundAndCheckedA = true;
-            }
-
-            // ProjectB is on ProjectDs classpath indirectly. It is on ProjectCs
-            // classpath and re-exported
-            if (pathElement.indexOf("ProjectB") != -1) {
-                System.out.println("ProjectB element is [" + pathElement + "]");
-                if (pathElement.indexOf("ProjectB") == 1) {
-                    fail("Path element looks incorrect.  Path for ProjectB should be an absolute location, not [" + pathElement + "]");
-                }
-                if (!pathElement.endsWith("bin")) {
-                    fail("Expected pathelement to end with the output folder 'bin', but it did not: [" + pathElement + "]");
-                }
-                foundAndCheckedB = true;
-            }
-            // ProjectB is directly on ProjectCs classpath
-            if (pathElement.indexOf("ProjectC") != -1) {
-                System.out.println("ProjectC element is [" + pathElement + "]");
-                if (pathElement.indexOf("ProjectC") == 1) {
-                    fail("Path element looks incorrect.  Path for ProjectC should be an absolute location, not [" + pathElement + "]");
-                }
-                if (!pathElement.endsWith("bin")) {
-                    fail("Expected pathelement to end with the output folder 'bin', but it did not: [" + pathElement + "]");
-                }
-                foundAndCheckedC = true;
-            }
-        }
-        if (!foundAndCheckedC) {
-            fail("Unable to check entry for ProjectC in the classpath, didn't find it:\n" + classpathForProjectD);
-        }
-        if (!foundAndCheckedB) {
-            fail("Unable to check entry for ProjectB in the classpath, didn't find it:\n" + classpathForProjectD);
-        }
-        if (!foundAndCheckedA) {
-            fail("Unable to check entry for ProjectA in the classpath, didn't find it:\n" + classpathForProjectD);
-        }
     }
 }

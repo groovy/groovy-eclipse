@@ -21,33 +21,17 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import java.lang.reflect.Modifier;
-import java.net.URL;
-import java.util.Map;
 import java.util.Optional;
 
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.control.CompilationUnit;
-import org.eclipse.core.runtime.FileLocator;
-import org.eclipse.core.runtime.Platform;
-import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.osgi.framework.Version;
 
 public final class TransformationsTests extends GroovyCompilerTestSuite {
-
-    private String getJarPath(String entry) {
-        try {
-            URL url = Platform.getBundle("org.eclipse.jdt.groovy.core.tests.compiler").getEntry(entry);
-            return FileLocator.resolve(url).getFile();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     private boolean isPackagePrivate(int modifiers) {
         return !(Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers) || Modifier.isPrivate(modifiers));
@@ -408,8 +392,6 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
 
     @Test // not a great test, needs work
     public void testCategory_STS3822() {
-        assumeTrue(JavaCore.getPlugin().getBundle().getVersion().compareTo(Version.parseVersion("3.10")) >= 0);
-
         String[] sources = {
             "bad.groovy",
             "@Category(C.class) \n"+
@@ -704,68 +686,27 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testWithLogging() {
-        Map<String, String> options = getCompilerOptions();
-        // Taken from http://svn.codehaus.org/groovy/trunk/groovy/groovy-core/src/examples/transforms/local
-        options.put(CompilerOptions.OPTIONG_GroovyClassLoaderPath, "###" + getJarPath("astTransformations/transforms.jar"));
-        options.put(CompilerOptions.OPTIONG_GroovyProjectName, "Test");
-
         String[] sources = {
-            "examples/local/LoggingExample.groovy",
-            "package examples.local\n"+
-            "\n"+
-            "/**\n"+
-            " * Demonstrates how a local transformation works. \n"+
-            " */ \n"+
-            "\n"+
-            "def greet() {\n"+
-            "  println \"Hello World\"\n"+
-            "}\n"+
-            "\n"+
-            "@WithLogging //this should trigger extra logging\n"+
-            "def greetWithLogging() {\n"+
-            "  println \"Hello World\"\n"+
-            "}\n"+
-            "\n"+
-            "// this prints out a simple Hello World\n"+
-            "greet()\n"+
-            "\n"+
-            "// this prints out Hello World along with the extra compile time logging\n"+
-            "greetWithLogging()\n"+
-            "\n"+
-            "//\n"+
-            "// The rest of this script is asserting that this all works correctly. \n"+
-            "//\n"+
-            "\n"+
-            "def oldOut = System.out\n"+
-            "// redirect standard out so we can make assertions on it\n"+
-            "def standardOut = new ByteArrayOutputStream();\n"+
-            "System.setOut(new PrintStream(standardOut)); \n"+
-            "\n"+
-            "greet()\n"+
-            "assert \"Hello World\" == standardOut.toString(\"ISO-8859-1\").trim()\n"+
-            "\n"+
-            "// reset standard out and redirect it again\n"+
-            "standardOut.close()\n"+
-            "standardOut = new ByteArrayOutputStream();\n"+
-            "System.setOut(new PrintStream(standardOut)); \n"+
-            "\n"+
-            "greetWithLogging()\n"+
-            "def result = standardOut.toString(\"ISO-8859-1\").split('\\n')\n"+
-            "assert \"Starting greetWithLogging\"  == result[0].trim()\n"+
-            "assert \"Hello World\"                == result[1].trim()\n"+
-            "assert \"Ending greetWithLogging\"    == result[2].trim()\n"+
-            "\n"+
-            "System.setOut(oldOut);\n"+
-            "print 'done'\n",
+            "LoggingExample.groovy",
+            "void greet() {\n" +
+            "  println 'Hello World'\n" +
+            "}\n" +
+            "\n" +
+            "@examples.local.WithLogging // this should trigger extra logging\n" +
+            "void greetWithLogging() {\n" +
+            "  println 'Hello World'\n" +
+            "}\n" +
+            "\n" +
+            "greet()\n" +
+            "\n" +
+            "greetWithLogging()\n",
         };
 
         runConformTest(sources,
             "Hello World\n" +
             "Starting greetWithLogging\n" +
             "Hello World\n" +
-            "Ending greetWithLogging\n" +
-            "done",
-            options);
+            "Ending greetWithLogging");
     }
 
     @Test
