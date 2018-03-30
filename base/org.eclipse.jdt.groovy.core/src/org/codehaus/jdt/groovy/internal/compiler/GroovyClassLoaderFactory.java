@@ -27,7 +27,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarFile;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import groovy.lang.GroovyClassLoader;
@@ -150,12 +149,12 @@ public class GroovyClassLoaderFactory {
             IClasspathEntry[] classpathEntries = javaProject.getResolvedClasspath(true);
 
             Map.Entry<IClasspathEntry[], GroovyClassLoader[]> entry = projectClassLoaderCache.computeIfAbsent(compilerOptions.groovyProjectName, key -> {
-                String[] parts = calculateClasspath(classpathEntries, javaProject, project).split("###");
+                Set<String>[] paths = calculateClasspath(classpathEntries, javaProject, project);
 
-                String classPaths = parts[0];
-                String xformPaths = parts[parts.length - 1];
+                Set<String> classPaths = paths[0];
+                Set<String> xformPaths = paths[paths.length - 1];
                 if (GroovyLogManager.manager.hasLoggers()) {
-                    GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM, "transform classpath: " + xformPaths);
+                    GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM, "transform classpath: " + String.join(File.pathSeparator, xformPaths));
                 }
 
                 return new java.util.AbstractMap.SimpleEntry<>(classpathEntries, new GroovyClassLoader[] {
@@ -172,11 +171,11 @@ public class GroovyClassLoaderFactory {
                 return getProjectGroovyClassLoaders(compilerConfiguration);
             }
         } catch (Exception e) {
-            throw new IllegalStateException(e);
+            throw new RuntimeException("Failed to bootstrap GroovyClassLoaders for project '" + compilerOptions.groovyProjectName + "'", e);
         }
     }
 
-    private static String calculateClasspath(IClasspathEntry[] classpathEntries, IJavaProject javaProject, IProject project) {
+    private static Set<String>[] calculateClasspath(IClasspathEntry[] classpathEntries, IJavaProject javaProject, IProject project) {
         Set<String> classpath = new LinkedHashSet<>();
         try {
             for (IClasspathEntry classpathEntry : classpathEntries) {
@@ -204,7 +203,7 @@ public class GroovyClassLoaderFactory {
                     }
                     if (classpathEntry.getEntryKind() == IClasspathEntry.CPE_PROJECT) {
                         // the classpath entry is a dependency on another project
-                        computeDependenciesFromProject(project, findProject(segmentZero), classpath);
+                        computeDependenciesFromProject(findProject(segmentZero), classpath);
                         // FIXASC what does all this look like for batch compilation?  Should it be passed in rather than computed here
                     } else if (pathElement == null) {
                         pathElement = classpathEntry.getPath().toOSString();
@@ -233,21 +232,21 @@ public class GroovyClassLoaderFactory {
             throw new RuntimeException(e);
         }
 
-        return classpath.stream().collect(Collectors.joining(File.pathSeparator));
+        @SuppressWarnings("unchecked")
+        Set<String>[] paths = new Set[] {classpath};
+        return paths; // TODO: return separate set for xform paths
     }
 
     /**
-     * Determine the exposed (exported) dependencies from the project named
-     * 'otherProject' and add them to the accumulatedPathEntries String Set.
-     * This will include the output location of the project plus other kinds
-     * of entry that are re-exported.  If dependent on another project and
-     * that project is re-exported, the method will recurse.
+     * Determines the exported dependencies from the project and adds them to
+     * the classpath string set.  This includes the output location of the
+     * project plus other kinds of entries that are re-exported.  If dependent
+     * on another project and that project is re-exported, the method will recurse.
      *
-     * @param baseProject the original project for which the classpath is being computed
-     * @param requiredProject a project something in the dependency chain for the base project
-     * @param classpath a String set of classpath entries, into which new entries should be added
+     * @param requiredProject a project in the dependency chain of another project
+     * @param classpath a set of classpath entries into which new entries are added
      */
-    private static void computeDependenciesFromProject(IProject baseProject, IProject requiredProject, Set<String> classpath)
+    private static void computeDependenciesFromProject(IProject requiredProject, Set<String> classpath)
             throws JavaModelException {
 
         IJavaProject javaProject = JavaCore.create(requiredProject);
@@ -268,7 +267,7 @@ public class GroovyClassLoaderFactory {
                         classpath.add(requiredProject.getFile(cpePath.removeFirstSegments(1)).getRawLocation().toOSString());
                     } else if (cpe.getEntryKind() == IClasspathEntry.CPE_PROJECT) {
                         // segmentZero is a project name
-                        computeDependenciesFromProject(requiredProject, findProject(segmentZero), classpath);
+                        computeDependenciesFromProject(findProject(segmentZero), classpath);
                     } else {
                         String otherPathElement = null;
                         if (segmentZero != null && segmentZero.equals(requiredProject.getName())) {
@@ -313,8 +312,8 @@ public class GroovyClassLoaderFactory {
         return realLocation;
     }
 
-    private static URLClassLoader newClassLoader(String classpath, ClassLoader parent) {
-        URL[] urls = Stream.of(classpath.split(File.pathSeparator)).map(file -> {
+    private static URLClassLoader newClassLoader(Set<String> classpath, ClassLoader parent) {
+        URL[] urls = classpath.stream().map(file -> {
             try {
                 return new File(file).toURI().toURL();
             } catch (MalformedURLException ignore) {
