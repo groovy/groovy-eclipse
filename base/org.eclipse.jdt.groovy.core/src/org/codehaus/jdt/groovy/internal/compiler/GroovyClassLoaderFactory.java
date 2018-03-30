@@ -144,7 +144,7 @@ public class GroovyClassLoaderFactory {
     }
 
     private GroovyClassLoader[] getProjectGroovyClassLoaders(CompilerConfiguration compilerConfiguration) {
-        IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(compilerOptions.groovyProjectName);
+        IProject project = findProject(compilerOptions.groovyProjectName);
         try {
             IJavaProject javaProject = JavaCore.create(project);
             IClasspathEntry[] classpathEntries = javaProject.getResolvedClasspath(true);
@@ -195,7 +195,7 @@ public class GroovyClassLoaderFactory {
                 } else {
                     // GRECLIPSE-917: Entry is something like /SomeOtherProject/foo/bar/doodah.jar
                     if (classpathEntry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
-                        IProject project2 = project.getWorkspace().getRoot().getProject(segmentZero);
+                        IProject project2 = findProject(segmentZero);
                         if (project2 != null) {
                             IFile ifile = project2.getFile(cpePath.removeFirstSegments(1));
                             IPath ipath = (ifile == null ? null : ifile.getRawLocation());
@@ -203,9 +203,8 @@ public class GroovyClassLoaderFactory {
                         }
                     }
                     if (classpathEntry.getEntryKind() == IClasspathEntry.CPE_PROJECT) {
-                        IProject project2 = project.getWorkspace().getRoot().getProject(segmentZero);
                         // the classpath entry is a dependency on another project
-                        computeDependenciesFromProject(project, project2, classpath);
+                        computeDependenciesFromProject(project, findProject(segmentZero), classpath);
                         // FIXASC what does all this look like for batch compilation?  Should it be passed in rather than computed here
                     } else if (pathElement == null) {
                         pathElement = classpathEntry.getPath().toOSString();
@@ -269,7 +268,7 @@ public class GroovyClassLoaderFactory {
                         classpath.add(requiredProject.getFile(cpePath.removeFirstSegments(1)).getRawLocation().toOSString());
                     } else if (cpe.getEntryKind() == IClasspathEntry.CPE_PROJECT) {
                         // segmentZero is a project name
-                        computeDependenciesFromProject(requiredProject, baseProject.getWorkspace().getRoot().getProject(segmentZero), classpath);
+                        computeDependenciesFromProject(requiredProject, findProject(segmentZero), classpath);
                     } else {
                         String otherPathElement = null;
                         if (segmentZero != null && segmentZero.equals(requiredProject.getName())) {
@@ -282,6 +281,10 @@ public class GroovyClassLoaderFactory {
                 }
             }
         }
+    }
+
+    private static IProject findProject(String projectName) {
+        return ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
     }
 
     private static String pathToString(IPath path, IProject project) {
