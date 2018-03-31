@@ -43,9 +43,10 @@ import org.eclipse.jdt.core.util.IMethodInfo;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.AnnotationMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Argument;
-import org.eclipse.jdt.internal.compiler.ast.UnionTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.IntersectionCastTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
+import org.eclipse.jdt.internal.compiler.ast.UnionTypeReference;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
@@ -2696,14 +2697,13 @@ public class Util {
 			// special treatment for union type reference
 			UnionTypeReference unionTypeReference = (UnionTypeReference) type;
 			TypeReference[] typeReferences = unionTypeReference.typeReferences;
-			int length = typeReferences.length;
-			String[] typeSignatures = new String[length];
-			for(int i = 0; i < length; i++) {
-				char[][] compoundName = typeReferences[i].getParameterizedTypeName();
-				char[] typeName = CharOperation.concatWith(compoundName, '.');
-				typeSignatures[i] = Signature.createTypeSignature(typeName, false/*don't resolve*/);
-			}
+			String[] typeSignatures = typeSignatures(typeReferences);
 			signature = Signature.createIntersectionTypeSignature(typeSignatures);
+		} else if (type instanceof IntersectionCastTypeReference) {
+			IntersectionCastTypeReference intersection = (IntersectionCastTypeReference) type;
+			TypeReference[] typeReferences = intersection.typeReferences;
+			String[] typeSignatures = typeSignatures(typeReferences);
+			signature = Signature.createUnionTypeSignature(typeSignatures);
 		} else {
 			char[][] compoundName = type.getParameterizedTypeName();
 			char[] typeName =CharOperation.concatWith(compoundName, '.');
@@ -2711,7 +2711,17 @@ public class Util {
 		}
 		return signature;
 	}
-
+	
+	private static String[] typeSignatures(TypeReference[] types) {
+		int length = types.length;
+		String[] typeSignatures = new String[length];
+		for(int i = 0; i < length; i++) {
+			char[][] compoundName = types[i].getParameterizedTypeName();
+			char[] typeName = CharOperation.concatWith(compoundName, '.');
+			typeSignatures[i] = Signature.createTypeSignature(typeName, false/*don't resolve*/);
+		}
+		return typeSignatures;
+	}
 	/**
 	 * Asserts that the given method signature is valid.
 	 */

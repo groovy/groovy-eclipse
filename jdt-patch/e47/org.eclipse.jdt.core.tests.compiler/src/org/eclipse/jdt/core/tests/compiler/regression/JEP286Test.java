@@ -789,4 +789,420 @@ public void testBug532351() throws IOException {
 		"No enclosing instance of type X is accessible. Must qualify the allocation with an enclosing instance of type X (e.g. x.new A() where x is an instance of X).\n" +
 		"----------\n");
 }
+public void testBug531025() {
+	runNegativeTest(
+		new String[] {
+			"a/Ann.java",
+			"package a;\n" +
+			"public @interface Ann {}\n",
+			"a/AnnM.java",
+			"package a;\n" +
+			"import java.lang.annotation.*;\n" +
+			"@Target(ElementType.METHOD)\n" +
+			"public @interface AnnM {}\n",
+			"a/AnnD.java",
+			"package a;\n" +
+			"import java.lang.annotation.*;\n" +
+			"@Target(ElementType.LOCAL_VARIABLE)\n" +
+			"public @interface AnnD {}\n",
+			"a/AnnT.java",
+			"package a;\n" +
+			"import java.lang.annotation.*;\n" +
+			"@Target(ElementType.TYPE_USE)\n" +
+			"public @interface AnnT {}\n",
+			"a/AnnDT.java",
+			"package a;\n" +
+			"import java.lang.annotation.*;\n" +
+			"@Target({ElementType.LOCAL_VARIABLE, ElementType.TYPE_USE})\n" +
+			"public @interface AnnDT {}\n",
+			"X.java",
+			"import a.*;\n" +
+			"import java.util.*;\n" +
+			"public class X {\n" +
+			"	void test(List<String> strings) {\n" +
+			"		@Ann   var v  = strings;\n" +
+			"		@AnnM  var vm = strings;\n" +
+			"		@AnnD  var vd = strings;\n" +
+			"		@AnnT  var vt = \"\";\n" +
+			"		@AnnDT var vdt = this;\n" +
+			"		for (@AnnD var fvd : strings) {}\n" +
+			"		for (@AnnT var fvt : strings) {}\n" +
+			"	}\n" +
+			"}\n"
+		},
+		"----------\n" + 
+		"1. ERROR in X.java (at line 6)\n" + 
+		"	@AnnM  var vm = strings;\n" + 
+		"	^^^^^\n" + 
+		"The annotation @AnnM is disallowed for this location\n" + 
+		"----------\n" + 
+		"2. ERROR in X.java (at line 8)\n" + 
+		"	@AnnT  var vt = \"\";\n" + 
+		"	^^^^^\n" + 
+		"The annotation @AnnT is disallowed for this location\n" + 
+		"----------\n" + 
+		"3. ERROR in X.java (at line 11)\n" + 
+		"	for (@AnnT var fvt : strings) {}\n" + 
+		"	     ^^^^^\n" + 
+		"The annotation @AnnT is disallowed for this location\n" + 
+		"----------\n");
+}
+public void testBug532349_001() throws IOException {
+	this.runConformTest(
+		new String[] {
+			"X.java",
+			"class X {\n" + 
+			"	public static void foo() {\n" + 
+			"		Y<? extends Number> y = new Y<>();\n" + 
+			"		var v = y.t;\n" + 
+			"		Integer dsbType0 = v;\n" + 
+			"	}\n" + 
+			"}\n" + 
+			"class Y<T extends Integer> {\n" + 
+			"	public T t;\n" + 
+			"}"
+		});
+}
+public void testBug532349_002() throws IOException {
+	this.runConformTest(
+		new String[] {
+			"X.java",
+			"class X {\n" + 
+			"	public static void foo() {\n" + 
+			"		Y<? extends I> y = new Y<>();\n" + 
+			"		var v = y.t;\n" + 
+			"		Integer dsbType0 = v;\n" + 
+			"	}\n" + 
+			"}\n" + 
+			"interface I { }\n" +
+			"class Y<T extends Integer> {\n" + 
+			"	public T t;\n" + 
+			"}"
+		});
+}
+public void testBug532349_003() throws IOException {
+	this.runConformTest(
+		new String[] {
+			"X.java",
+			"class X {\n" + 
+			"	public static void foo(Y<? extends I> y) {\n" + 
+			"		var v = y.t;\n" + 
+			"		Integer dsbType0 = v;\n" +
+			"		I i = v;\n" +
+			"	}\n" + 
+			"}\n" + 
+			"interface I { }\n" +
+			"class Y<T extends Integer> {\n" + 
+			"	public T t;\n" + 
+			"}"
+		});
+}
+public void testBug532349_004() throws IOException {
+	this.runConformTest(
+		new String[] {
+			"X.java",
+			"import java.io.Serializable;\n" +
+			"class X {\n" + 
+			"	public static void foo() {\n" + 
+			"		Y<? extends Integer> y = new Y<>();\n" + 
+			"		var v = y.t;\n" + 
+			"		Integer dsbType0 = v;\n" +
+			"		Serializable s = v;\n" +
+			"	}\n" + 
+			"}\n" + 
+			"class Y<T extends Number&Serializable> {\n" + 
+			"	public T t;\n" + 
+			"}"
+		});
+}
+public void testBug532349_005() throws IOException {
+	this.runConformTest(
+		new String[] {
+			"X.java",
+			"import java.io.Serializable;\n" +
+			"class X {\n" + 
+			"	public static void foo() {\n" + 
+			"		Y<?> y = new Y<>();\n" + 
+			"		var v = y.t;\n" + 
+			"		I i = v;\n" +
+			"		Serializable s = v;\n" +
+			"	}\n" + 
+			"}\n" + 
+			"interface I { }\n" +
+			"class Y<T extends I&Serializable> {\n" + 
+			"	public T t;\n" + 
+			"}"
+		});
+}
+public void testBug532349_006() throws IOException {
+	this.runConformTest(
+		new String[] {
+			"X.java",
+			"import java.io.Serializable;\n" +
+			"class X {\n" + 
+			"	public static void foo() {\n" + 
+			"		Y<? extends I> y = new Y<>();\n" + 
+			"		var v = y.t;\n" + 
+			"		I i = v;\n" +
+			"		Serializable s = v;\n" +
+			"	}\n" + 
+			"}\n" + 
+			"interface I { }\n" +
+			"class Y<T extends Serializable> {\n" + 
+			"	public T t;\n" + 
+			"}",
+		});
+}
+public void testBug532349_007() throws IOException {
+	this.runConformTest(
+		new String[] {
+			"X.java",
+			"class X {\n" + 
+			"	public static void foo() {\n" + 
+			"		Z<? extends I> z = new Z<>();\n" + 
+			"		var v = z.t;\n" + 
+			"		X x = v.t;\n" +
+			"		v.doSomething();\n" +
+			"	}\n" + 
+			"}\n" + 
+			"interface I { void doSomething();}\n" +
+			"class Z<T extends Y<?>> {\n" + 
+			"	public T t;\n" + 
+			"}\n" +
+			"class Y<T extends X> {\n" + 
+			"	public T t;\n" + 
+			"}",
+		});
+}
+public void testBug532349_008() throws IOException {
+	this.runConformTest(
+		new String[] {
+			"X.java",
+			"class X {\n" + 
+			"	public static void foo() {\n" + 
+			"		Z<? extends Y<? extends C>> z = new Z<>();\n" + 
+			"		var v = z.t;\n" + 
+			"		C c = v.t;\n" +
+			"		v.doSomething();\n" +
+			"	}\n" + 
+			"}\n" + 
+			"interface I { void doSomething();}\n" +
+			"class C extends X{ }\n" +
+			"class Z<T extends I> {\n" + 
+			"	public T t;\n" + 
+			"}\n" +
+			"class Y<T extends X> {\n" + 
+			"	public T t;\n" + 
+			"}",
+		});
+}
+public void testBug532349_009() throws IOException {
+	this.runNegativeTest(
+		new String[] {
+			"X.java",
+			"import java.io.Serializable;\n" +
+			"class X {\n" + 
+			"	public static void foo() {\n" + 
+			"		Y<? super J> y = new Y<>();\n" + 
+			"		var v = y.t;\n" + 
+			"		I i = v;\n" +
+			"		Serializable s = v;\n" +
+			"	}\n" + 
+			"}\n" + 
+			"interface I { }\n" +
+			"interface J extends I{}" +
+			"class Y<T extends I> {\n" + 
+			"	public T t;\n" + 
+			"}",
+		},
+		"----------\n" + 
+		"1. ERROR in X.java (at line 7)\n" + 
+		"	Serializable s = v;\n" + 
+		"	                 ^\n" + 
+		"Type mismatch: cannot convert from I to Serializable\n" + 
+		"----------\n");
+}
+public void testBug532349_010() throws IOException {
+	this.runConformTest(
+		new String[] {
+			"X.java",
+			"import java.io.Serializable;\n" +
+			"class X {\n" + 
+			"	public static void foo(C<?> c) {\n" + 
+			"		var v = c.t;\n" + 
+			"		v = (I&Serializable) new D();\n" +
+			"		v.doSomething();\n" +
+			"	}\n" + 
+			"}\n" + 
+			"interface I { void doSomething();}\n" +
+			"class C<T extends I&Serializable>{ T t;}\n" +
+			"class D implements I, Serializable { public void doSomething() {} }\n"
+		});
+}
+public void testBug532349_11() throws IOException {
+	this.runConformTest(
+		new String[] {
+			"X.java",
+			"class X {\n" +
+			"	static <R extends D<? extends Y>> W<? extends R> boo() {\n" + 
+			"		return null;\n" + 
+			"	}\n" +
+			"	public static void foo() {\n" + 
+			"		var v = boo();\n" + 
+			"		var var = v.t;\n" +
+			"		Y y = var.r;\n" +
+			"	}\n" + 
+			"}\n" + 
+			"class Y extends X { }\n" +
+			"class D<R extends X>{ R r;}\n" +
+			"class W<T extends D<?>> { T t; }\n"
+		});
+}
+public void testBug532349_12() throws IOException {
+	this.runConformTest(
+		new String[] {
+			"X.java",
+			"class X {\n" +
+			"	public static void foo(D<?> d) {\n" + 
+			"		var v = d;\n" + 
+			"		D<? extends Y> dy = v;\n" +
+			"		D<? extends X> dx = v;\n" +
+			"	}\n" + 
+			"}\n" + 
+			"class Y extends X{ }\n" +
+			"class D<R extends Y>{ R r;}\n"
+		});
+}
+public void testBug532349_13() throws IOException {
+	this.runConformTest(
+		new String[] {
+			"X.java",
+			"class X {\n" +
+			"	public static void foo(D<Y<? extends Integer>> d) {\n" + 
+			"		var v = d.r;\n" + 
+			"		Y<? extends Number> yn = v;\n" +
+			"		Y<? extends Integer> yi = v;\n" +
+			"	}\n" + 
+			"}\n" + 
+			"class Y<T extends Integer>{ }\n" +
+			"class D<R extends Y<? extends Number>>{ R r;}\n"
+		});
+}
+public void testBug532349_14() throws IOException {
+	this.runConformTest(
+		new String[] {
+			"X.java",
+			"class X {\n" +
+			"	public static void foo(A<? super C> ac) {\n" + 
+			"		C c = new C(100);\n" + 
+			"		var c1 = ac;\n" + 
+			"		A<? super C> a1 = c1;\n" + 
+			"		A<? super C> a2 = new A<B>(new B());\n" +
+			"		a2 = c1;\n" +
+			"	}\n" + 
+			"}\n" + 
+			"class C<T> extends B{\n" + 
+			"	T t;\n" + 
+			"	C(T t) {\n" + 
+			"		this.t = t;\n" + 
+			"	}\n" + 
+			"}\n" + 
+			"class B { }\n" + 
+			"class A<Q> {\n" + 
+			"	A(Q e) {}\n" + 
+			"}"
+		});
+}
+public void testBug532349_15() throws IOException {
+	this.runConformTest(
+		new String[] {
+			"X.java",
+			"public class X {\n" +
+			"	    public static <T> A<T> m(T t) {\n" + 
+			"        return new A(t);\n" + 
+			"    }\n" + 
+			"    public static <U extends I1<?>> A<? extends U> m2(A<? super U> u) {\n" + 
+			"        return new A(u);\n" + 
+			"    }\n" + 
+			"    public static void main(String argv[]) {\n" + 
+			"        A<?> checkValue1 = new C(10);\n" + 
+			"        var varValue = m2(m(checkValue1));\n" + 
+			"        if(!varValue.t.t.equals(10)) {\n" + 
+			"            System.out.println(\"Error:\");\n" + 
+			"        }\n" + 
+			"        if(varValue.t.methodOnI1() != true) {\n" + 
+			"            System.out.println(\"Error:\");\n" + 
+			"        }\n" + 
+			"    }" + 
+			"}\n" + 
+			"class A<E> {\n" + 
+			"    E t;\n" + 
+			"    A(E t) {\n" + 
+			"        this.t = t;\n" + 
+			"    }\n" + 
+			"    A<E> u;\n" + 
+			"    A (A<E> u) {\n" + 
+			"        this(u.t);\n" + 
+			"        this.u = u;\n" + 
+			"    }\n" + 
+			"}\n" + 
+			"interface I1<E> {\n" + 
+			"    default boolean methodOnI1() {\n" + 
+			"        return true;\n" + 
+			"    }\n" + 
+			"}\n" +
+			"class C<T> extends A implements I1 {\n" + 
+			"    C(T t) {\n" + 
+			"        super(t);\n" + 
+			"    }\n" + 
+			"}"
+		}, "");
+}
+public void testBug532349_0016() throws IOException {
+	this.runNegativeTest(
+		new String[] {
+			"X.java",
+			"class X {\n" + 
+			"	public static void foo() {\n" + 
+			"		Y<? extends I> yi = new Y<>();\n" +
+			"		var vi = yi.t;\n" +
+			"		Y<Integer> yj = new Y<>();\n" +
+			"		vi = yj.t;\n" + 
+			"	}\n" + 
+			"}\n" + 
+			"interface I { }\n" +
+			"class Y<T extends Number> {\n" + 
+			"	public T t;\n" + 
+			"}"
+		},
+		"----------\n" + 
+		"1. ERROR in X.java (at line 6)\n" + 
+		"	vi = yj.t;\n" + 
+		"	     ^^^^\n" + 
+		"Type mismatch: cannot convert from Integer to Number & I\n" + 
+		"----------\n");
+}
+public void testBug532349_0017() throws IOException {
+	this.runNegativeTest(
+		new String[] {
+			"X.java",
+			"class X {\n" + 
+			"	public static <Q extends Number & I> void foo(Y<? super Q> y) {\n" + 
+			"		var vy = y;\n" +
+			"		Y<Integer> yi = new Y<>();\n" +
+			"		vy = yi;\n" + 
+			"	}\n" + 
+			"}\n" + 
+			"interface I { }\n" +
+			"class Y<T extends Number> {\n" + 
+			"	public T t;\n" + 
+			"}"
+		},
+		"----------\n" + 
+		"1. ERROR in X.java (at line 5)\n" + 
+		"	vy = yi;\n" + 
+		"	     ^^\n" + 
+		"Type mismatch: cannot convert from Y<Integer> to Y<? super Q>\n" + 
+		"----------\n");
+}
 }

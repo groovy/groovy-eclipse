@@ -1371,6 +1371,14 @@ private boolean isCompatibleWith0(TypeBinding otherType, /*@Nullable*/ Scope cap
 										// above if same erasure
 			}
 			ReferenceBinding otherReferenceType = (ReferenceBinding) otherType;
+			if (otherReferenceType.isIntersectionType18()) {
+				ReferenceBinding[] intersectingTypes = ((IntersectionTypeBinding18)otherReferenceType).intersectingTypes;
+				for (ReferenceBinding binding : intersectingTypes) {
+					if (!isCompatibleWith(binding))
+						return false;
+				}
+				return true;
+			}
 			if (otherReferenceType.isInterface()) { // could be annotation type
 				if (implementsInterface(otherReferenceType, true))
 					return true;

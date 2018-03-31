@@ -115,6 +115,8 @@ public class MementoTokenizer {
 					if (buffer == null) buffer = new StringBuffer();
 					buffer.append(this.memento, start, this.index - start);
 					start = ++this.index;
+					if (this.memento[this.index] == JavaElement.JEM_MODULE)
+						return buffer.toString();
 					break;
 				case JavaElement.JEM_COUNT:
 				case JavaElement.JEM_JAVAPROJECT:

@@ -157,7 +157,7 @@ private ClasspathLocation mapToClassPathLocation(JavaModelManager manager, Packa
 		if (root.isArchive()) {
 			ClasspathEntry rawClasspathEntry = (ClasspathEntry) root.getRawClasspathEntry();
 			cp = JavaModelManager.isJrt(path) ? 
-					new ClasspathJrt(path.toOSString(), 
+					new ClasspathJrt(path.toOSString(), rawClasspathEntry.getAccessRuleSet(), 
 							ClasspathEntry.getExternalAnnotationPath(rawClasspathEntry, ((IJavaProject)root.getParent()).getProject(), true)) :
 						new ClasspathJar(manager.getZipFile(path), rawClasspathEntry.getAccessRuleSet(),
 								ClasspathEntry.getExternalAnnotationPath(rawClasspathEntry,

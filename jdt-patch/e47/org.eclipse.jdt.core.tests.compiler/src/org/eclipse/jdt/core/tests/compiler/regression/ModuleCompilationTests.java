@@ -4073,6 +4073,26 @@ public void testBug521362_emptyFile() {
 	        "",
 	        true);
 	}
+	public void testReleaseOption13a() {
+		runConformModuleTest(
+			new String[] {
+				"p/X.java",
+				"package p;\n" +
+				"public class X {\n" +
+				"	public static void main(String[] args) {\n" +
+				"	}\n" +
+				"}",
+				"module-info.java",
+				"module mod.one { \n" +
+				"	requires java.base;\n" +
+				"}"
+	        },
+			" --release 10 \"" + OUTPUT_DIR +  File.separator + "module-info.java\" "
+	        + "\"" + OUTPUT_DIR +  File.separator + "p/X.java\"",
+	        "",
+	        "",
+	        true);
+	}
 	public void testReleaseOption14() {
 		runNegativeModuleTest(
 			new String[] {

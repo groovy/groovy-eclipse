@@ -33,6 +33,7 @@ import org.eclipse.jdt.internal.compiler.env.IDependent;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.core.JarPackageFragmentRoot;
 import org.eclipse.jdt.internal.core.JavaModelManager;
+import org.eclipse.jdt.internal.core.JrtPackageFragmentRoot;
 import org.eclipse.jdt.internal.core.ModularClassFile;
 import org.eclipse.jdt.internal.core.PackageFragmentRoot;
 import org.eclipse.jdt.internal.core.nd.java.JavaIndex;
@@ -58,18 +59,22 @@ public class BinaryModuleFactory {
 		String entryName = TypeConstants.MODULE_INFO_CLASS_NAME_STRING;
 		IPath workspacePath = root.getPath();
 		String indexPath;
+		char[] moduleName = null;
 
 		if (root instanceof JarPackageFragmentRoot) {
 			entryName = ((JarPackageFragmentRoot) root).getClassFilePath(entryName);
 			indexPath = root.getHandleIdentifier() + IDependent.JAR_FILE_ENTRY_SEPARATOR + entryName;
 			// see additional comments in BinaryTypeFactor.createDescriptor()
+			if (root instanceof JrtPackageFragmentRoot) {
+				moduleName = root.getElementName().toCharArray();
+			}
 		} else {
 			location = location.append(entryName);
 			indexPath = workspacePath.append(entryName).toString();
 			workspacePath = classFile.resource().getFullPath();
 		}
 
-		return new BinaryModuleDescriptor(location.toString().toCharArray(), null, // TODO: module name not know at this point
+		return new BinaryModuleDescriptor(location.toString().toCharArray(), moduleName, // TODO: module name only known for JRT
 				workspacePath.toString().toCharArray(), indexPath.toCharArray());
 	}
 

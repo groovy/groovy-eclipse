@@ -1108,40 +1108,11 @@ public class TypeVariableBinding extends ReferenceBinding {
 	}
 
 	public ReferenceBinding upwardsProjection(Scope scope, TypeBinding[] mentionedTypeVariables) {
-		if (enterRecursiveProjectionFunction()) {
-			try {
-				for (int i = 0; i < mentionedTypeVariables.length; ++i) {
-					if (TypeBinding.equalsEquals(this, mentionedTypeVariables[i])) {
-						TypeBinding upperBound = this.upperBound();
-						ReferenceBinding projectedUpper = ((ReferenceBinding)upperBound).upwardsProjection(scope, mentionedTypeVariables);
-						TypeBinding additionalBounds[] = this.additionalBounds();
-						if (additionalBounds == null || additionalBounds.length == 0) {
-							// Return upwards projection of upper bound 
-							return projectedUpper;
-						} else {
-							// If the type variable has more than one upper bound,
-							// we'll need to make an intersection type of projections of all bounds
-							int totalBounds = 1 + additionalBounds.length;
-							ReferenceBinding[] projectedTypes = new ReferenceBinding[totalBounds];
-							projectedTypes[0] = projectedUpper;
-							for (int j = 0; j < additionalBounds.length; ++j) {
-								projectedTypes[j+1] = (ReferenceBinding)additionalBounds[j].upwardsProjection(scope, mentionedTypeVariables);
-							}
-							return  (ReferenceBinding) scope.environment().createIntersectionType18(projectedTypes);
-						}
-					}
-				}
-				return this;
-			} finally {
-				exitRecursiveProjectionFunction();
-			}
-		} else {
-			return scope.getJavaLangObject();
-		}
+		return this;
 	}
 
 	public ReferenceBinding downwardsProjection(Scope scope, TypeBinding[] mentionedTypeVariables) {
-		return null;
+		return this;
 	}
 
 }

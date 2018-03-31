@@ -61,6 +61,7 @@ import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.InferenceContext18;
 import org.eclipse.jdt.internal.compiler.lookup.InvocationSite;
 import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
+import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
 import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
@@ -474,8 +475,10 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 		}
 
 		if ((field.modifiers & ExtraCompilerModifiers.AccRestrictedAccess) != 0) {
+			ModuleBinding module = field.declaringClass.module();
+			LookupEnvironment env = (module == null) ? scope.environment() : module.environment;
 			AccessRestriction restriction =
-				scope.environment().getAccessRestriction(field.declaringClass.erasure());
+				env.getAccessRestriction(field.declaringClass.erasure());
 			if (restriction != null) {
 				scope.problemReporter().forbiddenReference(field, this,
 						restriction.classpathEntryType, restriction.classpathEntryName,
@@ -519,8 +522,10 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 		if (isExplicitUse && (method.modifiers & ExtraCompilerModifiers.AccRestrictedAccess) != 0) {
 			// note: explicit constructors calls warnings are kept despite the 'new C1()' case (two
 			//       warnings, one on type, the other on constructor), because of the 'super()' case.
+			ModuleBinding module = method.declaringClass.module();
+			LookupEnvironment env = (module == null) ? scope.environment() : module.environment;
 			AccessRestriction restriction =
-				scope.environment().getAccessRestriction(method.declaringClass.erasure());
+				env.getAccessRestriction(method.declaringClass.erasure());
 			if (restriction != null) {
 				scope.problemReporter().forbiddenReference(method, this,
 						restriction.classpathEntryType, restriction.classpathEntryName,
@@ -587,7 +592,9 @@ public abstract class ASTNode implements TypeConstants, TypeIds {
 		}
 
 		if (refType.hasRestrictedAccess()) {
-			AccessRestriction restriction = scope.environment().getAccessRestriction(type.erasure());
+			ModuleBinding module = refType.module();
+			LookupEnvironment env = (module == null) ? scope.environment() : module.environment;
+			AccessRestriction restriction = env.getAccessRestriction(type.erasure());
 			if (restriction != null) {
 				scope.problemReporter().forbiddenReference(type, this, restriction.classpathEntryType,
 						restriction.classpathEntryName, restriction.getProblemId());

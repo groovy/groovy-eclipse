@@ -103,6 +103,35 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="dom/org/eclipse/jdt/core/dom/SimpleName.java" type="org.eclipse.jdt.core.dom.SimpleName">
+        <filter comment="jls 10 support for var" id="336658481">
+            <message_arguments>
+                <message_argument value="org.eclipse.jdt.core.dom.SimpleName"/>
+                <message_argument value="VAR_PROPERTY"/>
+            </message_arguments>
+        </filter>
+        <filter comment="jls 10 support for var" id="1141899266">
+            <message_arguments>
+                <message_argument value="3.14"/>
+                <message_argument value="3.13"/>
+                <message_argument value="VAR_PROPERTY"/>
+            </message_arguments>
+        </filter>
+        <filter comment="jls 10 support for var" id="1141899266">
+            <message_arguments>
+                <message_argument value="3.14"/>
+                <message_argument value="3.13"/>
+                <message_argument value="isVar()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="jls 10 support for var" id="1141899266">
+            <message_arguments>
+                <message_argument value="3.14"/>
+                <message_argument value="3.13"/>
+                <message_argument value="setVar(boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="dom/org/eclipse/jdt/core/dom/Type.java" type="org.eclipse.jdt.core.dom.Type">
         <filter id="1141899266">
             <message_arguments>
@@ -125,6 +154,36 @@
                 <message_argument value="3.14"/>
                 <message_argument value="3.13"/>
                 <message_argument value="getAllVersions()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="model/org/eclipse/jdt/core/Signature.java" type="org.eclipse.jdt.core.Signature">
+        <filter comment="Java 10 work backported to 4.7.3a" id="1141899266">
+            <message_arguments>
+                <message_argument value="3.14"/>
+                <message_argument value="3.13"/>
+                <message_argument value="C_UNION"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Java 10 work backported to 4.7.3a" id="1141899266">
+            <message_arguments>
+                <message_argument value="3.14"/>
+                <message_argument value="3.13"/>
+                <message_argument value="UNION_TYPE_SIGNATURE"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Java 10 work backported to 4.7.3a" id="1141899266">
+            <message_arguments>
+                <message_argument value="3.14"/>
+                <message_argument value="3.13"/>
+                <message_argument value="createUnionTypeSignature(String[])"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Java 10 work backported to 4.7.3a" id="1141899266">
+            <message_arguments>
+                <message_argument value="3.14"/>
+                <message_argument value="3.13"/>
+                <message_argument value="getUnionTypeBounds(String)"/>
             </message_arguments>
         </filter>
     </resource>

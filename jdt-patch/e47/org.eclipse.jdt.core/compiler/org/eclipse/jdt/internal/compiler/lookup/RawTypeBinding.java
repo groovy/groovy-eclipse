@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -289,5 +289,13 @@ public class RawTypeBinding extends ParameterizedTypeBinding {
 	
 	void collectInferenceVariables(Set<InferenceVariable> variables) {
 		// nothing to collect for a raw type.
+	}
+
+	public ReferenceBinding upwardsProjection(Scope scope, TypeBinding[] mentionedTypeVariables) {
+		return this;
+	}
+
+	public ReferenceBinding downwardsProjection(Scope scope, TypeBinding[] mentionedTypeVariables) {
+		return this;
 	}
 }

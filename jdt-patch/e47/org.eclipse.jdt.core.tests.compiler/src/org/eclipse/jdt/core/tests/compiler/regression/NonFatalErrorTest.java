@@ -561,22 +561,27 @@ public class NonFatalErrorTest extends AbstractRegressionTest {
 				"Test.java",
 				// JLS doesn't really allow this duplication, but also javac defers the error to the use site, see:
 				// https://bugs.openjdk.java.net/browse/JDK-8133619?focusedCommentId=14133759&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-14133759
-				"import static java.awt.geom.Line2D.Double;\n" +
-				"import static java.awt.geom.Point2D.Double;\n" +
-				"\n" +
+				"import static java.awt.geom.Line2D.Double;\n" + 
+				"import static java.awt.geom.Point2D.Double;\n" + 
+				"\n" + 
 				"public class Test {\n" +
-				"	Double d = null;\n" +
+				"	Double d = null;\n" + 
 				"}\n"
 			},
-			"----------\n" + (this.complianceLevel > ClassFileConstants.JDK1_7
-		?	"1. ERROR in Test.java (at line 5)\n" +
-			"	Double d = null;\n" +
-			"	^^^^^^\n" +
-			"The type Double is ambiguous\n"
-		:	"1. ERROR in Test.java (at line 2)\n" +
-			"	import static java.awt.geom.Point2D.Double;\n" +
-			"	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
-			"The import java.awt.geom.Point2D.Double collides with another import statement\n") +
-			"----------\n");
+			(this.complianceLevel < ClassFileConstants.JDK1_8
+			?
+				"----------\n" + 
+				"1. ERROR in Test.java (at line 2)\n" + 
+				"	import static java.awt.geom.Point2D.Double;\n" + 
+				"	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+				"The import java.awt.geom.Point2D.Double collides with another import statement\n" + 
+				"----------\n"
+			:
+				"----------\n" + 
+				"1. ERROR in Test.java (at line 5)\n" + 
+				"	Double d = null;\n" + 
+				"	^^^^^^\n" + 
+				"The type Double is ambiguous\n" + 
+				"----------\n"));
 	}
 }

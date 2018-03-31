@@ -1507,7 +1507,9 @@ class DefaultBindingResolver extends BindingResolver {
 			QualifiedSuperReference qualifiedSuperReference = (QualifiedSuperReference) node;
 			return this.getTypeBinding(qualifiedSuperReference.qualification.resolvedType);
 		} else if (node instanceof LocalDeclaration) {
-			return this.getVariableBinding(((LocalDeclaration)node).binding);
+			return name.getAST().apiLevel() >= AST.JLS10_INTERNAL && name instanceof SimpleName && ((SimpleName) name).isVar()  ? 
+					resolveTypeBindingForName(name) :
+					this.getVariableBinding(((LocalDeclaration)node).binding);
 		} else if (node instanceof JavadocFieldReference) {
 			JavadocFieldReference fieldRef = (JavadocFieldReference) node;
 			if (fieldRef.methodBinding != null) {

@@ -821,6 +821,11 @@ public class CompilerOptions {
 					return ClassFileConstants.JDK1_8;
 				case '9':
 					return ClassFileConstants.JDK9;
+				case '1':
+					if (release.length() > 1 && release.charAt(1) == '0')
+						return ClassFileConstants.JDK10;
+					else 
+						return 0;
 				default:
 					return 0; // unknown
 			}

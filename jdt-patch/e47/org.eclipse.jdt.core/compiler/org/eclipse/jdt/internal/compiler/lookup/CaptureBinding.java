@@ -273,6 +273,68 @@ public class CaptureBinding extends TypeVariableBinding {
 			evaluateNullAnnotations(scope, null);
 		}
 	}
+	public ReferenceBinding upwardsProjection(Scope scope, TypeBinding[] mentionedTypeVariables) {
+		if (enterRecursiveProjectionFunction()) {
+			try {
+				for (int i = 0; i < mentionedTypeVariables.length; ++i) {
+					if (TypeBinding.equalsEquals(this, mentionedTypeVariables[i])) {
+						TypeBinding upperBoundForProjection = this.upperBoundForProjection();
+						return ((ReferenceBinding)upperBoundForProjection).upwardsProjection(scope, mentionedTypeVariables);
+					}
+				}
+				return this;
+			} finally {
+				exitRecursiveProjectionFunction();
+			}
+		} else {
+			return scope.getJavaLangObject();
+		}
+	}
+	public TypeBinding upperBoundForProjection() {
+		TypeBinding upperBound = null;
+		if (this.wildcard != null) {
+			ReferenceBinding[] supers = this.superInterfaces();
+			if (this.wildcard.boundKind == Wildcard.EXTENDS) {
+				if (supers.length > 0) {
+					ReferenceBinding[] allBounds = new ReferenceBinding[supers.length + 1];
+					System.arraycopy(supers, 0, allBounds, 1, supers.length);
+					allBounds[0] = this.superclass();
+					ReferenceBinding[] glbs = Scope.greaterLowerBound(allBounds);
+					if (glbs == null) {
+						upperBound = new ProblemReferenceBinding(null, null, ProblemReasons.ParameterBoundMismatch);
+					} else if (glbs.length == 1) {
+						upperBound = glbs[0];
+					} else {
+						upperBound = this.environment.createIntersectionType18(glbs);
+					}
+				} else {
+					upperBound = this.superclass;
+				}
+			} else {
+				// ITB18.isCompatibleWith does not handle the presence of j.l.Object among intersecting types,
+				// so it returns false when checking (I&J).isCompatibleWith(Object&I&J)
+				// TODO see if this can be handled in ITB18.isCompatibleWith() itself
+				boolean superClassIsObject = TypeBinding.equalsEquals(this.superclass(), this.environment.getResolvedJavaBaseType(TypeConstants.JAVA_LANG_OBJECT, null));
+				if (supers.length == 0) {
+					upperBound = this.superclass();
+				} else if (supers.length == 1) {
+					upperBound = superClassIsObject ? supers[0] : this.environment.createIntersectionType18(new ReferenceBinding[] {this.superclass(), supers[0]});
+				} else {
+					if (superClassIsObject) {
+						upperBound = this.environment.createIntersectionType18(supers);
+					} else {
+						ReferenceBinding[] allBounds = new ReferenceBinding[supers.length + 1];
+						System.arraycopy(supers, 0, allBounds, 1, supers.length);
+						allBounds[0] = this.superclass();
+						upperBound = this.environment.createIntersectionType18(allBounds);
+					}
+				}
+			}
+		} else {
+			upperBound = super.upperBound();
+		}
+		return upperBound;
+	}
 
 	/**
 	 * @see org.eclipse.jdt.internal.compiler.lookup.TypeBinding#isCapture()

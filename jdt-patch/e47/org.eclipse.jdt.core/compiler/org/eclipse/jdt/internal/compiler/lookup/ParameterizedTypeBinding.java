@@ -475,17 +475,17 @@ public class ParameterizedTypeBinding extends ReferenceBinding implements Substi
 				//  * Bi is not a subtype of U,
 				// then Ai' is an upper-bounded wildcard, ? extends U.
 				if (u.id != TypeIds.T_JavaLangObject
-						&& (b_i.mentionsAny(typeVariables, -1) || b_i.findSuperTypeOriginatingFrom(u) == null)) {
-					a_i_primes[i] = this.environment().createWildcard(null, i, u, null, Wildcard.EXTENDS);
+						&& (b_i.mentionsAny(typeVariables, -1) || !b_i.isSubtypeOf(u))) {
+					a_i_primes[i] = this.environment().createWildcard(genericType(), i, u, null, Wildcard.EXTENDS);
 				} else {
 					TypeBinding l = a_i.downwardsProjection(scope, mentionedTypeVariables);
 					// Otherwise, if the downward projection of Ai is L,
 					// then Ai' is a lower-bounded wildcard, ? super L.
 					if (l != null) {
-						a_i_primes[i] = this.environment().createWildcard(null, i, l, null, Wildcard.SUPER);
+						a_i_primes[i] = this.environment().createWildcard(genericType(), i, l, null, Wildcard.SUPER);
 					} else {
 						// Otherwise, the downward projection of Ai is undefined and Ai' is an unbounded wildcard, ?.
-						a_i_primes[i] = this.environment().createWildcard(null, i, null, null, Wildcard.UNBOUND);
+						a_i_primes[i] = this.environment().createWildcard(genericType(), i, null, null, Wildcard.UNBOUND);
 					}
 				}
 			} else  { 

@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -165,6 +166,22 @@ public class JRTUtil {
 	public static boolean hasCompilationUnit(File jrt, String qualifiedPackageName, String moduleName) {
 		return getJrtSystem(jrt).hasClassFile(qualifiedPackageName, moduleName);
 	}
+	/**
+	 * Tries to read all bytes of the file denoted by path,
+	 * returns null if the file could not be found or if the read was interrupted.
+	 * @param path
+	 * @return bytes or null
+	 * @throws IOException any IO exception other than NoSuchFileException
+	 */
+	public static byte[] safeReadBytes(Path path) throws IOException {
+		try {
+			return Files.readAllBytes(path);
+		} catch(ClosedByInterruptException e) {
+			return null;
+		} catch (NoSuchFileException e) {
+			return null;
+		}
+	}
 }
 class JrtFileSystem {
 	private final Map<String, String> packageToModule = new HashMap<String, String>();
@@ -287,14 +304,10 @@ class JrtFileSystem {
 		byte[] content = null;
 		String module = null;
 		for (String mod : modules) {
-			try {
-				content = Files.readAllBytes(this.jrtSystem.getPath(JRTUtil.MODULES_SUBDIR, mod, fileName));
-				if (content != null) {
-					module = mod;
-					break;
-				}
-			} catch(NoSuchFileException e) {
-				continue;
+			content = JRTUtil.safeReadBytes(this.jrtSystem.getPath(JRTUtil.MODULES_SUBDIR, mod, fileName));
+			if (content != null) {
+				module = mod;
+				break;
 			}
 		}
 		if (content != null) {
@@ -312,26 +325,16 @@ class JrtFileSystem {
 		} else {
 			String[] modules = getModules(fileName);
 			for (String mod : modules) {
-				try {
-					content = Files.readAllBytes(this.jrtSystem.getPath(JRTUtil.MODULES_SUBDIR, mod, fileName));
-					if (content != null) {
-						break;
-					}
-				} catch(NoSuchFileException e) {
-					continue;
+				content = JRTUtil.safeReadBytes(this.jrtSystem.getPath(JRTUtil.MODULES_SUBDIR, mod, fileName));
+				if (content != null) {
+					break;
 				}
 			}
 		}
 		return content;
 	}
 	private byte[] getClassfileBytes(String fileName, String module) throws IOException, ClassFormatException {
-		byte[] content = null;
-		try {
-			content = Files.readAllBytes(this.jrtSystem.getPath(JRTUtil.MODULES_SUBDIR, module, fileName));
-		} catch(NoSuchFileException e) {
-			return null;
-		}
-		return content;
+		return JRTUtil.safeReadBytes(this.jrtSystem.getPath(JRTUtil.MODULES_SUBDIR, module, fileName));
 	}
 	public ClassFileReader getClassfile(String fileName, String module) throws IOException, ClassFormatException {
 		ClassFileReader reader = null;

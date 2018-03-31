@@ -27,6 +27,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.core.compiler.IProblem;
@@ -202,6 +203,8 @@ public abstract class AbstractClassFile extends Openable implements IClassFile, 
 				JavaModelManager.getJavaModelManager().closeZipFile(zip);
 			}
 		}
+		if (contents == null && Thread.interrupted()) // reading from JRT is interruptible
+			throw new OperationCanceledException();
 		return contents;
 	}
 	

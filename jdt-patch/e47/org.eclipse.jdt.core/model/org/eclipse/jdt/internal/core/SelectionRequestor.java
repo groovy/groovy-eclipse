@@ -26,10 +26,12 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeParameter;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
-import org.eclipse.jdt.core.compiler.*;
+import org.eclipse.jdt.core.compiler.CategorizedProblem;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.codeassist.ISelectionRequestor;
 import org.eclipse.jdt.internal.codeassist.SelectionEngine;
 import org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.CastExpression;
 import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
 import org.eclipse.jdt.internal.compiler.ast.LocalDeclaration;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
@@ -465,7 +467,11 @@ public void acceptLocalVariable(LocalVariableBinding binding, org.eclipse.jdt.in
 	if(parent != null) {
 		String typeSig = null;
 		if (local.type == null || local.type.isTypeNameVar(binding.declaringScope)) {
-			typeSig = Signature.createTypeSignature(binding.type.signableName(), true);// : Util.typeSignature(local.type)
+			if (local.initialization instanceof CastExpression) {
+				typeSig = Util.typeSignature(((CastExpression) local.initialization).type);
+			} else {
+				typeSig = Signature.createTypeSignature(binding.type.signableName(), true);
+			}
 		} else {
 			typeSig = Util.typeSignature(local.type);
 		}
