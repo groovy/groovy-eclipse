@@ -24,7 +24,6 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.groovy.tests.ReconcilerUtils;
-import org.eclipse.jdt.core.tests.util.Util;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -58,7 +57,6 @@ public final class FullProjectTests extends BuilderTestSuite {
 
     private IPath[] createGroovyProject() throws Exception {
         IPath prj = env.addProject("Project");
-        env.addExternalJars(prj, Util.getJavaClassLibs());
         env.addGroovyJars(prj);
         env.setOutputFolder(prj, "bin");
         env.removePackageFragmentRoot(prj, "");

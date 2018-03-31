@@ -19,7 +19,6 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.groovy.tests.builder.BuilderTestSuite;
-import org.eclipse.jdt.core.tests.util.Util;
 
 public abstract class GroovyTypeRootTestSuite extends BuilderTestSuite {
 
@@ -28,7 +27,6 @@ public abstract class GroovyTypeRootTestSuite extends BuilderTestSuite {
         if (!isGroovy) {
             env.removeGroovyNature("Project");
         }
-        env.addExternalJars(projectPath, Util.getJavaClassLibs());
 
         // remove old package fragment root so that names don't collide
         env.removePackageFragmentRoot(projectPath, "");
@@ -64,8 +62,7 @@ public abstract class GroovyTypeRootTestSuite extends BuilderTestSuite {
     }
 
     protected final IPath createEmptyGroovyProject() throws Exception {
-        IPath projectPath = env.addProject("Project", "1.5");
-        env.addExternalJars(projectPath, Util.getJavaClassLibs());
+        IPath projectPath = env.addProject("Project");
         env.addGroovyJars(projectPath);
 
         // remove old package fragment root so that names don't collide

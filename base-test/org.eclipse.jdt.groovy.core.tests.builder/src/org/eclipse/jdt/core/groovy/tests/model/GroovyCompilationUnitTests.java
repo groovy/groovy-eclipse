@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,6 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.IProblem;
-import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.groovy.core.util.JavaConstants;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -52,7 +51,6 @@ public final class GroovyCompilationUnitTests extends GroovyTypeRootTestSuite {
     @Test
     public void testCreateJavaCompilationUnit() throws Exception {
         IPath projectPath = env.addProject("Project");
-        env.addExternalJars(projectPath, Util.getJavaClassLibs());
         fullBuild(projectPath);
 
         // remove old package fragment root so that names don't collide

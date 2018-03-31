@@ -27,7 +27,6 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.internal.core.ClasspathAccessRule;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.framework.Version;
 
 /**
  * Tests for build path access rules (i.e. restrictions placed on classpath entries).
@@ -47,23 +46,17 @@ public final class BuildAccessRulesTests extends BuilderTestSuite {
 
     @Before
     public void setUp() throws Exception {
-        IPath projectPath = env.addProject("Project", "1.5");
-        env.addGroovyNature("Project");
+        IPath projectPath = env.addProject("Project");
         env.setClasspath(projectPath, new IClasspathEntry[] {
             JavaCore.newSourceEntry(src = projectPath.append("src")),
             JavaCore.newContainerEntry(GroovyClasspathContainer.CONTAINER_ID),
-            JavaCore.newContainerEntry(new Path("org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.5"),
+            JavaCore.newContainerEntry(new Path("org.eclipse.jdt.launching.JRE_CONTAINER"),
                 new IAccessRule[] {new ClasspathAccessRule(new Path("java/beans/**"), IAccessRule.K_NON_ACCESSIBLE)}, null, false) // create access restriction
         });
         env.createFolder(src);
 
-        if (JavaCore.getPlugin().getBundle().getVersion().compareTo(Version.parseVersion("3.10")) < 0) {
-            problemFormat = "Problem : Access restriction: The type %s is not accessible due to restriction on required library ##" +
-                                            " [ resource : </Project/src/Foo.groovy> range : <%d,%d> category : <150> severity : <2>]";
-        } else {
-            problemFormat = "Problem : Access restriction: The type '%s' is not API (restriction on required library '##')" +
-                                            " [ resource : </Project/src/Foo.groovy> range : <%d,%d> category : <150> severity : <2>]";
-        }
+        problemFormat = "Problem : Access restriction: The type '%s' is not API (restriction on required library '##')" +
+                                    " [ resource : </Project/src/Foo.groovy> range : <%d,%d> category : <150> severity : <2>]";
     }
 
     private void assertAccessRestriction(String source, String... types) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -176,10 +176,13 @@ abstract class GroovyEclipseTestSuite {
         testProject.addClasspathEntry(JavaCore.newContainerEntry(path, true))
     }
 
-    protected final void addJUnit4() {
-        //addClasspathContainer(new Path('org.eclipse.jdt.junit.JUNIT_CONTAINER/4'))
+    protected final void addJUnit(int n) {
+        addClasspathContainer(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/$n"))
+    }
+
+    protected final void addSpock() {
         def bundle = Platform.getBundle('org.eclipse.jdt.groovy.core.tests.builder')
-        URL jarUrl = FileLocator.toFileURL(bundle.getEntry('lib/junit-4.12.jar'))
+        URL jarUrl = FileLocator.toFileURL(bundle.getEntry('lib/spock-core-1.1-groovy-2.4.jar'))
         testProject.addExternalLibrary(new Path(jarUrl.file))
     }
 

@@ -21,7 +21,6 @@ import java.util.Arrays;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.tests.builder.Problem;
-import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.groovy.core.Activator;
 import org.junit.After;
 import org.junit.Test;
@@ -41,11 +40,9 @@ public final class STCScriptsTests extends BuilderTestSuite {
         if (genericProjectExists()) {
             return env.getProject("Project").getFullPath();
         }
-        IPath projectPath = env.addProject("Project", "1.5");
+        IPath projectPath = env.addProject("Project");
         // remove old package fragment root so that names don't collide
         env.removePackageFragmentRoot(projectPath, "");
-        env.addExternalJars(projectPath, Util.getJavaClassLibs());
-        env.addGroovyNature("Project");
         env.addGroovyJars(projectPath);
         fullBuild(projectPath);
         env.addPackageFragmentRoot(projectPath, "src");

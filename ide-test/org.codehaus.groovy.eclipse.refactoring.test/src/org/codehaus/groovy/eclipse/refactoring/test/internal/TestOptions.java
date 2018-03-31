@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,8 @@
 package org.codehaus.groovy.eclipse.refactoring.test.internal;
 
 import java.lang.reflect.Field;
-import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Map;
 
-import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
@@ -52,12 +49,6 @@ public class TestOptions {
         store.setValue(PreferenceConstants.ORGIMPORTS_IMPORTORDER, "java;javax;org;com");
         store.setValue(PreferenceConstants.ORGIMPORTS_ONDEMANDTHRESHOLD, 99);
         store.setValue(PreferenceConstants.ORGIMPORTS_IGNORELOWERCASE, true);
-    }
-
-    public static void initializeProjectOptions(IJavaProject project) {
-        Map<String, String> options = new HashMap<>();
-        JavaProjectHelper.set15CompilerOptions(options);
-        project.setOptions(options);
     }
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.groovy.tests.builder.BuilderTestSuite;
-import org.eclipse.jdt.core.tests.util.Util;
 import org.junit.Test;
 
 public final class MoveRenameCopyTests extends BuilderTestSuite {
@@ -124,7 +123,6 @@ public final class MoveRenameCopyTests extends BuilderTestSuite {
     private GroovyCompilationUnit createSimpleGroovyProject(String pack, String contents) throws Exception {
         IPath projectPath = env.addProject("Project");
         env.addGroovyNature("Project");
-        env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
         fullBuild(projectPath);
         expectingNoProblems();

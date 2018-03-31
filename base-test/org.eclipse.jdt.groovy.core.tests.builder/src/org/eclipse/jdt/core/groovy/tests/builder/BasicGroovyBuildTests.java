@@ -45,11 +45,11 @@ import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.tests.builder.Problem;
-import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.core.JavaModelManager;
@@ -69,20 +69,16 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     }
 
     private IPath[] createSimpleProject(String name, boolean isGroovy) throws Exception {
-        IPath path = env.addProject(name, "1.6");
-        env.addExternalJars(path, Util.getJavaClassLibs());
+        IPath path = env.addProject(name);
         if (isGroovy) {
             env.addGroovyJars(path);
-            env.addGroovyNature(name);
         } else {
             env.removeGroovyNature(name);
         }
-        env.removePackageFragmentRoot(path, "");
-        IPath root = env.addPackageFragmentRoot(path, "src");
-        env.setOutputFolder(path, "bin");
         fullBuild(path);
-
-        return new IPath[] {path, root};
+        env.setOutputFolder(path, "bin");
+        env.removePackageFragmentRoot(path, "");
+        return new IPath[] {path, env.addPackageFragmentRoot(path, "src")};
     }
 
     private static MethodNode getMethodNode(ClassNode jcn, String selector, int paramCount) {
@@ -1743,15 +1739,13 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     @Test
     public void testSpock_GRE558() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
-        env.addJar(paths[0], "lib/junit-4.12.jar");
-        env.addJar(paths[0], "lib/spock-core-0.4-groovy-1.7-SNAPSHOT.jar");
+        env.addJar(paths[0], "lib/spock-core-1.1-groovy-2.4.jar");
+        env.addEntry(paths[0], JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/4")));
 
         env.addGroovyClass(paths[1], "", "MyTest",
             "import org.junit.runner.RunWith\n" +
             "import spock.lang.Specification \n" +
-            "import spock.lang.Sputnik;\n" +
             "\n" +
-            "@RunWith(Sputnik)\n" +
             "class MyTest extends Specification {\n" +
             "//deleting extends Specification is sufficient to remove all 3 errors,\n" +
             "//necessary to remove model.SpecMetadata\n" +
@@ -1777,8 +1771,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     @Test
     public void testSpock_GRE605_1() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
-        env.addJar(paths[0], "lib/junit-4.12.jar");
-        env.addJar(paths[0], "lib/spock-core-0.4-groovy-1.7-SNAPSHOT.jar");
+        env.addJar(paths[0], "lib/spock-core-1.1-groovy-2.4.jar");
+        env.addEntry(paths[0], JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/4")));
 
         env.addGroovyClass(paths[1], "", "FoobarSpec",
             "import spock.lang.Specification\n" +
@@ -1841,8 +1835,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     @Test
     public void testSpock_GRE605_2() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
-        env.addJar(paths[0], "lib/junit-4.12.jar");
-        env.addJar(paths[0], "lib/spock-core-0.4-groovy-1.7-SNAPSHOT.jar");
+        env.addJar(paths[0], "lib/spock-core-1.1-groovy-2.4.jar");
+        env.addEntry(paths[0], JavaCore.newContainerEntry(new Path("org.eclipse.jdt.junit.JUNIT_CONTAINER/4")));
 
         env.addGroovyClass(paths[1], "", "FoobarSpec",
             "import spock.lang.Specification\n" +
@@ -2271,27 +2265,18 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testTaskMarkerInMultiLineButNoText() throws Exception {
         Hashtable<String, String> newOptions = JavaCore.getOptions();
         newOptions.put(JavaCore.COMPILER_TASK_TAGS, "todo");
-
         JavaCore.setOptions(newOptions);
 
-        IPath projectPath = env.addProject("Project");
-        env.addExternalJars(projectPath, Util.getJavaClassLibs());
-        env.addGroovyJars(projectPath);
+        IPath[] paths = createSimpleProject("Project", true);
 
-        // remove old package fragment root so that names don't collide
-        env.removePackageFragmentRoot(projectPath, "");
+        IPath pathToA = env.addGroovyClass(paths[1], "p", "A",
+            "package p; \n" +
+            "/*  todo\n" +
+            " */\n" +
+            "public class A {\n" +
+            "}");
 
-        IPath root = env.addPackageFragmentRoot(projectPath, "src");
-        env.setOutputFolder(projectPath, "bin");
-
-        IPath pathToA = env.addGroovyClass(root, "p", "A",
-                "package p; \n" +
-                        "/*  todo\n" +
-                        " */\n" +
-                        "public class A {\n" +
-                        "}");
-
-        fullBuild(projectPath);
+        fullBuild(paths[0]);
 
         expectingSpecificProblemFor(pathToA, new Problem("A", toTask("todo", ""), pathToA, 16, 20, -1, IMarker.SEVERITY_ERROR));
     }
@@ -3005,7 +2990,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     public void testBug164707() throws Exception {
         IPath projectPath = env.addProject("Project");
         env.getJavaProject(projectPath).setOption(JavaCore.COMPILER_SOURCE, "invalid");
-        env.addExternalJars(projectPath, Util.getJavaClassLibs());
         fullBuild(projectPath);
         expectingNoProblems();
     }

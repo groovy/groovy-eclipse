@@ -47,6 +47,7 @@ import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.util.Util;
+import org.eclipse.jdt.launching.JavaRuntime;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -295,10 +296,20 @@ public abstract class BuilderTestSuite {
     protected static class TestingEnvironment extends org.eclipse.jdt.core.tests.builder.TestingEnvironment {
 
         @Override
+        public IPath addProject(String projectName) {
+            return addProject(projectName, "1.6");
+        }
+
+        @Override
         public IPath addProject(String projectName, String compliance) {
-            IPath projectPath = super.addProject(projectName, compliance);
-            addGroovyNature(projectName);
-            return projectPath;
+            try {
+                IPath projectPath = super.addProject(projectName, compliance);
+                addEntry(projectPath, JavaRuntime.getDefaultJREContainerEntry());
+                addGroovyNature(projectName);
+                return projectPath;
+            } catch (JavaModelException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         public void addGroovyNature(String projectName) {

@@ -509,7 +509,7 @@ public void cleanBuild(String projectName) {
 		try {
 			checkAssertion("a workspace must be open", this.isOpen); //$NON-NLS-1$
 			JavaProject javaProject = (JavaProject) JavaCore.create(getProject(projectPath));
-			return javaProject.getExpandedClasspath();
+			return javaProject.getRawClasspath();
 //			IPath[] packageFragmentRootsPath = new IPath[entries.length];
 //			for (int i = 0; i < entries.length; ++i)
 //				packageFragmentRootsPath[i] = entries[i].getPath();

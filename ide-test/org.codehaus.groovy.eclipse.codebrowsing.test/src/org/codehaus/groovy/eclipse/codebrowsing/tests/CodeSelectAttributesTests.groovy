@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,7 +68,7 @@ final class CodeSelectAttributesTests extends BrowsingTestSuite {
 
     @Test
     void testCodeSelectOnAttributeValue2() {
-        addJUnit4()
+        addJUnit(4)
 
         String source = '''\
             import org.junit.Test
@@ -85,7 +85,7 @@ final class CodeSelectAttributesTests extends BrowsingTestSuite {
 
     @Test
     void testCodeSelectOnAttributeValue2a() {
-        addJUnit4()
+        addJUnit(4)
 
         String source = '''\
             import org.junit.Test
@@ -102,7 +102,7 @@ final class CodeSelectAttributesTests extends BrowsingTestSuite {
 
     @Test
     void testCodeSelectOnAttributeValue2b() {
-        addJUnit4()
+        addJUnit(4)
 
         String source = '''\
             import org.junit.Test

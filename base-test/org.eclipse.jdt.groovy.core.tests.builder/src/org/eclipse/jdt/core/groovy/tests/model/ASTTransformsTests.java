@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,6 @@ import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.groovy.tests.builder.BuilderTestSuite;
-import org.eclipse.jdt.core.tests.util.Util;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -43,7 +42,6 @@ public final class ASTTransformsTests extends BuilderTestSuite {
     @Before
     public void setUp() throws Exception {
         IPath projectPath = env.addProject("Project");
-        env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
         fullBuild(projectPath);
 

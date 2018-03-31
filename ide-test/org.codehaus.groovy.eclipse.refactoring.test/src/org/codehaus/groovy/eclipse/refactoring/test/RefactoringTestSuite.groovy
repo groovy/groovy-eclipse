@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,7 +67,6 @@ abstract class RefactoringTestSuite {
     private static IJavaProject fgJavaTestProject
     private static IPackageFragmentRoot fgRoot
     private static IPackageFragment fgPackageP
-    private static IPackageFragmentRoot[] fgJRELibraries
 
     @BeforeClass
     static final void setUpTestSuite() {
@@ -85,11 +84,6 @@ abstract class RefactoringTestSuite {
         JavaPlugin.getDefault().getCodeTemplateStore().load()
 
         fgJavaTestProject = JavaProjectHelper.createGroovyProject('TestProject', 'bin')
-        fgJRELibraries = JavaProjectHelper.addRTJars(fgJavaTestProject)
-        JavaProjectHelper.addGroovyJar(fgJavaTestProject)
-
-        // just in case, remove the source root that is the root of the project (if it exists)
-        JavaProjectHelper.removeFromClasspath(fgJavaTestProject, fgJavaTestProject.getProject().getFullPath())
         fgRoot = JavaProjectHelper.addSourceContainer(fgJavaTestProject, 'src')
         fgPackageP = fgRoot.createPackageFragment('p', true, null)
 
@@ -191,22 +185,20 @@ abstract class RefactoringTestSuite {
         if (fgJavaTestProject.exists()) {
             IClasspathEntry srcEntry = root.rawClasspathEntry
             try {
-                IClasspathEntry[] jreEntries = fgJRELibraries*.rawClasspathEntry as IClasspathEntry[]
-                IClasspathEntry[] cpes = fgJavaTestProject.rawClasspath
-                List<IClasspathEntry> newCPEs = []
                 boolean cpChanged = false
-                for (cpe in cpes) {
-                    if (cpe == srcEntry || cpe in jreEntries) {
-                        newCPEs.add(cpe)
+                List<IClasspathEntry> cpes = []
+                for (IClasspathEntry cpe : fgJavaTestProject.rawClasspath) {
+                    if (cpe == srcEntry || cpe.path.lastSegment() =~ 'groovy-|JRE_CONTAINER$') {
+                        cpes << cpe
                     } else {
                         cpChanged = true
                     }
                 }
                 if (cpChanged) {
-                    fgJavaTestProject.setRawClasspath(newCPEs as IClasspathEntry[], null)
+                    fgJavaTestProject.setRawClasspath(cpes as IClasspathEntry[], null)
                 }
             } catch (JavaModelException e) {
-                System.err.println('Exception thrown when trying to restore project to original state.  We can probable ignore this.')
+                System.err.println('Exception thrown when trying to restore project to original state.  We can probably ignore this.')
                 e.printStackTrace()
             }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.internal;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -25,8 +24,7 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 
-import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
-import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSuite;
+import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -37,7 +35,6 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
@@ -50,39 +47,27 @@ import org.eclipse.jdt.core.search.IJavaSearchConstants;
 import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.TypeNameRequestor;
-import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.util.CoreUtility;
+import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Synchronizer;
-import org.junit.Assert;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
 
 /**
  * Helper methods to set up a IJavaProject.
  */
 public class JavaProjectHelper {
 
-    private static final int MAX_RETRY= 5;
-    /**
-     * @deprecated
-     * @see #RT_STUBS_15
-     */
-    public static final IPath RT_STUBS_13= new Path("resources/rtstubs.jar");
-    public static final IPath RT_STUBS_15= new Path("resources/rtstubs15.jar");
-    public static final IPath RT_STUBS_16= new Path("resources/rtstubs16.jar");
+    private static final int MAX_RETRY = 5;
 
     /**
-     * Creates a IJavaProject.
-     * @param projectName The name of the project
-     * @param binFolderName Name of the output folder
-     * @return Returns the Java project handle
-     * @throws CoreException Project creation failed
+     * @param projectName name of the project
+     * @param binFolderName name of the output folder (may be null)
      */
     public static IJavaProject createJavaProject(String projectName, String binFolderName) throws Exception {
-        IWorkspaceRoot root= ResourcesPlugin.getWorkspace().getRoot();
-        IProject project= root.getProject(projectName);
+        IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+        IProject project = root.getProject(projectName);
         if (!project.exists()) {
             project.create(null);
         } else {
@@ -95,139 +80,52 @@ public class JavaProjectHelper {
 
         IPath outputLocation;
         if (binFolderName != null && binFolderName.length() > 0) {
-            IFolder binFolder= project.getFolder(binFolderName);
+            IFolder binFolder = project.getFolder(binFolderName);
             if (!binFolder.exists()) {
                 CoreUtility.createFolder(binFolder, false, true, null);
             }
-            outputLocation= binFolder.getFullPath();
+            outputLocation = binFolder.getFullPath();
         } else {
-            outputLocation= project.getFullPath();
+            outputLocation = project.getFullPath();
         }
 
         if (!project.hasNature(JavaCore.NATURE_ID)) {
             addNatureToProject(project, JavaCore.NATURE_ID, null);
         }
 
-        IJavaProject jproject= JavaCore.create(project);
-
+        IJavaProject jproject = JavaCore.create(project);
         jproject.setOutputLocation(outputLocation, null);
-        jproject.setRawClasspath(new IClasspathEntry[0], null);
-
+        removeFromClasspath(jproject, jproject.getPath());
+        addToClasspath(jproject, JavaRuntime.getDefaultJREContainerEntry());
+        //jproject.setOptions(putCompilerOptions(new HashMap<>(), JavaCore.VERSION_1_6));
         return jproject;
     }
 
     /**
-     * Creates a IJavaProject with a groovy nature
-     * @param projectName The name of the project
-     * @param binFolderName Name of the output folder
-     * @return Returns the Java project handle
-     * @throws CoreException Project creation failed
+     * @param projectName name of the project
+     * @param binFolderName name of the output folder (may be null)
      */
     public static IJavaProject createGroovyProject(String projectName, String binFolderName) throws Exception {
-        IWorkspaceRoot root= ResourcesPlugin.getWorkspace().getRoot();
-        IProject project= root.getProject(projectName);
-        if (!project.exists()) {
-            project.create(null);
-        } else {
-            project.refreshLocal(IResource.DEPTH_INFINITE, null);
-        }
+        IJavaProject jproject = createJavaProject(projectName, binFolderName);
 
-        if (!project.isOpen()) {
-            project.open(null);
+        if (!jproject.getProject().hasNature(GroovyNature.GROOVY_NATURE)) {
+            addNatureToProject(jproject.getProject(), GroovyNature.GROOVY_NATURE, null);
         }
-
-        IPath outputLocation;
-        if (binFolderName != null && binFolderName.length() > 0) {
-            IFolder binFolder= project.getFolder(binFolderName);
-            if (!binFolder.exists()) {
-                CoreUtility.createFolder(binFolder, false, true, null);
-            }
-            outputLocation= binFolder.getFullPath();
-        } else {
-            outputLocation= project.getFullPath();
-        }
-
-        if (!project.hasNature(JavaCore.NATURE_ID)) {
-            addNatureToProject(project, JavaCore.NATURE_ID, null);
-        }
-        if (!project.hasNature(GroovyNature.GROOVY_NATURE)) {
-            addNatureToProject(project, GroovyNature.GROOVY_NATURE, null);
-        }
-
-        IJavaProject jproject= JavaCore.create(project);
-
-        jproject.setOutputLocation(outputLocation, null);
-        jproject.setRawClasspath(new IClasspathEntry[0], null);
+        addToClasspath(jproject, JavaCore.newContainerEntry(GroovyClasspathContainer.CONTAINER_ID));
 
         return jproject;
     }
 
     /**
-     * Sets the compiler options to 1.5 for the given project.
-     * @param project the java project
+     * @param options compiler options map to populate
      */
-    public static void set15CompilerOptions(IJavaProject project) {
-        Map<String, String> options= project.getOptions(false);
-        JavaProjectHelper.set15CompilerOptions(options);
-        project.setOptions(options);
-    }
-
-    /**
-     * Sets the compiler options to 1.4 for the given project.
-     * @param project the java project
-     */
-    public static void set14CompilerOptions(IJavaProject project) {
-        Map<String, String> options= project.getOptions(false);
-        JavaProjectHelper.set14CompilerOptions(options);
-        project.setOptions(options);
-    }
-
-    /**
-     * Sets the compiler options to 1.6
-     * @param options The compiler options to configure
-     */
-    public static void set16CompilerOptions(Map<String, String> options) {
-        options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_6);
+    public static Map<String, String> putCompilerOptions(Map<String, String> options, String compliance) {
+        options.put(JavaCore.COMPILER_COMPLIANCE, compliance);
         options.put(JavaCore.COMPILER_PB_ASSERT_IDENTIFIER, JavaCore.ERROR);
         options.put(JavaCore.COMPILER_PB_ENUM_IDENTIFIER, JavaCore.ERROR);
-        options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_6);
-        options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_6);
-    }
-
-    /**
-     * Sets the compiler options to 1.5
-     * @param options The compiler options to configure
-     */
-    public static void set15CompilerOptions(Map<String, String> options) {
-        options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_5);
-        options.put(JavaCore.COMPILER_PB_ASSERT_IDENTIFIER, JavaCore.ERROR);
-        options.put(JavaCore.COMPILER_PB_ENUM_IDENTIFIER, JavaCore.ERROR);
-        options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_5);
-        options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_5);
-    }
-
-    /**
-     * Sets the compiler options to 1.4
-     * @param options The compiler options to configure
-     */
-    public static void set14CompilerOptions(Map<String, String> options) {
-        options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_4);
-        options.put(JavaCore.COMPILER_PB_ASSERT_IDENTIFIER, JavaCore.ERROR);
-        options.put(JavaCore.COMPILER_PB_ENUM_IDENTIFIER, JavaCore.WARNING);
-        options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_3);
-        options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_2);
-    }
-
-    /**
-     * Sets the compiler options to 1.3
-     * @param options The compiler options to configure
-     */
-    public static void set13CompilerOptions(Map<String, String> options) {
-        options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_3);
-        options.put(JavaCore.COMPILER_PB_ASSERT_IDENTIFIER, JavaCore.WARNING);
-        options.put(JavaCore.COMPILER_PB_ENUM_IDENTIFIER, JavaCore.WARNING);
-        options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_3);
-        options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_2);
+        options.put(JavaCore.COMPILER_SOURCE, compliance);
+        options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, compliance);
+        return options;
     }
 
     /**
@@ -297,7 +195,7 @@ public class JavaProjectHelper {
             SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE,
             IJavaSearchConstants.CLASS,
             SearchEngine.createJavaSearchScope(new IJavaElement[0]),
-            new Requestor(),
+            new TypeNameRequestor() {},
             IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH,
             null);
     }
@@ -463,53 +361,6 @@ public class JavaProjectHelper {
     }
 
     /**
-     * Adds a library entry pointing to a JRE (stubs only)
-     * and sets the right compiler options.
-     * <p>Currently, the compiler compliance level is 1.5.
-     *
-     * @param jproject target
-     * @return the new package fragment root
-     * @throws CoreException
-     */
-    public static IPackageFragmentRoot addRTJar(IJavaProject jproject) throws Exception {
-        return addRTJar15(jproject);
-    }
-
-    /**
-     * Adds a library entry pointing to a Groovy jar
-     *
-     * @param jproject target
-     * @return the new package fragment root
-     * @throws CoreException
-     */
-    public static IPackageFragmentRoot addGroovyJar(IJavaProject jproject) throws Exception {
-        IPath[] groovyJarPath= findGroovyJar();
-        return addLibrary(jproject, groovyJarPath[0], groovyJarPath[1], groovyJarPath[2]);
-    }
-
-    public static IPackageFragmentRoot addRTJar13(IJavaProject jproject) throws Exception {
-        IPath[] rtJarPath= findRtJar(RT_STUBS_13);
-        Map<String, String> options= jproject.getOptions(false);
-        JavaProjectHelper.set13CompilerOptions(options);
-        jproject.setOptions(options);
-        return addLibrary(jproject, rtJarPath[0], rtJarPath[1], rtJarPath[2]);
-    }
-
-    public static IPackageFragmentRoot addRTJar15(IJavaProject jproject) throws Exception {
-        IPath[] rtJarPath= findRtJar(RT_STUBS_15);
-        set15CompilerOptions(jproject);
-        return addLibrary(jproject, rtJarPath[0], rtJarPath[1], rtJarPath[2]);
-    }
-
-    public static IPackageFragmentRoot addRTJar16(IJavaProject jproject) throws Exception {
-        IPath[] rtJarPath= findRtJar(RT_STUBS_16);
-        Map<String, String> options= jproject.getOptions(false);
-        JavaProjectHelper.set16CompilerOptions(options);
-        jproject.setOptions(options);
-        return addLibrary(jproject, rtJarPath[0], rtJarPath[1], rtJarPath[2]);
-    }
-
-    /**
      * Adds a variable entry with source attachment to a IJavaProject.
      * Can return null if variable can not be resolved.
      * @param jproject The parent project
@@ -527,59 +378,6 @@ public class JavaProjectHelper {
             return jproject.getPackageFragmentRoot(resolvedPath.toString());
         }
         return null;
-    }
-
-    public static IPackageFragmentRoot addVariableRTJar13(IJavaProject jproject, String libVarName, String srcVarName, String srcrootVarName) throws Exception {
-        return addVariableRTJar(jproject, RT_STUBS_13, libVarName, srcVarName, srcrootVarName);
-    }
-
-    /**
-     * Adds a variable entry pointing to a current JRE (stubs only)
-     * and sets the compiler compliance level on the project accordingly.
-     * The arguments specify the names of the variables to be used.
-     * Currently, the compiler compliance level is set to 1.5.
-     *
-     * @param jproject the project to add the variable RT JAR
-     * @param libVarName Name of the variable for the library
-     * @param srcVarName Name of the variable for the source attachment. Can be <code>null</code>.
-     * @param srcrootVarName name of the variable for the source attachment root. Can be <code>null</code>.
-     * @return the new package fragment root
-     * @throws CoreException Creation failed
-     */
-    public static IPackageFragmentRoot addVariableRTJar(IJavaProject jproject, String libVarName, String srcVarName, String srcrootVarName) throws Exception {
-        return addVariableRTJar(jproject, RT_STUBS_15, libVarName, srcVarName, srcrootVarName);
-    }
-
-    /**
-     * Adds a variable entry pointing to a current JRE (stubs only).
-     * The arguments specify the names of the variables to be used.
-     * Clients must not forget to set the right compiler compliance level on the project.
-     *
-     * @param jproject the project to add the variable RT JAR
-     * @param rtStubsPath path to an rt.jar
-     * @param libVarName name of the variable for the library
-     * @param srcVarName Name of the variable for the source attachment. Can be <code>null</code>.
-     * @param srcrootVarName Name of the variable for the source attachment root. Can be <code>null</code>.
-     * @return the new package fragment root
-     * @throws CoreException Creation failed
-     */
-    private static IPackageFragmentRoot addVariableRTJar(IJavaProject jproject, IPath rtStubsPath, String libVarName, String srcVarName, String srcrootVarName) throws Exception {
-        IPath[] rtJarPaths= findRtJar(rtStubsPath);
-        IPath libVarPath= new Path(libVarName);
-        IPath srcVarPath= null;
-        IPath srcrootVarPath= null;
-        JavaCore.setClasspathVariable(libVarName, rtJarPaths[0], null);
-        if (srcVarName != null) {
-            IPath varValue= rtJarPaths[1] != null ? rtJarPaths[1] : Path.EMPTY;
-            JavaCore.setClasspathVariable(srcVarName, varValue, null);
-            srcVarPath= new Path(srcVarName);
-        }
-        if (srcrootVarName != null) {
-            IPath varValue= rtJarPaths[2] != null ? rtJarPaths[2] : Path.EMPTY;
-            JavaCore.setClasspathVariable(srcrootVarName, varValue, null);
-            srcrootVarPath= new Path(srcrootVarName);
-        }
-        return addVariableEntry(jproject, libVarPath, srcVarPath, srcrootVarPath);
     }
 
     /**
@@ -621,28 +419,6 @@ public class JavaProjectHelper {
         jproject.setRawClasspath(newEntries, null);
     }
 
-    public static IPath[] findRtJar(IPath rtStubsPath) throws Exception {
-        File rtStubs = new File(FileLocator.toFileURL(FrameworkUtil.getBundle(RefactoringTestSuite.class).getEntry(rtStubsPath.toString())).getFile());
-        Assert.assertNotNull(rtStubs);
-        Assert.assertTrue(rtStubs.exists());
-        return new IPath[] {
-            Path.fromOSString(rtStubs.getPath()),
-            null,
-            null
-        };
-    }
-
-    public static IPath[] findGroovyJar() throws Exception {
-        IPath groovyJarPath = CompilerUtils.getExportedGroovyAllJar();
-        Assert.assertNotNull(groovyJarPath);
-        Assert.assertTrue(groovyJarPath.toFile().exists());
-        return new IPath[] {
-            groovyJarPath,
-            null,
-            null
-        };
-    }
-
     private static void addNatureToProject(IProject proj, String natureId, IProgressMonitor monitor) throws Exception {
         IProjectDescription description = proj.getDescription();
         String[] prevNatures= description.getNatureIds();
@@ -664,34 +440,31 @@ public class JavaProjectHelper {
      * @throws IOException import failed
      */
     public static void importResources(IContainer importTarget, Bundle bundle, String bundleSourcePath) throws Exception {
-        Enumeration<String> entryPaths= bundle.getEntryPaths(bundleSourcePath);
+        Enumeration<String> entryPaths = bundle.getEntryPaths(bundleSourcePath);
         while (entryPaths.hasMoreElements()) {
-            String path= entryPaths.nextElement();
-            IPath name= new Path(path.substring(bundleSourcePath.length()));
+            String path = entryPaths.nextElement();
+            IPath name = new Path(path.substring(bundleSourcePath.length()));
             if (path.endsWith("/")) {
-                IFolder folder= importTarget.getFolder(name);
+                IFolder folder = importTarget.getFolder(name);
                 folder.create(false, true, null);
                 importResources(folder, bundle, path);
             } else {
-                URL url= bundle.getEntry(path);
-                IFile file= importTarget.getFile(name);
+                URL url = bundle.getEntry(path);
+                IFile file = importTarget.getFile(name);
                 file.create(url.openStream(), true, null);
             }
         }
     }
 
-    private static class Requestor extends TypeNameRequestor{
-    }
-
     public static void emptyDisplayLoop() {
-        boolean showDebugInfo= false;
+        boolean showDebugInfo = false;
 
-        Display display= Display.getCurrent();
+        Display display = Display.getCurrent();
         if (display != null) {
             if (showDebugInfo) {
                 try {
-                    Synchronizer synchronizer= display.getSynchronizer();
-                    Field field= Synchronizer.class.getDeclaredField("messageCount");
+                    Synchronizer synchronizer = display.getSynchronizer();
+                    Field field = Synchronizer.class.getDeclaredField("messageCount");
                     field.setAccessible(true);
                     System.out.println("Processing " + field.getInt(synchronizer) + " messages in queue");
                 } catch (Exception e) {
@@ -699,19 +472,9 @@ public class JavaProjectHelper {
                     System.out.println(e);
                 }
             }
-            while (display.readAndDispatch()) { /*loop*/ }
+            while (display.readAndDispatch()) {
+                /*loop*/
+            }
         }
-    }
-    /**
-     * @param project
-     * @return
-     */
-    public static IPackageFragmentRoot[] addRTJars(IJavaProject project) throws Exception {
-        String[] javaClassLibs = Util.getJavaClassLibs();
-        IPackageFragmentRoot[] roots = new IPackageFragmentRoot[javaClassLibs.length];
-        for (int i = 0; i < javaClassLibs.length; i++) {
-            roots[i] = addLibrary(project, Path.fromOSString(javaClassLibs[i]), null, null);
-        }
-        return roots;
     }
 }

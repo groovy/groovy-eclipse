@@ -170,7 +170,6 @@ public final class GroovyContentTypeTests extends BuilderTestSuite {
 
     private static IProject createProject() throws Exception {
         IPath projectPath = env.addProject("Project");
-        env.addExternalJars(projectPath, org.eclipse.jdt.core.tests.util.Util.getJavaClassLibs());
         env.removePackageFragmentRoot(projectPath, "");
 
         IPath root = env.addPackageFragmentRoot(projectPath, "src");

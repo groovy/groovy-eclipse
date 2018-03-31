@@ -44,7 +44,6 @@ import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.groovy.tests.builder.BuilderTestSuite;
 import org.eclipse.jdt.core.tests.builder.Problem;
-import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.groovy.core.util.JavaConstants;
 import org.junit.Test;
 
@@ -197,8 +196,7 @@ public final class SourceLocationsTests extends BuilderTestSuite {
     }
 
     private IPath createGenericProject() throws Exception {
-        IPath projectPath = env.addProject("Project", "1.5");
-        env.addExternalJars(projectPath, Util.getJavaClassLibs());
+        IPath projectPath = env.addProject("Project");
         env.addGroovyJars(projectPath);
         env.removePackageFragmentRoot(projectPath, "");
         IPath root = env.addPackageFragmentRoot(projectPath, "src");

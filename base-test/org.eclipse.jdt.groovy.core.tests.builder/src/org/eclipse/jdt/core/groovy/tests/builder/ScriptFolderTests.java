@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,11 +35,9 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.groovy.tests.MockScriptFolderSelector;
 import org.eclipse.jdt.core.groovy.tests.SimpleProgressMonitor;
-import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector;
 import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector.FileKind;
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.junit.After;
 import org.junit.Test;
@@ -406,8 +404,6 @@ public final class ScriptFolderTests extends BuilderTestSuite {
 
     private CompilationUnit createScriptInGroovyProject(String name, String contents, boolean isGroovy) throws Exception {
         IPath projectPath = env.addProject("Project");
-        env.addGroovyNature("Project");
-        env.addExternalJars(projectPath, Util.getJavaClassLibs());
         env.addGroovyJars(projectPath);
 
         // remove old package fragment root so that names don't collide
@@ -415,10 +411,6 @@ public final class ScriptFolderTests extends BuilderTestSuite {
         env.addPackageFragmentRoot(projectPath, "scripts");
         env.setOutputFolder(projectPath, "bin");
         IProject project = env.getProject("Project");
-        IJavaProject javaProject = JavaCore.create(project);
-        javaProject.setOption(CompilerOptions.OPTION_Compliance, "1.5");
-        javaProject.setOption(CompilerOptions.OPTION_Source, "1.5");
-        javaProject.setOption(CompilerOptions.OPTION_TargetPlatform, "1.5");
         IPath path;
         if (isGroovy) {
             path = env.addGroovyClass(project.getFolder("scripts").getFullPath(), name, contents);

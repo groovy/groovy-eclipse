@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -84,9 +84,9 @@ public class TestProject {
         createOutputFolder(createBinFolder());
         sourceFolder = createSourceFolder();
 
-        javaProject.setOption(CompilerOptions.OPTION_Source, "1.5");
-        javaProject.setOption(CompilerOptions.OPTION_Compliance, "1.5");
-        javaProject.setOption(CompilerOptions.OPTION_TargetPlatform, "1.5");
+        javaProject.setOption(CompilerOptions.OPTION_Source, "1.6");
+        javaProject.setOption(CompilerOptions.OPTION_Compliance, "1.6");
+        javaProject.setOption(CompilerOptions.OPTION_TargetPlatform, "1.6");
     }
 
     public IProject getProject() {
