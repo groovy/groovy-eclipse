@@ -188,7 +188,7 @@ abstract class RefactoringTestSuite {
                 boolean cpChanged = false
                 List<IClasspathEntry> cpes = []
                 for (IClasspathEntry cpe : fgJavaTestProject.rawClasspath) {
-                    if (cpe == srcEntry || cpe.path.lastSegment() =~ 'groovy-|JRE_CONTAINER$') {
+                    if (cpe == srcEntry || cpe.path.lastSegment() =~ 'GROOVY_SUPPORT|JRE_CONTAINER$') {
                         cpes << cpe
                     } else {
                         cpChanged = true

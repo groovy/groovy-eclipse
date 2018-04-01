@@ -127,7 +127,7 @@ public class TestProject {
         addNature(GroovyNature.GROOVY_NATURE);
 
         if (!hasGroovyContainer()) {
-            ensureGroovyClasspathContainer(getJavaProject(), true);
+            ensureGroovyClasspathContainer(getJavaProject(), false);
         }
     }
 

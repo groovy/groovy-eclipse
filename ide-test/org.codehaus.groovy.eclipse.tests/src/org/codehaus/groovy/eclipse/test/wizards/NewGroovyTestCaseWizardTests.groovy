@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,37 +33,22 @@ final class NewGroovyTestCaseWizardTests extends GroovyEclipseTestSuite {
 
     @Before
     void setUp() {
-        addNature(GROOVY_NATURE)
         setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, '2')
         setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.SPACE)
-    }
-
-    private NewGroovyTestTypeWizardPage newGroovyTestTypeWizardPage() {
-        def wizardPage = new NewGroovyTestTypeWizardPage(new NewTestCaseWizardPageTwo())
-        wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
-        wizardPage.setPackageFragment(getPackageFragment('test'), true)
-        wizardPage.setEnclosingTypeSelection(false, true)
-        wizardPage.setJUnit4(false, true)
-
-        wizardPage.metaClass.setStubSelection = { String which, boolean state ->
-            def stubs = ReflectionUtils.getPrivateField(NewTestCaseWizardPageOne, 'fMethodStubsButtons', delegate)
-            int index = ['setUpClass', 'tearDownClass', 'setUp', 'tearDown', 'constructor'].indexOf(which)
-            assert stubs.isEnabled(index) : "$which checkbox is not enabled"
-            stubs.setSelection(index, state)
-        }
-
-        return wizardPage
     }
 
     @Test
     void testCreateGroovyTestCase_NotGroovyProject() {
         removeNature(GROOVY_NATURE)
+        try {
+            def wizardPage = newGroovyTestTypeWizardPage()
+            wizardPage.setTypeName('NonGroovyProjectTestCase', true)
+            wizardPage.createType(new NullProgressMonitor())
 
-        def wizardPage = newGroovyTestTypeWizardPage()
-        wizardPage.setTypeName('NonGroovyProjectTestCase', true)
-        wizardPage.createType(new NullProgressMonitor())
-
-        assert wizardPage.createdType == null
+            assert wizardPage.createdType == null
+        } finally {
+            addNature(GROOVY_NATURE)
+        }
     }
 
     @Test
@@ -116,5 +101,24 @@ final class NewGroovyTestCaseWizardTests extends GroovyEclipseTestSuite {
             |'''.stripMargin()
 
         assertEquals(expected, wizardPage.createdType.compilationUnit.source)
+    }
+
+    //--------------------------------------------------------------------------
+
+    private NewGroovyTestTypeWizardPage newGroovyTestTypeWizardPage() {
+        def wizardPage = new NewGroovyTestTypeWizardPage(new NewTestCaseWizardPageTwo())
+        wizardPage.setPackageFragmentRoot(getPackageFragmentRoot(), true)
+        wizardPage.setPackageFragment(getPackageFragment('test'), true)
+        wizardPage.setEnclosingTypeSelection(false, true)
+        wizardPage.setJUnit4(false, true)
+
+        wizardPage.metaClass.setStubSelection = { String which, boolean state ->
+            def stubs = ReflectionUtils.getPrivateField(NewTestCaseWizardPageOne, 'fMethodStubsButtons', delegate)
+            int index = ['setUpClass', 'tearDownClass', 'setUp', 'tearDown', 'constructor'].indexOf(which)
+            assert stubs.isEnabled(index) : "$which checkbox is not enabled"
+            stubs.setSelection(index, state)
+        }
+
+        return wizardPage
     }
 }
