@@ -74,13 +74,6 @@ public final class GroovyClassLoaderFactory {
         }
     }
 
-    public static void closeClassLoader(String projectName) {
-        Map.Entry<?, GroovyClassLoader[]> entry = projectClassLoaderCache.get(projectName);
-        if (entry != null) {
-            Stream.of(entry.getValue()).filter(Objects::nonNull).forEach(GroovyClassLoaderFactory::close);
-        }
-    }
-
     private static void close(ClassLoader classLoader) {
         if (classLoader instanceof Closeable) {
             try {
@@ -88,6 +81,9 @@ public final class GroovyClassLoaderFactory {
             } catch (IOException e) {
                 Util.log(e);
             }
+        }
+        if (classLoader instanceof GroovyClassLoader) {
+            ((GroovyClassLoader) classLoader).clearCache();
         }
         if (classLoader.getParent() instanceof URLClassLoader) {
             close(classLoader.getParent());
@@ -127,35 +123,34 @@ public final class GroovyClassLoaderFactory {
                         for (FileSystem.Classpath classpath : classpaths) {
                             batchLoader.addClasspath(classpath.getPath());
                         }
-                    } else {
-                        System.err.println("Cannot find field 'classpaths' on FileSystem instance");
                     }
                 }
             } catch (Exception e) {
                 Util.log(e, "Unexpected problem computing classpath for batch compiler");
             }
         }
-        return new GroovyClassLoader[] {new GrapeAwareGroovyClassLoader(batchLoader), batchLoader};
+        return new GroovyClassLoader[] {new GrapeAwareGroovyClassLoader(batchLoader, compilerConfiguration), batchLoader};
     }
 
     private GroovyClassLoader[] getProjectGroovyClassLoaders(CompilerConfiguration compilerConfiguration) {
-        IProject project = findProject(compilerOptions.groovyProjectName);
+        String projectName = compilerOptions.groovyProjectName; IProject project = findProject(projectName);
         try {
             IJavaProject javaProject = JavaCore.create(project);
             IClasspathEntry[] classpathEntries = javaProject.getResolvedClasspath(true);
 
-            Map.Entry<IClasspathEntry[], GroovyClassLoader[]> entry = projectClassLoaderCache.computeIfAbsent(compilerOptions.groovyProjectName, key -> {
+            Map.Entry<IClasspathEntry[], GroovyClassLoader[]> entry = projectClassLoaderCache.computeIfAbsent(projectName, key -> {
                 Set<String>[] paths = calculateClasspath(classpathEntries, javaProject, project);
 
                 Set<String> classPaths = paths[0];
                 Set<String> xformPaths = paths[paths.length - 1];
                 if (GroovyLogManager.manager.hasLoggers()) {
-                    GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM, "transform classpath: " + String.join(File.pathSeparator, xformPaths));
+                    GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM,
+                        "transform classpath: " + String.join(File.pathSeparator, xformPaths));
                 }
 
                 return new java.util.AbstractMap.SimpleEntry<>(classpathEntries, new GroovyClassLoader[] {
-                    new GrapeAwareGroovyClassLoader(newClassLoader(classPaths, null/*no parent loader*/)),
-                    new GroovyClassLoader(newClassLoader(xformPaths, GroovyParser.class.getClassLoader()))
+                    new GrapeAwareGroovyClassLoader(newClassLoader(classPaths, null/*no parent loader*/), compilerConfiguration),
+                    new GroovyClassLoader(newClassLoader(xformPaths, GroovyParser.class.getClassLoader())/*, compilerConfiguration*/)
                 });
             });
 
@@ -163,12 +158,18 @@ public final class GroovyClassLoaderFactory {
                 return entry.getValue();
             } else {
                 // project classpath has changed; remove and reload
-                projectClassLoaderCache.remove(compilerOptions.groovyProjectName);
+                projectClassLoaderCache.remove(projectName);
                 return getProjectGroovyClassLoaders(compilerConfiguration);
             }
         } catch (Exception e) {
-            throw new RuntimeException("Failed to bootstrap GroovyClassLoaders for project '" + compilerOptions.groovyProjectName + "'", e);
+            throw new RuntimeException("Failed to bootstrap GroovyClassLoaders for project '" + projectName + "'", e);
         }
+    }
+
+    //--------------------------------------------------------------------------
+
+    private static IProject findProject(String projectName) {
+        return ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
     }
 
     private static Set<String>[] calculateClasspath(IClasspathEntry[] classpathEntries, IJavaProject javaProject, IProject project) {
@@ -278,12 +279,8 @@ public final class GroovyClassLoaderFactory {
         }
     }
 
-    private static IProject findProject(String projectName) {
-        return ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
-    }
-
     private static String pathToString(IPath path, IProject project) {
-        String realLocation = null;
+        String location = null;
         if (path != null) {
             String prefix = path.segment(0);
             if (prefix.equals(project.getName())) {
@@ -291,21 +288,21 @@ public final class GroovyClassLoaderFactory {
                     // the path is actually to the project root
                     IPath rawPath = project.getRawLocation();
                     if (rawPath != null) {
-                        realLocation = rawPath.toOSString();
+                        location = rawPath.toOSString();
                     } else {
-                        realLocation = project.getLocation().toOSString();
+                        location = project.getLocation().toOSString();
                     }
                 } else {
                     IPath rawLocation = project.getFile(path.removeFirstSegments(1)).getRawLocation();
                     if (rawLocation != null) {
-                        realLocation = rawLocation.toOSString();
+                        location = rawLocation.toOSString();
                     }
                 }
             } else {
-                realLocation = path.toOSString();
+                location = path.toOSString();
             }
         }
-        return realLocation;
+        return location;
     }
 
     private static URLClassLoader newClassLoader(Set<String> classpath, ClassLoader parent) {
@@ -320,7 +317,7 @@ public final class GroovyClassLoaderFactory {
         if (NONLOCKING) {
             return new org.apache.xbean.classloader.NonLockingJarFileClassLoader("AST Transform loader", urls, parent);
         } else {
-            return new URLClassLoader(urls, parent);
+            return URLClassLoader.newInstance(urls, parent);
         }
     }
 
@@ -338,8 +335,8 @@ public final class GroovyClassLoaderFactory {
         /** {@code true} if any grabbing is done */
         public boolean grabbed;
 
-        public GrapeAwareGroovyClassLoader(ClassLoader parent) {
-            super(parent);
+        public GrapeAwareGroovyClassLoader(ClassLoader parent, CompilerConfiguration config) {
+            super(parent, config);
         }
 
         @Override

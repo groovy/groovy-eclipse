@@ -69,24 +69,9 @@ public class GroovyParser {
 
     private static Map<String, ScriptFolderSelector> scriptFolderSelectorCache = new ConcurrentHashMap<>();
 
-    /**
-     * Clears cached class loaders for all caches. It helps to fix problems with cached trait helper classes.
-     */
-    protected static void clearCache() {
-        GroovyClassLoaderFactory.clearCache();
-    }
-
-    /**
-     * Removes all cached ClassLoaders for given project.
-     */
     public static void clearCache(String projectName) {
-        // this orphans the loader on the heap
-        GroovyClassLoaderFactory.clearCache(projectName);
         scriptFolderSelectorCache.remove(projectName);
-    }
-
-    public static void closeClassLoader(String projectName) {
-        GroovyClassLoaderFactory.closeClassLoader(projectName);
+        GroovyClassLoaderFactory.clearCache(projectName);
     }
 
     //--------------------------------------------------------------------------

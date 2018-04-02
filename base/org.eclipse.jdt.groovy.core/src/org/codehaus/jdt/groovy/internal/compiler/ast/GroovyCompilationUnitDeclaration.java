@@ -81,6 +81,8 @@ import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.tools.GroovyClass;
 import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
 import org.codehaus.jdt.groovy.core.dom.GroovyCompilationUnit;
+import org.codehaus.jdt.groovy.internal.compiler.GroovyClassLoaderFactory;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.Flags;
@@ -199,21 +201,17 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
      * @return true if clean processing, false otherwise
      */
     public boolean processToPhase(int phase) {
-        // GRECLIPSE-1776 start
-        // Try to discard cached class loaders for traits
-        if (phase == Phases.CANONICALIZATION) {
-            for (ModuleNode module : groovyCompilationUnit.getAST().getModules()) {
-                for (ClassNode classNode : module.getClasses()) {
-                    if (traitHelper.isTrait(classNode)) {
-                        GroovyParser.clearCache();
-                        break;
-                    }
+        if (phase == Phases.CANONICALIZATION && groovySourceUnit instanceof EclipseSourceUnit) {
+            IFile file = ((EclipseSourceUnit) groovySourceUnit).getEclipseFile(); if (file != null) {
+                // TODO: Surgically remove about-to-be-compiled class(es) from transform loader cache
+                if (getModuleNode().getClasses().stream().anyMatch(traitHelper::isTrait)) {
+                    GroovyClassLoaderFactory.clearCache(file.getProject().getName()); // GRECLIPSE-1776
                 }
             }
         }
-        // GRECLIPSE-1776 end
+
         boolean alreadyHasErrors = compilationResult.hasErrors();
-        // Our replacement error collector doesn't cause an exception, instead they are checked for post 'compile'
+        // replacement error collector doesn't cause an exception, instead errors are checked post 'compile'
         try {
             ClassLoader cl = Thread.currentThread().getContextClassLoader();
             try {
@@ -222,6 +220,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             } finally {
                 Thread.currentThread().setContextClassLoader(cl);
             }
+
             if (groovySourceUnit.getErrorCollector().hasErrors()) {
                 recordProblems(groovySourceUnit.getErrorCollector().getErrors());
                 return false;

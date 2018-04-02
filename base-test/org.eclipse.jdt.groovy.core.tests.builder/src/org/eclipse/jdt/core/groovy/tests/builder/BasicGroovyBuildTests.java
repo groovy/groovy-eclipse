@@ -2574,11 +2574,13 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     @Test
     public void testNoDoubleResolve() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
-        env.addGroovyClass(paths[1], "p", "Groov", "package p\n");
+        env.addGroovyClass(paths[1], "p", "Script", "package p; println ''\n");
         incrementalBuild(paths[0]);
 
-        IType pGroov = env.getJavaProject("Project").findType("p.Groov");
-        GroovyCompilationUnit unit = (GroovyCompilationUnit) pGroov.getCompilationUnit();
+        IType pScript = env.getJavaProject("Project").findType("p.Script");
+        assertNotNull(pScript);
+
+        GroovyCompilationUnit unit = (GroovyCompilationUnit) pScript.getCompilationUnit();
         unit.becomeWorkingCopy(null);
 
         ModuleNodeInfo moduleInfo = unit.getModuleInfo(true);
@@ -2781,7 +2783,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         executeClass(paths[0], "Runner", "new name", "");
     }
 
-    @Test
+    @Test // see GroovyCompilationUnitDeclaration#processToPhase(int)
     public void testTraitGRE1776() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
 
@@ -2803,7 +2805,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         env.addGroovyClass(paths[1], "p", "MyTrait",
             "package p\n" +
             "trait MyTrait {\n" +
-            "    def m() { 'm' }\n" +
+            "  def m() { 'm' }\n" +
             "}\n");
 
         incrementalBuild(paths[0]);
@@ -2814,7 +2816,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         env.addGroovyClass(paths[1], "p", "MyTrait",
             "package p\n" +
             "trait MyTrait {\n" +
-            "    def k() { 'm' }\n" +
+            "  def k() { 'k' }\n" +
             "}\n");
 
         incrementalBuild(paths[0]);
