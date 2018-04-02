@@ -47,6 +47,7 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
+import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.tests.builder.Problem;
@@ -2573,14 +2574,17 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     @Test
     public void testNoDoubleResolve() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
-
         env.addGroovyClass(paths[1], "p", "Groov", "package p\n");
+        incrementalBuild(paths[0]);
 
-        GroovyCompilationUnit unit = (GroovyCompilationUnit) env.getJavaProject("Project").findType("p.Groov").getCompilationUnit();
+        IType pGroov = env.getJavaProject("Project").findType("p.Groov");
+        GroovyCompilationUnit unit = (GroovyCompilationUnit) pGroov.getCompilationUnit();
         unit.becomeWorkingCopy(null);
+
         ModuleNodeInfo moduleInfo = unit.getModuleInfo(true);
         JDTResolver resolver = moduleInfo.resolver;
         assertNotNull(resolver);
+
         resolver.currentClass = moduleInfo.module.getScriptClassDummy();
         ClassNode url = resolver.resolve("java.net.URL");
         assertNotNull("Should have found the java.net.URL ClassNode", url);

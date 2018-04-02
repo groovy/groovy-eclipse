@@ -15,18 +15,18 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler;
 
+import java.io.Closeable;
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.jar.JarFile;
 import java.util.stream.Stream;
 
 import groovy.lang.GroovyClassLoader;
@@ -50,8 +50,9 @@ import org.eclipse.jdt.internal.compiler.batch.FileSystem;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
+import org.eclipse.jdt.internal.core.util.Util;
 
-public class GroovyClassLoaderFactory {
+public final class GroovyClassLoaderFactory {
 
     /*
      * Each project is allowed a GroovyClassLoader that will be used to load transform definitions and supporting classes. A cache
@@ -63,11 +64,14 @@ public class GroovyClassLoaderFactory {
     private static Map<String, Map.Entry<IClasspathEntry[], GroovyClassLoader[]>> projectClassLoaderCache = new ConcurrentHashMap<>();
 
     public static void clearCache() {
-        projectClassLoaderCache.clear();
+        projectClassLoaderCache.clear(); // TODO: Close class loaders?
     }
 
     public static void clearCache(String projectName) {
-        projectClassLoaderCache.remove(projectName);
+        Map.Entry<?, GroovyClassLoader[]> entry = projectClassLoaderCache.remove(projectName);
+        if (entry != null) {
+            Stream.of(entry.getValue()).filter(Objects::nonNull).forEach(GroovyClassLoaderFactory::close);
+        }
     }
 
     public static void closeClassLoader(String projectName) {
@@ -77,23 +81,16 @@ public class GroovyClassLoaderFactory {
         }
     }
 
-    /**
-     * Closes the jar files that have been kept open by the URLClassLoader.
-     */
-    private static void close(GroovyClassLoader groovyClassLoader) {
-        Object urlClasspath = ReflectionUtils.getPrivateField(URLClassLoader.class, "ucp", groovyClassLoader);
-        Object[] jarLoaders = ((Collection<?>) ReflectionUtils.getPrivateField(urlClasspath.getClass(), "loaders", urlClasspath)).toArray();
-        for (Object jarLoader : jarLoaders) {
+    private static void close(ClassLoader classLoader) {
+        if (classLoader instanceof Closeable) {
             try {
-                JarFile jarFile = (JarFile) ReflectionUtils.getPrivateField(jarLoader.getClass(), "jar", jarLoader);
-
-                String jarFileName = jarFile.getName();
-                if (jarFileName.indexOf("cache") != -1 || jarFileName.indexOf("plugins") != -1) {
-                    jarFile.close();
-                }
-            } catch (Throwable t) {
-                t.printStackTrace();
+                ((Closeable) classLoader).close();
+            } catch (IOException e) {
+                Util.log(e);
             }
+        }
+        if (classLoader.getParent() instanceof URLClassLoader) {
+            close(classLoader.getParent());
         }
     }
 
@@ -135,8 +132,7 @@ public class GroovyClassLoaderFactory {
                     }
                 }
             } catch (Exception e) {
-                System.err.println("Unexpected problem computing classpath for AST transform loader:");
-                e.printStackTrace();
+                Util.log(e, "Unexpected problem computing classpath for batch compiler");
             }
         }
         return new GroovyClassLoader[] {new GrapeAwareGroovyClassLoader(batchLoader), batchLoader};
