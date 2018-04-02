@@ -45,6 +45,7 @@ import org.codehaus.groovy.eclipse.codeassist.relevance.internal.CompositeRule;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.codehaus.groovy.eclipse.codeassist.requestor.MethodInfoContentAssistContext;
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitScope;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -196,7 +197,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         foundTypesCount += 1;
 
         // do not propose synthetic types
-        if (CharOperation.contains('$', simpleTypeName) || (enclosingTypeNames.length > 0 &&
+        if (CharOperation.contains('$', simpleTypeName) || (DefaultGroovyMethods.asBoolean(enclosingTypeNames) &&
                 CLOSURE_INNER_TYPE.matcher(new CharArraySequence(simpleTypeName)).find())) {
             return;
         }
