@@ -81,7 +81,6 @@ import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.tools.GroovyClass;
 import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
 import org.codehaus.jdt.groovy.core.dom.GroovyCompilationUnit;
-import org.codehaus.jdt.groovy.internal.compiler.GroovyClassLoaderFactory;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -204,9 +203,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         if (phase == Phases.CANONICALIZATION && groovySourceUnit instanceof EclipseSourceUnit) {
             IFile file = ((EclipseSourceUnit) groovySourceUnit).getEclipseFile(); if (file != null) {
                 // TODO: Surgically remove about-to-be-compiled class(es) from transform loader cache
-                if (getModuleNode().getClasses().stream().anyMatch(traitHelper::isTrait)) {
-                    GroovyClassLoaderFactory.clearCache(file.getProject().getName()); // GRECLIPSE-1776
-                }
             }
         }
 

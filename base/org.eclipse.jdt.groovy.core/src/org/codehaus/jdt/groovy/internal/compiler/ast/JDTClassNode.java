@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -29,6 +30,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.GenericsType;
+import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
@@ -301,6 +303,16 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                     FieldNode fNode = fieldBindingToFieldNode(fieldBinding, groovyTypeDecl);
                     addField(fNode);
                 }
+            }
+
+            if (mightHaveInners()) {
+                Stream.of(jdtBinding.memberTypes()).map(resolver::convertToClassNode).forEach(cn -> {
+                    @SuppressWarnings("unused") // InnerClassNode constructor adds reference to this.innerClasses
+                    ClassNode icn = new InnerClassNode(this, cn.getName(), cn.getModifiers(), cn.getSuperClass()) {{
+                        isPrimaryNode = false;
+                        setRedirect(cn);
+                    }};
+                });
             }
         } catch (AbortCompilation e) {
             throw e;
