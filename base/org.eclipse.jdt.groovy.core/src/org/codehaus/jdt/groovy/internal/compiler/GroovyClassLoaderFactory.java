@@ -22,6 +22,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
@@ -35,15 +36,14 @@ import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.compiler.batch.FileSystem;
@@ -51,6 +51,8 @@ import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.core.util.Util;
+import org.eclipse.jdt.launching.IRuntimeClasspathEntry;
+import org.eclipse.jdt.launching.JavaRuntime;
 
 public final class GroovyClassLoaderFactory {
 
@@ -139,10 +141,9 @@ public final class GroovyClassLoaderFactory {
             IClasspathEntry[] classpathEntries = javaProject.getResolvedClasspath(true);
 
             Map.Entry<IClasspathEntry[], GroovyClassLoader[]> entry = projectClassLoaderCache.computeIfAbsent(projectName, key -> {
-                Set<String>[] paths = calculateClasspath(classpathEntries, javaProject, project);
+                Set<String> classPaths = new LinkedHashSet<>(), xformPaths = new LinkedHashSet<>();
+                calculateClasspath(javaProject, classPaths, xformPaths);
 
-                Set<String> classPaths = paths[0];
-                Set<String> xformPaths = paths[paths.length - 1];
                 if (GroovyLogManager.manager.hasLoggers()) {
                     GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM,
                         "transform classpath: " + String.join(File.pathSeparator, xformPaths));
@@ -172,136 +173,43 @@ public final class GroovyClassLoaderFactory {
         return ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
     }
 
-    private static Set<String>[] calculateClasspath(IClasspathEntry[] classpathEntries, IJavaProject javaProject, IProject project) {
-        Set<String> classpath = new LinkedHashSet<>();
+    private static void calculateClasspath(IJavaProject javaProject, Set<String> classPaths, Set<String> xformPaths) {
         try {
-            for (IClasspathEntry classpathEntry : classpathEntries) {
-                if (classpathEntry.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
-                    continue;
-                }
-                String pathElement = null;
-                // Two kinds of entry we are interested in - those relative and those absolute
-                // relative example: grails/lib/hibernate3-3.3.1.jar  (where grails is the project name)
-                // absolute example: f:/grails-111/dist/grails-core-blah.jar
-                // javaProject path is f:\grails\grails
-                IPath cpePath = classpathEntry.getPath();
-                String segmentZero = cpePath.segment(0);
-                if (segmentZero.equals(project.getName())) {
-                    pathElement = project.getFile(cpePath.removeFirstSegments(1)).getRawLocation().toOSString();
-                } else {
-                    // GRECLIPSE-917: Entry is something like /SomeOtherProject/foo/bar/doodah.jar
-                    if (classpathEntry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
-                        IProject project2 = findProject(segmentZero);
-                        if (project2 != null) {
-                            IFile ifile = project2.getFile(cpePath.removeFirstSegments(1));
-                            IPath ipath = (ifile == null ? null : ifile.getRawLocation());
-                            pathElement = (ipath == null ? null : ipath.toOSString());
-                        }
-                    }
-                    if (classpathEntry.getEntryKind() == IClasspathEntry.CPE_PROJECT) {
-                        // the classpath entry is a dependency on another project
-                        computeDependenciesFromProject(findProject(segmentZero), classpath);
-                        // FIXASC what does all this look like for batch compilation?  Should it be passed in rather than computed here
-                    } else if (pathElement == null) {
-                        pathElement = classpathEntry.getPath().toOSString();
-                    }
-                }
-                if (pathElement != null) {
-                    classpath.add(pathElement);
+            IRuntimeClasspathEntry[] dependencies = JavaRuntime.computeUnresolvedRuntimeDependencies(javaProject); // TODO: Leverage "excludeTestCode" parameter?  http://www.eclipse.org/eclipse/news/4.8/M5/index.html#jdt-test-sources
+            Arrays.sort(dependencies, Comparator.comparing(IRuntimeClasspathEntry::getType));
+            for (IRuntimeClasspathEntry unresolved : dependencies) {
+                Set<String> paths = (unresolved.getType() == IRuntimeClasspathEntry.CONTAINER ? classPaths : xformPaths);
+                for (IRuntimeClasspathEntry resolved : resolveRuntimeClasspathEntry(unresolved, javaProject)) {
+                    paths.add(getAbsoluteLocation(resolved));
                 }
             }
-
-            String defaultOutputLocation = pathToString(javaProject.getOutputLocation(), project);
-            classpath.add(defaultOutputLocation);
-
-            // add output locations which are not default
-            if (project.hasNature("org.eclipse.jdt.groovy.core.groovyNature")) {
-                for (IClasspathEntry classpathEntry : javaProject.getRawClasspath()) {
-                    if (classpathEntry.getOutputLocation() != null) {
-                        String location = pathToString(classpathEntry.getOutputLocation(), project);
-                        if (!defaultOutputLocation.equals(location)) {
-                            classpath.add(location);
-                        }
-                    }
-                }
-            }
-        } catch (CoreException e) {
-            throw new RuntimeException(e);
+            classPaths.addAll(xformPaths);
+            assert classPaths.stream().allMatch(path -> new File(path).isAbsolute());
         }
-
-        @SuppressWarnings("unchecked")
-        Set<String>[] paths = new Set[] {classpath};
-        return paths; // TODO: return separate set for xform paths
+        catch (RuntimeException e) { throw e; } catch (Exception e) { throw new RuntimeException(e); }
     }
 
-    /**
-     * Determines the exported dependencies from the project and adds them to
-     * the classpath string set.  This includes the output location of the
-     * project plus other kinds of entries that are re-exported.  If dependent
-     * on another project and that project is re-exported, the method will recurse.
-     *
-     * @param requiredProject a project in the dependency chain of another project
-     * @param classpath a set of classpath entries into which new entries are added
-     */
-    private static void computeDependenciesFromProject(IProject requiredProject, Set<String> classpath)
-            throws JavaModelException {
-
-        IJavaProject javaProject = JavaCore.create(requiredProject);
-
-        // add the project's output location
-        classpath.add(pathToString(javaProject.getOutputLocation(), requiredProject));
-
-        IClasspathEntry[] cpes = javaProject.getResolvedClasspath(true);
-        if (cpes != null) {
-            for (IClasspathEntry cpe : cpes) {
-                if (cpe.getEntryKind() == IClasspathEntry.CPE_SOURCE && cpe.getOutputLocation() != null) {
-                    // add the source folder's output location (if different from the project's)
-                    classpath.add(pathToString(cpe.getOutputLocation(), requiredProject));
-                } else if (cpe.isExported()) {
-                    IPath cpePath = cpe.getPath();
-                    String segmentZero = cpePath.segment(0);
-                    if (segmentZero != null && segmentZero.equals(requiredProject.getName())) {
-                        classpath.add(requiredProject.getFile(cpePath.removeFirstSegments(1)).getRawLocation().toOSString());
-                    } else if (cpe.getEntryKind() == IClasspathEntry.CPE_PROJECT) {
-                        // segmentZero is a project name
-                        computeDependenciesFromProject(findProject(segmentZero), classpath);
-                    } else {
-                        String otherPathElement = null;
-                        if (segmentZero != null && segmentZero.equals(requiredProject.getName())) {
-                            otherPathElement = requiredProject.getFile(cpePath.removeFirstSegments(1)).getRawLocation().toOSString();
-                        } else {
-                            otherPathElement = cpePath.toOSString();
-                        }
-                        classpath.add(otherPathElement);
-                    }
-                }
-            }
-        }
+    private static IRuntimeClasspathEntry[] resolveRuntimeClasspathEntry(IRuntimeClasspathEntry classpathEntry, IJavaProject javaProject) throws Exception {
+        //return JavaRuntime.resolveRuntimeClasspathEntry(classpathEntry, javaProject); // indirect dependency on org.eclipse.debug.core.ILaunchConfiguration
+        return (IRuntimeClasspathEntry[]) ReflectionUtils.throwableExecutePrivateMethod(JavaRuntime.class, "resolveRuntimeClasspathEntry", new Class[] {IRuntimeClasspathEntry.class, IJavaProject.class}, JavaRuntime.class, new Object[] {classpathEntry, javaProject});
     }
 
-    private static String pathToString(IPath path, IProject project) {
-        String location = null;
-        if (path != null) {
-            String prefix = path.segment(0);
-            if (prefix.equals(project.getName())) {
-                if (path.segmentCount() == 1) {
-                    // the path is actually to the project root
-                    IPath rawPath = project.getRawLocation();
-                    if (rawPath != null) {
-                        location = rawPath.toOSString();
-                    } else {
-                        location = project.getLocation().toOSString();
-                    }
-                } else {
-                    IPath rawLocation = project.getFile(path.removeFirstSegments(1)).getRawLocation();
-                    if (rawLocation != null) {
-                        location = rawLocation.toOSString();
-                    }
-                }
+    private static String getAbsoluteLocation(IRuntimeClasspathEntry classpathEntry) {
+        String location = classpathEntry.getLocation();
+
+        Path path = new Path(location);
+        if (!path.toFile().exists()) {
+            IProject project = findProject(path.segment(0));
+            IResource resource = (path.segmentCount() == 1 ? project : project.getFile(path.removeFirstSegments(1)));
+
+            IPath rawLocation = resource.getRawLocation();
+            if (rawLocation != null) {
+                location = rawLocation.toOSString();
             } else {
-                location = path.toOSString();
+                location = resource.getLocation().toOSString();
             }
         }
+
         return location;
     }
 
