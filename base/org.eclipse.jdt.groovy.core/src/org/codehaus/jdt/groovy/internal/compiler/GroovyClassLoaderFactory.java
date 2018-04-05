@@ -175,7 +175,7 @@ public final class GroovyClassLoaderFactory {
 
     private static void calculateClasspath(IJavaProject javaProject, Set<String> classPaths, Set<String> xformPaths) {
         try {
-            IRuntimeClasspathEntry[] dependencies = JavaRuntime.computeUnresolvedRuntimeDependencies(javaProject); // TODO: Leverage "excludeTestCode" parameter?  http://www.eclipse.org/eclipse/news/4.8/M5/index.html#jdt-test-sources
+            IRuntimeClasspathEntry[] dependencies = JavaRuntime.computeUnresolvedRuntimeClasspath(javaProject); // TODO: Leverage "excludeTestCode" parameter?  http://www.eclipse.org/eclipse/news/4.8/M5/index.html#jdt-test-sources
             Arrays.sort(dependencies, Comparator.comparing(IRuntimeClasspathEntry::getType));
             for (IRuntimeClasspathEntry unresolved : dependencies) {
                 Set<String> paths = (unresolved.getType() == IRuntimeClasspathEntry.CONTAINER ? classPaths : xformPaths);
