@@ -155,7 +155,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
             compilationResult.lineSeparatorPositions = GroovyUtils.getSourceLineSeparatorsIn(icu.getContents());
 
             gcu.addSource(groovySourceUnit);
-            GroovyCompilationUnitDeclaration decl = new GroovyCompilationUnitDeclaration(problemReporter, compilationResult, sourceLength, gcu, groovySourceUnit, null);
+            GroovyCompilationUnitDeclaration decl = new GroovyCompilationUnitDeclaration(problemReporter, compilationResult, sourceLength, gcu, groovySourceUnit, problemReporter.options);
 
             decl.processToPhase(Phases.CONVERSION);
 
