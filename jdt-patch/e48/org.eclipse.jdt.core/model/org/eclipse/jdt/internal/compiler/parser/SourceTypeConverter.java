@@ -92,15 +92,12 @@ public class SourceTypeConverter extends TypeConverter {
 		ProblemReporter problemReporter,
 		CompilationResult compilationResult) {
 
-//		long start = System.currentTimeMillis();
 		SourceTypeConverter converter = new SourceTypeConverter(flags, problemReporter);
 		try {
 			return converter.convert(sourceTypes, compilationResult);
 		} catch (JavaModelException e) {
 			return null;
-/*		} finally {
-			System.out.println("Spent " + (System.currentTimeMillis() - start) + "ms to convert " + ((JavaElement) converter.cu).toStringWithAncestors());
-*/		}
+		}
 	}
 
 	public static CompilationUnitDeclaration buildModularCompilationUnit(
@@ -133,14 +130,9 @@ public class SourceTypeConverter extends TypeConverter {
 		org.eclipse.jdt.core.ICompilationUnit cuHandle = topLevelTypeInfo.getHandle().getCompilationUnit();
 		this.cu = (ICompilationUnit) cuHandle;
 
-		// GROOVY add -- trying to avoid building an incorrect TypeDeclaration below (when it should be a GroovyTypeDeclaration)
-		// FIXASC think about doing the necessary rewrite below rather than this - does it make things too slow?
-		if (LanguageSupportFactory.isInterestingSourceFile(new String(compilationResult.getFileName()))) {
-			try {
-				return LanguageSupportFactory.getParser(this, this.problemReporter.options, this.problemReporter, true, 3).dietParse(this.cu, compilationResult);
-			} catch (Throwable t) {
-				t.printStackTrace();
-			}
+		// GROOVY add
+		if (LanguageSupportFactory.isInterestingSourceFile(String.valueOf(compilationResult.getFileName()))) {
+			return this.unit;
 		}
 		// GROOVY end
 
