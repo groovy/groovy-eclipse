@@ -156,22 +156,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
     private SourceUnit groovySourceUnit;
     private CompilerOptions compilerOptions;
     public static boolean defaultCheckGenerics = false;
-    public static boolean earlyTransforms = true;
-    static {
-        try {
-            String value = System.getProperty("earlyTransforms");
-            if (value != null) {
-                if (value.equalsIgnoreCase("true")) {
-                    log("groovyeclipse.earlyTransforms = true");
-                    earlyTransforms = true;
-                } else if (value.equalsIgnoreCase("false")) {
-                    log("groovyeclipse.earlyTransforms = false");
-                    earlyTransforms = false;
-                }
-            }
-        } catch (Throwable ignored) {
-        }
-    }
 
     private boolean isScript = false;
     private TraitHelper traitHelper = new TraitHelper();
@@ -1375,10 +1359,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         }
                     });
                 }
-            }
-
-            if (earlyTransforms) {
-                applyEarlyTransforms(ctorName, classNode, accumulatedMethodDeclarations);
             }
         }
 
@@ -2642,83 +2622,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
             if (!isDuplicate) {
                 methodDeclarations.add(newDeclaration);
-            }
-        }
-
-        /**
-         * Augments set of methods based on AST transforms. If transforms are going to trigger additional methods later, add them here.
-         */
-        private void applyEarlyTransforms(char[] ctorName, ClassNode classNode, List<AbstractMethodDeclaration> methodDeclarations) {
-            boolean sortable = false;
-            boolean immutable = false;
-            boolean inheritCtors = false;
-            for (AnnotationNode anno : classNode.getAnnotations()) {
-                String name = anno.getClassNode().getName();
-                if (isType("groovy.transform.Sortable", name)) {
-                    sortable = true;
-                } else if (isType("groovy.transform.Immutable", name)) {
-                    immutable = true;
-                } else if (isType("groovy.transform.InheritConstructors", name)) {
-                    inheritCtors = true;
-                }
-            }
-
-            if (sortable) {
-                MethodDeclaration decl = new MethodDeclaration(unitDeclaration.compilationResult);
-
-                Parameter p = new Parameter(classNode, "that");
-                p.setSourcePosition(classNode); // prevent IllegalArgumentException in ASTConverter
-
-                decl.arguments = createArguments(new Parameter[] {p}, false);
-                decl.modifiers = Flags.AccPublic;
-                decl.returnType = createTypeReferenceForClassNode(ClassHelper.int_TYPE);
-                decl.selector = "compareTo".toCharArray();
-                decl.sourceEnd = classNode.getEnd();
-                decl.sourceStart = classNode.getEnd() - 1;
-                decl.declarationSourceEnd = decl.sourceEnd;
-                decl.declarationSourceStart = decl.sourceStart;
-
-                addUnlessDuplicate(methodDeclarations, decl);
-            }
-
-            if (immutable) {
-                // only add constructor if 1 or more fields; fall back on the default constructor for 0 fields
-                List<FieldNode> fields = classNode.getFields();
-                int n = fields.size();
-                if (n > 0) {
-                    Parameter[] params = new Parameter[n];
-                    for (int i = 0; i < n; i += 1) {
-                        FieldNode field = fields.get(i);
-                        params[i] = new Parameter(field.getType(), field.getName());
-                        params[i].setStart(field.getStart());
-                        params[i].setEnd(field.getEnd());
-                    }
-
-                    ConstructorDeclaration decl = new ConstructorDeclaration(unitDeclaration.compilationResult);
-                    decl.arguments = createArguments(params, false);
-                    decl.modifiers = Flags.AccPublic;
-                    decl.selector = ctorName;
-                    decl.sourceEnd = classNode.getNameEnd();
-                    decl.sourceStart = classNode.getNameStart();
-                    decl.declarationSourceStart = decl.sourceStart;
-
-                    addUnlessDuplicate(methodDeclarations, decl);
-                }
-            }
-
-            if (inheritCtors) {
-                ClassNode superClassNode = classNode.getSuperClass();
-                for (ConstructorNode ctor : superClassNode.getDeclaredConstructors()) {
-                    ConstructorDeclaration decl = new ConstructorDeclaration(unitDeclaration.compilationResult);
-                    decl.arguments = createArguments(ctor.getParameters(), false);
-                    decl.modifiers = ctor.getModifiers();
-                    decl.selector = ctorName;
-                    decl.sourceEnd = classNode.getNameEnd();
-                    decl.sourceStart = classNode.getNameStart();
-                    decl.declarationSourceStart = decl.sourceStart;
-
-                    addUnlessDuplicate(methodDeclarations, decl);
-                }
             }
         }
 

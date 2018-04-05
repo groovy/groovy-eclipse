@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.eclipse.jdt.core.Flags;
@@ -437,26 +436,6 @@ public class GroovyClassScope extends ClassScope {
     }
 
     @Override
-    public MethodBinding[] getAnyExtraMethods(char[] selector, TypeBinding[] argumentTypes) {
-        MethodBinding[] bindings = null;
-
-        List<MethodNode> methods = ((GroovyTypeDeclaration) referenceContext).getClassNode().getMethods(String.valueOf(selector));
-        if (methods != null && !methods.isEmpty()) {
-            int n = methods.size();
-            bindings = new MethodBinding[n];
-            for (int i = 0; i < n; i += 1) {
-                MethodNode method = methods.get(i);
-                TypeBinding[] parameterTypes = null; // TODO: resolve these
-                TypeBinding returnType = compilationUnitScope().environment.getResolvedType(
-                    CharOperation.splitAndTrimOn('.', method.getReturnType().getName().toCharArray()), this);
-                bindings[i] = new MethodBinding(method.getModifiers(), selector, returnType, parameterTypes, null, referenceContext.binding);
-            }
-        }
-
-        return bindings;
-    }
-
-    @Override
     protected ClassScope buildClassScope(Scope parent, TypeDeclaration typeDecl) {
         return new GroovyClassScope(parent, typeDecl);
     }
@@ -471,7 +450,7 @@ public class GroovyClassScope extends ClassScope {
                 anonType.resolve(anonType.enclosingScope);
             }
         }
-        // STS-3930 start
+        // STS-3930 add
         for (MethodBinding method : referenceContext.binding.methods()) {
             fixupTypeParameters(method);
         }

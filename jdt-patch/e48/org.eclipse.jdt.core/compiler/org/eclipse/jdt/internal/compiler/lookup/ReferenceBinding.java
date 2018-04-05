@@ -2244,10 +2244,4 @@ public ModuleBinding module() {
 		return this.fPackage.enclosingModule;
 	return null;
 }
-// GROOVY add
-//more thought required - is this in the right place?
-public MethodBinding[] getAnyExtraMethods(char[] selector, TypeBinding[] argumentTypes) {
-	return null;
-}
-// GROOVY end
 }

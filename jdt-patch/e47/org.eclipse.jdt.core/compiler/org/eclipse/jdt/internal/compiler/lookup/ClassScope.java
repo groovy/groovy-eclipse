@@ -1434,11 +1434,4 @@ public class ClassScope extends Scope {
 							+ this.referenceContext.binding.toString();
 		return "--- Class Scope ---\n\n Binding not initialized" ; //$NON-NLS-1$
 	}
-
-	// GROOVY add
-	// more thought required - is this in the right place?
-	public MethodBinding[] getAnyExtraMethods(char[] selector, TypeBinding[] argumentTypes) {
-		return null;
-	}
-	// GROOVY end
 }
