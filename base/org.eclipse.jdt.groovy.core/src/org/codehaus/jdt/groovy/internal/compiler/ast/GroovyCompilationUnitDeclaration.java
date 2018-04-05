@@ -1619,8 +1619,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 int n = tokens.length, s = prop.getObjectExpression().getStart();
                 long[] positions = new long[n];
                 for (int i = 0; i < n; i += 1) {
-                    positions[i] = toPos(s, s + tokens[i].length - 1);
-                    s += tokens[i].length;
+                    int len = (prop.getObjectExpression().getEnd() > 0 ? tokens[i].length - 1 : 0);
+                    positions[i] = toPos(s, s + len);
+                    s += len;
                 }
                 assert s <= expr.getEnd();
 

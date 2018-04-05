@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,22 +31,25 @@ import org.eclipse.jdt.internal.compiler.parser.Parser;
 
 public class GroovyTypeDeclaration extends TypeDeclaration {
 
-    public List<PropertyNode> properties;
-
-    // The Groovy ClassNode that gave rise to this type declaration
-    private ClassNode classNode;
-
     public GroovyTypeDeclaration(CompilationResult compilationResult, ClassNode classNode) {
         super(compilationResult);
         this.classNode = classNode;
     }
 
+    /**
+     * Returns the Groovy ClassNode that gave rise to this type declaration.
+     */
     public ClassNode getClassNode() {
         return classNode;
     }
 
-    // FIXASC Is this always what we want to do - are there any other implications?
+    private final ClassNode classNode;
 
+    protected BlockScope enclosingScope;
+
+    protected List<PropertyNode> properties;
+
+    // FIXASC Is this always what we want to do - are there any other implications?
     @Override
     public void parseMethods(Parser parser, CompilationUnitDeclaration unit) {
     // prevent Groovy types from having their methods re-parsed
@@ -59,12 +62,9 @@ public class GroovyTypeDeclaration extends TypeDeclaration {
     public boolean isScannerUsableOnThisDeclaration() {
         return false;
     }
-
     // FIXASC end
 
     //--------------------------------------------------------------------------
-
-    public BlockScope enclosingScope;
 
     /**
      * Anonymous types that are declared in this type's methods
@@ -93,13 +93,13 @@ public class GroovyTypeDeclaration extends TypeDeclaration {
      */
     public void fixAnonymousTypeBinding(GroovyCompilationUnitScope groovyCompilationUnitScope) {
         if ((this.bits & ASTNode.IsAnonymousType) != 0) {
-            if (classNode.getInterfaces() != null && classNode.getInterfaces().length == 1
-                    && classNode.getSuperClass().getName().equals("java.lang.Object")) {
+            if (classNode.getInterfaces() != null &&
+                classNode.getInterfaces().length == 1 &&
+                classNode.getSuperClass().getName().equals("java.lang.Object")) {
 
                 this.superInterfaces = new TypeReference[] { this.superclass };
                 this.binding.superInterfaces = new ReferenceBinding[] { (ReferenceBinding) this.superclass.resolvedType };
                 this.superclass = null;
-
             }
         }
         if (anonymousTypes != null) {
