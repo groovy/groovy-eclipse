@@ -19,7 +19,9 @@ import java.util.Map;
 
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.util.Util;
@@ -45,10 +47,10 @@ public class CompilerUtils {
 			options.groovyFlags = 0;
 			return;
 		}
+		IProject project = javaProject.getProject();
 		try {
-			IProject project = javaProject.getProject();
 			if (isGroovyNaturedProject(project)) {
-				options.groovyExcludeGlobalASTScan = project.getFile(javaProject.getOutputLocation().removeFirstSegments(1)).getRawLocation().toOSString();
+				options.groovyExcludeGlobalASTScan = getAbsoluteLocation(javaProject.getOutputLocation(), project);
 				options.groovyProjectName = project.getName();
 				options.storeAnnotations = true;
 				options.buildGroovyFiles = 2;
@@ -73,10 +75,10 @@ public class CompilerUtils {
 	 * to just build java.
 	 */
 	public static void configureOptionsBasedOnNature(Map<String, String> options, IJavaProject javaProject) {
+		IProject project = javaProject.getProject();
 		try {
-			IProject project = javaProject.getProject();
 			if (isGroovyNaturedProject(project)) {
-				options.put(CompilerOptions.OPTIONG_GroovyExcludeGlobalASTScan, project.getFile(javaProject.getOutputLocation().removeFirstSegments(1)).getRawLocation().toOSString());
+				options.put(CompilerOptions.OPTIONG_GroovyExcludeGlobalASTScan, getAbsoluteLocation(javaProject.getOutputLocation(), project));
 				options.put(CompilerOptions.OPTIONG_GroovyProjectName, javaProject.getElementName());
 				options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
 				if (isProbablyGrailsProject(project)) {
@@ -93,6 +95,16 @@ public class CompilerUtils {
 			Util.log(e, "configureOptionsBasedOnNature failed");
 			options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.DISABLED);
 			options.put(CompilerOptions.OPTIONG_GroovyFlags, "0");
+		}
+	}
+
+	private static String getAbsoluteLocation(IPath path, IProject project) throws CoreException {
+		IResource rsrc = (path.segmentCount() == 1 ? project : project.getFile(path.removeFirstSegments(1)));
+		IPath rawLocation = rsrc.getRawLocation();
+		if (rawLocation != null) {
+			return rawLocation.toOSString();
+		} else {
+			return rsrc.getLocation().toOSString();
 		}
 	}
 

@@ -247,6 +247,22 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         executeClass(paths[0], "p1.Hello", "Hello Groovy world", null);
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/550
+    public void testProjectBasedirAsOutputLocation() throws Exception {
+        IPath path = env.addProject("Project");
+        env.setOutputFolder(path, "");
+        env.addGroovyJars(path);
+
+        env.addGroovyClass(path, "p", "Script",
+            "package p\n" +
+            "println 'Groovy!'\n");
+
+        fullBuild(path);
+        expectingNoProblems();
+        expectingCompiledClasses("p.Script");
+        executeClass(path, "p.Script", "Groovy!", null);
+    }
+
     @Test
     public void testInners_983() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
