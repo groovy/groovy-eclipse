@@ -365,6 +365,39 @@ final class FieldCompletionTests extends CompletionTestSuite {
     }
 
     @Test
+    void testArrayLength1() {
+        String contents = 'int[] arr; arr.len'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
+        proposalExists(proposals, 'length', 1)
+    }
+
+    @Test
+    void testArrayLength2() {
+        String contents = 'Object[] arr; arr.len'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
+        proposalExists(proposals, 'length', 1)
+    }
+
+    @Test
+    void testArrayLength3() {
+        String contents = '[].toArray().len'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
+        proposalExists(proposals, 'length', 1)
+    }
+
+    @Test @NotYetImplemented
+    void testArrayLength4() {
+        String contents = '''\
+            static <T> T[] array() {
+              return null
+            }
+            array().len
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.lastIndexOf('len') + 3)
+        proposalExists(proposals, 'length', 1)
+    }
+
+    @Test
     void testEnumReceiver1() {
         addJavaSource('enum E { CONST; public static final String VALUE = ""; }', 'E')
 

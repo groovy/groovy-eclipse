@@ -37,6 +37,7 @@ import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
 /**
@@ -73,9 +74,8 @@ public class FieldProposalCreator extends AbstractProposalCreator {
         }
 
         if (!isPrimary && "class".startsWith(prefix) && VariableScope.CLASS_CLASS_NODE.equals(type)) {
-            @SuppressWarnings("static-access")
             FieldNode field = new FieldNode("class",
-                FieldNode.ACC_PUBLIC & FieldNode.ACC_STATIC & FieldNode.ACC_FINAL,
+                Flags.AccPublic | Flags.AccStatic | Flags.AccFinal,
                 VariableScope.CLASS_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE, null);
             field.setDeclaringClass(VariableScope.OBJECT_CLASS_NODE);
             proposals.add(new GroovyFieldProposal(field));

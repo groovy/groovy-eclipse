@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.CodeVisitorSupport;
@@ -51,6 +50,7 @@ import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.CompletionProposal;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
@@ -121,13 +121,13 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
     }
 
     private GroovyFieldProposal createFieldProposal(String name, ClassNode declaring, ClassNode type) {
-        FieldNode field = new FieldNode(name, Opcodes.ACC_PUBLIC, type, declaring, null);
+        FieldNode field = new FieldNode(name, Flags.AccPublic, type, declaring, null);
         field.setDeclaringClass(declaring);
         return new GroovyFieldProposal(field);
     }
 
     private GroovyMethodProposal createMethodProposal(String name, ClassNode declaring, ClassNode returnType) {
-        MethodNode method = new MethodNode(name, Opcodes.ACC_PUBLIC, returnType, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
+        MethodNode method = new MethodNode(name, Flags.AccPublic, returnType, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
         method.setDeclaringClass(declaring);
         return new GroovyMethodProposal(method);
     }
