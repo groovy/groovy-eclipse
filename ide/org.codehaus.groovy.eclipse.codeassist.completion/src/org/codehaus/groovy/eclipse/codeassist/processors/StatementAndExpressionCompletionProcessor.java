@@ -26,6 +26,7 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
@@ -121,11 +122,10 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 if (clazz.redirect() == clazz && clazz.isScript()) {
                     return VisitStatus.CONTINUE;
                 }
-            } else if (node instanceof MethodNode) {
-                MethodNode run = (MethodNode) node;
-                if (run.getName().equals("run") &&
-                        run.getDeclaringClass().isScript() &&
-                        (run.getParameters() == null || run.getParameters().length == 0)) {
+            } else if (node instanceof MethodNode && !(node instanceof ConstructorNode)) {
+                MethodNode meth = (MethodNode) node;
+                if (meth.getName().equals("run") && meth.getDeclaringClass().isScript() &&
+                        (meth.getParameters() == null || meth.getParameters().length == 0)) {
                     return VisitStatus.CONTINUE;
                 }
             } else if (node == lhsNode) {
@@ -220,7 +220,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
          * Determines if this is the lhs of an array access -- the 'foo' of 'foo[0]'.
          */
         private boolean doTestForAfterArrayAccess(ASTNode node) {
-            return node == arrayAccessLHS;
+            return (node == arrayAccessLHS);
         }
 
         private void maybeRememberTypeOfLHS(TypeLookupResult result) {
@@ -286,14 +286,18 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             } else if (node instanceof BinaryExpression) {
                 BinaryExpression bin = (BinaryExpression) node;
                 if (bin.getLeftExpression() == arrayAccessLHS) {
-                    // don't return true here, but rather wait for the LHS to
-                    // come through
-                    // this way we can use the derefed value as the completion
-                    // type
+                    // don't return true here, but rather wait for the LHS to come through
+                    // this way we can use the derefed value as the completion type
                     return false;
                 }
             }
-            return isNotExpressionAndStatement(completionNode, node) && completionNode.getStart() == node.getStart() && completionNode.getEnd() == node.getEnd();
+
+            boolean rangeMatch = (completionNode.getStart() == node.getStart() && completionNode.getEnd() == node.getEnd());
+            if (!rangeMatch && node instanceof MethodNode && getContext().completionExpression.isEmpty()) {
+                rangeMatch = doTest(((MethodNode) node).getCode());
+            }
+
+            return (isNotExpressionAndStatement(completionNode, node) && rangeMatch);
         }
 
         /**
@@ -428,7 +432,8 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 containingClass = null;
             }
             if (containingClass != null) {
-                groovyProposals.addAll(new CategoryProposalCreator().findAllProposals(containingClass, VariableScope.ALL_DEFAULT_CATEGORIES, context.getPerceivedCompletionExpression(), false, isPrimary));
+                Set<ClassNode> categories = context.unit.getModuleNode().getNodeMetaData(VariableScope.DGM_CLASS_NODE.getTypeClass());
+                groovyProposals.addAll(new CategoryProposalCreator().findAllProposals(containingClass, categories, context.getPerceivedCompletionExpression(), false, isPrimary));
             } else if (node instanceof ImportNode) {
                 ImportNode importNode = (ImportNode) node;
                 if (importNode.isStatic()) {

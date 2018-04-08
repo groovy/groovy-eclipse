@@ -54,7 +54,7 @@ public class CategoryTypeLookup implements ITypeLookup {
 
             for (ClassNode category : scope.getCategoryNames()) {
                 for (MethodNode method : category.getMethods(simpleName)) {
-                    if (isCompatibleCategoryMethod(method, normalizedType)) {
+                    if (isCompatibleCategoryMethod(method, normalizedType, scope)) {
                         candidates.add(method);
                     }
                 }
@@ -62,7 +62,7 @@ public class CategoryTypeLookup implements ITypeLookup {
                 if (getterName != null) {
                     for (MethodNode method : category.getMethods(getterName)) {
                         if (AccessorSupport.findAccessorKind(method, true) == AccessorSupport.GETTER &&
-                                isCompatibleCategoryMethod(method, normalizedType)) {
+                                isCompatibleCategoryMethod(method, normalizedType, scope)) {
                             candidates.add(method);
                         }
                     }
@@ -71,7 +71,7 @@ public class CategoryTypeLookup implements ITypeLookup {
                 if (setterName != null) {
                     for (MethodNode method : category.getMethods(setterName)) {
                         if (AccessorSupport.findAccessorKind(method, true) == AccessorSupport.SETTER &&
-                                isCompatibleCategoryMethod(method, normalizedType)) {
+                                isCompatibleCategoryMethod(method, normalizedType, scope)) {
                             candidates.add(method);
                         }
                     }
@@ -87,7 +87,7 @@ public class CategoryTypeLookup implements ITypeLookup {
                 MethodNode method = selectBestMatch(candidates, argumentTypes);
 
                 TypeLookupResult result = new TypeLookupResult(method.getReturnType(), method.getDeclaringClass(), method,
-                        isDefaultGroovyMethod(method) ? TypeConfidence.LOOSELY_INFERRED : TypeConfidence.INFERRED, scope);
+                        isDefaultGroovyMethod(method, scope) ? TypeConfidence.LOOSELY_INFERRED : TypeConfidence.INFERRED, scope);
                 result.isGroovy = true; // enable semantic highlighting as Groovy method
                 return result;
             }
@@ -105,17 +105,16 @@ public class CategoryTypeLookup implements ITypeLookup {
         return false;
     }
 
-    protected static boolean isCompatibleCategoryMethod(MethodNode method, ClassNode firstArgumentType) {
+    protected static boolean isCompatibleCategoryMethod(MethodNode method, ClassNode firstArgumentType, VariableScope scope) {
         if (method.isStatic()) {
             Parameter[] paramters = method.getParameters();
             if (paramters != null && paramters.length > 0) {
                 ClassNode parameterType = paramters[0].getType();
-                if (VariableScope.CLASS_CLASS_NODE.equals(firstArgumentType) &&
-                        VariableScope.DGSM_CLASS_NODE.equals(method.getDeclaringClass())) {
+                if (VariableScope.CLASS_CLASS_NODE.equals(firstArgumentType) && isDefaultGroovyStaticMethod(method, scope)) {
                     parameterType = VariableScope.newClassClassNode(parameterType);
                 }
                 if (isTypeCompatible(firstArgumentType, parameterType)) {
-                    return !isDefaultGroovyMethod(method) || !GroovyUtils.isDeprecated(method);
+                    return !isDefaultGroovyMethod(method, scope) || !GroovyUtils.isDeprecated(method);
                 }
             }
         }
@@ -138,8 +137,12 @@ public class CategoryTypeLookup implements ITypeLookup {
         return false;
     }
 
-    protected static boolean isDefaultGroovyMethod(MethodNode method) {
-        return VariableScope.ALL_DEFAULT_CATEGORIES.contains(method.getDeclaringClass());
+    protected static boolean isDefaultGroovyMethod(MethodNode method, VariableScope scope) {
+        return (VariableScope.DGM_CLASS_NODE.equals(method.getDeclaringClass()) || scope.isDefaultCategory(method.getDeclaringClass()));
+    }
+
+    protected static boolean isDefaultGroovyStaticMethod(MethodNode method, VariableScope scope) {
+        return (VariableScope.DGSM_CLASS_NODE.equals(method.getDeclaringClass()) || scope.isDefaultStaticCategory(method.getDeclaringClass()));
     }
 
     /**
