@@ -58,6 +58,8 @@ import org.codehaus.plexus.util.cli.Commandline;
 
 /**
  * Allows the use of the Groovy-Eclipse compiler through Maven.
+ *
+ * @threadSafe
  */
 @Component(role = Compiler.class, hint = "groovy-eclipse-compiler")
 public class GroovyEclipseCompiler extends AbstractCompiler {
