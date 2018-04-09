@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,14 +75,14 @@ public class GroovyProjectConfigurator extends AbstractJavaProjectConfigurator i
             IFolder srcMainGroovy = project.getFolder("src/main/groovy");
             if (srcMainGroovy.exists() && (sourceType == ProjectSourceType.MAIN || sourceType == ProjectSourceType.BOTH)) {
                 if (isAbsent(classpath, srcMainGroovy.getFullPath())) {
-                    classpath.addSourceEntry(srcMainGroovy.getFullPath(), mainOutput, true /*derived*/);
+                    classpath.addSourceEntry(srcMainGroovy.getFullPath(), mainOutput, /*generated:*/ true);
                 }
             }
 
             IFolder srcTestGroovy = project.getFolder("src/test/groovy");
             if (srcTestGroovy.exists() && (sourceType == ProjectSourceType.TEST || sourceType == ProjectSourceType.BOTH)) {
                 if (isAbsent(classpath, srcTestGroovy.getFullPath())) {
-                    classpath.addSourceEntry(srcTestGroovy.getFullPath(), testOutput, true /*derived*/);
+                    classpath.addSourceEntry(srcTestGroovy.getFullPath(), testOutput, /*generated:*/ true).setClasspathAttribute("test", "true");
                 }
             }
 
