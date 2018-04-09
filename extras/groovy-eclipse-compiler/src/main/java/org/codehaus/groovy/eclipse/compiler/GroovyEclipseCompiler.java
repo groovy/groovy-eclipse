@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,9 +34,11 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import org.codehaus.groovy.eclipse.compiler.InternalCompiler.Result;
 import org.codehaus.plexus.compiler.AbstractCompiler;
+import org.codehaus.plexus.compiler.Compiler;
 import org.codehaus.plexus.compiler.CompilerConfiguration;
 import org.codehaus.plexus.compiler.CompilerException;
 import org.codehaus.plexus.compiler.CompilerMessage;
@@ -47,6 +49,7 @@ import org.codehaus.plexus.compiler.util.scan.InclusionScanException;
 import org.codehaus.plexus.compiler.util.scan.SourceInclusionScanner;
 import org.codehaus.plexus.compiler.util.scan.StaleSourceScanner;
 import org.codehaus.plexus.compiler.util.scan.mapping.SuffixMapping;
+import org.codehaus.plexus.component.annotations.Component;
 import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.Os;
@@ -54,19 +57,17 @@ import org.codehaus.plexus.util.cli.CommandLineUtils;
 import org.codehaus.plexus.util.cli.Commandline;
 
 /**
- * Allows the use of the Groovy-Eclipse compiler through maven.
- *
- * @plexus.component role="org.codehaus.plexus.compiler.Compiler"
- *                   role-hint="groovy-eclipse-compiler"
+ * Allows the use of the Groovy-Eclipse compiler through Maven.
  */
+@Component(role = Compiler.class, hint = "groovy-eclipse-compiler")
 public class GroovyEclipseCompiler extends AbstractCompiler {
 
-    // IMPORTANT!!! this class must not reference any JDT classes directly.  Must be loadable even if batch compiler not around
+    // IMPORTANT!!! This class must not reference any JDT classes directly.  Must be loadable even if batch compiler not around.
 
-    private static final String PROB_SEPARATOR = "----------\n";
+    private static final String PROB_SEPARATOR = "----------\r?\n";
 
     public GroovyEclipseCompiler() {
-        // here is a bit of a hack. maven only wants a single file extension
+        // Here is a bit of a hack. Maven only wants a single file extension
         // for sources, so we pass it "". Later, we must recalculate for real.
         super(CompilerOutputStyle.ONE_OUTPUT_FILE_PER_INPUT_FILE, "", ".class", null);
     }
@@ -84,32 +85,20 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
     }
 
     @Override
-    public CompilerResult performCompile(CompilerConfiguration configuration) throws CompilerException {
-        checkForGroovyEclipseBatch();
-
-        List<CompilerMessage> messages = new ArrayList<CompilerMessage>();
-        boolean result = internalCompile(configuration, messages);
-        return new CompilerResult(result, messages);
-    }
-
-    /**
-     * groovy-eclipse-batch must be depended upon explicitly; if it is not there, then raise a nice, readable error
-     */
-    private void checkForGroovyEclipseBatch() throws CompilerException {
+    public CompilerResult performCompile(CompilerConfiguration config) throws CompilerException {
+        // groovy-eclipse-batch must be depended upon explicitly; if it is not there, then raise a nice, readable error
         try {
             Class.forName("org.eclipse.jdt.core.compiler.CompilationProgress");
         } catch (Exception e) {
-            throw new CompilerException("Could not find groovy-eclipse-batch artifact. Must add this artifact as an explicit dependency the pom.");
+            throw new CompilerException("Could not find groovy-eclipse-batch artifact. Must add this artifact as an explicit dependency in the pom.");
         }
-    }
 
-    private boolean internalCompile(CompilerConfiguration config, List<CompilerMessage> messages) throws CompilerException {
         String[] args = createCommandLine(config);
         if (args.length == 0) {
             getLogger().info("Nothing to compile - all classes are up to date");
-            return true;
+
+            return new CompilerResult(true, Collections.EMPTY_LIST);
         }
-        boolean success;
         if (config.isFork()) {
             String executable = config.getExecutable();
             if (isBlank(executable)) {
@@ -122,22 +111,19 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             }
 
             String groovyEclipseLocation = getGroovyEclipseBatchLocation();
-            success = compileOutOfProcess(config, executable, groovyEclipseLocation, args, messages);
+            return compileOutOfProcess(config, executable, groovyEclipseLocation, args);
+
         } else {
             StringWriter out = new StringWriter();
-            Result result = InternalCompiler.doCompile(args, out, getLogger(), verbose);
-            success = result.success;
-            try {
-                messages.addAll(parseMessages(success ? 0 : 1, out.getBuffer().toString(), config.isShowWarnings()));
-            } catch (IOException e) {
-                messages = new ArrayList<CompilerMessage>(1);
+            InternalCompiler.Result result = InternalCompiler.doCompile(args, out, getLogger(), verbose);
+
+            List<CompilerMessage> messages = parseMessages(result.success ? 0 : 1, out.getBuffer().toString(), config.isShowWarnings() || config.isVerbose());
+            if (!result.success) {
+                messages.add(formatResult(result.success, result.globalErrorsCount, result.globalWarningsCount));
             }
 
-            if (!success) {
-                messages.add(formatResult(success, result.globalErrorsCount, result.globalWarningsCount));
-            }
+            return new CompilerResult(result.success, messages);
         }
-        return success;
     }
 
     private File[] recalculateStaleFiles(CompilerConfiguration config) throws CompilerException {
@@ -162,7 +148,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         scanner.addSourceMapping(new SuffixMapping(".java", ".class"));
 
         File outputDirectory = new File(compilerConfiguration.getOutputLocation());
-        Set<File> staleSources = new TreeSet<File>();
+        Set<File> staleSources = new TreeSet<>();
 
         for (String sourceRoot : compilerConfiguration.getSourceLocations()) {
             File sourcePath = new File(sourceRoot);
@@ -203,13 +189,14 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
     }
 
     private Map<String,String> composeSourceFiles(File[] sourceFiles) {
-        Map<String, String> sources = new DeduplicatingHashMap<String, String>(getLogger(), sourceFiles.length);
+        Map<String, String> sources = new DeduplicatingHashMap<>(getLogger(), sourceFiles.length);
         for (File sourceFile : sourceFiles) {
             sources.put(sourceFile.getPath(), null);
         }
         return sources;
     }
 
+    @Override
     public String[] createCommandLine(CompilerConfiguration config) throws CompilerException {
         File destinationDir = new File(config.getOutputLocation());
         if (!destinationDir.exists()) {
@@ -244,7 +231,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         getLogger().debug(String.format("Compiling %d source file%s to %s", sourceFiles.length, (sourceFiles.length == 1 ? "" : "s"), destinationDir.getAbsolutePath()));
 
 
-        Map<String, String> args = new DeduplicatingHashMap<String, String>(getLogger());
+        Map<String, String> args = new DeduplicatingHashMap<>(getLogger());
 
         String cp = getPathString(config.getClasspathEntries());
         verbose = config.isVerbose();
@@ -343,7 +330,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         return argsList;
     }
 
-    private boolean compileOutOfProcess(CompilerConfiguration config, String executable, String groovyEclipseLocation, String[] args, List<CompilerMessage> messages) throws CompilerException {
+    private CompilerResult compileOutOfProcess(CompilerConfiguration config, String executable, String groovyEclipseLocation, String[] args) throws CompilerException {
         Commandline cli = new Commandline();
         cli.setWorkingDirectory(config.getWorkingDirectory().getAbsolutePath());
         cli.setExecutable(executable);
@@ -391,11 +378,11 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         int returnCode;
         try {
             returnCode = CommandLineUtils.executeCommandLine(cli, out, err);
-            messages.addAll(parseMessages(returnCode, out.getOutput(), config.isShowWarnings()));
         } catch (Exception e) {
             throw new CompilerException("Error while executing the external compiler.", e);
         }
 
+        List<CompilerMessage> messages = parseMessages(returnCode, out.getOutput(), config.isShowWarnings() || config.isVerbose());
         if (returnCode != 0 && messages.isEmpty()) {
             if (isBlank(err.getOutput())) {
                 throw new CompilerException("Unknown error trying to execute the external compiler: " + EOL + cli.toString());
@@ -406,44 +393,39 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
             getLogger().warn("Error output from groovy-eclipse compiler:" + EOL + err.getOutput());
         }
 
-        return (returnCode == 0);
+        return new CompilerResult(returnCode == 0, messages);
     }
 
-    /**
-     * Parse the output from the compiler into a list of CompilerError objects
-     *
-     * @param exitCode
-     *            The exit code of javac.
-     * @param input
-     *            The output of the compiler
-     * @return List of CompilerError objects
-     */
-    private List<CompilerMessage> parseMessages(int exitCode, String input, boolean showWarnings) throws IOException {
-        List<CompilerMessage> parsedMessages = new ArrayList<CompilerMessage>();
+    private List<CompilerMessage> parseMessages(int exitCode, String input, boolean showWarnings) {
+        List<CompilerMessage> parsedMessages = new ArrayList<>();
 
         for (String msg : input.split(PROB_SEPARATOR)) {
-            if (isNotBlank(msg)) {
-                CompilerMessage message = parseMessage(msg, showWarnings, false);
-                if (message != null) {
-                    if (showWarnings || message.getKind() == Kind.ERROR) {
+            if (isBlank(msg)) continue;
+
+            CompilerMessage message = parseMessage(msg, showWarnings, false);
+            if (message != null) {
+                if (showWarnings || message.getKind() == Kind.ERROR) {
+                    parsedMessages.add(message);
+                }
+            } else {
+                StringBuilder unrecognized = new StringBuilder();
+                // assume that there are one or more non-normal messages here
+                // typical messages start with <num>. ERROR or <num>. WARNING
+                for (String line : msg.split("\n")) {
+                    if (line.indexOf(". WARNING") > 0 || line.indexOf(". ERROR") > 0) {
+                        message = parseMessage(line, showWarnings, true);
+                        if (showWarnings || message.getKind() == Kind.ERROR) {
+                            parsedMessages.add(message);
+                        }
+                    } else if (!PROB_SEPARATOR.equals(line)) {
+                        unrecognized.append(line).append("\n");
+                    }
+                }
+                if (unrecognized.length() > 0) {
+                    message = parseMessage(unrecognized.toString(), showWarnings, true);
+                    if (showWarnings || message.getKind() != Kind.WARNING) {
                         parsedMessages.add(message);
                     }
-                } else {
-                    // assume that there are one or more non-normal messages here
-                    // All messages start with <num>. ERROR or <num>. WARNING
-                    String[] extraMsgs = msg.split("\n");
-                    StringBuilder sb = new StringBuilder();
-                    for (String extraMsg : extraMsgs) {
-                        if (extraMsg.indexOf(". WARNING") > 0 || extraMsg.indexOf(". ERROR") > 0) {
-                            handleCurrentMessage(showWarnings, parsedMessages, sb);
-                            sb = new StringBuilder("\n").append(extraMsg).append("\n");
-                        } else {
-                            if (!PROB_SEPARATOR.equals(extraMsg)) {
-                                sb.append(extraMsg).append("\n");
-                            }
-                        }
-                    }
-                    handleCurrentMessage(showWarnings, parsedMessages, sb);
                 }
             }
         }
@@ -451,72 +433,49 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
         return parsedMessages;
     }
 
-    private void handleCurrentMessage(boolean showWarnings, List<CompilerMessage> parsedMessages, StringBuilder sb) {
-        final CompilerMessage message;
-        if (sb.length() > 0) {
-            message = parseMessage(sb.toString(), showWarnings, true);
-            if (showWarnings || message.getKind() == Kind.ERROR) {
-                parsedMessages.add(message);
-            }
-        }
-    }
-
     /**
      * Constructs a CompilerError object from a line of the compiler output.
+     *
+     * Eclipse compiler messages should look like this: <pre>
+     * 1. WARNING in /Users/andrew/git-repos/foo/src/main/java/packAction.java (at line 47)
+     * \tpublic abstract class AbstractScmTagAction extends TaskAction implements BuildBadgeAction {
+     * \t                      ^^^^^^^^^^^^^^^^^^^^</pre>
+     * But there will also be messages contributed from annotation processors that will look non-normal.
      */
     private CompilerMessage parseMessage(String msgText, boolean showWarning, boolean force) {
-        // message should look like this:
-//        1. WARNING in /Users/andrew/git-repos/foo/src/main/java/packAction.java (at line 47)
-//            public abstract class AbstractScmTagAction extends TaskAction implements BuildBadgeAction {
-//                                  ^^^^^^^^^^^^^^^^^^^^
-
-        // But there will also be messages contributed from annotation processors that will look non-normal
-        int dotIndex = msgText.indexOf('.');
-        Kind kind;
-        boolean isNormal = false;
-        if (dotIndex > 0) {
-            if (msgText.substring(dotIndex, dotIndex + ". WARNING".length()).equals(". WARNING")) {
-                kind = Kind.WARNING;
-                isNormal = true;
-                dotIndex += ". WARNING in ".length();
-            } else if (msgText.substring(dotIndex, dotIndex + ". ERROR".length()).equals(". ERROR")) {
+        Matcher m = Pattern.compile("^\\d+\\. (ERROR|WARNING|INFO) in (.+?) \\(at line (\\d+)\\)").matcher(msgText);
+        boolean isNormal = m.find();
+        Kind kind = Kind.NOTE;
+        if (isNormal) {
+            if (m.group(1).equals("ERROR")) {
                 kind = Kind.ERROR;
-                isNormal = true;
-                dotIndex += ". ERROR in ".length();
-            } else {
-                kind = Kind.NOTE;
+            } else if (m.group(1).equals("WARNING")) {
+                kind = Kind.WARNING;
             }
-        } else {
-            kind = Kind.NOTE;
         }
 
-        int firstNewline = msgText.indexOf('\n');
-        String firstLine = firstNewline > 0 ? msgText.substring(0, firstNewline) : msgText;
-        String rest = firstNewline > 0 ? msgText.substring(firstNewline + 1) : "";
-
         if (isNormal) {
+            String[] parts = msgText.split("\r?\n", 2);
             try {
-                int parenIndex = firstLine.indexOf(" (");
-                String file = firstLine.substring(dotIndex, parenIndex);
-                int line = Integer.parseInt(firstLine.substring(parenIndex + " (at line ".length(), firstLine.indexOf(')')));
-                int lastLineIndex = rest.lastIndexOf("\n\t");
-                int startColumn = rest.indexOf('^', lastLineIndex) - 1 - lastLineIndex; // -1 because starts with tab
-                int endColumn = rest.lastIndexOf('^') - 1 - lastLineIndex;
-                return new CompilerMessage(file, kind, line, startColumn, line, endColumn, msgText);
-            } catch (RuntimeException e) {
-                // lots of things could go wrong
+                String file = m.group(2);
+                int line = Integer.parseInt(m.group(3));
+                int lastLineIndex = parts[1].lastIndexOf("\n\t");
+                int startColumn = parts[1].indexOf('^', lastLineIndex) - 1 - lastLineIndex; // -1 because starts with tab
+                int endColumn = parts[1].lastIndexOf('^') - 1 - lastLineIndex;
+
+                return new CompilerMessage(file, kind, line, startColumn, line, endColumn, EOL + msgText.trim());
+
+            } catch (RuntimeException e) { // lots of things could go wrong
                 if (force) {
-                    return new CompilerMessage(msgText, kind);
+                    return new CompilerMessage(msgText.trim(), kind);
                 } else {
                     return null;
                 }
             }
+        } else if (force) {
+            return new CompilerMessage(msgText.trim(), kind);
         } else {
-            if (force) {
-                return new CompilerMessage(msgText, kind);
-            } else {
-                return null;
-            }
+            return null;
         }
     }
 
@@ -634,7 +593,7 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
      * @return Array with {@code args} converted to an array
      */
     private String[] flattenArgumentsMap(Map<String, String> args) {
-        List<String> argsList = new ArrayList<String>(args.size() * 2);
+        List<String> argsList = new ArrayList<>(args.size() * 2);
 
         for (Map.Entry<String, String> entry : args.entrySet()) {
             String key = entry.getKey();

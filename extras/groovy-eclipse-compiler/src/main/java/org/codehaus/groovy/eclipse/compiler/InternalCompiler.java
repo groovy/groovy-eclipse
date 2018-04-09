@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,6 @@ class InternalCompiler extends CompilationProgress {
         final int globalWarningsCount;
 
         public Result(boolean success, int globalErrorCount, int globalWarningCount) {
-            super();
             this.success = success;
             this.globalErrorsCount = globalErrorCount;
             this.globalWarningsCount = globalWarningCount;
@@ -44,27 +43,34 @@ class InternalCompiler extends CompilationProgress {
     private Logger logger;
     private boolean verbose;
 
-    InternalCompiler(Logger logger,boolean verbose) {
+    InternalCompiler(Logger logger, boolean verbose) {
         this.logger = logger;
         this.verbose = verbose;
     }
 
     private int count = 0;
 
-    public void begin(int remainingWork) {}
+    @Override
+    public void begin(int remainingWork) {
+    }
 
+    @Override
     public void done() {
         if (verbose) {
             logger.info("Compilation complete.  Compiled " + count + " files.");
         }
     }
 
+    @Override
     public boolean isCanceled() {
         return false;
     }
 
-    public void setTaskName(String newTaskName) {}
+    @Override
+    public void setTaskName(String newTaskName) {
+    }
 
+    @Override
     public void worked(int workIncrement, int remainingWork) {
         if (verbose) {
             String file = remainingWork == 1 ? "file" : "files";
@@ -74,9 +80,7 @@ class InternalCompiler extends CompilationProgress {
     }
 
     static Result doCompile(String[] args, StringWriter out, Logger logger, boolean verbose) {
-        InternalCompiler progress = new InternalCompiler(logger, verbose);
-        Main main = new Main(new PrintWriter(out), new PrintWriter(out), /*systemExit:*/ false, /*options:*/ null, progress);
-        boolean result = main.compile(args);
-        return new Result(result, main.globalErrorsCount, main.globalWarningsCount);
+        Main main = new Main(new PrintWriter(out), new PrintWriter(out), /*systemExit:*/ false, /*options:*/ null, new InternalCompiler(logger, verbose));
+        return new Result(main.compile(args), main.globalErrorsCount, main.globalWarningsCount);
     }
 }
