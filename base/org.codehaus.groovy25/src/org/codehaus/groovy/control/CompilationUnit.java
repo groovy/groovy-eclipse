@@ -1099,7 +1099,8 @@ public class CompilationUnit extends ProcessingUnit {
         return sorted;
     }
 
-    /*private static List<ClassNode> getSorted(int[] index, List<ClassNode> unsorted) {
+    @SuppressWarnings("unused")
+    private static List<ClassNode> getSorted(int[] index, List<ClassNode> unsorted) {
         int unsortedSize = unsorted.size();
         List<ClassNode> sorted = new ArrayList<ClassNode>(unsortedSize);
         for (int i = 0; i < unsortedSize; i++) {
@@ -1115,7 +1116,7 @@ public class CompilationUnit extends ProcessingUnit {
             index[min] = -1;
         }
         return sorted;
-    }*/
+    }
 
     /**
      * A loop driver for applying operations to all primary ClassNodes in

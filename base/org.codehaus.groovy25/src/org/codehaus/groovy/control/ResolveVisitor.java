@@ -64,7 +64,6 @@ import org.codehaus.groovy.transform.trait.Traits;
 import groovyjarjarasm.asm.Opcodes;
 
 import java.lang.reflect.Modifier;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -103,7 +102,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     private Map<String, GenericsType> genericParameterNames = new HashMap<String, GenericsType>();
     private final Set<FieldNode> fieldTypesChecked = new HashSet<FieldNode>();
     // GRECLIPSE add
-    private final Set<String> resolutionFailedCache = new HashSet<>(32);
+    private final Set<String> resolutionFailedCache = new HashSet<String>();
     // GRECLIPSE end
     private boolean checkingVariableTypeInDeclaration = false;
     private ImportNode currImportNode = null;
@@ -393,62 +392,22 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 resolveToOuter(type);
     }
 
-    // GRECLIPSE add
-    private boolean existsAsInnerClass(ClassNode maybeEnclosing, String name) {
-        for (Iterator<InnerClassNode> innerClasses = maybeEnclosing.getInnerClasses(); innerClasses.hasNext();) {
-            InnerClassNode innerClass = innerClasses.next();
-            if (name.equals(innerClass.getName())) {
-                return true;
-            }
-        }
-        return false;
-    }
-    // GRECLIPSE end
-
     private boolean resolveNestedClass(ClassNode type) {
         if (type instanceof ConstructedNestedClass || type instanceof ConstructedClassWithPackage) return false;
-        // GRECLIPSE add
-        String qualName = type.getName();
-        int dotIndex = qualName.indexOf('.');
-        int dollarIndex = qualName.indexOf('$');
-        String firstComponent = dotIndex == -1 && dollarIndex == -1 ? qualName
-            : (dotIndex == -1 ? qualName.substring(0, dollarIndex) : qualName.substring(0, dotIndex));
-        // GRECLIPSE end
-
         // we have for example a class name A, are in class X
         // and there is a nested class A$X. we want to be able 
         // to access that class directly, so A becomes a valid
         // name in X.
         // GROOVY-4043: Do this check up the hierarchy, if needed
         Map<String, ClassNode> hierClasses = new LinkedHashMap<String, ClassNode>();
-        ClassNode val;
-        for(ClassNode classToCheck = currentClass; classToCheck != ClassHelper.OBJECT_TYPE; 
+        for(ClassNode classToCheck = currentClass; classToCheck != ClassHelper.OBJECT_TYPE;
             classToCheck = classToCheck.getSuperClass()) {
             if(classToCheck == null || hierClasses.containsKey(classToCheck.getName())) break;
             hierClasses.put(classToCheck.getName(), classToCheck);
         }
 
         for (ClassNode classToCheck : hierClasses.values()) {
-            // GRECLIPSE add
-            if (classToCheck.mightHaveInners() && existsAsInnerClass(classToCheck, classToCheck.getName() + '$' + firstComponent)) {
-            // GRECLIPSE end
-            val = new ConstructedNestedClass(classToCheck,type.getName());
-            if (resolveFromCompileUnit(val)) {
-                type.setRedirect(val);
-                return true;
-            }
-            // GRECLIPSE add
-            }
-            // GRECLIPSE end
-            // also check interfaces in case we have interfaces with nested classes
-            for (ClassNode next : classToCheck.getAllInterfaces()) {
-                if (type.getName().contains(next.getName())) continue;
-                val = new ConstructedNestedClass(next,type.getName());
-                if (resolve(val, false, false, false)) {
-                    type.setRedirect(val);
-                    return true;
-                }
-            }
+            if (setRedirect(type, classToCheck)) return true;
         }
 
         // another case we want to check here is if we are in a
@@ -475,53 +434,79 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             outer = outer.getOuterClass();
         }
         // most outer class is now element 0
-        // GRECLIPSE refactor into new method
-        return resolveFromInnerClass(type, outerClasses);
-    }
-
-    // GRECLIPSE add
-    private boolean resolveFromInnerClass(ClassNode type, Collection<ClassNode> outerClasses) {
-        String name;
-        ClassNode val;
-        if (type.getNameWithoutPackage().equals(type.getName())) {
-        // GRECLIPSE end
+        /* GRECLIPSE edit -- unroll setRedirect and insert resolution cache checks
         for (ClassNode testNode : outerClasses) {
-            // GRECLIPSE add
-            name = testNode.getName() + '$' + type.getName();
-            if (!resolutionFailedCache.contains(name)) {
-            // GRECLIPSE end
-            val = new ConstructedNestedClass(testNode,type.getName());
-            if (resolveFromCompileUnit(val)) {
-                type.setRedirect(val);
-                return true;
-            }
-            // GRECLIPSE add
-            }
-            resolutionFailedCache.add(name);
-            // GRECLIPSE end
-            // also check interfaces in case we have interfaces with nested classes
-            for (ClassNode next : testNode.getAllInterfaces()) {
-                if (type.getName().contains(next.getName())) continue;
-                // GRECLIPSE add
-                name = next.getName() + '$' + type.getName();
-                if (resolutionFailedCache.contains(name)) continue;
-                // GRECLIPSE end
-                val = new ConstructedNestedClass(next,type.getName());
-                if (resolve(val, false, false, false)) {
-                    type.setRedirect(val);
-                    return true;
-                }
-                // GRECLIPSE add
-                resolutionFailedCache.add(name);
-                // GRECLIPSE end
-            }
+            if (setRedirect(type, testNode)) return true;
         }
-        // GRECLIPSE add
+        */
+        if (type.getName().indexOf('.') < 0) {
+            for (ClassNode classToCheck : outerClasses) {
+                ClassNode val = new ConstructedNestedClass(classToCheck, type.getName());
+                if (!resolutionFailedCache.contains(val.getName())) {
+                    if (resolveFromCompileUnit(val)) {
+                        type.setRedirect(val);
+                        return true;
+                    }
+                }
+                resolutionFailedCache.add(val.getName());
+
+                // also check interfaces in case we have interfaces with nested classes
+                for (ClassNode next : classToCheck.getAllInterfaces()) {
+                    if (type.getName().contains(next.getName())) continue;
+                    val = new ConstructedNestedClass(next, type.getName());
+                    if (!resolutionFailedCache.contains(val.getName())) {
+                        if (resolve(val, false, false, false)) {
+                            type.setRedirect(val);
+                            return true;
+                        }
+                    }
+                    resolutionFailedCache.add(val.getName());
+                }
+            }
         }
         // GRECLIPSE end
 
         return false;
     }
+
+    private boolean setRedirect(ClassNode type, ClassNode classToCheck) {
+        ClassNode val = new ConstructedNestedClass(classToCheck, type.getName());
+        // GRECLIPSE add
+        String qualName = type.getName();
+        int dotIndex = qualName.indexOf('.'), dollarIndex = qualName.indexOf('$');
+        String firstComponent = (dotIndex == -1 && dollarIndex == -1 ? qualName : (dotIndex == -1 ? qualName.substring(0, dollarIndex) : qualName.substring(0, dotIndex)));
+        if (classToCheck.mightHaveInners() && existsAsInnerClass(classToCheck, classToCheck.getName() + '$' + firstComponent)) {
+        // GRECLIPSE end
+        if (resolveFromCompileUnit(val)) {
+            type.setRedirect(val);
+            return true;
+        }
+        // GRECLIPSE add
+        }
+        // GRECLIPSE end
+        // also check interfaces in case we have interfaces with nested classes
+        for (ClassNode next : classToCheck.getAllInterfaces()) {
+            if (type.getName().contains(next.getName())) continue;
+            val = new ConstructedNestedClass(next, type.getName());
+            if (resolve(val, false, false, false)) {
+                type.setRedirect(val);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // GRECLIPSE add
+    private boolean existsAsInnerClass(ClassNode maybeEnclosing, String name) {
+        for (Iterator<InnerClassNode> innerClasses = maybeEnclosing.getInnerClasses(); innerClasses.hasNext();) {
+            InnerClassNode innerClass = innerClasses.next();
+            if (name.equals(innerClass.getName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+    // GRECLIPSE end
 
     private static String replaceLastPoint(String name) {
         int lastPoint = name.lastIndexOf('.');
@@ -1495,7 +1480,21 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         // GRECLIPSE end
         currentClass = oldNode;
     }
-    
+
+    // GRECLIPSE add
+    /**
+     * @return {@code true} if resolution should continue, {@code false} otherwise (because, for example, it previously succeeded for this unit)
+     */
+    protected boolean commencingResolution() {
+        // template method
+        return true;
+    }
+
+    protected void finishedResolution() {
+        // template method
+    }
+    // GRECLIPSE end
+
     private void checkCyclicInheritance(ClassNode originalNode, ClassNode parentToCompare, ClassNode[] interfacesToCompare) {
         if(!originalNode.isInterface()) {
             if(parentToCompare == null) return;
@@ -1640,18 +1639,4 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     public void setClassNodeResolver(ClassNodeResolver classNodeResolver) {
         this.classNodeResolver = classNodeResolver;
     }
-
-  // GRECLIPSE add
-    /**
-     * @return {@code true} if resolution should continue, {@code false} otherwise (because, for example, it previously succeeded for this unit)
-     */
-    protected boolean commencingResolution() {
-        // template method
-        return true;
-    }
-
-    protected void finishedResolution() {
-        // template method
-    }
-  // GRECLIPSE end
 }

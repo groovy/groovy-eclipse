@@ -274,7 +274,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
 
     private static AnnotationCollectorMode getMode(AnnotationNode node) {
         final Expression member = node.getMember("mode");
-        if (member != null && member instanceof PropertyExpression) {
+        if (member instanceof PropertyExpression) {
             PropertyExpression prop = (PropertyExpression) member;
             Expression oe = prop.getObjectExpression();
             if (oe instanceof ClassExpression) {
@@ -446,7 +446,7 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
     }
     */
 
-  // GRECLIPSE add
+    // GRECLIPSE add
     private static final String[] NONE = new String[0];
     private static final Class[] NO_CLASSES = new Class[0];
 
@@ -546,5 +546,5 @@ public class ASTTransformationCollectorCodeVisitor extends ClassCodeVisitorSuppo
             return getTransformClasses(transformClassAnnotation);
         }
     }
-  // GRECLIPSE end
+    // GRECLIPSE end
 }

@@ -422,7 +422,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                     new BytecodeSequence(new BytecodeInstruction() {
                         public void visit(MethodVisitor mv) {
                             Label nullLabel = new Label();
-                            /**
+                            /*
                              *  the code is:
                              *  if (this.metaClass==null) {
                              *      this.metaClass = this.$getStaticMetaClass()
@@ -467,7 +467,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                 List list = new ArrayList();
                 list.add(new BytecodeInstruction() {
                     public void visit(MethodVisitor mv) {
-                        /**
+                        /*
                          * the code is (meta class is stored in 1):
                          * this.metaClass = <1>
                          */
@@ -573,6 +573,12 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         } else {
             return node.addMethod(name, modifiers & ~ACC_SYNTHETIC, returnType, parameters, exceptions, code);
         }
+    }
+
+    // for binary compatibility only, don't use or override this
+    protected void addMethod$$bridge(ClassNode node, boolean shouldBeSynthetic, String name, int modifiers, ClassNode returnType, Parameter[] parameters,
+                                   ClassNode[] exceptions, Statement code) {
+        addMethod(node, shouldBeSynthetic, name, modifiers, returnType, parameters, exceptions, code);
     }
 
     @Deprecated
@@ -718,19 +724,11 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             getterModifiers = ~Modifier.FINAL & getterModifiers;
         }
         if (getterBlock != null) {
-            MethodNode getter =
-                    new MethodNode(getterName, getterModifiers, node.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, getterBlock);
-            getter.setSynthetic(true);
-            addPropertyMethod(getter);
-            visitMethod(getter);
+            visitGetter(node, getterBlock, getterModifiers, getterName);
 
             if (ClassHelper.boolean_TYPE == node.getType() || ClassHelper.Boolean_TYPE == node.getType()) {
                 String secondGetterName = "is" + capitalize(name);
-                MethodNode secondGetter =
-                        new MethodNode(secondGetterName, getterModifiers, node.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, getterBlock);
-                secondGetter.setSynthetic(true);
-                addPropertyMethod(secondGetter);
-                visitMethod(secondGetter);
+                visitGetter(node, getterBlock, getterModifiers, secondGetterName);
             }
         }
         if (setterBlock != null) {
@@ -741,6 +739,14 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             addPropertyMethod(setter);
             visitMethod(setter);
         }
+    }
+
+    private void visitGetter(PropertyNode node, Statement getterBlock, int getterModifiers, String secondGetterName) {
+        MethodNode secondGetter =
+                new MethodNode(secondGetterName, getterModifiers, node.getType(), Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, getterBlock);
+        secondGetter.setSynthetic(true);
+        addPropertyMethod(secondGetter);
+        visitMethod(secondGetter);
     }
 
     protected void addPropertyMethod(MethodNode method) {
@@ -927,22 +933,10 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                         );
                         k++;
                     } else if (parameter.hasInitialExpression()) {
-                        newParams[index++] = parameter;
-                        arguments.addExpression(
-                                new CastExpression(
-                                        parameter.getType(),
-                                        new VariableExpression(parameter.getName())
-                                )
-                        );
+                        index = addExpression(newParams, arguments, index, parameter);
                         k++;
                     } else {
-                        newParams[index++] = parameter;
-                        arguments.addExpression(
-                                new CastExpression(
-                                        parameter.getType(),
-                                        new VariableExpression(parameter.getName())
-                                )
-                        );
+                        index = addExpression(newParams, arguments, index, parameter);
                     }
                 }
             }
@@ -954,6 +948,17 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             parameter.putNodeMetaData(Verifier.INITIAL_EXPRESSION, parameter.getInitialExpression());
             parameter.setInitialExpression(null);
         }
+    }
+
+    private int addExpression(Parameter[] newParams, ArgumentListExpression arguments, int index, Parameter parameter) {
+        newParams[index++] = parameter;
+        arguments.addExpression(
+                new CastExpression(
+                        parameter.getType(),
+                        new VariableExpression(parameter.getName())
+                )
+        );
+        return index;
     }
 
     protected void addClosureCode(InnerClassNode node) {
@@ -1102,7 +1107,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
     }
 
     private static ConstructorCallExpression getFirstIfSpecialConstructorCall(Statement code) {
-        if (code == null || !(code instanceof ExpressionStatement)) return null;
+        if (!(code instanceof ExpressionStatement)) return null;
 
         Expression expression = ((ExpressionStatement) code).getExpression();
         if (!(expression instanceof ConstructorCallExpression)) return null;
@@ -1284,11 +1289,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             Map genericsSpec = createGenericsSpec(sn, oldGenericsSpec);
             List<MethodNode> classMethods = sn.getMethods();
             // original class causing bridge methods for methods in super class
-            for (Object declaredMethod : declaredMethods) {
-                MethodNode method = (MethodNode) declaredMethod;
-                if (method.isStatic()) continue;
-                storeMissingCovariantMethods(classMethods, method, methodsToAdd, genericsSpec, false);
-            }
+            storeMissingCovariantMethods(declaredMethods, methodsToAdd, genericsSpec, classMethods);
             // super class causing bridge methods for abstract methods in original class
             if (!abstractMethods.isEmpty()) {
                 for (Object classMethod : classMethods) {
@@ -1305,14 +1306,18 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         for (ClassNode anInterface : interfaces) {
             List interfacesMethods = anInterface.getMethods();
             Map genericsSpec = createGenericsSpec(anInterface, oldGenericsSpec);
-            for (Object declaredMethod : declaredMethods) {
-                MethodNode method = (MethodNode) declaredMethod;
-                if (method.isStatic()) continue;
-                storeMissingCovariantMethods(interfacesMethods, method, methodsToAdd, genericsSpec, false);
-            }
+            storeMissingCovariantMethods(declaredMethods, methodsToAdd, genericsSpec, interfacesMethods);
             addCovariantMethods(anInterface, declaredMethods, abstractMethods, methodsToAdd, genericsSpec);
         }
 
+    }
+
+    private void storeMissingCovariantMethods(List declaredMethods, Map methodsToAdd, Map genericsSpec, List<MethodNode> methodNodeList) {
+        for (Object declaredMethod : declaredMethods) {
+            MethodNode method = (MethodNode) declaredMethod;
+            if (method.isStatic()) continue;
+            storeMissingCovariantMethods(methodNodeList, method, methodsToAdd, genericsSpec, false);
+        }
     }
 
     private MethodNode getCovariantImplementation(final MethodNode oldMethod, final MethodNode overridingMethod, Map genericsSpec, boolean ignoreError) {

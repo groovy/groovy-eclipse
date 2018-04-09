@@ -15,6 +15,9 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
+import static org.junit.Assume.assumeFalse;
+
 import java.util.Comparator;
 import java.util.List;
 
@@ -430,7 +433,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDGMDeclaring() {
+    public void testDGMDeclaring1() {
         String contents = "\"\".eachLine";
         assertDeclType(contents, "eachLine", "org.codehaus.groovy.runtime.StringGroovyMethods");
     }
@@ -448,7 +451,8 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/372
-    public void testDGSMDeclaring() {
+    public void testDGSMDeclaring1() {
+        assumeFalse(isAtLeastGroovy(25));
         String contents = "Date.parse('format', 'value')";
         assertDeclType(contents, "parse", "org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
     }

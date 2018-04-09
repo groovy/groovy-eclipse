@@ -377,9 +377,9 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
             if (disableChecksums != null) basicArgs.put(DISABLE_CHECKSUMS_SETTING, disableChecksums);
             if (systemProperties != null) basicArgs.put(SYSTEM_PROPERTIES_SETTING, systemProperties);
 
-            // GRECLIPSE edit
-            /*try {
-                Grape.grab(basicArgs, grabMaps.toArray(new Map[grabMaps.size()]));
+            /* GRECLIPSE edit
+            try {
+                Grape.grab(basicArgs, grabMaps.toArray(new Map[0]));
                 // grab may have added more transformations through new URLs added to classpath, so do one more scan
                 if (compilationUnit!=null) {
                     ASTTransformationVisitor.addGlobalTransformsAfterGrab(compilationUnit.getASTTransformationsContext());
@@ -389,7 +389,8 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
                 // The down side is we lose line number information for the offending
                 // @Grab annotation.
                 source.addException(re);
-            }*/
+            }
+            */
             // grab one thing at a time (so the errors are discovered individually)
             Map<String,Object>[] grabMapsAsMapArray = grabMaps.toArray(new Map[grabMaps.size()]);
             for (int i = 0, n = grabMapsAsMapArray.length; i < n; i += 1) {
@@ -495,7 +496,7 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
 
     private void checkForClassLoader(AnnotationNode node) {
         Object val = node.getMember("systemClassLoader");
-        if (val == null || !(val instanceof ConstantExpression)) return;
+        if (!(val instanceof ConstantExpression)) return;
         Object systemClassLoaderObject = ((ConstantExpression)val).getValue();
         if (!(systemClassLoaderObject instanceof Boolean)) return;
         Boolean systemClassLoader = (Boolean) systemClassLoaderObject;
@@ -504,7 +505,7 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
 
     private void checkForInitContextClassLoader(AnnotationNode node) {
         Object val = node.getMember("initContextClassLoader");
-        if (val == null || !(val instanceof ConstantExpression)) return;
+        if (!(val instanceof ConstantExpression)) return;
         Object initContextClassLoaderObject = ((ConstantExpression)val).getValue();
         if (!(initContextClassLoaderObject instanceof Boolean)) return;
         initContextClassLoader = (Boolean) initContextClassLoaderObject;
@@ -512,7 +513,7 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
 
     private void checkForAutoDownload(AnnotationNode node) {
         Object val = node.getMember(AUTO_DOWNLOAD_SETTING);
-        if (val == null || !(val instanceof ConstantExpression)) return;
+        if (!(val instanceof ConstantExpression)) return;
         Object autoDownloadValue = ((ConstantExpression)val).getValue();
         if (!(autoDownloadValue instanceof Boolean)) return;
         autoDownload = (Boolean) autoDownloadValue;
@@ -520,7 +521,7 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
 
     private void checkForDisableChecksums(AnnotationNode node) {
         Object val = node.getMember(DISABLE_CHECKSUMS_SETTING);
-        if (val == null || !(val instanceof ConstantExpression)) return;
+        if (!(val instanceof ConstantExpression)) return;
         Object disableChecksumsValue = ((ConstantExpression)val).getValue();
         if (!(disableChecksumsValue instanceof Boolean)) return;
         disableChecksums = (Boolean) disableChecksumsValue;
@@ -541,7 +542,7 @@ public class GrabAnnotationTransformation extends ClassCodeVisitorSupport implem
 
     private static void checkForConvenienceForm(AnnotationNode node, boolean exclude) {
         Object val = node.getMember("value");
-        if (val == null || !(val instanceof ConstantExpression)) return;
+        if (!(val instanceof ConstantExpression)) return;
         Object allParts = ((ConstantExpression)val).getValue();
         if (!(allParts instanceof String)) return;
         String allstr = (String) allParts;
