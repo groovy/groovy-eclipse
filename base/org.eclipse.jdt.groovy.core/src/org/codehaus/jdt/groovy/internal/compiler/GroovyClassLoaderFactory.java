@@ -208,7 +208,7 @@ public final class GroovyClassLoaderFactory {
             IPath rawLocation = resource.getRawLocation();
             if (rawLocation != null) {
                 location = rawLocation.toOSString();
-            } else {
+            } else if (resource.getLocation() != null) {
                 location = resource.getLocation().toOSString();
             }
         }
