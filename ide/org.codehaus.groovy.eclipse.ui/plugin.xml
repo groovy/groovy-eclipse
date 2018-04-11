@@ -239,13 +239,6 @@
       </wizard>
    </extension>
 
-   <extension point="org.eclipse.ui.views">
-      <category
-            id="org.codehaus.groovy.eclipse.Groovy"
-            name="Groovy">
-      </category>
-   </extension>
-
    <extension point="org.eclipse.ui.popupMenus">
       <objectContribution
             adaptable="true"
@@ -265,12 +258,6 @@
                   name="refresh">
             </separator>
          </menu>
-         <visibility>
-            <objectState
-                  name="projectNature"
-                  value="org.eclipse.jdt.groovy.core.groovyNature">
-            </objectState>
-         </visibility>
       </objectContribution>
 
       <objectContribution
@@ -408,27 +395,21 @@
 
       <!-- Toggle breakpoint action and JDT's other breakpoint actions -->
       <viewerContribution
-            id="org.codehaus.groovy.eclipse.ui.CompilationUnitRulerPopupActions"
+            id="org.codehaus.groovy.eclipse.ui.CompilationUnitRulerActions"
             targetID="#GroovyCompilationUnitRulerContext">
-         <action
-               class="org.eclipse.jdt.debug.ui.actions.JavaBreakpointPropertiesRulerActionDelegate"
-               helpContextId="breakpoint_properties_action_context"
-               id="org.eclipse.jdt.debug.ui.actions.JavaBreakpointPropertiesRulerActionDelegate"
-               label="Breakpoint P&amp;roperties..."
-               menubarPath="group.properties">
-         </action>
          <action
                class="org.eclipse.debug.ui.actions.RulerEnableDisableBreakpointActionDelegate"
                helpContextId="enable_disable_breakpoint_action_context"
                id="org.eclipse.jdt.debug.ui.actions.EnableDisableBreakpointRulerActionDelegate"
-               label="(Groovy) &amp;Toggle Breakpoint Enabled"
+               label="Disable Breakpoint"
                menubarPath="debug">
          </action>
          <action
                class="org.codehaus.groovy.eclipse.debug.ui.GroovyBreakpointRulerActionDelegate"
                helpContextId="manage_breakpoint_action_context"
+               icon="platform:/plugin/org.eclipse.debug.ui/$nl$/icons/full/obj16/brkp_obj.png"
                id="org.codehaus.groovy.eclipse.debug.ui.GroovyBreakpointRulerActionDelegate"
-               label="(Groovy) Toggle Breakpoint"
+               label="Toggle Breakpoint"
                menubarPath="debug">
          </action>
          <action
@@ -446,20 +427,26 @@
                label="Add Bookmark..."
                menubarPath="add">
          </action>
-         <!-- This adds "Quick Fix" action to the Groovy editor ruler context menu -->
          <action
                class="org.eclipse.jdt.internal.ui.javaeditor.JavaSelectRulerAction"
                helpContextId="org.eclipse.ui.bookmark_action_context"
                id="org.eclipse.jdt.internal.ui.javaeditor.JavaSelectRulerAction"
-               label="Select Annotation ruler"
+               label="Go to Annotation"
                menubarPath="add">
+         </action>
+         <action
+               class="org.eclipse.jdt.debug.ui.actions.JavaBreakpointPropertiesRulerActionDelegate"
+               helpContextId="breakpoint_properties_action_context"
+               id="org.eclipse.jdt.debug.ui.actions.JavaBreakpointPropertiesRulerActionDelegate"
+               label="Breakpoint Properties..."
+               menubarPath="group.properties">
          </action>
       </viewerContribution>
 
       <!-- Groovy Refactorings -->
       <viewerContribution
-               id="org.codehaus.groovy.viewer.refactorings"
-               targetID="#GroovyCompilationUnitEditorContext">
+            id="org.codehaus.groovy.eclipse.ui.CompilationUnitEditorActions"
+            targetID="#GroovyCompilationUnitEditorContext">
          <menu
                id="org.codehaus.groovy.refactoring.menu"
                label="Groovy Refac&amp;tor">
@@ -468,20 +455,18 @@
             </separator>
          </menu>
          <action
-            class="org.codehaus.groovy.eclipse.refactoring.actions.ConvertToMethodAction"
-            definitionId="org.codehaus.groovy.eclipse.ui.convertToMethod"
-            id="org.groovy.codehaus.eclipse.ui.actions.convertToMethodContribution"
-            label="Convert closure to method"
-            menubarPath="org.codehaus.groovy.refactoring.menu/refactoring"
-            style="push">
+               class="org.codehaus.groovy.eclipse.refactoring.actions.ConvertToMethodAction"
+               definitionId="org.codehaus.groovy.eclipse.ui.convertToMethod"
+               id="org.groovy.codehaus.eclipse.ui.actions.convertToMethodContribution"
+               label="Convert closure to method"
+               menubarPath="org.codehaus.groovy.refactoring.menu/refactoring">
          </action>
          <action
-            class="org.codehaus.groovy.eclipse.refactoring.actions.ConvertToClosureAction"
-            definitionId="org.codehaus.groovy.eclipse.ui.convertToClosure"
-            id="org.groovy.codehaus.eclipse.ui.actions.convertToClosureContribution"
-            label="Convert method to closure"
-            menubarPath="org.codehaus.groovy.refactoring.menu/refactoring"
-            style="push">
+               class="org.codehaus.groovy.eclipse.refactoring.actions.ConvertToClosureAction"
+               definitionId="org.codehaus.groovy.eclipse.ui.convertToClosure"
+               id="org.groovy.codehaus.eclipse.ui.actions.convertToClosureContribution"
+               label="Convert method to closure"
+               menubarPath="org.codehaus.groovy.refactoring.menu/refactoring">
          </action>
       </viewerContribution>
    </extension>
@@ -503,7 +488,7 @@
       <actionSet
             description="Converts between groovy and java file extensions"
             id="org.codehaus.groovy.eclipse.conversion"
-            label="Convert to/from groovy source"
+            label="Groovy Source Conversion"
             visible="false">
          <action
                class="org.codehaus.groovy.eclipse.editor.actions.RenameToGroovyAction"
@@ -523,8 +508,7 @@
                definitionId="org.codehaus.groovy.eclipse.ui.convertToJava"
                enablesFor="*"
                id="org.codehaus.groovy.eclipse.convertToJava.action"
-               label="Convert file extension to Java"
-               tooltip="Convert file to having a *.java extension">
+               label="Convert file extension to Java">
             <enablement>
                <objectState
                      name="extension"
@@ -652,48 +636,67 @@
             categoryId="org.eclipse.debug.ui.category.run"
             description="Run Groovy Shell"
             id="org.codehaus.groovy.eclipse.debug.ui.groovyShellLaunchShortcut.run"
-            name="Run Groovy Shell"/>
+            name="Run Groovy Shell">
+      </command>
       <command
             categoryId="org.eclipse.debug.ui.category.run"
             description="Debug Groovy Shell"
             id="org.codehaus.groovy.eclipse.debug.ui.groovyShellLaunchShortcut.debug"
-            name="Debug Groovy Shell"/>
+            name="Debug Groovy Shell">
+      </command>
       <command
             categoryId="org.eclipse.debug.ui.category.run"
             description="Run Groovy Console"
             id="org.codehaus.groovy.eclipse.groovyConsoleLaunchShortcut.run"
-            name="Run Groovy Console"/>
+            name="Run Groovy Console">
+      </command>
       <command
             categoryId="org.eclipse.debug.ui.category.run"
             description="Debug Groovy Console"
             id="org.codehaus.groovy.eclipse.groovyConsoleLaunchShortcut.debug"
-            name="Debug Groovy Console"/>
+            name="Debug Groovy Console">
+      </command>
       <command
             categoryId="org.eclipse.debug.ui.category.run"
             description="Run Groovy Script"
             id="org.codehaus.groovy.eclipse.groovyScriptLaunchShortcut.run"
-            name="Run Groovy Script"/>
+            name="Run Groovy Script">
+      </command>
       <command
             categoryId="org.eclipse.debug.ui.category.run"
             description="Debug Groovy Script"
             id="org.codehaus.groovy.eclipse.groovyScriptLaunchShortcut.debug"
-            name="Debug Groovy Script"/>
-      <command
-            categoryId="org.codehaus.groovy.eclipse.refactoring.commands.refactoring"
-            description="Converts a file with a groovy extension to a file with a java extension"
-            id="org.codehaus.groovy.eclipse.ui.convertToJava"
-            name="Convert to Java">
+            name="Debug Groovy Script">
       </command>
+
+      <category
+            id="org.codehaus.groovy.eclipse.category.compiler"
+            name="Groovy Compiler Commands">
+      </category>
       <command
-            categoryId="org.codehaus.groovy.eclipse.refactoring.commands.refactoring"
-            description="Converts a file with a java extension to a file with a groovy extension"
-            id="org.codehaus.groovy.eclipse.ui.convertToGroovy"
-            name="Convert to Groovy"/>
+            categoryId="org.codehaus.groovy.eclipse.category.compiler"
+            description="Opens a dialog to fix all projects that use a compiler version different from what the workspace provides"
+            id="org.codehaus.groovy.eclipse.ui.fixCompilerMismatch"
+            name="Fix Groovy Compiler Mismatches">
+      </command>
+
       <command
             categoryId="org.codehaus.groovy.eclipse.editor.category.source"
             description="Populates the search view with all occurrecnes of currently selected token in the file"
             id="org.codehaus.groovy.eclipse.ui.findOccurrences"
             name="Find occurrences in current file">
+      </command>
+      <command
+            categoryId="org.codehaus.groovy.eclipse.refactoring.commands.refactoring"
+            description="Converts a file with a java extension to a file with a groovy extension"
+            id="org.codehaus.groovy.eclipse.ui.convertToGroovy"
+            name="Convert to Groovy">
+      </command>
+      <command
+            categoryId="org.codehaus.groovy.eclipse.refactoring.commands.refactoring"
+            description="Converts a file with a groovy extension to a file with a java extension"
+            id="org.codehaus.groovy.eclipse.ui.convertToJava"
+            name="Convert to Java">
       </command>
       <command
             categoryId="org.codehaus.groovy.eclipse.refactoring.commands.refactoring"
@@ -713,12 +716,6 @@
             id="org.codehaus.groovy.eclipse.ui.convertToProperty"
             name="Convert to Property">
       </command>
-      <command
-            categoryId="org.codehaus.groovy.eclipse.refactoring.commands.refactoring"
-            description="Opens a dialog to fix all projects that use a compielr version different from what the workspace provides."
-            id="org.codehaus.groovy.eclipse.ui.fixCompilerMismatch"
-            name="Fix Groovy Compiler Mismatches">
-      </command>
    </extension>
 
    <extension point="org.eclipse.ui.contexts">
@@ -726,7 +723,8 @@
             description="Editing Groovy Source Context"
             id="org.codehaus.groovy.eclipse.editor.groovyEditorScope"
             name="Editing Groovy Source"
-            parentId="org.eclipse.jdt.ui.javaEditorScope"/>
+            parentId="org.eclipse.jdt.ui.javaEditorScope">
+      </context>
    </extension>
 
    <extension point="org.eclipse.ui.bindings">
