@@ -26,13 +26,13 @@
       <command
             categoryId="org.codehaus.groovy.eclipse.dsl.command.category"
             description="Perform static type checking on selected resources"
-            id="org.codehaus.groovy.eclipse.dsl.command.type_check"
+            id="org.codehaus.groovy.eclipse.dsl.command.check_types"
             name="Type check">
       </command>
       <command
             categoryId="org.codehaus.groovy.eclipse.dsl.command.category"
             description="Removes type checking annotations from selected resources"
-            id="org.codehaus.groovy.eclipse.dsl.command.type_check.remove"
+            id="org.codehaus.groovy.eclipse.dsl.command.uncheck_types"
             name="Remove type checking annotations">
       </command>
    </extension>
@@ -40,67 +40,73 @@
    <extension point="org.eclipse.ui.popupMenus">
       <objectContribution
             adaptable="true"
-            id="org.codehaus.groovy.eclipse.dsl.objectContribution"
+            id="org.codehaus.groovy.eclipse.dsl.projectContribution"
             objectClass="org.eclipse.core.resources.IProject">
-         <action
-               class="org.codehaus.groovy.eclipse.dsl.ui.RefreshDSLDFilesActionDelegate"
-               definitionId="org.codehaus.groovy.eclipse.dsl.command.refresh"
-               enablesFor="+"
-               id="org.codehaus.groovy.eclipse.dsl.action.refresh"
-               label="Refresh DSLD files"
-               menubarPath="groovy/dsl"
-               tooltip="Refresh Groovy DSLs for currentl selected Groovy Project(s)">
-         </action>
          <action
                class="org.codehaus.groovy.eclipse.dsl.ui.AddDSLDContainerAction"
                enablesFor="1"
                id="org.codehaus.groovy.eclipse.dsl.action.add_container"
-               label="Add DSL support"
-               menubarPath="groovy/dsl"
-               tooltip="Add or remove DSL support for this project">
+               label="Groovy DSL Support classpath container"
+               menubarPath="groovy/configure"
+               tooltip="Add or remove the Groovy DSL Support classpath container">
          </action>
-          <visibility>
-             <objectState
-                   name="nature"
-                   value="org.eclipse.jdt.groovy.core.groovyNature">
-             </objectState>
-          </visibility>
+         <action
+               class="org.codehaus.groovy.eclipse.dsl.ui.RefreshDSLDFilesActionDelegate"
+               definitionId="org.codehaus.groovy.eclipse.dsl.command.refresh"
+               enablesFor="+"
+               icon="platform:/plugin/org.eclipse.ui/$nl$/icons/full/elcl16/refresh_nav.png"
+               id="org.codehaus.groovy.eclipse.dsl.action.refresh"
+               label="Refresh DSLD cache"
+               menubarPath="groovy/refresh"
+               tooltip="Refresh Groovy DSLs for selected project(s)">
+         </action>
+         <visibility>
+            <objectState
+                  name="nature"
+                  value="org.eclipse.jdt.groovy.core.groovyNature">
+            </objectState>
+         </visibility>
       </objectContribution>
       <objectContribution
             adaptable="true"
-            id="org.codehaus.groovy.eclipse.dsl.objectContribution1"
+            id="org.codehaus.groovy.eclipse.dsl.resourceContribution"
             objectClass="org.eclipse.core.resources.IResource">
          <action
-               class="org.codehaus.groovy.eclipse.dsl.ui.StaticTypeCheckAction"
-               definitionId="org.codehaus.groovy.eclipse.dsl.command.type_check"
+               class="org.codehaus.groovy.eclipse.dsl.ui.RemoveCheckerWarnings"
+               definitionId="org.codehaus.groovy.eclipse.dsl.command.uncheck_types"
                enablesFor="+"
-               id="org.codehaus.groovy.eclipse.dsl.action.type_check"
-               label="Type check"
-               menubarPath="groovyresource/dsl1"
-               tooltip="Perform static type checking of selected resources.">
+               icon="platform:/plugin/org.eclipse.ui/$nl$/icons/full/etool16/clear_co.png"
+               id="org.codehaus.groovy.eclipse.dsl.action.type_check.remove"
+               label="Clear STC markers"
+               menubarPath="groovy/analyze"
+               tooltip="Remove static type checking markers from selected resource(s)">
          </action>
          <action
-               class="org.codehaus.groovy.eclipse.dsl.ui.RemoveCheckerWarnings"
-               definitionId="org.codehaus.groovy.eclipse.dsl.command.type_check.remove"
+               class="org.codehaus.groovy.eclipse.dsl.ui.StaticTypeCheckAction"
+               definitionId="org.codehaus.groovy.eclipse.dsl.command.check_types"
                enablesFor="+"
-               id="org.codehaus.groovy.eclipse.dsl.action.type_check.remove"
-               label="Remove checks"
-               menubarPath="groovyresource/dsl2"
-               tooltip="Perform static type checking of selected resources.">
+               icon="$nl$/icons/stc_warning.png"
+               id="org.codehaus.groovy.eclipse.dsl.action.type_check"
+               label="Check types"
+               menubarPath="groovy/analyze"
+               tooltip="Perform static type checking on selected resource(s)">
          </action>
-         <menu
-               id="groovyresource"
-               label="Groovy Type Checking"
-               path="additions">
-            <separator
-                  name="defaultGroup">
-            </separator>
-         </menu>
          <visibility>
-            <objectState
-                  name="projectNature"
-                  value="org.eclipse.jdt.groovy.core.groovyNature">
-            </objectState>
+            <and>
+               <objectState
+                     name="projectNature"
+                     value="org.eclipse.jdt.groovy.core.groovyNature">
+               </objectState>
+               <or>
+                  <objectState
+                        name="contentTypeId"
+                        value="org.eclipse.jdt.groovy.core.groovySource">
+                  </objectState>
+                  <not>
+                     <objectClass name="org.eclipse.core.resources.IFile"/>
+                  </not>
+               </or>
+            </and>
          </visibility>
       </objectContribution>
    </extension>

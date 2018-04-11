@@ -249,30 +249,56 @@
    <extension point="org.eclipse.ui.popupMenus">
       <objectContribution
             adaptable="true"
+            id="org.codehaus.groovy.eclipse.groovySubmenu"
+            objectClass="org.eclipse.core.resources.IResource">
+         <menu
+               id="groovy"
+               label="Groovy"
+               path="additions">
+            <separator
+                  name="default">
+            </separator>
+            <separator
+                  name="analyze">
+            </separator>
+            <separator
+                  name="refresh">
+            </separator>
+         </menu>
+         <visibility>
+            <objectState
+                  name="projectNature"
+                  value="org.eclipse.jdt.groovy.core.groovyNature">
+            </objectState>
+         </visibility>
+      </objectContribution>
+
+      <objectContribution
+            adaptable="true"
             id="org.codehaus.groovy.eclipse.groovyProjectContributions"
             objectClass="org.eclipse.core.resources.IProject">
          <action
                class="org.codehaus.groovy.eclipse.actions.RemoveGroovyNatureAction"
                enablesFor="1"
                id="org.codehaus.groovy.eclipse.removenature.action"
-               label="Remove Groovy nature"
-               menubarPath="groovy/nature">
+               label="Remove Groovy nature from project"
+               menubarPath="groovy/configure">
          </action>
          <action
                class="org.codehaus.groovy.eclipse.actions.AddGroovyClasspathContainerAction"
                enablesFor="1"
                id="org.codehaus.groovy.eclipse.importlibs.action"
-               label="Add Groovy libs to classpath"
-               menubarPath="groovy/libs"
-               tooltip="Add or remove the Groovy classpath container to this project">
+               label="Groovy Libraries classpath container"
+               menubarPath="groovy/configure"
+               tooltip="Add or remove the Groovy Libraries classpath container">
          </action>
          <action
                class="org.codehaus.groovy.eclipse.actions.FixCompilerMismatches"
                definitionId="org.codehaus.groovy.eclipse.ui.fixCompilerMismatch"
-               enablesFor="1"
+               enablesFor="+"
                id="org.codehaus.groovy.eclipse.ui.fixCompilerMismatch.action"
                label="Fix Compiler Mismatch problems"
-               menubarPath="groovy/nature">
+               menubarPath="groovy/refresh"><!-- TODO: Test for compiler mismatch problem marker. -->
          </action>
          <visibility>
             <objectState
@@ -287,65 +313,54 @@
             id="org.codehaus.groovy.eclipse.groovyFileContributions"
             objectClass="org.eclipse.core.resources.IFile">
          <action
-               class="org.codehaus.groovy.eclipse.editor.actions.RenameToGroovyAction"
-               definitionId="org.codehaus.groovy.eclipse.ui.convertToGroovy"
-               enablesFor="*"
-               id="org.codehaus.groovy.eclipse.convertToGroovy.action"
-               label="Convert file extension to Groovy"
-               menubarPath="groovyfile/defaultGroup">
-            <enablement>
-               <objectState
-                     name="extension"
-                     value="java"/>
-            </enablement>
-         </action>
-         <action
                class="org.codehaus.groovy.eclipse.editor.actions.RenameToJavaAction"
                definitionId="org.codehaus.groovy.eclipse.ui.convertToJava"
                enablesFor="*"
                id="org.codehaus.groovy.eclipse.convertToJava.action"
                label="Convert file extension to Java"
-               menubarPath="groovyfile/defaultGroup"
-               tooltip="Convert file to having a *.java extension">
+               menubarPath="groovy/default">
             <enablement>
-               <objectState
-                     name="extension"
-                     value="groovy"/>
+               <not>
+                  <objectState
+                        name="extension"
+                        value="java">
+                  </objectState>
+               </not>
             </enablement>
          </action>
-         <menu
-               id="groovyfile"
-               label="Groovy"
-               path="additions">
-            <separator
-                  name="defaultGroup">
-            </separator>
-         </menu>
+         <action
+               class="org.codehaus.groovy.eclipse.editor.actions.RenameToGroovyAction"
+               definitionId="org.codehaus.groovy.eclipse.ui.convertToGroovy"
+               enablesFor="*"
+               id="org.codehaus.groovy.eclipse.convertToGroovy.action"
+               label="Convert file extension to Groovy"
+               menubarPath="groovy/default">
+            <enablement>
+               <not>
+                  <objectState
+                        name="extension"
+                        value="groovy">
+                  </objectState>
+               </not>
+            </enablement>
+         </action>
          <visibility>
-            <objectState
-                  name="projectNature"
-                  value="org.eclipse.jdt.groovy.core.groovyNature"/>
-         </visibility>
-      </objectContribution>
-
-      <objectContribution
-            adaptable="true"
-            id="org.codehaus.groovy.eclipse.groovymenu"
-            objectClass="org.eclipse.core.resources.IProject">
-         <menu
-               id="groovy"
-               label="Groovy"
-               path="additions">
-            <separator name="defaultGroup"/>
-            <separator
-                  name="libs">
-            </separator>
-         </menu>
-         <visibility>
-            <objectState
-                  name="nature"
-                  value="org.eclipse.jdt.groovy.core.groovyNature">
-            </objectState>
+            <and>
+               <objectState
+                     name="projectNature"
+                     value="org.eclipse.jdt.groovy.core.groovyNature">
+               </objectState>
+               <or>
+                  <objectState
+                        name="contentTypeId"
+                        value="org.eclipse.jdt.core.javaSource">
+                  </objectState>
+                  <objectState
+                        name="contentTypeId"
+                        value="org.eclipse.jdt.groovy.core.groovySource">
+                  </objectState>
+               </or>
+            </and>
          </visibility>
       </objectContribution>
 
@@ -448,7 +463,9 @@
          <menu
                id="org.codehaus.groovy.refactoring.menu"
                label="Groovy Refac&amp;tor">
-            <separator name="refactoring"/>
+            <separator
+                  name="refactoring">
+            </separator>
          </menu>
          <action
             class="org.codehaus.groovy.eclipse.refactoring.actions.ConvertToMethodAction"
@@ -768,11 +785,13 @@
       <consoleLineTracker
          class="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTracker"
          id="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTrackerForJava"
-         processType="java"/>
+         processType="java">
+      </consoleLineTracker>
       <consoleLineTracker
          class="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTracker"
          id="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLineTrackerForGroovy"
-         processType="groovy"/>
+         processType="groovy">
+      </consoleLineTracker>
    </extension>
 
    <extension point="org.eclipse.core.expressions.propertyTesters">
@@ -781,16 +800,20 @@
             id="org.codehaus.groovy.eclipse.ui.groovyResourcePropertyTester"
             namespace="org.codehaus.groovy.eclipse.ui"
             properties="isTest,hasMain,isScript"
-            type="org.eclipse.core.runtime.IAdaptable"/>
+            type="org.eclipse.core.runtime.IAdaptable">
+      </propertyTester>
    </extension>
 
    <extension point="org.eclipse.core.runtime.preferences">
       <initializer
-            class="org.codehaus.groovy.eclipse.preferences.PreferenceInitializer"/>
+            class="org.codehaus.groovy.eclipse.preferences.PreferenceInitializer">
+      </initializer>
       <initializer
-            class="org.codehaus.groovy.eclipse.preferences.FormatterPreferenceInitializer"/>
+            class="org.codehaus.groovy.eclipse.preferences.FormatterPreferenceInitializer">
+      </initializer>
       <initializer
-            class="org.codehaus.groovy.eclipse.preferences.SaveActionsPreferenceInitializer"/>
+            class="org.codehaus.groovy.eclipse.preferences.SaveActionsPreferenceInitializer">
+      </initializer>
    </extension>
 
    <extension point="org.eclipse.jdt.ui.classpathContainerPage">
