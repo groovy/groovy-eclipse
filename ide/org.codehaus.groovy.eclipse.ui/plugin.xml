@@ -239,6 +239,38 @@
       </wizard>
    </extension>
 
+   <extension point="org.eclipse.ui.menus">
+       <menuContribution
+             allPopups="false"
+             locationURI="popup:#GroovyCompilationUnitEditorContext?before=additions">
+          <separator
+                name="groovy.debug">
+          </separator>
+          <command
+                commandId="org.eclipse.jdt.debug.ui.commands.StepIntoSelection">
+             <visibleWhen
+                   checkEnabled="false">
+                <and>
+                   <systemTest
+                         property="org.eclipse.jdt.debug.ui.debuggerActive"
+                         value="true">
+                   </systemTest>
+                   <systemTest
+                         property="org.eclipse.jdt.debug.ui.instanceof.IJavaStackFrame"
+                         value="true">
+                   </systemTest>
+                   <with
+                         variable="activeMenuSelection">
+                      <instanceof
+                            value="org.eclipse.jface.text.ITextSelection">
+                      </instanceof>
+                   </with>
+                </and>
+             </visibleWhen>
+          </command>
+       </menuContribution>
+   </extension>
+
    <extension point="org.eclipse.ui.popupMenus">
       <objectContribution
             adaptable="true"
@@ -441,6 +473,66 @@
                label="Breakpoint Properties..."
                menubarPath="group.properties">
          </action>
+      </viewerContribution>
+
+      <viewerContribution
+            id="org.codehaus.groovy.eclipse.ui.CompilationUnitDebuggerActions"
+            targetID="#GroovyCompilationUnitEditorContext">
+         <visibility>
+            <and>
+               <systemProperty
+                     name="org.eclipse.jdt.debug.ui.debuggerActive"
+                     value="true">
+               </systemProperty>
+               <objectClass
+                     name="org.eclipse.jface.text.ITextSelection">
+               </objectClass>
+            </and>
+         </visibility>
+         <action
+               class="org.eclipse.debug.ui.actions.RunToLineActionDelegate"
+               definitionId="org.eclipse.debug.ui.commands.RunToLine"
+               helpContextId="run_to_line_action_context"
+               icon="platform:/plugin/org.eclipse.debug.ui/$nl$/icons/full/elcl16/runtoline_co.png"
+               id="greclipse.debug.popup.RunToLine"
+               label="%runToLineAction.label"
+               menubarPath="groovy.debug">
+         </action>
+         <!--action
+               class="org.eclipse.jdt.internal.debug.ui.actions.ExecuteAction"
+               definitionId="org.eclipse.jdt.debug.ui.commands.Execute"
+               helpContextId="execute_action_context"
+               icon="platform:/plugin/org.eclipse.debug.ui/$nl$/icons/full/etool16/run_sbook.png"
+               id="greclipse.debug.popup.Execute"
+               label="%Execute.label"
+               menubarPath="groovy.debug">
+         </action>
+         <action
+               class="org.eclipse.jdt.internal.debug.ui.actions.PopupDisplayAction"
+               definitionId="org.eclipse.jdt.debug.ui.commands.Display"
+               helpContextId="display_action_context"
+               icon="platform:/plugin/org.eclipse.debug.ui/$nl$/icons/full/etool16/disp_sbook.png"
+               id="greclipse.debug.popup.Display"
+               label="%Display.label"
+               menubarPath="groovy.debug">
+         </action>
+         <action
+               class="org.eclipse.jdt.internal.debug.ui.actions.PopupInspectAction"
+               definitionId="org.eclipse.jdt.debug.ui.commands.Inspect"
+               helpContextId="inspect_action_context"
+               icon="platform:/plugin/org.eclipse.debug.ui/$nl$/icons/full/etool16/insp_sbook.png"
+               id="greclipse.debug.popup.Inspect"
+               label="%Inspect.label"
+               menubarPath="groovy.debug">
+         </action>
+         <action
+               class="org.eclipse.jdt.internal.debug.ui.actions.WatchAction"
+               helpContextId="watch_action_context"
+               icon="platform:/plugin/org.eclipse.debug.ui/$nl$/icons/full/etool16/watch_exp.png"
+               id="greclipse.debug.popup.Watch"
+               label="%Watch.label"
+               menubarPath="groovy.debug">
+         </action-->
       </viewerContribution>
 
       <!-- Groovy Refactorings -->
@@ -883,6 +975,8 @@
       <factory
             adaptableType="org.codehaus.groovy.eclipse.editor.GroovyEditor"
             class="org.codehaus.groovy.eclipse.debug.ui.GroovyRetargettableActionAdapterFactory">
+         <adapter
+               type="org.eclipse.debug.ui.actions.IRunToLineTarget"/>
          <adapter
                type="org.eclipse.debug.ui.actions.IToggleBreakpointsTarget"/>
       </factory>
