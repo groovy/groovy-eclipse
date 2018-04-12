@@ -80,11 +80,7 @@ public class BreakpointLocationVerifierJob extends Job {
      */
     private IResource fResource;
 
-
-    /**
-     * The status line to use to display errors
-     */
-    private IEditorStatusLine fStatusLine;
+    private IEditorPart fEditorPart;
 
     public BreakpointLocationVerifierJob(IJavaLineBreakpoint breakpoint, int lineNumber, String typeName, IType type, IResource resource, IEditorPart editorPart) {
         super(ActionMessages.BreakpointLocationVerifierJob_breakpoint_location);
@@ -93,26 +89,26 @@ public class BreakpointLocationVerifierJob extends Job {
         fTypeName = typeName;
         fType = type;
         fResource = resource;
-        fStatusLine = Adapters.adapt(editorPart, IEditorStatusLine.class);
+        fEditorPart = editorPart;
     }
 
     @Override
     public IStatus run(IProgressMonitor monitor) {
         try {
-            ModuleNode module = Adapters.adapt(fResource, ModuleNode.class);
-            if (module == null) {
-                return new Status(IStatus.WARNING, JDIDebugUIPlugin.getUniqueIdentifier(), ActionMessages.BreakpointLocationVerifierJob_not_valid_location);
-            }
             if (fBreakpoint != null) {
                 DebugPlugin.getDefault().getBreakpointManager().removeBreakpoint(fBreakpoint, true);
             }
-            ASTNode valid = new BreakpointLocationFinder(module).findBreakpointLocation(fLineNumber);
-            if (valid instanceof MethodNode && ((MethodNode) valid).getNameEnd() > 0) {
-                createNewMethodBreakpoint((MethodNode) valid, fTypeName);
-                return new Status(IStatus.OK, JDIDebugUIPlugin.getUniqueIdentifier(), ActionMessages.BreakpointLocationVerifierJob_breakpoint_set);
-            } else if (valid != null) {
-                createNewLineBreakpoint(valid, fTypeName);
-                return new Status(IStatus.OK, JDIDebugUIPlugin.getUniqueIdentifier(), ActionMessages.BreakpointLocationVerifierJob_breakpoint_set);
+
+            ModuleNode module = Adapters.adapt(fEditorPart, ModuleNode.class);
+            if (module != null) {
+                ASTNode found = new BreakpointLocationFinder(module).findBreakpointLocation(fLineNumber);
+                if (found instanceof MethodNode && ((MethodNode) found).getNameEnd() > 0) {
+                    createNewMethodBreakpoint((MethodNode) found, fTypeName);
+                    return new Status(IStatus.OK, JDIDebugUIPlugin.getUniqueIdentifier(), ActionMessages.BreakpointLocationVerifierJob_breakpoint_set);
+                } else if (found != null) {
+                    createNewLineBreakpoint(found, fTypeName);
+                    return new Status(IStatus.OK, JDIDebugUIPlugin.getUniqueIdentifier(), ActionMessages.BreakpointLocationVerifierJob_breakpoint_set);
+                }
             }
         } catch (CoreException e) {
             JDIDebugUIPlugin.log(new Status(IStatus.WARNING, JDIDebugUIPlugin.getUniqueIdentifier(), "Breakpoint location verification failed", e));
@@ -179,8 +175,9 @@ public class BreakpointLocationVerifierJob extends Job {
 
     protected void report(final String message) {
         JDIDebugUIPlugin.getStandardDisplay().asyncExec(() -> {
-            if (fStatusLine != null) {
-                fStatusLine.setMessage(true, message, null);
+            IEditorStatusLine statusLine = Adapters.adapt(fEditorPart, IEditorStatusLine.class);
+            if (statusLine != null) {
+                statusLine.setMessage(true, message, null);
             }
             if (message != null && JDIDebugUIPlugin.getActiveWorkbenchShell() != null) {
                 Display.getCurrent().beep();

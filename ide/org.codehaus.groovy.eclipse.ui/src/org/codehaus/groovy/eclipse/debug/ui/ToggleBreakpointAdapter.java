@@ -204,21 +204,25 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
                             resource = BreakpointUtils.getBreakpointResource(type);
                             try {
                                 IRegion line = document.getLineInformation(lineNumber - 1);
-                                int start = line.getOffset();
-                                int end = start + line.getLength() - 1;
+                                int start = line.getOffset(), end = start + line.getLength() - 1;
                                 BreakpointUtils.addJavaBreakpointAttributesWithMemberDetails(attributes, type, start, end);
                             } catch (BadLocationException ble) {
                                 JDIDebugUIPlugin.log(ble);
                             }
                         }
 
-                        if (typeName != null && resource != null) {
-                            IJavaLineBreakpoint existingBreakpoint = JDIDebugModel.lineBreakpointExists(resource, typeName, lineNumber);
+                        if (typeName != null) {
+                            IJavaLineBreakpoint existingBreakpoint = JDIDebugModel.lineBreakpointExists(typeName, lineNumber);
                             if (existingBreakpoint != null) {
                                 removeBreakpoint(existingBreakpoint, true);
                                 return Status.OK_STATUS;
                             }
-                            createLineBreakpoint(resource, typeName, offset, lineNumber, -1, -1, 0, true, attributes, document, bestMatch, type, editorPart);
+                            if (resource != null) {
+                                int charStart = -1, charEnd = -1, hitCount = 0; boolean register = true;
+                                IJavaLineBreakpoint breakpoint = JDIDebugModel.createLineBreakpoint(
+                                    resource, typeName, lineNumber, charStart, charEnd, hitCount, register, attributes);
+                                new BreakpointLocationVerifierJob(breakpoint, lineNumber, typeName, type, resource, editorPart).schedule();
+                            }
                         }
                     } catch (CoreException ce) {
                         return ce.getStatus();
@@ -239,11 +243,6 @@ public class ToggleBreakpointAdapter implements IToggleBreakpointsTargetExtensio
     }
 
     //--------------------------------------------------------------------------
-
-    private void createLineBreakpoint(IResource resource, String typeName, int offset, int lineNumber, int charStart, int charEnd, int hitCount, boolean register, Map<String, Object> attributes, IDocument document, boolean bestMatch, IType type, IEditorPart editorPart) throws CoreException {
-        IJavaLineBreakpoint breakpoint = JDIDebugModel.createLineBreakpoint(resource, typeName, lineNumber, charStart, charEnd, hitCount, register, attributes);
-        new BreakpointLocationVerifierJob(breakpoint, lineNumber, typeName, type, resource, editorPart).schedule();
-    }
 
     protected IType getType(ITextSelection selection) {
         IMember member = ActionDelegateHelper.getDefault().getCurrentMember(selection);

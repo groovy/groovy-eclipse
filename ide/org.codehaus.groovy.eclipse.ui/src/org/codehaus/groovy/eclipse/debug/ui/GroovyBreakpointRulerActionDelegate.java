@@ -1,66 +1,54 @@
-/*******************************************************************************
- * Copyright (c) 2000-2012  IBM Corporation, SpringSource and others. All rights reserved. This
- * program and the accompanying materials are made available under the terms of
- * the Eclipse Public License v1.0 which accompanies this distribution, and is
- * available at http://www.eclipse.org/legal/epl-v10.html
+/*
+ * Copyright 2009-2018 the original author or authors.
  *
- * Contributors: IBM Corporation - initial version
- *              Andrew Eisenberg - convert for use with Groovy
- ******************************************************************************/
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.debug.ui;
 
-import org.codehaus.jdt.groovy.model.GroovyNature;
-import org.eclipse.core.resources.IResource;
+import static org.codehaus.jdt.groovy.model.GroovyNature.hasGroovyNature;
+
+import org.codehaus.groovy.ast.ModuleNode;
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.debug.ui.actions.RulerToggleBreakpointActionDelegate;
+import org.eclipse.jdt.core.IClassFile;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.text.source.IVerticalRulerInfo;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.texteditor.ITextEditor;
 
 public class GroovyBreakpointRulerActionDelegate extends RulerToggleBreakpointActionDelegate {
 
-    private IEditorPart fEditorPart;
-    private GroovyBreakpointRulerAction groovyDelegate;
-    /**
-     * @see IEditorActionDelegate#setActiveEditor(bIAction, IEditorPart)
-     */
-    @Override
-    public void setActiveEditor(IAction callerAction, IEditorPart targetEditor) {
-        fEditorPart = targetEditor;
-        super.setActiveEditor(callerAction, targetEditor);
-    }
+    private GroovyBreakpointRulerAction delegate;
 
-
-    /**
-     * @see AbstractRulerActionDelegate#createAction()
-     */
     @Override
-    protected IAction createAction(ITextEditor editor,
-            IVerticalRulerInfo rulerInfo) {
-        IResource resource;
-        IEditorInput editorInput = editor.getEditorInput();
-        if (editorInput instanceof IFileEditorInput) {
-            resource = ((IFileEditorInput) editorInput).getFile();
-            if (GroovyNature.hasGroovyNature(resource.getProject())) {
-                groovyDelegate = new GroovyBreakpointRulerAction(rulerInfo, editor,
-                        fEditorPart);
-                return groovyDelegate;
-            }
+    protected IAction createAction(ITextEditor editor, IVerticalRulerInfo rulerInfo) {
+        IProject project = getProject(editor.getEditorInput());
+        if (project != null && hasGroovyNature(project) && hasGroovySource(editor)) {
+            delegate = new GroovyBreakpointRulerAction(rulerInfo, editor, getEditorPart());
+            return delegate;
         }
-        //	else: use jdt's action
         return super.createAction(editor, rulerInfo);
     }
 
-    /* (non-Javadoc)
-     * @see org.eclipse.ui.IActionDelegate2#runWithEvent(org.eclipse.jface.action.IAction, org.eclipse.swt.widgets.Event)
-     */
     @Override
     public void runWithEvent(IAction action, Event event) {
-        if(groovyDelegate != null) {
-            groovyDelegate.runWithEvent(event);
+        if (delegate != null) {
+            delegate.runWithEvent(event);
         } else {
             super.runWithEvent(action, event);
         }
@@ -68,7 +56,34 @@ public class GroovyBreakpointRulerActionDelegate extends RulerToggleBreakpointAc
 
     @Override
     public void dispose() {
-        groovyDelegate = null;
+        if (delegate != null) {
+            delegate.dispose();
+            delegate = null;
+        }
         super.dispose();
+    }
+
+    //--------------------------------------------------------------------------
+
+    protected IEditorPart getEditorPart() {
+        return (IEditorPart) ReflectionUtils.getPrivateField(RulerToggleBreakpointActionDelegate.class, "fEditor", this);
+    }
+
+    protected IProject getProject(IEditorInput editorInput) {
+        IFile file = Adapters.adapt(editorInput, IFile.class);
+        if (file != null) {
+            return file.getProject();
+        }
+
+        IClassFile classFile = Adapters.adapt(editorInput, IClassFile.class);
+        if (classFile != null) {
+            return classFile.getJavaProject().getProject();
+        }
+
+        return null;
+    }
+
+    protected boolean hasGroovySource(ITextEditor editor) {
+        return (Adapters.adapt(editor, ModuleNode.class) != null);
     }
 }

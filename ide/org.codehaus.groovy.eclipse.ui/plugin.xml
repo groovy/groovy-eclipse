@@ -873,6 +873,14 @@
                type="org.codehaus.groovy.ast.ModuleNode"/>
       </factory>
       <factory
+            adaptableType="org.eclipse.jdt.internal.ui.javaeditor.ClassFileEditor"
+            class="org.codehaus.groovy.eclipse.adapters.ClassFileEditorAdapterFactory">
+         <adapter
+               type="org.codehaus.groovy.ast.ClassNode"/>
+         <adapter
+               type="org.codehaus.groovy.ast.ModuleNode"/>
+      </factory>
+      <factory
             adaptableType="org.codehaus.groovy.eclipse.editor.GroovyEditor"
             class="org.codehaus.groovy.eclipse.debug.ui.GroovyRetargettableActionAdapterFactory">
          <adapter
@@ -881,28 +889,40 @@
    </extension>
 
    <extension point="org.eclipse.ui.editorActions">
+      <!-- Ruler actions -->
       <editorContribution
             id="org.codehaus.groovy.editor.actions"
             targetID="org.codehaus.groovy.eclipse.editor.GroovyEditor">
-         <!-- Ruler actions -->
          <action
                actionID="RulerDoubleClick"
                class="org.codehaus.groovy.eclipse.debug.ui.GroovyBreakpointRulerActionDelegate"
-               id="org.groovy.codehaus.eclipse.ui.actions.ManageBreakpointRulerAction"
+               id="org.codehaus.groovy.editor.ruler.ToggleBreakpointRulerAction"
                label="Toggle Breakpoint">
          </action>
          <action
                actionID="RulerClick"
                class="org.eclipse.jdt.internal.ui.javaeditor.JavaSelectRulerAction"
-               id="org.eclipse.jdt.internal.ui.javaeditor.JavaSelectRulerAction"
-               label="Select Annotation ruler">
+               id="org.codehaus.groovy.editor.ruler.SelectAnnotationRulerAction"
+               label="Select Annotation">
          </action>
          <action
                class="org.codehaus.groovy.eclipse.editor.actions.FindOccurrencesAction"
                definitionId="org.codehaus.groovy.eclipse.ui.findOccurrences"
                id="org.codehaus.groovy.eclipse.ui.action.findOccurrences"
-               label="Find Occurrences in file"
-               style="push">
+               label="Find Occurrences in file">
+         </action>
+      </editorContribution>
+      <editorContribution
+            id="org.codehaus.groovy.class_editor.actions"
+            targetID="org.eclipse.jdt.ui.ClassFileEditor">
+         <action
+               actionID="RulerDoubleClick"
+               class="org.codehaus.groovy.eclipse.debug.ui.GroovyBreakpointRulerActionDelegate"
+               id="org.codehaus.groovy.class_editor.ruler.ToggleBreakpointRulerAction"
+               label="Toggle Breakpoint">
+            <!--enablement>
+               TODO: For now this applies to all .class files with source attachment
+            </enablement-->
          </action>
       </editorContribution>
    </extension>
