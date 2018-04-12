@@ -292,11 +292,13 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 }
             }
 
-            boolean rangeMatch = (completionNode.getStart() == node.getStart() && completionNode.getEnd() == node.getEnd());
-            if (!rangeMatch && node instanceof MethodNode && getContext().completionExpression.isEmpty()) {
-                rangeMatch = doTest(((MethodNode) node).getCode());
+            boolean rangeMatch = false;
+            if (completionNode != null) {
+                rangeMatch = (completionNode.getStart() == node.getStart() && completionNode.getEnd() == node.getEnd());
+                if (!rangeMatch && node instanceof MethodNode && getContext().completionExpression.isEmpty()) {
+                    rangeMatch = doTest(((MethodNode) node).getCode());
+                }
             }
-
             return (isNotExpressionAndStatement(completionNode, node) && rangeMatch);
         }
 
