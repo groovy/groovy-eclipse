@@ -21,7 +21,9 @@ import java.util.TreeSet;
 
 import org.codehaus.groovy.antlr.LocationSupport;
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
@@ -61,6 +63,14 @@ public class BreakpointLocationFinder {
                 super.visitMethod(method);
             }
 
+            @Override
+            public void visitField(FieldNode field) {
+                if (field.getLineNumber() > 0) {
+                    nodes.add(field);
+                }
+                super.visitField(field);
+            }
+
         }.visitModule(module);
 
         this.nodes = Collections.unmodifiableSet(nodes);
@@ -88,9 +98,9 @@ public class BreakpointLocationFinder {
     }
 
     protected int lineNumber(ASTNode node) {
-        if (locator != null && node instanceof MethodNode) {
+        if (locator != null && (node instanceof MethodNode || node instanceof FieldNode)) {
             // annotations, modifiers and generics may be on separate line(s)
-            int[] row_col = locator.getRowCol(((MethodNode) node).getNameStart());
+            int[] row_col = locator.getRowCol(((AnnotatedNode) node).getNameStart());
             if (row_col != null && row_col.length > 0) {
                 return row_col[0];
             }

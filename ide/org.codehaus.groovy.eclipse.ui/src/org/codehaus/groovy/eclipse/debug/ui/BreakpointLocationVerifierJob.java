@@ -18,8 +18,9 @@ package org.codehaus.groovy.eclipse.debug.ui;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.codehaus.groovy.antlr.LocationSupport;
 import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.eclipse.core.resources.IResource;
@@ -31,12 +32,11 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.debug.core.IJavaLineBreakpoint;
 import org.eclipse.jdt.debug.core.JDIDebugModel;
-import org.eclipse.jdt.groovy.search.VariableScope;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.internal.debug.ui.BreakpointUtils;
 import org.eclipse.jdt.internal.debug.ui.JDIDebugUIPlugin;
 import org.eclipse.jdt.internal.debug.ui.actions.ActionMessages;
@@ -93,6 +93,11 @@ public class BreakpointLocationVerifierJob extends Job {
     }
 
     @Override
+    public boolean belongsTo(Object family) {
+        return (family == FAMILY);
+    }
+
+    @Override
     public IStatus run(IProgressMonitor monitor) {
         try {
             if (fBreakpoint != null) {
@@ -102,11 +107,14 @@ public class BreakpointLocationVerifierJob extends Job {
             ModuleNode module = Adapters.adapt(fEditorPart, ModuleNode.class);
             if (module != null) {
                 ASTNode found = new BreakpointLocationFinder(module).findBreakpointLocation(fLineNumber);
-                if (found instanceof MethodNode && ((MethodNode) found).getNameEnd() > 0) {
-                    createNewMethodBreakpoint((MethodNode) found, fTypeName);
-                    return new Status(IStatus.OK, JDIDebugUIPlugin.getUniqueIdentifier(), ActionMessages.BreakpointLocationVerifierJob_breakpoint_set);
+                if (found instanceof FieldNode && ((FieldNode) found).getNameEnd() > 0) {
+                    createNewFieldBreakpoint((FieldNode) found, module.getNodeMetaData(LocationSupport.class));
+                } else if (found instanceof MethodNode && ((MethodNode) found).getNameEnd() > 0) {
+                    createNewMethodBreakpoint((MethodNode) found, module.getNodeMetaData(LocationSupport.class));
                 } else if (found != null) {
-                    createNewLineBreakpoint(found, fTypeName);
+                    createNewLineBreakpoint(found);
+                }
+                if (found != null) {
                     return new Status(IStatus.OK, JDIDebugUIPlugin.getUniqueIdentifier(), ActionMessages.BreakpointLocationVerifierJob_breakpoint_set);
                 }
             }
@@ -119,49 +127,47 @@ public class BreakpointLocationVerifierJob extends Job {
         return new Status(IStatus.OK, JDIDebugUIPlugin.getUniqueIdentifier(), ActionMessages.BreakpointLocationVerifierJob_not_valid_location);
     }
 
-    private void createNewMethodBreakpoint(MethodNode node, String typeName) throws CoreException {
-        Map<String, Object> newAttributes = new HashMap<>(10);
-        int start = node.getNameStart();
-        int end = node.getNameEnd();
+    private void createNewFieldBreakpoint(FieldNode node, LocationSupport locator) throws CoreException {
         if (fType != null) {
-            IJavaElement elt = fType.getTypeRoot().getElementAt(start);
-            if (elt != null) {
-                IMethod method = (IMethod) elt;
-                BreakpointUtils.addJavaBreakpointAttributesWithMemberDetails(newAttributes, fType, start, end);
-                BreakpointUtils.addJavaBreakpointAttributes(newAttributes, method);
-                JDIDebugModel.createMethodBreakpoint(fResource, typeName, node.getName(), createMethodSignature(node), true, false, false, node.getLineNumber(), start, end, 0, true, newAttributes);
+            int start = node.getNameStart(), end = node.getNameEnd();
+            IJavaElement elem = fType.getTypeRoot().getElementAt(start);
+            if (elem != null) {
+                int lineNumber = locator.getRowCol(start)[0];
+                Map<String, Object> attributes = new HashMap<>();
+                BreakpointUtils.addJavaBreakpointAttributes(attributes, elem);
+                BreakpointUtils.addJavaBreakpointAttributesWithMemberDetails(attributes, fType, start, end);
+                JDIDebugModel.createWatchpoint(fResource, fTypeName, node.getName(), lineNumber, start, end, 0, true, attributes);
+            }
+        }
+    }
+
+    private void createNewMethodBreakpoint(MethodNode node, LocationSupport locator) throws CoreException {
+        if (fType != null) {
+            int start = node.getNameStart(), end = node.getNameEnd();
+            IJavaElement elem = fType.getTypeRoot().getElementAt(start);
+            if (elem != null) {
+                int lineNumber = locator.getRowCol(start)[0];
+                Map<String, Object> attributes = new HashMap<>();
+                BreakpointUtils.addJavaBreakpointAttributes(attributes, elem);
+                BreakpointUtils.addJavaBreakpointAttributesWithMemberDetails(attributes, fType, start, end);
+                JDIDebugModel.createMethodBreakpoint(fResource, fTypeName, node.getName(), createMethodSignature(node), true, false, false, lineNumber, start, end, 0, true, attributes);
             }
         }
     }
 
     private String createMethodSignature(MethodNode node) {
-        String returnType = createTypeSignatureStr(node.getReturnType());
-        String[] parameterTypes = new String[node.getParameters().length];
-        for (int i = 0, n = parameterTypes.length; i < n; i += 1) {
-            parameterTypes[i] = createTypeSignatureStr(node.getParameters()[i].getType());
-        }
+        String[] parameterTypes = GroovyUtils.getParameterTypeSignatures(node, true);
+        String returnType = GroovyUtils.getTypeSignature(node.getReturnType(), true, true);
         return Signature.createMethodSignature(parameterTypes, returnType).replace('.', '/');
-    }
-
-    private String createTypeSignatureStr(ClassNode node) {
-        if (node == null) {
-            node = VariableScope.OBJECT_CLASS_NODE;
-        }
-        String name = node.getName();
-        if (name.startsWith("[")) {
-            return name;
-        } else {
-            return Signature.createTypeSignature(name, true);
-        }
     }
 
     /**
      * Create a new breakpoint at the right position.
      */
-    private void createNewLineBreakpoint(ASTNode node, String typeName) throws CoreException {
+    private void createNewLineBreakpoint(ASTNode node) throws CoreException {
         // check to make sure that breakpoint doesn't exist on this line
         // line may have moved by the validator
-        if (JDIDebugModel.lineBreakpointExists(typeName, node.getLineNumber()) != null) {
+        if (JDIDebugModel.lineBreakpointExists(fTypeName, node.getLineNumber()) != null) {
             return;
         }
         Map<String, Object> newAttributes = new HashMap<>(10);
@@ -170,10 +176,10 @@ public class BreakpointLocationVerifierJob extends Job {
         if (fType != null) {
             BreakpointUtils.addJavaBreakpointAttributesWithMemberDetails(newAttributes, fType, start, end);
         }
-        JDIDebugModel.createLineBreakpoint(fResource, typeName, node.getLineNumber(), start, end, 0, true, newAttributes);
+        JDIDebugModel.createLineBreakpoint(fResource, fTypeName, node.getLineNumber(), start, end, 0, true, newAttributes);
     }
 
-    protected void report(final String message) {
+    private void report(final String message) {
         JDIDebugUIPlugin.getStandardDisplay().asyncExec(() -> {
             IEditorStatusLine statusLine = Adapters.adapt(fEditorPart, IEditorStatusLine.class);
             if (statusLine != null) {
@@ -183,10 +189,5 @@ public class BreakpointLocationVerifierJob extends Job {
                 Display.getCurrent().beep();
             }
         });
-    }
-
-    @Override
-    public boolean belongsTo(Object family) {
-        return family == FAMILY;
     }
 }

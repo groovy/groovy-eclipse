@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.test.debug
 
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ConstructorNode
+import org.codehaus.groovy.ast.FieldNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.eclipse.debug.ui.BreakpointLocationFinder
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
@@ -301,7 +302,7 @@ final class BreakpointLocationTests extends GroovyEclipseTestSuite {
         assert node?.lineNumber == 3
     }
 
-    @Test
+    @Test // TODO: Should line breakpoint be created for closure body instead of watchpoint for field?
     void testBreakpointInClass8() {
         def node = findBreakpointLocation 'here()', '''\
             class Class {
@@ -309,7 +310,8 @@ final class BreakpointLocationTests extends GroovyEclipseTestSuite {
             }
             '''.stripIndent()
 
-        assert node?.lineNumber == 2
+        assert node instanceof FieldNode
+        assert node.lineNumber == 2
     }
 
     @Test
@@ -320,7 +322,21 @@ final class BreakpointLocationTests extends GroovyEclipseTestSuite {
             }
             '''.stripIndent()
 
-        assert node == null
+        assert node instanceof FieldNode
+        assert node.lineNumber == 2
+    }
+
+    @Test
+    void testBreakpointInClass9a() {
+        def node = findBreakpointLocation 'field', '''\
+            import groovy.transform.PackageScope
+            class Class {
+              @PackageScope String field
+            }
+            '''.stripIndent()
+
+        assert node instanceof FieldNode
+        assert node.lineNumber == 3
     }
 
     @Test
