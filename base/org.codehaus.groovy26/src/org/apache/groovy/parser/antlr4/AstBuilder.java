@@ -568,6 +568,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 runMethod.setLastColumnNumber(omega.getLastColumnNumber());
             }
         }
+        moduleNode.putNodeMetaData(LocationSupport.class, locationSupport);
         sourceUnit.setComments(lexer.getComments());
         // GRECLIPSE end
 

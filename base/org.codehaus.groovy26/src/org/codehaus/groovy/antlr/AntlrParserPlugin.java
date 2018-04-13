@@ -411,6 +411,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     runMethod.setLastColumnNumber(last.getLastColumnNumber());
                 }
             }
+            output.putNodeMetaData(LocationSupport.class, locations);
             // GRECLIPSE end
         }
         catch (ASTRuntimeException e) {

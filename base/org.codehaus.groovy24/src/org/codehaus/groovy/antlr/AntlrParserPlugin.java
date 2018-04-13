@@ -371,6 +371,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
             // GRECLIPSE add
             fixModuleNodeLocations();
+            output.putNodeMetaData(LocationSupport.class, locations);
             // GRECLIPSE end
         }
         catch (ASTRuntimeException e) {

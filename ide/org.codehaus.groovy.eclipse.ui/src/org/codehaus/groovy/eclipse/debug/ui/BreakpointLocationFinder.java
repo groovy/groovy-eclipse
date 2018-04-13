@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.TreeSet;
 
+import org.codehaus.groovy.antlr.LocationSupport;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -31,6 +32,7 @@ import org.eclipse.jdt.groovy.core.util.DepthFirstVisitor;
 
 public class BreakpointLocationFinder {
 
+    protected final LocationSupport locator;
     protected final Iterable<ASTNode> nodes;
 
     public BreakpointLocationFinder(ModuleNode module) {
@@ -62,6 +64,7 @@ public class BreakpointLocationFinder {
         }.visitModule(module);
 
         this.nodes = Collections.unmodifiableSet(nodes);
+        this.locator = module.getNodeMetaData(LocationSupport.class);
     }
 
     public ASTNode findBreakpointLocation(int lineNumber) {
@@ -75,12 +78,23 @@ public class BreakpointLocationFinder {
                     // variable expression in a declaration expression with no initializer
                     skipNext = true;
                 }
-            } else if (node.getLineNumber() >= lineNumber) {
+            } else if (lineNumber(node) >= lineNumber) {
                 bestMatch = node;
                 break;
             }
         }
 
         return bestMatch;
+    }
+
+    protected int lineNumber(ASTNode node) {
+        if (locator != null && node instanceof MethodNode) {
+            // annotations, modifiers and generics may be on separate line(s)
+            int[] row_col = locator.getRowCol(((MethodNode) node).getNameStart());
+            if (row_col != null && row_col.length > 0) {
+                return row_col[0];
+            }
+        }
+        return node.getLineNumber();
     }
 }

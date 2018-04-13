@@ -373,4 +373,18 @@ final class BreakpointLocationTests extends GroovyEclipseTestSuite {
         assert node instanceof MethodNode
         assert node.lineNumber == 5
     }
+
+    @Test
+    void testBreakpointInClass13() {
+        def node = findBreakpointLocation 'def m', '''\
+            class Class {
+              @Deprecated
+              def m() {
+                here()
+              }
+            }
+            '''.stripIndent()
+
+        assert node instanceof MethodNode
+    }
 }

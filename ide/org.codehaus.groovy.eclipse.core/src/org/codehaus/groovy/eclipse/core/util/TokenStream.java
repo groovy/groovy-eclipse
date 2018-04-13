@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.codehaus.groovy.antlr.LocationSupport;
 import org.codehaus.groovy.ast.Comment;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.core.ISourceBuffer;
@@ -341,14 +342,16 @@ public class TokenStream {
             GroovySnippetParser parser = new GroovySnippetParser();
             ModuleNode module = parser.parse(source);
 
+            LocationSupport locator = module.getNodeMetaData(LocationSupport.class);
+
             // extract the comment ranges from the parse results
             List<Comment> list = module.getContext().getComments();
             int i = 0, n = (list == null ? 0 : list.size());
             comments = new int[n * 2];
             if (n > 0) {
                 for (Comment comment : list) {
-                    comments[i++] = parser.getLocations().findOffset(comment.sline, comment.scol);
-                    comments[i++] = parser.getLocations().findOffset(comment.eline, comment.ecol);
+                    comments[i++] = locator.findOffset(comment.sline, comment.scol);
+                    comments[i++] = locator.findOffset(comment.eline, comment.ecol);
                 }
                 Arrays.sort(comments); // should be sorted already, but let's be sure
             }
