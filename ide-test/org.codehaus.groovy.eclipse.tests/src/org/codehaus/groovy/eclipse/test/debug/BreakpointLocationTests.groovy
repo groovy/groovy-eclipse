@@ -16,6 +16,7 @@
 package org.codehaus.groovy.eclipse.test.debug
 
 import org.codehaus.groovy.ast.ASTNode
+import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.ConstructorNode
 import org.codehaus.groovy.ast.FieldNode
 import org.codehaus.groovy.ast.MethodNode
@@ -221,7 +222,8 @@ final class BreakpointLocationTests extends GroovyEclipseTestSuite {
             }
             '''.stripIndent()
 
-        assert node?.lineNumber == 2
+        assert node instanceof ClassNode
+        assert node.lineNumber == 1
     }
 
     @Test
@@ -352,8 +354,8 @@ final class BreakpointLocationTests extends GroovyEclipseTestSuite {
             }
             '''.stripIndent()
 
-        assert node instanceof ConstructorNode
-        assert node.lineNumber == 5
+        assert node instanceof ClassNode
+        assert node.lineNumber == 4
     }
 
     @Test

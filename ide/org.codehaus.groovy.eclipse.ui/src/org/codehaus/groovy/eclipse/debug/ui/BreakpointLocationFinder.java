@@ -23,6 +23,7 @@ import org.codehaus.groovy.antlr.LocationSupport;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
@@ -56,19 +57,27 @@ public class BreakpointLocationFinder {
             }
 
             @Override
-            public void visitMethod(MethodNode method) {
-                if (method.getLineNumber() > 0) {
-                    nodes.add(method);
+            public void visitMethod(MethodNode node) {
+                if (node.getNameStart() > 0) {
+                    nodes.add(node);
                 }
-                super.visitMethod(method);
+                super.visitMethod(node);
             }
 
             @Override
-            public void visitField(FieldNode field) {
-                if (field.getLineNumber() > 0) {
-                    nodes.add(field);
+            public void visitField(FieldNode node) {
+                if (node.getNameStart() > 0) {
+                    nodes.add(node);
                 }
-                super.visitField(field);
+                super.visitField(node);
+            }
+
+            @Override
+            public void visitClass(ClassNode node) {
+                if (node.getNameStart() > 0) {
+                    nodes.add(node);
+                }
+                super.visitClass(node);
             }
 
         }.visitModule(module);
@@ -98,7 +107,7 @@ public class BreakpointLocationFinder {
     }
 
     protected int lineNumber(ASTNode node) {
-        if (locator != null && (node instanceof MethodNode || node instanceof FieldNode)) {
+        if (locator != null && (node instanceof AnnotatedNode && !(node instanceof Expression))) {
             // annotations, modifiers and generics may be on separate line(s)
             int[] row_col = locator.getRowCol(((AnnotatedNode) node).getNameStart());
             if (row_col != null && row_col.length > 0) {

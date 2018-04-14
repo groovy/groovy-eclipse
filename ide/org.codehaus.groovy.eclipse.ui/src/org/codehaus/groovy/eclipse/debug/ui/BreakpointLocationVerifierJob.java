@@ -20,6 +20,7 @@ import java.util.Map;
 
 import org.codehaus.groovy.antlr.LocationSupport;
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
@@ -34,6 +35,7 @@ import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.debug.core.IJavaClassPrepareBreakpoint;
 import org.eclipse.jdt.debug.core.IJavaLineBreakpoint;
 import org.eclipse.jdt.debug.core.JDIDebugModel;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
@@ -107,9 +109,11 @@ public class BreakpointLocationVerifierJob extends Job {
             ModuleNode module = Adapters.adapt(fEditorPart, ModuleNode.class);
             if (module != null) {
                 ASTNode found = new BreakpointLocationFinder(module).findBreakpointLocation(fLineNumber);
-                if (found instanceof FieldNode && ((FieldNode) found).getNameEnd() > 0) {
+                if (found instanceof ClassNode && ((ClassNode) found).getNameStart() > 0) {
+                    createNewClassBreakpoint((ClassNode) found, module.getNodeMetaData(LocationSupport.class));
+                } else if (found instanceof FieldNode && ((FieldNode) found).getNameStart() > 0) {
                     createNewFieldBreakpoint((FieldNode) found, module.getNodeMetaData(LocationSupport.class));
-                } else if (found instanceof MethodNode && ((MethodNode) found).getNameEnd() > 0) {
+                } else if (found instanceof MethodNode && ((MethodNode) found).getNameStart() > 0) {
                     createNewMethodBreakpoint((MethodNode) found, module.getNodeMetaData(LocationSupport.class));
                 } else if (found != null) {
                     createNewLineBreakpoint(found);
@@ -123,20 +127,57 @@ public class BreakpointLocationVerifierJob extends Job {
         }
 
         // cannot find a valid location
-        report(ActionMessages.BreakpointLocationVerifierJob_not_valid_location);
+        JDIDebugUIPlugin.getStandardDisplay().asyncExec(() -> {
+            IEditorStatusLine statusLine = Adapters.adapt(fEditorPart, IEditorStatusLine.class);
+            if (statusLine != null) {
+                statusLine.setMessage(true, ActionMessages.BreakpointLocationVerifierJob_not_valid_location, null);
+            }
+            if (JDIDebugUIPlugin.getActiveWorkbenchShell() != null) {
+                Display.getCurrent().beep();
+            }
+        });
         return new Status(IStatus.OK, JDIDebugUIPlugin.getUniqueIdentifier(), ActionMessages.BreakpointLocationVerifierJob_not_valid_location);
+    }
+
+    private void createNewLineBreakpoint(ASTNode node) throws CoreException {
+        // make sure that breakpoint doesn't exist on this line; line may have moved by the validator
+        if (JDIDebugModel.lineBreakpointExists(fTypeName, node.getLineNumber()) == null) {
+            // TODO: Find surrounding declaration for more accurate attributes
+            Map<String, Object> newAttributes = new HashMap<>();
+            int start = node.getStart(), end = node.getEnd();
+            if (fType != null) {
+                BreakpointUtils.addJavaBreakpointAttributesWithMemberDetails(newAttributes, fType, start, end);
+            }
+            JDIDebugModel.createLineBreakpoint(fResource, fTypeName, node.getLineNumber(), start, end, 0, true, newAttributes);
+        }
+    }
+
+    private void createNewClassBreakpoint(ClassNode node, LocationSupport locator) throws CoreException {
+        if (fType != null) {
+            int start = node.getNameStart(), end = node.getNameEnd();
+            IJavaElement element = fType.getTypeRoot().getElementAt(start);
+            if (element != null) {
+                int memberType = (!node.isInterface()
+                    ? IJavaClassPrepareBreakpoint.TYPE_CLASS
+                    : IJavaClassPrepareBreakpoint.TYPE_INTERFACE);
+                Map<String, Object> attributes = new HashMap<>();
+                BreakpointUtils.addJavaBreakpointAttributes(attributes, element);
+                BreakpointUtils.addJavaBreakpointAttributesWithMemberDetails(attributes, element, start, end);
+                JDIDebugModel.createClassPrepareBreakpoint(fResource, node.getName(), memberType, start, end, true, attributes);
+            }
+        }
     }
 
     private void createNewFieldBreakpoint(FieldNode node, LocationSupport locator) throws CoreException {
         if (fType != null) {
             int start = node.getNameStart(), end = node.getNameEnd();
-            IJavaElement elem = fType.getTypeRoot().getElementAt(start);
-            if (elem != null) {
+            IJavaElement element = fType.getTypeRoot().getElementAt(start);
+            if (element != null) {
                 int lineNumber = locator.getRowCol(start)[0];
                 Map<String, Object> attributes = new HashMap<>();
-                BreakpointUtils.addJavaBreakpointAttributes(attributes, elem);
-                BreakpointUtils.addJavaBreakpointAttributesWithMemberDetails(attributes, fType, start, end);
-                JDIDebugModel.createWatchpoint(fResource, fTypeName, node.getName(), lineNumber, start, end, 0, true, attributes);
+                BreakpointUtils.addJavaBreakpointAttributes(attributes, element);
+                BreakpointUtils.addJavaBreakpointAttributesWithMemberDetails(attributes, element, start, end);
+                JDIDebugModel.createWatchpoint(fResource, node.getDeclaringClass().getName(), node.getName(), lineNumber, start, end, 0, true, attributes);
             }
         }
     }
@@ -144,50 +185,22 @@ public class BreakpointLocationVerifierJob extends Job {
     private void createNewMethodBreakpoint(MethodNode node, LocationSupport locator) throws CoreException {
         if (fType != null) {
             int start = node.getNameStart(), end = node.getNameEnd();
-            IJavaElement elem = fType.getTypeRoot().getElementAt(start);
-            if (elem != null) {
+            IJavaElement element = fType.getTypeRoot().getElementAt(start);
+            if (element != null) {
                 int lineNumber = locator.getRowCol(start)[0];
                 Map<String, Object> attributes = new HashMap<>();
-                BreakpointUtils.addJavaBreakpointAttributes(attributes, elem);
-                BreakpointUtils.addJavaBreakpointAttributesWithMemberDetails(attributes, fType, start, end);
-                JDIDebugModel.createMethodBreakpoint(fResource, fTypeName, node.getName(), createMethodSignature(node), true, false, false, lineNumber, start, end, 0, true, attributes);
+                BreakpointUtils.addJavaBreakpointAttributes(attributes, element);
+                BreakpointUtils.addJavaBreakpointAttributesWithMemberDetails(attributes, element, start, end);
+                JDIDebugModel.createMethodBreakpoint(fResource, node.getDeclaringClass().getName(), node.getName(), createMethodSignature(node), true, false, false, lineNumber, start, end, 0, true, attributes);
             }
         }
     }
 
-    private String createMethodSignature(MethodNode node) {
+    //--------------------------------------------------------------------------
+
+    private static String createMethodSignature(MethodNode node) {
         String[] parameterTypes = GroovyUtils.getParameterTypeSignatures(node, true);
         String returnType = GroovyUtils.getTypeSignature(node.getReturnType(), true, true);
         return Signature.createMethodSignature(parameterTypes, returnType).replace('.', '/');
-    }
-
-    /**
-     * Create a new breakpoint at the right position.
-     */
-    private void createNewLineBreakpoint(ASTNode node) throws CoreException {
-        // check to make sure that breakpoint doesn't exist on this line
-        // line may have moved by the validator
-        if (JDIDebugModel.lineBreakpointExists(fTypeName, node.getLineNumber()) != null) {
-            return;
-        }
-        Map<String, Object> newAttributes = new HashMap<>(10);
-        int start= node.getStart();
-        int end= node.getEnd();
-        if (fType != null) {
-            BreakpointUtils.addJavaBreakpointAttributesWithMemberDetails(newAttributes, fType, start, end);
-        }
-        JDIDebugModel.createLineBreakpoint(fResource, fTypeName, node.getLineNumber(), start, end, 0, true, newAttributes);
-    }
-
-    private void report(final String message) {
-        JDIDebugUIPlugin.getStandardDisplay().asyncExec(() -> {
-            IEditorStatusLine statusLine = Adapters.adapt(fEditorPart, IEditorStatusLine.class);
-            if (statusLine != null) {
-                statusLine.setMessage(true, message, null);
-            }
-            if (message != null && JDIDebugUIPlugin.getActiveWorkbenchShell() != null) {
-                Display.getCurrent().beep();
-            }
-        });
     }
 }
