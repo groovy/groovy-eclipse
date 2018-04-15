@@ -500,7 +500,7 @@ public class ModuleNode extends ASTNode implements Opcodes {
     }
 
     public void addStaticImport(ClassNode type, String fieldName, String alias) {
-        addStaticImport(type, fieldName, alias, new ArrayList<AnnotationNode>());
+        addStaticImport(type, fieldName, alias, Collections.EMPTY_LIST);
     }
 
     public void addStaticImport(ClassNode type, String fieldName, String alias, List<AnnotationNode> annotations) {
@@ -509,7 +509,10 @@ public class ModuleNode extends ASTNode implements Opcodes {
         // GRECLIPSE edit
         //staticImports.put(alias, node);
         ImportNode prev = staticImports.put(alias, node);
-        if (prev != null) staticImports.put(prev.toString(), prev);
+        if (prev != null) {
+            staticImports.put(prev.toString(), prev);
+            staticImports.put(alias, staticImports.remove(alias));
+        }
         // GRECLIPSE end
         storeLastAddedImportNode(node);
     }
