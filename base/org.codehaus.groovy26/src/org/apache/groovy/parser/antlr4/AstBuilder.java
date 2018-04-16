@@ -115,7 +115,6 @@ import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
-import org.codehaus.groovy.runtime.DefaultGroovyMethodsSupport;
 import org.codehaus.groovy.runtime.StringGroovyMethods;
 import org.codehaus.groovy.syntax.Numbers;
 import org.codehaus.groovy.syntax.SyntaxException;
@@ -356,17 +355,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         this.sourceUnit = sourceUnit;
         this.moduleNode = new ModuleNode(sourceUnit);
 
-        // GRECLIPSE edit
-        //CharStream charStream = createCharStream(sourceUnit);
-        CharStream charStream;
-        try {
-            sourceUnitReader = new BufferedReader(sourceUnit.getSource().getReader());
-        } catch (IOException e) {
-            throw new RuntimeException("Error occurred reading the source code.", e);
-        }
-        try {
-            charStream = CharStreams.fromReader(sourceUnitReader, sourceUnit.getName());
-        // GRECLIPSE end
+        CharStream charStream = createCharStream(sourceUnit);
 
         this.lexer = new GroovyLangLexer(charStream);
         this.parser = new GroovyLangParser(new CommonTokenStream(this.lexer));
@@ -376,24 +365,21 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         this.groovydocManager = GroovydocManager.getInstance();
 
         // GRECLIPSE add
-            try (BufferedReader reader = new BufferedReader(sourceUnit.getSource().getReader())) {
-                // TODO: Can this be done without boxing/unboxing offsets or juggling temp arrays?
-                int chr, off = 0; List<Integer> ends = new ArrayList<>(32); ends.add(0);
-                while ((chr = reader.read()) != -1) { off += 1;
-                    if (chr == '\n') ends.add(off);
-                }
-                ends.add(off);
-
-                int[] arr = new int[ends.size()];
-                for (int i = 0, n = arr.length; i < n; i += 1) {
-                    arr[i] = ends.get(i);
-                }
-                this.locationSupport = new LocationSupport(arr);
+        try (BufferedReader reader = new BufferedReader(sourceUnit.getSource().getReader())) {
+            // TODO: Can this be done without boxing/unboxing offsets or juggling temp arrays?
+            int chr, off = 0; List<Integer> ends = new ArrayList<>(32); ends.add(0);
+            while ((chr = reader.read()) != -1) { off += 1;
+                if (chr == '\n') ends.add(off);
             }
-        } catch (Throwable t) {
-            DefaultGroovyMethodsSupport.closeQuietly(sourceUnitReader);
-            if (t instanceof Error) throw (Error) t; // preserve error semantics
-            throw new RuntimeException("Error occurred reading the source code.", t);
+            ends.add(off);
+
+            int[] arr = new int[ends.size()];
+            for (int i = 0, n = arr.length; i < n; i += 1) {
+                arr[i] = ends.get(i);
+            }
+            this.locationSupport = new LocationSupport(arr);
+        } catch (Exception e) {
+            throw new RuntimeException("Error occurred reading the source code.", e);
         }
         // GRECLIPSE end
     }
@@ -438,7 +424,6 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     }
     // GRECLIPSE end
 
-    /* GRECLIPSE edit
     private CharStream createCharStream(SourceUnit sourceUnit) {
         CharStream charStream;
 
@@ -452,7 +437,6 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
         return charStream;
     }
-    */
 
     private GroovyParserRuleContext buildCST() throws CompilationFailedException {
         GroovyParserRuleContext result;
@@ -512,11 +496,6 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         } catch (Throwable t) {
             throw convertException(t);
         }
-        // GRECLIPSE add
-        finally {
-            DefaultGroovyMethodsSupport.closeQuietly(sourceUnitReader);
-        }
-        // GRECLIPSE end
     }
 
     @Override
@@ -731,7 +710,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 // GRECLIPSE edit
                 //configureAST(classNode, ctx);
                 ASTNode typeNode = PositionConfigureUtils.configureAST(classNode instanceof ImmutableClassNode ? new ClassExpression(classNode) : classNode, ctx.qualifiedName());
-                PositionConfigureUtils.configureEndPosition(typeNode, identifierList.get(identifierListSize - 2).getStop());
+                PositionConfigureUtils.configureEndPosition(typeNode, identifierList.get(Math.max(0, identifierListSize - 2)).getStop());
                 configureAST(typeNode);
                 // GRECLIPSE end
 
@@ -5186,7 +5165,6 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     private final GroovydocManager groovydocManager;
     // GRECLIPSE add
     private final LocationSupport locationSupport;
-    private final BufferedReader sourceUnitReader;
     // GRECLIPSE add
     private final List<ClassNode> classNodeList = new LinkedList<>();
     private final Deque<ClassNode> classNodeStack = new ArrayDeque<>();
