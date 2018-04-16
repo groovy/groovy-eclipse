@@ -710,7 +710,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 // GRECLIPSE edit
                 //configureAST(classNode, ctx);
                 ASTNode typeNode = PositionConfigureUtils.configureAST(classNode instanceof ImmutableClassNode ? new ClassExpression(classNode) : classNode, ctx.qualifiedName());
-                PositionConfigureUtils.configureEndPosition(typeNode, identifierList.get(identifierListSize - 2).getStop());
+                PositionConfigureUtils.configureEndPosition(typeNode, identifierList.get(Math.max(0, identifierListSize - 2)).getStop());
                 configureAST(typeNode);
                 // GRECLIPSE end
 
