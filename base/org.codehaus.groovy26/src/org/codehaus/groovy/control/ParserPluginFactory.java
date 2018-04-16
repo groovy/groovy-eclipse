@@ -18,24 +18,27 @@
  */
 package org.codehaus.groovy.control;
 
-import groovy.lang.GroovyRuntimeException;
+import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.syntax.ParserException;
+import org.codehaus.groovy.syntax.Reduction;
 
-import java.security.AccessController;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
+import java.io.Reader;
 
 /**
  * A factory of parser plugin instances
  *
  */
 public abstract class ParserPluginFactory {
+    /* GRECLIPSE edit
     private static Class<?> ANTLR4_CLASS=null;
+    */
 
     /**
      * creates the ANTLR 4 parser
      * @return the factory for the parser
      */
     public static ParserPluginFactory antlr4() {
+        /* GRECLIPSE edit
         if (ANTLR4_CLASS==null) {
             String name = "org.apache.groovy.parser.antlr4.Antlr4PluginFactory";
             try {
@@ -54,6 +57,24 @@ public abstract class ParserPluginFactory {
         } catch (PrivilegedActionException e) {
             throw new GroovyRuntimeException("Could not create instance of parser plugin factory for antlr4", e.getCause());
         }
+        */
+        return new ParserPluginFactory() {
+            @Override
+            public ParserPlugin createParserPlugin() {
+                return new ParserPlugin() {
+                    @Override
+                    public Reduction parseCST(SourceUnit sourceUnit, Reader reader) throws CompilationFailedException {
+                        return null;
+                    }
+                    @Override
+                    public ModuleNode buildAST(SourceUnit sourceUnit, ClassLoader classLoader, Reduction cst) throws ParserException {
+                        assert sourceUnit.getSource() != null && sourceUnit.getSource().canReopenSource();
+                        return new org.apache.groovy.parser.antlr4.AstBuilder(sourceUnit).buildAST();
+                    }
+                };
+            }
+        };
+        // GRECLIPSE end
     }
 
     /**
