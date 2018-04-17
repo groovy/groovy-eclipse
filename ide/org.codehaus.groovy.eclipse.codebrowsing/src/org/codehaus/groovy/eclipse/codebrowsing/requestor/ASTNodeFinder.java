@@ -346,7 +346,7 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     protected void checkNameRange(AnnotatedNode node) {
         if (sloc.regionIsCoveredByNameRange(node)) {
             completeVisitation(node, new Region(
-                node.getNameStart(), node.getNameEnd() - node.getNameStart()));
+                node.getNameStart(), (node.getNameEnd()+1) - node.getNameStart()));
         }
         if (node instanceof ClassNode) {
             checkGenerics((ClassNode) node);

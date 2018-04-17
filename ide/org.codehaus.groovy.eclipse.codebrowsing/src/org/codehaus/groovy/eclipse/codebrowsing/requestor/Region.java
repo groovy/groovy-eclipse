@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,7 +77,7 @@ public class Region {
      * @return true iff the node's name range covers the region
      */
     public boolean regionIsCoveredByNameRange(AnnotatedNode node) {
-        return this.start >= node.getNameStart() && this.getEnd() <= node.getNameEnd()+1;  // FIXADE why +1?
+        return this.start >= node.getNameStart() && this.getEnd() <= node.getNameEnd()+1;
     }
 
     /**
