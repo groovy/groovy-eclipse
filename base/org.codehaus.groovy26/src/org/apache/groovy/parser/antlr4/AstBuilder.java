@@ -1708,7 +1708,10 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     public GenericsType visitTypeParameter(TypeParameterContext ctx) {
         return configureAST(
                 new GenericsType(
-                        configureAST(ClassHelper.make(this.visitClassName(ctx.className())), ctx),
+                        // GRECLIPSE edit
+                        //configureAST(ClassHelper.make(this.visitClassName(ctx.className())), ctx),
+                        configureAST(ClassHelper.make(this.visitClassName(ctx.className())), ctx.className()),
+                        // GRECLIPSE end
                         this.visitTypeBound(ctx.typeBound()),
                         null
                 ),
