@@ -2633,7 +2633,9 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
         if (asBoolean(ctx.arguments())) {
             Expression argumentsExpr = this.visitArguments(ctx.arguments());
-            configureAST(argumentsExpr, ctx);
+            // GRECLIPSE edit
+            //configureAST(argumentsExpr, ctx);
+            // GRECLIPSE end
 
             if (isInsideParentheses(baseExpr)) { // e.g. (obj.x)(), (obj.@x)()
                 return configureAST(createCallMethodCallExpression(baseExpr, argumentsExpr), ctx);
@@ -2878,10 +2880,27 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         }
 
         if (!asBoolean(ctx) || !asBoolean(ctx.enhancedArgumentList())) {
-            return new ArgumentListExpression();
+            // GRECLIPSE edit -- exclude parentheses from source range
+            //return new ArgumentListExpression();
+            ArgumentListExpression ale = new ArgumentListExpression();
+            if (ctx != null) {
+                ale.setStart(locationSupport.findOffset(ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine() + 2));
+                ale.setEnd(locationSupport.findOffset(ctx.getStop().getLine(), ctx.getStop().getCharPositionInLine() + 1));
+                int[] row_col = locationSupport.getRowCol(ale.getStart());
+                ale.setLineNumber(row_col[0]);
+                ale.setColumnNumber(row_col[1]);
+                row_col = locationSupport.getRowCol(ale.getEnd());
+                ale.setLastLineNumber(row_col[0]);
+                ale.setLastColumnNumber(row_col[1]);
+            }
+            return ale;
+            // GRECLIPSE end
         }
 
-        return configureAST(this.visitEnhancedArgumentList(ctx.enhancedArgumentList()), ctx);
+        // GRECLIPSE edit
+        //return configureAST(this.visitEnhancedArgumentList(ctx.enhancedArgumentList()), ctx);
+        return visitEnhancedArgumentList(ctx.enhancedArgumentList());
+        // GRECLIPSE end
     }
 
     @Override
