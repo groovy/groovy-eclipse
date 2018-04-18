@@ -170,11 +170,8 @@ public class ASTNodeFinder extends DepthFirstVisitor {
 
     @Override
     public void visitArrayExpression(ArrayExpression expression) {
-        ClassNode arrayClass = expression.getElementType();
-        if (arrayClass != arrayClass.redirect()) {
-            check(arrayClass);
-        } else {
-            // synthetic ArrayExpression for referencing enum fields or collected annotations
+        if (expression.getEnd() > 0) {
+            check(expression.getElementType(), expression.getNameStart(), expression.getNameEnd() + 1);
         }
         super.visitArrayExpression(expression);
     }
