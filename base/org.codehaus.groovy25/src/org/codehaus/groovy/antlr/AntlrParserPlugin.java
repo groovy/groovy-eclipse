@@ -2545,14 +2545,14 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         return variableExpression;
     }
 
-    protected Expression literalExpression(AST node, Object value) {
+    // GRECLIPSE Expression->ConstantExpression
+    protected ConstantExpression literalExpression(AST node, Object value) {
         ConstantExpression constantExpression = new ConstantExpression(value, value instanceof Boolean);
         configureAST(constantExpression, node);
         return constantExpression;
     }
 
-    // GRECLIPSE Expression->ConstantExpression
-    protected ConstantExpression rangeExpression(AST rangeNode, boolean inclusive) {
+    protected Expression rangeExpression(AST rangeNode, boolean inclusive) {
         AST node = rangeNode.getFirstChild();
         Expression left = expression(node);
         Expression right = expression(node.getNextSibling());
