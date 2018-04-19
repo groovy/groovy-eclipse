@@ -519,6 +519,15 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
     }
 
     @Test
+    void testSelectCoercionType3() {
+        String contents = 'def p = /abc/ as java.util.regex.Pattern'
+        assertCodeSelect([contents], 'Pattern')
+        assertCodeSelect([contents], 'java', 'java')
+        assertCodeSelect([contents], 'util', 'java.util')
+        assertCodeSelect([contents], 'regex', 'java.util.regex')
+    }
+
+    @Test
     void testSelectTypecastType1() {
         String contents = 'def i = (int) 1'
         assertCodeSelect([contents], 'int', null)
@@ -532,6 +541,15 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
 
     @Test
     void testSelectTypecastType3() {
+        String contents = 'def p = (java.util.regex.Pattern) "abc"'
+        assertCodeSelect([contents], 'Pattern')
+        assertCodeSelect([contents], 'java', 'java')
+        assertCodeSelect([contents], 'util', 'java.util')
+        assertCodeSelect([contents], 'regex', 'java.util.regex')
+    }
+
+    @Test
+    void testSelectTypecastType4() {
         String contents = 'def arr = (Object[]) null'
         assertCodeSelect([contents], 'Object')
     }

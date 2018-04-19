@@ -3136,6 +3136,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     @Override
     public CastExpression visitCastExprAlt(CastExprAltContext ctx) {
+        /* GRECLIPSE edit
         return configureAST(
                 new CastExpression(
                         this.visitCastParExpression(ctx.castParExpression()),
@@ -3143,6 +3144,12 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 ),
                 ctx
         );
+        */
+        CastExpression cast = new CastExpression(visitCastParExpression(ctx.castParExpression()), (Expression) visit(ctx.expression()));
+        Expression name = configureAST(new ConstantExpression(null), ctx.castParExpression().type());
+        cast.setNameStart(name.getStart()); cast.setNameEnd(name.getEnd());
+        return configureAST(cast, ctx);
+        // GRECLIPSE end
     }
 
     @Override
@@ -3254,9 +3261,16 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     public Expression visitRelationalExprAlt(RelationalExprAltContext ctx) {
         switch (ctx.op.getType()) {
             case AS:
+                /* GRECLIPSE edit
                 return configureAST(
                         CastExpression.asExpression(this.visitType(ctx.type()), (Expression) this.visit(ctx.left)),
                         ctx);
+                */
+                CastExpression cast = CastExpression.asExpression(visitType(ctx.type()), (Expression) visit(ctx.left));
+                Expression name = configureAST(new ConstantExpression(null), ctx.type());
+                cast.setNameStart(name.getStart()); cast.setNameEnd(name.getEnd());
+                return configureAST(cast, ctx);
+                // GRECLIPSE end
 
             case INSTANCEOF:
             case NOT_INSTANCEOF:
@@ -3519,7 +3533,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                     ctx);
             */
             ConstructorCallExpression constructorCallExpression = new ConstructorCallExpression(classNode, arguments);
-            ASTNode nameNode = configureAST(new ConstantExpression(classNode.getName()), ctx.createdName().qualifiedClassName());
+            ASTNode nameNode = configureAST(new ConstantExpression(classNode.getName()), ctx.createdName());
             constructorCallExpression.setNameStart(nameNode.getStart());
             constructorCallExpression.setNameEnd(nameNode.getEnd() - 1);
             return configureAST(constructorCallExpression, ctx);
@@ -3602,8 +3616,10 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 componentType = componentType.getComponentType();
                 configureAST(componentType, ctx, configureAST(new ConstantExpression(""), annOptCtxt.get(i)));
             }
-            ASTNode nameNode = configureAST(new ConstantExpression(""), ctx.createdName().qualifiedClassName());
-            arrayExpression.setNameStart(nameNode.getStart()); arrayExpression.setNameEnd(nameNode.getEnd() - 1);
+
+            ASTNode nameNode = configureAST(new ConstantExpression(classNode.getName()), ctx.createdName());
+            arrayExpression.setNameStart(nameNode.getStart());
+            arrayExpression.setNameEnd(nameNode.getEnd() - 1);
             // GRECLIPSE end
             return configureAST(arrayExpression, ctx);
         }
