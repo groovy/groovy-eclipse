@@ -141,11 +141,11 @@ public final class GroovyClassLoaderFactory {
         String projectName = compilerOptions.groovyProjectName; IProject project = findProject(projectName);
         try {
             IJavaProject javaProject = JavaCore.create(project);
-            IClasspathEntry[] classpathEntries = javaProject.getResolvedClasspath(true);
+            IClasspathEntry[] classpathEntries = javaProject.exists() ? javaProject.getResolvedClasspath(true) : new IClasspathEntry[0];
 
             Map.Entry<IClasspathEntry[], GroovyClassLoader[]> entry = projectClassLoaderCache.computeIfAbsent(projectName, key -> {
                 Set<String> classPaths = new LinkedHashSet<>(), xformPaths = new LinkedHashSet<>();
-                calculateClasspath(javaProject, classPaths, xformPaths);
+                if (javaProject.exists()) calculateClasspath(javaProject, classPaths, xformPaths);
 
                 if (GroovyLogManager.manager.hasLoggers()) {
                     GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM,
@@ -226,7 +226,8 @@ public final class GroovyClassLoaderFactory {
         }).filter(Objects::nonNull).toArray(URL[]::new);
 
         if (NONLOCKING) {
-            return new org.apache.xbean.classloader.NonLockingJarFileClassLoader("AST Transform loader", urls, parent);
+            if (parent == null) parent = URLClassLoader.newInstance(new URL[0], null);
+            return new org.apache.xbean.classloader.NonLockingJarFileClassLoader("GDT non-locking loader", urls, parent);
         } else {
             return URLClassLoader.newInstance(urls, parent);
         }
