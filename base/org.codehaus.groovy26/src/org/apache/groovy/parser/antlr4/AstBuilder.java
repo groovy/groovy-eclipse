@@ -2407,15 +2407,22 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                     configureAST(
                             this.createMethodCallExpression(baseExpr, arguments),
                             arguments);
-            // GRECLIPSE add
-            methodCallExpression.setNameStart(baseExpr.getStart());
-            methodCallExpression.setNameEnd(baseExpr.getEnd() - 1);
-            // GRECLIPSE end
         } else { // e.g. a[x] b, new A() b, etc.
             methodCallExpression = configureAST(this.createCallMethodCallExpression(baseExpr, arguments), arguments);
         }
 
         methodCallExpression.putNodeMetaData(IS_COMMAND_EXPRESSION, true);
+        // GRECLIPSE add
+        methodCallExpression.setColumnNumber(baseExpr.getColumnNumber());
+        methodCallExpression.setLineNumber(baseExpr.getLineNumber());
+        methodCallExpression.setStart(baseExpr.getStart());
+
+        if (methodCallExpression.getMethod() instanceof ConstantExpression) {
+            Expression nameExpr = methodCallExpression.getMethod();
+            methodCallExpression.setNameStart(nameExpr.getStart());
+            methodCallExpression.setNameEnd(nameExpr.getEnd() - 1);
+        }
+        // GRECLIPSE end
 
         if (!asBoolean(ctx.commandArgument())) {
             return configureAST(methodCallExpression, ctx);
@@ -2539,61 +2546,38 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             Expression namePartExpr = this.visitNamePart(ctx.namePart());
             GenericsType[] genericsTypes = this.visitNonWildcardTypeArguments(ctx.nonWildcardTypeArguments());
 
-            // GRECLIPSE add
-            Expression expression = null;
-            // GRECLIPSE end
+
             if (asBoolean(ctx.DOT())) {
                 boolean isSafeChain = isTrue(baseExpr, PATH_EXPRESSION_BASE_EXPR_SAFE_CHAIN);
-                // GRECLIPSE edit
-                //return createDotExpression(ctx, baseExpr, namePartExpr, genericsTypes, isSafeChain);
-                expression = createDotExpression(ctx, baseExpr, namePartExpr, genericsTypes, isSafeChain);
-                // GRECLIPSE end
+
+                return createDotExpression(ctx, baseExpr, namePartExpr, genericsTypes, isSafeChain);
             } else if (asBoolean(ctx.SAFE_DOT())) {
-                // GRECLIPSE edit
-                //return createDotExpression(ctx, baseExpr, namePartExpr, genericsTypes, true);
-                expression = createDotExpression(ctx, baseExpr, namePartExpr, genericsTypes, true);
-                // GRECLIPSE end
+                return createDotExpression(ctx, baseExpr, namePartExpr, genericsTypes, true);
             } else if (asBoolean(ctx.SAFE_CHAIN_DOT())) { // e.g. obj??.a  OR obj??.@a
-                // GRECLIPSE edit
-                /*Expression*/ expression = createDotExpression(ctx, baseExpr, namePartExpr, genericsTypes, true);
+                Expression expression = createDotExpression(ctx, baseExpr, namePartExpr, genericsTypes, true);
                 expression.putNodeMetaData(PATH_EXPRESSION_BASE_EXPR_SAFE_CHAIN, true);
-                //return expression;
-                // GRECLIPSE end
+
+                return expression;
             }  else if (asBoolean(ctx.METHOD_POINTER())) { // e.g. obj.&m
-                // GRECLIPSE edit
-                //return configureAST(new MethodPointerExpression(baseExpr, namePartExpr), ctx);
-                expression = configureAST(new MethodPointerExpression(baseExpr, namePartExpr), ctx);
-                // GRECLIPSE end
+                return configureAST(new MethodPointerExpression(baseExpr, namePartExpr), ctx);
             } else if (asBoolean(ctx.METHOD_REFERENCE())) { // e.g. obj::m
-                // GRECLIPSE edit
-                //return configureAST(new MethodReferenceExpression(baseExpr, namePartExpr), ctx);
-                expression = configureAST(new MethodReferenceExpression(baseExpr, namePartExpr), ctx);
-                // GRECLIPSE end
+                return configureAST(new MethodReferenceExpression(baseExpr, namePartExpr), ctx);
             } else if (asBoolean(ctx.SPREAD_DOT())) {
                 if (asBoolean(ctx.AT())) { // e.g. obj*.@a
                     AttributeExpression attributeExpression = new AttributeExpression(baseExpr, namePartExpr, true);
+
                     attributeExpression.setSpreadSafe(true);
-                    // GRECLIPSE edit
-                    //return configureAST(attributeExpression, ctx);
-                    expression = configureAST(attributeExpression, ctx);
-                    // GRECLIPSE end
+
+                    return configureAST(attributeExpression, ctx);
                 } else { // e.g. obj*.p
                     PropertyExpression propertyExpression = new PropertyExpression(baseExpr, namePartExpr, true);
                     propertyExpression.putNodeMetaData(PATH_EXPRESSION_BASE_EXPR_GENERICS_TYPES, genericsTypes);
+
                     propertyExpression.setSpreadSafe(true);
-                    // GRECLIPSE edit
-                    expression = configureAST(propertyExpression, ctx);
-                    // GRECLIPSE end
+
+                    return configureAST(propertyExpression, ctx);
                 }
             }
-            // GRECLIPSE add
-            if (expression != null) {
-                expression.setColumnNumber(baseExpr.getColumnNumber());
-                expression.setLineNumber(baseExpr.getLineNumber());
-                expression.setStart(baseExpr.getStart());
-                return expression;
-            }
-            // GRECLIPSE end
         }
 
         if (asBoolean(ctx.indexPropertyArgs())) { // e.g. list[1, 3, 5]
@@ -2652,11 +2636,9 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             }
 
             if (baseExpr instanceof PropertyExpression) { // e.g. obj.a(1, 2)
-                MethodCallExpression methodCallExpression = this.createMethodCallExpression((PropertyExpression) baseExpr, argumentsExpr);
-                // GRECLIPSE add
-                methodCallExpression.setNameStart(((PropertyExpression) baseExpr).getProperty().getStart());
-                methodCallExpression.setNameEnd(((PropertyExpression) baseExpr).getProperty().getEnd() - 1);
-                // GRECLIPSE end
+                MethodCallExpression methodCallExpression =
+                        this.createMethodCallExpression((PropertyExpression) baseExpr, argumentsExpr);
+
                 return configureAST(methodCallExpression, ctx);
             }
 
@@ -2673,9 +2655,6 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                     || baseExpr instanceof GStringExpression
                     || (baseExpr instanceof ConstantExpression && isTrue(baseExpr, IS_STRING))) { // e.g. m(), "$m"(), "m"()
 
-                // GRECLIPSE add
-                Expression callExpr = null;
-                // GRECLIPSE end
                 String baseExprText = baseExpr.getText();
                 if (SUPER_STR.equals(baseExprText) || THIS_STR.equals(baseExprText)) { // e.g. this(...), super(...)
                     // class declaration is not allowed in the closure,
@@ -2683,8 +2662,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                     // e.g. src/test/org/codehaus/groovy/transform/MapConstructorTransformTest.groovy:
                     // @MapConstructor(pre={ super(args?.first, args?.last); args = args ?: [:] }, post = { first = first?.toUpperCase() })
                     if (visitingClosureCnt > 0) {
-                        // GRECLIPSE edit
-                        callExpr = /*return*/ configureAST(
+                        return configureAST(
                                 new MethodCallExpression(
                                         baseExpr,
                                         baseExprText,
@@ -2692,12 +2670,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                                 ),
                                 ctx);
                     }
-                    // GRECLIPSE add
-                    else
-                    // GRECLIPSE end
 
-                    // GRECLIPSE edit
-                    callExpr = /*return*/ configureAST(
+                    return configureAST(
                             new ConstructorCallExpression(
                                     SUPER_STR.equals(baseExprText)
                                             ? ClassNode.SUPER
@@ -2707,19 +2681,10 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                             ctx);
                 }
 
-                /* GRECLIPSE edit
                 MethodCallExpression methodCallExpression =
                         this.createMethodCallExpression(baseExpr, argumentsExpr);
 
                 return configureAST(methodCallExpression, ctx);
-                */
-                if (callExpr == null) {
-                    callExpr = configureAST(createMethodCallExpression(baseExpr, argumentsExpr), ctx);
-                }
-                callExpr.setNameStart(baseExpr.getStart());
-                callExpr.setNameEnd(baseExpr.getEnd() - 1);
-                return callExpr;
-                // GRECLIPSE end
             }
 
             // e.g. 1(), 1.1(), ((int) 1 / 2)(1, 2), {a, b -> a + b }(1, 2), m()()
@@ -3146,7 +3111,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         );
         */
         CastExpression cast = new CastExpression(visitCastParExpression(ctx.castParExpression()), (Expression) visit(ctx.expression()));
-        Expression name = configureAST(new ConstantExpression(null), ctx.castParExpression().type());
+        Expression name = configureAST(new ConstantExpression(null), ctx.castParExpression().type().primitiveType() != null
+            ? ctx.castParExpression().type().primitiveType() : ctx.castParExpression().type().classOrInterfaceType());
         cast.setNameStart(name.getStart()); cast.setNameEnd(name.getEnd());
         return configureAST(cast, ctx);
         // GRECLIPSE end
@@ -3267,7 +3233,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                         ctx);
                 */
                 CastExpression cast = CastExpression.asExpression(visitType(ctx.type()), (Expression) visit(ctx.left));
-                Expression name = configureAST(new ConstantExpression(null), ctx.type());
+                Expression name = configureAST(new ConstantExpression(null), ctx.type().primitiveType() != null
+                    ? ctx.type().primitiveType() : ctx.type().classOrInterfaceType());
                 cast.setNameStart(name.getStart()); cast.setNameEnd(name.getEnd());
                 return configureAST(cast, ctx);
                 // GRECLIPSE end
@@ -3517,13 +3484,15 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 }
 
                 ConstructorCallExpression constructorCallExpression = new ConstructorCallExpression(anonymousInnerClassNode, arguments);
-                constructorCallExpression.setUsingAnonymousInnerClass(true);
                 // GRECLIPSE add
-                anonymousInnerClassNode.setNameStart(classNode.getStart());
-                anonymousInnerClassNode.setNameEnd(classNode.getEnd() - 1);
-                constructorCallExpression.setNameStart(classNode.getStart());
-                constructorCallExpression.setNameEnd(classNode.getEnd() - 1);
+                ASTNode nameNode = configureAST(new ConstantExpression(classNode.getName()), ctx.createdName().qualifiedClassName());
+                anonymousInnerClassNode.setNameStart(nameNode.getStart());
+                anonymousInnerClassNode.setNameEnd(nameNode.getEnd() - 1);
+                constructorCallExpression.setNameStart(nameNode.getStart());
+                constructorCallExpression.setNameEnd(nameNode.getEnd() - 1);
                 // GRECLIPSE end
+                constructorCallExpression.setUsingAnonymousInnerClass(true);
+
                 return configureAST(constructorCallExpression, ctx);
             }
 
@@ -3533,7 +3502,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                     ctx);
             */
             ConstructorCallExpression constructorCallExpression = new ConstructorCallExpression(classNode, arguments);
-            ASTNode nameNode = configureAST(new ConstantExpression(classNode.getName()), ctx.createdName());
+            ASTNode nameNode = configureAST(new ConstantExpression(classNode.getName()), ctx.createdName().qualifiedClassName());
             constructorCallExpression.setNameStart(nameNode.getStart());
             constructorCallExpression.setNameEnd(nameNode.getEnd() - 1);
             return configureAST(constructorCallExpression, ctx);
@@ -3617,7 +3586,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 configureAST(componentType, ctx, configureAST(new ConstantExpression(""), annOptCtxt.get(i)));
             }
 
-            ASTNode nameNode = configureAST(new ConstantExpression(classNode.getName()), ctx.createdName());
+            ASTNode nameNode = configureAST(new ConstantExpression(classNode.getName()),ctx.createdName().primitiveType() != null
+                ? ctx.createdName().primitiveType() : ctx.createdName().qualifiedClassName());
             arrayExpression.setNameStart(nameNode.getStart());
             arrayExpression.setNameEnd(nameNode.getEnd() - 1);
             // GRECLIPSE end
@@ -4822,6 +4792,20 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             boolean isSafeChain = isTrue(expr, PATH_EXPRESSION_BASE_EXPR_SAFE_CHAIN);
 
             expr = this.visitPathElement(pathElementContext);
+            // GRECLIPSE add
+            Expression base = pathElementContext.getNodeMetaData(PATH_EXPRESSION_BASE_EXPR);
+            expr.setColumnNumber(base.getColumnNumber());
+            expr.setLineNumber(base.getLineNumber());
+            expr.setStart(base.getStart());
+
+            if (expr instanceof MethodCallExpression) {
+                Expression meth = ((MethodCallExpression) expr).getMethod();
+                if (meth instanceof ConstantExpression) {
+                    expr.setNameStart(meth.getStart());
+                    expr.setNameEnd(meth.getEnd() - 1);
+                }
+            }
+            // GRECLIPSE end
 
             if (isSafeChain) {
                 expr.putNodeMetaData(PATH_EXPRESSION_BASE_EXPR_SAFE_CHAIN, true);
