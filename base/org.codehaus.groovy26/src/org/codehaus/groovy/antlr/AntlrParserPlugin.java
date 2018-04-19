@@ -653,9 +653,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                         configureAST(typeNode, packageNode);
                     }
                     configureAST(imp, importNode);
-                    ConstantExpression nameExpr = new ConstantExpression(name);
-                    configureAST(nameExpr, nameNode);
-                    imp.setFieldNameExpr(nameExpr);
+                    imp.setFieldNameExpr(literalExpression(nameNode, name));
                     // GRECLIPSE end
                 } else {
                     // import is like "import foo.Bar"
@@ -677,11 +675,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     // GRECLIPSE end
                 }
                 // GRECLIPSE add
-                // configure alias ast
                 if (alias != null) {
-                    ConstantExpression aliasExpr = new ConstantExpression(alias);
-                    configureAST(aliasExpr, aliasNode);
-                    imp.setAliasExpr(aliasExpr);
+                    imp.setAliasExpr(literalExpression(aliasNode, alias));
                 }
                 // GRECLIPSE end
             }
@@ -2663,7 +2658,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         return variableExpression;
     }
 
-    protected Expression literalExpression(AST node, Object value) {
+    // GRECLIPSE Expression->ConstantExpression
+    protected ConstantExpression literalExpression(AST node, Object value) {
         ConstantExpression constantExpression = new ConstantExpression(value, value instanceof Boolean);
         configureAST(constantExpression, node);
         return constantExpression;
@@ -3179,6 +3175,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             List size = arraySizeExpression(expressionNode);
             ArrayExpression arrayExpression = new ArrayExpression(type, null, size);
             configureAST(arrayExpression, constructorCallNode);
+            // GRECLIPSE add
+            Expression name = literalExpression(node, null);
+            arrayExpression.setNameStart(name.getStart());
+            arrayExpression.setNameEnd(name.getEnd() - 1);
+            // GRECLIPSE end
             return arrayExpression;
         }
         Expression arguments = arguments(elist);
@@ -3189,15 +3190,17 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             ret.setUsingAnonymousInnerClass(true);
             innerClass.setUnresolvedSuperClass(type);
             // GRECLIPSE add
-            innerClass.setNameStart(type.getStart());
-            innerClass.setNameEnd(type.getEnd() - 1);
+            Expression name = literalExpression(node, null);
+            innerClass.setNameStart(name.getStart());
+            innerClass.setNameEnd(name.getEnd() - 1);
             // GRECLIPSE end
         }
 
         configureAST(ret, constructorCallNode);
         // GRECLIPSE add
-        ret.setNameStart(type.getStart());
-        ret.setNameEnd(type.getEnd() - 1);
+        Expression name = literalExpression(node, null);
+        ret.setNameStart(name.getStart());
+        ret.setNameEnd(name.getEnd() - 1);
         // GRECLIPSE end
         return ret;
     }

@@ -1708,7 +1708,10 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     public GenericsType visitTypeParameter(TypeParameterContext ctx) {
         return configureAST(
                 new GenericsType(
-                        configureAST(ClassHelper.make(this.visitClassName(ctx.className())), ctx),
+                        // GRECLIPSE edit
+                        //configureAST(ClassHelper.make(this.visitClassName(ctx.className())), ctx),
+                        configureAST(ClassHelper.make(this.visitClassName(ctx.className())), ctx.className()),
+                        // GRECLIPSE end
                         this.visitTypeBound(ctx.typeBound()),
                         null
                 ),
@@ -3520,15 +3523,22 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             constructorCallExpression.setNameStart(nameNode.getStart());
             constructorCallExpression.setNameEnd(nameNode.getEnd() - 1);
             return configureAST(constructorCallExpression, ctx);
+            // GRECLIPSE end
         }
 
         if (asBoolean(ctx.LBRACK()) || asBoolean(ctx.dims())) { // create array
             ArrayExpression arrayExpression;
             List<List<AnnotationNode>> allDimList;
+            // GRECLIPSE add
+            List<AnnotationsOptContext> annOptCtxt = new ArrayList<>();
+            // GRECLIPSE end
 
             if (asBoolean(ctx.arrayInitializer())) {
                 ClassNode elementType = classNode;
                 allDimList = this.visitDims(ctx.dims());
+                // GRECLIPSE add
+                annOptCtxt.addAll(ctx.dims().annotationsOpt());
+                // GRECLIPSE end
 
                 for (int i = 0, n = allDimList.size() - 1; i < n; i++) {
                     elementType = elementType.makeArray();
@@ -3574,10 +3584,27 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 Collections.reverse(emptyDimList);
                 allDimList.addAll(emptyDimList);
                 Collections.reverse(allDimList);
+                // GRECLIPSE add
+                annOptCtxt.addAll(ctx.annotationsOpt());
+                if (asBoolean(ctx.dimsOpt().dims())) annOptCtxt.addAll(ctx.dimsOpt().dims().annotationsOpt());
+                // GRECLIPSE end
             }
 
-            arrayExpression.setType(createArrayType(classNode, allDimList));
-
+            // GRECLIPSE edit
+            //arrayExpression.setType(createArrayType(classNode, allDimList));
+            ClassNode componentType = arrayExpression.getType();
+            if (!asBoolean(ctx.dims())) {
+                configureAST(componentType, ctx);
+            } else {
+                configureAST(componentType, ctx, configureAST(new ConstantExpression(""), ctx.dims()));
+            }
+            for (int i = annOptCtxt.size() - 1; i > 0; i -= 1) {
+                componentType = componentType.getComponentType();
+                configureAST(componentType, ctx, configureAST(new ConstantExpression(""), annOptCtxt.get(i)));
+            }
+            ASTNode nameNode = configureAST(new ConstantExpression(""), ctx.createdName().qualifiedClassName());
+            arrayExpression.setNameStart(nameNode.getStart()); arrayExpression.setNameEnd(nameNode.getEnd() - 1);
+            // GRECLIPSE end
             return configureAST(arrayExpression, ctx);
         }
 
@@ -4326,6 +4353,12 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             classNode = this.createArrayType(classNode, dimList);
             // GRECLIPSE add
             configureAST(classNode, ctx);
+            ClassNode componentType = classNode;
+            for (int i = dimList.size() - 1; i > 0; i -= 1) {
+                componentType = componentType.getComponentType();
+                AnnotationsOptContext aoc = ctx.dimsOpt().dims().annotationsOpt(i);
+                configureAST(componentType, ctx, configureAST(new ConstantExpression(""), aoc));
+            }
             // GRECLIPSE end
         }
 
@@ -4738,10 +4771,10 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         if (asBoolean(ellipsis)) {
             // GRECLIPSE edit
             //classNode = configureAST(classNode.makeArray(), classNode);
-            if (asBoolean(typeContext)) {
-                classNode = configureAST(classNode.makeArray(), typeContext);
-            } else {
+            if (!asBoolean(typeContext)) {
                 classNode = configureAST(classNode.makeArray(), ellipsis);
+            } else {
+                classNode = configureAST(classNode.makeArray(), typeContext, configureAST(new ConstantExpression("..."), ellipsis));
             }
             // GRECLIPSE end
         }

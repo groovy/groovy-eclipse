@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.codebrowsing.tests
+
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
+import static org.junit.Assume.assumeTrue
 
 import groovy.transform.NotYetImplemented
 
@@ -670,8 +673,8 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
 
     @Test
     void testSelectPackageOnFullyQualifiedName5() {
-        String contents = 'def x = new java.util.Date()'
-        assertCodeSelect([contents], 'x')
+        String contents = 'def z = new java.util.Date()'
+        assertCodeSelect([contents], 'z')
         assertCodeSelect([contents], 'Date')
         assertCodeSelect([contents], 'java', 'java')
         assertCodeSelect([contents], 'util', 'java.util')
@@ -689,6 +692,59 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
 
     @Test
     void testSelectPackageOnFullyQualifiedName6() {
+        String contents = 'def z = new java.util.Date[9][10]'
+        assertCodeSelect([contents], 'z')
+        assertCodeSelect([contents], 'Date')
+        assertCodeSelect([contents], 'java', 'java')
+        assertCodeSelect([contents], 'util', 'java.util')
+    }
+
+    @Test
+    void testSelectPackageOnFullyQualifiedName6a() {
+        String contents = 'def z = new java.util.regex.Pattern[9][10][]'
+        assertCodeSelect([contents], 'z')
+        assertCodeSelect([contents], 'Pattern')
+        assertCodeSelect([contents], 'java', 'java')
+        assertCodeSelect([contents], 'util', 'java.util')
+        assertCodeSelect([contents], 'regex', 'java.util.regex')
+    }
+
+    @Test
+    void testSelectPackageOnFullyQualifiedName7() {
+        assumeTrue(isParrotParser())
+
+        String contents = 'def z = new java.util.Date[][] {}'
+        assertCodeSelect([contents], 'z')
+        assertCodeSelect([contents], 'Date')
+        assertCodeSelect([contents], 'java', 'java')
+        assertCodeSelect([contents], 'util', 'java.util')
+    }
+
+    @Test
+    void testSelectPackageOnFullyQualifiedName7a() {
+        assumeTrue(isParrotParser())
+
+        String contents = 'def z = new java.util.regex.Pattern[][][] {      }'
+        assertCodeSelect([contents], 'z')
+        assertCodeSelect([contents], 'Pattern')
+        assertCodeSelect([contents], 'java', 'java')
+        assertCodeSelect([contents], 'util', 'java.util')
+        assertCodeSelect([contents], 'regex', 'java.util.regex')
+    }
+
+    @Test
+    void testSelectPackageOnFullyQualifiedName7b() {
+        assumeTrue(isParrotParser())
+
+        String contents = 'def z = new java.lang.String[] { "a", "b", "c" }'
+        assertCodeSelect([contents], 'z')
+        assertCodeSelect([contents], 'String')
+        assertCodeSelect([contents], 'java', 'java')
+        assertCodeSelect([contents], 'lang', 'java.lang')
+    }
+
+    @Test
+    void testSelectPackageOnFullyQualifiedName8() {
         String contents = 'def x = java.util.Collections.emptyList()'
         assertCodeSelect([contents], 'x')
         assertCodeSelect([contents], 'Collections')
