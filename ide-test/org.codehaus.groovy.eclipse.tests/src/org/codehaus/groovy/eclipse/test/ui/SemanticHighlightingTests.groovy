@@ -16,7 +16,9 @@
 package org.codehaus.groovy.eclipse.test.ui
 
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.*
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
 import static org.junit.Assert.assertEquals
+import static org.junit.Assume.assumeTrue
 
 import org.codehaus.groovy.eclipse.GroovyPlugin
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants
@@ -758,6 +760,92 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('ex in'),  2, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('ex //'),  2, VARIABLE),
             new HighlightedTypedPosition(contents.lastIndexOf('ex'), 2, VARIABLE))
+    }
+
+    @Test
+    void testForParam() {
+        String contents = '''\
+            for (int i = 0; i < n; i++) {
+              i
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('i ='), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('0'  ), 1, NUMBER  ),
+            new HighlightedTypedPosition(contents.indexOf('i <'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('n; '), 1, UNKNOWN ),
+            new HighlightedTypedPosition(contents.indexOf('i++'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('i'), 1, VARIABLE))
+    }
+
+    @Test
+    void testForParams() {
+        assumeTrue(isParrotParser())
+
+        String contents = '''\
+            for (int i = 0, n = 999; i < n; i++) {
+              i
+              n
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('i ='), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('0'  ), 1, NUMBER  ),
+            new HighlightedTypedPosition(contents.indexOf('n ='), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('999'), 3, NUMBER  ),
+            new HighlightedTypedPosition(contents.indexOf('i <'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('n; '), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('i++'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('i'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('n'), 1, VARIABLE))
+    }
+
+    @Test
+    void testForParams2() {
+        assumeTrue(isParrotParser())
+
+        String contents = '''\
+            for (def (i, n) = [0, 999]; i < n; i++) {
+              i
+              n
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('i'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('n'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('0'  ), 1, NUMBER  ),
+            new HighlightedTypedPosition(contents.indexOf('999'), 3, NUMBER  ),
+            new HighlightedTypedPosition(contents.indexOf('i <'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('n; '), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('i++'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('i'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('n'), 1, VARIABLE))
+    }
+
+    @Test
+    void testForParams3() {
+        assumeTrue(isParrotParser())
+
+        String contents = '''\
+            for (def (int i, int n) = [0, 999]; i < n; i++) {
+              i
+              n
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('i,'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('n)'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('0'  ), 1, NUMBER  ),
+            new HighlightedTypedPosition(contents.indexOf('999'), 3, NUMBER  ),
+            new HighlightedTypedPosition(contents.indexOf('i <'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('n; '), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('i++'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('i'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('n'), 1, VARIABLE))
     }
 
     @Test
