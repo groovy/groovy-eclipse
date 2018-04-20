@@ -2259,11 +2259,16 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     @Override
     public VariableExpression visitTypeNamePair(TypeNamePairContext ctx) {
+        /* GRECLIPSE edit
         return configureAST(
                 new VariableExpression(
                         this.visitVariableDeclaratorId(ctx.variableDeclaratorId()).getName(),
                         this.visitType(ctx.type())),
                 ctx);
+        */
+        VariableExpression var = new VariableExpression(visitIdentifier(ctx.variableDeclaratorId().identifier()), visitType(ctx.type()));
+        return configureAST(var, ctx.variableDeclaratorId());
+        // GRECLIPSE end
     }
 
     @Override
