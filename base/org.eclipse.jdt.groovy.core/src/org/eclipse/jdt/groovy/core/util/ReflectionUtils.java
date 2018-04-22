@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,8 +36,7 @@ public class ReflectionUtils {
     private ReflectionUtils() {}
 
     public static Class<?>[] getAllInterfaces(Class<?> clazz) {
-        @SuppressWarnings("rawtypes")
-        Set<Class> interfaces = new LinkedHashSet<>();
+        Set<Class<?>> interfaces = new LinkedHashSet<>();
 
         do {
             Collections.addAll(interfaces, clazz.getInterfaces());
@@ -50,8 +49,10 @@ public class ReflectionUtils {
     public static <T> Constructor<T> getConstructor(Class<T> instanceType, Class<?>... parameterTypes) {
         try {
             Constructor<T> ctor = instanceType.getDeclaredConstructor(parameterTypes);
-            ctor.setAccessible(true);
+            if (!ctor.isAccessible()) ctor.setAccessible(true);
             return ctor;
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -62,8 +63,8 @@ public class ReflectionUtils {
             return ctor.newInstance(args);
         } catch (RuntimeException e) {
             throw e;
-        } catch (Throwable t) {
-            throw new RuntimeException(t);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -76,69 +77,85 @@ public class ReflectionUtils {
         }
     }
 
-    public static Object getPrivateField(Class<?> clazz, String fieldName, Object target) {
-        String key = clazz.getCanonicalName() + fieldName;
-        Field field = FIELDS.get(key);
+    public static <R, T> R getPrivateField(Class<? extends T> clazz, String fieldName, T target) {
         try {
-            if (field == null) {
-                field = clazz.getDeclaredField(fieldName);
-                field.setAccessible(true);
-                FIELDS.put(key, field);
-            }
-            return field.get(target);
+            Field field = getDeclaredField(clazz, fieldName);
+
+            @SuppressWarnings("unchecked")
+            R result = (R) field.get(target);
+            return result;
         } catch (Exception e) {
             log("Error getting private field '" + fieldName + "' on class " + clazz, e);
+            return null;
         }
-        return null;
     }
 
-    public static void setPrivateField(Class<?> clazz, String fieldName, Object target, Object newValue) {
-        String key = clazz.getCanonicalName() + fieldName;
-        Field field = FIELDS.get(key);
+    public static <T> void setPrivateField(Class<? extends T> clazz, String fieldName, T target, Object value) {
         try {
-            if (field == null) {
-                field = clazz.getDeclaredField(fieldName);
-                field.setAccessible(true);
-                FIELDS.put(key, field);
-            }
-            field.set(target, newValue);
+            Field field = getDeclaredField(clazz, fieldName);
+
+            field.set(target, value);
         } catch (Exception e) {
             log("Error setting private field '" + fieldName + "' on class " + clazz, e);
         }
     }
 
-    public static <T> Object executeNoArgPrivateMethod(Class<T> clazz, String methodName, Object target) {
+    public static <R, T> R executePrivateMethod(Class<? extends T> clazz, String methodName, T target) {
         return executePrivateMethod(clazz, methodName, NO_TYPES, target, NO_ARGS);
     }
 
-    public static <T> Object executePrivateMethod(Class<T> clazz, String methodName, Class<?>[] types, Object target, Object[] args) {
-        // forget caching for now...
+    public static <R, T> R executePrivateMethod(Class<? extends T> clazz, String methodName, Class<?>[] paramTypes, T target, Object[] args) {
         try {
-            Method method = clazz.getDeclaredMethod(methodName, types);
-            method.setAccessible(true);
-            return method.invoke(target, args);
+            Method method = getDeclaredMethod(clazz, methodName, paramTypes);
+
+            @SuppressWarnings("unchecked")
+            R result = (R) method.invoke(target, args);
+            return result;
         } catch (Exception e) {
             log("Error executing private method '" + methodName + "' on class " + clazz, e);
             return null;
         }
     }
 
-    public static <T> Object throwableExecutePrivateMethod(Class<? extends T> clazz, String methodName, Class<?>[] types, T target, Object[] args) throws Exception {
-        // forget caching for now...
-        Method method = clazz.getDeclaredMethod(methodName, types);
-        method.setAccessible(true);
-        return method.invoke(target, args);
+    public static <R, T> R throwableExecutePrivateMethod(Class<? extends T> clazz, String methodName, Class<?>[] paramTypes, T target, Object[] args) throws Exception {
+        Method method = getDeclaredMethod(clazz, methodName, paramTypes);
+
+        @SuppressWarnings("unchecked")
+        R result = (R) method.invoke(target, args);
+        return result;
     }
 
-    public static <T> Object throwableGetPrivateField(Class<? extends T> clazz, String fieldName, T target) throws Exception {
-        String key = clazz.getCanonicalName() + fieldName;
-        Field field = FIELDS.get(key);
-        if (field == null) {
-            field = clazz.getDeclaredField(fieldName);
-            field.setAccessible(true);
-            FIELDS.put(key, field);
-        }
-        return field.get(target);
+    public static <R, T> R throwableGetPrivateField(Class<? extends T> clazz, String fieldName, T target) throws Exception {
+        Field field = getDeclaredField(clazz, fieldName);
+
+        @SuppressWarnings("unchecked")
+        R result = (R) field.get(target);
+        return result;
+    }
+
+    //--------------------------------------------------------------------------
+
+    private static Field getDeclaredField(Class<?> clazz, String field) throws Exception {
+        return FIELDS.computeIfAbsent(clazz.getCanonicalName() + field, k -> {
+            try {
+                Field f = clazz.getDeclaredField(field);
+                if (!f.isAccessible()) f.setAccessible(true);
+                return f;
+
+            } catch (NoSuchFieldException e) {
+                log("Error finding field '" + field + "' on class " + clazz.getName(), e);
+                return null;
+
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    private static Method getDeclaredMethod(Class<?> clazz, String method, Class<?>... paramTypes) throws Exception {
+        Method m = clazz.getDeclaredMethod(method, paramTypes);
+        if (!m.isAccessible()) m.setAccessible(true);
+        return m;
     }
 
     private static void log(String message, Throwable throwable) {

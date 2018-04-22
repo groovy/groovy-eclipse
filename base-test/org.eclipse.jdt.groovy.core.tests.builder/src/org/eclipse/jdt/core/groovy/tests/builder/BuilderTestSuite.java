@@ -80,63 +80,82 @@ public abstract class BuilderTestSuite {
     @After
     public final void tearDownTestCase() {
         env.resetWorkspace();
-        // Discard primary working copies and copies with owner left from failed tests
-        ICompilationUnit[] wcs = null;
-        int i = 0;
-        do {
-            wcs = JavaModelManager.getJavaModelManager().getWorkingCopies(null, true);
-            if (wcs != null) {
-                for (ICompilationUnit workingCopy : wcs) {
-                    try {
-                        workingCopy.discardWorkingCopy();
-                        workingCopy.close();
-                    } catch (Exception e) {
-                        e.printStackTrace();
+        try {
+            // discard primary working copies and copies with owner left from failed tests
+            ICompilationUnit[] wcs = null;
+            int i = 0;
+            do {
+                wcs = JavaModelManager.getJavaModelManager().getWorkingCopies(null, true);
+                if (wcs != null) {
+                    for (ICompilationUnit workingCopy : wcs) {
+                        try {
+                            workingCopy.discardWorkingCopy();
+                            workingCopy.close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
-            }
-            i += 1;
-            if (i > 20 && wcs != null) {
-                Assert.fail("Could not delete working copies " + wcs);
-            }
-        } while (wcs != null && wcs.length > 0);
-        Assert.assertTrue("ModuleNodeMapper should be empty when there are no working copies", moduleNodeMapperCacheSize >= ModuleNodeMapper.size());
-        JavaCore.setOptions(JavaCore.getDefaultOptions());
+                i += 1;
+                if (i > 20 && wcs != null) {
+                    Assert.fail("Could not delete working copies " + wcs);
+                }
+            } while (wcs != null && wcs.length > 0);
+
+            Assert.assertTrue("ModuleNodeMapper should be empty when there are no working copies", moduleNodeMapperCacheSize >= ModuleNodeMapper.size());
+        } finally {
+            JavaCore.setOptions(JavaCore.getDefaultOptions());
+        }
     }
 
     protected final void cleanBuild() {
         debugRequestor.clearResult();
         debugRequestor.activate();
-        env.cleanBuild();
-        debugRequestor.deactivate();
+        try {
+            env.cleanBuild();
+        } finally {
+            debugRequestor.deactivate();
+        }
     }
 
     protected final void fullBuild() {
         debugRequestor.clearResult();
         debugRequestor.activate();
-        env.fullBuild();
-        debugRequestor.deactivate();
+        try {
+            env.fullBuild();
+        } finally {
+            debugRequestor.deactivate();
+        }
     }
 
     protected final void fullBuild(IPath projectPath) {
         debugRequestor.clearResult();
         debugRequestor.activate();
-        env.fullBuild(projectPath);
-        debugRequestor.deactivate();
+        try {
+            env.fullBuild(projectPath);
+        } finally {
+            debugRequestor.deactivate();
+        }
     }
 
     protected final void incrementalBuild() {
         debugRequestor.clearResult();
         debugRequestor.activate();
-        env.incrementalBuild();
-        debugRequestor.deactivate();
+        try {
+            env.incrementalBuild();
+        } finally {
+            debugRequestor.deactivate();
+        }
     }
 
     protected final void incrementalBuild(IPath projectPath) {
         debugRequestor.clearResult();
         debugRequestor.activate();
-        env.incrementalBuild(projectPath);
-        debugRequestor.deactivate();
+        try {
+            env.incrementalBuild(projectPath);
+        } finally {
+            debugRequestor.deactivate();
+        }
     }
 
     protected void executeClass(IPath projectPath, String className, String expectingOutput, String expectedError) {
@@ -163,7 +182,7 @@ public abstract class BuilderTestSuite {
         if (expectedError == null && actualError.length() != 0) {
             if (actualError.trim().endsWith(
                 "WARNING: Module [groovy-all] - Unable to load extension class [org.codehaus.groovy.runtime.NioGroovyMethods]")) {
-                // Allow this it indicates (usually) running the tests with groovy 2.3 on a pre 1.7 vm
+                // allow this it indicates (usually) running the tests with groovy 2.3 on a pre 1.7 vm
             } else {
                 Assert.fail("unexpected error : " + actualError);
             }
@@ -187,7 +206,7 @@ public abstract class BuilderTestSuite {
     //--------------------------------------------------------------------------
 
     protected final void expectingCompiledClasses(String... expected) {
-        String[] actual = (String[]) ReflectionUtils.executeNoArgPrivateMethod(debugRequestor.getClass(), "getCompiledClasses", debugRequestor);
+        String[] actual = ReflectionUtils.executePrivateMethod(debugRequestor.getClass(), "getCompiledClasses", debugRequestor);
         Util.sort(actual);
         Util.sort(expected);
         expectingCompiling(actual, expected, "unexpected recompiled units. lenExpected=" + expected.length + " lenActual=" + actual.length);
@@ -195,19 +214,17 @@ public abstract class BuilderTestSuite {
 
     private void expectingCompiling(String[] actual, String[] expected, String message) {
         StringBuilder actualBuffer = new StringBuilder("{");
-        for (int i = 0; i < actual.length; i++) {
-            if (i > 0)
-                actualBuffer.append(",");
+        for (int i = 0; i < actual.length; i += 1) {
+            if (i > 0) actualBuffer.append(",");
             actualBuffer.append(actual[i]);
         }
-        actualBuffer.append('}');
+        actualBuffer.append("}");
         StringBuilder expectedBuffer = new StringBuilder("{");
-        for (int i = 0; i < expected.length; i++) {
-            if (i > 0)
-                expectedBuffer.append(",");
+        for (int i = 0; i < expected.length; i += 1) {
+            if (i > 0) expectedBuffer.append(",");
             expectedBuffer.append(expected[i]);
         }
-        expectedBuffer.append('}');
+        expectedBuffer.append("}");
         Assert.assertEquals(message, expectedBuffer.toString(), actualBuffer.toString());
     }
 
@@ -235,7 +252,7 @@ public abstract class BuilderTestSuite {
 
     protected void expectingSpecificProblemsFor(IPath root, Problem[] problems) {
         Problem[] rootProblems = env.getProblemsFor(root);
-        next : for (int i = 0; i < problems.length; i += 1) {
+        next: for (int i = 0; i < problems.length; i += 1) {
             Problem problem = problems[i];
             for (int j = 0; j < rootProblems.length; j += 1) {
                 Problem rootProblem = rootProblems[j];

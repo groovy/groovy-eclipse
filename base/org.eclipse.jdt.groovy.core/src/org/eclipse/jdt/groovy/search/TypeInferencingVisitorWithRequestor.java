@@ -2376,8 +2376,7 @@ assert primaryExprType != null && dependentExprType != null;
                 // statically-compiled assignment chains need a little help
                 if (!(node instanceof TupleExpression) &&
                         expr.getRightExpression() instanceof ListOfExpressionsExpression) {
-                    @SuppressWarnings("unchecked")
-                    List<Expression> list = (List<Expression>) ReflectionUtils.getPrivateField(
+                    List<Expression> list = ReflectionUtils.getPrivateField(
                         ListOfExpressionsExpression.class, "expressions", expr.getRightExpression());
                     // list.get(0) should be TemporaryVariableExpression
                     return (node != list.get(1) && list.get(1) instanceof MethodCallExpression);

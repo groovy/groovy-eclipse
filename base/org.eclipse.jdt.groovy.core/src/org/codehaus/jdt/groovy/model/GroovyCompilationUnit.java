@@ -237,7 +237,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
                 createAST = ((Integer) ReflectionUtils.getPrivateField(ASTHolderCUInfo.class, "astLevel", astHolder)) != NO_AST;
                 resolveBindings = (Boolean) ReflectionUtils.getPrivateField(ASTHolderCUInfo.class, "resolveBindings", astHolder);
                 reconcileFlags = (Integer) ReflectionUtils.getPrivateField(ASTHolderCUInfo.class, "reconcileFlags", astHolder);
-                problems = HashMap.class.cast(ReflectionUtils.getPrivateField(ASTHolderCUInfo.class, "problems", astHolder));
+                problems = ReflectionUtils.getPrivateField(ASTHolderCUInfo.class, "problems", astHolder);
             } else {
                 createAST = false;
                 resolveBindings = false;

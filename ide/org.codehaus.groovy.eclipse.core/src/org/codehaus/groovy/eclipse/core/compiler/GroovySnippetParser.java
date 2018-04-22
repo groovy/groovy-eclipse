@@ -80,10 +80,10 @@ public class GroovySnippetParser {
 
     public GroovySourceAST parseForCST(CharSequence source) {
         SourceUnit sourceUnit = dietParse(source).getSourceUnit();
-        ParserPlugin parserPlugin = (ParserPlugin) ReflectionUtils.getPrivateField(SourceUnit.class, "parserPlugin", sourceUnit);
+        ParserPlugin parserPlugin = ReflectionUtils.getPrivateField(SourceUnit.class, "parserPlugin", sourceUnit);
         if (parserPlugin instanceof AntlrParserPlugin) {
             // TODO: This field is nulled out at the end of AntlrParserPlugin.buildAST
-            return (GroovySourceAST) ReflectionUtils.getPrivateField(AntlrParserPlugin.class, "ast", parserPlugin);
+            return ReflectionUtils.getPrivateField(AntlrParserPlugin.class, "ast", parserPlugin);
         }
         return null;
     }

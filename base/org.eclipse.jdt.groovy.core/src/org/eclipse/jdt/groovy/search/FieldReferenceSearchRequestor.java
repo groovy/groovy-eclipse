@@ -54,11 +54,11 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
         this.requestor = requestor;
         this.participant = participant;
 
-        char[] arr = (char[]) ReflectionUtils.getPrivateField(VariablePattern.class, "name", pattern);
+        char[] arr = ReflectionUtils.getPrivateField(VariablePattern.class, "name", pattern);
         fieldName = String.valueOf(arr);
-        arr = (char[]) ReflectionUtils.getPrivateField(FieldPattern.class, "declaringSimpleName", pattern);
+        arr = ReflectionUtils.getPrivateField(FieldPattern.class, "declaringSimpleName", pattern);
         String declaringSimpleName = ((arr == null || arr.length == 0) ? "" : String.valueOf(arr));
-        arr = (char[]) ReflectionUtils.getPrivateField(FieldPattern.class, "declaringQualification", pattern);
+        arr = ReflectionUtils.getPrivateField(FieldPattern.class, "declaringQualification", pattern);
         String declaringQualification = ((arr == null || arr.length == 0) ? "" : (String.valueOf(arr) + "."));
         declaringQualifiedName = declaringQualification + declaringSimpleName;
 

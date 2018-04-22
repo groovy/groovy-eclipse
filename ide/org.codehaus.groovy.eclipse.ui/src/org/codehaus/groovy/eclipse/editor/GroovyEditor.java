@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,7 +68,6 @@ import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaOutlinePage;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
-import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.SelectionHistory;
 import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.StructureSelectionAction;
 import org.eclipse.jdt.internal.ui.text.JavaHeuristicScanner;
 import org.eclipse.jdt.internal.ui.text.JavaWordFinder;
@@ -860,11 +859,9 @@ public class GroovyEditor extends CompilationUnitEditor {
                 if (model instanceof AbstractMarkerAnnotationModel) {
                     if (ReflectionUtils.getPrivateField(AbstractMarkerAnnotationModel.class, "fMarkerUpdaterSpecifications", model) == null) {
                         // force instantiation of the extension points
-                        ReflectionUtils.executeNoArgPrivateMethod(AbstractMarkerAnnotationModel.class, "installMarkerUpdaters", model);
+                        ReflectionUtils.executePrivateMethod(AbstractMarkerAnnotationModel.class, "installMarkerUpdaters", model);
                     }
-                    @SuppressWarnings("unchecked")
-                    List<IConfigurationElement> updaterSpecs = (List<IConfigurationElement>)
-                        ReflectionUtils.getPrivateField(AbstractMarkerAnnotationModel.class, "fMarkerUpdaterSpecifications", model);
+                    List<IConfigurationElement> updaterSpecs = ReflectionUtils.getPrivateField(AbstractMarkerAnnotationModel.class, "fMarkerUpdaterSpecifications", model);
                     // remove the marker updater for Java breakpoints; the Groovy one will be used instead
                     for (Iterator<IConfigurationElement> specIter = updaterSpecs.iterator(); specIter.hasNext();) {
                         IConfigurationElement spec = specIter.next();
@@ -1035,8 +1032,7 @@ public class GroovyEditor extends CompilationUnitEditor {
         markAsStateDependentAction("IndentOnTab", true);
 
         // selection history actions
-        ExpandSelectionAction selectionAction = new ExpandSelectionAction(this,
-            (SelectionHistory) ReflectionUtils.getPrivateField(JavaEditor.class, "fSelectionHistory", this));
+        ExpandSelectionAction selectionAction = new ExpandSelectionAction(this, ReflectionUtils.getPrivateField(JavaEditor.class, "fSelectionHistory", this));
         selectionAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.SELECT_ENCLOSING);
         setAction(StructureSelectionAction.ENCLOSING, selectionAction);
         setAction(StructureSelectionAction.PREVIOUS, null);
@@ -1047,8 +1043,8 @@ public class GroovyEditor extends CompilationUnitEditor {
         ISurroundWithFactory surroundWithFactory = (ISurroundWithFactory) Platform.getAdapterManager()
             .loadAdapter(this, "org.codehaus.groovy.eclipse.quickfix.templates.SurroundWithAdapterFactory");
         if (surroundWithFactory != null) {
-            CompositeActionGroup compositActions = (CompositeActionGroup) ReflectionUtils.getPrivateField(CompilationUnitEditor.class, "fContextMenuGroup", this);
-            ActionGroup[] groups = (ActionGroup[]) ReflectionUtils.getPrivateField(CompositeActionGroup.class, "fGroups", compositActions);
+            CompositeActionGroup compositActions = ReflectionUtils.getPrivateField(CompilationUnitEditor.class, "fContextMenuGroup", this);
+            ActionGroup[] groups = ReflectionUtils.getPrivateField(CompositeActionGroup.class, "fGroups", compositActions);
             boolean found = false;
             ActionGroup surroundWithGroup = surroundWithFactory.createSurrundWithGroup(this, ITextEditorActionConstants.GROUP_EDIT);
             for (int i = 0, n = groups.length; i < n; i += 1) {
@@ -1063,7 +1059,7 @@ public class GroovyEditor extends CompilationUnitEditor {
             }
 
             found = false;
-            groups = (ActionGroup[]) ReflectionUtils.getPrivateField(CompositeActionGroup.class, "fGroups", fActionGroups);
+            groups = ReflectionUtils.getPrivateField(CompositeActionGroup.class, "fGroups", fActionGroups);
             for (int i = 0, n = groups.length; i < n; i += 1) {
                 if (groups[i] instanceof SurroundWithActionGroup) {
                     found = true;
@@ -1171,7 +1167,7 @@ public class GroovyEditor extends CompilationUnitEditor {
         ReflectionUtils.setPrivateField(GenerateActionGroup.class, "fOrganizeImports", group, organizeGroovyImportsAction);
 
         // disable Clean Ups...
-        AllCleanUpsAction acua = (AllCleanUpsAction) ReflectionUtils.getPrivateField(GenerateActionGroup.class, "fCleanUp", group);
+        AllCleanUpsAction acua = ReflectionUtils.getPrivateField(GenerateActionGroup.class, "fCleanUp", group);
         acua.setEnabled(false);
     }
 
@@ -1240,7 +1236,7 @@ public class GroovyEditor extends CompilationUnitEditor {
 
     protected final void replaceRefactoringAction(String actionFieldName, SelectionDispatchAction newAction) {
         RefactorActionGroup group = getRefactorActionGroup();
-        SelectionDispatchAction action = (SelectionDispatchAction) ReflectionUtils.getPrivateField(RefactorActionGroup.class, actionFieldName, group);
+        SelectionDispatchAction action = ReflectionUtils.getPrivateField(RefactorActionGroup.class, actionFieldName, group);
         if (action != null) {
             getSite().getSelectionProvider().removeSelectionChangedListener(action);
         }
@@ -1328,7 +1324,7 @@ public class GroovyEditor extends CompilationUnitEditor {
     }
 
     protected Job fOccurrencesFinderJob_get() throws Exception {
-        return (Job) ReflectionUtils.throwableGetPrivateField(JavaEditor.class, "fOccurrencesFinderJob", this);
+        return ReflectionUtils.throwableGetPrivateField(JavaEditor.class, "fOccurrencesFinderJob", this);
     }
 
     protected boolean fMarkOccurrenceAnnotations_get() throws Exception {
@@ -1336,7 +1332,7 @@ public class GroovyEditor extends CompilationUnitEditor {
     }
 
     protected IRegion fMarkOccurrenceTargetRegion_get() throws Exception {
-        return (IRegion) ReflectionUtils.throwableGetPrivateField(JavaEditor.class, "fMarkOccurrenceTargetRegion", this);
+        return ReflectionUtils.throwableGetPrivateField(JavaEditor.class, "fMarkOccurrenceTargetRegion", this);
     }
 
     protected void fMarkOccurrenceTargetRegion_set(IRegion r) throws Exception {

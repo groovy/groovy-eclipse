@@ -187,9 +187,8 @@ public abstract class GroovyCompilerTestSuite {
         return complianceLevel >= level;
     }
 
-    @SuppressWarnings("unchecked")
     protected final Map<String, String> getCompilerOptions() {
-        return (Map<String, String>) ReflectionUtils.executeNoArgPrivateMethod(AbstractRegressionTest.class, "getCompilerOptions", testDriver);
+        return ReflectionUtils.executePrivateMethod(AbstractRegressionTest.class, "getCompilerOptions", testDriver);
     }
 
     protected final void runConformTest(String[] sources) {

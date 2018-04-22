@@ -90,11 +90,11 @@ public class OrganizeGroovyImportsAction extends OrganizeImportsAction {
     }
 
     protected JavaEditor getEditor() {
-        return (JavaEditor) ReflectionUtils.getPrivateField(OrganizeImportsAction.class, "fEditor", this);
+        return ReflectionUtils.getPrivateField(OrganizeImportsAction.class, "fEditor", this);
     }
 
     protected MultiOrganizeImportAction getDelegate() {
-        MultiOrganizeImportAction delegate = (MultiOrganizeImportAction) ReflectionUtils.getPrivateField(OrganizeImportsAction.class, "fCleanUpDelegate", this);
+        MultiOrganizeImportAction delegate = ReflectionUtils.getPrivateField(OrganizeImportsAction.class, "fCleanUpDelegate", this);
         // override the final field's MultiOrganizeImportAction with our import clean-up
         MultiOrganizeImportAction override = new MultiOrganizeImportAction(getSite()) {
             @Override

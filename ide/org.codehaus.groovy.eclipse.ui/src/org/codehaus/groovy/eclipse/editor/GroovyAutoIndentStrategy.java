@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.editor;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.refactoring.formatter.GroovyIndentationService;
-import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.ui.text.java.JavaAutoIndentStrategy;
 import org.eclipse.jface.text.BadLocationException;
@@ -39,9 +38,9 @@ public class GroovyAutoIndentStrategy extends AbstractAutoEditStrategy {
 
     public GroovyAutoIndentStrategy(JavaAutoIndentStrategy javaStrategy) {
         this.javaStrategy = javaStrategy;
-        ReflectionUtils.executeNoArgPrivateMethod(JavaAutoIndentStrategy.class, "clearCachedValues", javaStrategy);
+        ReflectionUtils.executePrivateMethod(JavaAutoIndentStrategy.class, "clearCachedValues", javaStrategy);
         this.closeBraces = (Boolean) ReflectionUtils.getPrivateField(JavaAutoIndentStrategy.class, "fCloseBrace", javaStrategy);
-        this.indentService = GroovyIndentationService.get((IJavaProject) ReflectionUtils.getPrivateField(JavaAutoIndentStrategy.class, "fProject", javaStrategy));
+        this.indentService = GroovyIndentationService.get(ReflectionUtils.getPrivateField(JavaAutoIndentStrategy.class, "fProject", javaStrategy));
     }
 
     @Override

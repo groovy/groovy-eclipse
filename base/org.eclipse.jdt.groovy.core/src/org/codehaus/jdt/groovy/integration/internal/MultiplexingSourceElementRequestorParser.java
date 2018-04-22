@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,9 +77,9 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
                     super.notifySourceElementRequestor(importReference, isPackage);
                     if (!isPackage && importReference.annotations != null) {
                         try {
-                        ImportContainerInfo importContainerInfo = (ImportContainerInfo) ReflectionUtils.getPrivateField(CompilationUnitStructureRequestor.class, "importContainerInfo", compUnitStructureRequestor);
+                        ImportContainerInfo importContainerInfo = ReflectionUtils.getPrivateField(CompilationUnitStructureRequestor.class, "importContainerInfo", compUnitStructureRequestor);
                         for (Annotation annotation : importReference.annotations) {
-                            IJavaElement[] imports = (IJavaElement[]) ReflectionUtils.throwableExecutePrivateMethod(CompilationUnitStructureRequestor.class, "getChildren", new Class[] {Object.class}, compUnitStructureRequestor, new Object[] {importContainerInfo});
+                            IJavaElement[] imports = ReflectionUtils.throwableExecutePrivateMethod(CompilationUnitStructureRequestor.class, "getChildren", new Class[] {Object.class}, compUnitStructureRequestor, new Object[] {importContainerInfo});
 
                             //requestor.acceptAnnotation(Annotation annotation, AnnotatableInfo parentInfo, JavaElement parentHandle);
                             ReflectionUtils.throwableExecutePrivateMethod(CompilationUnitStructureRequestor.class, "acceptAnnotation",
@@ -115,7 +115,7 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
             GroovyParser groovyParser = new GroovyParser(this.groovyParser.requestor, options, problemReporter, false, true);
             CompilationUnitDeclaration cud = groovyParser.dietParse(unit, compilationResult);
 
-            SourceElementNotifier notifier = (SourceElementNotifier) ReflectionUtils.getPrivateField(SourceElementParser.class, "notifier", this);
+            SourceElementNotifier notifier = ReflectionUtils.getPrivateField(SourceElementParser.class, "notifier", this);
             notifier.notifySourceElementRequestor(cud, 0, unit.getContents().length, groovyReportReferenceInfo, createSourceEnds(cud), Collections.EMPTY_MAP); // we don't care about the @category tag, so pass empty map
 
             return cud;

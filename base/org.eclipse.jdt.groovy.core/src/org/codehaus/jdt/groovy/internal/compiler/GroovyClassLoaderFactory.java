@@ -122,7 +122,7 @@ public final class GroovyClassLoaderFactory {
                     nameEnvironment = ((INameEnvironment[]) ReflectionUtils.getPrivateField(nameEnvironment.getClass(), "classLibs", nameEnvironment))[0];
                 }
                 if (nameEnvironment instanceof FileSystem) {
-                    FileSystem.Classpath[] classpaths = (FileSystem.Classpath[]) ReflectionUtils.getPrivateField(FileSystem.class, "classpaths", nameEnvironment);
+                    FileSystem.Classpath[] classpaths = ReflectionUtils.getPrivateField(FileSystem.class, "classpaths", nameEnvironment);
                     if (classpaths != null) {
                         batchLoader = new GroovyClassLoader();
                         for (FileSystem.Classpath classpath : classpaths) {
@@ -194,7 +194,7 @@ public final class GroovyClassLoaderFactory {
 
     private static IRuntimeClasspathEntry[] resolveRuntimeClasspathEntry(IRuntimeClasspathEntry classpathEntry, IJavaProject javaProject) throws Exception {
         //return JavaRuntime.resolveRuntimeClasspathEntry(classpathEntry, javaProject); // indirect dependency on org.eclipse.debug.core.ILaunchConfiguration
-        return (IRuntimeClasspathEntry[]) ReflectionUtils.throwableExecutePrivateMethod(JavaRuntime.class, "resolveRuntimeClasspathEntry", new Class[] {IRuntimeClasspathEntry.class, IJavaProject.class}, JavaRuntime.class, new Object[] {classpathEntry, javaProject});
+        return ReflectionUtils.throwableExecutePrivateMethod(JavaRuntime.class, "resolveRuntimeClasspathEntry", new Class[] {IRuntimeClasspathEntry.class, IJavaProject.class}, JavaRuntime.class, new Object[] {classpathEntry, javaProject});
     }
 
     private static String getAbsoluteLocation(IRuntimeClasspathEntry classpathEntry) {

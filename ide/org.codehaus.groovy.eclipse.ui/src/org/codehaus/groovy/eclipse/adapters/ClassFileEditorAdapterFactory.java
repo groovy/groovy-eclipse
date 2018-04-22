@@ -47,8 +47,8 @@ public class ClassFileEditorAdapterFactory implements IAdapterFactory {
             CompilationUnit unit = SharedASTProvider.getAST(root, SharedASTProvider.WAIT_YES, null);
             if (unit.getClass().getName().equals("org.codehaus.jdt.groovy.core.dom.GroovyCompilationUnit")) {
                 // TODO: Is there a better way to get from GroovyCompilationUnit to GroovyCompilationUnitDeclaration?
-                Object resolver = ReflectionUtils.executeNoArgPrivateMethod(org.eclipse.jdt.core.dom.AST.class, "getBindingResolver", unit.getAST());
-                CompilationUnitScope scope = (CompilationUnitScope) ReflectionUtils.executeNoArgPrivateMethod(resolver.getClass(), "scope", resolver);
+                Object resolver = ReflectionUtils.executePrivateMethod(org.eclipse.jdt.core.dom.AST.class, "getBindingResolver", unit.getAST());
+                CompilationUnitScope scope = ReflectionUtils.executePrivateMethod(resolver.getClass(), "scope", resolver);
 
                 ModuleNode moduleNode = ((GroovyCompilationUnitDeclaration) scope.referenceContext).getModuleNode();
                 if (adapterType.equals(ModuleNode.class)) {

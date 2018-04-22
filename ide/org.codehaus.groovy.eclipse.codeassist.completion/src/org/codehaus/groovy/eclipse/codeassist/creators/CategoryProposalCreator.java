@@ -182,9 +182,9 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
             IJavaCompletionProposal javaProposal = super.createJavaProposal(context, javaContext);
             if (javaProposal instanceof LazyJavaCompletionProposal) {
                 //ProposalInfo proposalInfo = ((LazyJavaCompletionProposal) javaProposal).getProposalInfo();
-                ProposalInfo proposalInfo = (ProposalInfo) ReflectionUtils.executeNoArgPrivateMethod(LazyJavaCompletionProposal.class, "getProposalInfo", javaProposal);
+                ProposalInfo proposalInfo = ReflectionUtils.executePrivateMethod(LazyJavaCompletionProposal.class, "getProposalInfo", javaProposal);
                 //CompletionProposal proposal = ((LazyJavaCompletionProposal) javaProposal).getProposal();
-                CompletionProposal proposal = (CompletionProposal) ReflectionUtils.executeNoArgPrivateMethod(LazyJavaCompletionProposal.class, "getProposal", javaProposal);
+                CompletionProposal proposal = ReflectionUtils.executePrivateMethod(LazyJavaCompletionProposal.class, "getProposal", javaProposal);
                 // reuse existing or create one to call some private methods
                 final MethodProposalInfo methodProposalInfo = (proposalInfo instanceof MethodProposalInfo ? (MethodProposalInfo) proposalInfo : new MethodProposalInfo(javaContext.getProject(), proposal));
 
@@ -198,14 +198,14 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
                                 String methName = getMethod().getName();
                                 String[] paramTypes = GroovyUtils.getParameterTypeSignatures(getMethod(), false);
                                 //Map<String, char[]> typeVariables = methodProposalInfo.computeTypeVariables(type);
-                                @SuppressWarnings("unchecked") Map<String, char[]> typeVariables = (Map<String, char[]>) ReflectionUtils.
-                                    throwableExecutePrivateMethod(MethodProposalInfo.class, "computeTypeVariables", new Class[] {IType.class}, methodProposalInfo, new Object[] {type});
+                                Map<String, char[]> typeVariables = ReflectionUtils.throwableExecutePrivateMethod(MethodProposalInfo.class, "computeTypeVariables",
+                                    new Class[] {IType.class}, methodProposalInfo, new Object[] {type});
 
                                 IMethod[] methods = type.getMethods();
                                 for (int i = methods.length - 1; i >= 0; i -= 1) {
                                     if (!methName.equals(methods[i].getElementName())) continue;
                                     //boolean match = isSameMethodSignature(methName, paramTypes, false, methods[i], typeVariables, type);
-                                    Boolean match = (Boolean) ReflectionUtils.throwableExecutePrivateMethod(MethodProposalInfo.class, "isSameMethodSignature",
+                                    Boolean match = ReflectionUtils.throwableExecutePrivateMethod(MethodProposalInfo.class, "isSameMethodSignature",
                                         new Class [] {String.class, String[].class, boolean.class, IMethod.class, Map.class,     IType.class}, methodProposalInfo,
                                         new Object[] {methName,     paramTypes,     Boolean.FALSE, methods[i],    typeVariables, type       });
                                     if (Boolean.TRUE.equals(match)) {

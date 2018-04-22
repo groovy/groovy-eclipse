@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ public class TypeRequestorFactory {
         } else if (pattern instanceof PackageReferencePattern) {
             return new PackageReferenceSearchRequestor((PackageReferencePattern) pattern, requestor, possibleMatch.document.getParticipant());
         } else if (pattern instanceof LocalVariablePattern) {
-            ILocalVariable localVar = (ILocalVariable) ReflectionUtils.getPrivateField(LocalVariablePattern.class, "localVariable", pattern);
+            ILocalVariable localVar = ReflectionUtils.getPrivateField(LocalVariablePattern.class, "localVariable", pattern);
             int start;
             try {
                 start = localVar.getSourceRange().getOffset();
@@ -63,7 +63,7 @@ public class TypeRequestorFactory {
             }
             return new LocalVariableReferenceRequestor(localVar.getElementName(), localVar.getParent(), requestor, possibleMatch.document.getParticipant(), start);
         } else if (pattern instanceof OrPattern) {
-            SearchPattern[] patterns = (SearchPattern[]) ReflectionUtils.getPrivateField(OrPattern.class, "patterns", pattern);
+            SearchPattern[] patterns = ReflectionUtils.getPrivateField(OrPattern.class, "patterns", pattern);
             List<ITypeRequestor> requestors = new ArrayList<>(patterns.length);
             for (SearchPattern orPattern : patterns) {
                 if (orPattern != null) {

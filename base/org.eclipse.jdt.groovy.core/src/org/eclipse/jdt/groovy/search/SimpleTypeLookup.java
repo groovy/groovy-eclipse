@@ -712,7 +712,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         } else {
             StatementMeta meta = expr.getNodeMetaData(StatementMeta.class);
             if (meta != null) {
-                MethodNode target = (MethodNode) ReflectionUtils.getPrivateField(StatementMeta.class, "target", meta);
+                MethodNode target = ReflectionUtils.getPrivateField(StatementMeta.class, "target", meta);
                 return target;
             }
         }

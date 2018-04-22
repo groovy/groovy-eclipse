@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,8 +41,8 @@ public class RenameLocalGroovyVariableContribution extends JavaUIRefactoringCont
     @Override
     public Refactoring createRefactoring(JavaRefactoringDescriptor descriptor, RefactoringStatus status) throws CoreException {
         if (descriptor instanceof RenameJavaElementDescriptor) {
-            IJavaElement elt = (IJavaElement) ReflectionUtils.getPrivateField(RenameJavaElementDescriptor.class, "fJavaElement", descriptor);
-            String newName = (String) ReflectionUtils.getPrivateField(RenameJavaElementDescriptor.class, "fName", descriptor);
+            IJavaElement elt = ReflectionUtils.getPrivateField(RenameJavaElementDescriptor.class, "fJavaElement", descriptor);
+            String newName = ReflectionUtils.getPrivateField(RenameJavaElementDescriptor.class, "fName", descriptor);
             if (elt instanceof ILocalVariable && newName != null) {
                 ILocalVariable var = (ILocalVariable) elt;
                 return new RenameRefactoring(new GroovyRenameLocalVariableProcessor(var, newName, status));

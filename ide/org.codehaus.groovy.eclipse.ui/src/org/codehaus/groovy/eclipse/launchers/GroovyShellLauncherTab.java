@@ -45,15 +45,13 @@ public class GroovyShellLauncherTab extends JavaMainTab {
         super.createMainTypeEditor(parent, text);
         fMainText.getParent().setVisible(false);
         fMainText.setText("org.codehaus.groovy.tools.shell.Main");
-        Button fSearchButton = (Button) ReflectionUtils.getPrivateField(SharedJavaMainTab.class, "fSearchButton", this);
+        Button fSearchButton = ReflectionUtils.getPrivateField(SharedJavaMainTab.class, "fSearchButton", this);
         fSearchButton.setVisible(false);
-        Button fSearchExternalJarsCheckButton = (Button) ReflectionUtils.getPrivateField(JavaMainTab.class,
-                "fSearchExternalJarsCheckButton", this);
+        Button fSearchExternalJarsCheckButton = ReflectionUtils.getPrivateField(JavaMainTab.class, "fSearchExternalJarsCheckButton", this);
         fSearchExternalJarsCheckButton.setVisible(false);
-        Button fConsiderInheritedMainButton = (Button) ReflectionUtils.getPrivateField(JavaMainTab.class,
-                "fConsiderInheritedMainButton", this);
+        Button fConsiderInheritedMainButton = ReflectionUtils.getPrivateField(JavaMainTab.class, "fConsiderInheritedMainButton", this);
         fConsiderInheritedMainButton.setVisible(false);
-        Button fStopInMainCheckButton = (Button) ReflectionUtils.getPrivateField(JavaMainTab.class, "fStopInMainCheckButton", this);
+        Button fStopInMainCheckButton = ReflectionUtils.getPrivateField(JavaMainTab.class, "fStopInMainCheckButton", this);
         fStopInMainCheckButton.setVisible(false);
     }
 
@@ -72,24 +70,16 @@ public class GroovyShellLauncherTab extends JavaMainTab {
         }
         fProjText.setText(projectName);
 
-        ReflectionUtils.executePrivateMethod(JavaLaunchTab.class, "setCurrentLaunchConfiguration",
-                new Class[] { ILaunchConfiguration.class }, this, new Object[] { config });
+        ReflectionUtils.executePrivateMethod(JavaLaunchTab.class, "setCurrentLaunchConfiguration", new Class[] {ILaunchConfiguration.class}, this, new Object[] {config});
     }
 
-    /**
-     * @see org.eclipse.debug.ui.ILaunchConfigurationTab#getName()
-     */
     @Override
     public String getName() {
-        return "Groovy Shell"; //$NON-NLS-1$
+        return "Groovy Shell";
     }
 
-    /**
-     * @see org.eclipse.debug.ui.ILaunchConfigurationTab#getImage()
-     */
     @Override
     public Image getImage() {
         return JavaUI.getSharedImages().getImage(ISharedImages.IMG_OBJS_CLASS);
     }
-
 }

@@ -66,7 +66,7 @@ public class GroovyBreakpointRulerActionDelegate extends RulerToggleBreakpointAc
     //--------------------------------------------------------------------------
 
     protected IEditorPart getEditorPart() {
-        return (IEditorPart) ReflectionUtils.getPrivateField(RulerToggleBreakpointActionDelegate.class, "fEditor", this);
+        return ReflectionUtils.getPrivateField(RulerToggleBreakpointActionDelegate.class, "fEditor", this);
     }
 
     protected IProject getProject(IEditorInput editorInput) {

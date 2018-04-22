@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -227,7 +227,7 @@ public class GroovyRenameLinkedMode extends RenameLinkedMode {
     }
 
     private IEditingSupport getFocusEditingSupport() {
-        return (IEditingSupport) ReflectionUtils.getPrivateField(RenameLinkedMode.class, "fFocusEditingSupport", this);
+        return ReflectionUtils.getPrivateField(RenameLinkedMode.class, "fFocusEditingSupport", this);
     }
 
     private boolean getShowPreview() {
@@ -235,11 +235,11 @@ public class GroovyRenameLinkedMode extends RenameLinkedMode {
     }
 
     private IJavaElement getJavaElement() {
-        return (IJavaElement) ReflectionUtils.getPrivateField(RenameLinkedMode.class, "fJavaElement", this);
+        return ReflectionUtils.getPrivateField(RenameLinkedMode.class, "fJavaElement", this);
     }
 
     private static RenameLinkedMode getMyActiveLinkedMode() {
-        return (RenameLinkedMode) ReflectionUtils.getPrivateField(RenameLinkedMode.class, "fgActiveLinkedMode", null);
+        return ReflectionUtils.getPrivateField(RenameLinkedMode.class, "fgActiveLinkedMode", null);
     }
 
     private void setShowPreview(boolean show) {
@@ -267,11 +267,11 @@ public class GroovyRenameLinkedMode extends RenameLinkedMode {
     }
 
     private void doOpenSecondaryPopup() {
-        ReflectionUtils.executeNoArgPrivateMethod(RenameLinkedMode.class, "openSecondaryPopup", this);
+        ReflectionUtils.executePrivateMethod(RenameLinkedMode.class, "openSecondaryPopup", this);
     }
 
     private void doLinkedModeLeft() {
-        ReflectionUtils.executeNoArgPrivateMethod(RenameLinkedMode.class, "linkedModeLeft", this);
+        ReflectionUtils.executePrivateMethod(RenameLinkedMode.class, "linkedModeLeft", this);
     }
 
     private void doDoRename(boolean showPreview) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -170,7 +170,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
     }
 
     private CompilationUnitChange getChange() {
-        return (CompilationUnitChange) ReflectionUtils.getPrivateField(ExtractConstantRefactoring.class, "fChange", this);
+        return ReflectionUtils.getPrivateField(ExtractConstantRefactoring.class, "fChange", this);
     }
 
     private void setChange(CompilationUnitChange change) {
@@ -648,24 +648,21 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
 
     private GroovyCompilationUnit getCu() {
         if (unit == null) {
-            unit =
-                (GroovyCompilationUnit) ReflectionUtils.getPrivateField(ExtractConstantRefactoring.class, "fCu", this);
+            unit = ReflectionUtils.getPrivateField(ExtractConstantRefactoring.class, "fCu", this);
         }
         return unit;
     }
 
     private int getSelectionStart() {
         if (start == -1) {
-            start =
-                (Integer) ReflectionUtils.getPrivateField(ExtractConstantRefactoring.class, "fSelectionStart", this);
+            start = (Integer) ReflectionUtils.getPrivateField(ExtractConstantRefactoring.class, "fSelectionStart", this);
         }
         return start;
     }
 
     private int getSelectionLength() {
         if (length == -1) {
-            length =
-                (Integer) ReflectionUtils.getPrivateField(ExtractConstantRefactoring.class, "fSelectionLength", this);
+            length = (Integer) ReflectionUtils.getPrivateField(ExtractConstantRefactoring.class, "fSelectionLength", this);
         }
         return length;
     }
