@@ -1,5 +1,5 @@
- /*
- * Copyright 2009-2017 the original author or authors.
+/*
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ public class GroovyQuickFixPlugin extends AbstractUIPlugin {
 
     public static final String PLUGIN_ID = "org.codehaus.groovy.eclipse.quickfix";
 
-    public final static String GROOVY_CONTEXT_TYPE = "groovy";
+    public static final String GROOVY_CONTEXT_TYPE = "groovy";
 
     private static GroovyQuickFixPlugin plugin;
 
@@ -39,13 +39,13 @@ public class GroovyQuickFixPlugin extends AbstractUIPlugin {
         return plugin;
     }
 
+    public static void logWarning(String message, Throwable exception) {
+        log(createWarningStatus(message, exception));
+    }
+
     public static void log(String message, Throwable exception) {
         IStatus status = createErrorStatus(message, exception);
         log(status);
-    }
-
-    public static void logWarning(String message, Throwable exception) {
-        log(createWarningStatus(message, exception));
     }
 
     public static void log(Throwable exception) {
@@ -88,7 +88,7 @@ public class GroovyQuickFixPlugin extends AbstractUIPlugin {
      */
     public TemplateStore getTemplateStore() {
         if (templateStore == null) {
-            templateStore= new ContributionTemplateStore(getTemplateContextRegistry(), getPreferenceStore(), GROOVY_CONTEXT_TYPE);
+            templateStore = new ContributionTemplateStore(getTemplateContextRegistry(), getPreferenceStore(), GROOVY_CONTEXT_TYPE);
             try {
                 templateStore.load();
             } catch (IOException e) {
@@ -107,7 +107,7 @@ public class GroovyQuickFixPlugin extends AbstractUIPlugin {
         if (contextTypeRegistry == null) {
             ContributionContextTypeRegistry registry = new ContributionContextTypeRegistry();
             registry.addContextType(GROOVY_CONTEXT_TYPE);
-            contextTypeRegistry= registry;
+            contextTypeRegistry = registry;
         }
         return contextTypeRegistry;
     }

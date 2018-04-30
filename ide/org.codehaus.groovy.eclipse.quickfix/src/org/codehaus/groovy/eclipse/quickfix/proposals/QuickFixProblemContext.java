@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,11 +31,10 @@ public class QuickFixProblemContext {
     private final IInvocationContext context;
     private final IProblemLocation location;
 
-    public QuickFixProblemContext(ProblemDescriptor problemDescriptor, IInvocationContext context,
-            IProblemLocation location) {
-                this.problemDescriptor = problemDescriptor;
-                this.context = context;
-                this.location = location;
+    public QuickFixProblemContext(ProblemDescriptor problemDescriptor, IInvocationContext context, IProblemLocation location) {
+        this.problemDescriptor = problemDescriptor;
+        this.context = context;
+        this.location = location;
     }
 
     /**
@@ -104,7 +103,6 @@ public class QuickFixProblemContext {
         return getCompilationUnit() != null ? getCompilationUnit()
                 .getResource() : null;
     }
-
 
     public IInvocationContext getContext() {
         return context;

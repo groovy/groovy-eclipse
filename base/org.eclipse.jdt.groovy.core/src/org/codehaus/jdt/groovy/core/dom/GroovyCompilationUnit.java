@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,10 +38,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
     @Override
     protected void accept0(ASTVisitor visitor) {
         String visitorName = visitor.getClass().getName();
-        if (visitorName.equals("org.eclipse.jdt.internal.debug.core.hcr.MethodSearchVisitor")) {
-            // String message =
-            // "Cannot correctly answer the findMethod() call for Groovy code whilst debugging, the method AST will be empty";
-            // throw new CoreException(new Status(IStatus.CANCEL, Activator.PLUGIN_ID, IStatus.OK, message, null));
+        if ("org.eclipse.jdt.internal.debug.core.hcr.MethodSearchVisitor".equals(visitorName)) {
             return;
         }
         super.accept0(visitor);
@@ -49,7 +46,7 @@ public class GroovyCompilationUnit extends CompilationUnit {
 
     @Override
     public List getCommentList() {
-        // prevent NullPointerExceptions down-stream
-        return super.getCommentList() != null ? super.getCommentList() : Collections.emptyList();
+        // prevent down-stream NullPointerExceptions
+        return (super.getCommentList() != null ? super.getCommentList() : Collections.emptyList());
     }
 }

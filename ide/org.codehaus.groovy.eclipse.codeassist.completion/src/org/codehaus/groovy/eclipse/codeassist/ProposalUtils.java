@@ -53,16 +53,16 @@ public class ProposalUtils {
     // See org.eclipse.jdt.ui.text.java.CompletionProposalCollector
 
     /** Triggers for method proposals without parameters. Do not modify! */
-    public static final char[] METHOD_TRIGGERS = { ';', ',', '.', '[', ' ', '\t' };
+    public static final char[] METHOD_TRIGGERS = {';', ',', '.', '[', ' ', '\t'};
 
     /** Triggers for method proposals. Do not modify! */
-    public static final char[] METHOD_WITH_ARGUMENTS_TRIGGERS = { '(', '{', '-', ' ' };
+    public static final char[] METHOD_WITH_ARGUMENTS_TRIGGERS = {'(', '{', '-', ' '};
 
     /** Triggers for types. Do not modify! */
-    public static final char[] TYPE_TRIGGERS = { ';', '.', '=', '[', '(', ' ', '\t' };
+    public static final char[] TYPE_TRIGGERS = {';', '.', '=', '[', '(', ' ', '\t'};
 
     /** Triggers for variables. Do not modify! */
-    public static final char[] VAR_TRIGGER = new char[] { ';', '.', '=', '[', '(', '{', ' ', '\t' };
+    public static final char[] VAR_TRIGGER = new char[] {';', '.', '=', '[', '(', '{', ' ', '\t'};
 
     public static final ICompletionProposal[] NO_COMPLETIONS = new ICompletionProposal[0];
     public static final List<IGroovyProposal> NO_PROPOSALS = Collections.EMPTY_LIST;
@@ -121,7 +121,7 @@ public class ProposalUtils {
                     return accessRuleSet.getViolatedRestriction(CharOperation.concatWith(packageChars, fileWithoutExtension, '/'));
                 }
             }
-        } catch (JavaModelException e) {
+        } catch (JavaModelException ignore) {
         }
         return null;
     }
@@ -135,18 +135,18 @@ public class ProposalUtils {
 
     /**
      * Includes named params but not optional params.
-     */
-    public static String createMethodSignatureStr(MethodNode node) {
-        return createMethodSignatureStr(node, 0);
-    }
-
-    /**
-     * Includes named params but not optional params.
      *
      * @param ignoreParameters number of parameters to ignore at the start
      */
     public static char[] createMethodSignature(MethodNode node, int ignoreParameters) {
         return createMethodSignatureStr(node, ignoreParameters).toCharArray();
+    }
+
+    /**
+     * Includes named params but not optional params.
+     */
+    public static String createMethodSignatureStr(MethodNode node) {
+        return createMethodSignatureStr(node, 0);
     }
 
     /**
@@ -323,7 +323,7 @@ public class ProposalUtils {
                     break;
                 }
             }
-        } catch (BadLocationException e) {
+        } catch (BadLocationException ignore) {
         }
         return false;
     }

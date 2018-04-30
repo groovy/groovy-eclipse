@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ public class DocumentSourceBuffer implements ISourceBuffer {
         try {
             line = document.getLineOfOffset(offset);
             int lineOffset = document.getLineOffset(line);
-            return new int[] { line + 1, offset - lineOffset + 1 };
+            return new int[] {line + 1, offset - lineOffset + 1};
         } catch (BadLocationException e) {
             throw new IndexOutOfBoundsException(e.getMessage());
         }
@@ -69,7 +69,7 @@ public class DocumentSourceBuffer implements ISourceBuffer {
             return offset + column - 1;
         } catch (BadLocationException e) {
             try {
-                return document.getLineOffset(document.getNumberOfLines()-1);
+                return document.getLineOffset(document.getNumberOfLines() - 1);
             } catch (BadLocationException e1) {
                 throw new IndexOutOfBoundsException(e.getMessage());
             }

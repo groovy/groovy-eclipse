@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,12 @@ package org.codehaus.groovy.syntax;
 
 /**
  * A more precise form of SyntaxException that is aware of the precise start/end offsets.
- *
- * @author Andy Clement
  */
 @SuppressWarnings("serial")
 public class PreciseSyntaxException extends SyntaxException {
 
-    private int startOffset;
-    private int endOffset;
+    private final int startOffset;
+    private final int endOffset;
 
     public PreciseSyntaxException(String message, int line, int col, int startOffset, int endOffset) {
         super(message, line, col);

@@ -1,5 +1,5 @@
- /*
- * Copyright 2009-2017 the original author or authors.
+/*
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,12 +32,12 @@ public class LaunchShortcutHelper {
     /**
      * The dialog title when selecting a class to run
      */
-    public static final String SELECT_CLASS_DIALOG_TITLE = "Select Groovy Class" ;
+    public static final String SELECT_CLASS_DIALOG_TITLE = "Select Groovy Class";
 
     /**
      * The dialog text when selecting a class to run
      */
-    public static final String SELECT_CLASS_DIALOG_TEXT = "More than one Groovy class in this file can be run.  Please select the class to run." ;
+    public static final String SELECT_CLASS_DIALOG_TEXT = "More than one Groovy class in this file can be run.  Please select the class to run.";
 
     /**
      * Prompts the user to select a class from the Lists.
@@ -62,13 +62,13 @@ public class LaunchShortcutHelper {
      */
     @SuppressWarnings("unchecked")
     public static <T> T chooseFromList(List<T> options, ILabelProvider labelProvider, String title, String message) {
-        ElementListSelectionDialog dialog= new ElementListSelectionDialog(GroovyPlugin.getActiveWorkbenchShell(), labelProvider);
+        ElementListSelectionDialog dialog = new ElementListSelectionDialog(GroovyPlugin.getActiveWorkbenchShell(), labelProvider);
         dialog.setElements(options.toArray());
         dialog.setTitle(title);
         dialog.setMessage(message);
         dialog.setMultipleSelection(false);
         int result = dialog.open();
-        labelProvider.dispose() ;
+        labelProvider.dispose();
         if (result == Window.OK) {
             return (T) dialog.getFirstResult();
         }

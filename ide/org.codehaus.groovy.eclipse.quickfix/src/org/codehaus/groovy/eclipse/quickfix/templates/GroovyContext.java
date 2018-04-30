@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,24 +33,22 @@ public class GroovyContext extends JavaContext {
     }
 
     @Override
-    public TemplateBuffer evaluate(Template template)
-            throws BadLocationException, TemplateException {
+    public TemplateBuffer evaluate(Template template) throws BadLocationException, TemplateException {
         TemplateBuffer buffer = super.evaluate(template);
 
-        // TODO must reformat since Java formatter may not have worked
-        // but also must update the variable positions
-//        IDocument doc = new Document(buffer.getString());
-//        int indentLevel = (Integer) ReflectionUtils.executePrivateMethod(JavaContext.class, "getIndentation", new Class[0], this, new Object[0]);
-//        DefaultGroovyFormatter formatter = new DefaultGroovyFormatter(doc, new FormatterPreferences(this.getJavaProject()), indentLevel);
-//        try {
-//            formatter.format().apply(doc);
-//        } catch (MalformedTreeException e) {
-//            GroovyQuickFixPlugin.log("Exception during extract local variable refactoring", e);
-//        } catch (BadLocationException e) {
-//            GroovyQuickFixPlugin.log("Exception during extract local variable refactoring", e);
-//        }
-//
-//        buffer.setContent(doc.get(), buffer.getVariables());
+        // TODO must reformat since Java formatter may not have worked but also must update the variable positions
+        /*IDocument doc = new Document(buffer.getString());
+        int indentLevel = (Integer) ReflectionUtils.executePrivateMethod(JavaContext.class, "getIndentation", new Class[0], this, new Object[0]);
+        DefaultGroovyFormatter formatter = new DefaultGroovyFormatter(doc, new FormatterPreferences(this.getJavaProject()), indentLevel);
+        try {
+            formatter.format().apply(doc);
+        } catch (MalformedTreeException e) {
+            GroovyQuickFixPlugin.log("Exception during extract local variable refactoring", e);
+        } catch (BadLocationException e) {
+            GroovyQuickFixPlugin.log("Exception during extract local variable refactoring", e);
+        }
+        buffer.setContent(doc.get(), buffer.getVariables());*/
+
         return buffer;
     }
 }

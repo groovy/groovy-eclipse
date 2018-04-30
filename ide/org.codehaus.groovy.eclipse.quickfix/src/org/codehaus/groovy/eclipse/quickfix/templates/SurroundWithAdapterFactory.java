@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,8 @@ public class SurroundWithAdapterFactory implements IAdapterFactory {
         return new Class[] {SurroundWithFactory.class};
     }
 
-    @Override @SuppressWarnings("unchecked")
+    @Override
+    @SuppressWarnings("unchecked")
     public <T> T getAdapter(Object adaptable, Class<T> adapterType) {
         if (adaptable instanceof GroovyEditor && adapterType.equals(SurroundWithFactory.class)) {
             return (T) new SurroundWithFactory();

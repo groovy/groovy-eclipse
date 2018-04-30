@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ public interface IASTFragment {
      *
      * @return true iff other matches this fragment
      */
-    public boolean matches(IASTFragment other);
+    boolean matches(IASTFragment other);
 
     /**
      * Returns a sub-fragment of this one that matches other.
@@ -52,44 +52,44 @@ public interface IASTFragment {
      * @return a matching sub-fragment or {@link EmptyASTFragment} if there is
      *         no match
      */
-    public IASTFragment findMatchingSubFragment(IASTFragment other);
+    IASTFragment findMatchingSubFragment(IASTFragment other);
 
     /**
      * @return lexical start of this fragment
      */
-    public int getStart();
+    int getStart();
 
     /**
      * @return lexical end of this fragment
      */
-    public int getEnd();
+    int getEnd();
 
     /**
      * @return lexical end of this fragment with any trailing whitespace removed
      */
-    public int getTrimmedEnd(GroovyCompilationUnit unit);
+    int getTrimmedEnd(GroovyCompilationUnit unit);
 
     /**
      * Convenience method for getEnd() - getStart()
      */
-    public int getLength();
+    int getLength();
 
     /**
      * Convenience method for getTrimmedLength(unit) - getStart()
      */
-    public int getTrimmedLength(GroovyCompilationUnit unit);
+    int getTrimmedLength(GroovyCompilationUnit unit);
 
     /**
      * The associated expression is the parent node that contains all fragments. The
      * source location of the node may be larger than the start and length
      */
-    public Expression getAssociatedExpression();
+    Expression getAssociatedExpression();
 
     /**
      * The associated node is the parent node that contains all fragments. The
      * source location of the node may be larger than the start and length
      */
-    public ASTNode getAssociatedNode();
+    ASTNode getAssociatedNode();
 
     /**
      * Produces debug-ready string
@@ -97,17 +97,17 @@ public interface IASTFragment {
      *
      * @param indentLvl number of double spaces to indent the string by
      */
-    public String print(int indentLvl);
+    String print(int indentLvl);
 
     /**
      * @return number of subcomponents of this fragment
      */
-    public int fragmentLength();
+    int fragmentLength();
 
     /**
      * Part of the visitor pattern
      */
-    public void accept(FragmentVisitor visitor);
+    void accept(FragmentVisitor visitor);
 
-    public ASTFragmentKind kind();
+    ASTFragmentKind kind();
 }

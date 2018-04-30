@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,10 +67,10 @@ public class GroovyResolvedSourceMethod extends ResolvedSourceMethod implements 
         try {
             return super.getElementInfo();
         } catch (JavaModelException jme) {
-            if (!jme.getJavaModelStatus().isDoesNotExist() ||
-                    !(inferredElement instanceof MethodNode)) {
+            if (!jme.getJavaModelStatus().isDoesNotExist() || !(inferredElement instanceof MethodNode)) {
                 throw jme;
             }
+            // @formatter:off
             return new org.eclipse.jdt.internal.core.SourceMethodInfo() {{
                 MethodNode method = (MethodNode) inferredElement;
 
@@ -83,6 +83,7 @@ public class GroovyResolvedSourceMethod extends ResolvedSourceMethod implements 
                 setSourceRangeEnd(method.getEnd());
                 setFlags(method.getModifiers());
             }};
+            // @formatter:on
         }
     }
 

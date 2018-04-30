@@ -240,7 +240,7 @@ public class GroovyProjectFacade {
 
     GroovyCompilationUnit groovyModuleToCompilationUnit(ModuleNode node) {
         List<ClassNode> classes = node.getClasses();
-        ClassNode classNode = classes.size() > 0 ? (ClassNode) classes.get(0) : null;
+        ClassNode classNode = !classes.isEmpty() ? (ClassNode) classes.get(0) : null;
         if (classNode != null) {
             IType type = groovyClassToJavaType(classNode);
             if (type instanceof SourceType) {
@@ -283,8 +283,9 @@ public class GroovyProjectFacade {
         String type = Signature.toString(Signature.getTypeErasure(signature.substring(dims)));
 
         ClassNode node = ClassHelper.make(type);
-        while (dims-- > 0)
+        while (dims-- > 0) {
             node = node.makeArray();
+        }
         return node;
     }
 
@@ -336,11 +337,9 @@ public class GroovyProjectFacade {
         try {
             IMethod[] allMethods = type.getMethods();
             for (IMethod method : allMethods) {
-                if (method.getElementName().equals("main") &&
-                        Flags.isStatic(method.getFlags()) &&
-                        // void or Object are valid return types
-                        (method.getReturnType().equals("V") || method.getReturnType().endsWith("java.lang.Object;")) &&
-                        hasAppropriateArrayArgsForMain(method.getParameterTypes())) {
+                if (method.getElementName().equals("main") && Flags.isStatic(method.getFlags()) && // void or Object are valid return types
+                    (method.getReturnType().equals("V") || method.getReturnType().endsWith("java.lang.Object;")) && hasAppropriateArrayArgsForMain(method.getParameterTypes())) {
+
                     return true;
                 }
             }
@@ -367,15 +366,7 @@ public class GroovyProjectFacade {
         String sigNoArray = Signature.getElementType(params[0]);
         String name = Signature.getSignatureSimpleName(sigNoArray);
         String qual = Signature.getSignatureQualifier(sigNoArray);
-        return (name.equals(typeName)) && (qual == null || qual.equals("java.lang") || qual.equals(""));
-    }
-
-    public boolean isGroovyScript(IType type) {
-        ClassNode node = javaTypeToGroovyClass(type);
-        if (node != null) {
-            return node.isScript();
-        }
-        return false;
+        return (name.equals(typeName)) && (qual == null || qual.isEmpty() || "java.lang".equals(qual));
     }
 
     public List<IType> findAllScripts() throws JavaModelException {
@@ -401,6 +392,14 @@ public class GroovyProjectFacade {
             }
         }
         return results;
+    }
+
+    public boolean isGroovyScript(IType type) {
+        ClassNode node = javaTypeToGroovyClass(type);
+        if (node != null) {
+            return node.isScript();
+        }
+        return false;
     }
 
     public boolean isGroovyScript(ICompilationUnit unit) {

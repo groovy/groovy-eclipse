@@ -98,12 +98,13 @@ import org.eclipse.jface.text.contentassist.ICompletionProposal;
 public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
 
     private static final char[] NO_TYPE_NAME = {'.'};
-    private static final char[] _AS_ = {' ','a','s',' '};
+    private static final char[] _AS_ = {' ', 'a', 's', ' '};
+
     private static final int CHECK_CANCEL_FREQUENCY = 50;
     private static final Pattern CLOSURE_INNER_TYPE = Pattern.compile("_closure\\d+$");
 
-    private int foundTypesCount = 0;
-    private int foundConstructorsCount = 0;
+    private int foundTypesCount;
+    private int foundConstructorsCount;
 
     private ObjectVector acceptedTypes;
     private Set<String> acceptedPackages;
@@ -335,7 +336,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
     List<ICompletionProposal> processAcceptedPackages() {
         checkCancel();
         List<ICompletionProposal> proposals = new LinkedList<>();
-        if (acceptedPackages != null && acceptedPackages.size() > 0) {
+        if (acceptedPackages != null && !acceptedPackages.isEmpty()) {
             for (String packageNameStr : acceptedPackages) {
                 char[] packageName = packageNameStr.toCharArray();
                 GroovyCompletionProposal proposal = createProposal(CompletionProposal.PACKAGE_REF, context.completionLocation);
@@ -398,7 +399,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                     continue next;
                 }
 
-
                 if (imports == null && resolver.getScope() != null) {
                     initializeImportArrays(resolver.getScope());
                 }
@@ -456,13 +456,11 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
     }
 
     private ICompletionProposal proposeType(AcceptedType type) {
-        int completionOffset = (isImport || type.mustBeQualified ? offset :
-            context.completionLocation - context.completionExpression.length());
+        int completionOffset = (isImport || type.mustBeQualified ? offset : context.completionLocation - context.completionExpression.length());
 
         GroovyCompletionProposal proposal = createProposal(CompletionProposal.TYPE_REF, completionOffset);
         proposal.setAccessibility(type.accessibility);
-        proposal.setCompletion(!type.mustBeQualified ? type.simpleTypeName :
-            CharOperation.replaceOnCopy(type.fullyQualifiedName, '$', '.'));
+        proposal.setCompletion(!type.mustBeQualified ? type.simpleTypeName : CharOperation.replaceOnCopy(type.fullyQualifiedName, '$', '.'));
         proposal.setDeclarationSignature(type.packageName);
         proposal.setFlags(type.modifiers);
         proposal.setPackageName(type.packageName);
@@ -643,7 +641,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
 
                 typeProposal.setRequiredProposals(new CompletionProposal[] {outerTypeProposal});
 
-            // check for required qualifier or import statement insertion
+                // check for required qualifier or import statement insertion
                 if (CharOperation.equals(plainTypeName, completionExpressionChars, 0, plainTypeName.length)) {
                     if (!isImported(qualifierAndSimpleTypeName(ctor.packageName, outerTypeName)[0], plainTypeName)) {
                         outerTypeProposal.setCompletion(Signature.toCharArray(outerTypeProposal.getSignature()));
@@ -713,7 +711,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                 parameterTypeSigs[i] = Signature.createCharArrayTypeSignature(copy, isQualified);
             }
         }
-        return Signature.createMethodSignature(parameterTypeSigs, new char[] { 'V' });
+        return Signature.createMethodSignature(parameterTypeSigs, new char[] {'V'});
     }
 
     protected final GroovyCompletionProposal createProposal(int kind, int completionOffset) {
@@ -735,7 +733,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                     .contains(unit.getJavaProject().findType("java.lang.Throwable"))) {
                 return true;
             }
-        } catch (Exception e) {
+        } catch (Exception ignore) {
         }
         return false;
     }
@@ -912,7 +910,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         public final char[] qualifiedTypeName;
         public final char[] fullyQualifiedName;
 
-        public AcceptedCtor(
+        AcceptedCtor(
             int modifiers,
             char[] simpleTypeName,
             int parameterCount,

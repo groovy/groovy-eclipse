@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ public class AddClassCastResolver extends AbstractQuickFixResolver {
 
     @Override
     protected ProblemType[] getTypes() {
-        return new ProblemType[] { ProblemType.STATIC_TYPE_CHECKING_CANNOT_ASSIGN };
+        return new ProblemType[] {ProblemType.STATIC_TYPE_CHECKING_CANNOT_ASSIGN};
     }
 
     public static class AddClassCastProposal extends AbstractGroovyQuickFixProposal {

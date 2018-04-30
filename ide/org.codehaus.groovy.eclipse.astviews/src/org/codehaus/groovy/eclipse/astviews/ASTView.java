@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,58 +63,6 @@ public class ASTView extends ViewPart {
     private IPartListener partListener;
 
     private IElementChangedListener listener;
-
-    private static class ViewContentProvider implements IStructuredContentProvider, ITreeContentProvider {
-        ITreeNode root;
-
-        @Override
-        public void inputChanged(Viewer v, Object oldInput, Object newInput) {
-        }
-
-        @Override
-        public void dispose() {
-        }
-
-        @Override
-        public Object[] getElements(Object inputElement) {
-            if (!(inputElement instanceof ModuleNode)) {
-                return new Object[0];
-            }
-            root = TreeNodeFactory.createTreeNode(null, inputElement, "Module Nodes");
-            Object[] children = root.getChildren();
-            return children;
-        }
-
-        @Override
-        public Object getParent(Object child) {
-            Object parent = ((ITreeNode) child).getParent();
-            return parent;
-        }
-
-        @Override
-        public Object[] getChildren(Object parent) {
-            ITreeNode[] children = ((ITreeNode) parent).getChildren();
-            return children;
-        }
-
-        @Override
-        public boolean hasChildren(Object parent) {
-            boolean has = !((ITreeNode) parent).isLeaf();
-            return has;
-        }
-    }
-
-    private static class ViewLabelProvider extends LabelProvider {
-        @Override
-        public String getText(Object obj) {
-            return ((ITreeNode) obj).getDisplayName();
-        }
-
-        @Override
-        public Image getImage(Object obj) {
-            return null;
-        }
-    }
 
     /**
      * This is a callback that will allow us to create the viewer and initialize it.
@@ -220,26 +168,17 @@ public class ASTView extends ViewPart {
             }
 
             private boolean isUnitInDelta(IJavaElementDelta delta, GroovyCompilationUnit unit) {
-
                 IJavaElement elt = delta.getElement();
                 if (elt.getElementType() == IJavaElement.COMPILATION_UNIT) {
                     // comparing with a compilation unit
                     // if test fails, no need to go further
-                    if (elt.getElementName().equals(unit.getElementName())) {
-                        return true;
-                    } else {
-                        return false;
-                    }
+                    return elt.getElementName().equals(unit.getElementName());
                 }
 
                 ICompilationUnit candidateUnit = (ICompilationUnit) elt.getAncestor(IJavaElement.COMPILATION_UNIT);
                 if (candidateUnit != null) {
                     // now if test fails, no need to go further
-                    if (candidateUnit.getElementName().equals(unit.getElementName())) {
-                        return true;
-                    } else {
-                        return false;
-                    }
+                    return candidateUnit.getElementName().equals(unit.getElementName());
                 }
 
                 // delta is a potential ancestor of this compilationUnit
@@ -283,7 +222,7 @@ public class ASTView extends ViewPart {
                         int offset0 = node.getStart();
                         int offset1 = node.getEnd();
                         if (editor instanceof ITextEditor) {
-                            ((ITextEditor) editor).getSelectionProvider().setSelection(new TextSelection(offset0, offset1-offset0));
+                            ((ITextEditor) editor).getSelectionProvider().setSelection(new TextSelection(offset0, offset1 - offset0));
                         }
                     }
                 }
@@ -301,5 +240,57 @@ public class ASTView extends ViewPart {
     @Override
     public void setFocus() {
         viewer.getControl().setFocus();
+    }
+
+    private static class ViewContentProvider implements IStructuredContentProvider, ITreeContentProvider {
+        ITreeNode root;
+
+        @Override
+        public void inputChanged(Viewer v, Object oldInput, Object newInput) {
+        }
+
+        @Override
+        public void dispose() {
+        }
+
+        @Override
+        public Object[] getElements(Object inputElement) {
+            if (!(inputElement instanceof ModuleNode)) {
+                return new Object[0];
+            }
+            root = TreeNodeFactory.createTreeNode(null, inputElement, "Module Nodes");
+            Object[] children = root.getChildren();
+            return children;
+        }
+
+        @Override
+        public Object getParent(Object child) {
+            Object parent = ((ITreeNode) child).getParent();
+            return parent;
+        }
+
+        @Override
+        public Object[] getChildren(Object parent) {
+            ITreeNode[] children = ((ITreeNode) parent).getChildren();
+            return children;
+        }
+
+        @Override
+        public boolean hasChildren(Object parent) {
+            boolean has = !((ITreeNode) parent).isLeaf();
+            return has;
+        }
+    }
+
+    private static class ViewLabelProvider extends LabelProvider {
+        @Override
+        public String getText(Object obj) {
+            return ((ITreeNode) obj).getDisplayName();
+        }
+
+        @Override
+        public Image getImage(Object obj) {
+            return null;
+        }
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,18 @@ public class ConvertToGroovyFileResolver extends AbstractQuickFixResolver {
         super(problem);
     }
 
+    @Override
+    protected ProblemType[] getTypes() {
+        return new ProblemType[] {ProblemType.MISSING_SEMI_COLON_TYPE, ProblemType.MISSING_SEMI_COLON_TYPE_VARIANT};
+    }
+
+    @Override
+    public List<IJavaCompletionProposal> getQuickFixProposals() {
+        List<IJavaCompletionProposal> fixes = new ArrayList<>();
+        fixes.add(new ConvertToGroovyQuickFix(getQuickFixProblem()));
+        return fixes;
+    }
+
     public static class ConvertToGroovyQuickFix extends AbstractGroovyQuickFixProposal {
         public ConvertToGroovyQuickFix(QuickFixProblemContext problem) {
             super(problem);
@@ -58,17 +70,5 @@ public class ConvertToGroovyFileResolver extends AbstractQuickFixResolver {
         public String getDisplayString() {
             return DESCRIPTION;
         }
-    }
-
-    @Override
-    protected ProblemType[] getTypes() {
-        return new ProblemType[] { ProblemType.MISSING_SEMI_COLON_TYPE, ProblemType.MISSING_SEMI_COLON_TYPE_VARIANT };
-    }
-
-    @Override
-    public List<IJavaCompletionProposal> getQuickFixProposals() {
-        List<IJavaCompletionProposal> fixes = new ArrayList<>();
-        fixes.add(new ConvertToGroovyQuickFix(getQuickFixProblem()));
-        return fixes;
     }
 }

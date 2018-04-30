@@ -2,27 +2,32 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension-point
-         id="completionProposalProvider"
-         name="Groovy Completion Proposals Provider"
-         schema="schema/completionProposalProvider.exsd"
-   />
-   <extension-point
          id="completionProposalFilter"
          name="Groovy Completion Proposals Filter"
          schema="schema/completionProposalFilter.exsd"
    />
+   <extension-point
+         id="completionProposalProvider"
+         name="Groovy Completion Proposals Provider"
+         schema="schema/completionProposalProvider.exsd"
+   />
+
    <extension point="org.eclipse.jdt.ui.javaCompletionProposalComputer"
          id="org.codehaus.groovy.eclipse.codeassist.category"
          name="Groovy Proposals">
       <proposalCategory
-            icon="$nl$/icons/groovy.png" />
+            icon="$nl$/icons/groovy.png">
+      </proposalCategory>
    </extension>
+
    <extension point="org.eclipse.jdt.ui.javaCompletionProposalComputer"
          id="org.codehaus.groovy.eclipse.codeassist.templates.category"
          name="Groovy Template Proposals">
       <proposalCategory
-            icon="$nl$/icons/template.png" />
+            icon="$nl$/icons/template.png">
+      </proposalCategory>
    </extension>
+
    <extension point="org.eclipse.jdt.ui.javaCompletionProposalComputer"
          id="org.codehaus.groovy.eclipse.codeassist.completion.groovy"
          name="Groovy Code Completions">
@@ -36,12 +41,13 @@
          <partition
                type="__java_string">
          </partition>
-         <!-- this is not an error, pde does not recognize this as a valid partition type -->
+         <!-- this is not an error; pde does not recognize this as a valid partition type -->
          <partition
                type="__groovy_multiline_string">
          </partition>
       </javaCompletionProposalComputer>
    </extension>
+
    <extension point="org.eclipse.ui.preferencePages">
       <page
             category="org.codehaus.groovy.eclipse.preferences.editor"
@@ -53,6 +59,7 @@
          </keywordReference>
       </page>
    </extension>
+
    <extension point="org.eclipse.ui.keywords"
          id="org.codehaus.groovy.eclipse.codeassist.completion.keywords">
       <keyword

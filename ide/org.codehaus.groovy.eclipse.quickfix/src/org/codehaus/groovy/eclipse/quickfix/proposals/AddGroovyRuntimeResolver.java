@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,31 +31,6 @@ import org.eclipse.jface.text.IDocument;
  */
 public class AddGroovyRuntimeResolver extends AbstractQuickFixResolver {
 
-    public static class AddGroovyRuntimeProposal extends AbstractGroovyQuickFixProposal {
-
-        private final IJavaProject project;
-
-        public AddGroovyRuntimeProposal(IJavaProject project, QuickFixProblemContext problem,
-                int relevance) {
-            super(problem, relevance);
-            this.project = project;
-        }
-
-        @Override
-        public void apply(IDocument document) {
-            GroovyRuntime.addGroovyClasspathContainer(project);
-        }
-
-        @Override
-        public String getDisplayString() {
-            return "Add Groovy Runtime to classpath";
-        }
-
-        @Override
-        protected String getImageBundleLocation() {
-            return JavaPluginImages.IMG_OBJS_LIBRARY;
-        }
-    }
     protected AddGroovyRuntimeResolver(QuickFixProblemContext problem) {
         super(problem);
     }
@@ -79,5 +54,30 @@ public class AddGroovyRuntimeResolver extends AbstractQuickFixResolver {
     @Override
     protected ProblemType[] getTypes() {
         return new ProblemType[] {ProblemType.MISSING_CLASSPATH_CONTAINER_TYPE};
+    }
+
+    public static class AddGroovyRuntimeProposal extends AbstractGroovyQuickFixProposal {
+
+        private final IJavaProject project;
+
+        public AddGroovyRuntimeProposal(IJavaProject project, QuickFixProblemContext problem, int relevance) {
+            super(problem, relevance);
+            this.project = project;
+        }
+
+        @Override
+        public void apply(IDocument document) {
+            GroovyRuntime.addGroovyClasspathContainer(project);
+        }
+
+        @Override
+        public String getDisplayString() {
+            return "Add Groovy Runtime to classpath";
+        }
+
+        @Override
+        protected String getImageBundleLocation() {
+            return JavaPluginImages.IMG_OBJS_LIBRARY;
+        }
     }
 }

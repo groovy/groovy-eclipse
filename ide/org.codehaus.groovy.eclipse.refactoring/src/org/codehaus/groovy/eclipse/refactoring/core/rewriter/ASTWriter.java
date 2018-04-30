@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,15 +15,18 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.core.rewriter;
 
+import static org.codehaus.groovy.runtime.StringGroovyMethods.asBoolean;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Stack;
 
 import org.codehaus.groovy.antlr.LineColumn;
 import org.codehaus.groovy.ast.ASTNode;
@@ -110,19 +113,19 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
 
     protected StringBuilder groovyCode;
     private String lineDelimiter;
-    protected Stack<ASTNode> nodeStack = new Stack<>();
+    protected Deque<ASTNode> nodeStack = new ArrayDeque<>();
     private final ModuleNode root;
     private int lineOfPreviousNode = 1;
     private int lineOfCurrentNode = 1;
-    private int columnOffset = 0;
-    private int caseCount = 0; //to know which case is the first one in switch
-    private boolean inElseBlock = false;
+    private int columnOffset;
+    private int caseCount; //to know which case is the first one in switch
+    private boolean inElseBlock;
     private final IDocument currentDocument; // might be null
-    private int lineOffset = 0;
-    private boolean explizitModifier = false;
+    private int lineOffset;
+    private boolean explizitModifier;
     private String modifier = "";
-    private int linesSinceFirstAnnotation = 0; //to know the startline of a method without the annotations
-    private DeclarationExpression previousDeclaration = null;
+    private int linesSinceFirstAnnotation; //to know the startline of a method without the annotations
+    private DeclarationExpression previousDeclaration;
 
     /**
      * @param lineOffset set a startposition for the rewritten Code
@@ -292,13 +295,6 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
         node.visitContents(this);
         postVisitStatementCloseBlock(node);
         postVisitStatement(node);
-
-        // Object initializers don't exist at this point
-        /*List list = node.getObjectInitializerStatements();
-        for (Iterator iter = list.iterator(); iter.hasNext();) {
-            Statement element = (Statement) iter.next();
-            element.visit(this);
-        }*/
     }
 
     /*
@@ -334,10 +330,7 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
         while (it.hasNext()) {
             AnnotationNode an = it.next();
 
-            // annotations with no member-value pairs are having
-            // an invalid lastLineNumber.  It is 1 greater than it should be.
-            // ASC no longer an issue when annotation position is fixed...
-            int extra = 1;//an.getMembers().size() == 0 ? 0 : 1;
+            int extra = 1;
 
             linesSinceFirstAnnotation += (an.getLastLineNumber() + extra) - an.getLineNumber();
             preVisitStatement(an);
@@ -418,10 +411,11 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
             if (node.getExceptions().length > 0) {
                 groovyCode.append(" throws ");
                 for (int i = 0; i < node.getExceptions().length; i++) {
-                    if (i == 0)
+                    if (i == 0) {
                         groovyCode.append(node.getExceptions()[i].getNameWithoutPackage());
-                    else
+                    } else {
                         groovyCode.append(", " + node.getExceptions()[i].getNameWithoutPackage());
+                    }
                 }
             }
         }
@@ -523,9 +517,10 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
         //also finally Statement (BlockStatement in BlockStatement) needs to be adapted maybe
         //TODO:look in file to decide whether write curly brakets or not
         if (getTop() instanceof CaseStatement ||
-                getTop() instanceof SwitchStatement ||
-                getTop() instanceof BlockStatement ||
-                getTop() instanceof ModuleNode) {
+            getTop() instanceof SwitchStatement ||
+            getTop() instanceof BlockStatement ||
+            getTop() instanceof ModuleNode) {
+
             preVisitStatement(block);
             super.visitBlockStatement(block);
             postVisitStatement(block);
@@ -626,8 +621,7 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
              * Methodcall has a certain number of
              * arguments
              */
-            if (ale.getExpressions().size() >= 1) {
-
+            if (!ale.getExpressions().isEmpty()) {
                 List<Expression> listOfAllExpressions = ale.getExpressions();
                 ArgumentListExpression listOfMethodArguments = new ArgumentListExpression();
                 ClosureExpression closure = null;
@@ -647,14 +641,13 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
                 /*
                  * Visit the "normal" arguments
                  */
-                if (listOfMethodArguments.getExpressions().size() >= 1) {
+                if (!listOfMethodArguments.getExpressions().isEmpty()) {
                     printArgumentsOfaMethod(listOfMethodArguments);
                 }
 
                 if (closure != null) {
                     closure.visit(this);
                 }
-
             } else {
                 groovyCode.append("()");
             }
@@ -898,7 +891,7 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
                 GroovyCore.logException("Error in refactoring", e);
             }
             expression.getLeftExpression().visit(this);
-            if (expression.getRightExpression().getText() != "null") {
+            if (!"null".equals(expression.getRightExpression().getText())) {
                 groovyCode.append(" ");
                 groovyCode.append(operation.getText());
                 groovyCode.append(" ");
@@ -945,26 +938,6 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
     @Override
     public void visitBooleanExpression(BooleanExpression expression) {
         preVisitExpression(expression);
-        //    	LineColumn coords = new LineColumn(expression.getLineNumber(),
-        //    			expression.getColumnNumber());
-        //      	if (!(expression.getExpression() instanceof BinaryExpression)
-        //      			&& FilePartReader.readForwardFromCoordinate(currentDocument,coords).startsWith("(")) {
-        //    		/*
-        //    		 * e.g  displayName = (boolVal) ?: f   //"(" optional, that causes the read in the original
-        //    		 */
-        //    		groovyCode.append("(");
-        //    		super.visitBooleanExpression(expression);
-        //    		groovyCode.append(")");
-        //    	} else {
-        //        	/*
-        //        	 * if the BooleanExpression contains a BinaryExpression,
-        //			 * the parenthesis are written there
-        //        	 *
-        //        	 * e.g if (test == 4) {}
-        //        	 * or displayName = boolVal ?: f
-        //        	 */
-        //    		super.visitBooleanExpression(expression);
-        //    	}
         super.visitBooleanExpression(expression);
         postVisitExpression(expression);
     }
@@ -1103,7 +1076,7 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
         String post = "";
         ASTNode parent = getParent();
 
-        if (parent instanceof AssertStatement && expression.getText() != "null") {
+        if (parent instanceof AssertStatement && !"null".equals(expression.getText())) {
             pre = " , ";
         }
         if (parent instanceof DeclarationExpression || parent instanceof FieldNode) {
@@ -1142,10 +1115,10 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
     }
 
     private boolean constExprIsAString(ConstantExpression expression) {
-        return expression.getType().getName() == "java.lang.String" &&
+        return ("java.lang.String".equals(expression.getType().getName()) &&
             !(getParent() instanceof MethodCallExpression) &&
             !(getParent() instanceof GStringExpression) &&
-            !(getParent() instanceof MethodPointerExpression);
+            !(getParent() instanceof MethodPointerExpression));
     }
 
     @Override
@@ -1267,9 +1240,9 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
         String alias = ImportResolver.asAlias(root, expression.getObjectExpression().getType());
         String fieldName = ImportResolver.asFieldName(root, expression.getObjectExpression().getType(),
             expression.getPropertyAsString());
-        if (alias != "") {
+        if (asBoolean(alias)) {
             groovyCode.append(alias);
-        } else if (fieldName != "") {
+        } else if (asBoolean(fieldName)) {
             groovyCode.append(fieldName);
         } else {
             expression.getObjectExpression().visit(this);
@@ -1460,15 +1433,6 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
     protected void postVisitStatement(ASTNode statement) {
         nodeStack.pop();
         lineOfCurrentNode = statement.getLastLineNumber() - lineOffset;
-        /*
-        * Annotations lastline is to long. Workaround:
-        * if LastLineNumber - 1 = LineNumber-> reduce annotation line count
-        */
-        //    	if (statement instanceof AnnotationNode) {
-        //    		if (statement.getLastLineNumber() - 1 == statement.getLineNumber()) {
-        //    			linesSinceFirstAnnotation--;
-        //    		}
-        //    	}
         if (statement instanceof SwitchStatement) {
             caseCount = 0;
         }
@@ -1493,16 +1457,14 @@ public class ASTWriter extends CodeVisitorSupport implements GroovyClassVisitor 
     }
 
     protected void printExpression(ASTNode expression) {
-        String pre = "";
-        String post = "";
-        if (expression.getText() != "null") {
-            printExpression(pre, expression, post);
+        if (!"null".equals(expression.getText())) {
+            printExpression("", expression, "");
         }
     }
 
     protected void printExpression(String pre, ASTNode expression, String post) {
         String printExpression = expression.getText();
-        if (expression.getText() == "null") {
+        if ("null".equals(expression.getText())) {
             printExpression = "";
         }
         //Escape if not RegularExpression or MultiLineString

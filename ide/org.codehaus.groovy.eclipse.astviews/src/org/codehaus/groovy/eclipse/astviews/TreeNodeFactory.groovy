@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,7 +41,7 @@ import org.codehaus.groovy.ast.ASTNode
         // displayName relies on the value object being set before it.  Since groovy does not
         // honor the order of the attributes in the constructor declaration, value is null when
         // setDisplayName() is called and the ASTViewer becomes frustrating.
-        if (value instanceof ASTNode || forceDefaultNode.contains(value.getClass())) {
+        if (value instanceof ASTNode || forceDefaultNode.contains(value.class)) {
             def node = new DefaultTreeNode(parent: parent, value: value)
             node.displayName = displayName
             return node
@@ -112,7 +112,7 @@ import org.codehaus.groovy.ast.ASTNode
 
 @PackageScope class DefaultTreeNode extends TreeNode {
     ITreeNode[] loadChildren() {
-        def methods = value.class.getMethods()
+        def methods = value.class.methods
         methods = methods?.findAll { (it.name.startsWith('get') && it.parameterTypes.length == 0) || it.name == 'redirect' }
         def children = methods?.findResults { method ->
             def name = method.name == 'redirect' ? method.name : method.name[3..-1]
@@ -143,7 +143,7 @@ import org.codehaus.groovy.ast.ASTNode
         return value.collect {
             def name = StringUtil.toString(it)
             if (name.indexOf('@') != -1) {
-                name = it.getClass().canonicalName
+                name = it.class.canonicalName
             }
             TreeNodeFactory.createTreeNode(this, it, name)
         } as ITreeNode[]
@@ -181,7 +181,7 @@ import org.codehaus.groovy.ast.ASTNode
         } else {
             def valueName = StringUtil.toString(value)
             if (valueName.indexOf('@') != -1) {
-                valueName = value.getClass().canonicalName
+                valueName = value.class.canonicalName
             }
             displayName = "$name : ${StringUtil.toString(valueName)}".toString()
         }
