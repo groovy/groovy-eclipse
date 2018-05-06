@@ -954,18 +954,23 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
     @Test // GRECLIPSE-1458
     void testMultiProject() {
         def otherProject = new TestProject('Other')
-        otherProject.createFile('dsld/other.dsld', '''\
-            contribute(currentType(String)) {
-              property name: 'other', type: Integer
-            }
-            '''.stripIndent())
-        otherProject.fullBuild()
+        try {
+            otherProject.createFile('dsld/other.dsld', '''\
+                package dsld
+                contribute(currentType(String)) {
+                  property name: 'other', type: Integer
+                }
+                '''.stripIndent())
+            otherProject.fullBuild()
 
-        addProjectReference(otherProject.javaProject)
-        GroovyDSLCoreActivator.default.contextStoreManager.initialize(project, true)
+            addProjectReference(otherProject.javaProject)
+            GroovyDSLCoreActivator.default.contextStoreManager.initialize(project, true)
 
-        String contents = '"".other'
-        int offset = contents.lastIndexOf('other')
-        assertType(contents, offset, offset + 'other'.length(), 'java.lang.Integer')
+            String contents = '"".other'
+            int offset = contents.lastIndexOf('other')
+            assertType(contents, offset, offset + 'other'.length(), 'java.lang.Integer')
+        } finally {
+            otherProject.dispose()
+        }
     }
 }
