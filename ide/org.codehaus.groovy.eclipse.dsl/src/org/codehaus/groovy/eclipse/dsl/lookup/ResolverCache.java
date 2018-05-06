@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,18 +49,18 @@ public class ResolverCache {
             return ClassHelper.DYNAMIC_TYPE;
         }
         qName = qName.trim();
-        if (qName.equals("java.lang.Void") || qName.equals("void")) {
+        if ("java.lang.Void".equals(qName) || "void".equals(qName)) {
             return VariableScope.VOID_CLASS_NODE;
         }
         ClassNode clazz = nameTypeCache.get(qName);
-        int arrayCnt = 0;
+        int arrayCount = 0;
         if (clazz == null && resolver != null) {
             int typeParamEnd = qName.lastIndexOf('>');
             int arrayStart = qName.indexOf('[', typeParamEnd);
             String componentName;
             if (arrayStart > 0) {
                 componentName = qName.substring(0, arrayStart);
-                arrayCnt = calculateArrayCount(qName, arrayStart);
+                arrayCount = calculateArrayCount(qName, arrayStart);
             } else {
                 componentName = qName;
             }
@@ -105,11 +105,11 @@ public class ResolverCache {
                     nameTypeCache.put(componentName, clazz);
                 }
             }
-            while (arrayCnt > 0) {
-                clazz = new ClassNode(clazz);
+            while (arrayCount > 0) {
+                arrayCount -= 1;
                 componentName += "[]";
+                clazz = clazz.makeArray();
                 nameTypeCache.put(componentName, clazz);
-                arrayCnt -= 1;
             }
         }
 

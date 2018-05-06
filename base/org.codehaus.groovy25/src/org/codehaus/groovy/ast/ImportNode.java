@@ -152,7 +152,7 @@ public class ImportNode extends AnnotatedNode implements Opcodes {
     public void visit(GroovyCodeVisitor visitor) {
     }
 
-  // GRECLIPSE add
+    // GRECLIPSE add
     private boolean unresolvable;
     private ConstantExpression aliasExpr;
     private ConstantExpression fieldNameExpr;
@@ -212,5 +212,5 @@ public class ImportNode extends AnnotatedNode implements Opcodes {
     public String toString() {
         return super.toString() + '[' + getText() + ']';
     }
-  // GRECLIPSE end
+    // GRECLIPSE end
 }

@@ -277,7 +277,7 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
         return AstToTextHelper.getModifiersText(modifiers) + " " + retType + " " + name + "(" + parms + ") " + exceptionTypes + " { ... }";
     }
 
-  // GRECLIPSE add
+    // GRECLIPSE add
     /**
      * When default parameters are involved, this field will be
      * the original method without any default parameters applied
@@ -296,5 +296,5 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
     public void setOriginal(MethodNode original) {
         this.original = original;
     }
-  // GRECLIPSE end
+    // GRECLIPSE end
 }

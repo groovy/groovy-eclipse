@@ -1214,7 +1214,7 @@ public class CompilationUnit extends ProcessingUnit {
         this.classNodeResolver = classNodeResolver;
     }
 
-  // GRECLIPSE add
+    // GRECLIPSE add
     public interface ProgressListener {
         void parseComplete(int phase, String sourceUnitName);
         void generateComplete(int phase, ClassNode classNode);
@@ -1279,5 +1279,5 @@ public class CompilationUnit extends ProcessingUnit {
      * See bug https://jira.codehaus.org/browse/GRECLIPSE-1762
      */
     public final String excludeGlobalASTScan;
-  // GRECLIPSE end
+    // GRECLIPSE end
 }

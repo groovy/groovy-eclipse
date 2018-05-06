@@ -633,7 +633,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         return true; // JDTClassNodes are created because of a JDT Reference Binding file so are always 'resolved' (although not initialized upon creation)
     }
 
-    @Override
+    // TODO: Remove when Groovy 2.4 is hard minimum.
     public boolean isReallyResolved() {
         return true;
     }

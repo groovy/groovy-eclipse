@@ -18,6 +18,7 @@
  */
 package org.codehaus.groovy.control;
 
+import groovy.lang.Tuple2;
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -63,6 +64,7 @@ import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.trait.Traits;
 import groovyjarjarasm.asm.Opcodes;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -86,10 +88,13 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.isDefaultVisibility;
  * Note: the method to start the resolving is  startResolving(ClassNode, SourceUnit).
  */
 public class ResolveVisitor extends ClassCodeExpressionTransformer {
-    // GRECLIPSE private->public
-    public ClassNode currentClass;
     // note: BigInteger and BigDecimal are also imported by default
     public static final String[] DEFAULT_IMPORTS = {"java.lang.", "java.io.", "java.net.", "java.util.", "groovy.lang.", "groovy.util."};
+    private static final String BIGINTEGER_STR = "BigInteger";
+    private static final String BIGDECIMAL_STR = "BigDecimal";
+
+    // GRECLIPSE private->public
+    public ClassNode currentClass;
     // GRECLIPSE private->public
     public final CompilationUnit compilationUnit;
     private SourceUnit source;
@@ -153,8 +158,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
      * part. There is also the case of a imported class, so this logic
      * can't be done in these cases...
      */
-    // GRECLIPSE private->public
-    public static class ConstructedClassWithPackage extends ClassNode {
+    private static class ConstructedClassWithPackage extends ClassNode {
         final String prefix;
         String className;
         public ConstructedClassWithPackage(String pkg, String name) {
@@ -180,7 +184,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
     }
 
-     /**
+    /**
      * we use LowerCaseClass to limit the resolving the compiler
      * does for vanilla names starting with a lower case letter. The idea
      * that if we use a vanilla name with a lower case letter, that this
@@ -190,8 +194,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
      * name foo and bar for being classes. Instead we will ask the module
      * for an alias for this name which is much faster.
      */
-    // GRECLIPSE private->public
-    public static class LowerCaseClass extends ClassNode {
+    private static class LowerCaseClass extends ClassNode {
         final String className;
         public LowerCaseClass(String name) {
             super(name, Opcodes.ACC_PUBLIC,ClassHelper.OBJECT_TYPE);
@@ -288,36 +291,61 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         String name = type.getName();
         String saved = name;
         while (true) {
-            int len = name.lastIndexOf('.');
-            if (len == -1) break;
-            name = name.substring(0,len) + "$" + name.substring(len+1);
+            if (-1 == name.lastIndexOf('.')) break;
+            name = replaceLastPointWithDollar(name);
             type.setName(name);
             if (resolve(type)) return true;
         }
-        if(resolveToNestedOfCurrent(type)) return true;
-        
+
+        if (resolveToNestedOfCurrentClassAndSuperClasses(type)) return true;
+
         type.setName(saved);
         return false;
     }
 
     // GRECLIPSE add -- support backwards compatibility with org.eclipse.jdt.groovy.core
     protected boolean resolveToInnerEnum(ClassNode type) {
-        return resolveToNestedOfCurrent(type);
+        return resolveToNestedOfCurrentClassAndSuperClasses(type);
     }
     // GRECLIPSE end
 
-    private boolean resolveToNestedOfCurrent(ClassNode type) {
+    private boolean resolveToNestedOfCurrentClassAndSuperClasses(ClassNode type) {
+        // GROOVY-8531: Fail to resolve type defined in super class written in Java
+        for (ClassNode enclosingClassNode = currentClass; ClassHelper.OBJECT_TYPE != enclosingClassNode && null != enclosingClassNode; enclosingClassNode = enclosingClassNode.getSuperClass()) {
+            if(resolveToNested(enclosingClassNode, type)) return true;
+        }
+
+        return false;
+    }
+
+    private boolean resolveToNested(ClassNode enclosingType, ClassNode type) {
         if (type instanceof ConstructedNestedClass) return false;
         // GROOVY-3110: It may be an inner enum defined by this class itself, in which case it does not need to be
         // explicitly qualified by the currentClass name
         String name = type.getName();
-        if (currentClass != type && !name.contains(".") && type.getClass().equals(ClassNode.class)) {
-            ClassNode tmp = new ConstructedNestedClass(currentClass,name);
+        if (enclosingType != type && !name.contains(".") && type.getClass().equals(ClassNode.class)) {
+            ClassNode tmp = new ConstructedNestedClass(enclosingType,name);
             if (resolve(tmp)) {
+                if (!checkInnerTypeVisibility(enclosingType, tmp)) return false;
+
                 type.setRedirect(tmp);
                 return true;
             }
         }
+
+        return false;
+    }
+
+    private boolean checkInnerTypeVisibility(ClassNode enclosingType, ClassNode innerClassNode) {
+        if (currentClass == enclosingType) {
+            return true;
+        }
+
+        int modifiers = innerClassNode.getModifiers();
+        if (Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers)) {
+            return true;
+        }
+
         return false;
     }
 
@@ -371,15 +399,17 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         // test if vanilla name is current class name
         if (currentClass == type) return true;
 
-        if (genericParameterNames.get(type.getName()) != null) {
-            GenericsType gt = genericParameterNames.get(type.getName());
+        String typeName = type.getName();
+
+        if (genericParameterNames.get(typeName) != null) {
+            GenericsType gt = genericParameterNames.get(typeName);
             type.setRedirect(gt.getType());
-            type.setGenericsTypes(new GenericsType[]{gt});
+            type.setGenericsTypes(new GenericsType[]{ gt });
             type.setGenericsPlaceHolder(true);
             return true;
         }
 
-        if (currentClass.getNameWithoutPackage().equals(type.getName())) {
+        if (currentClass.getNameWithoutPackage().equals(typeName)) {
             type.setRedirect(currentClass);
             return true;
         }
@@ -508,14 +538,10 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
     // GRECLIPSE end
 
-    private static String replaceLastPoint(String name) {
-        int lastPoint = name.lastIndexOf('.');
-        name = new StringBuffer()
-                .append(name.substring(0, lastPoint))
-                .append("$")
-                .append(name.substring(lastPoint + 1))
-                .toString();
-        return name;
+    private static String replaceLastPointWithDollar(String name) {
+        int lastPointIndex = name.lastIndexOf('.');
+
+        return name.substring(0, lastPointIndex) + "$" + name.substring(lastPointIndex + 1);
     }
 
     // GRECLIPSE private->protected
@@ -536,7 +562,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 // the package is really a class is handled elsewhere
                 ConstructedClassWithPackage tmp = (ConstructedClassWithPackage) type;
                 String savedName = tmp.className;
-                tmp.className = replaceLastPoint(savedName);
+                tmp.className = replaceLastPointWithDollar(savedName);
                 if (resolve(tmp, false, true, true)) {
                     type.setRedirect(tmp.redirect());
                     return true;
@@ -544,7 +570,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 tmp.className = savedName;
             } else {
                 String savedName = type.getName();
-                String replacedPointType = replaceLastPoint(savedName);
+                String replacedPointType = replaceLastPointWithDollar(savedName);
                 type.setName(replacedPointType);
                 if (resolve(type, false, true, true)) return true;
                 type.setName(savedName);
@@ -561,10 +587,10 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         // try to resolve against a default import, because we know that the
         // default packages do not contain classes like these
         testDefaultImports &= !(type instanceof LowerCaseClass);
+        final String typeName = type.getName();
+
         if (testDefaultImports) {
-            for (int i = 0, size = DEFAULT_IMPORTS.length; i < size; i++) {
-                String packagePrefix = DEFAULT_IMPORTS[i];
-                String name = type.getName();
+            for (String packagePrefix : DEFAULT_IMPORTS) {
                 // We limit the inner class lookups here by using ConstructedClassWithPackage.
                 // This way only the name will change, the packagePrefix will
                 // not be included in the lookup. The case where the
@@ -572,10 +598,10 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 // WARNING: This code does not expect a class that has a static
                 //          inner class in DEFAULT_IMPORTS
                 // GRECLIPSE add
-                String className = packagePrefix + name;
+                String className = packagePrefix + typeName;
                 if (resolutionFailedCache.contains(className)) continue;
                 // GRECLIPSE end
-                ConstructedClassWithPackage tmp =  new ConstructedClassWithPackage(packagePrefix,name);
+                ConstructedClassWithPackage tmp =  new ConstructedClassWithPackage(packagePrefix, typeName);
                 if (resolve(tmp, false, false, false)) {
                     type.setRedirect(tmp.redirect());
                     return true;
@@ -584,11 +610,11 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 resolutionFailedCache.add(className);
                 // GRECLIPSE end
             }
-            String name = type.getName();
-            if (name.equals("BigInteger")) {
+
+            if (BIGINTEGER_STR.equals(typeName)) {
                 type.setRedirect(ClassHelper.BigInteger_TYPE);
                 return true;
-            } else if (name.equals("BigDecimal")) {
+            } else if (BIGDECIMAL_STR.equals(typeName)) {
                 type.setRedirect(ClassHelper.BigDecimal_TYPE);
                 return true;
             }
@@ -885,19 +911,10 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                     return null;
                 }
                 String varName = ve.getName();
-                if (doInitialClassTest) {
-                    // we are at the first name part. This is the right most part.
-                    // If this part is in lower case, then we do not need a class
-                    // check. other parts of the property expression will be tested
-                    // by a different method call to this method, so foo.Bar.bar
-                    // can still be resolved to the class foo.Bar and the static
-                    // field bar.
-                    if (!testVanillaNameForClass(varName)) return null;
-                    doInitialClassTest = false;
-                    name = new StringBuilder(varName);
-                } else {
-                    name.insert(0, varName + ".");
-                }
+                Tuple2<StringBuilder, Boolean> classNameInfo = makeClassName(doInitialClassTest, name, varName);
+                name = classNameInfo.getFirst();
+                doInitialClassTest = classNameInfo.getSecond();
+
                 break;
             }
             // anything other than PropertyExpressions or
@@ -911,23 +928,36 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 if (propertyPart == null || propertyPart.equals("class")) {
                     return null;
                 }
-                if (doInitialClassTest) {
-                    // we are at the first name part. This is the right most part.
-                    // If this part is in lower case, then we do not need a class
-                    // check. other parts of the property expression will be tested
-                    // by a different method call to this method, so foo.Bar.bar
-                    // can still be resolved to the class foo.Bar and the static
-                    // field bar.
-                    if (!testVanillaNameForClass(propertyPart)) return null;
-                    doInitialClassTest= false;
-                    name = new StringBuilder(propertyPart);
-                } else {
-                    name.insert(0, propertyPart + ".");
-                }
+                Tuple2<StringBuilder, Boolean> classNameInfo = makeClassName(doInitialClassTest, name, propertyPart);
+                name = classNameInfo.getFirst();
+                doInitialClassTest = classNameInfo.getSecond();
             }
         }
-        if (name.length() == 0) return null;
+
+        if (null == name || name.length() == 0) return null;
+
         return name.toString();
+    }
+
+    private static Tuple2<StringBuilder, Boolean> makeClassName(boolean doInitialClassTest, StringBuilder name, String varName) {
+        if (doInitialClassTest) {
+            // we are at the first name part. This is the right most part.
+            // If this part is in lower case, then we do not need a class
+            // check. other parts of the property expression will be tested
+            // by a different method call to this method, so foo.Bar.bar
+            // can still be resolved to the class foo.Bar and the static
+            // field bar.
+            if (!testVanillaNameForClass(varName)) {
+                name = null;
+            } else {
+                doInitialClassTest = false;
+                name = new StringBuilder(varName);
+            }
+        } else {
+            name.insert(0, varName + ".");
+        }
+
+        return new Tuple2<StringBuilder, Boolean>(name, doInitialClassTest);
     }
 
     // iterate from the inner most to the outer and check for classes
@@ -1095,7 +1125,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                   t = new LowerCaseClass(name);
                 }
                 isClass = resolve(t);
-                if(!isClass) isClass = resolveToNestedOfCurrent(t);
+                if(!isClass) {
+                    isClass = resolveToNestedOfCurrentClassAndSuperClasses(t);
+                }
             }
             if (isClass) {
                 // the name is a type so remove it from the scoping
@@ -1311,18 +1343,30 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 checkAnnotationMemberValue(newValue);
             }
             /* GRECLIPSE edit -- can't do this
-            if(annType.isResolved()) {
+            if (annType.isResolved()) {
                 Class annTypeClass = annType.getTypeClass();
                 Retention retAnn = (Retention) annTypeClass.getAnnotation(Retention.class);
-                if (retAnn != null && retAnn.value().equals(RetentionPolicy.RUNTIME)) {
+                if (retAnn != null && retAnn.value().equals(RetentionPolicy.RUNTIME) && !isRepeatable(annTypeClass)) {
+                    // remember runtime/non-repeatable annos (auto collecting of Repeatable annotations is handled elsewhere)
                     AnnotationNode anyPrevAnnNode = tmpAnnotations.put(annTypeClass.getName(), an);
-                    if(anyPrevAnnNode != null) {
+                    if (anyPrevAnnNode != null) {
                         addError("Cannot specify duplicate annotation on the same member : " + annType.getName(), an);
                     }
                 }
             }
             */
         }
+    }
+
+    @SuppressWarnings("unused")
+    private boolean isRepeatable(Class annTypeClass) {
+        Annotation[] annTypeAnnotations = annTypeClass.getAnnotations();
+        for (Annotation annTypeAnnotation : annTypeAnnotations) {
+            if (annTypeAnnotation.annotationType().getName().equals("java.lang.annotation.Repeatable")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // resolve constant-looking expressions statically (do here as gets transformed away later)

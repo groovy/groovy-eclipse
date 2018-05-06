@@ -3791,7 +3791,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         System.out.println("Type: " + getTokenName(node) + " text: " + node.getText());
     }
 
-  // GRECLIPSE add
+    // GRECLIPSE add
     private void fixModuleNodeLocations() {
         // only occurs if in a script
 
@@ -3918,5 +3918,5 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
         node.setEnd(node.getEnd() - 1); // Eclipse wants this for error reporting
     }
-  // GRECLIPSE end
+    // GRECLIPSE end
 }

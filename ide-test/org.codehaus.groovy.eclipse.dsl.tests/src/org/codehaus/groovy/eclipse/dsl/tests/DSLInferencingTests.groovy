@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests
 
-import groovy.transform.NotYetImplemented
-
+import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
+import org.codehaus.groovy.eclipse.test.TestProject
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.core.groovy.tests.search.InferencingTestSuite
 import org.junit.Before
@@ -28,7 +28,7 @@ import org.junit.Test
 final class DSLInferencingTests extends DSLInferencingTestSuite {
 
     private static final String SET_DELEGATE_TYPE_SCRIPT = '''\
-        public interface Obj {
+        interface Obj {
           String getFoo()
           int FOO1 = 9
           int FOO2 = 9
@@ -45,7 +45,7 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
         meth { getFoo() }
         meth { FOO1 }
         meth { delegate.FOO2 }
-        meth { "".OTHER }
+        meth { ''.OTHER }
         meth { delegate.with { BAR } }
         meth { 1.BAZ1 }
         meth { 1.with { BAZ2 } }
@@ -781,7 +781,6 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
         int end = start + 'this'.length()
         GroovyCompilationUnit unit = addGroovySource(contents, 'Search')
         InferencingTestSuite.assertType(unit, start, end, 'Search')
-
     }
 
     @Test
@@ -860,12 +859,12 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
     void testNullType() {
         createDsls '''\
             contribute(enclosingCall(hasArgument(type()))) {
-              property name:"foo", type:Integer
+              property name:'foo', type:Integer
             }
             '''.stripIndent()
         String contents = '''\
             String flart(val, closure) { }
-            flart "", {
+            flart '', {
               foo
             }
             '''.stripIndent()
@@ -874,14 +873,14 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
         assertType(contents, start, end, 'java.lang.Integer')
     }
 
-    private final static String ARRAY_TYPE_DSLD = '''\
+    private static final String ARRAY_TYPE_DSLD = '''\
         contribute(currentType()) {
-          property name:"foot1", type:"java.lang.String[]"
-          property name:"foot2", type:"java.lang.String[][]"
-          property name:"foot3", type:"java.util.List<java.lang.String[][]>"
-          property name:"foot4", type:"java.util.List<java.lang.String>[]"
-          property name:"foot5", type:"java.util.List<java.lang.String[]>[]"
-          property name:"foot6", type:"java.util.Map<java.lang.String[],java.lang.Integer[]>"
+          property name:'foot1', type:'java.lang.String[]'
+          property name:'foot2', type:'java.lang.String[][]'
+          property name:'foot3', type:'java.util.List<java.lang.String[][]>'
+          property name:'foot4', type:'java.util.List<java.lang.String>[]'
+          property name:'foot5', type:'java.util.List<java.lang.String[]>[]'
+          property name:'foot6', type:'java.util.Map<java.lang.String[],java.lang.Integer[]>'
         }'''.stripIndent()
 
     @Test // GRECLIPSE-1555
@@ -905,14 +904,14 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
         assertType(contents, 0, contents.length(), 'java.util.List<java.lang.String[][]>')
     }
 
-    @Test @NotYetImplemented
+    @Test
     void testArrayType4() {
         createDsls(ARRAY_TYPE_DSLD)
         String contents = 'foot4'
         assertType(contents, 0, contents.length(), 'java.util.List<java.lang.String>[]')
     }
 
-    @Test @NotYetImplemented
+    @Test
     void testArrayType5() {
         createDsls(ARRAY_TYPE_DSLD)
         String contents = 'foot5'
@@ -928,45 +927,45 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
 
     @Test
     void testNestedCalls() {
-        createDsls(
-            'contribute(bind( x: enclosingCall())) {\n' +
-            '	x.each { \n' +
-            '		property name: it.methodAsString + "XXX", type: Long\n' +
-            '	}\n' +
-            '}')
+        createDsls '''\
+            contribute(bind(x: enclosingCall())) {
+              x.each {
+                property name: it.methodAsString + 'XXX', type: Long
+              }
+            }
+            '''.stripIndent()
 
-        String contents =
-            'bar {\n' +
-            '	foo {\n' +
-            '		 fooXXX\n' +
-            '		 barXXX      \n' +
-            '	}\n' +
-            '}'
+        String contents = '''\
+            bar {
+              foo {
+                fooXXX
+                barXXX
+              }
+            }
+            '''.stripIndent()
 
-        int start = contents.indexOf('fooXXX')
-        int end = start + 'fooXXX'.length()
-        assertType(contents, start, end, 'java.lang.Long')
+        int offset = contents.indexOf('fooXXX')
+        assertType(contents, offset, offset + 'fooXXX'.length(), 'java.lang.Long')
 
-        start = contents.indexOf('barXXX')
-        end = start + 'barXXX'.length()
-        assertType(contents, start, end, 'java.lang.Long')
+        offset = contents.indexOf('barXXX')
+        assertType(contents, offset, offset + 'barXXX'.length(), 'java.lang.Long')
     }
 
-    /*@Test // GRECLIPSE-1458
+    @Test // GRECLIPSE-1458
     void testMultiProject() {
-        IPath otherPath = env.addProject('Other', '1.5')
-        env.removePackageFragmentRoot(otherPath, '')
-        IPath root = env.addPackageFragmentRoot(otherPath, 'src', null, null, 'bin')
-        env.addFile(env.addFolder(root, 'dsld'), 'otherdsld.dsld', 'contribute(currentType(String)) { property name: "other", type: Integer }')
-        env.fullBuild('Other')
-        env.addRequiredProject(project.getFullPath(), otherPath)
+        def otherProject = new TestProject('Other')
+        otherProject.createFile('dsld/other.dsld', '''\
+            contribute(currentType(String)) {
+              property name: 'other', type: Integer
+            }
+            '''.stripIndent())
+        otherProject.fullBuild()
 
-        GroovyDSLCoreActivator.getDefault().getContextStoreManager().initialize(project, true)
+        addProjectReference(otherProject.javaProject)
+        GroovyDSLCoreActivator.default.contextStoreManager.initialize(project, true)
 
         String contents = '"".other'
-        int start = contents.lastIndexOf('other')
-        int end = start + 'other'.length()
-
-        assertType(contents, start, end, 'java.lang.Integer')
-    }*/
+        int offset = contents.lastIndexOf('other')
+        assertType(contents, offset, offset + 'other'.length(), 'java.lang.Integer')
+    }
 }

@@ -263,8 +263,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     /*
      * Constructor used by makeArray() if no real class is available
      */
-    // GRECLIPSE private->public
-    public ClassNode(ClassNode componentType) {
+    private ClassNode(ClassNode componentType) {
         // GRECLIPSE edit
         this(/*componentType.getName()+"[]"*/computeArrayName(componentType), ACC_PUBLIC, ClassHelper.OBJECT_TYPE);
         // GRECLIPSE end
@@ -281,7 +280,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * <li> reference types: Create [Lcom.foo.Bar; - this isn't quite right really as it should have '/' in...
      * </ul>
      */
-    public static String computeArrayName(ClassNode componentType) {
+    private static String computeArrayName(ClassNode componentType) {
         String n = componentType.getName();
         if (componentType.isPrimitive()) {
             int len=n.length();
@@ -325,8 +324,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     /*
      * Constructor used by makeArray() if a real class is available
      */
-    // GRECLIPSE private->public
-    public ClassNode(Class c, ClassNode componentType) {
+    private ClassNode(Class c, ClassNode componentType) {
         this(c);
         this.componentType = componentType;
         isPrimaryNode=false;
@@ -1457,17 +1455,14 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public boolean isResolved() {
-        ClassNode r = redirect();
-        return r.isReallyResolved() || // GRECLIPSE add
-            r.clazz != null || (componentType != null && componentType.isResolved());
+        /* GRECLIPSE edit
+        return redirect().clazz!=null || (componentType != null && componentType.isResolved());
+        */
+        if (clazz != null) return true;
+        if (redirect != null) return redirect.isResolved();
+        return componentType != null && componentType.isResolved();
+        // GRECLIPSE end
     }
-
-    // GRECLIPSE hacky; rework (remove?) this if it behaves as an approach
-    // enables the redirect to be a JDTClassNode and satisfy 'isResolved()'
-    public boolean isReallyResolved() {
-        return false;
-    }
-    // GRECLIPSE end
 
     public boolean isArray() {
         return componentType != null;
@@ -1477,12 +1472,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         return componentType;
     }
 
-    // GRECLIPSE add
-    public boolean hasClass() {
-        return redirect().clazz != null;
-    }
-    // GRECLIPSE end
-
     /**
      * Returns the concrete class this classnode relates to. However, this method
      * is inherently unsafe as it may return null depending on the compile phase you are
@@ -1491,24 +1480,34 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * @return the class this classnode relates to. May return null.
      */
     public Class getTypeClass() {
+        /* GRECLIPSE edit
         Class c = redirect().clazz;
         if (c!=null) return c;
+        */
+        if (clazz != null) return clazz;
+        if (redirect != null) return redirect.getTypeClass();
+        // GRECLIPSE end
         ClassNode component = redirect().componentType;
-        if (component!=null && component.isResolved()) {
+        if (component != null && component.isResolved()) {
+            /* GRECLIPSE edit
             ClassNode cn = component.makeArray();
             setRedirect(cn);
             return redirect().clazz;
+            */
+            return Array.newInstance(component.getTypeClass(), 0).getClass();
+            // GRECLIPSE end
         }
-        // GRECLIPSE add
-        if (redirect().getClass().getName().endsWith("JDTClassNode")) {
-            return redirect().getTypeClass();
-        }
-        // GRECLIPSE end
-        throw new GroovyBugError("ClassNode#getTypeClass for "+getName()+" is called before the type class is set ");
+        throw new GroovyBugError("ClassNode#getTypeClass for " + getName() + " called before the type class is set");
     }
 
+    // GRECLIPSE add
+    public boolean hasClass() {
+        return (clazz != null || redirect().clazz != null);
+    }
+    // GRECLIPSE end
+
     public boolean hasPackageName() {
-        return redirect().name.indexOf('.')>0;
+        return redirect().name.indexOf('.') > 0;
     }
 
     /**
