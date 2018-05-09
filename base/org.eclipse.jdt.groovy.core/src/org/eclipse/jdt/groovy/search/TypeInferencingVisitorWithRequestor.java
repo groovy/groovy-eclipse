@@ -90,6 +90,7 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.ast.tools.WideningCategories;
 import org.codehaus.groovy.classgen.BytecodeExpression;
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.FieldASTTransformation;
@@ -125,26 +126,6 @@ import org.eclipse.jdt.internal.core.util.Util;
  * Visits {@link GroovyCompilationUnit} instances to determine the type of expressions they contain.
  */
 public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport {
-
-    public static class VisitCompleted extends RuntimeException {
-        private static final long serialVersionUID = 1L;
-
-        public final VisitStatus status;
-
-        public VisitCompleted(VisitStatus status) {
-            this.status = status;
-        }
-    }
-
-    private static class Tuple {
-        ClassNode declaringType;
-        ASTNode declaration;
-
-        Tuple(ClassNode declaringType, ASTNode declaration) {
-            this.declaringType = declaringType;
-            this.declaration = declaration;
-        }
-    }
 
     private static void log(Throwable t, String form, Object... args) {
         String m = "Groovy-Eclipse Type Inferencing: " + String.format(form, args);
@@ -217,25 +198,31 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         dgmClosureDelegateMethods.add("eachFile");
         dgmClosureDelegateMethods.add("eachDirRecurse");
         dgmClosureDelegateMethods.add("eachFileRecurse");
+        dgmClosureDelegateMethods.add("withStream");
     }
 
-    // these methods can be called with a collection or a map.
-    // When called with a map and there are 2 closure arguments, then
-    // the types are the key/value of the map entry
+    // methods with "@ClosureParams(MapEntryOrKeyValue.class)" variants
     private static final Set<String> dgmClosureMaybeMap = new HashSet<>();
     static {
         dgmClosureMaybeMap.add("any");
         dgmClosureMaybeMap.add("every");
         dgmClosureMaybeMap.add("each");
+      //dgmClosureMaybeMap.add("eachWithIndex"); options={"index=true"}
+        dgmClosureMaybeMap.add("reverseEach");
         dgmClosureMaybeMap.add("inject");
         dgmClosureMaybeMap.add("collect");
+        dgmClosureMaybeMap.add("collectMany");
         dgmClosureMaybeMap.add("collectEntries");
+        dgmClosureMaybeMap.add("find");
+        dgmClosureMaybeMap.add("findAll");
         dgmClosureMaybeMap.add("findResult");
         dgmClosureMaybeMap.add("findResults");
-        dgmClosureMaybeMap.add("findAll");
+        dgmClosureMaybeMap.add("count");
+        dgmClosureMaybeMap.add("countBy");
         dgmClosureMaybeMap.add("groupBy");
         dgmClosureMaybeMap.add("groupEntriesBy");
-        dgmClosureMaybeMap.add("withDefault");
+        dgmClosureMaybeMap.add("dropWhile");
+        dgmClosureMaybeMap.add("takeWhile");
     }
 
     // These methods have a fixed type for the closure argument
@@ -249,7 +236,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         dgmClosureFixedTypeMethods.put("withDataInputStream", VariableScope.DATA_INPUT_STREAM_CLASS);
         dgmClosureFixedTypeMethods.put("withOutputStream", VariableScope.OUTPUT_STREAM_CLASS);
         dgmClosureFixedTypeMethods.put("withInputStream", VariableScope.INPUT_STREAM_CLASS);
-        dgmClosureFixedTypeMethods.put("withStream", VariableScope.OUTPUT_STREAM_CLASS);
         dgmClosureFixedTypeMethods.put("metaClass", ClassHelper.METACLASS_TYPE);
         dgmClosureFixedTypeMethods.put("eachFileMatch", VariableScope.FILE_CLASS_NODE);
         dgmClosureFixedTypeMethods.put("eachDirMatch", VariableScope.FILE_CLASS_NODE);
@@ -303,14 +289,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
      */
     private final LinkedList<ClassNode> dependentTypeStack = new LinkedList<>();
 
-    /**
-     * Keeps track of closures types.
-     */
-    private LinkedList<Map<ClosureExpression, ClassNode>> closureTypes = new LinkedList<>();
+    private final AssignmentStorer assignmentStorer = new AssignmentStorer();
 
     private final JDTResolver resolver;
-
-    private final AssignmentStorer assignmentStorer = new AssignmentStorer();
 
     /**
      * Keeps track of local map variables contexts.
@@ -847,31 +828,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     @Override
-    public void visitArgumentlistExpression(ArgumentListExpression node) {
-        VariableScope.CallAndType callAndType = scopes.getLast().getEnclosingMethodCallExpression();
-        boolean closureFound = false;
-        if (callAndType != null && callAndType.declaration instanceof MethodNode) {
-            Map<ClosureExpression, ClassNode> map = new HashMap<>();
-            MethodNode methodNode = (MethodNode) callAndType.declaration;
-            if (node.getExpressions().size() == methodNode.getParameters().length) {
-                for (int i = 0; i < node.getExpressions().size(); i++) {
-                    if (node.getExpression(i) instanceof ClosureExpression) {
-                        map.put((ClosureExpression) node.getExpression(i), methodNode.getParameters()[i].getType());
-                        closureFound = true;
-                    }
-                }
-            }
-            if (closureFound) {
-                closureTypes.addLast(map);
-            }
-        }
-        visitTupleExpression(node);
-        if (closureFound) {
-            closureTypes.removeLast();
-        }
-    }
-
-    @Override
     public void visitArrayExpression(ArrayExpression node) {
         boolean shouldContinue = handleSimpleExpression(node);
         if (shouldContinue) {
@@ -1039,25 +995,17 @@ assert primaryExprType != null && dependentExprType != null;
         scopes.add(scope);
 
         ClassNode[] inferredParamTypes = inferClosureParamTypes(node, scope);
-        Parameter[] parameters = node.getParameters(); final int n;
-        if (parameters != null && (n = parameters.length) > 0) {
-            handleParameterList(parameters);
-            // TODO: If this is moved above handleParameterList, the inferred type will be available to the param nodes as well.
-            for (int i = 0; i < n; i += 1) {
-                Parameter parameter = parameters[i];
-                // only reset the type of the parametrers if it is not explicitly defined
-                if (inferredParamTypes[i] != VariableScope.OBJECT_CLASS_NODE && parameter.isDynamicTyped()) {
-                    parameter.setType(inferredParamTypes[i]);
-                    scope.addVariable(parameter);
+        if (node.isParameterSpecified()) {
+            Parameter[] parameters = node.getParameters();
+            for (int i = 0, n = parameters.length; i < n; i += 1) {
+                // only change the type of the parameter if it's not explicitly defined
+                if (parameters[i].isDynamicTyped() && !VariableScope.OBJECT_CLASS_NODE.equals(inferredParamTypes[i])) {
+                    parameters[i].setType(inferredParamTypes[i]);
                 }
             }
-        } else
-        // it variable only exists if there are no explicit parameters
-        if (inferredParamTypes[0] != VariableScope.OBJECT_CLASS_NODE && !scope.containsInThisScope("it")) {
-            scope.addVariable("it", inferredParamTypes[0], VariableScope.OBJECT_CLASS_NODE);
-        }
-        if (scope.lookupNameInCurrentScope("it") == null) {
-            inferItType(node, scope);
+            handleParameterList(parameters);
+        } else if (node.getParameters() != null && !scope.containsInThisScope("it")) {
+            scope.addVariable("it", inferredParamTypes[0], VariableScope.CLOSURE_CLASS_NODE);
         }
 
         // if enclosing closure, owner type is 'Closure', otherwise it's 'typeof(this)'
@@ -2197,7 +2145,7 @@ assert primaryExprType != null && dependentExprType != null;
                         } else if (expression instanceof MapExpression) {
                             types.add(VariableScope.MAP_CLASS_NODE);
                         } else if (expression instanceof ListExpression) {
-                             types.add(VariableScope.LIST_CLASS_NODE);
+                            types.add(VariableScope.LIST_CLASS_NODE);
                         } else*/ if (expression instanceof ClassExpression) {
                             types.add(VariableScope.newClassClassNode(exprType));
                         } else if (expression instanceof CastExpression || expression instanceof ConstructorCallExpression) {
@@ -2246,36 +2194,80 @@ assert primaryExprType != null && dependentExprType != null;
         return generics;
     }
 
-    private void inferItType(ClosureExpression node, VariableScope scope) {
-        if (closureTypes.isEmpty()) {
-            return;
+    private ClassNode[] inferClosureParamTypes(ClosureExpression node, VariableScope scope) {
+        if (node.getParameters() == null) { // i.e. "{ -> ... }"
+            return ClassNode.EMPTY_ARRAY;
         }
-        ClassNode closureType = closureTypes.getLast().get(node);
-        if (closureType != null) {
-            // Try to find single abstract method with single parameter
-            MethodNode method = null;
-            for (MethodNode methodNode : closureType.getMethods()) {
-                if (methodNode.isAbstract() && methodNode.getParameters().length == 1) {
-                    if (method != null) {
-                        return;
-                    } else {
-                        method = methodNode;
+
+        ClassNode[] inferredTypes = new ClassNode[node.isParameterSpecified() ? node.getParameters().length : 1];
+
+        VariableScope.CallAndType cat = scope.getEnclosingMethodCallExpression();
+        if (cat != null) {
+            String methodName = cat.call.getMethodAsString();
+            ClassNode fauxDeclaringType = cat.declaringType; // won't be true declaring type for category/class methods
+
+            ClassNode inferredParamType;
+            if (dgmClosureDelegateMethods.contains(methodName)) {
+                inferredParamType = VariableScope.extractElementType(fauxDeclaringType);
+            } else {
+                inferredParamType = dgmClosureFixedTypeMethods.get(methodName);
+            }
+
+            if (inferredParamType != null) {
+                Arrays.fill(inferredTypes, inferredParamType);
+
+                if (inferredTypes.length > 1 && "eachWithIndex".equals(methodName)) {
+                    inferredTypes[inferredTypes.length - 1] = VariableScope.INTEGER_CLASS_NODE;
+                }
+                if (VariableScope.MAP_CLASS_NODE.equals(fauxDeclaringType)) {
+                    if ((inferredTypes.length == 2 && dgmClosureMaybeMap.contains(methodName)) ||
+                            (inferredTypes.length == 3 && "eachWithIndex".equals(methodName))) {
+                        GenericsType[] typeParams = inferredParamType.getGenericsTypes();
+                        if (typeParams != null && typeParams.length == 2) {
+                            inferredTypes[0] = typeParams[0].getType();
+                            inferredTypes[1] = typeParams[1].getType();
+                        }
+                    } else if (inferredTypes.length == 1 && "withDefault".equals(methodName)) {
+                        GenericsType[] typeParams = inferredParamType.getGenericsTypes();
+                        if (typeParams != null && typeParams.length >= 1) {
+                            inferredTypes[0] = typeParams[0].getType();
+                        }
+                    }
+                }
+            } else if (cat.declaration instanceof MethodNode) {
+                // check for SAM-type coercion of closure expression
+                MethodNode methodNode = (MethodNode) cat.declaration;
+                Parameter methodParam = findTargetParameter(node, cat.call, methodNode,
+                    !methodNode.getDeclaringClass().equals(cat.getPerceivedDeclaringType()));
+                if (methodParam != null) {
+                    ClassNode mpt = methodParam.getType();
+                    if (methodParam == DefaultGroovyMethods.last(methodNode.getParameters()) &&
+                        GenericsMapper.isVargs(methodNode.getParameters())) mpt = mpt.getComponentType();
+
+                    MethodNode sam = ClassHelper.findSAM(mpt);
+                    if (sam != null) {
+                        int i = 0;
+                        for (ClassNode t : GroovyUtils.getParameterTypes(sam.getParameters())) {
+                            if (i == inferredTypes.length) break;
+                            inferredTypes[i++] = t;
+                        }
+                        Arrays.fill(inferredTypes, i, inferredTypes.length, VariableScope.OBJECT_CLASS_NODE);
                     }
                 }
             }
-            if (method != null) {
-                ClassNode inferredType = method.getParameters()[0].getType();
-                scope.addVariable("it", inferredType, VariableScope.OBJECT_CLASS_NODE);
-            }
         }
+
+        if (inferredTypes[0] == null) {
+            Arrays.fill(inferredTypes, VariableScope.OBJECT_CLASS_NODE);
+        }
+
+        return inferredTypes;
     }
 
     private ClassNode isCategoryDeclaration(MethodCallExpression node, VariableScope scope) {
-        String methodAsString = node.getMethodAsString();
-        if (methodAsString != null && methodAsString.equals("use")) {
-            Expression exprs = node.getArguments();
-            if (exprs instanceof ArgumentListExpression) {
-                ArgumentListExpression args = (ArgumentListExpression) exprs;
+        if ("use".equals(node.getMethodAsString())) {
+            if (node.getArguments() instanceof ArgumentListExpression) {
+                ArgumentListExpression args = (ArgumentListExpression) node.getArguments();
                 if (args.getExpressions().size() >= 2 && args.getExpressions().get(1) instanceof ClosureExpression) {
                     // really, should be doing inference on the first expression and seeing if it
                     // is a class node, but looking up in scope is good enough for now
@@ -2698,18 +2690,41 @@ assert primaryExprType != null && dependentExprType != null;
         return null;
     }
 
+    private static Parameter findTargetParameter(Expression arg, MethodCallExpression call, MethodNode declaration, boolean isGroovyMethod) {
+        // see ExpressionCompletionRequestor.getParameterPosition(ASTNode, MethodCallExpression)
+        // see CompletionNodeFinder.isArgument(Expression, List<? extends Expression>)
+        int pos = -1;
+        if (call.getArguments() instanceof ArgumentListExpression) {
+            int idx = -1;
+            for (Expression exp : (ArgumentListExpression) call.getArguments()) {
+                idx += 1;
+                if (arg == exp) {
+                    pos = idx;
+                    break;
+                }
+            }
+        }
+        if (pos != -1) {
+            if (isGroovyMethod) pos += 1; // skip self param
+            if (pos < declaration.getParameters().length || GenericsMapper.isVargs(declaration.getParameters())) {
+                return declaration.getParameters()[Math.min(pos, declaration.getParameters().length - 1)];
+            }
+        }
+        return null;
+    }
+
     /**
      * @return the method name associated with this unary operator
      */
     private static String findUnaryOperatorName(String text) {
         switch (text.charAt(0)) {
         case '+':
-            if (text.length() > 1 && text.equals("++")) {
+            if (text.equals("++")) {
                 return "next";
             }
             return "positive";
         case '-':
-            if (text.length() > 1 && text.equals("--")) {
+            if (text.equals("--")) {
                 return "previous";
             }
             return "negative";
@@ -2719,6 +2734,37 @@ assert primaryExprType != null && dependentExprType != null;
             return "bitwiseNegate";
         }
         return null;
+    }
+
+    private static Map<String, ClassNode[]> inferInstanceOfType(BooleanExpression condition, VariableScope scope) {
+        // check for "if (x instanceof y) { ... }" flow typing
+        if (condition.getExpression() instanceof BinaryExpression) {
+            BinaryExpression be = (BinaryExpression) condition.getExpression();
+            // check for "if (x == null || x instanceof y) { .. }" or
+            //  "if (x != null && x instanceof y) { .. }" flow typing
+            BinaryExpression nsbe = nullSafeBinaryExpression(be);
+            if (nsbe != null) {
+                be = nsbe;
+            }
+            if (be.getOperation().getType() == Types.KEYWORD_INSTANCEOF &&
+                    be.getLeftExpression() instanceof VariableExpression) {
+                VariableExpression ve = (VariableExpression) be.getLeftExpression();
+                VariableScope.VariableInfo vi = scope.lookupName(ve.getName());
+                if (vi != null && GroovyUtils.isAssignable(be.getRightExpression().getType(), vi.type)) {
+                    return Collections.singletonMap(vi.name, new ClassNode[] {be.getRightExpression().getType(), null});
+                }
+            }
+        }/* else if (condition.getExpression() instanceof NotExpression) {
+            // check for "if (!(x instanceof y)) { ... } else { ... }"
+            Map<String, ClassNode[]> types = inferInstanceOfType((NotExpression) condition.getExpression(), scope);
+            if (!types.isEmpty()) {
+                for (Map.Entry<String, ClassNode[]>entry : types.entrySet()) {
+                    entry.setValue(new ClassNode[] {entry.getValue()[1], entry.getValue()[0]});
+                }
+                return types;
+            }
+        }*/
+        return Collections.EMPTY_MAP;
     }
 
     /**
@@ -2751,91 +2797,6 @@ assert primaryExprType != null && dependentExprType != null;
         default:
             return false;
         }
-    }
-
-    /**
-     * Determines if the parameter type can be implicitly determined.  We look for
-     * DGM method calls that take closures and see what kind of type they expect.
-     *
-     * @return array of {@link ClassNode}s specifying the inferred types of the closure's parameters
-     */
-    private static ClassNode[] inferClosureParamTypes(ClosureExpression closure, VariableScope scope) {
-        int paramCount = closure.getParameters() == null ? 0 : closure.getParameters().length;
-        if (paramCount == 0) {
-            // implicit parameter
-            paramCount += 1;
-        }
-
-        ClassNode[] inferredTypes = new ClassNode[paramCount];
-
-        // TODO: Could this use the Closure annotations to determine the type?
-
-        VariableScope.CallAndType cat = scope.getEnclosingMethodCallExpression();
-        if (cat != null) {
-            ClassNode fauxDeclaringType = cat.declaringType; // will not be true declaring type for category methods
-            String methodName = cat.call.getMethodAsString();
-
-            ClassNode inferredParamType;
-            if (dgmClosureDelegateMethods.contains(methodName)) {
-                inferredParamType = VariableScope.extractElementType(fauxDeclaringType);
-            } else {
-                inferredParamType = dgmClosureFixedTypeMethods.get(methodName);
-            }
-
-            if (inferredParamType != null) {
-                Arrays.fill(inferredTypes, inferredParamType);
-                // special cases: eachWithIndex has last element an integer
-                if (methodName.equals("eachWithIndex") && inferredTypes.length > 1) {
-                    inferredTypes[inferredTypes.length - 1] = VariableScope.INTEGER_CLASS_NODE;
-                }
-                // if declaring type is a map and
-                if (fauxDeclaringType.getName().equals(VariableScope.MAP_CLASS_NODE.getName())) {
-                    if ((dgmClosureMaybeMap.contains(methodName) && paramCount == 2) ||
-                            (methodName.equals("eachWithIndex") && paramCount == 3)) {
-                        GenericsType[] typeParams = inferredParamType.getGenericsTypes();
-                        if (typeParams != null && typeParams.length == 2) {
-                            inferredTypes[0] = typeParams[0].getType();
-                            inferredTypes[1] = typeParams[1].getType();
-                        }
-                    }
-                }
-                return inferredTypes;
-            }
-        }
-
-        Arrays.fill(inferredTypes, VariableScope.OBJECT_CLASS_NODE);
-        return inferredTypes;
-    }
-
-    private static Map<String, ClassNode[]> inferInstanceOfType(BooleanExpression condition, VariableScope scope) {
-        // check for "if (x instanceof y) { ... }" flow typing
-        if (condition.getExpression() instanceof BinaryExpression) {
-            BinaryExpression be = (BinaryExpression) condition.getExpression();
-            // check for "if (x == null || x instanceof y) { .. }" or
-            //  "if (x != null && x instanceof y) { .. }" flow typing
-            BinaryExpression nsbe = nullSafeBinaryExpression(be);
-            if (nsbe != null) {
-                be = nsbe;
-            }
-            if (be.getOperation().getType() == Types.KEYWORD_INSTANCEOF &&
-                    be.getLeftExpression() instanceof VariableExpression) {
-                VariableExpression ve = (VariableExpression) be.getLeftExpression();
-                VariableScope.VariableInfo vi = scope.lookupName(ve.getName());
-                if (vi != null && GroovyUtils.isAssignable(be.getRightExpression().getType(), vi.type)) {
-                    return Collections.singletonMap(vi.name, new ClassNode[] {be.getRightExpression().getType(), null});
-                }
-            }
-        }/* else if (condition.getExpression() instanceof NotExpression) {
-            // check for "if (!(x instanceof y)) { ... } else { ... }"
-            Map<String, ClassNode[]> types = inferInstanceOfType((NotExpression) condition.getExpression(), scope);
-            if (!types.isEmpty()) {
-                for (Map.Entry<String, ClassNode[]>entry : types.entrySet()) {
-                    entry.setValue(new ClassNode[] {entry.getValue()[1], entry.getValue()[0]});
-                }
-                return types;
-            }
-        }*/
-        return Collections.EMPTY_MAP;
     }
 
     private static boolean isEnumInit(MethodCallExpression node) {
@@ -2985,5 +2946,27 @@ assert primaryExprType != null && dependentExprType != null;
         }
 
         return members;
+    }
+
+    //--------------------------------------------------------------------------
+
+    private static class Tuple {
+        ClassNode declaringType;
+        ASTNode declaration;
+
+        Tuple(ClassNode declaringType, ASTNode declaration) {
+            this.declaringType = declaringType;
+            this.declaration = declaration;
+        }
+    }
+
+    public static class VisitCompleted extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+
+        public final VisitStatus status;
+
+        public VisitCompleted(VisitStatus status) {
+            this.status = status;
+        }
     }
 }

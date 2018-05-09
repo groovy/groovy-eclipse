@@ -76,13 +76,13 @@ public final class DGMInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testDGM3() {
-        String contents = "[1].collectNested { it }";
+        String contents = "[1, [2, 3]].collectNested { it }";
         assertExprType(contents, "it", "java.lang.Integer");
     }
 
     @Test
     public void testDGM4() {
-        String contents = "[1].collectNested { it }";
+        String contents = "[1, [2, 3]].collectNested { it }";
         assertExprType(contents, "it", "java.lang.Integer");
     }
 
@@ -220,20 +220,20 @@ public final class DGMInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testDGM27() {
-        String contents = "[key:1].withDefault { key, value -> key.toUpperCase() + value.intValue() }";
+        String contents = "[key:1].withDefault { key -> key.toUpperCase() }";
         assertExprType(contents, "key", "java.lang.String");
     }
 
-    @Test
-    public void testDGM28() {
-        String contents = "[key:1].withDefault { key, value -> key.toUpperCase() + value.intValue() }";
-        assertExprType(contents, "value", "java.lang.Integer");
+    @Ignore @Test
+    public void testDGM28() { // TODO: Should val be Object since it is not specified?
+        String contents = "[key:1].withDefault { key, val -> key.toUpperCase() + val.intValue() }";
+        assertExprType(contents, "val", "java.lang.Integer");
     }
 
     @Test
     public void testDGM29() {
         String contents = "new FileOutputStream().withStream { it }";
-        assertExprType(contents, "it", "java.io.OutputStream");
+        assertExprType(contents, "it", "java.io.FileOutputStream");
     }
 
     @Test
@@ -316,7 +316,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testDGM43() {
-        String contents = "\"\".eachMatch(\"\") { it.toLowerCase() }";
+        String contents = "''.eachMatch('') { it.toLowerCase() }";
         assertExprType(contents, "it", "java.lang.String");
     }
 

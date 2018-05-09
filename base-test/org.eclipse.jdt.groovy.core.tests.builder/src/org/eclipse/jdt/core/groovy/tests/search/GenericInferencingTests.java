@@ -761,15 +761,6 @@ public final class GenericInferencingTests extends InferencingTestSuite {
         assertType(contents, start, end, "Search");
     }
 
-    @Test // GRECLIPSE-1131
-    public void testEachOnNonIterables3() {
-        String contents = "1.reverseEach { it }";
-        String toFind = "it";
-        int start = contents.lastIndexOf(toFind);
-        int end = start + toFind.length();
-        assertType(contents, start, end, "java.lang.Integer");
-    }
-
     @Test
     public void testInferringGetClass1() {
         String contents = "''.getClass()", toFind = "getClass";
