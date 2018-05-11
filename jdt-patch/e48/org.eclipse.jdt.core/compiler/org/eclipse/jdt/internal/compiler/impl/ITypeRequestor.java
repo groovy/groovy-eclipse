@@ -11,6 +11,7 @@
 package org.eclipse.jdt.internal.compiler.impl;
 
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
+import org.eclipse.jdt.internal.compiler.env.IBinaryModule;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.env.IModule;
@@ -42,8 +43,12 @@ public interface ITypeRequestor {
 	void accept(ISourceType[] sourceType, PackageBinding packageBinding, AccessRestriction accessRestriction);
 
 	/**
-	 * Accept the requested module, could come in in different forms like IBinaryModule, ISourceModule,
-	 * "hopefully" no other form.
+	 * Accept the requested module, could come in in one of 3 different forms:
+	 * <ul>
+	 * <li>{@link IBinaryModule}
+	 * <li>{@link ISourceModule}
+	 * <li>IModule.AutoModule
+	 * </ul>
 	 *
 	 * @since 3.14
 	 */
@@ -53,12 +58,13 @@ public interface ITypeRequestor {
 				ICompilationUnit compilationUnit = ((ISourceModule) module).getCompilationUnit();
 				if (compilationUnit != null) {
 					accept(compilationUnit, null);
-					return;
 				}
 			} catch (AbortCompilation abort) {
-				// fall through
+				// silent
 			}
+		} else {
+			// handles IBinaryModule and IModule.AutoModule:
+			BinaryModuleBinding.create(module, environment);
 		}
-		BinaryModuleBinding.create(module, environment);
 	}
 }

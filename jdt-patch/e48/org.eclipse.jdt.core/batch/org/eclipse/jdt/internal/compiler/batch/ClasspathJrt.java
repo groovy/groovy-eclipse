@@ -45,7 +45,7 @@ public class ClasspathJrt extends ClasspathLocation implements IMultiModuleEntry
 	public File file;
 	protected ZipFile annotationZipFile;
 	protected boolean closeZipFileAtEnd;
-	private static HashMap<String, Map<String,IModule>> ModulesCache = new HashMap<>();
+	protected static HashMap<String, Map<String,IModule>> ModulesCache = new HashMap<>();
 	public final Set<String> moduleNamesCache;
 	//private Set<String> packageCache;
 	protected List<String> annotationPaths;

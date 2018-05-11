@@ -10,27 +10,30 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.batch;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.ExportsStatement;
 import org.eclipse.jdt.internal.compiler.ast.ModuleDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ModuleReference;
 import org.eclipse.jdt.internal.compiler.ast.OpensStatement;
-import org.eclipse.jdt.internal.compiler.ast.RequiresStatement;
 import org.eclipse.jdt.internal.compiler.ast.ProvidesStatement;
+import org.eclipse.jdt.internal.compiler.ast.RequiresStatement;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.ast.UsesStatement;
+import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.env.IModulePathEntry;
+import org.eclipse.jdt.internal.compiler.env.ISourceModule;
 import org.eclipse.jdt.internal.compiler.env.ModuleReferenceImpl;
 import org.eclipse.jdt.internal.compiler.env.PackageExportImpl;
 
-public class BasicModule implements IModule {
+/**
+ * Retrofit a {@link ModuleDeclaration} into an {@link ISourceModule}.
+ * It remembers the underlying {@link ICompilationUnit} so the full structure
+ * can be recreated if needed.
+ */
+public class BasicModule implements ISourceModule {
 	static class Service implements IModule.IService {
 		char[] provides;
 		char[][] with;
@@ -97,7 +100,10 @@ public class BasicModule implements IModule {
 	char[][] uses;
 	Service[] provides;
 	IModule.IPackageExport[] opens;
+	private ICompilationUnit compilationUnit;
+	
 	public BasicModule(ModuleDeclaration descriptor, IModulePathEntry root) {
+		this.compilationUnit = descriptor.compilationResult().compilationUnit;
 		this.name = descriptor.moduleName;
 		if (descriptor.requiresCount > 0) {
 			RequiresStatement[] refs = descriptor.requires;
@@ -148,11 +154,9 @@ public class BasicModule implements IModule {
 		this.isAutomodule = false; // Just to be explicit
 		this.isOpen = descriptor.isOpen();
 	}
-	public BasicModule(char[] name, boolean isAuto) {
-		this.name = name;
-		this.exports = IModule.NO_EXPORTS;
-		this.requires = IModule.NO_MODULE_REFS;
-		this.isAutomodule = isAuto;
+	@Override
+	public ICompilationUnit getCompilationUnit() {
+		return this.compilationUnit;
 	}
 	@Override
 	public char[] name() {
@@ -185,38 +189,6 @@ public class BasicModule implements IModule {
 	@Override
 	public boolean isOpen() {
 		return this.isOpen;
-	}
-	@Override
-	public void addReads(char[] modName) {
-		Predicate<char[]> shouldAdd = m -> {
-			return Stream.of(this.requires).map(ref -> ref.name()).noneMatch(n -> CharOperation.equals(modName, n));
-		};
-		if (shouldAdd.test(modName)) {
-			int len = this.requires.length;
-			this.requires = Arrays.copyOf(this.requires, len + 1);
-			ModuleReferenceImpl info = new ModuleReferenceImpl();
-			info.name = modName;
-			this.requires[len] = info;
-		}		
-	}
-	@Override
-	public void addExports(IModule.IPackageExport[] toAdd) {
-		Predicate<char[]> shouldAdd = m -> {
-			return Stream.of(this.exports).map(ref -> ((PackageExportImpl) ref).pack).noneMatch(n -> CharOperation.equals(m, n));
-		};
-		Collection<IPackageExport> merged = Stream.concat(Stream.of(this.exports), Stream.of(toAdd)
-				.filter(e -> shouldAdd.test(e.name()))
-				.map(e -> {
-					PackageExportImpl exp = new PackageExportImpl();
-					exp.pack = ((PackageExportImpl )e).name();
-					exp.exportedTo = ((PackageExportImpl )e).targets();
-					return exp;
-				}))
-			.collect(
-				ArrayList::new,
-				ArrayList::add,
-				ArrayList::addAll);
-		this.exports = merged.toArray(new PackageExportImpl[merged.size()]);
 	}
 	@Override
 	public boolean equals(Object o) {

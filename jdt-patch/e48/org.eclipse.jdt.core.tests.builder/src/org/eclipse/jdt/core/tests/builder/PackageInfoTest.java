@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -136,7 +136,7 @@ public void test002() throws JavaModelException {
 	);
 	incrementalBuild(projectPath);
 	String javaVersion = System.getProperty("java.version");
-	if (javaVersion != null && javaVersion.startsWith("9")) {
+	if (javaVersion != null && JavaCore.compareJavaVersions(javaVersion, "9") >= 0) {
 		expectingProblemsFor(new Path("/Project/src/testcase/Main.java"), 
 				"Problem : The method getPackage(String) from the type Package is deprecated [ resource : </Project/src/testcase/Main.java> range : <125,147> category : <110> severity : <1>]");
 	} else {

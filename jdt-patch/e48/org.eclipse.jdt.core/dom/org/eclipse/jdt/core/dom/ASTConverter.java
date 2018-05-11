@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -3724,12 +3724,17 @@ class ASTConverter {
 		final VariableDeclarationFragment variableDeclarationFragment = convertToVariableDeclarationFragment(localDeclaration);
 		final VariableDeclarationStatement variableDeclarationStatement = new VariableDeclarationStatement(this.ast);
 		variableDeclarationStatement.fragments().add(variableDeclarationFragment);
-		if (this.resolveBindings) {
-			recordNodes(variableDeclarationFragment, localDeclaration);
-		}
 		variableDeclarationStatement.setSourceRange(localDeclaration.declarationSourceStart, localDeclaration.declarationSourceEnd - localDeclaration.declarationSourceStart + 1);
 		Type type = convertType(localDeclaration.type);
 		setTypeForVariableDeclarationStatement(variableDeclarationStatement, type, variableDeclarationFragment.getExtraDimensions());
+		if (this.resolveBindings) {
+			recordNodes(variableDeclarationFragment, localDeclaration);
+			if (this.ast.apiLevel() >= AST.JLS10_INTERNAL && type.isVar()) {
+				SimpleName varName = (SimpleName) ((SimpleType) type).getName();
+				varName.setVar(true);
+				recordNodes(varName, localDeclaration);				
+			}
+		}
 		if (localDeclaration.modifiersSourceStart != -1) {
 			setModifiers(variableDeclarationStatement, localDeclaration);
 		}
@@ -3916,6 +3921,9 @@ class ASTConverter {
 				type = simpleType;
 				type.setSourceRange(sourceStart, end - sourceStart + 1);
 				type = simpleType;
+				if (this.ast.apiLevel() >= AST.JLS10_INTERNAL && type.isVar()) {
+					simpleName.setVar(true);
+				}
 				if (this.resolveBindings) {
 					this.recordNodes(simpleName, typeReference);
 				}

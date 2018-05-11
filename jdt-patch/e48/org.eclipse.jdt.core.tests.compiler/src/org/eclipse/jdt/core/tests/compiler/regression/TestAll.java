@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -163,6 +163,11 @@ public static Test suite() {
 	since_9.add(AutomaticModuleNamingTest.class);
 	since_9.add(UnnamedModuleTest.class);
 	since_9.add(NullAnnotationTests9.class);
+	since_9.add(AnnotationTest_9.class);
+
+	// add 10 specific test here (check duplicates)
+	ArrayList since_10 = new ArrayList();
+	since_10.add(JEP286Test.class);
 	
 	// Build final test suite
 	TestSuite all = new TestSuite(TestAll.class.getName());
@@ -234,6 +239,19 @@ public static Test suite() {
 		TestCase.TESTS_RANGE = null;
 		TestCase.RUN_ONLY_ID = null;
 		all.addTest(AbstractCompilerTest.buildComplianceTestSuite(ClassFileConstants.JDK9, tests_9));
+	}
+
+	if ((possibleComplianceLevels & AbstractCompilerTest.F_10) != 0) {
+		ArrayList tests_10 = (ArrayList)standardTests.clone();
+		tests_10.addAll(since_1_4);
+		tests_10.addAll(since_1_5);
+		tests_10.addAll(since_1_6);
+		tests_10.addAll(since_1_7);
+		tests_10.addAll(since_1_8);
+		tests_10.addAll(since_9);
+		tests_10.addAll(since_10);
+		TestCase.resetForgottenFilters(tests_10);
+		all.addTest(AbstractCompilerTest.buildComplianceTestSuite(ClassFileConstants.JDK10, tests_10));
 	}
 	all.addTest(new TestSuite(Jsr14Test.class));
 	return all;

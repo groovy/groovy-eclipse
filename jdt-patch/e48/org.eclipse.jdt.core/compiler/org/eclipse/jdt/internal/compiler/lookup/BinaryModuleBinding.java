@@ -68,24 +68,28 @@ public class BinaryModuleBinding extends ModuleBinding {
 	/**
 	 * Construct a named module from binary, could be an auto module - or from an info from Java Model.
 	 * <p>
+	 * <strong>precondition:</strong> module must be either IBinaryModule or IModule.AutoModule
+	 * </p>
+	 * <p>
 	 * <strong>Side effects:</strong> adds the new module to root.knownModules and resolves its directives.
 	 * </p>
 	 */
 	public static ModuleBinding create(IModule module, LookupEnvironment existingEnvironment) {
 		if (module.isAutomatic())
 			return new AutomaticModuleBinding(module, existingEnvironment);
-		return new BinaryModuleBinding(module, existingEnvironment);
+		return new BinaryModuleBinding((IBinaryModule) module, existingEnvironment);
 	}
 
-	private BinaryModuleBinding(IModule module, LookupEnvironment existingEnvironment) {
+	private BinaryModuleBinding(IBinaryModule module, LookupEnvironment existingEnvironment) {
 		super(module.name(), existingEnvironment);
 		existingEnvironment.root.knownModules.put(this.moduleName, this);
 		cachePartsFrom(module);
 	}
 	
-	void cachePartsFrom(IModule module) {
+	void cachePartsFrom(IBinaryModule module) {
 		if (module.isOpen())
 			this.modifiers |= ClassFileConstants.ACC_OPEN;
+		this.tagBits |= module.getTagBits();
 
 		IModuleReference[] requiresReferences = module.requires();
 		this.requires = new ModuleBinding[requiresReferences.length];
@@ -111,9 +115,10 @@ public class BinaryModuleBinding extends ModuleBinding {
 		this.unresolvedUses = module.uses();
 		this.unresolvedProvides = module.provides();
 		if (this.environment.globalOptions.isAnnotationBasedNullAnalysisEnabled) {
-			if (module instanceof IBinaryModule)
-				scanForNullDefaultAnnotation((IBinaryModule) module);
-//			this.setAnnotations(BinaryTypeBinding.createAnnotations(((IBinaryModule) module).getAnnotations(), this.environment, null));
+			scanForNullDefaultAnnotation(module);
+		}
+		if ((this.tagBits & TagBits.AnnotationDeprecated) != 0 || this.environment.globalOptions.storeAnnotations) {
+			this.setAnnotations(BinaryTypeBinding.createAnnotations(module.getAnnotations(), this.environment, null), true);
 		}
 	}
 
@@ -163,8 +168,12 @@ public class BinaryModuleBinding extends ModuleBinding {
 			PackageBinding declaredPackage = getVisiblePackage(CharOperation.splitOn('.', export.name()));
 			if (declaredPackage != null) {
 				this.exportedPackages[count++] = declaredPackage;
-				declaredPackage.isExported = Boolean.TRUE;
-				recordExportRestrictions(declaredPackage, export.targets());
+				if (declaredPackage instanceof SplitPackageBinding)
+					declaredPackage = ((SplitPackageBinding) declaredPackage).getIncarnation(this);
+				if (declaredPackage != null) {
+					declaredPackage.isExported = Boolean.TRUE;
+					recordExportRestrictions(declaredPackage, export.targets());
+				}
 			} else {
 				// TODO(SHMOD): report incomplete module path?
 			}
@@ -179,7 +188,11 @@ public class BinaryModuleBinding extends ModuleBinding {
 			PackageBinding declaredPackage = getVisiblePackage(CharOperation.splitOn('.', opens.name()));
 			if (declaredPackage != null) {
 				this.openedPackages[count++] = declaredPackage;
-				recordOpensRestrictions(declaredPackage, opens.targets());
+				if (declaredPackage instanceof SplitPackageBinding)
+					declaredPackage = ((SplitPackageBinding) declaredPackage).getIncarnation(this);
+				if (declaredPackage != null) {
+					recordOpensRestrictions(declaredPackage, opens.targets());
+				}
 			} else {
 				// TODO(SHMOD): report incomplete module path?
 			}
@@ -222,5 +235,9 @@ public class BinaryModuleBinding extends ModuleBinding {
 				impls[j] = this.environment.getType(CharOperation.splitOn('.', implNames[j]), this);
 			this.implementations.put(this.services[i], impls);
 		}
+	}
+	@Override
+	public AnnotationBinding[] getAnnotations() {
+		return retrieveAnnotations(this);
 	}
 }

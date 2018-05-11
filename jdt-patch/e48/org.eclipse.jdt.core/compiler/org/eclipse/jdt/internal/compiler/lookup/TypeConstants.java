@@ -21,6 +21,7 @@
  *    Jesper S Moller - Contributions for
  *								Bug 405066 - [1.8][compiler][codegen] Implement code generation infrastructure for JSR335
  *								Bug 412153 - [1.8][compiler] Check validity of annotations which may be repeatable
+ *								bug 527554 - [18.3] Compiler support for JEP 286 Local-Variable Type
  *    Andy Clement (GoPivotal, Inc) aclement@gopivotal.com - Contributions for
  *                              Bug 405104 - [1.8][compiler][codegen] Implement support for serializeable lambdas
  *    Ulrich Grave <ulrich.grave@gmx.de> - Contributions for
@@ -103,6 +104,9 @@ public interface TypeConstants {
     char[] DESERIALIZE_LAMBDA = "$deserializeLambda$".toCharArray(); //$NON-NLS-1$
     char[] LAMBDA_TYPE = "<lambda>".toCharArray(); //$NON-NLS-1$
     char[] UPPER_MODULE = "MODULE".toCharArray(); //$NON-NLS-1$
+
+    // JEP 286
+	char[] VAR = "var".toCharArray(); //$NON-NLS-1$
 
     // jsr308
 	char[] TYPE_USE_TARGET  = "TYPE_USE".toCharArray(); //$NON-NLS-1$

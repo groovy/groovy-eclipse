@@ -482,12 +482,6 @@ public class ClassFile implements TypeConstants, TypeIds {
 			}
 			attributesNumber += generateSourceAttribute(fullFileName);
 		}
-		// Deprecated attribute
-		if (module.isDeprecated()) {
-			// check that there is enough space to write all the bytes for the field info corresponding
-			// to the @fieldBinding
-			attributesNumber += generateDeprecatedAttribute();
-		}
 		attributesNumber += generateModuleAttribute(cud.moduleDeclaration);
 		if (annotations != null) {
 			long targetMask = TagBits.AnnotationForModule;

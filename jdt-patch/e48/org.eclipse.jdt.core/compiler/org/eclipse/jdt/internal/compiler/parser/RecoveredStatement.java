@@ -17,12 +17,15 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
+import org.eclipse.jdt.internal.compiler.ast.Block;
+import org.eclipse.jdt.internal.compiler.ast.ForeachStatement;
 import org.eclipse.jdt.internal.compiler.ast.Statement;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 
 public class RecoveredStatement extends RecoveredElement {
 
 	public Statement statement;
+	RecoveredBlock nestedBlock;
 	
 public RecoveredStatement(Statement statement, RecoveredElement parent, int bracketBalance){
 	super(parent, bracketBalance);
@@ -48,6 +51,10 @@ public String toString(int tab){
 	return tabString(tab) + "Recovered statement:\n" + this.statement.print(tab + 1, new StringBuffer(10)); //$NON-NLS-1$
 }
 public Statement updatedStatement(int depth, Set<TypeDeclaration> knownTypes){
+	if (this.nestedBlock != null) {
+		this.nestedBlock.updatedStatement(depth, knownTypes);
+		// block has already been assigned in its parent statement
+	}
 	return this.statement;
 }
 @Override
@@ -69,5 +76,35 @@ public RecoveredElement updateOnClosingBrace(int braceStart, int braceEnd){
 		return this.parent.updateOnClosingBrace(braceStart, braceEnd);
 	}
 	return this;
+}
+@Override
+public RecoveredElement add(Block nestedBlockDeclaration, int bracketBalanceValue) {
+	if (this.statement instanceof ForeachStatement) {
+		ForeachStatement foreach = (ForeachStatement) this.statement;
+		
+		// see RecoveredBlock.add(Block, int):
+		resetPendingModifiers();
+
+		/* do not consider a nested block starting passed the block end (if set)
+			it must be belonging to an enclosing block */
+		if (foreach.sourceEnd != 0
+			&& foreach.action != null // if action is unassigned then foreach.sourceEnd is not yet the real end.
+			&& nestedBlockDeclaration.sourceStart > foreach.sourceEnd) {
+			return this.parent.add(nestedBlockDeclaration, bracketBalanceValue);
+		}
+		foreach.action = nestedBlockDeclaration;
+
+		RecoveredBlock element = new RecoveredBlock(nestedBlockDeclaration, this, bracketBalanceValue);
+
+		if(parser().statementRecoveryActivated) {
+			addBlockStatement(element);
+		}
+		this.nestedBlock = element;
+		
+		if (nestedBlockDeclaration.sourceEnd == 0) return element;
+		return this;
+	} else {
+		return super.add(nestedBlockDeclaration, bracketBalanceValue);
+	}
 }
 }

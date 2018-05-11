@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -451,6 +451,13 @@ public ExceptionLabel enterAnyExceptionHandler(CodeStream codeStream) {
 public void enterDeclaredExceptionHandlers(CodeStream codeStream) {
 	for (int i = 0, length = this.declaredExceptionLabels == null ? 0 : this.declaredExceptionLabels.length; i < length; i++) {
 		this.declaredExceptionLabels[i].placeStart();
+	}
+	int resourceCount = this.resources.length;
+	if (resourceCount > 0 && this.resourceExceptionLabels != null) { // https://bugs.eclipse.org/bugs/show_bug.cgi?id=375248
+		// Reinstall handlers
+		for (int i = resourceCount; i >= 0; --i) {
+			this.resourceExceptionLabels[i].placeStart();
+		}
 	}
 }
 
@@ -950,10 +957,7 @@ public boolean generateSubRoutineInvocation(BlockScope currentScope, CodeStream 
 			codeStream.recordPositionsFrom(invokeCloseStartPc, this.tryBlock.sourceEnd);
 			exitLabel.place();
 		}
-		// Reinstall handlers
-		for (int i = resourceCount; i > 0; --i) {
-			this.resourceExceptionLabels[i].placeStart();
-		}
+		this.resourceExceptionLabels[0].placeEnd(); // outermost should end here as well, will start again on enter
 	}
 
 	boolean isStackMapFrameCodeStream = codeStream instanceof StackMapFrameCodeStream;

@@ -154,7 +154,7 @@ public class QualifiedTypeReference extends TypeReference {
 				}
 				if (currentType.isGenericType()) {
 					qualifiedType = scope.environment().createRawType(currentType, qualifiedType);
-				} else if (currentType.isStatic()) {
+				} else if (!currentType.hasEnclosingInstanceContext()) {
 					qualifiedType = currentType; // parameterization of enclosing is irrelevant in this case
 				} else {
 					boolean rawQualified = qualifiedType.isRawType();

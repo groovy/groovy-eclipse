@@ -225,7 +225,7 @@ public class ParameterizedSingleTypeReference extends ArrayTypeReference {
 				// be resilient, still attempt resolving arguments
 			}
 			enclosingType = currentType.enclosingType(); // if member type
-			if (enclosingType != null && !currentType.isStatic()) {
+			if (enclosingType != null && currentType.hasEnclosingInstanceContext()) {
 				enclosingType = scope.environment().convertToParameterizedType(enclosingType);
 			}
 		} else { // resolving member type (relatively to enclosingType)

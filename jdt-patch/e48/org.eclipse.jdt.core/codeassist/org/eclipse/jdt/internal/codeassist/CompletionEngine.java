@@ -9772,30 +9772,9 @@ public final class CompletionEngine
 				!this.requestor.isIgnored(CompletionProposal.KEYWORD) &&
 				((scope instanceof MethodScope && !((MethodScope)scope).isStatic)
 				|| ((methodScope = scope.enclosingMethodScope()) != null && !methodScope.isStatic))) {
-			if (token.length > 0) {
+			if (token.length >= 0) {
 				findKeywords(token, new char[][]{Keywords.THIS, Keywords.SUPER}, true, false);
-			} else {
-				int relevance = computeBaseRelevance();
-				relevance += computeRelevanceForResolution();
-				relevance += computeRelevanceForInterestingProposal();
-				relevance += computeRelevanceForCaseMatching(this.completionToken, Keywords.THIS);
-				relevance += computeRelevanceForRestrictions(IAccessRule.K_ACCESSIBLE); // no access restriction for keywords
-				relevance += R_NON_INHERITED;
-
-				this.noProposal = false;
-				if (!this.requestor.isIgnored(CompletionProposal.KEYWORD)) {
-					InternalCompletionProposal proposal =  createProposal(CompletionProposal.KEYWORD, this.actualCompletionPosition);
-					proposal.setName(Keywords.THIS);
-					proposal.setCompletion(Keywords.THIS);
-					proposal.setReplaceRange(this.startPosition - this.offset, this.endPosition - this.offset);
-					proposal.setTokenRange(this.tokenStart - this.offset, this.tokenEnd - this.offset);
-					proposal.setRelevance(relevance);
-					this.requestor.accept(proposal);
-					if (DEBUG) {
-						this.printDebug(proposal);
-					}
-				}
-			}
+			} 
 		}
 
 		if (!this.requestor.isIgnored(CompletionProposal.FIELD_REF)) {
@@ -12413,7 +12392,7 @@ public final class CompletionEngine
 								continue next;
 							
 							// https://bugs.eclipse.org/bugs/show_bug.cgi?id=328674
-							if (local.declaration.initialization != null) {
+							if (local.declaration.initialization != null && !local.declaration.type.isTypeNameVar(null)) {
 								// proposal being asked inside field's initialization. Don't propose this field.
 								continue next;
 							}

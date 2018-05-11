@@ -57,8 +57,9 @@ abstract class GroovyEclipseTestSuite {
     @BeforeClass
     static final void setUpTestSuite() {
         testProject = new TestProject(autoBuilding: false)
-
-        new ProjectScope(testProject.project).getNode(Platform.PI_RUNTIME).put(Platform.PREF_LINE_SEPARATOR, '\n')
+        def projectScope = new ProjectScope(testProject.project)
+        projectScope.getNode(Platform.PI_RUNTIME).put(Platform.PREF_LINE_SEPARATOR, '\n')
+        projectScope.getNode('org.eclipse.jdt.launching').put('org.eclipse.jdt.launching.PREF_COMPILER_COMPLIANCE_DOES_NOT_MATCH_JRE', JavaCore.IGNORE)
     }
 
     @AfterClass

@@ -23,6 +23,7 @@ import java.util.Map;
 import junit.framework.Test;
 
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -5593,6 +5594,11 @@ public void testTypeVariable7a() {
 		"	<U> U m(I1<U> in) { return in.get(); }\n" + 
 		"	           ^\n" + 
 		"Null constraint mismatch: The type \'U\' is not a valid substitute for the type parameter \'@NonNull T\'\n" + 
+		"----------\n" + 
+		"2. WARNING in X.java (at line 6)\n" + 
+		"	@Nullable String s = m(() -> \"OK\");\n" + 
+		"	                       ^^^^^^^^^^\n" + 
+		"Contradictory null annotations: function type was inferred as \'@NonNull @Nullable String ()\', but only one of \'@NonNull\' and \'@Nullable\' can be effective at any location\n" + 
 		"----------\n",
 		"OK");
 }
@@ -5623,10 +5629,10 @@ public void testTypeVariable7err() {
 		"	                           ^^^^^^^^\n" + 
 		"Null type mismatch (type annotations): required \'U\' but this expression has type \'@Nullable U\', where \'U\' is a free type variable\n" + 
 		"----------\n" + 
-		"3. WARNING in X.java (at line 6)\n" + 
+		"3. ERROR in X.java (at line 6)\n" + 
 		"	@NonNull String s = m(() -> \"\");\n" + 
-		"	                    ^^^^^^^^^^^\n" + 
-		"Null type safety (type annotations): The expression of type \'String\' needs unchecked conversion to conform to \'@NonNull String\'\n" + 
+		"	                      ^^^^^^^^\n" + 
+		"Contradictory null annotations: function type was inferred as \'@Nullable @NonNull String ()\', but only one of \'@NonNull\' and \'@Nullable\' can be effective at any location\n" + 
 		"----------\n");
 }
 //Bug 435570 - [1.8][null] @NonNullByDefault illegally tries to affect "throws E"
@@ -7148,7 +7154,7 @@ public void testBug448777() {
 		"2. ERROR in DoubleInference.java (at line 13)\n" + 
 		"	return applyWith(i -> i, \"hallo\");\n" + 
 		"	                 ^^^^^^\n" + 
-		"The target type of this expression must be a functional interface\n" + 
+		"Contradictory null annotations: function type was inferred as \'@Nullable @NonNull String (@Nullable @NonNull String)\', but only one of \'@NonNull\' and \'@Nullable\' can be effective at any location\n" + 
 		"----------\n" + 
 		"3. ERROR in DoubleInference.java (at line 15)\n" + 
 		"	void test2(Func<String> f1, Func<@NonNull String> f2) {\n" + 
@@ -17428,5 +17434,99 @@ public void testBug518839_BTB() {
 		"Null type mismatch: required \'@NonNull String\' but the provided value is null\n" + 
 		"----------\n"
 	);
+}
+public void testBug531040() {
+	if (this.complianceLevel < ClassFileConstants.JDK10)
+		return;
+	runNegativeTestWithLibs(
+		new String[] {
+			"Test.java",
+			"import java.util.*;\n" + 
+			"\n" + 
+			"import org.eclipse.jdt.annotation.NonNull;\n" + 
+			"\n" + 
+			"public class Test {\n" + 
+			"	void test() {\n" + 
+			"		var list1 = new ArrayList<@NonNull String>();\n" + 
+			"		list1.add(null);\n" + 
+			"		@NonNull String val = \"\";\n" + 
+			"		var list2 = getList(val);\n" + 
+			"		list2.add(null);\n" + 
+			"	}\n" + 
+			"	<T> List<T> getList(T... in) {\n" + 
+			"		return Arrays.asList(in);\n" + 
+			"	}\n" + 
+			"}\n" + 
+			""
+		},
+		"----------\n" + 
+		"1. ERROR in Test.java (at line 8)\n" + 
+		"	list1.add(null);\n" + 
+		"	          ^^^^\n" + 
+		"Null type mismatch: required \'@NonNull String\' but the provided value is null\n" + 
+		"----------\n" + 
+		"2. ERROR in Test.java (at line 11)\n" + 
+		"	list2.add(null);\n" + 
+		"	          ^^^^\n" + 
+		"Null type mismatch: required \'@NonNull String\' but the provided value is null\n" + 
+		"----------\n" + 
+		"3. WARNING in Test.java (at line 13)\n" + 
+		"	<T> List<T> getList(T... in) {\n" + 
+		"	                         ^^\n" + 
+		"Type safety: Potential heap pollution via varargs parameter in\n" + 
+		"----------\n"
+	);
+}
+public void testBug533339() {
+	Runner runner = new Runner();
+	runner.testFiles =
+		new String[] {
+			"Test.java",
+			"import org.eclipse.jdt.annotation.NonNull;\n" + 
+			"import org.eclipse.jdt.annotation.Nullable;\n" + 
+			"\n" + 
+			"public class Test {\n" + 
+			"\n" + 
+			"	interface Foo {\n" + 
+			"\n" + 
+			"		@Nullable\n" + 
+			"		String getString();\n" + 
+			"	}\n" + 
+			"\n" + 
+			"	class Bar {\n" + 
+			"\n" + 
+			"		Bar(@NonNull String s) {\n" + 
+			"		}\n" + 
+			"	}\n" + 
+			"\n" + 
+			"	Bar hasWarning(Foo foo) {\n" + 
+			"		@NonNull String s = checkNotNull(foo.getString());\n" + 
+			"		return new Bar(s);// Null type mismatch: required '@NonNull String' but the provided value is inferred as @Nullable\n" + 
+			"	}\n" + 
+			"\n" + 
+			"	Bar hasNoWarning(Foo foo) {\n" + 
+			"		return new Bar(checkNotNull(foo.getString()));// no warning when s is inlined\n" + 
+			"	}\n" +
+			"	static <T> T checkNotNull(T reference) {\n" +
+			"		if (reference == null) throw new NullPointerException();\n" +
+			"		return reference;\n" +
+			"	}\n" + 
+			"}\n"
+		};
+	runner.classLibraries = this.LIBS;
+	runner.expectedCompilerLog =
+		"----------\n" + 
+		"1. WARNING in Test.java (at line 19)\n" + 
+		"	@NonNull String s = checkNotNull(foo.getString());\n" + 
+		"	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+		"Null type safety (type annotations): The expression of type \'String\' needs unchecked conversion to conform to \'@NonNull String\'\n" + 
+		"----------\n" + 
+		"2. WARNING in Test.java (at line 24)\n" + 
+		"	return new Bar(checkNotNull(foo.getString()));// no warning when s is inlined\n" + 
+		"	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+		"Null type safety (type annotations): The expression of type \'String\' needs unchecked conversion to conform to \'@NonNull String\'\n" + 
+		"----------\n";
+	runner.javacTestOptions = JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings;
+	runner.runWarningTest();
 }
 }

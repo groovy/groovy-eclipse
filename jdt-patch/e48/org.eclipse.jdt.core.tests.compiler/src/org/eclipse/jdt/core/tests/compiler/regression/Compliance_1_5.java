@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -2089,84 +2089,97 @@ public void test062() {
 }
 
 public void test063() {
-	this.runNegativeTest(
-		new String[] {
-			/* p1/X.java */
-			"p1/X.java",
-			"package p1;	\n"+
-			"public class X {	\n"+
-			"	class Y extends X {}	\n"+
-			"	class Z extends Y {	\n"+
-			"		Z(){	\n"+
-			"			System.out.println(\"SUCCESS\");	\n"+
-			"		}	\n" +
-			"	}	\n" +
-			"	public static void main(String[] arguments) {	\n"+
-			"		new X().new Z();	\n"+
-			"	}	\n"+
-			"}	\n",
-		},
-		"----------\n" +
-		"1. ERROR in p1\\X.java (at line 5)\n" +
-		"	Z(){	\n" +
-		"	^^^\n" +
-		"No enclosing instance of type X is available due to some intermediate constructor invocation\n" +
-		"----------\n"
-	);
+	String[] sources = new String[] {
+		/* p1/X.java */
+		"p1/X.java",
+		"package p1;	\n"+
+		"public class X {	\n"+
+		"	class Y extends X {}	\n"+
+		"	class Z extends Y {	\n"+
+		"		Z(){	\n"+
+		"			System.out.println(\"SUCCESS\");	\n"+
+		"		}	\n" +
+		"	}	\n" +
+		"	public static void main(String[] arguments) {	\n"+
+		"		new X().new Z();	\n"+
+		"	}	\n"+
+		"}	\n",
+	};
+	if (this.complianceLevel >= ClassFileConstants.JDK1_7) {
+		this.runConformTest(sources, "SUCCESS");
+	} else {
+		this.runNegativeTest(
+			sources,
+			"----------\n" +
+			"1. ERROR in p1\\X.java (at line 5)\n" +
+			"	Z(){	\n" +
+			"	^^^\n" +
+			"No enclosing instance of type X is available due to some intermediate constructor invocation\n" +
+			"----------\n");
+	}
 }
 
 /**
- * Refuse selection of own enclosing instance arg for super constructor call in 1.3 compliant mode
+ * Refuse selection of own enclosing instance arg for super constructor call in 1.5 compliant mode
  */
 public void test064() {
-	this.runNegativeTest(
-		new String[] {
-			"Foo.java",
-			"public class Foo {\n" +
-			"	public static void main(String[] args) {\n"+
-			"		System.out.println(\"SUCCESS\");\n"+
-			"	}\n"+
-			"	public class Bar extends Foo {\n" +
-			"		public Bar() {\n" +
-			"		}\n" +
-			"	}\n" +
-			"	public class Baz extends Bar {\n" +
-			"		public Baz() {\n" +
-			"		}\n" +
-			"	}\n" +
-			"}\n"
-		},
-		"----------\n" +
-		"1. ERROR in Foo.java (at line 10)\n" +
-		"	public Baz() {\n" +
-		"	       ^^^^^\n" +
-		"No enclosing instance of type Foo is available due to some intermediate constructor invocation\n" +
-		"----------\n");
+	String[] sources = new String[] {
+		"Foo.java",
+		"public class Foo {\n" +
+		"	public static void main(String[] args) {\n"+
+		"		System.out.println(\"SUCCESS\");\n"+
+		"	}\n"+
+		"	public class Bar extends Foo {\n" +
+		"		public Bar() {\n" +
+		"		}\n" +
+		"	}\n" +
+		"	public class Baz extends Bar {\n" +
+		"		public Baz() {\n" +
+		"		}\n" +
+		"	}\n" +
+		"}\n"
+	};
+	if (this.complianceLevel >= ClassFileConstants.JDK1_7) {
+		this.runConformTest(sources, "SUCCESS");
+	} else {
+		this.runNegativeTest(
+			sources,
+			"----------\n" +
+			"1. ERROR in Foo.java (at line 10)\n" +
+			"	public Baz() {\n" +
+			"	       ^^^^^\n" +
+			"No enclosing instance of type Foo is available due to some intermediate constructor invocation\n" +
+			"----------\n");
+	}
 }
 
 public void test065() {
-	this.runNegativeTest(
-		new String[] {
-			"X.java",
-			"public class X {	\n"+
-			"	public static void main(String[] arguments) {	\n"+
-			"		new X().new Y().new Z().bar();	\n"+
-			"	}	\n"+
-			"	String foo() { return \"X-foo\"; }	\n"+
-			"	class Y extends X {	\n"+
-			"		String foo() { return \"Y-foo\"; }	\n"+
-			"		class Z extends Y {	\n"+
-			"			Z(){	\n"+
-			"				//X.this.super();	\n"+
-			"			}	\n"+
-			"			String foo() { return \"Z-foo\"; }	\n"+
-			"			void bar () {	\n"+
-			"				System.out.println(X.this.foo());	\n"+
-			"			}	\n"+
-			"		}	\n"+
-			"	}	\n"+
-			"}	\n"
-		},
+	String[] sources = new String[] {
+		"X.java",
+		"public class X {	\n"+
+		"	public static void main(String[] arguments) {	\n"+
+		"		new X().new Y().new Z().bar();	\n"+
+		"	}	\n"+
+		"	String foo() { return \"X-foo\"; }	\n"+
+		"	class Y extends X {	\n"+
+		"		String foo() { return \"Y-foo\"; }	\n"+
+		"		class Z extends Y {	\n"+
+		"			Z(){	\n"+
+		"				//X.this.super();	\n"+
+		"			}	\n"+
+		"			String foo() { return \"Z-foo\"; }	\n"+
+		"			void bar () {	\n"+
+		"				System.out.println(X.this.foo());	\n"+
+		"			}	\n"+
+		"		}	\n"+
+		"	}	\n"+
+		"}	\n"
+	};
+	if (this.complianceLevel >= ClassFileConstants.JDK1_7) {
+		this.runConformTest(sources, "X-foo");
+	} else {
+		this.runNegativeTest(
+			sources,
 			"----------\n" +
 			"1. WARNING in X.java (at line 7)\n" +
 			"	String foo() { return \"Y-foo\"; }	\n" +
@@ -2183,6 +2196,7 @@ public void test065() {
 			"	       ^^^^^\n" +
 			"The method foo() of type X.Y.Z should be tagged with @Override since it actually overrides a superclass method\n" +
 			"----------\n");
+	}
 }
 
 /*
@@ -2233,7 +2247,7 @@ public void test067() {
 			"	      ^^^^^^^\n" +
 			"No enclosing instance of type X is available due to some intermediate constructor invocation\n" +
 			"----------\n";
-	if (this.complianceLevel >= ClassFileConstants.JDK1_6) {
+	if (this.complianceLevel == ClassFileConstants.JDK1_6) {
 		expectedError =
 				"----------\n" + 
 				"1. ERROR in X.java (at line 11)\n" + 
@@ -2244,6 +2258,14 @@ public void test067() {
 				"2. ERROR in X.java (at line 14)\n" + 
 				"	super(new M());//2\n" + 
 				"	^^^^^^^^^^^^^^^\n" + 
+				"No enclosing instance of type X is available due to some intermediate constructor invocation\n" + 
+				"----------\n";
+	} else if (this.complianceLevel >= ClassFileConstants.JDK1_7) {
+		expectedError =
+				"----------\n" + 
+				"1. ERROR in X.java (at line 14)\n" + 
+				"	super(new M());//2\n" + 
+				"	      ^^^^^^^\n" + 
 				"No enclosing instance of type X is available due to some intermediate constructor invocation\n" + 
 				"----------\n";
 	}
@@ -2275,30 +2297,35 @@ public void test067() {
  * Check that indirect member type allocation is denied access to compatible enclosing instance available as constructor argument
  */
 public void test068() {
-	this.runNegativeTest(
-		new String[] {
-			"X.java",
-			"public class X {\n" +
-			"	class MX1 extends X {\n" +
-			"		MX1() {\n" +
-			"		}\n" +
-			"	}\n" +
-			"	class MX2 extends MX1 {\n" +
-			"		MX2() {\n" +
-			"			super();	// ko\n" +
-			"		}\n" +
-			"		MX2(X x) {\n" +
-			"			this();		// ok\n" +
-			"		}\n" +
-			"	}\n" +
-			"}\n",
-		},
-		"----------\n" +
-		"1. ERROR in X.java (at line 8)\n" +
-		"	super();	// ko\n" +
-		"	^^^^^^^^\n" +
-		"No enclosing instance of type X is available due to some intermediate constructor invocation\n" +
-		"----------\n");
+	String[] sources = new String[] {
+		"X.java",
+		"public class X {\n" +
+		"	class MX1 extends X {\n" +
+		"		MX1() {\n" +
+		"		}\n" +
+		"	}\n" +
+		"	class MX2 extends MX1 {\n" +
+		"		MX2() {\n" +
+		"			super();	// ko\n" +
+		"		}\n" +
+		"		MX2(X x) {\n" +
+		"			this();		// ok\n" +
+		"		}\n" +
+		"	}\n" +
+		"}\n",
+	};
+	if (this.complianceLevel >= ClassFileConstants.JDK1_7) {
+		this.runConformTest(sources);
+	} else {
+		this.runNegativeTest(
+			sources,
+			"----------\n" +
+			"1. ERROR in X.java (at line 8)\n" +
+			"	super();	// ko\n" +
+			"	^^^^^^^^\n" +
+			"No enclosing instance of type X is available due to some intermediate constructor invocation\n" +
+			"----------\n");
+	}
 }
 
 /*
@@ -2322,7 +2349,7 @@ public void test069() {
 			"	     ^^^^^^^^^\n" +
 			"No enclosing instance of type X is available due to some intermediate constructor invocation\n" +
 			"----------\n";
-	if (this.complianceLevel >= ClassFileConstants.JDK1_6) {
+	if (this.complianceLevel == ClassFileConstants.JDK1_6) {
 		expectedError =
 				"----------\n" + 
 				"1. ERROR in X.java (at line 8)\n" + 
@@ -2335,6 +2362,20 @@ public void test069() {
 				"	     ^^^^^^^^^\n" + 
 				"No enclosing instance of type X is available due to some intermediate constructor invocation\n" + 
 				"----------\n";
+	} else if (this.complianceLevel >= ClassFileConstants.JDK1_7) {
+		expectedError =
+				"----------\n" + 
+				"1. ERROR in X.java (at line 8)\n" + 
+				"	super(new MX4());	// ko\n" + 
+				"	      ^^^^^^^^^\n" + 
+				"No enclosing instance of type X is available due to some intermediate constructor invocation\n" + 
+				"----------\n" + 
+				"2. ERROR in X.java (at line 14)\n" + 
+				"	this(new MX4());		// ko\n" + 
+				"	     ^^^^^^^^^\n" + 
+				"No enclosing instance of type X is available due to some intermediate constructor invocation\n" + 
+				"----------\n";
+		
 	}
 	this.runNegativeTest(
 		new String[] {
@@ -2968,9 +3009,10 @@ public void test088() {
 		"Type null of the last argument to method getMethod(String, Class...) doesn't exactly match the vararg parameter type. Cast to Class[] to confirm the non-varargs invocation, or pass individual arguments of type Class for a varargs invocation.\n" +
 		"----------\n";
 	String javaVersion = System.getProperty("java.version");
-	if (isJRELevel(AbstractCompilerTest.F_1_6|AbstractCompilerTest.F_1_7|AbstractCompilerTest.F_1_8|AbstractCompilerTest.F_9)
-			|| (AbstractCompilerTest.getPossibleComplianceLevels() == AbstractCompilerTest.F_1_5
-				&& javaVersion.indexOf("1.5") == -1)) {
+	int allPossibleLevels = getPossibleComplianceLevels();
+	boolean isLevelGreaterThan5 = (allPossibleLevels & ~(F_1_3 | F_1_4 | F_1_5)) != 0;
+	if (isLevelGreaterThan5
+			|| (allPossibleLevels == AbstractCompilerTest.F_1_5 && javaVersion.indexOf("1.5") == -1)) {
 		errorMessage =
 			"----------\n" +
 			"1. WARNING in p\\X.java (at line 4)\n" +

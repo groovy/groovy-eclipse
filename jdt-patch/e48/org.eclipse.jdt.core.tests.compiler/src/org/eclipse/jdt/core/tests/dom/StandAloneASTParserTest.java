@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2017 IBM Corporation and others.
+ * Copyright (c) 2010, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -41,8 +42,11 @@ import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.ModuleDeclaration;
+import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.NodeFinder;
 import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SimpleType;
+import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
@@ -54,7 +58,7 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 		super(name);
 	}
 	
-	private static final int AST_JLS_LATEST = AST.JLS9;
+	private static final int AST_JLS_LATEST = AST.JLS10;
 
 	public ASTNode runConversion(
 			int astLevel,
@@ -638,6 +642,7 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 		assertTrue("should have parsed a CUD", ast instanceof CompilationUnit);
 	}
 
+	@Deprecated
 	public void testBug465048() {
 		String source =
 				"class A {\n" +
@@ -670,6 +675,7 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 	/**
 	 * Verifies that ASTParser doesn't throw an IllegalArgumentException when given
 	 * this valid input.
+	 * @deprecated
 	 */
 	public void testBug480545() {
 	    String input = "class Test2 { void f(Test2... xs) {} }";
@@ -680,6 +686,7 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 	    parser.setCompilerOptions(options);
 	    assertNotNull(parser.createAST(null));
 	}
+	@Deprecated
 	public void testBug493336_001() {
 	    String input = "public class X implements á¼³ {\n" +
 	    			   "  public static final class if {\n"+
@@ -701,6 +708,7 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 	    parser.setCompilerOptions(options1);
 	    assertNotNull(parser.createAST(null));
 	}
+	@Deprecated
 	public void testBug526996_001() {
 		File rootDir = new File(System.getProperty("java.io.tmpdir"));
 		String contents = 
@@ -1577,7 +1585,7 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 					super.acceptAST(sourceFilePath, ast);
 				}
 			};
-			ASTParser parser = ASTParser.newParser(AST.JLS9);
+			ASTParser parser = ASTParser.newParser(AST.JLS10);
 			parser.setResolveBindings(true);
 			parser.setStatementsRecovery(true);
 			parser.setBindingsRecovery(true);
@@ -1600,4 +1608,149 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 			fileY.delete();
 		}
 	}
+	public void testBug530299_001() {
+		String contents =
+				"public class X {\n" +
+				"	public static void main(String[] args) {\n" +
+				"		var x = new X();\n" +
+				"       for (var i = 0; i < 10; ++i) {}\n" +
+				"	}\n" +
+				"}";
+	    ASTParser parser = ASTParser.newParser(AST.JLS10);
+	    parser.setSource(contents.toCharArray());
+		parser.setStatementsRecovery(true);
+		parser.setBindingsRecovery(true);
+		parser.setKind(ASTParser.K_COMPILATION_UNIT);
+		parser.setEnvironment(null, new String[] {null}, null, true);
+		parser.setResolveBindings(true);	
+		Map<String, String> options = getCompilerOptions();
+		options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_10);
+		options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_10);
+		options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_10);
+		parser.setCompilerOptions(options);
+		ASTNode node = parser.createAST(null);
+		assertEquals("Not a compilation unit", ASTNode.COMPILATION_UNIT, node.getNodeType());
+		CompilationUnit cu = (CompilationUnit) node;
+		assertTrue("Problems in compilation", cu.getProblems().length == 0);
+		TypeDeclaration typeDeclaration = (TypeDeclaration) cu.types().get(0);
+		MethodDeclaration[] methods = typeDeclaration.getMethods();
+		MethodDeclaration methodDeclaration = methods[0];
+		VariableDeclarationStatement vStmt = (VariableDeclarationStatement) methodDeclaration.getBody().statements().get(0);
+		Type type = vStmt.getType();
+		assertNotNull(type);
+		assertTrue("not a var", type.isVar());
+	}
+	public void testBug482254() throws IOException {
+		File rootDir = new File(System.getProperty("java.io.tmpdir"));
+
+		String contents =
+			"enum X {\n" + 
+			"              /** */\n" + 
+			"    FOO\n" + 
+			"}";
+		
+		File file = new File(rootDir, "X.java");
+		Writer writer = null;
+		try {
+			writer = new BufferedWriter(new FileWriter(file));
+			writer.write(contents);
+		} finally {
+			if (writer != null) {
+				try {
+					writer.close();
+				} catch(IOException e) {
+					// ignore
+				}
+			}
+		}
+
+		File packageDir = new File(rootDir, "p");
+		packageDir.mkdir();
+		File fileY = new File(packageDir, "Y.java");
+		String canonicalPath = fileY.getCanonicalPath();
+
+		packageDir = new File(rootDir, "p");
+		packageDir.mkdir();
+		fileY = new File(packageDir, "Z.java");
+		String canonicalPath2 = fileY.getCanonicalPath();
+
+		contents =
+				"enum X {\n" + 
+				"              /** */\n" + 
+				"    FOO\n" + 
+				"}";
+			
+			File file2 = new File(rootDir, "X.java");
+			writer = null;
+			try {
+				writer = new BufferedWriter(new FileWriter(file2));
+				writer.write(contents);
+			} finally {
+				if (writer != null) {
+					try {
+						writer.close();
+					} catch(IOException e) {
+						// ignore
+					}
+				}
+			}
+
+		try {
+			ASTParser parser = ASTParser.newParser(AST_JLS_LATEST);
+			parser.setKind(ASTParser.K_COMPILATION_UNIT);
+			parser.setEnvironment(null, null, null, true);
+			parser.setResolveBindings(true);
+			parser.setCompilerOptions(JavaCore.getOptions());
+			parser.createASTs(
+					new String[] { file.getCanonicalPath(), canonicalPath, canonicalPath2, file2.getCanonicalPath() },
+					null,
+					new String[] {},
+					new FileASTRequestor() {},
+					null);
+		} finally {
+			file.delete();
+			fileY.delete();
+		}
+	}
+	
+	/*
+	 * To test isVar returning false for ast level 10 and compliance 9
+	 */
+	public void testBug533210_0001() throws JavaModelException {
+		String contents =
+				"public class X {\n" +
+				"	public static void main(String[] args) {\n" +
+				"		var s = new Y();\n" + 
+				"	}\n" +
+				"}\n" +
+				"class Y {}";
+
+			ASTParser parser = ASTParser.newParser(AST_JLS_LATEST);
+			parser.setSource(contents.toCharArray());
+			parser.setEnvironment(null, null, null, true);
+			parser.setResolveBindings(true);
+			parser.setStatementsRecovery(true);
+			parser.setBindingsRecovery(true);
+			parser.setUnitName("module-info.java");
+			Map<String, String> options = getCompilerOptions();
+			options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_9);
+			options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_9);
+			options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_9);
+			parser.setCompilerOptions(options);
+	
+			ASTNode node = parser.createAST(null);
+			assertTrue("Should be a compilation unit", node instanceof CompilationUnit);
+			CompilationUnit cu = (CompilationUnit) node;
+			TypeDeclaration typeDeclaration = (TypeDeclaration) cu.types().get(0);
+			MethodDeclaration[] methods = typeDeclaration.getMethods();
+			MethodDeclaration methodDeclaration = methods[0];
+			VariableDeclarationStatement vStmt = (VariableDeclarationStatement) methodDeclaration.getBody().statements().get(0);
+			Type type = vStmt.getType();
+			SimpleType simpleType = (SimpleType) type;
+			assertFalse("A var", simpleType.isVar());
+			Name name = simpleType.getName();
+			SimpleName simpleName = (SimpleName) name;
+			assertFalse("A var", simpleName.isVar());
+	}
+	
 }

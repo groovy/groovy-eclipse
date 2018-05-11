@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.eclipse.jdt.internal.compiler.CompilationResult;
@@ -29,50 +30,52 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.env.PackageExportImpl;
+import org.eclipse.jdt.internal.compiler.env.IModule.IPackageExport;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
 public class ModuleFinder {
 
-	public static List<FileSystem.Classpath> findModules(File f, String destinationPath, Parser parser, Map<String, String> options, boolean isModulepath) {
+	public static List<FileSystem.Classpath> findModules(File f, String destinationPath, Parser parser, Map<String, String> options, boolean isModulepath, String release) {
 		List<FileSystem.Classpath> collector = new ArrayList<>();
-		scanForModules(destinationPath, parser, options, isModulepath, false, collector, f);
+		scanForModules(destinationPath, parser, options, isModulepath, false, collector, f, release);
 		return collector;
 	}
 
 	protected static FileSystem.Classpath findModule(final File file, String destinationPath, Parser parser,
-			Map<String, String> options, boolean isModulepath) {
+			Map<String, String> options, boolean isModulepath, String release) {
 		FileSystem.Classpath modulePath = FileSystem.getClasspath(file.getAbsolutePath(), null, !isModulepath, null,
-				destinationPath == null ? null : (destinationPath + File.separator + file.getName()), options);
+				destinationPath == null ? null : (destinationPath + File.separator + file.getName()), options, release);
 		if (modulePath != null) {
-			scanForModule(modulePath, file, parser, isModulepath);
+			scanForModule(modulePath, file, parser, isModulepath, release);
 		}
 		return modulePath;
 	}
 	protected static void scanForModules(String destinationPath, Parser parser, Map<String, String> options, boolean isModulepath, 
-			boolean thisAnAutomodule, List<FileSystem.Classpath> collector, final File file) {
+			boolean thisAnAutomodule, List<FileSystem.Classpath> collector, final File file, String release) {
 		FileSystem.Classpath entry = FileSystem.getClasspath(
 				file.getAbsolutePath(),
 				null,
 				!isModulepath,
 				null,
 				destinationPath == null ? null : (destinationPath + File.separator + file.getName()), 
-				options);
+				options,
+				release);
 		if (entry != null) {
-			IModule module = scanForModule(entry, file, parser, thisAnAutomodule);
+			IModule module = scanForModule(entry, file, parser, thisAnAutomodule, release);
 			if (module != null) {
 				collector.add(entry);
 			} else {
 				if (file.isDirectory()) {
 					File[] files = file.listFiles();
 					for (File f : files) {
-						scanForModules(destinationPath, parser, options, isModulepath, isModulepath, collector, f);
+						scanForModules(destinationPath, parser, options, isModulepath, isModulepath, collector, f, release);
 					}
 				}
 			}
 		}
 	}
-	protected static IModule scanForModule(FileSystem.Classpath modulePath, final File file, Parser parser, boolean considerAutoModules) {
+	protected static IModule scanForModule(FileSystem.Classpath modulePath, final File file, Parser parser, boolean considerAutoModules, String release) {
 		IModule module = null;
 		if (file.isDirectory()) {
 			String[] list = file.list(new FilenameFilter() {
@@ -105,7 +108,7 @@ public class ModuleFinder {
 		} else {
 			String moduleDescPath = getModulePathForArchive(file);
 			if (moduleDescPath != null) {
-				module = extractModuleFromArchive(file, modulePath, moduleDescPath);
+				module = extractModuleFromArchive(file, modulePath, moduleDescPath, release);
 			}
 		}
 		if (considerAutoModules && module == null && !(modulePath instanceof ClasspathJrt)) {
@@ -159,16 +162,33 @@ public class ModuleFinder {
  		return new String[]{source, target};
 	}
 	/**
-	 * Parses the --add-exports command line option and returns the package export definitions
-	 * in the form of an IModule. Note the IModule returned only holds this specific exports-to
-	 * clause and can't by itself be used as a module description.
-	 *
-	 * The expected format is:
-	 *   --add-exports <source-module>/<package>=<target-module>(,<target-module>)*
-	 * @param option
-	 * @return a dummy module object with package exports
+	 * Simple structure representing one <code>--add-exports</code> value.
 	 */
-	protected static IModule extractAddonExport(String option) {
+	static class AddExport {
+		/** the name of the exporting module. */
+		public final String sourceModuleName;
+		/** the export structure */
+		public final IModule.IPackageExport export;
+		public AddExport(String moduleName, IPackageExport export) {
+			this.sourceModuleName = moduleName;
+			this.export = export;
+		}
+	}
+	/**
+	 * Parses the --add-exports command line option and returns the package export definitions.
+	 *
+	 * <p>
+	 * The expected format is:
+	 * </p>
+	 * <p>
+	 * {@code
+	 *   --add-exports <source-module>/<package>=<target-module>(,<target-module>)*
+	 * }
+	 * </p>
+	 * @param option the option to parse
+	 * @return an {@link AddExport} structure.
+	 */
+	protected static AddExport extractAddonExport(String option) {
 		StringTokenizer tokenizer = new StringTokenizer(option, "/"); //$NON-NLS-1$
 		String source = null;
 		String pack = null;
@@ -194,9 +214,7 @@ public class ModuleFinder {
 		for(int i = 0; i < export.exportedTo.length; i++) {
 			export.exportedTo[i] = targets.get(i).toCharArray();
 		}
-		BasicModule module = new BasicModule(source.toCharArray(), false);
-		module.exports = new IModule.IPackageExport[]{export};
-		return module;
+		return new AddExport(source, export);
 	}
 
 	private static String getModulePathForArchive(File file) {
@@ -208,10 +226,17 @@ public class ModuleFinder {
 		}
 		return null;
 	}
-	private static IModule extractModuleFromArchive(File file, Classpath pathEntry, String path) {
+	private static IModule extractModuleFromArchive(File file, Classpath pathEntry, String path, String release) {
 		ZipFile zipFile = null;
 		try {
 			zipFile = new ZipFile(file);
+			if (release != null) {
+				String releasePath = "META-INF/versions/" + release + "/" + path; //$NON-NLS-1$ //$NON-NLS-2$
+				ZipEntry entry = zipFile.getEntry(releasePath);
+				if (entry != null) {
+					path = releasePath;
+				}
+			}
 			ClassFileReader reader = ClassFileReader.read(zipFile, path);
 			IModule module = getModule(reader);
 			if (module != null) {
@@ -252,7 +277,7 @@ public class ModuleFinder {
 		return null;
 	}
 	private static IModule extractModuleFromSource(File file, Parser parser, Classpath pathEntry) {
-		ICompilationUnit cu = new CompilationUnit(null, file.getAbsolutePath(), null);
+		ICompilationUnit cu = new CompilationUnit(null, file.getAbsolutePath(), null, pathEntry.getDestinationPath());
 		CompilationResult compilationResult = new CompilationResult(cu, 0, 1, 10);
 		CompilationUnitDeclaration unit = parser.parse(cu, compilationResult);
 		if (unit.isModuleInfo() && unit.moduleDeclaration != null) {

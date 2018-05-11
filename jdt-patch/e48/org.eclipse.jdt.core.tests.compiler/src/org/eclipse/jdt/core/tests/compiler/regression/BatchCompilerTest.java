@@ -12581,7 +12581,7 @@ public void test385780_warn_option() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=405225
 public void test405225_extdirs() {
-	if (AbstractCompilerTest.isJRE9)
+	if (AbstractCompilerTest.isJRE9Plus)
 		return;
 	this.runConformTest(
 		new String[] {
@@ -13086,7 +13086,7 @@ public void testReleaseOption() throws Exception {
 }
 
 public void testBug531579() throws Exception {
-	if (!isJRE9) return;
+	if (!isJRE9Plus) return;
 	// these types replace inaccessible types from JRE/javax.xml.bind: 
 	runConformTest(new String[] {
 			"src/javax/xml/bind/JAXBContext.java",

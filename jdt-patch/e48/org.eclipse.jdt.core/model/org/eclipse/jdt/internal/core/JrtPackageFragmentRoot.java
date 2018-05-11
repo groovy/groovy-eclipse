@@ -19,6 +19,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.IJavaModelStatusConstants;
 import org.eclipse.jdt.core.IModuleDescription;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -38,6 +39,8 @@ import org.eclipse.jdt.internal.core.util.Util;
 public class JrtPackageFragmentRoot extends JarPackageFragmentRoot implements IModulePathEntry {
 
 	String moduleName;
+	
+	public static final ThreadLocal<Boolean> workingOnOldClasspath = new ThreadLocal<>();
 	
 	/**
 	 * Constructs a package fragment root which represents a module
@@ -154,5 +157,12 @@ public class JrtPackageFragmentRoot extends JarPackageFragmentRoot implements IM
 			return new char[][] { requestedModuleName.toCharArray() };
 		}
 		return null;
+	}
+	@Override
+	protected boolean ignoreErrorStatus(IStatus status) {
+		if (status.getCode() == IJavaModelStatusConstants.ELEMENT_NOT_ON_CLASSPATH
+				&& workingOnOldClasspath.get() == Boolean.TRUE)
+			return true;
+		return false;
 	}
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,6 +14,8 @@
  *								Bug 456497 - [1.8][null] during inference nullness from target type is lost against weaker hint from applicability analysis
  *								Bug 456924 - StackOverflowError during compilation
  *								Bug 462790 - [null] NPE in Expression.computeConversion()
+ *     Jesper S Møller - Contributions for bug 381345 : [1.8] Take care of the Java 8 major version
+ *								Bug 527554 - [18.3] Compiler support for JEP 286 Local-Variable Type
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -275,6 +277,69 @@ public class CaptureBinding extends TypeVariableBinding {
 			evaluateNullAnnotations(scope, null);
 		}
 	}
+	@Override
+	public ReferenceBinding upwardsProjection(Scope scope, TypeBinding[] mentionedTypeVariables) {
+		if (enterRecursiveProjectionFunction()) {
+			try {
+				for (int i = 0; i < mentionedTypeVariables.length; ++i) {
+					if (TypeBinding.equalsEquals(this, mentionedTypeVariables[i])) {
+						TypeBinding upperBoundForProjection = this.upperBoundForProjection();
+						return ((ReferenceBinding)upperBoundForProjection).upwardsProjection(scope, mentionedTypeVariables);
+					}
+				}
+				return this;
+			} finally {
+				exitRecursiveProjectionFunction();
+			}
+		} else {
+			return scope.getJavaLangObject();
+		}
+	}
+	public TypeBinding upperBoundForProjection() {
+		TypeBinding upperBound = null;
+		if (this.wildcard != null) {
+			ReferenceBinding[] supers = this.superInterfaces();
+			if (this.wildcard.boundKind == Wildcard.EXTENDS) {
+				if (supers.length > 0) {
+					ReferenceBinding[] allBounds = new ReferenceBinding[supers.length + 1];
+					System.arraycopy(supers, 0, allBounds, 1, supers.length);
+					allBounds[0] = this.superclass();
+					ReferenceBinding[] glbs = Scope.greaterLowerBound(allBounds);
+					if (glbs == null) {
+						upperBound = new ProblemReferenceBinding(null, null, ProblemReasons.ParameterBoundMismatch);
+					} else if (glbs.length == 1) {
+						upperBound = glbs[0];
+					} else {
+						upperBound = this.environment.createIntersectionType18(glbs);
+					}
+				} else {
+					upperBound = this.superclass;
+				}
+			} else {
+				// ITB18.isCompatibleWith does not handle the presence of j.l.Object among intersecting types,
+				// so it returns false when checking (I&J).isCompatibleWith(Object&I&J)
+				// TODO see if this can be handled in ITB18.isCompatibleWith() itself
+				boolean superClassIsObject = TypeBinding.equalsEquals(this.superclass(), this.environment.getResolvedJavaBaseType(TypeConstants.JAVA_LANG_OBJECT, null));
+				if (supers.length == 0) {
+					upperBound = this.superclass();
+				} else if (supers.length == 1) {
+					upperBound = superClassIsObject ? supers[0] : this.environment.createIntersectionType18(new ReferenceBinding[] {this.superclass(), supers[0]});
+				} else {
+					if (superClassIsObject) {
+						upperBound = this.environment.createIntersectionType18(supers);
+					} else {
+						ReferenceBinding[] allBounds = new ReferenceBinding[supers.length + 1];
+						System.arraycopy(supers, 0, allBounds, 1, supers.length);
+						allBounds[0] = this.superclass();
+						upperBound = this.environment.createIntersectionType18(allBounds);
+					}
+				}
+			}
+		} else {
+			upperBound = super.upperBound();
+		}
+		return upperBound;
+	}
 
 	/**
 	 * @see org.eclipse.jdt.internal.compiler.lookup.TypeBinding#isCapture()
@@ -459,6 +524,23 @@ public class CaptureBinding extends TypeVariableBinding {
 	@Override
 	public TypeBinding uncapture(Scope scope) {
 		return this.wildcard;
+	}
+
+	@Override
+	public ReferenceBinding downwardsProjection(Scope scope, TypeBinding[] mentionedTypeVariables) {
+		ReferenceBinding result = null;
+		if (enterRecursiveProjectionFunction()) {
+			for (int i = 0; i < mentionedTypeVariables.length; ++i) {
+				if (TypeBinding.equalsEquals(this, mentionedTypeVariables[i])) {
+					if (this.lowerBound != null) {
+						result = (ReferenceBinding) this.lowerBound.downwardsProjection(scope, mentionedTypeVariables);
+					}
+					break;
+				}
+			}
+			exitRecursiveProjectionFunction();
+		}
+		return result;
 	}
 
 	/*

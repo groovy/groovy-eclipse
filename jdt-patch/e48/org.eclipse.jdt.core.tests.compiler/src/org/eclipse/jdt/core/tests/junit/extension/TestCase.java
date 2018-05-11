@@ -1,12 +1,18 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
+ * 
+ * This is an implementation of an early-draft specification developed under the Java
+ * Community Process (JCP) and is made available for testing and evaluation purposes
+ * only. The code is not compatible with any specification of the JCP.
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Jesper S Moller <jesper@selskabet.org> -  Contributions for
+ *				bug 527554 - [18.3] Compiler support for JEP 286 Local-Variable Type
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.junit.extension;
 
@@ -35,6 +41,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.eclipse.jdt.core.Flags;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.internal.compiler.batch.Main;
 import org.eclipse.jdt.internal.core.nd.indexer.Indexer;
@@ -817,7 +824,7 @@ protected boolean isFirst() {
 }
 
 protected void setUp() throws Exception {
-	Indexer.getInstance().enableAutomaticIndexing(false);
+	if (JavaCore.getPlugin() != null) Indexer.getInstance().enableAutomaticIndexing(false);
 	super.setUp();
 
 	// Store test class and its name when changing
@@ -906,7 +913,7 @@ public void stopMeasuring() {
 protected void tearDown() throws Exception {
 	super.tearDown();
 
-	Indexer.getInstance().enableAutomaticIndexing(true);
+	if (JavaCore.getPlugin() != null) Indexer.getInstance().enableAutomaticIndexing(true);
 
 	// Memory storage if specified
 	if (STORE_MEMORY != null && MEM_LOG_FILE != null) {

@@ -21,6 +21,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.core.compiler.CompilerUtils;
@@ -30,6 +31,7 @@ import org.codehaus.jdt.groovy.model.ModuleNodeMapper;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
+import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
@@ -280,24 +282,14 @@ public abstract class BuilderTestSuite {
     }
 
     private Problem[] getSortedProblems(IPath[] roots) {
-        Problem[] allProblems = new Problem[0];
+        List<Problem> allProblems = new ArrayList<>();
         for (IPath root : roots) {
-            Problem[] problems = env.getProblemsFor(root);
-            int length = problems.length;
-            if (problems.length != 0) {
-                if (allProblems.length == 0) {
-                    allProblems = problems;
-                } else {
-                    int all = allProblems.length;
-                    System.arraycopy(allProblems, 0, allProblems = new Problem[all + length], 0, all);
-                    System.arraycopy(problems, 0, allProblems, all, length);
-                }
-            }
+            Collections.addAll(allProblems, env.getProblemsFor(root));
         }
-        if (allProblems.length > 1) {
-            Arrays.sort(allProblems);
+        if (allProblems.size() > 1) {
+            allProblems.sort(null);
         }
-        return allProblems;
+        return allProblems.toArray(new Problem[0]);
     }
 
     private static String toString(Iterable<?> seq) {
@@ -321,6 +313,10 @@ public abstract class BuilderTestSuite {
         public IPath addProject(String projectName, String compliance) {
             try {
                 IPath projectPath = super.addProject(projectName, compliance);
+
+                new ProjectScope(getProject(projectName)).getNode("org.eclipse.jdt.launching")
+                    .put("org.eclipse.jdt.launching.PREF_COMPILER_COMPLIANCE_DOES_NOT_MATCH_JRE", JavaCore.IGNORE);
+
                 addEntry(projectPath, JavaRuntime.getDefaultJREContainerEntry());
                 addGroovyNature(projectName);
                 return projectPath;
@@ -386,6 +382,18 @@ public abstract class BuilderTestSuite {
 
         /**
          * Adds a groovy class with the given contents to the given
+         * package in the workspace.  The package is created
+         * if necessary.  If a class with the same name already
+         * exists, it is replaced.  A workspace must be open,
+         * and the given class name must not end with ".java".
+         * Returns the path of the added class.
+         */
+        public IPath addGroovyClass(IPath packageFragmentRootPath, String packageName, String className, String contents) {
+            return addGroovyClassExtension(packageFragmentRootPath, packageName, className, contents, null);
+        }
+
+        /**
+         * Adds a groovy class with the given contents to the given
          * package in the workspace, the file will use the specified file suffix.
          * The package is created if necessary.  If a class with the same name already
          * exists, it is replaced.
@@ -393,6 +401,10 @@ public abstract class BuilderTestSuite {
          */
         public IPath addGroovyClassWithSuffix(IPath packagePath, String className, String suffix, String contents) {
             return addGroovyClassExtension(packagePath, className, suffix, contents, suffix);
+        }
+
+        public IPath addGroovyClassWithSuffix(IPath packageFragmentRootPath, String packageName, String className, String suffix, String contents) {
+            return addGroovyClassExtension(packageFragmentRootPath, packageName, className, contents, suffix);
         }
 
         /**
@@ -426,22 +438,6 @@ public abstract class BuilderTestSuite {
          * exists, it is replaced.  A workspace must be open,
          * and the given class name must not end with ".java".
          * Returns the path of the added class.
-         */
-        public IPath addGroovyClass(IPath packageFragmentRootPath, String packageName, String className, String contents) {
-            return addGroovyClassExtension(packageFragmentRootPath, packageName, className, contents, null);
-        }
-
-        public IPath addGroovyClassWithSuffix(IPath packageFragmentRootPath, String packageName, String className, String suffix, String contents) {
-            return addGroovyClassExtension(packageFragmentRootPath, packageName, className, contents, suffix);
-        }
-
-        /**
-         * Adds a groovy class with the given contents to the given
-         * package in the workspace.  The package is created
-         * if necessary.  If a class with the same name already
-         * exists, it is replaced.  A workspace must be open,
-         * and the given class name must not end with ".java".
-         * Returns the path of the added class.
          * @param fileExtension file extension of the groovy class to create (without a '.')
          */
         public IPath addGroovyClassExtension(IPath packageFragmentRootPath, String packageName, String className,
@@ -466,8 +462,9 @@ public abstract class BuilderTestSuite {
             try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getContents(), file.getCharset()))) {
                 StringBuilder sb = new StringBuilder(300);
                 int read = 0;
-                while ((read = br.read()) != -1)
+                while ((read = br.read()) != -1) {
                     sb.append((char) read);
+                }
                 return sb.toString();
             } catch (Exception ex) {
                 handle(ex);

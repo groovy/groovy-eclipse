@@ -15,6 +15,7 @@ package org.eclipse.jdt.internal.core;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.jdt.core.IAccessRule;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
@@ -35,6 +36,7 @@ public class JavaModelCache {
 	public static final int DEFAULT_PKG_SIZE = 500; // average 1782 bytes per pkg -> maximum size : 178200*BASE_VALUE bytes
 	public static final int DEFAULT_OPENABLE_SIZE = 250; // average 6629 bytes per openable (includes children) -> maximum size : 662900*BASE_VALUE bytes
 	public static final int DEFAULT_CHILDREN_SIZE = 250*20; // average 20 children per openable
+	public static final int DEFAULT_ACCESSRULE_SIZE = 1024;
 	public static final String RATIO_PROPERTY = "org.eclipse.jdt.core.javamodelcache.ratio"; //$NON-NLS-1$
 	public static final String JAR_TYPE_RATIO_PROPERTY = "org.eclipse.jdt.core.javamodelcache.jartyperatio"; //$NON-NLS-1$
 
@@ -74,6 +76,12 @@ public class JavaModelCache {
 	 * Cache of open children of openable Java Model Java elements
 	 */
 	protected Map<IJavaElement, Object> childrenCache;
+	
+	/**
+	 * Cache of access rules
+	 */
+	protected LRUCache<IAccessRule, IAccessRule> accessRuleCache;
+
 
 	/**
 	 * Cache of open binary type (inside a jar) that have a non-open parent
@@ -97,6 +105,7 @@ public JavaModelCache() {
 		this.openableCache = new ElementCache<>((int) (DEFAULT_OPENABLE_SIZE * ratio * openableRatio));
 	}
 	this.childrenCache = new HashMap<>((int) (DEFAULT_CHILDREN_SIZE * ratio * openableRatio));
+	this.accessRuleCache = new LRUCache<>(DEFAULT_ACCESSRULE_SIZE);
 	resetJarTypeCache();
 }
 

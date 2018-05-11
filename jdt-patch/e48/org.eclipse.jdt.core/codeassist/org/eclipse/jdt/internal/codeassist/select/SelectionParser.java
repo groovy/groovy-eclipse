@@ -1,12 +1,14 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *     Jesper Steen Møller <jesper@selskabet.org> - contributions for:	
+ *         Bug 531046: [10] ICodeAssist#codeSelect support for 'var'
  *******************************************************************************/
 package org.eclipse.jdt.internal.codeassist.select;
 
@@ -76,8 +78,15 @@ public class SelectionParser extends AssistParser {
 	protected static final int K_INSIDE_RETURN_STATEMENT = SELECTION_PARSER + 2; // whether we are between the keyword 'return' and the end of a return statement
 	protected static final int K_CAST_STATEMENT = SELECTION_PARSER + 3; // whether we are between ')' and the end of a cast statement
 
-	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=476693
-	private boolean selectionNodeFound;
+	/* https://bugs.eclipse.org/bugs/show_bug.cgi?id=476693
+	 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=515758
+	 * Records whether and when we found an invocation being selected:
+	 * 0: not found
+	 * 1: found just now
+	 * 2...: inside block (lambda body) within the invocation found before
+	 * Rationale: we really need to complete parsing the invocation for resolving to succeed.
+	 */
+	private int selectionNodeFoundLevel = 0;
 	public ASTNode assistNodeParent; // the parent node of assist node
 
 	/* public fields */
@@ -603,7 +612,7 @@ protected void consumeEnterVariable() {
 
 	AbstractVariableDeclaration variable = (AbstractVariableDeclaration) this.astStack[this.astPtr];
 	if (variable.type == this.assistNode){
-		if (!this.diet){
+		if (!this.diet && ! variable.type.isTypeNameVar(null)) {
 			this.restartRecovery	= true;	// force to restart in recovery mode
 			this.lastIgnoredToken = -1;
 		}
@@ -617,11 +626,14 @@ protected void consumeExitVariableWithInitialization() {
 
 	// does not keep the initialization if selection is not inside
 	AbstractVariableDeclaration variable = (AbstractVariableDeclaration) this.astStack[this.astPtr];
-	int start = variable.initialization.sourceStart;
-	int end =  variable.initialization.sourceEnd;
-	if ((this.selectionStart < start) &&  (this.selectionEnd < start) ||
-			(this.selectionStart > end) && (this.selectionEnd > end)) {
+	int start = variable.declarationSourceStart;
+	int end =  variable.declarationSourceEnd;
+	// Keep the initialization intact, because that's the only way we are going to know the type
+	if (!variable.type.isTypeNameVar(null)) {
+		if ((this.selectionStart < start) &&  (this.selectionEnd < start) ||
+				(this.selectionStart > end) && (this.selectionEnd > end)) {
 			variable.initialization = null;
+		}
 	}
 	triggerRecoveryUponLambdaClosure(variable, false);
 }
@@ -834,24 +846,39 @@ protected void consumeLocalVariableDeclarationStatement() {
 			this.lastIgnoredToken = -1;
 		}
 	}
-	if (this.selectionNodeFound) {
-		this.restartRecovery = true;
-	}
+	checkRestartRecovery();
 }
 @Override
 protected void consumeAssignment() {
 	super.consumeAssignment();
-	if (this.selectionNodeFound) {
-		this.restartRecovery = true;
-	}
+	checkRestartRecovery();
 }
 @Override
 protected void consumeBlockStatement() {
 	super.consumeBlockStatement();
-	if (this.selectionNodeFound) {
-		this.restartRecovery = true;
+	checkRestartRecovery();
+}
+protected void checkRestartRecovery() {
+	if (this.selectionNodeFoundLevel > 0) {
+		if (--this.selectionNodeFoundLevel == 0)
+			this.restartRecovery = true;
 	}
 }
+
+@Override
+protected void consumeOpenBlock() {
+	super.consumeOpenBlock();
+	if (this.selectionNodeFoundLevel > 0)
+		this.selectionNodeFoundLevel++;
+}
+
+@Override
+protected void consumeBlock() {
+	super.consumeBlock();
+	if (this.selectionNodeFoundLevel > 0)
+		this.selectionNodeFoundLevel--;
+}
+
 @Override
 protected void consumeMarkerAnnotation(boolean isTypeAnnotation) {
 	int index;
@@ -1511,7 +1538,7 @@ protected MessageSend newMessageSend() {
 	if (!this.diet){
 		// Don't restart recovery, not yet, until variable decl statement has been consumed.
 		// This is to ensure chained method invocations are taken into account for resolution.
-		this.selectionNodeFound = true;
+		this.selectionNodeFoundLevel = 1;
 		this.lastIgnoredToken = -1;
 	}
 
@@ -1539,7 +1566,7 @@ protected MessageSend newMessageSendWithTypeArguments() {
 	if (!this.diet){
 		// Don't restart recovery, not yet, until variable decl statement has been consumed.
 		// This is to ensure chained method invocations are taken into account for resolution.
-		this.selectionNodeFound = true;
+		this.selectionNodeFoundLevel = 1;
 		this.lastIgnoredToken = -1;
 	}
 

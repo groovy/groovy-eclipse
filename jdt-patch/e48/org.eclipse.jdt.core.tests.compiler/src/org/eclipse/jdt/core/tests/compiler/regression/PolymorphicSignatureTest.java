@@ -14,6 +14,9 @@ import junit.framework.Test;
 
 @SuppressWarnings({ "rawtypes" })
 public class PolymorphicSignatureTest extends AbstractRegressionTest {
+	static {
+//		TESTS_NAMES = new String[] { "testBug515863" };
+	}
 	public PolymorphicSignatureTest(String name) {
 		super(name);
 	}
@@ -57,5 +60,26 @@ public class PolymorphicSignatureTest extends AbstractRegressionTest {
 				"}"
 			},
 			"42");
+	}
+	public void testBug515863() {
+		runConformTest(
+			new String[] {
+				"Test.java",
+				"import java.lang.invoke.MethodHandle;\n" + 
+				"import java.util.ArrayList;\n" + 
+				"import java.util.Collections;\n" + 
+				"\n" + 
+				"public class Test {\n" + 
+				"	\n" + 
+				"	public void foo() throws Throwable {\n" + 
+				"		\n" + 
+				"		MethodHandle mh = null;\n" + 
+				"		mh.invoke(null);                           // works, no issues.\n" + 
+				"		mh.invoke(null, new ArrayList<>());        // Bug 501457 fixed this\n" + 
+				"		mh.invoke(null, Collections.emptyList());  // This triggers UOE\n" + 
+				"		\n" + 
+				"	}\n" + 
+				"}\n"
+			});
 	}
 }

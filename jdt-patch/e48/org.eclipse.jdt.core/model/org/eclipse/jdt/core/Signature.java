@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -39,8 +39,12 @@ import org.eclipse.jdt.internal.compiler.util.Util;
  * with J2SE 1.4 or earlier, involved only <i>simple</i> signatures.
  * </p>
  * <p>
- * Note that the "Q", "!" and "|" formats are specific to Eclipse; the remainder
+ * Note that the "Q", "!", "|" and "&" formats are specific to Eclipse; the remainder
  * are specified in the JVM spec.
+ * </p>
+ * <p>
+ * Due to historical reasons Eclipse uses "|" format for Intersection and "&" for Union
+ * which is opposite to their usage in source code.
  * </p>
  * <p>
  * The syntax for a type signature is:
@@ -271,6 +275,14 @@ public final class Signature {
 	public static final char C_INTERSECTION = '|';
 
 	/**
+	 * Character constant indicating a union type in a
+	 * signature. Value is <code>'&'</code>.
+	 *
+	 * @since 3.14
+	 */
+	public static final char C_UNION = '&';
+
+	/**
 	 * Character constant indicating the primitive type long in a signature.
 	 * Value is <code>'J'</code>.
 	 */
@@ -380,6 +392,12 @@ public final class Signature {
 	 * @since 3.7.1
 	 */
 	public static final int INTERSECTION_TYPE_SIGNATURE = 7;
+	/**
+	 * Kind constant for the union type signature.
+	 * @see #getTypeSignatureKind(String)
+	 * @since 3.14
+	 */
+	public static final int UNION_TYPE_SIGNATURE = 8;
 
 	private static final char[] LONG = "long".toCharArray(); //$NON-NLS-1$
 
@@ -1102,6 +1120,26 @@ public static String createIntersectionTypeSignature(char[][] typeSignatures) {
 	}
 	return String.valueOf(buffer);
 }
+/**
+ * Creates a new union type signature from the given type signatures.
+ * 
+ * <p>The encoded type signature is dot-based.</p>
+ *
+ * @param typeSignatures the given type signatures
+ * @return the encoded type signature
+ * @since 3.7.1
+ */
+private static String createUnionTypeSignature(char[][] typeSignatures) {
+	StringBuffer buffer = new StringBuffer();
+	buffer.append(Signature.C_UNION);
+	for (int i = 0, max = typeSignatures.length; i < max; i++) {
+		if (i > 0) {
+			buffer.append(Signature.C_COLON);
+		}
+		buffer.append(typeSignatures[i]);
+	}
+	return String.valueOf(buffer);
+}
 
 /**
  * Creates a new intersection type signature from the given type signatures.
@@ -1119,6 +1157,23 @@ public static String createIntersectionTypeSignature(String[] typeSignatures) {
 		signatures[i] = typeSignatures[i].toCharArray();
 	}
 	return createIntersectionTypeSignature(signatures);
+}
+/**
+ * Creates a new union type signature from the given type signatures.
+ * 
+ * <p>The encoded type signature is dot-based.</p>
+ *
+ * @param typeSignatures the given type signatures
+ * @return the encoded type signature
+ * @since 3.14
+ */
+public static String createUnionTypeSignature(String[] typeSignatures) {
+	int typeSignaturesLenth = typeSignatures.length;
+	char[][] signatures = new char[typeSignaturesLenth][];
+	for (int i = 0; i < typeSignaturesLenth; i++) {
+		signatures[i] = typeSignatures[i].toCharArray();
+	}
+	return createUnionTypeSignature(signatures);
 }
 /**
  * Creates a method signature from the given parameter and return type
@@ -1581,6 +1636,30 @@ public static char[][] getIntersectionTypeBounds(char[] intersectionTypeSignatur
 		i = e + 2; // add one to skip C_COLON
 	}
 }
+private static char[][] getUnionTypeBounds(char[] unionTypeSignature) throws IllegalArgumentException {
+	if (getTypeSignatureKind(unionTypeSignature) != UNION_TYPE_SIGNATURE) {
+		return CharOperation.NO_CHAR_CHAR;
+	}
+	ArrayList args = new ArrayList();
+	int i = 1; // skip the '|'
+	int length = unionTypeSignature.length;
+	for (;;) {
+		int e = Util.scanClassTypeSignature(unionTypeSignature, i);
+		if (e < 0) {
+			throw new IllegalArgumentException("Invalid format"); //$NON-NLS-1$
+		}
+		args.add(CharOperation.subarray(unionTypeSignature, i, e + 1));
+		if (e == length - 1) {
+			int size = args.size();
+			char[][] result = new char[size][];
+			args.toArray(result);
+			return result;
+		} else if (unionTypeSignature[e + 1] != C_COLON) {
+			throw new IllegalArgumentException("Invalid format"); //$NON-NLS-1$
+		}
+		i = e + 2; // add one to skip C_COLON
+	}
+}
 /**
  * Extracts the type bounds' signatures from the given intersection type signature.
  * Returns an empty array if the type signature is not an intersection type signature.
@@ -1593,6 +1672,20 @@ public static char[][] getIntersectionTypeBounds(char[] intersectionTypeSignatur
  */
 public static String[] getIntersectionTypeBounds(String intersectionTypeSignature) throws IllegalArgumentException {
 	char[][] args = getIntersectionTypeBounds(intersectionTypeSignature.toCharArray());
+	return CharOperation.toStrings(args);
+}
+/**
+ * Extracts the type bounds' signatures from the given union type signature.
+ * Returns an empty array if the type signature is not an union type signature.
+ *
+ * @param unionSignature the union type signature
+ * @return the signatures of the type bounds
+ * @exception IllegalArgumentException if the signature is syntactically incorrect
+ *
+ * @since 3.14
+ */
+public static String[] getUnionTypeBounds(String unionSignature) throws IllegalArgumentException {
+	char[][] args = getUnionTypeBounds(unionSignature.toCharArray());
 	return CharOperation.toStrings(args);
 }
 /**
@@ -2512,6 +2605,8 @@ public static int getTypeSignatureKind(char[] typeSignature) {
 			return CAPTURE_TYPE_SIGNATURE;
 		case C_INTERSECTION :
 			return INTERSECTION_TYPE_SIGNATURE;
+		case C_UNION :
+			return UNION_TYPE_SIGNATURE;
 		default :
 			throw new IllegalArgumentException();
 	}

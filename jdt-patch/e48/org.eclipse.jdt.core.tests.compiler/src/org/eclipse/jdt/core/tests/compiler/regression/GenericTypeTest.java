@@ -40281,7 +40281,7 @@ public void test1151() throws Exception {
 			"}\n"
 		},
 		//"java.lang.ref.Reference<X<java.lang.String>.Other<java.lang.Thread>.Deeply>##java.lang.ref.Reference<X<java.lang.String>.Other<java.lang.Thread>.Deeply$Inside<java.lang.Number>>"
-		(isJRE9 
+		(isJRE9Plus 
 		? "java.lang.ref.Reference<X<java.lang.String>$Other<java.lang.Thread>$Deeply>"
 		: "java.lang.ref.Reference<X<java.lang.String>.Other<java.lang.Thread>.Deeply>")
 	);
@@ -40397,7 +40397,7 @@ public void test1153() {
 			"}\n"
 		},
 		"java.lang.ref.Reference<p.X$Rather$Deeply>##java.lang.ref.Reference<p.X$Rather>##java.lang.ref.Reference<p.X$Rather$Deeply$Inside>##"+
-		(isJRE9 
+		(isJRE9Plus 
 		? "java.lang.ref.Reference<p.X<java.lang.String>$Other<java.lang.Thread>$Deeply>"
 		: "java.lang.ref.Reference<p.X<java.lang.String>.Other<java.lang.Thread>.Deeply>"),
 		null,
@@ -40479,7 +40479,7 @@ public void test1155() throws Exception {
 			"	}\n" +
 			"}\n"
 		},
-		(isJRE9
+		(isJRE9Plus
 		? "java.lang.ref.Reference<X<java.lang.String>$Other<java.lang.Thread>$Deeply>"
 		: "java.lang.ref.Reference<X<java.lang.String>.Other<java.lang.Thread>.Deeply>")	);
 
@@ -52286,6 +52286,52 @@ public void testBug492450_comment0() {
 				"	@Override\n" + 
 				"	public ArrayList<IDocumentElementNode> getChildNodesList(Class<?>[] classes, boolean match) {\n" + 
 				"		return null;\n" + 
+				"	}\n" + 
+				"}\n"
+			});
+	}
+}
+public void testBug532653() {
+	if (this.complianceLevel >= ClassFileConstants.JDK1_6) {
+		runConformTest(
+			new String[] {
+				"Builder.java",
+				"public interface Builder<T> {\n" + 
+				"	T build();\n" + 
+				"}\n", 
+				"ConcreteBuilder.java",
+				"public class ConcreteBuilder<B extends ConcreteBuilder<B>> implements Builder<String> {\n" + 
+				"	private String s = \"\";\n" + 
+				"	protected B b;\n" + 
+				"	@Override\n" + 
+				"	public String build() {\n" + 
+				"		return s;\n" + 
+				"	}\n" + 
+				"	public B append(String s) {\n" + 
+				"		this.s += s;\n" + 
+				"		return b;\n" + 
+				"	}\n" + 
+				"	public static ConcreteBuilder<?> create() {\n" + 
+				"		class ConcreteStringBuilder extends ConcreteBuilder<ConcreteStringBuilder> {\n" + 
+				"			public ConcreteStringBuilder() {\n" + 
+				"				b = this;\n" + 
+				"			}\n" + 
+				"		}\n" + 
+				"		return new ConcreteStringBuilder();\n" + 
+				"	}\n" + 
+				"}",
+				"ConcreteSubBuilder.java",
+				"public class ConcreteSubBuilder<B extends ConcreteSubBuilder<B>> extends ConcreteBuilder<B>{\n" + 
+				"	public B appendTwice(String s) {\n" + 
+				"		return super.append(s).append(s);\n" + 
+				"	}\n" + 
+				"	public static ConcreteSubBuilder<?> create() {\n" + 
+				"		class ConcreteSubStringBuilder extends ConcreteSubBuilder<ConcreteSubStringBuilder> {\n" + 
+				"			public ConcreteSubStringBuilder() {\n" + 
+				"				b = this;\n" + 
+				"			}\n" + 
+				"		}\n" + 
+				"		return new ConcreteSubStringBuilder();\n" + 
 				"	}\n" + 
 				"}\n"
 			});

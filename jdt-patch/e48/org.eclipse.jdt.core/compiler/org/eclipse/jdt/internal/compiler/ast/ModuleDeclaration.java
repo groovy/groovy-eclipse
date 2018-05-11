@@ -276,29 +276,16 @@ public class ModuleDeclaration extends ASTNode implements ReferenceContext {
 	private void analyseReferencedPackages(CompilationUnitScope skope) {
 		if (this.exports != null) {
 			for (ExportsStatement export : this.exports) {
-				PackageBinding pb = analysePackageStatement(skope, export);
-				if (pb != null && !pb.hasCompilationUnit(true))
-					skope.problemReporter().invalidPackageReference(IProblem.PackageDoesNotExistOrIsEmpty, export);					
+				PackageBinding pb = export.resolvedPackage;
+				if (pb == null)
+					continue;
+				if (pb instanceof SplitPackageBinding)
+					pb = ((SplitPackageBinding) pb).getIncarnation(this.binding);
+				if (pb.hasCompilationUnit(true))
+					continue;
+				skope.problemReporter().invalidPackageReference(IProblem.PackageDoesNotExistOrIsEmpty, export);
 			}
 		}
-		if (this.opens != null) {
-			for (OpensStatement opensStat : this.opens)
-				analysePackageStatement(skope, opensStat);
-			// it is legal for opens to refer to a "non-existing" or empty package
-		}
-	}
-
-	protected PackageBinding analysePackageStatement(CompilationUnitScope skope, PackageVisibilityStatement statement) {
-		PackageBinding pb = statement.resolvedPackage;
-		if (pb != null) {
-			if (pb instanceof SplitPackageBinding)
-				pb = ((SplitPackageBinding) pb).getIncarnation(this.binding);
-			if (pb.isViewedAsDeprecated()) {
-				TypeBinding packageInfo = pb.getType(PACKAGE_INFO_NAME, this.binding); // for annotations with details
-				skope.problemReporter().deprecatedPackage(statement.pkgRef, pb, packageInfo);
-			}
-		}
-		return pb;
 	}
 
 	public void analyseModuleGraph(CompilationUnitScope skope) {

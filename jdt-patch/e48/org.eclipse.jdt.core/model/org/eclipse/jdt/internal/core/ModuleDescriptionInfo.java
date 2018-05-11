@@ -47,7 +47,6 @@ public class ModuleDescriptionInfo extends AnnotatableInfo implements ISourceMod
 	char[][] usedServices;
 	IModuleDescription handle;
 	char[] name;
-	boolean isOpen = false;
 	private Map<IJavaElement,String[]> categories;
 
 	static class ModuleReferenceInfo extends MemberElementInfo implements IModule.IModuleReference {
@@ -119,10 +118,7 @@ public class ModuleDescriptionInfo extends AnnotatableInfo implements ISourceMod
 	public static ModuleDescriptionInfo createModule(ModuleDeclaration module) {
 		ModuleDescriptionInfo mod = new ModuleDescriptionInfo();
 		mod.name = module.moduleName;
-		if (module.isOpen()) {
-			mod.isOpen = true;
-			mod.setFlags(ClassFileConstants.ACC_OPEN);
-		}
+		mod.setFlags(module.modifiers);
 		if (module.requiresCount > 0) {
 			RequiresStatement[] refs = module.requires;
 			mod.requires = new ModuleReferenceInfo[refs.length+1];
@@ -243,7 +239,7 @@ public class ModuleDescriptionInfo extends AnnotatableInfo implements ISourceMod
 
 	@Override
 	public boolean isOpen() {
-		return this.isOpen;
+		return (this.flags & ClassFileConstants.ACC_OPEN) != 0;
 	}
 
 	@Override

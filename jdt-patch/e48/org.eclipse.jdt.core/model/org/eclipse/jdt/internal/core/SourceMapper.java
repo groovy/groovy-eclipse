@@ -1161,18 +1161,21 @@ public class SourceMapper
 					source = getSourceForRootPath("", name); //$NON-NLS-1$
 				}
 			}
-	
-			if (source == null) {
-				computeAllRootPaths(typeOrModule);
-				if (this.rootPaths != null) {
-					loop: for (Iterator iterator = this.rootPaths.iterator(); iterator.hasNext(); ) {
-						String currentRootPath = (String) iterator.next();
-						if (!currentRootPath.equals(this.rootPath)) {
-							source = getSourceForRootPath(currentRootPath, name);
-							if (source != null) {
-								// remember right root path
-								this.rootPath = currentRootPath;
-								break loop;
+
+			if (source == null) { // proceed with automatic root path detection ...
+				// ... but not for multi-module roots
+				if (!(typeOrModule.getAncestor(IJavaElement.PACKAGE_FRAGMENT_ROOT) instanceof JrtPackageFragmentRoot)) {
+					computeAllRootPaths(typeOrModule);
+					if (this.rootPaths != null) {
+						loop: for (Iterator iterator = this.rootPaths.iterator(); iterator.hasNext(); ) {
+							String currentRootPath = (String) iterator.next();
+							if (!currentRootPath.equals(this.rootPath)) {
+								source = getSourceForRootPath(currentRootPath, name);
+								if (source != null) {
+									// remember right root path
+									this.rootPath = currentRootPath;
+									break loop;
+								}
 							}
 						}
 					}

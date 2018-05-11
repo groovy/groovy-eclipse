@@ -2068,7 +2068,7 @@ public class JavaProject
 						projectOptions.put(propertyName, value);
 						if (!optionNames.contains(propertyName)) {
 							// try to migrate deprecated options
-							String[] compatibleOptions = (String[]) javaModelManager.deprecatedOptions.get(propertyName);
+							String[] compatibleOptions = javaModelManager.deprecatedOptions.get(propertyName);
 							if (compatibleOptions != null) {
 								for (int co=0, length=compatibleOptions.length; co < length; co++) {
 									String compatibleOption = compatibleOptions[co];

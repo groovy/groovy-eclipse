@@ -25,6 +25,7 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.IModuleAwareNameEnvironment;
 import org.eclipse.jdt.internal.compiler.env.IUpdatableModule;
 import org.eclipse.jdt.internal.compiler.util.HashtableOfPackage;
+import org.eclipse.jdt.internal.compiler.util.SimpleLookupTable;
 import org.eclipse.jdt.internal.compiler.util.SimpleSetOfCharArray;
 
 /**
@@ -114,6 +115,7 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 	private boolean[] isComplete = new boolean[UpdateKind.values().length];
 	private Set<ModuleBinding> transitiveRequires;
 	boolean isPackageLookupActive = false; // to prevent cyclic lookup caused by synthetic reads edges on behalf of auto-modules.
+	SimpleLookupTable storedAnnotations = null;
 
 	/**
 	 * Packages declared in this module (indexed by qualified name).
@@ -843,5 +845,56 @@ public class ModuleBinding extends Binding implements IUpdatableModule {
 	public int getDefaultNullness() {
 		getAnnotationTagBits(); // ensure annotations are initialized
 		return this.defaultNullness;
+	}
+	SimpleLookupTable storedAnnotations(boolean forceInitialize, boolean forceStore) {
+		
+		if (forceInitialize && this.storedAnnotations == null) {
+			if (!this.environment.globalOptions.storeAnnotations && !forceStore)
+				return null; // not supported during this compile
+			this.storedAnnotations = new SimpleLookupTable(3);
+		}
+		return this.storedAnnotations;
+	}
+	public AnnotationHolder retrieveAnnotationHolder(Binding binding, boolean forceInitialization) {
+		SimpleLookupTable store = storedAnnotations(forceInitialization, false);
+		return store == null ? null : (AnnotationHolder) store.get(binding);
+	}
+
+	AnnotationBinding[] retrieveAnnotations(Binding binding) {
+		AnnotationHolder holder = retrieveAnnotationHolder(binding, true);
+		return holder == null ? Binding.NO_ANNOTATIONS : holder.getAnnotations();
+	}
+
+	@Override
+	public void setAnnotations(AnnotationBinding[] annotations, boolean forceStore) {
+		storeAnnotations(this, annotations, forceStore);
+	}
+	void storeAnnotationHolder(Binding binding, AnnotationHolder holder) {
+		if (holder == null) {
+			SimpleLookupTable store = storedAnnotations(false, false);
+			if (store != null)
+				store.removeKey(binding);
+		} else {
+			SimpleLookupTable store = storedAnnotations(true, false);
+			if (store != null)
+				store.put(binding, holder);
+		}
+	}
+
+	void storeAnnotations(Binding binding, AnnotationBinding[] annotations, boolean forceStore) {
+		AnnotationHolder holder = null;
+		if (annotations == null || annotations.length == 0) {
+			SimpleLookupTable store = storedAnnotations(false, forceStore);
+			if (store != null)
+				holder = (AnnotationHolder) store.get(binding);
+			if (holder == null) return; // nothing to delete
+		} else {
+			SimpleLookupTable store = storedAnnotations(true, forceStore);
+			if (store == null) return; // not supported
+			holder = (AnnotationHolder) store.get(binding);
+			if (holder == null)
+				holder = new AnnotationHolder();
+		}
+		storeAnnotationHolder(binding, holder.setAnnotations(annotations));
 	}
 }

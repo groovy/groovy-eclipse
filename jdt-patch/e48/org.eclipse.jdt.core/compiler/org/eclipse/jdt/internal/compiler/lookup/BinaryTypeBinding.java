@@ -47,6 +47,7 @@ import java.util.ArrayList;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.ast.Annotation;
+import org.eclipse.jdt.internal.compiler.classfmt.AnnotationInfo;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.classfmt.ExternalAnnotationProvider.IMethodAnnotationWalker;
 import org.eclipse.jdt.internal.compiler.classfmt.MethodInfoWithAnnotations;
@@ -169,6 +170,13 @@ public TypeBinding clone(TypeBinding outerType) {
 }
 
 static AnnotationBinding createAnnotation(IBinaryAnnotation annotationInfo, LookupEnvironment env, char[][][] missingTypeNames) {
+	// temporary debug for Bug 532176 - [10] NPE during reconcile
+	if (annotationInfo instanceof AnnotationInfo) {
+		RuntimeException ex = ((AnnotationInfo) annotationInfo).exceptionDuringDecode;
+		if (ex != null)
+			new IllegalStateException("Accessing annotation with decode error", ex).printStackTrace(); //$NON-NLS-1$
+	}
+	//--
 	IBinaryElementValuePair[] binaryPairs = annotationInfo.getElementValuePairs();
 	int length = binaryPairs == null ? 0 : binaryPairs.length;
 	ElementValuePair[] pairs = length == 0 ? Binding.NO_ELEMENT_VALUE_PAIRS : new ElementValuePair[length];

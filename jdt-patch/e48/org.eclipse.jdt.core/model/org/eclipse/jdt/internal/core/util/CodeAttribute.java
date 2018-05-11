@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -270,7 +270,9 @@ public class CodeAttribute extends ClassFileAttribute implements ICodeAttribute 
 					if (constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_Float
 						&& constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_Integer
 						&& constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_String
-						&& constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_Class) {
+						&& constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_Class
+						&& constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_MethodType
+						&& constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_MethodHandle) {
 							throw new ClassFormatException(ClassFormatException.INVALID_CONSTANT_POOL_ENTRY);
 					}
 					visitor._ldc(pc - this.codeOffset, index, constantPoolEntry);
@@ -282,7 +284,9 @@ public class CodeAttribute extends ClassFileAttribute implements ICodeAttribute 
 					if (constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_Float
 						&& constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_Integer
 						&& constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_String
-						&& constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_Class) {
+						&& constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_Class
+						&& constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_MethodType
+						&& constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_MethodHandle) {
 							throw new ClassFormatException(ClassFormatException.INVALID_CONSTANT_POOL_ENTRY);
 					}
 					visitor._ldc_w(pc - this.codeOffset, index, constantPoolEntry);

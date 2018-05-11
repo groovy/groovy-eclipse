@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2014 IBM Corporation and others.
+ * Copyright (c) 2006, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7878,8 +7878,8 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 					"    127  return\n" + 
 					"      Exception Table:\n" + 
 					"        [pc: 17, pc: 22] -> 51 when : any\n" + 
-					"        [pc: 32, pc: 38] -> 51 when : any\n" + 
-					"        [pc: 6, pc: 64] -> 64 when : any\n" + 
+					"        [pc: 6, pc: 32] -> 64 when : any\n" +
+					"        [pc: 38, pc: 64] -> 64 when : any\n" +
 					"        [pc: 2, pc: 32] -> 98 when : java.io.IOException\n" + 
 					"        [pc: 38, pc: 92] -> 98 when : java.io.IOException\n" + 
 					"        [pc: 2, pc: 32] -> 112 when : any\n" + 

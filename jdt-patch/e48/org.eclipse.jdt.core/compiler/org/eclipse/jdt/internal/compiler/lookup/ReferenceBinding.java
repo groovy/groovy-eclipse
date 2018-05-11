@@ -40,6 +40,7 @@
  *      Jesper S Moller - Contributions for
  *								bug 382701 - [1.8][compiler] Implement semantic analysis of Lambda expressions & Reference expression
  *								bug 412153 - [1.8][compiler] Check validity of annotations which may be repeatable
+ *								bug 527554 - [18.3] Compiler support for JEP 286 Local-Variable Type
  *     Ulrich Grave <ulrich.grave@gmx.de> - Contributions for
  *                              bug 386692 - Missing "unused" warning on "autowired" fields
  *******************************************************************************/
@@ -409,7 +410,7 @@ public boolean canBeSeenBy(Scope scope) {
 
 public char[] computeGenericTypeSignature(TypeVariableBinding[] typeVariables) {
 
-	boolean isMemberOfGeneric = isMemberType() && !isStatic() && (enclosingType().modifiers & ExtraCompilerModifiers.AccGenericSignature) != 0;
+	boolean isMemberOfGeneric = isMemberType() && hasEnclosingInstanceContext() && (enclosingType().modifiers & ExtraCompilerModifiers.AccGenericSignature) != 0;
 	if (typeVariables == Binding.NO_TYPE_VARIABLES && !isMemberOfGeneric) {
 		return signature();
 	}
@@ -1369,6 +1370,7 @@ private boolean isCompatibleWith0(TypeBinding otherType, /*@Nullable*/ Scope cap
 		case Binding.TYPE :
 		case Binding.PARAMETERIZED_TYPE :
 		case Binding.RAW_TYPE :
+		case Binding.INTERSECTION_TYPE18 :
 			switch (kind()) {
 				case Binding.GENERIC_TYPE :
 				case Binding.PARAMETERIZED_TYPE :
@@ -1378,6 +1380,14 @@ private boolean isCompatibleWith0(TypeBinding otherType, /*@Nullable*/ Scope cap
 										// above if same erasure
 			}
 			ReferenceBinding otherReferenceType = (ReferenceBinding) otherType;
+			if (otherReferenceType.isIntersectionType18()) {
+				ReferenceBinding[] intersectingTypes = ((IntersectionTypeBinding18)otherReferenceType).intersectingTypes;
+				for (ReferenceBinding binding : intersectingTypes) {
+					if (!isCompatibleWith(binding))
+						return false;
+				}
+				return true;
+			}
 			if (otherReferenceType.isInterface()) { // could be annotation type
 				if (implementsInterface(otherReferenceType, true))
 					return true;
@@ -1678,7 +1688,7 @@ public char[] readableName() /*java.lang.Object,  p.X<T> */ {
 public char[] readableName(boolean showGenerics) /*java.lang.Object,  p.X<T> */ {
     char[] readableName;
 	if (isMemberType()) {
-		readableName = CharOperation.concat(enclosingType().readableName(showGenerics && !isStatic()), this.sourceName, '.');
+		readableName = CharOperation.concat(enclosingType().readableName(showGenerics && hasEnclosingInstanceContext()), this.sourceName, '.');
 	} else {
 		readableName = CharOperation.concatWith(this.compoundName, '.');
 	}
@@ -1829,7 +1839,7 @@ public char[] shortReadableName() /*Object*/ {
 public char[] shortReadableName(boolean showGenerics) /*Object*/ {
 	char[] shortReadableName;
 	if (isMemberType()) {
-		shortReadableName = CharOperation.concat(enclosingType().shortReadableName(showGenerics && !isStatic()), this.sourceName, '.');
+		shortReadableName = CharOperation.concat(enclosingType().shortReadableName(showGenerics && hasEnclosingInstanceContext()), this.sourceName, '.');
 	} else {
 		shortReadableName = this.sourceName;
 	}
@@ -1862,6 +1872,28 @@ public char[] signature() /* Ljava/lang/Object; */ {
 @Override
 public char[] sourceName() {
 	return this.sourceName;
+}
+
+/**
+ * Perform an upwards type projection as per JLS 4.10.5
+ * @param scope Relevant scope for evaluating type projection
+ * @param mentionedTypeVariables Filter for mentioned type variabled
+ * @returns Upwards type projection of 'this', or null if downwards projection is undefined 
+*/
+@Override
+public ReferenceBinding upwardsProjection(Scope scope, TypeBinding[] mentionedTypeVariables) {
+	return this;
+}
+
+/**
+ * Perform a downwards type projection as per JLS 4.10.5
+ * @param scope Relevant scope for evaluating type projection
+ * @param mentionedTypeVariables Filter for mentioned type variabled
+ * @returns Downwards type projection of 'this', or null if downwards projection is undefined 
+*/
+@Override
+public ReferenceBinding downwardsProjection(Scope scope, TypeBinding[] mentionedTypeVariables) {
+	return this;
 }
 
 void storeAnnotationHolder(Binding binding, AnnotationHolder holder) {
@@ -2243,6 +2275,15 @@ public ModuleBinding module() {
 	if (this.fPackage != null)
 		return this.fPackage.enclosingModule;
 	return null;
+}
+
+public boolean hasEnclosingInstanceContext() {
+	if (isMemberType() && !isStatic())
+		return true;
+	MethodBinding enclosingMethod = enclosingMethod();
+	if (enclosingMethod != null)
+		return !enclosingMethod.isStatic();
+	return false;
 }
 // GROOVY add
 //more thought required - is this in the right place?

@@ -17,10 +17,17 @@ import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.jdt.core.*;
+import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.core.DeltaProcessor.RootInfo;
 import org.eclipse.jdt.internal.core.util.HashSetOfArray;
-import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jdt.internal.core.util.HashtableOfArrayToObject;
+import org.eclipse.jdt.internal.core.util.Util;
 
 /**
  * Info for IJavaProject.
@@ -32,7 +39,7 @@ import org.eclipse.jdt.internal.core.util.HashtableOfArrayToObject;
  * that are internal to the project, use <code>JavaProject#getChildren()</code>.
  */
 
-@SuppressWarnings({"rawtypes", "unchecked"})
+@SuppressWarnings({"rawtypes"})
 /* package */
 class JavaProjectElementInfo extends OpenableElementInfo {
 
@@ -131,7 +138,7 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 							String resName = res.getName();
 
 							// ignore a jar file on the classpath
-							if (isClasspathResolved && 
+							if (isClasspathResolved &&
 									isClasspathEntryOrOutputLocation(resFullPath, res.getLocation()/* see https://bugs.eclipse.org/bugs/show_bug.cgi?id=244406 */, classpath, projectOutput)) {
 								break;
 							}
@@ -196,9 +203,18 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 
 	ProjectCache getProjectCache(JavaProject project, boolean excludeTestCode) {
 		ProjectCache cache = excludeTestCode ? this.mainProjectCache : this.projectCache;
+		if (cache != null) {
+			for (IPackageFragmentRoot root : cache.allPkgFragmentRootsCache) {
+				IJavaProject rootProject = root.getJavaProject();
+				if (rootProject != this && !rootProject.exists()) {
+					cache = null; // force rebuilding
+					break;
+				}
+			}
+		}
 		if (cache == null) {
 			IPackageFragmentRoot[] roots;
-			Map reverseMap = new HashMap(3);
+			Map<?, ?> reverseMap = new HashMap<>(3);
 			try {
 				roots = project.getAllPackageFragmentRoots(reverseMap, excludeTestCode);
 			} catch (JavaModelException e) {
@@ -207,13 +223,13 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 				reverseMap.clear();
 			}
 
-			HashMap rootInfos = JavaModelManager.getJavaModelManager().deltaState.roots;
-			HashMap pkgFragmentsCaches = new HashMap();
+			Map<IPath, RootInfo> rootInfos = JavaModelManager.getJavaModelManager().deltaState.roots;
+			HashMap<IPackageFragmentRoot, HashSetOfArray> pkgFragmentsCaches = new HashMap<>();
 			int length = roots.length;
 			JavaModelManager  manager = JavaModelManager.getJavaModelManager();
 			for (int i = 0; i < length; i++) {
 				IPackageFragmentRoot root = roots[i];
-				DeltaProcessor.RootInfo rootInfo = (DeltaProcessor.RootInfo) rootInfos.get(root.getPath());
+				DeltaProcessor.RootInfo rootInfo = rootInfos.get(root.getPath());
 				if (rootInfo == null || rootInfo.project.equals(project)) {
 					// ensure that an identical root is used (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=217059 )
 					roots[i] = root = (IPackageFragmentRoot) manager.getExistingElement(root);
@@ -226,7 +242,7 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 
 			cache = new ProjectCache(roots, reverseMap, pkgFragmentsCaches);
 			if(excludeTestCode) {
-				this.mainProjectCache = cache;				
+				this.mainProjectCache = cache;
 			} else {
 				this.projectCache = cache;
 			}
@@ -292,13 +308,13 @@ class JavaProjectElementInfo extends OpenableElementInfo {
 		ProjectCache cache = getProjectCache(project, excludeTestCode);
 		HashtableOfArrayToObject allPkgFragmentsCache = cache.allPkgFragmentsCache;
 		if (allPkgFragmentsCache == null) {
-			HashMap rootInfos = JavaModelManager.getJavaModelManager().deltaState.roots;
+			Map<IPath, RootInfo> rootInfos = JavaModelManager.getJavaModelManager().deltaState.roots;
 			IPackageFragmentRoot[] allRoots = cache.allPkgFragmentRootsCache;
 			int length = allRoots.length;
 			allPkgFragmentsCache = new HashtableOfArrayToObject();
 			for (int i = 0; i < length; i++) {
 				IPackageFragmentRoot root = allRoots[i];
-				DeltaProcessor.RootInfo rootInfo = (DeltaProcessor.RootInfo) rootInfos.get(root.getPath());
+				DeltaProcessor.RootInfo rootInfo = rootInfos.get(root.getPath());
 				JavaProject rootProject = rootInfo == null ? project : rootInfo.project;
 				HashSetOfArray fragmentsCache;
 				if (rootProject.equals(project)) {

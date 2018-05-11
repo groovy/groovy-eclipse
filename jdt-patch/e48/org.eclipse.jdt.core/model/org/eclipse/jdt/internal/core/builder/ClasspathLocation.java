@@ -16,15 +16,18 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.zip.ZipFile;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
 import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.env.IUpdatableModule;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
 import org.eclipse.jdt.internal.compiler.env.IUpdatableModule.UpdateKind;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
@@ -128,15 +131,15 @@ static ClasspathLocation forLibrary(String libraryPathname,
 										IPath annotationsPath,
 										boolean autoModule,
 										String compliance) {
-	return Util.isJrt(libraryPathname) ?
-			new ClasspathJrt(libraryPathname, accessRuleSet, annotationsPath, compliance) :
-				Util.archiveFormat(libraryPathname) == Util.JMOD_FILE ?
+	return Util.archiveFormat(libraryPathname) == Util.JMOD_FILE ?
 					new ClasspathJMod(libraryPathname, lastModified, accessRuleSet, annotationsPath) :
-			new ClasspathJar(libraryPathname, lastModified, accessRuleSet, annotationsPath, autoModule);
+						(compliance == null || (CompilerOptions.versionToJdkLevel(compliance) < ClassFileConstants.JDK9) ?
+			new ClasspathJar(libraryPathname, lastModified, accessRuleSet, annotationsPath, autoModule) :
+				new ClasspathMultiReleaseJar(libraryPathname, lastModified, accessRuleSet, annotationsPath, autoModule, compliance));
 
 }
-static ClasspathJrt forJrtSystem(String jdkHome, AccessRuleSet accessRuleSet, IPath annotationsPath, String release) {
-	return new ClasspathJrt(jdkHome, accessRuleSet, annotationsPath, release);
+static ClasspathJrt forJrtSystem(String jrtPath, AccessRuleSet accessRuleSet, IPath annotationsPath, String release) {
+	return new ClasspathJrt(jrtPath, accessRuleSet, annotationsPath, release);
 }
 
 public static ClasspathLocation forLibrary(String libraryPathname, AccessRuleSet accessRuleSet, IPath annotationsPath,
@@ -145,8 +148,14 @@ public static ClasspathLocation forLibrary(String libraryPathname, AccessRuleSet
 }
 
 static ClasspathLocation forLibrary(IFile library, AccessRuleSet accessRuleSet, IPath annotationsPath,
-										boolean autoModule) {
-	return new ClasspathJar(library, accessRuleSet, annotationsPath, autoModule);
+										boolean autoModule, String compliance) {
+	return compliance == null ? new ClasspathJar(library, accessRuleSet, annotationsPath, autoModule) :
+					new ClasspathMultiReleaseJar(library, accessRuleSet, annotationsPath, autoModule, compliance);
+}
+public static ClasspathLocation forLibrary(ZipFile zipFile, AccessRuleSet accessRuleSet, IPath externalAnnotationPath, boolean isOnModulePath, String compliance) {
+	return (CompilerOptions.versionToJdkLevel(compliance) < ClassFileConstants.JDK9) ?
+			new ClasspathJar(zipFile, accessRuleSet, externalAnnotationPath, isOnModulePath) :
+				new ClasspathMultiReleaseJar(zipFile, accessRuleSet, externalAnnotationPath, isOnModulePath, compliance);
 }
 
 public abstract IPath getProjectRelativePath();

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2009 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,8 +10,11 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.codeassist.select;
 
+import org.eclipse.jdt.internal.compiler.ast.ASTNode;
+import org.eclipse.jdt.internal.compiler.ast.ForeachStatement;
 import org.eclipse.jdt.internal.compiler.ast.LocalDeclaration;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
+import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 
 public class SelectionOnLocalName extends LocalDeclaration{
 
@@ -24,6 +27,23 @@ public class SelectionOnLocalName extends LocalDeclaration{
 	public void resolve(BlockScope scope) {
 
 		super.resolve(scope);
+		if (isTypeNameVar(scope)) {
+			if ((this.bits & ASTNode.IsForeachElementVariable) != 0 && scope.blockStatement instanceof ForeachStatement) {
+				// small version extracted from ForeachStatement.resolve():
+				
+				ForeachStatement stat = (ForeachStatement) scope.blockStatement;
+				TypeBinding collectionType = stat.collection == null ? null : stat.collection.resolveType((BlockScope) scope.parent);
+
+				// Patch the resolved type
+				if (!TypeBinding.equalsEquals(TypeBinding.NULL, collectionType)
+						&& !TypeBinding.equalsEquals(TypeBinding.VOID, collectionType)) {
+					TypeBinding elementType = ForeachStatement.getCollectionElementType(scope, collectionType);
+					if (elementType != null) {
+						this.patchType(elementType);
+					}
+				}
+			}
+		}
 		throw new SelectionNodeFound(this.binding);
 	}
 

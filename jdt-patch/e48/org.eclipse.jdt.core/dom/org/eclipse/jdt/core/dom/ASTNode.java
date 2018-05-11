@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -2036,6 +2036,21 @@ public abstract class ASTNode {
 	final void unsupportedBelow9() {
 		if (this.ast.apiLevel < AST.JLS9_INTERNAL) {
 			throw new UnsupportedOperationException("Operation only supported in JLS9 and later AST"); //$NON-NLS-1$
+		}
+	}
+	/**
+     * Checks that this AST operation is not used when
+     * building JLS2, JLS3, JLS4, JLS8 or JLS9 level ASTs.
+     * <p>
+     * Use this method to prevent access to new properties that have been added in JLS10
+     * </p>
+     *
+	 * @exception UnsupportedOperationException if this operation is used below JLS10
+	 * @since 3.14
+	 */
+	final void unsupportedBelow10() {
+		if (this.ast.apiLevel < AST.JLS10_INTERNAL) {
+			throw new UnsupportedOperationException("Operation only supported in ASTs with level JLS10 and above"); //$NON-NLS-1$
 		}
 	}
 	/**

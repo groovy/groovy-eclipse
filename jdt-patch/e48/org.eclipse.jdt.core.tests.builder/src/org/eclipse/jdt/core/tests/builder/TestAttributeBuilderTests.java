@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017 Till Brychcy and others.
+ * Copyright (c) 2017, 2018 Till Brychcy and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -19,6 +19,10 @@ import org.eclipse.jdt.core.tests.util.Util;
 import junit.framework.Test;
 
 public class TestAttributeBuilderTests extends BuilderTests {
+	static {
+		 // TESTS_NAMES = new String[] { "testIncrementalBuildTestOnlyProject" };
+	}
+
 
 	public TestAttributeBuilderTests(String name) {
 		super(name);
@@ -570,6 +574,51 @@ public class TestAttributeBuilderTests extends BuilderTests {
 		expectingCompiledClasses(new String[] { "p1.T1Class", "p1.Test1", "p2.T2Class", "p2.Test2" });
 		expectingCompilingOrder(new String[] { "/Project1/tests/p1/T1Class.java", "/Project1/tests/p1/Test1.java",
 				"/Project2/tests/p2/T2Class.java", "/Project2/tests/p2/Test2.java" });
+	}
+
+	public void testIncrementalBuildTestOnlyProject() throws JavaModelException {
+		IPath project1Path = env.addProject("Project1"); 
+		env.removePackageFragmentRoot(project1Path, "");
+		IPath tests1 = env.addTestPackageFragmentRoot(project1Path, "tests");
+		env.addExternalJars(project1Path, Util.getJavaClassLibs());		
+	
+		env.addClass(tests1, "p1", "T1Class", 
+				"package p1;\n" + 
+				"\n" + 
+				"public class T1Class {\n"+ 
+				"}\n" 
+				);
+		env.addClass(tests1, "p1", "Test1", 
+				"package p1;\n" + 
+				"\n" + 
+				"public class Test1 {\n" + 
+				"	void test1() {\n" + 
+				"		new T1Class();" + 
+				"	}\n" + 
+				"}\n" + 
+				"" 
+				);
+
+		fullBuild();
+		expectingNoProblems();
+
+		IPath test1 = env.addClass(tests1, "p1", "Test1", 
+				"package p1;\n" + 
+				"\n" + 
+				"public class Test1 {\n" + 
+				"	void test1() {\n" + 
+				"		new X1Class();" + 
+				"	}\n" + 
+				"}\n" + 
+				"" 
+				);
+		incrementalBuild();
+		expectingProblemsFor(
+				test1,
+			"Problem : X1Class cannot be resolved to a type [ resource : </Project1/tests/p1/Test1.java> range : <56,63> category : <40> severity : <2>]"
+		);
+		expectingCompiledClasses(new String[] { "p1.Test1" });
+		expectingCompilingOrder(new String[] { "/Project1/tests/p1/Test1.java"});
 	}
 
 	public void testClasspathEntryTestAttributeChanges() throws JavaModelException {

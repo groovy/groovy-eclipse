@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
@@ -27,8 +29,10 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IModuleDescription;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.core.nd.IReader;
@@ -63,6 +67,9 @@ public class JarPackageFragmentRoot extends PackageFragmentRoot {
 
 	boolean knownToBeModuleLess;
 
+	private boolean multiVersion;
+	public String versionPath;
+
 	/**
 	 * Constructs a package fragment root which is the root of the Java package directory hierarchy
 	 * based on a JAR file that is not contained in a <code>IJavaProject</code> and
@@ -89,6 +96,7 @@ public class JarPackageFragmentRoot extends PackageFragmentRoot {
 	@Override
 	protected boolean computeChildren(OpenableElementInfo info, IResource underlyingResource) throws JavaModelException {
 		final HashtableOfArrayToObject rawPackageInfo = new HashtableOfArrayToObject();
+		final Set<String> overridden = new HashSet<>();
 		IJavaElement[] children;
 		try {
 			// always create the default package
@@ -125,15 +133,28 @@ public class JarPackageFragmentRoot extends PackageFragmentRoot {
 			// contain an up-to-date entry for this .jar) then fetch it directly from the .jar
 			if (!usedIndex) {
 				Object file = JavaModel.getTarget(getPath(), true);
-				long level = Util.getJdkLevel(file);
-				String compliance = CompilerOptions.versionFromJdkLevel(level);
+				long classLevel = Util.getJdkLevel(file);
+				String projectCompliance = this.getJavaProject().getOption(JavaCore.COMPILER_COMPLIANCE, true);
+				long projectLevel = CompilerOptions.versionToJdkLevel(projectCompliance);
 				ZipFile jar = null;
 				try {
 					jar = getJar();
-
+					String version = "META-INF/versions/" + projectCompliance + "/";  //$NON-NLS-1$//$NON-NLS-2$
+					int versionPathLength = version.length();
+					if (projectLevel >= ClassFileConstants.JDK9 && jar.getEntry(version) != null) {
+						this.multiVersion = true;
+						this.versionPath = version;
+					}
 					for (Enumeration e= jar.entries(); e.hasMoreElements();) {
 						ZipEntry member= (ZipEntry) e.nextElement();
-						initRawPackageInfo(rawPackageInfo, member.getName(), member.isDirectory(), compliance);
+						String name = member.getName();
+						if (this.multiVersion && name.length() > versionPathLength && name.startsWith(version)) {
+							name = name.substring(version.length());
+							if (org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(name)) {
+								overridden.add(name);
+							}
+						}
+						initRawPackageInfo(rawPackageInfo, name, member.isDirectory(), CompilerOptions.versionFromJdkLevel(classLevel));
 					}
 				}  finally {
 					JavaModelManager.getJavaModelManager().closeZipFile(jar);
@@ -162,6 +183,7 @@ public class JarPackageFragmentRoot extends PackageFragmentRoot {
 
 		info.setChildren(children);
 		((JarPackageFragmentRootInfo) info).rawPackageInfo = rawPackageInfo;
+		((JarPackageFragmentRootInfo) info).overriddenClasses = overridden;
 		return true;
 	}
 	protected IJavaElement[] createChildren(final HashtableOfArrayToObject rawPackageInfo) {
@@ -257,6 +279,21 @@ public class JarPackageFragmentRoot extends PackageFragmentRoot {
 		return new JarPackageFragment(this, pkgName); // Overridden in JImageModuleFragmentBridge
 	}
 
+	@Override
+	public String getClassFilePath(String classname) {
+		if (this.multiVersion) {
+			JarPackageFragmentRootInfo elementInfo;
+			try {
+				elementInfo = (JarPackageFragmentRootInfo) getElementInfo();
+				if (elementInfo.overriddenClasses.contains(classname)) {
+					return this.versionPath == null ? classname : this.versionPath + classname;
+				}
+			} catch (JavaModelException e) {
+				// move on
+			}
+		}
+		return classname;
+	}
 	@Override
 	public IModuleDescription getModuleDescription() {
 		if (this.knownToBeModuleLess)

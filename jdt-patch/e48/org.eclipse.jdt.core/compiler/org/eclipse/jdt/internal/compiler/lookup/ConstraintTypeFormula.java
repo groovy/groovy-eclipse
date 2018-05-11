@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2016 GK Software AG.
+ * Copyright (c) 2013, 2018 GK Software AG, and others
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -262,9 +262,11 @@ class ConstraintTypeFormula extends ConstraintFormula {
 			case Binding.PARAMETERIZED_TYPE:
 				{
 					List<ConstraintFormula> constraints = new ArrayList<>();
+					boolean isFirst = true;
 					while (superCandidate != null && superCandidate.kind() == Binding.PARAMETERIZED_TYPE && subCandidate != null)  {
 						if (!addConstraintsFromTypeParameters(subCandidate, (ParameterizedTypeBinding) superCandidate, constraints))
-							return FALSE;
+							if (isFirst) return FALSE;				
+						isFirst = false;
 						// travel to enclosing types to check if they have type parameters, too:
 						superCandidate = superCandidate.enclosingType();
 						subCandidate = subCandidate.enclosingType();
@@ -378,9 +380,6 @@ class ConstraintTypeFormula extends ConstraintFormula {
 	}
 
 	boolean addConstraintsFromTypeParameters(TypeBinding subCandidate, ParameterizedTypeBinding ca, List<ConstraintFormula> constraints) {
-		TypeBinding[] ai = ca.arguments;								// C<A1,A2,...>
-		if (ai == null)
-			return true; // no arguments here means nothing to check
 		TypeBinding cb = subCandidate.findSuperTypeOriginatingFrom(ca);	// C<B1,B2,...>
 		if (cb == null)
 			return false; // nothing here means we failed 
@@ -391,6 +390,9 @@ class ConstraintTypeFormula extends ConstraintFormula {
 			return ca.isParameterizedWithOwnVariables();
 		}
 		TypeBinding[] bi = ((ParameterizedTypeBinding) cb).arguments;
+		TypeBinding[] ai = ca.arguments;								// C<A1,A2,...>
+		if (ai == null)
+			return true; // no arguments here means nothing to check
 		if (cb.isRawType() || bi == null || bi.length == 0)
 			return (this.isSoft && InferenceContext18.SIMULATE_BUG_JDK_8026527) ? true : false; // FALSE would conform to the spec 
 		for (int i = 0; i < ai.length; i++)

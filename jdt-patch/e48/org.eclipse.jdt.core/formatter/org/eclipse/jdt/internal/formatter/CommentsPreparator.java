@@ -624,18 +624,20 @@ public class CommentsPreparator extends ASTVisitor {
 
 		if (PARAM_TAGS.contains(tagName) && this.options.comment_indent_parameter_description) {
 			// tokens in the first line should not be indented
-			int startIndex = this.ctm.firstIndexIn(node, -1);
-			int endIndex = this.ctm.lastIndexIn(node, -1);
-			int range = this.options.indentation_size;
-			for (int i = startIndex + 2; i <= endIndex && range > 0; i++) {
-				Token token = this.ctm.get(i);
-				if (token.getLineBreaksBefore() > 0)
-					break;
-				assert token.getIndent() >= this.options.indentation_size;
-				token.setIndent(token.getIndent() - this.options.indentation_size);
-				if (token.getLineBreaksAfter() > 0)
-					break;
-				range -= this.ctm.getLength(token, 0) + (token.isSpaceBefore() ? 1 : 0);
+			int startIndex = this.ctm.findIndex(node.getStartPosition(), -1, false);
+			if (this.ctm.get(startIndex).tokenType != TokenNameNotAToken) {
+				int endIndex = this.ctm.lastIndexIn(node, -1);
+				int range = this.options.indentation_size;
+				for (int i = startIndex + 2; i <= endIndex && range > 0; i++) {
+					Token token = this.ctm.get(i);
+					if (token.getLineBreaksBefore() > 0)
+						break;
+					assert token.getIndent() >= this.options.indentation_size;
+					token.setIndent(token.getIndent() - this.options.indentation_size);
+					if (token.getLineBreaksAfter() > 0)
+						break;
+					range -= this.ctm.getLength(token, 0) + (token.isSpaceBefore() ? 1 : 0);
+				}
 			}
 		}
 	}

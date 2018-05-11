@@ -11,8 +11,8 @@
  *******************************************************************************/
 package org.eclipse.jdt.internal.core.search;
 
-import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.core.resources.IFolder;
@@ -27,6 +27,7 @@ import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
 import org.eclipse.jdt.internal.core.DeltaProcessor;
+import org.eclipse.jdt.internal.core.DeltaProcessor.RootInfo;
 import org.eclipse.jdt.internal.core.ExternalFoldersManager;
 import org.eclipse.jdt.internal.core.JavaModel;
 import org.eclipse.jdt.internal.core.JavaModelManager;
@@ -38,7 +39,6 @@ import org.eclipse.jdt.internal.core.util.Util;
  * The scope can be configured to not search binaries. By default, binaries
  * are included.
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
 public class JavaWorkspaceScope extends AbstractJavaSearchScope {
 
 	private IPath[] enclosingPaths = null;
@@ -76,7 +76,7 @@ public IPath[] enclosingProjectsAndJars() {
 	try {
 		IJavaProject[] projects = JavaModelManager.getJavaModelManager().getJavaModel().getJavaProjects();
 		// use a linked set to preserve the order during search: see bug 348507
-		Set paths = new LinkedHashSet(projects.length * 2);
+		Set<IPath> paths = new LinkedHashSet<>(projects.length * 2);
 		for (int i = 0, length = projects.length; i < length; i++) {
 			JavaProject javaProject = (JavaProject) projects[i];
 
@@ -141,22 +141,22 @@ public int hashCode() {
  */
 @Override
 public IPackageFragmentRoot packageFragmentRoot(String resourcePathString, int jarSeparatorIndex, String jarPath) {
-	HashMap rootInfos = JavaModelManager.getDeltaState().roots;
+	Map<IPath, RootInfo> rootInfos = JavaModelManager.getDeltaState().roots;
 	DeltaProcessor.RootInfo rootInfo = null;
 	if (jarPath != null) {
 		IPath path = new Path(jarPath);
-		rootInfo = (DeltaProcessor.RootInfo) rootInfos.get(path);
+		rootInfo = rootInfos.get(path);
 	} else {
 		IPath path = new Path(resourcePathString);
 		if (ExternalFoldersManager.isInternalPathForExternalFolder(path)) {
 			IResource resource = JavaModel.getWorkspaceTarget(path.uptoSegment(2/*linked folders for external folders are always of size 2*/));
 			if (resource != null)
-				rootInfo = (DeltaProcessor.RootInfo) rootInfos.get(resource.getLocation());
+				rootInfo = rootInfos.get(resource.getLocation());
 		} else {
-			rootInfo = (DeltaProcessor.RootInfo) rootInfos.get(path);
+			rootInfo = rootInfos.get(path);
 			while (rootInfo == null && path.segmentCount() > 0) {
 				path = path.removeLastSegments(1);
-				rootInfo = (DeltaProcessor.RootInfo) rootInfos.get(path);
+				rootInfo = rootInfos.get(path);
 			}
 		}
 	}

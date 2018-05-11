@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -175,6 +175,20 @@ public abstract class Type extends ASTNode {
 	 */
 	public final boolean isUnionType() {
 		return (this instanceof UnionType);
+	}
+
+	/**
+	 * Returns whether this type is a var. The convenience method checks
+	 * whether the type is so named.
+	 *
+	 * @return <code>true</code> if this is a var, and
+	 *    <code>false</code> otherwise
+	 * @exception UnsupportedOperationException if this operation is used in
+	 * an AST of level less than JLS10
+	 * @since 3.14
+	 */
+	public boolean isVar() {
+		return false;
 	}
 
 	/**

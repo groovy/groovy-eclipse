@@ -154,6 +154,7 @@ public class FieldAligner {
 	public void alignComments() {
 		if (this.fieldAlignGroups.isEmpty())
 			return;
+		boolean alignLineComments = !this.options.comment_preserve_white_space_between_code_and_line_comments;
 		PositionCounter positionCounter = new PositionCounter();
 		// align comments after field declarations
 		for (List<FieldDeclaration> alignGroup : this.fieldAlignGroups) {
@@ -179,10 +180,10 @@ public class FieldAligner {
 					if (lineBreak) {
 						if (token.tokenType == TokenNameCOMMENT_BLOCK) {
 							token.setAlign(maxCommentAlign);
-						} else {
+						} else if (alignLineComments) {
 							this.tm.addNLSAlignIndex(i, maxCommentAlign);
 						}
-					} else if (next.tokenType == TokenNameCOMMENT_LINE
+					} else if (next.tokenType == TokenNameCOMMENT_LINE && alignLineComments
 							|| (next.tokenType == TokenNameCOMMENT_BLOCK && i == lastIndex)) {
 						next.setAlign(maxCommentAlign);
 					}

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -186,7 +186,7 @@ protected IProject[] build(int kind, Map ignored, IProgressMonitor monitor) thro
 					if (DEBUG)
 						System.out.println("JavaBuilder: Performing full build since classpath has changed"); //$NON-NLS-1$
 					buildAll();
-				} else if (this.nameEnvironment.sourceLocations.length > 0) {
+				} else if (this.nameEnvironment.sourceLocations.length > 0 || this.testNameEnvironment.sourceLocations.length > 0) {
 					// if there is no source to compile & no classpath changes then we are done
 					SimpleLookupTable deltas = findDeltas();
 					if (deltas == null) {
@@ -340,6 +340,7 @@ private void createInconsistentBuildMarker(CoreException coreException) throws C
 private void cleanup() {
 	this.participants = null;
 	this.nameEnvironment = null;
+	this.testNameEnvironment = null;
 	this.binaryLocationsPerProject = null;
 	this.lastState = null;
 	this.notifier = null;

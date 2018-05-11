@@ -38,12 +38,19 @@ public static AnnotationBinding[] addStandardAnnotations(AnnotationBinding[] rec
 	if ((annotationTagBits & TagBits.AllStandardAnnotationsMask) == 0) {
 		return recordedAnnotations;
 	}
+	boolean haveDeprecated = false;
+	for (AnnotationBinding annotationBinding : recordedAnnotations) {
+		if (annotationBinding.getAnnotationType().id == TypeIds.T_JavaLangDeprecated) {
+			haveDeprecated = true;
+			break;
+		}
+	}
 	int count = 0;
 	if ((annotationTagBits & TagBits.AnnotationTargetMASK) != 0)
 		count++;
 	if ((annotationTagBits & TagBits.AnnotationRetentionMASK) != 0)
 		count++;
-	if ((annotationTagBits & TagBits.AnnotationDeprecated) != 0)
+	if (!haveDeprecated && (annotationTagBits & TagBits.AnnotationDeprecated) != 0)
 		count++;
 	if ((annotationTagBits & TagBits.AnnotationDocumented) != 0)
 		count++;
@@ -69,7 +76,7 @@ public static AnnotationBinding[] addStandardAnnotations(AnnotationBinding[] rec
 		result[index++] = buildTargetAnnotation(annotationTagBits, env);
 	if ((annotationTagBits & TagBits.AnnotationRetentionMASK) != 0)
 		result[index++] = buildRetentionAnnotation(annotationTagBits, env);
-	if ((annotationTagBits & TagBits.AnnotationDeprecated) != 0)
+	if (!haveDeprecated && (annotationTagBits & TagBits.AnnotationDeprecated) != 0)
 		result[index++] = buildMarkerAnnotation(TypeConstants.JAVA_LANG_DEPRECATED, env.javaBaseModule(), env);
 	if ((annotationTagBits & TagBits.AnnotationDocumented) != 0)
 		result[index++] = buildMarkerAnnotation(TypeConstants.JAVA_LANG_ANNOTATION_DOCUMENTED, env.javaBaseModule(), env);

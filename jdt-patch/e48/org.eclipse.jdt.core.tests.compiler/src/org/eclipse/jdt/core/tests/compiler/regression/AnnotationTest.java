@@ -28,7 +28,6 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
@@ -98,12 +97,6 @@ public class AnnotationTest extends AbstractComparableTest {
 		if (this.reportMissingJavadocComments != null)
 			options.put(CompilerOptions.OPTION_ReportMissingJavadocComments, this.reportMissingJavadocComments);
 		return options;
-	}
-	static class CustomFileSystem extends FileSystem {
-		// make protected constructor accessible
-		CustomFileSystem(Collection<String> limitModules) {
-			super(Util.getJavaClassLibs(), new String[0], null, limitModules);
-		}
 	}
 	@Override
 	protected INameEnvironment getNameEnvironment(String[] testFiles, String[] classPaths) {
@@ -10314,7 +10307,7 @@ public void testBug365437b() {
 			"----------\n";
 	INameEnvironment save = this.javaClassLib;
 	try {
-		if (isJRE9) {
+		if (isJRE9Plus) {
 			List<String> limitModules = Arrays.asList("java.se", "java.xml.ws.annotation");
 			this.javaClassLib = new CustomFileSystem(limitModules);
 		}
@@ -10864,7 +10857,7 @@ public void _testBug386356_1() {
 public void testBug386356_2() {
 	INameEnvironment save = this.javaClassLib;
 	try {
-		if (isJRE9) {
+		if (isJRE9Plus) {
 			List<String> limitModules = Arrays.asList("java.se", "java.xml.bind");
 			this.javaClassLib = new CustomFileSystem(limitModules);
 		}
@@ -11872,70 +11865,5 @@ public void testBug506888f() throws Exception {
 	assertNotNull(requestor.problemArguments);
 	assertEquals(1, requestor.problemArguments.length);
 	assertEquals(JavaCore.COMPILER_PB_UNUSED_PARAMETER, requestor.problemArguments[0]);
-}
-public void testBug521054a() throws Exception {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_8) {
-		return;
-	}
-	this.runNegativeTest(
-		new String[] {
-				"X.java",
-				"public @interface X {\n" +
-				"	String value(X this);\n" +
-				"}\n",
-		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 2)\n" + 
-		"	String value(X this);\n" + 
-		"	       ^^^^^^^^^^^^^\n" + 
-		"Annotation attributes cannot have parameters\n" + 
-		"----------\n", 
-		null, true);
-}
-public void testBug521054b() throws Exception {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_8) {
-		return;
-	}
-	this.runNegativeTest(
-		new String[] {
-				"X.java",
-				"@java.lang.annotation.Repeatable(Container.class)\n" +
-				"public @interface X {\n" +
-				"	String value();\n" +
-				"}\n" +
-				"@interface Container {\n" +
-				"	X[] value(Container this);\n" +
-				"}\n",
-		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 6)\n" + 
-		"	X[] value(Container this);\n" + 
-		"	    ^^^^^^^^^^^^^^^^^^^^^\n" + 
-		"Annotation attributes cannot have parameters\n" + 
-		"----------\n", 
-		null, true);
-}
-public void testBug521054c() throws Exception {
-	if (this.complianceLevel <= ClassFileConstants.JDK1_8) {
-		return;
-	}
-	this.runNegativeTest(
-		new String[] {
-				"X.java",
-				"@java.lang.annotation.Repeatable(Container.class)\n" +
-				"public @interface X {\n" +
-				"	String value(X this, int i);\n" +
-				"}\n" +
-				"@interface Container {\n" +
-				"	X[] value();\n" +
-				"}\n",
-		},
-		"----------\n" + 
-		"1. ERROR in X.java (at line 3)\n" + 
-		"	String value(X this, int i);\n" + 
-		"	       ^^^^^^^^^^^^^^^^^^^^\n" + 
-		"Annotation attributes cannot have parameters\n" + 
-		"----------\n", 
-		null, true);
 }
 }

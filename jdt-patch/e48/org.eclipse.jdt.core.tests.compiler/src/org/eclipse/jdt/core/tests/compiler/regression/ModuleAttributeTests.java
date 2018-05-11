@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017 IBM Corporation.
+ * Copyright (c) 2017, 2018 IBM Corporation.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,8 +13,10 @@ package org.eclipse.jdt.core.tests.compiler.regression;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.stream.Stream;
 
 import org.eclipse.jdt.core.ToolFactory;
+import org.eclipse.jdt.core.util.IAttributeNamesConstants;
 import org.eclipse.jdt.core.util.IClassFileAttribute;
 import org.eclipse.jdt.core.util.IClassFileReader;
 import org.eclipse.jdt.core.util.IModuleAttribute;
@@ -32,6 +34,14 @@ public class ModuleAttributeTests extends AbstractRegressionTest9 {
 		return ModuleAttributeTests.class;
 	}
 
+	private static String[] allowedAttributes = {
+			new String(IAttributeNamesConstants.MODULE),
+			new String(IAttributeNamesConstants.MODULE_MAIN_CLASS),
+			new String(IAttributeNamesConstants.MODULE_PACKAGES),
+			new String(IAttributeNamesConstants.RUNTIME_VISIBLE_ANNOTATIONS),
+			new String(IAttributeNamesConstants.RUNTIME_INVISIBLE_ANNOTATIONS),
+			new String(IAttributeNamesConstants.SOURCE)
+	};
 	// Use this static initializer to specify subset for tests
 	// All specified tests which does not belong to the class are skipped...
 	static {
@@ -217,5 +227,21 @@ public class ModuleAttributeTests extends AbstractRegressionTest9 {
 			};
 		IModuleAttribute moduleAttribute = getModuleAttribute(contents);
 		assertTrue("module java.base should not require any other modules", moduleAttribute.getRequiresCount() == 0);
+	}
+	public void testBug533134() throws Exception {
+		String[] contents =  {
+			"module-info.java",
+			"@Deprecated\n" +
+			"module test {\n" +
+			"}\n",
+			};
+		this.runConformTest(contents);
+		IClassFileReader cfr = ToolFactory.createDefaultClassFileReader(OUTPUT_DIR + File.separator + "module-info.class", IClassFileReader.CLASSFILE_ATTRIBUTES);
+		assertNotNull("Error reading module-info.class", cfr);
+		IClassFileAttribute[] attrs = cfr.getAttributes();
+		for (IClassFileAttribute attr : attrs) {
+			String name = new String(attr.getAttributeName());
+			assertTrue("Attribute " + name + " is not allowed", Stream.of(allowedAttributes).anyMatch(a -> a.equals(name)));
+		}
 	}
 }
