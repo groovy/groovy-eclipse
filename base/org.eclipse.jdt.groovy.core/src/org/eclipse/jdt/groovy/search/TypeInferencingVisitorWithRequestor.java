@@ -19,15 +19,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import groovy.transform.stc.ClosureSignatureHint;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -87,15 +87,18 @@ import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.IfStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.ast.tools.WideningCategories;
 import org.codehaus.groovy.classgen.BytecodeExpression;
+import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.FieldASTTransformation;
 import org.codehaus.groovy.transform.sc.ListOfExpressionsExpression;
 import org.codehaus.groovy.transform.sc.transformers.CompareToNullExpression;
+import org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -133,121 +136,15 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         Util.log(s);
     }
 
+    // shared instances for several method checks below
+    private static final String[] NO_PARAMS = CharOperation.NO_STRINGS;
+    private static final Parameter[] NO_PARAMETERS = Parameter.EMPTY_ARRAY;
+
     /**
      * Set to true if debug mode is desired. Any exceptions will be spit to syserr. Also, after a visit, there will be a sanity
      * check to ensure that all stacks are empty Only set to true if using a visitor that always visits the entire file
      */
     public boolean DEBUG = false;
-
-    // shared instances for several method checks below
-    private static final String[] NO_PARAMS = CharOperation.NO_STRINGS;
-    private static final Parameter[] NO_PARAMETERS = Parameter.EMPTY_ARRAY;
-
-    /** methods that take a closure and pass self or element of self to that closure */
-    private static final Set<String> dgmClosureDelegateMethods = new HashSet<>();
-    static {
-        dgmClosureDelegateMethods.add("each");
-        dgmClosureDelegateMethods.add("eachByte");
-        dgmClosureDelegateMethods.add("reverseEach");
-        dgmClosureDelegateMethods.add("eachWithIndex");
-        dgmClosureDelegateMethods.add("eachPermutation");
-        dgmClosureDelegateMethods.add("inject");
-        dgmClosureDelegateMethods.add("collect");
-        dgmClosureDelegateMethods.add("collectAll");
-        dgmClosureDelegateMethods.add("collectMany");
-        dgmClosureDelegateMethods.add("collectNested");
-        dgmClosureDelegateMethods.add("collectEntries");
-        dgmClosureDelegateMethods.add("removeAll");
-        dgmClosureDelegateMethods.add("retainAll");
-        dgmClosureDelegateMethods.add("count");
-        dgmClosureDelegateMethods.add("countBy");
-        dgmClosureDelegateMethods.add("groupBy");
-        dgmClosureDelegateMethods.add("groupEntriesBy");
-        dgmClosureDelegateMethods.add("find");
-        dgmClosureDelegateMethods.add("findAll");
-        dgmClosureDelegateMethods.add("findResult");
-        dgmClosureDelegateMethods.add("findResults");
-        dgmClosureDelegateMethods.add("grep");
-        dgmClosureDelegateMethods.add("any");
-        dgmClosureDelegateMethods.add("every");
-        dgmClosureDelegateMethods.add("sum");
-        dgmClosureDelegateMethods.add("split");
-        dgmClosureDelegateMethods.add("flatten");
-        dgmClosureDelegateMethods.add("findIndexOf");
-        dgmClosureDelegateMethods.add("findIndexValues");
-        dgmClosureDelegateMethods.add("findLastIndexOf");
-        dgmClosureDelegateMethods.add("min");
-        dgmClosureDelegateMethods.add("max");
-        dgmClosureDelegateMethods.add("sort");
-        dgmClosureDelegateMethods.add("toSorted");
-        dgmClosureDelegateMethods.add("unique");
-        dgmClosureDelegateMethods.add("toUnique");
-        dgmClosureDelegateMethods.add("dropWhile");
-        dgmClosureDelegateMethods.add("takeWhile");
-        dgmClosureDelegateMethods.add("withDefault");
-
-        // these don't take collections, but can be handled in the same way
-        dgmClosureDelegateMethods.add("identity");
-        dgmClosureDelegateMethods.add("with");
-        dgmClosureDelegateMethods.add("upto");
-        dgmClosureDelegateMethods.add("downto");
-        dgmClosureDelegateMethods.add("step");
-        dgmClosureDelegateMethods.add("times");
-        dgmClosureDelegateMethods.add("traverse");
-        dgmClosureDelegateMethods.add("eachDir");
-        dgmClosureDelegateMethods.add("eachFile");
-        dgmClosureDelegateMethods.add("eachDirRecurse");
-        dgmClosureDelegateMethods.add("eachFileRecurse");
-        dgmClosureDelegateMethods.add("withStream");
-    }
-
-    // methods with "@ClosureParams(MapEntryOrKeyValue.class)" variants
-    private static final Set<String> dgmClosureMaybeMap = new HashSet<>();
-    static {
-        dgmClosureMaybeMap.add("any");
-        dgmClosureMaybeMap.add("every");
-        dgmClosureMaybeMap.add("each");
-      //dgmClosureMaybeMap.add("eachWithIndex"); options={"index=true"}
-        dgmClosureMaybeMap.add("reverseEach");
-        dgmClosureMaybeMap.add("inject");
-        dgmClosureMaybeMap.add("collect");
-        dgmClosureMaybeMap.add("collectMany");
-        dgmClosureMaybeMap.add("collectEntries");
-        dgmClosureMaybeMap.add("find");
-        dgmClosureMaybeMap.add("findAll");
-        dgmClosureMaybeMap.add("findResult");
-        dgmClosureMaybeMap.add("findResults");
-        dgmClosureMaybeMap.add("count");
-        dgmClosureMaybeMap.add("countBy");
-        dgmClosureMaybeMap.add("groupBy");
-        dgmClosureMaybeMap.add("groupEntriesBy");
-        dgmClosureMaybeMap.add("dropWhile");
-        dgmClosureMaybeMap.add("takeWhile");
-    }
-
-    // These methods have a fixed type for the closure argument
-    private static final Map<String, ClassNode> dgmClosureFixedTypeMethods = new HashMap<>();
-    static {
-        dgmClosureFixedTypeMethods.put("eachLine", VariableScope.STRING_CLASS_NODE);
-        dgmClosureFixedTypeMethods.put("splitEachLine", VariableScope.STRING_CLASS_NODE);
-        dgmClosureFixedTypeMethods.put("withObjectOutputStream", VariableScope.OBJECT_OUTPUT_STREAM);
-        dgmClosureFixedTypeMethods.put("withObjectInputStream", VariableScope.OBJECT_INPUT_STREAM);
-        dgmClosureFixedTypeMethods.put("withDataOutputStream", VariableScope.DATA_OUTPUT_STREAM_CLASS);
-        dgmClosureFixedTypeMethods.put("withDataInputStream", VariableScope.DATA_INPUT_STREAM_CLASS);
-        dgmClosureFixedTypeMethods.put("withOutputStream", VariableScope.OUTPUT_STREAM_CLASS);
-        dgmClosureFixedTypeMethods.put("withInputStream", VariableScope.INPUT_STREAM_CLASS);
-        dgmClosureFixedTypeMethods.put("metaClass", ClassHelper.METACLASS_TYPE);
-        dgmClosureFixedTypeMethods.put("eachFileMatch", VariableScope.FILE_CLASS_NODE);
-        dgmClosureFixedTypeMethods.put("eachDirMatch", VariableScope.FILE_CLASS_NODE);
-        dgmClosureFixedTypeMethods.put("withReader", VariableScope.BUFFERED_READER_CLASS_NODE);
-        dgmClosureFixedTypeMethods.put("withWriter", VariableScope.BUFFERED_WRITER_CLASS_NODE);
-        dgmClosureFixedTypeMethods.put("withWriterAppend", VariableScope.BUFFERED_WRITER_CLASS_NODE);
-        dgmClosureFixedTypeMethods.put("withPrintWriter", VariableScope.PRINT_WRITER_CLASS_NODE);
-        dgmClosureFixedTypeMethods.put("transformChar", VariableScope.STRING_CLASS_NODE);
-        dgmClosureFixedTypeMethods.put("transformLine", VariableScope.STRING_CLASS_NODE);
-        dgmClosureFixedTypeMethods.put("filterLine", VariableScope.STRING_CLASS_NODE);
-        dgmClosureFixedTypeMethods.put("eachMatch", VariableScope.STRING_CLASS_NODE);
-    }
 
     private final GroovyCompilationUnit unit;
 
@@ -303,12 +200,18 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
      * Use factory to instantiate
      */
     TypeInferencingVisitorWithRequestor(GroovyCompilationUnit unit, ITypeLookup[] lookups) {
-        super();
         this.unit = unit;
         this.lookups = lookups;
+
         ModuleNodeInfo info = createModuleNode(unit);
-        this.resolver = info != null ? info.resolver : null;
-        this.enclosingDeclarationNode = this.enclosingModule = info != null ? info.module : null;
+        if (info == null) {
+            this.resolver = null;
+            this.enclosingModule = null;
+        } else {
+            this.resolver = info.resolver;
+            this.enclosingModule = info.module;
+            this.enclosingDeclarationNode = info.module;
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -429,7 +332,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         }
                     }
                 }
-
             } catch (JavaModelException e) {
                 log(e, "Error visiting children of %s", type.getFullyQualifiedName());
             }
@@ -599,6 +501,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                             throw e;
                         }
                     }
+                    //fallthrough
                 case CANCEL_MEMBER:
                     continue;
                 case CANCEL_BRANCH:
@@ -896,7 +799,7 @@ assert primaryExprType != null && dependentExprType != null;
                 TypeLookupResult result = lookupExpressionType(new ConstantExpression(associatedMethod), primaryExprType, false, scopes.getLast());
                 if (result.confidence != TypeConfidence.UNKNOWN) completeExprType = result.type;
                 // special case DefaultGroovyMethods.getAt -- the problem is that DGM has too many variants of getAt
-                if (associatedMethod.equals("getAt") && result.declaringType.equals(VariableScope.DGM_CLASS_NODE)) {
+                if ("getAt".equals(associatedMethod) && VariableScope.DGM_CLASS_NODE.equals(result.declaringType)) {
                     if (primaryExprType.getName().equals("java.util.BitSet")) {
                         completeExprType = VariableScope.BOOLEAN_CLASS_NODE;
                     } else {
@@ -1231,6 +1134,7 @@ assert primaryExprType != null && dependentExprType != null;
                 if (init != null) {
                     init.visit(this);
                 }
+                //fallthrough
             case CANCEL_BRANCH:
                 return;
             case CANCEL_MEMBER:
@@ -1358,7 +1262,7 @@ assert primaryExprType != null && dependentExprType != null;
         completeExpressionStack.add(node);
         super.visitListExpression(node);
         ClassNode eltType;
-        if (node.getExpressions().size() > 0) {
+        if (isNotEmpty(node.getExpressions())) {
             eltType = primaryTypeStack.removeLast();
         } else {
             eltType = VariableScope.OBJECT_CLASS_NODE;
@@ -1432,8 +1336,7 @@ assert primaryExprType != null && dependentExprType != null;
                 }
 
                 // pre-visit entry so keys are highlighted as keys, not fields/methods/properties
-                ClassNode mapType = isPrimaryExpression(entry) ?
-                    createParameterizedMap(key.getType(), val.getType()) : primaryTypeStack.getLast();
+                ClassNode mapType = isPrimaryExpression(entry) ? createParameterizedMap(key.getType(), val.getType()) : primaryTypeStack.getLast();
                 scope.setCurrentNode(entry);
                 handleCompleteExpression(entry, mapType, null);
                 scope.forgetCurrentNode();
@@ -1623,8 +1526,7 @@ assert primaryExprType != null && dependentExprType != null;
         if (node.isSpreadSafe()) {
             // if we are dealing with a map, then a spread dot will return a list of values,
             // so use the type of the value.
-            if (objType.equals(VariableScope.MAP_CLASS_NODE) && objType.getGenericsTypes() != null
-                    && objType.getGenericsTypes().length == 2) {
+            if (objType.equals(VariableScope.MAP_CLASS_NODE) && objType.getGenericsTypes() != null && objType.getGenericsTypes().length == 2) {
                 exprType = objType.getGenericsTypes()[1].getType();
             }
             exprType = createParameterizedList(exprType);
@@ -1795,8 +1697,8 @@ assert primaryExprType != null && dependentExprType != null;
         // now infer the type of the operator. It could have been overloaded
         String associatedMethod = findUnaryOperatorName(operation);
         ClassNode completeExprType;
-        if (associatedMethod == null && primaryType.equals(VariableScope.NUMBER_CLASS_NODE)
-                || ClassHelper.getWrapper(primaryType).isDerivedFrom(VariableScope.NUMBER_CLASS_NODE)) {
+        if (associatedMethod == null && primaryType.equals(VariableScope.NUMBER_CLASS_NODE) ||
+                ClassHelper.getWrapper(primaryType).isDerivedFrom(VariableScope.NUMBER_CLASS_NODE)) {
             completeExprType = primaryType;
         } else {
             // there is an overloadable method associated with this operation
@@ -2202,44 +2104,46 @@ assert primaryExprType != null && dependentExprType != null;
         ClassNode[] inferredTypes = new ClassNode[node.isParameterSpecified() ? node.getParameters().length : 1];
 
         VariableScope.CallAndType cat = scope.getEnclosingMethodCallExpression();
-        if (cat != null) {
-            String methodName = cat.call.getMethodAsString();
-            ClassNode fauxDeclaringType = cat.declaringType; // won't be true declaring type for category/class methods
+        if (cat != null && cat.declaration instanceof MethodNode) {
+            MethodNode methodNode = (MethodNode) cat.declaration;
+            Parameter methodParam = findTargetParameter(node, cat.call, methodNode,
+                !methodNode.getDeclaringClass().equals(cat.getPerceivedDeclaringType()));
+            if (methodParam != null) {
+                if (VariableScope.CLOSURE_CLASS_NODE.equals(methodParam.getType())) {
+                    GroovyUtils.getAnnotations(methodParam, VariableScope.CLOSURE_PARAMS.getName()).findFirst().ifPresent(cp -> {
+                        SourceUnit sourceUnit = enclosingModule.getContext();
+                        try {
+                            @SuppressWarnings("unchecked")
+                            Class<? extends ClosureSignatureHint> hint = (Class<? extends ClosureSignatureHint>) StaticTypeCheckingSupport.evaluateExpression(GeneralUtils.castX(VariableScope.CLASS_CLASS_NODE, cp.getMember("value")), sourceUnit.getConfiguration());
+                            String[] opts = (String[]) StaticTypeCheckingSupport.evaluateExpression(GeneralUtils.castX(VariableScope.STRING_CLASS_NODE.makeArray(), cp.getMember("options")), sourceUnit.getConfiguration());
 
-            ClassNode inferredParamType;
-            if (dgmClosureDelegateMethods.contains(methodName)) {
-                inferredParamType = VariableScope.extractElementType(fauxDeclaringType);
-            } else {
-                inferredParamType = dgmClosureFixedTypeMethods.get(methodName);
-            }
+                            // determine closure param types from ClosureSignatureHint
+                            List<ClassNode[]> sigs = hint.newInstance().getClosureSignatures(methodNode, sourceUnit, resolver.compilationUnit, opts, cat.call);
+                            if (isNotEmpty(sigs)) {
+                                for (ClassNode[] sig : sigs) {
+                                    if (sig.length == inferredTypes.length) {
+                                        GenericsType[] generics = getMethodCallGenericsTypes(cat.call);
+                                        List<ClassNode> arguments = GroovyUtils.getParameterTypes(methodNode.getParameters());
+                                        GenericsMapper map = GenericsMapper.gatherGenerics(arguments, cat.declaringType, methodNode.getOriginal(), generics);
 
-            if (inferredParamType != null) {
-                Arrays.fill(inferredTypes, inferredParamType);
+                                        for (int i = 0, n = sig.length; i < n; i += 1) {
+                                            // TODO: If result still has generics, use Object or ???
+                                            inferredTypes[i] = VariableScope.resolveTypeParameterization(map, sig[i]);
+                                        }
 
-                if (inferredTypes.length > 1 && "eachWithIndex".equals(methodName)) {
-                    inferredTypes[inferredTypes.length - 1] = VariableScope.INTEGER_CLASS_NODE;
-                }
-                if (VariableScope.MAP_CLASS_NODE.equals(fauxDeclaringType)) {
-                    if ((inferredTypes.length == 2 && dgmClosureMaybeMap.contains(methodName)) ||
-                            (inferredTypes.length == 3 && "eachWithIndex".equals(methodName))) {
-                        GenericsType[] typeParams = inferredParamType.getGenericsTypes();
-                        if (typeParams != null && typeParams.length == 2) {
-                            inferredTypes[0] = typeParams[0].getType();
-                            inferredTypes[1] = typeParams[1].getType();
+                                        break; // TODO: What if more than one signature matches parameter count?
+                                    }
+                                }
+                            }
+                        } catch (Exception e) {
+                            log(e, "Error processing @ClosureParams of %s", methodNode.getTypeDescriptor());
                         }
-                    } else if (inferredTypes.length == 1 && "withDefault".equals(methodName)) {
-                        GenericsType[] typeParams = inferredParamType.getGenericsTypes();
-                        if (typeParams != null && typeParams.length >= 1) {
-                            inferredTypes[0] = typeParams[0].getType();
-                        }
-                    }
+                    });
                 }
-            } else if (cat.declaration instanceof MethodNode) {
-                // check for SAM-type coercion of closure expression
-                MethodNode methodNode = (MethodNode) cat.declaration;
-                Parameter methodParam = findTargetParameter(node, cat.call, methodNode,
-                    !methodNode.getDeclaringClass().equals(cat.getPerceivedDeclaringType()));
-                if (methodParam != null) {
+
+                if (inferredTypes[0] == null) {
+                    // check for SAM-type coercion of closure expression
+
                     ClassNode mpt = methodParam.getType();
                     if (methodParam == DefaultGroovyMethods.last(methodNode.getParameters()) &&
                         GenericsMapper.isVargs(methodNode.getParameters())) mpt = mpt.getComponentType();

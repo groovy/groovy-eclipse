@@ -118,9 +118,10 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     public static final ClassNode BUFFERED_WRITER_CLASS_NODE = ClassHelper.make(BufferedWriter.class);
     public static final ClassNode PRINT_WRITER_CLASS_NODE = ClassHelper.make(PrintWriter.class);
 
-    // only exists on 2.1+
-    public static final ClassNode CLOSURE_PARAMS = ClassHelper.make(ClosureParams.class);
+    // present in Groovy 2.1+
     public static final ClassNode DELEGATES_TO = ClassHelper.make(DelegatesTo.class);
+    // present in Groovy 2.3+
+    public static final ClassNode CLOSURE_PARAMS = ClassHelper.make(ClosureParams.class);
 
     // standard category classes
     public static final ClassNode DGM_CLASS_NODE = ClassHelper.make(DefaultGroovyMethods.class);
