@@ -18,9 +18,6 @@ package org.eclipse.jdt.core.groovy.tests.search;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assume.assumeFalse;
 
-import java.util.Comparator;
-import java.util.List;
-
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -76,14 +73,14 @@ public final class DGMInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testDGM3() {
-        String contents = "[1].collectNested { it }";
-        assertExprType(contents, "it", "java.lang.Integer");
+        String contents = "[1, [2, 3]].collectNested { it }";
+        assertExprType(contents, "it", "java.lang.Object");
     }
 
     @Test
     public void testDGM4() {
-        String contents = "[1].collectNested { it }";
-        assertExprType(contents, "it", "java.lang.Integer");
+        String contents = "[1, [2, 3], null].collectNested { it }";
+        assertExprType(contents, "it", "java.lang.Object");
     }
 
     @Test
@@ -208,115 +205,127 @@ public final class DGMInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testDGM25() {
-        String contents = "[key:1].inject(1) { key, value -> key.toUpperCase() + value.intValue() }";
-        assertExprType(contents, "key", "java.lang.String");
+        String contents = "[key:1].inject(1.0) { seed, entry -> null }";
+        assertExprType(contents, "seed", "java.math.BigDecimal");
     }
 
     @Test
     public void testDGM26() {
-        String contents = "[key:1].inject(1) { key, value -> key.toUpperCase() + value.intValue() }";
+        String contents = "[key:1].inject(1.0) { seed, entry -> entry.key.toUpperCase() + entry.value.intValue() }";
+        assertExprType(contents, "entry", "java.util.Map$Entry<java.lang.String,java.lang.Integer>");
+    }
+
+    @Test
+    public void testDGM26a() {
+        String contents = "[key:1].inject(1.0) { seed, key, value -> key.toUpperCase() + value.intValue() }";
+        assertExprType(contents, "key", "java.lang.String");
+    }
+
+    @Test
+    public void testDGM26b() {
+        String contents = "[key:1].inject(1.0) { seed, key, value -> key.toUpperCase() + value.intValue() }";
         assertExprType(contents, "value", "java.lang.Integer");
     }
 
     @Test
     public void testDGM27() {
-        String contents = "[key:1].withDefault { key, value -> key.toUpperCase() + value.intValue() }";
+        String contents = "[key:1].withDefault { key -> key.toUpperCase() }";
         assertExprType(contents, "key", "java.lang.String");
     }
 
     @Test
-    public void testDGM28() {
-        String contents = "[key:1].withDefault { key, value -> key.toUpperCase() + value.intValue() }";
-        assertExprType(contents, "value", "java.lang.Integer");
+    public void testDGM28() { // withDefault expects one-param Closure
+        String contents = "[key:1].withDefault { key, val -> key.toUpperCase() + val.intValue() }";
+        assertExprType(contents, "val", "java.lang.Object");
     }
 
     @Test
     public void testDGM29() {
         String contents = "new FileOutputStream().withStream { it }";
-        assertExprType(contents, "it", "java.io.OutputStream");
+        assertExprType(contents, "it", "java.io.FileOutputStream");
     }
 
     @Test
     public void testDGM30() {
-        String contents = "new File(\"test\").eachFileMatch(FileType.FILES, 1) { it.getName() }";
+        String contents = "new File('test').eachFileMatch(FileType.FILES, 1) { it.name }";
         assertExprType(contents, "it", "java.io.File");
     }
 
     @Test
     public void testDGM31() {
-        String contents = "new File(\"test\").eachDirMatch(FileType.FILES, 1) { it.getName() }";
+        String contents = "new File('test').eachDirMatch(1) { it.name }";
         assertExprType(contents, "it", "java.io.File");
     }
 
     @Test
     public void testDGM32() {
-        String contents = "new File(\"test\").withReader { it.reset() }";
+        String contents = "new File('test').withReader { it.reset() }";
         assertExprType(contents, "it", "java.io.BufferedReader");
     }
 
     @Test
     public void testDGM33() {
-        String contents = "new FileReader(new File(\"test\")).filterLine(new FileWriter(new File(\"test\"))) { it.toUpperCase() }";
+        String contents = "new FileReader(new File('test')).filterLine(new FileWriter(new File('test'))) { it.toUpperCase() }";
         assertExprType(contents, "it", "java.lang.String");
     }
 
     @Test
     public void testDGM34() {
-        String contents = "new File(\"test\").withOutputStream { it.flush() }";
+        String contents = "new File('test').withOutputStream { it.flush() }";
         assertExprType(contents, "it", "java.io.OutputStream");
     }
 
     @Test
     public void testDGM35() {
-        String contents = "new File(\"test\").withInputStream { it.flush() }";
+        String contents = "new File('test').withInputStream { it.flush() }";
         assertExprType(contents, "it", "java.io.InputStream");
     }
 
     @Test
     public void testDGM36() {
-        String contents = "new File(\"test\").withDataOutputStream { it.flush() }";
+        String contents = "new File('test').withDataOutputStream { it.flush() }";
         assertExprType(contents, "it", "java.io.DataOutputStream");
     }
 
     @Test
     public void testDGM37() {
-        String contents = "new File(\"test\").withDataInputStream { it.flush() }";
+        String contents = "new File('test').withDataInputStream { it.flush() }";
         assertExprType(contents, "it", "java.io.DataInputStream");
     }
 
     @Test
     public void testDGM38() {
-        String contents = "new File(\"test\").withWriter { it.flush() }";
+        String contents = "new File('test').withWriter { it.flush() }";
         assertExprType(contents, "it", "java.io.BufferedWriter");
     }
 
     @Test
     public void testDGM39() {
-        String contents = "new File(\"test\").withWriterAppend { it.flush() }";
+        String contents = "new File('test').withWriterAppend { it.flush() }";
         assertExprType(contents, "it", "java.io.BufferedWriter");
     }
 
     @Test
     public void testDGM40() {
-        String contents = "new File(\"test\").withPrintWriter { it.flush() }";
+        String contents = "new File('test').withPrintWriter { it.flush() }";
         assertExprType(contents, "it", "java.io.PrintWriter");
     }
 
     @Test
     public void testDGM41() {
-        String contents = "new FileReader(new File(\"test\")).transformChar(new FileWriter(new File(\"test\"))) { it.toUpperCase() }";
+        String contents = "new FileReader(new File('test')).transformChar(new FileWriter(new File('test'))) { it.toUpperCase() }";
         assertExprType(contents, "it", "java.lang.String");
     }
 
     @Test
     public void testDGM42() {
-        String contents = "new FileReader(new File(\"test\")).transformLine(new FileWriter(new File(\"test\"))) { it.toUpperCase() }";
+        String contents = "new FileReader(new File('test')).transformLine(new FileWriter(new File('test'))) { it.toUpperCase() }";
         assertExprType(contents, "it", "java.lang.String");
     }
 
-    @Test
+    @Test @Ignore("ClosureParams states 'List<String>' or 'String[]', but runtime allows for destructuring if number of elements fits into params")
     public void testDGM43() {
-        String contents = "\"\".eachMatch(\"\") { it.toLowerCase() }";
+        String contents = "''.eachMatch('') { it.toLowerCase() }";
         assertExprType(contents, "it", "java.lang.String");
     }
 
@@ -343,7 +352,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         assertExprType(contents, "it", "java.lang.String");
     }
 
-    @Test
+    /*@Test relies on each(Object,Closure) type inferencing, which lacks @ClosureParams
     public void testDGM45a() {
         // Java 8 adds default method sort(Comparator) to the List interface
         boolean jdkListSort;
@@ -361,7 +370,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             "  it\n" +
             "}\n";
         assertExprType(contents, "it", jdkListSort ? "java.lang.Void" : "java.lang.String");
-    }
+    }*/
 
     @Test
     public void testDGM46() {
@@ -432,9 +441,141 @@ public final class DGMInferencingTests extends InferencingTestSuite {
         assertExprType(contents, "result", "java.lang.Number");
     }
 
+    @Test // GRECLIPSE-1131
+    public void testEachOnNonIterables1() {
+        String contents = "1.each { it }";
+        assertExprType(contents, "it", "java.lang.Object"); // not Integer because no @ClosureParams on this each
+    }
+
+    @Test // GRECLIPSE-1131
+    public void testEachOnNonIterables2() {
+        String contents = "each { it }";
+        assertExprType(contents, "it", "java.lang.Object"); // not Search because no @ClosureParams on this each
+    }
+
+    @Test
+    public void testDGMClosure1() {
+        String contents = "[''].each { it }";
+        assertExprType(contents, "it", "java.lang.String");
+    }
+
+    @Test
+    public void testDGMClosure2() {
+        String contents = "[''].reverseEach { val -> val }";
+        assertExprType(contents, "val", "java.lang.String");
+    }
+
+    @Test
+    public void testDGMClosure3() {
+        String contents = "(1..4).find { it }";
+        assertExprType(contents, "it", "java.lang.Integer");
+    }
+
+    @Test
+    public void testDGMClosure4() {
+        String contents = "['a':1].unique { it.key }";
+        assertExprType(contents, "key", "java.lang.String");
+    }
+
+    @Test
+    public void testDGMClosure5() {
+        String contents = "['a':1].collect { it.value }";
+        assertExprType(contents, "value", "java.lang.Integer");
+    }
+
+    @Test // Integer is explicit, so should use that as a type
+    public void testDGMClosure7() {
+        String contents = "[''].reverseEach { Integer val -> val }";
+        assertExprType(contents, "val", "java.lang.Integer");
+    }
+
+    @Test // Integer is explicit, so should use that as a type
+    public void testDGMClosure8() {
+        String contents = "[''].reverseEach { Integer it -> it }";
+        assertExprType(contents, "it", "java.lang.Integer");
+    }
+
+    @Test
+    public void testDGMClosure9() {
+        String contents = "[new Date()].eachWithIndex { val, i -> val }";
+        assertExprType(contents, "val", "java.util.Date");
+    }
+
+    @Test
+    public void testDGMClosure10() {
+        String contents = "[''].eachWithIndex { val, i -> i }";
+        assertExprType(contents, "i", "java.lang.Integer");
+    }
+
+    @Test
+    public void testDGMClosure11() {
+        String contents = "[1:new Date()].eachWithIndex { key, val, i -> val }";
+        assertExprType(contents, "val", "java.util.Date");
+    }
+
+    @Test
+    public void testDGMClosure12() {
+        String contents = "[1:new Date()].eachWithIndex { key, val, i -> key }";
+        assertExprType(contents, "key", "java.lang.Integer");
+    }
+
+    @Test
+    public void testDGMClosure13() {
+        String contents = "[1:new Date()].eachWithIndex { key, val, i -> i }";
+        assertExprType(contents, "i", "java.lang.Integer");
+    }
+
+    @Test
+    public void testDGMClosure14() {
+        String contents = "[1:new Date()].each { key, val -> key }";
+        assertExprType(contents, "key", "java.lang.Integer");
+    }
+
+    @Test
+    public void testDGMClosure15() {
+        String contents = "[1:new Date()].each { key, val -> val }";
+        assertExprType(contents, "val", "java.util.Date");
+    }
+
+    @Test
+    public void testDGMClosure16() {
+        String contents = "[1:new Date()].collect { key, val -> key }";
+        assertExprType(contents, "key", "java.lang.Integer");
+    }
+
+    @Test
+    public void testDGMClosure17() {
+        String contents = "[1:new Date()].collect { key, val -> val }";
+        assertExprType(contents, "val", "java.util.Date");
+    }
+
+    @Test
+    public void testDGMClosure18() {
+        String contents = "[1].unique { a, b -> b }";
+        assertExprType(contents, "b", "java.lang.Integer");
+    }
+
+    @Test
+    public void testDGMClosure19() {
+        String contents = "[1].unique { a, b -> a }";
+        assertExprType(contents, "a", "java.lang.Integer");
+    }
+
+    @Test
+    public void testDGMClosure20() {
+        String contents = "[1f: 1d].collectEntries { key, value -> [value, key] } ";
+        assertExprType(contents, "value", "java.lang.Double");
+    }
+
+    @Test
+    public void testDGMClosure21() {
+        String contents = "[1f: 1d].collectEntries { key, value -> [value, key] } ";
+        assertExprType(contents, "key", "java.lang.Float");
+    }
+
     @Test
     public void testDGMDeclaring1() {
-        String contents = "\"\".eachLine";
+        String contents = "''.eachLine";
         assertDeclType(contents, "eachLine", "org.codehaus.groovy.runtime.StringGroovyMethods");
     }
 
