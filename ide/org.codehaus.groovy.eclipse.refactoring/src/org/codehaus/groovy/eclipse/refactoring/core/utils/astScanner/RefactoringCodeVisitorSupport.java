@@ -230,8 +230,8 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
         				ClassNode[] upperBounds = genericType.getUpperBounds().clone();
         				// prevent recursion by nulling out duplicates
         				for (int j = 0; j < upperBounds.length; j++) {
-                            if (upperBounds[i].getName().equals(node.getName())) {
-                                upperBounds[i] = null;
+                            if (upperBounds[j].getName().equals(node.getName())) {
+                                upperBounds[j] = null;
                             }
                         }
                         analyzeTypes(upperBounds);
