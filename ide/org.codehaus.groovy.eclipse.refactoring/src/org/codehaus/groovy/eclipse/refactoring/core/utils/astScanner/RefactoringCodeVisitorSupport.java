@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.core.utils.astScanner;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
@@ -32,7 +31,6 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
-import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.AttributeExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
@@ -44,7 +42,6 @@ import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ClosureListExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
-import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.ElvisOperatorExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
@@ -84,6 +81,7 @@ import org.codehaus.groovy.ast.stmt.SynchronizedStatement;
 import org.codehaus.groovy.ast.stmt.ThrowStatement;
 import org.codehaus.groovy.ast.stmt.TryCatchStatement;
 import org.codehaus.groovy.ast.stmt.WhileStatement;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 
 public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringCodeVisitor {
 
@@ -116,9 +114,8 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
         analyseClassImports();
         analyseStaticClassImport();
         analyseStaticFieldImport();
-
         if (!rootNode.getStatementBlock().isEmpty()) {
-            for (Statement statement : (Iterable<Statement>) rootNode.getStatementBlock().getStatements()) {
+            for (Statement statement : rootNode.getStatementBlock().getStatements()) {
                 statement.visit(this);
             }
         }
@@ -136,8 +133,7 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
     }
 
     private void analyseStaticFieldImport() {
-        //visit static imports like import java.lang.Math.cos
-
+        // visit static imports like import java.lang.Math.cos
         for (Entry<String, ImportNode> aliasOrField : rootNode.getStaticImports().entrySet()) {
             StaticFieldImport staticAliasImport = new StaticFieldImport(aliasOrField.getValue().getType(),
                 aliasOrField.getKey(), aliasOrField.getValue().getFieldName());
@@ -147,10 +143,8 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
     }
 
     private void analyseStaticClassImport() {
-        //visit static imports like import java.lang.Math.*
-        Collection<ImportNode> staticImportClasses = rootNode.getStaticImports().values();
-
-        for (ImportNode staticImp : staticImportClasses) {
+        // visit static imports like import java.lang.Math.*
+        for (ImportNode staticImp : rootNode.getStaticImports().values()) {
             ClassNode type = staticImp.getType();
             StaticClassImport staticClassImport = new StaticClassImport(type);
             staticClassImport.setSourcePosition(type);
@@ -159,8 +153,7 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
     }
 
     private void analyseClassImports() {
-        //visit imports like import java.io.File and import java.io.File as MyFile
-
+        // visit imports like import java.io.File and import java.io.File as MyFile
         List<ImportNode> imports = rootNode.getImports();
         for (ImportNode importNode : imports) {
             ClassImport classImport = new ClassImport(importNode);
@@ -171,37 +164,33 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
 
     protected void analyzeNodes(ASTNode[] nodes) {
         if (nodes != null) {
-            for (int i = 0; i < nodes.length; i++) {
-                analyzeNode(nodes[i]);
-                clear(nodes[i]);
+            for (ASTNode node : nodes) {
+                analyzeNode(node);
+                clear(node);
             }
         }
     }
 
-    protected void analyzeTypes(ClassNode[] classNodes) {
-        if (classNodes != null) {
-            for (int i = 0; i < classNodes.length; i++) {
-                if (classNodes[i] != null) {
-                    analyzeType(classNodes[i]);
-                    clear(classNodes[i]);
+    protected void analyzeTypes(ClassNode[] types) {
+        if (types != null) {
+            for (ClassNode type : types) {
+                if (type != null) {
+                    analyzeType(type);
+                    clear(type);
                 }
             }
         }
     }
 
-    private void analyzeTypeInternal(ClassNode classNode) {
-        ClassNode node = classNode;
-        //visit all classNodes for arrays
-        while (node.isArray()) {
-            node = node.getComponentType();
-        }
-        analyzeNode(node);
-        analyzeGenerics(node);
-    }
-
     @Override
     public void analyzeType(ClassNode node) {
         analyzeTypeInternal(node);
+    }
+
+    private void analyzeTypeInternal(ClassNode type) {
+        type = GroovyUtils.getBaseType(type);
+        analyzeNode(type);
+        analyzeGenerics(type);
     }
 
     @Override
@@ -211,22 +200,19 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
 
     protected void analyzeGenerics(ClassNode node) {
         if (node.getGenericsTypes() != null) {
-            GenericsType[] generics = node.getGenericsTypes();
-            for (int i = 0; i < generics.length; i++) {
-                GenericsType genericType = generics[i];
-
+            for (GenericsType genericsType : node.getGenericsTypes()) {
                 // bottoms out recursion when a type parameter refers to itself, eg- java.lang.Enum
-                if (!node.getName().equals(genericType.getType().getName())) {
-                    analyzeType(genericType.getType());
-                    clear(genericType.getType());
-                    if (genericType.getLowerBound() != null) {
-                        analyzeType(genericType.getLowerBound());
-                        clear(genericType.getLowerBound());
+                if (!node.getName().equals(genericsType.getType().getName())) {
+                    analyzeType(genericsType.getType());
+                    clear(genericsType.getType());
+                    if (genericsType.getLowerBound() != null) {
+                        analyzeType(genericsType.getLowerBound());
+                        clear(genericsType.getLowerBound());
                     }
-                    if (genericType.getUpperBounds() != null) {
-                        ClassNode[] upperBounds = genericType.getUpperBounds().clone();
+                    if (genericsType.getUpperBounds() != null) {
+                        ClassNode[] upperBounds = genericsType.getUpperBounds().clone();
                         // prevent recursion by nulling out duplicates
-                        for (int j = 0; j < upperBounds.length; j++) {
+                        for (int i = 0, n = upperBounds.length; i < n; i += 1) {
                             if (upperBounds[i].getName().equals(node.getName())) {
                                 upperBounds[i] = null;
                             }
@@ -248,7 +234,6 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
                     parameter.getInitialExpression().visit(this);
                 }
                 clear(parameter);
-
             }
         }
     }
@@ -350,13 +335,6 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
     }
 
     @Override
-    public void visitArgumentlistExpression(ArgumentListExpression ale) {
-        analyzeNode(ale);
-        super.visitArgumentlistExpression(ale);
-        clear(ale);
-    }
-
-    @Override
     public void visitArrayExpression(ArrayExpression expression) {
         analyzeNode(expression);
         analyzeType(expression.getElementType());
@@ -414,12 +392,12 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
         clear(statement);
     }
 
-    //	@Override
-    //	public void visitBytecodeExpression(BytecodeExpression cle) {
-    //		analyzeNode(cle);
-    //		super.visitBytecodeExpression(cle);
-    //		clear(cle);
-    //	}
+    /*@Override
+    public void visitBytecodeExpression(BytecodeExpression cle) {
+        analyzeNode(cle);
+        super.visitBytecodeExpression(cle);
+        clear(cle);
+    }*/
 
     @Override
     public void visitCaseStatement(CaseStatement statement) {
@@ -481,14 +459,6 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
         analyzeNode(statement);
         super.visitContinueStatement(statement);
         clear(statement);
-    }
-
-    @Override
-    public void visitDeclarationExpression(DeclarationExpression expression) {
-        //Do not analyse, since it is analysed in visitBinaryExpression
-        //analyzeNode(expression);
-        super.visitDeclarationExpression(expression);
-        //clear(expression);
     }
 
     @Override
@@ -677,11 +647,9 @@ public abstract class RefactoringCodeVisitorSupport extends AbstractRefactoringC
 
     @Override
     public void visitTupleExpression(TupleExpression expression) {
-        //		do nothing here, TupleExpression is visited in ArgumentListExpression
-
-        //		analyzeNode(expression);
+        analyzeNode(expression);
         super.visitTupleExpression(expression);
-        //		clear(expression);
+        clear(expression);
     }
 
     @Override

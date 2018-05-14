@@ -1,0 +1,14 @@
+###prop
+###src
+class SomeClass {
+	Map<String, Object> foo(String a, String b, String c, String d,
+							Map<String, ? extends Object> e) {
+	}
+}
+###exp
+class SomeClass {
+	Map<String, Object> foo(String a, String b, String c, String d,
+			Map<String, ? extends Object> e) {
+	}
+}
+###end
