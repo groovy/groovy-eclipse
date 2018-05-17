@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,39 +25,40 @@ import org.eclipse.text.edits.TextEdit;
 
 public class GroovyLineWrapper {
 
-    public DefaultGroovyFormatter formatter;
+    private final DefaultGroovyFormatter formatter;
     private final IFormatterPreferences preferences;
-    private final LineIndentations lineIndentation;
-    MultiTextEdit lineWraps;
+    private final LineIndentations lineIndentations;
 
-    public GroovyLineWrapper(
-        DefaultGroovyFormatter defaultGroovyFormatter,
-        IFormatterPreferences pref,
-        LineIndentations lineIndentations) {
-        this.formatter = defaultGroovyFormatter;
-        this.preferences = pref;
-        this.lineIndentation = lineIndentations;
-        lineWraps = new MultiTextEdit();
+    public GroovyLineWrapper(DefaultGroovyFormatter formatter, IFormatterPreferences preferences, LineIndentations lineIndentations) {
+        this.formatter = formatter;
+        this.preferences = preferences;
+        this.lineIndentations = lineIndentations;
     }
 
     public TextEdit getLineWrapEdits() throws BadLocationException {
+        MultiTextEdit lineWraps = new MultiTextEdit();
+        int maxLineLength = preferences.getMaxLineLength();
+
         for (List<Token> tokenLine : formatter.getLineTokens()) {
             Token lastTokenOnLine = tokenLine.get(tokenLine.size() - 1);
-            if (lastTokenOnLine.getColumn() >= preferences.getMaxLineLength()) {
-
+            if (lastTokenOnLine.getColumn() >= maxLineLength) {
                 int offsetInLine = 0;
-
                 while (true) {
                     int lastToken = getLastTokenPositionUnderMaximum(tokenLine, offsetInLine);
                     if (lastToken > 0 && lastToken != tokenLine.size() - 2) {
                         int replOffset = formatter.getOffsetOfTokenEnd(tokenLine.get(lastToken));
                         int replLength = formatter.getOffsetOfToken(tokenLine.get(lastToken + 1)) - replOffset;
                         String insert = formatter.getNewLine();
-                        int indentationLevel = lineIndentation.getLineIndentation(lastTokenOnLine.getLine());
-                        if (!lineIndentation.isMultilineIndentation(lastTokenOnLine.getLine()))
+                        int indentationLevel = lineIndentations.getLineIndentation(lastTokenOnLine.getLine());
+                        if (!lineIndentations.isMultilineIndentation(lastTokenOnLine.getLine())) {
                             indentationLevel += preferences.getIndentationMultiline();
+                        }
                         String leadingGap = formatter.getLeadingGap(indentationLevel);
-                        lineWraps.addChild(new ReplaceEdit(replOffset, replLength, insert + leadingGap));
+
+                        if (replOffset >= formatter.formatOffset && replOffset + replLength <= formatter.formatOffset + formatter.formatLength) {
+                            lineWraps.addChild(new ReplaceEdit(replOffset, replLength, insert + leadingGap));
+                        }
+
                         offsetInLine = tokenLine.get(lastToken + 1).getColumn() - leadingGap.length();
                     } else {
                         break;
@@ -65,11 +66,12 @@ public class GroovyLineWrapper {
                 }
             }
         }
+
         return lineWraps;
     }
 
     private int getLastTokenPositionUnderMaximum(List<Token> tokens, int offsetInLine) throws BadLocationException {
-        for (int i = tokens.size() - 2; i >= 0; i--) {
+        for (int i = tokens.size() - 2; i >= 0; i -= 1) {
             Token token = tokens.get(i);
             if (token.getColumn() - offsetInLine + formatter.getTokenLength(token) <= preferences.getMaxLineLength()) {
                 return i;

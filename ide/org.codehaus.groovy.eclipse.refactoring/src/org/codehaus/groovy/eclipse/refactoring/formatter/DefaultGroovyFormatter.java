@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,8 +45,8 @@ import org.eclipse.jface.text.TextSelection;
 import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
-import org.eclipse.text.edits.UndoEdit;
 
+@SuppressWarnings("deprecation")
 public class DefaultGroovyFormatter extends GroovyFormatter {
 
     protected IFormatterPreferences pref;
@@ -57,7 +57,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
     public int formatOffset, formatLength;
 
     private KlenkDocumentScanner tokens;
-    private int indentationLevel = 0;
+    private int indentationLevel;
 
     /**
      * Default Formatter for the Groovy-Eclipse Plugin
@@ -114,19 +114,28 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
     public TextEdit format() {
         formattedDocument = new Document(document.get());
         try {
+            int length;
             if (!indentOnly) {
                 initCodebase();
+                length = formattedDocument.getLength();
                 GroovyBeautifier beautifier = new GroovyBeautifier(this, pref);
-                int lengthBefore = formattedDocument.getLength();
                 beautifier.getBeautifiEdits().apply(formattedDocument);
-                int lengthAfter = formattedDocument.getLength();
-                formatLength += lengthAfter - lengthBefore;
+                formatLength += formattedDocument.getLength() - length;
             }
 
             initCodebase();
+            length = formattedDocument.getLength();
             GroovyIndentation indent = new GroovyIndentation(this, pref, indentationLevel);
-            UndoEdit undo = indent.getIndentationEdits().apply(formattedDocument);
-            formatLength += undo.getLength();
+            indent.getIndentationEdits().apply(formattedDocument);
+            formatLength += formattedDocument.getLength() - length;
+
+            if (!indentOnly && Boolean.getBoolean("greclipse.formatter.linewrap")) {
+                initCodebase();
+                length = formattedDocument.getLength();
+                GroovyLineWrapper wrapper = new GroovyLineWrapper(this, pref, new LineIndentations(getProgressDocument().getNumberOfLines()));
+                wrapper.getLineWrapEdits().apply(formattedDocument);
+                formatLength += formattedDocument.getLength() - length;
+            }
         } catch (Exception e) {
             GroovyCore.logWarning("Cannot format, probably due to compilation errors.  Please fix and try again.", e);
         }
@@ -259,6 +268,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
         }
         return found;
     }
+
     /**
      * Return a token after many () if there is no opening {
      *
@@ -275,7 +285,7 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
         }
         i++;
 
-        while (countParenthesis > 0 && i < tokens.size()-1) {
+        while (countParenthesis > 0 && i < tokens.size() - 1) {
             int ttype = tokens.get(i).getType();
             if (ttype == GroovyTokenTypeBridge.LPAREN) {
                 countParenthesis++;
@@ -323,15 +333,14 @@ public class DefaultGroovyFormatter extends GroovyFormatter {
      * or the current position if it is the last token
      */
     public int getPositionOfNextToken(int cPos, boolean includingNLS) {
-        if (cPos == tokens.size()-1) {
+        if (cPos == tokens.size() - 1) {
             return cPos;
         }
         int currentPos = cPos;
         int type;
         do {
             type = tokens.get(++currentPos).getType();
-        } while ((type == GroovyTokenTypeBridge.WS || (type == GroovyTokenTypeBridge.NLS && !includingNLS))
-                && currentPos < tokens.size() - 2);
+        } while ((type == GroovyTokenTypeBridge.WS || (type == GroovyTokenTypeBridge.NLS && !includingNLS)) && currentPos < tokens.size() - 2);
         return currentPos;
     }
 

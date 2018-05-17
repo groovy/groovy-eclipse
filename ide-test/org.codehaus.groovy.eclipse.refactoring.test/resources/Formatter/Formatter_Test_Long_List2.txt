@@ -1,7 +1,8 @@
 ###prop
-setPreferences=true
 indentendOnly=false
 longListLength=150
+maxLineLegth=200
+setPreferences=true
 ###src
 def method() {
 def gender = ["unknown",

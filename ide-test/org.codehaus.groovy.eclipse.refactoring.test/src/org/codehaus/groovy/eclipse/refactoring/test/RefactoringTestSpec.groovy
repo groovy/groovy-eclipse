@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,12 +41,12 @@ import org.eclipse.jface.text.TextSelection
  * tabsize=4
  * ###src
  * def hh() {
- *     int[] i;
+ *     int[] i
  *     i
  * }
  * ###exp
  * def hh() {
- *     int[] i;
+ *     int[] i
  *     myExtract(i)
  * }
  *
@@ -110,7 +110,7 @@ class RefactoringTestSpec {
         return new Document()
     }
 
-    public TextSelection getUserSelection() {
+    TextSelection getUserSelection() {
         try {
             int startLine = getInt('startLine')
             int startColumn = getInt('startColumn')
@@ -126,9 +126,9 @@ class RefactoringTestSpec {
         }
     }
 
-    private int getInt(String startLine) {
+    private int getInt(String key) {
         try {
-            return Integer.valueOf(properties.get(startLine))
+            return Integer.parseInt(properties.get(key), 10)
         } catch (NumberFormatException e) {
             return -1
         }

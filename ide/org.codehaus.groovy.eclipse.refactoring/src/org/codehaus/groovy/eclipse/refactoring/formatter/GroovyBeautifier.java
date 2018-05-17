@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,11 +44,12 @@ import org.eclipse.text.edits.MultiTextEdit;
 import org.eclipse.text.edits.ReplaceEdit;
 import org.eclipse.text.edits.TextEdit;
 
+@SuppressWarnings("deprecation")
 public class GroovyBeautifier {
 
     private static final boolean DEBUG_EDITS = false;
 
-    public DefaultGroovyFormatter formatter;
+    public final DefaultGroovyFormatter formatter;
     private final IFormatterPreferences preferences;
     private final Set<Token> ignoreToken = new HashSet<>();
 
@@ -58,16 +59,72 @@ public class GroovyBeautifier {
     }
 
     public TextEdit getBeautifiEdits() throws BadLocationException {
-        MultiTextEdit edits = new MultiTextEdit();
+        try {
+            MultiTextEdit edits = new MultiTextEdit();
 
-        combineClosures(edits);
-        formatLists(edits);
-        correctBraces(edits);
-        removeUnnecessarySemicolons(edits);
+            combineClosures(edits);
+            formatLists(edits);
+            correctBraces(edits);
+            removeUnnecessarySemicolons(edits);
 
-        formatter.getTokens().dispose();
+            return edits;
+        } finally {
+            formatter.getTokens().dispose();
+        }
+    }
 
-        return edits;
+    private void combineClosures(MultiTextEdit edits) throws BadLocationException {
+        ASTScanner scanner = new ASTScanner(formatter.getProgressRootNode(), new ClosuresInCodePredicate(), formatter.getProgressDocument());
+        scanner.startASTscan();
+        for (ASTNode node : scanner.getMatchedNodes().keySet()) {
+            ClosureExpression clExp = ((ClosureExpression) node);
+
+            int posClStart = formatter.getPosOfToken(GroovyTokenTypeBridge.LCURLY, clExp.getLineNumber(), clExp.getColumnNumber(), "{");
+            if (posClStart == -1) {
+                // skip... invalid (likely the closure is inside a GString so can't find tokens in there.
+                continue;
+            }
+
+            int posCLEnd = formatter.getPosOfToken(GroovyTokenTypeBridge.RCURLY, clExp.getLastLineNumber(), clExp.getLastColumnNumber() - 1, "}");
+            if (posCLEnd == -1) {
+                int positionLastTokenOfClosure = formatter.getPosOfToken(clExp.getLastLineNumber(), clExp.getLastColumnNumber());
+                while (formatter.getTokens().get(positionLastTokenOfClosure).getType() != GroovyTokenTypeBridge.RCURLY) {
+                    positionLastTokenOfClosure -= 1;
+                }
+                posCLEnd = positionLastTokenOfClosure;
+            }
+            // ignore closure on one line
+            if (clExp.getLineNumber() == clExp.getLastLineNumber()) {
+                ignoreToken.add(formatter.getTokens().get(posCLEnd));
+                continue;
+            }
+
+            if (clExp.getCode() instanceof BlockStatement) {
+                BlockStatement codeblock = (BlockStatement) clExp.getCode();
+                int posParamDelim = posClStart;
+                if (clExp.getParameters() != null && clExp.getParameters().length > 0) {
+                    // position Parameters on same line
+                    posParamDelim = formatter.getPosOfNextTokenOfType(posClStart, GroovyTokenTypeBridge.CLOSABLE_BLOCK_OP);
+                    replaceNLSWithSpace(edits, posClStart, posParamDelim);
+                }
+                // combine closure with only one statments with less than 5 tokens to one line
+                if (codeblock.getStatements().size() == 1 && (posCLEnd - posClStart) < 10) {
+                    replaceNLSWithSpace(edits, posParamDelim, posCLEnd);
+                    ignoreToken.add(formatter.getTokens().get(posCLEnd));
+                } else {
+                    // check if there is a linebreak after the parameters
+                    if (posParamDelim > 0 &&
+                        formatter.getNextTokenIncludingNLS(posParamDelim).getType() != GroovyTokenTypeBridge.NLS) {
+                        addEdit(new InsertEdit(formatter.getOffsetOfTokenEnd(formatter.getTokens().get(posParamDelim)), formatter.getNewLine()), edits);
+                    } else {
+                        // if there are no parameters check if the first statement is on the next line
+                        if (posParamDelim == 0 && formatter.getNextTokenIncludingNLS(posClStart).getType() != GroovyTokenTypeBridge.NLS) {
+                            addEdit(new InsertEdit(formatter.getOffsetOfTokenEnd(formatter.getTokens().get(posClStart)), formatter.getNewLine()), edits);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private void formatLists(MultiTextEdit edits) {
@@ -144,8 +201,7 @@ public class GroovyBeautifier {
     }
 
     /**
-     * Corrects node length in case new line token consists of more than one
-     * character.
+     * Corrects node length in case new line token consists of more than one character.
      *
      * @param nodeLen original node length
      * @param tokens a list of node tokens
@@ -194,60 +250,6 @@ public class GroovyBeautifier {
             }
         }
         return false;
-    }
-
-    private void combineClosures(MultiTextEdit edits) throws BadLocationException {
-        ASTScanner scanner = new ASTScanner(formatter.getProgressRootNode(), new ClosuresInCodePredicate(), formatter.getProgressDocument());
-        scanner.startASTscan();
-        for (ASTNode node : scanner.getMatchedNodes().keySet()) {
-            ClosureExpression clExp = ((ClosureExpression) node);
-
-            int posClStart = formatter.getPosOfToken(GroovyTokenTypeBridge.LCURLY, clExp.getLineNumber(), clExp.getColumnNumber(), "{");
-            if (posClStart == -1) {
-                // skip... invalid (likely the closure is inside a GString so can't find tokens in there.
-                continue;
-            }
-
-            int posCLEnd = formatter.getPosOfToken(GroovyTokenTypeBridge.RCURLY, clExp.getLastLineNumber(), clExp.getLastColumnNumber() - 1, "}");
-            if (posCLEnd == -1) {
-                int positionLastTokenOfClosure = formatter.getPosOfToken(clExp.getLastLineNumber(), clExp.getLastColumnNumber());
-                while (formatter.getTokens().get(positionLastTokenOfClosure).getType() != GroovyTokenTypeBridge.RCURLY) {
-                    positionLastTokenOfClosure -= 1;
-                }
-                posCLEnd = positionLastTokenOfClosure;
-            }
-            // ignore closure on one line
-            if (clExp.getLineNumber() == clExp.getLastLineNumber()) {
-                ignoreToken.add(formatter.getTokens().get(posCLEnd));
-                continue;
-            }
-
-            if (clExp.getCode() instanceof BlockStatement) {
-                BlockStatement codeblock = (BlockStatement) clExp.getCode();
-                int posParamDelim = posClStart;
-                if (clExp.getParameters() != null && clExp.getParameters().length > 0) {
-                    // position Parameters on same line
-                    posParamDelim = formatter.getPosOfNextTokenOfType(posClStart, GroovyTokenTypeBridge.CLOSABLE_BLOCK_OP);
-                    replaceNLSWithSpace(edits, posClStart, posParamDelim);
-                }
-                // combine closure with only one statments with less than 5 tokens to one line
-                if (codeblock.getStatements().size() == 1 && (posCLEnd - posClStart) < 10) {
-                    replaceNLSWithSpace(edits, posParamDelim, posCLEnd);
-                    ignoreToken.add(formatter.getTokens().get(posCLEnd));
-                } else {
-                    // check if there is a linebreak after the parameters
-                    if (posParamDelim > 0 &&
-                        formatter.getNextTokenIncludingNLS(posParamDelim).getType() != GroovyTokenTypeBridge.NLS) {
-                        addEdit(new InsertEdit(formatter.getOffsetOfTokenEnd(formatter.getTokens().get(posParamDelim)), formatter.getNewLine()), edits);
-                    } else {
-                        // if there are no parameters check if the first statement is on the next line
-                        if (posParamDelim == 0 && formatter.getNextTokenIncludingNLS(posClStart).getType() != GroovyTokenTypeBridge.NLS) {
-                            addEdit(new InsertEdit(formatter.getOffsetOfTokenEnd(formatter.getTokens().get(posClStart)), formatter.getNewLine()), edits);
-                        }
-                    }
-                }
-            }
-        }
     }
 
     private void replaceNLSWithSpace(MultiTextEdit container, int startPos, int endPos) throws BadLocationException {

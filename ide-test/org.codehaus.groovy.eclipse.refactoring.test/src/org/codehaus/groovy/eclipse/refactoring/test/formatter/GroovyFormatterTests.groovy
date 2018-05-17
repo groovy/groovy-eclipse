@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import org.codehaus.groovy.eclipse.refactoring.test.internal.TestPrefInitializer
 import org.eclipse.core.runtime.FileLocator
 import org.eclipse.core.runtime.Platform
 import org.eclipse.jface.preference.IPreferenceStore
+import org.junit.AfterClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
@@ -32,18 +33,24 @@ import org.junit.runners.Parameterized.Parameters
 @RunWith(Parameterized)
 final class GroovyFormatterTests {
 
-    @Parameters
+    @Parameters(name='{1}')
     static Iterable<Object[]> params() {
         URL url = Platform.getBundle('org.codehaus.groovy.eclipse.refactoring.test').getEntry('/resources/Formatter')
-        new File(FileLocator.toFileURL(url).getFile()).listFiles({ File dir, String item ->
+        new File(FileLocator.toFileURL(url).file).listFiles({ File dir, String item ->
             item ==~ /Formatter_Test_.*/
         } as FilenameFilter).collect {
             [it, it.name - ~/.txt/] as Object[]
         }
     }
 
+    @AfterClass
+    static void tearDown() {
+        System.clearProperty('greclipse.formatter.linewrap')
+    }
+
     GroovyFormatterTests(File file, String name) {
         spec = new RefactoringTestSpec(file)
+        System.setProperty('greclipse.formatter.linewrap', 'true')
 
         println '----------------------------------------'
         println "Starting: $name"
@@ -57,7 +64,7 @@ final class GroovyFormatterTests {
         IPreferenceStore pref = null
         if (spec.properties['setPreferences'] == 'true') {
             indentendOnly = (spec.properties['indentendOnly'] == 'true')
-            pref = TestPrefInitializer.initializePreferences(spec.properties as HashMap, null)
+            pref = TestPrefInitializer.initializePreferences(spec.properties as Map, null)
         }
 
         DefaultGroovyFormatter formatter = new DefaultGroovyFormatter(
