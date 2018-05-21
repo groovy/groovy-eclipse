@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -409,9 +409,13 @@ public boolean subsumes(PackageBinding binding) {
  */
 public boolean isExported() {
 	if (this.isExported == null) {
-		this.enclosingModule.getExports(); // ensure resolved and completed
-		if (this.isExported == null)
-			this.isExported = Boolean.FALSE;
+		if (this.enclosingModule.isAuto) {
+			this.isExported = Boolean.TRUE;
+		} else {
+			this.enclosingModule.getExports(); // ensure resolved and completed
+			if (this.isExported == null)
+				this.isExported = Boolean.FALSE;
+		}
 	}
 	return this.isExported == Boolean.TRUE;
 }

@@ -554,14 +554,12 @@ void cachePartsFrom(IBinaryType binaryType, boolean needFieldsAndMethods) {
 					FieldBinding field = this.fields[i];
 					if (!field.isDeprecated()) {
 						field.modifiers |= ExtraCompilerModifiers.AccDeprecatedImplicitly;
-						field.tagBits |= this.tagBits & TagBits.AnnotationTerminallyDeprecated;
 					}
 				}
 				for (int i = 0, max = this.methods.length; i < max; i++) {
 					MethodBinding method = this.methods[i];
 					if (!method.isDeprecated()) {
 						method.modifiers |= ExtraCompilerModifiers.AccDeprecatedImplicitly;
-						method.tagBits |= this.tagBits & TagBits.AnnotationTerminallyDeprecated;
 					}
 				}
 			}

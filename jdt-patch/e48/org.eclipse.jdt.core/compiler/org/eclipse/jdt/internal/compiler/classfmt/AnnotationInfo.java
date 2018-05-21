@@ -389,6 +389,16 @@ private int scanElementValue(int offset) {
 	int tag = u1At(currentOffset);
 	currentOffset++;
 	switch (tag) {
+		case 'Z':
+			if ((this.standardAnnotationTagBits & TagBits.AnnotationDeprecated) != 0) {
+				// assume member_name is 'since', because @Deprecated has only one boolean member
+				int constantOffset = this.constantPoolOffsets[u2At(currentOffset)] - this.structOffset + 1;
+				if (i4At(constantOffset) == 1) {
+					this.standardAnnotationTagBits |= TagBits.AnnotationTerminallyDeprecated;
+				}
+			}
+			currentOffset += 2;
+			break;
 		case 'B':
 		case 'C':
 		case 'D':
@@ -396,7 +406,6 @@ private int scanElementValue(int offset) {
 		case 'I':
 		case 'J':
 		case 'S':
-		case 'Z':
 		case 's':
 		case 'c':
 			currentOffset += 2;

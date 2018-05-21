@@ -8,3 +8,4 @@
 25-Jan-2018: ff65550 (I20180124)
 09-Mar-2018: 72c9603 (Photon M6)
 11-May-2018: 7e9706d (Photon M7)
+21-May-2018: 3c1f931 (Photon RC1)

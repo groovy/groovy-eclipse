@@ -606,7 +606,8 @@ public char[][] getModulesDeclaringPackage(char[][] parentPackageName, char[] na
 		default:
 			if (this.modulePathEntries != null) {
 				names = CharOperation.NO_CHAR_CHAR;
-				for (IModulePathEntry modulePathEntry : this.modulePathEntries.values()) {
+				Collection<IModulePathEntry> entries = new HashSet<>(this.modulePathEntries.values());
+				for (IModulePathEntry modulePathEntry : entries) {
 					char[][] declaringModules = modulePathEntry.getModulesDeclaringPackage(pkgName, modName);
 					if (declaringModules != null)
 						names = CharOperation.arrayConcat(names, declaringModules);

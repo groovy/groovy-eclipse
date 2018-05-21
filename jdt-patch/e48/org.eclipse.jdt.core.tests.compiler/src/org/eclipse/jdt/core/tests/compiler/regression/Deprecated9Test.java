@@ -866,7 +866,7 @@ public class Deprecated9Test extends AbstractRegressionTest9 {
 				"1. WARNING in module-info.java (at line 2)\n" + 
 				"	requires jdk.xml.bind;\n" + 
 				"	         ^^^^^^^^^^^^\n" + 
-				"The module jdk.xml.bind is deprecated since version 9\n" + 
+				"The module jdk.xml.bind has been deprecated since version 9 and marked for removal\n" + 
 				"----------\n";
 			runner.runWarningTest();
 		} finally {

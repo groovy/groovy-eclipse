@@ -6059,7 +6059,7 @@ public void new_(TypeReference typeReference, TypeBinding typeBinding) {
 	this.stackDepth++;
 	if (this.stackDepth > this.stackMax)
 		this.stackMax = this.stackDepth;
-	if (this.classFileOffset + 2 >= this.bCodeStream.length) {
+	if (this.classFileOffset + 3 >= this.bCodeStream.length) {
 		resizeByteArray();
 	}
 	this.position++;

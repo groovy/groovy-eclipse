@@ -17,6 +17,7 @@
 package org.eclipse.jdt.internal.codeassist;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -9773,8 +9774,44 @@ public final class CompletionEngine
 				((scope instanceof MethodScope && !((MethodScope)scope).isStatic)
 				|| ((methodScope = scope.enclosingMethodScope()) != null && !methodScope.isStatic))) {
 			if (token.length >= 0) {
-				findKeywords(token, new char[][]{Keywords.THIS, Keywords.SUPER}, true, false);
-			} 
+				boolean isInterface = false;
+				if (receiverType != null) {
+					isInterface = receiverType.isInterface();
+				}
+				if (!isInterface) {
+					findKeywords(token, new char[][] { Keywords.THIS, Keywords.SUPER }, true, false);
+				} else {
+					boolean isEqual = false;
+					char[] enclosingSourceName = null;
+					if(scope.enclosingSourceType() != null)
+						enclosingSourceName = scope.enclosingSourceType().sourceName;
+					char[] receiverSourceName = null;
+					if (receiverType != null) {
+						receiverSourceName = receiverType.sourceName;
+					}
+					if( enclosingSourceName !=null & receiverSourceName !=null)
+						isEqual = Arrays.equals(enclosingSourceName, receiverSourceName);
+					if(isEqual) {
+						findKeywords(token, new char[][] { Keywords.THIS }, true, false);
+					} else {
+						// Check if the enclosing source implements this interface then show super
+						if (scope.enclosingSourceType() != null) {
+							SourceTypeBinding src = scope.enclosingSourceType();
+							ReferenceBinding[] superInterfaces = src.superInterfaces();
+							boolean implemented = false;
+							for (ReferenceBinding referenceBinding : superInterfaces) {
+								if (Arrays.equals(referenceBinding.sourceName, receiverSourceName)) {
+									implemented = true;
+									break;
+								}
+							}
+							if (implemented) {
+								findKeywords(token, new char[][] { Keywords.SUPER }, true, false);
+							}
+						}
+					}
+				}
+			}
 		}
 
 		if (!this.requestor.isIgnored(CompletionProposal.FIELD_REF)) {
