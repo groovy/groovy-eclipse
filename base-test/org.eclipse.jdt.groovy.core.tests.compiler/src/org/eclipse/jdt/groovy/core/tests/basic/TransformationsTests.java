@@ -1019,16 +1019,16 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "p/Foo.groovy",
             "package p\n" +
-            "class Foo {\n"+
-            "  protected void m() {}\n"+
+            "class Foo {\n" +
+            "  protected void m() {}\n" +
             "}\n",
 
             "p/Bar.groovy",
             "package p\n" +
-            "@groovy.transform.CompileStatic\n"+
+            "@groovy.transform.CompileStatic\n" +
             "class Bar {\n" +
-            "  void testM() {\n" +
-            "    new Foo().m()\n" +
+            "  void testM(Foo f) {\n" +
+            "    f.m()\n" +
             "  }\n" +
             "}\n",
         };
@@ -1043,25 +1043,30 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "q/Foo.groovy",
             "package q\n" +
-            "class Foo {\n"+
-            "  protected void m() {}\n"+
+            "class Foo {\n" +
+            "  protected void m() {}\n" +
             "}\n",
 
             "r/Bar.groovy",
             "package r\n" +
-            "@groovy.transform.CompileStatic\n"+
+            "@groovy.transform.CompileStatic\n" +
             "class Bar {\n" +
-            "  void testM() {\n" +
-            "    new q.Foo().m()\n" +
+            "  void testM(q.Foo f) {\n" +
+            "    f.m()\n" +
             "  }\n" +
             "}\n",
         };
 
+        //@formatter:off
         runNegativeTest(sources, "----------\n" +
             "1. ERROR in r\\Bar.groovy (at line 5)\n" +
-            "\tnew q.Foo().m()\n" +
-            "\t^^^^^^^^^^^\n" +
-            "Groovy:Method m is protected in q.Foo @ line 5, column 5.\n");
+            "\tf.m()\n" + (isAtLeastGroovy(26)
+            ? "\t^\n" +
+              "Groovy:Method m is protected in q.Foo @ line 5, column 5.\n"
+            : "\t^^^^^\n" +
+              "Groovy:[Static type checking] - Cannot find matching method q.Foo#m(). Please check if the declared type is correct and if the method exists.\n") +
+            "----------\n");
+        //@formatter:on
     }
 
     @Test

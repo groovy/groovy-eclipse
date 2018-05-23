@@ -25,6 +25,7 @@
         <file-match-pattern match-pattern="groovy/ast/GenericsType.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/GroovyCodeVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/ImportNode.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/InnerClassNode.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/MethodNode.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/ModuleNode.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/Parameter.java" include-pattern="false" />
@@ -43,7 +44,6 @@
         <file-match-pattern match-pattern="groovy/classgen/asm/CompileStack.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/StatementWriter.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/WriterController.java" include-pattern="false" />
-        <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticInvocationWriter.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/asm/sc/StaticPropertyAccessHelper.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/CompilationUnit.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/control/ErrorCollector.java" include-pattern="false" />

@@ -870,6 +870,25 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         return null;
     }
 
+    public List<ClassNode> getOuterClasses() {
+        /* GRECLIPSE edit
+        if (!(this instanceof InnerClassNode)) {
+            return Collections.emptyList();
+        }
+
+        List<ClassNode> result = new LinkedList<>();
+        ClassNode outestClass = ((InnerClassNode) this).getOuterMostClass();
+        ClassNode cn = this;
+
+        do {
+            result.add(cn = cn.getOuterClass());
+        } while (!cn.equals(outestClass));
+
+        return result;
+        */
+        return Collections.EMPTY_LIST;
+    }
+
     /**
      * Adds a statement to the object initializer.
      *
@@ -1502,9 +1521,8 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public boolean isAnnotationDefinition() {
-        return redirect().isPrimaryNode &&
-               isInterface() &&
-               (getModifiers() & ACC_ANNOTATION) != 0;
+        return /* redirect().isPrimaryNode && */
+                isInterface() && (getModifiers() & ACC_ANNOTATION) != 0;
     }
 
     public List<AnnotationNode> getAnnotations() {
