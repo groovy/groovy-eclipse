@@ -206,9 +206,13 @@ protected boolean computeChildren(OpenableElementInfo info, IResource underlying
 //			if (module != null && module.exists()) {
 //				vChildren.add(new ClassFile(getPackageFragment(CharOperation.NO_STRINGS), String.valueOf(TypeConstants.MODULE_INFO_NAME)));
 //			}
-			IJavaElement[] children = new IJavaElement[vChildren.size()];
-			vChildren.toArray(children);
-			info.setChildren(children);
+			if (!vChildren.isEmpty()) {
+				IJavaElement[] children = new IJavaElement[vChildren.size()];
+				vChildren.toArray(children);
+				info.setChildren(children);
+			} else {
+				info.setChildren(JavaElement.NO_ELEMENTS);
+			}
 		}
 	} catch (JavaModelException e) {
 		//problem resolving children; structure remains unknown

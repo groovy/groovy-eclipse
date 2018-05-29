@@ -78,7 +78,7 @@ protected boolean buildStructure(OpenableElementInfo info, IProgressMonitor pm, 
 	if (typeInfo == null) {
 		// The structure of a class file is unknown if a class file format errors occurred
 		//during the creation of the diet class file representative of this ClassFile.
-		info.setChildren(new IJavaElement[] {});
+		info.setChildren(JavaElement.NO_ELEMENTS);
 		return false;
 	}
 	
