@@ -77,7 +77,6 @@ import java.util.Set;
 
 import static org.codehaus.groovy.ast.tools.GeneralUtils.inSamePackage;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.isDefaultVisibility;
-import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
 
 /**
  * Visitor to resolve Types and convert VariableExpression to
@@ -1638,6 +1637,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         if (types == null) return;
         currentClass.setUsingGenerics(true);
         List<Tuple2<ClassNode, GenericsType>> upperBoundsWithGenerics = new LinkedList<>();
+        List<Tuple2<ClassNode, ClassNode>> upperBoundsToResolve = new LinkedList<>();
         for (GenericsType type : types) {
             if (level > 0 && type.getName().equals(rootType.getName())) {
                 continue;
@@ -1660,12 +1660,12 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                                 classNode.setRedirect(upperBound);
                                 nameAdded = true;
                             }
-
                         }
-                        resolveOrFail(upperBound, classNode);
+
+                        upperBoundsToResolve.add(new Tuple2<>(upperBound, classNode));
                     }
 
-                    if (asBoolean(upperBound.isUsingGenerics())) {
+                    if (upperBound.isUsingGenerics()) {
                         upperBoundsWithGenerics.add(new Tuple2<>(upperBound, type));
                     }
                 }
@@ -1684,6 +1684,12 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                     }
                 }
             }
+        }
+
+        for (Tuple2<ClassNode, ClassNode> tp : upperBoundsToResolve) {
+            ClassNode upperBound = tp.getFirst();
+            ClassNode classNode = tp.getSecond();
+            resolveOrFail(upperBound, classNode);
         }
 
         for (Tuple2<ClassNode, GenericsType> tp : upperBoundsWithGenerics) {

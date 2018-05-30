@@ -18,11 +18,6 @@
       %license
    </license>
 
-   <requires>
-      <import plugin="org.apache.ant"/>
-      <import plugin="org.junit"/>
-   </requires>
-
    <plugin
          id="org.codehaus.groovy"
          download-size="0"

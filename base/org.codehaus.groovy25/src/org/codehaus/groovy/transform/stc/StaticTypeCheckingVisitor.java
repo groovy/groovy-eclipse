@@ -100,6 +100,7 @@ import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.TokenUtil;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.StaticTypesTransformation;
+import org.codehaus.groovy.transform.sc.StaticCompilationMetadataKeys;
 import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.groovy.util.ListHashMap;
 import groovyjarjarasm.asm.Opcodes;
@@ -168,6 +169,8 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.binX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.castX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.findActualTypeByGenericsPlaceholderName;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.makeDeclaringAndActualGenericsTypeMap;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.toGenericTypesString;
 import static org.codehaus.groovy.ast.tools.WideningCategories.LowestUpperBoundClassNode;
@@ -220,7 +223,6 @@ import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.choose
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.evaluateExpression;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.extractGenericsConnections;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.extractGenericsParameterMapOfThis;
-import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findActualTypeByPlaceholderName;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findDGMMethodsByNameAndArguments;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findSetters;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.findTargetVariable;
@@ -593,15 +595,38 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         } else if (accessedVariable instanceof FieldNode) {
             FieldNode fieldNode = (FieldNode) accessedVariable;
 
-            ClassNode parameterizedType = GenericsUtils.findParameterizedType(fieldNode.getDeclaringClass(), typeCheckingContext.getEnclosingClassNode());
-            if (null != parameterizedType) {
-                ClassNode originalType = fieldNode.getOriginType();
-                ClassNode actualType = findActualTypeByPlaceholderName(originalType.getUnresolvedName(), GenericsUtils.extractPlaceholders(parameterizedType));
-
-                if (null != actualType) {
-                    storeType(vexp, actualType);
-                    return;
+            TypeCheckingContext.EnclosingClosure enclosingClosure = typeCheckingContext.getEnclosingClosure();
+            if (enclosingClosure != null) {
+                // GROOVY-8562
+                // when vexp has the same name as a property of the owner,
+                // the IMPLICIT_RECEIVER must be set in case it's the delegate
+                if (tryVariableExpressionAsProperty(vexp, vexp.getName())) {
+                    // IMPLICIT_RECEIVER is handled elsewhere
+                    // however other access needs to be fixed for private access
+                    if (vexp.getNodeMetaData(StaticTypesMarker.IMPLICIT_RECEIVER) == null) {
+                        ClassNode owner = (ClassNode) vexp.getNodeMetaData(StaticCompilationMetadataKeys.PROPERTY_OWNER);
+                        if (owner != null) {
+                            FieldNode veFieldNode = owner.getField(vexp.getName());
+                            if (veFieldNode != null) {
+                                fieldNode = veFieldNode;
+                                boolean lhsOfEnclosingAssignment = isLHSOfEnclosingAssignment(vexp);
+                                vexp.setAccessedVariable(fieldNode);
+                                checkOrMarkPrivateAccess(vexp, fieldNode, lhsOfEnclosingAssignment);
+                            }
+                        }
+                    }
                 }
+            }
+
+            ClassNode actualType =
+                    findActualTypeByGenericsPlaceholderName(
+                        fieldNode.getOriginType().getUnresolvedName(),
+                        makeDeclaringAndActualGenericsTypeMap(fieldNode.getDeclaringClass(), typeCheckingContext.getEnclosingClassNode())
+                    );
+
+            if (null != actualType) {
+                storeType(vexp, actualType);
+                return;
             }
         }
 
@@ -3237,7 +3262,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         if (typeCheckMethodsWithGenericsOrFail(chosenReceiver.getType(), args, mn.get(0), call)) {
                             returnType = adjustWithTraits(directMethodCallCandidate, chosenReceiver.getType(), args, returnType);
 
-                            if (null != typeCheckingContext.getEnclosingReturnStatement()) { // the method call is within return statement, we can try to infer type further
+                            if (null != typeCheckingContext.getEnclosingReturnStatement() && !isNestedOrSandwichedMethodCall()) {
                                 ClassNode inferredType = infer(returnType, typeCheckingContext.getEnclosingMethod().getReturnType());
                                 if (null != inferredType) {
                                     returnType = inferredType;
@@ -3308,6 +3333,15 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
             typeCheckingContext.popEnclosingMethodCall();
             extension.afterMethodCall(call);
         }
+    }
+
+    /**
+     * e.g. a(b()),         b() is nested method call
+     *      a().b().c(),    a() and b() are sandwiched method call
+     *
+     */
+    private boolean isNestedOrSandwichedMethodCall() {
+        return typeCheckingContext.getEnclosingMethodCalls().size() > 1;
     }
 
     /**
