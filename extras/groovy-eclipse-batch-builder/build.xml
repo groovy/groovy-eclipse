@@ -114,8 +114,8 @@
         </fileset>
 
         <fileset dir="${git.repo.loc}/base" id="orig.groovy.jars">
-            <!-- include groovy-all and the sources -->
-            <include name="${groovy.folder}/lib/groovy-all*.jar"/>
+            <!-- include groovy and the sources -->
+            <include name="${groovy.folder}/lib/groovy-*.jar"/>
             <!-- also include the non-locking classloader with sources -->
             <include name="org.eclipse.jdt.groovy.core/nlcl*.jar"/>
         </fileset>
