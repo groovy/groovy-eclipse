@@ -10,3 +10,4 @@
 11-May-2018: 7e9706d (Photon M7)
 21-May-2018: 3c1f931 (Photon RC1)
 28-May-2018: 7a71038 (Photon RC2)
+01-Jun-2018: eb8f27c (Photon RC3)
