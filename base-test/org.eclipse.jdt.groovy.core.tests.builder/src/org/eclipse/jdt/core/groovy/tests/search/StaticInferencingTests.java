@@ -195,14 +195,28 @@ public final class StaticInferencingTests extends InferencingTestSuite {
         assertKnown(contents, "toString", "java.util.Arrays", "java.lang.String");
     }
 
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/595
     public void testStaticReference5() {
+        String contents =
+            "class Chars {\n" +
+            "  static boolean equals(char[] a, char[] b) {\n" +
+            "  }\n" +
+            "  static void meth(char[] x, char[] y) {\n" +
+            "    if (Chars.equals(x, y)) {\n" + // name clashes with method available from java.lang.Object
+            "    }\n" +
+            "  }\n" +
+            "}\n";
+        assertKnown(contents, "equals", "Chars", "java.lang.Boolean");
+    }
+
+    @Test
+    public void testStaticReference6() {
         String contents = "def search = Arrays.&binarySearch";
         assertKnown(contents, "binarySearch", "java.util.Arrays", "java.lang.Integer");
     }
 
     @Test
-    public void testStaticReference6() {
+    public void testStaticReference7() {
         String contents = "Arrays.&mixin";
         assertUnknown(contents, "mixin");
     }

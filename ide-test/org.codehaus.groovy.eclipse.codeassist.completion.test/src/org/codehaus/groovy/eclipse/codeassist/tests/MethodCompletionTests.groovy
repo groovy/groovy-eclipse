@@ -35,13 +35,13 @@ final class MethodCompletionTests extends CompletionTestSuite {
     private List<MethodNode> delegateTestParameterNames(GroovyCompilationUnit unit) {
         waitForIndex()
         List<MethodNode> methods = extract(unit).getMethods('m')
-        for (MethodNode method : methods) {
-            if (method.getParameters().length == 1) {
+        for (method in methods) {
+            if (method.parameters.length == 1) {
                 GroovyMethodProposal proposal = new GroovyMethodProposal(method)
                 char[][] names = proposal.createAllParameterNames(unit)
                 checkNames(['x'.toCharArray()] as char[][], names)
             }
-            if (method.getParameters().length == 2) {
+            if (method.parameters.length == 2) {
                 GroovyMethodProposal proposal = new GroovyMethodProposal(method)
                 char[][] names = proposal.createAllParameterNames(unit)
                 checkNames(['x'.toCharArray(), 'y'.toCharArray()] as char[][], names)
@@ -51,13 +51,13 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     private static ClassNode extract(GroovyCompilationUnit unit) {
-        Statement state = unit.getModuleNode().getStatementBlock().getStatements().get(0)
+        Statement state = unit.moduleNode.statementBlock.statements.get(0)
         if (state instanceof ReturnStatement) {
             ReturnStatement ret = (ReturnStatement) state
-            return ret.getExpression().getType()
+            return ret.expression.type
         } else if (state instanceof ExpressionStatement) {
             ExpressionStatement expr = (ExpressionStatement) state
-            return expr.getExpression().getType()
+            return expr.expression.type
         } else {
             fail('Invalid statement kind for ' + state + '\nExpecting return statement or expression statement')
             return null

@@ -412,8 +412,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
 
         // StatementAndExpressionCompletionProcessor circa line 390 has similar check for proposals
-        if (confidence == TypeConfidence.UNKNOWN && VariableScope.CLASS_CLASS_NODE.equals(realDeclaringType) && realDeclaringType.isUsingGenerics()) {
-            ClassNode typeParam = realDeclaringType.getGenericsTypes()[0].getType();
+        if (confidence == TypeConfidence.UNKNOWN && VariableScope.CLASS_CLASS_NODE.equals(declaringType) && declaringType.isUsingGenerics()) {
+            ClassNode typeParam = declaringType.getGenericsTypes()[0].getType();
             if (!VariableScope.CLASS_CLASS_NODE.equals(typeParam) && !VariableScope.OBJECT_CLASS_NODE.equals(typeParam)) {
                 // GRECLIPSE-1544: "Type.staticMethod()" or "def type = Type.class; type.staticMethod()" or ".&" variations
                 return findTypeForNameWithKnownObjectExpression(name, type, typeParam, scope, confidence0, isStaticObjectExpression, isPrimaryExpression, isLhsExpression);
