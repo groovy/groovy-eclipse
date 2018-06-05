@@ -19,9 +19,9 @@ import groovy.transform.NotYetImplemented
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 
-import org.codehaus.groovy.ast.AnnotationNode
-import org.codehaus.groovy.ast.expr.ClassExpression
-import org.codehaus.groovy.ast.expr.VariableExpression
+import org.codehaus.groovy.ast.*
+import org.codehaus.groovy.ast.expr.*
+import org.codehaus.groovy.ast.stmt.*
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation
 import org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer
@@ -106,21 +106,93 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     }
 
     @Test
-    void testStatement11() {
+    void testStatement11a() {
         String contents = 'def x() { }'
-        assertLocation(contents, contents.indexOf('{') + 1, ContentAssistLocation.STATEMENT)
+        assertLocation(contents, contents.indexOf('{') + 1, ContentAssistLocation.STATEMENT) {
+            assert containingDeclaration instanceof MethodNode
+            assert completionNode instanceof ReturnStatement
+        }
     }
 
     @Test
-    void testStatement12() {
-        String contents = 'class Blar { def x() { } }'
-        assertLocation(contents, contents.indexOf('}'), ContentAssistLocation.STATEMENT)
+    void testStatement11b() {
+        String contents = 'def x() { null }'
+        assertLocation(contents, contents.indexOf('{') + 1, ContentAssistLocation.STATEMENT) {
+            assert containingDeclaration instanceof MethodNode
+            assert completionNode instanceof BlockStatement
+        }
     }
 
     @Test
-    void testStatement13() {
-        String contents = 'class Blar { def x = { } }'
-        assertLocation(contents, contents.indexOf('}'), ContentAssistLocation.STATEMENT)
+    void testStatement11c() {
+        String contents = 'def x(int y) { null }'
+        assertLocation(contents, contents.indexOf('{') + 1, ContentAssistLocation.STATEMENT) {
+            assert containingDeclaration instanceof MethodNode
+            assert completionNode instanceof BlockStatement
+        }
+    }
+
+    @Test
+    void testStatement12a() {
+        String contents = 'class C { def x() {\n } }'
+        assertLocation(contents, contents.lastIndexOf('{') + 1, ContentAssistLocation.STATEMENT) {
+            assert containingDeclaration instanceof MethodNode
+            assert completionNode instanceof ReturnStatement
+        }
+    }
+
+    @Test
+    void testStatement12b() {
+        String contents = 'class C { def x() {\n }\n }'
+        assertLocation(contents, contents.indexOf('}'), ContentAssistLocation.STATEMENT) {
+            assert containingDeclaration instanceof MethodNode
+            assert completionNode instanceof ReturnStatement
+        }
+    }
+
+    @Test
+    void testStatement12c() {
+        String contents = 'class C { C() {\n }\n }'
+        assertLocation(contents, contents.lastIndexOf('{') + 1, ContentAssistLocation.STATEMENT) {
+            assert containingDeclaration instanceof ConstructorNode
+            assert completionNode instanceof BlockStatement
+        }
+    }
+
+    @Test
+    void testStatement12d() {
+        String contents = 'class C { C() {\n }\n }'
+        assertLocation(contents, contents.indexOf('}'), ContentAssistLocation.STATEMENT) {
+            assert containingDeclaration instanceof ConstructorNode
+            assert completionNode instanceof BlockStatement
+        }
+    }
+
+    @Test
+    void testStatement12e() {
+        String contents = 'class C { C(int x) {\n }\n }'
+        assertLocation(contents, contents.lastIndexOf('{') + 1, ContentAssistLocation.STATEMENT) {
+            assert containingDeclaration instanceof ConstructorNode
+            assert completionNode instanceof BlockStatement
+        }
+    }
+
+    @Test
+    void testStatement13a() {
+        String contents = 'class C { def x = {\n } }'
+        assertLocation(contents, contents.lastIndexOf('{') + 1, ContentAssistLocation.STATEMENT) {
+            assert containingDeclaration instanceof PropertyNode
+            assert completionNode instanceof BlockStatement
+        }
+    }
+
+    @Test
+    void testStatement13b() {
+        String contents = 'class C { def x = {\n } }'
+        assertLocation(contents, contents.indexOf('}'), ContentAssistLocation.STATEMENT) {
+            assert containingDeclaration instanceof PropertyNode
+            assert completionNode instanceof BlockStatement
+        }
     }
 
     @Test
