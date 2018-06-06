@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -111,10 +111,10 @@ def insideContribution = { (enclosingCallName('accept') | enclosingCallName('con
 }
 
 // Here, specify everything that can be used inside of an accept block (also called a Contribution Group)
-(dsldFile & insideContribution()).accept {
+(dsldFile & insideContribution() & isThisType()).accept {
     provider = 'the meta-DSLD script'
 
-    property name : 'provider', type: String, doc: 'Specifies a <em>Provider</em> for the current contribution.  This provider is displayed during content assist and in other places to give a quick hint as to where this contribution elementcomes from.'
+    property name: 'provider', type: String, doc: 'Specifies a <em>Provider</em> for the current contribution. This provider is displayed during content assist and in other places to give a quick hint as to where this contribution elementcomes from.'
 
     method  name: 'property',
             namedParams: [
@@ -128,7 +128,7 @@ def insideContribution = { (enclosingCallName('accept') | enclosingCallName('con
                 provider: String,
                 doc: String
             ],
-            doc: 'Specifies a new property contribution.  <b>name</b> is mandatory, but all other parameters are optional.'
+            doc: 'Specifies a new property contribution. <b>name</b> is mandatory, but all other parameters are optional.'
 
     method  name: 'method',
             namedParams: [
@@ -219,7 +219,7 @@ def insideContribution = { (enclosingCallName('accept') | enclosingCallName('con
 }
 
 // Adds the contributions for inside a 'registerPointcut' call.  User-registered pointcuts are not fully fleshed out yet, so best not to use them yet.
-(dsldFile & inClosure() & enclosingCallName('registerPointcut')).accept {
+(dsldFile & enclosingCallName('registerPointcut') & inClosure() & isThisType()).accept {
     // a little naughty again...reference an internal Groovy-Eclipse type; this may be removed in future versions
     property name: 'currentScope', type: org.eclipse.jdt.groovy.search.VariableScope
     property name: 'currenType', type: ClassNode

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,13 +37,13 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
     }
 
     private void assertDsldType(GroovyCompilationUnit unit, String expr) {
-        int start = unit.getSource().lastIndexOf(expr), until = start + expr.length()
-        String declType = InferencingTestSuite.doVisit(start, until, unit, false).getDeclaringTypeName()
+        int start = unit.source.lastIndexOf(expr), until = start + expr.length()
+        String declType = InferencingTestSuite.doVisit(start, until, unit, false).declaringTypeName
         assert declType == 'p.IPointcut'
     }
 
     private void assertDsldUnknown(GroovyCompilationUnit unit, String expr) {
-        int start = unit.getSource().lastIndexOf(expr), until = start + expr.length()
+        int start = unit.source.lastIndexOf(expr), until = start + expr.length()
         TypeConfidence exprCnf = InferencingTestSuite.doVisit(start, until, unit, false).result.confidence
         assert exprCnf == TypeConfidence.UNKNOWN
     }
@@ -100,8 +100,28 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
         assertDsldType(unit, 'delegatesTo')
     }
 
-    @Test
+    @Test // object expression is not "this"
     void testMetaDSL5() {
+        GroovyCompilationUnit unit = addDsldSource('''\
+            currentType().accept {
+              String x
+              x.method
+              x.wormhole
+              x.setDelegateType
+              x.delegatesToUseNamedArgs
+              x.delegatesTo
+            }
+            '''.stripIndent())
+
+        assertDsldUnknown(unit, 'method')
+        assertDsldUnknown(unit, 'wormhole')
+        assertDsldUnknown(unit, 'setDelegateType')
+        assertDsldUnknown(unit, 'delegatesToUseNamedArgs')
+        assertDsldUnknown(unit, 'delegatesTo')
+    }
+
+    @Test
+    void testMetaDSL6() {
         GroovyCompilationUnit unit = addDsldSource('''\
             method
             wormhole
@@ -118,7 +138,7 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
     }
 
     @Test // within plain Groovy source, these things are unknown
-    void testMetaDSL6() {
+    void testMetaDSL7() {
         String contents = '''\
             currentType().accept {
               method
