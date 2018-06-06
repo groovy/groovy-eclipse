@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
 import static org.junit.Assume.assumeTrue
 
 import org.codehaus.groovy.eclipse.codeassist.tests.CompletionTestSuite
@@ -244,7 +245,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
         proposalExists(proposals, 'new', 3) // one for each constructor in ArrayList
 
-        proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'HashM')))
+        proposals = orderByRelevance(createProposalsAtOffset(contents, getLastIndexOf(contents, 'HashM')))
         proposalExists(proposals, 'HashMap', 4) // one for each constructor in HashMap
     }
 
@@ -260,7 +261,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
         proposalExists(proposals, 'new', 0)
 
-        proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'HashM')))
+        proposals = orderByRelevance(createProposalsAtOffset(contents, getLastIndexOf(contents, 'HashM')))
         proposalExists(proposals, 'HashMap', 4) // one for each constructor in HashMap
     }
 
@@ -276,9 +277,54 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
         proposalExists(proposals, 'new', 3) // one for each constructor in ArrayList
 
-        proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'HashM')))
-        //proposalExists(proposals, 'HashMap', 4) // one for each constructor in HashMap
-        // TODO: waiting for https://issues.apache.org/jira/browse/GROOVY-8249
+        proposals = orderByRelevance(createProposalsAtOffset(contents, getLastIndexOf(contents, 'HashM')))
+        proposalExists(proposals, 'HashMap', 4) // one for each constructor in HashMap
+    }
+
+    @Test
+    void testNewifyTransform5() {
+        assumeTrue(isAtLeastGroovy(25)) // @Newify(pattern=...) added in Groovy 2.5
+
+        String contents = '''\
+            @Newify(auto=false, pattern=/(Linked)?Hash.*/) class Foo {
+              List list = ArrayList.n
+              Map map = HashM
+            }
+            '''.stripIndent()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
+        proposalExists(proposals, 'new', 0)
+
+        proposals = orderByRelevance(createProposalsAtOffset(contents, getLastIndexOf(contents, 'HashM')))
+        proposalExists(proposals, 'HashMap', 4) // one for each constructor in HashMap
+    }
+
+    @Test
+    void testNewifyTransform5a() {
+        assumeTrue(isAtLeastGroovy(25)) // @Newify(pattern=...) added in Groovy 2.5
+
+        String contents = '''\
+            @Newify(auto=false, pattern=/(Linked)?Hash.*/) class Foo {
+              Map map = LinkedH
+            }
+            '''.stripIndent()
+
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'LinkedH')))
+        proposalExists(proposals, 'LinkedHashMap', 5) // one for each constructor in LinkedHashMap
+    }
+
+    @Test
+    void testNewifyTransform5b() {
+        assumeTrue(isAtLeastGroovy(25)) // @Newify(pattern=...) added in Groovy 2.5
+
+        String contents = '''\
+            @Newify(auto=false, pattern=/(Linked)?Hash.*/) class Foo {
+              Map map = LinkedHashMap()
+            }
+            '''.stripIndent()
+
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'LinkedHashMap')))
+        proposalExists(proposals, 'LinkedHashMap', 5) // one for each constructor in LinkedHashMap
     }
 
     @Test

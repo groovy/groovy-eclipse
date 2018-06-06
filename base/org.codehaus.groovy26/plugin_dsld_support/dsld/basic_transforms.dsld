@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -94,6 +94,39 @@ contribute(enclosingClass(annos: annotatedBy(Newify)) | enclosingField(annos: an
                 addNewifyMethods(e.type)
             }
         }
+
+        // check for Python style (i.e. pattern=/.../)
+        expr = node.getMember('pattern')
+        if (expr) {
+            def resolveNewifyType = { String name ->
+                if (name.split('\\.')[-1].matches(expr.text)) {
+                    ClassNode type = currentType.module.context.resolver.resolve(name)
+                    if (type != ClassHelper.DYNAMIC_TYPE) {
+                        addNewifyMethods(type)
+                    }
+                }
+            }
+
+            // check for method call (i.e. "HashSet(32)")
+            if (currentNode instanceof ConstantExpression &&
+                enclosingNode instanceof MethodCallExpression && enclosingNode.method == currentNode &&
+                enclosingNode.objectExpression instanceof VariableExpression && enclosingNode.objectExpression.isThisExpression()) {
+
+                resolveNewifyType(currentNode.text)
+            }
+            // check for free variable (i.e. "HashS")
+            else if (currentNode instanceof VariableExpression && currentNode.accessedVariable instanceof DynamicVariable) {
+
+                // TODO: Should some of this be refactored into a DSL type lookup facility?
+                def env = currentType.module.context.resolver.scope.environment.nameEnvironment
+                String prefix = currentNode.name; boolean findMembers = true, camelCaseMatch = false; int searchFor = org.eclipse.jdt.core.search.IJavaSearchConstants.CLASS
+                env.findTypes(prefix.toCharArray(), findMembers, camelCaseMatch, searchFor, { char[] packageName, char[] typeName, char[][] enclosingTypeNames, int modifiers, accessRestriction ->
+                    if (!org.eclipse.jdt.internal.corext.util.TypeFilter.isFiltered(packageName, org.eclipse.jdt.core.compiler.CharOperation.concatWith(enclosingTypeNames, typeName, '.' as char))) {
+                        resolveNewifyType(org.eclipse.jdt.core.compiler.CharOperation.concat(packageName, org.eclipse.jdt.core.compiler.CharOperation.concatWith(enclosingTypeNames, typeName, '$' as char), '.' as char) as String)
+                    }
+                } as org.eclipse.jdt.internal.codeassist.ISearchRequestor)
+            }
+        }
     }
 }
 
@@ -125,6 +158,8 @@ contribute(enclosingClass(annotatedBy(AutoExternalize))) {
     provider = '{@link groovy.transform.AutoExternalize AutoExternalize} AST transform'
     delegatesTo type: Externalizable
 }
+
+//@groovy.transform.AutoFinal
 
 //@groovy.transform.AutoImplement
 
@@ -165,6 +200,8 @@ contribute(currentType(fields: fields(annotatedBy(IndexedProperty)))) {
 //@groovy.transform.MapConstructor
 
 //@groovy.transform.Memoized
+
+//@groovy.transform.NamedVariant, et al.
 
 //@groovy.transform.NotYetImplemented
 
