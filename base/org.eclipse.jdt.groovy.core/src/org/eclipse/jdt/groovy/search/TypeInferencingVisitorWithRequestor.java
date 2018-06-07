@@ -750,7 +750,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             primaryTypeStack.removeLast();
         }
 
-        boolean isAssignment = node.getOperation().getType() == Types.EQUALS;
+        boolean isAssignment = (node.getOperation().getType() == Types.EQUALS);
         BinaryExpression oldEnclosingAssignment = enclosingAssignment;
         if (isAssignment) {
             enclosingAssignment = node;
@@ -867,7 +867,10 @@ assert primaryExprType != null && dependentExprType != null;
         boolean shouldContinue = handleSimpleExpression(node);
         if (shouldContinue) {
             visitClassReference(node.getType());
-            super.visitCastExpression(node);
+
+            completeExpressionStack.add(node);
+              super.visitCastExpression(node);
+            completeExpressionStack.removeLast();
         }
     }
 
@@ -1504,7 +1507,6 @@ assert primaryExprType != null && dependentExprType != null;
                 localMapProperties.put(currentMapVariable, map);
             }
             if (enclosingAssignment != null) {
-                //String key = ((ConstantExpression) node.getProperty()).getConstantName();
                 String key = (String) ((ConstantExpression) node.getProperty()).getValue();
                 ClassNode val = enclosingAssignment.getRightExpression().getType();
                 map.put(key, val);
@@ -1817,8 +1819,7 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     private boolean handleSimpleExpression(Expression node) {
-        ClassNode primaryType;
-        boolean isStatic;
+        ClassNode primaryType; boolean isStatic;
         VariableScope scope = scopes.getLast();
         if (!isDependentExpression(node)) {
             primaryType = null;
@@ -1827,7 +1828,7 @@ assert primaryExprType != null && dependentExprType != null;
             scope.setMethodCallGenericsTypes(getMethodCallGenericsTypes(node));
         } else {
             primaryType = primaryTypeStack.removeLast();
-            // implicit this expressions do not have a primary type
+            // implicit this (no obj expr) method calls do not have a primary type
             if (completeExpressionStack.getLast() instanceof MethodCallExpression &&
                     ((MethodCallExpression) completeExpressionStack.getLast()).isImplicitThis()) {
                 primaryType = null;
@@ -2100,6 +2101,7 @@ assert primaryExprType != null && dependentExprType != null;
         if (node.getParameters() == null) { // i.e. "{ -> ... }"
             return ClassNode.EMPTY_ARRAY;
         }
+        ClassNode primaryType = null;
 
         ClassNode[] inferredTypes = new ClassNode[node.isParameterSpecified() ? node.getParameters().length : 1];
 
@@ -2142,27 +2144,29 @@ assert primaryExprType != null && dependentExprType != null;
                 }
 
                 if (inferredTypes[0] == null) {
-                    // check for SAM-type coercion of closure expression
-
-                    ClassNode mpt = methodParam.getType();
-                    if (methodParam == DefaultGroovyMethods.last(methodNode.getParameters()) &&
-                        GenericsMapper.isVargs(methodNode.getParameters())) mpt = mpt.getComponentType();
-
-                    MethodNode sam = ClassHelper.findSAM(mpt);
-                    if (sam != null) {
-                        int i = 0;
-                        for (ClassNode t : GroovyUtils.getParameterTypes(sam.getParameters())) {
-                            if (i == inferredTypes.length) break;
-                            inferredTypes[i++] = t;
-                        }
-                        Arrays.fill(inferredTypes, i, inferredTypes.length, VariableScope.OBJECT_CLASS_NODE);
+                    primaryType = methodParam.getType();
+                    if (GenericsMapper.isVargs(methodNode.getParameters()) &&
+                            DefaultGroovyMethods.last(methodNode.getParameters()) == methodParam) {
+                        primaryType = primaryType.getComponentType();
                     }
                 }
             }
+        } else if (!completeExpressionStack.isEmpty() && completeExpressionStack.getLast() instanceof CastExpression &&
+                          ((CastExpression) completeExpressionStack.getLast()).getExpression() == node) {
+            primaryType = ((CastExpression) completeExpressionStack.getLast()).getType();
+        } else if (enclosingAssignment != null && enclosingAssignment.getRightExpression() == node) {
+            primaryType = enclosingAssignment.getLeftExpression().getType();
         }
 
         if (inferredTypes[0] == null) {
-            Arrays.fill(inferredTypes, VariableScope.OBJECT_CLASS_NODE);
+            int i = 0; MethodNode sam; // check for SAM-type coercion of closure expression
+            if (primaryType != null && (sam = ClassHelper.findSAM(primaryType)) != null) {
+                for (ClassNode t : GroovyUtils.getParameterTypes(sam.getParameters())) {
+                    if (i == inferredTypes.length) break;
+                    inferredTypes[i++] = t;
+                }
+            }
+            Arrays.fill(inferredTypes, i, inferredTypes.length, VariableScope.OBJECT_CLASS_NODE);
         }
 
         return inferredTypes;
@@ -2192,38 +2196,36 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     /**
-     * Dependent expressions are expressions whose type depends on another expression.
-     *
-     * Dependent expressions are:
+     * Dependent (type depends on another expression) expressions are:
      * <ul>
-     * <li>right part of a non-assignment binary expression
-     * <li>left part of a assignment expression
-     * <li>propery (ie- right part) of a property expression
-     * <li>method (ie- right part) of a method call expression
-     * <li>property/field (ie- right part) of an attribute expression
+     * <li>field (ie- right side) of an attribute expression
+     * <li>property (ie- right side) of a property expression
+     * <li>method (ie- right side) of a method call expression
+     * <li>method (ie- right side) of a method pointer expression
+     * <li>alias expression of an import statement or field expression of a static import
      * </ul>
      *
      * Note that for statements and ternary expressions do not have any dependent
      * expression even though they have primary expressions.
      *
-     * @param node expression node to check
-     * @return true iff the node is the primary expression in an expression pair.
+     * @return true iff the expression is a dependent expression in an expression group
      */
-    private boolean isDependentExpression(Expression node) {
+    private boolean isDependentExpression(Expression expr) {
         if (!completeExpressionStack.isEmpty()) {
-            ASTNode complete = completeExpressionStack.getLast();
-            if (complete instanceof PropertyExpression) {
-                PropertyExpression prop = (PropertyExpression) complete;
-                return prop.getProperty() == node;
-            } else if (complete instanceof MethodCallExpression) {
-                MethodCallExpression call = (MethodCallExpression) complete;
-                return call.getMethod() == node;
-            } else if (complete instanceof MethodPointerExpression) {
-                MethodPointerExpression ref = (MethodPointerExpression) complete;
-                return ref.getMethodName() == node;
-            } else if (complete instanceof ImportNode) {
-                ImportNode imp = (ImportNode) complete;
-                return imp.getAliasExpr() == node || imp.getFieldNameExpr() == node;
+            ASTNode node = completeExpressionStack.getLast();
+
+            if (node instanceof PropertyExpression) {
+                return ((PropertyExpression) node).getProperty() == expr;
+
+            } else if (node instanceof MethodCallExpression) {
+                return ((MethodCallExpression) node).getMethod() == expr;
+
+            } else if (node instanceof MethodPointerExpression) {
+                return ((MethodPointerExpression) node).getMethodName() == expr;
+
+            } else if (node instanceof ImportNode) {
+                return ((ImportNode) node).getAliasExpr() == expr ||
+                        ((ImportNode) node).getFieldNameExpr() == expr;
             }
         }
         return false;
@@ -2232,95 +2234,95 @@ assert primaryExprType != null && dependentExprType != null;
     /**
      * Primary expressions are:
      * <ul>
-     * <li>left part of a non-assignment binary expression
-     * <li>right part of a assignment expression
-     * <li>object (ie- left part) of a property expression
-     * <li>object (ie- left part) of a method call expression
-     * <li>object (ie- left part) of an attribute expression
-     * <li>collection expression (ie- right part) of a for statement
-     * <li>true expression (ie- right part) of a ternary expression
+     * <li>right side of an assignment expression
+     * <li>either side of a non-assignment binary expression
+     * <li>object (ie- left side) of a property expression
+     * <li>object (ie- left side) of a method call expression
+     * <li>object (ie- left side) of an attribute expression
+     * <li>collection expression of a for statement
+     * <li>true expression of a ternary expression
      * <li>first element of a list expression (the first element is assumed to be representative of all list elements)
      * <li>first element of a range expression (the first element is assumed to be representative of the range)
-     * <li>Either the key OR the value expression of a {@link MapEntryExpression}
-     * <li>The first {@link MapEntryExpression} of a {@link MapExpression}
-     * <li>The expression of a {@link PrefixExpression}, a {@link PostfixExpression}, a {@link UnaryMinusExpression}, a
-     * {@link UnaryPlusExpression}, or a {@link BitwiseNegationExpression}
+     * <li>either the key or the value expression of a {@link MapEntryExpression}
+     * <li>first {@link MapEntryExpression} of a {@link MapExpression}
+     * <li>expression of a {@link PrefixExpression}, {@link PostfixExpression},
+     *     {@link UnaryMinusExpression}, {@link UnaryPlusExpression}, or {@link BitwiseNegationExpression}
      * </ul>
      *
-     * @param node expression node to check
-     * @return true iff the node is the primary expression in an expression pair.
+     * @return true iff the expression is a primary expression in an expression group
      */
-    private boolean isPrimaryExpression(Expression node) {
+    private boolean isPrimaryExpression(Expression expr) {
         if (!completeExpressionStack.isEmpty()) {
-            ASTNode complete = completeExpressionStack.getLast();
-            if (complete instanceof PropertyExpression) {
-                return ((PropertyExpression) complete).getObjectExpression() == node;
+            ASTNode node = completeExpressionStack.getLast();
 
-            } else if (complete instanceof MethodCallExpression) {
-                return ((MethodCallExpression) complete).getObjectExpression() == node;
+            if (node instanceof PropertyExpression) {
+                return ((PropertyExpression) node).getObjectExpression() == expr;
 
-            } else if (complete instanceof MethodPointerExpression) {
-                return ((MethodPointerExpression) complete).getExpression() == node;
+            } else if (node instanceof MethodCallExpression) {
+                return ((MethodCallExpression) node).getObjectExpression() == expr;
 
-            } else if (complete instanceof BinaryExpression) {
-                BinaryExpression expr = (BinaryExpression) complete;
+            } else if (node instanceof MethodPointerExpression) {
+                return ((MethodPointerExpression) node).getExpression() == expr;
+
+            } else if (node instanceof BinaryExpression) {
+                BinaryExpression bexp = (BinaryExpression) node;
                 // both sides of the binary expression are primary since we need
                 // access to both of them when inferring binary expression types
-                if (expr.getLeftExpression() == node || expr.getRightExpression() == node) {
+                if (bexp.getLeftExpression() == expr || bexp.getRightExpression() == expr) {
                     return true;
                 }
                 // statically-compiled assignment chains need a little help
-                if (!(node instanceof TupleExpression) &&
-                        expr.getRightExpression() instanceof ListOfExpressionsExpression) {
+                if (!(expr instanceof TupleExpression) &&
+                        bexp.getRightExpression() instanceof ListOfExpressionsExpression) {
                     List<Expression> list = ReflectionUtils.getPrivateField(
-                        ListOfExpressionsExpression.class, "expressions", expr.getRightExpression());
+                        ListOfExpressionsExpression.class, "expressions", bexp.getRightExpression());
                     // list.get(0) should be TemporaryVariableExpression
-                    return (node != list.get(1) && list.get(1) instanceof MethodCallExpression);
+                    return (expr != list.get(1) && list.get(1) instanceof MethodCallExpression);
                 }
 
-            } else if (complete instanceof AttributeExpression) {
-                return ((AttributeExpression) complete).getObjectExpression() == node;
+            } else if (node instanceof AttributeExpression) {
+                return ((AttributeExpression) node).getObjectExpression() == expr;
 
-            } else if (complete instanceof TernaryExpression) {
-                return ((TernaryExpression) complete).getTrueExpression() == node;
+            } else if (node instanceof TernaryExpression) {
+                return ((TernaryExpression) node).getTrueExpression() == expr;
 
-            } else if (complete instanceof ForStatement) {
+            } else if (node instanceof ForStatement) {
                 // this check is used to store the type of the collection expression
                 // so that it can be assigned to the for loop variable
-                return ((ForStatement) complete).getCollectionExpression() == node;
+                return ((ForStatement) node).getCollectionExpression() == expr;
 
-            } else if (complete instanceof ReturnStatement) {
-                return ((ReturnStatement) complete).getExpression() == node;
+            } else if (node instanceof ReturnStatement) {
+                return ((ReturnStatement) node).getExpression() == expr;
 
-            } else if (complete instanceof ListExpression) {
-                return isNotEmpty(((ListExpression) complete).getExpressions()) &&
-                        ((ListExpression) complete).getExpression(0) == node;
+            } else if (node instanceof ListExpression) {
+                return isNotEmpty(((ListExpression) node).getExpressions()) &&
+                        ((ListExpression) node).getExpression(0) == expr;
 
-            } else if (complete instanceof RangeExpression) {
-                return ((RangeExpression) complete).getFrom() == node;
+            } else if (node instanceof RangeExpression) {
+                return ((RangeExpression) node).getFrom() == expr;
 
-            } else if (complete instanceof MapEntryExpression) {
-                return ((MapEntryExpression) complete).getKeyExpression() == node ||
-                        ((MapEntryExpression) complete).getValueExpression() == node;
+            } else if (node instanceof MapEntryExpression) {
+                return ((MapEntryExpression) node).getKeyExpression() == expr ||
+                        ((MapEntryExpression) node).getValueExpression() == expr;
 
-            } else if (complete instanceof MapExpression) {
-                return isNotEmpty(((MapExpression) complete).getMapEntryExpressions()) &&
-                        ((MapExpression) complete).getMapEntryExpressions().get(0) == node;
+            } else if (node instanceof MapExpression) {
+                return isNotEmpty(((MapExpression) node).getMapEntryExpressions()) &&
+                        ((MapExpression) node).getMapEntryExpressions().get(0) == expr;
 
-            } else if (complete instanceof PrefixExpression) {
-                return ((PrefixExpression) complete).getExpression() == node;
+            } else if (node instanceof PrefixExpression) {
+                return ((PrefixExpression) node).getExpression() == expr;
 
-            } else if (complete instanceof PostfixExpression) {
-                return ((PostfixExpression) complete).getExpression() == node;
+            } else if (node instanceof PostfixExpression) {
+                return ((PostfixExpression) node).getExpression() == expr;
 
-            } else if (complete instanceof UnaryPlusExpression) {
-                return ((UnaryPlusExpression) complete).getExpression() == node;
+            } else if (node instanceof UnaryPlusExpression) {
+                return ((UnaryPlusExpression) node).getExpression() == expr;
 
-            } else if (complete instanceof UnaryMinusExpression) {
-                return ((UnaryMinusExpression) complete).getExpression() == node;
+            } else if (node instanceof UnaryMinusExpression) {
+                return ((UnaryMinusExpression) node).getExpression() == expr;
 
-            } else if (complete instanceof BitwiseNegationExpression) {
-                return ((BitwiseNegationExpression) complete).getExpression() == node;
+            } else if (node instanceof BitwiseNegationExpression) {
+                return ((BitwiseNegationExpression) node).getExpression() == expr;
             }
         }
         return false;

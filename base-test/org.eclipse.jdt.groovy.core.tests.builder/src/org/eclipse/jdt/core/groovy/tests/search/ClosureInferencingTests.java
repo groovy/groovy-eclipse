@@ -99,7 +99,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     @Test
     public void testClosure7() {
         String contents =
-            "class Foo { }\n" +
+            "class Foo {}\n" +
             "class Bar extends Foo {\n" +
             "  def method() {\n" +
             "    def fn = {\n" +
@@ -119,7 +119,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     @Test // closure with non-default resolve strategy
     public void testClosure8() {
         String contents =
-            "class Foo { }\n" +
+            "class Foo {}\n" +
             "class Bar {\n" +
             "  def method() {\n" +
             "    new Foo().with {\n" +
@@ -139,7 +139,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     @Test // closure within static scope wrt owner
     public void testClosure9() {
         String contents =
-            "class Foo { }\n" +
+            "class Foo {}\n" +
             "class Bar extends Foo {\n" +
             "  static void main(args) {\n" +
             "    def fn = {\n" +
@@ -189,7 +189,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     @Test
     public void testClosure10() {
         String contents =
-            "class Foo { }\n" +
+            "class Foo {}\n" +
             "class Bar extends Foo {\n" +
             "  static void main(args) {\n" +
             "    def fn = {\n" +
@@ -229,7 +229,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     @Test // static object expression for delegate
     public void testClosure11a() {
         String contents =
-            "class Boo { }\n" +
+            "class Boo {}\n" +
             "class Foo {\n" +
             "  Number bar\n" +
             "  static main(args) {\n" +
@@ -352,7 +352,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "    }\n" +
             "  }\n" +
             "}\n" +
-            "class C { }";
+            "class C {}";
         assertExprType(contents, "xxx", "C");
         int offset = contents.lastIndexOf("xyz");
         assertUnknownConfidence(contents, offset, offset + 3, "B", false);
@@ -362,7 +362,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     public void testClosure17() {
         String contents =
             "class A {\n" +
-            "  def m() { }\n" +
+            "  def m() {}\n" +
             "}\n" +
             "class B extends A {\n" +
             "  def m() {\n" +
@@ -384,7 +384,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     public void testClosure18() {
         String contents =
             "class A {\n" +
-            "  def m() { }\n" +
+            "  def m() {}\n" +
             "}\n" +
             "@groovy.transform.CompileStatic\n" +
             "class B extends A {\n" +
@@ -411,7 +411,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     public void testClosure19() {
         String contents =
             "class A {\n" +
-            "  def m() { }\n" +
+            "  def m() {}\n" +
             "}\n" +
             "@groovy.transform.CompileStatic\n" +
             "class B extends A {\n" +
@@ -638,7 +638,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         String contents =
             "import java.beans.*\n" +
             "class B extends PropertyChangeSupport {\n" +
-            "  boolean meth(args) { }\n" +
+            "  boolean meth(args) {}\n" +
             "}\n" +
             "class C {\n" +
             "  B bean\n" +
@@ -653,6 +653,34 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
         int offset = contents.lastIndexOf("meth");
         assertType(contents, offset, offset + 4, "java.lang.Boolean");
         assertDeclaringType(contents, offset, offset + 4, "B"); // outer delegate
+    }
+
+    @Test
+    public void testCoercedClosure1() {
+        createUnit("Face",
+            "interface Face {\n" +
+            "  void meth(int a, BigInteger b, java.util.regex.Pattern c)\n" +
+            "}");
+
+        String contents = "Face f = { x, y, z-> }";
+
+        assertExprType(contents, "x", "java.lang.Integer");
+        assertExprType(contents, "y", "java.math.BigInteger");
+        assertExprType(contents, "z", "java.util.regex.Pattern");
+    }
+
+    @Test
+    public void testCoercedClosure2() {
+        createUnit("Face",
+            "interface Face {\n" +
+            "  void meth(int a, BigInteger b, java.util.regex.Pattern c)\n" +
+            "}");
+
+        String contents = "def f = { x, y, z-> } as Face";
+
+        assertExprType(contents, "x", "java.lang.Integer");
+        assertExprType(contents, "y", "java.math.BigInteger");
+        assertExprType(contents, "z", "java.util.regex.Pattern");
     }
 
     @Test // Closure type inference without @CompileStatic
@@ -672,9 +700,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}";
 
-        int start = contents.lastIndexOf("it");
-        int end = start + "it".length();
-        assertType(contents, start, end, "java.beans.PropertyChangeEvent");
+        int offset = contents.lastIndexOf("it");
+        assertType(contents, offset, offset + 2, "java.beans.PropertyChangeEvent");
     }
 
     @Test // GRECLIPSE-1748: Closure type inference with @CompileStatic
@@ -775,7 +802,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
 
         start = contents.indexOf("foo", end);
         end = start + "foo".length();
-        assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void": "java.lang.String");
+        assertType(contents, start, end, isAccessorPreferredForSTCProperty() ? "java.lang.Void" : "java.lang.String");
     }
 
     @Test
@@ -862,7 +889,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "  return new Foo()\n" +
             "}()\n" +
             "foo.bar\n" +
-            "foo.baz\n" ;
+            "foo.baz\n" +
+            "";
 
         int offset = contents.indexOf("foo");
         assertType(contents, offset, offset + "foo".length(), "Foo");
@@ -886,7 +914,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "}()\n" +
             "arr.length\n" +
             "arr[0].bar\n" +
-            "arr[0].baz\n" ;
+            "arr[0].baz\n" +
+            "";
 
         int offset = contents.indexOf("arr");
         assertType(contents, offset, offset + "arr".length(), "Foo[]");
@@ -912,7 +941,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "  return new Foo()\n" +
             "}\n" +
             "foo.bar\n" +
-            "foo.baz\n" ;
+            "foo.baz\n" +
+            "";
 
         int offset = contents.indexOf("foo");
         assertType(contents, offset, offset + "foo".length(), "Foo");
@@ -936,7 +966,8 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "}\n" +
             "arr.length\n" +
             "arr[0].bar\n" +
-            "arr[0].baz\n" ;
+            "arr[0].baz\n" +
+            "";
 
         int offset = contents.indexOf("arr");
         assertType(contents, offset, offset + "arr".length(), "Foo[]");
@@ -955,7 +986,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     public void testClosureReferencesSuperClass() {
         String contents =
             "class MySuper {\n" +
-            "  public void insuper() {  }\n" +
+            "  public void insuper() {}\n" +
             "}\n" +
             "class MySub extends MySuper {\n" +
             "  public void foo() {\n" +
