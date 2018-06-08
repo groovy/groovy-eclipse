@@ -959,6 +959,10 @@ assert primaryExprType != null && dependentExprType != null;
             scope.addVariable("getDelegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
         }
 
+        //GRECLIPSE-598 make sure enclosingAssignment is set before visitClosureExpression() to make assignedVariable pointcut work
+        //immediately inside assigned closure block: def foo = { | }
+        scope.getWormhole().put("enclosingAssignment", enclosingAssignment);
+
         super.visitClosureExpression(node);
         handleSimpleExpression(node);
         scopes.removeLast();

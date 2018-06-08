@@ -57,6 +57,20 @@ final class DSLContentAssistTests extends CompletionTestSuite {
           setDelegateType(String)
         }
         '''.stripIndent()
+    private static final String ASSIGNED_VAR = '''\
+        import org.codehaus.groovy.ast.Variable
+        import org.codehaus.groovy.ast.expr.BinaryExpression
+        import org.codehaus.groovy.ast.expr.VariableExpression
+        contribute(bind(var:assignedVariable(name()))) {
+          if (var[0] instanceof BinaryExpression) {
+            BinaryExpression be = (BinaryExpression)var[0];
+            if (be.getLeftExpression() instanceof Variable) {
+              VariableExpression ve = (VariableExpression)be.getLeftExpression();
+              property name: 'var_' + ve.getName()
+            }
+          }
+        }
+        '''.stripIndent()
 
     @BeforeClass
     static void setUpTests() {
@@ -435,5 +449,39 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         // proposals should not exist since not applied to 'this'
         proposalExists(proposals, 'frame', 0)
         proposalExists(proposals, 'registerBinding', 0)
+    }
+
+    @Test
+    void testAssignedVar() {
+        createDsls(ASSIGNED_VAR)
+        String contents = 'def foo = '
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'foo = '))
+        proposalExists(proposals, 'var_foo', 1)
+    }
+
+    @Test
+    void testAssignedVarToNestedClosures() {
+        createDsls(ASSIGNED_VAR)
+        String contents = '''\
+            def foo = {
+              bar {
+                baz {
+
+                }
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'baz {'))
+        proposalExists(proposals, 'var_foo', 1)
+    }
+
+    @Test
+    void testAssignedVarToImmediateClosures() {
+        createDsls(ASSIGNED_VAR)
+        String contents = '''\
+            def foo = { }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'foo = {'))
+        proposalExists(proposals, 'var_foo', 1)
     }
 }
