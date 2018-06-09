@@ -208,20 +208,19 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     @Test
     void testAssignedVariable6() {
         createDsls '''\
-            contribute(bind(exprs: assignedVariable(type(BigInteger)))) {
+            contribute(bind(exprs: assignedVariable())) {
               property name: 'var_' + exprs[0].leftExpression.name
             }
             '''.stripIndent()
 
         String contents = 'def foo = '
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'foo = '))
-        proposalExists(proposals, 'var_foo', 1)
+        checkUniqueProposal(contents, '= ', 'var_foo')
     }
 
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/598
     void testAssignedVariable7() {
         createDsls '''\
-            contribute(bind(exprs: assignedVariable(type(BigInteger)))) {
+            contribute(bind(exprs: assignedVariable())) {
               property name: 'var_' + exprs[0].leftExpression.name
             }
             '''.stripIndent()
@@ -229,14 +228,13 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         String contents = '''\
             def foo = { }
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'foo = {'))
-        proposalExists(proposals, 'var_foo', 1)
+        checkUniqueProposal(contents, '{ ', 'var_foo')
     }
 
     @Test
     void testAssignedVariable8() {
         createDsls '''\
-            contribute(bind(exprs: assignedVariable(type(BigInteger)))) {
+            contribute(bind(exprs: assignedVariable())) {
               property name: 'var_' + exprs[0].leftExpression.name
             }
             '''.stripIndent()
@@ -249,8 +247,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
               }
             }
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'baz {'))
-        proposalExists(proposals, 'var_foo', 1)
+        checkUniqueProposal(contents, 'baz {', 'var_foo')
     }
 
     @Test
