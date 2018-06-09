@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,21 @@
  */
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
+import java.util.Collection;
+import java.util.stream.Collectors;
+
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
+import org.codehaus.groovy.syntax.Types;
 import org.eclipse.core.resources.IStorage;
 
 /**
@@ -37,36 +42,42 @@ public class NamePointcut extends FilteringPointcut<Object> {
     }
 
     @Override
-    protected Object filterObject(Object result, GroovyDSLDContext context, String firstArgAsString) {
-        String toCompare;
-        if (result instanceof ClassNode) {
-            toCompare = ((ClassNode) result).getName();
-        } else if (result instanceof AnnotationNode) {
-            toCompare = ((AnnotationNode) result).getClassNode().getName();
-        } else if (result instanceof FieldNode) {
-            toCompare = ((FieldNode) result).getName();
-        } else if (result instanceof MethodNode) {
-            toCompare = ((MethodNode) result).getName();
-        } else if (result instanceof PropertyNode) {
-            toCompare = ((PropertyNode) result).getName();
-        } else if (result instanceof MapEntryExpression) {
-            // argument to a method call
-            toCompare = ((MapEntryExpression) result).getKeyExpression().getText();
-        } else if (result instanceof MethodCallExpression) {
-            toCompare = ((MethodCallExpression) result).getMethodAsString();
-        } else if (result instanceof Variable) {
-            toCompare = ((Variable) result).getName();
-        } else if (result instanceof Expression) {
-            toCompare = ((Expression) result).getText();
-        } else {
-            toCompare = String.valueOf(result.toString());
+    protected Collection<Object> explodeObject(Object toMatch) {
+        Collection<Object> objects = super.explodeObject(toMatch);
+        if (objects == null) {
+            return null;
         }
-
-        if (firstArgAsString == null) {
-            // always match
-            return toCompare;
-        }
-        return toCompare.equals(firstArgAsString) ? toCompare : null;
+        return objects.stream().map(object -> {
+            if (object instanceof ClassNode) {
+                return ((ClassNode) object).getName();
+            } else if (object instanceof FieldNode) {
+                return ((FieldNode) object).getName();
+            } else if (object instanceof MethodNode) {
+                return ((MethodNode) object).getName();
+            } else if (object instanceof PropertyNode) {
+                return ((PropertyNode) object).getName();
+            } else if (object instanceof AnnotationNode) {
+                return ((AnnotationNode) object).getClassNode().getName();
+            } else if (object instanceof MethodCallExpression) {
+                return ((MethodCallExpression) object).getMethodAsString();
+            } else if (object instanceof MapEntryExpression) {
+                return ((MapEntryExpression) object).getKeyExpression().getText();
+            } else if (object instanceof Variable) {
+                return ((Variable) object).getName();
+            } else if (object instanceof BinaryExpression &&
+                ((BinaryExpression) object).getLeftExpression() instanceof Variable &&
+                ((BinaryExpression) object).getOperation().getType() == Types.ASSIGN) {
+                return ((Variable) ((BinaryExpression) object).getLeftExpression()).getName();
+            } else if (object instanceof Expression) {
+                return ((Expression) object).getText();
+            } else {
+                return object.toString();
+            }
+        }).collect(Collectors.toList());
     }
 
+    @Override
+    protected Object filterObject(Object name, GroovyDSLDContext context, String firstArgAsString) {
+        return (firstArgAsString == null || firstArgAsString.equals(name) ? name : null);
+    }
 }

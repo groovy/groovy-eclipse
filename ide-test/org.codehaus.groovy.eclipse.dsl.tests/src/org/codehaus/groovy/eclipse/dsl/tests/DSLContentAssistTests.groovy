@@ -47,16 +47,6 @@ final class DSLContentAssistTests extends CompletionTestSuite {
           method name:'flart', noParens:true, type:'Inner', params:[a:Integer, b:String]
         }
         '''.stripIndent()
-    private static final String NO_PARENS_FOR_DELEGATE = '''\
-        contribute(currentType('Inner')) {
-          delegatesTo type: 'Other', noParens: true
-        }
-        '''.stripIndent()
-    private static final String SET_DELEGATE_ON_INT = '''\
-        contribute(currentType(Integer) & enclosingCallName('foo')) {
-          setDelegateType(String)
-        }
-        '''.stripIndent()
 
     @BeforeClass
     static void setUpTests() {
@@ -89,9 +79,182 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     //--------------------------------------------------------------------------
 
+    @Test
+    void testAssignedVariable1() {
+        createDsls '''\
+            contribute(bind(exprs: assignedVariable())) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            def foo = v
+            '''.stripIndent()
+        checkUniqueProposal(contents, 'v', 'var_foo')
+    }
+
+    @Test
+    void testAssignedVariable2() {
+        createDsls '''\
+            contribute(bind(exprs: assignedVariable('foo'))) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            def foo = v
+            '''.stripIndent()
+        checkUniqueProposal(contents, 'v', 'var_foo')
+    }
+
+    @Test
+    void testAssignedVariable2a() {
+        createDsls '''\
+            contribute(bind(exprs: assignedVariable('boo'))) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            def foo = v
+            '''.stripIndent()
+        proposalExists(createProposalsAtOffset(contents, getIndexOf(contents, 'v')), 'var_foo', 0)
+    }
+
+    @Test
+    void testAssignedVariable3() {
+        createDsls '''\
+            contribute(bind(exprs: assignedVariable(~/f.*/))) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            def foo = v
+            '''.stripIndent()
+        checkUniqueProposal(contents, 'v', 'var_foo')
+    }
+
+    @Test
+    void testAssignedVariable3a() {
+        createDsls '''\
+            contribute(bind(exprs: assignedVariable(~/b.*/))) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            def foo = v
+            '''.stripIndent()
+        proposalExists(createProposalsAtOffset(contents, getIndexOf(contents, 'v')), 'var_foo', 0)
+    }
+
+    @Test
+    void testAssignedVariable4() {
+        createDsls '''\
+            contribute(bind(exprs: assignedVariable(name('foo')))) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            def foo = v
+            '''.stripIndent()
+        checkUniqueProposal(contents, 'v', 'var_foo')
+    }
+
+    @Test
+    void testAssignedVariable4a() {
+        createDsls '''\
+            contribute(bind(exprs: assignedVariable(name('boo')))) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            def foo = v
+            '''.stripIndent()
+        proposalExists(createProposalsAtOffset(contents, getIndexOf(contents, 'v')), 'var_foo', 0)
+    }
+
+    @Test
+    void testAssignedVariable5() {
+        createDsls '''\
+            contribute(bind(exprs: assignedVariable(type(BigInteger)))) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            BigInteger foo = v
+            '''.stripIndent()
+        checkUniqueProposal(contents, 'v', 'var_foo')
+    }
+
+    @Test
+    void testAssignedVariable5a() {
+        createDsls '''\
+            contribute(bind(exprs: assignedVariable(type(BigInteger)))) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            def foo = v
+            '''.stripIndent()
+        proposalExists(createProposalsAtOffset(contents, getIndexOf(contents, 'v')), 'var_foo', 0)
+    }
+
+    @Test
+    void testDelegatesToNoParens1() {
+        createDsls '''\
+            contribute(currentType('Inner')) {
+              delegatesTo type: 'Other', noParens: true
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            class Other {
+              def blart(a, b, c) { }
+              def flart(a) { }
+            }
+            class Inner { }
+            def val = new Inner()
+            val.bl
+            '''.stripIndent()
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'val.bl', 'blart', 'blart val, val, val')
+        applyProposalAndCheck(proposal, contents.replace('val.bl', 'val.blart val, val, val'))
+    }
+
+    @Test
+    void testDelegatesToNoParens2() {
+        createDsls '''\
+            contribute(currentType('Inner')) {
+              delegatesTo type: 'Other', noParens: true
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            class Other {
+              def blart(a, b, c) { }
+              def flart(a) { }
+            }
+            class Inner { }
+            def val = new Inner()
+            val.fl
+            '''.stripIndent()
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'val.fl', 'flart', 'flart val')
+        applyProposalAndCheck(proposal, contents.replace('val.fl', 'val.flart val'))
+    }
+
     @Test // GRECLIPSE-1324
     void testEmptyClosure1() {
-        createDsls(SET_DELEGATE_ON_INT)
+        createDsls '''\
+            contribute(currentType(Integer) & enclosingCallName('foo')) {
+              setDelegateType(String)
+            }
+            '''.stripIndent()
+
         String contents = '''\
             def foo(@DelegatesTo(Integer) Closure cl) {
             }
@@ -110,7 +273,12 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test // GRECLIPSE-1324
     void testEmptyClosure2() {
-        createDsls(SET_DELEGATE_ON_INT)
+        createDsls '''\
+            contribute(currentType(Integer) & enclosingCallName('foo')) {
+              setDelegateType(String)
+            }
+            '''.stripIndent()
+
         String contents = '''\
             def foo(@DelegatesTo(Integer) Closure cl) {
             }
@@ -185,37 +353,8 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         applyProposalAndCheck(proposal, contents.replace(' fl', ' flart 0, ""'))
     }
 
-    @Test
-    void testDelegatesToNoParens1() {
-        createDsls(NO_PARENS_FOR_DELEGATE)
-        String contents = '''\
-            class Other {
-              def blart(a, b, c) { }
-              def flart(a) { }
-            }
-            class Inner { }
-            def val = new Inner()
-            val.bl
-            '''.stripIndent()
-        ICompletionProposal proposal = checkUniqueProposal(contents, 'val.bl', 'blart', 'blart val, val, val')
-        applyProposalAndCheck(proposal, contents.replace('val.bl', 'val.blart val, val, val'))
-    }
-
-    @Test
-    void testDelegatesToNoParens2() {
-        createDsls(NO_PARENS_FOR_DELEGATE)
-        String contents = '''\
-            class Other {
-              def blart(a, b, c) { }
-              def flart(a) { }
-            }
-            class Inner { }
-            def val = new Inner()
-            val.fl
-            '''.stripIndent()
-        ICompletionProposal proposal = checkUniqueProposal(contents, 'val.fl', 'flart', 'flart val')
-        applyProposalAndCheck(proposal, contents.replace('val.fl', 'val.flart val'))
-    }
+    //--------------------------------------------------------------------------
+    // Built-in contributions:
 
     @Test
     void testNewifyTransform1() {
