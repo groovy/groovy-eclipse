@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,10 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
+import org.codehaus.groovy.syntax.Types;
 import org.eclipse.core.resources.IStorage;
 
 /**
@@ -36,13 +38,9 @@ public class TypePointcut extends FilteringPointcut<ClassNode>  {
         super(containerIdentifier, pointcutName, ClassNode.class);
     }
 
-    /**
-     * Grabs the explicit type of the {@link AnnotatedNode}.  This will not return
-     *  the expected value for {@link Expression}s, unless they are constants or variable declarations with an explicit type.
-     */
     @Override
     protected Collection<ClassNode> explodeObject(Object toMatch) {
-        ClassNode type;
+        ClassNode type = null;
         if (toMatch instanceof ClassNode) {
             type = (ClassNode) toMatch;
         } else if (toMatch instanceof FieldNode) {
@@ -51,13 +49,16 @@ public class TypePointcut extends FilteringPointcut<ClassNode>  {
             type = ((MethodNode) toMatch).getReturnType();
         } else if (toMatch instanceof PropertyNode) {
             type = ((PropertyNode) toMatch).getType();
-        } else if (toMatch instanceof Expression) {
-            type = ((Expression) toMatch).getType();
         } else if (toMatch instanceof Variable) {
             type = ((Variable) toMatch).getType();
-        } else {
-            type = null;
+        } else if (toMatch instanceof BinaryExpression &&
+            ((BinaryExpression) toMatch).getLeftExpression() instanceof Variable &&
+            ((BinaryExpression) toMatch).getOperation().getType() == Types.ASSIGN) {
+            type = ((Variable) ((BinaryExpression) toMatch).getLeftExpression()).getType();
+        } else if (toMatch instanceof Expression) {
+            type = ((Expression) toMatch).getType();
         }
+
         if (type != null) {
             return Collections.singleton(type);
         } else {
@@ -67,6 +68,6 @@ public class TypePointcut extends FilteringPointcut<ClassNode>  {
 
     @Override
     protected ClassNode filterObject(ClassNode result, GroovyDSLDContext context, String firstArgAsString) {
-        return firstArgAsString == null ? result : (result.getName().equals(firstArgAsString) ? result : null);
+        return (firstArgAsString == null || firstArgAsString.equals(result.getName()) ? result : null);
     }
 }

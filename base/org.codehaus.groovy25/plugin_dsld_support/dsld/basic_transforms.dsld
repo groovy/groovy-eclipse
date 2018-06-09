@@ -108,15 +108,11 @@ contribute(enclosingClass(annos: annotatedBy(Newify)) | enclosingField(annos: an
             }
 
             // check for method call (i.e. "HashSet(32)")
-            if (currentNode instanceof ConstantExpression &&
-                enclosingNode instanceof MethodCallExpression && enclosingNode.method == currentNode &&
-                enclosingNode.objectExpression instanceof VariableExpression && enclosingNode.objectExpression.isThisExpression()) {
-
+            if (currentNode instanceof ConstantExpression && enclosingNode instanceof MethodCallExpression && enclosingNode.method == currentNode && enclosingNode.isImplicitThis()) {
                 resolveNewifyType(currentNode.text)
             }
             // check for free variable (i.e. "HashS")
             else if (currentNode instanceof VariableExpression && currentNode.accessedVariable instanceof DynamicVariable) {
-
                 // TODO: Should some of this be refactored into a DSL type lookup facility?
                 def env = currentType.module.context.resolver.scope.environment.nameEnvironment
                 String prefix = currentNode.name; boolean findMembers = true, camelCaseMatch = false; int searchFor = org.eclipse.jdt.core.search.IJavaSearchConstants.CLASS
