@@ -134,11 +134,6 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
         return (VariableScope.DGSM_CLASS_NODE.equals(category) || (currentScope != null && currentScope.isDefaultStaticCategory(category)));
     }
 
-    @Override
-    public boolean redoForLoopClosure() {
-        return true;
-    }
-
     //--------------------------------------------------------------------------
 
     protected class CategoryMethodProposal extends GroovyMethodProposal {

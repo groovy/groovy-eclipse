@@ -205,11 +205,6 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
         }
     }
 
-    @Override
-    public boolean redoForLoopClosure() {
-        return true;
-    }
-
     protected static ClassNode tryResolveClassNode(String typeName, ModuleNode module) {
         for (ClassNode t : module.getClasses()) {
             if (t.getName().equals(typeName)) {
