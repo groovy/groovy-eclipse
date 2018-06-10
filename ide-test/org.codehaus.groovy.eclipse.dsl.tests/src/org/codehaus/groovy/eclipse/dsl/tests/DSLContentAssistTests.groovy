@@ -251,6 +251,37 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
+    void testAssignedVariable9() {
+        createDsls '''\
+            contribute(bind(exprs: assignedVariable())) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            foo = {
+              bar {
+                baz {
+                }
+              }
+            }
+            '''.stripIndent()
+        checkUniqueProposal(contents, 'baz {', 'var_foo')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/600
+    void testAssignedVariable10() {
+        createDsls '''\
+            contribute(bind(exprs: assignedVariable())) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = 'foo = '.stripIndent()
+        checkUniqueProposal(contents, '= ', 'var_foo')
+    }
+
+    @Test
     void testDelegatesToNoParens1() {
         createDsls '''\
             contribute(currentType('Inner')) {
