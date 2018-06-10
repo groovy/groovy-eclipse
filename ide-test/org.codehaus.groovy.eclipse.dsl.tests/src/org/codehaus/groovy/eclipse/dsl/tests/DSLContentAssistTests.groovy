@@ -217,6 +217,18 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         checkUniqueProposal(contents, '= ', 'var_foo')
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/600
+    void testAssignedVariable6a() {
+        createDsls '''\
+            contribute(bind(exprs: assignedVariable())) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = 'foo = '.stripIndent()
+        checkUniqueProposal(contents, '= ', 'var_foo')
+    }
+
     @Test // https://github.com/groovy/groovy-eclipse/issues/598
     void testAssignedVariable7() {
         createDsls '''\
@@ -227,6 +239,20 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
         String contents = '''\
             def foo = { }
+            '''.stripIndent()
+        checkUniqueProposal(contents, '{ ', 'var_foo')
+    }
+
+    @Test
+    void testAssignedVariable7a() {
+        createDsls '''\
+            contribute(bind(exprs: assignedVariable())) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            foo = { }
             '''.stripIndent()
         checkUniqueProposal(contents, '{ ', 'var_foo')
     }
@@ -251,7 +277,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
-    void testAssignedVariable9() {
+    void testAssignedVariable8a() {
         createDsls '''\
             contribute(bind(exprs: assignedVariable())) {
               property name: 'var_' + exprs[0].leftExpression.name
@@ -267,18 +293,6 @@ final class DSLContentAssistTests extends CompletionTestSuite {
             }
             '''.stripIndent()
         checkUniqueProposal(contents, 'baz {', 'var_foo')
-    }
-
-    @Test // https://github.com/groovy/groovy-eclipse/issues/600
-    void testAssignedVariable10() {
-        createDsls '''\
-            contribute(bind(exprs: assignedVariable())) {
-              property name: 'var_' + exprs[0].leftExpression.name
-            }
-            '''.stripIndent()
-
-        String contents = 'foo = '.stripIndent()
-        checkUniqueProposal(contents, '= ', 'var_foo')
     }
 
     @Test
