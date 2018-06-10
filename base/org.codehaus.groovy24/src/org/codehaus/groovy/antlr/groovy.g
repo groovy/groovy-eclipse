@@ -3075,6 +3075,21 @@ assignmentExpression[int lc_stmt]
             expressionStatementNoCheck
             // If left-context of {x = y} is a statement boundary,
             // define the left-context of y as an initializer.
+            
+	        // GRECLIPSE add
+	        exception
+	        catch [RecognitionException e] {
+	            // if empty assignment was found, produce something compatible with content assist
+	            int index = 0;
+	            if (ASSIGN == LT(index).getType() || ASSIGN == LT(--index).getType()) {
+	                astFactory.addASTChild(currentAST, missingIdentifier(LT(index), LT(index + 1)));
+	                #assignmentExpression = (AST) currentAST.root;
+	                reportError(e);
+	            } else {
+	                throw e;
+	            }
+	        }
+	        // GRECLIPSE end
         )?
     ;
 
