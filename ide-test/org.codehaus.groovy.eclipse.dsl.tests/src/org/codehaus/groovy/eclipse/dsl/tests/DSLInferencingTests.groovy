@@ -366,8 +366,8 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
 
     @Test
     void testEnclosingCall3() {
-        createDsls('contribute(enclosingCall(name("foo") & hasArgument(name("arg") & bind(value : value()))) & isThisType()) {  ' +
-            'value.each { property name: "${it}Prop", type: Double } }')
+        createDsls('contribute(enclosingCall(name("foo") & hasArgument(name("arg") & bind(values: value()))) & isThisType()) {  ' +
+            'values.each { property name: "${it}Prop", type: Double } }')
 
         String contents = 'foo(arg:"yes", arg2:yesProp)'
         int start = contents.lastIndexOf('yesProp')
@@ -377,8 +377,8 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
 
     @Test
     void testEnclosingCall4() {
-        createDsls('contribute(enclosingCall(name("foo") & hasArgument(value : name("arg"))) & isThisType()) {  ' +
-            'value.each { property name: "${it}Prop", type: Double } }')
+        createDsls('contribute(enclosingCall(name("foo") & hasArgument(names: name("arg"))) & isThisType()) {  ' +
+            'names.each { property name: "${it}Prop", type: Double } }')
 
         String contents = 'foo(arg:argProp)'
         int start = contents.lastIndexOf('argProp')
@@ -388,8 +388,8 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
 
     @Test
     void testEnclosingCall5() {
-        createDsls('contribute(enclosingCall(name("foo") & hasArgument(bind(value : name("arg")) | bind(value : name("arg2")))) & isThisType()) {  ' +
-            'value.each { property name: "${it}Prop", type: Double } }')
+        createDsls('contribute(enclosingCall(name("foo") & hasArgument(bind(names: name("arg")) | bind(names: name("arg2")))) & isThisType()) {  ' +
+            'names.each { property name: "${it}Prop", type: Double } }')
 
         String contents = 'foo(arg:argProp)'
         int start = contents.lastIndexOf('argProp')
@@ -399,8 +399,8 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
 
     @Test
     void testEnclosingCall6() {
-        createDsls('contribute(enclosingCall(name("foo") & hasArgument(bind(value : name("arg"))) & hasArgument(name("arg2"))) & isThisType()) {  ' +
-            'value.each { property name: "${it}Prop", type: Double } }')
+        createDsls('contribute(enclosingCall(name("foo") & hasArgument(bind(names: name("arg"))) & hasArgument(name("arg2"))) & isThisType()) {  ' +
+            'names.each { property name: "${it}Prop", type: Double } }')
 
         String contents = 'foo(arg:argProp, arg2: nuthin)'
         int start = contents.lastIndexOf('argProp')
@@ -410,8 +410,8 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
 
     @Test
     void testEnclosingCall7() {
-        createDsls('contribute(enclosingCall(name("foo") & hasArgument(bind(value : value()) & name("arg"))) & isThisType()) {  ' +
-            'value.each { property name: "${it}Prop", type: Double } }')
+        createDsls('contribute(enclosingCall(name("foo") & hasArgument(bind(values: value()) & name("arg"))) & isThisType()) {  ' +
+            'values.each { property name: "${it}Prop", type: Double } }')
 
         String contents = 'foo(arg:"arg", arg2:argProp)'
         int start = contents.lastIndexOf('argProp')
@@ -426,7 +426,7 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
             '    name("MyAnno") &   \n' +
             '    hasAttribute(\n' +
             '        name("name") & \n' +
-            '        bind(vals : value()))))) {\n' +
+            '        bind(vals: value()))))) {\n' +
             '    vals.each { property name:it, type: Double }\n' +
             '}')
         String contents =
@@ -449,11 +449,11 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
             '    name("MyAnno") &   \n' +
             '    hasAttribute(\n' +
             '        name("name") & \n' +
-            '        bind(names : value())) &\n' +
+            '        bind(names: value())) &\n' +
             '    hasAttribute(\n' +
             '        name("type") & \n' +
-            '        bind(types : value()))))) {\n' +
-            '    property name : names.iterator().next(), type: types.iterator().next()\n' +
+            '        bind(types: value()))))) {\n' +
+            '    property name: names.iterator().next(), type: types.iterator().next()\n' +
             '}')
         String contents =
             '@interface MyAnno {\n' +
@@ -469,37 +469,64 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
         assertType(contents, start, end, 'java.lang.Double')
     }
 
-    @Test // GRECLIPSE-1190
+    @Test
     void testHasArgument1() {
-        createDsls(
-            'enclosingMethod(name("foo") & declaringType("Flart") & hasArgument("arg")).accept {\n' +
-            '  property name:"arg", type:"Flart"\n' +
-            '}')
+        createDsls '''\
+            contribute(enclosingMethod(name('foo') & declaringType('Flart') & hasArgument('arg'))) {
+              property name:'arg', type:'Flart'
+            }
+            '''.stripIndent()
 
-        String contents =
-            'class Flart {\n' +
-            '  def foo(arg) { arg } }'
-
-        int start = contents.lastIndexOf('arg')
-        int end = start + 'arg'.length()
-        assertType(contents, start, end, 'Flart')
+        String contents = '''\
+            class Flart {
+              def foo(arg) {
+                arg
+              }
+            }
+            '''
+        int offset = contents.lastIndexOf('arg')
+        assertType(contents, offset, offset + 'arg'.length(), 'Flart')
     }
 
-    @Test // GRECLIPSE-1190
+    @Test
     void testHasArgument2() {
-        createDsls(
-            'enclosingMethod(name("foo") & type("Flart") & hasArgument("arg")).accept {\n' +
-                    '  property name:"arg", type:"Flart"\n' +
-            '}')
+        createDsls '''\
+            contribute(enclosingMethod(name('foo') & type('Flart') & hasArgument('arg'))) {
+              property name:'arg', type:'Flart'
+            }
+            '''.stripIndent()
 
-        String contents =
-            'class Flart { }\n' +
-            'class Other {\n' +
-            '  Flart foo(arg) { arg } }'
+        String contents = '''\
+            class Flart { }
+            class Other {
+              Flart foo(arg) {
+                arg
+              }
+            }
+            '''.stripIndent()
 
-        int start = contents.lastIndexOf('arg')
-        int end = start + 'arg'.length()
-        assertType(contents, start, end, 'Flart')
+        int offset = contents.lastIndexOf('arg')
+        assertType(contents, offset, offset + 'arg'.length(), 'Flart')
+    }
+
+    @Test
+    void testHasArgument3() {
+        createDsls '''\
+            contribute(enclosingCall(name('foo') & hasArgument('arg')) & inClosure()) {
+              property name:'bar', type:BigDecimal
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            def arg
+            def foo(... args) {}
+            def baz = foo(arg) { ->
+              bar
+            }
+            '''.stripIndent()
+
+        int offset = contents.lastIndexOf('bar')
+        assertType(contents, offset, offset + 'bar'.length(), 'java.math.BigDecimal')
     }
 
     @Test // GRECLIPSE-1261

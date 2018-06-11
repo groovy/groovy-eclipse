@@ -33,8 +33,7 @@ import org.junit.Test
  */
 final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
 
-    BuiltInDSLInferencingTests()
-    {
+    BuiltInDSLInferencingTests() {
         doRemoveClasspathContainer = false
     }
 
@@ -54,7 +53,7 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
         IPackageFragmentRoot root = javaProject.children.find { it.elementName.contains('plugin_dsld') }
         List<String> elements = javaProject.children*.elementName
 
-        List<String> possibleFrags = javaProject.packageFragments.findAll { it.elementName.equals('dsld') }.collectMany { IPackageFragment frag ->
+        List<String> possibleFrags = javaProject.packageFragments.findAll { it.elementName == 'dsld' }.collectMany { frag ->
             def items = [frag.toString()]
             if (frag.children) {
                 items << '  ['
