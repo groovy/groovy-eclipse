@@ -444,6 +444,96 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         applyProposalAndCheck(proposal, contents.replace(' fl', ' flart 0, ""'))
     }
 
+    @Test
+    void testConfigScript1() {
+        createDsld '''\
+            contribute(enclosingCall(name('withConfig') & hasArgument('configuration')) & inClosure() & isThisType()) {
+              method(name:'imports', type:void, params:[block:Closure])
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            withConfig(configuration) {
+              // here
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.indexOf('// here'))
+        proposalExists(proposals, 'imports(Closure block)', 1)
+    }
+
+    @Test
+    void testConfigScript1a() {
+        createDsld '''\
+            contribute(enclosingCall(name('withConfig') & hasArgument('configuration')) & inClosure() & isThisType()) {
+              method(name:'imports', type:void, params:[block:Closure])
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            withConfig(configuration) {
+              x.i
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'x.i'))
+        proposalExists(proposals, 'imports(Closure block)', 0)
+    }
+
+    @Test
+    void testConfigScript2() {
+        createDsld '''\
+            |def configBlock = { -> enclosingCall(name('withConfig') & hasArgument('configuration')) & inClosure() & isThisType() }
+            |
+            |contribute(configBlock()) {
+            |  method(name:'imports', type:void, params:[block:Closure])
+            |}
+            |
+            |contribute(configBlock() & enclosingCallName('imports')) {
+            |  setDelegateType('org.codehaus.groovy.control.customizers.builder.ImportCustomizerFactory.ImportHelper')
+            |}
+            |'''.stripMargin()
+
+        String contents = '''\
+            withConfig(configuration) {
+              imports {
+                star 'groovy.transform'
+                norm
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'norm'))
+        proposalExists(proposals, 'normal', 2)
+    }
+
+    @Test
+    void testConfigScript3() {
+        createDsld '''\
+            |def configBlock = { -> enclosingCall(name('withConfig') & hasArgument('configuration')) & inClosure() & isThisType() }
+            |
+            |contribute(configBlock()) {
+            |  method(name:'imports', type:void, params:[block:Closure])
+            |}
+            |
+            |contribute(configBlock() & enclosingCallName('imports')) {
+            |  setDelegateType('org.codehaus.groovy.control.customizers.builder.ImportCustomizerFactory.ImportHelper')
+            |}
+            |'''.stripMargin()
+
+        String contents = '''\
+            withConfig(configuration) {
+              source(basenameValidator: { !!(it =~ /.src.test./) }) {
+                imports {
+                  normal 'org.junit.Test'
+                  st
+                }
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'st'))
+        proposalExists(proposals, 'staticMember', 2)
+        proposalExists(proposals, 'staticStar', 2)
+        proposalExists(proposals, 'star', 1)
+    }
+
     //--------------------------------------------------------------------------
     // Built-in contributions:
 

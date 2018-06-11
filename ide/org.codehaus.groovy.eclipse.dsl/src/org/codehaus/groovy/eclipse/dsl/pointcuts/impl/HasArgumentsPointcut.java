@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,12 +23,13 @@ import java.util.Collections;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.ast.expr.MapExpression;
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.MethodCall;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.eclipse.core.resources.IStorage;
@@ -43,12 +44,12 @@ public class HasArgumentsPointcut extends FilteringPointcut<AnnotatedNode>  {
     }
 
     /**
-     * Converts the method call arguments to expressions
+     * Converts method call arguments or method decl parameters to expressions.
      */
     @Override
     protected Collection<AnnotatedNode> explodeObject(Object toMatch) {
-        if (toMatch instanceof MethodCallExpression) {
-            Expression arguments = ((MethodCallExpression) toMatch).getArguments();
+        if (toMatch instanceof MethodCall) {
+            Expression arguments = ((MethodCall) toMatch).getArguments();
             if (arguments instanceof TupleExpression) {
                 Collection<Expression> innerArgs = ((TupleExpression) arguments).getExpressions();
                 Collection<AnnotatedNode> actualArgs = new ArrayList<>(innerArgs.size());
@@ -76,31 +77,24 @@ public class HasArgumentsPointcut extends FilteringPointcut<AnnotatedNode>  {
         return null;
     }
 
-    /**
-     * by default, matches on the names of named arguments (if a named expression), otherwise passes the arguments to contained pointcuts
-     */
     @Override
     protected AnnotatedNode filterObject(AnnotatedNode result, GroovyDSLDContext context, String firstArgAsString) {
+        boolean matches = false;
         if (firstArgAsString == null) {
-            // always match
+            matches = true;
+        } else if (result instanceof Variable) {
+            matches = firstArgAsString.equals(((Variable) result).getName());
+        } else if (result instanceof MapEntryExpression) {
+            if (((MapEntryExpression) result).getKeyExpression() instanceof ConstantExpression) {
+                matches = firstArgAsString.equals(((MapEntryExpression) result).getKeyExpression().getText());
+            }
+        }
+
+        if (matches) {
             if (result instanceof MapEntryExpression) {
                 return ((MapEntryExpression) result).getValueExpression();
-            } else {
-                return result;
             }
-        } else if (result instanceof MapEntryExpression) {
-            MapEntryExpression entry = (MapEntryExpression) result;
-            if (entry.getKeyExpression() instanceof ConstantExpression) {
-                String argName = entry.getKeyExpression().getText();
-                if (argName.equals(firstArgAsString)) {
-                    return entry.getValueExpression();
-                }
-            }
-        } else if (result instanceof Parameter) {
-            String name = ((Parameter) result).getName();
-            if (name.equals(firstArgAsString)) {
-                return result;
-            }
+            return result; // parameter or variable
         }
         return null;
     }
