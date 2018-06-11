@@ -22,7 +22,6 @@ import org.codehaus.groovy.eclipse.codeassist.tests.CompletionTestSuite
 import org.codehaus.groovy.eclipse.dsl.DSLPreferencesInitializer
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
 import org.eclipse.core.resources.IFile
-import org.eclipse.core.resources.IProject
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
@@ -31,22 +30,6 @@ import org.junit.Ignore
 import org.junit.Test
 
 final class DSLContentAssistTests extends CompletionTestSuite {
-
-    private static final String COMMAND_CHAIN_NO_ARGS = '''\
-        contribute(currentType('Inner')) {
-          method name:'flart', noParens:true, type:'Inner'
-        }
-        '''.stripIndent()
-    private static final String COMMAND_CHAIN_ONE_ARG = '''\
-        contribute(currentType('Inner')) {
-          method name:'flart', noParens:true, type:'Inner', params:[a:Integer]
-        }
-        '''.stripIndent()
-    private static final String COMMAND_CHAIN_TWO_ARGS = '''\
-        contribute(currentType('Inner')) {
-          method name:'flart', noParens:true, type:'Inner', params:[a:Integer, b:String]
-        }
-        '''.stripIndent()
 
     @BeforeClass
     static void setUpTests() {
@@ -57,31 +40,24 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     void setUp() {
         assumeTrue(!GroovyDSLCoreActivator.default.isDSLDDisabled())
         addClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID)
-        withProject { IProject project ->
+        withProject { project ->
             GroovyDSLCoreActivator.default.contextStoreManager.initialize(project, true)
-          //GroovyDSLCoreActivator.default.contextStoreManager.ignoreProject(project)
         }
 
         setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'true')
         setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'true')
     }
 
-    private String[] createDsls(String... dsls) {
-        System.out.println("Now creating $dsls.length DSLD files.")
-        int i = 0
-        for (dsl in dsls) {
-            println "Creating:\n$dsl"
-            IFile file = addPlainText(dsl, "dsl${i++}.dsld")
-            assert file.exists() : "File $file just created, but doesn't exist"
-        }
-        return dsls
+    private void createDsld(CharSequence dsld) {
+        IFile file = addPlainText(dsld, "${nextUnitName()}.dsld")
+        assert file.exists() : "File $file just created, but doesn't exist"
     }
 
     //--------------------------------------------------------------------------
 
     @Test
     void testAssignedVariable1() {
-        createDsls '''\
+        createDsld '''\
             contribute(bind(exprs: assignedVariable())) {
               property name: 'var_' + exprs[0].leftExpression.name
             }
@@ -95,7 +71,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testAssignedVariable2() {
-        createDsls '''\
+        createDsld '''\
             contribute(bind(exprs: assignedVariable('foo'))) {
               property name: 'var_' + exprs[0].leftExpression.name
             }
@@ -109,7 +85,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testAssignedVariable2a() {
-        createDsls '''\
+        createDsld '''\
             contribute(bind(exprs: assignedVariable('boo'))) {
               property name: 'var_' + exprs[0].leftExpression.name
             }
@@ -123,7 +99,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testAssignedVariable3() {
-        createDsls '''\
+        createDsld '''\
             contribute(bind(exprs: assignedVariable(~/f.*/))) {
               property name: 'var_' + exprs[0].leftExpression.name
             }
@@ -137,7 +113,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testAssignedVariable3a() {
-        createDsls '''\
+        createDsld '''\
             contribute(bind(exprs: assignedVariable(~/b.*/))) {
               property name: 'var_' + exprs[0].leftExpression.name
             }
@@ -151,7 +127,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testAssignedVariable4() {
-        createDsls '''\
+        createDsld '''\
             contribute(bind(exprs: assignedVariable(name('foo')))) {
               property name: 'var_' + exprs[0].leftExpression.name
             }
@@ -165,7 +141,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testAssignedVariable4a() {
-        createDsls '''\
+        createDsld '''\
             contribute(bind(exprs: assignedVariable(name('boo')))) {
               property name: 'var_' + exprs[0].leftExpression.name
             }
@@ -179,7 +155,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testAssignedVariable5() {
-        createDsls '''\
+        createDsld '''\
             contribute(bind(exprs: assignedVariable(type(BigInteger)))) {
               property name: 'var_' + exprs[0].leftExpression.name
             }
@@ -193,7 +169,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testAssignedVariable5a() {
-        createDsls '''\
+        createDsld '''\
             contribute(bind(exprs: assignedVariable(type(BigInteger)))) {
               property name: 'var_' + exprs[0].leftExpression.name
             }
@@ -207,7 +183,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testAssignedVariable6() {
-        createDsls '''\
+        createDsld '''\
             contribute(bind(exprs: assignedVariable())) {
               property name: 'var_' + exprs[0].leftExpression.name
             }
@@ -219,7 +195,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/600
     void testAssignedVariable6a() {
-        createDsls '''\
+        createDsld '''\
             contribute(bind(exprs: assignedVariable())) {
               property name: 'var_' + exprs[0].leftExpression.name
             }
@@ -231,7 +207,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/598
     void testAssignedVariable7() {
-        createDsls '''\
+        createDsld '''\
             contribute(bind(exprs: assignedVariable())) {
               property name: 'var_' + exprs[0].leftExpression.name
             }
@@ -245,7 +221,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testAssignedVariable7a() {
-        createDsls '''\
+        createDsld '''\
             contribute(bind(exprs: assignedVariable())) {
               property name: 'var_' + exprs[0].leftExpression.name
             }
@@ -259,7 +235,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testAssignedVariable8() {
-        createDsls '''\
+        createDsld '''\
             contribute(bind(exprs: assignedVariable())) {
               property name: 'var_' + exprs[0].leftExpression.name
             }
@@ -278,7 +254,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testAssignedVariable8a() {
-        createDsls '''\
+        createDsld '''\
             contribute(bind(exprs: assignedVariable())) {
               property name: 'var_' + exprs[0].leftExpression.name
             }
@@ -297,7 +273,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testDelegatesToNoParens1() {
-        createDsls '''\
+        createDsld '''\
             contribute(currentType('Inner')) {
               delegatesTo type: 'Other', noParens: true
             }
@@ -318,7 +294,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testDelegatesToNoParens2() {
-        createDsls '''\
+        createDsld '''\
             contribute(currentType('Inner')) {
               delegatesTo type: 'Other', noParens: true
             }
@@ -339,7 +315,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test // GRECLIPSE-1324
     void testEmptyClosure1() {
-        createDsls '''\
+        createDsld '''\
             contribute(currentType(Integer) & enclosingCallName('foo')) {
               setDelegateType(String)
             }
@@ -363,7 +339,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test // GRECLIPSE-1324
     void testEmptyClosure2() {
-        createDsls '''\
+        createDsld '''\
             contribute(currentType(Integer) & enclosingCallName('foo')) {
               setDelegateType(String)
             }
@@ -384,7 +360,12 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testCommandChain1() {
-        createDsls(COMMAND_CHAIN_NO_ARGS)
+        createDsld '''\
+            contribute(currentType('Inner')) {
+              method name:'flart', noParens:true, type:'Inner'
+            }
+            '''.stripIndent()
+
         String contents = '''\
             class Inner { }
             def val = new Inner()
@@ -396,7 +377,12 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testCommandChain2() {
-        createDsls(COMMAND_CHAIN_NO_ARGS)
+        createDsld '''\
+            contribute(currentType('Inner')) {
+              method name:'flart', noParens:true, type:'Inner'
+            }
+            '''.stripIndent()
+
         String contents = '''\
             class Inner { }
             def val = new Inner()
@@ -408,7 +394,12 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testCommandChain3() {
-        createDsls(COMMAND_CHAIN_NO_ARGS)
+        createDsld '''\
+            contribute(currentType('Inner')) {
+              method name:'flart', noParens:true, type:'Inner'
+            }
+            '''.stripIndent()
+
         String contents = '''\
             class Inner { }
             def val = new Inner()
@@ -420,7 +411,12 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testCommandChain4() {
-        createDsls(COMMAND_CHAIN_ONE_ARG)
+        createDsld '''\
+            contribute(currentType('Inner')) {
+              method name:'flart', noParens:true, type:'Inner', params:[a:Integer]
+            }
+            '''.stripIndent()
+
         String contents = '''\
             class Inner { }
             def val = new Inner()
@@ -433,7 +429,12 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testCommandChain5() {
-        createDsls(COMMAND_CHAIN_TWO_ARGS)
+        createDsld '''\
+            contribute(currentType('Inner')) {
+              method name:'flart', noParens:true, type:'Inner', params:[a:Integer, b:String]
+            }
+            '''.stripIndent()
+
         String contents = '''\
             class Inner { }
             def val = new Inner()
