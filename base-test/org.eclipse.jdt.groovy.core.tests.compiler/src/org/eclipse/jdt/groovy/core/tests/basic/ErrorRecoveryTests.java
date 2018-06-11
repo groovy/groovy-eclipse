@@ -100,6 +100,102 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testIncompleteAssignmentParsingRecovery1a() {
+        runNegativeTest(new String[] {
+            "X.groovy",
+            "int err\n" +
+            "err = ",
+        },
+        "----------\n" +
+        "1. ERROR in X.groovy (at line 2)\n" +
+        "\terr = \n" +
+        "\t     ^\n" +
+        "Groovy:unexpected token:  @ line 2, column 6.\n" +
+        "----------\n" +
+        "2. ERROR in X.groovy (at line 2)\n" +
+        "\terr = \n" +
+        "\t     ^\n" +
+        "Groovy:Invalid variable name. Must start with a letter but was: ?\n" +
+        "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "public class X extends groovy.lang.Script {\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "  public X(public groovy.lang.Binding context) {\n" +
+            "  }\n" +
+            "  public static void main(public java.lang.String... args) {\n" +
+            "  }\n" +
+            "  public java.lang.Object run() {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testIncompleteAssignmentParsingRecovery1b() {
+        runNegativeTest(new String[] {
+            "X.groovy",
+            "int err\n" +
+            "err *= ",
+        },
+        "----------\n" +
+        "1. ERROR in X.groovy (at line 2)\n" +
+        "\terr *= \n" +
+        "\t      ^\n" +
+        "Groovy:unexpected token:  @ line 2, column 7.\n" +
+        "----------\n" +
+        "2. ERROR in X.groovy (at line 2)\n" +
+        "\terr *= \n" +
+        "\t      ^\n" +
+        "Groovy:Invalid variable name. Must start with a letter but was: ?\n" +
+        "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "public class X extends groovy.lang.Script {\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "  public X(public groovy.lang.Binding context) {\n" +
+            "  }\n" +
+            "  public static void main(public java.lang.String... args) {\n" +
+            "  }\n" +
+            "  public java.lang.Object run() {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testIncompleteAssignmentParsingRecovery1c() {
+        runNegativeTest(new String[] {
+            "X.groovy",
+            "int err\n" +
+            "err **= ",
+        },
+        "----------\n" +
+        "1. ERROR in X.groovy (at line 2)\n" +
+        "\terr **= \n" +
+        "\t       ^\n" +
+        "Groovy:unexpected token:  @ line 2, column 8.\n" +
+        "----------\n" +
+        "2. ERROR in X.groovy (at line 2)\n" +
+        "\terr **= \n" +
+        "\t       ^\n" +
+        "Groovy:Invalid variable name. Must start with a letter but was: ?\n" +
+        "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "public class X extends groovy.lang.Script {\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "  public X(public groovy.lang.Binding context) {\n" +
+            "  }\n" +
+            "  public static void main(public java.lang.String... args) {\n" +
+            "  }\n" +
+            "  public java.lang.Object run() {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
     public void testIncompleteAssignmentParsingRecovery2() {
         runNegativeTest(new String[] {
             "X.groovy",
@@ -117,6 +213,37 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         "\t}\n" +
         "\t^\n" +
         "Groovy:unexpected token: } @ line 3, column 1.\n" +
+        "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "public class X {\n" +
+            "  private int err;\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testIncompleteAssignmentParsingRecovery2a() {
+        runNegativeTest(new String[] {
+            "X.groovy",
+            "public class X {\n" +
+            "  int err\n" +
+            "  X() {\n" +
+            "    err = \n" +
+            "  }\n" +
+            "}",
+        },
+        "----------\n" +
+        "1. ERROR in X.groovy (at line 4)\n" +
+        "\terr = \n" +
+        "\t     ^\n" +
+        "Groovy:Invalid variable name. Must start with a letter but was: ?\n" +
+        "----------\n" +
+        "2. ERROR in X.groovy (at line 5)\n" +
+        "\t}\n" +
+        "\t^\n" +
+        "Groovy:unexpected token: } @ line 5, column 3.\n" +
         "----------\n");
 
         checkGCUDeclaration("X.groovy",
