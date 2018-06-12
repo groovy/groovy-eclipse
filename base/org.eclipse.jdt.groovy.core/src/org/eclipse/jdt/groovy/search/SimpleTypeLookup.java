@@ -76,11 +76,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     }
 
     @Override
-    public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
-        return lookupType(node, scope, objectExpressionType, false);
-    }
-
-    @Override
     public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType, boolean isStaticObjectExpression) {
         TypeConfidence[] confidence = {TypeConfidence.EXACT};
         if (ClassHelper.isPrimitiveType(objectExpressionType)) {

@@ -55,12 +55,39 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
     //
 
     @Test
-    void testSimpleDSL() {
-        assertType('foo', 0, 3, 'java.lang.Object')
-        createDsls('currentType().accept { property ( name: "foo", type: Date ) }')
-        assertType('foo', 0, 3, 'java.util.Date')
-        deleteDslFile(0)
-        assertType('foo', 0, 3, 'java.lang.Object')
+    void testBindings1() {
+        GroovyCompilationUnit unit = addDsldSource('''\
+            bind(types: currentType()).accept {
+              types
+            }
+            '''.stripIndent())
+
+        int offset = unit.source.lastIndexOf('types')
+        InferencingTestSuite.assertType(unit, offset, offset + 'types'.length(), 'java.util.Collection<E extends java.lang.Object>')
+    }
+
+    @Test
+    void testBindings2() {
+        GroovyCompilationUnit unit = addDsldSource('''\
+            contribute(bind(types: currentType())) {
+              types
+            }
+            '''.stripIndent())
+
+        int offset = unit.source.lastIndexOf('types')
+        InferencingTestSuite.assertType(unit, offset, offset + 'types'.length(), 'java.util.Collection<E extends java.lang.Object>')
+    }
+
+    @Test
+    void testBindings3() {
+        GroovyCompilationUnit unit = addDsldSource('''\
+            contribute(currentType(annos: annotatedBy(Deprecated))) {
+              annos
+            }
+            '''.stripIndent())
+
+        int offset = unit.source.lastIndexOf('annos')
+        InferencingTestSuite.assertType(unit, offset, offset + 'annos'.length(), 'java.util.Collection<E extends java.lang.Object>')
     }
 
     @Test
@@ -120,7 +147,7 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
         assertDsldUnknown(unit, 'delegatesTo')
     }
 
-    @Test
+    @Test // unknown outside contribution block
     void testMetaDSL6() {
         GroovyCompilationUnit unit = addDsldSource('''\
             method
@@ -137,7 +164,7 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
         assertDsldUnknown(unit, 'delegatesToUseNamedArgs')
     }
 
-    @Test // within plain Groovy source, these things are unknown
+    @Test // unknown within plain Groovy source
     void testMetaDSL7() {
         String contents = '''\
             currentType().accept {
@@ -158,14 +185,46 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
         assertUnknown(contents, 'delegatesToUseNamedArgs')
     }
 
-    @Test
-    void testBindings() {
+    @Test // local declarations take precedence over meta-DSL contributions
+    void testMetaDSL8() {
         GroovyCompilationUnit unit = addDsldSource('''\
-            bind(b: currentType()).accept {
-              b
+            import org.codehaus.groovy.ast.*
+            contribute(bind(methods: enclosingMethod())) {
+              MethodNode mn = null
+              for (MethodNode method : methods) {
+                Parameter[] params = method.parameters
+                // ... if (...) {
+                mn = method
+                // }
+              }
+              method(name:'other', params: params(mn))
             }
             '''.stripIndent())
 
-        assertDsldType(unit, 'b')
+        // "method" in "Parameter[] params = method.parameters"
+        int start = unit.source.indexOf('method.'), until = start + 'method'.length()
+        def result = InferencingTestSuite.doVisit(start, until, unit, false).result
+        assert result.type.toString(false) == 'org.codehaus.groovy.ast.MethodNode'
+
+        // "method()" in "method(name:'other', params: params(mn))"
+        start = unit.source.lastIndexOf('method'); until = start + 'method'.length()
+        result = InferencingTestSuite.doVisit(start, until, unit, false).result
+        assert result.declaration instanceof org.codehaus.groovy.ast.MethodNode
+
+        // "params" in "Parameter[] params = method.parameters"
+        start = unit.source.indexOf('params'); until = start + 'params'.length()
+        result = InferencingTestSuite.doVisit(start, until, unit, false).result
+        assert result.type.toString(false) == 'org.codehaus.groovy.ast.Parameter[]'
+
+        // "params:" in "method(name:'other', params: params(mn))"
+        start = unit.source.indexOf('params:'); until = start + 'params'.length()
+        result = InferencingTestSuite.doVisit(start, until, unit, false).result
+        assert result.type.toString(false) == 'java.lang.String'
+
+        // "params()" in "method(name:'other', params: params(mn))"
+        start = unit.source.indexOf('params('); until = start + 'params'.length()
+        result = InferencingTestSuite.doVisit(start, until, unit, false).result
+        assert result.declaration instanceof org.codehaus.groovy.ast.MethodNode
+        assert result.type.toString(false) == 'java.util.Map <java.lang.String, org.codehaus.groovy.ast.ClassNode>'
     }
 }

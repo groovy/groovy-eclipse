@@ -193,6 +193,69 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
         assertDeclaringType(contents, start, end, 'Other')
     }
 
+    @Test // GRECLIPSE-1321
+    void testDelegatesTo7() {
+        createDsls(
+            'contribute(currentType(String)) {\n' +
+            '  delegatesTo "Obj"\n' +
+            '}')
+        String contents =
+            'public interface Obj {\n' +
+            '    String getFoo();\n' +
+            '    int foo(arg);\n' +
+            ' }\n' +
+            '"".getFoo()' +
+            '"".foo()'
+        int start = contents.lastIndexOf('foo')
+        int end = start + 'foo'.length()
+        assertType(contents, start, end, 'java.lang.Integer')
+        start = contents.lastIndexOf('getFoo')
+        end = start + 'getFoo'.length()
+        assertType(contents, start, end, 'java.lang.String')
+    }
+
+    @Test // GRECLIPSE-1442
+    void testDelegatesTo8() {
+        createDsls(
+            'contribute(currentType("Delegatee")) {\n' +
+            '    delegatesTo type: "MyCategory", asCategory: true\n' +
+            '}')
+        String contents =
+            'class MyCategory {\n' +
+            '    static int getSomething(Delegatee d) { }\n' +
+            '}\n' +
+            'class Delegatee { }\n' +
+            'new Delegatee().something \n' +
+            'new Delegatee().getSomething()'
+        int start = contents.lastIndexOf('getSomething')
+        int end = start + 'getSomething'.length()
+        assertType(contents, start, end, 'java.lang.Integer')
+        start = contents.lastIndexOf('something')
+        end = start + 'something'.length()
+        assertType(contents, start, end, 'java.lang.Integer')
+    }
+
+    @Test // GRECLIPSE-1442
+    void testDelegatesTo9() {
+        createDsls(
+            'contribute(currentType("Delegatee")) {\n' +
+            '    delegatesTo type: "MyCategory", asCategory: true\n' +
+            '}')
+        String contents =
+            'class MyCategory {\n' +
+            '    static boolean isSomething(Delegatee d) { }\n' +
+            '}\n' +
+            'class Delegatee { }\n' +
+            'new Delegatee().something \n' +
+            'new Delegatee().isSomething()'
+        int start = contents.lastIndexOf('isSomething')
+        int end = start + 'isSomething'.length()
+        assertType(contents, start, end, 'java.lang.Boolean')
+        start = contents.lastIndexOf('something')
+        end = start + 'something'.length()
+        assertType(contents, start, end, 'java.lang.Boolean')
+    }
+
     @Test
     void testGenerics1() {
         createDsls('contribute(currentType("Foo")) { property name: "fooProp", type: "List<Class<Foo>>" }')
@@ -310,36 +373,6 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
         int end = start + 'fooProp'.length()
         // script should be executed
         assertType(contents, start, end, 'java.util.Map<java.lang.Integer,java.lang.Long>')
-    }
-
-    @Test
-    void testIsThisType1() {
-        createDsls('contribute(isThisType()) { property name: "thisType", type:Integer }')
-        String contents =
-            'class Foo { \n' +
-            'def k() { \n' +
-            '  thisType\n' +
-            '  new Foo().thisType\n' +
-            '  [].thisType }\n' +
-            'def l = { \n' +
-            '  thisType\n' +
-            '  new Foo().thisType\n' +
-            '  [].thisType }\n' +
-            '}'
-
-        int loc = 0
-        int len = 'thisType'.length()
-        int num = 0
-        while ((loc = contents.indexOf('thisType', loc + 1)) > 0) {
-            if (num % 3 == 0) {
-                assertType(contents, loc, loc+len, 'java.lang.Integer')
-            } else if (num % 3 == 1) {
-                assertUnknownConfidence(contents, loc, loc+len, 'Foo')
-            } else if (num % 3 == 2) {
-                assertUnknownConfidence(contents, loc, loc+len, 'java.util.List<E>')
-            }
-            num++
-        }
     }
 
     @Test
@@ -666,27 +699,96 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
         assertType(contents, start, end, 'java.lang.Boolean')
     }
 
-    @Test // GRECLIPSE-1295
+    @Test
+    void testIsThisType1() {
+        createDsls '''\
+            contribute(isThisType()) {
+              property name: 'thisType', type: Integer
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            class Foo {
+              def m() {
+                thisType
+                new Foo().thisType
+                [].thisType
+              }
+            }
+            '''.stripIndent()
+
+        int offset = contents.indexOf('thisType')
+        assertType(contents, offset, offset + 'thisType'.length(), 'java.lang.Integer')
+
+        offset = contents.indexOf('thisType', offset + 1)
+        assertUnknownConfidence(contents, offset, offset + 'thisType'.length(), 'Foo')
+
+        offset = contents.indexOf('thisType', offset + 1)
+        assertUnknownConfidence(contents, offset, offset + 'thisType'.length(), 'java.util.List<E>')
+    }
+
+    @Test
     void testIsThisType2() {
-        createDsls('contribute(isThisType()) { property name:"hi", type:int }')
-        String contents =
-            'class Foo {\n' +
-            '  def meth(Closure c) { }\n' +
-            '}\n' +
-            'new Foo().meth { hi }'
-        int start = contents.lastIndexOf('hi')
-        int end = start + 'hi'.length()
-        assertType(contents, start, end, 'java.lang.Integer')
+        createDsls '''\
+            contribute(isThisType()) {
+              property name: 'thisType', type: Integer
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            class Foo {
+              def f = {
+                thisType
+                new Foo().thisType
+                [].thisType
+              }
+            }
+            '''.stripIndent()
+
+        int offset = contents.indexOf('thisType')
+        assertType(contents, offset, offset + 'thisType'.length(), 'java.lang.Integer')
+
+        offset = contents.indexOf('thisType', offset + 1)
+        assertUnknownConfidence(contents, offset, offset + 'thisType'.length(), 'Foo')
+
+        offset = contents.indexOf('thisType', offset + 1)
+        assertUnknownConfidence(contents, offset, offset + 'thisType'.length(), 'java.util.List<E>')
     }
 
     @Test // GRECLIPSE-1295
     void testIsThisType3() {
-        createDsls('contribute(currentTypeIsEnclosingType()) { property name:"hi", type:int }')
-        String contents =
-            'class Foo {\n' +
-            '  def meth(@DelegatesTo(Foo) Closure c) { }\n' +
-            '}\n' +
-            'new Foo().meth { hi }'
+        createDsls '''\
+            contribute(isThisType()) {
+              property name: 'hi', type: int
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            class Foo {
+              def meth(@DelegatesTo(Foo) Closure c) { }
+            }
+            new Foo().meth { hi }
+            '''.stripIndent()
+
+        int offset = contents.lastIndexOf('hi')
+        assertType(contents, offset, offset + 'hi'.length(), 'java.lang.Integer')
+    }
+
+    @Test // GRECLIPSE-1295
+    void testCurrentTypeIsEnclosingType1() {
+        createDsls '''\
+            contribute(currentTypeIsEnclosingType()) {
+              property name: 'hi', type: int
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            class Foo {
+              def meth(@DelegatesTo(Foo) Closure c) { }
+            }
+            new Foo().meth { hi }
+            '''.stripIndent()
+
         int start = contents.lastIndexOf('hi')
         int end = start + 'hi'.length()
         assertUnknownConfidence(contents, start, end, 'Foo')
@@ -726,69 +828,6 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
         int start = contents.lastIndexOf('hi')
         int end = start + 'hi'.length()
         assertType(contents, start, end, 'java.lang.Integer')
-    }
-
-    @Test // GRECLIPSE-1321
-    void testDelegatesTo7() {
-        createDsls(
-            'contribute(currentType(String)) {\n' +
-            '  delegatesTo "Obj"\n' +
-            '}')
-        String contents =
-            'public interface Obj {\n' +
-            '    String getFoo();\n' +
-            '    int foo(arg);\n' +
-            ' }\n' +
-            '"".getFoo()' +
-            '"".foo()'
-        int start = contents.lastIndexOf('foo')
-        int end = start + 'foo'.length()
-        assertType(contents, start, end, 'java.lang.Integer')
-        start = contents.lastIndexOf('getFoo')
-        end = start + 'getFoo'.length()
-        assertType(contents, start, end, 'java.lang.String')
-    }
-
-    @Test // GRECLIPSE-1442
-    void testDelegatesTo8() {
-        createDsls(
-            'contribute(currentType("Delegatee")) {\n' +
-            '    delegatesTo type: "MyCategory", asCategory: true\n' +
-            '}')
-        String contents =
-            'class MyCategory {\n' +
-            '    static int getSomething(Delegatee d) { }\n' +
-            '}\n' +
-            'class Delegatee { }\n' +
-            'new Delegatee().something \n' +
-            'new Delegatee().getSomething()'
-        int start = contents.lastIndexOf('getSomething')
-        int end = start + 'getSomething'.length()
-        assertType(contents, start, end, 'java.lang.Integer')
-        start = contents.lastIndexOf('something')
-        end = start + 'something'.length()
-        assertType(contents, start, end, 'java.lang.Integer')
-    }
-
-    @Test // GRECLIPSE-1442
-    void testDelegatesTo9() {
-        createDsls(
-            'contribute(currentType("Delegatee")) {\n' +
-            '    delegatesTo type: "MyCategory", asCategory: true\n' +
-            '}')
-        String contents =
-            'class MyCategory {\n' +
-            '    static boolean isSomething(Delegatee d) { }\n' +
-            '}\n' +
-            'class Delegatee { }\n' +
-            'new Delegatee().something \n' +
-            'new Delegatee().isSomething()'
-        int start = contents.lastIndexOf('isSomething')
-        int end = start + 'isSomething'.length()
-        assertType(contents, start, end, 'java.lang.Boolean')
-        start = contents.lastIndexOf('something')
-        end = start + 'something'.length()
-        assertType(contents, start, end, 'java.lang.Boolean')
     }
 
     @Test

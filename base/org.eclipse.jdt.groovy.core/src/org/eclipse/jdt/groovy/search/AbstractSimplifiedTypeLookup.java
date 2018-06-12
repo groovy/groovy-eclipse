@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +22,16 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.ClassExpression;
+import org.codehaus.groovy.ast.expr.ClosureExpression;
+import org.codehaus.groovy.ast.expr.ClosureListExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.GStringExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 
 /**
@@ -36,54 +40,21 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
  */
 public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtension {
 
-    public static class TypeAndDeclaration {
-        public TypeAndDeclaration(ClassNode type, ASTNode declaration) {
-            this.type = type;
-            this.declaration = declaration;
-            this.declaringType = null;
-            this.extraDoc = null;
-            this.confidence = null;
-        }
-
-        public TypeAndDeclaration(ClassNode type, ASTNode declaration, ClassNode declaringType) {
-            this.type = type;
-            this.declaration = declaration;
-            this.declaringType = declaringType;
-            this.extraDoc = null;
-            this.confidence = null;
-        }
-
-        public TypeAndDeclaration(ClassNode type, ASTNode declaration, ClassNode declaringType, String extraDoc) {
-            this.type = type;
-            this.declaration = declaration;
-            this.declaringType = declaringType;
-            this.extraDoc = extraDoc;
-            this.confidence = null;
-        }
-
-        public TypeAndDeclaration(ClassNode type, ASTNode declaration, ClassNode declaringType, String extraDoc, TypeConfidence confidence) {
-            this.type = type;
-            this.declaration = declaration;
-            this.declaringType = declaringType;
-            this.extraDoc = extraDoc;
-            this.confidence = confidence;
-        }
-
-        protected final ClassNode type;
-        protected final ClassNode declaringType;
-        protected final ASTNode declaration;
-        protected final String extraDoc;
-        protected final TypeConfidence confidence;
-    }
-
     private boolean isStatic;
     private Expression currentExpression;
 
     /**
-     * @return true iff the current lookup is in a static scope
+     * Gives an option for descendants to set confidence by their own
      */
-    protected boolean isStatic() {
-        return isStatic;
+    protected TypeConfidence checkConfidence(Expression node, TypeConfidence originalConfidence, ASTNode declaration, String extraDoc) {
+        return (originalConfidence == null ? confidence() : originalConfidence);
+    }
+
+    /**
+     * @return the confidence level of lookup results for this type lookup. Defaults to {@link TypeConfidence#LOOSELY_INFERRED}
+     */
+    protected TypeConfidence confidence() {
+        return TypeConfidence.LOOSELY_INFERRED;
     }
 
     /**
@@ -94,62 +65,81 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
     }
 
     /**
+     * @return the variable AST node if declared within current or enclosing scope
+     */
+    protected Variable getDeclaredVariable(String name, VariableScope scope) {
+        Variable var = null;
+        VariableScope.VariableInfo info = scope.lookupName(name);
+        if (info != null) {
+            org.codehaus.groovy.ast.VariableScope groovyScope = null;
+            if (info.scopeNode instanceof MethodNode) {
+                groovyScope = ((MethodNode) info.scopeNode).getVariableScope();
+            } else if (info.scopeNode instanceof ForStatement) {
+                groovyScope = ((ForStatement) info.scopeNode).getVariableScope();
+            } else if (info.scopeNode instanceof BlockStatement) {
+                groovyScope = ((BlockStatement) info.scopeNode).getVariableScope();
+            } else if (info.scopeNode instanceof ClosureExpression) {
+                groovyScope = ((ClosureExpression) info.scopeNode).getVariableScope();
+            } else if (info.scopeNode instanceof ClosureListExpression) {
+                groovyScope = ((ClosureListExpression) info.scopeNode).getVariableScope();
+            }
+            while (groovyScope != null && (var = groovyScope.getDeclaredVariable(name)) == null) {
+                groovyScope = groovyScope.getParent();
+            }
+        }
+        return var;
+    }
+
+    /**
      * @return true iff the current expression being inferred is a quoted string
      */
     protected boolean isQuotedString() {
         return currentExpression instanceof GStringExpression || currentExpression.getText().length() != currentExpression.getLength();
     }
 
-    // not called, but must be implemented
-    @Override
-    public final TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
-        return lookupType(node, scope, objectExpressionType, false);
+    /**
+     * @return true iff the current lookup is in a static scope
+     */
+    protected boolean isStatic() {
+        return isStatic;
     }
 
     @Override
     public final TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType, boolean isStaticObjectExpression) {
-        ClassNode declaringType;
-        if (objectExpressionType != null) {
-            declaringType = currentExpression instanceof ClassExpression ? currentExpression.getType() : objectExpressionType;
-        } else {
-            // Use delegate type if exists
-            declaringType = scope.getDelegateOrThis();
-            if (declaringType == null) {
-                declaringType = scope.getEnclosingTypeDeclaration();
+        if (node instanceof VariableExpression || (node instanceof ConstantExpression &&
+                (node.getEnd() < 1) || (node.getLength() == node.getText().length()))) {
+            String name = node.getText();
+
+            Variable variable = getDeclaredVariable(name, scope);
+            if (variable != null && !variable.isDynamicTyped()) {
+                return null; // var type is explicitly declared
+            }
+
+            ClassNode declaringType;
+            if (objectExpressionType != null) {
+                declaringType = currentExpression instanceof ClassExpression ? currentExpression.getType() : objectExpressionType;
+            } else {
+                // Use delegate type if exists
+                declaringType = scope.getDelegateOrThis();
                 if (declaringType == null) {
-                    // part of an import statment
-                    declaringType = VariableScope.OBJECT_CLASS_NODE;
+                    declaringType = scope.getEnclosingTypeDeclaration();
+                    if (declaringType == null) {
+                        // part of an import statment
+                        declaringType = VariableScope.OBJECT_CLASS_NODE;
+                    }
                 }
             }
-        }
-        // I would have liked to pass this value into lookupTypeAndDeclaration, but I can't break api here
-        isStatic = isStaticObjectExpression;
-        currentExpression = node;
+            // I would have liked to pass this value into lookupTypeAndDeclaration, but I can't break api here
+            isStatic = isStaticObjectExpression;
+            currentExpression = node;
 
-        TypeAndDeclaration tAndD = null;
-        if (node instanceof VariableExpression || (node instanceof ConstantExpression && (node.getEnd() < 1) || (node.getLength() == node.getText().length()))) {
-            tAndD = lookupTypeAndDeclaration(declaringType, node.getText(), scope);
-        }
-
-        if (tAndD != null) {
-            TypeConfidence confidence = checkConfidence(node, tAndD.confidence, tAndD.declaration, tAndD.extraDoc);
-            return new TypeLookupResult(tAndD.type, tAndD.declaringType == null ? declaringType : tAndD.declaringType, tAndD.declaration, confidence, scope, tAndD.extraDoc);
+            TypeAndDeclaration result = lookupTypeAndDeclaration(declaringType, name, scope);
+            if (result != null) {
+                TypeConfidence confidence = checkConfidence(node, result.confidence, result.declaration, result.extraDoc);
+                return new TypeLookupResult(result.type, result.declaringType == null ? declaringType : result.declaringType, result.declaration, confidence, scope, result.extraDoc);
+            }
         }
         return null;
-    }
-
-    /**
-     * Gives an option for descendants to set confidence by their own
-     */
-    protected TypeConfidence checkConfidence(Expression node, TypeConfidence originalConfidence, ASTNode declaration, String extraDoc) {
-        return originalConfidence == null ? confidence() : originalConfidence;
-    }
-
-    /**
-     * @return the confidence level of lookup results for this type lookup. Defaults to {@link TypeConfidence#LOOSELY_INFERRED}
-     */
-    protected TypeConfidence confidence() {
-        return TypeConfidence.LOOSELY_INFERRED;
     }
 
     @Override
@@ -196,4 +186,45 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
      *         should be avoided in that it prevents the use of navigation and of javadoc hovers
      */
     protected abstract TypeAndDeclaration lookupTypeAndDeclaration(ClassNode declaringType, String name, VariableScope scope);
+
+    public static class TypeAndDeclaration {
+
+        public TypeAndDeclaration(ClassNode type, ASTNode declaration) {
+            this.type = type;
+            this.declaration = declaration;
+            this.declaringType = null;
+            this.extraDoc = null;
+            this.confidence = null;
+        }
+
+        public TypeAndDeclaration(ClassNode type, ASTNode declaration, ClassNode declaringType) {
+            this.type = type;
+            this.declaration = declaration;
+            this.declaringType = declaringType;
+            this.extraDoc = null;
+            this.confidence = null;
+        }
+
+        public TypeAndDeclaration(ClassNode type, ASTNode declaration, ClassNode declaringType, String extraDoc) {
+            this.type = type;
+            this.declaration = declaration;
+            this.declaringType = declaringType;
+            this.extraDoc = extraDoc;
+            this.confidence = null;
+        }
+
+        public TypeAndDeclaration(ClassNode type, ASTNode declaration, ClassNode declaringType, String extraDoc, TypeConfidence confidence) {
+            this.type = type;
+            this.declaration = declaration;
+            this.declaringType = declaringType;
+            this.extraDoc = extraDoc;
+            this.confidence = confidence;
+        }
+
+        protected final ClassNode type;
+        protected final ClassNode declaringType;
+        protected final ASTNode declaration;
+        protected final String extraDoc;
+        protected final TypeConfidence confidence;
+    }
 }
