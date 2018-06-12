@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -143,7 +143,7 @@ public class MethodContributionElement implements IContributionElement {
 
         List<IGroovyProposal> extraProposals = new ArrayList<>(availableParams.size());
         for (Entry<String, ClassNode> available : availableParams.entrySet()) {
-            extraProposals.add(new GroovyNamedArgumentProposal(available.getKey(), available.getValue(), toMethod(declaringType.redirect(), resolver), provider));
+            extraProposals.add(new GroovyNamedArgumentProposal(available.getKey(), available.getValue(), toMethod(declaringType.redirect(), resolver), methodName));
         }
         return extraProposals;
     }
@@ -166,7 +166,7 @@ public class MethodContributionElement implements IContributionElement {
             if (arguments instanceof MapExpression) {
                 // Do extra filtering to determine what parameters are still available
                 MapExpression enclosingCallArgs = (MapExpression) arguments;
-                for (MapEntryExpression entry : enclosingCallArgs .getMapEntryExpressions()) {
+                for (MapEntryExpression entry : enclosingCallArgs.getMapEntryExpressions()) {
                     String paramName = entry.getKeyExpression().getText();
                     availableParams.remove(paramName);
                 }

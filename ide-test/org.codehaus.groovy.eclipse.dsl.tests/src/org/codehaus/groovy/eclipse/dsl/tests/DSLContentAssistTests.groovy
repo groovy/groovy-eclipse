@@ -538,6 +538,149 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     // Built-in contributions:
 
     @Test
+    void testNamedVariantTransform1() {
+        assumeTrue(isAtLeastGroovy(25)) // @NamedVariant added in Groovy 2.5
+
+        String contents = '''\
+            |import groovy.transform.*
+            |
+            |class Pogo {
+            |  String name, type
+            |}
+            |
+            |@NamedVariant
+            |def meth(Pogo pogo) { }
+            |
+            |meth()
+            |'''.stripMargin()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'meth', 2)
+        proposalExists(proposals, 'name : __', 1)
+        proposalExists(proposals, 'type : __', 1)
+    }
+
+    @Test
+    void testNamedVariantTransform1a() {
+        assumeTrue(isAtLeastGroovy(25)) // @NamedVariant added in Groovy 2.5
+
+        String contents = '''\
+            |import groovy.transform.*
+            |
+            |class Pogo {
+            |  String name, type
+            |}
+            |
+            |@NamedVariant
+            |def meth(Pogo pogo, int what) { }
+            |
+            |meth()
+            |'''.stripMargin()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'meth(Map namedParams, int what)', 1)
+        proposalExists(proposals, 'meth(Pogo pogo, int what)', 1)
+        proposalExists(proposals, 'name : __', 1)
+        proposalExists(proposals, 'type : __', 1)
+        proposalExists(proposals, 'what : __', 0)
+    }
+
+    @Test
+    void testNamedVariantTransform2() {
+        assumeTrue(isAtLeastGroovy(25)) // @NamedVariant added in Groovy 2.5
+
+        String contents = '''\
+            |import groovy.transform.*
+            |
+            |class Pogo {
+            |  String name, type
+            |}
+            |
+            |@NamedVariant
+            |def meth(@NamedDelegate Pogo pogo) { }
+            |
+            |meth()
+            |'''.stripMargin()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'meth', 2)
+        proposalExists(proposals, 'name : __', 1)
+        proposalExists(proposals, 'type : __', 1)
+    }
+
+    @Test
+    void testNamedVariantTransform3() {
+        assumeTrue(isAtLeastGroovy(25)) // @NamedVariant added in Groovy 2.5
+
+        String contents = '''\
+            |import groovy.transform.*
+            |
+            |class Pogo {
+            |  boolean isSome() {}
+            |  Object getThing() {}
+            |  void setName(String value) {}
+            |  void setType(String value) {}
+            |}
+            |
+            |@NamedVariant
+            |def meth(@NamedDelegate Pogo pogo) { }
+            |
+            |meth()
+            |'''.stripMargin()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'meth', 2)
+        proposalExists(proposals, 'name : __', 1)
+        proposalExists(proposals, 'type : __', 1)
+        proposalExists(proposals, 'some : __', 0)
+        proposalExists(proposals, 'thing : __', 0)
+    }
+
+    @Test
+    void testNamedVariantTransform4() {
+        assumeTrue(isAtLeastGroovy(25)) // @NamedVariant added in Groovy 2.5
+
+        String contents = '''\
+            |import groovy.transform.*
+            |
+            |@NamedVariant
+            |def meth(@NamedParam('dob') Date date) { }
+            |
+            |meth()
+            |'''.stripMargin()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'meth', 2)
+        proposalExists(proposals, 'dob : __', 1)
+        proposalExists(proposals, 'date : __', 0)
+    }
+
+    @Test
+    void testNamedVariantTransform5() {
+        assumeTrue(isAtLeastGroovy(25)) // @NamedVariant added in Groovy 2.5
+
+        String contents = '''\
+            |import groovy.transform.*
+            |
+            |class Name {
+            |  String first, middle, last
+            |}
+            |
+            |@NamedVariant
+            |def meth(@NamedDelegate Name name, @NamedParam('dob') Date date) { }
+            |
+            |meth()
+            |'''.stripMargin()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'first : __', 1)
+        proposalExists(proposals, 'last : __', 1)
+        proposalExists(proposals, 'name : __', 0)
+        proposalExists(proposals, 'date : __', 0)
+        proposalExists(proposals, 'dob : __', 1)
+    }
+
+    @Test
     void testNewifyTransform1() {
         String contents = '''\
             @Newify class Foo {

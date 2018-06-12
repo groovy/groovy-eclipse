@@ -38,7 +38,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
     }
 
     // TODO: @Lazy, @Field, @Canonical, @EqualsAndHashCode, @ToString, @Newify, @Bindable, @Vetoable, @Memoized, @TailRecursive (2.3+)
-    //       @IndexedProperty, @TupleConstructor, @MapConstructor (2.5+), @AutoClone, @AutoExternalize, @AutoImplement (2.5+)
+    //       @IndexedProperty, @TupleConstructor, @MapConstructor (2.5+), @AutoClone, @AutoExternalize, @AutoFinal (2.5+), @AutoImplement (2.5+)
     //       @Synchronized, @WithReadLock, @WithWriteLock, @ConditionalInterrupt, @ThreadInterrupt, @TimedInterrupt
 
     @Test
@@ -488,10 +488,87 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
         ClassNode fieldType = unit.getClassNode("b.SomeValueObject").getField("id").getType();
         Optional<AnnotationNode> anno = fieldType.getAnnotations().stream().filter(node -> {
             String name = node.getClassNode().getName();
-            return (name.equals("groovy.transform.Immutable") ||
-                name.equals("groovy.transform.KnownImmutable"));
+            return name.matches("groovy.transform.(Known)?Immutable");
         }).findFirst();
         assertTrue(anno.isPresent());
+    }
+
+    @Test
+    public void testNamedVariant1() {
+        assumeTrue(isAtLeastGroovy(25)); // @NamedVariant added in Groovy 2.5
+
+        String[] sources = {
+            "Script.groovy",
+            "@groovy.transform.NamedVariant\n" +
+            "String m(Color c) {\n" +
+            "  return c\n" +
+            "}\n" +
+            "\n" +
+            "print m(g:12, b:42, r:12)",
+
+            "Color.groovy",
+            "@groovy.transform.ToString(includeNames=true)\n" +
+            "class Color {\n" +
+            "  Integer r, g, b\n" +
+            "}\n",
+        };
+
+        runConformTest(sources, "Color(r:12, g:12, b:42)");
+    }
+
+    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-8627")
+    public void testNamedVariant2() {
+        assumeTrue(isAtLeastGroovy(25)); // @NamedVariant added in Groovy 2.5
+
+        String[] sources = {
+            "Script.groovy",
+            "import groovy.transform.*\n" +
+            "\n" +
+            "@NamedVariant\n" +
+            "String m(@NamedDelegate Color color, @NamedParam(value='a', required=true) int alpha) {\n" +
+            "  return [color, alpha].join(' ')\n" +
+            "}\n" +
+            "\n" +
+            "print m(r:1, g:2, b:3, a: 0)",
+
+            "Color.groovy",
+            "@groovy.transform.ToString(includeNames=true)\n" +
+            "class Color {\n" +
+            "  Integer r, g, b\n" +
+            "}\n",
+        };
+
+        runConformTest(sources, "Color(r:1, g:2, b:3) Sound(frequency:44.1, intensity:null)");
+    }
+
+    @Test @Ignore("Cannot cast object '{}' with class 'java.util.LinkedHashMap' to class 'java.lang.Integer'")
+    public void testNamedVariant3() {
+        assumeTrue(isAtLeastGroovy(25)); // @NamedVariant added in Groovy 2.5
+
+        String[] sources = {
+            "Script.groovy",
+            "print(new Color(g:12, b:42, r:12))",
+
+            "Color.groovy",
+            "import groovy.transform.*\n" +
+            "import groovy.transform.options.*\n" +
+            "\n" +
+            "@ToString(includeNames=true)\n" +
+            "class Color {\n" +
+            "  final Integer r, g, b\n" +
+            "  \n" +
+            "  @NamedVariant @VisibilityOptions(Visibility.PUBLIC)\n" +
+            "  private Color(Integer r, Integer g, Integer b) {\n" +
+            "    this.r = r\n" +
+            "    this.g = g\n" +
+            "    this.b = b\n" +
+            "  }\n" +
+            "  \n" +
+            "  public static final Color BLACK = new Color(0, 0, 0)\n" +
+            "}\n",
+        };
+
+        runConformTest(sources, "Color(r:12, g:12, b:42)");
     }
 
     @Test
@@ -607,7 +684,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
     /**
      * COOL!!!  The getInstance() method is added by a late AST Transformation made due to the Singleton annotation - and yet
      * still it is referencable from Java.  This is not possible with normal joint compilation.
-     * currently have to 'turn on' support in GroovyClassScope.getAnyExtraMethods() - still thinking about this stuff...
+     * currently have to 'turn on' support in org.eclipse.jdt.internal.compiler.lookup.Scope#oneLastLook
      */
     @Test @Ignore
     public void testJavaAccessingTransformedGroovy_Singleton() {
