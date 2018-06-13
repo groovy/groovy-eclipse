@@ -21,7 +21,6 @@ import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.tools.*
 import org.codehaus.groovy.runtime.MetaClassHelper
 
-import static org.apache.groovy.ast.tools.AnnotatedNodeUtils.hasAnnotation
 import static org.codehaus.groovy.transform.NamedVariantASTTransformation.*
 
 // http://groovy-lang.org/metaprogramming.html#_available_ast_transformations
@@ -207,8 +206,8 @@ contribute(currentType(meths: methods(annotatedBy(NamedVariant)))) {
     for (MethodNode meth : meths) {
         Parameter[] parms = meth.parameters
         if (parms) {
-            Collection<Parameter> named = parms.findAll { hasAnnotation(it, NAMED_PARAM_TYPE) }
-            Collection<Parameter> delegate = parms.findAll { hasAnnotation(it, NAMED_DELEGATE_TYPE) }
+            Collection<Parameter> named = parms.findAll { !!it.getAnnotations(NAMED_PARAM_TYPE) }
+            Collection<Parameter> delegate = parms.findAll { !!it.getAnnotation(NAMED_DELEGATE_TYPE) }
             if (!named && !delegate) {
                 delegate << parms[0]
             }
