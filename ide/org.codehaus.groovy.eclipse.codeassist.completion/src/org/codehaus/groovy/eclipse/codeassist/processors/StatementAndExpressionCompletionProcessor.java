@@ -16,6 +16,7 @@
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -31,7 +32,6 @@ import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.Variable;
-import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.Expression;
@@ -277,29 +277,25 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         }
 
         private boolean doTest(ASTNode node) {
-            if (node instanceof ArgumentListExpression) {
-                // || node instanceof PropertyExpression) {
-                // we never complete on a list of arguments, but rather one of the arguments itself
-                // also, never do a completion on the property expression, but rather on the
-                // propertyExpression.getProperty() node
+            if (node instanceof PropertyExpression || node instanceof TupleExpression) {
+                // never complete on a property expression, but rather on its getProperty() result
+                // never complete on a list of expressions, but rather on its getExpressions() result
                 return false;
-            } else if (node instanceof BinaryExpression) {
-                BinaryExpression bin = (BinaryExpression) node;
-                if (bin.getLeftExpression() == arrayAccessLHS) {
-                    // don't return true here, but rather wait for the LHS to come through
-                    // this way we can use the derefed value as the completion type
-                    return false;
-                }
+            } else if (node instanceof BinaryExpression &&
+                    ((BinaryExpression) node).getLeftExpression() == arrayAccessLHS) {
+                // wait for LHS to come through so the dereferenced value can be used as the completion type
+                return false;
             }
 
             boolean rangeMatch = false;
             if (completionNode != null) {
                 rangeMatch = (completionNode.getStart() == node.getStart() && completionNode.getEnd() == node.getEnd());
-                if (!rangeMatch && node instanceof MethodNode && getContext().completionExpression.isEmpty()) {
+                if (!rangeMatch && "".equals(getContext().getPerceivedCompletionExpression()) &&
+                        node instanceof MethodNode && ((MethodNode) node).getCode() != null) {
                     rangeMatch = doTest(((MethodNode) node).getCode());
                 }
             }
-            return (isNotExpressionAndStatement(completionNode, node) && rangeMatch);
+            return (rangeMatch && isNotExpressionAndStatement(completionNode, node));
         }
 
         /**
@@ -323,14 +319,13 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             return false;
         }
 
-        private boolean isNotExpressionAndStatement(ASTNode thisNode, ASTNode otherNode) {
+        private boolean isNotExpressionAndStatement(ASTNode thisNode, ASTNode thatNode) {
             if (thisNode instanceof Expression) {
-                return !(otherNode instanceof Statement);
+                return !(thatNode instanceof Statement);
             } else if (thisNode instanceof Statement) {
-                return !(otherNode instanceof Expression);
-            } else {
-                return true;
+                return !(thatNode instanceof Expression);
             }
+            return true;
         }
     }
 
@@ -382,22 +377,22 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
                 }
             }
 
-            IProposalCreator[] creators = chooseProposalCreators();
+            List<IProposalCreator> creators = chooseProposalCreators();
             boolean isStatic1 = (isStatic && closureCompletionType == null);
             // if completionType refers to the closure delegate, use instance (non-static) semantics
-            proposalCreatorLoop(context, requestor, completionType, isStatic1, groovyProposals, creators, false);
+            proposalCreatorLoop(groovyProposals, creators, requestor, context, completionType, isStatic1, false);
 
             if (completionType.equals(VariableScope.CLASS_CLASS_NODE) &&
                     !completionType.getGenericsTypes()[0].getType().equals(VariableScope.CLASS_CLASS_NODE) &&
                     !completionType.getGenericsTypes()[0].getType().equals(VariableScope.OBJECT_CLASS_NODE)) {
-                // "Foo.bar" and "Foo.@bar" are static; "Foo.&bar" is not static
+                // "Foo.bar" and "Foo.@bar" are static; "Foo.&bar" and "Foo::bar" are not static
                 boolean isStatic2 = !METHOD_POINTER_COMPLETION.matcher(context.fullCompletionExpression).matches();
-                proposalCreatorLoop(context, requestor, completionType.getGenericsTypes()[0].getType(), isStatic2, groovyProposals, creators, false);
+                proposalCreatorLoop(groovyProposals, creators, requestor, context, completionType.getGenericsTypes()[0].getType(), isStatic2, false);
             }
 
             if (closureCompletionType != null) {
                 // inside of a closure; must also add content assist for this (previously did the delegate)
-                proposalCreatorLoop(context, requestor, closureCompletionType, isStatic, groovyProposals, creators, true);
+                proposalCreatorLoop(groovyProposals, creators, requestor, context, closureCompletionType, isStatic, true);
             }
 
             if (isPrimary) {
@@ -461,7 +456,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             for (IProposalProvider provider : providers) {
                 try {
                     List<IGroovyProposal> otherProposals = provider.getStatementAndExpressionProposals(context, completionType, isStatic, requestor.categories);
-                    if (otherProposals != null) {
+                    if (otherProposals != null && !otherProposals.isEmpty()) {
                         groovyProposals.addAll(otherProposals);
                     }
                 } catch (Exception e) {
@@ -507,7 +502,8 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         return javaProposals;
     }
 
-    private void proposalCreatorLoop(ContentAssistContext context, ExpressionCompletionRequestor requestor, ClassNode completionType, boolean isStatic, List<IGroovyProposal> groovyProposals, IProposalCreator[] creators, boolean isClosureThis) {
+    private void proposalCreatorLoop(Collection<IGroovyProposal> proposals, Collection<IProposalCreator> creators,
+            ExpressionCompletionRequestor requestor, ContentAssistContext context, ClassNode completionType, boolean isStatic, boolean isClosureThis) {
         for (IProposalCreator creator : creators) {
             if (isClosureThis && !creator.redoForLoopClosure()) {
                 // avoid duplicate DGMs by not proposing category proposals twice
@@ -520,14 +516,13 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             Set<ClassNode> categories = requestor.categories;
             String expression = context.getPerceivedCompletionExpression();
             boolean isPrimary = (context.location == ContentAssistLocation.STATEMENT);
-            groovyProposals.addAll(
+            proposals.addAll(
                 creator.findAllProposals(completionType, categories, expression, isStatic, isPrimary));
         }
     }
 
     protected VariableScope createTopLevelScope(ClassNode completionType) {
-        VariableScope scope = new VariableScope(null, completionType, false);
-        return scope;
+        return new VariableScope(null, completionType, false);
     }
 
     private ClassNode getCompletionType(ExpressionCompletionRequestor requestor) {
@@ -564,16 +559,21 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         return completionType;
     }
 
-    private IProposalCreator[] chooseProposalCreators() {
-        String completionExpression = getContext().fullCompletionExpression;
-        if (completionExpression == null) completionExpression = "";
-        if (FIELD_ACCESS_COMPLETION.matcher(completionExpression).matches()) {
-            return new IProposalCreator[] {new FieldProposalCreator()};
+    private List<IProposalCreator> chooseProposalCreators() {
+        ContentAssistContext context = getContext();
+        String fullCompletionExpression = context.fullCompletionExpression;
+        if (fullCompletionExpression == null) fullCompletionExpression = "";
+
+        if (FIELD_ACCESS_COMPLETION.matcher(fullCompletionExpression).matches()) {
+            return Collections.singletonList(new FieldProposalCreator());
         }
-        if (METHOD_POINTER_COMPLETION.matcher(completionExpression).matches()) {
-            return new IProposalCreator[] {new MethodProposalCreator()};
+        if (METHOD_POINTER_COMPLETION.matcher(fullCompletionExpression).matches()) {
+            return Collections.singletonList(new MethodProposalCreator());
         }
-        return getAllProposalCreators();
+
+        List<IProposalCreator> creators = new ArrayList<>(4);
+        Collections.addAll(creators, getAllProposalCreators());
+        return creators;
     }
 
     public static final Pattern FIELD_ACCESS_COMPLETION =  Pattern.compile(".+\\.@\\s*(?:\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*)?", Pattern.DOTALL);

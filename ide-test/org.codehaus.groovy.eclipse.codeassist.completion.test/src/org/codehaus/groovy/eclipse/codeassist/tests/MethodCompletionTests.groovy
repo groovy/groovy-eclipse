@@ -494,6 +494,35 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
+    void testAnnotatedMethod1() {
+        String contents = '''\
+            class Foo {
+              @SuppressWarnings(value=[])
+              def bar(def baz) {
+                baz.
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'baz.'))
+        proposalExists(proposals, 'equals', 1)
+    }
+
+    @Test
+    void testAnnotatedMethod2() {
+        String contents = '''\
+            class Foo {
+              @SuppressWarnings(value=[])
+              def bar() {
+                def baz = whatever()
+                baz.
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'baz.'))
+        proposalExists(proposals, 'equals', 1)
+    }
+
+    @Test
     void testIncompleteMethodCall() {
         String contents = '''\
             class Foo {
