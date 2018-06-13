@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,9 +24,9 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.eclipse.core.resources.IStorage;
 
 /**
- * the match returns true if the pattern passed in is an identifier expression
- * (either a {@link ConstantExpression} or a {@link VariableExpression} whose text
- * that matches the contained argument
+ * Matches if the current node is an identifier expression (either a
+ * {@link ConstantExpression} or a {@link VariableExpression} with text that
+ * matches the contained argument.
  */
 public class CurrentIdentifierPointcut extends FilteringPointcut<Expression> {
 
@@ -34,20 +34,17 @@ public class CurrentIdentifierPointcut extends FilteringPointcut<Expression> {
         super(containerIdentifier, pointcutName, Expression.class);
     }
 
-
-    /**
-     * Ignore toMatch and use the current node instead
-     */
     @Override
-    public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
-        return super.matches(pattern, pattern.getCurrentScope().getCurrentNode());
+    public Collection<?> matches(GroovyDSLDContext context, Object toMatch) {
+        //                            ignore toMatch and use currentNode instead
+        return super.matches(context, context.getCurrentScope().getCurrentNode());
     }
 
     @Override
-    protected Expression filterObject(Expression result, GroovyDSLDContext context, String firstArgAsString) {
-        if (result instanceof VariableExpression || result instanceof ConstantExpression) {
-            if (firstArgAsString == null || result.getText().equals(firstArgAsString)) {
-                return result;
+    protected Expression filterObject(Expression expression, GroovyDSLDContext context, String firstArgAsString) {
+        if (expression instanceof VariableExpression || expression instanceof ConstantExpression) {
+            if (firstArgAsString == null || firstArgAsString.equals(expression.getText())) {
+                return expression;
             }
         }
         return null;

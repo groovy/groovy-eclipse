@@ -23,7 +23,6 @@ import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.Variable;
-import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ClosureListExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
@@ -40,7 +39,7 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
  */
 public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtension {
 
-    private boolean isStatic;
+    private Boolean isStatic;
     private Expression currentExpression;
 
     /**
@@ -94,21 +93,22 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
      * @return true iff the current expression being inferred is a quoted string
      */
     protected boolean isQuotedString() {
-        return currentExpression instanceof GStringExpression || currentExpression.getText().length() != currentExpression.getLength();
+        return (currentExpression instanceof GStringExpression || (currentExpression instanceof ConstantExpression &&
+            (currentExpression.getEnd() < 1 || currentExpression.getLength() != currentExpression.getText().length())));
     }
 
     /**
      * @return true iff the current lookup is in a static scope
      */
     protected boolean isStatic() {
-        return isStatic;
+        return isStatic.booleanValue();
     }
 
     @Override
-    public final TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType, boolean isStaticObjectExpression) {
-        if (node instanceof VariableExpression || (node instanceof ConstantExpression &&
-                (node.getEnd() < 1) || (node.getLength() == node.getText().length()))) {
-            String name = node.getText();
+    public final TypeLookupResult lookupType(Expression expression, VariableScope scope, ClassNode objectExpressionType, boolean isStaticObjectExpression) {
+        if (expression instanceof VariableExpression || (expression instanceof ConstantExpression &&
+                (expression.getEnd() < 1 || expression.getLength() == expression.getText().length()))) {
+            String name = expression.getText();
 
             Variable variable = getDeclaredVariable(name, scope);
             if (variable != null && !variable.isDynamicTyped()) {
@@ -117,9 +117,11 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
 
             ClassNode declaringType;
             if (objectExpressionType != null) {
-                declaringType = currentExpression instanceof ClassExpression ? currentExpression.getType() : objectExpressionType;
+                declaringType = objectExpressionType;
+                if (isStaticObjectExpression && objectExpressionType.isUsingGenerics() && objectExpressionType.equals(VariableScope.CLASS_CLASS_NODE)) {
+                    declaringType = objectExpressionType.getGenericsTypes()[0].getType();
+                }
             } else {
-                // Use delegate type if exists
                 declaringType = scope.getDelegateOrThis();
                 if (declaringType == null) {
                     declaringType = scope.getEnclosingTypeDeclaration();
@@ -129,14 +131,18 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
                     }
                 }
             }
-            // I would have liked to pass this value into lookupTypeAndDeclaration, but I can't break api here
-            isStatic = isStaticObjectExpression;
-            currentExpression = node;
 
-            TypeAndDeclaration result = lookupTypeAndDeclaration(declaringType, name, scope);
-            if (result != null) {
-                TypeConfidence confidence = checkConfidence(node, result.confidence, result.declaration, result.extraDoc);
-                return new TypeLookupResult(result.type, result.declaringType == null ? declaringType : result.declaringType, result.declaration, confidence, scope, result.extraDoc);
+            try {
+                // I would have liked to pass these values into lookupTypeAndDeclaration, but I can't break API here...
+                currentExpression = expression; isStatic = isStaticObjectExpression;
+
+                TypeAndDeclaration result = lookupTypeAndDeclaration(declaringType, name, scope);
+                if (result != null) {
+                    TypeConfidence confidence = checkConfidence(expression, result.confidence, result.declaration, result.extraDoc);
+                    return new TypeLookupResult(result.type, result.declaringType == null ? declaringType : result.declaringType, result.declaration, confidence, scope, result.extraDoc);
+                }
+            } finally {
+                currentExpression = null; isStatic = null;
             }
         }
         return null;
@@ -172,16 +178,9 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
         return null;
     }
 
-    @Override
-    public void lookupInBlock(BlockStatement node, VariableScope scope) {
-    }
-
     /**
      * Clients should return a {@link TypeAndDeclaration} corresponding to an additional
      *
-     * @param declaringType
-     * @param name
-     * @param scope
      * @return the type and declaration corresponding to the name in the given declaring type. The declaration may be null, but this
      *         should be avoided in that it prevents the use of navigation and of javadoc hovers
      */

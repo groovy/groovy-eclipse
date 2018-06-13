@@ -34,7 +34,7 @@ public interface ITypeLookupExtension extends ITypeLookup {
     /**
      * Determine the type for an expression node.
      *
-     * @param node the AST Node to determine the type for
+     * @param expression the AST Node to determine the type for
      * @param scope the variable scope at this location
      * @param objectExpressionType if the parent of node is a {@link PropertyExpression}, then this value contains the type of
      *        {@link PropertyExpression#getObjectExpression()}, otherwise null
@@ -42,10 +42,11 @@ public interface ITypeLookupExtension extends ITypeLookup {
      *        the class declaration
      * @return the type for the node and confidence in that type, or null if cannot determine
      */
-    TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType, boolean isStaticObjectExpression);
+    TypeLookupResult lookupType(Expression expression, VariableScope scope, ClassNode objectExpressionType, boolean isStaticObjectExpression);
 
     /**
      * Determines the type inside of a BlockStatement
      */
-    void lookupInBlock(BlockStatement node, VariableScope scope);
+    default void lookupInBlock(BlockStatement statement, VariableScope scope) {
+    }
 }

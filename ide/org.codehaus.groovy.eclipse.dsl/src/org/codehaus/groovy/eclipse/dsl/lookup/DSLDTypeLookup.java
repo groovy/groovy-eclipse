@@ -106,8 +106,8 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
     @Override
     public void lookupInBlock(BlockStatement node, VariableScope scope) {
         context.setPrimaryNode(true);
-        context.setStatic(isStatic());
         context.setCurrentScope(scope);
+        context.setStatic(scope.isStatic());
         ClassNode delegateOrThis = scope.getDelegateOrThis();
         if (delegateOrThis != null) {
             context.setTargetType(delegateOrThis);
