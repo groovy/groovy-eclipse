@@ -207,7 +207,7 @@ contribute(currentType(meths: methods(annotatedBy(NamedVariant)))) {
         Parameter[] parms = meth.parameters
         if (parms) {
             Collection<Parameter> named = parms.findAll { !!it.getAnnotations(NAMED_PARAM_TYPE) }
-            Collection<Parameter> delegate = parms.findAll { !!it.getAnnotation(NAMED_DELEGATE_TYPE) }
+            Collection<Parameter> delegate = parms.findAll { !!it.getAnnotations(NAMED_DELEGATE_TYPE) }
             if (!named && !delegate) {
                 delegate << parms[0]
             }
