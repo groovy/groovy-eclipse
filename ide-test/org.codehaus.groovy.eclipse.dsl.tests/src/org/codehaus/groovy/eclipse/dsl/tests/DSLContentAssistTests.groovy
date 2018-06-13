@@ -578,8 +578,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
             |'''.stripMargin()
 
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
-        proposalExists(proposals, 'meth(Map namedParams, int what)', 1)
-        proposalExists(proposals, 'meth(Pogo pogo, int what)', 1)
+        proposalExists(proposals, 'meth', 2)
         proposalExists(proposals, 'name : __', 1)
         proposalExists(proposals, 'type : __', 1)
         proposalExists(proposals, 'what : __', 0)

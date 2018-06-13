@@ -18,7 +18,6 @@ package dsld
 import groovy.transform.*
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.*
-import org.codehaus.groovy.ast.tools.*
 import org.codehaus.groovy.runtime.MetaClassHelper
 
 import static org.codehaus.groovy.transform.NamedVariantASTTransformation.*
@@ -201,44 +200,32 @@ contribute(currentType(fields: fields(annotatedBy(IndexedProperty)))) {
 //@groovy.transform.Memoized
 
 //@groovy.transform.NamedVariant, et al.
-contribute(currentType(meths: methods(annotatedBy(NamedVariant)))) {
+contribute(currentType(meths: methods(hasArgument(annotatedBy(NamedParam))))) {
     provider = '{@link groovy.transform.NamedVariant NamedVariant} AST transform'
     for (MethodNode meth : meths) {
-        Parameter[] parms = meth.parameters
-        if (parms) {
-            Collection<Parameter> named = parms.findAll { !!it.getAnnotations(NAMED_PARAM_TYPE) }
-            Collection<Parameter> delegate = parms.findAll { !!it.getAnnotations(NAMED_DELEGATE_TYPE) }
-            if (!named && !delegate) {
-                delegate << parms[0]
-            }
-
-            Map<String, ClassNode> namedParams = [:], optionalParams = [:], positionalParams = [:]
-            positionalParams.put('namedParams', GenericsUtils.nonGeneric(ClassHelper.MAP_TYPE))
-            (parms - (named + delegate)).collectEntries(positionalParams) {
-                Collections.singletonMap(it.name, it.type)
-            }
-            for (t in delegate*.type) {
-                for (p in BeanUtils.getAllProperties(t, true, false, false, true, false)) {
-                    if (p.name != 'metaClass') optionalParams.put(p.name, p.type)
-                }
-            }
-            for (p in named) {
-                for (a in p.getAnnotations(NAMED_PARAM_TYPE)) {
-                    Boolean r = a.getMember('required')?.value
-                    if (r == null) r = NamedParam.getMethod('required').defaultValue
-                    (r ? namedParams : optionalParams).put(a.getMember('value')?.value ?: p.name, a.getMember('type')?.type ?: p.type)
-                }
-            }
-
-            method  name: meth.name,
-                    type: meth.returnType,
-                    isStatic: meth.isStatic(),
-                    isDeprecated: org.eclipse.jdt.groovy.core.util.GroovyUtils.isDeprecated(meth),
-                    // TODO: set public/private/package/protected from meth.modifiers and VisibilityOptions
-                    params: positionalParams,
-                    namedParams: namedParams,
-                    optionalParams: optionalParams
+        Parameter parm = meth.parameters[0]
+        if (!ClassHelper.MAP_TYPE.equals(parm.type)) {
+            continue
         }
+
+        Map<String, ClassNode> namedParams = [:], optionalParams = [:]
+        for (AnnotationNode anno : parm.getAnnotations(NAMED_PARAM_TYPE)) {
+            String name = anno.getMember('value').value
+            ClassNode type = anno.getMember('type')?.type
+            Boolean r = anno.getMember('required')?.value
+            if (r == null) r = NamedParam.getMethod('required').defaultValue
+
+            (r ? namedParams : optionalParams).put(name, type)
+        }
+
+        method  name: meth.name,
+                params: params(meth),
+                namedParams: namedParams,
+                optionalParams: optionalParams,
+                declaringType: meth.declaringClass,
+                type: meth.returnType, isStatic: meth.isStatic(),
+                // TODO: set public/private/package/protected from meth.modifiers
+                isDeprecated: org.eclipse.jdt.groovy.core.util.GroovyUtils.isDeprecated(meth)
     }
 }
 

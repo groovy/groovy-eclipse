@@ -516,7 +516,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "Color(r:12, g:12, b:42)");
     }
 
-    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-8627")
+    @Test
     public void testNamedVariant2() {
         assumeTrue(isAtLeastGroovy(25)); // @NamedVariant added in Groovy 2.5
 
@@ -538,7 +538,7 @@ public final class TransformationsTests extends GroovyCompilerTestSuite {
             "}\n",
         };
 
-        runConformTest(sources, "Color(r:1, g:2, b:3) Sound(frequency:44.1, intensity:null)");
+        runConformTest(sources, "Color(r:1, g:2, b:3) 0");
     }
 
     @Test @Ignore("Cannot cast object '{}' with class 'java.util.LinkedHashMap' to class 'java.lang.Integer'")

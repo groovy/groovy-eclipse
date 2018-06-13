@@ -162,7 +162,7 @@ def insideContribution = { (enclosingCallName('accept') | enclosingCallName('con
     method  name: 'delegatesToCategory',
             params: [type: Object],
             isDeprecated: true,
-            doc : '''\
+            doc: '''\
                 Specifies that the currentType delegates to the given type. The currentType is the type being analyzed.
                 And the given type is specified as a parameter (either a String, Class, AnnotatedNode). All methods of
                 the given type will be available from the currentType.
@@ -178,7 +178,7 @@ def insideContribution = { (enclosingCallName('accept') | enclosingCallName('con
                 <p>Named arguments will be used for all methods.
                 '''.stripIndent()
 
-    method  name : 'delegatesTo',
+    method  name: 'delegatesTo',
             namedParams: [type: Object],
             optionalParams: [useNamed: Boolean, except: 'java.util.List<java.lang.String>', asCategory: Boolean],
             doc: '''\
