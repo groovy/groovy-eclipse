@@ -189,17 +189,19 @@ public final class ASTTransformsTests extends BuilderTestSuite {
         return clazz.getField("me");
     }
 
-    private MethodNode getMethod(GroovyCompilationUnit unit,String name) {
+    private MethodNode getMethod(GroovyCompilationUnit unit, String name) {
         ClassNode clazz = getClassFromScript(unit);
-        clazz.getFields();  // force lazy initialization
+        clazz.getFields(); // force lazy initialization
         List<MethodNode> ms = clazz.getMethods();
-        for (MethodNode m: ms) {
+        for (MethodNode m : ms) {
             if (m.getName().equals(name)) {
                 return m;
             }
         }
         return null;
-    }    private ClassNode getClassFromScript(GroovyCompilationUnit unit) {
+    }
+
+    private ClassNode getClassFromScript(GroovyCompilationUnit unit) {
         return ((ClassExpression) ((ReturnStatement) unit.getModuleNode().getStatementBlock().getStatements().get(0)).getExpression()).getType();
     }
 

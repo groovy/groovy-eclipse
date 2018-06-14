@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,22 @@ import org.junit.runners.Suite
     org.eclipse.jdt.groovy.core.tests.basic.GroovySimpleTests,
     org.eclipse.jdt.groovy.core.tests.basic.GroovySimpleTests_Compliance_1_8,
     org.eclipse.jdt.groovy.core.tests.basic.TraitsTests,
-    org.eclipse.jdt.groovy.core.tests.basic.TransformationsTests,
+
+    // AST Transform tests
+    org.eclipse.jdt.groovy.core.tests.xform.AnnotationCollectorTests,
+    org.eclipse.jdt.groovy.core.tests.xform.CategoryTests,
+    org.eclipse.jdt.groovy.core.tests.xform.DelegateTests,
+    org.eclipse.jdt.groovy.core.tests.xform.GrabTests,
+    org.eclipse.jdt.groovy.core.tests.xform.ImmutableTests,
+    org.eclipse.jdt.groovy.core.tests.xform.InheritConstructorsTests,
+    org.eclipse.jdt.groovy.core.tests.xform.LoggingTests,
+    org.eclipse.jdt.groovy.core.tests.xform.NamedVariantTests,
+    org.eclipse.jdt.groovy.core.tests.xform.PackageScopeTests,
+    org.eclipse.jdt.groovy.core.tests.xform.SingletonTests,
+    org.eclipse.jdt.groovy.core.tests.xform.SortableTests,
+    org.eclipse.jdt.groovy.core.tests.xform.StaticCompilationTests,
+    org.eclipse.jdt.groovy.core.tests.xform.TypeCheckedTests,
+    org.eclipse.jdt.groovy.core.tests.xform.UserDefinedTests,
 
     // Builder tests
     org.eclipse.jdt.core.groovy.tests.builder.BasicGroovyBuildTests,
