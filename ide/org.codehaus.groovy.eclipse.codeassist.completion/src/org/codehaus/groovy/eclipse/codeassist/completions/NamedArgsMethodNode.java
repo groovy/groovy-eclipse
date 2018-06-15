@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,43 +21,34 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.stmt.Statement;
 
 /**
- * A method node that knows which of its parameters are named, optional, and regular.
+ * A method node that knows which of its parameters are regular (aka positional),
+ * named (required) and named (optional).
  */
 public class NamedArgsMethodNode extends MethodNode {
 
-    private final Parameter[] regularParams;
+    private final Parameter[] params, namedParams, optionalParams;
 
-    private final Parameter[] namedParams;
-
-    private final Parameter[] optionalParams;
-
-    /**
-     * A combination of the regular and named params.
-     * Lazily initialized
-     */
-    private Parameter[] visibleParams;
-
-    public NamedArgsMethodNode(String name, int modifiers, ClassNode returnType, Parameter[] regularParams, Parameter[] namedParams, Parameter[] optionalParams, ClassNode[] exceptions, Statement code) {
-        super(name, modifiers, returnType, concatParams(regularParams, namedParams, optionalParams), exceptions, code);
-        this.regularParams = regularParams;
+    public NamedArgsMethodNode(String name, int modifiers, ClassNode returnType, Parameter[] params, Parameter[] namedParams, Parameter[] optionalParams, ClassNode[] exceptions, Statement code) {
+        super(name, modifiers, returnType, concatParams(params, namedParams, optionalParams), exceptions, code);
+        this.params = params;
         this.namedParams = namedParams;
         this.optionalParams = optionalParams;
     }
 
-    private static Parameter[] concatParams(Parameter[] regularParams, Parameter[] namedParams, Parameter[] optionalParams) {
-        regularParams = regularParams == null ? Parameter.EMPTY_ARRAY : regularParams;
-        namedParams = namedParams == null ? Parameter.EMPTY_ARRAY : namedParams;
-        optionalParams = optionalParams == null ? Parameter.EMPTY_ARRAY : optionalParams;
+    private static Parameter[] concatParams(Parameter[] params, Parameter[] namedParams, Parameter[] optionalParams) {
+        if (params == null) params = Parameter.EMPTY_ARRAY;
+        if (namedParams == null) namedParams = Parameter.EMPTY_ARRAY;
+        if (optionalParams == null) optionalParams = Parameter.EMPTY_ARRAY;
 
-        Parameter[] allParams = new Parameter[regularParams.length + namedParams.length + optionalParams.length];
-        System.arraycopy(regularParams, 0, allParams, 0, regularParams.length);
-        System.arraycopy(namedParams, 0, allParams, regularParams.length, namedParams.length);
-        System.arraycopy(optionalParams, 0, allParams, regularParams.length + namedParams.length, optionalParams.length);
+        Parameter[] allParams = new Parameter[params.length + namedParams.length + optionalParams.length];
+        System.arraycopy(params, 0, allParams, 0, params.length);
+        System.arraycopy(namedParams, 0, allParams, params.length, namedParams.length);
+        System.arraycopy(optionalParams, 0, allParams, params.length + namedParams.length, optionalParams.length);
         return allParams;
     }
 
     public Parameter[] getRegularParams() {
-        return regularParams;
+        return params;
     }
 
     public Parameter[] getNamedParams() {
@@ -69,9 +60,6 @@ public class NamedArgsMethodNode extends MethodNode {
     }
 
     public Parameter[] getVisibleParams() {
-        if (visibleParams == null) {
-            visibleParams = concatParams(regularParams, namedParams, null);
-        }
-        return visibleParams;
+        return concatParams(getRegularParams(), getNamedParams(), null);
     }
 }
