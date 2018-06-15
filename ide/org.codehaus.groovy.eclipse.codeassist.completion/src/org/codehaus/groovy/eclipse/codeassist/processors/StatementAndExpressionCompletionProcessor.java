@@ -577,5 +577,5 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
     }
 
     public static final Pattern FIELD_ACCESS_COMPLETION =  Pattern.compile(".+\\.@\\s*(?:\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*)?", Pattern.DOTALL);
-    public static final Pattern METHOD_POINTER_COMPLETION = Pattern.compile(".+\\.&\\s*(?:\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*)?", Pattern.DOTALL);
+    public static final Pattern METHOD_POINTER_COMPLETION = Pattern.compile(".+(\\.&|::)\\s*(?:\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*)?", Pattern.DOTALL);
 }

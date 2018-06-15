@@ -15,7 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
 import static org.junit.Assert.fail
+import static org.junit.Assume.assumeTrue
 
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
@@ -470,8 +472,27 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
+    void testMethodPointer0() {
+        String contents = 'class Foo { public static Foo instance }\nFoo.&in'
+        proposalExists(createProposalsAtOffset(contents, getLastIndexOf(contents, 'in')), 'instance', 0)
+    }
+
+    @Test
+    void testMethodPointer0a() {
+        String contents = 'class Foo { public static Foo instance }\nFoo::in'
+        proposalExists(createProposalsAtOffset(contents, getLastIndexOf(contents, 'in')), 'instance', 0)
+    }
+
+    @Test
     void testMethodPointer1() {
         String contents = 'String.&isE'
+        applyProposalAndCheck(checkUniqueProposal(contents, 'isE', 'isEmpty'), contents + 'mpty')
+    }
+
+    @Test
+    void testMethodPointer1a() {
+        assumeTrue(isParrotParser())
+        String contents = 'String::isE'
         applyProposalAndCheck(checkUniqueProposal(contents, 'isE', 'isEmpty'), contents + 'mpty')
     }
 
@@ -482,14 +503,35 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
+    void testMethodPointer2a() {
+        assumeTrue(isParrotParser())
+        String contents = 'String::  isE'
+        applyProposalAndCheck(checkUniqueProposal(contents, 'isE', 'isEmpty'), contents + 'mpty')
+    }
+
+    @Test
     void testMethodPointer3() {
         String contents = 'String.&isEmpty.mem'
         applyProposalAndCheck(checkUniqueProposal(contents, 'mem', 'memoize()'), contents + 'oize()')
     }
 
     @Test
+    void testMethodPointer3a() {
+        assumeTrue(isParrotParser())
+        String contents = 'String::isEmpty.mem'
+        applyProposalAndCheck(checkUniqueProposal(contents, 'mem', 'memoize()'), contents + 'oize()')
+    }
+
+    @Test
     void testMethodPointer4() {
         String contents = '(String.&isEmpty).mem'
+        applyProposalAndCheck(checkUniqueProposal(contents, 'mem', 'memoize()'), contents + 'oize()')
+    }
+
+    @Test
+    void testMethodPointer4a() {
+        assumeTrue(isParrotParser())
+        String contents = '(String::isEmpty).mem'
         applyProposalAndCheck(checkUniqueProposal(contents, 'mem', 'memoize()'), contents + 'oize()')
     }
 
