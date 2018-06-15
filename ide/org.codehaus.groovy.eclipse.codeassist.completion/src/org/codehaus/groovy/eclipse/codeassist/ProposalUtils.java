@@ -40,8 +40,6 @@ import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.internal.ui.viewsupport.ImageDescriptorRegistry;
 import org.eclipse.jdt.ui.text.java.CompletionProposalLabelProvider;
-import org.eclipse.jface.text.BadLocationException;
-import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.swt.graphics.Image;
@@ -303,27 +301,6 @@ public class ProposalUtils {
             if (CharOperation.isWhitespace(c)) {
                 return true;
             }
-        }
-        return false;
-    }
-
-    /** Checks '.&' operator before replacement offset. */
-    public static boolean isMethodPointerCompletion(IDocument document, int replacementOffset) {
-        try {
-            boolean seenAmpersand = false;
-            while (--replacementOffset > 0) {
-                char c = document.getChar(replacementOffset);
-                if (Character.isJavaIdentifierPart(c) || (!Character.isWhitespace(c) && c != '&' && c != '.')) break;
-                if (c == '&') {
-                    if (seenAmpersand) break;
-                    seenAmpersand = true;
-                } else if (c == '.') {
-                    if (seenAmpersand)
-                        return true;
-                    break;
-                }
-            }
-        } catch (BadLocationException ignore) {
         }
         return false;
     }

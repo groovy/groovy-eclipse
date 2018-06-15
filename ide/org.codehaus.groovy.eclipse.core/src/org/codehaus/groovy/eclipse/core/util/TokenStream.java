@@ -151,6 +151,13 @@ public class TokenStream {
                     last = new Token(Token.Type.METHOD_POINTER, offset + 1, offset + 3, buffer.subSequence(offset + 1, offset + 3).toString());
                 }
                 break;
+            case ':':
+                nextChar();
+                if (ch == ':') {
+                    nextChar();
+                    last = new Token(Token.Type.METHOD_POINTER, offset + 1, offset + 3, buffer.subSequence(offset + 1, offset + 3).toString());
+                }
+                break;
             case ';':
                 nextChar();
                 last = new Token(Token.Type.SEMI, offset + 1, offset + 2, buffer.subSequence(offset + 1, offset + 2).toString());
