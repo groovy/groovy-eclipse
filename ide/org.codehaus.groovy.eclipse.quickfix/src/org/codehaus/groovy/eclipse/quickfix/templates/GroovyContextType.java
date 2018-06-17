@@ -1,7 +1,5 @@
 /*
- * Copyright 2011 SpringSource, a division of VMware, Inc
- * 
- * andrew - Initial API and implementation
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +28,7 @@ public class GroovyContextType extends AbstractJavaContextType {
         setName("Groovy surround-with templates");
         initializeContextTypeResolvers();
     }
+
     @Override
     protected void initializeContext(JavaContext context) {
         context.addCompatibleContextType(GroovyQuickFixPlugin.GROOVY_CONTEXT_TYPE);
@@ -44,7 +43,7 @@ public class GroovyContextType extends AbstractJavaContextType {
         // global
         addResolver(new GlobalTemplateVariables.Cursor());
         addResolver(new GlobalTemplateVariables.WordSelection());
-//        addResolver(new SurroundWithLineSelection());
+        //addResolver(new SurroundWithLineSelection());
         addResolver(new GlobalTemplateVariables.Dollar());
         addResolver(new GlobalTemplateVariables.Date());
         addResolver(new GlobalTemplateVariables.Year());
@@ -53,13 +52,13 @@ public class GroovyContextType extends AbstractJavaContextType {
 
         // compilation unit
         addResolver(new File());
-//        addResolver(new PrimaryTypeName());
-//        addResolver(new ReturnType());
-//        addResolver(new Method());
+        //addResolver(new PrimaryTypeName());
+        //addResolver(new ReturnType());
+        //addResolver(new Method());
         addResolver(new Type());
         addResolver(new Package());
         addResolver(new Project());
-//        addResolver(new Arguments());
+        //addResolver(new Arguments());
 
         // java
         addResolver(new Array());
@@ -72,12 +71,11 @@ public class GroovyContextType extends AbstractJavaContextType {
         addResolver(new IterableType());
         addResolver(new IterableElement());
         addResolver(new Todo());
-        
+
         // Extra
         addResolver(new StaticImportResolver("importStatic", "adds a static import"));
         TypeResolver resolver = new TypeResolver();
         resolver.setType("newType");
         addResolver(resolver);
     }
-
 }

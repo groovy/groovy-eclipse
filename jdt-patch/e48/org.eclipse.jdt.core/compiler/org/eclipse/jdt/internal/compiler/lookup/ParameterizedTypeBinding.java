@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2016 IBM Corporation and others.
+ * Copyright (c) 2005, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -39,6 +39,8 @@
  *								Bug 435805 - [1.8][compiler][null] Java 8 compiler does not recognize declaration style null annotations
  *								Bug 456508 - Unexpected RHS PolyTypeBinding for: <code-snippet>
  *								Bug 390064 - [compiler][resource] Resource leak warning missing when extending parameterized class
+ *     Jesper S Møller  - Contributions for bug 381345 : [1.8] Take care of the Java 8 major version
+ *								Bug 527554 - [18.3] Compiler support for JEP 286 Local-Variable Type
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
 
@@ -76,7 +78,7 @@ public class ParameterizedTypeBinding extends ReferenceBinding implements Substi
 	public ParameterizedTypeBinding(ReferenceBinding type, TypeBinding[] arguments,  ReferenceBinding enclosingType, LookupEnvironment environment){
 		this.environment = environment;
 		this.enclosingType = enclosingType; // never unresolved, never lazy per construction
-		if (type.isStatic() && arguments == null && !(this instanceof RawTypeBinding))
+		if (!type.hasEnclosingInstanceContext() && arguments == null && !(this instanceof RawTypeBinding))
 			throw new IllegalStateException();
 		initialize(type, arguments);
 		if (type instanceof UnresolvedReferenceBinding)
@@ -460,6 +462,114 @@ public class ParameterizedTypeBinding extends ReferenceBinding implements Substi
 	public TypeBinding erasure() {
         return this.type.erasure(); // erasure
     }
+    /* (non-Javadoc)
+     * @see org.eclipse.jdt.internal.compiler.lookup.TypeBinding#upwardsProjection(org.eclipse.jdt.internal.compiler.lookup.Scope, org.eclipse.jdt.internal.compiler.lookup.TypeBinding[])
+     */
+    @Override
+	public ReferenceBinding upwardsProjection(Scope scope, TypeBinding[] mentionedTypeVariables) {
+    		TypeBinding[] typeVariables = this.arguments;
+		if (typeVariables == null) return this; // How would that be possible?
+		
+		TypeBinding[] a_i_primes = new TypeBinding[typeVariables.length];
+		for (int i = 0, length = typeVariables.length; i < length; i++) {
+			TypeBinding a_i = typeVariables[i];
+			
+			// If Ai does not mention any restricted type variable, then Ai' = Ai.
+			int typeVariableKind = a_i.kind();
+			if (! a_i.mentionsAny(mentionedTypeVariables, -1)) {
+				a_i_primes[i] = a_i;
+			} else if (typeVariableKind != Binding.WILDCARD_TYPE) {
+				// If Ai is a type that mentions a restricted type variable, then Ai' is a wildcard.
+				//  Let U be the upward projection of Ai. There are three cases:
+				TypeBinding u = a_i.upwardsProjection(scope, mentionedTypeVariables);
+				TypeVariableBinding[] g_vars = this.type.typeVariables();
+				if (g_vars == null || g_vars.length == 0) return this; // Careful - could be a MissingTypeBinding here
+				TypeBinding b_i = g_vars[i].upperBound();
+								
+				// If U is not Object,
+				// and if either
+				//  * the declared bound of the ith parameter of G, Bi, mentions a type parameter of G, or
+				//  * Bi is not a subtype of U,
+				// then Ai' is an upper-bounded wildcard, ? extends U.
+				if (u.id != TypeIds.T_JavaLangObject
+						&& (b_i.mentionsAny(typeVariables, -1) || !b_i.isSubtypeOf(u, false))) {
+					a_i_primes[i] = this.environment().createWildcard(genericType(), i, u, null, Wildcard.EXTENDS);
+				} else {
+					TypeBinding l = a_i.downwardsProjection(scope, mentionedTypeVariables);
+					// Otherwise, if the downward projection of Ai is L,
+					// then Ai' is a lower-bounded wildcard, ? super L.
+					if (l != null) {
+						a_i_primes[i] = this.environment().createWildcard(genericType(), i, l, null, Wildcard.SUPER);
+					} else {
+						// Otherwise, the downward projection of Ai is undefined and Ai' is an unbounded wildcard, ?.
+						a_i_primes[i] = this.environment().createWildcard(genericType(), i, null, null, Wildcard.UNBOUND);
+					}
+				}
+			} else  { 
+				WildcardBinding wildcard = (WildcardBinding)a_i;
+				if (wildcard.boundKind() == Wildcard.EXTENDS) {
+					// If Ai is an upper-bounded wildcard that mentions a restricted type variable, 
+					// then let U be the upward projection of the wildcard bound.
+					TypeBinding u = wildcard.bound().upwardsProjection(scope, mentionedTypeVariables);
+					// Ai' is a wildcard ? extends U.
+					a_i_primes[i] = this.environment().createWildcard(null, 0, u, null, Wildcard.EXTENDS);
+				} else if (wildcard.boundKind() == Wildcard.SUPER) {
+					// If Ai is a lower-bounded wildcard that mentions a restricted type variable,
+					TypeBinding l = wildcard.bound().downwardsProjection(scope, mentionedTypeVariables);
+					if (l != null) {
+						// then if the downward projection of the wildcard bound is L, then Ai' is a wildcard ? super L;
+						a_i_primes[i] = this.environment().createWildcard(null, 0, l, null, Wildcard.SUPER);
+					} else {
+						// if the downward projection of the wildcard bound is undefined, then Ai' is an unbounded wildcard, ?.
+						a_i_primes[i] = this.environment().createWildcard(null, 0, null, null, Wildcard.UNBOUND);
+					}
+				}
+			}
+		}
+		return this.environment.createParameterizedType(this.type, a_i_primes, this.enclosingType);
+    }
+    @Override
+	public ReferenceBinding downwardsProjection(Scope scope, TypeBinding[] mentionedTypeVariables) {
+		TypeBinding[] typeVariables = this.arguments;
+		if (typeVariables == null) return this; // How would that be possible?
+		
+		TypeBinding[] a_i_primes = new TypeBinding[typeVariables.length];
+		for (int i = 0, length = typeVariables.length; i < length; i++) {
+			TypeBinding a_i = typeVariables[i];
+			
+			// If Ai does not mention any restricted type variable, then Ai' = Ai.
+			int typeVariableKind = a_i.kind();
+			if (! a_i.mentionsAny(mentionedTypeVariables, -1)) {
+				a_i_primes[i] = a_i;
+			} else if (typeVariableKind != Binding.WILDCARD_TYPE) {
+				return null;
+			} else  { 
+				WildcardBinding wildcard = (WildcardBinding)a_i;
+				if (wildcard.boundKind() == Wildcard.EXTENDS) {
+					// Ai is an upper-bounded wildcard that mentions a restricted type variable,
+					TypeBinding u = wildcard.bound().downwardsProjection(scope, mentionedTypeVariables);
+					// then if the downward projection of the wildcard bound is U, then Ai' is a wildcard ? extends U;
+					if (u != null) {
+						// Ai' is a wildcard ? extends U.
+						a_i_primes[i] = this.environment().createWildcard(null, 0, u, null, Wildcard.EXTENDS);
+					} else {
+						// if the downward projection of the wildcard bound is undefined, then Ai' is undefined.
+						return null;
+					}
+				} else if (wildcard.boundKind() == Wildcard.SUPER) {
+					// If Ai is a lower-bounded wildcard that mentions a restricted type variable,
+					// then let L be the upward projection of the wildcard bound.
+					TypeBinding l = wildcard.bound().upwardsProjection(scope, mentionedTypeVariables);
+					//  Ai' is a wildcard ? super L.
+					a_i_primes[i] = this.environment().createWildcard(null, 0, l, null, Wildcard.SUPER);
+				} else {
+					return null;
+				}
+			}
+		}
+		return this.environment.createParameterizedType(this.type, a_i_primes, this.enclosingType);
+	}
+ 
 	/**
 	 * @see org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding#fieldCount()
 	 */

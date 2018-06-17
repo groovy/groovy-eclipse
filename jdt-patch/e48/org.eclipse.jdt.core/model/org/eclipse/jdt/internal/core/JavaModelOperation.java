@@ -13,6 +13,7 @@ package org.eclipse.jdt.internal.core;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.*;
@@ -169,7 +170,7 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 	 * Registers the given reconcile delta with the Java Model Manager.
 	 */
 	protected void addReconcileDelta(ICompilationUnit workingCopy, IJavaElementDelta delta) {
-		HashMap reconcileDeltas = JavaModelManager.getJavaModelManager().getDeltaProcessor().reconcileDeltas;
+		Map<ICompilationUnit, IJavaElementDelta> reconcileDeltas = JavaModelManager.getJavaModelManager().getDeltaProcessor().reconcileDeltas;
 		JavaElementDelta previousDelta = (JavaElementDelta)reconcileDeltas.get(workingCopy);
 		if (previousDelta != null) {
 			IJavaElementDelta[] children = delta.getAffectedChildren();
@@ -728,7 +729,7 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 						// noop if aready initialized
 						JavaModelManager.getDeltaState().initializeRoots(false/*not initiAfterLoad*/);
 					}
-	
+
 					executeOperation();
 				} finally {
 					if (isTopLevelOperation()) {
@@ -739,12 +740,12 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 				try {
 					// reacquire delta processor as it can have been reset during executeOperation()
 					deltaProcessor = manager.getDeltaProcessor();
-	
+
 					// update JavaModel using deltas that were recorded during this operation
 					for (int i = previousDeltaCount, size = deltaProcessor.javaModelDeltas.size(); i < size; i++) {
-						deltaProcessor.updateJavaModel((IJavaElementDelta)deltaProcessor.javaModelDeltas.get(i));
+						deltaProcessor.updateJavaModel(deltaProcessor.javaModelDeltas.get(i));
 					}
-	
+
 					// close the parents of the created elements and reset their project's cache (in case we are in an
 					// IWorkspaceRunnable and the clients wants to use the created element's parent)
 					// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=83646
@@ -762,7 +763,7 @@ public abstract class JavaModelOperation implements IWorkspaceRunnable, IProgres
 						}
 					}
 					deltaProcessor.resetProjectCaches();
-	
+
 					// fire only iff:
 					// - the operation is a top level operation
 					// - the operation did produce some delta(s)

@@ -22,6 +22,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -35,6 +36,8 @@ import groovy.lang.GroovyClassLoader;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
+import org.codehaus.groovy.runtime.m12n.ExtensionModuleScanner;
+import org.codehaus.groovy.runtime.m12n.SimpleExtensionModule;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyParser;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -119,7 +122,7 @@ public final class GroovyClassLoaderFactory {
                     nameEnvironment = ((INameEnvironment[]) ReflectionUtils.getPrivateField(nameEnvironment.getClass(), "classLibs", nameEnvironment))[0];
                 }
                 if (nameEnvironment instanceof FileSystem) {
-                    FileSystem.Classpath[] classpaths = (FileSystem.Classpath[]) ReflectionUtils.getPrivateField(FileSystem.class, "classpaths", nameEnvironment);
+                    FileSystem.Classpath[] classpaths = ReflectionUtils.getPrivateField(FileSystem.class, "classpaths", nameEnvironment);
                     if (classpaths != null) {
                         batchLoader = new GroovyClassLoader();
                         for (FileSystem.Classpath classpath : classpaths) {
@@ -138,11 +141,11 @@ public final class GroovyClassLoaderFactory {
         String projectName = compilerOptions.groovyProjectName; IProject project = findProject(projectName);
         try {
             IJavaProject javaProject = JavaCore.create(project);
-            IClasspathEntry[] classpathEntries = javaProject.getResolvedClasspath(true);
+            IClasspathEntry[] classpathEntries = javaProject.exists() ? javaProject.getResolvedClasspath(true) : new IClasspathEntry[0];
 
             Map.Entry<IClasspathEntry[], GroovyClassLoader[]> entry = projectClassLoaderCache.computeIfAbsent(projectName, key -> {
                 Set<String> classPaths = new LinkedHashSet<>(), xformPaths = new LinkedHashSet<>();
-                calculateClasspath(javaProject, classPaths, xformPaths);
+                if (javaProject.exists()) calculateClasspath(javaProject, classPaths, xformPaths);
 
                 if (GroovyLogManager.manager.hasLoggers()) {
                     GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM,
@@ -175,9 +178,9 @@ public final class GroovyClassLoaderFactory {
 
     private static void calculateClasspath(IJavaProject javaProject, Set<String> classPaths, Set<String> xformPaths) {
         try {
-            IRuntimeClasspathEntry[] dependencies = JavaRuntime.computeUnresolvedRuntimeClasspath(javaProject); // TODO: Leverage "excludeTestCode" parameter?  http://www.eclipse.org/eclipse/news/4.8/M5/index.html#jdt-test-sources
-            Arrays.sort(dependencies, Comparator.comparing(IRuntimeClasspathEntry::getType));
-            for (IRuntimeClasspathEntry unresolved : dependencies) {
+            IRuntimeClasspathEntry[] entries = JavaRuntime.computeUnresolvedRuntimeClasspath(javaProject); // TODO: Leverage "excludeTestCode" parameter?  http://www.eclipse.org/eclipse/news/4.8/M5/index.html#jdt-test-sources
+            Arrays.sort(entries, Comparator.comparing(IRuntimeClasspathEntry::getType));
+            for (IRuntimeClasspathEntry unresolved : entries) {
                 Set<String> paths = (unresolved.getType() == IRuntimeClasspathEntry.CONTAINER ? classPaths : xformPaths);
                 for (IRuntimeClasspathEntry resolved : resolveRuntimeClasspathEntry(unresolved, javaProject)) {
                     paths.add(getAbsoluteLocation(resolved));
@@ -191,7 +194,7 @@ public final class GroovyClassLoaderFactory {
 
     private static IRuntimeClasspathEntry[] resolveRuntimeClasspathEntry(IRuntimeClasspathEntry classpathEntry, IJavaProject javaProject) throws Exception {
         //return JavaRuntime.resolveRuntimeClasspathEntry(classpathEntry, javaProject); // indirect dependency on org.eclipse.debug.core.ILaunchConfiguration
-        return (IRuntimeClasspathEntry[]) ReflectionUtils.throwableExecutePrivateMethod(JavaRuntime.class, "resolveRuntimeClasspathEntry", new Class[] {IRuntimeClasspathEntry.class, IJavaProject.class}, JavaRuntime.class, new Object[] {classpathEntry, javaProject});
+        return ReflectionUtils.throwableExecutePrivateMethod(JavaRuntime.class, "resolveRuntimeClasspathEntry", new Class[] {IRuntimeClasspathEntry.class, IJavaProject.class}, JavaRuntime.class, new Object[] {classpathEntry, javaProject});
     }
 
     private static String getAbsoluteLocation(IRuntimeClasspathEntry classpathEntry) {
@@ -205,7 +208,7 @@ public final class GroovyClassLoaderFactory {
             IPath rawLocation = resource.getRawLocation();
             if (rawLocation != null) {
                 location = rawLocation.toOSString();
-            } else {
+            } else if (resource.getLocation() != null) {
                 location = resource.getLocation().toOSString();
             }
         }
@@ -223,7 +226,8 @@ public final class GroovyClassLoaderFactory {
         }).filter(Objects::nonNull).toArray(URL[]::new);
 
         if (NONLOCKING) {
-            return new org.apache.xbean.classloader.NonLockingJarFileClassLoader("AST Transform loader", urls, parent);
+            if (parent == null) parent = URLClassLoader.newInstance(new URL[0], null);
+            return new org.apache.xbean.classloader.NonLockingJarFileClassLoader("GDT non-locking loader", urls, parent);
         } else {
             return URLClassLoader.newInstance(urls, parent);
         }
@@ -238,10 +242,8 @@ public final class GroovyClassLoaderFactory {
 
     //--------------------------------------------------------------------------
 
+    @SuppressWarnings("rawtypes")
     public static class GrapeAwareGroovyClassLoader extends GroovyClassLoader {
-
-        /** {@code true} if any grabbing is done */
-        public boolean grabbed;
 
         public GrapeAwareGroovyClassLoader(ClassLoader parent, CompilerConfiguration config) {
             super(parent, config);
@@ -251,6 +253,48 @@ public final class GroovyClassLoaderFactory {
         public void addURL(URL url) {
             this.grabbed = true;
             super.addURL(url);
+        }
+
+        /** {@code true} if any grabbing is done */
+        public boolean grabbed;
+
+        private volatile Set<Class> defaultCategories;
+        private volatile Set<Class> defaultStaticCategories;
+
+        public Set<Class> getDefaultCategories() {
+            if (defaultCategories == null) {
+                synchronized (this) {
+                    if (defaultCategories == null) {
+                        defaultCategories = new LinkedHashSet<>(); defaultStaticCategories = new LinkedHashSet<>();
+                        try {
+                            Class dgm = loadClass("org.codehaus.groovy.runtime.DefaultGroovyMethods");
+                            Class dgsm = loadClass("org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
+
+                            Collections.addAll(defaultCategories, (Class[]) dgm.getField("DGM_LIKE_CLASSES").get(dgm));
+
+                            defaultStaticCategories.add(dgsm);
+
+                            new ExtensionModuleScanner(module ->  {
+                                if (module instanceof SimpleExtensionModule) {
+                                    defaultCategories.addAll(((SimpleExtensionModule) module).getInstanceMethodsExtensionClasses());
+                                    defaultStaticCategories.addAll(((SimpleExtensionModule) module).getStaticMethodsExtensionClasses());
+                                }
+                            }, this).scanClasspathModules();
+
+                            defaultCategories.addAll(defaultStaticCategories);
+
+                        } catch (Exception e) {
+                            Util.log(e, "Failed to find Default Groovy Methods with " + this);
+                        }
+                    }
+                }
+            }
+            return Collections.unmodifiableSet(defaultCategories);
+        }
+
+        public boolean isDefaultStaticCategory(String name) {
+            if (defaultStaticCategories == null) getDefaultCategories();
+            return defaultStaticCategories.stream().map(Class::getName).anyMatch(name::equals);
         }
     }
 }

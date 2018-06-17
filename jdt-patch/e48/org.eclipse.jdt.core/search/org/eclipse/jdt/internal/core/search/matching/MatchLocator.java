@@ -1525,7 +1525,11 @@ public void locateMatches(SearchDocument[] searchDocuments) throws CoreException
 			PossibleMatch possibleMatch = new PossibleMatch(this, resource, openable, searchDocument,this.pattern.mustResolve);
 			matchSet.add(possibleMatch);
 			if (pathString.endsWith(TypeConstants.AUTOMATIC_MODULE_NAME)) {
-				possibleMatch.autoModuleName = new String(AutomaticModuleNaming.determineAutomaticModuleName(pathString.split(Pattern.quote("|"))[0])); //$NON-NLS-1$
+				IPath path = resource.getFullPath();
+				String s = (pathString.contains(path.lastSegment())) ?
+						JavaModelManager.getLocalFile(path).toPath().toAbsolutePath().toString() :
+						pathString.split(Pattern.quote("|"))[0]; //$NON-NLS-1$
+				possibleMatch.autoModuleName = new String(AutomaticModuleNaming.determineAutomaticModuleName(s));
 			}			
 		}
 

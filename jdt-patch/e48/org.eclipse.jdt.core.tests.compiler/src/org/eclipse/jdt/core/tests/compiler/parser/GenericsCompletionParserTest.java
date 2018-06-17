@@ -8111,10 +8111,10 @@ public void test0167_Method(){
 			"  }\n" +
 			"  void foo() {\n" +
 			"    List<Integer> cont;\n" +
-			"    Integer i;\n" +
-			"    {\n" +
-			"      <CompleteOnName:i.>;\n" +
-			"    }\n" +
+			"    for (Integer i : cont) \n" +
+			"      {\n" +
+			"        <CompleteOnName:i.>;\n" +
+			"      }\n" +
 			"  }\n" +
 			"}\n";
 
@@ -10086,10 +10086,10 @@ public void test0202_Method(){
 			"  public Test() {\n" +
 			"  }\n" +
 			"  void bar() {\n" +
-			"    Entry entry;\n" +
-			"    {\n" +
-			"      <CompleteOnName:entry.>;\n" +
-			"    }\n" +
+			"    for (Entry entry : (Set<Entry>) var) \n" +
+			"      {\n" +
+			"        <CompleteOnName:entry.>;\n" +
+			"      }\n" +
 			"  }\n" +
 			"}\n";
 
@@ -10164,10 +10164,10 @@ public void test0203_Method(){
 			"  public Test() {\n" +
 			"  }\n" +
 			"  void bar() {\n" +
-			"    Entry entry;\n" +
-			"    {\n" +
-			"      <CompleteOnName:entry.>;\n" +
-			"    }\n" +
+			"    for (Entry entry : (ZZZ<YYY>.Set<Entry>) var) \n" +
+			"      {\n" +
+			"        <CompleteOnName:entry.>;\n" +
+			"      }\n" +
 			"  }\n" +
 			"}\n";
 

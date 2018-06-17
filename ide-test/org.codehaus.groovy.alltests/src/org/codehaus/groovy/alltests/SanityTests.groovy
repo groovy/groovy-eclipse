@@ -35,7 +35,7 @@ final class SanityTests {
     @Before
     void setUp() {
         println '----------------------------------------'
-        println 'Starting: ' + test.getMethodName()
+        println 'Starting: ' + test.methodName
 
         GroovyActivator.initialize()
         println 'ClassLoader location: ' + GroovyActivator.getClassLoader().getResource('.')
@@ -43,12 +43,12 @@ final class SanityTests {
 
     @Test
     void testCompilerVersion() {
-        Version groovyVersion = CompilerUtils.getActiveGroovyBundle().getVersion()
+        Version groovyVersion = CompilerUtils.getActiveGroovyBundle().version
         assert groovyVersion.major == CompilerUtils.getWorkspaceCompilerLevel().majorVersion
         assert groovyVersion.minor == CompilerUtils.getWorkspaceCompilerLevel().minorVersion
 
-        println "Eclipse Platform version: ${Platform.getBundle('org.eclipse.platform')?.getVersion()}"
-        println "JDT Core version: ${Platform.getBundle('org.eclipse.jdt.core').getVersion()}"
+        println "Eclipse Platform version: ${Platform.getBundle('org.eclipse.platform')?.version}"
+        println "JDT Core version: ${Platform.getBundle('org.eclipse.jdt.core').version}"
         println "Groovy version: $groovyVersion"
 
         int major = groovyVersion.major,

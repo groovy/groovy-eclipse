@@ -28,6 +28,7 @@ public interface IModuleDescription extends IMember, IAnnotatable {
 
 	/**
 	 * Answer the names of all modules directly required from this module.
+	 *
 	 * @return a non-null array of module names
 	 * @since 3.14
 	 */

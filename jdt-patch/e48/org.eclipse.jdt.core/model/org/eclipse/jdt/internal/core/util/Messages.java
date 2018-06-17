@@ -360,6 +360,8 @@ public final class Messages extends NLS {
 	public static String classformat_checkcast;
 	public static String classformat_instanceof;
 	public static String classformat_ldc_w_class;
+	public static String classformat_ldc_w_methodtype;
+	public static String classformat_ldc_w_methodhandle;
 	public static String classformat_ldc_w_float;
 	public static String classformat_ldc_w_integer;
 	public static String classformat_ldc_w_string;

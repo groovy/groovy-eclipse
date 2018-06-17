@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2014 IBM Corporation and others.
+ * Copyright (c) 2013, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -143,7 +143,7 @@ public class AnnotatableTypeSystem extends TypeSystem {
 	public RawTypeBinding getRawType(ReferenceBinding genericType, ReferenceBinding enclosingType, AnnotationBinding [] annotations) {
 		if (genericType.hasTypeAnnotations())
 			throw new IllegalStateException();
-		if (genericType.isStatic() && enclosingType != null) {
+		if (!genericType.hasEnclosingInstanceContext() && enclosingType != null) {
 			enclosingType = (ReferenceBinding) enclosingType.original();
 		}
 		
@@ -187,7 +187,7 @@ public class AnnotatableTypeSystem extends TypeSystem {
 			throw new IllegalStateException();
 		
 		WildcardBinding nakedType = null;
-		boolean useDerivedTypesOfBound = bound instanceof TypeVariableBinding || bound instanceof ParameterizedTypeBinding;
+		boolean useDerivedTypesOfBound = bound instanceof TypeVariableBinding || (bound instanceof ParameterizedTypeBinding && !(bound instanceof RawTypeBinding)) ;
 		TypeBinding[] derivedTypes = getDerivedTypes(useDerivedTypesOfBound ? bound : genericType);
 		for (int i = 0, length = derivedTypes.length; i < length; i++) {
 			TypeBinding derivedType = derivedTypes[i];

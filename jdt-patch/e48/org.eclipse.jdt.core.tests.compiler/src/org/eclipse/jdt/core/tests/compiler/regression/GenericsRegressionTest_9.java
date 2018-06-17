@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2017 IBM Corporation.
+ * Copyright (c) 2016, 2018 IBM Corporation.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -618,6 +618,53 @@ public void testBug521815b() {
 			"	              ^^^^^^^^^^^\n" + 
 			"The import a.b.X.Inner is never used\n" + 
 			"----------\n");
+}
+public void testBug533644() {
+	runConformTest(
+		new String[] {
+			"q/JobDetail.java",
+			"package q;\n" + 
+			"import java.io.Serializable;\n" + 
+			"public interface JobDetail extends Serializable, Cloneable { }\n",
+			"q/Scheduler.java",
+			"package q;\n" + 
+			"import java.util.Map;\n" + 
+			"import java.util.Set;\n" + 
+			"public interface Scheduler {\n" + 
+			"    void scheduleJobs(Map<JobDetail, Set<? extends Trigger>> triggersAndJobs, boolean replace) throws SchedulerException;\n" + 
+			"}\n",
+			"q/SchedulerException.java",
+			"package q;\n" + 
+			"public class SchedulerException extends Exception {\n" + 
+			"    private static final long serialVersionUID = 174841398690789156L;\n" + 
+			"}\n",
+			"q/Trigger.java",
+			"package q;\n" + 
+			"import java.io.Serializable;\n" + 
+			"public interface Trigger extends Serializable, Cloneable, Comparable<Trigger> {\n" + 
+			"    public static final long serialVersionUID = -3904243490805975570L;\n" + 
+			"}\n"
+		});
+	Runner runner = new Runner();
+	runner.shouldFlushOutputDirectory = false;
+	runner.testFiles = new String[] {
+			"ForwardingScheduler.java",
+			"import java.util.Map;\n" + 
+			"import java.util.Set;\n" + 
+			"\n" + 
+			"import q.JobDetail;\n" + 
+			"import q.Scheduler;\n" + 
+			"import q.SchedulerException;\n" + 
+			"import q.Trigger;\n" + 
+			"\n" + 
+			"public class ForwardingScheduler implements Scheduler {\n" + 
+			"  @Override\n" + 
+			"  public void scheduleJobs(Map<JobDetail, Set<? extends Trigger>> triggersAndJobs, boolean replace)\n" + 
+			"      throws SchedulerException {\n" + 
+			"  }\n" + 
+			"}\n"
+	};
+	runner.runConformTest();
 }
 public static Class<GenericsRegressionTest_9> testClass() {
 	return GenericsRegressionTest_9.class;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,14 +32,16 @@ import org.eclipse.core.resources.IFile;
  */
 public class EclipseSourceUnit extends SourceUnit {
 
-    final private IFile file;
-    final public JDTResolver resolver;
+    private final IFile file;
+    public final JDTResolver resolver;
 
-    public EclipseSourceUnit(IFile resource, String filepath, String string, CompilerConfiguration groovyCompilerConfig,
-            GroovyClassLoader classLoader, ErrorCollector errorCollector, JDTResolver resolver) {
-        super(filepath, string, groovyCompilerConfig, classLoader, errorCollector);
-        this.file = resource;
+    public EclipseSourceUnit(IFile file, String filePath, String sourceCode, boolean isReconcile,
+        CompilerConfiguration compilerConfig, GroovyClassLoader classLoader, ErrorCollector errorCollector, JDTResolver resolver) {
+
+        super(filePath, sourceCode, compilerConfig, classLoader, errorCollector);
+        this.file = file;
         this.resolver = resolver;
+        this.isReconcile = isReconcile;
     }
 
     /**

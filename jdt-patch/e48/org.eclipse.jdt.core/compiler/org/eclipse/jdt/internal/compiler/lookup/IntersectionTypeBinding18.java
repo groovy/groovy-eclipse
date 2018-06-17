@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -14,6 +14,8 @@
  *							Bug 428019 - [1.8][compiler] Type inference failure with nested generic invocation.
  *     Andy Clement (GoPivotal, Inc) aclement@gopivotal.com - Contributions for
  *                          Bug 405104 - [1.8][compiler][codegen] Implement support for serializeable lambdas
+ *     Jesper S Møller - Contributions for bug 381345 : [1.8] Take care of the Java 8 major version
+ *                          Bug 527554 - [18.3] Compiler support for JEP 286 Local-Variable Type
  *******************************************************************************/
 
 package org.eclipse.jdt.internal.compiler.lookup;
@@ -290,6 +292,24 @@ public class IntersectionTypeBinding18 extends ReferenceBinding { // abstraction
 			this.intersectingTypes[i].collectInferenceVariables(variables);
 	}
 	
+	@Override
+	public ReferenceBinding upwardsProjection(Scope scope, TypeBinding[] mentionedTypeVariables) {
+		ReferenceBinding[] projectedTypes = new ReferenceBinding[this.intersectingTypes.length];
+		for (int i = 0; i < this.intersectingTypes.length; ++i) {
+			projectedTypes[i] =  this.intersectingTypes[i].upwardsProjection(scope, mentionedTypeVariables);
+		}
+		return (ReferenceBinding) scope.environment().createIntersectionType18(projectedTypes);
+	}
+
+	@Override
+	public ReferenceBinding downwardsProjection(Scope scope, TypeBinding[] mentionedTypeVariables) {
+		ReferenceBinding[] projectedTypes = new ReferenceBinding[this.intersectingTypes.length];
+		for (int i = 0; i < this.intersectingTypes.length; ++i) {
+			projectedTypes[i] = this.intersectingTypes[i].downwardsProjection(scope, mentionedTypeVariables);
+		}
+		return (ReferenceBinding) scope.environment().createIntersectionType18(projectedTypes);
+	}
+
 	@Override
 	public boolean mentionsAny(TypeBinding[] parameters, int idx) {
 		if (super.mentionsAny(parameters, idx))

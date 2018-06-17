@@ -1,0 +1,27 @@
+###prop
+bracesStart=next
+indentation=space
+indentsize=4
+maxLineLegth=40
+multilineIndentation=1
+setPreferences=true
+startLine=1
+startColumn=1
+endLine=4
+endColumn=2
+###src
+void meth(def one, def two, def three, def four, ...)
+{
+  // method body
+}
+
+meth(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14)
+###exp
+void meth(def one, def two, def three,
+    def four, ...)
+{
+    // method body
+}
+
+meth(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14)
+###end

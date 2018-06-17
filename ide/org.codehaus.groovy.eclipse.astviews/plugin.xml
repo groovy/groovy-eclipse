@@ -2,8 +2,12 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension point="org.eclipse.ui.views">
+      <category
+            id="org.codehaus.groovy.eclipse"
+            name="Groovy">
+      </category>
       <view
-            category="org.codehaus.groovy.eclipse.Groovy"
+            category="org.codehaus.groovy.eclipse"
             class="org.codehaus.groovy.eclipse.astviews.ASTView"
             icon="platform:/plugin/org.codehaus.groovy.eclipse/$nl$/groovy16.png"
             id="org.codehaus.groovy.eclipse.astviews.ASTView"

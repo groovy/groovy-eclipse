@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -67,6 +67,7 @@ public class BlockScope extends Scope {
 
 	// annotation support
 	public boolean insideTypeAnnotation = false;
+	public Statement blockStatement;
 
 public BlockScope(BlockScope parent) {
 	this(parent, true);
@@ -826,7 +827,6 @@ public Object[] getEmulationPath(ReferenceBinding targetEnclosingType, boolean o
 				&& sourceType.scope.referenceContext.allocation.enclosingInstance != null;
 			// reject allocation and super constructor call
 			if (denyEnclosingArgInConstructorCall
-					&& currentMethodScope.isConstructorCall
 					&& !isAnonymousAndHasEnclosing
 					&& (TypeBinding.equalsEquals(sourceType, targetEnclosingType) || (!onlyExactMatch && sourceType.findSuperTypeOriginatingFrom(targetEnclosingType) != null))) {
 				return BlockScope.NoEnclosingInstanceInConstructorCall;

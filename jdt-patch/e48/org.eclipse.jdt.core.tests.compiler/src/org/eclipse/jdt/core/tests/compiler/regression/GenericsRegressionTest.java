@@ -6297,5 +6297,80 @@ public void testBug520482() {
 		"", "", null
 	);
 }
+public void testBug532137() {
+	runConformTest(
+		new String[] {
+			"subtypes/A.java",
+			"package subtypes;\n" +
+			"\n" +
+			"\n" +
+			"public abstract class A<R extends B> {\n" +
+			"\n" +
+			"	public A() {\n" +
+			"\n" +
+			"	}\n" +
+			"\n" +
+			"}\n" +
+			"",
+			"subtypes/B.java",
+			"package subtypes;\n" +
+			"\n" +
+			"public abstract class B  {\n" +
+			"\n" +
+			"	public B() {\n" +
+			"\n" +
+			"	}\n" +
+			"\n" +
+			"}\n" +
+			"",
+			"subtypes/GenericType.java",
+			"package subtypes;\n" +
+			"public abstract class GenericType<REQ extends A<RES>, RES extends B> {\n" +
+			"\n" +
+			"}\n" +
+			"",
+			"subtypes/TestBase.java",
+			"package subtypes;\n" +
+			"\n" +
+			"import java.util.Collections;\n" +
+			"import java.util.List;\n" +
+			"\n" +
+			"public abstract class TestBase {\n" +
+			"\n" +
+			"	@SuppressWarnings(\"rawtypes\")\n" +
+			"	protected List<Class<? extends GenericType>> giveMeAListOfTypes() {\n" +
+			"		return Collections.emptyList();\n" +
+			"	}\n" +
+			"\n" +
+			"}\n" +
+			"",
+		}
+	);
+	runNegativeTest(
+		new String[] {
+			"subtypes/TestImpl.java",
+			"package subtypes;\n" +
+			"\n" +
+			"import java.util.List;\n" +
+			"\n" +
+			"public class TestImpl extends TestBase{\n" +
+			"\n" +
+			"	@Override\n" +
+			"    protected List<Class<? extends GenericType>> giveMeAListOfTypes() {\n" +
+			"		return super.giveMeAListOfTypes();\n" +
+			"	}\n" +
+			"}\n" +
+			"",
+		},
+		"----------\n" + 
+		"1. WARNING in subtypes\\TestImpl.java (at line 8)\n" + 
+		"	protected List<Class<? extends GenericType>> giveMeAListOfTypes() {\n" + 
+		"	                               ^^^^^^^^^^^\n" + 
+		"GenericType is a raw type. References to generic type GenericType<REQ,RES> should be parameterized\n" + 
+		"----------\n",
+		null,
+		false
+	);
+}
 }
 

@@ -69,7 +69,8 @@ public class ASTNodeFinder extends DepthFirstVisitor {
         result = null;
         try {
             visitModule(node);
-        } catch (VisitCompleteException done) {
+        } catch (VisitCompleteException e) {
+            // finished
         }
         return result;
     }
@@ -170,11 +171,8 @@ public class ASTNodeFinder extends DepthFirstVisitor {
 
     @Override
     public void visitArrayExpression(ArrayExpression expression) {
-        ClassNode arrayClass = expression.getElementType();
-        if (arrayClass != arrayClass.redirect()) {
-            check(arrayClass);
-        } else {
-            // synthetic ArrayExpression for referencing enum fields or collected annotations
+        if (expression.getEnd() > 0) {
+            check(expression.getElementType(), expression.getNameStart(), expression.getNameEnd() + 1);
         }
         super.visitArrayExpression(expression);
     }
@@ -346,7 +344,7 @@ public class ASTNodeFinder extends DepthFirstVisitor {
     protected void checkNameRange(AnnotatedNode node) {
         if (sloc.regionIsCoveredByNameRange(node)) {
             completeVisitation(node, new Region(
-                node.getNameStart(), node.getNameEnd() - node.getNameStart()));
+                node.getNameStart(), (node.getNameEnd() + 1) - node.getNameStart()));
         }
         if (node instanceof ClassNode) {
             checkGenerics((ClassNode) node);

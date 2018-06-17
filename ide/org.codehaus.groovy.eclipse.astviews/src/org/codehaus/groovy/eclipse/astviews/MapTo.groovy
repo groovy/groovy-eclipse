@@ -1,5 +1,5 @@
- /*
- * Copyright 2009-2017 the original author or authors.
+/*
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,12 +30,12 @@ import org.codehaus.groovy.ast.stmt.*
         (PropertyNode)        : { it.name },
         (MethodNode)          : { it.name },
         (Parameter)           : { it.name },
-        (Expression)          : { it.getClass().canonicalName },
-        (ExpressionStatement) : { "(${it.expression.getClass().canonicalName}) ${it.expression.text}" }
+        (Expression)          : { it.class.canonicalName },
+        (ExpressionStatement) : { "(${it.expression.class.canonicalName}) ${it.expression.text}" }
     ].asImmutable()
 
     @PackageScope static String names(Object value) {
-        def cls = value.getClass()
+        def cls = value.class
         def getter = mapToNames[cls]
         while (getter == null && cls != null) {
             cls = cls.superclass

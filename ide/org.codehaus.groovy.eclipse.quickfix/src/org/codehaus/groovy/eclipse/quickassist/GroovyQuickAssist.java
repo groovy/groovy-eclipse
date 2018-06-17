@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -109,24 +109,25 @@ public class GroovyQuickAssist implements IQuickAssistProcessor {
         ISourceViewer viewer = context.getSourceViewer();
         if (viewer != null) document = viewer.getDocument();
         Region region = new Region(context.getOffset(), context.getLength());
-        if (document != null && region.getLength() > 1) // must have selection for surround-with proposals
-        try {
-            ContextTypeRegistry templateContextRegistry = GroovyQuickFixPlugin.getDefault().getTemplateContextRegistry();
-            TemplateContextType contextType = templateContextRegistry.getContextType(GroovyQuickFixPlugin.GROOVY_CONTEXT_TYPE);
+        if (document != null && region.getLength() > 1) { // must have selection for surround-with proposals
+            try {
+                ContextTypeRegistry templateContextRegistry = GroovyQuickFixPlugin.getDefault().getTemplateContextRegistry();
+                TemplateContextType contextType = templateContextRegistry.getContextType(GroovyQuickFixPlugin.GROOVY_CONTEXT_TYPE);
 
-            JavaContext templateContext = new GroovyContext(contextType, document, region.getOffset(), region.getLength(), unit);
-            templateContext.setForceEvaluation(true);
-            templateContext.setVariable(LineSelection.NAME, document.get(region.getOffset(), region.getLength()));
+                JavaContext templateContext = new GroovyContext(contextType, document, region.getOffset(), region.getLength(), unit);
+                templateContext.setForceEvaluation(true);
+                templateContext.setVariable(LineSelection.NAME, document.get(region.getOffset(), region.getLength()));
 
-            List<IJavaCompletionProposal> templates = new ArrayList<>();
-            for (Template template : GroovyQuickFixPlugin.getDefault().getTemplateStore().getTemplates()) {
-                if (isSurroundWith(template, templateContext)) {
-                    templates.add(new TemplateProposal(template, templateContext, region, null));
+                List<IJavaCompletionProposal> templates = new ArrayList<>();
+                for (Template template : GroovyQuickFixPlugin.getDefault().getTemplateStore().getTemplates()) {
+                    if (isSurroundWith(template, templateContext)) {
+                        templates.add(new TemplateProposal(template, templateContext, region, null));
+                    }
                 }
+                return templates;
+            } catch (BadLocationException e) {
+                GroovyQuickFixPlugin.log(e);
             }
-            return templates;
-        } catch (BadLocationException e) {
-            GroovyQuickFixPlugin.log(e);
         }
         return Collections.emptyList();
     }

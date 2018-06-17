@@ -8521,121 +8521,142 @@ inputState.guessing--;
         case BOR_ASSIGN:
         case STAR_STAR_ASSIGN:
         {
-            {
-            switch ( LA(1)) {
-            case ASSIGN:
-            {
-                AST tmp204_AST = null;
-                tmp204_AST = astFactory.create(LT(1));
-                astFactory.makeASTRoot(currentAST, tmp204_AST);
-                match(ASSIGN);
-                break;
+            try {      // for error handling
+                {
+                switch ( LA(1)) {
+                case ASSIGN:
+                {
+                    AST tmp204_AST = null;
+                    tmp204_AST = astFactory.create(LT(1));
+                    astFactory.makeASTRoot(currentAST, tmp204_AST);
+                    match(ASSIGN);
+                    break;
+                }
+                case PLUS_ASSIGN:
+                {
+                    AST tmp205_AST = null;
+                    tmp205_AST = astFactory.create(LT(1));
+                    astFactory.makeASTRoot(currentAST, tmp205_AST);
+                    match(PLUS_ASSIGN);
+                    break;
+                }
+                case MINUS_ASSIGN:
+                {
+                    AST tmp206_AST = null;
+                    tmp206_AST = astFactory.create(LT(1));
+                    astFactory.makeASTRoot(currentAST, tmp206_AST);
+                    match(MINUS_ASSIGN);
+                    break;
+                }
+                case STAR_ASSIGN:
+                {
+                    AST tmp207_AST = null;
+                    tmp207_AST = astFactory.create(LT(1));
+                    astFactory.makeASTRoot(currentAST, tmp207_AST);
+                    match(STAR_ASSIGN);
+                    break;
+                }
+                case DIV_ASSIGN:
+                {
+                    AST tmp208_AST = null;
+                    tmp208_AST = astFactory.create(LT(1));
+                    astFactory.makeASTRoot(currentAST, tmp208_AST);
+                    match(DIV_ASSIGN);
+                    break;
+                }
+                case MOD_ASSIGN:
+                {
+                    AST tmp209_AST = null;
+                    tmp209_AST = astFactory.create(LT(1));
+                    astFactory.makeASTRoot(currentAST, tmp209_AST);
+                    match(MOD_ASSIGN);
+                    break;
+                }
+                case SR_ASSIGN:
+                {
+                    AST tmp210_AST = null;
+                    tmp210_AST = astFactory.create(LT(1));
+                    astFactory.makeASTRoot(currentAST, tmp210_AST);
+                    match(SR_ASSIGN);
+                    break;
+                }
+                case BSR_ASSIGN:
+                {
+                    AST tmp211_AST = null;
+                    tmp211_AST = astFactory.create(LT(1));
+                    astFactory.makeASTRoot(currentAST, tmp211_AST);
+                    match(BSR_ASSIGN);
+                    break;
+                }
+                case SL_ASSIGN:
+                {
+                    AST tmp212_AST = null;
+                    tmp212_AST = astFactory.create(LT(1));
+                    astFactory.makeASTRoot(currentAST, tmp212_AST);
+                    match(SL_ASSIGN);
+                    break;
+                }
+                case BAND_ASSIGN:
+                {
+                    AST tmp213_AST = null;
+                    tmp213_AST = astFactory.create(LT(1));
+                    astFactory.makeASTRoot(currentAST, tmp213_AST);
+                    match(BAND_ASSIGN);
+                    break;
+                }
+                case BXOR_ASSIGN:
+                {
+                    AST tmp214_AST = null;
+                    tmp214_AST = astFactory.create(LT(1));
+                    astFactory.makeASTRoot(currentAST, tmp214_AST);
+                    match(BXOR_ASSIGN);
+                    break;
+                }
+                case BOR_ASSIGN:
+                {
+                    AST tmp215_AST = null;
+                    tmp215_AST = astFactory.create(LT(1));
+                    astFactory.makeASTRoot(currentAST, tmp215_AST);
+                    match(BOR_ASSIGN);
+                    break;
+                }
+                case STAR_STAR_ASSIGN:
+                {
+                    AST tmp216_AST = null;
+                    tmp216_AST = astFactory.create(LT(1));
+                    astFactory.makeASTRoot(currentAST, tmp216_AST);
+                    match(STAR_STAR_ASSIGN);
+                    break;
+                }
+                default:
+                {
+                    throw new NoViableAltException(LT(1), getFilename());
+                }
+                }
+                }
+                nls();
+                expressionStatementNoCheck();
+                astFactory.addASTChild(currentAST, returnAST);
             }
-            case PLUS_ASSIGN:
-            {
-                AST tmp205_AST = null;
-                tmp205_AST = astFactory.create(LT(1));
-                astFactory.makeASTRoot(currentAST, tmp205_AST);
-                match(PLUS_ASSIGN);
-                break;
+            catch (RecognitionException e) {
+                if (inputState.guessing==0) {
+                    
+                    // if empty assignment was found, produce something compatible with content assist
+                    int[] types = {ASSIGN, PLUS_ASSIGN, MINUS_ASSIGN, STAR_ASSIGN, DIV_ASSIGN, MOD_ASSIGN,
+                    SR_ASSIGN, BSR_ASSIGN, SL_ASSIGN, BAND_ASSIGN, BXOR_ASSIGN, BOR_ASSIGN, STAR_STAR_ASSIGN};
+                    int index = 0;
+                    if (Arrays.binarySearch(types, LT(index).getType()) >= 0 || Arrays.binarySearch(types, LT(--index).getType()) >= 0) {
+                    astFactory.addASTChild(currentAST, missingIdentifier(LT(index), LT(index + 1)));
+                    assignmentExpression_AST = (AST) currentAST.root;
+                    reportError(e);
+                    } else {
+                    throw e;
+                    }
+                    
+                } else {
+                    throw e;
+                }
             }
-            case MINUS_ASSIGN:
-            {
-                AST tmp206_AST = null;
-                tmp206_AST = astFactory.create(LT(1));
-                astFactory.makeASTRoot(currentAST, tmp206_AST);
-                match(MINUS_ASSIGN);
-                break;
-            }
-            case STAR_ASSIGN:
-            {
-                AST tmp207_AST = null;
-                tmp207_AST = astFactory.create(LT(1));
-                astFactory.makeASTRoot(currentAST, tmp207_AST);
-                match(STAR_ASSIGN);
-                break;
-            }
-            case DIV_ASSIGN:
-            {
-                AST tmp208_AST = null;
-                tmp208_AST = astFactory.create(LT(1));
-                astFactory.makeASTRoot(currentAST, tmp208_AST);
-                match(DIV_ASSIGN);
-                break;
-            }
-            case MOD_ASSIGN:
-            {
-                AST tmp209_AST = null;
-                tmp209_AST = astFactory.create(LT(1));
-                astFactory.makeASTRoot(currentAST, tmp209_AST);
-                match(MOD_ASSIGN);
-                break;
-            }
-            case SR_ASSIGN:
-            {
-                AST tmp210_AST = null;
-                tmp210_AST = astFactory.create(LT(1));
-                astFactory.makeASTRoot(currentAST, tmp210_AST);
-                match(SR_ASSIGN);
-                break;
-            }
-            case BSR_ASSIGN:
-            {
-                AST tmp211_AST = null;
-                tmp211_AST = astFactory.create(LT(1));
-                astFactory.makeASTRoot(currentAST, tmp211_AST);
-                match(BSR_ASSIGN);
-                break;
-            }
-            case SL_ASSIGN:
-            {
-                AST tmp212_AST = null;
-                tmp212_AST = astFactory.create(LT(1));
-                astFactory.makeASTRoot(currentAST, tmp212_AST);
-                match(SL_ASSIGN);
-                break;
-            }
-            case BAND_ASSIGN:
-            {
-                AST tmp213_AST = null;
-                tmp213_AST = astFactory.create(LT(1));
-                astFactory.makeASTRoot(currentAST, tmp213_AST);
-                match(BAND_ASSIGN);
-                break;
-            }
-            case BXOR_ASSIGN:
-            {
-                AST tmp214_AST = null;
-                tmp214_AST = astFactory.create(LT(1));
-                astFactory.makeASTRoot(currentAST, tmp214_AST);
-                match(BXOR_ASSIGN);
-                break;
-            }
-            case BOR_ASSIGN:
-            {
-                AST tmp215_AST = null;
-                tmp215_AST = astFactory.create(LT(1));
-                astFactory.makeASTRoot(currentAST, tmp215_AST);
-                match(BOR_ASSIGN);
-                break;
-            }
-            case STAR_STAR_ASSIGN:
-            {
-                AST tmp216_AST = null;
-                tmp216_AST = astFactory.create(LT(1));
-                astFactory.makeASTRoot(currentAST, tmp216_AST);
-                match(STAR_STAR_ASSIGN);
-                break;
-            }
-            default:
-            {
-                throw new NoViableAltException(LT(1), getFilename());
-            }
-            }
-            }
-            nls();
-            expressionStatementNoCheck();
-            astFactory.addASTChild(currentAST, returnAST);
             break;
         }
         case EOF:

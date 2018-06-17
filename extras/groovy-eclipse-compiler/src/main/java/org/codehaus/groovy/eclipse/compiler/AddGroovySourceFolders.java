@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,6 +39,7 @@ public class AddGroovySourceFolders extends AbstractMojo {
      */
     private MavenProject project;
 
+    @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         getLog().info("Adding /src/main/groovy to the list of source folders");
         project.addCompileSourceRoot(project.getBasedir() + "/src/main/groovy");

@@ -1099,7 +1099,8 @@ public class CompilationUnit extends ProcessingUnit {
         return sorted;
     }
 
-    /*private static List<ClassNode> getSorted(int[] index, List<ClassNode> unsorted) {
+    @SuppressWarnings("unused")
+    private static List<ClassNode> getSorted(int[] index, List<ClassNode> unsorted) {
         int unsortedSize = unsorted.size();
         List<ClassNode> sorted = new ArrayList<ClassNode>(unsortedSize);
         for (int i = 0; i < unsortedSize; i++) {
@@ -1115,7 +1116,7 @@ public class CompilationUnit extends ProcessingUnit {
             index[min] = -1;
         }
         return sorted;
-    }*/
+    }
 
     /**
      * A loop driver for applying operations to all primary ClassNodes in
@@ -1213,7 +1214,7 @@ public class CompilationUnit extends ProcessingUnit {
         this.classNodeResolver = classNodeResolver;
     }
 
-  // GRECLIPSE add
+    // GRECLIPSE add
     public interface ProgressListener {
         void parseComplete(int phase, String sourceUnitName);
         void generateComplete(int phase, ClassNode classNode);
@@ -1278,5 +1279,5 @@ public class CompilationUnit extends ProcessingUnit {
      * See bug https://jira.codehaus.org/browse/GRECLIPSE-1762
      */
     public final String excludeGlobalASTScan;
-  // GRECLIPSE end
+    // GRECLIPSE end
 }

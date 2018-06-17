@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -107,9 +107,9 @@ public class BinaryExpressionFragment implements IASTFragment {
         }
 
         BinaryExpressionFragment otherBinary = (BinaryExpressionFragment) other;
-        return otherBinary.getToken().getText().equals(this.token.getText())
-                && new IsSameExpression().isSame(expression, otherBinary.getAssociatedExpression())
-                && this.next.matches(otherBinary.getNext());
+        return (otherBinary.getToken().getText().equals(this.token.getText()) &&
+            new IsSameExpression().isSame(expression, otherBinary.getAssociatedExpression()) &&
+            this.next.matches(otherBinary.getNext()));
     }
 
     @Override
@@ -152,13 +152,11 @@ public class BinaryExpressionFragment implements IASTFragment {
             return new EmptyASTFragment();
         }
 
-        if (other.kind() == ASTFragmentKind.SIMPLE_EXPRESSION
-                && new IsSameExpression().isSame(this.getAssociatedExpression(), other.getAssociatedExpression())) {
+        if (other.kind() == ASTFragmentKind.SIMPLE_EXPRESSION && new IsSameExpression().isSame(this.getAssociatedExpression(), other.getAssociatedExpression())) {
             return new SimpleExpressionASTFragment(expression);
         } else if (other.kind() == ASTFragmentKind.BINARY) {
             BinaryExpressionFragment otherBinary = (BinaryExpressionFragment) other;
-            if (new IsSameExpression().isSame(this.getAssociatedExpression(), other.getAssociatedExpression())
-                    && this.getToken().getText().equals(otherBinary.getToken().getText())) {
+            if (new IsSameExpression().isSame(this.getAssociatedExpression(), other.getAssociatedExpression()) && this.getToken().getText().equals(otherBinary.getToken().getText())) {
                 // current component of the fragment matches. Now check to see
                 // if there are any more pieces that match
                 IASTFragment result = this.next.findMatchingSubFragment(otherBinary.next);

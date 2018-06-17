@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -164,7 +164,7 @@ abstract class GroovyEditorTestSuite extends GroovyEclipseTestSuite {
 
     protected void assertStatusLineText(String expected) {
         Object manager = ReflectionUtils.throwableExecutePrivateMethod(AbstractTextEditor.class, 'getStatusLineManager', new Class[0], editor, new Object[0])
-        String actual = (String) ReflectionUtils.throwableGetPrivateField(manager.getClass(), 'message', manager)
+        String actual = ReflectionUtils.throwableGetPrivateField(manager.getClass(), 'message', manager)
         Assert.assertEquals(expected, actual)
     }
 }

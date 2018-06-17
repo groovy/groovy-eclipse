@@ -281,19 +281,15 @@ public class TokenManager implements Iterable<Token> {
 
 	public int getPositionInLine(int tokenIndex) {
 		Token token = get(tokenIndex);
-		if (token.getAlign() > 0)
-			return get(tokenIndex).getAlign();
 		// find the first token in line and calculate position of given token
 		int firstTokenIndex = token.getLineBreaksBefore() > 0 ? tokenIndex : findFirstTokenInLine(tokenIndex);
 		Token firstToken = get(firstTokenIndex);
 		int startingPosition = toIndent(firstToken.getIndent(), firstToken.getWrapPolicy() != null);
-		if (firstTokenIndex == tokenIndex)
-			return startingPosition;
 
 		this.positionInLineCounter.value = tokenIndex;
 		this.positionInLineCounter.counter = startingPosition;
 		traverse(firstTokenIndex, this.positionInLineCounter);
-		return this.positionInLineCounter.counter;
+		return Math.max(this.positionInLineCounter.counter, token.getAlign());
 	}
 
 	public int findSourcePositionInLine(int position) {

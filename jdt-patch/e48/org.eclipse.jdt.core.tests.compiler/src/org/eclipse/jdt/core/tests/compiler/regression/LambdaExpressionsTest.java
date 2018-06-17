@@ -5052,7 +5052,7 @@ public void test447119d() {
 			"[- java.util.List<java.lang.String> noop(java.util.List<java.lang.String>)]",
 			null,
 			true,
-			(isJRE9 
+			(isJRE9Plus 
 			? new String[] { "--add-opens", "java.base/java.io=ALL-UNNAMED" } 
 			: new String [] { "-Ddummy" }) // Not sure, unless we force the VM to not be reused by passing dummy vm argument, the generated program aborts midway through its execution.
 			);
@@ -5220,7 +5220,7 @@ public void test449063() {
 		null,
 		customOptions,
 		null,
-		(isJRE9
+		(isJRE9Plus
 		? "Test$Tuple<java.lang.Integer, java.lang.String>\n" +
 		  "Test$Tuple<java.lang.String, java.lang.Double>"
 		: "Test.Test$Tuple<java.lang.Integer, java.lang.String>\n" +
@@ -5296,7 +5296,7 @@ public void test449063a() {
 		null,
 		customOptions,
 		null,
-		(isJRE9
+		(isJRE9Plus
 		? "Test$Tuple<java.lang.Integer, java.lang.String>\n" +
 		  "Test$Tuple<java.lang.String, java.lang.Double>"
 		: "Test.Test$Tuple<java.lang.Integer, java.lang.String>\n" +
@@ -5511,7 +5511,7 @@ public void test449063e() {
 			"    }\n" + 
 			"}"
 			},
-			(isJRE9
+			(isJRE9Plus
 			? "Test$Tuple<java.lang.Integer, java.lang.String>\n" +
 			  "Test$Tuple<java.lang.String, java.lang.Double>"
 			: "Test.Test$Tuple<java.lang.Integer, java.lang.String>\n" +
@@ -6956,6 +6956,38 @@ public void testBug531093comment1() {
 		"				Arrays.asList(method.getParameters()).toString();\n" +
 			"		}\n" +
 			"	}\n" +
+			"}\n" +
+			"",
+		}, 
+		""
+	);
+}
+public void testBug531093() {
+	runConformTest(
+		new String[] {
+			"bug/Bug.java",
+			"package bug;\n" +
+			"import java.io.Serializable;\n" +
+			"import java.lang.reflect.Method;\n" +
+			"import java.util.Arrays;\n" +
+			"import java.util.Optional;\n" +
+			"import java.util.function.Function;\n" +
+			"\n" +
+			"public class Bug {\n" +
+			"    public <E extends Number & Serializable> Function<E, Optional<String>> useMethodRef() {\n" +
+			"        return Bug::getMapper;\n" +
+			"    }\n" +
+			"\n" +
+			"    private static Optional<String> getMapper(Number event) {\n" +
+			"        return null;\n" +
+			"    }\n" +
+			"\n" +
+			"    public static void main(String[] args) {\n" +
+			"        Method[] methods = Bug.class.getDeclaredMethods();\n" +
+			"        for (Method method : methods) {\n" +
+			"            String.valueOf(Arrays.asList(method.getParameters()));\n" +
+			"        }\n" +
+			"    }\n" +
 			"}\n" +
 			"",
 		}, 

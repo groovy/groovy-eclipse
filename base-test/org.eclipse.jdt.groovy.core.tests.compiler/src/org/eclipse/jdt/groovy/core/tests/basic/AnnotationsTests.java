@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1002,54 +1002,6 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    @Test
-    public void testAnnotationCollector1() {
-        String[] sources = {
-            "Type.groovy",
-            "@Alias(includes='id')\n"+
-            "class Type {\n" +
-            "  String id\n" +
-            "  String hidden = '456'\n" +
-            "  \n" +
-            "  static void main(String[] args) {\n" +
-            "    print(new Type(id:'123'))\n" +
-            "  }\n" +
-            "}",
-
-            "Alias.groovy",
-            "import groovy.transform.*\n" +
-            "@AnnotationCollector\n" +
-            "@EqualsAndHashCode\n" +
-            "@ToString\n" +
-            "@interface Alias { }",
-        };
-
-        runConformTest(sources);
-    }
-
-    @Test
-    public void testAnnotationCollector2() {
-        String[] sources = {
-            "Type.groovy",
-            "@Alias(includes='id')\n"+
-            "class Type {\n" +
-            "  String id\n" +
-            "  String hidden = '456'\n" +
-            "  \n" +
-            "  static void main(String[] args) {\n" +
-            "    print(new Type(id:'123'))\n" +
-            "  }\n" +
-            "}",
-
-            "Alias.groovy",
-            "import groovy.transform.*\n" +
-            "@AnnotationCollector([EqualsAndHashCode, ToString])\n" +
-            "@interface Alias { }",
-        };
-
-        runConformTest(sources, "Type(123)");
-    }
-
     @Test // All types in groovy with TYPE specified for Target and obeyed
     public void testAnnotationsTargetType() {
         String[] sources = {
@@ -1748,8 +1700,8 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "----------\n");
     }
 
-    // FIXASC groovy bug? why doesn't it complain - the type parameter doesn't meet the secondary upper bound
-    public void _testWildcards12() {
+    @Test @Ignore("FIXASC groovy bug? why doesn't it complain - the type parameter doesn't meet the secondary upper bound")
+    public void testWildcards12() {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +

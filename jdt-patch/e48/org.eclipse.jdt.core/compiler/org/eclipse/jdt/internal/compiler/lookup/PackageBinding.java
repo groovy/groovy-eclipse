@@ -186,7 +186,7 @@ PackageBinding getPackage0Any(char[] name) {
 * package with the same name.
 */
 
-public ReferenceBinding getType(char[] name, ModuleBinding mod) {
+ReferenceBinding getType(char[] name, ModuleBinding mod) {
 	ReferenceBinding referenceBinding = getType0(name);
 	if (referenceBinding == null) {
 		if ((referenceBinding = this.environment.askForType(this, name, mod)) == null) {
@@ -409,9 +409,13 @@ public boolean subsumes(PackageBinding binding) {
  */
 public boolean isExported() {
 	if (this.isExported == null) {
-		this.enclosingModule.getExports(); // ensure resolved and completed
-		if (this.isExported == null)
-			this.isExported = Boolean.FALSE;
+		if (this.enclosingModule.isAuto) {
+			this.isExported = Boolean.TRUE;
+		} else {
+			this.enclosingModule.getExports(); // ensure resolved and completed
+			if (this.isExported == null)
+				this.isExported = Boolean.FALSE;
+		}
 	}
 	return this.isExported == Boolean.TRUE;
 }

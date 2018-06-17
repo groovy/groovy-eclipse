@@ -231,9 +231,6 @@ public RecoveredElement buildInitialRecoveryState(){
 	ASTNode node = null, lastNode = null;
 	for (int i = 0; i <= this.astPtr; i++, lastNode = node) {
 		node = this.astStack[i];
-		if(node instanceof ForeachStatement && ((ForeachStatement)node).action == null) {
-			node = ((ForeachStatement)node).elementVariable;
-		}
 		/* check for intermediate block creation, so recovery can properly close them afterwards */
 		int nodeStart = node.sourceStart;
 		for (int j = blockIndex; j <= this.realBlockPtr; j++){
@@ -334,6 +331,9 @@ public RecoveredElement buildInitialRecoveryState(){
 					element.add(stmt, 0);
 					this.lastCheckPoint = stmt.sourceEnd + 1;
 					this.isOrphanCompletionNode = false;
+				} else if ((stmt instanceof ForeachStatement) && ((ForeachStatement) stmt).action == null) {
+					element = element.add(stmt, 0);
+					this.lastCheckPoint = stmt.sourceEnd + 1;
 				}
 			}
 			continue;

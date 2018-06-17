@@ -15,30 +15,39 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.compiler.batch.FileSystem.Classpath;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileReader;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFormatException;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
 import org.eclipse.jdt.internal.compiler.env.IModule;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.compiler.util.JRTUtil;
 import org.eclipse.jdt.internal.compiler.util.Util;
 
-public class ClasspathJep247 extends ClasspathLocation {
+public class ClasspathJep247 extends ClasspathJrt {
 
 	private java.nio.file.FileSystem fs = null;
-	private String release = null;
+	private String compliance = null;
+	private long jdklevel;
+	private String releaseInHex = null;
 	private String[] subReleases = null;
 	private Path releasePath = null;
-	private File file = null;
 	private Set<String> packageCache;
+	File jdkHome;
+	String modulePath = null;
 
 	public ClasspathJep247(File jdkHome, String release, AccessRuleSet accessRuleSet) {
-		super(accessRuleSet, null);
-		this.release = release;
-		this.file = jdkHome;
+		super(jdkHome, false, accessRuleSet, null);
+		this.compliance = release;
+		this.jdklevel = CompilerOptions.releaseToJDKLevel(this.compliance);
+		this.jdkHome = jdkHome;
+		this.file = new File(new File(jdkHome, "lib"), "jrt-fs.jar"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	@Override
 	public List<Classpath> fetchLinkedJars(FileSystem.ClasspathSectionProblemReporter problemReporter) {
@@ -62,13 +71,13 @@ public class ClasspathJep247 extends ClasspathLocation {
 				for (String rel : this.subReleases) {
 					Path p = this.fs.getPath(rel, qualifiedBinaryFileName);
 					if (Files.exists(p)) {
-						content = Files.readAllBytes(p);
+						content = JRTUtil.safeReadBytes(p);
 						if (content != null)
 							break;
 					}
 				}
 			} else {
-				content = Files.readAllBytes(this.fs.getPath(this.release, qualifiedBinaryFileName));
+				content = JRTUtil.safeReadBytes(this.fs.getPath(this.releaseInHex, qualifiedBinaryFileName));
 			}
 			if (content != null) {
 				reader = new ClassFileReader(content, qualifiedBinaryFileName.toCharArray());
@@ -81,22 +90,14 @@ public class ClasspathJep247 extends ClasspathLocation {
 		}
 		return null;
 	}
-	@Override
-	public boolean hasAnnotationFileFor(String qualifiedTypeName) {
-		return false;
-	}
-	@Override
-	public char[][][] findTypeNames(final String qualifiedPackageName, String moduleName) {
-		// TODO: Revisit
-		return null;
-	}
 
 	@Override
 	public void initialize() throws IOException {
-		if (this.release == null) {
+		if (this.compliance == null) {
 			return;
 		}
-		Path filePath = this.file.toPath().resolve("lib").resolve("ct.sym"); //$NON-NLS-1$ //$NON-NLS-2$
+		this.releaseInHex = Integer.toHexString(Integer.parseInt(this.compliance));
+		Path filePath = this.jdkHome.toPath().resolve("lib").resolve("ct.sym"); //$NON-NLS-1$ //$NON-NLS-2$
 		URI t = filePath.toUri();
 		if (!Files.exists(filePath)) {
 			return;
@@ -111,13 +112,84 @@ public class ClasspathJep247 extends ClasspathLocation {
 			HashMap<String, ?> env = new HashMap<>();
 			this.fs = FileSystems.newFileSystem(uri, env);
 		}
-		this.releasePath = this.fs.getPath(""); //$NON-NLS-1$
-		if (!Files.exists(this.fs.getPath(this.release))) {
-			throw new IllegalArgumentException("release " + this.release + " is not found in the system");  //$NON-NLS-1$//$NON-NLS-2$
+		this.releasePath = this.fs.getPath("/"); //$NON-NLS-1$
+		if (!Files.exists(this.fs.getPath(this.releaseInHex))) {
+			throw new IllegalArgumentException("release " + this.compliance + " is not found in the system");  //$NON-NLS-1$//$NON-NLS-2$
+		}
+		super.initialize();
+	}
+	@Override
+	public void loadModules() {
+		// Modules below level 8 are not dealt with here. Leave it to ClasspathJrt
+		if (this.jdklevel <= ClassFileConstants.JDK1_8) {
+			super.loadModules();
+			return;
+		}
+		final Path modPath = this.fs.getPath(this.releaseInHex + "-modules"); //$NON-NLS-1$
+		if (!Files.exists(modPath)) {
+			throw new IllegalArgumentException("release " + this.compliance + " is not found in the system");  //$NON-NLS-1$//$NON-NLS-2$
+		}
+		this.modulePath = this.file.getPath() + "|" + modPath.toString(); //$NON-NLS-1$
+		Map<String, IModule> cache = ModulesCache.get(this.modulePath);
+		if (cache == null) {
+			try (DirectoryStream<java.nio.file.Path> stream = Files.newDirectoryStream(modPath)) {
+				for (final java.nio.file.Path subdir: stream) {
+						Files.walkFileTree(subdir, new FileVisitor<java.nio.file.Path>() {
+
+							@Override
+							public FileVisitResult preVisitDirectory(java.nio.file.Path dir, BasicFileAttributes attrs)
+									throws IOException {
+								return FileVisitResult.CONTINUE;
+							}
+
+							@Override
+							public FileVisitResult visitFile(java.nio.file.Path f, BasicFileAttributes attrs) throws IOException {
+								byte[] content = null;
+								if (Files.exists(f)) {
+									content = JRTUtil.safeReadBytes(f);
+									if (content == null)
+										return FileVisitResult.CONTINUE;
+									ClasspathJep247.this.acceptModule(content);
+									ClasspathJep247.this.moduleNamesCache.add(f.getFileName().toString());
+								}
+								return FileVisitResult.CONTINUE;
+							}
+
+							@Override
+							public FileVisitResult visitFileFailed(java.nio.file.Path f, IOException exc) throws IOException {
+								return FileVisitResult.CONTINUE;
+							}
+
+							@Override
+							public FileVisitResult postVisitDirectory(java.nio.file.Path dir, IOException exc) throws IOException {
+								return FileVisitResult.CONTINUE;
+							}
+						});
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} else {
+			this.moduleNamesCache.addAll(cache.keySet());
 		}
 	}
+	@Override
 	void acceptModule(ClassFileReader reader) {
-		// Nothing to do
+		// Modules below level 8 are not dealt with here. Leave it to ClasspathJrt
+		if (this.jdklevel <= ClassFileConstants.JDK1_8) {
+			super.acceptModule(reader);
+			return;
+		}
+		if (reader != null) {
+			IModule moduleDecl = reader.getModuleDeclaration();
+			if (moduleDecl != null) {
+				Map<String, IModule> cache = ModulesCache.get(this.modulePath);
+				if (cache == null) {
+					ModulesCache.put(this.modulePath, cache = new HashMap<String,IModule>());
+				}
+				cache.put(String.valueOf(moduleDecl.name()), moduleDecl);
+			}
+		}
 	}
 	protected void addToPackageCache(String packageName, boolean endsWithSep) {
 		if (this.packageCache.contains(packageName))
@@ -136,7 +208,7 @@ public class ClasspathJep247 extends ClasspathLocation {
 		try (DirectoryStream<java.nio.file.Path> stream = Files.newDirectoryStream(this.releasePath)) {
 			for (final java.nio.file.Path subdir: stream) {
 				String rel = subdir.getFileName().toString();
-				if (rel.contains(this.release)) {
+				if (rel.contains(this.releaseInHex)) {
 					sub.add(rel);
 				} else {
 					continue;
@@ -173,11 +245,6 @@ public class ClasspathJep247 extends ClasspathLocation {
 		}
 		this.subReleases = sub.toArray(new String[sub.size()]);
 		return singletonModuleNameIf(this.packageCache.contains(qualifiedPackageName));
-	}
-	@Override
-	public boolean hasCompilationUnit(String qualifiedPackageName, String moduleName) {
-		// TOOD: Revisit
-		return false;
 	}
 	@Override
 	public void reset() {
@@ -221,8 +288,4 @@ public class ClasspathJep247 extends ClasspathLocation {
 		return BINARY;
 	}
 
-	@Override
-	public IModule getModule() {
-		return null;
-	}
 }

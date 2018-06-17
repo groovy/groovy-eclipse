@@ -40,6 +40,7 @@ import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.syntax.SyntaxException;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
@@ -367,17 +368,18 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
      * defines it.
      */
     private static boolean skipManifest(CompilationUnit compilationUnit, URL service) {
-        if (service == null) {
-            //This shouldn't happen, but anyhow...
-            return true;
-        }
         String exclude = compilationUnit.excludeGlobalASTScan;
-        if (exclude == null) {
-            return false;
-        }
-        String proto = service.getProtocol();
-        if ("file".equals(proto)) {
-            return service.getPath().startsWith(exclude);
+        if (exclude != null && service != null && service.getProtocol().equals("file")) {
+            if (!exclude.startsWith("/")) {
+                try {
+                    // normalize "C:\b\a" to "/C:/b/a" for URL comparison
+                    exclude = new File(exclude).toURI().toURL().getPath();
+                } catch (Exception ignore) {
+                }
+            }
+            if (service.getPath().startsWith(exclude)) {
+                return true;
+            }
         }
         return false;
     }

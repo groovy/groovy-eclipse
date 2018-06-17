@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -307,10 +307,9 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         return monitor.isCanceled();
     }
 
-    @SuppressWarnings("unchecked")
     private List<Position> getHighlightedPositions() {
         // NOTE: Be very careful with this; fPositions is often accessed synchronously!
-        return (List<Position>) ReflectionUtils.getPrivateField(SemanticHighlightingPresenter.class, "fPositions", presenter);
+        return ReflectionUtils.getPrivateField(SemanticHighlightingPresenter.class, "fPositions", presenter);
     }
 
     private Position newHighlightedPosition(HighlightedTypedPosition pos) {
@@ -405,7 +404,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
 
     private TextAttribute getTextAttribute(Object highlightingStyle) {
         // return highlightingStyle.getTextAttribute();
-        return (TextAttribute) ReflectionUtils.executeNoArgPrivateMethod(highlightingStyle.getClass(), "getTextAttribute", highlightingStyle);
+        return ReflectionUtils.executePrivateMethod(highlightingStyle.getClass(), "getTextAttribute", highlightingStyle);
     }
 
     /**

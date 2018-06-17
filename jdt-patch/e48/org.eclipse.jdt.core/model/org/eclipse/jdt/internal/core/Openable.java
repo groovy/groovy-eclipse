@@ -249,7 +249,7 @@ protected void generateInfos(Object info, HashMap newElements, IProgressMonitor 
 	// validate existence
 	IResource underlResource = resource();
 	IStatus status = validateExistence(underlResource);
-	if (!status.isOK())
+	if (!status.isOK() && !ignoreErrorStatus(status))
 		throw newJavaModelException(status);
 
 	if (monitor != null && monitor.isCanceled())
@@ -275,6 +275,9 @@ protected void generateInfos(Object info, HashMap newElements, IProgressMonitor 
 	if (JavaModelCache.VERBOSE) {
 		System.out.println(JavaModelManager.getJavaModelManager().cacheToString("-> ")); //$NON-NLS-1$
 	}
+}
+protected boolean ignoreErrorStatus(IStatus status) {
+	return false;
 }
 /**
  * Note: a buffer with no unsaved changes can be closed by the Java Model

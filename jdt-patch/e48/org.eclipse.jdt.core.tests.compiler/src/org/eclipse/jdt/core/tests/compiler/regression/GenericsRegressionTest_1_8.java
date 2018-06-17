@@ -8935,4 +8935,51 @@ public void testBug508834_comment0() {
 			};
 		runner.runConformTest();
 	}
+	public void testBug488328_001() {
+		runConformTest(
+			new String[] {
+				"Test.java",
+				"public class Test {\n" +
+				"  static class A<R> {\n" +
+				"    class  I {\n" +
+				"    }\n" +
+				"  }\n" +
+				"\n" +
+				"  public static <R> void m(A<R>.I instance, R generic) {\n" +
+				"    System.out.println(\"called with A<R>.I\");\n" +
+				"  }\n" +
+				"\n" +
+				"  public static void m(long l, Object o) {\n" +
+				"    System.out.println(\"called with long\");\n" +
+				"  }\n" +
+				"\n" +
+				"  public static void main(String... args) {\n" +
+				"    Long l = new Long(3);\n" +
+				"    m(l, l);\n" +
+				"  }\n" +
+				"}"
+			});
+	}
+	public void testBug488328_002() {
+		runConformTest(
+			new String[] {
+				"Test.java",
+				"class A1<R> {\n"+
+				"    class  I1<S> {}\n"+
+				"}\n"+
+				"public class Test<R> extends A1<R>{\n" +
+				"  class A2 {\n" +
+				"    class I2 extends A1<R>.I1<R> {}\n" +
+				"  }\n" +
+				"\n" +
+				"  public static <R> void m(A1<R>.I1<R> instance) {\n" +
+				"    System.out.println(\"called with A1<R>.I1<R>\");\n" +
+				"  }\n" +
+				"  public static void main(String... args) {\n" +
+				"    Test<Integer>.A2.I2  l =  new Test<Integer>().new A2().new I2();\n" +
+				"    m(l);\n" +
+				"  }\n" +
+				"}"
+			});
+	}
 }

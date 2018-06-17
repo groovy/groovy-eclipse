@@ -81,7 +81,7 @@ abstract class RefactoringTestSuite {
 
         JavaCore.setOptions(options)
         TestOptions.initializeCodeGenerationOptions()
-        JavaPlugin.getDefault().getCodeTemplateStore().load()
+        JavaPlugin.getDefault().codeTemplateStore.load()
 
         fgJavaTestProject = JavaProjectHelper.createGroovyProject('TestProject', 'bin')
         fgRoot = JavaProjectHelper.addSourceContainer(fgJavaTestProject, 'src')
@@ -108,7 +108,7 @@ abstract class RefactoringTestSuite {
     @Before
     final void setUpTestCase() {
         println '----------------------------------------'
-        println 'Starting: ' + test.getMethodName()
+        println 'Starting: ' + test.methodName
 
         RefactoringCore.getUndoManager().flush()
     }
@@ -134,7 +134,7 @@ abstract class RefactoringTestSuite {
 
             if (root.exists()) {
                 for (IPackageFragment pack in root.children) {
-                    if (!pack.equals(packageP) && pack.exists() && !pack.isReadOnly()) {
+                    if (pack != packageP && pack.exists() && !pack.isReadOnly()) {
                         if (pack.isDefaultPackage()) {
                             pack.delete(true, null)
                         } else {
@@ -146,7 +146,6 @@ abstract class RefactoringTestSuite {
             }
 
             restoreTestProject()
-
         } finally {
             TestRenameParticipantShared.reset()
             TestRenameParticipantSingle.reset()
@@ -187,7 +186,7 @@ abstract class RefactoringTestSuite {
             try {
                 boolean cpChanged = false
                 List<IClasspathEntry> cpes = []
-                for (IClasspathEntry cpe : fgJavaTestProject.rawClasspath) {
+                for (cpe in fgJavaTestProject.rawClasspath) {
                     if (cpe == srcEntry || cpe.path.lastSegment() =~ 'GROOVY_SUPPORT|JRE_CONTAINER$') {
                         cpes << cpe
                     } else {
@@ -262,25 +261,24 @@ abstract class RefactoringTestSuite {
             final CreateChangeOperation create = new CreateChangeOperation(
                 new CheckConditionsOperation(ref, CheckConditionsOperation.ALL_CONDITIONS), RefactoringStatus.FATAL)
             create.run(new NullProgressMonitor())
-            RefactoringStatus checkingStatus = create.getConditionCheckingStatus()
+            RefactoringStatus checkingStatus = create.conditionCheckingStatus
             if (checkingStatus.hasError())
                 return checkingStatus
-            Change change = create.getChange()
-            ChangeDescriptor descriptor = change.getDescriptor()
+            Change change = create.change
+            ChangeDescriptor descriptor = change.descriptor
             if (descriptor instanceof RefactoringChangeDescriptor) {
                 RefactoringChangeDescriptor rcd = (RefactoringChangeDescriptor) descriptor
-                RefactoringDescriptor refactoringDescriptor = rcd.getRefactoringDescriptor()
+                RefactoringDescriptor refactoringDescriptor = rcd.refactoringDescriptor
                 if (refactoringDescriptor instanceof JavaRefactoringDescriptor) {
                     JavaRefactoringDescriptor jrd = (JavaRefactoringDescriptor) refactoringDescriptor
                     RefactoringStatus validation = jrd.validateDescriptor()
                     if (validation.hasError() && !performOnFail)
                         return validation
                     RefactoringStatus refactoringStatus = new RefactoringStatus()
-                    Class<? extends JavaRefactoringDescriptor> expected = jrd.getClass()
-                    RefactoringContribution contribution = RefactoringCore.getRefactoringContribution(jrd.getID())
-                    jrd = (JavaRefactoringDescriptor) contribution.createDescriptor(jrd.getID(), jrd.getProject(),
-                        jrd.getDescription(), jrd.getComment(), contribution.retrieveArgumentMap(jrd), jrd.getFlags())
-                    assert jrd.getClass() == expected
+                    Class<? extends JavaRefactoringDescriptor> expected = jrd.class
+                    RefactoringContribution contribution = RefactoringCore.getRefactoringContribution(jrd.ID)
+                    jrd = contribution.createDescriptor(jrd.ID, jrd.project, jrd.description, jrd.comment, contribution.retrieveArgumentMap(jrd), jrd.flags)
+                    assert jrd.class == expected
                     ref = jrd.createRefactoring(refactoringStatus)
                     if (refactoringStatus.hasError() && !performOnFail)
                         return refactoringStatus
@@ -291,14 +289,14 @@ abstract class RefactoringTestSuite {
         final CreateChangeOperation create = new CreateChangeOperation(
             new CheckConditionsOperation(ref, CheckConditionsOperation.ALL_CONDITIONS), RefactoringStatus.FATAL)
         final PerformChangeOperation perform = new PerformChangeOperation(create)
-        perform.setUndoManager(undoManager, ref.getName())
+        perform.setUndoManager(undoManager, ref.name)
         IWorkspace workspace = ResourcesPlugin.getWorkspace()
         executePerformOperation(perform, workspace)
-        RefactoringStatus status = create.getConditionCheckingStatus()
+        RefactoringStatus status = create.conditionCheckingStatus
         if ((!status.hasError() && !performOnFail) || (status.hasError() && performOnFail))
             return status
         assert perform.changeExecuted() : 'Change was not executed'
-        Change undo = perform.getUndoChange()
+        Change undo = perform.undoChange
         if (providesUndo) {
             assert undo != null : 'Undo does not exist'
             assert undoManager.anythingToUndo() : 'Undo manager is empty'
@@ -323,18 +321,18 @@ abstract class RefactoringTestSuite {
         CreateChangeOperation create = new CreateChangeOperation(refactoring)
         PerformChangeOperation perform = new PerformChangeOperation(create)
         if (storeUndo) {
-            perform.setUndoManager(getUndoManager(), refactoring.getName())
+            perform.setUndoManager(undoManager, refactoring.name)
         }
         ResourcesPlugin.getWorkspace().run(perform, new NullProgressMonitor())
         assert perform.changeExecuted() : 'Change was not executed'
-        return perform.getUndoChange()
+        return perform.undoChange
     }
 
     protected final Change performChange(final Change change) {
         PerformChangeOperation perform = new PerformChangeOperation(change)
         ResourcesPlugin.getWorkspace().run(perform, new NullProgressMonitor())
         assert perform.changeExecuted() : 'Change was not executed'
-        return perform.getUndoChange()
+        return perform.undoChange
     }
 
     protected final IUndoManager getUndoManager() {
@@ -406,7 +404,11 @@ abstract class RefactoringTestSuite {
     }
 
     protected static String getFileContents(String fileName) {
-        return FrameworkUtil.getBundle(RefactoringTestSuite).getEntry('/resources/' + fileName).openStream().text
+        def fileUrl = FrameworkUtil.getBundle(RefactoringTestSuite).getEntry('/resources/' + fileName)
+        fileUrl.openConnection().with {
+            useCaches = false
+            inputStream.text
+        }
     }
 
     /*protected static IField[] getFields(IType type, String[] names) {
@@ -414,7 +416,7 @@ abstract class RefactoringTestSuite {
         Set<IField> fields = new HashSet<IField>()
         for (int i = 0; i < names.length; i++) {
             IField field = type.getField(names[i])
-            assert field.exists() : 'field ' + field.getElementName() + ' does not exist'
+            assert field.exists() : 'field ' + field.elementName + ' does not exist'
             fields.add(field)
         }
         return fields.toArray(new IField[fields.size()])
@@ -434,7 +436,7 @@ abstract class RefactoringTestSuite {
             } else {
                 memberType = type.getType(names[i])
             }
-            assert memberType.exists() : 'member type ' + memberType.getElementName() + ' does not exist'
+            assert memberType.exists() : 'member type ' + memberType.elementName + ' does not exist'
             memberTypes.add(memberType)
         }
         return memberTypes.toArray(new IType[memberTypes.size()])
@@ -446,7 +448,7 @@ abstract class RefactoringTestSuite {
         List<IMethod> methods = []
         for (int i = 0; i < names.length; i += 1) {
             IMethod method = type.getMethod(names[i], signatures[i])
-            assert method.exists() : 'method ' + method.getElementName() + ' does not exist'
+            assert method.exists() : 'method ' + method.elementName + ' does not exist'
             if (!methods.contains(method)) {
                 methods.add(method)
             }
@@ -460,7 +462,7 @@ abstract class RefactoringTestSuite {
             IType type = types[i]
             for (int j = 0; j < namesOfTypesToPullUp.length; j++) {
                 String name = namesOfTypesToPullUp[j]
-                if (type.getElementName().equals(name))
+                if (type.elementName == name)
                     found.add(type)
             }
         }
@@ -473,7 +475,7 @@ abstract class RefactoringTestSuite {
             IField field = fields[i]
             for (int j = 0; j < namesOfFieldsToPullUp.length; j++) {
                 String name = namesOfFieldsToPullUp[j]
-                if (field.getElementName().equals(name))
+                if (field.elementName == name)
                     found.add(field)
             }
         }
@@ -484,10 +486,10 @@ abstract class RefactoringTestSuite {
         List<IMethod> found = new ArrayList<IMethod>(selectedMethods.length)
         for (int i = 0; i < selectedMethods.length; i++) {
             IMethod method = selectedMethods[i]
-            String[] paramTypes = method.getParameterTypes()
+            String[] paramTypes = method.parameterTypes
             for (int j = 0; j < namesOfMethods.length; j++) {
                 String methodName = namesOfMethods[j]
-                if (!methodName.equals(method.getElementName()))
+                if (methodName != method.elementName)
                     continue
                 String[] methodSig = signaturesOfMethods[j]
                 if (!areSameSignatures(paramTypes, methodSig))
@@ -502,8 +504,9 @@ abstract class RefactoringTestSuite {
         if (s1.length != s2.length)
             return false
         for (int i = 0; i < s1.length; i++) {
-            if (!s1[i].equals(s2[i]))
+            if (s1[i] != s2[i]) {
                 return false
+            }
         }
         return true
     }*/

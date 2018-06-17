@@ -154,8 +154,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
      * part. There is also the case of a imported class, so this logic
      * can't be done in these cases...
      */
-    // GRECLIPSE private->public
-    public static class ConstructedClassWithPackage extends ClassNode {
+    private static class ConstructedClassWithPackage extends ClassNode {
         final String prefix;
         String className;
         public ConstructedClassWithPackage(String pkg, String name) {
@@ -181,7 +180,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
     }
 
-     /**
+    /**
      * we use LowerCaseClass to limit the resolving the compiler
      * does for vanilla names starting with a lower case letter. The idea
      * that if we use a vanilla name with a lower case letter, that this
@@ -191,8 +190,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
      * name foo and bar for being classes. Instead we will ask the module
      * for an alias for this name which is much faster.
      */
-    // GRECLIPSE private->public
-    public static class LowerCaseClass extends ClassNode {
+    private static class LowerCaseClass extends ClassNode {
         final String className;
         public LowerCaseClass(String name) {
             super(name, Opcodes.ACC_PUBLIC,ClassHelper.OBJECT_TYPE);

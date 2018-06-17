@@ -615,8 +615,8 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         if (n > 0 && fInvocationContext.getCoreContext().isExtended()) {
             char[] lastType = Signature.getTypeErasure(parameterSignatures[n - 1]);
             if (Signature.getArrayCount(lastType) == 0) {
-                GroovyExtendedCompletionContext groovyContext = (GroovyExtendedCompletionContext)
-                    ReflectionUtils.getPrivateField(InternalCompletionContext.class, "extendedContext", fInvocationContext.getCoreContext());
+                GroovyExtendedCompletionContext groovyContext = ReflectionUtils.getPrivateField(
+                    InternalCompletionContext.class, "extendedContext", fInvocationContext.getCoreContext());
 
                 return ClassHelper.isSAMType(groovyContext.toClassNode(lastType));
             }
@@ -686,7 +686,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
             computer = key -> {
                 boolean def = getDefaultOptions().get(key).matches(JavaCore.ENABLED + "|" + JavaCore.INSERT);
-                Boolean val = (Boolean) ReflectionUtils.executePrivateMethod(FormatterPrefs.class, "getCoreOption",
+                Boolean val = ReflectionUtils.executePrivateMethod(FormatterPrefs.class, "getCoreOption",
                     new Class[] {IJavaProject.class, String.class, boolean.class}, prefs, new Object[] {project, key, def});
                 return val;
             };

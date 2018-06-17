@@ -75,37 +75,37 @@ public enum SpecifiedVersion {
             String[] splits = jarName.substring(verstionStart).split("\\.");
             if (splits.length > 1) {
                 try {
-                    int major = Integer.valueOf(splits[0]);
-                    int minor = Integer.valueOf(splits[1]);
+                    int major = Integer.parseInt(splits[0], 10);
+                    int minor = Integer.parseInt(splits[1], 10);
                     switch (major) {
+                    case 1:
+                        switch (minor) {
+                        case 6:
+                            return _16;
+                        case 7:
+                            return _17;
+                        case 8:
+                            return _18;
+                        }
+                        break;
+                    case 2:
+                        switch (minor) {
+                        case 0:
+                            return _20;
                         case 1:
-                            switch (minor) {
-                                case 6:
-                                    return _16;
-                                case 7:
-                                    return _17;
-                                case 8:
-                                    return _18;
-                            }
-                            break;
+                            return _21;
                         case 2:
-                            switch (minor) {
-                                case 0:
-                                    return _20;
-                                case 1:
-                                    return _21;
-                                case 2:
-                                    return _22;
-                                case 3:
-                                    return _23;
-                                case 4:
-                                    return _24;
-                                case 5:
-                                    return _25;
-                                case 6:
-                                    return _26;
-                            }
-                            break;
+                            return _22;
+                        case 3:
+                            return _23;
+                        case 4:
+                            return _24;
+                        case 5:
+                            return _25;
+                        case 6:
+                            return _26;
+                        }
+                        break;
                     }
                 } catch (NumberFormatException e) {
                     // can ignore just return unspecified
@@ -159,41 +159,41 @@ public enum SpecifiedVersion {
             return DONT_CARE;
         }
 
-        System.out.println("Invalid Groovy compiler level specified: " + compilerLevel +
-            "\nMust be one of 16, 1.6, 17, 1.7, 18, 1.8, 19, 1.9, 20, 2.0, 21, 2.1, 22, 2.2, 23, 2.3, 24, 2.4, 25, 2.5, 26 or 2.6");
+        System.out.println("Invalid Groovy compiler level specified: " + compilerLevel + "\n" +
+            "Must be one of 16, 1.6, 17, 1.7, 18, 1.8, 19, 1.9, 20, 2.0, 21, 2.1, 22, 2.2, 23, 2.3, 24, 2.4, 25, 2.5, 26 or 2.6");
 
         return UNSPECIFIED;
     }
 
     public static SpecifiedVersion findVersion(Version ver) {
         switch (ver.getMajor()) {
+        case 1:
+            switch (ver.getMinor()) {
+            case 6:
+                return _16;
+            case 7:
+                return _17;
+            case 8:
+                return _18;
+            }
+            break;
+        case 2:
+            switch (ver.getMinor()) {
+            case 0:
+                return _20;
             case 1:
-                switch (ver.getMinor()) {
-                    case 6:
-                        return _16;
-                    case 7:
-                        return _17;
-                    case 8:
-                        return _18;
-                }
-                break;
+                return _21;
             case 2:
-                switch (ver.getMinor()) {
-                    case 0:
-                        return _20;
-                    case 1:
-                        return _21;
-                    case 2:
-                        return _22;
-                    case 3:
-                        return _23;
-                    case 4:
-                        return _24;
-                    case 5:
-                        return _25;
-                    case 6:
-                        return _26;
-                }
+                return _22;
+            case 3:
+                return _23;
+            case 4:
+                return _24;
+            case 5:
+                return _25;
+            case 6:
+                return _26;
+            }
         }
         return UNSPECIFIED;
     }

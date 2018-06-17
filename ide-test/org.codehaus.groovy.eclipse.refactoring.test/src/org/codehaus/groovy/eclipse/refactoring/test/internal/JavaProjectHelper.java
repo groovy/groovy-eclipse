@@ -19,6 +19,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -450,8 +451,8 @@ public class JavaProjectHelper {
                 importResources(folder, bundle, path);
             } else {
                 URL url = bundle.getEntry(path);
-                IFile file = importTarget.getFile(name);
-                file.create(url.openStream(), true, null);
+                URLConnection con = url.openConnection(); con.setUseCaches(false);
+                importTarget.getFile(name).create(con.getInputStream(), true, null);
             }
         }
     }

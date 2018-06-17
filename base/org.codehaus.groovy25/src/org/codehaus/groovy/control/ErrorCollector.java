@@ -27,6 +27,7 @@ import org.codehaus.groovy.syntax.CSTNode;
 import org.codehaus.groovy.syntax.SyntaxException;
 
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -35,15 +36,10 @@ import java.util.List;
  * A base class for collecting messages and errors during processing.
  * Each CompilationUnit should have an ErrorCollector, and the SourceUnits
  * should share their ErrorCollector with the CompilationUnit.
- *
- * @author <a href="mailto:cpoirier@dreaming.org">Chris Poirier</a>
- * @author <a href="mailto:blackdrag@gmx.org">Jochen Theodorou</a>
  */
-public class ErrorCollector {
-    // GRECLIPSE add
-    public boolean transformActive;
-    // GRECLIPSE end
-    
+public class ErrorCollector implements Serializable {
+
+    private static final long serialVersionUID = 2844774170905056755L;
     /**
      * WarningMessages collected during processing
      */
@@ -56,6 +52,10 @@ public class ErrorCollector {
      * Configuration and other settings that control processing
      */
     protected CompilerConfiguration configuration;
+
+    // GRECLIPSE add
+    public boolean transformActive;
+    // GRECLIPSE end
 
     /**
      * Initialize the ErrorReporter.
@@ -245,7 +245,7 @@ public class ErrorCollector {
         SyntaxException exception = null;
 
         Message message = getError(index);
-        if (message != null && message instanceof SyntaxErrorMessage) {
+        if (message instanceof SyntaxErrorMessage) {
             exception = ((SyntaxErrorMessage) message).getCause();
         }
         return exception;

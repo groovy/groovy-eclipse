@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -80,6 +80,7 @@ public class HierarchyResolver implements ITypeRequestor {
 
 	private int typeIndex;
 	private IGenericType[] typeModels;
+	private Parser basicParser;
 
 	private static final CompilationUnitDeclaration FakeUnit;
 	static {
@@ -128,11 +129,31 @@ public void accept(IBinaryType binaryType, PackageBinding packageBinding, Access
  */
 @Override
 public void accept(ICompilationUnit sourceUnit, AccessRestriction accessRestriction) {
-	//System.out.println("Cannot accept compilation units inside the HierarchyResolver.");
-	this.lookupEnvironment.problemReporter.abortDueToInternalError(
-		new StringBuffer(Messages.accept_cannot)
-			.append(sourceUnit.getFileName())
-			.toString());
+	if (CharOperation.equals(TypeConstants.MODULE_INFO_NAME, sourceUnit.getMainTypeName())) {
+		// module is needed for resolving, so parse and build it now:
+		CompilationResult unitResult = new CompilationResult(sourceUnit, 1, 1, this.options.maxProblemsPerUnit);
+		CompilationUnitDeclaration parsedUnit = basicParser().dietParse(sourceUnit, unitResult);
+		this.lookupEnvironment.buildTypeBindings(parsedUnit, accessRestriction);
+		this.lookupEnvironment.completeTypeBindings(parsedUnit, true); // work done inside checkAndSetImports() 
+	} else {
+		//System.out.println("Cannot accept compilation units inside the HierarchyResolver.");
+		this.lookupEnvironment.problemReporter.abortDueToInternalError(
+			new StringBuffer(Messages.accept_cannot)
+				.append(sourceUnit.getFileName())
+				.toString());
+	}
+}
+private Parser basicParser() {
+	if (this.basicParser == null) {
+		ProblemReporter problemReporter =
+			new ProblemReporter(
+				DefaultErrorHandlingPolicies.proceedWithAllProblems(),
+				this.options,
+				new DefaultProblemFactory());
+		this.basicParser = new Parser(problemReporter, false);
+		this.basicParser.reportOnlyOneSyntaxError = true;
+	}
+	return this.basicParser;
 }
 
 /**
@@ -165,12 +186,15 @@ public void accept(ISourceType[] sourceTypes, PackageBinding packageBinding, Acc
 	// build bindings
 	if (unit != null) {
 		try {
-			this.lookupEnvironment.buildTypeBindings(unit, accessRestriction);
+			LookupEnvironment environment = packageBinding.environment;
+			if (environment == null)
+				environment = this.lookupEnvironment;
+			environment.buildTypeBindings(unit, accessRestriction);
 
 			org.eclipse.jdt.core.ICompilationUnit cu = ((SourceTypeElementInfo)sourceType).getHandle().getCompilationUnit();
 			rememberAllTypes(unit, cu, false);
 
-			this.lookupEnvironment.completeTypeBindings(unit, true/*build constructor only*/);
+			environment.completeTypeBindings(unit, true/*build constructor only*/);
 		} catch (AbortCompilation e) {
 			// missing 'java.lang' package: ignore
 		}

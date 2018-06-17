@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,29 +43,24 @@ public enum ASTFragmentKind {
         } else {
             return SIMPLE_EXPRESSION;
         }
-
     }
 
-    /**
-     * @param fragment
-     * @return
-     */
     public static boolean isExpressionKind(IASTFragment fragment) {
         if (fragment == null)
             return false;
 
         ASTFragmentKind kind = fragment.kind();
         switch (kind) {
-            case PROPERTY:
-            case SAFE_PROPERTY:
-            case SPREAD_SAFE_PROPERTY:
-            case METHOD_POINTER:
-            case METHOD_CALL:
-            case BINARY:
-            case SIMPLE_EXPRESSION:
-                return true;
-            default:
-                return false;
+        case PROPERTY:
+        case SAFE_PROPERTY:
+        case SPREAD_SAFE_PROPERTY:
+        case METHOD_POINTER:
+        case METHOD_CALL:
+        case BINARY:
+        case SIMPLE_EXPRESSION:
+            return true;
+        default:
+            return false;
         }
     }
 }

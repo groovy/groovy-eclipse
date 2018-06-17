@@ -179,7 +179,7 @@ protected FileSystem(String[] classpathNames, String[] initialFileNames, String 
 	this.classpaths = new Classpath[classpathSize];
 	int counter = 0;
 	for (int i = 0; i < classpathSize; i++) {
-		Classpath classpath = getClasspath(classpathNames[i], encoding, null, null);
+		Classpath classpath = getClasspath(classpathNames[i], encoding, null, null, null);
 		try {
 			classpath.initialize();
 			for (String moduleName : classpath.getModuleNames(limitModules))
@@ -244,10 +244,10 @@ protected FileSystem(Classpath[] paths, String[] initialFileNames, boolean annot
 	this(paths, initialFileNames, annotationsFromClasspath, null);
 }
 public static Classpath getClasspath(String classpathName, String encoding, AccessRuleSet accessRuleSet) {
-	return getClasspath(classpathName, encoding, false, accessRuleSet, null, null);
+	return getClasspath(classpathName, encoding, false, accessRuleSet, null, null, null);
 }
-public static Classpath getClasspath(String classpathName, String encoding, AccessRuleSet accessRuleSet, Map<String, String> options) {
-	return getClasspath(classpathName, encoding, false, accessRuleSet, null, options);
+public static Classpath getClasspath(String classpathName, String encoding, AccessRuleSet accessRuleSet, Map<String, String> options, String release) {
+	return getClasspath(classpathName, encoding, false, accessRuleSet, null, options, release);
 }
 public static Classpath getJrtClasspath(String jdkHome, String encoding, AccessRuleSet accessRuleSet, Map<String, String> options) {
 	return new ClasspathJrt(new File(convertPathSeparators(jdkHome)), true, accessRuleSet, null);
@@ -257,7 +257,7 @@ public static Classpath getOlderSystemRelease(String jdkHome, String release, Ac
 }
 public static Classpath getClasspath(String classpathName, String encoding,
 		boolean isSourceOnly, AccessRuleSet accessRuleSet,
-		String destinationPath, Map<String, String> options) {
+		String destinationPath, Map<String, String> options, String release) {
 	Classpath result = null;
 	File file = new File(convertPathSeparators(classpathName));
 	if (file.isDirectory()) {
@@ -298,7 +298,10 @@ public static Classpath getClasspath(String classpathName, String encoding,
 						JRT_CLASSPATH_CACHE.put(file, result);
 					}
 				} else {
-					result = new ClasspathJar(file, true, accessRuleSet, null);
+					result = 
+							(release == null) ?
+									new ClasspathJar(file, true, accessRuleSet, null) :
+										new ClasspathMultiReleaseJar(file, true, accessRuleSet, destinationPath, release);
 				}
 			}
 		} else if (format == Util.JMOD_FILE) {
@@ -370,7 +373,7 @@ private void initializeKnownFileNames(String[] initialFileNames) {
 public void scanForModules(Parser parser) {
 	for (int i = 0, max = this.classpaths.length; i < max; i++) {
 		File file = new File(this.classpaths[i].getPath());
-		IModule iModule = ModuleFinder.scanForModule(this.classpaths[i], file, parser, false);
+		IModule iModule = ModuleFinder.scanForModule(this.classpaths[i], file, parser, false, null);
 		if (iModule != null)
 			this.moduleLocations.put(String.valueOf(iModule.name()), this.classpaths[i]);
 	}

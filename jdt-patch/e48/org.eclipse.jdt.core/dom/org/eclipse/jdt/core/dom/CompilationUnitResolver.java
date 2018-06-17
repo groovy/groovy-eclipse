@@ -1,6 +1,6 @@
 // GROOVY PATCHED
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -29,6 +29,7 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
@@ -43,6 +44,7 @@ import org.eclipse.jdt.internal.compiler.IProblemFactory;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.batch.FileSystem.Classpath;
+import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
 import org.eclipse.jdt.internal.compiler.env.ISourceType;
@@ -293,6 +295,20 @@ public class CompilationUnitResolver extends Compiler {
 			boolean fromJavaProject) {
 		BindingResolver resolver = null;
 		AST ast = AST.newAST(apiLevel);
+		String sourceModeSetting = (String) options.get(JavaCore.COMPILER_SOURCE);
+		long sourceLevel = CompilerOptions.versionToJdkLevel(sourceModeSetting);
+		if (sourceLevel == 0) {
+			// unknown sourceModeSetting
+			sourceLevel = ClassFileConstants.JDK1_3;
+		}
+		ast.scanner.sourceLevel = sourceLevel;
+		String compliance = (String) options.get(JavaCore.COMPILER_COMPLIANCE);
+		long complianceLevel = CompilerOptions.versionToJdkLevel(compliance);
+		if (complianceLevel == 0) {
+			// unknown sourceModeSetting
+			complianceLevel = sourceLevel;
+		}
+		ast.scanner.complianceLevel = complianceLevel;
 		ast.setDefaultNodeFlag(ASTNode.ORIGINAL);
 		CompilationUnit compilationUnit = null;
 		ASTConverter converter = new ASTConverter(options, needToResolveBindings, monitor);
@@ -1029,6 +1045,11 @@ public class CompilationUnitResolver extends Compiler {
 					continue;
 				}
 				sourceUnits[count++] = new org.eclipse.jdt.internal.compiler.batch.CompilationUnit(contents, sourceUnitPath, encoding);
+			}
+			if (count < length) {
+				org.eclipse.jdt.internal.compiler.env.ICompilationUnit[] newArray = new org.eclipse.jdt.internal.compiler.env.ICompilationUnit[count];
+				System.arraycopy(sourceUnits, 0, newArray, 0, count);
+				sourceUnits = newArray;
 			}
 			beginToCompile(sourceUnits, bindingKeys);
 			// process all units (some more could be injected in the loop by the lookup environment)

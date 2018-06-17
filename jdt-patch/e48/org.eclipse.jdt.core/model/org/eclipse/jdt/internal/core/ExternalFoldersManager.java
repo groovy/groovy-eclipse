@@ -48,6 +48,7 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.internal.core.DeltaProcessor.RootInfo;
 import org.eclipse.jdt.internal.core.util.Messages;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -249,10 +250,8 @@ public class ExternalFoldersManager {
 
 	private List<Entry<IPath, IFolder>> getFoldersToCleanUp(IProgressMonitor monitor) throws CoreException {
 		DeltaProcessingState state = JavaModelManager.getDeltaState();
-		@SuppressWarnings("rawtypes")
-		Map roots = state.roots;
-		@SuppressWarnings("rawtypes")
-		Map sourceAttachments = state.sourceAttachments;
+		Map<IPath, RootInfo> roots = state.roots;
+		Map<IPath, IPath> sourceAttachments = state.sourceAttachments;
 		if (roots == null && sourceAttachments == null)
 			return null;
 		Map<IPath, IFolder> knownFolders = getFolders();

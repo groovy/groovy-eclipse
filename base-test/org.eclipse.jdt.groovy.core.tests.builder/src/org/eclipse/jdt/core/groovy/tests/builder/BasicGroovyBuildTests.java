@@ -247,6 +247,22 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         executeClass(paths[0], "p1.Hello", "Hello Groovy world", null);
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/550
+    public void testProjectBasedirAsOutputLocation() throws Exception {
+        IPath path = env.addProject("Project");
+        env.setOutputFolder(path, "");
+        env.addGroovyJars(path);
+
+        env.addGroovyClass(path, "p", "Script",
+            "package p\n" +
+            "println 'Groovy!'\n");
+
+        fullBuild(path);
+        expectingNoProblems();
+        expectingCompiledClasses("p.Script");
+        executeClass(path, "p.Script", "Groovy!", null);
+    }
+
     @Test
     public void testInners_983() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
@@ -2574,7 +2590,9 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     @Test
     public void testNoDoubleResolve() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
-        env.addGroovyClass(paths[1], "p", "Script", "package p; println ''\n");
+
+        env.addGroovyClass(paths[1], "p", "Script",
+            "package p; println ''\n");
         incrementalBuild(paths[0]);
 
         IType pScript = env.getJavaProject("Project").findType("p.Script");
@@ -2601,7 +2619,10 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "package p\nclass Other {\ndef x = 9 }");
         env.addGroovyClass(paths[1], "p", "Target",
             "package p\nnew Other()");
-        GroovyCompilationUnit unit = (GroovyCompilationUnit) env.getJavaProject("Project").findType("p.Target").getCompilationUnit();
+        incrementalBuild(paths[0]);
+
+        IType pTarget = env.getJavaProject("Project").findType("p.Target");
+        GroovyCompilationUnit unit = (GroovyCompilationUnit) pTarget.getCompilationUnit();
 
         // now find the class reference
         ClassNode type = ((ConstructorCallExpression) ((ReturnStatement) unit.getModuleNode().getStatementBlock().getStatements().get(0)).getExpression()).getType();

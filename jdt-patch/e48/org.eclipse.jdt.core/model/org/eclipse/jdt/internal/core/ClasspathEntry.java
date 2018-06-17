@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,6 +13,7 @@
  *								Bug 440477 - [null] Infrastructure for feeding external annotations into compilation
  *								Bug 462768 - [null] NPE when using linked folder for external annotations
  *                              Bug 465296 - precedence of extra attributes on a classpath container
+ *     Karsten Thoms - Bug 532505 - Reduce memory footprint of ClasspathAccessRule
  *******************************************************************************/
 package org.eclipse.jdt.internal.core;
 
@@ -444,7 +445,7 @@ public class ClasspathEntry implements IClasspathEntry {
 				else
 					continue;
 				boolean ignoreIfBetter = "true".equals(elementAccessRule.getAttribute(TAG_IGNORE_IF_BETTER)); //$NON-NLS-1$
-				result[index++] = new ClasspathAccessRule(new Path(pattern), ignoreIfBetter ? kind | IAccessRule.IGNORE_IF_BETTER : kind);
+				result[index++] = JavaCore.newAccessRule(new Path(pattern), ignoreIfBetter ? kind | IAccessRule.IGNORE_IF_BETTER : kind);
 			}
 		}
 		if (index != length)

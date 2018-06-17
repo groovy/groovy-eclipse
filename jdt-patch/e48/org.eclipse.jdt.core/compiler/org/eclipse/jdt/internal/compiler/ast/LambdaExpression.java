@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012, 2017 IBM Corporation and others.
+ * Copyright (c) 2012, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -336,16 +336,18 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 					if (groundType != expectedSAMType) { //$IDENTITY-COMPARISON$
 						if (!groundType.isCompatibleWith(expectedSAMType, this.scope)) { // the ground has shifted, are we still on firm grounds ? 
 							blockScope.problemReporter().typeMismatchError(groundType, this.expectedType, this, null); // report deliberately against block scope so as not to blame the lambda.
-							return this.resolvedType = null;
+							return null;
 						}
 					}
 					this.resolvedType = groundType;
 				}
 			} else {
-				reportSamProblem(blockScope, new ProblemMethodBinding(TypeConstants.ANONYMOUS_METHOD, null, ProblemReasons.NotAWellFormedParameterizedType));
+				this.binding = new ProblemMethodBinding(TypeConstants.ANONYMOUS_METHOD, null, ProblemReasons.NotAWellFormedParameterizedType);
+				reportSamProblem(blockScope, this.binding);
 				return this.resolvedType = null;
 			}
 		}
+		boolean parametersHaveErrors = false;
 		boolean genericSignatureNeeded = this.requiresGenericSignature || blockScope.compilerOptions().generateGenericSignatureForLambdaExpressions;
 		for (int i = 0; i < argumentsLength; i++) {
 			Argument argument = this.arguments[i];
@@ -357,7 +359,7 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 					if (expectedParameterType.isProperType(true)) {
 						if (!isOnlyWildcardMismatch(expectedParameterType, argumentType)) {
 							this.scope.problemReporter().lambdaParameterTypeMismatched(argument, argument.type, expectedParameterType);
-							this.resolvedType = null; // continue to type check.
+							parametersHaveErrors = true; // continue to type check, but don't signal success
 						}
 					}
 				}
@@ -448,7 +450,7 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 		if (this.shouldCaptureInstance && this.scope.isConstructorCall) {
 			this.scope.problemReporter().fieldsOrThisBeforeConstructorInvocation(this);
 		}
-		return argumentsHaveErrors ? this.resolvedType = null : this.resolvedType;
+		return (argumentsHaveErrors|parametersHaveErrors) ? null : this.resolvedType;
 	}
 
 	// check if the given types are parameterized types and if their type arguments

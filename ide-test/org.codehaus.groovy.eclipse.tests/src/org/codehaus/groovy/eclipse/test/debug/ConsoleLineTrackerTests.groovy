@@ -1,5 +1,5 @@
  /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ final class ConsoleLineTrackerTests extends GroovyEclipseTestSuite {
         lineTracker.lineAppended(new Region(0, contents.length()))
         Assert.assertNotNull('Should have found a hyperlink', console.getLastLink())
         FileLink link = (FileLink) console.getLastLink()
-        IFile file = (IFile) ReflectionUtils.getPrivateField(FileLink.class, 'fFile', link)
+        IFile file = ReflectionUtils.getPrivateField(FileLink.class, 'fFile', link)
         Assert.assertTrue('File should exist', file.isAccessible())
         Assert.assertEquals('File name is wrong', 'Bar.groovy', file.getName())
     }
@@ -89,7 +89,7 @@ final class ConsoleLineTrackerTests extends GroovyEclipseTestSuite {
         Object file = ReflectionUtils.getPrivateField(FileLink.class, 'fFile', link)
         Assert.assertNull('File should be null since the selection is ambiguous', file)
 
-        IFile[] files = (IFile[]) ReflectionUtils.getPrivateField(AmbiguousFileLink.class, 'files', link)
+        IFile[] files = ReflectionUtils.getPrivateField(AmbiguousFileLink.class, 'files', link)
 
         Assert.assertEquals('Should have found 2 files', 2, files.length)
         Assert.assertEquals('File name is wrong', 'Baz.groovy', files[0].getName())

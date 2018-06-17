@@ -3029,12 +3029,28 @@ assignmentExpression[int lc_stmt]
             |   BXOR_ASSIGN^
             |   BOR_ASSIGN^
             |   STAR_STAR_ASSIGN^
-            //|   USEROP_13^  //DECIDE: This is how user-define ops would show up.
             )
             nls!
             expressionStatementNoCheck
             // If left-context of {x = y} is a statement boundary,
             // define the left-context of y as an initializer.
+
+            // GRECLIPSE add
+            exception
+            catch [RecognitionException e] {
+                // if empty assignment was found, produce something compatible with content assist
+                int[] types = {ASSIGN, PLUS_ASSIGN, MINUS_ASSIGN, STAR_ASSIGN, DIV_ASSIGN, MOD_ASSIGN,
+                    SR_ASSIGN, BSR_ASSIGN, SL_ASSIGN, BAND_ASSIGN, BXOR_ASSIGN, BOR_ASSIGN, STAR_STAR_ASSIGN};
+                int index = 0;
+                if (Arrays.binarySearch(types, LT(index).getType()) >= 0 || Arrays.binarySearch(types, LT(--index).getType()) >= 0) {
+                    astFactory.addASTChild(currentAST, missingIdentifier(LT(index), LT(index + 1)));
+                    #assignmentExpression = (AST) currentAST.root;
+                    reportError(e);
+                } else {
+                    throw e;
+                }
+            }
+            // GRECLIPSE end
         )?
     ;
 

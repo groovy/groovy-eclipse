@@ -1,10 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
@@ -26,10 +26,12 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeParameter;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
-import org.eclipse.jdt.core.compiler.*;
+import org.eclipse.jdt.core.compiler.CategorizedProblem;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.codeassist.ISelectionRequestor;
 import org.eclipse.jdt.internal.codeassist.SelectionEngine;
 import org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.CastExpression;
 import org.eclipse.jdt.internal.compiler.ast.LambdaExpression;
 import org.eclipse.jdt.internal.compiler.ast.LocalDeclaration;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
@@ -466,6 +468,16 @@ public void acceptLocalVariable(LocalVariableBinding binding, org.eclipse.jdt.in
 	}
 	LocalVariable localVar = null;
 	if(parent != null) {
+		String typeSig = null;
+		if (local.type == null || local.type.isTypeNameVar(binding.declaringScope)) {
+			if (local.initialization instanceof CastExpression) {
+				typeSig = Util.typeSignature(((CastExpression) local.initialization).type);
+			} else {
+				typeSig = Signature.createTypeSignature(binding.type.signableName(), true);
+			}
+		} else {
+			typeSig = Util.typeSignature(local.type);
+		}
 		localVar = new LocalVariable(
 				(JavaElement)parent,
 				new String(local.name),
@@ -473,7 +485,7 @@ public void acceptLocalVariable(LocalVariableBinding binding, org.eclipse.jdt.in
 				local.declarationSourceEnd,
 				local.sourceStart,
 				local.sourceEnd,
-				local.type == null ? Signature.createTypeSignature(binding.type.signableName(), true) : Util.typeSignature(local.type),
+				typeSig,
 				local.annotations,
 				local.modifiers,
 				local.getKind() == AbstractVariableDeclaration.PARAMETER);

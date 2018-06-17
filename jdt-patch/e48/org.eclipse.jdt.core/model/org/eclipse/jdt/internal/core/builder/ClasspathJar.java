@@ -136,6 +136,8 @@ boolean closeZipFileAtEnd;
 private SimpleSet knownPackageNames;
 AccessRuleSet accessRuleSet;
 String externalAnnotationPath;
+// Meant for ClasspathMultiReleaseJar, not used in here
+String compliance;
 
 ClasspathJar(IFile resource, AccessRuleSet accessRuleSet, IPath externalAnnotationPath, boolean isOnModulePath) {
 	this.resource = resource;
@@ -228,6 +230,9 @@ public boolean equals(Object o) {
 	if (this.accessRuleSet != jar.accessRuleSet)
 		if (this.accessRuleSet == null || !this.accessRuleSet.equals(jar.accessRuleSet))
 			return false;
+	if (!Util.equalOrNull(this.compliance, jar.compliance)) {
+		return false;
+	}
 	return this.zipFilename.equals(jar.zipFilename) 
 			&& lastModified() == jar.lastModified()
 			&& this.isOnModulePath == jar.isOnModulePath
@@ -311,7 +316,7 @@ public boolean hasCompilationUnit(String pkgName, String moduleName) {
 }
 
 /** Scan the contained packages and try to locate the module descriptor. */
-private void scanContent() {
+private boolean scanContent() {
 	try {
 		if (this.zipFile == null) {
 			if (org.eclipse.jdt.internal.core.JavaModelManager.ZIP_ACCESS_VERBOSE) {
@@ -323,8 +328,10 @@ private void scanContent() {
 		} else {
 			this.knownPackageNames = findPackageSet();
 		}
+		return true;
 	} catch(Exception e) {
 		this.knownPackageNames = new SimpleSet(); // assume for this build the zipFile is empty
+		return false;
 	}
 }
 
@@ -363,7 +370,8 @@ public NameEnvironmentAnswer findClass(String typeName, String qualifiedPackageN
 	return findClass(typeName, qualifiedPackageName, moduleName, qualifiedBinaryFileName, false, null);
 }
 public Manifest getManifest() {
-	scanContent(); // ensure zipFile is initialized
+	if (!scanContent()) // ensure zipFile is initialized
+		return null;
 	ZipEntry entry = this.zipFile.getEntry(TypeConstants.META_INF_MANIFEST_MF);
 	try {
 		if (entry != null)

@@ -46,7 +46,7 @@ public class MultiplexingIndexingParser extends IndexingParser {
     public MultiplexingIndexingParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options,
             boolean reportLocalDeclarations, boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
         super(requestor, problemFactory, options, reportLocalDeclarations, optimizeStringLiterals, useSourceJavadocParser);
-        this.notifier = (SourceElementNotifier) ReflectionUtils.getPrivateField(SourceElementParser.class, "notifier", this);
+        this.notifier = ReflectionUtils.getPrivateField(SourceElementParser.class, "notifier", this);
         this.groovyReportReferenceInfo = reportLocalDeclarations;
         this.requestor = requestor;
     }

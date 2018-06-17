@@ -1,11 +1,7 @@
-package org.codehaus.groovy.eclipse.maven.testing
-
-import groovy.util.logging.Log;
-import groovy.util.logging.Log4j;
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
- * Licensed under the Apache License, Version 2.0 (the "LicensLoge");
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -17,13 +13,10 @@ import groovy.util.logging.Log4j;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.codehaus.groovy.eclipse.maven.testing
 
+import groovy.util.logging.Log4j;
 
-/**
- * 
- * @author Andrew Eisenberg
- * @created Sep 26, 2011
- */
 @Log4j
 class Logged {
 }

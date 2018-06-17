@@ -53,7 +53,7 @@ import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
 public class GroovyClassScope extends ClassScope {
 
     // SET FOR TESTING ONLY, enables tests to listen for interesting events
-    public static EventListener debugListener = null;
+    public static EventListener debugListener;
 
     private TraitHelper traitHelper = new TraitHelper();
 
@@ -156,7 +156,7 @@ public class GroovyClassScope extends ClassScope {
                     }
                     // Create isA if type is boolean
                     String propertyType = property.getType().getName();
-                    if (propertyType.equals("boolean")) {
+                    if ("boolean".equals(propertyType)) {
                         createGetterMethod(name, "is" + capitalizedName, property.isStatic(), groovyMethods, methodBindings, typeDeclaration);
                     }
                 }
@@ -404,12 +404,7 @@ public class GroovyClassScope extends ClassScope {
                 modifiers |= Flags.AccAbstract;
             }
             char[] methodName = name.toCharArray();
-            /*
-             * if (typeDeclaration != null) { // check we are not attempting to override a final method MethodBinding[]
-             * existingBindings = typeDeclaration.binding.getMethods(name.toCharArray()); int stop = 1; }
-             */
-            MethodBinding mb = new LazilyResolvedMethodBinding(false, propertyName, modifiers, methodName, null,
-                    this.referenceContext.binding);
+            MethodBinding mb = new LazilyResolvedMethodBinding(false, propertyName, modifiers, methodName, null, referenceContext.binding);
             // FIXASC parameter names - what value would it have to set them correctly?
             groovyMethods.add(mb);
         }
@@ -499,8 +494,8 @@ public class GroovyClassScope extends ClassScope {
      */
     private class TraitHelper {
 
+        private boolean lookForTraitAlias;
         private boolean toBeInitialized = true;
-        private boolean lookForTraitAlias = false;
 
         private void initialize() {
             ImportBinding[] imports = referenceContext.scope.compilationUnitScope().imports;

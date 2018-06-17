@@ -326,6 +326,10 @@ public class GroovyUtils {
         return null;
     }
 
+    public static boolean isAnonymous(ClassNode node) {
+        return (node instanceof InnerClassNode && ((InnerClassNode) node).isAnonymous());
+    }
+
     /**
      * Determines if a value or reference of given source type can be assigned
      * to a receiver of given target type.  Excludes checks for the null value,
@@ -410,10 +414,6 @@ public class GroovyUtils {
 
     public static boolean isSynthetic(MethodNode node) {
         return (node.getModifiers() & MethodNode.ACC_SYNTHETIC) != 0;
-    }
-
-    public static boolean isAnonymous(ClassNode node) {
-        return (node instanceof InnerClassNode && ((InnerClassNode) node).isAnonymous());
     }
 
     public static void updateClosureWithInferredTypes(ClassNode closure, ClassNode returnType, Parameter[] parameters) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
+
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
+import static org.junit.Assume.assumeFalse
 
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.eclipse.jdt.core.Flags
@@ -214,6 +217,7 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
 
     @Test // GRECLIPSE-1158
     void testDateGM() {
+        assumeFalse(isAtLeastGroovy(25))
         String contents = 'new Date().toCal'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'toCal'))
         proposalExists(proposals, 'toCalendar', 1)

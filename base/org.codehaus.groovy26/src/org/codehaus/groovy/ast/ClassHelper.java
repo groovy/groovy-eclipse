@@ -45,6 +45,8 @@ import java.lang.ref.SoftReference;
 import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +60,7 @@ import java.util.regex.Pattern;
  */
 public class ClassHelper {
 
+    @SuppressWarnings("unused")
     private static final Class[] classes = new Class[]{
             Object.class, Boolean.TYPE, Character.TYPE, Byte.TYPE, Short.TYPE,
             Integer.TYPE, Long.TYPE, Double.TYPE, Float.TYPE, Void.TYPE,
@@ -69,6 +72,7 @@ public class ClassHelper {
             Iterator.class, GeneratedClosure.class, GeneratedLambda.class, GroovyObjectSupport.class
     };
 
+    @SuppressWarnings("unused")
     private static final String[] primitiveClassNames = new String[]{
             "", "boolean", "char", "byte", "short",
             "int", "long", "double", "float", "void"
@@ -76,8 +80,7 @@ public class ClassHelper {
 
     public static final ClassNode
             DYNAMIC_TYPE = makeCached(Object.class), OBJECT_TYPE = DYNAMIC_TYPE,
-            VOID_TYPE = makeCached(Void.TYPE),
-            CLOSURE_TYPE = makeCached(Closure.class),
+            VOID_TYPE = makeCached(Void.TYPE), CLOSURE_TYPE = makeCached(Closure.class),
             GSTRING_TYPE = makeCached(GString.class), LIST_TYPE = makeWithoutCaching(List.class),
             MAP_TYPE = makeWithoutCaching(Map.class), RANGE_TYPE = makeCached(Range.class),
             PATTERN_TYPE = makeCached(Pattern.class), STRING_TYPE = makeCached(String.class),
@@ -103,8 +106,6 @@ public class ClassHelper {
             Annotation_TYPE = makeCached(Annotation.class),
             ELEMENT_TYPE_TYPE = makeCached(ElementType.class),
 
-//    FunctionalInterface_Type = ClassHelper.makeCached(FunctionalInterface.class),
-
     // uncached constants.
     CLASS_Type = makeWithoutCaching(Class.class), COMPARABLE_TYPE = makeWithoutCaching(Comparable.class),
             GENERATED_CLOSURE_Type = makeWithoutCaching(GeneratedClosure.class),
@@ -127,6 +128,17 @@ public class ClassHelper {
             Iterator_TYPE, GENERATED_CLOSURE_Type, GENERATED_LAMBDA_TYPE, GROOVY_OBJECT_SUPPORT_TYPE,
             GROOVY_OBJECT_TYPE, GROOVY_INTERCEPTABLE_TYPE, Enum_Type, Annotation_TYPE
     };
+
+    // GRECLIPSE add
+    private static final Map<String, ClassNode> namesToTypes;
+    static {
+        Map<String, ClassNode> map = new HashMap<String, ClassNode>();
+        for (ClassNode type : types) {
+            map.put(type.getName(), type);
+        }
+        namesToTypes = Collections.unmodifiableMap(map);
+    }
+    // GRECLIPSE end
 
     private static final int ABSTRACT_STATIC_PRIVATE =
             Modifier.ABSTRACT | Modifier.PRIVATE | Modifier.STATIC;
@@ -182,13 +194,19 @@ public class ClassHelper {
     }
 
     public static ClassNode make(Class c, boolean includeGenerics) {
+        /* GRECLIPSE edit
         for (int i = 0; i < classes.length; i++) {
             if (c == classes[i]) return types[i];
         }
+        */
         if (c.isArray()) {
             ClassNode cn = make(c.getComponentType(), includeGenerics);
             return cn.makeArray();
         }
+        // GRECLIPSE add
+        ClassNode cn = namesToTypes.get(c.getName());
+        if (cn != null) return cn;
+        // GRECLIPSE end
         return makeWithoutCaching(c, includeGenerics);
     }
 
@@ -211,7 +229,6 @@ public class ClassHelper {
             return t;
         }
     }
-
 
     /**
      * Creates a ClassNode using a given class.
@@ -240,6 +257,7 @@ public class ClassHelper {
     public static ClassNode make(String name) {
         if (name == null || name.length() == 0) return DYNAMIC_TYPE;
 
+        /* GRECLIPSE edit
         for (int i = 0; i < primitiveClassNames.length; i++) {
             if (primitiveClassNames[i].equals(name)) return types[i];
         }
@@ -248,6 +266,10 @@ public class ClassHelper {
             String cname = classes[i].getName();
             if (name.equals(cname)) return types[i];
         }
+        */
+        ClassNode cn = namesToTypes.get(name);
+        if (cn != null) return cn;
+        // GRECLIPSE end
         return makeWithoutCaching(name);
     }
 
@@ -307,7 +329,6 @@ public class ClassHelper {
 
         return cn;
     }
-
 
     /**
      * Test to determine if a ClassNode is a primitive type.

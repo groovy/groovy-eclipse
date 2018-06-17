@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.codehaus.groovy.eclipse.core.builder;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IPackageFragment;
@@ -39,13 +38,12 @@ import org.eclipse.jdt.internal.core.util.Util;
  */
 public class GroovyNameLookup extends NameLookup {
 
-    @SuppressWarnings("unchecked")
     public GroovyNameLookup(NameLookup other) {
         this(new IPackageFragmentRoot[0], new HashtableOfArrayToObject(), new ICompilationUnit[0], new HashMap<PackageFragmentRoot, ClasspathEntry>());
-        this.packageFragmentRoots = (IPackageFragmentRoot[]) ReflectionUtils.getPrivateField(NameLookup.class, "packageFragmentRoots", other);
-        this.packageFragments = (HashtableOfArrayToObject) ReflectionUtils.getPrivateField(NameLookup.class, "packageFragments", other);
-        this.typesInWorkingCopies = (HashMap<PackageFragmentRoot, ?>) ReflectionUtils.getPrivateField(NameLookup.class, "typesInWorkingCopies", other);
-        this.rootToResolvedEntries = (Map<IPackageFragmentRoot, IClasspathEntry>) ReflectionUtils.getPrivateField(NameLookup.class, "rootToResolvedEntries", other);
+        this.packageFragmentRoots = ReflectionUtils.getPrivateField(NameLookup.class, "packageFragmentRoots", other);
+        this.packageFragments = ReflectionUtils.getPrivateField(NameLookup.class, "packageFragments", other);
+        this.typesInWorkingCopies = ReflectionUtils.getPrivateField(NameLookup.class, "typesInWorkingCopies", other);
+        this.rootToResolvedEntries = ReflectionUtils.getPrivateField(NameLookup.class, "rootToResolvedEntries", other);
     }
 
     public GroovyNameLookup(IPackageFragmentRoot[] packageFragmentRoots, HashtableOfArrayToObject packageFragments, ICompilationUnit[] workingCopies, Map<PackageFragmentRoot, ClasspathEntry> rootToResolvedEntries) {

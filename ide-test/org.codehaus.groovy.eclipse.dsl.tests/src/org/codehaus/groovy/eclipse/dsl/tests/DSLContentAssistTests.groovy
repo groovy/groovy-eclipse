@@ -15,13 +15,13 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
 import static org.junit.Assume.assumeTrue
 
 import org.codehaus.groovy.eclipse.codeassist.tests.CompletionTestSuite
 import org.codehaus.groovy.eclipse.dsl.DSLPreferencesInitializer
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
 import org.eclipse.core.resources.IFile
-import org.eclipse.core.resources.IProject
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
@@ -30,32 +30,6 @@ import org.junit.Ignore
 import org.junit.Test
 
 final class DSLContentAssistTests extends CompletionTestSuite {
-
-    private static final String COMMAND_CHAIN_NO_ARGS = '''\
-        contribute(currentType('Inner')) {
-          method name:'flart', noParens:true, type:'Inner'
-        }
-        '''.stripIndent()
-    private static final String COMMAND_CHAIN_ONE_ARG = '''\
-        contribute(currentType('Inner')) {
-          method name:'flart', noParens:true, type:'Inner', params:[a:Integer]
-        }
-        '''.stripIndent()
-    private static final String COMMAND_CHAIN_TWO_ARGS = '''\
-        contribute(currentType('Inner')) {
-          method name:'flart', noParens:true, type:'Inner', params:[a:Integer, b:String]
-        }
-        '''.stripIndent()
-    private static final String NO_PARENS_FOR_DELEGATE = '''\
-        contribute(currentType('Inner')) {
-          delegatesTo type: 'Other', noParens: true
-        }
-        '''.stripIndent()
-    private static final String SET_DELEGATE_ON_INT = '''\
-        contribute(currentType(Integer) & enclosingCallName('foo')) {
-          setDelegateType(String)
-        }
-        '''.stripIndent()
 
     @BeforeClass
     static void setUpTests() {
@@ -66,31 +40,287 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     void setUp() {
         assumeTrue(!GroovyDSLCoreActivator.default.isDSLDDisabled())
         addClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID)
-        withProject { IProject project ->
+        withProject { project ->
             GroovyDSLCoreActivator.default.contextStoreManager.initialize(project, true)
-          //GroovyDSLCoreActivator.default.contextStoreManager.ignoreProject(project)
         }
 
         setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'true')
         setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'true')
     }
 
-    private String[] createDsls(String... dsls) {
-        System.out.println("Now creating $dsls.length DSLD files.")
-        int i = 0
-        for (dsl in dsls) {
-            println "Creating:\n$dsl"
-            IFile file = addPlainText(dsl, "dsl${i++}.dsld")
-            assert file.exists() : "File $file just created, but doesn't exist"
-        }
-        return dsls
+    private void createDsld(CharSequence dsld) {
+        IFile file = addPlainText(dsld, "${nextUnitName()}.dsld")
+        assert file.exists() : "File $file just created, but doesn't exist"
     }
 
     //--------------------------------------------------------------------------
 
+    @Test
+    void testAssignedVariable1() {
+        createDsld '''\
+            contribute(bind(exprs: assignedVariable())) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            def foo = v
+            '''.stripIndent()
+        checkUniqueProposal(contents, 'v', 'var_foo')
+    }
+
+    @Test
+    void testAssignedVariable2() {
+        createDsld '''\
+            contribute(bind(exprs: assignedVariable('foo'))) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            def foo = v
+            '''.stripIndent()
+        checkUniqueProposal(contents, 'v', 'var_foo')
+    }
+
+    @Test
+    void testAssignedVariable2a() {
+        createDsld '''\
+            contribute(bind(exprs: assignedVariable('boo'))) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            def foo = v
+            '''.stripIndent()
+        proposalExists(createProposalsAtOffset(contents, getIndexOf(contents, 'v')), 'var_foo', 0)
+    }
+
+    @Test
+    void testAssignedVariable3() {
+        createDsld '''\
+            contribute(bind(exprs: assignedVariable(~/f.*/))) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            def foo = v
+            '''.stripIndent()
+        checkUniqueProposal(contents, 'v', 'var_foo')
+    }
+
+    @Test
+    void testAssignedVariable3a() {
+        createDsld '''\
+            contribute(bind(exprs: assignedVariable(~/b.*/))) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            def foo = v
+            '''.stripIndent()
+        proposalExists(createProposalsAtOffset(contents, getIndexOf(contents, 'v')), 'var_foo', 0)
+    }
+
+    @Test
+    void testAssignedVariable4() {
+        createDsld '''\
+            contribute(bind(exprs: assignedVariable(name('foo')))) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            def foo = v
+            '''.stripIndent()
+        checkUniqueProposal(contents, 'v', 'var_foo')
+    }
+
+    @Test
+    void testAssignedVariable4a() {
+        createDsld '''\
+            contribute(bind(exprs: assignedVariable(name('boo')))) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            def foo = v
+            '''.stripIndent()
+        proposalExists(createProposalsAtOffset(contents, getIndexOf(contents, 'v')), 'var_foo', 0)
+    }
+
+    @Test
+    void testAssignedVariable5() {
+        createDsld '''\
+            contribute(bind(exprs: assignedVariable(type(BigInteger)))) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            BigInteger foo = v
+            '''.stripIndent()
+        checkUniqueProposal(contents, 'v', 'var_foo')
+    }
+
+    @Test
+    void testAssignedVariable5a() {
+        createDsld '''\
+            contribute(bind(exprs: assignedVariable(type(BigInteger)))) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            def foo = v
+            '''.stripIndent()
+        proposalExists(createProposalsAtOffset(contents, getIndexOf(contents, 'v')), 'var_foo', 0)
+    }
+
+    @Test
+    void testAssignedVariable6() {
+        createDsld '''\
+            contribute(bind(exprs: assignedVariable())) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = 'def foo = '
+        checkUniqueProposal(contents, '= ', 'var_foo')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/600
+    void testAssignedVariable6a() {
+        createDsld '''\
+            contribute(bind(exprs: assignedVariable())) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = 'foo = '.stripIndent()
+        checkUniqueProposal(contents, '= ', 'var_foo')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/598
+    void testAssignedVariable7() {
+        createDsld '''\
+            contribute(bind(exprs: assignedVariable())) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            def foo = { }
+            '''.stripIndent()
+        checkUniqueProposal(contents, '{ ', 'var_foo')
+    }
+
+    @Test
+    void testAssignedVariable7a() {
+        createDsld '''\
+            contribute(bind(exprs: assignedVariable())) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            foo = { }
+            '''.stripIndent()
+        checkUniqueProposal(contents, '{ ', 'var_foo')
+    }
+
+    @Test
+    void testAssignedVariable8() {
+        createDsld '''\
+            contribute(bind(exprs: assignedVariable())) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            def foo = {
+              bar {
+                baz {
+                }
+              }
+            }
+            '''.stripIndent()
+        checkUniqueProposal(contents, 'baz {', 'var_foo')
+    }
+
+    @Test
+    void testAssignedVariable8a() {
+        createDsld '''\
+            contribute(bind(exprs: assignedVariable())) {
+              property name: 'var_' + exprs[0].leftExpression.name
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            foo = {
+              bar {
+                baz {
+                }
+              }
+            }
+            '''.stripIndent()
+        checkUniqueProposal(contents, 'baz {', 'var_foo')
+    }
+
+    @Test
+    void testDelegatesToNoParens1() {
+        createDsld '''\
+            contribute(currentType('Inner')) {
+              delegatesTo type: 'Other', noParens: true
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            class Other {
+              def blart(a, b, c) { }
+              def flart(a) { }
+            }
+            class Inner { }
+            def val = new Inner()
+            val.bl
+            '''.stripIndent()
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'val.bl', 'blart', 'blart val, val, val')
+        applyProposalAndCheck(proposal, contents.replace('val.bl', 'val.blart val, val, val'))
+    }
+
+    @Test
+    void testDelegatesToNoParens2() {
+        createDsld '''\
+            contribute(currentType('Inner')) {
+              delegatesTo type: 'Other', noParens: true
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            class Other {
+              def blart(a, b, c) { }
+              def flart(a) { }
+            }
+            class Inner { }
+            def val = new Inner()
+            val.fl
+            '''.stripIndent()
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'val.fl', 'flart', 'flart val')
+        applyProposalAndCheck(proposal, contents.replace('val.fl', 'val.flart val'))
+    }
+
     @Test // GRECLIPSE-1324
     void testEmptyClosure1() {
-        createDsls(SET_DELEGATE_ON_INT)
+        createDsld '''\
+            contribute(currentType(Integer) & enclosingCallName('foo')) {
+              setDelegateType(String)
+            }
+            '''.stripIndent()
+
         String contents = '''\
             def foo(@DelegatesTo(Integer) Closure cl) {
             }
@@ -109,7 +339,12 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test // GRECLIPSE-1324
     void testEmptyClosure2() {
-        createDsls(SET_DELEGATE_ON_INT)
+        createDsld '''\
+            contribute(currentType(Integer) & enclosingCallName('foo')) {
+              setDelegateType(String)
+            }
+            '''.stripIndent()
+
         String contents = '''\
             def foo(@DelegatesTo(Integer) Closure cl) {
             }
@@ -125,7 +360,12 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testCommandChain1() {
-        createDsls(COMMAND_CHAIN_NO_ARGS)
+        createDsld '''\
+            contribute(currentType('Inner')) {
+              method name:'flart', noParens:true, type:'Inner'
+            }
+            '''.stripIndent()
+
         String contents = '''\
             class Inner { }
             def val = new Inner()
@@ -137,7 +377,12 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testCommandChain2() {
-        createDsls(COMMAND_CHAIN_NO_ARGS)
+        createDsld '''\
+            contribute(currentType('Inner')) {
+              method name:'flart', noParens:true, type:'Inner'
+            }
+            '''.stripIndent()
+
         String contents = '''\
             class Inner { }
             def val = new Inner()
@@ -149,7 +394,12 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testCommandChain3() {
-        createDsls(COMMAND_CHAIN_NO_ARGS)
+        createDsld '''\
+            contribute(currentType('Inner')) {
+              method name:'flart', noParens:true, type:'Inner'
+            }
+            '''.stripIndent()
+
         String contents = '''\
             class Inner { }
             def val = new Inner()
@@ -161,7 +411,12 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testCommandChain4() {
-        createDsls(COMMAND_CHAIN_ONE_ARG)
+        createDsld '''\
+            contribute(currentType('Inner')) {
+              method name:'flart', noParens:true, type:'Inner', params:[a:Integer]
+            }
+            '''.stripIndent()
+
         String contents = '''\
             class Inner { }
             def val = new Inner()
@@ -174,7 +429,12 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testCommandChain5() {
-        createDsls(COMMAND_CHAIN_TWO_ARGS)
+        createDsld '''\
+            contribute(currentType('Inner')) {
+              method name:'flart', noParens:true, type:'Inner', params:[a:Integer, b:String]
+            }
+            '''.stripIndent()
+
         String contents = '''\
             class Inner { }
             def val = new Inner()
@@ -185,35 +445,238 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
-    void testDelegatesToNoParens1() {
-        createDsls(NO_PARENS_FOR_DELEGATE)
-        String contents = '''\
-            class Other {
-              def blart(a, b, c) { }
-              def flart(a) { }
+    void testConfigScript1() {
+        createDsld '''\
+            contribute(enclosingCall(name('withConfig') & hasArgument('configuration')) & inClosure() & isThisType()) {
+              method(name:'imports', type:void, params:[block:Closure])
             }
-            class Inner { }
-            def val = new Inner()
-            val.bl
             '''.stripIndent()
-        ICompletionProposal proposal = checkUniqueProposal(contents, 'val.bl', 'blart', 'blart val, val, val')
-        applyProposalAndCheck(proposal, contents.replace('val.bl', 'val.blart val, val, val'))
+
+        String contents = '''\
+            withConfig(configuration) {
+              // here
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.indexOf('// here'))
+        proposalExists(proposals, 'imports(Closure block)', 1)
     }
 
     @Test
-    void testDelegatesToNoParens2() {
-        createDsls(NO_PARENS_FOR_DELEGATE)
-        String contents = '''\
-            class Other {
-              def blart(a, b, c) { }
-              def flart(a) { }
+    void testConfigScript1a() {
+        createDsld '''\
+            contribute(enclosingCall(name('withConfig') & hasArgument('configuration')) & inClosure() & isThisType()) {
+              method(name:'imports', type:void, params:[block:Closure])
             }
-            class Inner { }
-            def val = new Inner()
-            val.fl
             '''.stripIndent()
-        ICompletionProposal proposal = checkUniqueProposal(contents, 'val.fl', 'flart', 'flart val')
-        applyProposalAndCheck(proposal, contents.replace('val.fl', 'val.flart val'))
+
+        String contents = '''\
+            withConfig(configuration) {
+              x.i
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'x.i'))
+        proposalExists(proposals, 'imports(Closure block)', 0)
+    }
+
+    @Test
+    void testConfigScript2() {
+        createDsld '''\
+            |def configBlock = { -> enclosingCall(name('withConfig') & hasArgument('configuration')) & inClosure() & isThisType() }
+            |
+            |contribute(configBlock()) {
+            |  method(name:'imports', type:void, params:[block:Closure])
+            |}
+            |
+            |contribute(configBlock() & enclosingCallName('imports')) {
+            |  setDelegateType('org.codehaus.groovy.control.customizers.builder.ImportCustomizerFactory.ImportHelper')
+            |}
+            |'''.stripMargin()
+
+        String contents = '''\
+            withConfig(configuration) {
+              imports {
+                star 'groovy.transform'
+                norm
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'norm'))
+        proposalExists(proposals, 'normal', 2)
+    }
+
+    @Test
+    void testConfigScript3() {
+        createDsld '''\
+            |def configBlock = { -> enclosingCall(name('withConfig') & hasArgument('configuration')) & inClosure() & isThisType() }
+            |
+            |contribute(configBlock()) {
+            |  method(name:'imports', type:void, params:[block:Closure])
+            |}
+            |
+            |contribute(configBlock() & enclosingCallName('imports')) {
+            |  setDelegateType('org.codehaus.groovy.control.customizers.builder.ImportCustomizerFactory.ImportHelper')
+            |}
+            |'''.stripMargin()
+
+        String contents = '''\
+            withConfig(configuration) {
+              source(basenameValidator: { !!(it =~ /.src.test./) }) {
+                imports {
+                  normal 'org.junit.Test'
+                  st
+                }
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'st'))
+        proposalExists(proposals, 'staticMember', 2)
+        proposalExists(proposals, 'staticStar', 2)
+        proposalExists(proposals, 'star', 1)
+    }
+
+    //--------------------------------------------------------------------------
+    // Built-in contributions:
+
+    @Test
+    void testNamedVariantTransform1() {
+        assumeTrue(isAtLeastGroovy(25)) // @NamedVariant added in Groovy 2.5
+
+        String contents = '''\
+            |import groovy.transform.*
+            |
+            |class Pogo {
+            |  String name, type
+            |}
+            |
+            |@NamedVariant
+            |def meth(Pogo pogo) { }
+            |
+            |meth()
+            |'''.stripMargin()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'meth', 2)
+        proposalExists(proposals, 'name : __', 1)
+        proposalExists(proposals, 'type : __', 1)
+    }
+
+    @Test
+    void testNamedVariantTransform1a() {
+        assumeTrue(isAtLeastGroovy(25)) // @NamedVariant added in Groovy 2.5
+
+        String contents = '''\
+            |import groovy.transform.*
+            |
+            |class Pogo {
+            |  String name, type
+            |}
+            |
+            |@NamedVariant
+            |def meth(Pogo pogo, int what) { }
+            |
+            |meth()
+            |'''.stripMargin()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'meth', 2)
+        proposalExists(proposals, 'name : __', 1)
+        proposalExists(proposals, 'type : __', 1)
+        proposalExists(proposals, 'what : __', 0)
+    }
+
+    @Test
+    void testNamedVariantTransform2() {
+        assumeTrue(isAtLeastGroovy(25)) // @NamedVariant added in Groovy 2.5
+
+        String contents = '''\
+            |import groovy.transform.*
+            |
+            |class Pogo {
+            |  String name, type
+            |}
+            |
+            |@NamedVariant
+            |def meth(@NamedDelegate Pogo pogo) { }
+            |
+            |meth()
+            |'''.stripMargin()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'meth', 2)
+        proposalExists(proposals, 'name : __', 1)
+        proposalExists(proposals, 'type : __', 1)
+    }
+
+    @Test
+    void testNamedVariantTransform3() {
+        assumeTrue(isAtLeastGroovy(25)) // @NamedVariant added in Groovy 2.5
+
+        String contents = '''\
+            |import groovy.transform.*
+            |
+            |class Pogo {
+            |  boolean isSome() {}
+            |  Object getThing() {}
+            |  void setName(String value) {}
+            |  void setType(String value) {}
+            |}
+            |
+            |@NamedVariant
+            |def meth(@NamedDelegate Pogo pogo) { }
+            |
+            |meth()
+            |'''.stripMargin()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'meth', 2)
+        proposalExists(proposals, 'name : __', 1)
+        proposalExists(proposals, 'type : __', 1)
+        proposalExists(proposals, 'some : __', 0)
+        proposalExists(proposals, 'thing : __', 0)
+    }
+
+    @Test
+    void testNamedVariantTransform4() {
+        assumeTrue(isAtLeastGroovy(25)) // @NamedVariant added in Groovy 2.5
+
+        String contents = '''\
+            |import groovy.transform.*
+            |
+            |@NamedVariant
+            |def meth(@NamedParam('dob') Date date) { }
+            |
+            |meth()
+            |'''.stripMargin()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'meth', 2)
+        proposalExists(proposals, 'dob : __', 1)
+        proposalExists(proposals, 'date : __', 0)
+    }
+
+    @Test
+    void testNamedVariantTransform5() {
+        assumeTrue(isAtLeastGroovy(25)) // @NamedVariant added in Groovy 2.5
+
+        String contents = '''\
+            |import groovy.transform.*
+            |
+            |class Name {
+            |  String first, middle, last
+            |}
+            |
+            |@NamedVariant
+            |def meth(@NamedDelegate Name name, @NamedParam('dob') Date date) { }
+            |
+            |meth()
+            |'''.stripMargin()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'first : __', 1)
+        proposalExists(proposals, 'last : __', 1)
+        proposalExists(proposals, 'name : __', 0)
+        proposalExists(proposals, 'date : __', 0)
+        proposalExists(proposals, 'dob : __', 1)
     }
 
     @Test
@@ -244,7 +707,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
         proposalExists(proposals, 'new', 3) // one for each constructor in ArrayList
 
-        proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'HashM')))
+        proposals = orderByRelevance(createProposalsAtOffset(contents, getLastIndexOf(contents, 'HashM')))
         proposalExists(proposals, 'HashMap', 4) // one for each constructor in HashMap
     }
 
@@ -260,7 +723,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
         proposalExists(proposals, 'new', 0)
 
-        proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'HashM')))
+        proposals = orderByRelevance(createProposalsAtOffset(contents, getLastIndexOf(contents, 'HashM')))
         proposalExists(proposals, 'HashMap', 4) // one for each constructor in HashMap
     }
 
@@ -276,9 +739,54 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
         proposalExists(proposals, 'new', 3) // one for each constructor in ArrayList
 
-        proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'HashM')))
-        //proposalExists(proposals, 'HashMap', 4) // one for each constructor in HashMap
-        // TODO: waiting for https://issues.apache.org/jira/browse/GROOVY-8249
+        proposals = orderByRelevance(createProposalsAtOffset(contents, getLastIndexOf(contents, 'HashM')))
+        proposalExists(proposals, 'HashMap', 4) // one for each constructor in HashMap
+    }
+
+    @Test
+    void testNewifyTransform5() {
+        assumeTrue(isAtLeastGroovy(25)) // @Newify(pattern=...) added in Groovy 2.5
+
+        String contents = '''\
+            @Newify(auto=false, pattern=/(Linked)?Hash.*/) class Foo {
+              List list = ArrayList.n
+              Map map = HashM
+            }
+            '''.stripIndent()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.n'))
+        proposalExists(proposals, 'new', 0)
+
+        proposals = orderByRelevance(createProposalsAtOffset(contents, getLastIndexOf(contents, 'HashM')))
+        proposalExists(proposals, 'HashMap', 4) // one for each constructor in HashMap
+    }
+
+    @Test
+    void testNewifyTransform5a() {
+        assumeTrue(isAtLeastGroovy(25)) // @Newify(pattern=...) added in Groovy 2.5
+
+        String contents = '''\
+            @Newify(auto=false, pattern=/(Linked)?Hash.*/) class Foo {
+              Map map = LinkedH
+            }
+            '''.stripIndent()
+
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'LinkedH')))
+        proposalExists(proposals, 'LinkedHashMap', 5) // one for each constructor in LinkedHashMap
+    }
+
+    @Test
+    void testNewifyTransform5b() {
+        assumeTrue(isAtLeastGroovy(25)) // @Newify(pattern=...) added in Groovy 2.5
+
+        String contents = '''\
+            @Newify(auto=false, pattern=/(Linked)?Hash.*/) class Foo {
+              Map map = LinkedHashMap()
+            }
+            '''.stripIndent()
+
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'LinkedHashMap')))
+        proposalExists(proposals, 'LinkedHashMap', 5) // one for each constructor in LinkedHashMap
     }
 
     @Test

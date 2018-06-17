@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -235,8 +235,7 @@ public final class LocationSupportTests {
         GroovyCompilationUnitDeclaration cud = new GroovyCompilationUnitDeclaration(null, null, -1, null, null, null) {{
             GroovyCompilationUnitDeclaration.UnitPopulator cup = new GroovyCompilationUnitDeclaration.UnitPopulator();
             ReflectionUtils.setPrivateField(cup.getClass(), "unitDeclaration", cup, this);
-            ReflectionUtils.executePrivateMethod(cup.getClass(), "createImportDeclarations",
-                                                    new Class[] {ModuleNode.class}, cup, new Object[] {module});
+            ReflectionUtils.executePrivateMethod(cup.getClass(), "createImportDeclarations", new Class[] {ModuleNode.class}, cup, new Object[] {module});
         }};
 
         assertEquals(module.getImport("List").getStart(), cud.imports[0].declarationSourceStart);

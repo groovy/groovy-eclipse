@@ -56,7 +56,7 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'y', 0)
     }
 
-    @Test // should not find local vars here.. They are calculated by JDT
+    @Test // should not find local vars here -- they are calculated by JDT
     void testLocalVarsInGroovyFile() {
         ICompilationUnit unit = createGroovy()
         ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'y\n'))
@@ -99,6 +99,13 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'xxx', 1)
         proposalExists(proposals, 'xx', 1)
         proposalExists(proposals, 'y', 1)
+    }
+
+    @Test
+    void testLocalVarsInEmptyMethod() {
+        String contents = 'def method(int param) {\n \n}'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '{\n '))
+        proposalExists(proposals, 'param', 1)
     }
 
     @Test // GRECLIPSE-1267

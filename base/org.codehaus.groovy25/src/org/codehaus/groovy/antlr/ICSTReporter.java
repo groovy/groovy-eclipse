@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,18 +19,16 @@ import java.util.List;
 
 /**
  * Reports on CST builds.
- *
- * @author empovazan
  */
 public interface ICSTReporter {
     /**
      * Report that an AST has been generated.
      */
-    public void generatedCST(String fileName, GroovySourceAST ast);
+    void generatedCST(String fileName, GroovySourceAST ast);
 
     /**
-     * Report parse errors while attempting to generate a CST. Not that the CST
+     * Report parse errors while attempting to generate a CST. Note that the CST
      * may in fact be generated if the parser is error recovering.
      */
-    public void reportErrors(String fileName, List errors);
+    void reportErrors(String fileName, List errors);
 }

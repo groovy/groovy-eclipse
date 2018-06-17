@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -71,7 +71,7 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
     }
 
     protected final char[] extractArray(TypeReferencePattern pattern, String fieldName) {
-        char[] arr = (char[]) ReflectionUtils.getPrivateField(TypeReferencePattern.class, fieldName, pattern);
+        char[] arr = ReflectionUtils.getPrivateField(TypeReferencePattern.class, fieldName, pattern);
         if (!isCaseSensitive) {
             arr = CharOperation.toLowerCase(arr);
         }

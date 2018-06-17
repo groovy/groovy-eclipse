@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,26 +82,6 @@ public class SurroundWithTemplateMenuAction implements IWorkbenchWindowPulldownD
 
     private static final String CONFIG_GROUP = "configGroup"; //$NON-NLS-1$
 
-    private static class ConfigureTemplatesAction extends Action {
-
-        public ConfigureTemplatesAction() {
-            super(ActionMessages.SurroundWithTemplateMenuAction_ConfigureTemplatesActionName);
-        }
-
-        @Override
-        public void run() {
-            PreferenceDialog preferenceDialog =
-                PreferencesUtil.createPreferenceDialogOn(getShell(), GROOVY_TEMPLATE_PREFERENCE_PAGE_ID,
-                    new String[] { GROOVY_TEMPLATE_PREFERENCE_PAGE_ID, CODE_TEMPLATE_PREFERENCE_PAGE_ID }, null);
-            preferenceDialog.getTreeViewer().expandAll();
-            preferenceDialog.open();
-        }
-
-        private Shell getShell() {
-            return JavaPlugin.getActiveWorkbenchWindow().getShell();
-        }
-    }
-
     private static Action NONE_APPLICABLE_ACTION =
         new Action(ActionMessages.SurroundWithTemplateMenuAction_NoneApplicable) {
             @Override
@@ -170,22 +150,6 @@ public class SurroundWithTemplateMenuAction implements IWorkbenchWindowPulldownD
         return fMenu;
     }
 
-    public static void fillMenu(IMenuManager menu, CompilationUnitEditor editor) {
-        IAction[] actions = getTemplateActions(editor);
-
-        if ((actions == null || actions.length == 0)) {
-            menu.add(NONE_APPLICABLE_ACTION);
-        } else {
-            menu.add(new Separator(TEMPLATE_GROUP));
-            for (int i = 0; actions != null && i < actions.length; i++)
-                menu.add(actions[i]);
-
-        }
-
-        menu.add(new Separator(CONFIG_GROUP));
-        menu.add(new ConfigureTemplatesAction());
-    }
-
     @Override
     public void dispose() {
         if (fPartService != null) {
@@ -232,6 +196,22 @@ public class SurroundWithTemplateMenuAction implements IWorkbenchWindowPulldownD
         // Default do nothing
     }
 
+    public static void fillMenu(IMenuManager menu, CompilationUnitEditor editor) {
+        IAction[] actions = getTemplateActions(editor);
+
+        if ((actions == null || actions.length == 0)) {
+            menu.add(NONE_APPLICABLE_ACTION);
+        } else {
+            menu.add(new Separator(TEMPLATE_GROUP));
+            for (int i = 0; actions != null && i < actions.length; i += 1) {
+                menu.add(actions[i]);
+            }
+        }
+
+        menu.add(new Separator(CONFIG_GROUP));
+        menu.add(new ConfigureTemplatesAction());
+    }
+
     /**
      * The menu to show in the workbench menu
      * @param menu the menu to fill entries into it
@@ -270,7 +250,6 @@ public class SurroundWithTemplateMenuAction implements IWorkbenchWindowPulldownD
 
         ActionContributionItem configAction = new ActionContributionItem(new ConfigureTemplatesAction());
         configAction.fill(menu, -1);
-
     }
 
     protected void initMenu() {
@@ -309,8 +288,8 @@ public class SurroundWithTemplateMenuAction implements IWorkbenchWindowPulldownD
 
         List<IJavaCompletionProposal> proposals =
             quickTemplateProcessor.getTemplateAssists(context, (GroovyCompilationUnit) cu);
-        if (proposals == null || proposals.size() == 0)
-            return null;
+
+        if (proposals == null || proposals.isEmpty()) return null;
 
         return getActionsFromProposals(proposals, context.getSelectionOffset(), editor.getViewer());
     }
@@ -343,8 +322,7 @@ public class SurroundWithTemplateMenuAction implements IWorkbenchWindowPulldownD
         }
     }
 
-    private static IAction[] getActionsFromProposals(List<IJavaCompletionProposal> proposals, final int offset,
-        final ITextViewer viewer) {
+    private static IAction[] getActionsFromProposals(List<IJavaCompletionProposal> proposals, final int offset, final ITextViewer viewer) {
         List<Action> result = new ArrayList<>();
 
         int j = 1;
@@ -370,8 +348,8 @@ public class SurroundWithTemplateMenuAction implements IWorkbenchWindowPulldownD
                 j++;
             }
         }
-        if (result.size() == 0)
-            return null;
+
+        if (result.isEmpty()) return null;
 
         return result.toArray(new IAction[result.size()]);
     }
@@ -423,6 +401,25 @@ public class SurroundWithTemplateMenuAction implements IWorkbenchWindowPulldownD
 
             if (registry != null)
                 registry.unregister(helper);
+        }
+    }
+
+    private static class ConfigureTemplatesAction extends Action {
+
+        ConfigureTemplatesAction() {
+            super(ActionMessages.SurroundWithTemplateMenuAction_ConfigureTemplatesActionName);
+        }
+
+        @Override
+        public void run() {
+            PreferenceDialog preferenceDialog = PreferencesUtil.createPreferenceDialogOn(
+                getShell(), GROOVY_TEMPLATE_PREFERENCE_PAGE_ID, new String[] {GROOVY_TEMPLATE_PREFERENCE_PAGE_ID, CODE_TEMPLATE_PREFERENCE_PAGE_ID}, null);
+            preferenceDialog.getTreeViewer().expandAll();
+            preferenceDialog.open();
+        }
+
+        private Shell getShell() {
+            return JavaPlugin.getActiveWorkbenchWindow().getShell();
         }
     }
 }

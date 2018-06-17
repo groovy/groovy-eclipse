@@ -372,6 +372,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
             // GRECLIPSE add
             fixModuleNodeLocations();
+            output.putNodeMetaData(LocationSupport.class, locations);
             // GRECLIPSE end
         }
         catch (ASTRuntimeException e) {
@@ -515,9 +516,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     // import is like "import static foo.Bar.*"
                     // packageName is actually a className in this case
                     ClassNode type = ClassHelper.make(packageName);
-                    // GRECLIPSE edit
-                    //configureAST(type, importNode);
-                    //addStaticStarImport(type, packageName, annotations);
+                    /* GRECLIPSE edit
+                    configureAST(type, importNode);
+                    addStaticStarImport(type, packageName, annotations);
+                    */
                     configureAST(type, packageNode);
                     addStaticStarImport(type, packageName, annotations);
                     ASTNode imp = output.getStaticStarImports().get(packageName);
@@ -550,9 +552,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     // import is like "import static foo.Bar.method"
                     // packageName is really class name in this case
                     ClassNode type = ClassHelper.make(packageName);
-                    // GRECLIPSE edit
-                    //configureAST(type, importNode);
-                    //addStaticImport(type, name, alias, annotations);
+                    /* GRECLIPSE edit
+                    configureAST(type, importNode);
+                    addStaticImport(type, name, alias, annotations);
+                    */
                     configureAST(type, packageNode);
                     addStaticImport(type, name, alias, annotations);
                     imp = output.getStaticImports().get(alias == null ? name : alias);
@@ -562,9 +565,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                         configureAST(typeNode, packageNode);
                     }
                     configureAST(imp, importNode);
-                    ConstantExpression nameExpr = new ConstantExpression(name);
-                    configureAST(nameExpr, nameNode);
-                    imp.setFieldNameExpr(nameExpr);
+                    imp.setFieldNameExpr(literalExpression(nameNode, name));
                     // GRECLIPSE end
                 } else {
                     // import is like "import foo.Bar"
@@ -586,11 +587,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     // GRECLIPSE end
                 }
                 // GRECLIPSE add
-                // configure alias ast
                 if (alias != null) {
-                    ConstantExpression aliasExpr = new ConstantExpression(alias);
-                    configureAST(aliasExpr, aliasNode);
-                    imp.setAliasExpr(aliasExpr);
+                    imp.setAliasExpr(literalExpression(aliasNode, alias));
                 }
                 // GRECLIPSE end
             }
@@ -1019,13 +1017,14 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 }
             }
         }
-        // GRECLIPSE edit
-        //FieldNode enumField = EnumHelper.addEnumConstant(classNode, identifier, init);
-        FieldNode enumField = EnumHelper.addEnumConstant(classNode, classNode, identifier, init, savedLine, savedColumn);
+        FieldNode enumField = EnumHelper.addEnumConstant(classNode, identifier, init);
+        enumField.addAnnotations(annotations);
+        // GRECLIPSE add
+        enumField.setLineNumber(savedLine);
+        enumField.setColumnNumber(savedColumn);
         enumField.setNameStart(locations.findOffset(savedLine, savedColumn));
         enumField.setNameEnd(enumField.getNameStart() + identifier.length() - 1);
         // GRECLIPSE end
-        enumField.addAnnotations(annotations);
         configureAST(enumField, node);
         enumConstantBeingDef = false;
     }
@@ -2011,7 +2010,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
         // let's do the catch nodes
         List<CatchStatement> catches = new ArrayList<CatchStatement>();
-        for (; node != null && isType(LITERAL_catch, node); node = node.getNextSibling()) {
+        for (; isType(LITERAL_catch, node); node = node.getNextSibling()) {
             final List<CatchStatement> catchStatements = catchStatement(node);
             catches.addAll(catchStatements);
         }
@@ -2548,7 +2547,8 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         return variableExpression;
     }
 
-    protected Expression literalExpression(AST node, Object value) {
+    // GRECLIPSE Expression->ConstantExpression
+    protected ConstantExpression literalExpression(AST node, Object value) {
         ConstantExpression constantExpression = new ConstantExpression(value, value instanceof Boolean);
         configureAST(constantExpression, node);
         return constantExpression;
@@ -3028,7 +3028,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     private static void setTypeArgumentsOnMethodCallExpression(MethodCallExpression expression,
                                                         List<GenericsType> typeArgumentList) {
         if (typeArgumentList != null && !typeArgumentList.isEmpty()) {
-            expression.setGenericsTypes(typeArgumentList.toArray(new GenericsType[typeArgumentList.size()]));
+            expression.setGenericsTypes(typeArgumentList.toArray(GenericsType.EMPTY_ARRAY));
         }
     }
 
@@ -3064,6 +3064,11 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             List size = arraySizeExpression(expressionNode);
             ArrayExpression arrayExpression = new ArrayExpression(type, null, size);
             configureAST(arrayExpression, constructorCallNode);
+            // GRECLIPSE add
+            Expression name = literalExpression(node, null);
+            arrayExpression.setNameStart(name.getStart());
+            arrayExpression.setNameEnd(name.getEnd() - 1);
+            // GRECLIPSE end
             return arrayExpression;
         }
         Expression arguments = arguments(elist);
@@ -3074,15 +3079,17 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             ret.setUsingAnonymousInnerClass(true);
             innerClass.setUnresolvedSuperClass(type);
             // GRECLIPSE add
-            innerClass.setNameStart(type.getStart());
-            innerClass.setNameEnd(type.getEnd() - 1);
+            Expression name = literalExpression(node, null);
+            innerClass.setNameStart(name.getStart());
+            innerClass.setNameEnd(name.getEnd() - 1);
             // GRECLIPSE end
         }
 
         configureAST(ret, constructorCallNode);
         // GRECLIPSE add
-        ret.setNameStart(type.getStart());
-        ret.setNameEnd(type.getEnd() - 1);
+        Expression name = literalExpression(node, null);
+        ret.setNameStart(name.getStart());
+        ret.setNameEnd(name.getEnd() - 1);
         // GRECLIPSE end
         return ret;
     }
@@ -3463,7 +3470,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     private ClassNode addTypeArguments(ClassNode basicType, AST node) {
         List<GenericsType> typeArgumentList = getTypeArgumentsList(node);
         // a 0-length type argument list means we face the diamond operator
-        basicType.setGenericsTypes(typeArgumentList.toArray(new GenericsType[typeArgumentList.size()]));
+        basicType.setGenericsTypes(typeArgumentList.toArray(GenericsType.EMPTY_ARRAY));
         return basicType;
     }
 
@@ -3496,7 +3503,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             bounds.add(bound);
         }
         if (bounds.isEmpty()) return null;
-        return (ClassNode[]) bounds.toArray(new ClassNode[bounds.size()]);
+        return (ClassNode[]) bounds.toArray(ClassNode.EMPTY_ARRAY);
     }
 
     protected GenericsType[] makeGenericsType(AST rootNode) {
@@ -3514,7 +3521,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             ret.add(gt);
             typeParameter = typeParameter.getNextSibling();
         }
-        return (GenericsType[]) ret.toArray(new GenericsType[ret.size()]);
+        return (GenericsType[]) ret.toArray(GenericsType.EMPTY_ARRAY);
     }
 
     protected ClassNode makeType(AST typeNode) {
@@ -3568,6 +3575,17 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         }
         return seenTypeArgs;
     }
+
+    /**
+     * Performs a name resolution to see if the given name is a type from imports,
+     * aliases or newly created classes
+     */
+    /*protected String resolveTypeName(String name, boolean safe) {
+        if (name == null) {
+            return null;
+        }
+        return resolveNewClassOrName(name, safe);
+    }*/
 
     /**
      * Extracts an identifier from the Antlr AST and then performs a name resolution
@@ -3775,7 +3793,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         System.out.println("Type: " + getTokenName(node) + " text: " + node.getText());
     }
 
-  // GRECLIPSE add
+    // GRECLIPSE add
     private void fixModuleNodeLocations() {
         // only occurs if in a script
 
@@ -3902,5 +3920,5 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
         node.setEnd(node.getEnd() - 1); // Eclipse wants this for error reporting
     }
-  // GRECLIPSE end
+    // GRECLIPSE end
 }

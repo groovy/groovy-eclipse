@@ -267,7 +267,7 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 			ReferenceBinding currentType = (ReferenceBinding) this.resolvedType;
 			if (qualifyingType == null) {
 				qualifyingType = currentType.enclosingType(); // if member type
-				if (qualifyingType != null && !currentType.isStatic()) {
+				if (qualifyingType != null && currentType.hasEnclosingInstanceContext()) {
 					qualifyingType = scope.environment().convertToParameterizedType(qualifyingType);
 				}
 			} else {
@@ -336,7 +336,7 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 				}
 				// check parameterizing (non-)static member type of raw type
 				if (typeIsConsistent) {
-					if (currentType.isStatic()) {
+					if (!currentType.hasEnclosingInstanceContext()) {
 						if (qualifyingType != null && qualifyingType.isRawType())
 							this.typesPerToken[i-1] = qualifyingType = qualifyingType.actualType(); // revert rawification of enclosing, since its generics are inaccessible
 					} else {
@@ -365,7 +365,7 @@ public class ParameterizedQualifiedTypeReference extends ArrayQualifiedTypeRefer
 					if (((ClassScope) scope).detectHierarchyCycle(currentOriginal, this))
 						return null;
 				if (currentOriginal.isGenericType()) {
-	   			    if (typeIsConsistent && qualifyingType != null && qualifyingType.isParameterizedType() && !currentOriginal.isStatic()) {
+	   			    if (typeIsConsistent && qualifyingType != null && qualifyingType.isParameterizedType() && currentOriginal.hasEnclosingInstanceContext()) {
 						scope.problemReporter().parameterizedMemberTypeMissingArguments(this, scope.environment().createParameterizedType(currentOriginal, null, qualifyingType), i);
 						typeIsConsistent = false;
 					}

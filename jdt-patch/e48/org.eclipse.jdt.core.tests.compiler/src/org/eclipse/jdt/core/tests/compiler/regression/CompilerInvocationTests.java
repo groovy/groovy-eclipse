@@ -43,6 +43,7 @@
  *								bug 384567 - [1.5][compiler] Compiler accepts illegal modifiers on package declaration
  *								bug 412153 - [1.8][compiler] Check validity of annotations which may be repeatable
  *								bug 419209 - [1.8] Repeating container annotations should be rejected in the presence of annotation it contains
+ *								bug 527554 - [18.3] Compiler support for JEP 286 Local-Variable Type
  *******************************************************************************/
 package org.eclipse.jdt.core.tests.compiler.regression;
 
@@ -1130,26 +1131,40 @@ public void test011_problem_categories() {
 		expectedProblemAttributes.put("UsingDeprecatedField", new ProblemAttributes(CategorizedProblem.CAT_DEPRECATION));
 		expectedProblemAttributes.put("UsingDeprecatedMethod", new ProblemAttributes(CategorizedProblem.CAT_DEPRECATION));
 		expectedProblemAttributes.put("UsingDeprecatedModule", new ProblemAttributes(CategorizedProblem.CAT_DEPRECATION));
-		expectedProblemAttributes.put("UsingDeprecatedPackage", new ProblemAttributes(CategorizedProblem.CAT_DEPRECATION));
+		expectedProblemAttributes.put("UsingDeprecatedPackage", new ProblemAttributes(CategorizedProblem.CAT_MODULE));
 		expectedProblemAttributes.put("UsingDeprecatedType", new ProblemAttributes(CategorizedProblem.CAT_DEPRECATION));
 		expectedProblemAttributes.put("UsingDeprecatedSinceVersionConstructor", new ProblemAttributes(CategorizedProblem.CAT_DEPRECATION));
 		expectedProblemAttributes.put("UsingDeprecatedSinceVersionField", new ProblemAttributes(CategorizedProblem.CAT_DEPRECATION));
 		expectedProblemAttributes.put("UsingDeprecatedSinceVersionMethod", new ProblemAttributes(CategorizedProblem.CAT_DEPRECATION));
 		expectedProblemAttributes.put("UsingDeprecatedSinceVersionModule", new ProblemAttributes(CategorizedProblem.CAT_DEPRECATION));
-		expectedProblemAttributes.put("UsingDeprecatedSinceVersionPackage", new ProblemAttributes(CategorizedProblem.CAT_DEPRECATION));
+		expectedProblemAttributes.put("UsingDeprecatedSinceVersionPackage", new ProblemAttributes(CategorizedProblem.CAT_MODULE));
 		expectedProblemAttributes.put("UsingDeprecatedSinceVersionType", new ProblemAttributes(CategorizedProblem.CAT_DEPRECATION));
 		expectedProblemAttributes.put("UsingTerminallyDeprecatedConstructor", new ProblemAttributes(CategorizedProblem.CAT_DEPRECATION));
 		expectedProblemAttributes.put("UsingTerminallyDeprecatedField", new ProblemAttributes(CategorizedProblem.CAT_DEPRECATION));
 		expectedProblemAttributes.put("UsingTerminallyDeprecatedMethod", new ProblemAttributes(CategorizedProblem.CAT_DEPRECATION));
 		expectedProblemAttributes.put("UsingTerminallyDeprecatedModule", new ProblemAttributes(CategorizedProblem.CAT_DEPRECATION));
-		expectedProblemAttributes.put("UsingTerminallyDeprecatedPackage", new ProblemAttributes(CategorizedProblem.CAT_DEPRECATION));
+		expectedProblemAttributes.put("UsingTerminallyDeprecatedPackage", new ProblemAttributes(CategorizedProblem.CAT_MODULE));
 		expectedProblemAttributes.put("UsingTerminallyDeprecatedType", new ProblemAttributes(CategorizedProblem.CAT_DEPRECATION));
 		expectedProblemAttributes.put("UsingTerminallyDeprecatedSinceVersionConstructor", new ProblemAttributes(CategorizedProblem.CAT_DEPRECATION));
 		expectedProblemAttributes.put("UsingTerminallyDeprecatedSinceVersionField", new ProblemAttributes(CategorizedProblem.CAT_DEPRECATION));
 		expectedProblemAttributes.put("UsingTerminallyDeprecatedSinceVersionMethod", new ProblemAttributes(CategorizedProblem.CAT_DEPRECATION));
 		expectedProblemAttributes.put("UsingTerminallyDeprecatedSinceVersionModule", new ProblemAttributes(CategorizedProblem.CAT_DEPRECATION));
-		expectedProblemAttributes.put("UsingTerminallyDeprecatedSinceVersionPackage", new ProblemAttributes(CategorizedProblem.CAT_DEPRECATION));
+		expectedProblemAttributes.put("UsingTerminallyDeprecatedSinceVersionPackage", new ProblemAttributes(CategorizedProblem.CAT_MODULE));
 		expectedProblemAttributes.put("UsingTerminallyDeprecatedSinceVersionType", new ProblemAttributes(CategorizedProblem.CAT_DEPRECATION));
+		expectedProblemAttributes.put("UsingTerminallyDeprecatedSinceVersionType", new ProblemAttributes(CategorizedProblem.CAT_DEPRECATION));
+		expectedProblemAttributes.put("VarIsNotAllowedHere", new ProblemAttributes(CategorizedProblem.CAT_SYNTAX));
+		expectedProblemAttributes.put("VarIsReserved", new ProblemAttributes(CategorizedProblem.CAT_SYNTAX));
+		expectedProblemAttributes.put("VarIsReservedInFuture", new ProblemAttributes(CategorizedProblem.CAT_SYNTAX));
+		expectedProblemAttributes.put("VarLocalCannotBeArray", new ProblemAttributes(CategorizedProblem.CAT_SYNTAX));
+		expectedProblemAttributes.put("VarLocalCannotBeArrayInitalizers", new ProblemAttributes(CategorizedProblem.CAT_TYPE));
+		expectedProblemAttributes.put("VarLocalCannotBeLambda", new ProblemAttributes(CategorizedProblem.CAT_TYPE));
+		expectedProblemAttributes.put("VarLocalCannotBeMethodReference", new ProblemAttributes(CategorizedProblem.CAT_TYPE));
+		expectedProblemAttributes.put("VarLocalInitializedToNull", new ProblemAttributes(CategorizedProblem.CAT_TYPE));
+		expectedProblemAttributes.put("VarLocalInitializedToVoid", new ProblemAttributes(CategorizedProblem.CAT_TYPE));
+		expectedProblemAttributes.put("VarLocalMultipleDeclarators", new ProblemAttributes(CategorizedProblem.CAT_SYNTAX));
+		expectedProblemAttributes.put("VarLocalReferencesItself", new ProblemAttributes(CategorizedProblem.CAT_SYNTAX));
+		expectedProblemAttributes.put("VarLocalCannotBeArray", new ProblemAttributes(CategorizedProblem.CAT_SYNTAX));
+		expectedProblemAttributes.put("VarLocalWithoutInitizalier", new ProblemAttributes(CategorizedProblem.CAT_SYNTAX));
 		expectedProblemAttributes.put("VarargsElementTypeNotVisible", new ProblemAttributes(CategorizedProblem.CAT_MEMBER));
 		expectedProblemAttributes.put("VarargsElementTypeNotVisibleForConstructor", new ProblemAttributes(CategorizedProblem.CAT_MEMBER));
 		expectedProblemAttributes.put("VarargsConflict", new ProblemAttributes(CategorizedProblem.CAT_MEMBER));
@@ -2034,25 +2049,25 @@ public void test012_compiler_problems_tuning() {
 		expectedProblemAttributes.put("UsingDeprecatedField", new ProblemAttributes(JavaCore.COMPILER_PB_DEPRECATION));
 		expectedProblemAttributes.put("UsingDeprecatedMethod", new ProblemAttributes(JavaCore.COMPILER_PB_DEPRECATION));
 		expectedProblemAttributes.put("UsingDeprecatedModule", new ProblemAttributes(JavaCore.COMPILER_PB_DEPRECATION));
-		expectedProblemAttributes.put("UsingDeprecatedPackage", new ProblemAttributes(JavaCore.COMPILER_PB_DEPRECATION));
+		expectedProblemAttributes.put("UsingDeprecatedPackage", SKIP);
 		expectedProblemAttributes.put("UsingDeprecatedType", new ProblemAttributes(JavaCore.COMPILER_PB_DEPRECATION));
 		expectedProblemAttributes.put("UsingDeprecatedSinceVersionConstructor", new ProblemAttributes(JavaCore.COMPILER_PB_DEPRECATION));
 		expectedProblemAttributes.put("UsingDeprecatedSinceVersionField", new ProblemAttributes(JavaCore.COMPILER_PB_DEPRECATION));
 		expectedProblemAttributes.put("UsingDeprecatedSinceVersionMethod", new ProblemAttributes(JavaCore.COMPILER_PB_DEPRECATION));
 		expectedProblemAttributes.put("UsingDeprecatedSinceVersionModule", new ProblemAttributes(JavaCore.COMPILER_PB_DEPRECATION));
-		expectedProblemAttributes.put("UsingDeprecatedSinceVersionPackage", new ProblemAttributes(JavaCore.COMPILER_PB_DEPRECATION));
+		expectedProblemAttributes.put("UsingDeprecatedSinceVersionPackage", SKIP);
 		expectedProblemAttributes.put("UsingDeprecatedSinceVersionType", new ProblemAttributes(JavaCore.COMPILER_PB_DEPRECATION));
 		expectedProblemAttributes.put("UsingTerminallyDeprecatedConstructor", new ProblemAttributes(JavaCore.COMPILER_PB_TERMINAL_DEPRECATION));
 		expectedProblemAttributes.put("UsingTerminallyDeprecatedField", new ProblemAttributes(JavaCore.COMPILER_PB_TERMINAL_DEPRECATION));
 		expectedProblemAttributes.put("UsingTerminallyDeprecatedMethod", new ProblemAttributes(JavaCore.COMPILER_PB_TERMINAL_DEPRECATION));
 		expectedProblemAttributes.put("UsingTerminallyDeprecatedModule", new ProblemAttributes(JavaCore.COMPILER_PB_TERMINAL_DEPRECATION));
-		expectedProblemAttributes.put("UsingTerminallyDeprecatedPackage", new ProblemAttributes(JavaCore.COMPILER_PB_TERMINAL_DEPRECATION));
+		expectedProblemAttributes.put("UsingTerminallyDeprecatedPackage", SKIP);
 		expectedProblemAttributes.put("UsingTerminallyDeprecatedType", new ProblemAttributes(JavaCore.COMPILER_PB_TERMINAL_DEPRECATION));
 		expectedProblemAttributes.put("UsingTerminallyDeprecatedSinceVersionConstructor", new ProblemAttributes(JavaCore.COMPILER_PB_TERMINAL_DEPRECATION));
 		expectedProblemAttributes.put("UsingTerminallyDeprecatedSinceVersionField", new ProblemAttributes(JavaCore.COMPILER_PB_TERMINAL_DEPRECATION));
 		expectedProblemAttributes.put("UsingTerminallyDeprecatedSinceVersionMethod", new ProblemAttributes(JavaCore.COMPILER_PB_TERMINAL_DEPRECATION));
 		expectedProblemAttributes.put("UsingTerminallyDeprecatedSinceVersionModule", new ProblemAttributes(JavaCore.COMPILER_PB_TERMINAL_DEPRECATION));
-		expectedProblemAttributes.put("UsingTerminallyDeprecatedSinceVersionPackage", new ProblemAttributes(JavaCore.COMPILER_PB_TERMINAL_DEPRECATION));
+		expectedProblemAttributes.put("UsingTerminallyDeprecatedSinceVersionPackage", SKIP);
 		expectedProblemAttributes.put("UsingTerminallyDeprecatedSinceVersionType", new ProblemAttributes(JavaCore.COMPILER_PB_TERMINAL_DEPRECATION));
 		expectedProblemAttributes.put("VarargsConflict", SKIP);
 		expectedProblemAttributes.put("VarargsElementTypeNotVisible", SKIP);
@@ -2070,6 +2085,19 @@ public void test012_compiler_problems_tuning() {
 		expectedProblemAttributes.put("IllegalArrayOfUnionType", SKIP);
 		expectedProblemAttributes.put("IllegalArrayTypeInIntersectionCast", SKIP);
 		expectedProblemAttributes.put("ProblemNotAnalysed", SKIP);
+		expectedProblemAttributes.put("VarIsNotAllowedHere", SKIP);
+		expectedProblemAttributes.put("VarIsReserved", SKIP);
+		expectedProblemAttributes.put("VarIsReservedInFuture", SKIP);
+		expectedProblemAttributes.put("VarLocalCannotBeArray", SKIP);
+		expectedProblemAttributes.put("VarLocalCannotBeArrayInitalizers", SKIP);
+		expectedProblemAttributes.put("VarLocalCannotBeLambda", SKIP);
+		expectedProblemAttributes.put("VarLocalCannotBeMethodReference", SKIP);
+		expectedProblemAttributes.put("VarLocalInitializedToNull", SKIP);
+		expectedProblemAttributes.put("VarLocalInitializedToVoid", SKIP);
+		expectedProblemAttributes.put("VarLocalMultipleDeclarators", SKIP);
+		expectedProblemAttributes.put("VarLocalReferencesItself", SKIP);
+		expectedProblemAttributes.put("VarLocalTooManyBrackets", SKIP);
+		expectedProblemAttributes.put("VarLocalWithoutInitizalier", SKIP);
 		Map constantNamesIndex = new HashMap();
 		Field[] fields = JavaCore.class.getFields();
 		for (int i = 0, length = fields.length; i < length; i++) {

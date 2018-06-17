@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,7 +70,7 @@ public class ConvertToMultiLineStringProposal extends GroovyQuickAssistProposal2
                 if (VariableScope.STRING_CLASS_NODE.equals(result.type)) {
                     BinaryExpression expr = (BinaryExpression) node;
                     LinkedList<Expression> stack = new LinkedList<>();
-                    for (;;) { // accumulate left expressions
+                    while (true) { // accumulate left expressions
                         stack.addFirst(expr.getRightExpression());
                         if (expr.getLeftExpression() instanceof BinaryExpression) {
                             expr = (BinaryExpression) expr.getLeftExpression();

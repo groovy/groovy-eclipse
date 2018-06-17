@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
@@ -28,7 +29,7 @@ import org.eclipse.core.resources.IStorage;
 
 /**
  * Matches when current context is enclosed by a variable assignment that
- * satisfies the given name (string) or constraints (pointcut).
+ * satisfies the given name (string/pattern) or constraints (pointcut).
  */
 public class AssignedVariablePointcut extends AbstractPointcut {
 
@@ -37,16 +38,24 @@ public class AssignedVariablePointcut extends AbstractPointcut {
     }
 
     @Override
-    public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
-        BinaryExpression enclosing = (BinaryExpression) pattern.getCurrentScope().getWormhole().get("enclosingAssignment");
-        if (enclosing != null && enclosing.getLeftExpression() instanceof Variable) {
+    public Collection<?> matches(GroovyDSLDContext context, Object toMatch) {
+        BinaryExpression enclosing = (BinaryExpression) context.getCurrentScope().getWormhole().get("enclosingAssignment");
+        if (enclosing != null && enclosing.getLeftExpression() instanceof Variable &&
+                enclosing.getLeftExpression() != context.getCurrentScope().getCurrentNode()) {
+            Variable variable = (Variable) enclosing.getLeftExpression();
             Object argument = getFirstArgument();
-            if (argument instanceof String) {
-                if (argument.equals(((Variable) enclosing.getLeftExpression()).getName())) {
+            if (argument == null) {
+                return Collections.singleton(enclosing);
+            } else if (argument instanceof String) {
+                if (argument.equals(variable.getName())) {
+                    return Collections.singleton(enclosing);
+                }
+            } else if (argument instanceof Pattern) {
+                if (((Pattern) argument).matcher(variable.getName()).matches()) {
                     return Collections.singleton(enclosing);
                 }
             } else {
-                return matchOnPointcutArgument((IPointcut) argument, pattern, Collections.singleton(enclosing));
+                return matchOnPointcutArgument((IPointcut) argument, context, Collections.singleton(enclosing));
             }
         }
         return null;
@@ -54,7 +63,14 @@ public class AssignedVariablePointcut extends AbstractPointcut {
 
     @Override
     public void verify() throws PointcutVerificationException {
-        String failure = oneStringOrOnePointcutArg();
+        String failure = hasOneOrNoArgs();
+        if (failure == null) {
+            for (Object argument : getArgumentValues()) {
+                if (!(argument instanceof String || argument instanceof Pattern || argument instanceof IPointcut)) {
+                    failure = "This pointcut supports exactly one argument of type String, Pattern or Pointcut.";
+                }
+            }
+        }
         if (failure != null) {
             throw new PointcutVerificationException(failure, this);
         }

@@ -24,7 +24,6 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilationUnit.ProgressListener;
 import org.codehaus.groovy.control.CompilerConfiguration;
-import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.jdt.groovy.control.EclipseSourceUnit;
@@ -37,16 +36,20 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.Compiler;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
+import org.eclipse.jdt.internal.compiler.batch.BatchCompilerRequestor;
+import org.eclipse.jdt.internal.compiler.batch.Main;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
-import org.eclipse.jdt.internal.core.builder.BatchImageBuilder;
+import org.eclipse.jdt.internal.core.builder.AbstractImageBuilder;
 import org.eclipse.jdt.internal.core.builder.BuildNotifier;
+import org.eclipse.jdt.internal.core.builder.SourceFile;
 
 /**
  * The mapping layer between the groovy parser and the JDT. This class communicates
@@ -138,57 +141,56 @@ public class GroovyParser {
         return cu;
     }
 
-    public CompilationUnitDeclaration dietParse(ICompilationUnit sourceUnit, CompilationResult compilationResult) {
-        char[] sourceCode = sourceUnit.getContents();
-        if (sourceCode == null) {
-            sourceCode = CharOperation.NO_CHAR; // pretend empty from thereon
-        }
-
-        ErrorCollector errorCollector = new GroovyErrorCollectorForJDT(compilationUnit.getConfiguration());
-        String filepath = null;
-
-        // This check is necessary because the filename is short (as in the last part, eg. Foo.groovy) for types coming in
-        // from the hierarchy resolver. If there is the same type in two different packages then the compilation process
-        // is going to go wrong because the filename is used as a key in some groovy data structures. This can lead to false
-        // complaints about the same file defining duplicate types.
-        char[] fileName = sourceUnit.getFileName();
-        if (sourceUnit instanceof org.eclipse.jdt.internal.compiler.batch.CompilationUnit) {
-            filepath = String.valueOf(((org.eclipse.jdt.internal.compiler.batch.CompilationUnit) sourceUnit).fileName);
-        } else {
-            filepath = String.valueOf(fileName);
-        }
-
-        IPath path = new Path(filepath);
-        // Try to turn this into a 'real' absolute file system reference (this is because Grails 1.5 expects it).
-        IFile eclipseFile = null;
+    public CompilationUnitDeclaration dietParse(ICompilationUnit iCompilationUnit, CompilationResult compilationResult) {
+        String fileName = String.valueOf(iCompilationUnit.getFileName());
+        IPath filePath = new Path(fileName); IFile eclipseFile = null;
+        // try to turn this into a 'real' absolute file system reference (this is because Grails 1.5 expects it)
         // GRECLIPSE-1269 ensure get plugin is not null to ensure the workspace is open (ie- not in batch mode)
         // Needs 2 segments: a project and file name or eclipse throws assertion failed here
-        if (ResourcesPlugin.getPlugin() != null && path.segmentCount() >= 2) {
-            eclipseFile = ResourcesPlugin.getWorkspace().getRoot().getFile(path);
-            final IPath location = eclipseFile.getLocation();
+        if (filePath.segmentCount() > 1 && ResourcesPlugin.getPlugin() != null) {
+            eclipseFile = ResourcesPlugin.getWorkspace().getRoot().getFile(filePath);
+            IPath location = eclipseFile.getLocation();
             if (location != null) {
-                filepath = location.toFile().getAbsolutePath();
+                fileName = location.toFile().getAbsolutePath();
             }
         }
 
-        SourceUnit groovySourceUnit = new EclipseSourceUnit(eclipseFile, filepath, String.valueOf(sourceCode),
-            compilationUnit.getConfiguration(), compilationUnit.getClassLoader(), errorCollector, this.resolver);
-        groovySourceUnit.isReconcile = compilationUnit.isReconcile;
-        GroovyCompilationUnitDeclaration gcuDeclaration = new GroovyCompilationUnitDeclaration(
-            problemReporter, compilationResult, sourceCode.length, compilationUnit, groovySourceUnit, compilerOptions);
-        // FIXASC get this from the Antlr parser
-        compilationResult.lineSeparatorPositions = GroovyUtils.getSourceLineSeparatorsIn(sourceCode);
-        compilationUnit.addSource(groovySourceUnit);
+        char[] sourceCode = iCompilationUnit.getContents();
+        if (sourceCode == null) {
+            sourceCode = CharOperation.NO_CHAR;
+        }
 
-        // Check if it is worth plugging in a callback listener for parse/generation
+        SourceUnit sourceUnit = new EclipseSourceUnit(eclipseFile, fileName, String.valueOf(sourceCode), compilationUnit.isReconcile,
+            compilationUnit.getConfiguration(), compilationUnit.getClassLoader(), new GroovyErrorCollectorForJDT(compilationUnit.getConfiguration()), resolver);
+
+        compilationUnit.addSource(sourceUnit);
+
         if (requestor instanceof Compiler) {
-            if (((Compiler) requestor).requestor instanceof BatchImageBuilder) {
-                BuildNotifier notifier = ((BatchImageBuilder) ((Compiler) requestor).requestor).notifier;
-                if (notifier != null) {
-                    compilationUnit.setProgressListener(new ProgressListenerImpl(notifier));
+            Compiler compiler = (Compiler) requestor;
+            if (compiler.requestor instanceof AbstractImageBuilder) {
+                AbstractImageBuilder builder = (AbstractImageBuilder) compiler.requestor;
+                if (builder.notifier != null) {
+                    compilationUnit.setProgressListener(new ProgressListenerImpl(builder.notifier));
+                }
+                if (eclipseFile != null) {
+                    SourceFile sourceFile = (SourceFile) builder.fromIFile(eclipseFile);
+                    if (sourceFile != null) {
+                        compilationUnit.getConfiguration().setTargetDirectory(sourceFile.getOutputLocation().toFile());
+                    }
+                }
+            } else if (compiler.requestor instanceof BatchCompilerRequestor) {
+                Main main = ReflectionUtils.getPrivateField(BatchCompilerRequestor.class, "compiler", compiler.requestor);
+                if (main != null && main.destinationPath != null && main.destinationPath != Main.NONE) {
+                    compilationUnit.getConfiguration().setTargetDirectory(main.destinationPath);
                 }
             }
         }
+
+        compilationResult.lineSeparatorPositions = GroovyUtils.getSourceLineSeparatorsIn(sourceCode); // TODO: Get from Antlr
+
+        GroovyCompilationUnitDeclaration gcuDeclaration = new GroovyCompilationUnitDeclaration(
+            problemReporter, compilationResult, sourceCode.length, compilationUnit, sourceUnit, compilerOptions);
+
         gcuDeclaration.processToPhase(Phases.CONVERSION);
 
         // ModuleNode is null when there is a fatal error
@@ -201,11 +203,7 @@ public class GroovyParser {
         String projectName = compilerOptions.groovyProjectName;
         // Is this a script? If allowTransforms is TRUE then this is a 'full build' and we should remember which are scripts so that .class file output can be suppressed
         if (projectName != null && eclipseFile != null) {
-            ScriptFolderSelector scriptFolderSelector = scriptFolderSelectorCache.get(projectName);
-            if (scriptFolderSelector == null) {
-                scriptFolderSelector = new ScriptFolderSelector(ResourcesPlugin.getWorkspace().getRoot().getProject(projectName));
-                scriptFolderSelectorCache.put(projectName, scriptFolderSelector);
-            }
+            ScriptFolderSelector scriptFolderSelector = scriptFolderSelectorCache.computeIfAbsent(projectName, GroovyParser::newScriptFolderSelector);
             if (scriptFolderSelector.isScript(eclipseFile)) {
                 gcuDeclaration.tagAsScript();
             }
@@ -214,6 +212,10 @@ public class GroovyParser {
             debugRequestor.acceptCompilationUnitDeclaration(gcuDeclaration);
         }
         return gcuDeclaration;
+    }
+
+    private static ScriptFolderSelector newScriptFolderSelector(String projectName) {
+        return new ScriptFolderSelector(ResourcesPlugin.getWorkspace().getRoot().getProject(projectName));
     }
 
     /**
@@ -226,7 +228,7 @@ public class GroovyParser {
 
         private BuildNotifier notifier;
 
-        public ProgressListenerImpl(BuildNotifier notifier) {
+        ProgressListenerImpl(BuildNotifier notifier) {
             this.notifier = notifier;
         }
 

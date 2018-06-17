@@ -60,16 +60,17 @@ public class AbstractRegressionTest9 extends AbstractRegressionTest {
 	protected CompilationUnit[] getCompilationUnits(String[] testFiles) {
 		Map<String,char[]> moduleFiles= new HashMap<>(); // filename -> modulename
 
+		CompilationUnit[] compilationUnits = Util.compilationUnits(testFiles);
+
 		// scan for all module-info.java:
 		for (int i = 0; i < testFiles.length; i+=2) {
-			IModule module = extractModuleDesc(testFiles[i], testFiles[i+1]);
+			IModule module = extractModuleDesc(testFiles[i], testFiles[i+1], compilationUnits[i/2]);
 			if (module != null) {
 				this.moduleMap.put(String.valueOf(module.name()), module);
 				moduleFiles.put(testFiles[0], module.name());
 			}
 		}
 		// record module information in CUs:
-		CompilationUnit[] compilationUnits = Util.compilationUnits(testFiles);
 		for (int i = 0; i < compilationUnits.length; i++) {
 			char[] fileName = compilationUnits[i].getFileName();
 			String fileNameString = String.valueOf(compilationUnits[i].getFileName());
@@ -85,11 +86,10 @@ public class AbstractRegressionTest9 extends AbstractRegressionTest {
 		return compilationUnits;
 	}
 
-	private IModule extractModuleDesc(String fileName, String fileContent) {
+	private IModule extractModuleDesc(String fileName, String fileContent, ICompilationUnit cu) {
 		if (fileName.toLowerCase().endsWith(IModule.MODULE_INFO_JAVA)) {
 			Parser parser = createParser();
 			
-			ICompilationUnit cu = new CompilationUnit(fileContent.toCharArray(), fileName, null);
 			CompilationResult compilationResult = new CompilationResult(cu, 0, 1, 10);
 			CompilationUnitDeclaration unit = parser.parse(cu, compilationResult);
 			if (unit.isModuleInfo() && unit.moduleDeclaration != null) {

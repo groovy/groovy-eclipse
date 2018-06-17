@@ -38,6 +38,7 @@ import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.eclipse.jdt.groovy.core.util.DepthFirstVisitor;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.internal.compiler.ISourceElementRequestor;
 
@@ -120,7 +121,7 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
 
     @Override
     public void visitArrayExpression(ArrayExpression expression) {
-        if (expression.getType() != expression.getType().redirect()) {
+        if (expression.getEnd() > 0) {
             visitTypeReference(expression.getType(), false, true);
         }
         super.visitArrayExpression(expression);
@@ -256,8 +257,7 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
         if (isAnnotation) {
             requestor.acceptAnnotationTypeReference(splitName(type, useQualifiedName), type.getStart(), type.getEnd());
         } else {
-            ClassNode componentType = type.getComponentType();
-            requestor.acceptTypeReference(splitName(componentType != null ? componentType : type, useQualifiedName), type.getStart(), type.getEnd());
+            requestor.acceptTypeReference(splitName(GroovyUtils.getBaseType(type), useQualifiedName), type.getStart(), type.getEnd());
         }
         visitTypeParameters(type);
     }

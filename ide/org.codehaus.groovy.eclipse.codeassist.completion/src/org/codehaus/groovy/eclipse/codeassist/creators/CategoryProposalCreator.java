@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,10 +62,10 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
 
         List<IGroovyProposal> groovyProposals = new LinkedList<>();
         for (ClassNode category : categories) {
-            boolean isDGMCategory = isDGM(category);
+            boolean isDefaultCategory = isDefaultCategory(category);
             for (MethodNode method : category.getAllDeclaredMethods()) {
                 // check for DGMs filtered by deprecation or user preference
-                if (isDGMCategory && (GroovyUtils.isDeprecated(method) || filter.isFiltered(method))) {
+                if (isDefaultCategory && (GroovyUtils.isDeprecated(method) || filter.isFiltered(method))) {
                     continue;
                 }
                 String methodName = method.getName();
@@ -126,18 +126,12 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
         return false;
     }
 
-    protected boolean isDGM(ClassNode category) {
-        return VariableScope.ALL_DEFAULT_CATEGORIES.contains(category);
+    protected boolean isDefaultCategory(ClassNode category) {
+        return (VariableScope.DGM_CLASS_NODE.equals(category) || (currentScope != null && currentScope.isDefaultCategory(category)));
     }
 
-    protected boolean isDGSM(ClassNode category) {
-        // TODO: check the runtime DGM configuration
-        return VariableScope.DGSM_CLASS_NODE.equals(category);
-    }
-
-    @Override
-    public boolean redoForLoopClosure() {
-        return true;
+    protected boolean isDefaultStaticCategory(ClassNode category) {
+        return (VariableScope.DGSM_CLASS_NODE.equals(category) || (currentScope != null && currentScope.isDefaultStaticCategory(category)));
     }
 
     //--------------------------------------------------------------------------
@@ -147,7 +141,7 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
         protected CategoryMethodProposal(MethodNode method) {
             super(method, "Groovy");
 
-            if (isDGM(method.getDeclaringClass())) {
+            if (isDefaultCategory(method.getDeclaringClass())) {
                 setRelevanceMultiplier(0.1f);
             } else {
                 setRelevanceMultiplier(5);
@@ -157,7 +151,7 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
         @Override
         protected int getModifiers() {
             int modifiers = super.getModifiers();
-            if (!isDGSM(getMethod().getDeclaringClass())) {
+            if (!isDefaultStaticCategory(getMethod().getDeclaringClass())) {
                 modifiers &= ~Flags.AccStatic; // category methods are defined as static, but should not appear as such
             }
             return modifiers;
@@ -183,9 +177,9 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
             IJavaCompletionProposal javaProposal = super.createJavaProposal(context, javaContext);
             if (javaProposal instanceof LazyJavaCompletionProposal) {
                 //ProposalInfo proposalInfo = ((LazyJavaCompletionProposal) javaProposal).getProposalInfo();
-                ProposalInfo proposalInfo = (ProposalInfo) ReflectionUtils.executeNoArgPrivateMethod(LazyJavaCompletionProposal.class, "getProposalInfo", javaProposal);
+                ProposalInfo proposalInfo = ReflectionUtils.executePrivateMethod(LazyJavaCompletionProposal.class, "getProposalInfo", javaProposal);
                 //CompletionProposal proposal = ((LazyJavaCompletionProposal) javaProposal).getProposal();
-                CompletionProposal proposal = (CompletionProposal) ReflectionUtils.executeNoArgPrivateMethod(LazyJavaCompletionProposal.class, "getProposal", javaProposal);
+                CompletionProposal proposal = ReflectionUtils.executePrivateMethod(LazyJavaCompletionProposal.class, "getProposal", javaProposal);
                 // reuse existing or create one to call some private methods
                 final MethodProposalInfo methodProposalInfo = (proposalInfo instanceof MethodProposalInfo ? (MethodProposalInfo) proposalInfo : new MethodProposalInfo(javaContext.getProject(), proposal));
 
@@ -199,14 +193,14 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
                                 String methName = getMethod().getName();
                                 String[] paramTypes = GroovyUtils.getParameterTypeSignatures(getMethod(), false);
                                 //Map<String, char[]> typeVariables = methodProposalInfo.computeTypeVariables(type);
-                                @SuppressWarnings("unchecked") Map<String, char[]> typeVariables = (Map<String, char[]>) ReflectionUtils.
-                                    throwableExecutePrivateMethod(MethodProposalInfo.class, "computeTypeVariables", new Class[] {IType.class}, methodProposalInfo, new Object[] {type});
+                                Map<String, char[]> typeVariables = ReflectionUtils.throwableExecutePrivateMethod(MethodProposalInfo.class, "computeTypeVariables",
+                                    new Class[] {IType.class}, methodProposalInfo, new Object[] {type});
 
                                 IMethod[] methods = type.getMethods();
                                 for (int i = methods.length - 1; i >= 0; i -= 1) {
                                     if (!methName.equals(methods[i].getElementName())) continue;
                                     //boolean match = isSameMethodSignature(methName, paramTypes, false, methods[i], typeVariables, type);
-                                    Boolean match = (Boolean) ReflectionUtils.throwableExecutePrivateMethod(MethodProposalInfo.class, "isSameMethodSignature",
+                                    Boolean match = ReflectionUtils.throwableExecutePrivateMethod(MethodProposalInfo.class, "isSameMethodSignature",
                                         new Class [] {String.class, String[].class, boolean.class, IMethod.class, Map.class,     IType.class}, methodProposalInfo,
                                         new Object[] {methName,     paramTypes,     Boolean.FALSE, methods[i],    typeVariables, type       });
                                     if (Boolean.TRUE.equals(match)) {
@@ -240,11 +234,11 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
         protected CategoryPropertyProposal(MethodNode method) {
             super(createMockField(method));
 
-            if (!isDGSM(method.getDeclaringClass())) {
+            if (!isDefaultStaticCategory(method.getDeclaringClass())) {
                 getField().setModifiers(getField().getModifiers() & ~Flags.AccStatic);
             }
 
-            if (isDGM(method.getDeclaringClass())) {
+            if (isDefaultCategory(method.getDeclaringClass())) {
                 setRelevanceMultiplier(0.1f);
             } else {
                 setRelevanceMultiplier(5);

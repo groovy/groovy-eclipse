@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -71,6 +71,12 @@ public class NaiveASTFlattener extends ASTVisitor {
 	 */
 	private static final int JLS8 = AST.JLS8;
 
+	/**
+	 * Internal synonym for {@link AST#JLS9}. Use to alleviate
+	 * deprecation warnings.
+	 * @deprecated
+	 * @since 3.14
+	 */
 	private static final int JLS9 = AST.JLS9;
 
 	/**
@@ -1137,6 +1143,10 @@ public class NaiveASTFlattener extends ASTVisitor {
 	}
 
 	@Override
+	/*
+	 * @see ASTVisitor#visit(ModuleModifier)
+	 * @since 3.14
+	 */
 	public boolean visit(ModuleModifier node) {
 		this.buffer.append(node.getKeyword().toString());
 		return false;

@@ -253,7 +253,7 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
             private int startOffset(ASTNode node, ASTNodeFinder nodeFinder) throws CoreException {
                 int start = node.getStart();
                 if (node.getEnd() < 1) {
-                    Region nodeRegion = (Region) ReflectionUtils.getPrivateField(ASTNodeFinder.class, "sloc", nodeFinder);
+                    Region nodeRegion = ReflectionUtils.getPrivateField(ASTNodeFinder.class, "sloc", nodeFinder);
                     if (nodeRegion != null) {
                         start = nodeRegion.getOffset(); // may be approximate
                         while (!Character.isJavaIdentifierStart(compilationUnit.getSource().charAt(start))) {
@@ -267,7 +267,7 @@ public class AddImportOnSelectionAction extends AddImportOnSelectionAdapter {
             private int endOffset(ASTNode node, ASTNodeFinder nodeFinder) throws CoreException {
                 int end = node.getEnd();
                 if (end < 1) {
-                    Region nodeRegion = (Region) ReflectionUtils.getPrivateField(ASTNodeFinder.class, "sloc", nodeFinder);
+                    Region nodeRegion = ReflectionUtils.getPrivateField(ASTNodeFinder.class, "sloc", nodeFinder);
                     if (nodeRegion != null) {
                         end = nodeRegion.getEnd(); // may be approximate
                         while (end > 0 && !Character.isJavaIdentifierPart(compilationUnit.getSource().charAt(end - 1))) {

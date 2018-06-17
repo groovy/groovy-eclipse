@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1242,7 +1242,7 @@ public class Util implements SuffixConstants {
 		}
 		List<FileSystem.Classpath> classpaths = new ArrayList<>();
 		for (String filePath : filePaths) {
-			FileSystem.Classpath currentClasspath = FileSystem.getClasspath(filePath, null, null, null);
+			FileSystem.Classpath currentClasspath = FileSystem.getClasspath(filePath, null, null, null, null);
 			if (currentClasspath != null) {
 				classpaths.add(currentClasspath);
 			}

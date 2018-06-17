@@ -276,17 +276,19 @@ public void test495912() {
 					"package xy;\n" + 
 					"public class Test {\n" + 
 					"  {\n" + 
-					"    Runnable r = () ->     {\n" + 
-					"      Integer i;\n" + 
-					"      byte b = <SelectOnMessageSend:i.byteValue()>;\n" + 
-					"      if (true)\n" + 
-					"          {\n" + 
-					"            if (false)\n" + 
-					"                {\n" + 
-					"                }\n" + 
-					"          }\n" + 
-					"      String s;\n" + 
-					"    };\n" + 
+					"    {\n" + 
+					"      Runnable r = () ->       {\n" + 
+					"        Integer i;\n" + 
+					"        byte b = <SelectOnMessageSend:i.byteValue()>;\n" + 
+					"        if (true)\n" + 
+					"            {\n" + 
+					"              if (false)\n" + 
+					"                  {\n" + 
+					"                  }\n" + 
+					"            }\n" + 
+					"        String s;\n" + 
+					"      };\n" +
+					"    }\n" + 
 					"  }\n" + 
 					"  public Test() {\n" + 
 					"  }\n" + 
@@ -336,19 +338,21 @@ public void test495912a() {
 					"package xy;\n" + 
 					"public class Test {\n" + 
 					"  {\n" + 
-					"    Runnable r = () ->     {\n" + 
-					"      Integer i;\n" + 
-					"      byte b = <SelectOnMessageSend:i.byteValue()>;\n" + 
-					"      if (true)\n" + 
+					"    {\n" +
+					"      Runnable r = () ->       {\n" + 
+					"        Integer i;\n" + 
+					"        byte b = <SelectOnMessageSend:i.byteValue()>;\n" + 
+					"        if (true)\n" +
+					"            {\n" +
+					"              if (false)\n" +
+					"                  {\n" +
+					"                  }\n" +
+					"            }\n" +
+					"        for (int i1;; (i1 < 42); i1 ++) \n" + 
 					"          {\n" + 
-					"            if (false)\n" + 
-					"                {\n" + 
-					"                }\n" + 
 					"          }\n" + 
-					"      for (int i1;; (i1 < 42); i1 ++) \n" + 
-					"        {\n" + 
-					"        }\n" + 
-					"    };\n" + 
+					"      };\n" + 
+					"    }\n" + 
 					"  }\n" + 
 					"  public Test() {\n" + 
 					"  }\n" + 

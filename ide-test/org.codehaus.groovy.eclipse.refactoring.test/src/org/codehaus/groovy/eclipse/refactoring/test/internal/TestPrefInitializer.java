@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.internal;
 
-import java.util.HashMap;
+import java.util.Map;
 
 import org.codehaus.groovy.eclipse.refactoring.PreferenceConstants;
 import org.eclipse.jdt.core.IJavaProject;
@@ -28,7 +28,7 @@ import org.eclipse.jface.preference.PreferenceStore;
  */
 public final class TestPrefInitializer {
 
-    public static IPreferenceStore initializePreferences(HashMap<String, String> properties, IJavaProject javaProject) {
+    public static IPreferenceStore initializePreferences(Map<String, String> properties, IJavaProject javaProject) {
         IPreferenceStore pref = new PreferenceStore();
 
         String indentation = properties.get("indentation");
@@ -40,8 +40,7 @@ public final class TestPrefInitializer {
         }
 
         String tabsize = properties.get("tabsize");
-        // Older tests will use tabsize assuming its the same as indentsize, so
-        // set both of these!
+        // older tests will use tabsize assuming its the same as indentsize, so set both of these!
         if (tabsize != null) {
             pref.setValue(PreferenceConstants.GROOVY_FORMATTER_INDENTATION_SIZE, Integer.parseInt(tabsize));
             pref.setValue(PreferenceConstants.GROOVY_FORMATTER_TAB_SIZE, Integer.parseInt(tabsize));
@@ -52,12 +51,8 @@ public final class TestPrefInitializer {
             }
         } else {
             if (javaProject != null) {
-                javaProject.setOption(
-                        DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, null);
-                javaProject
-                        .setOption(
-                                DefaultCodeFormatterConstants.FORMATTER_INDENTATION_SIZE,
-                                null);
+                javaProject.setOption(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, null);
+                javaProject.setOption(DefaultCodeFormatterConstants.FORMATTER_INDENTATION_SIZE, null);
             }
         }
 
@@ -65,23 +60,14 @@ public final class TestPrefInitializer {
         if (indentsize != null) {
             // GRECLIPSE-1137  This is strange, but it looks like the JDT preferences are switched for spaces mode
             if ("space".equals(indentation)) {
-                pref.setValue(PreferenceConstants.GROOVY_FORMATTER_TAB_SIZE,
-                        Integer.parseInt(indentsize));
+                pref.setValue(PreferenceConstants.GROOVY_FORMATTER_TAB_SIZE, Integer.parseInt(indentsize));
                 if (javaProject != null) {
-                    javaProject.setOption(
-                            DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE,
-                            indentsize);
+                    javaProject.setOption(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, indentsize);
                 }
-
             } else {
-                pref.setValue(
-                        PreferenceConstants.GROOVY_FORMATTER_INDENTATION_SIZE,
-                        Integer.parseInt(indentsize));
+                pref.setValue(PreferenceConstants.GROOVY_FORMATTER_INDENTATION_SIZE, Integer.parseInt(indentsize));
                 if (javaProject != null) {
-                    javaProject
-                            .setOption(
-                                    DefaultCodeFormatterConstants.FORMATTER_INDENTATION_SIZE,
-                                    indentsize);
+                    javaProject.setOption(DefaultCodeFormatterConstants.FORMATTER_INDENTATION_SIZE, indentsize);
                 }
             }
         }

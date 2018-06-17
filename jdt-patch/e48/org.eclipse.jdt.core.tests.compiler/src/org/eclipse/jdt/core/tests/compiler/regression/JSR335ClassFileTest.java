@@ -35,7 +35,9 @@ public JSR335ClassFileTest(String name) {
 // No need for a tearDown()
 protected void setUp() throws Exception {
 	super.setUp();
-	this.versionString = (this.complianceLevel < ClassFileConstants.JDK9) ? "version 1.8 : 52.0" : "version 9 : 53.0";
+	this.versionString = (this.complianceLevel < ClassFileConstants.JDK9)
+			? "version 1.8 : 52.0"
+			: (this.complianceLevel < ClassFileConstants.JDK10 ? "version 9 : 53.0" : "version 10 : 54.0");
 }
 
 /*

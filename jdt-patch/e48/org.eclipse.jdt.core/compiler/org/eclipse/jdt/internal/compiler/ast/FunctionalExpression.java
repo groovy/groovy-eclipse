@@ -192,7 +192,7 @@ public abstract class FunctionalExpression extends Expression {
 			blockScope.problemReporter().targetTypeIsNotAFunctionalInterface(this);
 			return null;
 		}
-		if (!sam.isValidBinding()) {
+		if (!sam.isValidBinding() && sam.problemId() != ProblemReasons.ContradictoryNullAnnotations) {
 			return reportSamProblem(blockScope, sam);
 		}
 		

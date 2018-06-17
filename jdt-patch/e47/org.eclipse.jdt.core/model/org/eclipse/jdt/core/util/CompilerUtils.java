@@ -45,10 +45,10 @@ public class CompilerUtils {
 			options.groovyFlags = 0;
 			return;
 		}
+		IProject project = javaProject.getProject();
 		try {
-			IProject project = javaProject.getProject();
 			if (isGroovyNaturedProject(project)) {
-				options.groovyExcludeGlobalASTScan = project.getFile(javaProject.getOutputLocation().removeFirstSegments(1)).getRawLocation().toOSString();
+				options.groovyExcludeGlobalASTScan = project.getLocation().toOSString();
 				options.groovyProjectName = project.getName();
 				options.storeAnnotations = true;
 				options.buildGroovyFiles = 2;
@@ -73,10 +73,10 @@ public class CompilerUtils {
 	 * to just build java.
 	 */
 	public static void configureOptionsBasedOnNature(Map<String, String> options, IJavaProject javaProject) {
+		IProject project = javaProject.getProject();
 		try {
-			IProject project = javaProject.getProject();
 			if (isGroovyNaturedProject(project)) {
-				options.put(CompilerOptions.OPTIONG_GroovyExcludeGlobalASTScan, project.getFile(javaProject.getOutputLocation().removeFirstSegments(1)).getRawLocation().toOSString());
+				options.put(CompilerOptions.OPTIONG_GroovyExcludeGlobalASTScan, project.getLocation().toOSString());
 				options.put(CompilerOptions.OPTIONG_GroovyProjectName, javaProject.getElementName());
 				options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
 				if (isProbablyGrailsProject(project)) {

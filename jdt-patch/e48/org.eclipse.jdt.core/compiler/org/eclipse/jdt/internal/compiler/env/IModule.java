@@ -68,14 +68,6 @@ public interface IModule {
 		char[][] with();
 	}
 	
-	public default void addReads(char[] modName) {
-		// do nothing, would throwing an exception be better?
-	}
-	
-	public default void addExports(IPackageExport[] exports) {
-		// do nothing, would throwing an exception be better?
-	}
-
 	public default boolean isAutomatic() {
 		return false;
 	}

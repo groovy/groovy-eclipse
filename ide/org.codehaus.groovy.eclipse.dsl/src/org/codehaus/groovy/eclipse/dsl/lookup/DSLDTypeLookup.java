@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,9 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.MapEntryExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.eclipse.dsl.DSLDStore;
 import org.codehaus.groovy.eclipse.dsl.DSLDStoreManager;
@@ -49,10 +51,10 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
     DSLDStoreManager contextStoreManager = GroovyDSLCoreActivator.getDefault().getContextStoreManager();
 
     private DSLDStore store;
-    private GroovyDSLDContext pattern;
-    private Set<String> disabledScriptsAsSet;
     private ModuleNode module;
     private JDTResolver resolver;
+    private GroovyDSLDContext context;
+    private Set<String> disabledScriptsAsSet;
 
     @Override
     public void setResolverInformation(ModuleNode module, JDTResolver resolver) {
@@ -68,27 +70,31 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
         }
         disabledScriptsAsSet = DSLPreferences.getDisabledScriptsAsSet();
         try {
-            pattern = new GroovyDSLDContext(unit, module, resolver);
-            pattern.setCurrentScope(topLevelScope);
+            context = new GroovyDSLDContext(unit, module, resolver);
+            context.setCurrentScope(topLevelScope);
         } catch (CoreException e) {
             GroovyDSLCoreActivator.logException(e);
         }
         store = contextStoreManager.getDSLDStore(unit.getJavaProject());
-        store = store.createSubStore(pattern);
+        store = store.createSubStore(context);
     }
 
-    // FIXADE: Should shortcut if we find a solution earlier.
     @Override
     protected TypeAndDeclaration lookupTypeAndDeclaration(ClassNode declaringType, String name, VariableScope scope) {
-        pattern.setStatic(isStatic());
-        pattern.setCurrentScope(scope);
-        pattern.setTargetType(declaringType);
-        List<IContributionElement> elts = store.findContributions(pattern, disabledScriptsAsSet);
-        declaringType = pattern.getCurrentType(); // may have changed via a setDelegateType
-        for (IContributionElement elt : elts) {
-            TypeAndDeclaration td = elt.lookupType(name, declaringType, pattern.getResolverCache());
-            if (td != null) {
-                return td;
+        if (!(scope.getCurrentNode() instanceof ConstantExpression) || !(scope.getEnclosingNode() instanceof MapEntryExpression) ||
+            scope.getCurrentNode() != ((MapEntryExpression) scope.getEnclosingNode()).getKeyExpression() || inPointcutExpression(scope)) {
+
+            context.setStatic(isStatic());
+            context.setCurrentScope(scope);
+            context.setTargetType(declaringType);
+            List<IContributionElement> contributions = store.findContributions(context, disabledScriptsAsSet);
+
+            declaringType = context.getCurrentType(); // may have changed via a setDelegateType
+            for (IContributionElement contribution : contributions) {
+                TypeAndDeclaration td = contribution.lookupType(name, declaringType, context.getResolverCache());
+                if (td != null) {
+                    return td;
+                }
             }
         }
         return null;
@@ -99,20 +105,15 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
      */
     @Override
     public void lookupInBlock(BlockStatement node, VariableScope scope) {
-        pattern.setPrimaryNode(true);
-        pattern.setStatic(isStatic());
-        pattern.setCurrentScope(scope);
+        context.setPrimaryNode(true);
+        context.setCurrentScope(scope);
+        context.setStatic(scope.isStatic());
         ClassNode delegateOrThis = scope.getDelegateOrThis();
         if (delegateOrThis != null) {
-            pattern.setTargetType(delegateOrThis);
-            store.findContributions(pattern, disabledScriptsAsSet);
+            context.setTargetType(delegateOrThis);
+            store.findContributions(context, disabledScriptsAsSet);
         }
         // no need to return anything; setDelegateType is called and evaluated implicitly
-    }
-
-    @Override
-    protected TypeConfidence confidence() {
-        return TypeConfidence.INFERRED;
     }
 
     /*
@@ -126,5 +127,15 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
             confidence = TypeConfidence.LOOSELY_INFERRED;
         }
         return confidence;
+    }
+
+    @Override
+    protected TypeConfidence confidence() {
+        return TypeConfidence.INFERRED;
+    }
+
+    private boolean inPointcutExpression(VariableScope scope) {
+        return (context.simpleFileName.endsWith(".dsld") && (scope.getEnclosingClosure() == null ||
+            scope.getAllEnclosingMethodCallExpressions().stream().noneMatch(cat -> cat.call.getMethodAsString().matches("accept|contribute"))));
     }
 }

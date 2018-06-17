@@ -75,7 +75,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 
         this.methodName = String.valueOf(pattern.selector);
         String[] parameterTypeSignatures = getParameterTypeSignatures(pattern);
-        IType declaringType = (IType) ReflectionUtils.getPrivateField(MethodPattern.class, "declaringType", pattern);
+        IType declaringType = ReflectionUtils.getPrivateField(MethodPattern.class, "declaringType", pattern);
 
         char[] declaringQualifiedName = null;
 
@@ -154,7 +154,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
     }
 
     protected static String[] getParameterTypeSignatures(MethodPattern pattern) {
-        char[][][] signatures = (char[][][]) ReflectionUtils.getPrivateField(MethodPattern.class, "parametersTypeSignatures", pattern);
+        char[][][] signatures = ReflectionUtils.getPrivateField(MethodPattern.class, "parametersTypeSignatures", pattern);
         int n = (signatures == null ? 0 : signatures.length);
         String[] parameterTypeSignatures = new String[n];
         for (int i = 0; i < n; i += 1) {

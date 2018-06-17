@@ -1,17 +1,19 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2008 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *
+ * 
  * Contributors:
  *     IBM Corporation - initial API and implementation
+ *      Jesper Steen Møller - Contributions for
+ *                               bug 529552 - [18.3] Add 'var' in completions
  *******************************************************************************/
 package org.eclipse.jdt.internal.codeassist.impl;
 
 public interface Keywords {
-	int COUNT = 49;
+	int COUNT = 50;
 
 	char[] ABSTRACT = "abstract".toCharArray(); //$NON-NLS-1$
 	char[] ASSERT = "assert".toCharArray(); //$NON-NLS-1$
@@ -63,4 +65,5 @@ public interface Keywords {
 	char[] TRUE = "true".toCharArray(); //$NON-NLS-1$
 	char[] FALSE = "false".toCharArray(); //$NON-NLS-1$
 	char[] NULL = "null".toCharArray(); //$NON-NLS-1$
+	char[] VAR = "var".toCharArray(); //$NON-NLS-1$ // Admittedly not a full blown keyword, just "reserved"
 }

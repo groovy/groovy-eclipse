@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2015 IBM Corporation and others.
+ * Copyright (c) 2013, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -337,7 +337,7 @@ public class TypeSystem {
 	   they may and we need to materialize the unannotated versions and work on them.
 	*/ 
 	public RawTypeBinding getRawType(ReferenceBinding genericType, ReferenceBinding enclosingType) {
-		if (genericType.isStatic() && enclosingType != null) {
+		if (!genericType.hasEnclosingInstanceContext() && enclosingType != null) {
 			enclosingType = (ReferenceBinding) enclosingType.original();
 		}
 		ReferenceBinding unannotatedGenericType = (ReferenceBinding) getUnannotatedType(genericType);
@@ -387,7 +387,7 @@ public class TypeSystem {
 		}
 		TypeBinding unannotatedBound = bound == null ? null : getUnannotatedType(bound);
 
-		boolean useDerivedTypesOfBound = unannotatedBound instanceof TypeVariableBinding || unannotatedBound instanceof ParameterizedTypeBinding;
+		boolean useDerivedTypesOfBound = unannotatedBound instanceof TypeVariableBinding || (unannotatedBound instanceof ParameterizedTypeBinding && !(unannotatedBound instanceof RawTypeBinding));
 		TypeBinding[] derivedTypes = this.types[useDerivedTypesOfBound ? unannotatedBound.id :unannotatedGenericType.id];  // by construction, cachedInfo != null now.
 
 		int i, length = derivedTypes.length;

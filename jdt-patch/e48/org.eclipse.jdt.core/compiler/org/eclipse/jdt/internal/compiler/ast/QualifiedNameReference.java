@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2015 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -1062,7 +1062,8 @@ public TypeBinding resolveType(BlockScope scope) {
 						// only last field is actually a write access if any
 						// check if accessing enum static field in initializer
 						if (declaringClass.isEnum()) {
-							if ((TypeBinding.equalsEquals(sourceType, declaringClass) || TypeBinding.equalsEquals(sourceType.superclass, declaringClass)) // enum constant body
+							if ((TypeBinding.equalsEquals(sourceType, declaringClass) || 
+									(sourceType != null && TypeBinding.equalsEquals(sourceType.superclass, declaringClass))) // enum constant body
 									&& fieldBinding.constant(scope) == Constant.NotAConstant
 									&& !methodScope.isStatic
 									&& methodScope.isInsideInitializerOrConstructor()) {

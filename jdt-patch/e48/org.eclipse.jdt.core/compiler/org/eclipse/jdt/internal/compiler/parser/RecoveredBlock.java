@@ -18,6 +18,7 @@ import org.eclipse.jdt.internal.compiler.ast.Argument;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.Block;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.ForeachStatement;
 import org.eclipse.jdt.internal.compiler.ast.LocalDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Statement;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
@@ -169,8 +170,15 @@ public RecoveredElement add(Statement stmt, int bracketBalanceValue, boolean del
 
 	RecoveredStatement element = new RecoveredStatement(stmt, this, bracketBalanceValue);
 	attach(element);
-	if (stmt.sourceEnd == 0) return element;
+	if (!isEndKnown(stmt)) return element;
 	return this;
+}
+boolean isEndKnown(Statement stmt) {
+	if (stmt instanceof ForeachStatement) {
+		if (((ForeachStatement) stmt).action == null)
+			return false;
+	}
+	return stmt.sourceEnd != 0;
 }
 /*
  * Addition of a type to an initializer (act like inside method body)

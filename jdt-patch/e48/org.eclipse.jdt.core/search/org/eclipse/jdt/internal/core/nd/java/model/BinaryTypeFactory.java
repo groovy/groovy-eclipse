@@ -64,21 +64,24 @@ public class BinaryTypeFactory {
 	 * a location on the filesystem.
 	 */
 	private static BinaryTypeDescriptor createDescriptor(PackageFragment pkg, ClassFile classFile) {
-		String name = classFile.getName();
 		PackageFragmentRoot root = (PackageFragmentRoot) pkg.getParent();
 		IPath location = JavaIndex.getLocationForElement(root);
 		if (location == null) {
 			return null;
 		}
-		name = root.getClassFilePath(Util.concatWith(pkg.names, name, '/'));
 		String entryName = Util.concatWith(pkg.names, classFile.getElementName(), '/');
+		String name = Util.concatWith(pkg.names, classFile.getName(), '/');
+		String overridePath = root.getClassFilePath(entryName);
+		if (overridePath != entryName) {
+			entryName = overridePath;
+			name = ((JarPackageFragmentRoot) root).versionPath + name;
+		}
 		char[] fieldDescriptor = CharArrayUtils.concat(new char[] { 'L' },
 				name.toCharArray(), new char[] { ';' });
 		IPath workspacePath = root.getPath();
 		String indexPath;
 
 		if (root instanceof JarPackageFragmentRoot) {
-			entryName = ((JarPackageFragmentRoot) root).getClassFilePath(entryName);
 			// The old version returned this, but it doesn't conform to the spec on IBinaryType.getFileName():
 			indexPath = root.getHandleIdentifier() + IDependent.JAR_FILE_ENTRY_SEPARATOR + entryName;
 			// Version that conforms to the JavaDoc spec on IBinaryType.getFileName() -- note that this breaks

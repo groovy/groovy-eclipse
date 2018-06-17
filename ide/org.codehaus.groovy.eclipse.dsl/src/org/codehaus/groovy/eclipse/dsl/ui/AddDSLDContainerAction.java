@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,33 +28,28 @@ public class AddDSLDContainerAction extends AbstractAddClasspathContainerAction 
     }
 
     @Override
-    protected String errorMessage() {
-        return "Could not add DSLD Classpath container";
-    }
-
-    @Override
     protected String disabledText() {
         return "Cannot add DSL support";
     }
 
     @Override
+    protected String errorMessage() {
+        return "Failed to add DSL support";
+    }
+
+    @Override
     protected String addText() {
-        return "Add DSL Support";
+        return "Add Groovy DSL Support to classpath";
     }
 
     @Override
     protected String removeText() {
-        return "Remove DSL Support";
+        return "Remove Groovy DSL Support from classpath";
     }
 
     @Override
     public void run(IAction action) {
         super.run(action);
         GroovyDSLCoreActivator.getDefault().getContainerListener().ignoreProject(targetProject.getProject());
-    }
-
-    @Override
-    protected boolean exportClasspath() {
-        return false;
     }
 }

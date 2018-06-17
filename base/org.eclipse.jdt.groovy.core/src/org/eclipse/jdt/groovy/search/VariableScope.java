@@ -31,7 +31,6 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -75,6 +74,7 @@ import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.DefaultGroovyStaticMethods;
+import org.codehaus.jdt.groovy.internal.compiler.GroovyClassLoaderFactory.GrapeAwareGroovyClassLoader;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
@@ -118,24 +118,14 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     public static final ClassNode BUFFERED_WRITER_CLASS_NODE = ClassHelper.make(BufferedWriter.class);
     public static final ClassNode PRINT_WRITER_CLASS_NODE = ClassHelper.make(PrintWriter.class);
 
-    // only exists on 2.1+
-    public static final ClassNode CLOSURE_PARAMS = ClassHelper.make(ClosureParams.class);
+    // present in Groovy 2.1+
     public static final ClassNode DELEGATES_TO = ClassHelper.make(DelegatesTo.class);
+    // present in Groovy 2.3+
+    public static final ClassNode CLOSURE_PARAMS = ClassHelper.make(ClosureParams.class);
 
     // standard category classes
     public static final ClassNode DGM_CLASS_NODE = ClassHelper.make(DefaultGroovyMethods.class);
     public static final ClassNode DGSM_CLASS_NODE = ClassHelper.make(DefaultGroovyStaticMethods.class);
-
-    public static final Set<ClassNode> ALL_DEFAULT_CATEGORIES;
-    static {
-        Set<ClassNode> dgm_classes = Arrays.stream(DefaultGroovyMethods.DGM_LIKE_CLASSES)
-            .map(ClassHelper::make).collect(Collectors.toCollection(LinkedHashSet::new));
-        dgm_classes.remove(DGM_CLASS_NODE);
-        dgm_classes.add(DGSM_CLASS_NODE);
-        dgm_classes.add(DGM_CLASS_NODE);
-
-        ALL_DEFAULT_CATEGORIES = Collections.unmodifiableSet(dgm_classes);
-    }
 
     // primitive wrapper classes
     public static final ClassNode BOOLEAN_CLASS_NODE = ClassHelper.Boolean_TYPE;
@@ -475,18 +465,27 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
      * @return all categories active in this scope
      */
     public Set<ClassNode> getCategoryNames() {
-        if (parent == null) {
-            return ALL_DEFAULT_CATEGORIES;
+        Set<ClassNode> categories;
+
+        if (parent != null) {
+            categories = parent.getCategoryNames();
+            // look at the parent scope's category, not this scope's category
+            // if this scope represents a "use" block, category is not active
+            // until child scopes
+            if (parent.isCategoryBeingDeclared()) {
+                categories = new LinkedHashSet<>(categories);
+                categories.add(parent.categoryBeingDeclared);
+            }
+        } else {
+            categories = scopeNode.getNodeMetaData(DefaultGroovyMethods.class);
+            if (categories == null) {
+                GrapeAwareGroovyClassLoader gcl = (GrapeAwareGroovyClassLoader) ((ModuleNode) scopeNode).getUnit().getClassLoader();
+                categories = gcl.getDefaultCategories().stream().map(ClassNode::new).collect(Collectors.toCollection(LinkedHashSet::new));
+
+                scopeNode.putNodeMetaData(DefaultGroovyMethods.class, Collections.unmodifiableSet(categories));
+            }
         }
 
-        Set<ClassNode> categories = parent.getCategoryNames();
-        // look at the parent scope's category, not this scope's category
-        // if this scope represents a "use" block, category is not active
-        // until child scopes
-        if (parent.isCategoryBeingDeclared()) {
-            categories = new LinkedHashSet<>(categories);
-            categories.add(parent.categoryBeingDeclared);
-        }
         return categories;
     }
 
@@ -496,6 +495,20 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
 
     public void setCategoryBeingDeclared(ClassNode categoryBeingDeclared) {
         this.categoryBeingDeclared = categoryBeingDeclared;
+    }
+
+    public boolean isDefaultCategory(ClassNode category) {
+        ModuleNode module = getEnclosingModuleNode();
+        Set<ClassNode> defaultCategories = module.getNodeMetaData(DefaultGroovyMethods.class);
+
+        return defaultCategories.contains(category);
+    }
+
+    public boolean isDefaultStaticCategory(ClassNode category) {
+        ModuleNode module = getEnclosingModuleNode();
+        GrapeAwareGroovyClassLoader loader = (GrapeAwareGroovyClassLoader) module.getUnit().getClassLoader();
+
+        return loader.isDefaultStaticCategory(category.getName());
     }
 
     /**

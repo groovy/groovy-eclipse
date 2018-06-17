@@ -150,11 +150,10 @@ public class GroovyLanguageSupport implements LanguageSupport {
             org.codehaus.groovy.control.CompilationUnit gcu = new org.codehaus.groovy.control.CompilationUnit(compilerConfig);
             JDTResolver resolver = new JDTResolver(gcu);
             gcu.setResolveVisitor(resolver);
-
-            // TODO groovy get this from the Antlr parser
-            compilationResult.lineSeparatorPositions = GroovyUtils.getSourceLineSeparatorsIn(icu.getContents());
-
             gcu.addSource(groovySourceUnit);
+
+            compilationResult.lineSeparatorPositions = GroovyUtils.getSourceLineSeparatorsIn(icu.getContents()); // TODO: Get from Antlr
+
             GroovyCompilationUnitDeclaration decl = new GroovyCompilationUnitDeclaration(problemReporter, compilationResult, sourceLength, gcu, groovySourceUnit, problemReporter.options);
 
             decl.processToPhase(Phases.CONVERSION);

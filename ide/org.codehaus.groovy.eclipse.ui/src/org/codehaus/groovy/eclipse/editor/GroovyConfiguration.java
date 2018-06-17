@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -116,7 +116,7 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
         };
     }
 
-    @Override @SuppressWarnings("unchecked")
+    @Override
     public IContentAssistant getContentAssistant(ISourceViewer sourceViewer) {
         ContentAssistant assistant = (ContentAssistant) super.getContentAssistant(sourceViewer);
 
@@ -125,8 +125,7 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
 
         // retain only Groovy-approved completion proposal categories
         IContentAssistProcessor processor = assistant.getContentAssistProcessor(IDocument.DEFAULT_CONTENT_TYPE);
-        List<CompletionProposalCategory> categories = (List<CompletionProposalCategory>)
-            ReflectionUtils.getPrivateField(ContentAssistProcessor.class, "fCategories", processor);
+        List<CompletionProposalCategory> categories = ReflectionUtils.getPrivateField(ContentAssistProcessor.class, "fCategories", processor);
         List<CompletionProposalCategory> newCategories = new ArrayList<>();
         for (CompletionProposalCategory category : categories) {
             if (GROOVY_CONTENT_ASSIST.matcher(category.getId()).matches()) {

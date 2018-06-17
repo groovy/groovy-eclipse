@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,8 +19,12 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.TreeSet;
 
+import org.codehaus.groovy.antlr.LocationSupport;
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
@@ -31,6 +35,7 @@ import org.eclipse.jdt.groovy.core.util.DepthFirstVisitor;
 
 public class BreakpointLocationFinder {
 
+    protected final LocationSupport locator;
     protected final Iterable<ASTNode> nodes;
 
     public BreakpointLocationFinder(ModuleNode module) {
@@ -52,16 +57,33 @@ public class BreakpointLocationFinder {
             }
 
             @Override
-            public void visitMethod(MethodNode method) {
-                if (method.getLineNumber() > 0) {
-                    nodes.add(method);
+            public void visitMethod(MethodNode node) {
+                if (node.getNameStart() > 0) {
+                    nodes.add(node);
                 }
-                super.visitMethod(method);
+                super.visitMethod(node);
+            }
+
+            @Override
+            public void visitField(FieldNode node) {
+                if (node.getNameStart() > 0) {
+                    nodes.add(node);
+                }
+                super.visitField(node);
+            }
+
+            @Override
+            public void visitClass(ClassNode node) {
+                if (node.getNameStart() > 0) {
+                    nodes.add(node);
+                }
+                super.visitClass(node);
             }
 
         }.visitModule(module);
 
         this.nodes = Collections.unmodifiableSet(nodes);
+        this.locator = module.getNodeMetaData(LocationSupport.class);
     }
 
     public ASTNode findBreakpointLocation(int lineNumber) {
@@ -75,12 +97,23 @@ public class BreakpointLocationFinder {
                     // variable expression in a declaration expression with no initializer
                     skipNext = true;
                 }
-            } else if (node.getLineNumber() >= lineNumber) {
+            } else if (lineNumber(node) >= lineNumber) {
                 bestMatch = node;
                 break;
             }
         }
 
         return bestMatch;
+    }
+
+    protected int lineNumber(ASTNode node) {
+        if (locator != null && (node instanceof AnnotatedNode && !(node instanceof Expression))) {
+            // annotations, modifiers and generics may be on separate line(s)
+            int[] row_col = locator.getRowCol(((AnnotatedNode) node).getNameStart());
+            if (row_col != null && row_col.length > 0) {
+                return row_col[0];
+            }
+        }
+        return node.getLineNumber();
     }
 }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -206,9 +206,13 @@ protected boolean computeChildren(OpenableElementInfo info, IResource underlying
 //			if (module != null && module.exists()) {
 //				vChildren.add(new ClassFile(getPackageFragment(CharOperation.NO_STRINGS), String.valueOf(TypeConstants.MODULE_INFO_NAME)));
 //			}
-			IJavaElement[] children = new IJavaElement[vChildren.size()];
-			vChildren.toArray(children);
-			info.setChildren(children);
+			if (!vChildren.isEmpty()) {
+				IJavaElement[] children = new IJavaElement[vChildren.size()];
+				vChildren.toArray(children);
+				info.setChildren(children);
+			} else {
+				info.setChildren(JavaElement.NO_ELEMENTS);
+			}
 		}
 	} catch (JavaModelException e) {
 		//problem resolving children; structure remains unknown

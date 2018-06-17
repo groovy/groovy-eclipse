@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -3108,11 +3108,23 @@ public void generateSyntheticEnclosingInstanceValues(BlockScope currentScope, Re
 		} else if (compliance == ClassFileConstants.JDK1_4){
 			denyEnclosingArgInConstructorCall = invocationSite instanceof AllocationExpression
 				|| invocationSite instanceof ExplicitConstructorCall && ((ExplicitConstructorCall)invocationSite).isSuperAccess();
-		} else {
+		} else if (compliance < ClassFileConstants.JDK1_7) {
 			//compliance >= JDK1_5
 			denyEnclosingArgInConstructorCall = (invocationSite instanceof AllocationExpression
 					|| invocationSite instanceof ExplicitConstructorCall && ((ExplicitConstructorCall)invocationSite).isSuperAccess())
 				&& !targetType.isLocalType();
+		} else {
+			//compliance >= JDK1_7
+			if (invocationSite instanceof AllocationExpression) {
+				denyEnclosingArgInConstructorCall = !targetType.isLocalType();
+			} else if (invocationSite instanceof ExplicitConstructorCall && 
+					((ExplicitConstructorCall)invocationSite).isSuperAccess()) {
+				MethodScope enclosingMethodScope = currentScope.enclosingMethodScope();
+				denyEnclosingArgInConstructorCall = !targetType.isLocalType() && enclosingMethodScope != null
+						&& enclosingMethodScope.isConstructorCall; 
+			} else {
+				denyEnclosingArgInConstructorCall = false;
+			}
 		}
 
 		boolean complyTo14 = compliance >= ClassFileConstants.JDK1_4;
@@ -3411,8 +3423,9 @@ public static TypeBinding getConstantPoolDeclaringClass(Scope currentScope, Meth
 						&& (options.complianceLevel >= ClassFileConstants.JDK1_4 || !(isImplicitThisReceiver && codegenBinding.isStatic()))
 						&& codegenBinding.declaringClass.id != TypeIds.T_JavaLangObject) // no change for Object methods
 					|| !codegenBinding.declaringClass.canBeSeenBy(currentScope)) {
-				if (actualReceiverType.isIntersectionType18()) {
-					TypeBinding[] intersectingTypes = ((IntersectionTypeBinding18)actualReceiverType).getIntersectingTypes();
+				TypeBinding erasure = actualReceiverType.erasure();
+				if (erasure.isIntersectionType18()) {
+					TypeBinding[] intersectingTypes = ((IntersectionTypeBinding18)erasure).getIntersectingTypes();
 					for(int i = 0; i < intersectingTypes.length; i++) {
 						if (intersectingTypes[i].findSuperTypeOriginatingFrom(constantPoolDeclaringClass) != null) {
 							constantPoolDeclaringClass = intersectingTypes[i];
@@ -3420,7 +3433,7 @@ public static TypeBinding getConstantPoolDeclaringClass(Scope currentScope, Meth
 						}
 					}
 				} else {
-					constantPoolDeclaringClass = actualReceiverType.erasure();
+					constantPoolDeclaringClass = erasure;
 				}
 			}
 		}				
@@ -6046,7 +6059,7 @@ public void new_(TypeReference typeReference, TypeBinding typeBinding) {
 	this.stackDepth++;
 	if (this.stackDepth > this.stackMax)
 		this.stackMax = this.stackDepth;
-	if (this.classFileOffset + 2 >= this.bCodeStream.length) {
+	if (this.classFileOffset + 3 >= this.bCodeStream.length) {
 		resizeByteArray();
 	}
 	this.position++;

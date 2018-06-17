@@ -443,7 +443,8 @@ public ClassFileReader(byte[] classFileBytes, char[] fileName, boolean fullyInit
 	} catch(ClassFormatException e) {
 		throw e;
 	} catch (Exception e) {
-		throw new ClassFormatException(
+		throw new ClassFormatException(e,
+			this.classFileName,
 			ClassFormatException.ErrTruncatedInput,
 			readOffset);
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.test.debug
 
 import org.codehaus.groovy.eclipse.GroovyPlugin
 import org.codehaus.groovy.eclipse.debug.ui.ToggleBreakpointAdapter
+import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.groovy.eclipse.test.SynchronizationUtils
 import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.debug.core.IBreakpointManager
@@ -30,13 +31,81 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-final class DebugBreakpointsTests extends BreakpointTestSuite {
+final class DebugBreakpointsTests extends GroovyEclipseTestSuite {
 
     private ITextEditor editor, former
 
     @Before
     void setUp() {
-        editor = openInEditor(unit)
+        editor = openInEditor(addGroovySource('''\
+            |
+            |def t = [ x:1, y:2 ] // 1
+            |
+            |def shiftTriangle = { it ->
+            |    it.x += 1 // 2
+            |    it.y += 1 // 3
+            |
+            |    it.getX()
+            |}
+            |
+            |t.getX() // 4
+            |
+            |println "Triangle is at $t.centerLocation"
+            |shiftTriangle(t)
+            |println "Triangle is at $t.centerLocation"
+            |
+            |println "Triangle is at $t.centerLocation"
+            |
+            |t = ""
+            |
+            |def x() { // 12
+            |    print "Hi"  // 5
+            |}
+            |
+            |def xx() {
+            |    print "Hi"  // 16
+            |}
+            |
+            |def p = { g -> print g } // 13
+            |
+            |t = [ x: 1,
+            |      y: 2, // 6
+            |      z:4 ] // 7
+            |t = [ 1, // 8
+            |      2, // 9
+            |      3] // 10
+            |t = []; // 11
+            |
+            |
+            |class Class {
+            |    def m() {  // 22
+            |        here()
+            |        here() // 14
+            |        here()
+            |        here()
+            |    }
+            |
+            |    def t = { here() } // 15
+            |
+            |    static h = {
+            |        here() // 17
+            |    }
+            |}
+            |
+            |public class Printing {
+            |    Printing() {  // 21
+            |        print 8  // 18
+            |    }
+            |
+            |    static y() {  // 23
+            |    }
+            |    def x = {
+            |        print 9  // 19
+            |    }
+            |    static z = {
+            |        print 9  // 20
+            |    }
+            |}'''.stripMargin(), nextUnitName()))
         former = ActionDelegateHelper.default.textEditor
         ActionDelegateHelper.default.textEditor = editor
     }
@@ -50,8 +119,9 @@ final class DebugBreakpointsTests extends BreakpointTestSuite {
     private void doBreakpointTest(int i) {
         ToggleBreakpointAdapter adapter = new ToggleBreakpointAdapter()
 
-        String text = String.valueOf(unit.getContents())
-        ITextSelection selection = new TextSelection(new Document(text), text.indexOf('// ' + i) - 3, 3)
+        Document document = editor.documentProvider.getDocument(editor.editorInput)
+        ITextSelection selection = new TextSelection(document, document.get().indexOf('// ' + i) - 3, 3)
+
         boolean canToggle = adapter.canToggleLineBreakpoints(editor, selection)
         assert canToggle : 'Should be able to toggle breakpoint at section ' + i
 

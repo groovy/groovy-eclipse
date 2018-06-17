@@ -16,6 +16,7 @@
 package org.codehaus.groovy.eclipse.codeassist.creators;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -23,13 +24,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
@@ -48,13 +49,19 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
     }
 
     protected boolean checkName(String name) {
-        return name.charAt(0) != '<' && !name.contains("$");
+        return (name.charAt(0) != '<' && !name.contains("$"));
     }
 
     /**
      * Returns all fields, even those that are converted into properties.
      */
     protected Collection<FieldNode> getAllFields(ClassNode thisType, Set<ClassNode> exclude) {
+        if (thisType.isArray()) {
+            FieldNode length = new FieldNode("length", Flags.AccPublic | Flags.AccFinal, ClassHelper.int_TYPE, thisType, null);
+            length.setDeclaringClass(thisType);
+            return Collections.singleton(length);
+        }
+
         Map<String, FieldNode> allFields = new HashMap<>();
 
         // use a LinkedHashSet to preserve order
@@ -119,37 +126,38 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
      */
     private static boolean leftIsMoreAccessible(FieldNode field, FieldNode existing) {
         int leftAcc;
-        switch (field.getModifiers() & (Opcodes.ACC_PUBLIC | Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED)) {
-            case Opcodes.ACC_PUBLIC:
-                leftAcc = 0;
-                break;
-            case Opcodes.ACC_PROTECTED:
-                leftAcc = 1;
-                break;
-            case Opcodes.ACC_PRIVATE:
-                leftAcc = 3;
-                break;
-            default: // package default
-                leftAcc = 2;
-                break;
+        switch (field.getModifiers() & (Flags.AccPublic | Flags.AccPrivate | Flags.AccProtected)) {
+        case Flags.AccPublic:
+            leftAcc = 0;
+            break;
+        case Flags.AccProtected:
+            leftAcc = 1;
+            break;
+        case Flags.AccPrivate:
+            leftAcc = 3;
+            break;
+        default: // package-private
+            leftAcc = 2;
+            break;
         }
 
         int rightAcc;
-        switch (existing.getModifiers() & (Opcodes.ACC_PUBLIC | Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED)) {
-            case Opcodes.ACC_PUBLIC:
-                rightAcc = 0;
-                break;
-            case Opcodes.ACC_PROTECTED:
-                rightAcc = 1;
-                break;
-            case Opcodes.ACC_PRIVATE:
-                rightAcc = 3;
-                break;
-            default: // package default
-                rightAcc = 2;
-                break;
+        switch (existing.getModifiers() & (Flags.AccPublic | Flags.AccPrivate | Flags.AccProtected)) {
+        case Flags.AccPublic:
+            rightAcc = 0;
+            break;
+        case Flags.AccProtected:
+            rightAcc = 1;
+            break;
+        case Flags.AccPrivate:
+            rightAcc = 3;
+            break;
+        default: // package-private
+            rightAcc = 2;
+            break;
         }
-        return leftAcc < rightAcc;
+
+        return (leftAcc < rightAcc);
     }
 
     protected void getAllSupersAsStrings(ClassNode type, Set<String> set) {
@@ -159,7 +167,7 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
         set.add(type.getName());
         getAllSupersAsStrings(type.getSuperClass(), set);
         for (ClassNode inter : (Iterable<ClassNode>) type.getAllInterfaces()) {
-            if (! inter.getName().equals(type.getName())) {
+            if (!inter.getName().equals(type.getName())) {
                 getAllSupersAsStrings(inter, set);
             }
         }
@@ -195,11 +203,6 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
         } else {
             return AccessorSupport.NONE;
         }
-    }
-
-    @Override
-    public boolean redoForLoopClosure() {
-        return true;
     }
 
     protected static ClassNode tryResolveClassNode(String typeName, ModuleNode module) {

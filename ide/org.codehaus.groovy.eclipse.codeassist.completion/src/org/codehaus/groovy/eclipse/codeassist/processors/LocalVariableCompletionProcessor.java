@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,12 +28,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.CodeVisitorSupport;
 import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.GroovyCodeVisitor;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.Variable;
@@ -41,7 +39,7 @@ import org.codehaus.groovy.ast.VariableScope;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
-import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
@@ -51,6 +49,7 @@ import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.CompletionProposal;
+import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
@@ -121,13 +120,13 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
     }
 
     private GroovyFieldProposal createFieldProposal(String name, ClassNode declaring, ClassNode type) {
-        FieldNode field = new FieldNode(name, Opcodes.ACC_PUBLIC, type, declaring, null);
+        FieldNode field = new FieldNode(name, Flags.AccPublic, type, declaring, null);
         field.setDeclaringClass(declaring);
         return new GroovyFieldProposal(field);
     }
 
     private GroovyMethodProposal createMethodProposal(String name, ClassNode declaring, ClassNode returnType) {
-        MethodNode method = new MethodNode(name, Opcodes.ACC_PUBLIC, returnType, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
+        MethodNode method = new MethodNode(name, Flags.AccPublic, returnType, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, null);
         method.setDeclaringClass(declaring);
         return new GroovyMethodProposal(method);
     }
@@ -149,9 +148,8 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
         }
     }
 
-    private Map<String,ClassNode> findLocalNames(String prefix) {
-        ContentAssistContext context = getContext();
-        BlockStatement block = getContainingBlock(context.containingCodeBlock);
+    private Map<String, ClassNode> findLocalNames(String prefix) {
+        BlockStatement block = getContainingBlock(getContext().containingCodeBlock);
         if (block == null) {
             return Collections.emptyMap();
         }
@@ -162,6 +160,7 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
         while (scope != null) {
             for (Iterator<Variable> varIter = scope.getDeclaredVariablesIterator(); varIter.hasNext();) {
                 Variable var = varIter.next();
+
                 boolean inBounds;
                 if (var instanceof Parameter) {
                     inBounds = ((Parameter) var).getEnd() < offset;
@@ -178,7 +177,7 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
         }
 
         // if completion location is within declaration expression, exclude declared variable
-        GroovyCodeVisitor visitor = new CodeVisitorSupport() {
+        block.visit(new CodeVisitorSupport() {
             @Override
             public void visitDeclarationExpression(DeclarationExpression expression) {
                 if (expression.getStart() <= offset && offset <= expression.getEnd()) {
@@ -186,10 +185,7 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
                 }
                 super.visitDeclarationExpression(expression);
             }
-        };
-        for (Statement stmt : block.getStatements()) {
-            stmt.visit(visitor);
-        }
+        });
 
         return nameTypeMap;
     }
@@ -197,6 +193,14 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
     private BlockStatement getContainingBlock(ASTNode node) {
         if (node instanceof BlockStatement) {
             return (BlockStatement) node;
+        }
+        if (node instanceof ReturnStatement) {
+            // empty or simple methods may collapse to return statement
+            if (getContext().containingDeclaration instanceof MethodNode) {
+                return new BlockStatement(
+                    Collections.singletonList((ReturnStatement) node),
+                    ((MethodNode) getContext().containingDeclaration).getVariableScope());
+            }
         }
         if (node instanceof ClassNode && ((ClassNode) node).isScript()) {
             MethodNode script = ((ClassNode) node).getMethod("run", Parameter.EMPTY_ARRAY);

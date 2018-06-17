@@ -15,6 +15,7 @@ package org.eclipse.jdt.core.tests.runtime;
 import java.io.*;
 import java.util.*;
 
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.tests.util.Util;
 
 /**
@@ -71,7 +72,7 @@ public static LocalVMLauncher getLauncher() {
 		return new MacVMLauncher();
 	}
 	String javaVersion = System.getProperty("java.version");
-	boolean isJrt = javaVersion != null && javaVersion.length() > 0 && javaVersion.charAt(0) == '9';
+	boolean isJrt = javaVersion != null && javaVersion.length() > 0 && JavaCore.compareJavaVersions(javaVersion, "9") >= 0;
 	File file = new File(Util.getJREDirectory() + (isJrt ?	"/lib/jrt-fs.jar" :  "/lib/rt.jar"));
 	if (file.exists()) {
 		return new StandardVMLauncher();

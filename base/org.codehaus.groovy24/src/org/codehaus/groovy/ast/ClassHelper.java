@@ -42,6 +42,8 @@ import java.lang.ref.SoftReference;
 import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +57,7 @@ import java.util.regex.Pattern;
  */
 public class ClassHelper {
 
+    @SuppressWarnings("unused")
     private static final Class[] classes = new Class[]{
             Object.class, Boolean.TYPE, Character.TYPE, Byte.TYPE, Short.TYPE,
             Integer.TYPE, Long.TYPE, Double.TYPE, Float.TYPE, Void.TYPE,
@@ -66,6 +69,7 @@ public class ClassHelper {
             Iterator.class, GeneratedClosure.class, GroovyObjectSupport.class
     };
 
+    @SuppressWarnings("unused")
     private static final String[] primitiveClassNames = new String[]{
             "", "boolean", "char", "byte", "short",
             "int", "long", "double", "float", "void"
@@ -121,6 +125,17 @@ public class ClassHelper {
             GROOVY_OBJECT_TYPE, GROOVY_INTERCEPTABLE_TYPE, Enum_Type, Annotation_TYPE
     };
 
+    // GRECLIPSE add
+    private static final Map<String, ClassNode> namesToTypes;
+    static {
+        Map<String, ClassNode> map = new HashMap<String, ClassNode>();
+        for (ClassNode type : types) {
+            map.put(type.getName(), type);
+        }
+        namesToTypes = Collections.unmodifiableMap(map);
+    }
+    // GRECLIPSE end
+
     private static final int ABSTRACT_STATIC_PRIVATE =
             Modifier.ABSTRACT | Modifier.PRIVATE | Modifier.STATIC;
     private static final int VISIBILITY = 5; // public|protected
@@ -175,13 +190,19 @@ public class ClassHelper {
     }
 
     public static ClassNode make(Class c, boolean includeGenerics) {
+        /* GRECLIPSE edit
         for (int i = 0; i < classes.length; i++) {
             if (c == classes[i]) return types[i];
         }
+        */
         if (c.isArray()) {
             ClassNode cn = make(c.getComponentType(), includeGenerics);
             return cn.makeArray();
         }
+        // GRECLIPSE add
+        ClassNode cn = namesToTypes.get(c.getName());
+        if (cn != null) return cn;
+        // GRECLIPSE end
         return makeWithoutCaching(c, includeGenerics);
     }
 
@@ -204,7 +225,6 @@ public class ClassHelper {
             return t;
         }
     }
-
 
     /**
      * Creates a ClassNode using a given class.
@@ -233,6 +253,7 @@ public class ClassHelper {
     public static ClassNode make(String name) {
         if (name == null || name.length() == 0) return DYNAMIC_TYPE;
 
+        /* GRECLIPSE edit
         for (int i = 0; i < primitiveClassNames.length; i++) {
             if (primitiveClassNames[i].equals(name)) return types[i];
         }
@@ -241,6 +262,10 @@ public class ClassHelper {
             String cname = classes[i].getName();
             if (name.equals(cname)) return types[i];
         }
+        */
+        ClassNode cn = namesToTypes.get(name);
+        if (cn != null) return cn;
+        // GRECLIPSE end
         return makeWithoutCaching(name);
     }
 
@@ -310,7 +335,6 @@ public class ClassHelper {
             return cn;
         }
     }
-
 
     /**
      * Test to determine if a ClassNode is a primitive type.

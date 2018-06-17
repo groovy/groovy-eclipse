@@ -368,8 +368,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         blockStack.add(statement);
         super.visitBlockStatement(statement);
         if (check(statement)) {
-            // if we get here, then we know that we are in this block statement,
-            // but not inside any expression.  Use this to complete on
+            // if we get here, then we know that we are in this block statement, but not inside any expression
             createContext(blockStack.getLast(), statement, expressionOrStatement());
         }
         blockStack.removeLast();

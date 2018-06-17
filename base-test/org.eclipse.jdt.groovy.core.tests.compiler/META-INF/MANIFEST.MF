@@ -6,7 +6,8 @@ Bundle-Name: Compiler Tests
 Bundle-Vendor: Codehaus.org
 Bundle-Version: 3.0.0.qualifier
 Export-Package: org.eclipse.jdt.groovy.core.tests,
- org.eclipse.jdt.groovy.core.tests.basic
+ org.eclipse.jdt.groovy.core.tests.basic,
+ org.eclipse.jdt.groovy.core.tests.xform
 Require-Bundle: org.codehaus.groovy;bundle-version="2.1.9";visibility:=reexport,
  org.eclipse.core.resources;bundle-version="[3.12.0,4.0.0)";visibility:=reexport,
  org.eclipse.core.runtime;bundle-version="[3.13.0,4.0.0)";visibility:=reexport,

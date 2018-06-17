@@ -140,8 +140,8 @@ public class ClassNode extends AnnotatedNode implements Opcodes, GroovydocHolder
     }
 
     public static final ClassNode[] EMPTY_ARRAY = new ClassNode[0];
-    public static final ClassNode THIS = new ClassNode(Object.class);
-    public static final ClassNode SUPER = new ClassNode(Object.class);
+    public static final ClassNode THIS = new ImmutableClassNode(Object.class);
+    public static final ClassNode SUPER = new ImmutableClassNode(Object.class);
 
     private String name;
     private int modifiers;
@@ -264,8 +264,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes, GroovydocHolder
     /*
      * Constructor used by makeArray() if no real class is available
      */
-    // GRECLIPSE private->public
-    public ClassNode(ClassNode componentType) {
+    private ClassNode(ClassNode componentType) {
         // GRECLIPSE edit
         this(/*componentType.getName()+"[]"*/computeArrayName(componentType), ACC_PUBLIC, ClassHelper.OBJECT_TYPE);
         // GRECLIPSE end
@@ -282,22 +281,22 @@ public class ClassNode extends AnnotatedNode implements Opcodes, GroovydocHolder
      * <li> reference types: Create [Lcom.foo.Bar; - this isn't quite right really as it should have '/' in...
      * </ul>
      */
-    public static String computeArrayName(ClassNode componentType) {
-        String n = componentType.getName();
+    private static String computeArrayName(ClassNode componentType) {
+        String componentName = componentType.getName();
         if (componentType.isPrimitive()) {
-            int len = n.length();
+            int len = componentName.length();
             if (len == 7) {
                 return "[Z"; //boolean
             } else if (len == 6) {
                 return "[D"; //double
             } else if (len == 5) {
-                if (n.charAt(0) == 'f') {
+                if (componentName.charAt(0) == 'f') {
                     return "[F"; //float
                 } else {
                     return "[S"; //short
                 }
             } else if (len == 4) {
-                 switch (n.charAt(0)) {
+                 switch (componentName.charAt(0)) {
                  case 'b': return "[B"; //byte
                  case 'c': return "[C"; //char
                  default:  return "[J"; //long
@@ -307,10 +306,10 @@ public class ClassNode extends AnnotatedNode implements Opcodes, GroovydocHolder
             }
         } else if (componentType.isArray()) {
             // follow the pattern:
-            if (n.charAt(0) == '[') {
-                return new StringBuilder("[").append(n).toString();
+            if (componentName.charAt(0) == '[') {
+                return new StringBuilder("[").append(componentName).toString();
             } else {
-                return new StringBuilder(n).append("[]").toString();
+                return new StringBuilder(componentName).append("[]").toString();
             }
         } else {
             // reference type:
@@ -322,8 +321,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes, GroovydocHolder
     /*
      * Constructor used by makeArray() if a real class is available
      */
-    // GRECLIPSE private->public
-    public ClassNode(Class c, ClassNode componentType) {
+    private ClassNode(Class c, ClassNode componentType) {
         this(c);
         this.componentType = componentType;
         isPrimaryNode=false;
@@ -1430,13 +1428,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes, GroovydocHolder
         return componentType != null && componentType.isResolved();
     }
 
-    // GRECLIPSE hack -- rework (remove?) this if it behaves as an approach
-    // enables the redirect to be a JDTClassNode and satisfy 'isResolved()'
-    public boolean isReallyResolved() {
-        return false;
-    }
-    // GRECLIPSE end
-
     public boolean isArray() {
         return componentType != null;
     }
@@ -1457,19 +1448,14 @@ public class ClassNode extends AnnotatedNode implements Opcodes, GroovydocHolder
         if (redirect != null) return redirect.getTypeClass();
 
         ClassNode component = redirect().componentType;
-        if (component!=null && component.isResolved()){
+        if (component != null && component.isResolved()) {
             return Array.newInstance(component.getTypeClass(), 0).getClass();
         }
-        // GRECLIPSE add
-        if (redirect().getClass().getName().endsWith("JDTClassNode")) {
-            return redirect().getTypeClass();
-        }
-        // GRECLIPSE end
-        throw new GroovyBugError("ClassNode#getTypeClass for "+getName()+" is called before the type class is set ");
+        throw new GroovyBugError("ClassNode#getTypeClass for " + getName() + " called before the type class is set");
     }
 
-    public boolean hasPackageName(){
-        return redirect().name.indexOf('.')>0;
+    public boolean hasPackageName() {
+        return redirect().name.indexOf('.') > 0;
     }
 
     /**
@@ -1595,7 +1581,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes, GroovydocHolder
     }
 
     public boolean hasClass() {
-        return (redirect().clazz != null);
+        return (clazz != null || redirect().clazz != null);
     }
 
     public boolean isPrimitive() {

@@ -40,8 +40,6 @@ import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.internal.ui.viewsupport.ImageDescriptorRegistry;
 import org.eclipse.jdt.ui.text.java.CompletionProposalLabelProvider;
-import org.eclipse.jface.text.BadLocationException;
-import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.swt.graphics.Image;
@@ -53,16 +51,16 @@ public class ProposalUtils {
     // See org.eclipse.jdt.ui.text.java.CompletionProposalCollector
 
     /** Triggers for method proposals without parameters. Do not modify! */
-    public static final char[] METHOD_TRIGGERS = { ';', ',', '.', '[', ' ', '\t' };
+    public static final char[] METHOD_TRIGGERS = {';', ',', '.', '[', ' ', '\t'};
 
     /** Triggers for method proposals. Do not modify! */
-    public static final char[] METHOD_WITH_ARGUMENTS_TRIGGERS = { '(', '{', '-', ' ' };
+    public static final char[] METHOD_WITH_ARGUMENTS_TRIGGERS = {'(', '{', '-', ' '};
 
     /** Triggers for types. Do not modify! */
-    public static final char[] TYPE_TRIGGERS = { ';', '.', '=', '[', '(', ' ', '\t' };
+    public static final char[] TYPE_TRIGGERS = {';', '.', '=', '[', '(', ' ', '\t'};
 
     /** Triggers for variables. Do not modify! */
-    public static final char[] VAR_TRIGGER = new char[] { ';', '.', '=', '[', '(', '{', ' ', '\t' };
+    public static final char[] VAR_TRIGGER = new char[] {';', '.', '=', '[', '(', '{', ' ', '\t'};
 
     public static final ICompletionProposal[] NO_COMPLETIONS = new ICompletionProposal[0];
     public static final List<IGroovyProposal> NO_PROPOSALS = Collections.EMPTY_LIST;
@@ -121,7 +119,7 @@ public class ProposalUtils {
                     return accessRuleSet.getViolatedRestriction(CharOperation.concatWith(packageChars, fileWithoutExtension, '/'));
                 }
             }
-        } catch (JavaModelException e) {
+        } catch (JavaModelException ignore) {
         }
         return null;
     }
@@ -135,18 +133,18 @@ public class ProposalUtils {
 
     /**
      * Includes named params but not optional params.
-     */
-    public static String createMethodSignatureStr(MethodNode node) {
-        return createMethodSignatureStr(node, 0);
-    }
-
-    /**
-     * Includes named params but not optional params.
      *
      * @param ignoreParameters number of parameters to ignore at the start
      */
     public static char[] createMethodSignature(MethodNode node, int ignoreParameters) {
         return createMethodSignatureStr(node, ignoreParameters).toCharArray();
+    }
+
+    /**
+     * Includes named params but not optional params.
+     */
+    public static String createMethodSignatureStr(MethodNode node) {
+        return createMethodSignatureStr(node, 0);
     }
 
     /**
@@ -303,27 +301,6 @@ public class ProposalUtils {
             if (CharOperation.isWhitespace(c)) {
                 return true;
             }
-        }
-        return false;
-    }
-
-    /** Checks '.&' operator before replacement offset. */
-    public static boolean isMethodPointerCompletion(IDocument document, int replacementOffset) {
-        try {
-            boolean seenAmpersand = false;
-            while (--replacementOffset > 0) {
-                char c = document.getChar(replacementOffset);
-                if (Character.isJavaIdentifierPart(c) || (!Character.isWhitespace(c) && c != '&' && c != '.')) break;
-                if (c == '&') {
-                    if (seenAmpersand) break;
-                    seenAmpersand = true;
-                } else if (c == '.') {
-                    if (seenAmpersand)
-                        return true;
-                    break;
-                }
-            }
-        } catch (BadLocationException e) {
         }
         return false;
     }

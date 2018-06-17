@@ -114,7 +114,7 @@ public class AnnotatedNode extends ASTNode {
         this.hasNoRealSourcePositionFlag = value;
     }
 
-  // GRECLIPSE add
+    // GRECLIPSE add
     public int getNameStart() {
         return nameStart;
     }
@@ -140,5 +140,5 @@ public class AnnotatedNode extends ASTNode {
             setNameEnd(aNode.getNameEnd());
         }
     }
-  // GRECLIPSE end
+    // GRECLIPSE end
 }

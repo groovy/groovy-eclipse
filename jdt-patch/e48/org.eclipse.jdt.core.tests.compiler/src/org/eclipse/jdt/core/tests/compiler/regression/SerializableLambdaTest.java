@@ -1574,7 +1574,7 @@ public class SerializableLambdaTest extends AbstractRegressionTest {
 		"Looking for Testbed.foo\n" +
 		"true",
 		null,true,
-		(isJRE9 
+		(isJRE9Plus 
 		? new String[] { "--add-opens", "java.base/java.io=ALL-UNNAMED" } 
 		: new String [] { "-Ddummy" })
 		);
@@ -1662,7 +1662,7 @@ public class SerializableLambdaTest extends AbstractRegressionTest {
 		"Looking for Testbed$MethodRefImpl.<init>\n" +
 		"true",
 		null,true,
-		(isJRE9 
+		(isJRE9Plus 
 		? new String[] { "--add-opens", "java.base/java.io=ALL-UNNAMED" } 
 		: new String [] { "-Ddummy" })
 		);

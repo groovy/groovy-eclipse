@@ -242,12 +242,20 @@ class AddJarFileToIndex extends BinaryContainer {
 					}
 				}
 				if (!hasModuleInfoClass) {
-					char[] autoModuleName = AutomaticModuleNaming.determineAutomaticModuleName(this.containerPath.toOSString());
-					final char[] contents = CharOperation.append(CharOperation.append(TypeConstants.AUTOMATIC_MODULE_NAME.toCharArray(), ':'), autoModuleName);
-					// adding only the automatic module entry here - can be extended in the future to include other fields.
-					ZipEntry ze = new ZipEntry(TypeConstants.AUTOMATIC_MODULE_NAME);
-					JavaSearchDocument entryDocument = new JavaSearchDocument(ze, zipFilePath, new String(contents).getBytes(Charset.defaultCharset()), participant);
-					this.manager.indexDocument(entryDocument, participant, index, indexPath);
+					String s;
+					try {
+						s = this.resource == null ? this.containerPath.toOSString() :
+							JavaModelManager.getLocalFile(this.resource.getFullPath()).toPath().toAbsolutePath().toString();
+						char[] autoModuleName = AutomaticModuleNaming.determineAutomaticModuleName(s);
+						final char[] contents = CharOperation.append(CharOperation.append(TypeConstants.AUTOMATIC_MODULE_NAME.toCharArray(), ':'), autoModuleName);
+						// adding only the automatic module entry here - can be extended in the future to include other fields.
+						ZipEntry ze = new ZipEntry(TypeConstants.AUTOMATIC_MODULE_NAME);
+						JavaSearchDocument entryDocument = new JavaSearchDocument(ze, zipFilePath, new String(contents).getBytes(Charset.defaultCharset()), participant);
+						this.manager.indexDocument(entryDocument, participant, index, indexPath);
+					} catch (CoreException e) {
+						// TODO Auto-generated catch block
+//						e.printStackTrace();
+					}
 				}
 				if(this.forceIndexUpdate) {
 					this.manager.savePreBuiltIndex(index);

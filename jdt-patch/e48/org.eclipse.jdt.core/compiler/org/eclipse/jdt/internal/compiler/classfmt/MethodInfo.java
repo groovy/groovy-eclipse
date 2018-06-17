@@ -30,12 +30,12 @@ public class MethodInfo extends ClassFileStruct implements IBinaryMethod, Compar
 	protected int accessFlags;
 	protected int attributeBytes;
 	protected char[] descriptor;
-	protected char[][] exceptionNames;
+	protected volatile char[][] exceptionNames;
 	protected char[] name;
 	protected char[] signature;
 	protected int signatureUtf8Offset;
 	protected long tagBits;
-	protected char[][] argumentNames;
+	protected volatile char[][] argumentNames;
 	protected long version;
 
 public static MethodInfo createMethod(byte classFileBytes[], int offsets[], int offset, long version) {
@@ -304,7 +304,6 @@ public char[] getMethodDescriptor() {
 public int getModifiers() {
 	if (this.accessFlags == -1) {
 		// compute the accessflag. Don't forget the deprecated attribute
-		this.accessFlags = u2At(0);
 		readModifierRelatedAttributes();
 	}
 	return this.accessFlags;
@@ -371,9 +370,10 @@ public boolean isConstructor() {
 public boolean isSynthetic() {
 	return (getModifiers() & ClassFileConstants.AccSynthetic) != 0;
 }
-private void readExceptionAttributes() {
+private synchronized void readExceptionAttributes() {
 	int attributesCount = u2At(6);
 	int readOffset = 8;
+	char[][] names = null;
 	for (int i = 0; i < attributesCount; i++) {
 		int utf8Offset = this.constantPoolOffsets[u2At(readOffset)] - this.structOffset;
 		char[] attributeName = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
@@ -383,15 +383,15 @@ private void readExceptionAttributes() {
 			// place the readOffset at the beginning of the exceptions table
 			readOffset += 8;
 			if (entriesNumber == 0) {
-				this.exceptionNames = noException;
+				names = noException;
 			} else {
-				this.exceptionNames = new char[entriesNumber][];
+				names = new char[entriesNumber][];
 				for (int j = 0; j < entriesNumber; j++) {
 					utf8Offset =
 						this.constantPoolOffsets[u2At(
 							this.constantPoolOffsets[u2At(readOffset)] - this.structOffset + 1)]
 							- this.structOffset;
-					this.exceptionNames[j] = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
+					names[j] = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
 					readOffset += 2;
 				}
 			}
@@ -399,11 +399,14 @@ private void readExceptionAttributes() {
 			readOffset += (6 + u4At(readOffset + 2));
 		}
 	}
-	if (this.exceptionNames == null) {
+	if (names == null) {
 		this.exceptionNames = noException;
+	} else {
+		this.exceptionNames = names;
 	}
 }
-private void readModifierRelatedAttributes() {
+private synchronized void readModifierRelatedAttributes() {
+	int flags = u2At(0);
 	int attributesCount = u2At(6);
 	int readOffset = 8;
 	for (int i = 0; i < attributesCount; i++) {
@@ -414,23 +417,24 @@ private void readModifierRelatedAttributes() {
 			switch(attributeName[0]) {
 				case 'D' :
 					if (CharOperation.equals(attributeName, AttributeNamesConstants.DeprecatedName))
-						this.accessFlags |= ClassFileConstants.AccDeprecated;
+						flags |= ClassFileConstants.AccDeprecated;
 					break;
 				case 'S' :
 					if (CharOperation.equals(attributeName, AttributeNamesConstants.SyntheticName))
-						this.accessFlags |= ClassFileConstants.AccSynthetic;
+						flags |= ClassFileConstants.AccSynthetic;
 					break;
 				case 'A' :
 					if (CharOperation.equals(attributeName, AttributeNamesConstants.AnnotationDefaultName))
-						this.accessFlags |= ClassFileConstants.AccAnnotationDefault;
+						flags |= ClassFileConstants.AccAnnotationDefault;
 					break;
 				case 'V' :
 					if (CharOperation.equals(attributeName, AttributeNamesConstants.VarargsName))
-						this.accessFlags |= ClassFileConstants.AccVarargs;
+						flags |= ClassFileConstants.AccVarargs;
 			}
 		}
 		readOffset += (6 + u4At(readOffset + 2));
 	}
+	this.accessFlags = flags;
 }
 /**
  * Answer the size of the receiver in bytes.
@@ -454,7 +458,7 @@ void toString(StringBuffer buffer) {
 protected void toStringContent(StringBuffer buffer) {
 	BinaryTypeFormatter.methodToStringContent(buffer, this);
 }
-private void readCodeAttribute() {
+private synchronized void readCodeAttribute() {
 	int attributesCount = u2At(6);
 	int readOffset = 8;
 	if (attributesCount != 0) {
@@ -501,7 +505,7 @@ private void decodeLocalVariableAttribute(int offset, int codeLength) {
 	final int length = u2At(readOffset);
 	if (length != 0) {
 		readOffset += 2;
-		this.argumentNames = new char[length][];
+		char[][] names = new char[length][];
 		int argumentNamesIndex = 0;
 		for (int i = 0; i < length; i++) {
 			int startPC = u2At(readOffset);
@@ -510,17 +514,18 @@ private void decodeLocalVariableAttribute(int offset, int codeLength) {
 				int utf8Offset = this.constantPoolOffsets[nameIndex] - this.structOffset;
 				char[] localVariableName = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
 				if (!CharOperation.equals(localVariableName, ConstantPool.This)) {
-					this.argumentNames[argumentNamesIndex++] = localVariableName;
+					names[argumentNamesIndex++] = localVariableName;
 				}
 			} else {
 				break;
 			}
 			readOffset += 10;
 		}
-		if (argumentNamesIndex != this.argumentNames.length) {
+		if (argumentNamesIndex != names.length) {
 			// resize
-			System.arraycopy(this.argumentNames, 0, (this.argumentNames = new char[argumentNamesIndex][]), 0, argumentNamesIndex);
+			System.arraycopy(names, 0, (names = new char[argumentNamesIndex][]), 0, argumentNamesIndex);
 		}
+		this.argumentNames = names;
 	}
 }
 private void decodeMethodParameters(int offset, MethodInfo methodInfo) {
@@ -528,18 +533,19 @@ private void decodeMethodParameters(int offset, MethodInfo methodInfo) {
 	final int length = u1At(readOffset);
 	if (length != 0) {
 		readOffset += 1;
-		this.argumentNames = new char[length][];
+		char[][] names = new char[length][];
 		for (int i = 0; i < length; i++) {
 			int nameIndex = u2At(readOffset);
 			if (nameIndex != 0) {
 				int utf8Offset = this.constantPoolOffsets[nameIndex] - this.structOffset;
 				char[] parameterName = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
-				this.argumentNames[i] = parameterName;
+				names[i] = parameterName;
 			} else {
-				this.argumentNames[i] = CharOperation.concat(ARG, String.valueOf(i).toCharArray());
+				names[i] = CharOperation.concat(ARG, String.valueOf(i).toCharArray());
 			}
 			readOffset += 4;
 		}
+		this.argumentNames = names;
 	}
 }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -157,7 +157,7 @@ class JDTClassNodeBuilder {
             return fb;
         } else if (tb instanceof BinaryTypeBinding) {
             if (tb.isGenericType()) {
-                LookupEnvironment le = (LookupEnvironment) ReflectionUtils.getPrivateField(BinaryTypeBinding.class, "environment", tb);
+                LookupEnvironment le = ReflectionUtils.getPrivateField(BinaryTypeBinding.class, "environment", tb);
                 return le.convertToRawType(tb, false);
             } else {
                 return tb;

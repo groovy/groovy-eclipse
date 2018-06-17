@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2016 IBM Corporation and others.
+ * Copyright (c) 2006, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -7022,6 +7022,100 @@ public void testbug484546() {
 			"}\n"
 		},
 		"10");
+}
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=373371 [compiler] JDT Compiler reports an error whereas javac compiles without problem
+public void testbug373371() {
+	String[] sources = new String[] {
+		"Outer.java",
+		"class Outer {\n" + 
+		"    class Inner extends Outer {    }\n" + 
+		"    class SubInner extends Inner {\n" + 
+		"        public SubInner() {\n" + 
+		"          // Outer.this.super(); // (1)\n" + 
+		"        }\n" + 
+		"    }\n" + 
+		"}"
+	};
+	if (this.complianceLevel < ClassFileConstants.JDK1_4 || this.complianceLevel > ClassFileConstants.JDK1_6) {
+		this.runConformTest(sources);
+	} else {
+		this.runNegativeTest(
+			sources,
+			"----------\n" +
+			"1. ERROR in Outer.java (at line 4)\n" +
+			"	public SubInner() {\n" +
+			"	       ^^^^^^^^^^\n" +
+			"No enclosing instance of type Outer is available due to some intermediate constructor invocation\n" +
+			"----------\n");
+	}
+}
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=522061 EJC 4.8M1 does not compile a class that javac 1.8.0_112 compiles
+public void testbug522061() {
+	String[] sources = new String[] {
+		"ztest/Foo.java",
+		"package ztest;\n" + 
+		"import java.io.File;\n" + 
+		"import javax.swing.Action;\n" + 
+		"public abstract class Foo {\n" + 
+		"	public FilteredFileTree matching(final Action filterConfigAction) {\n" + 
+		"		return new FilteredFileTree() {\n" + 
+		"			//@Override\n" + 
+		"			protected File filter(File set) {\n" + 
+		"				return null;\n" + 
+		"			}\n" + 
+		"		};\n" + 
+		"	}\n" + 
+		"	public String getDisplayName() {\n" + 
+		"		return null;\n" + 
+		"	}\n" + 
+		"   private abstract class FilteredFileTree extends Foo {\n" + 
+		"		protected abstract File filter(File set);\n" + 
+		"		public String getDisplayName() {\n" + 
+		"			return Foo.this.toString();\n" + 
+		"		}\n" + 
+		"	}\n" + 
+		"}"
+	};
+	if (this.complianceLevel < ClassFileConstants.JDK1_4 || this.complianceLevel > ClassFileConstants.JDK1_6) {
+		this.runConformTest(sources);
+	} else {
+		this.runNegativeTest(
+			sources,
+			"----------\n" + 
+			"1. WARNING in ztest\\Foo.java (at line 6)\n" + 
+			"	return new FilteredFileTree() {\n" + 
+			"	           ^^^^^^^^^^^^^^^^^^\n" + 
+			"Access to enclosing constructor Foo.FilteredFileTree() is emulated by a synthetic accessor method\n" + 
+			"----------\n" + 
+			"2. ERROR in ztest\\Foo.java (at line 6)\n" + 
+			"	return new FilteredFileTree() {\n" + 
+			"	           ^^^^^^^^^^^^^^^^^^\n" + 
+			"No enclosing instance of type Foo is available due to some intermediate constructor invocation\n" + 
+			"----------\n");
+	}
+}
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=481793 Compilation error when trying to compile nested inner classes
+public void testbug481793() {
+	String[] sources = new String[] {
+		"A.java",
+		"public class A {\n" + 
+		"	public class B extends A {\n" + 
+		"		public class C extends B {}\n" + 
+		"	}\n" + 
+		"}"
+	};
+	if (this.complianceLevel < ClassFileConstants.JDK1_4 || this.complianceLevel > ClassFileConstants.JDK1_6) {
+		this.runConformTest(sources);
+	} else {
+		this.runNegativeTest(
+			sources,
+			"----------\n" + 
+			"1. ERROR in A.java (at line 3)\n" + 
+			"	public class C extends B {}\n" + 
+			"	             ^\n" + 
+			"No enclosing instance of type A is available due to some intermediate constructor invocation\n" + 
+			"----------\n");
+	}
 }
 public static Class testClass() {
 	return InnerEmulationTest.class;

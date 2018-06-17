@@ -1,4 +1,5 @@
 ###prop
+maxLineLegth=200
 setPreferences=true
 ###src
 // GRECLIPSE-460 no AIOOBE

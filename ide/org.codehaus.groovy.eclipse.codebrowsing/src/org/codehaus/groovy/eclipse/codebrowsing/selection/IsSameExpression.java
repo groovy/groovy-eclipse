@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -177,132 +177,99 @@ public class IsSameExpression {
     }
 
     private boolean visit(TernaryExpression left, TernaryExpression right) {
-        return isSame(left.getBooleanExpression(), right.getBooleanExpression()) &&
-               isSame(left.getTrueExpression(), right.getTrueExpression()) &&
-               isSame(left.getFalseExpression(), right.getFalseExpression());
+        return isSame(left.getBooleanExpression(), right.getBooleanExpression()) && isSame(left.getTrueExpression(), right.getTrueExpression()) && isSame(left.getFalseExpression(), right.getFalseExpression());
     }
-
 
     private boolean visit(StaticMethodCallExpression left, StaticMethodCallExpression right) {
-        return visit(left.getType(), right.getType()) && left.getMethod().equals(right.getMethod()) &&
-              isSame(left.getArguments(), right.getArguments()) ;
+        return visit(left.getType(), right.getType()) && left.getMethod().equals(right.getMethod()) && isSame(left.getArguments(), right.getArguments());
     }
-
 
     private boolean visit(SpreadExpression left, SpreadExpression right) {
         return isSame(left.getExpression(), right.getExpression());
     }
 
-
     private boolean visit(SpreadMapExpression left, SpreadMapExpression right) {
         return isSame(left.getExpression(), right.getExpression());
     }
-
 
     private boolean visit(RangeExpression left, RangeExpression right) {
         return isSame(left.getFrom(), right.getFrom()) && isSame(left.getTo(), right.getTo());
     }
 
-
     private boolean visit(PropertyExpression left, PropertyExpression right) {
         return isSame(left.getObjectExpression(), right.getObjectExpression()) && isSame(left.getProperty(), right.getProperty());
     }
-
 
     private boolean visit(PrefixExpression left, PrefixExpression right) {
         return nullEquals(left.getOperation(), (right.getOperation())) && isSame(left.getExpression(), right.getExpression());
     }
 
-
     private boolean visit(PostfixExpression left, PostfixExpression right) {
         return nullEquals(left.getOperation(), (right.getOperation())) && isSame(left.getExpression(), right.getExpression());
     }
 
-
     private boolean visit(MethodPointerExpression left, MethodPointerExpression right) {
-        return isSame(left.getExpression(), right.getExpression()) &&
-               isSame(left.getMethodName(), right.getMethodName());
+        return isSame(left.getExpression(), right.getExpression()) && isSame(left.getMethodName(), right.getMethodName());
     }
-
 
     private boolean visit(MethodCallExpression left, MethodCallExpression right) {
-        return isSame(left.getObjectExpression(), right.getObjectExpression()) &&
-               isSame(left.getMethod(), right.getMethod()) &&
-               isSame(left.getArguments(), right.getArguments());
+        return isSame(left.getObjectExpression(), right.getObjectExpression()) && isSame(left.getMethod(), right.getMethod()) && isSame(left.getArguments(), right.getArguments());
     }
-
 
     private boolean visit(MapExpression left, MapExpression right) {
         return checkExpressionList(left.getMapEntryExpressions(), right.getMapEntryExpressions());
     }
 
-
     private boolean visit(ListExpression left, ListExpression right) {
         return checkExpressionList(left.getExpressions(), right.getExpressions());
     }
 
-
     private boolean visit(GStringExpression left, GStringExpression right) {
-        return checkExpressionList(left.getStrings(), right.getStrings()) &&
-               checkExpressionList(left.getValues(), right.getValues());
+        return checkExpressionList(left.getStrings(), right.getStrings()) && checkExpressionList(left.getValues(), right.getValues());
     }
-
 
     private boolean visit(FieldExpression left, FieldExpression right) {
-        return visit(left.getField().getDeclaringClass(), right.getField().getDeclaringClass())
-                && nullEquals(left.getFieldName(), right.getFieldName());
+        return visit(left.getField().getDeclaringClass(), right.getField().getDeclaringClass()) && nullEquals(left.getFieldName(), right.getFieldName());
     }
-
 
     private boolean visit(EmptyExpression left, EmptyExpression right) {
         return true;
     }
 
-
     private boolean visit(ConstructorCallExpression left, ConstructorCallExpression right) {
         return visit(left.getType(), right.getType()) && isSame(left.getArguments(), right.getArguments());
     }
-
 
     private boolean visit(ConstantExpression left, ConstantExpression right) {
         return nullEquals(left.getText(), right.getText());
     }
 
-
     private boolean visit(ClosureExpression left, ClosureExpression right) {
         return false;  // not implemented yet because we can't compare statements
     }
-
 
     private boolean visit(ClassExpression left, ClassExpression right) {
         return visit(left.getType(), right.getType());
     }
 
-
     private boolean visit(CastExpression left, CastExpression right) {
         return visit(left.getType(), right.getType()) && isSame(left.getExpression(), right.getExpression());
     }
-
 
     private boolean visit(BooleanExpression left, BooleanExpression right) {
         return isSame(left.getExpression(), right.getExpression());
     }
 
-
     private boolean visit(BitwiseNegationExpression left, BitwiseNegationExpression right) {
         return isSame(left.getExpression(), right.getExpression());
     }
 
-
     private boolean visit(BinaryExpression left, BinaryExpression right) {
-        return left.getOperation().getType() == right.getOperation().getType()
-                && isSame(left.getLeftExpression(), right.getLeftExpression())
-                && isSame(left.getRightExpression(), right.getRightExpression());
+        return left.getOperation().getType() == right.getOperation().getType() && isSame(left.getLeftExpression(), right.getLeftExpression()) && isSame(left.getRightExpression(), right.getRightExpression());
     }
 
     private boolean visit(ArrayExpression left, ArrayExpression right) {
-        return checkExpressionList(left.getExpressions(), right.getExpressions()) &&
-               checkExpressionList(left.getSizeExpression(), right.getSizeExpression());
+        return checkExpressionList(left.getExpressions(), right.getExpressions()) && checkExpressionList(left.getSizeExpression(), right.getSizeExpression());
     }
 
     private boolean visit(ClassNode left, ClassNode right) {

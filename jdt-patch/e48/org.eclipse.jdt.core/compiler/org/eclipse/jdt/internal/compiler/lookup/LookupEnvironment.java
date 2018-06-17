@@ -420,10 +420,10 @@ private ModuleBinding getModuleFromAnswer(NameEnvironmentAnswer answer) {
 		} else { 
 			moduleBinding = this.knownModules.get(moduleName);
 			if (moduleBinding == null && this.nameEnvironment instanceof IModuleAwareNameEnvironment) {
-				assert answer.isBinaryType();
 				IModule iModule = ((IModuleAwareNameEnvironment) this.nameEnvironment).getModule(moduleName);
 				try {
-					moduleBinding = BinaryModuleBinding.create(iModule, this);
+					this.typeRequestor.accept(iModule, this);
+					moduleBinding = this.knownModules.get(moduleName);
 				} catch (NullPointerException e) {
 					System.err.println("Bug 529367: moduleName: " + new String(moduleName) + "iModule null" +  //$NON-NLS-1$ //$NON-NLS-2$
 							(iModule == null ? "true" : "false")); //$NON-NLS-1$ //$NON-NLS-2$]
@@ -780,9 +780,19 @@ private PackageBinding computePackageFrom(char[][] constantPoolName, boolean isM
 		}
 	}
 	if (packageBinding instanceof SplitPackageBinding) {
-		PackageBinding incarnation = ((SplitPackageBinding) packageBinding).getIncarnation(this.module);
-		if (incarnation != null)
-			packageBinding = incarnation;
+		PackageBinding candidate = null;
+		// select from incarnations the unique package containing CUs, if any:
+		for (PackageBinding incarnation : ((SplitPackageBinding) packageBinding).incarnations) {
+			if (incarnation.hasCompilationUnit(false)) {
+				if (candidate != null) {
+					candidate = null;
+					break; // likely to report "accessible from more than one module" downstream 
+				}
+				candidate = incarnation;
+			}
+		}
+		if (candidate != null)
+			return candidate;
 	}
 	return packageBinding;
 }
@@ -794,12 +804,12 @@ private PackageBinding computePackageFrom(char[][] constantPoolName, boolean isM
 public ReferenceBinding convertToParameterizedType(ReferenceBinding originalType) {
 	if (originalType != null) {
 		boolean isGeneric = originalType.isGenericType();
-		if (!isGeneric && originalType.isStatic())
+		if (!isGeneric && !originalType.hasEnclosingInstanceContext())
 			return originalType;
 		ReferenceBinding originalEnclosingType = originalType.enclosingType();
 		ReferenceBinding convertedEnclosingType = originalEnclosingType;
 		boolean needToConvert = isGeneric;
-		if (originalEnclosingType != null && hasInstanceContext(originalType)) {
+		if (originalEnclosingType != null && originalType.hasEnclosingInstanceContext()) {
 			convertedEnclosingType = convertToParameterizedType(originalEnclosingType);
 			needToConvert |= TypeBinding.notEquals(originalEnclosingType, convertedEnclosingType);
 		}
@@ -809,15 +819,6 @@ public ReferenceBinding convertToParameterizedType(ReferenceBinding originalType
 	}
 	return originalType;
 }
-private boolean hasInstanceContext(ReferenceBinding type) {
-	if (type.isMemberType() && !type.isStatic())
-		return true;
-	MethodBinding enclosingMethod = type.enclosingMethod();
-	if (enclosingMethod != null)
-		return !enclosingMethod.isStatic();
-	return false;
-}
-
 /**
  * Returns the given binding's raw type binding.
  * @param type the TypeBinding to raw convert
@@ -866,7 +867,7 @@ public TypeBinding convertToRawType(TypeBinding type, boolean forceRawEnclosingT
 		convertedType = needToConvert ? createRawType((ReferenceBinding)originalType.erasure(), null) : originalType;
 	} else {
 		ReferenceBinding convertedEnclosing;
-		if(((ReferenceBinding)originalType).isStatic()) {
+		if (!((ReferenceBinding)originalType).hasEnclosingInstanceContext()) {
 			convertedEnclosing = (ReferenceBinding) originalEnclosing.original();
 		} else {
 			if (originalEnclosing.kind() == Binding.RAW_TYPE) {			
@@ -1232,7 +1233,12 @@ public PolymorphicMethodBinding createPolymorphicMethod(MethodBinding originalPo
 		if (parameterTypeBinding.id == TypeIds.T_null) {
 			parametersTypeBinding[i] = getType(JAVA_LANG_VOID, javaBaseModule());
 		} else {
-			parametersTypeBinding[i] = parameterTypeBinding.erasure();
+			if (parameterTypeBinding.isPolyType()) {
+				PolyTypeBinding ptb = (PolyTypeBinding) parameterTypeBinding;
+				parametersTypeBinding[i] = ptb.expression.resolvedType;
+			} else {
+				parametersTypeBinding[i] = parameterTypeBinding.erasure();
+			}
 		}
 	}
 	boolean needToGrow = false;

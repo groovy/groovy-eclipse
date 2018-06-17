@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -105,7 +105,7 @@ public abstract class AddImportOnSelectionAdapter extends org.eclipse.jdt.intern
     }
 
     private CompilationUnitEditor getCompilationUnitEditor() {
-        CompilationUnitEditor editor = (CompilationUnitEditor) ReflectionUtils.getPrivateField(
+        CompilationUnitEditor editor = ReflectionUtils.getPrivateField(
             org.eclipse.jdt.internal.ui.javaeditor.AddImportOnSelectionAction.class, "fEditor", this);
         return editor;
     }
@@ -119,7 +119,7 @@ public abstract class AddImportOnSelectionAdapter extends org.eclipse.jdt.intern
     }
 
     private IEditingSupport newEditingSupport(ITextSelection textSelection, IChooseImportQuery typeQuery) {
-        return (IEditingSupport) ReflectionUtils.executePrivateMethod(
+        return ReflectionUtils.executePrivateMethod(
             org.eclipse.jdt.internal.ui.javaeditor.AddImportOnSelectionAction.class,
             "createViewerHelper", new Class[] {ITextSelection.class, SELECT_TYPE_QUERY}, this, new Object[] {textSelection, typeQuery});
 //        return new IEditingSupport() {

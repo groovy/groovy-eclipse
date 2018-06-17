@@ -123,16 +123,9 @@ public char[] getModuleName() {
 	return mod == null ? null : mod.name();
 }
 
-// GROOVY add -- GRECLIPSE-963
-public static final String LINK_TO_GRAILS_PLUGINS = ".link_to_grails_plugins"; //$NON-NLS-1$
-public boolean isInLinkedSourceFolder() {
-	if (this.sourceLocation != null &&  this.sourceLocation.sourceFolder != null) {
-		IPath fullPath = this.sourceLocation.sourceFolder.getFullPath();
-		if (fullPath != null) {
-			return LINK_TO_GRAILS_PLUGINS.equals(fullPath.segment(1));
-		}
-	}
-	return false;
+// GROOVY add
+public IPath getOutputLocation() {
+	return this.sourceLocation.getProjectRelativePath();
 }
 // GROOVY end
 }

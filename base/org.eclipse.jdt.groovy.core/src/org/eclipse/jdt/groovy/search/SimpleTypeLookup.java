@@ -53,7 +53,6 @@ import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
-import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.classgen.asm.OptimizingStatementWriter.StatementMeta;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -73,11 +72,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     @Override
     public void initialize(GroovyCompilationUnit unit, VariableScope topLevelScope) {
         this.unit = unit;
-    }
-
-    @Override
-    public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
-        return lookupType(node, scope, objectExpressionType, false);
     }
 
     @Override
@@ -149,10 +143,6 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             type = node.getType();
         }
         return new TypeLookupResult(type, scope.getEnclosingTypeDeclaration(), node /* should be methodnode? */, TypeConfidence.EXACT, scope);
-    }
-
-    @Override
-    public void lookupInBlock(BlockStatement node, VariableScope scope) {
     }
 
     //--------------------------------------------------------------------------
@@ -412,8 +402,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         }
 
         // StatementAndExpressionCompletionProcessor circa line 390 has similar check for proposals
-        if (confidence == TypeConfidence.UNKNOWN && VariableScope.CLASS_CLASS_NODE.equals(realDeclaringType) && realDeclaringType.isUsingGenerics()) {
-            ClassNode typeParam = realDeclaringType.getGenericsTypes()[0].getType();
+        if (confidence == TypeConfidence.UNKNOWN && VariableScope.CLASS_CLASS_NODE.equals(declaringType) && declaringType.isUsingGenerics()) {
+            ClassNode typeParam = declaringType.getGenericsTypes()[0].getType();
             if (!VariableScope.CLASS_CLASS_NODE.equals(typeParam) && !VariableScope.OBJECT_CLASS_NODE.equals(typeParam)) {
                 // GRECLIPSE-1544: "Type.staticMethod()" or "def type = Type.class; type.staticMethod()" or ".&" variations
                 return findTypeForNameWithKnownObjectExpression(name, type, typeParam, scope, confidence0, isStaticObjectExpression, isPrimaryExpression, isLhsExpression);
@@ -712,7 +702,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         } else {
             StatementMeta meta = expr.getNodeMetaData(StatementMeta.class);
             if (meta != null) {
-                MethodNode target = (MethodNode) ReflectionUtils.getPrivateField(StatementMeta.class, "target", meta);
+                MethodNode target = ReflectionUtils.getPrivateField(StatementMeta.class, "target", meta);
                 return target;
             }
         }
@@ -868,8 +858,9 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     protected static Boolean isTypeCompatible(ClassNode source, ClassNode target) {
         Boolean result = Boolean.TRUE;
         if (!target.equals(source) &&
-            !(source == VariableScope.NULL_TYPE && !target.isPrimitive()) &&
-            !(source.equals(VariableScope.CLOSURE_CLASS_NODE) && ClassHelper.isSAMType(target))) {
+            !(source == VariableScope.NULL_TYPE && !target.isPrimitive()) /*&&
+            !(source.equals(VariableScope.CLOSURE_CLASS_NODE) && ClassHelper.isSAMType(target))*/) {
+            // NOTE: Exact match of Closure to SAM Type creates tie for m(Closure) and m(Comparator)
 
             result = !GroovyUtils.isAssignable(source, target) ? Boolean.FALSE : null; // not an exact match
         }

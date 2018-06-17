@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -84,6 +84,7 @@ public class ASTRewriteFlattener extends ASTVisitor {
 	/** @deprecated using deprecated code */
 	private static final int JLS8_INTERNAL = AST.JLS8;
 
+	/** @deprecated using deprecated code */
 	private static final int JLS9_INTERNAL = AST.JLS9;
 
 
@@ -1337,6 +1338,10 @@ public class ASTRewriteFlattener extends ASTVisitor {
 	}
 
 	@Override
+	/*
+	 * @see ASTVisitor#visit(ModuleModifier)
+	 * @since 3.14
+	 */
 	public boolean visit(ModuleModifier node) {
 		this.result.append(getAttribute(node, ModuleModifier.KEYWORD_PROPERTY).toString());
 		return false;

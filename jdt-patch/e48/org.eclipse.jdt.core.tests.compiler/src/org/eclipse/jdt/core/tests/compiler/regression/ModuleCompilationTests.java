@@ -37,7 +37,7 @@ import junit.framework.Test;
 public class ModuleCompilationTests extends AbstractBatchCompilerTest {
 
 	static {
-//		 TESTS_NAMES = new String[] { "testPackageConflict4a" };
+//		 TESTS_NAMES = new String[] { "test_npe_bug535107" };
 		// TESTS_NUMBERS = new int[] { 1 };
 		// TESTS_RANGE = new int[] { 298, -1 };
 	}
@@ -4089,6 +4089,26 @@ public void testBug521362_emptyFile() {
 	        "",
 	        true);
 	}
+	public void testReleaseOption13a() {
+		runConformModuleTest(
+			new String[] {
+				"p/X.java",
+				"package p;\n" +
+				"public class X {\n" +
+				"	public static void main(String[] args) {\n" +
+				"	}\n" +
+				"}",
+				"module-info.java",
+				"module mod.one { \n" +
+				"	requires java.base;\n" +
+				"}"
+	        },
+			" --release 10 \"" + OUTPUT_DIR +  File.separator + "module-info.java\" "
+	        + "\"" + OUTPUT_DIR +  File.separator + "p/X.java\"",
+	        "",
+	        "",
+	        true);
+	}
 	public void testReleaseOption14() {
 		runNegativeModuleTest(
 			new String[] {
@@ -4843,5 +4863,66 @@ public void testBug521362_emptyFile() {
 				"",
 				false,
 				OUTPUT_DIR + "javac");
+	}
+	/*
+	 * Test that when module-info is not included in the command line, the class is still
+	 * generated inside the module's sub folder.
+	 */
+	public void testBug533411() {
+		File outputDirectory = new File(OUTPUT_DIR);
+		Util.flushDirectoryContent(outputDirectory);
+		String out = "bin";
+		String directory = OUTPUT_DIR + File.separator + "src";
+		String moduleLoc = directory + File.separator + "mod.one";
+		List<String> files = new ArrayList<>(); 
+		writeFileCollecting(files, moduleLoc, "module-info.java", 
+						"module mod.one { \n" +
+						"	requires java.sql;\n" +
+						"}");
+		writeFileCollecting(files, moduleLoc + File.separator + "p", "Test.java", 
+				"package p;\n" +
+				"public class Test {\n" +
+				"	java.sql.Connection conn = null;\n" +
+				"}");
+
+		StringBuffer buffer = new StringBuffer();
+		buffer.append("-d " + OUTPUT_DIR + File.separator + out )
+			.append(" -9 ")
+			.append(" -classpath \"")
+			.append(Util.getJavaClassLibsAsString())
+			.append("\" ")
+			.append(" --module-source-path " + "\"" + directory + "\" ")
+			.append(moduleLoc + File.separator + "p" + File.separator + "Test.java");
+
+		Set<String> classFiles = runConformModuleTest(
+				new String[0],
+				buffer.toString(),
+				"",
+				"",
+				false);
+		String fileName = OUTPUT_DIR + File.separator + out + File.separator + "mod.one" + File.separator + "module-info.class";
+		assertClassFile("Missing modul-info.class: " + fileName, fileName, classFiles);
+	}
+	public void test_npe_bug535107() {
+		runConformModuleTest(
+				new String[] {
+					"p/X.java",
+					"package p;\n" +
+			  		"import java.lang.annotation.*;\n" + 
+					"@Target(ElementType.MODULE)\n" +
+					"public @interface X {\n" +
+					"	ElementType value();\n" + 
+					"}",
+					"module-info.java",
+			  		"import java.lang.annotation.*;\n" + 
+			  		"@p.X(ElementType.MODULE)\n" + 
+					"module mod.one { \n" +
+					"}"
+		        },
+				" -9 \"" + OUTPUT_DIR +  File.separator + "module-info.java\" "
+		        + "\"" + OUTPUT_DIR +  File.separator + "p/X.java\"",
+		        "",
+		        "",
+		        true);
 	}
 }

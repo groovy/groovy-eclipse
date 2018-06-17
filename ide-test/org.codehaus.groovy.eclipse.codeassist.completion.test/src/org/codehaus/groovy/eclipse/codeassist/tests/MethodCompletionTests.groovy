@@ -15,7 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
 import static org.junit.Assert.fail
+import static org.junit.Assume.assumeTrue
 
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
@@ -35,13 +37,13 @@ final class MethodCompletionTests extends CompletionTestSuite {
     private List<MethodNode> delegateTestParameterNames(GroovyCompilationUnit unit) {
         waitForIndex()
         List<MethodNode> methods = extract(unit).getMethods('m')
-        for (MethodNode method : methods) {
-            if (method.getParameters().length == 1) {
+        for (method in methods) {
+            if (method.parameters.length == 1) {
                 GroovyMethodProposal proposal = new GroovyMethodProposal(method)
                 char[][] names = proposal.createAllParameterNames(unit)
                 checkNames(['x'.toCharArray()] as char[][], names)
             }
-            if (method.getParameters().length == 2) {
+            if (method.parameters.length == 2) {
                 GroovyMethodProposal proposal = new GroovyMethodProposal(method)
                 char[][] names = proposal.createAllParameterNames(unit)
                 checkNames(['x'.toCharArray(), 'y'.toCharArray()] as char[][], names)
@@ -51,13 +53,13 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     private static ClassNode extract(GroovyCompilationUnit unit) {
-        Statement state = unit.getModuleNode().getStatementBlock().getStatements().get(0)
+        Statement state = unit.moduleNode.statementBlock.statements.get(0)
         if (state instanceof ReturnStatement) {
             ReturnStatement ret = (ReturnStatement) state
-            return ret.getExpression().getType()
+            return ret.expression.type
         } else if (state instanceof ExpressionStatement) {
             ExpressionStatement expr = (ExpressionStatement) state
-            return expr.getExpression().getType()
+            return expr.expression.type
         } else {
             fail('Invalid statement kind for ' + state + '\nExpecting return statement or expression statement')
             return null
@@ -470,8 +472,27 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
+    void testMethodPointer0() {
+        String contents = 'class Foo { public static Foo instance }\nFoo.&in'
+        proposalExists(createProposalsAtOffset(contents, getLastIndexOf(contents, 'in')), 'instance', 0)
+    }
+
+    @Test
+    void testMethodPointer0a() {
+        String contents = 'class Foo { public static Foo instance }\nFoo::in'
+        proposalExists(createProposalsAtOffset(contents, getLastIndexOf(contents, 'in')), 'instance', 0)
+    }
+
+    @Test
     void testMethodPointer1() {
         String contents = 'String.&isE'
+        applyProposalAndCheck(checkUniqueProposal(contents, 'isE', 'isEmpty'), contents + 'mpty')
+    }
+
+    @Test
+    void testMethodPointer1a() {
+        assumeTrue(isParrotParser())
+        String contents = 'String::isE'
         applyProposalAndCheck(checkUniqueProposal(contents, 'isE', 'isEmpty'), contents + 'mpty')
     }
 
@@ -482,8 +503,22 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
+    void testMethodPointer2a() {
+        assumeTrue(isParrotParser())
+        String contents = 'String::  isE'
+        applyProposalAndCheck(checkUniqueProposal(contents, 'isE', 'isEmpty'), contents + 'mpty')
+    }
+
+    @Test
     void testMethodPointer3() {
         String contents = 'String.&isEmpty.mem'
+        applyProposalAndCheck(checkUniqueProposal(contents, 'mem', 'memoize()'), contents + 'oize()')
+    }
+
+    @Test
+    void testMethodPointer3a() {
+        assumeTrue(isParrotParser())
+        String contents = 'String::isEmpty.mem'
         applyProposalAndCheck(checkUniqueProposal(contents, 'mem', 'memoize()'), contents + 'oize()')
     }
 
@@ -491,6 +526,42 @@ final class MethodCompletionTests extends CompletionTestSuite {
     void testMethodPointer4() {
         String contents = '(String.&isEmpty).mem'
         applyProposalAndCheck(checkUniqueProposal(contents, 'mem', 'memoize()'), contents + 'oize()')
+    }
+
+    @Test
+    void testMethodPointer4a() {
+        assumeTrue(isParrotParser())
+        String contents = '(String::isEmpty).mem'
+        applyProposalAndCheck(checkUniqueProposal(contents, 'mem', 'memoize()'), contents + 'oize()')
+    }
+
+    @Test
+    void testAnnotatedMethod1() {
+        String contents = '''\
+            class Foo {
+              @SuppressWarnings(value=[])
+              def bar(def baz) {
+                baz.
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'baz.'))
+        proposalExists(proposals, 'equals', 1)
+    }
+
+    @Test
+    void testAnnotatedMethod2() {
+        String contents = '''\
+            class Foo {
+              @SuppressWarnings(value=[])
+              def bar() {
+                def baz = whatever()
+                baz.
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'baz.'))
+        proposalExists(proposals, 'equals', 1)
     }
 
     @Test

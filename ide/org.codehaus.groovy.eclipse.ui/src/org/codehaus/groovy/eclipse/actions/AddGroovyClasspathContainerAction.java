@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2009 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,17 +17,12 @@ package org.codehaus.groovy.eclipse.actions;
 
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.ui.IObjectActionDelegate;
 
-public class AddGroovyClasspathContainerAction extends AbstractAddClasspathContainerAction implements IObjectActionDelegate {
+public class AddGroovyClasspathContainerAction extends AbstractAddClasspathContainerAction {
+
     @Override
     protected IPath getClasspathContainerPath() {
         return GroovyClasspathContainer.CONTAINER_ID;
-    }
-
-    @Override
-    protected String errorMessage() {
-        return "Failed to add Groovy libraries to classpath";
     }
 
     @Override
@@ -36,17 +31,17 @@ public class AddGroovyClasspathContainerAction extends AbstractAddClasspathConta
     }
 
     @Override
+    protected String errorMessage() {
+        return "Failed to add Groovy libraries";
+    }
+
+    @Override
     protected String addText() {
-        return "Add Groovy libraries to classpath";
+        return "Add Groovy Libraries to classpath";
     }
 
     @Override
     protected String removeText() {
-        return "Remove Groovy libraries from classpath";
-    }
-
-    @Override
-    protected boolean exportClasspath() {
-        return false;
+        return "Remove Groovy Libraries from classpath";
     }
 }

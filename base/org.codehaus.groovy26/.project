@@ -5,7 +5,6 @@
     <buildSpec>
         <buildCommand>
             <name>org.eclipse.ui.externaltools.ExternalToolBuilder</name>
-            <triggers>auto,full,incremental,clean,</triggers>
             <arguments>
                 <dictionary>
                     <key>LaunchConfigHandle</key>
@@ -39,10 +38,23 @@
         <buildCommand>
             <name>org.eclipse.pde.SchemaBuilder</name>
         </buildCommand>
+
+        <buildCommand>
+            <name>net.sf.eclipsecs.core.CheckstyleBuilder</name>
+        </buildCommand>
     </buildSpec>
     <natures>
         <nature>org.eclipse.jdt.groovy.core.groovyNature</nature>
         <nature>org.eclipse.jdt.core.javanature</nature>
         <nature>org.eclipse.pde.PluginNature</nature>
+
+        <nature>net.sf.eclipsecs.core.CheckstyleNature</nature>
     </natures>
+    <linkedResources>
+        <link>
+            <name>.checkstyleConfig.xml</name>
+            <type>1</type>
+            <locationURI>PARENT-2-PROJECT_LOC/checkstyleConfig.xml</locationURI>
+        </link>
+    </linkedResources>
 </projectDescription>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,12 +24,15 @@ import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 /**
  * Creates proposals in a given completion context.
  */
+@FunctionalInterface
 public interface IProposalCreator {
 
     List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic, boolean isPrimary);
 
     /**
-     * If true, then execute this creator twice when in closures. Once for delegate and once for this.
+     * If {@code true}, then execute this creator twice when in closures. Once for {@code delegate} and once for {@code this}.
      */
-    boolean redoForLoopClosure();
+    default boolean redoForLoopClosure() {
+        return true;
+    }
 }

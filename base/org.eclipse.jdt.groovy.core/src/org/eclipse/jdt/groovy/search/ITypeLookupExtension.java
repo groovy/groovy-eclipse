@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,10 +25,16 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
  * third party implementors of {@link ITypeLookup}.
  */
 public interface ITypeLookupExtension extends ITypeLookup {
+
+    @Override
+    default TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType) {
+        return lookupType(node, scope, objectExpressionType, false);
+    }
+
     /**
      * Determine the type for an expression node.
      *
-     * @param node the AST Node to determine the type for
+     * @param expression the AST Node to determine the type for
      * @param scope the variable scope at this location
      * @param objectExpressionType if the parent of node is a {@link PropertyExpression}, then this value contains the type of
      *        {@link PropertyExpression#getObjectExpression()}, otherwise null
@@ -36,10 +42,11 @@ public interface ITypeLookupExtension extends ITypeLookup {
      *        the class declaration
      * @return the type for the node and confidence in that type, or null if cannot determine
      */
-    TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType, boolean isStaticObjectExpression);
+    TypeLookupResult lookupType(Expression expression, VariableScope scope, ClassNode objectExpressionType, boolean isStaticObjectExpression);
 
     /**
      * Determines the type inside of a BlockStatement
      */
-    void lookupInBlock(BlockStatement node, VariableScope scope);
+    default void lookupInBlock(BlockStatement statement, VariableScope scope) {
+    }
 }

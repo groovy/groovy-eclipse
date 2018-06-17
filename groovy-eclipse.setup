@@ -6,12 +6,13 @@
     xmlns:git="http://www.eclipse.org/oomph/setup/git/1.0"
     xmlns:jdt="http://www.eclipse.org/oomph/setup/jdt/1.0"
     xmlns:predicates="http://www.eclipse.org/oomph/predicates/1.0"
+    xmlns:projects="http://www.eclipse.org/oomph/setup/projects/1.0"
     xmlns:setup="http://www.eclipse.org/oomph/setup/1.0"
     xmlns:setup.p2="http://www.eclipse.org/oomph/setup/p2/1.0"
     xmlns:setup.targlets="http://www.eclipse.org/oomph/setup/targlets/1.0"
     xmlns:setup.workingsets="http://www.eclipse.org/oomph/setup/workingsets/1.0"
     xmlns:workingsets="http://www.eclipse.org/oomph/workingsets/1.0"
-    xsi:schemaLocation="http://www.eclipse.org/oomph/setup/git/1.0 http://git.eclipse.org/c/oomph/org.eclipse.oomph.git/plain/setups/models/Git.ecore http://www.eclipse.org/oomph/setup/jdt/1.0 http://git.eclipse.org/c/oomph/org.eclipse.oomph.git/plain/setups/models/JDT.ecore http://www.eclipse.org/oomph/predicates/1.0 http://git.eclipse.org/c/oomph/org.eclipse.oomph.git/plain/setups/models/Predicates.ecore http://www.eclipse.org/oomph/setup/targlets/1.0 http://git.eclipse.org/c/oomph/org.eclipse.oomph.git/plain/setups/models/SetupTarglets.ecore http://www.eclipse.org/oomph/setup/workingsets/1.0 http://git.eclipse.org/c/oomph/org.eclipse.oomph.git/plain/setups/models/SetupWorkingSets.ecore http://www.eclipse.org/oomph/workingsets/1.0 http://git.eclipse.org/c/oomph/org.eclipse.oomph.git/plain/setups/models/WorkingSets.ecore"
+    xsi:schemaLocation="http://www.eclipse.org/oomph/setup/git/1.0 http://git.eclipse.org/c/oomph/org.eclipse.oomph.git/plain/setups/models/Git.ecore http://www.eclipse.org/oomph/setup/jdt/1.0 http://git.eclipse.org/c/oomph/org.eclipse.oomph.git/plain/setups/models/JDT.ecore http://www.eclipse.org/oomph/predicates/1.0 http://git.eclipse.org/c/oomph/org.eclipse.oomph.git/plain/setups/models/Predicates.ecore http://www.eclipse.org/oomph/setup/projects/1.0 http://git.eclipse.org/c/oomph/org.eclipse.oomph.git/plain/setups/models/Projects.ecore http://www.eclipse.org/oomph/setup/targlets/1.0 http://git.eclipse.org/c/oomph/org.eclipse.oomph.git/plain/setups/models/SetupTarglets.ecore http://www.eclipse.org/oomph/setup/workingsets/1.0 http://git.eclipse.org/c/oomph/org.eclipse.oomph.git/plain/setups/models/SetupWorkingSets.ecore http://www.eclipse.org/oomph/workingsets/1.0 http://git.eclipse.org/c/oomph/org.eclipse.oomph.git/plain/setups/models/WorkingSets.ecore"
     name="Groovy-Eclipse"
     label="Groovy-Eclipse">
   <setupTask
@@ -19,6 +20,22 @@
       name="User Preferences">
     <annotation
         source="http://www.eclipse.org/oomph/setup/UserPreferences"/>
+    <setupTask
+        xsi:type="setup:CompoundTask"
+        name="org.codehaus.groovy.eclipse.compilerResolver">
+      <setupTask
+          xsi:type="setup:PreferenceTask"
+          key="/instance/org.codehaus.groovy.eclipse.compilerResolver/groovy.compiler.level"
+          value="24"/>
+    </setupTask>
+    <setupTask
+        xsi:type="setup:CompoundTask"
+        name="org.codehaus.groovy.eclipse.core">
+      <setupTask
+          xsi:type="setup:PreferenceTask"
+          key="/instance/org.codehaus.groovy.eclipse.core/groovy.classpath.use.groovy.lib.global"
+          value="false"/>
+    </setupTask>
     <setupTask
         xsi:type="setup:CompoundTask"
         name="org.codehaus.groovy.eclipse.dsl">
@@ -37,8 +54,21 @@
     </setupTask>
   </setupTask>
   <setupTask
+      xsi:type="setup:EclipseIniTask"
+      option="-Xmx"
+      value="1g"
+      vm="true">
+    <description>Set the heap space needed to work with the projects of ${scope.project.label}</description>
+  </setupTask>
+  <setupTask
+      xsi:type="jdt:JRETask"
+      version="JavaSE-1.8"
+      location="${jre.location-1.8}">
+    <description>Define the JRE needed to compile and run the Java projects of ${scope.project.label}</description>
+  </setupTask>
+  <setupTask
       xsi:type="setup:VariableTask"
-      name="greclipse.target.platform"
+      name="eclipse.target.platform"
       defaultValue="Oxygen"
       storageURI="scope://Workspace"
       label="Target Platform">
@@ -51,24 +81,6 @@
     <description>Choose the compatibility level of the target platform</description>
   </setupTask>
   <setupTask
-      xsi:type="setup:VariableTask"
-      name="eclipse.target.platform"
-      value="${greclipse.target.platform}"
-      storageURI="scope://Workspace"/>
-  <setupTask
-      xsi:type="jdt:JRETask"
-      version="JavaSE-1.8"
-      location="${jre.location-1.8}">
-    <description>Define the JRE needed to compile and run the Java projects of ${scope.project.label}</description>
-  </setupTask>
-  <setupTask
-      xsi:type="setup:EclipseIniTask"
-      option="-Xmx"
-      value="1024m"
-      vm="true">
-    <description>Set the heap space needed to work with the projects of ${scope.project.label}</description>
-  </setupTask>
-  <setupTask
       xsi:type="setup:ResourceCreationTask"
       excludedTriggers="STARTUP MANUAL"
       content="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?>&#xD;&#xA;&lt;section name=&quot;Workbench&quot;>&#xD;&#xA;&#x9;&lt;section name=&quot;org.eclipse.jdt.internal.ui.packageview.PackageExplorerPart&quot;>&#xD;&#xA;&#x9;&#x9;&lt;item value=&quot;true&quot; key=&quot;group_libraries&quot;/>&#xD;&#xA;&#x9;&#x9;&lt;item value=&quot;false&quot; key=&quot;linkWithEditor&quot;/>&#xD;&#xA;&#x9;&#x9;&lt;item value=&quot;2&quot; key=&quot;layout&quot;/>&#xD;&#xA;&#x9;&#x9;&lt;item value=&quot;2&quot; key=&quot;rootMode&quot;/>&#xD;&#xA;&#x9;&#x9;&lt;item value=&quot;&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;UTF-8&amp;quot;?&amp;gt;&amp;#x0D;&amp;#x0A;&amp;lt;packageExplorer configured=&amp;quot;true&amp;quot; group_libraries=&amp;quot;1&amp;quot; layout=&amp;quot;2&amp;quot; linkWithEditor=&amp;quot;0&amp;quot; rootMode=&amp;quot;2&amp;quot; sortWorkingSets=&amp;quot;false&amp;quot; workingSetName=&amp;quot;&amp;quot;&amp;gt;&amp;#x0D;&amp;#x0A;&amp;lt;localWorkingSetManager&amp;gt;&amp;#x0D;&amp;#x0A;&amp;lt;workingSet editPageId=&amp;quot;org.eclipse.jdt.internal.ui.OthersWorkingSet&amp;quot; factoryID=&amp;quot;org.eclipse.ui.internal.WorkingSetFactory&amp;quot; id=&amp;quot;1382792884467_1&amp;quot; label=&amp;quot;Other Projects&amp;quot; name=&amp;quot;Other Projects&amp;quot;/&amp;gt;&amp;#x0D;&amp;#x0A;&amp;lt;/localWorkingSetManager&amp;gt;&amp;#x0D;&amp;#x0A;&amp;lt;activeWorkingSet workingSetName=&amp;quot;Other Projects&amp;quot;/&amp;gt;&amp;#x0D;&amp;#x0A;&amp;lt;allWorkingSets workingSetName=&amp;quot;Other Projects&amp;quot;/&amp;gt;&amp;#x0D;&amp;#x0A;&amp;lt;/packageExplorer&amp;gt;&quot; key=&quot;memento&quot;/>&#xD;&#xA;&#x9;&lt;/section>&#xD;&#xA;&lt;/section>&#xD;&#xA;"
@@ -77,18 +89,46 @@
     <description>Initialize JDT's package explorer to show working sets as its root objects</description>
   </setupTask>
   <setupTask
-      xsi:type="setup.p2:P2Task">
+      xsi:type="setup.p2:P2Task"
+      label="">
     <requirement
-        name="org.codehaus.groovy.jdt.patch.feature.group"/>
+        name="org.eclipse.jdt.source.feature.group"/>
     <requirement
-        name="org.codehaus.groovy.eclipse.feature.feature.group"/>
+        name="org.eclipse.pde.source.feature.group"/>
     <requirement
-        name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
+        name="org.eclipse.platform.source.feature.group"/>
+    <requirement
+        name="org.eclipse.m2e.feature.feature.group"/>
+    <requirement
+        name="org.eclipse.oomph.setup.sdk.feature.group"/>
     <requirement
         name="org.eclipse.pde.api.tools.ee.feature.feature.group"/>
+    <requirement
+        name="com.ifedorenko.m2e.mavendev.feature.feature.group"/>
+    <requirement
+        name="net.sf.eclipsecs.feature.group"
+        optional="true"/>
     <repository
-        url="http://dist.springsource.org/snapshot/GRECLIPSE/e4.7"/><!-- TODO: URL must vary by target platform! -->
-    <description>Install the tools needed in the IDE to work with the source code for ${scope.project.label}</description>
+        url="http://ifedorenko.github.com/m2e-extras"/>
+    <repository
+        url="https://checkstyle.github.io/eclipse-cs/update"/>
+    <description></description>
+  </setupTask>
+  <setupTask
+      xsi:type="setup.p2:P2Task"
+      filter="(| (scope.product.version.name=photon) (scope.product.version.name=latest))">
+    <requirement
+        name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
+    <repository
+        url="http://dist.springsource.org/snapshot/GRECLIPSE/e4.8"/>
+  </setupTask>
+  <setupTask
+      xsi:type="setup.p2:P2Task"
+      filter="(| (scope.product.version.name=oxygen) (scope.product.version.name=latest.released))">
+    <requirement
+        name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
+    <repository
+        url="http://dist.springsource.org/snapshot/GRECLIPSE/e4.7"/>
   </setupTask>
   <setupTask
       xsi:type="git:GitCloneTask"
@@ -118,41 +158,62 @@
     <description>${scope.project.label}</description>
   </setupTask>
   <setupTask
+      xsi:type="projects:ProjectsImportTask">
+    <sourceLocator
+        rootFolder="${git.clone.Groovy-Eclipse.location}/base"
+        locateNestedProjects="true"/>
+    <sourceLocator
+        rootFolder="${git.clone.Groovy-Eclipse.location}/base-test"
+        locateNestedProjects="true">
+      <excludedPath>org.eclipse.jdt.groovy.core.tests.builder/workspace/ScriptFoldersProject</excludedPath>
+      <excludedPath>org.eclipse.jdt.groovy.core.tests.builder/workspace/ScriptFoldersProject2</excludedPath>
+    </sourceLocator>
+    <sourceLocator
+        rootFolder="${git.clone.Groovy-Eclipse.location}/ide"
+        locateNestedProjects="true"/>
+    <sourceLocator
+        rootFolder="${git.clone.Groovy-Eclipse.location}/ide-test"
+        locateNestedProjects="true"/>
+    <sourceLocator
+        rootFolder="${git.clone.Groovy-Eclipse.location}/extras"
+        locateNestedProjects="true">
+      <excludedPath>groovy-eclipse-maven-tests</excludedPath>
+      <excludedPath>groovy-eclipse-quickstart</excludedPath>
+    </sourceLocator>
+    <sourceLocator
+        rootFolder="${git.clone.Groovy-Eclipse.location}/Site-org.codehaus.groovy.eclipse"/>
+  </setupTask>
+  <setupTask
+      xsi:type="projects:ProjectsImportTask"
+      filter="(eclipse.target.platform=Photon)">
+    <sourceLocator
+        rootFolder="${git.clone.Groovy-Eclipse.location}/jdt-patch/e48"
+        locateNestedProjects="true"/>
+  </setupTask>
+  <setupTask
+      xsi:type="projects:ProjectsImportTask"
+      filter="(eclipse.target.platform=Oxygen)">
+    <sourceLocator
+        rootFolder="${git.clone.Groovy-Eclipse.location}/jdt-patch/e47"
+        locateNestedProjects="true"/>
+  </setupTask>
+  <setupTask
       xsi:type="setup.targlets:TargletTask">
     <targlet
-        name="${scope.project.label}"
+        name="Eclipse ${eclipse.target.platform}"
         activeRepositoryList="${eclipse.target.platform}">
       <requirement
-          name="org.eclipse.sdk.feature.group"/>
+          name="org.eclipse.jdt.source.feature.group"/>
+      <requirement
+          name="org.eclipse.pde.source.feature.group"/>
+      <requirement
+          name="org.eclipse.platform.source.feature.group"/>
+      <requirement
+          name="org.eclipse.m2e.feature.feature.group"/>
+      <requirement
+          name="org.eclipse.m2e.sdk.feature.feature.group"/>
       <requirement
           name="org.eclipse.test.feature.group"/>
-      <requirement
-          name="org.codehaus.groovy24.feature.feature.group"/>
-      <requirement
-          name="org.codehaus.groovy25.feature.feature.group"/>
-      <requirement
-          name="org.codehaus.groovy26.feature.feature.group"/>
-      <requirement
-          name="org.codehaus.groovy.alltests.feature.feature.group"/>
-      <requirement
-          name="org.codehaus.groovy.eclipse.feature.feature.group"/>
-      <requirement
-          name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
-      <sourceLocator
-          rootFolder="${git.clone.Groovy-Eclipse.location}/base"
-          locateNestedProjects="true"/>
-      <sourceLocator
-          rootFolder="${git.clone.Groovy-Eclipse.location}/base-test"
-          locateNestedProjects="true"/>
-      <sourceLocator
-          rootFolder="${git.clone.Groovy-Eclipse.location}/extras"
-          locateNestedProjects="true"/>
-      <sourceLocator
-          rootFolder="${git.clone.Groovy-Eclipse.location}/ide"
-          locateNestedProjects="true"/>
-      <sourceLocator
-          rootFolder="${git.clone.Groovy-Eclipse.location}/ide-test"
-          locateNestedProjects="true"/>
       <repositoryList
           name="Photon">
         <repository
@@ -170,38 +231,12 @@
     </targlet>
   </setupTask>
   <setupTask
-      xsi:type="setup.targlets:TargletTask"
-      filter="(eclipse.target.platform=Photon)">
-    <targlet
-        name="JDT Feature Patch for Photon">
-      <requirement
-          name="org.codehaus.groovy.jdt.patch.feature.group"
-          greedy="false"/>
-      <sourceLocator
-          rootFolder="${git.clone.Groovy-Eclipse.location}/jdt-patch/e48"
-          locateNestedProjects="true"/>
-    </targlet>
-  </setupTask>
-  <setupTask
-      xsi:type="setup.targlets:TargletTask"
-      filter="(eclipse.target.platform=Oxygen)">
-    <targlet
-        name="JDT Feature Patch for Oxygen">
-      <requirement
-          name="org.codehaus.groovy.jdt.patch.feature.group"
-          greedy="false"/>
-      <sourceLocator
-          rootFolder="${git.clone.Groovy-Eclipse.location}/jdt-patch/e47"
-          locateNestedProjects="true"/>
-    </targlet>
-  </setupTask>
-  <setupTask
       xsi:type="setup.workingsets:WorkingSetTask">
     <workingSet
         name="RT">
       <predicate
           xsi:type="predicates:NamePredicate"
-          pattern="^org\.codehaus\.groovy\d+$"/>
+          pattern="org\.codehaus\.groovy\d+"/>
     </workingSet>
     <workingSet
         name="JDT">
@@ -215,36 +250,18 @@
       <predicate
           xsi:type="predicates:AndPredicate">
         <operand
-            xsi:type="predicates:RepositoryPredicate"
-            project="org.codehaus.groovy.eclipse"/>
+            xsi:type="predicates:NamePredicate"
+            pattern="org\.codehaus\.groovy\.(m2)?eclipse.*"/>
         <operand
             xsi:type="workingsets:ExclusionPredicate"
-            excludedWorkingSet="//@setupTasks.11/@workingSets.4 //@setupTasks.11/@workingSets.1 //@setupTasks.11/@workingSets.3"/>
-        <operand
-            xsi:type="predicates:OrPredicate">
-          <operand
-              xsi:type="predicates:LocationPredicate"
-              pattern="^.*/ide/.*$"/>
-          <operand
-              xsi:type="predicates:NamePredicate"
-              pattern="^org\.codehaus\.groovy\.eclipse\.compilerResolver$"/>
-          <operand
-              xsi:type="predicates:NamePredicate"
-              pattern="^org\.codehaus\.groovy\.m2eclipse$"/>
-        </operand>
+            excludedWorkingSet="//@setupTasks.13/@workingSets.3"/>
       </predicate>
     </workingSet>
     <workingSet
         name="Tests">
       <predicate
-          xsi:type="predicates:AndPredicate">
-        <operand
-            xsi:type="predicates:LocationPredicate"
-            pattern="^.*/ide-test/.*$"/>
-        <operand
-            xsi:type="workingsets:ExclusionPredicate"
-            excludedWorkingSet="//@setupTasks.11/@workingSets.4"/>
-      </predicate>
+          xsi:type="predicates:LocationPredicate"
+          pattern=".*/ide-test/.*"/>
     </workingSet>
     <workingSet
         name="Features">
@@ -255,16 +272,10 @@
             pattern="Feature.*"/>
         <operand
             xsi:type="predicates:NamePredicate"
-            pattern="^org\.codehaus\.groovy\.eclipse$"/>
+            pattern="Site.*"/>
       </predicate>
     </workingSet>
   </setupTask>
-  <setupTask
-      xsi:type="setup:ResourceCreationTask"
-      excludedTriggers="STARTUP MANUAL"
-      content="eclipse.preferences.version=1&#xA;groovy.compiler.level=24&#xA;"
-      targetURL="${workspace.location|uri}/.metadata/.plugins/org.eclipse.core.runtime/.settings/org.codehaus.groovy.eclipse.compilerResolver.prefs"
-      encoding="UTF-8"/>
   <stream name="master"
       label="Master">
     <setupTask
