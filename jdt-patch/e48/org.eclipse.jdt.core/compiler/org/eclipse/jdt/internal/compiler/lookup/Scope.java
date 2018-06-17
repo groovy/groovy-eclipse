@@ -1626,20 +1626,6 @@ public abstract class Scope {
 		return method;
 	}
 
-	// GROOVY add
-	// FIXASC (M3) currently inactive; this enables getSingleton()
-	// FIXASC (M3) make this switchable as it is too damn powerful
-	public MethodBinding oneLastLook(ReferenceBinding receiverType, char[] selector, TypeBinding[] argumentTypes, InvocationSite invocationSite) {
-		if (false) {
-		MethodBinding[] extraMethods = receiverType.getAnyExtraMethods(selector, argumentTypes);
-		if (extraMethods != null && extraMethods.length > 0) {
-			return extraMethods[0];
-		}
-		}
-		return null;
-	}
-	// GROOVY end
-
 	public MethodBinding findMethod0(ReferenceBinding receiverType, char[] selector, TypeBinding[] argumentTypes, InvocationSite invocationSite, boolean inStaticContext) {
 		ReferenceBinding currentType = receiverType;
 		boolean receiverTypeIsInterface = receiverType.isInterface();
@@ -2915,12 +2901,6 @@ public abstract class Scope {
 				return methodBinding;
 
 			methodBinding = findMethod(currentType, selector, argumentTypes, invocationSite, false);
-			// GROOVY add -- give it one more chance as the ast transform may have introduced it
-			// Is this the right approach?  Requires AST transforms running before this is done.
-			if (methodBinding == null) {
-				methodBinding = oneLastLook(currentType, selector, argumentTypes, invocationSite);
-			}
-			// GROOVY end
 			if (methodBinding == null)
 				return new ProblemMethodBinding(selector, argumentTypes, ProblemReasons.NotFound);
 			if (!methodBinding.isValidBinding())

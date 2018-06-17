@@ -1240,14 +1240,6 @@ public FieldBinding getField(char[] fieldName, boolean needResolve) {
 	return null;
 }
 
-// GROOVY add
-// FIXASC (M3) is this the right approach to adding extra methods? Probably not - they should be forced on when created
-@Override
-public MethodBinding[] getAnyExtraMethods(char[] selector, TypeBinding[] argumentTypes) {
-	return (this.scope == null ? null : this.scope.getAnyExtraMethods(selector, argumentTypes));
-}
-// GROOVY end
-
 // NOTE: the return type, arg & exception types of each method of a source type are resolved when needed
 @Override
 public MethodBinding[] getMethods(char[] selector) {

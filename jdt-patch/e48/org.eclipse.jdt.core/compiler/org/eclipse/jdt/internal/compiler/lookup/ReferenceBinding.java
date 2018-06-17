@@ -2276,7 +2276,6 @@ public ModuleBinding module() {
 		return this.fPackage.enclosingModule;
 	return null;
 }
-
 public boolean hasEnclosingInstanceContext() {
 	if (isMemberType() && !isStatic())
 		return true;
@@ -2285,10 +2284,4 @@ public boolean hasEnclosingInstanceContext() {
 		return !enclosingMethod.isStatic();
 	return false;
 }
-// GROOVY add
-//more thought required - is this in the right place?
-public MethodBinding[] getAnyExtraMethods(char[] selector, TypeBinding[] argumentTypes) {
-	return null;
-}
-// GROOVY end
 }
