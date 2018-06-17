@@ -24,20 +24,13 @@ import org.junit.Test;
  */
 public final class SingletonTests extends GroovyCompilerTestSuite {
 
-    @Test
+    @Test @Ignore("https://github.com/groovy/groovy-eclipse/issues/421")
     public void testSingleton1() {
         String[] sources = {
-            "Goo.groovy",
-            "class Goo {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    Run.main(argv)\n" +
-            "  }\n" +
-            "}\n",
-
-            "Run.groovy",
-            "public class Run {\n" +
-            "  public static void main(String[] argv) {\n" +
-            "    System.out.println(Wibble.getInstance().field)\n" +
+            "Main.java",
+            "public class Main {\n" +
+            "  public static void main(String... args) {\n" +
+            "    System.out.print(Wibble.getInstance().field);\n" +
             "  }\n" +
             "}\n",
 
@@ -50,94 +43,68 @@ public final class SingletonTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "abcd");
     }
 
-    @Test // lazy option set in Singleton
+    @Test
     public void testSingleton2() {
         String[] sources = {
-            "Goo.groovy",
-            "class Goo {\n"+
-            "  public static void main(String[] argv) {\n"+
-            "    Run.main(argv);\n"+
-            "  }\n"+
+            "Main.groovy",
+            "class Main {\n" +
+            "  static void main(args) {\n" +
+            "    print(Wibble.instance.field)\n" +
+            "  }\n" +
             "}\n",
 
-            "Run.groovy",
-            "public class Run {\n"+
-            "  public static void main(String[] argv) {\n"+
-            "    Wibble.run();\n"+
-            "    System.out.print(\"running \");\n"+
-            "    System.out.print(Wibble.getInstance().field);\n"+
-            "  }\n"+
+            "Wibble.groovy",
+            "@Singleton class Wibble {\n" +
+            "  public String field = 'abcd'\n" +
+            "}\n",
+        };
+
+        runConformTest(sources, "abcd");
+    }
+
+    @Test
+    public void testSingleton3() {
+        String[] sources = {
+            "Main.groovy",
+            "class Main {\n" +
+            "  static void main(args) {\n" +
+            "    Wibble.run()\n" +
+            "    print('running ')\n" +
+            "    print(Wibble.instance.field)\n" +
+            "  }\n" +
             "}\n",
 
             "Wibble.groovy",
             "@Singleton(lazy=false, strict=false) class Wibble {" +
-            "  public String field = 'abcd';\n"+
-            "  private Wibble() { print \"ctor \";}\n"+
-            "  static void run() {}\n"+
+            "  public String field = 'abcd'\n" +
+            "  private Wibble() { print 'ctor ' }\n" +
+            "  static void run() {}\n" +
             "}\n",
         };
 
         runConformTest(sources, "ctor running abcd");
     }
 
-    @Test
-    public void testSingleton3() {
+    @Test // lazy option set in Singleton
+    public void testSingleton4() {
         String[] sources = {
-            "Goo.groovy",
-            "class Goo {\n"+
-            "  public static void main(String[] argv) {\n"+
-            "    Run.main(argv);\n"+
-            "  }\n"+
-            "}\n",
-
-            "Run.groovy",
-            "public class Run {\n"+
-            "  public static void main(String[] argv) {\n"+
-            "    Wibble.run();\n"+
-            "    System.out.print(\"running \");\n"+
-            "    System.out.print(Wibble.getInstance().field);\n"+
-            "  }\n"+
+            "Main.groovy",
+            "public class Main {\n" +
+            "  static void main(args) {\n" +
+            "    Wibble.run()\n" +
+            "    print('running ')\n" +
+            "    print(Wibble.instance.field)\n" +
+            "  }\n" +
             "}\n",
 
             "Wibble.groovy",
             "@Singleton(lazy=true, strict=false) class Wibble {" +
-            "  public String field = 'abcd';\n"+
-            "  private Wibble() { print \"ctor \";}\n"+
-            "  static void run() {}\n"+
+            "  public String field = 'abcd';\n" +
+            "  private Wibble() { print 'ctor ' }\n" +
+            "  static void run() {}\n" +
             "}\n",
         };
 
         runConformTest(sources, "running ctor abcd");
-    }
-
-    /**
-     * COOL!!!  The getInstance() method is added by a late AST Transformation made due to the Singleton annotation - and yet
-     * still it is referencable from Java.  This is not possible with normal joint compilation.
-     * currently have to 'turn on' support in org.eclipse.jdt.internal.compiler.lookup.Scope#oneLastLook
-     */
-    @Test @Ignore
-    public void testSingleton_JavaAccessingTransformedGroovy() {
-        String[] sources = {
-            "Goo.groovy",
-            "class Goo {\n"+
-            "  public static void main(String[] argv) {\n"+
-            "    Run.main(argv);\n"+
-            "  }\n"+
-            "}\n",
-
-            "Run.java",
-            "public class Run {\n"+
-            "  public static void main(String[] argv) {\n"+
-            "    System.out.println(Wibble.getInstance().field);\n"+
-            "  }\n"+
-            "}\n",
-
-            "Wibble.groovy",
-            "@Singleton class Wibble {\n" +
-            "  public final String field = 'abc'\n"+
-            "}\n",
-        };
-
-        runConformTest(sources, "abc");
     }
 }

@@ -191,6 +191,12 @@ public abstract class GroovyCompilerTestSuite {
         return ReflectionUtils.executePrivateMethod(AbstractRegressionTest.class, "getCompilerOptions", testDriver);
     }
 
+    protected final File createScript(CharSequence name, CharSequence contents) {
+        String folder = Util.getOutputDirectory() + File.separator + "resources" + File.separator;
+        new File(folder).mkdirs(); Util.writeToFile(contents.toString(), folder + name);
+        return new File(folder + name);
+    }
+
     protected final void runConformTest(String[] sources) {
         runConformTest(sources, (String) null, (String) null);
     }

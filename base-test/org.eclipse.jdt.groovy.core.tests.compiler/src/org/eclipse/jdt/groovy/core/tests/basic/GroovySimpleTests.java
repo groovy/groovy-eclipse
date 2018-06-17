@@ -39,7 +39,6 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyClassScope;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
-import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
@@ -5872,8 +5871,8 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     //--------------------------------------------------------------------------
 
     private void assertEventCount(int expectedCount, EventListener listener) {
-        if (listener.eventCount()!=expectedCount) {
-            fail("Expected "+expectedCount+" events but found "+listener.eventCount()+"\nEvents:\n"+listener.toString());
+        if (listener.eventCount() != expectedCount) {
+            fail("Expected " + expectedCount + " events but found " + listener.eventCount() + "\nEvents:\n" + listener.toString());
         }
     }
 
@@ -5883,30 +5882,24 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         while (eventIter.hasNext()) {
             String s = eventIter.next();
             if (s.equals(eventText)) {
-                found=true;
+                found = true;
                 break;
             }
         }
         if (!found) {
-            fail("Expected event '"+eventText+"'\nEvents:\n"+listener.toString());
+            fail("Expected event '" + eventText + "'\nEvents:\n" + listener.toString());
         }
-    }
-
-    public File createScript(CharSequence name, CharSequence contents) {
-        String folder = Util.getOutputDirectory() + File.separator + "resources" + File.separator;
-        new File(folder).mkdirs(); Util.writeToFile(contents.toString(), folder + name);
-        return new File(folder + name);
     }
 
     /**
      * Find the named file (which should have just been compiled) and for the named method determine
      * the ClassNode for the return type and return the name of the classnode.
      */
-    public String getReturnTypeOfMethod(String filename,String methodname) {
+    public String getReturnTypeOfMethod(String filename, String methodname) {
         ModuleNode mn = getModuleNode(filename);
         ClassNode cn = mn.getClasses().get(0);
         assertNotNull(cn);
-        MethodNode methodNode = cn.getMethod(methodname,new Parameter[]{});
+        MethodNode methodNode = cn.getMethod(methodname, Parameter.EMPTY_ARRAY);
         assertNotNull(methodNode);
         ClassNode returnType = methodNode.getReturnType();
         return returnType.getName();
@@ -5915,10 +5908,10 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     private String stringifyFieldDecl(FieldDeclaration fDecl) {
         StringBuffer sb = new StringBuffer();
         sb.append(fDecl.name);
-        sb.append(" sourceStart>sourceEnd:"+fDecl.sourceStart+">"+fDecl.sourceEnd);
-        sb.append(" declSourceStart>declSourceEnd:"+fDecl.declarationSourceStart+">"+fDecl.declarationSourceEnd);
-        sb.append(" modifiersSourceStart="+fDecl.modifiersSourceStart); // first char of decls modifiers
-        sb.append(" endPart1Position:"+fDecl.endPart1Position); // char after type decl ('int x,y' is space)
+        sb.append(" sourceStart>sourceEnd:" + fDecl.sourceStart + ">" + fDecl.sourceEnd);
+        sb.append(" declSourceStart>declSourceEnd:" + fDecl.declarationSourceStart + ">" + fDecl.declarationSourceEnd);
+        sb.append(" modifiersSourceStart=" + fDecl.modifiersSourceStart); // first char of decls modifiers
+        sb.append(" endPart1Position:" + fDecl.endPart1Position); // char after type decl ('int x,y' is space)
         return sb.toString();
     }
 }

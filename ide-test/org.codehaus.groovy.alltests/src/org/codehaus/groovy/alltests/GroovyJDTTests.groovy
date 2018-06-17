@@ -30,8 +30,9 @@ import org.junit.runners.Suite
     org.eclipse.jdt.groovy.core.tests.basic.GroovySimpleTests_Compliance_1_8,
     org.eclipse.jdt.groovy.core.tests.basic.TraitsTests,
 
-    // AST Transform tests
+    // Xform tests
     org.eclipse.jdt.groovy.core.tests.xform.AnnotationCollectorTests,
+    org.eclipse.jdt.groovy.core.tests.xform.CanonicalTests,
     org.eclipse.jdt.groovy.core.tests.xform.CategoryTests,
     org.eclipse.jdt.groovy.core.tests.xform.DelegateTests,
     org.eclipse.jdt.groovy.core.tests.xform.GrabTests,
