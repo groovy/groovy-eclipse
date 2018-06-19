@@ -206,8 +206,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         for (MethodNode method : abstractMethods) {
             MethodNode sameArgsMethod = node.getMethod(method.getName(), method.getParameters());
             if (sameArgsMethod==null || method.getReturnType().equals(sameArgsMethod.getReturnType())) {
-                // GRECLIPSE addError->addTypeError
-                addTypeError("Can't have an abstract method in a non-abstract class." +
+                addError("Can't have an abstract method in a non-abstract class." +
                         " The " + getDescription(node) + " must be declared abstract or" +
                         " the " + getDescription(method) + " must be implemented.", node);
             } else {
@@ -314,14 +313,12 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
     private void checkImplementsAndExtends(ClassNode node) {
         ClassNode cn = node.getSuperClass();
         if (cn.isInterface() && !node.isInterface()) {
-            // GRECLIPSE addError->addTypeError
-            addTypeError("You are not allowed to extend the " + getDescription(cn) + ", use implements instead.", node);
+            addError("You are not allowed to extend the " + getDescription(cn) + ", use implements instead.", node);
         }
         for (ClassNode anInterface : node.getInterfaces()) {
             cn = anInterface;
             if (!cn.isInterface()) {
-                // GRECLIPSE addError->addTypeError
-                addTypeError("You are not allowed to implement the " + getDescription(cn) + ", use extends instead.", node);
+                addError("You are not allowed to implement the " + getDescription(cn) + ", use extends instead.", node);
             }
         }
     }
@@ -413,7 +410,10 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         msg.append(" in ");
         msg.append(superMethod.getDeclaringClass().getName());
         msg.append("; attempting to assign weaker access privileges; was ");
-        msg.append(superMethod.isPublic() ? "public" : "protected");
+        // GRECLIPSE edit
+        //msg.append(superMethod.isPublic() ? "public" : "protected");
+        msg.append(superMethod.isPublic() ? "public" : (superMethod.isProtected() ? "protected" : "package-private"));
+        // GRECLIPSE end
         addError(msg.toString(), method);
     }
 
@@ -461,7 +461,11 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
             Parameter[] superParams = superMethod.getParameters();
             if (!hasEqualParameterTypes(params, superParams)) continue;
             if ((mn.isPrivate() && !superMethod.isPrivate()) ||
-                    (mn.isProtected() && superMethod.isPublic())) {
+                    // GRECLIPSE edit -- GROOVY-8651
+                    //(mn.isProtected() && superMethod.isPublic())) {
+                    (mn.isProtected() && !superMethod.isProtected() && !superMethod.isPrivate()) ||
+                    (!mn.isPrivate() && !mn.isProtected() && !mn.isPublic() && (superMethod.isPublic() || superMethod.isProtected()))) {
+                    // GRECLIPSE end
                 addWeakerAccessError(cn, mn, params, superMethod);
                 return;
             }

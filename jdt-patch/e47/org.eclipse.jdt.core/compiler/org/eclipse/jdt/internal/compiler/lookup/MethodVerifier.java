@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -177,6 +178,9 @@ void checkAgainstInheritedMethods(MethodBinding currentMethod, MethodBinding[] m
 			if (inheritedMethod.isFinal())
 				problemReporter(currentMethod).finalMethodCannotBeOverridden(currentMethod, inheritedMethod);
 			if (!isAsVisible(currentMethod, inheritedMethod))
+				// GROOVY add
+				if (this.type.scope.shouldReport(org.eclipse.jdt.core.compiler.IProblem.MethodReducesVisibility))
+				// GROOVY end
 				problemReporter(currentMethod).visibilityConflict(currentMethod, inheritedMethod);
 			if(inheritedMethod.isSynchronized() && !currentMethod.isSynchronized()) {
 				problemReporter(currentMethod).missingSynchronizedOnInheritedMethod(currentMethod, inheritedMethod);

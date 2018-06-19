@@ -56,7 +56,7 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
         node.visitContents(this);
         visitObjectInitializerStatements(node);
     }
-    
+
     protected void visitObjectInitializerStatements(ClassNode node) {
         for (Statement element : node.getObjectInitializerStatements()) {
             element.visit(this);
@@ -143,11 +143,6 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
     public static final String ORIGINAL_EXPRESSION = "OriginalExpression";
     // GRECLIPSE end
 
-    public void visitBlockStatement(BlockStatement block) {
-        visitStatement(block);
-        super.visitBlockStatement(block);
-    }
-
     protected void visitClassCodeContainer(Statement code) {
         if (code != null) code.visit(this);
     }
@@ -191,44 +186,28 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
         if (init != null) init.visit(this);
     }
 
-    public void addError(String msg, ASTNode expr) {
+    public void addError(String msg, ASTNode node) {
         // GRECLIPSE add
-        int line = expr.getLineNumber();
-        int col = expr.getColumnNumber();
-        int start = expr.getStart();
-        int end = expr.getEnd() - 1;
-        if (expr instanceof ClassNode) {
-            ClassNode cn = (ClassNode) expr;
-            if (cn.getNameEnd() > 0) {
-                start = cn.getNameStart();
-                end = cn.getNameEnd();
-            }
-        } else if (expr instanceof DeclarationExpression) {
-            // assume that we just want to underline the variable declaration
-            DeclarationExpression decl = (DeclarationExpression) expr;
-            Expression lhs = decl.getLeftExpression();
-            start = lhs.getStart();
-            // avoid extra space before = if a variable
-            end = lhs instanceof VariableExpression ? start + lhs.getText().length() - 1: lhs.getEnd() - 1;
+        int start, end;
+        if (node instanceof AnnotatedNode && ((AnnotatedNode) node).getNameEnd() > 0) {
+            start = ((AnnotatedNode) node).getNameStart();
+            end = ((AnnotatedNode) node).getNameEnd();
+        } else if (!(node instanceof DeclarationExpression)) {
+            start = node.getStart();
+            end = node.getEnd() - 1;
+        } else {
+            addError(msg, ((DeclarationExpression) node).getLeftExpression());
+            return;
         }
         // GRECLIPSE end
         SourceUnit source = getSourceUnit();
         source.getErrorCollector().addErrorAndContinue(
                 // GRECLIPSE edit
-                //new SyntaxErrorMessage(new SyntaxException(msg + '\n', expr.getLineNumber(), expr.getColumnNumber(), expr.getLastLineNumber(), expr.getLastColumnNumber()), source)
-                new SyntaxErrorMessage(new PreciseSyntaxException(msg + '\n', line, col, start, end), source)
+                //new SyntaxErrorMessage(new SyntaxException(msg + '\n', node.getLineNumber(), node.getColumnNumber(), node.getLastLineNumber(), node.getLastColumnNumber()), source)
+                new SyntaxErrorMessage(new PreciseSyntaxException(msg + '\n', node.getLineNumber(), node.getColumnNumber(), start, end), source)
                 // GRECLIPSE end
         );
     }
-
-    // GRECLIPSE add
-    protected void addTypeError(String msg, ClassNode expr) {
-        SourceUnit source = getSourceUnit();
-        source.getErrorCollector().addErrorAndContinue(
-                new SyntaxErrorMessage(new PreciseSyntaxException(msg + '\n', expr.getLineNumber(), expr.getColumnNumber(), expr.getNameStart(), expr.getNameEnd()), source)
-        );
-    }
-    // GRECLIPSE end
 
     // GRECLIPSE edit
     //protected abstract SourceUnit getSourceUnit();
@@ -243,6 +222,11 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
     public void visitAssertStatement(AssertStatement statement) {
         visitStatement(statement);
         super.visitAssertStatement(statement);
+    }
+
+    public void visitBlockStatement(BlockStatement block) {
+        visitStatement(block);
+        super.visitBlockStatement(block);
     }
 
     public void visitBreakStatement(BreakStatement statement) {

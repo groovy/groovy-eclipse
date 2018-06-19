@@ -224,7 +224,8 @@ public class GroovyClassScope extends ClassScope {
 
     private boolean isNotActuallyAbstract(MethodBinding methodBinding, ReferenceBinding helperBinding) {
         if (methodBinding.declaringClass instanceof SourceTypeBinding) {
-            AbstractMethodDeclaration methodDeclaration = ((SourceTypeBinding) methodBinding.declaringClass).scope.referenceContext.declarationOf(methodBinding);
+            AbstractMethodDeclaration methodDeclaration =
+                ((SourceTypeBinding) methodBinding.declaringClass).scope.referenceContext.declarationOf(methodBinding);
             if (methodDeclaration != null) {
                 return !Flags.isAbstract(methodDeclaration.modifiers);
             }
@@ -411,26 +412,6 @@ public class GroovyClassScope extends ClassScope {
     }
 
     @Override
-    public boolean shouldReport(int problem) {
-        if (problem == IProblem.SuperclassMustBeAClass) {
-            return false;
-        }
-        if (problem == IProblem.IncompatibleReturnType) {
-            return false;
-        }
-        if (problem == IProblem.AbstractMethodMustBeImplemented) {
-            return false;
-        }
-        if (problem == IProblem.MethodNameClash) {
-            return false;
-        }
-        if (problem == IProblem.VarargsConflict) {
-            return false;
-        }
-        return true;
-    }
-
-    @Override
     protected ClassScope buildClassScope(Scope parent, TypeDeclaration typeDecl) {
         return new GroovyClassScope(parent, typeDecl);
     }
@@ -489,8 +470,23 @@ public class GroovyClassScope extends ClassScope {
         }
     }
 
+    @Override
+    public boolean shouldReport(int problem) {
+        switch (problem) {
+        case IProblem.AbstractMethodMustBeImplemented:
+        case IProblem.MethodReducesVisibility:
+        case IProblem.IncompatibleReturnType:
+        case IProblem.SuperclassMustBeAClass:
+        case IProblem.MethodNameClash:
+        case IProblem.VarargsConflict:
+            return false;
+        default:
+            return true;
+        }
+    }
+
     /**
-     * The class helps to check if some class node is trait.
+     * Checks if some class node is trait.
      */
     private class TraitHelper {
 
@@ -545,7 +541,8 @@ public class GroovyClassScope extends ClassScope {
                 StringBuilder nameBuilder = new StringBuilder();
                 nameBuilder.append(interfaceBinding.sourceName);
                 nameBuilder.append("$Trait$Helper");
-                ReferenceBinding helperBinding = compilationUnitScope().findType(nameBuilder.toString().toCharArray(), interfaceBinding.fPackage, interfaceBinding.fPackage);
+                ReferenceBinding helperBinding = compilationUnitScope().findType(
+                    nameBuilder.toString().toCharArray(), interfaceBinding.fPackage, interfaceBinding.fPackage);
                 if (helperBinding != null) {
                     if (helperBinding instanceof ProblemReferenceBinding) {
                         helperBinding = ((ProblemReferenceBinding) helperBinding).closestReferenceMatch();

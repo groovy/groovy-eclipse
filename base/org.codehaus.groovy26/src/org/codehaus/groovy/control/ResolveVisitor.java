@@ -327,11 +327,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         //addError("unable to resolve class " + type.getName() + " " + msg, node);
         String fullMsg = "unable to resolve class " + type.toString(false) + " " + msg;
         if (type.getEnd() > 0) {
-            if (type.getNameEnd() > 0) {
-                addTypeError(fullMsg, type);
-            } else {
-                addError(fullMsg, type);
-            }
+            addError(fullMsg, type);
         } else {
             addError(fullMsg, node);
         }

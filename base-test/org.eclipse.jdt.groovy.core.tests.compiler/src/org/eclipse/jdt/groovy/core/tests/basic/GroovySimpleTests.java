@@ -1222,6 +1222,118 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testOverriding_ReducedVisibility1() {
+        runNegativeTest(new String[] {
+            "Bar.groovy",
+            "class Bar { public void baz() {} }\n",
+
+            "Foo.groovy",
+            "class Foo extends Bar { private void baz() {}\n }\n",
+        }, "----------\n" +
+            "1. ERROR in Foo.groovy (at line 1)\n" +
+            "\tclass Foo extends Bar { private void baz() {}\n" +
+            "\t                                     ^^^\n" +
+            "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was public\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testOverriding_ReducedVisibility1a() {
+        runNegativeTest(new String[] {
+            "Bar.groovy",
+            "class Bar { public void baz() {} }\n",
+
+            "Foo.groovy",
+            "class Foo extends Bar { protected void baz() {}\n }\n",
+        }, "----------\n" +
+            "1. ERROR in Foo.groovy (at line 1)\n" +
+            "\tclass Foo extends Bar { protected void baz() {}\n" +
+            "\t                                       ^^^\n" +
+            "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was public\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testOverriding_ReducedVisibility1b() {
+        runNegativeTest(new String[] {
+            "Bar.groovy",
+            "class Bar { public void baz() {} }\n",
+
+            "Foo.groovy",
+            "class Foo extends Bar { @groovy.transform.PackageScope void baz() {}\n }\n",
+        }, "----------\n" +
+            "1. ERROR in Foo.groovy (at line 1)\n" +
+            "\tclass Foo extends Bar { @groovy.transform.PackageScope void baz() {}\n" +
+            "\t                                                            ^^^\n" +
+            "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was public\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testOverriding_ReducedVisibility2() {
+        runNegativeTest(new String[] {
+            "Bar.groovy",
+            "class Bar { protected void baz() {} }\n",
+
+            "Foo.groovy",
+            "class Foo extends Bar { private void baz() {}\n }\n",
+        }, "----------\n" +
+            "1. ERROR in Foo.groovy (at line 1)\n" +
+            "\tclass Foo extends Bar { private void baz() {}\n" +
+            "\t                                     ^^^\n" +
+            "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was protected\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testOverriding_ReducedVisibility2a() {
+        runNegativeTest(new String[] {
+            "Bar.groovy",
+            "class Bar { protected void baz() {} }\n",
+
+            "Foo.groovy",
+            "class Foo extends Bar { @groovy.transform.PackageScope void baz() {}\n }\n",
+        }, "----------\n" +
+            "1. ERROR in Foo.groovy (at line 1)\n" +
+            "\tclass Foo extends Bar { @groovy.transform.PackageScope void baz() {}\n" +
+            "\t                                                            ^^^\n" +
+            "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was protected\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testOverriding_ReducedVisibility3() {
+        runNegativeTest(new String[] {
+            "Bar.groovy",
+            "class Bar { @groovy.transform.PackageScope void baz() {} }\n",
+
+            "Foo.groovy",
+            "class Foo extends Bar { private void baz() {}\n }\n",
+        }, "----------\n" +
+            "1. ERROR in Foo.groovy (at line 1)\n" +
+            "\tclass Foo extends Bar { private void baz() {}\n" +
+            "\t                                     ^^^\n" +
+            "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was package-private\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testOverriding_ReducedVisibility3a() {
+        runNegativeTest(new String[] {
+            "Bar.java",
+            "public class Bar { void baz() {} }\n",
+
+            "Foo.groovy",
+            "class Foo extends Bar { private void baz() {}\n }\n",
+        }, "----------\n" +
+            "1. ERROR in Foo.groovy (at line 1)\n" +
+            "\tclass Foo extends Bar { private void baz() {}\n" +
+            "\t                                     ^^^\n" +
+            "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was package-private\n" +
+            "----------\n");
+    }
+
+    @Test
     public void testAliasing_GRE473() {
         runConformTest(new String[] {
             "Foo.groovy",
