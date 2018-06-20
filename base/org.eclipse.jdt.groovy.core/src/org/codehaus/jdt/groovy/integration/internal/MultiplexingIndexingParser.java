@@ -59,21 +59,20 @@ public class MultiplexingIndexingParser extends IndexingParser {
 
     @Override
     public CompilationUnitDeclaration parseCompilationUnit(ICompilationUnit unit, boolean fullParse, IProgressMonitor pm) {
-        if (ContentTypeUtils.isGroovyLikeFileName(unit.getFileName())) {
-
+        if (!ContentTypeUtils.isGroovyLikeFileName(unit.getFileName())) {
+            return super.parseCompilationUnit(unit, fullParse, pm);
+        } else {
             // ASSUMPTIONS:
             // 1) there is no difference between a diet and full parse in the groovy works, so can ignore the fullParse parameter
             // 2) parsing is for the entire CU (ie- from character 0, to unit.getContents().length)
             // 3) nodesToCategories map is not necessary. I think it has something to do with JavaDoc, but not sure
 
-            CompilationResult compilationResult = new CompilationResult(unit, 0, 0, this.options.maxProblemsPerUnit);
+            CompilationResult compilationResult = new CompilationResult(unit, 0, 0, options.maxProblemsPerUnit);
 
             // FIXASC Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one
             GroovyCompilationUnitDeclaration cud = (GroovyCompilationUnitDeclaration)
-                new GroovyParser(this.options, problemReporter, false, true).dietParse(unit, compilationResult);
+                new GroovyParser(options, problemReporter, false, true).dietParse(unit, compilationResult);
 
-            // CompilationUnitDeclaration cud groovyParser.dietParse(sourceUnit, compilationResult);
-            HashtableOfObjectToInt sourceEnds = createSourceEnds(cud);
             if (cud.getModuleNode() != null) {
                 try {
                     GroovyIndexingVisitor visitor = new GroovyIndexingVisitor(requestor);
@@ -83,11 +82,9 @@ public class MultiplexingIndexingParser extends IndexingParser {
                 }
             }
 
-            notifier.notifySourceElementRequestor(cud, 0, unit.getContents().length, groovyReportReferenceInfo, sourceEnds,
-                /* We don't care about the @category tag, so pass empty map */Collections.EMPTY_MAP);
+            notifier.notifySourceElementRequestor(cud, 0, unit.getContents().length, groovyReportReferenceInfo, createSourceEnds(cud),
+                /* We don't care about the @category tag, so pass empty map */ Collections.EMPTY_MAP);
             return cud;
-        } else {
-            return super.parseCompilationUnit(unit, fullParse, pm);
         }
     }
 

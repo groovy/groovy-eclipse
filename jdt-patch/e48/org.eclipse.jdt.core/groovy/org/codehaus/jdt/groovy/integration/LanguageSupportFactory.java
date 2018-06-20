@@ -57,22 +57,19 @@ public class LanguageSupportFactory {
 
 	public static final int CommentRecorderParserVariant = 2;
 
-	public static Parser getParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean parseLiteralExpressionsAsConstants,int variant) {
-		return getLanguageSupport().getParser(requestor, compilerOptions,problemReporter,parseLiteralExpressionsAsConstants, variant);
+	public static Parser getParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean parseLiteralExpressionsAsConstants, int variant) {
+		return getLanguageSupport().getParser(requestor, compilerOptions,problemReporter, parseLiteralExpressionsAsConstants, variant);
 	}
 
-	public static CompletionParser getCompletionParser(CompilerOptions compilerOptions, ProblemReporter problemReposrter,
-			boolean storeExtraSourceEnds, IProgressMonitor monitor) {
+	public static CompletionParser getCompletionParser(CompilerOptions compilerOptions, ProblemReporter problemReposrter, boolean storeExtraSourceEnds, IProgressMonitor monitor) {
 		return getLanguageSupport().getCompletionParser(compilerOptions, problemReposrter, storeExtraSourceEnds, monitor);
 	}
 
-	public static IndexingParser getIndexingParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations,
-			boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
+	public static IndexingParser getIndexingParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations, boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
 		return getLanguageSupport().getIndexingParser(requestor, problemFactory, options, reportLocalDeclarations, optimizeStringLiterals, useSourceJavadocParser);
 	}
 
-	public static SourceElementParser getSourceElementParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations,
-			boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
+	public static SourceElementParser getSourceElementParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations, boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
 		return getLanguageSupport().getSourceElementParser(requestor, problemFactory, options, reportLocalDeclarations, optimizeStringLiterals, useSourceJavadocParser);
 	}
 
@@ -87,6 +84,7 @@ public class LanguageSupportFactory {
 	public static CompilationUnit newCompilationUnit(PackageFragment parent, String name, WorkingCopyOwner owner) {
 		return getLanguageSupport().newCompilationUnit(parent, name, owner);
 	}
+
 	public static CompilationUnitDeclaration newCompilationUnitDeclaration(ICompilationUnit unit, ProblemReporter problemReporter, CompilationResult compilationResult, int sourceLength) {
 		return getLanguageSupport().newCompilationUnitDeclaration(unit, problemReporter, compilationResult, sourceLength);
 	}
@@ -124,7 +122,6 @@ public class LanguageSupportFactory {
 	public static void filterNonSourceMembers(BinaryType binaryType) {
 		getLanguageSupport().filterNonSourceMembers(binaryType);
 	}
-
 
 	//FIXASC static state issues?
 	private static LanguageSupport getLanguageSupport() {
@@ -184,7 +181,6 @@ public class LanguageSupportFactory {
 		return getLanguageSupport().getEventHandler();
 	}
 
-
 	public static IJavaSearchScope expandSearchScope(IJavaSearchScope scope, SearchPattern pattern, SearchRequestor requestor) {
 		return getLanguageSupport().expandSearchScope(scope, pattern, requestor);
 	}
@@ -192,6 +188,7 @@ public class LanguageSupportFactory {
 	public static boolean isGroovyLanguageSupportInstalled() {
 		return getLanguageSupport().getClass().getName().endsWith("GroovyLanguageSupport"); //$NON-NLS-1$
 	}
+
 	/**
 	 * @param type a binary type that may or may not come from Groovy
 	 * @return true iff the binary type was compiled from groovy sources

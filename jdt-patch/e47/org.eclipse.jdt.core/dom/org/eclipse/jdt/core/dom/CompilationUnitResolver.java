@@ -352,7 +352,7 @@ public class CompilationUnitResolver extends Compiler {
 	public void initializeParser() {
 		// GROOVY edit
 		//this.parser = new CommentRecorderParser(this.problemReporter, false);
-		this.parser = LanguageSupportFactory.getParser(this, this.lookupEnvironment == null ? null : this.lookupEnvironment.globalOptions, this.problemReporter, false, LanguageSupportFactory.CommentRecorderParserVariant);
+		this.parser = LanguageSupportFactory.getParser(this, this.lookupEnvironment == null ? null : this.lookupEnvironment.globalOptions, this.problemReporter, false, LanguageSupportFactory.CommentRecorderParserVariant + 1);
 		// GROOVY end
 	}
 	public void process(CompilationUnitDeclaration unit, int i) {
@@ -515,14 +515,14 @@ public class CompilationUnitResolver extends Compiler {
 			false);
 		*/
 		Parser parser = LanguageSupportFactory.getParser(
-				null,
+			null,
+			compilerOptions,
+			new ProblemReporter(
+				DefaultErrorHandlingPolicies.proceedWithAllProblems(),
 				compilerOptions,
-				new ProblemReporter(
-					DefaultErrorHandlingPolicies.proceedWithAllProblems(),
-					compilerOptions,
-					new DefaultProblemFactory()),
-				false,
-				LanguageSupportFactory.CommentRecorderParserVariant);
+				new DefaultProblemFactory()),
+			false,
+			LanguageSupportFactory.CommentRecorderParserVariant);
 		// GROOVY end
 		CompilationResult compilationResult = new CompilationResult(sourceUnit, 0, 0, compilerOptions.maxProblemsPerUnit);
 		CompilationUnitDeclaration compilationUnitDeclaration = parser.dietParse(sourceUnit, compilationResult);

@@ -3997,7 +3997,9 @@ class ASTConverter {
 							// GROOVY edit -- avoid IllegalArgumentException in setSourceRange below
 							//end = type2 != null ? type2.getStartPosition() + type2.getLength() - 1 : end;
 							if (type2 != null) {
-								if (type2.getLength() > 0) {
+								if (start == -1) {
+									end = -3;
+								} else if (type2.getLength() > 0) {
 									end = type2.getStartPosition() + type2.getLength() - 1;
 								} else if (type2.isSimpleType()) {
 									Name name = ((SimpleType) type2).getName();
