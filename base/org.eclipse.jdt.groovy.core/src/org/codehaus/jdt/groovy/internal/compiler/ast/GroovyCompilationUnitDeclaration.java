@@ -20,6 +20,7 @@ import java.io.StringWriter;
 import java.math.BigInteger;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -52,6 +53,7 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.TaskEntry;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
+import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
@@ -437,8 +439,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         // FIXASC poor way to get the errors attached to the files
         // FIXASC does groovy ever produce warnings? How are they treated here?
         for (Iterator<?> iterator = errors.iterator(); iterator.hasNext();) {
-            SyntaxException syntaxException = null;
             Message message = (Message) iterator.next();
+            SyntaxException syntaxException = null;
             StringWriter sw = new StringWriter();
             message.write(new PrintWriter(sw));
             String msg = sw.toString();
@@ -508,12 +510,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     eoffset = rpe.getNode().getEnd() - 1;
                     // need to work out the line again as it may be wrong
                     line = 0;
-                    while (compilationResult.lineSeparatorPositions[line] < soffset
-                            && line < compilationResult.lineSeparatorPositions.length) {
-                        line++;
+                    while (compilationResult.lineSeparatorPositions[line] < soffset &&
+                            line < compilationResult.lineSeparatorPositions.length) {
+                        line += 1;
                     }
-
-                    line++; // from an array index to a real 'line number'
+                    line += 1; // from an array index to a real 'line number'
                 }
             }
             if (syntaxException instanceof PreciseSyntaxException) {
@@ -521,12 +522,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 eoffset = ((PreciseSyntaxException) syntaxException).getEndOffset();
                 // need to work out the line again as it may be wrong
                 line = 0;
-                while (line < compilationResult.lineSeparatorPositions.length
-                        && compilationResult.lineSeparatorPositions[line] < soffset) {
-                    line++;
+                while (line < compilationResult.lineSeparatorPositions.length &&
+                    compilationResult.lineSeparatorPositions[line] < soffset) {
+                    line += 1;
                 }
-                ;
-                line++; // from an array index to a real 'line number'
+                line += 1; // from an array index to a real 'line number'
             } else {
                 if (soffset == -1) {
                     soffset = getOffset(compilationResult.lineSeparatorPositions, line, scol);
@@ -546,7 +546,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             p = new DefaultProblemFactory().createProblem(getFileName(), 0, new String[] {msg}, 0, new String[] {msg}, sev, soffset, eoffset, line, scol);
             problemReporter.record(p, compilationResult, this, false);
             errorsRecorded.add(message);
-            log(String.valueOf(compilationResult.getFileName()) + ": " + line + " " + msg);
         }
         errors.removeAll(errorsRecorded);
     }
@@ -1587,33 +1586,36 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 Literal literal = createConstantExpression((ConstantExpression) expr);
                 if (literal != null) return literal;
 
-            } else if (expr instanceof PropertyExpression) {
-                PropertyExpression prop = (PropertyExpression) expr;
-                assert prop.getProperty() instanceof ConstantExpression;
-                if (prop.getPropertyAsString().equals("class")) {
-                    return new ClassLiteralAccess(expr.getEnd(), createTypeReferenceForClassLiteral(prop));
-                }
-                // could still be a class literal; Groovy does not require ".class" -- resolved in MemberValuePair
-                char[][] tokens = CharOperation.splitOn('.',  prop.getText().toCharArray());
-                // guess the intermediate positions based on start offset and token lengths
-                int n = tokens.length, s = prop.getObjectExpression().getStart();
-                long[] positions = new long[n];
-                for (int i = 0; i < n; i += 1) {
-                    int len = (prop.getObjectExpression().getEnd() > 0 ? tokens[i].length - 1 : 0);
-                    positions[i] = toPos(s, s + len);
-                    s += len;
-                }
-                assert s <= expr.getEnd();
-
-                return new QualifiedNameReference(tokens, positions, expr.getStart(), expr.getEnd());
-
             } else if (expr instanceof VariableExpression) {
                 String name = ((VariableExpression) expr).getName();
                 // could be a class literal; Groovy does not require ".class" -- resolved in MemberValuePair
                 return new SingleNameReference(name.toCharArray(), toPos(expr.getStart(), expr.getEnd() - 1));
 
+            } else if (expr instanceof PropertyExpression) {
+                PropertyExpression prop = (PropertyExpression) expr;
+                if ("class".equals(prop.getPropertyAsString())) {
+                    return new ClassLiteralAccess(expr.getEnd(), createTypeReferenceForClassLiteral(prop));
+                }
+                // could still be a class literal; Groovy does not require ".class" -- resolved in MemberValuePair
+                char[] text = GroovyUtils.readSourceRange(sourceUnit, expr.getStart(), expr.getLength());
+                if (text == null || text.length == 0) text = expr.getText().toCharArray();
+                char[][] toks = CharOperation.splitOn('.',  text);
+
+                return new QualifiedNameReference(toks, positionsFor(toks, expr.getStart(), expr.getEnd()), expr.getStart(), expr.getEnd());
+
+            } else if (expr instanceof ClassExpression) {
+                char[] text = GroovyUtils.readSourceRange(sourceUnit, expr.getStart(), expr.getLength());
+                if (text == null || text.length == 0) text = expr.getText().toCharArray();
+                char[][] toks = CharOperation.splitOn('.', text);
+
+                final int n = "class".equals(String.valueOf(toks[toks.length - 1]).trim()) ? toks.length - 1 : toks.length;
+                long[] poss = positionsFor(toks, expr.getStart(), expr.getEnd());
+
+                return new ClassLiteralAccess(expr.getEnd(), n == 1 ? new SingleTypeReference(toks[0], poss[0])
+                    : new QualifiedTypeReference(Arrays.copyOfRange(toks, 0, n), Arrays.copyOfRange(poss, 0, n)));
+
             } else if (expr instanceof ClosureExpression) {
-                // annotation is something like "@Tag(value = { some computation })" return "Closure.class" to appease JDT
+                // annotation is something like "@Tag(value = { -> ... })" return "Closure.class" to appease JDT
                 return new ClassLiteralAccess(expr.getEnd(), new SingleTypeReference("Closure".toCharArray(), toPos(expr.getStart(), expr.getEnd())));
 
             } else if (expr instanceof BinaryExpression) {
@@ -1844,8 +1846,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 ref = new QualifiedTypeReference(namePartsArr, poss);
             } else if (namePartsArr.length == 1) {
                 ref = new SingleTypeReference(namePartsArr[0], poss[0]);
-            } else {
-                // should not happen
+            } else { // should not happen
                 ref = TypeReference.baseTypeReference(nameToPrimitiveTypeId.get("void"), 0);
             }
             return ref;

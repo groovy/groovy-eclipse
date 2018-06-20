@@ -46,8 +46,6 @@ import org.eclipse.jdt.groovy.search.VariableScope;
  */
 public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITypeLookup, ITypeResolver {
 
-    private static final String GORM_SIGNATURE = "Provided by Grails ORM DSL";
-
     DSLDStoreManager contextStoreManager = GroovyDSLCoreActivator.getDefault().getContextStoreManager();
 
     private DSLDStore store;
@@ -120,10 +118,10 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
      * Checks explicitly if the confidence decision should be made later.
      */
     @Override
-    protected TypeConfidence checkConfidence(Expression node, TypeConfidence originalConfidence, ASTNode declaration, String extraDoc) {
-        TypeConfidence confidence = originalConfidence == null ? confidence() : originalConfidence;
-        if (declaration instanceof MethodNode && extraDoc != null && extraDoc.contains(GORM_SIGNATURE)) {
-            // Give a chance for TypeLookups called later
+    protected TypeConfidence checkConfidence(Expression node, TypeConfidence confidence, ASTNode declaration, String extraDoc) {
+        if (confidence == null) confidence = confidence();
+        if (declaration instanceof MethodNode && extraDoc != null && extraDoc.contains("Provided by Grails ORM DSL")) {
+            // give a chance for TypeLookups called later
             confidence = TypeConfidence.LOOSELY_INFERRED;
         }
         return confidence;
@@ -135,7 +133,7 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
     }
 
     private boolean inPointcutExpression(VariableScope scope) {
-        return (context.simpleFileName.endsWith(".dsld") && (scope.getEnclosingClosure() == null ||
+        return (context.simpleFileName != null && context.simpleFileName.endsWith(".dsld") && (scope.getEnclosingClosure() == null ||
             scope.getAllEnclosingMethodCallExpressions().stream().noneMatch(cat -> cat.call.getMethodAsString().matches("accept|contribute"))));
     }
 }

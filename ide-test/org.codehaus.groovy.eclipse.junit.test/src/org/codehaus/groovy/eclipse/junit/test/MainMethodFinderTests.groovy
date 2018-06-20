@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,8 +34,8 @@ final class MainMethodFinderTests extends JUnitTestSuite {
         MainMethodSearchEngine engine = new MainMethodSearchEngine()
         IType[] types = engine.searchMainMethods(new NullProgressMonitor(),
             new JavaWorkspaceScope(), IJavaElementSearchConstants.CONSIDER_ALL_TYPES)
-        assert types.length == expected.length : "Wrong number of main methods found in: ${ -> types.collect { it.fullyQualifiedName }}"
-        types.eachWithIndex { type, i ->
+        assert types.length == expected.length : "Wrong number of main methods found in: ${ -> types*.fullyQualifiedName }"
+        Arrays.asList(types).eachWithIndex { type, i ->
             assert type.fullyQualifiedName == expected[i]
         }
     }

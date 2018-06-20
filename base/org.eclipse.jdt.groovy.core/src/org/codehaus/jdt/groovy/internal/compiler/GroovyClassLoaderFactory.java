@@ -265,24 +265,26 @@ public final class GroovyClassLoaderFactory {
             if (defaultCategories == null) {
                 synchronized (this) {
                     if (defaultCategories == null) {
-                        defaultCategories = new LinkedHashSet<>(); defaultStaticCategories = new LinkedHashSet<>();
+                        Set<Class> objectCategories = new LinkedHashSet<>(), staticCategories = new LinkedHashSet<>();
                         try {
                             Class dgm = loadClass("org.codehaus.groovy.runtime.DefaultGroovyMethods");
                             Class dgsm = loadClass("org.codehaus.groovy.runtime.DefaultGroovyStaticMethods");
 
-                            Collections.addAll(defaultCategories, (Class[]) dgm.getField("DGM_LIKE_CLASSES").get(dgm));
+                            Collections.addAll(objectCategories, (Class[]) dgm.getField("DGM_LIKE_CLASSES").get(dgm));
 
-                            defaultStaticCategories.add(dgsm);
+                            staticCategories.add(dgsm);
 
                             new ExtensionModuleScanner(module ->  {
                                 if (module instanceof SimpleExtensionModule) {
-                                    defaultCategories.addAll(((SimpleExtensionModule) module).getInstanceMethodsExtensionClasses());
-                                    defaultStaticCategories.addAll(((SimpleExtensionModule) module).getStaticMethodsExtensionClasses());
+                                    objectCategories.addAll(((SimpleExtensionModule) module).getInstanceMethodsExtensionClasses());
+                                    staticCategories.addAll(((SimpleExtensionModule) module).getStaticMethodsExtensionClasses());
                                 }
                             }, this).scanClasspathModules();
 
-                            defaultCategories.addAll(defaultStaticCategories);
+                            objectCategories.addAll(staticCategories);
 
+                            defaultCategories = objectCategories;
+                            defaultStaticCategories = staticCategories;
                         } catch (Exception e) {
                             Util.log(e, "Failed to find Default Groovy Methods with " + this);
                         }

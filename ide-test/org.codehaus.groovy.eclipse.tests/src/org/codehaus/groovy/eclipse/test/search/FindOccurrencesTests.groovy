@@ -15,17 +15,18 @@
  */
 package org.codehaus.groovy.eclipse.test.search
 
+import groovy.transform.NotYetImplemented
+
 import org.codehaus.groovy.eclipse.search.GroovyOccurrencesFinder
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.junit.Assert
-import org.junit.Ignore
 import org.junit.Test
 
 /**
  * Tests for {@link GroovyOccurrencesFinder}.
  */
-public final class FindOccurrencesTests extends GroovyEclipseTestSuite {
+final class FindOccurrencesTests extends GroovyEclipseTestSuite {
 
     private void doTest(String contents, int start, int length, int... expected) {
         GroovyCompilationUnit unit = addGroovySource(contents)
@@ -115,7 +116,7 @@ public final class FindOccurrencesTests extends GroovyEclipseTestSuite {
         doTest(contents, contents.indexOf('x'), 1, contents.indexOf('x'), 1, contents.lastIndexOf('x'), 1)
     }
 
-    @Test @Ignore('Not working now; see GROOVY-4620 and GRECLIPSE-951')
+    @Test @NotYetImplemented // Not working now; see GROOVY-4620 and GRECLIPSE-951
     void testFindPrimitive() {
         String contents = '''\
             int x(int y) {
@@ -558,7 +559,7 @@ public final class FindOccurrencesTests extends GroovyEclipseTestSuite {
         doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len, start5, len, start6, len)
     }
 
-    @Test @Ignore('This doesn\'t work because inferencing engine gets confused when overloaded methods have same number of arguments')
+    @Test @NotYetImplemented // This doesn't work because inferencing engine gets confused when overloaded methods have same number of arguments
     void testDefaultParameters1a() {
         String contents =
             'class Default {\n' +
@@ -585,7 +586,7 @@ public final class FindOccurrencesTests extends GroovyEclipseTestSuite {
         doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len, start5, len, start6, len)
     }
 
-    @Test @Ignore('This doesn\'t work because inferencing engine gets confused when overloaded methods have same number of arguments')
+    @Test @NotYetImplemented // This doesn't work because inferencing engine gets confused when overloaded methods have same number of arguments
     void testDefaultParameters2() {
         String contents =
             'class Default {\n' +

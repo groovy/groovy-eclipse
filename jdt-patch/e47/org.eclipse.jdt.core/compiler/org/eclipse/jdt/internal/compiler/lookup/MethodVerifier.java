@@ -291,6 +291,9 @@ void checkForMissingHashCodeMethod() {
 }
 
 void checkForRedundantSuperinterfaces(ReferenceBinding superclass, ReferenceBinding[] superInterfaces) {
+	// GROOVY add
+	if (superInterfaces == null) return;
+	// GROOVY end
 	if (superInterfaces == Binding.NO_SUPERINTERFACES) return;
 
 	SimpleSet interfacesToCheck = new SimpleSet(superInterfaces.length);
@@ -668,6 +671,9 @@ void computeInheritedMethods(ReferenceBinding superclass, ReferenceBinding[] sup
 }
 
 void collectAllDistinctSuperInterfaces(ReferenceBinding[] superInterfaces, Set seen, List result) {
+	// GROOVY add
+	if (superInterfaces == null) return;
+	// GROOVY end
 	// use 'seen' to avoid duplicates, use result to maintain stable order
 	int length = superInterfaces.length;
 	for (int i=0; i<length; i++) {

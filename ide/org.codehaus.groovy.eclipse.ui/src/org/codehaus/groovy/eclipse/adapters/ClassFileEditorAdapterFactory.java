@@ -45,8 +45,8 @@ public class ClassFileEditorAdapterFactory implements IAdapterFactory {
             // trigger discriminator in MultiplexingCommentRecorderParser
             ITypeRoot root = EditorUtility.getEditorInputJavaElement(editor, false);
             CompilationUnit unit = SharedASTProvider.getAST(root, SharedASTProvider.WAIT_YES, null);
-            if (unit.getClass().getName().equals("org.codehaus.jdt.groovy.core.dom.GroovyCompilationUnit")) {
-                // TODO: Is there a better way to get from GroovyCompilationUnit to GroovyCompilationUnitDeclaration?
+            if (unit != null && unit.getClass().getName().equals("org.codehaus.jdt.groovy.core.dom.GroovyCompilationUnit")) {
+                // TODO: Is there a better way to get from a GroovyCompilationUnit to a GroovyCompilationUnitDeclaration?
                 Object resolver = ReflectionUtils.executePrivateMethod(org.eclipse.jdt.core.dom.AST.class, "getBindingResolver", unit.getAST());
                 CompilationUnitScope scope = ReflectionUtils.executePrivateMethod(resolver.getClass(), "scope", resolver);
 
