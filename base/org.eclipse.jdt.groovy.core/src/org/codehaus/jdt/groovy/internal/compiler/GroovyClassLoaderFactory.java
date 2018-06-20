@@ -286,6 +286,8 @@ public final class GroovyClassLoaderFactory {
                             defaultCategories = objectCategories;
                             defaultStaticCategories = staticCategories;
                         } catch (Exception e) {
+                            defaultCategories = Collections.EMPTY_SET;
+                            defaultStaticCategories = Collections.EMPTY_SET;
                             Util.log(e, "Failed to find Default Groovy Methods with " + this);
                         }
                     }
