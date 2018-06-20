@@ -1593,15 +1593,17 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
             } else if (expr instanceof PropertyExpression) {
                 PropertyExpression prop = (PropertyExpression) expr;
+                final int propertyEnd = prop.getProperty().getEnd();
                 if ("class".equals(prop.getPropertyAsString())) {
-                    return new ClassLiteralAccess(expr.getEnd(), createTypeReferenceForClassLiteral(prop));
+                    return new ClassLiteralAccess(propertyEnd, createTypeReferenceForClassLiteral(prop));
                 }
                 // could still be a class literal; Groovy does not require ".class" -- resolved in MemberValuePair
-                char[] text = GroovyUtils.readSourceRange(sourceUnit, expr.getStart(), expr.getLength());
-                if (text == null || text.length == 0) text = expr.getText().toCharArray();
+                char[] text = GroovyUtils.readSourceRange(sourceUnit, prop.getStart(), propertyEnd - prop.getStart());
+                if (text == null || text.length == 0) text = prop.getText().toCharArray();
                 char[][] toks = CharOperation.splitOn('.',  text);
 
-                return new QualifiedNameReference(toks, positionsFor(toks, expr.getStart(), expr.getEnd()), expr.getStart(), expr.getEnd());
+                if (toks.length == 1) return new SingleNameReference(toks[0], toPos(prop.getStart(), propertyEnd - 1));
+                return new QualifiedNameReference(toks, positionsFor(toks, prop.getStart(), propertyEnd), prop.getStart(), propertyEnd);
 
             } else if (expr instanceof ClassExpression) {
                 char[] text = GroovyUtils.readSourceRange(sourceUnit, expr.getStart(), expr.getLength());
@@ -1649,37 +1651,37 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             String type = expr.getType().getName();
             Object value = expr.getValue();
 
-            if (type.equals("java.lang.Object")) {
+            if ("java.lang.Object".equals(type)) {
                 assert value == null;
                 return new NullLiteral(start, until);
-            } else if (type.equals("java.lang.String")) {
+            } else if ("java.lang.String".equals(type)) {
                 return new StringLiteral(((String) value).toCharArray(), start, until - 1, expr.getLineNumber());
-            } else if (type.equals("boolean") || type.equals("java.lang.Boolean")) {
-                if (value.toString().equals("true")) {
+            } else if ("boolean".equals(type) || "java.lang.Boolean".equals(type)) {
+                if ("true".equals(value.toString())) {
                     return new TrueLiteral(start, until);
                 } else {
                     return new FalseLiteral(start, until);
                 }
-            } else if (type.equals("int") || type.equals("java.lang.Integer")) {
+            } else if ("int".equals(type) || "java.lang.Integer".equals(type)) {
                 // TODO: Should return a unary minus expression for negative values...
                 char[] chars = String.valueOf(Math.abs((Integer) value)).toCharArray();
                 return IntLiteral.buildIntLiteral(chars, start, start + chars.length);
-            } else if (type.equals("long") || type.equals("java.lang.Long")) {
+            } else if ("long".equals(type) || "java.lang.Long".equals(type)) {
                 char[] chars = (String.valueOf(Math.abs((Long) value)) + 'L').toCharArray();
                 return LongLiteral.buildLongLiteral(chars, start, start + chars.length);
-            } else if (type.equals("double") || type.equals("java.lang.Double")) {
+            } else if ("double".equals(type) || "java.lang.Double".equals(type)) {
                 return new DoubleLiteral(value.toString().toCharArray(), start, until);
-            } else if (type.equals("float") || type.equals("java.lang.Float")) {
+            } else if ("float".equals(type) || "java.lang.Float".equals(type)) {
                 return new FloatLiteral(value.toString().toCharArray(), start, until);
-            }/* else if (type.equals("byte") || type.equals("java.lang.Byte") ||
-                        type.equals("short") || type.equals("java.lang.Short")) {
+            }/* else if ("byte".equals(type) || "java.lang.Byte".equals(type) ||
+                        "short".equals(type) || "java.lang.Short".equals(type)) {
                 char[] chars = value.toString().toCharArray();
                 return IntLiteral.buildIntLiteral(chars, start, start + chars.length);
-            }*/ else if (type.equals("char") || type.equals("java.lang.Character")) {
+            }*/ else if ("char".equals(type) || "java.lang.Character".equals(type)) {
                 return new CharLiteral(value.toString().toCharArray(), start, until);
-            } else if (type.equals("java.math.BigDecimal")) {
+            } else if ("java.math.BigDecimal".equals(type)) {
                 return new DoubleLiteral(value.toString().toCharArray(), start, until);
-            } else if (type.equals("java.math.BigInteger")) {
+            } else if ("java.math.BigInteger".equals(type)) {
                 long thing = ((BigInteger) value).abs().longValue();
                 char[] chars = (String.valueOf(thing) + 'L').toCharArray();
                 return LongLiteral.buildLongLiteral(chars, start, start + chars.length);

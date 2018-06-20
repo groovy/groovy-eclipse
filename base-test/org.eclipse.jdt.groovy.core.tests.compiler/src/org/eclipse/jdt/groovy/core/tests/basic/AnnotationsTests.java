@@ -126,7 +126,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testClassAnnotationValue() {
+    public void testClassAnnotationValue1() {
         String[] sources = {
             "Anno.java",
             "import java.lang.annotation.*;\n" +
@@ -142,7 +142,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "}",
         };
 
-        runConformTest(sources);
+        runNegativeTest(sources, "");
     }
 
     @Test
@@ -162,7 +162,29 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "}",
         };
 
-        runConformTest(sources);
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testClassAnnotationValue3() {
+        String[] sources = {
+            "Anno.java",
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@Target(ElementType.TYPE)\n" +
+            "@interface Anno {\n" +
+            "  Class<?> value();\n" +
+            "}",
+
+            "Main.groovy",
+            "@Anno(\n" +
+            "  java.net.URL\n" +
+            ")\n" +
+            "class Main {\n" +
+            "}",
+        };
+
+        runNegativeTest(sources, "");
     }
 
     @Test
@@ -439,7 +461,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testAliasedAnnotationClassLiteral() {
+    public void testAliasedAnnotationClassLiteral1() {
         String[] sources = {
             "Anno.java",
             "import java.lang.annotation.*;\n" +
@@ -526,7 +548,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeLevelAnnotations01() {
+    public void testTypeLevelAnnotations() {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -583,7 +605,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testFieldLevelAnnotations01() {
+    public void testFieldLevelAnnotations() {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -730,7 +752,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testConstructorLevelAnnotations01() {
+    public void testConstructorLevelAnnotations() {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -789,7 +811,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeLevelAnnotations_SingleMember() {
+    public void testTypeLevelAnnotations_SingleMember01() {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -849,7 +871,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testMethodLevelAnnotations_SingleMember() {
+    public void testMethodLevelAnnotations_SingleMember01() {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -1003,7 +1025,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test // All types in groovy with TYPE specified for Target and obeyed
-    public void testAnnotationsTargetType() {
+    public void testAnnotationsTargetType01() {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
