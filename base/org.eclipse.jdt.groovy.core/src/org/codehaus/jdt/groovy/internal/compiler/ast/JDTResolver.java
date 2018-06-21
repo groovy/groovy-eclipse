@@ -302,28 +302,17 @@ public class JDTResolver extends ResolveVisitor {
         return false;
     }
 
-    // avoiding an inner resolve is dangerous
-    // leave a back door here to turn it back on
-    // if no one complains, then safe to remove
-    private static boolean doInnerResolve = Boolean.getBoolean("greclipse.doInnerResolve");
-
     @Override
     protected boolean resolveToInner(ClassNode type) {
-        if (doInnerResolve) {
-            return super.resolveToInner(type);
-        }
-        // inner classes are resolved by JDT, so
-        // if we get here then the inner class does not exist
+        // inner types are resolved by JDT, so if we get here then "type" does not exist
+        //return super.resolveToInner(type);
         return false;
     }
 
     @Override
     protected boolean resolveToInnerEnum(ClassNode type) {
-        if (doInnerResolve) {
-            return super.resolveToInnerEnum(type);
-        }
-        // inner classes are resolved by JDT, so
-        // if we get here then the inner class does not exist
+        // inner types are resolved by JDT, so if we get here then "type" does not exist
+        //return super.resolveToInnerEnum(type);
         return false;
     }
 
