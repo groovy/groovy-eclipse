@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -197,11 +197,10 @@ public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
     }
 
     /**
-     * Cache module node locally and not in the mapper
+     * Cache module node locally and not in the mapper.
      */
     @Override
-    protected void maybeCacheModuleNode(PerWorkingCopyInfo perWorkingCopyInfo,
-            GroovyCompilationUnitDeclaration compilationUnitDeclaration) {
+    protected void maybeCacheModuleNode(PerWorkingCopyInfo perWorkingCopyInfo, GroovyCompilationUnitDeclaration compilationUnitDeclaration) {
         if (compilationUnitDeclaration != null) {
             moduleNode = compilationUnitDeclaration.getModuleNode();
             moduleNode.setDescription(this.name);
