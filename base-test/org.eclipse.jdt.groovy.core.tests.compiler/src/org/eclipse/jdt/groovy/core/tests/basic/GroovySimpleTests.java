@@ -762,28 +762,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testOverridingFinalMethod() {
-        runNegativeTest(new String[] {
-            "Base.groovy",
-            "class Base {\n"+
-            "  final getFinalProperty() { 1 }\n"+
-            "}\n"+
-            "class Child extends Base {\n"+
-            "  def finalProperty = 32 \n"+
-            "  public static void main(String []argv) {\n"+
-            "    print new Child().getFinalProperty();\n"+
-            "  }\n"+
-            "}",
-        },
-        "----------\n" +
-        "1. ERROR in Base.groovy (at line 4)\n" +
-        "\tclass Child extends Base {\n" +
-        "\t      ^^^^^\n" +
-        "Cannot override the final method from Base\n" +
-        "----------\n");
-    }
-
-    @Test
     public void testMixedModeInnerProperties_GRE597() {
         runConformTest(new String[] {
             "gr8/JointGroovy.groovy",
@@ -1189,36 +1167,86 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
     @Test
     public void testOverriding_GRE440() {
-        runConformTest(new String[] {
-            "Foo.groovy",
-            "class Foo { \n"+
-            "  static void main(args) {}\n"+
-            "}",
+        runNegativeTest(new String[] {
+            "Bar.groovy",
+            "class Bar {\n" +
+            "  static void main(args) {}\n" +
+            "}\n",
 
-            "Goo.java",
-            "class Goo extends Foo { \n"+
-            "  public static void main(String[] argv) {}\n"+
-            "}",
-        });
-
-        //checkGCUDeclaration("Foo.groovy", "yyy");
+            "Foo.java",
+            "class Foo extends Bar { \n" +
+            "  public static void main(String[] args) {}\n" +
+            "}\n",
+        },
+        "");
     }
 
     @Test
     public void testOverriding_GRE440_2() {
-        runConformTest(new String[] {
+        runNegativeTest(new String[] {
+            "Bar.java",
+            "class Bar {\n" +
+            "  void main(String... strings) {}\n" +
+            "}\n",
+
             "Foo.java",
-            "class Foo { \n"+
-            "  void main(String... ss) {}\n"+
-            "}",
+            "class Foo extends Bar {\n" +
+            "  void main(String[] strings) {}\n" +
+            "}\n",
+        },
+        "----------\n" +
+        "1. WARNING in Foo.java (at line 2)\n" +
+        "\tvoid main(String[] strings) {}\n" +
+        "\t     ^^^^^^^^^^^^^^^^^^^^^^\n" +
+        "Varargs methods should only override or be overridden by other varargs methods unlike Foo.main(String[]) and Bar.main(String...)\n" +
+        "----------\n");
+    }
 
-            "Goo.java",
-            "class Goo extends Foo { \n"+
-            "  void main(String[] ss) {}\n"+
-            "}",
-        });
+    @Test
+    public void testOverriding_FinalMethod1() {
+        runNegativeTest(new String[] {
+            "Bar.groovy",
+            "class Bar {\n" +
+            "  final def getFinalProperty() {}\n" +
+            "}\n",
 
-        //checkGCUDeclaration("Foo.java", "yyy");
+            "Foo.groovy",
+            "class Foo extends Bar {\n" +
+            "  def getFinalProperty() {}\n" +
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in Foo.groovy (at line 2)\n" +
+        "\tdef getFinalProperty() {}\n" +
+        "\t    ^^^^^^^^^^^^^^^^\n" +
+        "Cannot override the final method from Bar\n" +
+        "----------\n" +
+        "2. ERROR in Foo.groovy (at line 2)\n" +
+        "\tdef getFinalProperty() {}\n" +
+        "\t    ^^^^^^^^^^^^^^^^\n" +
+        "Groovy:You are not allowed to override the final method getFinalProperty() from class 'Bar'.\n" +
+        "----------\n");
+    }
+
+    @Test
+    public void testOverriding_FinalMethod2() {
+        runNegativeTest(new String[] {
+            "Bar.groovy",
+            "class Bar {\n" +
+            "  final def getFinalProperty() {}\n" +
+            "}\n",
+
+            "Foo.groovy",
+            "class Foo extends Bar {\n" +
+            "  def finalProperty = 32\n" +
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in Foo.groovy (at line 1)\n" +
+        "\tclass Foo extends Bar {\n" +
+        "\t      ^^^\n" +
+        "Cannot override the final method from Bar\n" +
+        "----------\n");
     }
 
     @Test
@@ -1229,12 +1257,13 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
             "Foo.groovy",
             "class Foo extends Bar { private void baz() {}\n }\n",
-        }, "----------\n" +
-            "1. ERROR in Foo.groovy (at line 1)\n" +
-            "\tclass Foo extends Bar { private void baz() {}\n" +
-            "\t                                     ^^^\n" +
-            "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was public\n" +
-            "----------\n");
+        },
+        "----------\n" +
+        "1. ERROR in Foo.groovy (at line 1)\n" +
+        "\tclass Foo extends Bar { private void baz() {}\n" +
+        "\t                                     ^^^\n" +
+        "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was public\n" +
+        "----------\n");
     }
 
     @Test
@@ -1245,12 +1274,13 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
             "Foo.groovy",
             "class Foo extends Bar { protected void baz() {}\n }\n",
-        }, "----------\n" +
-            "1. ERROR in Foo.groovy (at line 1)\n" +
-            "\tclass Foo extends Bar { protected void baz() {}\n" +
-            "\t                                       ^^^\n" +
-            "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was public\n" +
-            "----------\n");
+        },
+        "----------\n" +
+        "1. ERROR in Foo.groovy (at line 1)\n" +
+        "\tclass Foo extends Bar { protected void baz() {}\n" +
+        "\t                                       ^^^\n" +
+        "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was public\n" +
+        "----------\n");
     }
 
     @Test
@@ -1261,12 +1291,13 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
             "Foo.groovy",
             "class Foo extends Bar { @groovy.transform.PackageScope void baz() {}\n }\n",
-        }, "----------\n" +
-            "1. ERROR in Foo.groovy (at line 1)\n" +
-            "\tclass Foo extends Bar { @groovy.transform.PackageScope void baz() {}\n" +
-            "\t                                                            ^^^\n" +
-            "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was public\n" +
-            "----------\n");
+        },
+        "----------\n" +
+        "1. ERROR in Foo.groovy (at line 1)\n" +
+        "\tclass Foo extends Bar { @groovy.transform.PackageScope void baz() {}\n" +
+        "\t                                                            ^^^\n" +
+        "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was public\n" +
+        "----------\n");
     }
 
     @Test
@@ -1277,12 +1308,13 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
             "Foo.groovy",
             "class Foo extends Bar { private void baz() {}\n }\n",
-        }, "----------\n" +
-            "1. ERROR in Foo.groovy (at line 1)\n" +
-            "\tclass Foo extends Bar { private void baz() {}\n" +
-            "\t                                     ^^^\n" +
-            "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was protected\n" +
-            "----------\n");
+        },
+        "----------\n" +
+        "1. ERROR in Foo.groovy (at line 1)\n" +
+        "\tclass Foo extends Bar { private void baz() {}\n" +
+        "\t                                     ^^^\n" +
+        "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was protected\n" +
+        "----------\n");
     }
 
     @Test
@@ -1293,12 +1325,13 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
             "Foo.groovy",
             "class Foo extends Bar { @groovy.transform.PackageScope void baz() {}\n }\n",
-        }, "----------\n" +
-            "1. ERROR in Foo.groovy (at line 1)\n" +
-            "\tclass Foo extends Bar { @groovy.transform.PackageScope void baz() {}\n" +
-            "\t                                                            ^^^\n" +
-            "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was protected\n" +
-            "----------\n");
+        },
+        "----------\n" +
+        "1. ERROR in Foo.groovy (at line 1)\n" +
+        "\tclass Foo extends Bar { @groovy.transform.PackageScope void baz() {}\n" +
+        "\t                                                            ^^^\n" +
+        "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was protected\n" +
+        "----------\n");
     }
 
     @Test
@@ -1309,12 +1342,13 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
             "Foo.groovy",
             "class Foo extends Bar { private void baz() {}\n }\n",
-        }, "----------\n" +
-            "1. ERROR in Foo.groovy (at line 1)\n" +
-            "\tclass Foo extends Bar { private void baz() {}\n" +
-            "\t                                     ^^^\n" +
-            "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was package-private\n" +
-            "----------\n");
+        },
+        "----------\n" +
+        "1. ERROR in Foo.groovy (at line 1)\n" +
+        "\tclass Foo extends Bar { private void baz() {}\n" +
+        "\t                                     ^^^\n" +
+        "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was package-private\n" +
+        "----------\n");
     }
 
     @Test
@@ -1325,12 +1359,13 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
             "Foo.groovy",
             "class Foo extends Bar { private void baz() {}\n }\n",
-        }, "----------\n" +
-            "1. ERROR in Foo.groovy (at line 1)\n" +
-            "\tclass Foo extends Bar { private void baz() {}\n" +
-            "\t                                     ^^^\n" +
-            "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was package-private\n" +
-            "----------\n");
+        },
+        "----------\n" +
+        "1. ERROR in Foo.groovy (at line 1)\n" +
+        "\tclass Foo extends Bar { private void baz() {}\n" +
+        "\t                                     ^^^\n" +
+        "Groovy:baz() in Foo cannot override baz in Bar; attempting to assign weaker access privileges; was package-private\n" +
+        "----------\n");
     }
 
     @Test
