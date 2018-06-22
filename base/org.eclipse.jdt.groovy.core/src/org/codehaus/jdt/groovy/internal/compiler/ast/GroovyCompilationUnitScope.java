@@ -126,42 +126,33 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
         return new GroovyClassScope(parent, typeDecl);
     }
 
-    /**
-     * Called after the type hierarchy is built for all types involved - allows glObject to be inserted
-     */
-    @Override
-    public void augmentTypeHierarchy() {
-        for (SourceTypeBinding topLevelType : topLevelTypes) {
-            augmentTypeHierarchy(topLevelType);
-        }
-    }
-
-    // FIXASC move this into GroovyClassScope
-    /**
-     * Ensures Groovy types extend groovy.lang.GroovyObject.
-     */
-    private void augmentTypeHierarchy(SourceTypeBinding typeBinding) {
-        if (!typeBinding.isAnnotationType() && !typeBinding.isInterface() && typeBinding.superInterfaces != null) {
-            CompilationUnitScope unitScope = compilationUnitScope();
-            unitScope.recordQualifiedReference(GROOVY_LANG_GROOVYOBJECT);
-            ReferenceBinding groovyLangObjectBinding = unitScope.environment.getResolvedType(GROOVY_LANG_GROOVYOBJECT, this);
-            if (!typeBinding.implementsInterface(groovyLangObjectBinding, true)) {
-                typeBinding.superInterfaces = (ReferenceBinding[]) ArrayUtils.add(typeBinding.superInterfaces, groovyLangObjectBinding);
-            }
-        }
-    }
-
     @Override
     protected void buildTypeBindings(AccessRestriction accessRestriction) {
-        TypeDeclaration[] types = referenceContext.types;
-        if (types != null) {
-            for (TypeDeclaration type : types) {
-                if (type instanceof GroovyTypeDeclaration) {
-                    ((GroovyTypeDeclaration) type).fixAnonymousTypeBinding(this);
+        if (referenceContext.types != null) {
+            for (TypeDeclaration typeDecl : referenceContext.types) {
+                if (typeDecl instanceof GroovyTypeDeclaration) {
+                    ((GroovyTypeDeclaration) typeDecl).fixAnonymousTypeBinding(this);
                 }
             }
         }
         super.buildTypeBindings(accessRestriction);
+    }
+
+    /**
+     * Ensures Groovy types implement {@code groovy.lang.GroovyObject}.
+     */
+    @Override
+    public void augmentTypeHierarchy() {
+        for (SourceTypeBinding topLevelType : topLevelTypes) {
+            if (!topLevelType.isInterface() && !topLevelType.isAnnotationType() && topLevelType.superInterfaces != null) {
+                CompilationUnitScope unitScope = compilationUnitScope();
+                unitScope.recordQualifiedReference(GROOVY_LANG_GROOVYOBJECT);
+                ReferenceBinding groovyLangObjectBinding = unitScope.environment.getResolvedType(GROOVY_LANG_GROOVYOBJECT, this);
+                if (!topLevelType.implementsInterface(groovyLangObjectBinding, true)) {
+                    topLevelType.superInterfaces = (ReferenceBinding[]) ArrayUtils.add(topLevelType.superInterfaces, groovyLangObjectBinding);
+                }
+            }
+        }
     }
 
     /*

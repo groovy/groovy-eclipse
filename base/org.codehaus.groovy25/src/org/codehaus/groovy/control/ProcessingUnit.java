@@ -29,7 +29,6 @@ import java.security.PrivilegedAction;
  *
  * @author <a href="mailto:cpoirier@dreaming.org">Chris Poirier</a>
  */
-
 public abstract class ProcessingUnit {
 
     /**
@@ -49,24 +48,21 @@ public abstract class ProcessingUnit {
      * Configuration and other settings that control processing
      */
     protected CompilerConfiguration configuration;
-  
+
     /**
      * The ClassLoader to use during processing
      */
     protected GroovyClassLoader classLoader;
-    
+
     /**
      * a helper to share errors and report them
      */
     protected ErrorCollector errorCollector;
 
-
     /**
      * Initialize the ProcessingUnit to the empty state.
      */
-
     public ProcessingUnit(CompilerConfiguration configuration, GroovyClassLoader classLoader, ErrorCollector er) {
-
         this.phase = Phases.INITIALIZATION;
         this.configuration = configuration;
         this.setClassLoader(classLoader);
@@ -74,7 +70,6 @@ public abstract class ProcessingUnit {
         if (er==null) er = new ErrorCollector(getConfiguration());
         this.errorCollector = er;
     }
-
 
     /**
      * Reconfigures the ProcessingUnit.
@@ -95,16 +90,13 @@ public abstract class ProcessingUnit {
     /**
      * Returns the class loader in use by this ProcessingUnit.
      */
-
     public GroovyClassLoader getClassLoader() {
         return classLoader;
     }
 
-
     /**
      * Sets the class loader for use by this ProcessingUnit.
      */
-
     public void setClassLoader(final GroovyClassLoader loader) {
         // Classloaders should only be created inside doPrivileged block
         // This code creates a classloader, which needs permission if a security manage is installed.
@@ -118,24 +110,6 @@ public abstract class ProcessingUnit {
         });
     }
 
-
-    /**
-     * Returns the current phase.
-     */
-
-    public int getPhase() {
-        return this.phase;
-    }
-
-
-    /**
-     * Returns the description for the current phase.
-     */
-
-    public String getPhaseDescription() {
-        return Phases.getDescription(this.phase);
-    }
-
     /**
      * Errors found during the compilation should be reported through the ErrorCollector.
      * @return
@@ -144,17 +118,35 @@ public abstract class ProcessingUnit {
     public ErrorCollector getErrorCollector() {
         return errorCollector;
     }
-    
+
+    /**
+     * Returns the current phase.
+     */
+    public int getPhase() {
+        return phase;
+    }
+
+    /**
+     * Returns the description for the current phase.
+     */
+    public String getPhaseDescription() {
+        return Phases.getDescription(phase);
+    }
+
+    // GROOVY add
+    public boolean isPhaseComplete() {
+        return phaseComplete;
+    }
+    // GROOVY end
+
     //---------------------------------------------------------------------------
     // PROCESSING
-
 
     /**
      * Marks the current phase complete and processes any
      * errors.
      */
-
-    public void completePhase() throws CompilationFailedException {       
+    public void completePhase() throws CompilationFailedException {
         // GRECLIPSE edit
         //errorCollector.failIfErrors();
         if (errorCollector.hasErrors()) {
@@ -164,26 +156,22 @@ public abstract class ProcessingUnit {
         phaseComplete = true;
     }
 
-
     /**
      * A synonym for <code>gotoPhase( phase + 1 )</code>.
      */
     public void nextPhase() throws CompilationFailedException {
-        gotoPhase(this.phase + 1);
+        gotoPhase(phase + 1);
     }
-
 
     /**
      * Wraps up any pending operations for the current phase
      * and switches to the next phase.
      */
     public void gotoPhase(int phase) throws CompilationFailedException {
-        if (!this.phaseComplete) {
+        if (!phaseComplete) {
             completePhase();
         }
-
         this.phase = phase;
-        this.phaseComplete = false;
+        phaseComplete = false;
     }
-
 }

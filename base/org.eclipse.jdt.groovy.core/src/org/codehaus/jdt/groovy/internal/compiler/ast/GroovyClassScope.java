@@ -474,6 +474,7 @@ public class GroovyClassScope extends ClassScope {
     public boolean shouldReport(int problem) {
         switch (problem) {
         case IProblem.AbstractMethodMustBeImplemented:
+        case IProblem.FinalMethodCannotBeOverridden:
         case IProblem.MethodReducesVisibility:
         case IProblem.IncompatibleReturnType:
         case IProblem.SuperclassMustBeAClass:

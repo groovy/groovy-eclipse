@@ -67,20 +67,17 @@ public final class ASTTransformsTests extends BuilderTestSuite {
         createUnit("Other",
             "class Other {\n" +
             "  @Delegate Date me\n" +
-            "  @Newify int compareTo(arg0) {}\n" +
+            "  @Newify int compareTo(Object that) {}\n" +
             "}");
 
         GroovyCompilationUnit unit = createUnit("ThisUnit", "Other");
         env.fullBuild();
         expectingNoProblems();
-        ClassNode clazz = getClassFromScript(unit);
-        MethodNode method = null;
-        for (MethodNode m : clazz.getMethods()) {
-            if ("compareTo".equals(m.getName())) {
-                method = m;
-            }
-        }
-        assertAnnotation("groovy.lang.Newify", method);
+
+        MethodNode meth = getClassFromScript(unit).getMethods("compareTo").stream().filter(
+            mn -> mn.getParameters()[0].getType().getName().equals("java.lang.Object")
+        ).findFirst().get();
+        assertAnnotation("groovy.lang.Newify", meth);
     }
 
     @Test

@@ -1219,11 +1219,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "1. ERROR in Foo.groovy (at line 2)\n" +
         "\tdef getFinalProperty() {}\n" +
         "\t    ^^^^^^^^^^^^^^^^\n" +
-        "Cannot override the final method from Bar\n" +
-        "----------\n" +
-        "2. ERROR in Foo.groovy (at line 2)\n" +
-        "\tdef getFinalProperty() {}\n" +
-        "\t    ^^^^^^^^^^^^^^^^\n" +
         "Groovy:You are not allowed to override the final method getFinalProperty() from class 'Bar'.\n" +
         "----------\n");
     }
@@ -1241,12 +1236,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "  def finalProperty = 32\n" +
             "}\n",
         },
-        "----------\n" +
-        "1. ERROR in Foo.groovy (at line 1)\n" +
-        "\tclass Foo extends Bar {\n" +
-        "\t      ^^^\n" +
-        "Cannot override the final method from Bar\n" +
-        "----------\n");
+        "");
     }
 
     @Test
