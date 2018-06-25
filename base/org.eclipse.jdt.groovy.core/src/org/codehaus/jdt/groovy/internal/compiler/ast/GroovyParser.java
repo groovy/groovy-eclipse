@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,6 +45,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
@@ -78,6 +79,8 @@ public class GroovyParser {
     private JDTResolver resolver;
     private String projectName;
     private String gclClasspath;
+    private boolean isReconcile;
+    private boolean allowTransforms;
     private CompilationUnit compilationUnit;
     private CompilerOptions compilerOptions;
 
@@ -229,8 +232,6 @@ public class GroovyParser {
         this.projectName = compilerOptions.groovyProjectName;
         this.gclClasspath = compilerOptions.groovyClassLoaderPath;
 
-        GroovyClassLoader gcl = getLoaderFor(gclClasspath);
-        // ---
         // 2011-10-18: Status of transforms and reconciling
         // Prior to 2.6.0 all transforms were turned OFF for reconciling, and by turned off that meant no phase
         // processing for them was done at all. With 2.6.0 this phase processing is now active during reconciling
@@ -243,17 +244,13 @@ public class GroovyParser {
         // with URLs when grab processing is running. This classloader is used as a last resort when resolving
         // types and is *only* called if a grab has occurred somewhere during compilation.
         // Currently it is not cached but created each time - we'll have to decide if there is a need to cache
-        GrapeAwareGroovyClassLoader grabbyLoader = new GrapeAwareGroovyClassLoader(gcl);
-        this.compilationUnit = makeCompilationUnit(grabbyLoader, gcl, isReconcile, allowTransforms);
-        this.compilationUnit.removeOutputPhaseOperation();
+
+        this.isReconcile = isReconcile;
+        this.allowTransforms = allowTransforms;
     }
 
     public void reset() {
-        GroovyClassLoader gcl = getLoaderFor(gclClasspath);
-        this.compilationUnit = makeCompilationUnit(
-            new GrapeAwareGroovyClassLoader(gcl), gcl,
-            this.compilationUnit.isReconcile,
-            this.compilationUnit.allowTransforms);
+        this.compilationUnit = null;
     }
 
     static class GrapeAwareGroovyClassLoader extends GroovyClassLoader {
@@ -339,7 +336,6 @@ public class GroovyParser {
             sourceCode = CharOperation.NO_CHAR; // pretend empty from thereon
         }
 
-        ErrorCollector errorCollector = new GroovyErrorCollectorForJDT(compilationUnit.getConfiguration());
         String filepath = null;
 
         // This check is necessary because the filename is short (as in the last part, eg. Foo.groovy) for types coming in
@@ -366,6 +362,17 @@ public class GroovyParser {
             }
         }
 
+        if (compilationUnit == null) {
+            if (eclipseFile != null && eclipseFile.getProject().isAccessible() &&
+                    !JavaCore.create(eclipseFile.getProject()).isOnClasspath(eclipseFile)) {
+                compilerOptions.groovyCompilerConfigScript = null;
+            }
+            GroovyClassLoader gcl = getLoaderFor(gclClasspath);
+            compilationUnit = makeCompilationUnit(new GrapeAwareGroovyClassLoader(gcl), gcl, isReconcile, allowTransforms);
+            compilationUnit.removeOutputPhaseOperation();
+        }
+
+        ErrorCollector errorCollector = new GroovyErrorCollectorForJDT(compilationUnit.getConfiguration());
         SourceUnit groovySourceUnit = new EclipseSourceUnit(eclipseFile, filepath, String.valueOf(sourceCode),
             compilationUnit.getConfiguration(), compilationUnit.getClassLoader(), errorCollector, this.resolver);
         groovySourceUnit.isReconcile = compilationUnit.isReconcile;

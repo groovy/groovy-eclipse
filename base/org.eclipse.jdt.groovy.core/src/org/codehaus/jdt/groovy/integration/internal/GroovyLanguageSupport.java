@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,11 +41,15 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyClassFileWorkingCopy;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyNature;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ISourceRange;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.WorkingCopyOwner;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
@@ -134,10 +138,24 @@ public class GroovyLanguageSupport implements LanguageSupport {
 
     public CompilationUnitDeclaration newCompilationUnitDeclaration(ICompilationUnit icu, ProblemReporter problemReporter, CompilationResult compilationResult, int sourceLength) {
         if (ContentTypeUtils.isGroovyLikeFileName(compilationResult.getFileName())) {
+
+            String unitName = String.valueOf(compilationResult.getFileName());
+
+            if (problemReporter.options.groovyCompilerConfigScript != null) {
+                IWorkspace workspace = ResourcesPlugin.getWorkspace();
+                if (workspace != null && workspace.getRoot() != null) {
+                    IFile eclipseFile = workspace.getRoot().getFile(new Path(unitName));
+                    if (eclipseFile != null && eclipseFile.getProject().isAccessible() &&
+                            !JavaCore.create(eclipseFile.getProject()).isOnClasspath(eclipseFile)) {
+                        problemReporter.options.groovyCompilerConfigScript = null;
+                    }
+                }
+            }
+
             CompilerConfiguration compilerConfig = newCompilerConfiguration(problemReporter.options, problemReporter);
             GroovyClassLoader classLoader = null; // TODO: missing the GroovyClassLoader configuration
             ErrorCollector errorCollector = new GroovyErrorCollectorForJDT(compilerConfig);
-            SourceUnit groovySourceUnit = new SourceUnit(String.valueOf(compilationResult.getFileName()), String.valueOf(icu.getContents()), compilerConfig, classLoader, errorCollector);
+            SourceUnit groovySourceUnit = new SourceUnit(unitName, String.valueOf(icu.getContents()), compilerConfig, classLoader, errorCollector);
 
             org.codehaus.groovy.control.CompilationUnit gcu = new org.codehaus.groovy.control.CompilationUnit(compilerConfig);
             JDTResolver resolver = new JDTResolver(gcu);
