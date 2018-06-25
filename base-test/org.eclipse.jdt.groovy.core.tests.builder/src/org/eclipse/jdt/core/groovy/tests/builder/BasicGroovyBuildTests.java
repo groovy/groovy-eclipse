@@ -53,6 +53,7 @@ import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.groovy.core.Activator;
 import org.eclipse.jdt.groovy.search.VariableScope;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.JavaModelManager;
 import org.eclipse.jdt.internal.core.builder.AbstractImageBuilder;
 import org.junit.After;
@@ -115,8 +116,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         }
     }
 
-    private static void compareParameters(Parameter jp, Parameter p,int d) {
-        compareClassNodes(jp.getType(),p.getType(),d+1);
+    private static void compareParameters(Parameter jp, Parameter p, int d) {
+        compareClassNodes(jp.getType(), p.getType(), d + 1);
     }
 
     // check whether these are identical (in everything except name!)
@@ -245,6 +246,43 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         expectingCompiledClasses("p1.Hello");
         expectingNoProblems();
         executeClass(paths[0], "p1.Hello", "Hello Groovy world", null);
+    }
+
+    @Test
+    public void testProjectCompilerConfigScript() throws Exception {
+        IPath[] paths = createSimpleProject("Project", true);
+
+        env.addFile(paths[0], "config.groovy", "withConfig(configuration) {\n" +
+            "  imports {\n" +
+            "    normal 'java.util.regex.Pattern'\n" +
+            "  }\n" +
+            "}\n");
+
+        Hashtable<String, String> newOptions = JavaCore.getOptions();
+        newOptions.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, "config.groovy");
+        JavaCore.setOptions(newOptions);
+
+        env.addGroovyClass(paths[1], "foo", "Bar",
+            "package foo\n" +
+            "class Bar {\n" +
+            "   Pattern baz\n" +
+            "}\n");
+
+        incrementalBuild(paths[0]);
+        expectingCompiledClasses("foo.Bar");
+        expectingNoProblems();
+
+        // add file outside of source folder
+        env.addFile(paths[0], "Err.groovy",
+            "class Err {\n" +
+            "   Pattern baz\n" +
+            "}\n");
+
+        incrementalBuild(paths[0]);
+        expectingCompiledClasses();
+        expectingNoProblems();
+
+        // TODO: Can it be shown that config.groovy is not applied when parsing non-classpath resources?
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/550
@@ -1441,7 +1479,6 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         incrementalBuild(paths[0]);
         // lots of errors on the missing static imports
         expectingCompiledClasses("Foo", "Test1");
-
     }
 
     @Test

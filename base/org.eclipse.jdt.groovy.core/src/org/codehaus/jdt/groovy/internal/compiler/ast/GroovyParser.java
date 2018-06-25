@@ -16,7 +16,9 @@
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 import groovy.lang.GroovyClassLoader;
 
@@ -33,6 +35,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
@@ -61,7 +64,7 @@ public class GroovyParser {
     private JDTResolver resolver;
     public final ProblemReporter problemReporter;
     public static IGroovyDebugRequestor debugRequestor;
-    private final GroovyClassLoaderFactory loaderFactory;
+    private final Supplier<CompilationUnit> unitFactory;
 
     private CompilationUnit compilationUnit;
     private CompilerOptions compilerOptions;
@@ -84,16 +87,9 @@ public class GroovyParser {
     }
 
     public GroovyParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean allowTransforms, boolean isReconcile) {
-        // FIXASC review callers who pass null for options
-        // FIXASC set parent of the loader to system or context class loader?
-
-        // record any paths we use for a project so that when the project is cleared,
-        // the paths (which point to cached classloaders) can be cleared
-
         this.requestor = requestor;
         this.compilerOptions = compilerOptions;
         this.problemReporter = problemReporter;
-        this.loaderFactory = new GroovyClassLoaderFactory(compilerOptions, requestor);
 
         // 2011-10-18: Status of transforms and reconciling
         // Prior to 2.6.0 all transforms were turned OFF for reconciling, and by turned off that meant no phase
@@ -108,42 +104,43 @@ public class GroovyParser {
         // types and is *only* called if a grab has occurred somewhere during compilation.
         // Currently it is not cached but created each time - we'll have to decide if there is a need to cache
 
-        compilationUnit = newCompilationUnit(isReconcile, allowTransforms);
+        GroovyClassLoaderFactory loaderFactory = new GroovyClassLoaderFactory(compilerOptions, requestor);
+
+        this.unitFactory = () -> {
+            CompilerConfiguration compilerConfiguration = GroovyLanguageSupport.newCompilerConfiguration(compilerOptions, problemReporter);
+            GroovyClassLoader[] classLoaders = loaderFactory.getGroovyClassLoaders(compilerConfiguration);
+            CompilationUnit unit = new CompilationUnit(
+                compilerConfiguration,
+                null, // CodeSource
+                classLoaders[0],
+                classLoaders[1],
+                allowTransforms,
+                compilerOptions.groovyExcludeGlobalASTScan);
+            this.resolver = new JDTResolver(unit);
+            unit.removeOutputPhaseOperation();
+            unit.setResolveVisitor(resolver);
+            unit.tweak(isReconcile);
+
+            // GRAILS add
+            if (allowTransforms && (compilerOptions.groovyFlags & CompilerUtils.IsGrails) != 0) {
+                unit.addPhaseOperation(new GrailsInjector(classLoaders[1]), Phases.CANONICALIZATION);
+                new Grails20TestSupport(compilerOptions, classLoaders[1]).addGrailsTestCompilerCustomizers(unit);
+                unit.addPhaseOperation(new GrailsGlobalPluginAwareEntityInjector(classLoaders[1]), Phases.CANONICALIZATION);
+            }
+            // GRAILS end
+
+            return unit;
+        };
     }
 
     public void reset() {
-        compilationUnit = newCompilationUnit(compilationUnit.isReconcile, compilationUnit.allowTransforms);
-    }
-
-    private CompilationUnit newCompilationUnit(boolean isReconcile, boolean allowTransforms) {
-        CompilerConfiguration compilerConfiguration = GroovyLanguageSupport.newCompilerConfiguration(compilerOptions, problemReporter);
-        GroovyClassLoader[] classLoaders = loaderFactory.getGroovyClassLoaders(compilerConfiguration);
-        CompilationUnit cu = new CompilationUnit(
-            compilerConfiguration,
-            null, // CodeSource
-            classLoaders[0],
-            classLoaders[1],
-            allowTransforms,
-            compilerOptions.groovyExcludeGlobalASTScan);
-        this.resolver = new JDTResolver(cu);
-        cu.removeOutputPhaseOperation();
-        cu.setResolveVisitor(resolver);
-        cu.tweak(isReconcile);
-
-        // GRAILS add
-        if (allowTransforms && compilerOptions != null && (compilerOptions.groovyFlags & CompilerUtils.IsGrails) != 0) {
-            cu.addPhaseOperation(new GrailsInjector(classLoaders[1]), Phases.CANONICALIZATION);
-            new Grails20TestSupport(compilerOptions, classLoaders[1]).addGrailsTestCompilerCustomizers(cu);
-            cu.addPhaseOperation(new GrailsGlobalPluginAwareEntityInjector(classLoaders[1]), Phases.CANONICALIZATION);
-        }
-        // GRAILS end
-
-        return cu;
+        compilationUnit = null;
     }
 
     public CompilationUnitDeclaration dietParse(ICompilationUnit iCompilationUnit, CompilationResult compilationResult) {
         String fileName = String.valueOf(iCompilationUnit.getFileName());
-        IPath filePath = new Path(fileName); IFile eclipseFile = null;
+        IPath filePath = new Path(fileName);
+        IFile eclipseFile = null;
         // try to turn this into a 'real' absolute file system reference (this is because Grails 1.5 expects it)
         // GRECLIPSE-1269 ensure get plugin is not null to ensure the workspace is open (ie- not in batch mode)
         // Needs 2 segments: a project and file name or eclipse throws assertion failed here
@@ -155,11 +152,15 @@ public class GroovyParser {
             }
         }
 
-        char[] sourceCode = iCompilationUnit.getContents();
-        if (sourceCode == null) {
-            sourceCode = CharOperation.NO_CHAR;
+        if (compilationUnit == null) {
+            if (eclipseFile != null && eclipseFile.getProject().isAccessible() &&
+                    !JavaCore.create(eclipseFile.getProject()).isOnClasspath(eclipseFile)) {
+                compilerOptions.groovyCompilerConfigScript = null;
+            }
+            compilationUnit = unitFactory.get();
         }
 
+        char[] sourceCode = Optional.ofNullable(iCompilationUnit.getContents()).orElse(CharOperation.NO_CHAR);
         SourceUnit sourceUnit = new EclipseSourceUnit(eclipseFile, fileName, String.valueOf(sourceCode), compilationUnit.isReconcile,
             compilationUnit.getConfiguration(), compilationUnit.getClassLoader(), new GroovyErrorCollectorForJDT(compilationUnit.getConfiguration()), resolver);
 
@@ -201,7 +202,7 @@ public class GroovyParser {
             }
         }
         String projectName = compilerOptions.groovyProjectName;
-        // Is this a script? If allowTransforms is TRUE then this is a 'full build' and we should remember which are scripts so that .class file output can be suppressed
+        // Is this a script? If allowTransforms then this is a 'full build', we should remember which are scripts so that class file output can be suppressed.
         if (projectName != null && eclipseFile != null) {
             ScriptFolderSelector scriptFolderSelector = scriptFolderSelectorCache.computeIfAbsent(projectName, GroovyParser::newScriptFolderSelector);
             if (scriptFolderSelector.isScript(eclipseFile)) {
