@@ -26,6 +26,10 @@ import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassCodeVisitorSupport;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.classgen.GeneratorContext;
 import org.codehaus.groovy.control.ASTTransformationsContext;
 import org.codehaus.groovy.control.CompilationFailedException;
@@ -37,6 +41,7 @@ import org.codehaus.groovy.control.messages.SimpleMessage;
 import org.codehaus.groovy.control.messages.WarningMessage;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.syntax.SyntaxException;
 
 import java.io.BufferedReader;
@@ -49,13 +54,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This class handles the invocation of the ASTAnnotationTransformation
@@ -95,6 +101,32 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
         return source;
     }
 
+    // GRECLIPSE add
+    private static String getTargetName(ASTNode node, ClassNode type) {
+        if (node == type) {
+            return "type: " + type.toString(false);
+        }
+        if (node instanceof FieldNode) {
+            return "field: " + ((FieldNode) node).getName();
+        }
+        if (node instanceof MethodNode) {
+            return "method: " + ((MethodNode) node).getName();
+        }
+        if (node instanceof PropertyNode) {
+            return "property: " + ((PropertyNode) node).getName();
+        }
+        if (node instanceof DeclarationExpression) {
+            DeclarationExpression expr = (DeclarationExpression) node;
+            if (!expr.isMultipleAssignmentDeclaration()) {
+                return "variable: " + expr.getVariableExpression().getName();
+            } else {
+                node = expr.getLeftExpression();
+            }
+        }
+        return type.toString(false) + ":" + node;
+    }
+    // GRECLIPSE end
+
     /**
      * Main loop entry.
      * <p>
@@ -129,8 +161,6 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 }
             }
 
-
-
             // invert the map, is now one to many
             transforms = new HashMap<ASTNode, List<ASTTransformation>>();
             for (Map.Entry<Class<? extends ASTTransformation>, Set<ASTNode>> entry : baseTransforms.entrySet()) {
@@ -154,7 +184,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 for (ASTTransformation snt : transforms.get(node[0])) {
                     // GRECLIPSE add
                     try {
-                        long stime = System.nanoTime();
+                        long t0 = System.nanoTime();
                         boolean okToSet = (source != null && source.getErrorCollector() != null);
                         try {
                             if (okToSet) {
@@ -171,20 +201,15 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                                 source.getErrorCollector().transformActive = false;
                             }
                         }
-                        long etime = System.nanoTime(); 
                         if (GroovyLogManager.manager.hasLoggers()) {
-                            try {
-                                GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM, "Local transform " + snt.getClass().getName() + " on " + classNode.getName() + ":" + node[1] + " = " + ((etime - stime) / 1000000) + "ms");
-                            } catch (Throwable t) {
-                                t.printStackTrace();
-                            }
+                            long millis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - t0);
+                            String sourceName = DefaultGroovyMethods.last(source.getName().split("/|\\\\"));
+                            GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM, "Local transform " + snt.getClass().getName() + " applied to " + sourceName + "(" + getTargetName(node[1], classNode) + ") in " + millis + "ms");
                         }
                     } catch (NoClassDefFoundError ncdfe) {
-                        String transformName = snt.getClass().getName();
-                        StringBuilder sb = new StringBuilder();
-                        sb.append("Unable to run AST transform ").append(transformName).append(": missing class ").append(ncdfe.getMessage());
-                        sb.append(": are you attempting to use groovy classes in an AST transform in the same project in which it is defined?");
-                        source.addError(new SyntaxException(sb.toString(), ncdfe, 0, 0));
+                        String message = "Unable to run AST transform " + snt.getClass().getName() + ": missing class " + ncdfe.getMessage() +
+                            ": Are you attempting to use groovy classes in an AST transform in the same project in which it is defined?";
+                        source.addError(new SyntaxException(message, ncdfe, node[1].getLineNumber(), node[1].getColumnNumber()));
                     }
                     // GRECLIPSE end
                 }
@@ -212,7 +237,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
 
         compilationUnit.addPhaseOperation(new CompilationUnit.PrimaryClassNodeOperation() {
             public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) throws CompilationFailedException {
-                ASTTransformationCollectorCodeVisitor collector = 
+                ASTTransformationCollectorCodeVisitor collector =
                     new ASTTransformationCollectorCodeVisitor(source, compilationUnit.getTransformLoader());
                 collector.visitClass(classNode);
             }
@@ -238,11 +263,11 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             }
         }
     }
-    
+
     public static void addGlobalTransformsAfterGrab(ASTTransformationsContext context) {
         doAddGlobalTransforms(context, false);
     }
-    
+
     public static void addGlobalTransforms(ASTTransformationsContext context) {
         doAddGlobalTransforms(context, true);
     }
@@ -309,7 +334,6 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                             compilationUnit.getErrorCollector().addError(new SimpleMessage(
                                     "IOException reading the service definition at "
                                             + service.toExternalForm() + " because of exception " + ioe.toString(), null));
-                            //noinspection UnnecessaryContinue
                             continue;
                         }
                     }
@@ -340,21 +364,21 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 WarningMessage.POSSIBLE_ERRORS, sb.toString(), null, null));
             return;
         }
-        
-        // record the transforms found in the first scan, so that in the 2nd scan, phase operations 
-        // can be added for only for new transforms that have come in 
-        if(isFirstScan) {
+
+        // record the transforms found in the first scan, so that in the 2nd scan, phase operations
+        // can be added for only for new transforms that have come in
+        if (isFirstScan) {
             for (Map.Entry<String, URL> entry : transformNames.entrySet()) {
                 context.getGlobalTransformNames().add(entry.getKey());
             }
             addPhaseOperationsForGlobalTransforms(context.getCompilationUnit(), transformNames, isFirstScan);
         } else {
             Iterator<Map.Entry<String, URL>> it = transformNames.entrySet().iterator();
-            while(it.hasNext()) {
+            while (it.hasNext()) {
                 Map.Entry<String, URL> entry = it.next();
-                if(!context.getGlobalTransformNames().add(entry.getKey())) {
+                if (!context.getGlobalTransformNames().add(entry.getKey())) {
                     // phase operations for this transform class have already been added before, so remove from current scan cycle
-                    it.remove(); 
+                    it.remove();
                 }
             }
             addPhaseOperationsForGlobalTransforms(context.getCompilationUnit(), transformNames, isFirstScan);
@@ -362,7 +386,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
     }
 
     // GRECLIPSE add
-    /** 
+    /**
      * Determines whether a given services manifest file belongs to the current project. If so
      * it must be skipped because we can not apply a GlobalASTTransform to the project that
      * defines it.
@@ -388,7 +412,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
 
     private static void ensureGlobalTransformsAllowedInReconcileInitialized() {
         if (globalTransformsAllowedInReconcile == null) {
-            globalTransformsAllowedInReconcile = new HashSet<String>();
+            globalTransformsAllowedInReconcile = new TreeSet<String>();
             globalTransformsAllowedInReconcile.add("groovy.grape.GrabAnnotationTransformation");
             String transformNames = System.getProperty("greclipse.globalTransformsInReconcile", "");
             for (String transformName : transformNames.split(",")) {
@@ -405,7 +429,6 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
         for (Map.Entry<String, URL> entry : transformNames.entrySet()) {
             try {
                 Class gTransClass = transformLoader.loadClass(entry.getKey(), false, true, false);
-                //no inspection unchecked
                 GroovyASTTransformation transformAnnotation = (GroovyASTTransformation) gTransClass.getAnnotation(GroovyASTTransformation.class);
                 if (transformAnnotation == null) {
                     compilationUnit.getErrorCollector().addWarning(new WarningMessage(
@@ -433,7 +456,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                             // GRECLIPSE add
                             if (isBuggered) return;
                             try {
-                                long stime = System.nanoTime();
+                                long t0 = System.nanoTime();
                                 boolean okToSet = (source != null && source.getErrorCollector() != null);
                                 try {
                                     if (okToSet) {
@@ -447,30 +470,22 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                                         source.getErrorCollector().transformActive = false;
                                     }
                                 }
-                                long etime = System.nanoTime(); 
                                 if (GroovyLogManager.manager.hasLoggers()) {
-                                    long timetaken = (etime - stime) / 1000000;
-                                    if (timetaken > 0) {
-                                        try {
-                                            GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM, "Global transform " + instance.getClass().getName() + " on " + source.getName() + " = " + timetaken + "ms");
-                                        } catch (Throwable t) {
-                                            t.printStackTrace();
-                                        }
-                                    }
+                                    long millis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - t0);
+                                    String sourceName = DefaultGroovyMethods.last(source.getName().split("/|\\\\"));
+                                    GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM, "Global transform " + instance.getClass().getName() + " applied to " + sourceName + " in " + millis + "ms");
                                 }
                             } catch (NoClassDefFoundError ncdfe) {
                                 // Suggests that the transform is written in Java but has dependencies on Groovy source
                                 // within the same project - as this has yet to be compiled, we can't find the class.
-                                Exception e = new GroovyException("Transform " + instance.toString() + " cannot be run", ncdfe);
-                                e.printStackTrace();
-                                source.addException(e);
+                                source.addException(new GroovyException("Transform " + instance.getClass().getName() + " cannot be run", ncdfe));
                                 // disable this visitor because it is BUGGERED
                                 isBuggered = true;
                             }
                             // GRECLIPSE end
                         }
-                    }; 
-                    if(isFirstScan) {
+                    };
+                    if (isFirstScan) {
                         compilationUnit.addPhaseOperation(suOp, transformAnnotation.phase().getPhaseNumber());
                     } else {
                         compilationUnit.addNewPhaseOperation(suOp, transformAnnotation.phase().getPhaseNumber());
@@ -480,7 +495,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                         // unexpected problem with the transformation. Could be:
                         // - problem instantiating the transformation class
                         compilationUnit.getErrorCollector().addError(new SimpleMessage(
-                                "Unexpected problem with AST transform: " + t.getMessage(), null));
+                            "Unexpected problem with AST transform: " + t.getMessage(), null));
                     }
                     // GRECLIPSE end
                 } else {
@@ -496,4 +511,3 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
         }
     }
 }
-
