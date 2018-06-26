@@ -334,12 +334,12 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
             this.node = node
         }
 
-        public VisitStatus acceptASTNode(ASTNode visitorNode, TypeLookupResult visitorResult, IJavaElement enclosingElement) {
+        public ITypeRequestor.VisitStatus acceptASTNode(ASTNode visitorNode, TypeLookupResult visitorResult, IJavaElement enclosingElement) {
             if (node == visitorNode) {
                 this.currentScope = visitorResult.scope
-                return VisitStatus.STOP_VISIT
+                return ITypeRequestor.VisitStatus.STOP_VISIT
             }
-            return VisitStatus.CONTINUE
+            return ITypeRequestor.VisitStatus.CONTINUE
         }
     }
 
