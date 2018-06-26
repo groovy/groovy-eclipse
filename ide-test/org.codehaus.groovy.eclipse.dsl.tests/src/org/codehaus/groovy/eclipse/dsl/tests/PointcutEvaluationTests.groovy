@@ -61,7 +61,7 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
             return context
         }
 
-        VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
+        ITypeRequestor.VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
             if (result != null && result.scope != null) {
                 context.setCurrentScope(result.scope)
                 context.setTargetType(result.type)
@@ -74,7 +74,7 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
                     largestMatchResult = matchResult
                 }
             }
-            return VisitStatus.CONTINUE
+            return ITypeRequestor.VisitStatus.CONTINUE
         }
 
         Collection getLargestMatchResult() {
