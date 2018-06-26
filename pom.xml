@@ -7,16 +7,16 @@
 	<packaging>pom</packaging>
 
 	<!-- To run this build use the following commands (depending on what you are trying to do) -->
-	<!-- mvn clean install -Pe43j8 -->
-	<!-- mvn clean deploy -Pe43j8 -->
+	<!-- mvn clean install -Pe46 -->
+	<!-- mvn clean deploy -Pe46 -->
 	<!-- Running 'deploy' requires s3 accessKey and secretKey to be provided
 		in a properties file. The properties file must be specified via env variable
 		'dist_properties'. The existence of this env variable enables the deployment
 		profile automatically and will allow the 'deploy' to execute. -->
 
 	<!-- Example commands to build and deploy a milestone or a release
-		mvn clean deploy -Pe47 -Pmilestone
-		mvn clean deploy -Pe47 -Prelease
+		mvn clean deploy -Pe46 -Pmilestone
+		mvn clean deploy -Pe46 -Prelease
 
 		Before building a release also check the definition of the release profile
 		in this pom. It may need some minor edits such as the deploy location
