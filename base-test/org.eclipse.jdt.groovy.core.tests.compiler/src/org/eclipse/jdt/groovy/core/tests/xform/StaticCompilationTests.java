@@ -217,16 +217,13 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
             "}\n",
         };
 
-        //@formatter:off
-        runNegativeTest(sources, "----------\n" +
+        runNegativeTest(sources,
+            "----------\n" +
             "1. ERROR in r\\Bar.groovy (at line 5)\n" +
-            "\tf.m()\n" + (isAtLeastGroovy(26)
-            ? "\t^\n" +
-              "Groovy:Method m is protected in q.Foo @ line 5, column 5.\n"
-            : "\t^^^^^\n" +
-              "Groovy:[Static type checking] - Cannot find matching method q.Foo#m(). Please check if the declared type is correct and if the method exists.\n") +
+            "\tf.m()\n" +
+            "\t^^^^^\n" +
+            "Groovy:[Static type checking] - Cannot find matching method q.Foo#m(). Please check if the declared type is correct and if the method exists.\n" +
             "----------\n");
-        //@formatter:on
     }
 
     @Test

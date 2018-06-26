@@ -18,8 +18,6 @@
  */
 package org.codehaus.groovy.ast;
 
-import groovy.lang.groovydoc.Groovydoc;
-import groovy.lang.groovydoc.GroovydocHolder;
 import org.apache.groovy.ast.tools.ClassNodeUtils;
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
@@ -105,7 +103,7 @@ import java.util.Set;
  *
  * @see org.codehaus.groovy.ast.ClassHelper
  */
-public class ClassNode extends AnnotatedNode implements Opcodes, GroovydocHolder<ClassNode> {
+public class ClassNode extends AnnotatedNode implements Opcodes {
     // GRECLIPSE private->package
     static class MapOfLists {
         // GRECLIPSE private->protected
@@ -876,6 +874,25 @@ public class ClassNode extends AnnotatedNode implements Opcodes, GroovydocHolder
         return null;
     }
 
+    public List<ClassNode> getOuterClasses() {
+        /* GRECLIPSE edit
+        if (!(this instanceof InnerClassNode)) {
+            return Collections.emptyList();
+        }
+
+        List<ClassNode> result = new LinkedList<>();
+        ClassNode outestClass = ((InnerClassNode) this).getOuterMostClass();
+        ClassNode cn = this;
+
+        do {
+            result.add(cn = cn.getOuterClass());
+        } while (!cn.equals(outestClass));
+
+        return result;
+        */
+        return Collections.EMPTY_LIST;
+    }
+
     /**
      * Adds a statement to the object initializer.
      *
@@ -1046,6 +1063,21 @@ public class ClassNode extends AnnotatedNode implements Opcodes, GroovydocHolder
     }
 
     /**
+     *
+     * @param classNodes the class nodes for the interfaces
+     * @return true if this class or any base class implements any of the given interfaces
+     */
+    public boolean implementsAnyInterfaces(ClassNode... classNodes) {
+        for (ClassNode classNode : classNodes) {
+            if (implementsInterface(classNode)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * @param classNode the class node for the interface
      * @return true if this class or any base class implements the given interface
      */
@@ -1058,6 +1090,22 @@ public class ClassNode extends AnnotatedNode implements Opcodes, GroovydocHolder
             node = node.getSuperClass();
         }
         while (node != null);
+        return false;
+    }
+
+    /**
+     *
+     * @param classNodes the class nodes for the interfaces
+     * @return true if this class declares that it implements any of the given interfaces
+     * or if one of its interfaces extends directly or indirectly any of the given interfaces
+     */
+    public boolean declaresAnyInterfaces(ClassNode... classNodes) {
+        for (ClassNode classNode : classNodes) {
+            if (declaresInterface(classNode)) {
+                return true;
+            }
+        }
+
         return false;
     }
 
@@ -1508,9 +1556,8 @@ public class ClassNode extends AnnotatedNode implements Opcodes, GroovydocHolder
     }
 
     public boolean isAnnotationDefinition() {
-        return redirect().isPrimaryNode &&
-               isInterface() &&
-               (getModifiers() & ACC_ANNOTATION) != 0;
+        return /* redirect().isPrimaryNode && */
+                isInterface() && (getModifiers() & ACC_ANNOTATION) != 0;
     }
 
     public List<AnnotationNode> getAnnotations() {
@@ -1617,15 +1664,5 @@ public class ClassNode extends AnnotatedNode implements Opcodes, GroovydocHolder
     @Override
     public String getText() {
         return getName();
-    }
-
-    @Override
-    public Groovydoc getGroovydoc() {
-        return this.<Groovydoc>getNodeMetaData(DOC_COMMENT);
-    }
-
-    @Override
-    public ClassNode getInstance() {
-        return this;
     }
 }

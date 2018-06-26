@@ -38,6 +38,7 @@ import org.codehaus.groovy.control.messages.WarningMessage;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.syntax.SyntaxException;
+import org.codehaus.groovy.util.URLStreams;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -261,7 +262,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 // GRECLIPSE end
                 BufferedReader svcIn = null;
                 try {
-                    svcIn = new BufferedReader(new InputStreamReader(service.openStream(), "UTF-8"));
+                    svcIn = new BufferedReader(new InputStreamReader(URLStreams.openUncachedStream(service), "UTF-8"));
                     try {
                         className = svcIn.readLine();
                     } catch (IOException ioe) {

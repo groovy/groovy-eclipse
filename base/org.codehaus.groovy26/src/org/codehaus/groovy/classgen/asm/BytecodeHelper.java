@@ -25,7 +25,7 @@ import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.decompiled.DecompiledClassNode;
-import org.codehaus.groovy.classgen.asm.util.TypeDescriptionUtil;
+import org.codehaus.groovy.classgen.asm.util.TypeUtil;
 import org.codehaus.groovy.reflection.ReflectionCache;
 import org.codehaus.groovy.runtime.typehandling.DefaultTypeTransformation;
 import groovyjarjarasm.asm.Label;
@@ -141,7 +141,7 @@ public class BytecodeHelper implements Opcodes {
      * @return the ASM type description for class loading
      */
     public static String getClassLoadingTypeDescription(ClassNode c) {
-        String desc = TypeDescriptionUtil.getDescriptionByType(c);
+        String desc = TypeUtil.getDescriptionByType(c);
 
         if (!c.isArray()) {
             if (desc.startsWith("L") && desc.endsWith(";")) {
@@ -176,7 +176,7 @@ public class BytecodeHelper implements Opcodes {
             d = d.redirect();
         }
 
-        String desc = TypeDescriptionUtil.getDescriptionByType(d);
+        String desc = TypeUtil.getDescriptionByType(d);
 
         if (!end && desc.endsWith(";")) {
             desc = desc.substring(0, desc.length() - 1);
@@ -266,7 +266,7 @@ public class BytecodeHelper implements Opcodes {
             return "java.lang.Object;";
         }
 
-        if (TypeDescriptionUtil.isPrimitiveType(name)) {
+        if (TypeUtil.isPrimitiveType(name)) {
             return name;
         }
 
@@ -287,7 +287,7 @@ public class BytecodeHelper implements Opcodes {
             prefix = "[";
             name = name.substring(0, name.length() - 2);
 
-            return prefix + TypeDescriptionUtil.getDescriptionByName(name);
+            return prefix + TypeUtil.getDescriptionByName(name);
         }
 
         return name.replace('/', '.');

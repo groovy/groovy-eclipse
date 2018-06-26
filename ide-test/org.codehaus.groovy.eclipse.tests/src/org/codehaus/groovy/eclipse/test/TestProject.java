@@ -23,7 +23,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
+import org.codehaus.groovy.runtime.IOGroovyMethods;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.codehaus.jdt.groovy.model.GroovyProjectFacade;
 import org.eclipse.core.internal.events.BuildCommand;
@@ -205,9 +205,8 @@ public class TestProject {
         return createJavaType(createPackage(packageName), fileName, source);
     }
 
-    @SuppressWarnings("deprecation")
     public ICompilationUnit createGroovyTypeAndPackage(String packageName, String fileName, InputStream source) throws Exception {
-        return createGroovyType(createPackage(packageName), fileName, DefaultGroovyMethods.getText(source));
+        return createGroovyType(createPackage(packageName), fileName, IOGroovyMethods.getText(source));
     }
 
     public ICompilationUnit createGroovyTypeAndPackage(String packageName, String fileName, CharSequence source) throws Exception {

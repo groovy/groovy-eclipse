@@ -188,7 +188,6 @@ import static org.apache.groovy.parser.antlr4.GroovyLangParser.ContinueStmtAltCo
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.CreatedNameContext;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.CreatorContext;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.DEC;
-import static org.apache.groovy.parser.antlr4.GroovyLangParser.DEF;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.DEFAULT;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.DimsContext;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.DimsOptContext;
@@ -332,6 +331,7 @@ import static org.apache.groovy.parser.antlr4.GroovyLangParser.TypeParameterCont
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.TypeParametersContext;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.UnaryAddExprAltContext;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.UnaryNotExprAltContext;
+import static org.apache.groovy.parser.antlr4.GroovyLangParser.VAR;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.VariableDeclarationContext;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.VariableDeclaratorContext;
 import static org.apache.groovy.parser.antlr4.GroovyLangParser.VariableDeclaratorIdContext;
@@ -996,7 +996,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 new TryCatchStatement((Statement) this.visit(ctx.block()),
                         this.visitFinallyBlock(ctx.finallyBlock()));
 
-        if (asBoolean(ctx.resources())) {
+        if (resourcesExists) {
             for (ExpressionStatement e : this.visitResources(ctx.resources())) {
                 tryCatchStatement.addResource(e);
             }
@@ -1042,14 +1042,40 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             return declarationStatements.get(0);
         } else if (asBoolean(ctx.expression())) {
             Expression expression = (Expression) this.visit(ctx.expression());
-            if (!(expression instanceof BinaryExpression
+            boolean isVariableDeclaration = expression instanceof BinaryExpression
                     && Types.ASSIGN == ((BinaryExpression) expression).getOperation().getType()
-                    && ((BinaryExpression) expression).getLeftExpression() instanceof VariableExpression)) {
+                    && ((BinaryExpression) expression).getLeftExpression() instanceof VariableExpression;
+            boolean isVariableAccess = expression instanceof VariableExpression;
 
-                throw createParsingFailedException("Only variable declarations are allowed to declare resource", ctx);
+            if (!(isVariableDeclaration || isVariableAccess)) {
+                throw createParsingFailedException("Only variable declarations or variable access are allowed to declare resource", ctx);
             }
+            BinaryExpression assignmentExpression;
 
-            BinaryExpression assignmentExpression = (BinaryExpression) expression;
+            if (isVariableDeclaration) {
+                assignmentExpression = (BinaryExpression) expression;
+            } else if (isVariableAccess) {
+                /* See https://docs.oracle.com/javase/specs/jls/se9/html/jls-14.html
+                 * 14.20.3.1. Basic try-with-resources
+                 *
+                 * If a basic try-with-resource statement is of the form:
+                 * try (VariableAccess ...)
+                 *      Block
+                 *
+                 * then the resource is first converted to a local variable declaration by the following translation:
+                 * try (T #r = VariableAccess ...) {
+                 *      Block
+                 * }
+                 */
+                assignmentExpression =
+                        new BinaryExpression(
+                                new VariableExpression(genResourceName()),
+                                org.codehaus.groovy.syntax.Token.newSymbol(Types.ASSIGN, -1, -1),
+                                expression
+                        );
+            } else {
+                throw createParsingFailedException("Unsupported resource declaration", ctx);
+            }
 
             return configureAST(
                     new ExpressionStatement(
@@ -1066,6 +1092,11 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         }
 
         throw createParsingFailedException("Unsupported resource declaration: " + ctx.getText(), ctx);
+    }
+
+    private int resourceCnt = 0;
+    private String genResourceName() {
+        return "__$$resource" + resourceCnt++;
     }
 
     /**
@@ -1379,6 +1410,11 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         final ClassNode outerClass = classNodeStack.peek();
         ClassNode classNode;
         String className = this.visitIdentifier(ctx.identifier());
+
+        if (VAR_STR.equals(className)) {
+            throw createParsingFailedException("var cannot be used for type declarations", ctx.identifier());
+        }
+
         if (asBoolean(ctx.ENUM())) {
             classNode =
                     EnumHelper.makeEnumNode(
@@ -1480,7 +1516,11 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     }
 
     private void attachTraitAnnotation(ClassNode classNode) {
-        classNode.addAnnotation(new AnnotationNode(ClassHelper.make(GROOVY_TRANSFORM_TRAIT)));
+        attachAnnotation(classNode, GROOVY_TRANSFORM_TRAIT);
+    }
+
+    private void attachAnnotation(ClassNode classNode, String annotationClassName) {
+        classNode.addAnnotation(new AnnotationNode(ClassHelper.make(annotationClassName)));
     }
 
     private boolean containsDefaultMethods(ClassDeclarationContext ctx) {
@@ -1489,7 +1529,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             if(memberDeclarationContext != null) {
                 MethodDeclarationContext methodDeclarationContext = memberDeclarationContext.methodDeclaration();
                 if (methodDeclarationContext != null) {
-                    if (createModifierManager(methodDeclarationContext).contains(DEFAULT)) {
+                    if (createModifierManager(methodDeclarationContext).containsAny(DEFAULT)) {
                         return true;
                     }
                 }
@@ -1791,6 +1831,11 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         validateMethodDeclaration(ctx);
 
         ModifierManager modifierManager = createModifierManager(ctx);
+
+        if (modifierManager.containsAny(VAR)) {
+            throw createParsingFailedException("var cannot be used for method declarations", ctx);
+        }
+
         String methodName = this.visitMethodName(ctx.methodName());
         ClassNode returnType = this.visitReturnType(ctx.returnType());
         Parameter[] parameters = this.visitFormalParameters(ctx.formalParameters());
@@ -1822,7 +1867,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                         asBoolean(ctx.returnType()),
                         modifierManager));
 
-        if (modifierManager.contains(STATIC)) {
+        if (modifierManager.containsAny(STATIC)) {
             for (Parameter e : methodNode.getParameters()) {
                 e.setInStaticContext(true);
             }
@@ -1882,7 +1927,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             }
 
             boolean isInterfaceOrAbstractClass = asBoolean(classNode) && classNode.isAbstract() && !classNode.isAnnotationDefinition();
-            if (isInterfaceOrAbstractClass && !modifierManager.contains(DEFAULT) && isAbstractMethod && hasMethodBody) {
+            if (isInterfaceOrAbstractClass && !modifierManager.containsAny(DEFAULT) && isAbstractMethod && hasMethodBody) {
                 throw createParsingFailedException("You defined an abstract method[" + methodNode.getName() + "] with body. Try removing the method body" + (classNode.isInterface() ? ", or declare it default" : ""), methodNode);
             }
         }
@@ -1899,7 +1944,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         methodNode =
                 new MethodNode(
                         methodName,
-                        modifierManager.contains(PRIVATE) ? Opcodes.ACC_PRIVATE : Opcodes.ACC_PUBLIC,
+                        modifierManager.containsAny(PRIVATE) ? Opcodes.ACC_PRIVATE : Opcodes.ACC_PUBLIC,
                         returnType,
                         parameters,
                         exceptions,
@@ -1944,7 +1989,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
         }
 
-        modifiers |= !modifierManager.contains(STATIC) && (classNode.isInterface() || (isTrue(classNode, IS_INTERFACE_WITH_DEFAULT_METHODS) && !modifierManager.contains(DEFAULT))) ? Opcodes.ACC_ABSTRACT : 0;
+        modifiers |= !modifierManager.containsAny(STATIC) && (classNode.isInterface() || (isTrue(classNode, IS_INTERFACE_WITH_DEFAULT_METHODS) && !modifierManager.containsAny(DEFAULT))) ? Opcodes.ACC_ABSTRACT : 0;
 
         checkWhetherMethodNodeWithSameSignatureExists(classNode, methodName, parameters, ctx);
 
@@ -2583,18 +2628,19 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                     return configureAST(propertyExpression, ctx);
                 }
             }
-        }
+        } else if (asBoolean(ctx.creator())) {
+            CreatorContext creatorContext = ctx.creator();
+            creatorContext.putNodeMetaData(ENCLOSING_INSTANCE_EXPRESSION, baseExpr);
 
-        if (asBoolean(ctx.indexPropertyArgs())) { // e.g. list[1, 3, 5]
+            return configureAST(this.visitCreator(creatorContext), ctx);
+        } else if (asBoolean(ctx.indexPropertyArgs())) { // e.g. list[1, 3, 5]
             Tuple2<Token, Expression> tuple = this.visitIndexPropertyArgs(ctx.indexPropertyArgs());
             boolean isSafeChain = isTrue(baseExpr, PATH_EXPRESSION_BASE_EXPR_SAFE_CHAIN);
 
             return configureAST(
                     new BinaryExpression(baseExpr, createGroovyToken(tuple.getFirst()), tuple.getSecond(), isSafeChain || asBoolean(ctx.indexPropertyArgs().QUESTION())),
                     ctx);
-        }
-
-        if (asBoolean(ctx.namedPropertyArgs())) { // this is a special way to new instance, e.g. Person(name: 'Daniel.Sun', location: 'Shanghai')
+        } else if (asBoolean(ctx.namedPropertyArgs())) { // this is a special way to new instance, e.g. Person(name: 'Daniel.Sun', location: 'Shanghai')
             List<MapEntryExpression> mapEntryExpressionList =
                     this.visitNamedPropertyArgs(ctx.namedPropertyArgs());
 
@@ -2621,9 +2667,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             return configureAST(
                     new BinaryExpression(baseExpr, createGroovyToken(ctx.namedPropertyArgs().LBRACK().getSymbol()), right),
                     ctx);
-        }
-
-        if (asBoolean(ctx.arguments())) {
+        } else if (asBoolean(ctx.arguments())) {
             Expression argumentsExpr = this.visitArguments(ctx.arguments());
             // GRECLIPSE edit
             //configureAST(argumentsExpr, ctx);
@@ -2694,9 +2738,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
             // e.g. 1(), 1.1(), ((int) 1 / 2)(1, 2), {a, b -> a + b }(1, 2), m()()
             return configureAST(createCallMethodCallExpression(baseExpr, argumentsExpr), ctx);
-        }
-
-        if (asBoolean(ctx.closure())) {
+        } else if (asBoolean(ctx.closure())) {
             ClosureExpression closureExpression = this.visitClosure(ctx.closure());
 
             if (baseExpr instanceof MethodCallExpression) {
@@ -3476,9 +3518,23 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     @Override
     public Expression visitCreator(CreatorContext ctx) {
         ClassNode classNode = this.visitCreatedName(ctx.createdName());
-        Expression arguments = this.visitArguments(ctx.arguments());
 
         if (asBoolean(ctx.arguments())) { // create instance of class
+            Expression arguments = this.visitArguments(ctx.arguments());
+            Expression enclosingInstanceExpression = ctx.getNodeMetaData(ENCLOSING_INSTANCE_EXPRESSION);
+
+            if (null != enclosingInstanceExpression) {
+                if (arguments instanceof ArgumentListExpression) {
+                    ((ArgumentListExpression) arguments).getExpressions().add(0, enclosingInstanceExpression);
+                } else if (arguments instanceof TupleExpression) {
+                    throw createParsingFailedException("Creating instance of non-static class does not support named parameters", arguments);
+                } else if (arguments instanceof NamedArgumentListExpression) {
+                    throw createParsingFailedException("Unexpected arguments", arguments);
+                } else {
+                    throw createParsingFailedException("Unsupported arguments", arguments); // should never reach here
+                }
+            }
+
             if (asBoolean(ctx.anonymousInnerClassDeclaration())) {
                 ctx.anonymousInnerClassDeclaration().putNodeMetaData(ANONYMOUS_INNER_CLASS_SUPER_CLASS, classNode);
                 InnerClassNode anonymousInnerClassNode = this.visitAnonymousInnerClassDeclaration(ctx.anonymousInnerClassDeclaration());
@@ -4499,10 +4555,18 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         if (asBoolean(ctx.statement())) {
             Object astNode = this.visit(ctx.statement()); //configureAST((Statement) this.visit(ctx.statement()), ctx);
 
-            if (astNode instanceof MethodNode) {
-                throw createParsingFailedException("Method definition not expected here", ctx);
-            } else {
+            if (null == astNode) {
+                return null;
+            }
+
+            if (astNode instanceof Statement) {
                 return (Statement) astNode;
+            } else if (astNode instanceof MethodNode) {
+                throw createParsingFailedException("Method definition not expected here", ctx);
+            } else if (astNode instanceof ImportNode) {
+                throw createParsingFailedException("Import statement not expected here", ctx);
+            } else {
+                throw createParsingFailedException("The statement(" + astNode.getClass() + ") not expected here", ctx);
             }
         }
 
@@ -4892,38 +4956,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             boolean isAnnotationDeclaration,
             boolean isAnonymousInnerEnumDeclaration,
             boolean hasReturnType,
-            ModifierManager modifierManager
-    ) {
-        return this.isSyntheticPublic(
-                isAnnotationDeclaration,
-                isAnonymousInnerEnumDeclaration,
-                modifierManager.containsAnnotations(),
-                modifierManager.containsVisibilityModifier(),
-                modifierManager.containsNonVisibilityModifier(),
-                hasReturnType,
-                modifierManager.contains(DEF));
-    }
-
-    /**
-     * @param isAnnotationDeclaration         whether the method is defined in an annotation
-     * @param isAnonymousInnerEnumDeclaration whether the method is defined in an anonymous inner enum
-     * @param hasAnnotation                   whether the method declaration has annotations
-     * @param hasVisibilityModifier           whether the method declaration contains visibility modifier(e.g. public, protected, private)
-     * @param hasModifier                     whether the method declaration has modifier(e.g. final, static and so on)
-     * @param hasReturnType                   whether the method declaration has an return type(e.g. String, generic types)
-     * @param hasDef                          whether the method declaration using def keyword
-     * @return the result
-     */
-    private boolean isSyntheticPublic(
-            boolean isAnnotationDeclaration,
-            boolean isAnonymousInnerEnumDeclaration,
-            boolean hasAnnotation,
-            boolean hasVisibilityModifier,
-            boolean hasModifier,
-            boolean hasReturnType,
-            boolean hasDef) {
-
-        if (hasVisibilityModifier) {
+            ModifierManager modifierManager) {
+        if (modifierManager.containsVisibilityModifier()) {
             return false;
         }
         return true;
@@ -4932,11 +4966,11 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             return true;
         }
 
-        if (hasDef && hasReturnType) {
+        if (hasReturnType && (modifierManager.containsAny(DEF, VAR))) {
             return true;
         }
 
-        if (hasModifier || hasAnnotation || !hasReturnType) {
+        if (!hasReturnType || modifierManager.containsNonVisibilityModifier() || modifierManager.containsAnnotations()) {
             return true;
         }
 
@@ -5156,18 +5190,6 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         parser.addErrorListener(this.createANTLRErrorListener());
     }
 
-    /*
-    private String createExceptionMessage(Throwable t) {
-        StringWriter sw = new StringWriter();
-
-        try (PrintWriter pw = new PrintWriter(sw)) {
-            t.printStackTrace(pw);
-        }
-
-        return sw.toString();
-    }
-    */
-
     private class DeclarationListStatement extends Statement {
         private final List<ExpressionStatement> declarationStatements;
 
@@ -5252,6 +5274,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     private static final String SQ_STR = "'";
     private static final String DQ_STR = "\"";
     private static final String DOLLAR_SLASH_STR = "$/";
+    private static final String VAR_STR = "var";
 
     private static final Map<String, String> QUOTATION_MAP = Maps.of(
             DQ_STR, DQ_STR,
@@ -5264,6 +5287,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
     private static final String PACKAGE_INFO = "package-info";
     private static final String PACKAGE_INFO_FILE_NAME = PACKAGE_INFO + ".groovy";
+
     private static final String GROOVY_TRANSFORM_TRAIT = "groovy.transform.Trait";
     private static final Set<String> PRIMITIVE_TYPE_SET = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("boolean", "char", "byte", "short", "int", "long", "float", "double")));
 
@@ -5287,6 +5311,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     private static final String ANONYMOUS_INNER_CLASS_SUPER_CLASS = "_ANONYMOUS_INNER_CLASS_SUPER_CLASS";
     private static final String INTEGER_LITERAL_TEXT = "_INTEGER_LITERAL_TEXT";
     private static final String FLOATING_POINT_LITERAL_TEXT = "_FLOATING_POINT_LITERAL_TEXT";
+    private static final String ENCLOSING_INSTANCE_EXPRESSION = "_ENCLOSING_INSTANCE_EXPRESSION";
 
     private static final String CLASS_NAME = "_CLASS_NAME";
 }

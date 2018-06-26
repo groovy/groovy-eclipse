@@ -62,7 +62,7 @@ public class MethodCallExpressionTransformer {
         }
         Expression objectExpression = expr.getObjectExpression();
         ClassNode type = staticCompilationTransformer.getTypeChooser().resolveType(objectExpression, staticCompilationTransformer.getClassNode());
-        if (isCallOnClosure(expr)) {
+        if (isCallOnClosure(expr) && staticCompilationTransformer.getClassNode() != null) {
             FieldNode field = staticCompilationTransformer.getClassNode().getField(expr.getMethodAsString());
             if (field != null) {
                 VariableExpression vexp = new VariableExpression(field);

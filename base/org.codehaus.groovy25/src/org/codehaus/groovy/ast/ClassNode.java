@@ -330,7 +330,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * ClassNode will not be a primary ClassNode.
      */
     public ClassNode(Class c) {
-        this(c.getName(), c.getModifiers(), null, null ,MixinNode.EMPTY_ARRAY);
+        this(c.getName(), c.getModifiers(), null, null, MixinNode.EMPTY_ARRAY);
         clazz=c;
         lazyInitDone=false;
         CompileUnit cu = getCompileUnit();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
+import org.codehaus.groovy.runtime.ResourceGroovyMethods;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.groovy.tests.search.InferencingTestSuite;
 import org.junit.Assert;
@@ -36,9 +36,9 @@ import org.junit.Assert;
 public class InferencerWorkload implements Iterable<InferencerWorkload.InferencerTask> {
 
     private static final String BEG_MARK_START = "/*!";
-    private static final String BEG_MARK_SEPARATOR = ":" ;
-    private static final String BEG_MARK_END = "!*/" ;
-    private static final String END_MARK = "/*!*/" ;
+    private static final String BEG_MARK_SEPARATOR = ":";
+    private static final String BEG_MARK_END = "!*/";
+    private static final String END_MARK = "/*!*/";
 
     private static final Map<String, String> DEFAULT_ALIASES = new HashMap<>();
     static {
@@ -92,9 +92,8 @@ public class InferencerWorkload implements Iterable<InferencerWorkload.Inference
     private final Map<String,String> aliases;
     private boolean aliasesLocked = false; //Set to true when we start parsing the workloadDefinition
 
-    @SuppressWarnings("deprecation")
     public InferencerWorkload(File workloadDefinitionFile, String ... extraAliases) throws Exception {
-        this(DefaultGroovyMethods.getText(workloadDefinitionFile), extraAliases);
+        this(ResourceGroovyMethods.getText(workloadDefinitionFile), extraAliases);
     }
 
     /**

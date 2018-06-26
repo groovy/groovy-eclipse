@@ -18,8 +18,6 @@
  */
 package org.codehaus.groovy.ast;
 
-import groovy.lang.groovydoc.Groovydoc;
-import groovy.lang.groovydoc.GroovydocHolder;
 import org.apache.groovy.ast.tools.MethodNodeUtils;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
@@ -33,7 +31,7 @@ import java.util.List;
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
  * @author Hamlet D'Arcy
  */
-public class MethodNode extends AnnotatedNode implements Opcodes, GroovydocHolder<MethodNode> {
+public class MethodNode extends AnnotatedNode implements Opcodes {
 
     public static final String SCRIPT_BODY_METHOD_KEY = "org.codehaus.groovy.ast.MethodNode.isScriptBody";
     private final String name;
@@ -172,6 +170,10 @@ public class MethodNode extends AnnotatedNode implements Opcodes, GroovydocHolde
         return (modifiers & ACC_PROTECTED) != 0;
     }
 
+    public boolean isPackageScope() {
+        return !(this.isPrivate() || this.isProtected() || this.isPublic());
+    }
+
     public boolean hasDefaultValue() {
         return this.hasDefaultValue;
     }
@@ -279,17 +281,7 @@ public class MethodNode extends AnnotatedNode implements Opcodes, GroovydocHolde
         return AstToTextHelper.getModifiersText(modifiers) + " " + retType + " " + name + "(" + parms + ") " + exceptionTypes + " { ... }";
     }
 
-    @Override
-    public Groovydoc getGroovydoc() {
-        return this.<Groovydoc>getNodeMetaData(DOC_COMMENT);
-    }
-
-    @Override
-    public MethodNode getInstance() {
-        return this;
-    }
-
-  // GRECLIPSE add
+    // GRECLIPSE add
     /**
      * When default parameters are involved, this field will be
      * the original method without any default parameters applied
@@ -308,5 +300,5 @@ public class MethodNode extends AnnotatedNode implements Opcodes, GroovydocHolde
     public void setOriginal(MethodNode original) {
         this.original = original;
     }
-  // GRECLIPSE end
+    // GRECLIPSE end
 }
