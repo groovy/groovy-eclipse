@@ -25,6 +25,7 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IMethod
 import org.eclipse.jdt.core.JavaModelException
+import org.eclipse.jdt.groovy.search.ITypeRequestor
 import org.eclipse.jdt.groovy.search.TypeLookupResult
 import org.junit.Test
 
@@ -42,9 +43,9 @@ final class PartialVisitTests extends BrowsingTestSuite {
         }
 
         @Override
-        public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
-            VisitStatus status = super.acceptASTNode(node, result, enclosingElement)
-            if (status == VisitStatus.CANCEL_MEMBER) {
+        public ITypeRequestor.VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
+            ITypeRequestor.VisitStatus status = super.acceptASTNode(node, result, enclosingElement)
+            if (status == ITypeRequestor.VisitStatus.CANCEL_MEMBER) {
                 assert !skippedElements.contains(getElementName(enclosingElement)) :
                     "Element has been skipped twice, but should only have been skipped once: $enclosingElement"
                 skippedElements.add(getElementName(enclosingElement))
