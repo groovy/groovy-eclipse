@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.InnerClassNode;
+import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.CastExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
@@ -208,6 +209,9 @@ public class CodeSelectHelper implements ICodeSelectHelper {
     protected static boolean isStringLiteral(ASTNode node, char[] contents, int start, int length) {
         if (node instanceof ConstantExpression && ClassHelper.STRING_TYPE.equals(((ConstantExpression) node).getType())) {
             return (start > node.getStart() && length < node.getLength());
+        } else if (node instanceof MethodNode) {
+            return (start > ((MethodNode) node).getNameStart() &&
+                start + length <= ((MethodNode) node).getNameEnd());
         }
         return false;
     }
