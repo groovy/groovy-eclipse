@@ -99,18 +99,18 @@
     </target>
 
 
-    <target name="-init" depends="-fail-if-no-version-specified,-init24,-init25">
+    <target name="-init" depends="-fail-if-no-version-specified,-init24,-init25,-init26">
         <fileset dir="${eclipse.install.plugins}" id="orig.plugin.jars">
-            <include name="org.eclipse.osgi_*.jar"/>
-            <include name="org.eclipse.core.runtime_*.jar"/>
-            <include name="org.eclipse.core.resources_*.jar"/>
-            <include name="org.eclipse.core.filesystem_*.jar"/>
             <include name="org.eclipse.core.contenttype_*.jar"/>
-            <include name="org.eclipse.equinox.common_*.jar"/>
+            <include name="org.eclipse.core.filesystem_*.jar"/>
             <include name="org.eclipse.core.jobs_*.jar"/>
-            <include name="org.eclipse.text_*.jar"/>
-            <include name="org.eclipse.jdt.core_*.jar"/>
+            <include name="org.eclipse.core.resources_*.jar"/>
+            <include name="org.eclipse.core.runtime_*.jar"/>
+            <include name="org.eclipse.equinox.common_*.jar"/>
+            <include name="org.eclipse.equinox.preferences_*.jar"/>
             <include name="org.eclipse.jdt.compiler.apt_*.jar"/>
+            <include name="org.eclipse.osgi_*.jar"/>
+            <include name="org.eclipse.text_*.jar"/>
         </fileset>
 
         <fileset dir="${git.repo.loc}/base" id="orig.groovy.jars">
