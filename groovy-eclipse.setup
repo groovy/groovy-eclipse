@@ -219,7 +219,7 @@
         <repository
             url="http://download.eclipse.org/releases/photon"/>
         <repository
-            url="http://download.eclipse.org/eclipse/updates/4.8milestones"/>
+            url="http://download.eclipse.org/eclipse/updates/4.8"/>
       </repositoryList>
       <repositoryList
           name="Oxygen">

@@ -123,11 +123,6 @@
 					<layout>p2</layout>
 					<url>http://download.eclipse.org/eclipse/updates/4.8</url>
 				</repository>
-				<repository>
-					<id>eclipse48-milestones</id>
-					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/4.8milestones</url>
-				</repository>
 			</repositories>
 			<modules>
 				<module>jdt-patch/e48/org.eclipse.jdt.core</module>
