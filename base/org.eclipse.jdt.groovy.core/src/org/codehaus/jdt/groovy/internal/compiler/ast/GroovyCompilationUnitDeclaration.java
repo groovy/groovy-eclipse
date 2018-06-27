@@ -876,7 +876,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 initialize();
             }
             List<AnnotationNode> annotations = classNode.getAnnotations();
-            if (annotations.size() > 0) {
+            if (!annotations.isEmpty()) {
                 for (AnnotationNode annotation : annotations) {
                     if ("groovy.transform.Trait".equals(annotation.getClassNode().getName())) {
                         return true;
@@ -1302,9 +1302,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
          */
         private void createConstructorDeclarations(ClassNode classNode, boolean isEnum,
                 List<AbstractMethodDeclaration> accumulatedMethodDeclarations) {
-            if (isTrait(classNode)) {
-                return;
-            }
+
             List<ConstructorNode> constructorNodes = classNode.getDeclaredConstructors();
 
             char[] ctorName = null;
@@ -1318,10 +1316,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 ctorName = classNode.getNameWithoutPackage().toCharArray();
             }
 
-            // Do we need a default constructor?
-            boolean needsDefaultCtor = constructorNodes.size() == 0 && !classNode.isInterface();
-
-            if (needsDefaultCtor) {
+            // add default constructor if no other constructors exist (and not trait/interface)
+            if (constructorNodes.isEmpty() && !classNode.isInterface() && !isTrait(classNode)) {
                 ConstructorDeclaration constructor = new ConstructorDeclaration(unitDeclaration.compilationResult);
                 constructor.bits |= ASTNode.IsDefaultConstructor;
                 if (isEnum) {
@@ -1370,13 +1366,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 GroovyTypeDeclaration typeDeclaration, List<AbstractMethodDeclaration> accumulatedDeclarations) {
             boolean isTrait = isTrait(classNode);
             List<MethodNode> methods = classNode.getMethods();
-
             for (MethodNode methodNode : methods) {
-                if (isTrait && (methodNode.isPrivate() || methodNode.isStatic())) {
+
+                if (isEnum && methodNode.isSynthetic()) {
                     continue;
                 }
-                if (isEnum && methodNode.isSynthetic()) {
-                    // skip synthetic methods in enums
+                if (isTrait && (!methodNode.isPublic() || methodNode.isStatic())) {
                     continue;
                 }
                 final MethodDeclaration methodDeclaration = createMethodDeclaration(classNode, isEnum, methodNode, unitDeclaration.compilationResult);
@@ -1496,7 +1491,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         //--------------------------------------------------------------------------------------------------------------
 
         private void configureSuperClass(TypeDeclaration typeDeclaration, ClassNode superclass, boolean isEnum, boolean isTrait) {
-            if (isEnum && superclass.getName().equals("java.lang.Enum") || isTrait) {
+            if ((isEnum && superclass.getName().equals("java.lang.Enum")) || isTrait) {
                 // Don't wire it in, JDT will do it
                 typeDeclaration.superclass = null;
             } else {
