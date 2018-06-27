@@ -212,7 +212,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
         int foundCount = 0
         for (proposal in proposals) {
             String replacement = proposal.replacementString
-            if (replacement.equals(expectedReplacement)) {
+            if (replacement == expectedReplacement) {
                 foundCount += 1
             }
         }
@@ -235,7 +235,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
         int foundCount = 0
         for (proposal in proposals) {
             String replacement = proposal.replacementString
-            if (replacement.equals(expectedReplacementOptions[0]) || replacement.equals(expectedReplacementOptions[1])) {
+            if (replacement == expectedReplacementOptions[0] || replacement == expectedReplacementOptions[1]) {
                 foundCount += 1
             }
         }
@@ -258,7 +258,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     protected String printProposals(ICompletionProposal[] proposals) {
         StringBuilder sb = new StringBuilder()
         for (proposal in proposals) {
-            sb.append('\n').append(proposal.getDisplayString())
+            sb.append('\n').append(proposal.displayString)
             if (proposal instanceof IJavaCompletionProposal) {
                 sb.append(' (').append(proposal.relevance).append(')')
             }
@@ -295,9 +295,9 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
 
             String message
             if (i == 0) {
-                message = String.format("Proposal '%s' should have been found in: ", order[i])
+                message = "Proposal '${order[i]}' should have been found in: "
             } else {
-                message = String.format("Proposal '%s' should have preceded proposal '%s' in: ", order[i - 1], order[i])
+                message = "Proposal '${order[i - 1]}' should have preceded proposal '${order[i]}' in: "
             }
             assertTrue(message + printProposals(proposals), next > prev)
 
@@ -307,13 +307,13 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
 
     protected void assertExtendedContextElements(GroovyExtendedCompletionContext context, String signature, String... expectedNames) {
         IJavaElement[] visibleElements = context.getVisibleElements(signature)
-        assertEquals("Incorrect number of visible elements\nexpected: " + Arrays.toString(expectedNames) +
-                "\nfound: " + elementsToNames(visibleElements), expectedNames.length, visibleElements.length)
+        assertEquals("Incorrect number of visible elements\nexpected: ${Arrays.toString(expectedNames)}\nfound: ${elementsToNames(visibleElements)}",
+            expectedNames.length, visibleElements.length)
 
         for (name in expectedNames) {
             boolean found = false
             for (element in visibleElements) {
-                if (element.elementName.equals(name)) {
+                if (element.elementName == name) {
                     found = true
                     break
                 }
@@ -349,11 +349,11 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
         public VariableScope currentScope
         public final ASTNode node
 
-        public SearchRequestor(ASTNode node) {
+        SearchRequestor(ASTNode node) {
             this.node = node
         }
 
-        public VisitStatus acceptASTNode(ASTNode visitorNode, TypeLookupResult visitorResult, IJavaElement enclosingElement) {
+        VisitStatus acceptASTNode(ASTNode visitorNode, TypeLookupResult visitorResult, IJavaElement enclosingElement) {
             if (node == visitorNode) {
                 this.currentScope = visitorResult.scope
                 return VisitStatus.STOP_VISIT
