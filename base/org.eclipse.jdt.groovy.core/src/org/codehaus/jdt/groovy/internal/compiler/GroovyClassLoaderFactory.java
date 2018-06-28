@@ -149,7 +149,7 @@ public final class GroovyClassLoaderFactory {
 
                 if (GroovyLogManager.manager.hasLoggers()) {
                     GroovyLogManager.manager.log(TraceCategory.AST_TRANSFORM,
-                        "transform classpath: " + String.join(File.pathSeparator, xformPaths));
+                        "Transform classpath: " + String.join(File.pathSeparator, xformPaths));
                 }
 
                 return new java.util.AbstractMap.SimpleEntry<>(classpathEntries, new GroovyClassLoader[] {
