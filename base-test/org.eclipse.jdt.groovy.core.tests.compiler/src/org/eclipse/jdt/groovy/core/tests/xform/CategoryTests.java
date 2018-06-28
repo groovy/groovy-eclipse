@@ -166,7 +166,7 @@ public final class CategoryTests extends GroovyCompilerTestSuite {
             "4. ERROR in bad.groovy (at line 2)\n" +
             "\t@ScriptMixin(C.class)\n" +
             "\t ^^^^^^^^^^^\n" +
-            "Groovy:unable to resolve class ScriptMixin ,  unable to find class for annotation\n" +
+            "Groovy:unable to resolve class ScriptMixin for annotation\n" +
             "----------\n" +
             "5. ERROR in bad.groovy (at line 2)\n" +
             "\t@ScriptMixin(C.class)\n" +

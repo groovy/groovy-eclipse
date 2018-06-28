@@ -96,7 +96,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "1. ERROR in MyDomainClass.groovy (at line 2)\n" +
         "\tdef Method[] methodArray = anInt.class.methods;\n" +
         "\t    ^^^^^^^^\n" +
-        "Groovy:unable to resolve class Method[] \n" +
+        "Groovy:unable to resolve class Method[]\n" +
         "----------\n");
     }
 
@@ -112,7 +112,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "1. ERROR in MyDomainClass.groovy (at line 2)\n" +
         "\tdef Method[][] methodMethodArray = anInt.class.methods;\n" +
         "\t    ^^^^^^^^^^\n" +
-        "Groovy:unable to resolve class Method[][] \n" +
+        "Groovy:unable to resolve class Method[][]\n" +
         "----------\n");
     }
 
@@ -1691,30 +1691,25 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "\t^^^\n" +
         "Map is a raw type. References to generic type Map<K,V> should be parameterized\n" +
         "----------\n" +
-//		"9. ERROR in X.groovy (at line 15)\n" +
-//		"\tCommand command\n" +
-//		"\t^^^^^^^\n" +
-//		"Groovy:unable to resolve class org.andrill.coretools.data.edit.Command \n" +
-//		"----------\n" +
         "9. ERROR in X.groovy (at line 33)\n" +
         "\tcommands << new GCommand(source: source, prop: name, value: newValue)\n" +
         "\t                ^^^^^^^^\n" +
-        "Groovy:unable to resolve class GCommand \n" +
+        "Groovy:unable to resolve class GCommand\n" +
         "----------\n" +
         "10. ERROR in X.groovy (at line 34)\n" +
         "\tlinks.each { commands << new GCommand(source: it, prop: constraints.linkTo, value: newValue) }\n" +
         "\t                             ^^^^^^^^\n" +
-        "Groovy:unable to resolve class GCommand \n" +
+        "Groovy:unable to resolve class GCommand\n" +
         "----------\n" +
         "11. ERROR in X.groovy (at line 36)\n" +
         "\t} else { return new GCommand(source: source, prop: name, value: newValue) }\n" +
         "\t                    ^^^^^^^^\n" +
-        "Groovy:unable to resolve class GCommand \n" +
+        "Groovy:unable to resolve class GCommand\n" +
         "----------\n" +
         "12. ERROR in X.groovy (at line 37)\n" +
         "\t} else { return new GCommand(source: source, prop: name, value: newValue) }\n" +
         "\t                    ^^^^^^^^\n" +
-        "Groovy:unable to resolve class GCommand \n" +
+        "Groovy:unable to resolve class GCommand\n" +
         "----------\n");
     }
 
@@ -1749,7 +1744,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "1. ERROR in p\\Foo.groovy (at line 3)\n" +
         "\tnew C();\n" +
         "\t    ^\n" +
-        "Groovy:unable to resolve class C \n" +
+        "Groovy:unable to resolve class C\n" +
         "----------\n");
     }
 
@@ -3299,7 +3294,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "1. ERROR in p\\C.groovy (at line 8)\n" +
         "\tpublic static void callitOne(A a) { }\n" +
         "\t                             ^\n" +
-        "Groovy:unable to resolve class A \n" +
+        "Groovy:unable to resolve class A\n" +
         "----------\n");
     }
 
@@ -4617,21 +4612,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testScriptWithError() {
-        runNegativeTest(new String[] {
-            "Foo.groovy",
-            "print Coolio!",
-        },
-        "----------\n" +
-        "1. ERROR in Foo.groovy (at line 1)\n" +
-        "\tprint Coolio!\n" +
-        "\t            ^\n" +
-        "Groovy:expecting EOF, found \'!\' @ line 1, column 13.\n" +
-        "----------\n"
-        );
-    }
-
-    @Test
     public void testScript() {
         runConformTest(new String[] {
             "Foo.groovy",
@@ -4649,6 +4629,43 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "class SomeJava { static String constant = \"abc\";}",
         },
         "abc");
+    }
+
+    @Test
+    public void testScriptWithError() {
+        runNegativeTest(new String[] {
+            "Foo.groovy",
+            "print Coolio!",
+        },
+        "----------\n" +
+        "1. ERROR in Foo.groovy (at line 1)\n" +
+        "\tprint Coolio!\n" +
+        "\t            ^\n" +
+        "Groovy:expecting EOF, found \'!\' @ line 1, column 13.\n" +
+        "----------\n"
+        );
+    }
+
+    @Test
+    public void testConfigScriptWithError() {
+        Map<String, String> options = getCompilerOptions();
+        options.put(CompilerOptions.OPTIONG_GroovyCompilerConfigScript, createScript("config.groovy",
+            "withConfig(configuration) {\n" +
+            "  X\n" +
+            "}\n"
+        ).getAbsolutePath());
+
+        runNegativeTest(new String[] {
+            "hello.groovy",
+            "println 'hello'",
+        },
+        "----------\n" +
+        "1. WARNING in hello.groovy (at line 1)\n" +
+        "\tprintln 'hello'\n" +
+        "\t^\n" +
+        "Cannot read the source from ##" + File.separator + "config.groovy due to internal exception groovy.lang.MissingPropertyException: No such property: X for class: config\n" +
+        "----------\n",
+        options);
     }
 
     @Test
@@ -5849,7 +5866,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "1. ERROR in A.groovy (at line 3)\n" +
         "\tclass BBB extends FooTes\n" +
         "\t                  ^^^^^^\n" +
-        "Groovy:unable to resolve class FooTes \n" +
+        "Groovy:unable to resolve class FooTes\n" +
         "----------\n" +
         "2. ERROR in A.groovy (at line 3)\n" +
         "\tclass BBB extends FooTes\n" +

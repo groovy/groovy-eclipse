@@ -355,7 +355,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         if (resolveToInner(type)) return;
         // GRECLIPSE edit
         //addError("unable to resolve class " + type.getName() + " " + msg, node);
-        String fullMsg = "unable to resolve class " + type.toString(false) + " " + msg;
+        String fullMsg = "unable to resolve class " + type.toString(false) + msg;
         if (type.getEnd() > 0) {
             addError(fullMsg, type);
         } else {
@@ -1316,7 +1316,10 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     protected Expression transformAnnotationConstantExpression(AnnotationConstantExpression ace) {
         AnnotationNode an = (AnnotationNode) ace.getValue();
         ClassNode type = an.getClassNode();
-        resolveOrFail(type, ", unable to find class for annotation", an);
+        // GRECLIPSE edit
+        //resolveOrFail(type, ", unable to find class for annotation", an);
+        resolveOrFail(type, " for annotation", an);
+        // GRECLIPSE end
         for (Map.Entry<String, Expression> member : an.getMembers().entrySet()) {
             member.setValue(transform(member.getValue()));
         }
@@ -1332,7 +1335,10 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             // skip built-in properties
             if (an.isBuiltIn()) continue;
             annType = an.getClassNode();
-            resolveOrFail(annType, ",  unable to find class for annotation", an);
+            // GRECLIPSE edit
+            //resolveOrFail(annType, ",  unable to find class for annotation", an);
+            resolveOrFail(annType, " for annotation", an);
+            // GRECLIPSE end
             for (Map.Entry<String, Expression> member : an.getMembers().entrySet()) {
                 Expression newValue = transform(member.getValue());
                 newValue = transformInlineConstants(newValue);

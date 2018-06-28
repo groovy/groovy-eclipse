@@ -66,7 +66,7 @@ public class AddMissingGroovyImportsResolver extends AbstractQuickFixResolver {
             String simpleTypeName = getUnresolvedSimpleName();
             if (simpleTypeName != null) {
                 String[] messages = getQuickFixProblem().getProblemDescriptor().getMarkerMessages();
-                boolean isAnnotation = (messages[0].contains("@" + simpleTypeName) || messages[0].endsWith("unable to find class for annotation"));
+                boolean isAnnotation = (messages[0].contains("@" + simpleTypeName) || messages[0].endsWith(" for annotation"));
                 UnresolvedTypeData data = new UnresolvedTypeData(simpleTypeName, isAnnotation, new SourceRange(offset, simpleTypeName.length()));
 
                 new TypeSearch().searchForTypes(getGroovyCompilationUnit(), Collections.singletonMap(simpleTypeName, data), null);

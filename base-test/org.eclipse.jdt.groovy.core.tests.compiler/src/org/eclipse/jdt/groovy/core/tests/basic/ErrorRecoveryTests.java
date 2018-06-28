@@ -878,7 +878,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         "2. ERROR in X.groovy (at line 3)\n" +
         "\tnew Earth\n" +
         "\t    ^^^^^\n" +
-        "Groovy:unable to resolve class Earth \n" +
+        "Groovy:unable to resolve class Earth\n" +
         "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -911,7 +911,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         "2. ERROR in X.groovy (at line 3)\n" +
         "\tnew Earth\n" +
         "\t    ^^^^^\n" +
-        "Groovy:unable to resolve class Earth \n" +
+        "Groovy:unable to resolve class Earth\n" +
         "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -973,7 +973,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         "2. ERROR in X.groovy (at line 3)\n" +
         "\tnew Earth\n" +
         "\t    ^^^^^\n" +
-        "Groovy:unable to resolve class Earth \n" +
+        "Groovy:unable to resolve class Earth\n" +
         "----------\n" +
         "3. ERROR in X.groovy (at line 4)\n" +
         "\tnew Air\n" +
@@ -983,7 +983,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         "4. ERROR in X.groovy (at line 4)\n" +
         "\tnew Air\n" +
         "\t    ^^^\n" +
-        "Groovy:unable to resolve class Air \n" +
+        "Groovy:unable to resolve class Air\n" +
         "----------\n" +
         "5. ERROR in X.groovy (at line 5)\n" +
         "\tnew\n" +
@@ -998,7 +998,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         "7. ERROR in X.groovy (at line 6)\n" +
         "\tnew Fire\n" +
         "\t    ^^^^\n" +
-        "Groovy:unable to resolve class Fire \n" +
+        "Groovy:unable to resolve class Fire\n" +
         "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -1194,7 +1194,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         "2. ERROR in X.groovy (at line 2)\n" +
         "\tdef x = new A\n" +
         "\t            ^\n" +
-        "Groovy:unable to resolve class A \n" +
+        "Groovy:unable to resolve class A\n" +
         "----------\n");
 
         checkGCUDeclaration("X.groovy",
@@ -1222,7 +1222,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         "2. ERROR in X.groovy (at line 3)\n" +
         "\tnew Earth\n" +
         "\t    ^^^^^\n" +
-        "Groovy:unable to resolve class Earth \n" +
+        "Groovy:unable to resolve class Earth\n" +
         "----------\n");
 
         checkGCUDeclaration("X.groovy", null);
@@ -1267,7 +1267,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         "1. ERROR in X.groovy (at line 4)\n" +
         "\tif (! (this instanceof HTML/*_*/) {\n" +
         "\t                       ^\n" +
-        "Groovy:unable to resolve class HTML \n" +
+        "Groovy:unable to resolve class HTML\n" +
         "----------\n" +
         "2. ERROR in X.groovy (at line 7)\n" +
         "\t} \n" +
