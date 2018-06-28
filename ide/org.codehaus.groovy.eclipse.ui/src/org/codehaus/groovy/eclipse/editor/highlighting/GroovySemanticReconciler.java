@@ -225,7 +225,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     public void reconciled(CompilationUnit ast, boolean forced, IProgressMonitor monitor) {
         if (ast != null && synchronize())
         try {
-            if (editor == null) return; // uninstalled?
+            if (editor == null || presenter == null) return;
             monitor.beginTask("Groovy semantic highlighting", 10);
             GroovyCompilationUnit unit = editor.getGroovyCompilationUnit();
             if (unit != null) {
