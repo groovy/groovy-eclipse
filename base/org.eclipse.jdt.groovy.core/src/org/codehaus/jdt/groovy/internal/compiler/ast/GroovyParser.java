@@ -36,6 +36,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
@@ -49,7 +50,12 @@ import org.eclipse.jdt.internal.compiler.batch.BatchCompilerRequestor;
 import org.eclipse.jdt.internal.compiler.batch.Main;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
+import org.eclipse.jdt.internal.compiler.problem.AbortCompilationUnit;
+import org.eclipse.jdt.internal.compiler.problem.AbortMethod;
+import org.eclipse.jdt.internal.compiler.problem.AbortType;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
+import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
 import org.eclipse.jdt.internal.core.builder.AbstractImageBuilder;
 import org.eclipse.jdt.internal.core.builder.BuildNotifier;
 import org.eclipse.jdt.internal.core.builder.SourceFile;
@@ -150,6 +156,10 @@ public class GroovyParser {
             if (location != null) {
                 fileName = location.toFile().getAbsolutePath();
             }
+        }
+
+        if (problemReporter.referenceContext == null) {
+            problemReporter.referenceContext = new ReferenceContextImpl(compilationResult);
         }
 
         if (compilationUnit == null) {
@@ -267,6 +277,53 @@ public class GroovyParser {
                 // doesn't matter
             }
             notifier.checkCancel();
+        }
+    }
+
+    private static class ReferenceContextImpl implements ReferenceContext {
+
+        private boolean hasErrors;
+        private final CompilationResult compilationResult;
+
+        ReferenceContextImpl(CompilationResult compilationResult) {
+            this.compilationResult = compilationResult;
+        }
+
+        @Override
+        public boolean hasErrors() {
+            return hasErrors;
+        }
+
+        @Override
+        public void tagAsHavingErrors() {
+            hasErrors = true;
+        }
+
+        @Override
+        public void tagAsHavingIgnoredMandatoryErrors(int problemId) {
+            // no-op
+        }
+
+        @Override
+        public CompilationResult compilationResult() {
+            return compilationResult;
+        }
+
+        @Override
+        public CompilationUnitDeclaration getCompilationUnitDeclaration() {
+            return null;
+        }
+
+        @Override
+        public void abort(int abortLevel, CategorizedProblem problem) {
+            switch (abortLevel) {
+            case ProblemSeverities.AbortType:
+                throw new AbortType(compilationResult, problem);
+            case ProblemSeverities.AbortMethod:
+                throw new AbortMethod(compilationResult, problem);
+            default:
+                throw new AbortCompilationUnit(compilationResult, problem);
+            }
         }
     }
 }

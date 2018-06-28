@@ -52,6 +52,7 @@ import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.WorkingCopyOwner;
+import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.search.IJavaSearchScope;
 import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.core.search.SearchRequestor;
@@ -77,6 +78,7 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
 import org.eclipse.jdt.internal.compiler.problem.ProblemReporter;
+import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities;
 import org.eclipse.jdt.internal.core.BinaryMember;
 import org.eclipse.jdt.internal.core.BinaryType;
 import org.eclipse.jdt.internal.core.ClassFile;
@@ -92,8 +94,9 @@ import org.eclipse.jdt.internal.core.search.matching.PossibleMatch;
 import org.eclipse.jdt.internal.core.util.Util;
 
 /**
- * The groovy implementation of LanguageSupport. This class is dynamically loaded by jdt.core (so referenced by name from jdt.core)
- * - and then invoked to get a parser that can handle either groovy or java.
+ * Groovy implementation of LanguageSupport. This class is dynamically loaded by
+ * jdt.core (so referenced by name from jdt.core) and then invoked to get parser
+ * that can handle either Groovy or Java.
  */
 public class GroovyLanguageSupport implements LanguageSupport {
 
@@ -200,8 +203,8 @@ public class GroovyLanguageSupport implements LanguageSupport {
             CompilerConfiguration configuratorConfig = new CompilerConfiguration();
             org.osgi.framework.Version v = GroovyUtils.getGroovyVersion();
             if ((v.getMajor() == 2 && v.getMinor() >= 1) || v.getMajor() > 2) {
-                ImportCustomizer customizer = new ImportCustomizer();
-                customizer.addStaticStars("org.codehaus.groovy.control.customizers.builder.CompilerCustomizationBuilder");
+                ImportCustomizer customizer = new ImportCustomizer().addStaticStars(
+                    "org.codehaus.groovy.control.customizers.builder.CompilerCustomizationBuilder");
                 configuratorConfig.addCompilationCustomizers(customizer);
             }
 
@@ -214,7 +217,15 @@ public class GroovyLanguageSupport implements LanguageSupport {
                 }
                 shell.evaluate(configScript);
             } catch (Exception e) {
-                throw new RuntimeException("Failed to process Groovy config script: " + compilerOptions.groovyCompilerConfigScript, e);
+                int severity = ProblemSeverities.Error;
+                CompilationResult compilationResult = null;
+                if (problemReporter.referenceContext != null) {
+                    severity = ProblemSeverities.Warning;
+                    compilationResult = problemReporter.referenceContext.compilationResult();
+                }
+                // TODO: Can the problem be associated with project instead of source unit?
+                String[] arguments = {compilerOptions.groovyCompilerConfigScript, e.toString()};
+                problemReporter.handle(IProblem.CannotReadSource, arguments, 0, arguments, severity, 0, 0, problemReporter.referenceContext, compilationResult);
             }
         }
 

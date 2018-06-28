@@ -134,6 +134,7 @@ import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
+import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
@@ -193,8 +194,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         boolean alreadyHasErrors = compilationResult.hasErrors();
+        ReferenceContext referenceContext = problemReporter.referenceContext;
         // replacement error collector doesn't cause an exception, instead errors are checked post 'compile'
         try {
+            problemReporter.referenceContext = this;
             ClassLoader cl = Thread.currentThread().getContextClassLoader();
             try {
                 Thread.currentThread().setContextClassLoader(groovyCompilationUnit.getTransformLoader());
@@ -255,6 +258,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                 recordProblems(collector.getErrors());
             }
+
+        } finally {
+            problemReporter.referenceContext = referenceContext;
         }
 
         return false;
