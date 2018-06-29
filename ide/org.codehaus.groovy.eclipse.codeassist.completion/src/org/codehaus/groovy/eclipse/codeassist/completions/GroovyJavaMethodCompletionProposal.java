@@ -501,8 +501,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
             fPositions.add(new Position(0));
 
             char[] name = (i < npc ? namedParameterNames[i] : positionalParameterNames[i - npc]);
-            // NOTE: named parameters come after positional parameters in the parameterTypes array
-            char[] type = (i < npc ? parameterTypes[i + positionalParameterNames.length] : parameterTypes[i - npc]);
+            char[] type = parameterTypes[i];
 
             ICompletionProposal[] vals;
             if (guess) {

@@ -41,9 +41,13 @@ public class NamedArgsMethodNode extends MethodNode {
         if (optionalParams == null) optionalParams = Parameter.EMPTY_ARRAY;
 
         Parameter[] allParams = new Parameter[params.length + namedParams.length + optionalParams.length];
-        System.arraycopy(params, 0, allParams, 0, params.length);
-        System.arraycopy(namedParams, 0, allParams, params.length, namedParams.length);
-        System.arraycopy(optionalParams, 0, allParams, params.length + namedParams.length, optionalParams.length);
+
+        //https://github.com/groovy/groovy-eclipse/issues/613
+        //named parameters go first, followed by positional params (including trailing closure)
+        System.arraycopy(namedParams, 0, allParams, 0, namedParams.length);
+        System.arraycopy(optionalParams, 0, allParams, namedParams.length, optionalParams.length);
+        System.arraycopy(params, 0, allParams, namedParams.length + optionalParams.length, params.length);
+
         return allParams;
     }
 
