@@ -87,11 +87,11 @@ public class GroovyUtils {
     // FIXASC don't use this any more?
     public static int[] getSourceLineSeparatorsIn(char[] code) {
         List<Integer> lineSeparatorsCollection = new ArrayList<>();
-        for (int i = 0, max = code.length; i < max; i++) {
+        for (int i = 0, max = code.length; i < max; i += 1) {
             if (code[i] == '\r') {
                 if ((i + 1) < max && code[i + 1] == '\n') {// \r\n
                     lineSeparatorsCollection.add(i + 1); // add the position of the \n
-                    i++;
+                    i += 1;
                 } else {
                     lineSeparatorsCollection.add(i); // add the position of the \r
                 }
@@ -100,7 +100,7 @@ public class GroovyUtils {
             }
         }
         int[] lineSepPositions = new int[lineSeparatorsCollection.size()];
-        for (int i = 0; i < lineSeparatorsCollection.size(); i++) {
+        for (int i = 0; i < lineSeparatorsCollection.size(); i += 1) {
             lineSepPositions[i] = lineSeparatorsCollection.get(i);
         }
         return lineSepPositions;
@@ -172,9 +172,11 @@ public class GroovyUtils {
         return node.getAnnotations().stream().filter(an -> an.getClassNode().getName().equals(name));
     }
 
-    public static ClassNode getBaseType(ClassNode node) {
-        while (node.isArray()) node = node.getComponentType();
-        return node;
+    public static ClassNode getBaseType(ClassNode classNode) {
+        while (classNode.isArray()) {
+            classNode = classNode.getComponentType();
+        }
+        return classNode;
     }
 
     public static GenericsType[] getGenericsTypes(ClassNode classNode) {

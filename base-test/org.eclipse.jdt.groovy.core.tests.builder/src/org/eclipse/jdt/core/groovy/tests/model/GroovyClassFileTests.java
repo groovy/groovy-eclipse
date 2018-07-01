@@ -31,7 +31,7 @@ import org.junit.Test;
 /**
  * Tests that our support for class files with Groovy source attachments is working.
  */
-public final class GroovyClassFileTests  extends GroovyTypeRootTestSuite {
+public final class GroovyClassFileTests extends GroovyTypeRootTestSuite {
 
     @Test // a class file in a groovy project should not include the non-source children
     public void testClassFileHasNoNonSourceChildren() throws Exception {

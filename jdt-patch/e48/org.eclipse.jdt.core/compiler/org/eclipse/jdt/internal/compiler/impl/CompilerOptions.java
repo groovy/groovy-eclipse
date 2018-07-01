@@ -808,7 +808,6 @@ public class CompilerOptions {
 					return VERSION_9;
 				break;
 			case ClassFileConstants.MAJOR_VERSION_10 :
-				// JDK10 uses same major version ad JDK9
 				if (jdkLevel == ClassFileConstants.JDK10)
 					return VERSION_10;
 				break;
