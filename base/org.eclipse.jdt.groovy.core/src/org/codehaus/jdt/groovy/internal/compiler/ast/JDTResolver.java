@@ -123,10 +123,10 @@ public class JDTResolver extends ResolveVisitor {
 
     // Type references are resolved through the 'activeScope'. This ensures visibility rules are obeyed - just because a
     // type exists does not mean it is visible to some other type and scope lookups verify this.
-    protected GroovyCompilationUnitScope activeScope = null;
+    protected GroovyCompilationUnitScope activeScope;
 
     // map of scopes in which resolution can happen
-    private Map<ClassNode, GroovyTypeDeclaration> scopes = new HashMap<>();
+    private Map<ClassNode, GroovyTypeDeclaration> scopes = new IdentityHashMap<>();
 
     // By recording what is currently in progress in terms of creation, we avoid recursive problems (like Enum<E extends Enum<E>>)
     private Map<TypeBinding, JDTClassNode> inProgress = new IdentityHashMap<>();
@@ -145,8 +145,8 @@ public class JDTResolver extends ResolveVisitor {
 
     //--------------------------------------------------------------------------
 
-    public JDTResolver(CompilationUnit groovyCompilationUnit) {
-        super(groovyCompilationUnit);
+    public JDTResolver(CompilationUnit compUnit) {
+        super(compUnit);
         if (recordInstances) {
             if (instances == null) {
                 instances = new ArrayList<>();
@@ -155,9 +155,82 @@ public class JDTResolver extends ResolveVisitor {
         }
     }
 
+    /**
+     * When recorded, the jdt resolver will be able to (later on) navigate from the classnode back to the JDT scope that should be used.
+     */
+    public void record(GroovyTypeDeclaration typeDecl) {
+        // FIXASC: Can the relationship here from classNode to scope be better preserved to remove the need for this map?
+        scopes.put(typeDecl.getClassNode(), typeDecl);
+
+        TypeDeclaration[] memberTypes = typeDecl.memberTypes;
+        if (memberTypes != null) {
+            for (TypeDeclaration memberType : memberTypes) {
+                record((GroovyTypeDeclaration) memberType);
+            }
+        }
+
+        GroovyTypeDeclaration[] anonymousTypes = typeDecl.getAnonymousTypes();
+        if (anonymousTypes != null) {
+            for (GroovyTypeDeclaration anonymousType : anonymousTypes) {
+                record(anonymousType);
+            }
+        }
+    }
+
+    @Override
+    public void startResolving(ClassNode classNode, SourceUnit sourceUnit) {
+        try {
+            super.startResolving(classNode, sourceUnit);
+        } catch (AbortResolutionException e) {
+            // probably syntax error(s)
+        } finally {
+            resetSourceUnit();
+            unresolvables.clear();
+            assert !scopes.containsKey(classNode);
+        }
+    }
+
+    /**
+     * Called when a ResolveVisitor is commencing resolution for a type. Allows
+     * us to setup the JDTResolver to point at the right scope for resolution-
+     * ification. If not able to find a scope, that is a serious problem!
+     */
+    @Override
+    protected boolean commencingResolution() {
+        GroovyTypeDeclaration typeDecl = scopes.remove(currentClass);
+        if (typeDecl == null) {
+            if (resolvedClassNodes.contains(currentClass)) {
+                // already resolved
+                return false;
+            }
+            throw new GroovyEclipseBug("commencingResolution failed: no declaration found for class " + currentClass);
+        }
+        activeScope = null;
+        if (typeDecl.scope == null) {
+            // scope may be null if there were errors in the code - let's not freak out the user here
+            if (typeDecl.hasErrors()) {
+                return false;
+            }
+            throw new GroovyEclipseBug("commencingResolution failed: declaration found, but unexpectedly found no scope for " + currentClass.getName());
+        }
+        activeScope = (GroovyCompilationUnitScope) typeDecl.scope.compilationUnitScope();
+        if (DEBUG) {
+            log("commencing resolution for " + currentClass.getName());
+        }
+        return true;
+    }
+
+    @Override
+    protected void finishedResolution() {
+        resolvedClassNodes.add(currentClass);
+    }
+
     public void cleanUp() {
+        scopes.clear();
         inProgress.clear();
         //nodeCache.clear();
+        //resolvedClassNodes.clear();
+        // TODO: Reset things like currentClass, currentScope, etc.?
     }
 
     public ClassNode resolve(String name) {
@@ -377,63 +450,6 @@ public class JDTResolver extends ResolveVisitor {
         return classNode;
     }
 
-    /**
-     * Called when a resolvevisitor is commencing resolution for a type - allows us to setup the JDTResolver to point at the right
-     * scope for resolutionification. If not able to find a scope, that is a serious problem!
-     */
-    @Override
-    protected boolean commencingResolution() {
-        GroovyTypeDeclaration gtDeclaration = scopes.get(currentClass);
-        if (gtDeclaration == null) {
-            if (resolvedClassNodes.contains(currentClass)) {
-                // already resolved!
-                return false;
-            }
-            throw new GroovyEclipseBug("commencingResolution failed: no declaration found for class " + currentClass);
-        }
-        activeScope = null;
-        if (gtDeclaration.scope == null) {
-            // The scope may be null if there were errors in the code - let's not freak out the user here
-            if (gtDeclaration.hasErrors()) {
-                return false;
-            }
-            throw new GroovyEclipseBug("commencingResolution failed: declaration found, but unexpectedly found no scope for " + currentClass.getName());
-        }
-        activeScope = (GroovyCompilationUnitScope) gtDeclaration.scope.compilationUnitScope();
-        if (DEBUG) {
-            log("commencing resolution for " + currentClass.getName());
-        }
-        return true;
-    }
-
-    @Override
-    protected void finishedResolution() {
-        resolvedClassNodes.add(currentClass);
-        scopes.remove(currentClass);
-        unresolvables.clear();
-    }
-
-    /**
-     * When recorded, the jdt resolver will be able to (later on) navigate from the classnode back to the JDT scope that should be
-     * used.
-     */
-    public void record(GroovyTypeDeclaration gtDeclaration) {
-        // FIXASC can the relationship here from classNode to scope be better preserved to remove the need for this map?
-        scopes.put(gtDeclaration.getClassNode(), gtDeclaration);
-        if (gtDeclaration.memberTypes != null) {
-            TypeDeclaration[] members = gtDeclaration.memberTypes;
-            for (int m = 0; m < members.length; m++) {
-                record((GroovyTypeDeclaration) members[m]);
-            }
-        }
-        GroovyTypeDeclaration[] anonymousTypes = gtDeclaration.getAnonymousTypes();
-        if (anonymousTypes != null) {
-            for (int m = 0; m < anonymousTypes.length; m++) {
-                record(anonymousTypes[m]);
-            }
-        }
-    }
-
     // FIXASC callers could check if it is a 'funky' type before always recording a depedency
     // by 'funky' I mean that the type was constructed just to try something (org.foo.bar.java$lang$Wibble doesn't want recording!)
     private void recordDependency(String typename) {
@@ -443,16 +459,6 @@ public class JDTResolver extends ResolveVisitor {
             } else {
                 activeScope.recordSimpleReference(typename.toCharArray());
             }
-        }
-    }
-
-    @Override
-    public void startResolving(ClassNode node, SourceUnit source) {
-        try {
-            super.startResolving(node, source);
-            unresolvables.clear();
-        } catch (AbortResolutionException are) {
-            // Can occur if there are other problems with the node (syntax errors) - so don't try resolving it
         }
     }
 

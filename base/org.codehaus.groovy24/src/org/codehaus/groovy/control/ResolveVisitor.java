@@ -1563,6 +1563,11 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     protected SourceUnit getSourceUnit() {
         return source;
     }
+    // GRECLIPSE add
+    protected void resetSourceUnit() {
+        source = null;
+    }
+    // GRECLIPSE end
 
     private boolean resolveGenericsTypes(GenericsType[] types) {
         if (types == null) return true;
