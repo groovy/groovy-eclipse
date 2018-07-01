@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -201,9 +201,9 @@ public class GroovyDSLDContext {
         }
 
         if (cachedHierarchy == null) {
-            // use linked hash set because order is important
-            cachedHierarchy = new LinkedHashSet<>();
-            getAllSupers(toCheck, cachedHierarchy);
+            LinkedHashSet<ClassNode> superTypes = new LinkedHashSet<>();
+            VariableScope.createTypeHierarchy(toCheck, superTypes, false);
+            cachedHierarchy = superTypes;
         }
 
         for (ClassNode node : cachedHierarchy) {
@@ -229,19 +229,6 @@ public class GroovyDSLDContext {
 
     public ClassNode getCurrentType() {
         return targetType;
-    }
-
-    private void getAllSupers(ClassNode type, Set<ClassNode> set) {
-        if (type == null) {
-            return;
-        }
-        set.add(type);
-        getAllSupers(type.getSuperClass(), set);
-        for (ClassNode inter : type.getAllInterfaces()) {
-            if (!inter.getName().equals(type.getName())) {
-                getAllSupers(inter, set);
-            }
-        }
     }
 
     public ResolverCache getResolverCache() {

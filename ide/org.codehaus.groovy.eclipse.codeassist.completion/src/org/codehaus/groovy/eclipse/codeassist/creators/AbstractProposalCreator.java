@@ -64,9 +64,7 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
 
         Map<String, FieldNode> allFields = new HashMap<>();
 
-        // use a LinkedHashSet to preserve order
-        Set<ClassNode> types = new LinkedHashSet<>();
-        getAllSupers(thisType, types, exclude);
+        Set<ClassNode> types = getAllSupers(thisType, exclude);
 
         for (ClassNode type : types) {
             for (FieldNode field : type.getFields()) {
@@ -86,7 +84,7 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
         return allFields.values();
     }
 
-    protected List<MethodNode> getAllMethods(ClassNode type, Set<ClassNode> exclude) {
+    protected Collection<MethodNode> getAllMethods(ClassNode type, Set<ClassNode> exclude) {
         List<MethodNode> allMethods = type.getAllDeclaredMethods();
         if (!exclude.isEmpty()) {
             // remove all methods from classes that we have already visited
@@ -97,8 +95,7 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
             }
         }
 
-        Set<ClassNode> types = new LinkedHashSet<>();
-        getAllSupers(type, types, exclude);
+        Set<ClassNode> types = getAllSupers(type, exclude);
 
         // keep track of the already seen types so that next time, we won't include them
         exclude.addAll(types);
@@ -106,19 +103,11 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
         return allMethods;
     }
 
-    protected void getAllSupers(ClassNode type, Set<ClassNode> set, Set<ClassNode> exclude) {
-        if (type == null) {
-            return;
-        }
-        if (!exclude.contains(type)) {
-            set.add(type);
-        }
-        getAllSupers(type.getSuperClass(), set, exclude);
-        for (ClassNode inter : (Iterable<ClassNode>) type.getAllInterfaces()) {
-            if (!inter.getName().equals(type.getName())) {
-                getAllSupers(inter, set, exclude);
-            }
-        }
+    private static Set<ClassNode> getAllSupers(ClassNode type, Set<ClassNode> exclude) {
+        LinkedHashSet<ClassNode> superTypes = new LinkedHashSet<>();
+        VariableScope.createTypeHierarchy(type, superTypes, false);
+        superTypes.removeAll(exclude);
+        return superTypes;
     }
 
     /**
@@ -158,19 +147,6 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
         }
 
         return (leftAcc < rightAcc);
-    }
-
-    protected void getAllSupersAsStrings(ClassNode type, Set<String> set) {
-        if (type == null) {
-            return;
-        }
-        set.add(type.getName());
-        getAllSupersAsStrings(type.getSuperClass(), set);
-        for (ClassNode inter : (Iterable<ClassNode>) type.getAllInterfaces()) {
-            if (!inter.getName().equals(type.getName())) {
-                getAllSupersAsStrings(inter, set);
-            }
-        }
     }
 
     /**

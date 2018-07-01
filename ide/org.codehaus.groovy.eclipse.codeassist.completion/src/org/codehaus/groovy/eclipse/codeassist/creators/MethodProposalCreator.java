@@ -48,15 +48,14 @@ public class MethodProposalCreator extends AbstractProposalCreator {
     public List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic, boolean isPrimary) {
         List<IGroovyProposal> proposals = new LinkedList<>();
 
-        boolean firstTime = alreadySeen.isEmpty();
-        List<MethodNode> allMethods = getAllMethods(type, alreadySeen);
         Set<String> alreadySeenFields = new HashSet<>();
         if (isStatic) {
             // "class" is added by FieldProposalCreator
             alreadySeenFields.add("class");
         }
+        boolean firstTime = alreadySeen.isEmpty();
 
-        for (MethodNode method : allMethods) {
+        for (MethodNode method : getAllMethods(type, alreadySeen)) {
             String methodName = method.getName();
             if ((!isStatic || method.isStatic() || method.getDeclaringClass() == VariableScope.OBJECT_CLASS_NODE) && checkName(methodName)) {
                 if (ProposalUtils.looselyMatches(prefix, methodName)) {
