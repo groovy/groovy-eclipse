@@ -141,6 +141,7 @@ public class GroovyParser {
 
     public void reset() {
         compilationUnit = null;
+        resolver = null;
     }
 
     public CompilationUnitDeclaration dietParse(ICompilationUnit iCompilationUnit, CompilationResult compilationResult) {

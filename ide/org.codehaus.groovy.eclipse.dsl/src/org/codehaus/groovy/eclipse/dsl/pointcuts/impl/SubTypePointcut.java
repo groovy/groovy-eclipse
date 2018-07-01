@@ -16,10 +16,10 @@
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
@@ -69,5 +69,5 @@ public class SubTypePointcut extends FilteringPointcut<ClassNode> {
         });
     }
 
-    private Map<ClassNode, Set<ClassNode>> cachedHierarchies = new HashMap<>();
+    private Map<ClassNode, Set<ClassNode>> cachedHierarchies = new WeakHashMap<>();
 }
