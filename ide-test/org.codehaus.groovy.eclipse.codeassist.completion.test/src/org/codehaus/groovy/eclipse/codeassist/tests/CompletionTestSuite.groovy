@@ -305,6 +305,15 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
         }
     }
 
+    protected void assertProposalSignature(ICompletionProposal proposal, String expected) {
+        String actual = proposal.getDisplayString()
+        int descrSeparator = actual.indexOf('-')
+        if (descrSeparator != -1) {
+            actual = actual.substring(0, descrSeparator).trim();
+        }
+        assertEquals(expected, actual)
+    }
+
     protected void assertExtendedContextElements(GroovyExtendedCompletionContext context, String signature, String... expectedNames) {
         IJavaElement[] visibleElements = context.getVisibleElements(signature)
         assertEquals("Incorrect number of visible elements\nexpected: ${Arrays.toString(expectedNames)}\nfound: ${elementsToNames(visibleElements)}",

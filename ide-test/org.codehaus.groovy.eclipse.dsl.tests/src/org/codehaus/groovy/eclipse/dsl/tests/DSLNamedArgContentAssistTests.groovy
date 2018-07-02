@@ -355,4 +355,54 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
         createDSL(CLOSURE_DSLD)
         checkProposalApplicationNonType(closureContents, closureContents + '0(first: "", "", {  }, "") {  }', closureContents.length(), 'test0')
     }
+
+    @Test //https://github.com/groovy/groovy-eclipse/issues/613
+    void testProposalSignature1() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
+        createDSL '''\
+            contribute(currentType()) {
+              method name: 'bar', type: 'void', namedParams:['named1':float,'named2':double], params: ['reg1':int,'reg2':long,'closure':Closure]
+            }
+            '''.stripIndent()
+
+        String contents = 'foo {  }'
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar(named1: named1, named2: named2, reg1, reg2, closure)')
+        assertProposalSignature(proposal, "bar(float named1, double named2, int reg1, long reg2, Closure closure) : void")
+    }
+
+    @Test
+    void testProposalSignature2() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
+        GroovyContentAssist.getDefault().getPreferenceStore().setValue(GroovyContentAssist.CLOSURE_BRACKETS, 'true')
+        createDSL '''\
+            contribute(currentType()) {
+              method name: 'bar', type: 'void', namedParams:['named1':float,'named2':double], params: ['reg1':int,'reg2':long,'closure':Closure]
+            }
+            '''.stripIndent()
+
+        String contents = 'foo {  }'
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar(named1: named1, named2: named2, reg1, reg2, { it })')
+        assertProposalSignature(proposal, "bar(float named1, double named2, int reg1, long reg2, Closure closure) : void")
+    }
+
+    @Test
+    void testProposalSignature3() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        GroovyContentAssist.getDefault().getPreferenceStore().setValue(GroovyContentAssist.CLOSURE_BRACKETS, 'true')
+        GroovyContentAssist.getDefault().getPreferenceStore().setValue(GroovyContentAssist.CLOSURE_NOPARENS, 'true')
+        createDSL '''\
+            contribute(currentType()) {
+              method name: 'bar', type: 'void', namedParams:['named1':float,'named2':double], params: ['reg1':int,'reg2':long,'closure':Closure]
+            }
+            '''.stripIndent()
+
+        String contents = 'foo {  }'
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar(named1: named1, named2: named2, reg1, reg2) { it }')
+        assertProposalSignature(proposal, "bar(float named1, double named2, int reg1, long reg2, Closure closure) : void")
+    }
+
+
 }
