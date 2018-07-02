@@ -525,7 +525,8 @@ public class GroovyClassScope extends ClassScope {
             AnnotationBinding[] annotations = referenceBinding.getAnnotations();
             if (annotations != null) {
                 for (AnnotationBinding annotation : annotations) {
-                    String annotationName = CharOperation.toString(annotation.getAnnotationType().compoundName);
+                    ReferenceBinding annotationType = annotation.getAnnotationType();
+                    String annotationName = CharOperation.toString(annotationType.compoundName);
                     if ("groovy.transform.Trait".equals(annotationName)) {
                         return true;
                     }
