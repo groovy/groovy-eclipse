@@ -13,54 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/*
- * Copyright 2009-2018 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-/*
- * Copyright 2009-2018 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-/*
- * Copyright 2009-2018 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.codehaus.groovy.eclipse.core.test
 
-import org.codehaus.groovy.eclipse.core.search.ISearchRequestor
 import org.codehaus.groovy.eclipse.core.search.SyntheticAccessorSearchRequestor
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.eclipse.jdt.core.IJavaElement
@@ -276,27 +230,14 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
 
     //--------------------------------------------------------------------------
 
-    private static class TestSearchRequestor implements ISearchRequestor {
-        List<SearchMatch> matches = []
-        public void acceptMatch(SearchMatch match) {
-            matches << match
-        }
-    }
-
-    private IJavaElement findSearchTarget(String name, IType type) {
-        for (IJavaElement child : type.children) {
-            if (child.elementName == name) {
-                return child
-            }
-        }
-        Assert.fail("child not found: $name")
-    }
-
     private List<SearchMatch> performSearch(String searchName, IType type = gType) {
-        IJavaElement toSearch = findSearchTarget(searchName, type)
-        TestSearchRequestor requestor = new TestSearchRequestor()
-        new SyntheticAccessorSearchRequestor().findSyntheticMatches(toSearch, requestor, null)
-        return requestor.matches
+        IJavaElement target = type.children.find { it.elementName == searchName }
+        Assert.assertNotNull("child not found: $searchName", target)
+
+        List<SearchMatch> matches = []
+        new SyntheticAccessorSearchRequestor().findSyntheticMatches(
+            target, { match -> if (match.offset < 200) matches << match }, null)
+        return matches
     }
 
     /**

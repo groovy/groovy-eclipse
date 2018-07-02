@@ -138,7 +138,8 @@ public final class GroovyClassLoaderFactory {
     }
 
     private GroovyClassLoader[] getProjectGroovyClassLoaders(CompilerConfiguration compilerConfiguration) {
-        String projectName = compilerOptions.groovyProjectName; IProject project = findProject(projectName);
+        String projectName = compilerOptions.groovyProjectName;
+        IProject project = findProject(projectName);
         try {
             IJavaProject javaProject = JavaCore.create(project);
             IClasspathEntry[] classpathEntries = javaProject.exists() ? javaProject.getResolvedClasspath(true) : new IClasspathEntry[0];
@@ -152,9 +153,15 @@ public final class GroovyClassLoaderFactory {
                         "Transform classpath: " + String.join(File.pathSeparator, xformPaths));
                 }
 
+                ClassLoader parentClassLoader = null; // no parent loader by default
+                // FIXME: This is a stopgap measure to provide basic support for Java 9+
+                if (classPaths.stream().anyMatch(path -> path.endsWith("jrt-fs.jar"))) {
+                    parentClassLoader = GroovyParser.class.getClassLoader();
+                }
+
                 return new java.util.AbstractMap.SimpleEntry<>(classpathEntries, new GroovyClassLoader[] {
-                    new GrapeAwareGroovyClassLoader(newClassLoader(classPaths, null/*no parent loader*/), compilerConfiguration),
-                    new GroovyClassLoader(newClassLoader(xformPaths, GroovyParser.class.getClassLoader())/*, compilerConfiguration*/)
+                    new GrapeAwareGroovyClassLoader(newClassLoader(classPaths, parentClassLoader), compilerConfiguration),
+                    new GroovyClassLoader(newClassLoader(xformPaths, GroovyParser.class.getClassLoader())/*, compilerConfiguration*/),
                 });
             });
 
