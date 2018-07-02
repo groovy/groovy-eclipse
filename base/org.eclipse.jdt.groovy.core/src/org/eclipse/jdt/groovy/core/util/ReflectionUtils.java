@@ -136,20 +136,22 @@ public class ReflectionUtils {
     //--------------------------------------------------------------------------
 
     private static Field getDeclaredField(Class<?> clazz, String field) throws Exception {
-        return FIELDS.computeIfAbsent(clazz.getCanonicalName() + field, k -> {
-            try {
-                Field f = clazz.getDeclaredField(field);
-                if (!f.isAccessible()) f.setAccessible(true);
-                return f;
-
-            } catch (NoSuchFieldException e) {
-                log("Error finding field '" + field + "' on class " + clazz.getName(), e);
-                return null;
-
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+        try {
+            return FIELDS.computeIfAbsent(clazz.getCanonicalName() + field, k -> {
+                try {
+                    Field f = clazz.getDeclaredField(field);
+                    if (!f.isAccessible()) f.setAccessible(true);
+                    return f;
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        } catch (RuntimeException e) {
+            if (e.getClass() == RuntimeException.class && e.getCause() != null) {
+                throw (Exception) e.getCause();
             }
-        });
+            throw e;
+        }
     }
 
     private static Method getDeclaredMethod(Class<?> clazz, String method, Class<?>... paramTypes) throws Exception {
