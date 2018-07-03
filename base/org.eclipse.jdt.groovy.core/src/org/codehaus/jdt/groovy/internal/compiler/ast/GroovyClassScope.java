@@ -74,7 +74,7 @@ public class GroovyClassScope extends ClassScope {
     protected MethodBinding[] augmentMethodBindings(MethodBinding[] methodBindings) {
         // don't add these methods to annotations
         SourceTypeBinding binding = referenceContext.binding;
-        if (binding != null && (binding.isAnnotationType() || (binding.isInterface() && !traitHelper.isTrait(binding)))) {
+        if (binding != null && (binding.isInterface() || binding.isAnnotationType())) {
             return methodBindings;
         }
         boolean implementsGroovyLangObject = false;
