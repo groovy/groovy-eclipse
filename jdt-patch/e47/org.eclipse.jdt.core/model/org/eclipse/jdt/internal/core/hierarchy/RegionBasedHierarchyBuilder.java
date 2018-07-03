@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -128,6 +129,9 @@ private void createTypeHierarchyBasedOnRegion(HashMap allOpenablesInRegion, IPro
 						if (type.isBinary()) {
 							openables.add(type.getClassFile());
 						} else {
+							// GROOVY add
+							if (!openables.contains(type.getCompilationUnit()))
+							// GROOVY end
 							openables.add(type.getCompilationUnit());
 						}
 						break;
