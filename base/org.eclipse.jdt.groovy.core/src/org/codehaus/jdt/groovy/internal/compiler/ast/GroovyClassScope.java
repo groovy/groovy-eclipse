@@ -74,7 +74,7 @@ public class GroovyClassScope extends ClassScope {
     protected MethodBinding[] augmentMethodBindings(MethodBinding[] methodBindings) {
         // don't add these methods to annotations
         SourceTypeBinding binding = referenceContext.binding;
-        if (binding != null && (binding.isAnnotationType() || binding.isInterface()) && !traitHelper.isTrait(binding)) {
+        if (binding != null && (binding.isAnnotationType() || (binding.isInterface() && !traitHelper.isTrait(binding)))) {
             return methodBindings;
         }
         boolean implementsGroovyLangObject = false;
@@ -516,22 +516,23 @@ public class GroovyClassScope extends ClassScope {
         }
 
         private boolean isTrait(ReferenceBinding referenceBinding) {
-            if (referenceBinding == null) {
-                return false;
-            }
-            if (toBeInitialized) {
-                initialize();
-            }
-            AnnotationBinding[] annotations = referenceBinding.getAnnotations();
-            if (annotations != null) {
-                for (AnnotationBinding annotation : annotations) {
-                    ReferenceBinding annotationType = annotation.getAnnotationType();
-                    String annotationName = CharOperation.toString(annotationType.compoundName);
-                    if ("groovy.transform.Trait".equals(annotationName)) {
-                        return true;
-                    }
-                    if (lookForTraitAlias && "Trait".equals(annotationName)) {
-                        return true;
+            if (referenceBinding != null) {
+                if (toBeInitialized) {
+                    initialize();
+                }
+                AnnotationBinding[] annotations = referenceBinding.getAnnotations();
+                if (annotations != null) {
+                    for (AnnotationBinding annotation : annotations) {
+                        if (annotation != null) {
+                            ReferenceBinding annotationType = annotation.getAnnotationType();
+                            String annotationName = CharOperation.toString(annotationType.compoundName);
+                            if ("groovy.transform.Trait".equals(annotationName)) {
+                                return true;
+                            }
+                            if (lookForTraitAlias && "Trait".equals(annotationName)) {
+                                return true;
+                            }
+                        }
                     }
                 }
             }

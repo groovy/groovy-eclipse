@@ -957,6 +957,66 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTypeLevelAnnotations_SelfReferential01() {
+        String[] sources = {
+            "p/X.groovy",
+            "package p;\n" +
+            "@Anno(X.Y)\n" +
+            "class X {\n" +
+            "  public static final String Y = ''\n" +
+            "}\n",
+
+            "p/Anno.java",
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface Anno { String value(); }\n",
+        };
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testTypeLevelAnnotations_SelfReferential02() {
+        String[] sources = {
+            "p/X.groovy",
+            "package p;\n" +
+            "@Anno(X.Y)\n" +
+            "trait X {\n" +
+            "  public static final String Y = ''\n" +
+            "}\n",
+
+            "p/Anno.java",
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface Anno { String value(); }\n",
+        };
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/619
+    public void testTypeLevelAnnotations_SelfReferential03() {
+        String[] sources = {
+            "p/X.groovy",
+            "package p;\n" +
+            "@Anno(X.Y)\n" +
+            "interface X {\n" +
+            "  public static final String Y = ''\n" +
+            "}\n",
+
+            "p/Anno.java",
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@interface Anno { String value(); }\n",
+        };
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
     public void testAnnotations_singleMemberAnnotationField() {
         String[] sources = {
             "p/X.groovy",
