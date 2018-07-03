@@ -38,12 +38,12 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     public void testInlineDeclaration() {
         String[] sources = {
             "A.groovy",
-            "@B\n"+
-            "class A { \n"+
-            "  public static void main(String[]argv) {print 'abc';}\n"+
-            "}\n"+
-            "@interface B {\n"+
-            "   String value() default \"\"\n"+
+            "@B\n" +
+            "class A {\n" +
+            "  public static void main(String[]argv) {print 'abc';}\n" +
+            "}\n" +
+            "@interface B {\n" +
+            "   String value() default \"\"\n" +
             "}",
         };
 
@@ -513,11 +513,11 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
             "p/Outer.java",
             "package p;\n" +
-            "public class Outer { public static class Inner { } }",
+            "public class Outer { public static class Inner {} }",
 
             "Main.groovy",
-            "import p.Outer as Retou\n" +
-            "@Anno(Retou.Inner)\n" +
+            "import p.Outer as Retuo\n" +
+            "@Anno(Retuo.Inner)\n" +
             "class Main {\n" +
             "}",
         };
@@ -552,17 +552,17 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
-            "@Anno\n"+
+            "@Anno\n" +
             "public class X {\n" +
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno {}\n",
         };
 
@@ -580,23 +580,23 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
-            "  @Anno\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  @Anno\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno {}\n",
         };
 
         runConformTest(sources, "success");
 
         String expectedOutput = "public static @Anno void main(public String... argv) {";
-        checkGCUDeclaration("X.groovy",expectedOutput);
+        checkGCUDeclaration("X.groovy", expectedOutput);
 
         expectedOutput =
             "  @p.Anno\n" +
@@ -610,27 +610,26 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
-            "  @Anno\n"+
-            "  String s\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  @Anno\n" +
+            "  String s\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno {}\n",
         };
 
         runConformTest(sources, "success");
 
         String expectedOutput = "private @Anno String s;";
-        checkGCUDeclaration("X.groovy",expectedOutput);
+        checkGCUDeclaration("X.groovy", expectedOutput);
 
         expectedOutput =
-            //"  // Field descriptor #11 Ljava/lang/String;\n" +
             "  @p.Anno\n" +
             "  private java.lang.String s;\n";
         checkDisassemblyFor("p/X.class", expectedOutput);
@@ -642,24 +641,23 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
-            "  @Anno\n"+
-            "  String s\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  @Anno\n" +
+            "  String s\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno {}\n",
         };
 
         runConformTest(sources, "success");
 
         String expectedOutput =
-            //"  // Field descriptor #11 Ljava/lang/String;\n" +
             "  @p.Anno\n" +
             "  private java.lang.String s;\n";
         checkDisassemblyFor("p/X.class", expectedOutput);
@@ -671,24 +669,23 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
-            "  @Anno\n"+
-            "  String s\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  @Anno\n" +
+            "  String s\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.SOURCE)\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.SOURCE)\n" +
             "@interface Anno {}\n",
         };
 
         runConformTest(sources, "success");
 
         String expectedOutput =
-            //"  // Field descriptor #9"+  descriptor number varies across compilers (1.6/1.7)
             "Ljava/lang/String;\n" +
             "  private java.lang.String s;\n";
         checkDisassemblyFor("p/X.class", expectedOutput);
@@ -700,22 +697,21 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
-            "  @Anno\n"+
-            "  String s\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  @Anno\n" +
+            "  String s\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.java",
-            "package p;\n"+
+            "package p;\n" +
             "@interface Anno {}\n",
         };
 
         runConformTest(sources, "success");
 
         String expectedOutput =
-//          "  // Field descriptor #9 "+ // descriptor number varies across compiler versions
             "Ljava/lang/String;\n" +
             "  private java.lang.String s;\n";
         checkDisassemblyFor("p/X.class", expectedOutput);
@@ -725,19 +721,19 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     public void testFieldLevelAnnotations_delegate() {
         String[] sources = {
             "Bar.groovy",
-            "class Bar {\n"+
-            " public void m() {\n"+
-            "Object o = new Other().me;\n"+
+            "class Bar {\n" +
+            " public void m() {\n" +
+            "Object o = new Other().me;\n" +
             "}}",
 
             "Other.groovy",
             "public class Other {\n" +
-            "  public @Anno Date me\n"+
+            "  public @Anno Date me\n" +
             "}\n",
 
             "Anno.java",
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno {}\n",
         };
 
@@ -757,17 +753,17 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
-            "  @Anno\n"+
-            "  X(String s) {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  @Anno\n" +
+            "  X(String s) {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno {}\n",
         };
 
@@ -787,27 +783,27 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
-            "  @Anno\n"+
-            "  public void foo(String s = \"abc\") {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  @Anno\n" +
+            "  public void foo(String s = \"abc\") {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno {}\n",
         };
 
         runConformTest(sources, "success");
 
         String expectedOutput = "public @Anno void foo() {";
-        checkGCUDeclaration("X.groovy",expectedOutput);
+        checkGCUDeclaration("X.groovy", expectedOutput);
 
         expectedOutput = "public @Anno void foo(public String s) {";
-        checkGCUDeclaration("X.groovy",expectedOutput);
+        checkGCUDeclaration("X.groovy", expectedOutput);
     }
 
     @Test
@@ -815,29 +811,29 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
-            "@Anno(Target.class)\n"+
+            "@Anno(Target.class)\n" +
             "public class X {\n" +
-            "  public void foo(String s = \"abc\") {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  public void foo(String s = \"abc\") {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno { Class<?> value(); }\n",
 
             "p/Target.java",
-            "package p;\n"+
-            "class Target { }",
+            "package p;\n" +
+            "class Target {}",
         };
 
         runConformTest(sources, "success");
 
         String expectedOutput = "public @Anno(Target.class) class X";
-        checkGCUDeclaration("X.groovy",expectedOutput);
+        checkGCUDeclaration("X.groovy", expectedOutput);
     }
 
     @Test
@@ -845,23 +841,23 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
-            "@Anno(p.Target.class)\n"+
+            "@Anno(p.Target.class)\n" +
             "public class X {\n" +
-            "  public void foo(String s = \"abc\") {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  public void foo(String s = \"abc\") {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno { Class<?> value(); }\n",
 
             "p/Target.java",
-            "package p;\n"+
-            "class Target { }",
+            "package p;\n" +
+            "class Target {}",
         };
 
         runConformTest(sources, "success");
@@ -876,28 +872,28 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
-            "  @Anno(Target.class)\n"+
-            "  public void foo(String s = \"abc\") {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  @Anno(Target.class)\n" +
+            "  public void foo(String s = \"abc\") {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno { Class<?> value(); }\n",
 
             "p/Target.java",
-            "package p;\n"+
-            "class Target { }",
+            "package p;\n" +
+            "class Target {}",
         };
 
         runConformTest(sources, "success");
 
         String expectedOutput = "public @Anno(Target.class) void foo(public String s) {";
-        checkGCUDeclaration("X.groovy",expectedOutput);
+        checkGCUDeclaration("X.groovy", expectedOutput);
     }
 
     @Test
@@ -906,28 +902,28 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
-            "  @Anno(p.Target.class)\n"+
-            "  public void foo(String s = \"abc\") {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  @Anno(p.Target.class)\n" +
+            "  public void foo(String s = \"abc\") {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno { Class<?> value(); }\n",
 
             "p/Target.java",
-            "package p;\n"+
-            "class Target { }",
+            "package p;\n" +
+            "class Target {}",
         };
 
         runConformTest(sources, "success");
 
         String expectedOutput = "public @Anno(p.Target.class) void foo(public String s) {";
-        checkGCUDeclaration("X.groovy",expectedOutput);
+        checkGCUDeclaration("X.groovy", expectedOutput);
     }
 
     @Test
@@ -936,28 +932,28 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
-            "  @Anno(Target.class)\n"+
-            "  public int foo = 5\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  @Anno(Target.class)\n" +
+            "  public int foo = 5\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno { Class<?> value(); }\n",
 
             "p/Target.java",
-            "package p;\n"+
-            "class Target { }",
+            "package p;\n" +
+            "class Target {}",
         };
 
         runConformTest(sources, "success");
 
         String expectedOutput = "public @Anno(Target.class) int foo";
-        checkGCUDeclaration("X.groovy",expectedOutput);
+        checkGCUDeclaration("X.groovy", expectedOutput);
     }
 
     @Test
@@ -966,28 +962,28 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
-            "  @Anno(p.Target.class)\n"+
-            "  public int foo = 5\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  @Anno(p.Target.class)\n" +
+            "  public int foo = 5\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno { Class<?> value(); }\n",
 
             "p/Target.java",
-            "package p;\n"+
-            "class Target { }",
+            "package p;\n" +
+            "class Target {}",
         };
 
         runConformTest(sources, "success");
 
         String expectedOutput = "public @Anno(p.Target.class) int foo";
-        checkGCUDeclaration("X.groovy",expectedOutput);
+        checkGCUDeclaration("X.groovy", expectedOutput);
     }
 
     @Test
@@ -996,17 +992,17 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
-            "  @Anno(IDontExist.class)\n"+
-            "  public int foo = 5\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  @Anno(IDontExist.class)\n" +
+            "  public int foo = 5\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno { Class<?> value(); }\n",
         };
 
@@ -1029,24 +1025,24 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
-            "@Anno(p.Foo.class)\n"+
+            "@Anno(p.Foo.class)\n" +
             "public class X {\n" +
-            "  public void foo(String s = \"abc\") {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  public void foo(String s = \"abc\") {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.groovy",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@Target([ElementType.TYPE])\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@Target([ElementType.TYPE])\n" +
             "@interface Anno { Class<?> value(); }\n",
 
             "p/Foo.groovy",
-            "package p;\n"+
-            "class Foo { }",
+            "package p;\n" +
+            "class Foo {}",
         };
 
         runConformTest(sources, "success");
@@ -1057,24 +1053,24 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
-            "@Anno(p.Foo.class)\n"+
+            "@Anno(p.Foo.class)\n" +
             "public class X {\n" +
-            "  public void foo(String s = \"abc\") {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  public void foo(String s = \"abc\") {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.groovy",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@Target([ElementType.METHOD])\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@Target([ElementType.METHOD])\n" +
             "@interface Anno { Class<?> value(); }\n",
 
             "p/Foo.groovy",
-            "package p;\n"+
-            "class Foo { }",
+            "package p;\n" +
+            "class Foo {}",
         };
 
         runNegativeTest(sources,
@@ -1091,24 +1087,24 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
-            "@Anno(p.Foo.class)\n"+
+            "@Anno(p.Foo.class)\n" +
             "public class X {\n" +
-            "  public void foo(String s = \"abc\") {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  public void foo(String s = \"abc\") {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.groovy",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@Target([ElementType.FIELD])\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@Target([ElementType.FIELD])\n" +
             "@interface Anno { Class<?> value(); }\n",
 
             "p/Foo.groovy",
-            "package p;\n"+
-            "class Foo { }",
+            "package p;\n" +
+            "class Foo {}",
         };
 
         runNegativeTest(sources,
@@ -1125,24 +1121,24 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
-            "@Anno(p.Foo.class)\n"+
+            "@Anno(p.Foo.class)\n" +
             "public class X {\n" +
-            "  public void foo(String s = \"abc\") {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  public void foo(String s = \"abc\") {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.groovy",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@Target([ElementType.FIELD,ElementType.METHOD])\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@Target([ElementType.FIELD,ElementType.METHOD])\n" +
             "@interface Anno { Class<?> value(); }\n",
 
             "p/Foo.groovy",
-            "package p;\n"+
-            "class Foo { }",
+            "package p;\n" +
+            "class Foo {}",
         };
 
         runNegativeTest(sources,
@@ -1159,24 +1155,24 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
-            "@Anno(p.Foo.class)\n"+
+            "@Anno(p.Foo.class)\n" +
             "public class X {\n" +
-            "  public void foo(String s = \"abc\") {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  public void foo(String s = \"abc\") {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.groovy",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@Target([ElementType.TYPE])\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@Target([ElementType.TYPE])\n" +
             "@interface Anno { Class<?> value(); }\n",
 
             "p/Foo.java",
-            "package p;\n"+
-            "class Foo { }",
+            "package p;\n" +
+            "class Foo {}",
         };
 
         runConformTest(sources, "success");
@@ -1187,24 +1183,24 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
-            "@Anno(p.Foo.class)\n"+
+            "@Anno(p.Foo.class)\n" +
             "public class X {\n" +
-            "  public void foo(String s = \"abc\") {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  public void foo(String s = \"abc\") {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.groovy",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@Target([ElementType.METHOD])\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@Target([ElementType.METHOD])\n" +
             "@interface Anno { Class<?> value(); }\n",
 
             "p/Foo.java",
-            "package p;\n"+
-            "class Foo { }",
+            "package p;\n" +
+            "class Foo {}",
         };
 
         runNegativeTest(sources,
@@ -1221,24 +1217,24 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
-            "@Anno(p.Foo.class)\n"+
+            "@Anno(p.Foo.class)\n" +
             "public class X {\n" +
-            "  public void foo(String s = \"abc\") {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  public void foo(String s = \"abc\") {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.groovy",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@Target([ElementType.FIELD])\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@Target([ElementType.FIELD])\n" +
             "@interface Anno { Class<?> value(); }\n",
 
             "p/Foo.groovy",
-            "package p;\n"+
-            "class Foo { }",
+            "package p;\n" +
+            "class Foo {}",
         };
 
         runNegativeTest(sources,
@@ -1255,24 +1251,24 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
-            "@Anno(p.Foo.class)\n"+
+            "@Anno(p.Foo.class)\n" +
             "public class X {\n" +
-            "  public void foo(String s = \"abc\") {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  public void foo(String s = \"abc\") {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.groovy",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@Target([ElementType.FIELD,ElementType.METHOD])\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@Target([ElementType.FIELD,ElementType.METHOD])\n" +
             "@interface Anno { Class<?> value(); }\n",
 
             "p/Foo.java",
-            "package p;\n"+
-            "class Foo { }",
+            "package p;\n" +
+            "class Foo {}",
         };
 
         runNegativeTest(sources,
@@ -1289,24 +1285,24 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
-            "@Anno(p.Foo.class)\n"+
+            "@Anno(p.Foo.class)\n" +
             "public class X {\n" +
-            "  public void foo(String s = \"abc\") {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  public void foo(String s = \"abc\") {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@Target({ElementType.TYPE})\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@Target({ElementType.TYPE})\n" +
             "@interface Anno { Class<?> value(); }\n",
 
             "p/Foo.java",
-            "package p;\n"+
-            "class Foo { }",
+            "package p;\n" +
+            "class Foo {}",
         };
 
         runConformTest(sources, "success");
@@ -1317,24 +1313,24 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
-            "@Anno(p.Foo.class)\n"+
+            "@Anno(p.Foo.class)\n" +
             "public class X {\n" +
-            "  public void foo(String s = \"abc\") {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  public void foo(String s = \"abc\") {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@Target({ElementType.METHOD})\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@Target({ElementType.METHOD})\n" +
             "@interface Anno { Class<?> value(); }\n",
 
             "p/Foo.java",
-            "package p;\n"+
-            "class Foo { }",
+            "package p;\n" +
+            "class Foo {}",
         };
 
         runNegativeTest(sources,
@@ -1351,24 +1347,24 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
-            "@Anno(p.Foo.class)\n"+
+            "@Anno(p.Foo.class)\n" +
             "public class X {\n" +
-            "  public void foo(String s = \"abc\") {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  public void foo(String s = \"abc\") {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@Target({ElementType.FIELD})\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@Target({ElementType.FIELD})\n" +
             "@interface Anno { Class<?> value(); }\n",
 
             "p/Foo.groovy",
-            "package p;\n"+
-            "class Foo { }",
+            "package p;\n" +
+            "class Foo {}",
         };
 
         runNegativeTest(sources,
@@ -1385,24 +1381,24 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
-            "@Anno(p.Foo.class)\n"+
+            "@Anno(p.Foo.class)\n" +
             "public class X {\n" +
-            "  public void foo(String s = \"abc\") {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  public void foo(String s = \"abc\") {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
-            "@Target({ElementType.FIELD,ElementType.METHOD})\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@Target({ElementType.FIELD,ElementType.METHOD})\n" +
             "@interface Anno { Class<?> value(); }\n",
 
             "p/Foo.java",
-            "package p;\n"+
-            "class Foo { }",
+            "package p;\n" +
+            "class Foo {}",
         };
 
         runNegativeTest(sources,
@@ -1419,18 +1415,18 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
-            "@Anno(String.class)\n"+
+            "@Anno(String.class)\n" +
             "public class X {\n" +
-            "  public void foo(String s = \"abc\") {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
+            "  public void foo(String s = \"abc\") {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.groovy",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno { Class<? extends Number> value(); }\n",
         };
 
@@ -1448,18 +1444,18 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "p/X.java",
             "package p;\n" +
-            "@Anno(String.class)\n"+
+            "@Anno(String.class)\n" +
             "public class X {\n" +
-            "  public void foo(String s) {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    System.out.println(\"success\");\n"+
-            "  }\n"+
+            "  public void foo(String s) {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    System.out.println(\"success\");\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno { Class<? extends Number> value(); }\n",
         };
 
@@ -1477,18 +1473,18 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "p/X.java",
             "package p;\n" +
-            "@Anno(String.class)\n"+
+            "@Anno(String.class)\n" +
             "public class X {\n" +
-            "  public void foo(String s) {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    System.out.println(\"success\");\n"+
-            "  }\n"+
+            "  public void foo(String s) {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    System.out.println(\"success\");\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.groovy",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno { Class<? extends Number> value(); }\n",
         };
 
@@ -1506,18 +1502,18 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
-            "@Anno(String.class)\n"+
+            "@Anno(String.class)\n" +
             "public class X {\n" +
-            "  public void foo(String s) {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    System.out.println(\"success\");\n"+
-            "  }\n"+
+            "  public void foo(String s) {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    System.out.println(\"success\");\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno { Class<? extends Number> value(); }\n",
         };
 
@@ -1535,18 +1531,18 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "p/X.java",
             "package p;\n" +
-            "@Anno(Integer.class)\n"+
+            "@Anno(Integer.class)\n" +
             "public class X {\n" +
-            "  public void foo(String s) {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    System.out.println(\"success\");\n"+
-            "  }\n"+
+            "  public void foo(String s) {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    System.out.println(\"success\");\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.groovy",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno { Class<? extends Number> value(); }\n",
         };
 
@@ -1558,18 +1554,18 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "p/X.java",
             "package p;\n" +
-            "@Anno(Number.class)\n"+
+            "@Anno(Number.class)\n" +
             "public class X {\n" +
-            "  public void foo(String s) {}\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    System.out.println(\"success\");\n"+
-            "  }\n"+
+            "  public void foo(String s) {}\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    System.out.println(\"success\");\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno { Class<? super Integer> value(); }\n",
         };
 
@@ -1581,17 +1577,17 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
-            "@Anno(String.class)\n"+
+            "@Anno(String.class)\n" +
             "public class X {\n" +
-            "  public static void main(String[]argv) {\n"+
-            "    System.out.println(\"success\");\n"+
-            "  }\n"+
+            "  public static void main(String[]argv) {\n" +
+            "    System.out.println(\"success\");\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.java",
-            "package p;\n"+
-            "import java.lang.annotation.*;\n"+
-            "@Retention(RetentionPolicy.RUNTIME)\n"+
+            "package p;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
             "@interface Anno { Class<? super Integer> value(); }\n",
         };
 
@@ -1609,18 +1605,18 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "p/X.java",
             "package p;\n" +
             "public class X {\n" +
-            "  public static void main(String[]argv) {\n"+
-            "    Object o = new Wibble<Integer>().run();\n"+
-            "    System.out.println(\"success\");\n"+
-            "  }\n"+
+            "  public static void main(String[]argv) {\n" +
+            "    Object o = new Wibble<Integer>().run();\n" +
+            "    System.out.println(\"success\");\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.java",
-            "package p;\n"+
+            "package p;\n" +
             "class Wibble<T extends Number & I> { Class<T> run() { return null;} }\n",
 
             "p/I.java",
-            "package p;\n"+
+            "package p;\n" +
             "interface I {}\n",
         };
 
@@ -1638,18 +1634,18 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "p/X.java",
             "package p;\n" +
             "public class X {\n" +
-            "  public static void main(String[]argv) {\n"+
-            "    Object o = new Wibble<Integer>().run();\n"+
-            "    System.out.println(\"success\");\n"+
-            "  }\n"+
+            "  public static void main(String[]argv) {\n" +
+            "    Object o = new Wibble<Integer>().run();\n" +
+            "    System.out.println(\"success\");\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.groovy",
-            "package p;\n"+
+            "package p;\n" +
             "class Wibble<T extends Number & I> { Class<T> run() { return null;} }\n",
 
             "p/I.java",
-            "package p;\n"+
+            "package p;\n" +
             "interface I {}\n",
         };
 
@@ -1667,18 +1663,18 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "p/X.groovy",
             "package p;\n" +
             "public class X {\n" +
-            "  public static void main(String[]argv) {\n"+
-            "    Object o = new Wibble<Integer>().run();\n"+
-            "    System.out.println(\"success\");\n"+
-            "  }\n"+
+            "  public static void main(String[]argv) {\n" +
+            "    Object o = new Wibble<Integer>().run();\n" +
+            "    System.out.println(\"success\");\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.groovy",
-            "package p;\n"+
+            "package p;\n" +
             "class Wibble<T extends Number & I> { Class<T> run() { return null;} }\n",
 
             "p/I.java",
-            "package p;\n"+
+            "package p;\n" +
             "interface I {}\n",
         };
 
@@ -1696,21 +1692,21 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "p/X.groovy",
             "package p;\n" +
             "public class X extends Wibble<Foo> {\n" +
-            "  public static void main(String[]argv) {\n"+
-            "    System.out.println(\"success\");\n"+
-            "  }\n"+
+            "  public static void main(String[]argv) {\n" +
+            "    System.out.println(\"success\");\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.groovy",
-            "package p;\n"+
+            "package p;\n" +
             "class Wibble<T extends Number & I> { Class<T> run() { return null;} }\n",
 
             "p/I.java",
-            "package p;\n"+
+            "package p;\n" +
             "interface I {}\n",
 
             "p/Foo.java",
-            "package p;\n"+
+            "package p;\n" +
             "class Foo implements I {}\n",
         };
 
@@ -1728,21 +1724,21 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "p/X.groovy",
             "package p;\n" +
             "public class X extends Wibble<Integer> {\n" +
-            "  public static void main(String[]argv) {\n"+
-            "    System.out.println(\"success\");\n"+
-            "  }\n"+
+            "  public static void main(String[]argv) {\n" +
+            "    System.out.println(\"success\");\n" +
+            "  }\n" +
             "}\n",
 
             "p/Anno.groovy",
-            "package p;\n"+
+            "package p;\n" +
             "class Wibble<T extends Number & I> { Class<T> run() { return null;} }\n",
 
             "p/I.java",
-            "package p;\n"+
+            "package p;\n" +
             "interface I {}\n",
 
             "p/Foo.java",
-            "package p;\n"+
+            "package p;\n" +
             "class Foo implements I {}\n",
         };
 
