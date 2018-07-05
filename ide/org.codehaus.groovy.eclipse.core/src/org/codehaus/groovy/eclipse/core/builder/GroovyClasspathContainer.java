@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,13 @@ package org.codehaus.groovy.eclipse.core.builder;
 
 import static org.eclipse.jdt.core.JavaCore.newLibraryEntry;
 
-import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.GroovyCoreActivator;
@@ -38,7 +39,6 @@ import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.internal.core.ClasspathAttribute;
 
 public class GroovyClasspathContainer implements IClasspathContainer {
@@ -65,6 +65,21 @@ public class GroovyClasspathContainer implements IClasspathContainer {
         return entries;
     }
 
+    @Override
+    public String getDescription() {
+        return DESC;
+    }
+
+    @Override
+    public int getKind() {
+        return K_APPLICATION;
+    }
+
+    @Override
+    public IPath getPath() {
+        return CONTAINER_ID;
+    }
+
     synchronized void reset() {
         entries = null;
     }
@@ -88,9 +103,15 @@ public class GroovyClasspathContainer implements IClasspathContainer {
                 // check for javadoc
                 IPath docPath = CompilerUtils.getJarInGroovyLib(jarPath.removeFileExtension().lastSegment().replace("-indy", "") + "-javadoc.jar");
 
-                cpEntries.add(newLibraryEntry(jarPath, srcPath, null, null, (docPath == null) ? null : new IClasspathAttribute[] {
-                    new ClasspathAttribute(IClasspathAttribute.JAVADOC_LOCATION_ATTRIBUTE_NAME, docPath.toFile().toURI().toURL().toString())
-                }, true));
+                List<IClasspathAttribute> attrs = new ArrayList<>();
+                if (jarPath.lastSegment().startsWith("groovy-test")) {
+                    attrs.add(newTestClasspathAttribute());
+                }
+                if (docPath != null) {
+                    attrs.add(new ClasspathAttribute(IClasspathAttribute.JAVADOC_LOCATION_ATTRIBUTE_NAME, docPath.toFile().toURI().toURL().toString()));
+                }
+
+                cpEntries.add(newLibraryEntry(jarPath, srcPath, null, null, attrs.toArray(new IClasspathAttribute[attrs.size()]), true));
             }
 
             if (!minimalLibraries && useGroovyLibs()) {
@@ -106,18 +127,6 @@ public class GroovyClasspathContainer implements IClasspathContainer {
         }
     }
 
-    public static boolean hasMinimalAttribute(IClasspathEntry entry) throws JavaModelException {
-        if (entry != null) {
-            IClasspathAttribute[] extraAttributes = entry.getExtraAttributes();
-            for (IClasspathAttribute attribute : extraAttributes) {
-                if (attribute.getName().equals(MINIMAL_ATTRIBUTE.getName())) {
-                    return Boolean.parseBoolean(attribute.getValue());
-                }
-            }
-        }
-        return false;
-    }
-
     private boolean useGroovyLibs() {
         IScopeContext projectScope = new ProjectScope(project.getProject());
         IEclipsePreferences projectNode = projectScope.getNode(GroovyCoreActivator.PLUGIN_ID);
@@ -131,31 +140,33 @@ public class GroovyClasspathContainer implements IClasspathContainer {
         }
     }
 
+    //--------------------------------------------------------------------------
+
     /**
      * Finds all the jars in the ~/.groovy/lib directory and adds them to the classpath.
      */
-    private Collection<IClasspathEntry> getGroovyJarsInDotGroovyLib() {
-        File[] files = CompilerUtils.findJarsInDotGroovyLocation();
-        final List<IClasspathEntry> newEntries = new ArrayList<>(files.length);
-        for (File file : files) {
-            IClasspathEntry entry = newLibraryEntry(new Path(file.getAbsolutePath()), null, null, null, null, true);
-            newEntries.add(entry);
+    private static Collection<IClasspathEntry> getGroovyJarsInDotGroovyLib() {
+        return Arrays.stream(CompilerUtils.findJarsInDotGroovyLocation()).map(file -> {
+            IPath path = new Path(file.getAbsolutePath());
+            IClasspathAttribute[] icas = (!file.getName().startsWith("groovy-test")
+                ? null : new IClasspathAttribute[] {newTestClasspathAttribute()});
+            return newLibraryEntry(path, null, null, null, icas, true);
+        }).collect(Collectors.toList());
+    }
+
+    public static boolean hasMinimalAttribute(IClasspathEntry entry) {
+        if (entry != null) {
+            IClasspathAttribute[] extraAttributes = entry.getExtraAttributes();
+            for (IClasspathAttribute attribute : extraAttributes) {
+                if (attribute.getName().equals(MINIMAL_ATTRIBUTE.getName())) {
+                    return Boolean.parseBoolean(attribute.getValue());
+                }
+            }
         }
-        return newEntries;
+        return false;
     }
 
-    @Override
-    public String getDescription() {
-        return DESC;
-    }
-
-    @Override
-    public int getKind() {
-        return K_APPLICATION;
-    }
-
-    @Override
-    public IPath getPath() {
-        return CONTAINER_ID;
+    private static IClasspathAttribute newTestClasspathAttribute() {
+        return new ClasspathAttribute(/*IClasspathAttribute.TEST*/"test", "true");
     }
 }
