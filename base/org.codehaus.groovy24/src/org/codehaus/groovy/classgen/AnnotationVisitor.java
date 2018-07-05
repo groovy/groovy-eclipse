@@ -287,7 +287,12 @@ public class AnnotationVisitor {
         } else {
             addError(base, exp);
         }
-        return ConstantExpression.EMPTY_EXPRESSION;
+        // GRECLIPSE edit
+        //return ConstantExpression.EMPTY_EXPRESSION;
+        ConstantExpression ret = new ConstantExpression(null);
+        ret.setSourcePosition(exp);
+        return ret;
+        // GRECLIPSE end
     }
 
     /**

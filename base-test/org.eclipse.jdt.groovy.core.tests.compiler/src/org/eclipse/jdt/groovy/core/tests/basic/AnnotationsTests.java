@@ -807,7 +807,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeLevelAnnotations_SingleMember01() {
+    public void testTypeLevelAnnotations_SingleMember1() {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -837,7 +837,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeLevelAnnotations_SingleMember02() {
+    public void testTypeLevelAnnotations_SingleMember2() {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -867,7 +867,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testMethodLevelAnnotations_SingleMember01() {
+    public void testMethodLevelAnnotations_SingleMember1() {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -897,7 +897,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testMethodLevelAnnotations_SingleMember02() {
+    public void testMethodLevelAnnotations_SingleMember2() {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -927,7 +927,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testFieldLevelAnnotations_SingleMember() {
+    public void testFieldLevelAnnotations_SingleMember1() {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -957,7 +957,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeLevelAnnotations_SelfReferential01() {
+    public void testTypeLevelAnnotations_SelfReferential1() {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -977,7 +977,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testTypeLevelAnnotations_SelfReferential02() {
+    public void testTypeLevelAnnotations_SelfReferential2() {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -997,7 +997,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/619
-    public void testTypeLevelAnnotations_SelfReferential03() {
+    public void testTypeLevelAnnotations_SelfReferential3() {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -1017,7 +1017,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testAnnotations_singleMemberAnnotationField() {
+    public void testAnnotations_singleMemberAnnotationField1() {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -1047,7 +1047,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testAnnotations_singleMemberAnnotationFailure() {
+    public void testAnnotations_singleMemberAnnotationFailure1() {
         String[] sources = {
             "p/X.groovy",
             "package p;\n" +
@@ -1077,6 +1077,48 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "\t@Anno(IDontExist.class)\n" +
             "\t      ^^^^^^^^^^^^^^^^\n" +
             "Groovy:Only classes and closures can be used for attribute 'value' in @p.Anno\n" +
+            "----------\n");
+    }
+
+    @Test
+    public void testAnnotations_singleMemberAnnotationFailure2() {
+        String[] sources = {
+            "p/X.groovy",
+            "package p;\n" +
+            "public class X {\n" +
+            "  @SuppressWarnings(DoesNot.EXIST)\n" +
+            "  static void main(String... args) {\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in p\\X.groovy (at line 3)\n" +
+            "\t@SuppressWarnings(DoesNot.EXIST)\n" +
+            "\t                  ^^^^^^^\n" +
+            "DoesNot cannot be resolved\n" +
+            "----------\n" +
+            "2. ERROR in p\\X.groovy (at line 3)\n" +
+            "\t@SuppressWarnings(DoesNot.EXIST)\n" +
+            "\t                  ^^^^^^^\n" +
+            "Groovy:unable to find class 'DoesNot.EXIST' for annotation attribute constant\n" +
+            "----------\n" +
+            "3. ERROR in p\\X.groovy (at line 3)\n" +
+            "\t@SuppressWarnings(DoesNot.EXIST)\n" +
+            "\t                  ^^^^^^^\n" +
+            "Groovy:Apparent variable 'DoesNot' was found in a static scope but doesn't refer to a local variable, static field or class. Possible causes:\n" +
+            "----------\n" +
+            "4. ERROR in p\\X.groovy (at line 3)\n" +
+            "\t@SuppressWarnings(DoesNot.EXIST)\n" +
+            "\t                  ^^^^^^^^^^^^^\n" +
+            "Groovy:Expected 'DoesNot.EXIST' to be an inline constant of type java.lang.String not a property expression in @java.lang.SuppressWarnings\n" +
+            "----------\n" +
+            // this error was associated with line -1
+            "5. ERROR in p\\X.groovy (at line 3)\n" +
+            "\t@SuppressWarnings(DoesNot.EXIST)\n" +
+            "\t                  ^^^^^^^^^^^^^\n" +
+            "Groovy:Attribute 'value' should have type 'java.lang.String'; but found type 'java.lang.Object' in @java.lang.SuppressWarnings\n" +
             "----------\n");
     }
 
