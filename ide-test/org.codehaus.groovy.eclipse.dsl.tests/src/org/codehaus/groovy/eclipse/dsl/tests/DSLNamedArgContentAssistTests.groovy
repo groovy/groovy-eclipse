@@ -21,7 +21,6 @@ import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.codehaus.groovy.eclipse.codeassist.tests.CompletionTestSuite
 import org.codehaus.groovy.eclipse.dsl.DSLPreferencesInitializer
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
-import org.eclipse.core.resources.IProject
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
@@ -39,9 +38,8 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     void setUp() {
         assumeTrue(!GroovyDSLCoreActivator.default.isDSLDDisabled())
         addClasspathContainer(GroovyDSLCoreActivator.CLASSPATH_CONTAINER_ID)
-        withProject { IProject project ->
+        withProject { project ->
             GroovyDSLCoreActivator.default.contextStoreManager.initialize(project, true)
-          //GroovyDSLCoreActivator.default.contextStoreManager.ignoreProject(project)
         }
 
         setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'true')
@@ -55,16 +53,79 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
         addPlainText(contents, 'MyDsld.dsld')
     }
 
-    //
+    //--------------------------------------------------------------------------
 
     @Test
-    void testNamedArgs1() {
+    void testNamedParams() {
         createDSL '''\
             contribute(currentType()) {
-              method name:"flar", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true
+              method name: 'flar', namedParams: [aaa: Integer, bbb: Boolean, ccc: String]
+            }
+            '''.stripIndent()
+
+        String contents = 'flar()'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '('))
+        proposalExists(proposals, 'aaa : __', 1)
+        proposalExists(proposals, 'bbb : __', 1)
+        proposalExists(proposals, 'ccc : __', 1)
+    }
+
+    @Test
+    void testOptionalParams() {
+        createDSL '''\
+            contribute(currentType()) {
+              method name: 'flar', optionalParams: [aaa: Integer, bbb: Boolean, ccc: String]
+            }
+            '''.stripIndent()
+
+        String contents = 'flar()'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '('))
+        proposalExists(proposals, 'aaa : __', 1)
+        proposalExists(proposals, 'bbb : __', 1)
+        proposalExists(proposals, 'ccc : __', 1)
+    }
+
+    @Test
+    void testNamedAndOptionalParams() {
+        createDSL '''\
+            contribute(currentType()) {
+              method name: 'flar', namedParams: [aaa: Integer], optionalParams: [bbb: Boolean, ccc: String]
+            }
+            '''.stripIndent()
+
+        String contents = 'flar()'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '('))
+        proposalExists(proposals, 'aaa : __', 1)
+        proposalExists(proposals, 'bbb : __', 1)
+        proposalExists(proposals, 'ccc : __', 1)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/623
+    void testNormalAndOptionalParams() {
+        createDSL '''\
+            contribute(currentType()) {
+              method name: 'flar', params: [aaa: Integer], optionalParams: [bbb: Boolean, ccc: String]
+            }
+            '''.stripIndent()
+
+        checkUniqueProposal('fla', 'fla', 'flar(Integer aaa)', 'flar(0)')
+
+        String contents = 'flar()'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '('))
+        proposalExists(proposals, 'aaa : __', 0)
+        proposalExists(proposals, 'bbb : __', 1)
+        proposalExists(proposals, 'ccc : __', 1)
+    }
+
+    @Test
+    void testUseNamedArgs1() {
+        createDSL '''\
+            contribute(currentType()) {
+              method name: 'flar', params: [aaa: Integer, bbb: Boolean, ccc: String], useNamedArgs: true
             }
             '''.stripIndent()
         String contents = 'flar()'
+
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '('))
         proposalExists(proposals, 'aaa : __', 1)
         proposalExists(proposals, 'bbb : __', 1)
@@ -73,13 +134,14 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
-    void testNoNamedArgs1() {
+    void testUseNamedArgs1a() {
         createDSL '''\
             contribute(currentType()) {
-              method name:"flar", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:false
+              method name: 'flar', params: [aaa: Integer, bbb: Boolean, ccc: String], useNamedArgs: false
             }
             '''.stripIndent()
         String contents = 'flar()'
+
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '('))
         proposalExists(proposals, 'aaa : __', 0)
         proposalExists(proposals, 'bbb : __', 0)
@@ -88,13 +150,14 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
-    void testNamedArgs2() {
+    void testUseNamedArgs2() {
         createDSL '''\
             contribute(currentType()) {
-              method name:"flar", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true
+              method name: 'flar', params: [aaa: Integer, bbb: Boolean, ccc: String], useNamedArgs: true
             }
             '''.stripIndent()
         String contents = 'flar(aaa:__, )'
+
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '('))
         proposalExists(proposals, 'aaa : __', 0)
         proposalExists(proposals, 'bbb : __', 1)
@@ -103,13 +166,14 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
-    void testNamedArgs3() {
+    void testUseNamedArgs3() {
         createDSL '''\
             contribute(currentType()) {
-              method name:"flar", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true
+              method name: 'flar', params: [aaa: Integer, bbb: Boolean, ccc: String], useNamedArgs: true
             }
             '''.stripIndent()
         String contents = 'flar(aaa:__, )'
+
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, ','))
         proposalExists(proposals, 'aaa : __', 0)
         proposalExists(proposals, 'bbb : __', 1)
@@ -118,12 +182,13 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
-    void testNamedArgs4() {
+    void testUseNamedArgs4() {
         createDSL '''\
             contribute(currentType()) {
-              method name:"flar", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true
+              method name: 'flar', params: [aaa: Integer, bbb: Boolean, ccc: String], useNamedArgs: true
             }
             '''.stripIndent()
+
         String contents = 'flar(aaa:__, bbb:__, )'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, ','))
         proposalExists(proposals, 'aaa : __', 0)
@@ -133,12 +198,13 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
-    void testNamedArgs5() {
+    void testUseNamedArgs5() {
         createDSL '''\
             contribute(currentType()) {
-              method name:"flar", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true
+              method name: 'flar', params: [aaa: Integer, bbb: Boolean, ccc: String], useNamedArgs: true
             }
             '''.stripIndent()
+
         String contents = 'flar(aaa:__, bbb:__, ccc:__)'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, ','))
         proposalExists(proposals, 'aaa : __', 0)
@@ -148,12 +214,13 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
-    void testNoNamedArgs6() {
+    void testUseNamedArgs6() {
         createDSL '''\
             contribute(currentType()) {
-              method name:"flar", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:false
+              method name: 'flar', params: [aaa: Integer, bbb: Boolean, ccc: String], useNamedArgs: false
             }
             '''.stripIndent()
+
         String contents = 'flar '
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, ' '))
         proposalExists(proposals, 'aaa : __', 0)
@@ -163,57 +230,13 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
-    void testOptionalArgs1() {
+    void testUseNamedArgs7() {
         createDSL '''\
             contribute(currentType()) {
-              method name:"flar", optionalParams:[aaa:Integer, bbb:Boolean, ccc:String]
+              method name: 'flar', params: [aaa: Integer, bbb: Boolean, ccc: String], useNamedArgs: true
             }
             '''.stripIndent()
-        String contents = 'flar( )'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '( '))
-        proposalExists(proposals, 'aaa : __', 1)
-        proposalExists(proposals, 'bbb : __', 1)
-        proposalExists(proposals, 'ccc : __', 1)
-        proposalExists(proposals, 'flar', 1)
-    }
 
-    @Test
-    void testOptionalArgs2() {
-        createDSL '''\
-            contribute(currentType()) {
-              method name:"flar", namedParams:[aaa:Integer, bbb:Boolean, ccc:String]
-            }
-            '''.stripIndent()
-        String contents = 'flar( )'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '( '))
-        proposalExists(proposals, 'aaa : __', 1)
-        proposalExists(proposals, 'bbb : __', 1)
-        proposalExists(proposals, 'ccc : __', 1)
-        proposalExists(proposals, 'flar', 1)
-    }
-
-    @Test
-    void testOptionalArgs3() {
-        createDSL '''\
-            contribute(currentType()) {
-              method name:"flar", namedParams:[aaa:Integer], optionalParams: [bbb:Boolean, ccc:String]
-            }
-            '''.stripIndent()
-        String contents = 'flar( )'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '( '))
-        proposalExists(proposals, 'aaa : __', 1)
-        proposalExists(proposals, 'bbb : __', 1)
-        proposalExists(proposals, 'ccc : __', 1)
-        proposalExists(proposals, 'flar', 1)
-    }
-
-    @Test
-    void testNamedArgs7() {
-        createDSL '''\
-            contribute(currentType()) {
-              method name:"flar", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true
-            }
-            '''.stripIndent()
         String contents = '''\
             flar aaa:__,
             need_this_here_so_parser_wont_break
@@ -226,12 +249,13 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
-    void testNamedArgs8() {
+    void testUseNamedArgs8() {
         createDSL '''\
             contribute(currentType()) {
-              method name:"flar", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true
+              method name: 'flar', params: [aaa: Integer, bbb: Boolean, ccc: String], useNamedArgs: true
             }
             '''.stripIndent()
+
         String contents = '''\
             flar aaa:__,
             need_this_here_so_parser_wont_break
@@ -244,12 +268,27 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
+    void testUseNamedArgs9() {
+        createDSL '''\
+            contribute(currentType()) {
+              method name: 'flar', params: [one: Integer, two: Closure], useNamedArgs: true
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            fla
+            '''.stripIndent()
+        checkUniqueProposal(contents, 'fla', 'flar(Integer one, Closure two)', 'flar(one: 0) {  }')
+    }
+
+    @Test
     void testParamGuessing1() {
         createDSL '''\
             contribute(currentType()) {
               method name:"flar", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true
             }
             '''.stripIndent()
+
         String contents = '''\
             String xxx
             int yyy
@@ -266,6 +305,7 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
               method name:"flar", params:[aaa:Integer, bbb:Boolean, ccc:String], useNamedArgs:true
             }
             '''.stripIndent()
+
         String contents = '''\
             String xxx
             boolean zzz
@@ -275,85 +315,6 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
             }
             '''.stripIndent()
         checkProposalChoices(contents, 'flar(', 'aaa', 'aaa: __', 'iii', 'yyy', '0')
-    }
-
-    // tests application of closures with and without named parameters
-    private static final String CLOSURE_DSLD = '''\
-        contribute(currentType('Clos')) {
-          method name: 'test1', params: [op:Closure]
-          method name: 'test2', params: [first: String, op:Closure]
-          method name: 'test3', namedParams: [op:Closure]
-          method name: 'test4', namedParams: [first: String, op:Closure]
-          method name: 'test5', params: [first: String], namedParams: [op:Closure]
-          method name: 'test6', namedParams: [first: String], params: [op:Closure]
-          method name: 'test7', namedParams: [first: String, other:String], params: [op:Closure]
-          method name: 'test8', namedParams: [first: String], params: [other:String, op:Closure]
-          method name: 'test9', namedParams: [first: String], params: [other:String, op:Closure, other2:String]
-          method name: 'test0', namedParams: [first: String], params: [other:String, op:Closure, other2:String, op2:Closure]
-        }
-        '''.stripIndent()
-    private static final String closureContents = '''\
-        class Clos { }
-        new Clos().test'''.stripIndent()
-
-    @Test
-    void testClostureOp1() {
-        createDSL(CLOSURE_DSLD)
-        checkProposalApplicationNonType(closureContents, closureContents + '1 {  }', closureContents.length(), 'test1')
-    }
-
-    @Test
-    void testClostureOp2() {
-        createDSL(CLOSURE_DSLD)
-        checkProposalApplicationNonType(closureContents, closureContents + '2("") {  }', closureContents.length(), 'test2')
-    }
-
-    @Test
-    void testClostureOp3() {
-        createDSL(CLOSURE_DSLD)
-        checkProposalApplicationNonType(closureContents, closureContents + '3(op: {  })', closureContents.length(), 'test3')
-    }
-
-    @Test
-    void testClostureOp4() {
-        createDSL(CLOSURE_DSLD)
-        checkProposalApplicationNonType(closureContents, closureContents + '4(first: "", op: {  })', closureContents.length(), 'test4')
-    }
-
-    @Test
-    void testClostureOp5() {
-        createDSL(CLOSURE_DSLD)
-        checkProposalApplicationNonType(closureContents, closureContents + '5(op: {  }, "")', closureContents.length(), 'test5')
-    }
-
-    @Test
-    void testClostureOp6() {
-        createDSL(CLOSURE_DSLD)
-        checkProposalApplicationNonType(closureContents, closureContents + '6(first: "") {  }', closureContents.length(), 'test6')
-    }
-
-    @Test
-    void testClostureOp7() {
-        createDSL(CLOSURE_DSLD)
-        checkProposalApplicationNonType(closureContents, closureContents + '7(first: "", other: "") {  }', closureContents.length(), 'test7')
-    }
-
-    @Test
-    void testClostureOp8() {
-        createDSL(CLOSURE_DSLD)
-        checkProposalApplicationNonType(closureContents, closureContents + '8(first: "", "") {  }', closureContents.length(), 'test8')
-    }
-
-    @Test
-    void testClostureOp9() {
-        createDSL(CLOSURE_DSLD)
-        checkProposalApplicationNonType(closureContents, closureContents + '9(first: "", "", {  }, "")', closureContents.length(), 'test9')
-    }
-
-    @Test
-    void testClostureOp0() {
-        createDSL(CLOSURE_DSLD)
-        checkProposalApplicationNonType(closureContents, closureContents + '0(first: "", "", {  }, "") {  }', closureContents.length(), 'test0')
     }
 
     @Test //https://github.com/groovy/groovy-eclipse/issues/613
@@ -404,5 +365,82 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
         assertProposalSignature(proposal, "bar(float named1, double named2, int reg1, long reg2, Closure closure) : void")
     }
 
+    //--------------------------------------------------------------------------
 
+    // tests application of closures with and without named parameters
+    private static final String CLOSURE_DSLD = '''\
+        contribute(currentType('Type')) {
+          method name: 'test1', params: [op: Closure]
+          method name: 'test2', params: [first: String, op: Closure]
+          method name: 'test3', namedParams: [op: Closure]
+          method name: 'test4', namedParams: [first: String, op: Closure]
+          method name: 'test5', params: [first: String], namedParams: [op: Closure]
+          method name: 'test6', namedParams: [first: String], params: [op: Closure]
+          method name: 'test7', namedParams: [first: String, other: String], params: [op: Closure]
+          method name: 'test8', namedParams: [first: String], params: [other: String, op: Closure]
+          method name: 'test9', namedParams: [first: String], params: [other: String, op: Closure, other2: String]
+          method name: 'test0', namedParams: [first: String], params: [other: String, op: Closure, other2: String, op2: Closure]
+        }
+        '''.stripIndent()
+    private static final String CLOSURE_TEST = 'class Type { }\n new Type().test'
+
+    @Test
+    void testClostureOp1() {
+        createDSL(CLOSURE_DSLD)
+        checkProposalApplicationNonType(CLOSURE_TEST, CLOSURE_TEST + '1 {  }', CLOSURE_TEST.length(), 'test1')
+    }
+
+    @Test
+    void testClostureOp2() {
+        createDSL(CLOSURE_DSLD)
+        checkProposalApplicationNonType(CLOSURE_TEST, CLOSURE_TEST + '2("") {  }', CLOSURE_TEST.length(), 'test2')
+    }
+
+    @Test
+    void testClostureOp3() {
+        createDSL(CLOSURE_DSLD)
+        checkProposalApplicationNonType(CLOSURE_TEST, CLOSURE_TEST + '3(op: {  })', CLOSURE_TEST.length(), 'test3')
+    }
+
+    @Test
+    void testClostureOp4() {
+        createDSL(CLOSURE_DSLD)
+        checkProposalApplicationNonType(CLOSURE_TEST, CLOSURE_TEST + '4(first: "", op: {  })', CLOSURE_TEST.length(), 'test4')
+    }
+
+    @Test
+    void testClostureOp5() {
+        createDSL(CLOSURE_DSLD)
+        checkProposalApplicationNonType(CLOSURE_TEST, CLOSURE_TEST + '5(op: {  }, "")', CLOSURE_TEST.length(), 'test5')
+    }
+
+    @Test
+    void testClostureOp6() {
+        createDSL(CLOSURE_DSLD)
+        checkProposalApplicationNonType(CLOSURE_TEST, CLOSURE_TEST + '6(first: "") {  }', CLOSURE_TEST.length(), 'test6')
+    }
+
+    @Test
+    void testClostureOp7() {
+        createDSL(CLOSURE_DSLD)
+        checkProposalApplicationNonType(CLOSURE_TEST, CLOSURE_TEST + '7(first: "", other: "") {  }', CLOSURE_TEST.length(), 'test7')
+    }
+
+    @Test
+    void testClostureOp8() {
+        createDSL(CLOSURE_DSLD)
+        checkProposalApplicationNonType(CLOSURE_TEST, CLOSURE_TEST + '8(first: "", "") {  }', CLOSURE_TEST.length(), 'test8')
+    }
+
+    @Test
+    void testClostureOp9() {
+        createDSL(CLOSURE_DSLD)
+        checkProposalApplicationNonType(CLOSURE_TEST, CLOSURE_TEST + '9(first: "", "", {  }, "")', CLOSURE_TEST.length(), 'test9')
+    }
+
+    @Test
+    void testClostureOp0() {
+        createDSL(CLOSURE_DSLD)
+        checkProposalApplicationNonType(CLOSURE_TEST, CLOSURE_TEST + '0(first: "", "", {  }, "") {  }', CLOSURE_TEST.length(), 'test0')
+    }
 }

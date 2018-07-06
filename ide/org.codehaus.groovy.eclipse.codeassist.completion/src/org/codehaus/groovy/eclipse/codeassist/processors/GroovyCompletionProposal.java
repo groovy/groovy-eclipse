@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.codeassist.processors;
+
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -57,10 +59,18 @@ public class GroovyCompletionProposal extends InternalCompletionProposal {
      */
     private char[][] regularParameterTypeNames = CharOperation.NO_CHAR_CHAR;
 
-    private boolean useExtraParameters = false;
+    private boolean useExtraParameters;
 
     public GroovyCompletionProposal(int kind, int completionLocation) {
         super(kind, completionLocation);
+    }
+
+    @Override
+    public char[][] findParameterNames(IProgressMonitor monitor) {
+        if (!asBoolean(optionalParameterNames)) {
+            return super.findParameterNames(monitor);
+        }
+        return CharOperation.arrayConcat(namedParameterNames, regularParameterNames);
     }
 
     public char[][] getNamedParameterNames() {
@@ -95,6 +105,10 @@ public class GroovyCompletionProposal extends InternalCompletionProposal {
         }
     }
 
+    public boolean hasParameters() {
+        return asBoolean(super.getParameterTypeNames());
+    }
+
     @Override
     public void setAccessibility(int kind) {
         super.setAccessibility(kind);
@@ -105,8 +119,18 @@ public class GroovyCompletionProposal extends InternalCompletionProposal {
     }
 
     @Override
+    public void setDeclarationPackageName(char[] declarationPackageName) {
+        super.setDeclarationPackageName(declarationPackageName);
+    }
+
+    @Override
     public void setDeclarationTypeName(char[] declarationTypeName) {
         super.setDeclarationTypeName(declarationTypeName);
+    }
+
+    @Override
+    protected void setIsContructor(boolean isConstructor) {
+        super.setIsContructor(isConstructor);
     }
 
     public void setNamedParameterNames(char[][] namedParameterNames) {
@@ -155,24 +179,5 @@ public class GroovyCompletionProposal extends InternalCompletionProposal {
     @Override
     public void setTypeName(char[] typeName) {
         super.setTypeName(typeName);
-    }
-
-    @Override
-    public void setDeclarationPackageName(char[] declarationPackageName) {
-        super.setDeclarationPackageName(declarationPackageName);
-    }
-
-    @Override
-    protected void setIsContructor(boolean isConstructor) {
-        super.setIsContructor(isConstructor);
-    }
-
-    @Override
-    public char[][] findParameterNames(IProgressMonitor monitor) {
-        return super.findParameterNames(monitor);
-    }
-
-    public boolean hasParameters() {
-        return super.getParameterTypeNames() != null && super.getParameterTypeNames().length > 0;
     }
 }

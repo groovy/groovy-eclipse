@@ -313,6 +313,182 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         applyProposalAndCheck(proposal, contents.replace('val.fl', 'val.flart val'))
     }
 
+    @Test
+    void testCommandChain1() {
+        createDsld '''\
+            contribute(currentType('Inner')) {
+              method name: 'flart', type: 'Inner', noParens: true
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            class Inner { }
+            def val = new Inner()
+            val.fla
+            '''.stripIndent()
+        ICompletionProposal proposal = checkUniqueProposal(contents, '.fla', 'flart', 'flart()')
+        applyProposalAndCheck(proposal, contents.replace('val.fla', 'val.flart()'))
+    }
+
+    @Test
+    void testCommandChain2() {
+        createDsld '''\
+            contribute(currentType('Inner')) {
+              method name: 'flart', type: 'Inner', noParens: true
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            class Inner { }
+            def val = new Inner()
+            val.flart foo fl
+            '''.stripIndent()
+        ICompletionProposal proposal = checkUniqueProposal(contents, ' fl', 'flart', 'flart()')
+        applyProposalAndCheck(proposal, contents.replace(' fl', ' flart()'))
+    }
+
+    @Test
+    void testCommandChain3() {
+        createDsld '''\
+            contribute(currentType('Inner')) {
+              method name: 'flart', type: 'Inner', noParens: true
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            class Inner { }
+            def val = new Inner()
+            val.flart foo, baz fl
+            '''.stripIndent()
+        ICompletionProposal proposal = checkUniqueProposal(contents, ' fl', 'flart', 'flart()')
+        applyProposalAndCheck(proposal, contents.replace(' fl', ' flart()'))
+    }
+
+    @Test
+    void testCommandChain4() {
+        createDsld '''\
+            contribute(currentType('Inner')) {
+              method name: 'flart', type: 'Inner', params: [a: Integer], noParens: true
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            class Inner { }
+            def val = new Inner()
+            val.flart foo, baz fl
+            '''.stripIndent()
+
+        ICompletionProposal proposal = checkUniqueProposal(contents, ' fl', 'flart', 'flart 0')
+        applyProposalAndCheck(proposal, contents.replace(' fl', ' flart 0'))
+    }
+
+    @Test
+    void testCommandChain5() {
+        createDsld '''\
+            contribute(currentType('Inner')) {
+              method name: 'flart', type: 'Inner', params: [a: Integer, b: String], noParens: true
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            class Inner { }
+            def val = new Inner()
+            val.flart foo, baz fl
+            '''.stripIndent()
+        ICompletionProposal proposal = checkUniqueProposal(contents, ' fl', 'flart', 'flart 0, ""')
+        applyProposalAndCheck(proposal, contents.replace(' fl', ' flart 0, ""'))
+    }
+
+    @Test
+    void testConfigScript1() {
+        createDsld '''\
+            contribute(isScript() & enclosingCall(name('withConfig') & hasArgument('configuration')) & inClosure() & isThisType()) {
+              method(name: 'imports', type: void, params: [block: Closure])
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            withConfig(configuration) {
+              // here
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.indexOf('// here'))
+        proposalExists(proposals, 'imports(Closure block)', 1)
+    }
+
+    @Test
+    void testConfigScript1a() {
+        createDsld '''\
+            contribute(isScript() & enclosingCall(name('withConfig') & hasArgument('configuration')) & inClosure() & isThisType()) {
+              method(name: 'imports', type: void, params: [block: Closure])
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            withConfig(configuration) {
+              x.i
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'x.i'))
+        proposalExists(proposals, 'imports(Closure block)', 0)
+    }
+
+    @Test
+    void testConfigScript2() {
+        createDsld '''\
+            |def configBlock = { -> isScript() & enclosingCall(name('withConfig') & hasArgument('configuration')) & inClosure() & isThisType() }
+            |
+            |contribute(configBlock()) {
+            |  method(name: 'imports', type: void, params: [block: Closure])
+            |}
+            |
+            |contribute(configBlock() & enclosingCallName('imports')) {
+            |  setDelegateType('org.codehaus.groovy.control.customizers.builder.ImportCustomizerFactory.ImportHelper')
+            |}
+            |'''.stripMargin()
+
+        String contents = '''\
+            withConfig(configuration) {
+              imports {
+                star 'groovy.transform'
+                norm
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'norm'))
+        proposalExists(proposals, 'normal', 2)
+    }
+
+    @Test
+    void testConfigScript3() {
+        createDsld '''\
+            |def configBlock = { -> isScript() & enclosingCall(name('withConfig') & hasArgument('configuration')) & inClosure() & isThisType() }
+            |
+            |contribute(configBlock()) {
+            |  method(name: 'imports', type: void, params: [block: Closure])
+            |}
+            |
+            |contribute(configBlock() & enclosingCallName('imports')) {
+            |  setDelegateType('org.codehaus.groovy.control.customizers.builder.ImportCustomizerFactory.ImportHelper')
+            |}
+            |'''.stripMargin()
+
+        String contents = '''\
+            withConfig(configuration) {
+              source(basenameValidator: { !!(it =~ /.src.test./) }) {
+                imports {
+                  normal 'org.junit.Test'
+                  st
+                }
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'st'))
+        proposalExists(proposals, 'staticMember', 2)
+        proposalExists(proposals, 'staticStar', 2)
+        proposalExists(proposals, 'star', 1)
+    }
+
     @Test // GRECLIPSE-1324
     void testEmptyClosure1() {
         createDsld '''\
@@ -356,182 +532,6 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         // should see proposals from String, not Integer
         proposalExists(proposals, 'toUpperCase()', 1)
         proposalExists(proposals, 'toHexString()', 0)
-    }
-
-    @Test
-    void testCommandChain1() {
-        createDsld '''\
-            contribute(currentType('Inner')) {
-              method name:'flart', noParens:true, type:'Inner'
-            }
-            '''.stripIndent()
-
-        String contents = '''\
-            class Inner { }
-            def val = new Inner()
-            val.fla
-            '''.stripIndent()
-        ICompletionProposal proposal = checkUniqueProposal(contents, '.fla', 'flart', 'flart()')
-        applyProposalAndCheck(proposal, contents.replace('val.fla', 'val.flart()'))
-    }
-
-    @Test
-    void testCommandChain2() {
-        createDsld '''\
-            contribute(currentType('Inner')) {
-              method name:'flart', noParens:true, type:'Inner'
-            }
-            '''.stripIndent()
-
-        String contents = '''\
-            class Inner { }
-            def val = new Inner()
-            val.flart foo fl
-            '''.stripIndent()
-        ICompletionProposal proposal = checkUniqueProposal(contents, ' fl', 'flart', 'flart()')
-        applyProposalAndCheck(proposal, contents.replace(' fl', ' flart()'))
-    }
-
-    @Test
-    void testCommandChain3() {
-        createDsld '''\
-            contribute(currentType('Inner')) {
-              method name:'flart', noParens:true, type:'Inner'
-            }
-            '''.stripIndent()
-
-        String contents = '''\
-            class Inner { }
-            def val = new Inner()
-            val.flart foo, baz fl
-            '''.stripIndent()
-        ICompletionProposal proposal = checkUniqueProposal(contents, ' fl', 'flart', 'flart()')
-        applyProposalAndCheck(proposal, contents.replace(' fl', ' flart()'))
-    }
-
-    @Test
-    void testCommandChain4() {
-        createDsld '''\
-            contribute(currentType('Inner')) {
-              method name:'flart', noParens:true, type:'Inner', params:[a:Integer]
-            }
-            '''.stripIndent()
-
-        String contents = '''\
-            class Inner { }
-            def val = new Inner()
-            val.flart foo, baz fl
-            '''.stripIndent()
-
-        ICompletionProposal proposal = checkUniqueProposal(contents, ' fl', 'flart', 'flart 0')
-        applyProposalAndCheck(proposal, contents.replace(' fl', ' flart 0'))
-    }
-
-    @Test
-    void testCommandChain5() {
-        createDsld '''\
-            contribute(currentType('Inner')) {
-              method name:'flart', noParens:true, type:'Inner', params:[a:Integer, b:String]
-            }
-            '''.stripIndent()
-
-        String contents = '''\
-            class Inner { }
-            def val = new Inner()
-            val.flart foo, baz fl
-            '''.stripIndent()
-        ICompletionProposal proposal = checkUniqueProposal(contents, ' fl', 'flart', 'flart 0, ""')
-        applyProposalAndCheck(proposal, contents.replace(' fl', ' flart 0, ""'))
-    }
-
-    @Test
-    void testConfigScript1() {
-        createDsld '''\
-            contribute(enclosingCall(name('withConfig') & hasArgument('configuration')) & inClosure() & isThisType()) {
-              method(name:'imports', type:void, params:[block:Closure])
-            }
-            '''.stripIndent()
-
-        String contents = '''\
-            withConfig(configuration) {
-              // here
-            }
-            '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.indexOf('// here'))
-        proposalExists(proposals, 'imports(Closure block)', 1)
-    }
-
-    @Test
-    void testConfigScript1a() {
-        createDsld '''\
-            contribute(enclosingCall(name('withConfig') & hasArgument('configuration')) & inClosure() & isThisType()) {
-              method(name:'imports', type:void, params:[block:Closure])
-            }
-            '''.stripIndent()
-
-        String contents = '''\
-            withConfig(configuration) {
-              x.i
-            }
-            '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'x.i'))
-        proposalExists(proposals, 'imports(Closure block)', 0)
-    }
-
-    @Test
-    void testConfigScript2() {
-        createDsld '''\
-            |def configBlock = { -> enclosingCall(name('withConfig') & hasArgument('configuration')) & inClosure() & isThisType() }
-            |
-            |contribute(configBlock()) {
-            |  method(name:'imports', type:void, params:[block:Closure])
-            |}
-            |
-            |contribute(configBlock() & enclosingCallName('imports')) {
-            |  setDelegateType('org.codehaus.groovy.control.customizers.builder.ImportCustomizerFactory.ImportHelper')
-            |}
-            |'''.stripMargin()
-
-        String contents = '''\
-            withConfig(configuration) {
-              imports {
-                star 'groovy.transform'
-                norm
-              }
-            }
-            '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'norm'))
-        proposalExists(proposals, 'normal', 2)
-    }
-
-    @Test
-    void testConfigScript3() {
-        createDsld '''\
-            |def configBlock = { -> enclosingCall(name('withConfig') & hasArgument('configuration')) & inClosure() & isThisType() }
-            |
-            |contribute(configBlock()) {
-            |  method(name:'imports', type:void, params:[block:Closure])
-            |}
-            |
-            |contribute(configBlock() & enclosingCallName('imports')) {
-            |  setDelegateType('org.codehaus.groovy.control.customizers.builder.ImportCustomizerFactory.ImportHelper')
-            |}
-            |'''.stripMargin()
-
-        String contents = '''\
-            withConfig(configuration) {
-              source(basenameValidator: { !!(it =~ /.src.test./) }) {
-                imports {
-                  normal 'org.junit.Test'
-                  st
-                }
-              }
-            }
-            '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'st'))
-        proposalExists(proposals, 'staticMember', 2)
-        proposalExists(proposals, 'staticStar', 2)
-        proposalExists(proposals, 'star', 1)
     }
 
     //--------------------------------------------------------------------------
