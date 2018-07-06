@@ -434,10 +434,36 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
     @Override
     public Point getSelection(IDocument document) {
+        if (fPreferences.bBuilderMethod && onlyParamIsClosure()) {
+            //for a builder-like methods with no other parameters immediately place cursor between closure brackets and do not select anything
+            return new Point(getReplacementOffset() + computeCursorPosition(), 0);
+        }
         if (fSelectedRegion != null) {
             return new Point(fSelectedRegion.getOffset(), fSelectedRegion.getLength());
         }
         return super.getSelection(document);
+    }
+
+    @Override
+    protected int computeCursorPosition() {
+        int pos = super.computeCursorPosition();
+        if (fPreferences.bBuilderMethod && lastParamIsClosure()) {
+            //for builder-like methods, put cursor in a middle of closure's brackets
+            pos--;
+            if (fPreferences.isEnabled(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_BEFORE_CLOSING_BRACE_IN_ARRAY_INITIALIZER)) {
+                pos--;
+            }
+        }
+        return pos;
+    }
+
+    @Override
+    protected boolean needsLinkedMode() {
+        if (fPreferences.bBuilderMethod && onlyParamIsClosure()) {
+            //for builder-like methods with a single parameter of Closure type, immediately place cursor inside a block: foo { | }
+            return false;
+        }
+        return super.needsLinkedMode();
     }
 
     @Override
@@ -451,7 +477,9 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                     group.addPosition(new LinkedPosition(document, baseOffset + fContextInformationPosition, 0));
                     model.addGroup(group);
                 } else {
-                    for (int i = 0, n = fPositions.size(); i < n; i += 1) {
+                    //for builder-like methods with last parameter of closure type, exclude it from the linking mode
+                    int n = fPreferences.bBuilderMethod && lastParamIsClosure()? fPositions.size() - 1 : fPositions.size();
+                    for (int i = 0; i < n; i += 1) {
                         Position position = fPositions.get(i);
                         // change offset from relative to absolute
                         position.setOffset(baseOffset + position.getOffset());
@@ -502,9 +530,11 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
             char[] name = (i < npc ? namedParameterNames[i] : positionalParameterNames[i - npc]);
             char[] type = parameterTypes[i];
+            boolean isClosure = CharOperation.equals(CLOSURE_TYPE_SIGNATURE, type, 1, type.length);
+            boolean isTrailingClosure = isClosure && i == n - 1;
 
             ICompletionProposal[] vals;
-            if (guess) {
+            if (guess && (!fPreferences.bBuilderMethod || !isTrailingClosure)) { //do not guess trailing closure param for builder-like method, it is assumed to be a nested code block
                 boolean fillBestGuess = true;
                 String typeSignature = String.valueOf(type);
                 IJavaElement[] visibleElements = fInvocationContext.getCoreContext().getVisibleElements(typeSignature);
@@ -520,7 +550,9 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                         buffer.append(SPACE);
                     }
 
-                    buffer.append("it");
+                    if (!fPreferences.bBuilderMethod || !isTrailingClosure) { //suppress 'it' in a trailing closure for 'builders'
+                        buffer.append("it");
+                    }
 
                     if (fPreferences.isEnabled(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_BEFORE_CLOSING_BRACE_IN_ARRAY_INITIALIZER)) {
                         buffer.append(SPACE);
@@ -623,6 +655,17 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         return false;
     }
 
+    protected final boolean onlyParamIsClosure() {
+        char[][] named = ((GroovyCompletionProposal) fProposal).getNamedParameterTypeNames();
+        char[][] regular = ((GroovyCompletionProposal) fProposal).getRegularParameterTypeNames();
+        return named.length == 0 && regular.length == 1 && lastParamIsClosure();
+    }
+
+    protected final boolean lastParamIsClosure() {
+        char[][] regular = ((GroovyCompletionProposal) fProposal).getRegularParameterTypeNames();
+        return lastParamIsClosure(regular, CharOperation.NO_CHAR_CHAR);
+    }
+
     protected final boolean lastParamIsClosure(char[][] parameterSignatures) {
         int n = parameterSignatures.length;
         if (n > 0) {
@@ -661,7 +704,9 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
         public ReplacementPreferences(ProposalFormattingOptions opts, FormatterPrefs prefs, IJavaProject project) {
 
-            bCommandChaining = opts.noParens; // no preference exists for this
+            //isBuilder overrides noParens who's behavior of placing comma before the trailing closure is not suitable
+            bBuilderMethod = opts.isBuilder;
+            bCommandChaining = opts.noParens && !opts.isBuilder; // no preference exists for this
             cache.put(GroovyContentAssist.NAMED_ARGUMENTS, opts.useNamedArguments);
             cache.put(GroovyContentAssist.CLOSURE_BRACKETS, opts.useBracketsForClosures);
             cache.put(GroovyContentAssist.CLOSURE_NOPARENS, opts.noParensAroundClosures);
@@ -692,6 +737,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         }
 
         public final boolean bCommandChaining;
+        public final boolean bBuilderMethod;
 
         private final Map<String, Boolean> cache = new HashMap<>(32);
         private final Function<String, Boolean> computer;

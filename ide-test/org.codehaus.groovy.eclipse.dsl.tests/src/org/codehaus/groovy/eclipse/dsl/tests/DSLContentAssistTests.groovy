@@ -272,6 +272,64 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
+    void testBuilder1() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false') //ensure default
+        createDsld '''\
+            contribute(currentType()) {
+              method name: 'bar', type: 'void', params: ['block':Closure]
+            }
+            '''.stripIndent()
+
+        String contents = 'foo {  }'
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar(block)')
+        applyProposalAndCheck(proposal, 'foo { bar(block) }')
+    }
+
+    @Test
+    void testBuilder2() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false') //ensure default
+        createDsld '''\
+            contribute(currentType()) {
+              method name: 'bar', type: 'void', isBuilder: true, params: ['block':Closure]
+            }
+            '''.stripIndent()
+
+        String contents = 'foo {  }'
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar {  }')
+        String expect = contents.replace('{  }', '{ bar {  } }')
+        applyProposalAndCheck(proposal, expect, 0 as char, 0, getIndexOf(expect, 'bar { '))
+    }
+
+    @Test
+    void testBuilder3() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false') //ensure default
+        createDsld '''\
+            contribute(currentType()) {
+              method name: 'bar', type: 'void', isBuilder: true, namedParams:['name':String], params: ['block':Closure]
+            }
+            '''.stripIndent()
+
+        String contents = 'foo {  }'
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar(name: name) {  }')
+        String expect = contents.replace('{  }', '{ bar(name: name) {  } }')
+        applyProposalAndCheck(proposal, expect)
+    }
+
+    @Test
+    void testBuilder4() {
+        createDsld '''\
+            contribute(currentType()) {
+              method name: 'bar', type: 'void', isBuilder: true, namedParams:['name':String], params: ['block':Closure]
+            }
+            '''.stripIndent()
+
+        String contents = 'foo {  }'
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar(name: "") {  }')
+        String expect = contents.replace('{  }', '{ bar(name: "") {  } }')
+        applyProposalAndCheck(proposal, expect)
+    }
+
+    @Test
     void testDelegatesToNoParens1() {
         createDsld '''\
             contribute(currentType('Inner')) {

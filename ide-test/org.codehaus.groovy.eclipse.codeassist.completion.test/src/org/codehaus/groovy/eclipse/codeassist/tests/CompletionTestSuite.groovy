@@ -180,7 +180,7 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
      * against the expected result. Assumes performContentAssist(...) was called
      * by some means to get {@code proposal}.
      */
-    protected void applyProposalAndCheck(ICompletionProposal proposal, String expected, char trigger = 0, int stateMask = 0) {
+    protected void applyProposalAndCheck(ICompletionProposal proposal, String expected, char trigger = 0, int stateMask = 0, int expectedCursorPosition = -1) {
         assert proposal instanceof ICompletionProposalExtension2
         JavaContentAssistInvocationContext context = proposal.@fInvocationContext
         proposal.apply(context.viewer, trigger, stateMask, proposal.replacementOffset)
@@ -188,6 +188,11 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
         String expect = expected.normalize()
         String actual = context.document.get().normalize()
         assertEquals('Completion proposal applied but different results found.', expect, actual)
+
+        if (expectedCursorPosition >= 0) {
+            assertEquals("Expecting empty selection range", 0, proposal.getSelection(context.document).y);
+            assertEquals("Selection range offset does not match", expectedCursorPosition, proposal.getSelection(context.document).x);
+        }
     }
 
     protected void checkReplacementRegexp(ICompletionProposal[] proposals, String expectedReplacement, int expectedCount) {
