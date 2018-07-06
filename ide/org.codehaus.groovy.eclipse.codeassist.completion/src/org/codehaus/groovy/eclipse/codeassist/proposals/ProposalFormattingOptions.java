@@ -61,7 +61,7 @@ public class ProposalFormattingOptions {
         // if not a constructor and not overridden, never use named args
         if (isBuilder) {
             //builders force CLOSURE_NOPARENS and CLOSURE_BRACKETS preferences
-            return new ProposalFormattingOptions(true, true, useNamedArguments, overrideNoParens, true);
+            return new ProposalFormattingOptions(true, true, overrideUseNamedArgs, overrideNoParens, true);
         } else if (overrideUseNamedArgs || overrideNoParens) {
             return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, overrideUseNamedArgs, overrideNoParens, false);
         } else if (useNamedArguments && !(method instanceof ConstructorNode)) {
