@@ -198,6 +198,8 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
             return replacementString;
         }
 
+        //builders override noParens behavior of placing comma before the trailing closure
+        boolean forceParens = fPreferences.bBuilderMethod && lastParamIsClosure();
         //
         StringBuffer buffer = new StringBuffer();
 
@@ -215,7 +217,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
             buffer.append(RPAREN);
 
         } else if (!fPreferences.isEnabled(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES)) {
-            if (fPreferences.bCommandChaining) {
+            if (fPreferences.bCommandChaining && !forceParens) {
                 int i = buffer.lastIndexOf(LPAREN);
                 while (Character.isWhitespace(buffer.charAt(i - 1))) {
                     i -= 1;
@@ -227,7 +229,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
             setContextInformationPosition(buffer.length());
 
-            if (!fPreferences.bCommandChaining)
+            if (!fPreferences.bCommandChaining || forceParens)
                 buffer.append(RPAREN);
 
         } else {
@@ -235,7 +237,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
             char[][] namedParameterTypes = ((GroovyCompletionProposal) fProposal).getNamedParameterTypeNames();
             char[][] regularParameterTypes = ((GroovyCompletionProposal) fProposal).getRegularParameterTypeNames();
 
-            if (fPreferences.bCommandChaining) {
+            if (fPreferences.bCommandChaining && !forceParens) {
                 int i = buffer.lastIndexOf(LPAREN);
                 while (Character.isWhitespace(buffer.charAt(i - 1))) {
                     i -= 1;
@@ -297,7 +299,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                 fPositions.get(i).setOffset(buffer.length());
                 buffer.append(nextValue);
 
-                if (i == (indexOfLastClosure - 1) || (i != indexOfLastClosure && i == (totalCount - 1) && !fPreferences.bCommandChaining)) {
+                if (i == (indexOfLastClosure - 1) || (i != indexOfLastClosure && i == (totalCount - 1) && (!fPreferences.bCommandChaining || forceParens))) {
                     if (fPreferences.isEnabled(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_BEFORE_CLOSING_PAREN_IN_METHOD_INVOCATION)) {
                         buffer.append(SPACE);
                     }
@@ -704,9 +706,8 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
         public ReplacementPreferences(ProposalFormattingOptions opts, FormatterPrefs prefs, IJavaProject project) {
 
-            //isBuilder overrides noParens who's behavior of placing comma before the trailing closure is not suitable
             bBuilderMethod = opts.isBuilder;
-            bCommandChaining = opts.noParens && !opts.isBuilder; // no preference exists for this
+            bCommandChaining = opts.noParens || opts.isBuilder; // no preference exists for this
             cache.put(GroovyContentAssist.NAMED_ARGUMENTS, opts.useNamedArguments);
             cache.put(GroovyContentAssist.CLOSURE_BRACKETS, opts.useBracketsForClosures);
             cache.put(GroovyContentAssist.CLOSURE_NOPARENS, opts.noParensAroundClosures);

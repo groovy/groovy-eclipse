@@ -317,6 +317,21 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
     @Test
     void testBuilder4() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false') //ensure default
+        createDsld '''\
+            contribute(currentType()) {
+              method name: 'bar', type: 'void', isBuilder: true, namedParams:['name':String], params: ['regular':String]
+            }
+            '''.stripIndent()
+
+        String contents = 'foo {  }'
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar name: name, regular')
+        String expect = contents.replace('{  }', '{ bar name: name, regular }')
+        applyProposalAndCheck(proposal, expect)
+    }
+
+    @Test
+    void testBuilder5() {
         createDsld '''\
             contribute(currentType()) {
               method name: 'bar', type: 'void', isBuilder: true, namedParams:['name':String], params: ['block':Closure]
