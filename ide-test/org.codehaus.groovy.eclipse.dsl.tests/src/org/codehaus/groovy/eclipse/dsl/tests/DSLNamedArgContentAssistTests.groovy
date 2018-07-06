@@ -366,8 +366,8 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     }
 
     //--------------------------------------------------------------------------
+    // test cases for application of closures with and without named parameters
 
-    // tests application of closures with and without named parameters
     private static final String CLOSURE_DSLD = '''\
         contribute(currentType('Type')) {
           method name: 'test1', params: [op: Closure]
@@ -385,61 +385,61 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
     private static final String CLOSURE_TEST = 'class Type { }\n new Type().test'
 
     @Test
-    void testClostureOp1() {
+    void testClosureOp1() {
         createDSL(CLOSURE_DSLD)
         checkProposalApplicationNonType(CLOSURE_TEST, CLOSURE_TEST + '1 {  }', CLOSURE_TEST.length(), 'test1')
     }
 
     @Test
-    void testClostureOp2() {
+    void testClosureOp2() {
         createDSL(CLOSURE_DSLD)
         checkProposalApplicationNonType(CLOSURE_TEST, CLOSURE_TEST + '2("") {  }', CLOSURE_TEST.length(), 'test2')
     }
 
     @Test
-    void testClostureOp3() {
+    void testClosureOp3() {
         createDSL(CLOSURE_DSLD)
         checkProposalApplicationNonType(CLOSURE_TEST, CLOSURE_TEST + '3(op: {  })', CLOSURE_TEST.length(), 'test3')
     }
 
     @Test
-    void testClostureOp4() {
+    void testClosureOp4() {
         createDSL(CLOSURE_DSLD)
         checkProposalApplicationNonType(CLOSURE_TEST, CLOSURE_TEST + '4(first: "", op: {  })', CLOSURE_TEST.length(), 'test4')
     }
 
     @Test
-    void testClostureOp5() {
+    void testClosureOp5() {
         createDSL(CLOSURE_DSLD)
         checkProposalApplicationNonType(CLOSURE_TEST, CLOSURE_TEST + '5(op: {  }, "")', CLOSURE_TEST.length(), 'test5')
     }
 
     @Test
-    void testClostureOp6() {
+    void testClosureOp6() {
         createDSL(CLOSURE_DSLD)
         checkProposalApplicationNonType(CLOSURE_TEST, CLOSURE_TEST + '6(first: "") {  }', CLOSURE_TEST.length(), 'test6')
     }
 
     @Test
-    void testClostureOp7() {
+    void testClosureOp7() {
         createDSL(CLOSURE_DSLD)
         checkProposalApplicationNonType(CLOSURE_TEST, CLOSURE_TEST + '7(first: "", other: "") {  }', CLOSURE_TEST.length(), 'test7')
     }
 
     @Test
-    void testClostureOp8() {
+    void testClosureOp8() {
         createDSL(CLOSURE_DSLD)
         checkProposalApplicationNonType(CLOSURE_TEST, CLOSURE_TEST + '8(first: "", "") {  }', CLOSURE_TEST.length(), 'test8')
     }
 
     @Test
-    void testClostureOp9() {
+    void testClosureOp9() {
         createDSL(CLOSURE_DSLD)
         checkProposalApplicationNonType(CLOSURE_TEST, CLOSURE_TEST + '9(first: "", "", {  }, "")', CLOSURE_TEST.length(), 'test9')
     }
 
     @Test
-    void testClostureOp0() {
+    void testClosureOp0() {
         createDSL(CLOSURE_DSLD)
         checkProposalApplicationNonType(CLOSURE_TEST, CLOSURE_TEST + '0(first: "", "", {  }, "") {  }', CLOSURE_TEST.length(), 'test0')
     }

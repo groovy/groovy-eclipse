@@ -107,7 +107,7 @@ def insideContribution = { (enclosingCallName('accept') | enclosingCallName('con
                 <code>supportsVersion(groovy: '1.7.10', groovyEclipse: '2.1.3')</code>
                 '''.stripIndent()
 
-    method  name: 'log', type: void, params: [message: String], doc: 'Logs a message to the Groovy Event Console.'
+    method  name: 'log', params: [message: Object], doc: 'Logs a message to the Groovy Event Console.'
 }
 
 // Here, specify everything that can be used inside of an accept block (also called a Contribution Group)
@@ -234,7 +234,7 @@ def insideContribution = { (enclosingCallName('accept') | enclosingCallName('con
                 methods of the delegate are added to the target type's list of recognized methods.
                 '''.stripIndent()
 
-    method  name: 'log', type: void, params: [message: String], doc: 'Logs a message to the Groovy Event Console.'
+    method  name: 'log', params: [message: Object], doc: 'Logs a message to the Groovy Event Console.'
 
     property name: 'currentType', type: ClassNode, doc: 'This is the declaring type of the current expression being evaluated.'
 
@@ -253,6 +253,6 @@ def insideContribution = { (enclosingCallName('accept') | enclosingCallName('con
 // Adds the contributions for inside a 'registerPointcut' call.  User-registered pointcuts are not fully fleshed out yet, so best not to use them yet.
 (dsldFile & enclosingCallName('registerPointcut') & inClosure() & isThisType()).accept {
     // a little naughty again...reference an internal Groovy-Eclipse type; this may be removed in future versions
-    property name: 'currentScope', type: org.eclipse.jdt.groovy.search.VariableScope
+    property name: 'currentScope', type: 'org.eclipse.jdt.groovy.search.VariableScope'
     property name: 'currenType', type: ClassNode
 }
