@@ -16,6 +16,7 @@
 package org.eclipse.jdt.groovy.search;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -394,9 +395,15 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                 }
             } else if (VariableScope.CLASS_CLASS_NODE.equals(realDeclaringType) && declaration instanceof MethodNode) {
                 // beware of matching Class methods too aggressively; Arrays.toString(Object[]) vs. Class.toString()
-                if (isStaticObjectExpression && !((MethodNode) declaration).isStatic() &&
-                        isLooseMatch(scope.getMethodCallArgumentTypes(), ((MethodNode) declaration).getParameters())) {
-                    confidence = TypeConfidence.UNKNOWN;
+                MethodNode classMethod = (MethodNode) declaration;
+                if (isStaticObjectExpression && !classMethod.isStatic()) {
+                    List<ClassNode> argumentTypes = scope.getMethodCallArgumentTypes();
+                    if (argumentTypes == null && !name.equals(classMethod.getName()) && !isLhsExpression) {
+                        argumentTypes = Collections.EMPTY_LIST; // assume getter; Class has only one setter
+                    }
+                    if (isLooseMatch(argumentTypes, ((MethodNode) declaration).getParameters())) {
+                        confidence = TypeConfidence.UNKNOWN;
+                    }
                 }
             }
         }
@@ -681,7 +688,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      * {@code Object} returns {@code T}; otherwise returns {@code declaringType}.
      */
     protected static ClassNode getBaseDeclaringType(ClassNode declaringType) {
-        if (VariableScope.CLASS_CLASS_NODE.equals(declaringType)) {
+        if (VariableScope.CLASS_CLASS_NODE.equals(declaringType) && declaringType.isUsingGenerics()) {
             ClassNode typeParam = declaringType.getGenericsTypes()[0].getType();
             if (!VariableScope.CLASS_CLASS_NODE.equals(typeParam) &&
                 !VariableScope.OBJECT_CLASS_NODE.equals(typeParam)) {

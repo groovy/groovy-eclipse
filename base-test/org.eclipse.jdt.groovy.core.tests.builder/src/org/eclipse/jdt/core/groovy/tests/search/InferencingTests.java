@@ -24,6 +24,11 @@ import org.junit.Test;
 
 public final class InferencingTests extends InferencingTestSuite {
 
+    private void assertDeclType(String source, String target, String type) {
+        final int offset = source.lastIndexOf(target);
+        assertDeclaringType(source, offset, offset + target.length(), type);
+    }
+
     private void assertExprType(String source, String target, String type) {
         final int offset = source.lastIndexOf(target);
         assertType(source, offset, offset + target.length(), type);
@@ -472,133 +477,112 @@ public final class InferencingTests extends InferencingTestSuite {
     @Test
     public void testMatcher1() {
         String contents = "def x = \"\" =~ /pattern/\nx";
-        int start = contents.lastIndexOf("x");
-        int end = start + "x".length();
-        assertType(contents, start, end, "java.util.regex.Matcher");
+        assertExprType(contents, "x", "java.util.regex.Matcher");
     }
 
     @Test
     public void testMatcher2() {
         String contents = "(\"\" =~ /pattern/).hasGroup()";
-        int start = contents.indexOf("hasGroup");
-        int end = start + "hasGroup".length();
-        assertType(contents, start, end, "java.lang.Boolean");
+        assertExprType(contents, "hasGroup", "java.lang.Boolean");
     }
 
     @Test
     public void testPattern1() {
-        String contents ="def x = ~/pattern/\nx";
-        int start = contents.lastIndexOf("x");
-        int end = start + "x".length();
-        assertType(contents, start, end, "java.util.regex.Pattern");
+        String contents = "def x = ~/pattern/\nx";
+        assertExprType(contents, "x", "java.util.regex.Pattern");
     }
 
     @Test
     public void testPattern2() {
-        String contents ="def x = \"\" ==~ /pattern/\nx";
-        int start = contents.lastIndexOf("x");
-        int end = start + "x".length();
-        assertType(contents, start, end, "java.lang.Boolean");
+        String contents = "def x = \"\" ==~ /pattern/\nx";
+        assertExprType(contents, "x", "java.lang.Boolean");
     }
 
     @Test
     public void testSpread1() {
         String contents = "def z = [1,2]*.value";
-        int start = contents.lastIndexOf("value");
-        assertType(contents, start, start + "value".length(), "java.lang.Integer");
+        assertExprType(contents, "value", "java.lang.Integer");
     }
 
     @Test
     public void testSpread2() {
         String contents = "[1,2,3]*.intValue()";
-        int start = contents.lastIndexOf("intValue");
-        assertType(contents, start, start + "intValue".length(), "java.lang.Integer");
+        assertExprType(contents, "intValue", "java.lang.Integer");
     }
 
     @Test
     public void testSpread3() {
         String contents = "[1,2,3]*.intValue()[0].value";
-        int start = contents.lastIndexOf("value");
-        assertType(contents, start, start + "value".length(), "java.lang.Integer");
+        assertExprType(contents, "value", "java.lang.Integer");
     }
 
     @Test
     public void testSpread4() {
         String contents = "[x:1,y:2,z:3]*.getKey()";
-        int start = contents.lastIndexOf("getKey");
-        assertType(contents, start, start + "getKey".length(), "java.lang.String");
+        assertExprType(contents, "getKey", "java.lang.String");
     }
 
     @Test
     public void testSpread5() {
         String contents = "[x:1,y:2,z:3]*.getValue()";
-        int start = contents.lastIndexOf("getValue");
-        assertType(contents, start, start + "getValue".length(), "java.lang.Integer");
+        assertExprType(contents, "getValue", "java.lang.Integer");
     }
 
     @Test
     public void testSpread6() {
         String contents = "[x:1,y:2,z:3]*.key";
-        int start = contents.lastIndexOf("key");
-        assertType(contents, start, start + "key".length(), "java.lang.String");
+        assertExprType(contents, "key", "java.lang.String");
     }
 
     @Test
     public void testSpread7() {
         String contents = "[x:1,y:2,z:3]*.value";
-        int start = contents.lastIndexOf("value");
-        assertType(contents, start, start + "value".length(), "java.lang.Integer");
+        assertExprType(contents, "value", "java.lang.Integer");
     }
 
     @Test
     public void testSpread8() {
         String contents = "[x:1,y:2,z:3]*.key[0].toLowerCase()";
-        int start = contents.lastIndexOf("toLowerCase");
-        assertType(contents, start, start + "toLowerCase".length(), "java.lang.String");
+        assertExprType(contents, "toLowerCase", "java.lang.String");
     }
 
     @Test
     public void testSpread9() {
         String contents = "[x:1,y:2,z:3]*.value[0].intValue()";
-        int start = contents.lastIndexOf("intValue");
-        assertType(contents, start, start + "intValue".length(), "java.lang.Integer");
+        assertExprType(contents, "intValue", "java.lang.Integer");
     }
 
     @Test
     public void testSpread10() {
         String contents = "[1,2,3]*.value[0].value";
-        int start = contents.lastIndexOf("value");
-        assertType(contents, start, start + "value".length(), "java.lang.Integer");
+        assertExprType(contents, "value", "java.lang.Integer");
     }
 
     @Test
     public void testSpread11() {
         String contents = "Set<String> strings = ['1','2','3'] as Set\n" +
-            "strings*.bytes";
-        int start = contents.lastIndexOf("bytes");
-        assertType(contents, start, start + "bytes".length(), "byte[]");
+            "strings*.bytes\n";
+        assertExprType(contents, "bytes", "byte[]");
     }
 
     @Test
     public void testSpread12() {
         String contents = "Set<String> strings = ['1','2','3'] as Set\n" +
-            "strings*.length()";
-        int start = contents.lastIndexOf("length");
-        assertType(contents, start, start + "length".length(), "java.lang.Integer");
+            "strings*.length()\n";
+        assertExprType(contents, "length", "java.lang.Integer");
     }
 
     @Test
     public void testSpread13() {
-        String contents = "@groovy.transform.TypeChecked class Foo {\n" +
+        String contents = "@groovy.transform.TypeChecked\n" +
+            "class Foo {\n" +
             "  static def meth() {\n" +
             "    Set<java.beans.BeanInfo> beans = []\n" +
             "    beans*.additionalBeanInfo\n" +
             "  }\n" +
-            "}";
-        int start = contents.lastIndexOf("beans");
-        assertType(contents, start, start + "beans".length(), "java.util.Set<java.beans.BeanInfo>");
-        start = contents.lastIndexOf("additionalBeanInfo");
-        assertType(contents, start, start + "additionalBeanInfo".length(), "java.beans.BeanInfo[]");
+            "}\n";
+        assertExprType(contents, "beans", "java.util.Set<java.beans.BeanInfo>");
+        assertExprType(contents, "additionalBeanInfo", "java.beans.BeanInfo[]");
     }
 
     @Test
@@ -614,84 +598,123 @@ public final class InferencingTests extends InferencingTestSuite {
     @Test
     public void testBoolean2() {
         String contents = "(x < y).booleanValue()";
-        int start = contents.indexOf("booleanValue");
-        int end = start + "booleanValue".length();
-        assertType(contents, start, end, "java.lang.Boolean");
+        assertExprType(contents, "booleanValue", "java.lang.Boolean");
     }
 
     @Test
     public void testBoolean3() {
         String contents = "(x <= y).booleanValue()";
-        int start = contents.indexOf("booleanValue");
-        int end = start + "booleanValue".length();
-        assertType(contents, start, end, "java.lang.Boolean");
+        assertExprType(contents, "booleanValue", "java.lang.Boolean");
     }
 
     @Test
     public void testBoolean4() {
         String contents = "(x >= y).booleanValue()";
-        int start = contents.indexOf("booleanValue");
-        int end = start + "booleanValue".length();
-        assertType(contents, start, end, "java.lang.Boolean");
+        assertExprType(contents, "booleanValue", "java.lang.Boolean");
     }
 
     @Test
     public void testBoolean5() {
         String contents = "(x != y).booleanValue()";
-        int start = contents.indexOf("booleanValue");
-        int end = start + "booleanValue".length();
-        assertType(contents, start, end, "java.lang.Boolean");
+        assertExprType(contents, "booleanValue", "java.lang.Boolean");
     }
 
     @Test
     public void testBoolean6() {
         String contents = "(x == y).booleanValue()";
-        int start = contents.indexOf("booleanValue");
-        int end = start + "booleanValue".length();
-        assertType(contents, start, end, "java.lang.Boolean");
+        assertExprType(contents, "booleanValue", "java.lang.Boolean");
     }
 
     @Test
     public void testBoolean7() {
         String contents = "(x in y).booleanValue()";
-        int start = contents.indexOf("booleanValue");
-        int end = start + "booleanValue".length();
-        assertType(contents, start, end, "java.lang.Boolean");
+        assertExprType(contents, "booleanValue", "java.lang.Boolean");
     }
 
     @Test
     public void testClassLiteral1() {
         String contents = "def foo = Number.class";
-        int start = contents.indexOf("foo"), end = start + 3;
-        assertType(contents, start, end, "java.lang.Class<java.lang.Number>");
+        assertExprType(contents, "foo", "java.lang.Class<java.lang.Number>");
     }
 
     @Test
     public void testClassLiteral2() {
         String contents = "def foo = java.lang.Number.class";
-        int start = contents.indexOf("foo"), end = start + 3;
-        assertType(contents, start, end, "java.lang.Class<java.lang.Number>");
+        assertExprType(contents, "foo", "java.lang.Class<java.lang.Number>");
     }
 
     @Test
     public void testClassLiteral3() {
         String contents = "def foo = Number";
-        int start = contents.indexOf("foo"), end = start + 3;
-        assertType(contents, start, end, "java.lang.Class<java.lang.Number>");
+        assertExprType(contents, "foo", "java.lang.Class<java.lang.Number>");
     }
 
     @Test
     public void testClassLiteral4() {
         String contents = "def foo = java.lang.Number";
-        int start = contents.indexOf("foo"), end = start + 3;
-        assertType(contents, start, end, "java.lang.Class<java.lang.Number>");
+        assertExprType(contents, "foo", "java.lang.Class<java.lang.Number>");
     }
 
     @Test
     public void testClassLiteral5() {
         String contents = "def foo = Map.Entry.class";
-        int start = contents.indexOf("foo"), end = start + 3;
-        assertType(contents, start, end, "java.lang.Class<java.util.Map$Entry>");
+        assertExprType(contents, "foo", "java.lang.Class<java.util.Map$Entry>");
+    }
+
+    @Test
+    public void testClassReference1() {
+        String contents = "String.substring";
+        int start = contents.indexOf("substring"), until = start + 9;
+        assertDeclaringType(contents, start, until, "java.lang.String", false, true);
+    }
+
+    @Test
+    public void testClassReference2() {
+        String contents = "String.getPackage()";
+        assertExprType(contents, "getPackage", "java.lang.Package");
+        assertDeclType(contents, "getPackage", "java.lang.Class<java.lang.String>");
+    }
+
+    @Test
+    public void testClassReference2a() {
+        String contents = "String.package";
+        assertExprType(contents, "package", "java.lang.Package");
+        assertDeclType(contents, "package", "java.lang.Class<java.lang.String>");
+    }
+
+    @Test
+    public void testClassReference3() {
+        String contents = "String.class.getPackage()";
+        assertExprType(contents, "getPackage", "java.lang.Package");
+        assertDeclType(contents, "getPackage", "java.lang.Class<java.lang.String>");
+    }
+
+    @Test
+    public void testClassReference3a() {
+        String contents = "String.class.package";
+        assertExprType(contents, "package", "java.lang.Package");
+        assertDeclType(contents, "package", "java.lang.Class<java.lang.String>");
+    }
+
+    @Test
+    public void testClassReference4() {
+        String contents = "def clazz = String; clazz.getPackage()";
+        assertExprType(contents, "getPackage", "java.lang.Package");
+        assertDeclType(contents, "getPackage", "java.lang.Class<java.lang.String>");
+    }
+
+    @Test
+    public void testClassReference4a() {
+        String contents = "def clazz = String; clazz.package";
+        assertExprType(contents, "package", "java.lang.Package");
+        assertDeclType(contents, "package", "java.lang.Class<java.lang.String>");
+    }
+
+    @Test
+    public void testClassReference4b() {
+        String contents = "Class clazz = String; clazz.package";
+        assertExprType(contents, "package", "java.lang.Package");
+        assertDeclType(contents, "package", "java.lang.Class");
     }
 
     @Test // GRECLIPSE-1229: constructors with map parameters
@@ -1706,38 +1729,6 @@ public final class InferencingTests extends InferencingTestSuite {
 
         String target = "class", source = "java.lang.Object";
         assertDeclaringType(contents, contents.indexOf(target), contents.indexOf(target) + target.length(), source);
-    }
-
-    @Test
-    public void testClassReference1() {
-        String contents = "String.substring";
-        int textStart = contents.indexOf("substring");
-        int textEnd = textStart + "substring".length();
-        assertDeclaringType(contents, textStart, textEnd, "java.lang.String", false, true);
-    }
-
-    @Test
-    public void testClassReference2() {
-        String contents = "String.getPackage()";
-        int textStart = contents.indexOf("getPackage");
-        int textEnd = textStart + "getPackage".length();
-        assertType(contents, textStart, textEnd, "java.lang.Package");
-    }
-
-    @Test
-    public void testClassReference3() {
-        String contents = "String.class.getPackage()";
-        int textStart = contents.indexOf("getPackage");
-        int textEnd = textStart + "getPackage".length();
-        assertType(contents, textStart, textEnd, "java.lang.Package");
-    }
-
-    @Test
-    public void testClassReference4() {
-        String contents = "String.class.package";
-        int textStart = contents.indexOf("package");
-        int textEnd = textStart + "package".length();
-        assertType(contents, textStart, textEnd, "java.lang.Package");
     }
 
     @Test

@@ -473,7 +473,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testDGMClosure4() {
-        String contents = "['a':1].unique { it.key }";
+        String contents = "['a':1].collect { it.key }";
         assertExprType(contents, "key", "java.lang.String");
     }
 
