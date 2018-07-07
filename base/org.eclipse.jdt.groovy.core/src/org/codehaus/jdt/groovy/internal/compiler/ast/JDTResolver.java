@@ -203,8 +203,16 @@ public class JDTResolver extends ResolveVisitor {
                 // already resolved
                 return false;
             }
+            if (activeScope != null && currentClass != null) {
+                for (TypeDeclaration t : activeScope.referenceContext.types) {
+                    if (currentClass == ((GroovyTypeDeclaration) t).getClassNode()) {
+                        return !t.hasErrors();
+                    }
+                }
+            }
             throw new GroovyEclipseBug("commencingResolution failed: no declaration found for class " + currentClass);
         }
+
         activeScope = null;
         if (typeDecl.scope == null) {
             // scope may be null if there were errors in the code - let's not freak out the user here
