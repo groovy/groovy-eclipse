@@ -48,6 +48,12 @@
       </javaCompletionProposalComputer>
    </extension>
 
+   <extension point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="org.codehaus.groovy.eclipse.codeassist.preferences.ContentAssistPreferenceInitializer">
+      </initializer>
+   </extension>
+
    <extension point="org.eclipse.ui.preferencePages">
       <page
             category="org.codehaus.groovy.eclipse.preferences.editor"
