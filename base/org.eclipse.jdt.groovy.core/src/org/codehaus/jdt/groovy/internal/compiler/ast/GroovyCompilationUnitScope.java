@@ -128,8 +128,10 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 
     @Override
     protected void buildTypeBindings(AccessRestriction accessRestriction) {
-        if (referenceContext.types != null) {
-            for (TypeDeclaration typeDecl : referenceContext.types) {
+        if (referenceContext.types != null && !referenceContext.compilationResult().hasErrors()) {
+            GroovyCompilationUnitDeclaration unitDecl = (GroovyCompilationUnitDeclaration) referenceContext;
+
+            for (TypeDeclaration typeDecl : unitDecl.types) {
                 if (typeDecl instanceof GroovyTypeDeclaration) {
                     ((GroovyTypeDeclaration) typeDecl).fixAnonymousTypeBinding(this);
                 }
@@ -244,14 +246,12 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 
     @Override
     protected void reportImportProblem(ImportReference importReference, Binding importBinding) {
-        // GRE-680
-        if (importBinding instanceof ProblemReferenceBinding) {
-            ProblemReferenceBinding problemRefBinding = (ProblemReferenceBinding) importBinding;
-            if (problemRefBinding.problemId() == ProblemReasons.NotFound) {
-                return;
-            }
+        // no eclipse 'not found' imports for groovy types (in case grab satisfies them)
+        if (importBinding instanceof ProblemReferenceBinding &&
+                ((ProblemReferenceBinding) importBinding).problemId() == ProblemReasons.NotFound) {
+            return;
         }
-        problemReporter().importProblem(importReference, importBinding);
+        super.reportImportProblem(importReference, importBinding);
     }
 
     @Override
@@ -296,10 +296,13 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
             // This means 'temp' is found via a real import reference in the source code, let's take a closer look at 'type'
             if (originallyFound.fPackage != null) {
                 char[][] packageName = originallyFound.fPackage.compoundName;
-                // packageName might be 'groovy.util'
-                if (CharOperation.equals(javaLang, packageName) || CharOperation.equals(javaIo, packageName)
-                        || CharOperation.equals(javaNet, packageName) || CharOperation.equals(javaUtil, packageName)
-                        || CharOperation.equals(groovyLang, packageName) || CharOperation.equals(groovyUtil, packageName)) {
+                if (CharOperation.equals(javaLang,   packageName) ||
+                    CharOperation.equals(javaUtil,   packageName) ||
+                    CharOperation.equals(javaIo,     packageName) ||
+                    CharOperation.equals(javaNet,    packageName) ||
+                    CharOperation.equals(groovyLang, packageName) ||
+                    CharOperation.equals(groovyUtil, packageName)) {
+
                     return newlyFound;
                 } else {
                     // Groovy rule: if the originally found one is via a declared import, which it must be
