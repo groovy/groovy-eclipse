@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,6 @@ import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.viewsupport.ImageImageDescriptor;
 import org.eclipse.jdt.internal.ui.viewsupport.JavaElementImageProvider;
 import org.eclipse.jdt.ui.JavaElementImageDescriptor;
-import org.eclipse.jdt.ui.ProblemsLabelDecorator;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.BaseLabelProvider;
 import org.eclipse.jface.viewers.ILabelDecorator;
@@ -41,10 +40,15 @@ import org.eclipse.ui.internal.WorkbenchPlugin;
 
 public class GroovyImageDecorator extends BaseLabelProvider implements ILabelDecorator {
 
+    @Override
+    public void dispose() {
+        baseImageProvider.disconnect();
+    }
+
     private boolean preventRecursion;
     private ILabelDecorator defaultDecorator;
-    private ILabelDecorator problemsDecorator = new ProblemsLabelDecorator();
-    private Map<IProject, ScriptFolderSelector> scriptFolderSelectors = new HashMap<IProject, ScriptFolderSelector>(); // TODO: GroovyParser maintains this same cache
+    private GroovyImageProvider baseImageProvider = new GroovyImageProvider(); // replaces JavaElementImageProvider
+    private Map<IProject, ScriptFolderSelector> scriptFolderSelectors = new HashMap<>(); // TODO: GroovyParser maintains this same cache
 
     private Image applyDefaultDecorator(Image image, Object element) {
         preventRecursion = true;
@@ -58,22 +62,14 @@ public class GroovyImageDecorator extends BaseLabelProvider implements ILabelDec
         }
     }
 
+    @Override
     public  Image decorateImage(Image image, Object element) {
         if (preventRecursion) {
             return null;
         }
 
-        if (element instanceof GroovyCompilationUnit && image.getBounds().width <= 16) {
-            // JavaElementImageProvider has overridden the icon tied to the GroovyEditor; need to replace image
-            image = getJavaElementImage(((GroovyCompilationUnit) element).getResource(), getImageSize(image));
-
-            // the Java ProblemsDecorator is not registered in the official decorator list, so call it directly
-            image = problemsDecorator.decorateImage(image, element);
-
-            // add non-problem decor, like type indicator and version control status
-            image = applyDefaultDecorator(image, element);
-
-            return image;
+        if (element instanceof GroovyCompilationUnit) {
+            return decorateImage(new ImageImageDescriptor(image), ((GroovyCompilationUnit) element).getResource(), getImageSize(image));
         }
 
         boolean isGradle = false;
@@ -84,8 +80,8 @@ public class GroovyImageDecorator extends BaseLabelProvider implements ILabelDec
 
         // Gradle files are a special case; image should be from Buildship plugin if it's present otherwise use Groovy's
         if (isGradle) {
-            ImageDescriptor base = (GroovyPluginImages.DESC_GRADLE_FILE != null ?
-                GroovyPluginImages.DESC_GRADLE_FILE : GroovyPluginImages.DESC_GROOVY_FILE);
+            ImageDescriptor base = (GroovyPluginImages.DESC_GRADLE_FILE != null
+                ? GroovyPluginImages.DESC_GRADLE_FILE : GroovyPluginImages.DESC_GROOVY_FILE);
             return applyDefaultDecorator(getImage(base, 0, getImageSize(image)), element);
         }
 
@@ -111,16 +107,6 @@ public class GroovyImageDecorator extends BaseLabelProvider implements ILabelDec
         }
 
         return getImage(base, flags, size);
-    }
-
-    private Image getJavaElementImage(IResource rsrc, Point size) {
-        boolean isGradle = (GroovyPluginImages.DESC_GRADLE_FILE != null && ContentTypeUtils.isGradleLikeFileName(rsrc.getName()));
-        ImageDescriptor base = isGradle ? GroovyPluginImages.DESC_GRADLE_FILE : GroovyPluginImages.DESC_GROOVY_FILE;
-        if (!isGradle) {
-            return decorateImage(base, rsrc, size);
-        } else {
-            return getImage(base, 0, size);
-        }
     }
 
     private Image getImage(ImageDescriptor base, int flags, Point size) {
@@ -157,10 +143,12 @@ public class GroovyImageDecorator extends BaseLabelProvider implements ILabelDec
 
     //--------------------------------------------------------------------------
 
+    @Override
     public boolean isLabelProperty(Object element, String property) {
         return false;
     }
 
+    @Override
     public String decorateText(String text, Object element) {
         return null;
     }

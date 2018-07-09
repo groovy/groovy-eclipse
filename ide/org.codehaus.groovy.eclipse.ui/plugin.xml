@@ -778,6 +778,7 @@
             id="org.codehaus.groovy.eclipse.ui.findOccurrences"
             name="Find occurrences in current file">
       </command>
+
       <command
             categoryId="org.codehaus.groovy.eclipse.refactoring.commands.refactoring"
             description="Converts a file with a java extension to a file with a groovy extension"
@@ -933,6 +934,41 @@
             Shows an image for Groovy Source files.
          </description>
       </decorator>
+   </extension>
+
+   <extension point="org.eclipse.ui.navigator.navigatorContent">
+      <navigatorContent
+            activeByDefault="true"
+            contentProvider="org.eclipse.jdt.internal.ui.navigator.JavaNavigatorContentProvider"
+            id="org.codehaus.groovy.eclipse.ui.groovyContent"
+            labelProvider="org.codehaus.groovy.eclipse.ui.GroovyNavigatorLabelProvider"
+            name="Groovy Sources"
+            priority="high">
+         <triggerPoints>
+            <or>
+               <instanceof value="org.codehaus.jdt.groovy.model.GroovyCompilationUnit" />
+               <instanceof value="org.eclipse.core.resources.IFile" />
+             </or>
+         </triggerPoints>
+         <possibleChildren>
+            <or>
+               <instanceof value="org.codehaus.jdt.groovy.model.GroovyCompilationUnit" />
+               <instanceof value="org.eclipse.core.resources.IFile" />
+            </or>
+         </possibleChildren> 
+         <override
+               policy="InvokeAlwaysRegardlessOfSuppressedExt"
+               suppressedExtensionId="org.eclipse.jdt.java.ui.javaContent">
+         </override>
+      </navigatorContent>
+   </extension>
+
+   <extension point="org.eclipse.ui.navigator.viewer">
+      <viewerContentBinding viewerId="org.eclipse.ui.navigator.ProjectExplorer">
+         <includes>
+            <contentExtension pattern="org.codehaus.groovy.eclipse.ui.groovyContent" />
+         </includes>
+      </viewerContentBinding>
    </extension>
 
    <extension point="org.eclipse.core.runtime.adapters">

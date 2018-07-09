@@ -47,6 +47,6 @@ Require-Bundle: org.codehaus.groovy;bundle-version="2.1.9",
  org.eclipse.ui.ide,
  org.eclipse.ui.views,
  org.eclipse.ui.workbench.texteditor
-Bundle-ActivationPolicy: lazy;exclude:="org.codehaus.groovy.eclipse.ui.decorators"
+Bundle-ActivationPolicy: lazy;exclude:="org.codehaus.groovy.eclipse.ui,org.codehaus.groovy.eclipse.ui.decorators"
 Bundle-Activator: org.codehaus.groovy.eclipse.GroovyPlugin
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
