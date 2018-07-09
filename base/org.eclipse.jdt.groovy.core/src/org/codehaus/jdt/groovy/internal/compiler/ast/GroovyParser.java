@@ -146,17 +146,22 @@ public class GroovyParser {
 
     public CompilationUnitDeclaration dietParse(ICompilationUnit iCompilationUnit, CompilationResult compilationResult) {
         String fileName = String.valueOf(iCompilationUnit.getFileName());
-        IPath filePath = new Path(fileName);
-        IFile eclipseFile = null;
+        final IPath filePath = new Path(fileName);
+        final IFile eclipseFile;
+        final boolean isScript;
         // try to turn this into a 'real' absolute file system reference (this is because Grails 1.5 expects it)
         // GRECLIPSE-1269 ensure get plugin is not null to ensure the workspace is open (ie- not in batch mode)
-        // Needs 2 segments: a project and file name or eclipse throws assertion failed here
+        // needs 2 segments: a project and file name or eclipse throws assertion failed here
         if (filePath.segmentCount() > 1 && ResourcesPlugin.getPlugin() != null) {
             eclipseFile = ResourcesPlugin.getWorkspace().getRoot().getFile(filePath);
             IPath location = eclipseFile.getLocation();
             if (location != null) {
                 fileName = location.toFile().getAbsolutePath();
             }
+            isScript = isScript(eclipseFile, compilerOptions.groovyProjectName);
+        } else {
+            eclipseFile = null;
+            isScript = false;
         }
 
         if (problemReporter.referenceContext == null) {
@@ -164,8 +169,8 @@ public class GroovyParser {
         }
 
         if (compilationUnit == null) {
-            if (eclipseFile != null && eclipseFile.getProject().isAccessible() &&
-                    !JavaCore.create(eclipseFile.getProject()).isOnClasspath(eclipseFile)) {
+            if (isScript || (eclipseFile != null && eclipseFile.getProject().isAccessible() &&
+                    !JavaCore.create(eclipseFile.getProject()).isOnClasspath(eclipseFile))) {
                 compilerOptions.groovyCompilerConfigScript = null;
             }
             compilationUnit = unitFactory.get();
@@ -212,13 +217,9 @@ public class GroovyParser {
                 resolver.record((GroovyTypeDeclaration) decl);
             }
         }
-        String projectName = compilerOptions.groovyProjectName;
-        // Is this a script? If allowTransforms then this is a 'full build', we should remember which are scripts so that class file output can be suppressed.
-        if (projectName != null && eclipseFile != null) {
-            ScriptFolderSelector scriptFolderSelector = scriptFolderSelectorCache.computeIfAbsent(projectName, GroovyParser::newScriptFolderSelector);
-            if (scriptFolderSelector.isScript(eclipseFile)) {
-                gcuDeclaration.tagAsScript();
-            }
+        // remember scripts so that class file output can be suppressed
+        if (isScript) {
+            gcuDeclaration.tagAsScript();
         }
         if (debugRequestor != null) {
             debugRequestor.acceptCompilationUnitDeclaration(gcuDeclaration);
@@ -226,8 +227,17 @@ public class GroovyParser {
         return gcuDeclaration;
     }
 
-    private static ScriptFolderSelector newScriptFolderSelector(String projectName) {
-        return new ScriptFolderSelector(ResourcesPlugin.getWorkspace().getRoot().getProject(projectName));
+    /**
+     * Determines if file matches any groovy script filter in the project.
+     */
+    private static boolean isScript(IFile sourceFile, String projectName) {
+        if (projectName != null) {
+            assert projectName == sourceFile.getProject().getName();
+            ScriptFolderSelector scriptFolderSelector = scriptFolderSelectorCache
+                .computeIfAbsent(projectName, key -> new ScriptFolderSelector(sourceFile.getProject()));
+            return scriptFolderSelector.isScript(sourceFile);
+        }
+        return false;
     }
 
     /**
