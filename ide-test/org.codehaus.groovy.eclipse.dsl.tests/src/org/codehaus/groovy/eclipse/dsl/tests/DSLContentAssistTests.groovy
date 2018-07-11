@@ -272,6 +272,172 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
+    void testBuilder1() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false') //ensure default
+        createDsld '''\
+            contribute(currentType()) {
+              method name: 'bar', type: 'void', params: ['block':Closure]
+            }
+            '''.stripIndent()
+
+        String contents = 'foo {  }'
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar(block)')
+        applyProposalAndCheck(proposal, 'foo { bar(block) }')
+    }
+
+    @Test
+    void testBuilder2() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false') //ensure default
+        createDsld '''\
+            contribute(currentType()) {
+              method name: 'bar', type: 'void', isBuilder: true, params: ['block':Closure]
+            }
+            '''.stripIndent()
+
+        String contents = 'foo {  }'
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar {  }')
+        String expect = contents.replace('{  }', '{ bar {  } }')
+        applyProposalAndCheck(proposal, expect, 0 as char, 0, getIndexOf(expect, 'bar { '))
+    }
+
+    @Test
+    void testBuilder3() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false') //ensure default
+        createDsld '''\
+            contribute(currentType()) {
+              method name: 'bar', type: 'void', isBuilder: true, namedParams:['name':String], params: ['block':Closure]
+            }
+            '''.stripIndent()
+
+        String contents = 'foo {  }'
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar(name: name) {  }')
+        String expect = contents.replace('{  }', '{ bar(name: name) {  } }')
+        applyProposalAndCheck(proposal, expect)
+    }
+
+    @Test
+    void testBuilder4() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false') //ensure default
+        createDsld '''\
+            contribute(currentType()) {
+              method name: 'bar', type: 'void', isBuilder: true, namedParams:['name':String], params: ['regular':String]
+            }
+            '''.stripIndent()
+
+        String contents = 'foo {  }'
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar name: name, regular')
+        String expect = contents.replace('{  }', '{ bar name: name, regular }')
+        applyProposalAndCheck(proposal, expect)
+    }
+
+    @Test
+    void testBuilder5() {
+        createDsld '''\
+            contribute(currentType()) {
+              method name: 'bar', type: 'void', isBuilder: true, namedParams:['name':String], params: ['block':Closure]
+            }
+            '''.stripIndent()
+
+        String contents = 'foo {  }'
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar(name: "") {  }')
+        String expect = contents.replace('{  }', '{ bar(name: "") {  } }')
+        applyProposalAndCheck(proposal, expect)
+    }
+
+    @Test
+    void testBuilderDelegatesTo1() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false') //ensure default
+        createDsld '''\
+            contribute(currentType('Inner')) {
+              delegatesTo type: 'Other', isBuilder: true
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            class Other {
+              def foo(String bar, Closure block) { }
+            }
+            class Inner { }
+            def val = new Inner()
+            val.fo
+            '''.stripIndent()
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'val.fo', 'foo', 'foo(bar) {  }')
+        applyProposalAndCheck(proposal, contents.replace('val.fo', 'val.foo(bar) {  }'))
+    }
+
+    @Test
+    void testBuilderDelegatesTo2() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false') //ensure default
+        createDsld '''\
+            contribute(currentType('Inner')) {
+              delegatesTo type: 'Other', isBuilder: true
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            class Other {
+              def foo(Closure block) { }
+            }
+            class Inner { }
+            def val = new Inner()
+            val.fo
+            '''.stripIndent()
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'val.fo', 'foo', 'foo {  }')
+        applyProposalAndCheck(proposal, contents.replace('val.fo', 'val.foo {  }'))
+    }
+
+    @Test
+    void testBuilderDelegatesTo3() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false') //ensure default
+        createDsld '''\
+            contribute(currentType('Inner')) {
+              delegatesTo type: 'Other', isBuilder: true
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            class Other {
+              def foo(bar) { }
+            }
+            class Inner { }
+            def val = new Inner()
+            val.fo
+            '''.stripIndent()
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'val.fo', 'foo', 'foo bar')
+        applyProposalAndCheck(proposal, contents.replace('val.fo', 'val.foo bar'))
+    }
+
+    @Test
+    void testBuilderWithUseNamedArgs() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false') //ensure default
+        createDsld '''\
+            contribute(currentType()) {
+              method name: 'bar', type: 'void', useNamedArgs: true, isBuilder: true, namedParams:['named':String], params: ['regular':String,'block':Closure]
+            }
+            '''.stripIndent()
+
+        String contents = 'foo {  }'
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar(named: named, regular: regular) {  }')
+        String expect = contents.replace('{  }', '{ bar(named: named, regular: regular) {  } }')
+        applyProposalAndCheck(proposal, expect)
+    }
+
+    @Test
+    void testBuilderOffWithUseNamedArgs() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false') //ensure default
+        createDsld '''\
+            contribute(currentType()) {
+              method name: 'bar', type: 'void', useNamedArgs: true, namedParams:['named':String], params: ['regular':String,'block':Closure]
+            }
+            '''.stripIndent()
+
+        String contents = 'foo {  }'
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar(named: named, regular: regular, block: block)')
+        String expect = contents.replace('{  }', '{ bar(named: named, regular: regular, block: block) }')
+        applyProposalAndCheck(proposal, expect)
+    }
+
+    @Test
     void testDelegatesToNoParens1() {
         createDsld '''\
             contribute(currentType('Inner')) {

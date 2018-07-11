@@ -30,7 +30,7 @@ public class ProposalFormattingOptions {
         final boolean useNamedArguments = prefs.getBoolean(GroovyContentAssist.NAMED_ARGUMENTS);
         final boolean noParensInChains = false;
 
-        return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, useNamedArguments, noParensInChains);
+        return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, useNamedArguments, noParensInChains, false);
     }
 
     public final boolean noParensAroundClosures;
@@ -41,25 +41,31 @@ public class ProposalFormattingOptions {
 
     // used for DSL command expressions
     public final boolean noParens;
+    public final boolean isBuilder;
 
     private ProposalFormattingOptions(
             boolean noParensAroundArgs,
             boolean useBracketsForClosures,
             boolean useNamedArguments,
-            boolean noParens) {
+            boolean noParens,
+            boolean isBuilder) {
         this.noParensAroundClosures = noParensAroundArgs;
         this.useBracketsForClosures = useBracketsForClosures;
         this.useNamedArguments = useNamedArguments;
         this.noParens = noParens;
+        this.isBuilder = isBuilder;
     }
 
-    public ProposalFormattingOptions newFromExisting(boolean overrideUseNamedArgs, boolean overrideNoParens, MethodNode method) {
+    public ProposalFormattingOptions newFromExisting(boolean overrideUseNamedArgs, boolean overrideNoParens, boolean isBuilder, MethodNode method) {
         // For named args if overridden, always use named args
         // if not a constructor and not overridden, never use named args
-        if (overrideUseNamedArgs || overrideNoParens) {
-            return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, overrideUseNamedArgs, overrideNoParens);
+        if (isBuilder) {
+            //builders force CLOSURE_NOPARENS and CLOSURE_BRACKETS preferences
+            return new ProposalFormattingOptions(true, true, overrideUseNamedArgs, overrideNoParens, true);
+        } else if (overrideUseNamedArgs || overrideNoParens) {
+            return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, overrideUseNamedArgs, overrideNoParens, false);
         } else if (useNamedArguments && !(method instanceof ConstructorNode)) {
-            return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, false, overrideNoParens);
+            return new ProposalFormattingOptions(noParensAroundClosures, useBracketsForClosures, false, overrideNoParens, false);
         } else {
             return this;
         }

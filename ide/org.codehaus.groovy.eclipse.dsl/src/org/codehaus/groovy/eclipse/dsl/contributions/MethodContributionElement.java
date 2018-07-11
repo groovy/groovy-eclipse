@@ -70,6 +70,7 @@ public class MethodContributionElement implements IContributionElement {
     private final int relevanceMultiplier;
     private final boolean isDeprecated;
     private final boolean noParens;
+    private final boolean isBuilder;
 
     public MethodContributionElement(
             String methodName,
@@ -82,7 +83,7 @@ public class MethodContributionElement implements IContributionElement {
             boolean useNamedArgs,
             boolean isDeprecated,
             int relevanceMultiplier) {
-        this(methodName, params, NO_PARAMETER_CONTRIBUTION, NO_PARAMETER_CONTRIBUTION, returnType, declaringType, isStatic, provider, doc, useNamedArgs, false, isDeprecated, relevanceMultiplier);
+        this(methodName, params, NO_PARAMETER_CONTRIBUTION, NO_PARAMETER_CONTRIBUTION, returnType, declaringType, isStatic, provider, doc, useNamedArgs, false, false, isDeprecated, relevanceMultiplier);
     }
 
     public MethodContributionElement(
@@ -97,6 +98,7 @@ public class MethodContributionElement implements IContributionElement {
             String doc,
             boolean useNamedArgs,
             boolean noParens,
+            boolean isBuilder,
             boolean isDeprecated,
             int relevanceMultiplier) {
         this.methodName = methodName;
@@ -108,6 +110,7 @@ public class MethodContributionElement implements IContributionElement {
         this.declaringType = declaringType;
         this.useNamedArgs = useNamedArgs;
         this.noParens = noParens;
+        this.isBuilder = isBuilder;
         this.isDeprecated = isDeprecated;
         this.relevanceMultiplier = relevanceMultiplier;
         this.provider = (provider != null ? removeJavadocMarkup(provider) : GROOVY_DSL_PROVIDER);
@@ -125,7 +128,7 @@ public class MethodContributionElement implements IContributionElement {
     @Override
     public IGroovyProposal toProposal(ClassNode declaringType, ResolverCache resolver) {
         GroovyMethodProposal proposal = new GroovyMethodProposal(toMethod(declaringType.redirect(), resolver), provider);
-        proposal.setProposalFormattingOptions(ProposalFormattingOptions.newFromOptions().newFromExisting(useNamedArgs, noParens, proposal.getMethod()));
+        proposal.setProposalFormattingOptions(ProposalFormattingOptions.newFromOptions().newFromExisting(useNamedArgs, noParens, isBuilder, proposal.getMethod()));
         proposal.setRelevanceMultiplier(relevanceMultiplier);
         return proposal;
     }
