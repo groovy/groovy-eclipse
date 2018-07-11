@@ -820,10 +820,7 @@ if (GroovyLogManager.manager.hasLoggers()) {
 
     private int startOffset(ClassNode type) {
         int start = type.getStart();
-        if (nodeToLookFor instanceof ImportNode) {
-            // recover the qualifier position for imports
-            start = endOffset(type) - type.getName().length();
-        } else if (type.getEnd() < 1) {
+        if (type.getEnd() < 1) {
             if (nodeRegion != null) {
                 start = nodeRegion.getOffset();
             } else {
@@ -835,9 +832,7 @@ if (GroovyLogManager.manager.hasLoggers()) {
 
     private int endOffset(ClassNode type) {
         int end = type.getEnd();
-        if (nodeToLookFor instanceof ImportNode) {
-            end = ((ImportNode) nodeToLookFor).getTypeEnd();
-        } else if (end < 1) {
+        if (end < 1) {
             if (nodeRegion != null) {
                 end = nodeRegion.getEnd();
             } else {

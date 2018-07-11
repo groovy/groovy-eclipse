@@ -18,7 +18,6 @@
  */
 package org.codehaus.groovy.ast;
 
-import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import groovyjarjarasm.asm.Opcodes;
 
@@ -34,7 +33,6 @@ public class ImportNode extends AnnotatedNode implements Opcodes {
     private final ClassNode type;
     private final String alias;
     private final String fieldName;
-    // TODO use PackageNode instead here?
     private final String packageName;
     private final boolean isStar;
     private final boolean isStatic;
@@ -153,17 +151,8 @@ public class ImportNode extends AnnotatedNode implements Opcodes {
     }
 
     // GRECLIPSE add
-    private boolean unresolvable;
     private ConstantExpression aliasExpr;
     private ConstantExpression fieldNameExpr;
-
-    public void markAsUnresolvable() {
-        unresolvable = true;
-    }
-
-    public boolean isUnresolvable() {
-        return unresolvable;
-    }
 
     public ConstantExpression getAliasExpr() {
         return aliasExpr;
@@ -179,34 +168,6 @@ public class ImportNode extends AnnotatedNode implements Opcodes {
 
     public void setFieldNameExpr(ConstantExpression fieldNameExpr) {
         this.fieldNameExpr = fieldNameExpr;
-    }
-
-    // getType().getStart() is unreliable because ClassNode instances are reused for well-known types
-    public int getTypeStart() {
-        int start = -1;
-        if (type != null) {
-            if (type.getEnd() > 0) {
-                start = type.getStart();
-            } else {
-                ClassExpression expr = getNodeMetaData(ClassExpression.class);
-                if (expr != null) start = expr.getStart();
-            }
-        }
-        return start;
-    }
-
-    // getType().getEnd() is unreliable because ClassNode instances are reused for well-known types
-    public int getTypeEnd() {
-        int end = -1;
-        if (type != null) {
-            if (type.getEnd() > 0) {
-                end = type.getEnd();
-            } else {
-                ClassExpression expr = getNodeMetaData(ClassExpression.class);
-                if (expr != null) end = expr.getEnd();
-            }
-        }
-        return end;
     }
 
     public String toString() {

@@ -18,7 +18,6 @@
  */
 package org.codehaus.groovy.ast;
 
-import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import groovyjarjarasm.asm.Opcodes;
 
@@ -110,12 +109,12 @@ public class ImportNode extends AnnotatedNode implements Opcodes {
             return "import static " + typeName + ".*";
         }
         if (isStatic) {
-            if (alias != null && alias.length() != 0 && !alias.equals(fieldName)) {
+            if (alias != null && !alias.isEmpty() && !alias.equals(fieldName)) {
                 return "import static " + typeName + "." + fieldName + " as " + alias;
             }
             return "import static " + typeName + "." + fieldName;
         }
-        if (alias == null || alias.length() == 0) {
+        if (alias == null || alias.isEmpty()) {
             return "import " + typeName;
         }
         return "import " + typeName + " as " + alias;
@@ -153,17 +152,8 @@ public class ImportNode extends AnnotatedNode implements Opcodes {
     }
 
     // GRECLIPSE add
-    private boolean unresolvable;
     private ConstantExpression aliasExpr;
     private ConstantExpression fieldNameExpr;
-
-    public void markAsUnresolvable() {
-        unresolvable = true;
-    }
-
-    public boolean isUnresolvable() {
-        return unresolvable;
-    }
 
     public ConstantExpression getAliasExpr() {
         return aliasExpr;
@@ -180,49 +170,6 @@ public class ImportNode extends AnnotatedNode implements Opcodes {
     public void setFieldNameExpr(ConstantExpression fieldNameExpr) {
         this.fieldNameExpr = fieldNameExpr;
     }
-
-    // getType().getStart() is unreliable because ClassNode instances are reused for well-known types
-    public int getTypeStart() {
-        int start = -1;
-        if (type != null) {
-            if (type.getEnd() > 0) {
-                start = type.getStart();
-            } else {
-                ClassExpression expr = getNodeMetaData(ClassExpression.class);
-                if (expr != null) start = expr.getStart();
-            }
-        }
-        return start;
-    }
-
-    // getType().getEnd() is unreliable because ClassNode instances are reused for well-known types
-    public int getTypeEnd() {
-        int end = -1;
-        if (type != null) {
-            if (type.getEnd() > 0) {
-                end = type.getEnd();
-            } else {
-                ClassExpression expr = getNodeMetaData(ClassExpression.class);
-                if (expr != null) end = expr.getEnd();
-            }
-        }
-        return end;
-    }
-
-    /*public boolean equals(Object that) {
-        if (that == this) {
-            return true;
-        }
-        if (!(that instanceof ImportNode)) {
-            return false;
-        }
-        // TODO: Check annotations and metadata as well?
-        return getText().equals(((ImportNode) that).getText());
-    }
-
-    public int hashCode() {
-        return getText().hashCode();
-    }*/
 
     public String toString() {
         return super.toString() + '[' + getText() + ']';

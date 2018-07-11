@@ -670,20 +670,17 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         if (hasStatic) {
             if (hasStar) { // e.g. import static java.lang.Math.*
                 String qualifiedName = this.visitQualifiedName(ctx.qualifiedName());
+                /* GRECLIPSE edit
                 ClassNode type = ClassHelper.make(qualifiedName);
-                // GRECLIPSE edit
-                //configureAST(type, ctx);
-                ASTNode typeNode = configureAST(type instanceof ImmutableClassNode ? new ClassExpression(type) : type, ctx.qualifiedName());
+                configureAST(type, ctx);
+                */
+                ClassNode type = makeClassNode(qualifiedName);
+                configureAST(type, ctx.qualifiedName());
                 // GRECLIPSE end
 
                 moduleNode.addStaticStarImport(type.getText(), type, annotationNodeList);
 
                 importNode = last(moduleNode.getStaticStarImports().values());
-                // GRECLIPSE add
-                if (importNode.getType() != typeNode) {
-                    importNode.setNodeMetaData(ClassExpression.class, typeNode);
-                }
-                // GRECLIPSE end
             } else { // e.g. import static java.lang.Math.pow
                 // GRECLIPSE edit
                 //List<QualifiedNameElementContext> identifierList = new LinkedList<>(ctx.qualifiedName().qualifiedNameElement());
@@ -701,17 +698,21 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                     }
                     builder.append(text);
                 }
+                /* GRECLIPSE edit
                 ClassNode classNode =
                         ClassHelper.make(
                                 builder.toString());
+                */
+                ClassNode classNode = makeClassNode(builder.toString());
+                // GRECLIPSE end
                 String alias = hasAlias
                         ? ctx.alias.getText()
                         : name;
                 // GRECLIPSE edit
                 //configureAST(classNode, ctx);
-                ASTNode typeNode = PositionConfigureUtils.configureAST(classNode instanceof ImmutableClassNode ? new ClassExpression(classNode) : classNode, ctx.qualifiedName());
-                PositionConfigureUtils.configureEndPosition(typeNode, identifierList.get(Math.max(0, identifierListSize - 2)).getStop());
-                configureAST(typeNode);
+                PositionConfigureUtils.configureAST(classNode, ctx.qualifiedName()); // qualifiedName includes field name
+                PositionConfigureUtils.configureEndPosition(classNode, identifierList.get(Math.max(0, identifierListSize - 2)).getStop());
+                configureAST(classNode);
                 // GRECLIPSE end
 
                 moduleNode.addStaticImport(classNode, name, alias, annotationNodeList);
@@ -726,9 +727,6 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                     configureAST(aliasExpr, ctx.alias);
                     importNode.setAliasExpr(aliasExpr);
                 }
-                if (importNode.getType() != typeNode) {
-                    importNode.setNodeMetaData(ClassExpression.class, typeNode);
-                }
                 // GRECLIPSE end
             }
         } else {
@@ -741,13 +739,16 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             } else { // e.g. import java.util.Map
                 String qualifiedName = this.visitQualifiedName(ctx.qualifiedName());
                 String name = last(ctx.qualifiedName().qualifiedNameElement()).getText();
-                ClassNode classNode = ClassHelper.make(qualifiedName);
+                // GRECLIPSE edit
+                //ClassNode classNode = ClassHelper.make(qualifiedName);
+                ClassNode classNode = makeClassNode(qualifiedName);
+                // GRECLIPSE end
                 String alias = hasAlias
                         ? ctx.alias.getText()
                         : name;
                 // GRECLIPSE edit
                 //configureAST(classNode, ctx);
-                ASTNode typeNode = configureAST(classNode instanceof ImmutableClassNode ? new ClassExpression(classNode) : classNode, last(ctx.qualifiedName().qualifiedNameElement()));
+                configureAST(classNode, ctx.qualifiedName());
                 // GRECLIPSE end
 
                 moduleNode.addImport(alias, classNode, annotationNodeList);
@@ -759,15 +760,29 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                     configureAST(aliasExpr, ctx.alias);
                     importNode.setAliasExpr(aliasExpr);
                 }
-                if (importNode.getType() != typeNode) {
-                    importNode.setNodeMetaData(ClassExpression.class, typeNode);
-                }
                 // GRECLIPSE end
             }
         }
 
+        // GRECLIPSE add
+        ASTNode nameNode = configureAST(new ConstantExpression(null), ctx.qualifiedName());
+        importNode.setNameStart(nameNode.getStart());
+        importNode.setNameEnd(nameNode.getEnd() - 1);
+        // GRECLIPSE end
         return configureAST(importNode, ctx);
     }
+
+    // GRECLIPSE add
+    private static ClassNode makeClassNode(String name) {
+        ClassNode node = ClassHelper.make(name);
+        if (node instanceof ImmutableClassNode) {
+            ClassNode wrapper = ClassHelper.makeWithoutCaching(name);
+            wrapper.setRedirect(node);
+            node = wrapper;
+        }
+        return node;
+    }
+    // GRECLIPSE and
 
     // statement {    --------------------------------------------------------------------
     @Override

@@ -35,6 +35,7 @@ import org.codehaus.groovy.antlr.treewalker.SourcePrinter;
 import org.codehaus.groovy.antlr.treewalker.Visitor;
 import org.codehaus.groovy.antlr.treewalker.VisitorAdapter;
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -592,9 +593,18 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             if (node.getNumberOfChildren() == 0) {
                 String name = identifier(node);
                 // import is like  "import Foo"
+                /* GRECLIPSE edit
                 ClassNode type = ClassHelper.make(name);
                 configureAST(type, importNode);
+                */
+                ClassNode type = makeClassNode(name);
+                configureAST(type, "?".equals(name) ? importNode : node);
+                // GRECLIPSE end
                 addImport(type, name, alias, annotations);
+                // GRECLIPSE add
+                ImportNode imp = last(output.getImports());
+                configureAST(imp, importNode, node, null);
+                // GRECLIPSE end
                 return;
             }
 
@@ -605,27 +615,24 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 if (isStatic) {
                     // import is like "import static foo.Bar.*"
                     // packageName is actually a className in this case
+                    /* GRECLIPSE edit
                     ClassNode type = ClassHelper.make(packageName);
-                    // GRECLIPSE edit
-                    //configureAST(type, importNode);
-                    //addStaticStarImport(type, packageName, annotations);
+                    configureAST(type, importNode);
+                    */
+                    ClassNode type = makeClassNode(packageName);
                     configureAST(type, packageNode);
+                    // GRECLIPSE end
                     addStaticStarImport(type, packageName, annotations);
-                    ASTNode imp = output.getStaticStarImports().get(packageName);
-                    if (type instanceof ImmutableClassNode) {
-                        ClassExpression typeNode = new ClassExpression(type);
-                        imp.setNodeMetaData(ClassExpression.class, typeNode);
-                        configureAST(typeNode, packageNode);
-                    }
-                    configureAST(imp, importNode);
+                    // GRECLIPSE add
+                    ImportNode imp = output.getStaticStarImports().get(packageName);
+                    configureAST(imp, importNode, packageNode, null);
                     // GRECLIPSE end
                 } else {
                     // import is like "import foo.*"
                     addStarImport(packageName, annotations);
                     // GRECLIPSE add
-                    // must configure sloc for import node
-                    ASTNode imp = output.getStarImports().get(output.getStarImports().size() - 1);
-                    configureAST(imp, importNode);
+                    ImportNode imp = last(output.getStarImports());
+                    configureAST(imp, importNode, packageNode, null);
                     // GRECLIPSE end
                 }
 
@@ -640,38 +647,37 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 if (isStatic) {
                     // import is like "import static foo.Bar.method"
                     // packageName is really class name in this case
+                    /* GRECLIPSE edit
                     ClassNode type = ClassHelper.make(packageName);
-                    // GRECLIPSE edit
-                    //configureAST(type, importNode);
-                    //addStaticImport(type, name, alias, annotations);
+                    configureAST(type, importNode);
+                    */
+                    ClassNode type = makeClassNode(packageName);
                     configureAST(type, packageNode);
+                    // GRECLIPSE end
                     addStaticImport(type, name, alias, annotations);
+                    // GRECLIPSE add
                     imp = output.getStaticImports().get(alias == null ? name : alias);
-                    if (type instanceof ImmutableClassNode) {
-                        ClassExpression typeNode = new ClassExpression(type);
-                        imp.setNodeMetaData(ClassExpression.class, typeNode);
-                        configureAST(typeNode, packageNode);
-                    }
-                    configureAST(imp, importNode);
                     imp.setFieldNameExpr(literalExpression(nameNode, name));
+                    configureAST(imp, importNode, packageNode, nameNode);
                     // GRECLIPSE end
                 } else {
                     // import is like "import foo.Bar"
+                    /* GRECLIPSE edit
                     ClassNode type = ClassHelper.make(packageName + "." + name);
-                    // GRECLIPSE edit
-                    // sloc for importNode configured by the ModuleNode
-                    configureAST(type, /*importNode*/nameNode);
+                    configureAST(type, importNode);
+                    */
+                    ClassNode type = makeClassNode(packageName + "." + name);
+                    type.setLineNumber(packageNode.getLine());
+                    type.setColumnNumber(packageNode.getColumn());
+                    type.setStart(locations.findOffset(type.getLineNumber(), type.getColumnNumber()));
+                    type.setLastLineNumber(((GroovySourceAST) nameNode).getLineLast());
+                    type.setLastColumnNumber(((GroovySourceAST) nameNode).getColumnLast());
+                    type.setEnd(locations.findOffset(type.getLastLineNumber(), type.getLastColumnNumber()));
                     // GRECLIPSE end
                     addImport(type, name, alias, annotations);
                     // GRECLIPSE add
-                    // be more precise about the sloc for the import node
-                    imp = output.getImport(alias == null ? name : alias);
-                    if (type instanceof ImmutableClassNode) {
-                        ClassExpression typeNode = new ClassExpression(type);
-                        imp.setNodeMetaData(ClassExpression.class, typeNode);
-                        configureAST(typeNode, nameNode);
-                    }
-                    configureAST(imp, importNode);
+                    imp = last(output.getImports());
+                    configureAST(imp, importNode, packageNode, nameNode);
                     // GRECLIPSE end
                 }
                 // GRECLIPSE add
@@ -1106,13 +1112,13 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             }
         }
         FieldNode enumField = EnumHelper.addEnumConstant(classNode, identifier, init);
+        enumField.addAnnotations(annotations);
         // GRECLIPSE add
         enumField.setLineNumber(savedLine);
         enumField.setColumnNumber(savedColumn);
         enumField.setNameStart(locations.findOffset(savedLine, savedColumn));
         enumField.setNameEnd(enumField.getNameStart() + identifier.length() - 1);
         // GRECLIPSE end
-        enumField.addAnnotations(annotations);
         configureAST(enumField, node);
         enumConstantBeingDef = false;
     }
@@ -3830,6 +3836,25 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // TODO we could one day store the Antlr AST on the Groovy AST
         // node.setCSTNode(ast);
     }
+
+    // GRECLIPSE add
+    protected void configureAST(AnnotatedNode node, AST ast, AST name0, AST name1) {
+        configureAST(node, ast);
+        node.setNameStart(locations.findOffset(name0.getLine(), name0.getColumn()));
+        GroovySourceAST nameStop = (GroovySourceAST) (name1 == null ? name0 : name1);
+        node.setNameEnd(locations.findOffset(nameStop.getLineLast(), nameStop.getColumnLast()) - 1);
+    }
+
+    protected static ClassNode makeClassNode(String name) {
+        ClassNode node = ClassHelper.make(name);
+        if (node instanceof ImmutableClassNode) {
+            ClassNode wrapper = ClassHelper.makeWithoutCaching(name);
+            wrapper.setRedirect(node);
+            node = wrapper;
+        }
+        return node;
+    }
+    // GRECLIPSE end
 
     protected static Token makeToken(int typeCode, AST node) {
         return Token.newSymbol(typeCode, node.getLine(), node.getColumn());

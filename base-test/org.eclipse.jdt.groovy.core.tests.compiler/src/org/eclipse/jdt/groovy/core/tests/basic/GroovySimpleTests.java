@@ -1385,7 +1385,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in Foo.groovy (at line 1)\n" +
         "\timport java.util.regex.Pattern\n" +
-        "\t                       ^^^^^^^\n" +
+        "\t       ^^^^^^^^^^^^^^^^^^^^^^^\n" +
         "The import java.util.regex.Pattern conflicts with a type defined in the same file\n" +
         "----------\n");
     }
@@ -1653,27 +1653,27 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in X.groovy (at line 2)\n" +
         "\timport org.andrill.coretools.data.edit.Command\n" +
-        "\t                                       ^^^^^^^\n" +
+        "\t       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
         "Groovy:unable to resolve class org.andrill.coretools.data.edit.Command\n" +
         "----------\n" +
         "2. ERROR in X.groovy (at line 3)\n" +
         "\timport org.andrill.coretools.data.edit.EditableProperty\n" +
-        "\t                                       ^^^^^^^^^^^^^^^^\n" +
+        "\t       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
         "Groovy:unable to resolve class org.andrill.coretools.data.edit.EditableProperty\n" +
         "----------\n" +
         "3. ERROR in X.groovy (at line 4)\n" +
         "\timport org.andrill.coretools.data.Model\n" +
-        "\t                                  ^^^^^\n" +
+        "\t       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
         "Groovy:unable to resolve class org.andrill.coretools.data.Model\n" +
         "----------\n" +
         "4. ERROR in X.groovy (at line 5)\n" +
         "\timport org.andrill.coretools.data.ModelCollection\n" +
-        "\t                                  ^^^^^^^^^^^^^^^\n" +
+        "\t       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
         "Groovy:unable to resolve class org.andrill.coretools.data.ModelCollection\n" +
         "----------\n" +
         "5. ERROR in X.groovy (at line 6)\n" +
         "\timport org.andrill.coretools.data.edit.commands.CompositeCommand\n" +
-        "\t                                                ^^^^^^^^^^^^^^^^\n" +
+        "\t       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" +
         "Groovy:unable to resolve class org.andrill.coretools.data.edit.commands.CompositeCommand\n" +
         "----------\n" +
         "6. ERROR in X.groovy (at line 8)\n" +
@@ -2576,7 +2576,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in p\\X.groovy (at line 2)\n" +
         "\timport a.b.c.D;\n" +
-        "\t             ^\n" +
+        "\t       ^^^^^^^\n" +
         "Groovy:unable to resolve class a.b.c.D\n" +
         "----------\n");
     }

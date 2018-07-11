@@ -77,7 +77,7 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
     public void testSearchForTypesScript6() throws Exception {
         // note that in "new First[ new First() ]", the first 'new First' is removed
         // by the AntlrPluginParser and so there is no way to search for it
-//        doTestForTwoInScript("new First[ new First() ]");
+        //doTestForTwoInScript("new First[ new First() ]");
         doTestForTwoInScript("[ new First(), First ]");
     }
 
@@ -128,11 +128,13 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testSearchForTypesClass7() throws Exception {
-        createUnit("other", "First", "class First { }");
-        doTestForTwoInClass("class Second extends First {\n" +
-                " def x() {\n" + // yes
-                " y = new other.First()\n" + // no
-                " y = new First()} }"); // yes
+        createUnit("other", "First", "class First {}");
+        doTestForTwoInClass("class Second extends First {\n" + // yes
+            "  def x() {\n" +
+            "    y = new other.First()\n" + // no
+            "    y = new First()\n" + // yes
+            "  }\n" +
+            "}\n");
     }
 
     @Test
@@ -168,8 +170,8 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
         //Specifically exercises the exact kind of searching behavior needed to find
         //Grails 2.0 tests that do *not* have @TestFor annotations.
 
-        int matchRule= SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE;
-        SearchPattern testPattern= SearchPattern.createPattern("*Tests", IJavaSearchConstants.TYPE, IJavaSearchConstants.DECLARATIONS, matchRule);
+        int matchRule = SearchPattern.R_EXACT_MATCH | SearchPattern.R_CASE_SENSITIVE;
+        SearchPattern testPattern = SearchPattern.createPattern("*Tests", IJavaSearchConstants.TYPE, IJavaSearchConstants.DECLARATIONS, matchRule);
         GroovyCompilationUnit songTests = createUnit("gtunes", "SongTests",
                 "package gtunes\n" +
                 "\n" +
@@ -182,7 +184,7 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
                 "package gtunes\n" +
                 "\n" +
                 "class Song2tests {" +
-                "    SongTests theOtherTests\n"+ //Shouldn't find
+                "    SongTests theOtherTests\n" + //Shouldn't find
                 "    def testSomethingElse() {\n" +
                 "       println 'testing'\n" +
                 "    }\n" +
@@ -201,17 +203,15 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
         IType artistTestsType = javaProject.findType("gtunes.ArtistTests");
         assertNotNull(artistTestsType);
 
-        SearchParticipant[] searchParticipants = new SearchParticipant[] { SearchEngine.getDefaultSearchParticipant() };
+        SearchParticipant[] searchParticipants = new SearchParticipant[] {SearchEngine.getDefaultSearchParticipant()};
 
-        final ArrayList<Object> result = new ArrayList<>();
-        IJavaSearchScope scope= SearchEngine.createJavaSearchScope(
-                new IJavaElement[] { songTests, weirdTests, artistTests},
-                IJavaSearchScope.SOURCES);
+        final List<Object> result = new ArrayList<>();
+        IJavaSearchScope scope = SearchEngine.createJavaSearchScope(new IJavaElement[] {songTests, weirdTests, artistTests}, IJavaSearchScope.SOURCES);
 
-        SearchRequestor requestor= new SearchRequestor() {
+        SearchRequestor requestor = new SearchRequestor() {
             @Override
             public void acceptSearchMatch(SearchMatch match) throws CoreException {
-                Object element= match.getElement();
+                Object element = match.getElement();
                 result.add(element);
             }
         };
@@ -280,7 +280,7 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
     public void testInnerTypes1() throws Exception {
         String firstContents =
             "class Other {\n" +
-            "        class First { }\n" +
+            "  class First {}\n" +
             "}";
 
         String secondContents =
@@ -300,22 +300,22 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
         assertEquals("Wrong offset " + match, start, match.getOffset());
         assertEquals("Wrong length " + match, len, match.getLength());
 
-        start = secondContents.indexOf("First", start+1);
+        start = secondContents.indexOf("First", start + 1);
         match = matches.get(1);
         assertEquals("Wrong offset " + match, start, match.getOffset());
         assertEquals("Wrong length " + match, len, match.getLength());
 
-        start = secondContents.indexOf("First", start+1);
+        start = secondContents.indexOf("First", start + 1);
         match = matches.get(2);
         assertEquals("Wrong offset " + match, start, match.getOffset());
         assertEquals("Wrong length " + match, len, match.getLength());
 
-        start = secondContents.indexOf("First", start+1);
+        start = secondContents.indexOf("First", start + 1);
         match = matches.get(3);
         assertEquals("Wrong offset " + match, start, match.getOffset());
         assertEquals("Wrong length " + match, len, match.getLength());
 
-        start = secondContents.indexOf("First", start+1);
+        start = secondContents.indexOf("First", start + 1);
         match = matches.get(4);
         assertEquals("Wrong offset " + match, start, match.getOffset());
         assertEquals("Wrong length " + match, len, match.getLength());
@@ -326,7 +326,7 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
         String firstContents =
             "package p\n" +
             "class Other {\n" +
-            "        class First { }\n" +
+            "  class First {}\n" +
             "}";
 
         String secondContents =
@@ -347,22 +347,22 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
         assertEquals("Wrong offset " + match, start, match.getOffset());
         assertEquals("Wrong length " + match, len, match.getLength());
 
-        start = secondContents.indexOf("First", start+1);
+        start = secondContents.indexOf("First", start + 1);
         match = matches.get(1);
         assertEquals("Wrong offset " + match, start, match.getOffset());
         assertEquals("Wrong length " + match, len, match.getLength());
 
-        start = secondContents.indexOf("First", start+1);
+        start = secondContents.indexOf("First", start + 1);
         match = matches.get(2);
         assertEquals("Wrong offset " + match, start, match.getOffset());
         assertEquals("Wrong length " + match, len, match.getLength());
 
-        start = secondContents.indexOf("First", start+1);
+        start = secondContents.indexOf("First", start + 1);
         match = matches.get(3);
         assertEquals("Wrong offset " + match, start, match.getOffset());
         assertEquals("Wrong length " + match, len, match.getLength());
 
-        start = secondContents.indexOf("First", start+1);
+        start = secondContents.indexOf("First", start + 1);
         match = matches.get(4);
         assertEquals("Wrong offset " + match, start, match.getOffset());
         assertEquals("Wrong length " + match, len, match.getLength());
@@ -373,7 +373,7 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
         String firstContents =
             "package p\n" +
             "class Other {\n" +
-            "        class First { }\n" +
+            "  class First {}\n" +
             "}";
 
         String secondContents =
@@ -394,17 +394,17 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
         assertEquals("Wrong offset " + match, start, match.getOffset());
         assertEquals("Wrong length " + match, len, match.getLength());
 
-        start = secondContents.indexOf("First", start+1);
+        start = secondContents.indexOf("First", start + 1);
         match = matches.get(1);
         assertEquals("Wrong offset " + match, start, match.getOffset());
         assertEquals("Wrong length " + match, len, match.getLength());
 
-        start = secondContents.indexOf("First", start+1);
+        start = secondContents.indexOf("First", start + 1);
         match = matches.get(2);
         assertEquals("Wrong offset " + match, start, match.getOffset());
         assertEquals("Wrong length " + match, len, match.getLength());
 
-        start = secondContents.indexOf("First", start+1);
+        start = secondContents.indexOf("First", start + 1);
         match = matches.get(3);
         assertEquals("Wrong offset " + match, start, match.getOffset());
         assertEquals("Wrong length " + match, len, match.getLength());
@@ -419,7 +419,7 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
                 "}\n";
         String secondContents =
                 "package q\n" +
-                "import p.First\n" +
+                "import p.*\n" +
                 "import groovy.transform.CompileStatic\n" +
                 "\n" +
                 "@CompileStatic\n" +
@@ -434,9 +434,9 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
             int start = secondContents.indexOf("First", lastMatch);
             assertEquals("Wrong offset " + searchMatch, start, searchMatch.getOffset());
             assertEquals("Wrong length " + searchMatch, "First".length(), searchMatch.getLength());
-            lastMatch = start+1;
+            lastMatch = start + 1;
         }
-        assertEquals("Wrong number of matches found\n" + matches, 3, matches.size());
+        assertEquals("Wrong number of matches found\n" + matches, 2, matches.size());
     }
 
     //--------------------------------------------------------------------------

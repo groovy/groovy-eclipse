@@ -63,7 +63,7 @@ public class GroovyIndexingVisitor extends DepthFirstVisitor {
         }
         String fieldName = node.getFieldName();
         if (fieldName != null) {
-            requestor.acceptUnknownReference(fieldName.toCharArray(), node.getTypeEnd() + 1);
+            requestor.acceptUnknownReference(fieldName.toCharArray(), node.getFieldNameExpr().getStart());
         }
         super.visitImport(node);
     }

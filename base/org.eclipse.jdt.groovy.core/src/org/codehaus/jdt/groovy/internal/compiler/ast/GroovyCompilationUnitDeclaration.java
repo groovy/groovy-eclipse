@@ -955,11 +955,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                 // type imports
                 for (ImportNode importNode : importNodes) {
-                    int endOffset = endOffset(importNode), typeEndOffset = -2, typeStartOffset = -1;
+                    int endOffset = endOffset(importNode), nameEndOffset = -2, nameStartOffset = -1;
                     if (endOffset > 0) {
-                        typeEndOffset = importNode.getTypeEnd();
-                        typeStartOffset = importNode.getTypeStart();
-                        if (typeStartOffset < 1) {
+                        nameEndOffset = importNode.getNameEnd() + 1;
+                        nameStartOffset = importNode.getNameStart();
+                        if (nameStartOffset < 1) {
                             continue; // incomplete import created during recovery
                         }
                     }
@@ -967,11 +967,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     ImportReference ref;
                     if (importNode.getAlias() == null || importNode.getAlias().length() < 1 ||
                             importNode.getAlias().equals(String.valueOf(splits[splits.length - 1]))) {
-                        endOffset = typeEndOffset; // endOffset may include extras before ;
-                        long[] positions = positionsFor(splits, typeStartOffset, endOffset);
+                        endOffset = nameEndOffset; // endOffset may include extras before ;
+                        long[] positions = positionsFor(splits, nameStartOffset, endOffset);
                         ref = new ImportReference(splits, positions, false, Flags.AccDefault);
                     } else {
-                        long[] positions = positionsFor(splits, typeStartOffset, endOffset);
+                        long[] positions = positionsFor(splits, nameStartOffset, endOffset);
                         ref = new AliasImportReference(importNode.getAlias().toCharArray(), splits, positions, false, Flags.AccDefault);
                     }
                     ref.annotations = createAnnotations(importNode.getAnnotations());
@@ -995,14 +995,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 // star imports
                 for (ImportNode importPackage : importPackages) {
                     String importText = importPackage.getText();
-                    int endOffset = endOffset(importPackage), packageEndOffset = -2, packageStartOffset = -1;
+                    int endOffset = endOffset(importPackage), nameEndOffset = -2, nameStartOffset = -1;
                     if (endOffset > 0) {
-                        // when calculating these offsets, assume no extraneous whitespace
-                        packageStartOffset = importPackage.getStart() + "import ".length();
-                        packageEndOffset = packageStartOffset + importText.length() - "import ".length() - ".*".length();
+                        nameEndOffset = importPackage.getNameEnd() + 1;
+                        nameStartOffset = importPackage.getNameStart();
                     }
                     char[][] splits = CharOperation.splitOn('.', importPackage.getPackageName().substring(0, importPackage.getPackageName().length() - 1).toCharArray());
-                    ImportReference ref = new ImportReference(splits, positionsFor(splits, packageStartOffset, packageEndOffset), true, Flags.AccDefault);
+                    ImportReference ref = new ImportReference(splits, positionsFor(splits, nameStartOffset, nameEndOffset), true, Flags.AccDefault);
                     ref.annotations = createAnnotations(importPackage.getAnnotations());
 
                     ref.sourceEnd = Math.max(endOffset - 1, ref.sourceStart); // For error reporting, Eclipse wants -1
@@ -1024,9 +1023,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 // static imports
                 for (Map.Entry<String, ImportNode> importStatic : importStatics.entrySet()) {
                     ImportNode importNode = importStatic.getValue();
-                    int endOffset = endOffset(importNode), typeStartOffset = importNode.getTypeStart();
+                    int endOffset = endOffset(importNode), nameEndOffset = -2, nameStartOffset = -1;
+                    if (endOffset > 0) {
+                        nameEndOffset = importNode.getNameEnd() + 1;
+                        nameStartOffset = importNode.getNameStart();
+                    }
                     char[][] splits = CharOperation.splitOn('.', (importNode.getClassName() + '.' + importNode.getFieldName()).toCharArray());
-                    long[] positions = positionsFor(splits, typeStartOffset, endOffset);
+                    long[] positions = positionsFor(splits, nameStartOffset, nameEndOffset);
                     ImportReference ref;
                     if (importNode.getAlias() == null || importNode.getAlias().length() < 1 || importNode.getAlias().equals(importNode.getFieldName())) {
                         ref = new ImportReference(splits, positions, false, Flags.AccDefault | Flags.AccStatic);
@@ -1055,13 +1058,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 for (Map.Entry<String, ImportNode> importStaticStar : importStaticStars.entrySet()) {
                     String classname = importStaticStar.getKey();
                     ImportNode importNode = importStaticStar.getValue();
-                    int endOffset = endOffset(importNode), typeEndOffset = -2, typeStartOffset = -1;
+                    int endOffset = endOffset(importNode), nameEndOffset = -2, nameStartOffset = -1;
                     if (endOffset > 0) {
-                        typeEndOffset = importNode.getTypeEnd();
-                        typeStartOffset = importNode.getTypeStart();
+                        nameEndOffset = importNode.getNameEnd() + 1;
+                        nameStartOffset = importNode.getNameStart();
                     }
                     char[][] splits = CharOperation.splitOn('.', classname.toCharArray());
-                    long[] positions = positionsFor(splits, typeStartOffset, typeEndOffset);
+                    long[] positions = positionsFor(splits, nameStartOffset, nameEndOffset);
                     ImportReference ref = new ImportReference(splits, positions, true, Flags.AccDefault | Flags.AccStatic);
                     ref.annotations = createAnnotations(importNode.getAnnotations());
 

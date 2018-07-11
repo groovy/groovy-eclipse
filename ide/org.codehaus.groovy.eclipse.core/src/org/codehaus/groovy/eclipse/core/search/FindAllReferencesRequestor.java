@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ClassExpression;
@@ -36,14 +37,15 @@ import org.eclipse.jdt.groovy.search.EqualityVisitor;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 
-/**
- * Finds all references to a particular Declaration in a file.
- */
 public class FindAllReferencesRequestor implements ITypeRequestor {
 
     private final AnnotatedNode declaration;
 
     private final Map<ASTNode, Integer> references;
+
+    public Map<ASTNode, Integer> getReferences() {
+        return references;
+    }
 
     public FindAllReferencesRequestor(AnnotatedNode declaration) {
         this.declaration = declaration;
@@ -52,20 +54,19 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
 
     @Override
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
-        if (node.getLength() == 0) {
+        if (node.getLength() < 1) {
             return VisitStatus.CONTINUE;
         }
 
-        if (node instanceof AnnotatedNode) {
+        if (node instanceof AnnotatedNode && !(node instanceof ImportNode || node instanceof PackageNode)) {
             ASTNode maybeDeclaration = result.declaration;
             if (maybeDeclaration == null) {
                 return VisitStatus.CONTINUE;
             }
+
             if (maybeDeclaration instanceof ClassNode) {
-                // sometimes generated methods and properties have a ClassNode
-                // as the declaration.
-                // we want to ignore these
-                if (!(node instanceof ClassExpression || node instanceof ClassNode || node instanceof ImportNode)) {
+                // sometimes generated methods and properties have a ClassNode as the declaration; ignore these
+                if (!(node instanceof ClassExpression || node instanceof ClassNode)) {
                     return VisitStatus.CONTINUE;
                 }
 
@@ -73,10 +74,8 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
                 if (node instanceof ClassNode) {
                     ClassNode script = (ClassNode) node;
                     if (script.isScript()) {
-                        // ugghh..I don't like this. If the length of the node
-                        // is different from the length of the name of the
-                        // script
-                        // we know that this is the declaration, not a reference
+                        // ugghh...I don't like this: if the length of the node is different from the length
+                        // of the name of the script we know that this is the declaration, not a reference
                         if (script.getNameWithoutPackage().length() != script.getLength()) {
                             return VisitStatus.CONTINUE;
                         }
@@ -89,24 +88,6 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
                 maybeDeclaration = ((PropertyNode) maybeDeclaration).getField();
             }
 
-            if (node instanceof ImportNode && ((ImportNode) node).getType() != null) {
-                ImportNode imp = ((ImportNode) node);
-                node = imp.getType();
-                if (imp.isStatic()) {
-                    // check for static import reference
-                    boolean isStaticDecl = (declaration instanceof FieldNode && ((FieldNode) declaration).isStatic())
-                            || (declaration instanceof FieldNode && ((FieldNode) declaration).isStatic());
-                    if (isStaticDecl) {
-                        String declarationName = getDeclarationName();
-                        ClassNode declaringClass = declaration.getDeclaringClass();
-                        if (declarationName.equals(imp.getFieldName()) && declaringClass.equals(imp.getType())) {
-                            // add just the name here
-                        }
-                        return VisitStatus.CONTINUE;
-                    }
-                }
-            }
-
             if (isEquivalent(maybeDeclaration)) {
                 int flag = EqualityVisitor.checkForAssignment(node, result.enclosingAssignment) ? F_WRITE_OCCURRENCE : F_READ_OCCURRENCE;
                 references.put(node, flag);
@@ -115,23 +96,9 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
         return VisitStatus.CONTINUE;
     }
 
-    private String getDeclarationName() {
-        if (declaration instanceof FieldNode) {
-            return ((FieldNode) declaration).getName();
-        } else if (declaration instanceof MethodNode) {
-            return ((MethodNode) declaration).getName();
-        } else if (declaration instanceof ClassNode) {
-            return ((ClassNode) declaration).getName();
-        } else {
-            // Variable
-            return declaration.getText();
-        }
-    }
-
     // from IOccurrenceFinder
     public static final int F_WRITE_OCCURRENCE = 1;
-
-    public static final int F_READ_OCCURRENCE = 2;
+    public static final int F_READ_OCCURRENCE  = 2;
 
     private boolean isEquivalent(ASTNode maybeDeclaration) {
         if (maybeDeclaration == declaration) {
@@ -151,34 +118,31 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
                 // ignorant of possible default parameters
                 MethodNode maybeMethod = (MethodNode) maybeDeclaration;
                 MethodNode method = (MethodNode) declaration;
-                return maybeMethod.getName().equals(method.getName())
-                        && maybeMethod.getDeclaringClass().equals(method.getDeclaringClass());
+                return maybeMethod.getName().equals(method.getName()) &&
+                    maybeMethod.getDeclaringClass().equals(method.getDeclaringClass());
             } else if (maybeDeclaration instanceof MethodNode) {
                 MethodNode maybeMethod = (MethodNode) maybeDeclaration;
                 MethodNode method = (MethodNode) declaration;
-                return checkParamLength(maybeMethod, method) && maybeMethod.getName().equals(method.getName())
-                        && maybeMethod.getDeclaringClass().equals(method.getDeclaringClass()) && checkParams(maybeMethod, method);
+                return checkParamLength(maybeMethod, method) && maybeMethod.getName().equals(method.getName()) &&
+                    maybeMethod.getDeclaringClass().equals(method.getDeclaringClass()) && checkParams(maybeMethod, method);
             }
         }
         // here check for inner class nodes
-        if ((maybeDeclaration instanceof InnerClassNode && declaration instanceof JDTClassNode)
-                || (declaration instanceof InnerClassNode && maybeDeclaration instanceof JDTClassNode)) {
+        if ((maybeDeclaration instanceof InnerClassNode && declaration instanceof JDTClassNode) ||
+                (declaration instanceof InnerClassNode && maybeDeclaration instanceof JDTClassNode)) {
             return ((ClassNode) maybeDeclaration).getName().equals(((ClassNode) declaration).getName());
         }
         return false;
-
     }
 
     private boolean checkParams(MethodNode maybeMethod, MethodNode method) {
         Parameter[] maybeParameters = maybeMethod.getParameters();
         Parameter[] parameters = method.getParameters();
-
-        for (int i = 0; i < parameters.length; i++) {
+        for (int i = 0; i < parameters.length; i += 1) {
             if (!maybeParameters[i].getName().equals(parameters[i].getName()) || !typeEquals(maybeParameters[i], parameters[i])) {
                 return false;
             }
         }
-
         return true;
     }
 
@@ -207,9 +171,5 @@ public class FindAllReferencesRequestor implements ITypeRequestor {
         }
 
         return true;
-    }
-
-    public Map<ASTNode, Integer> getReferences() {
-        return references;
     }
 }

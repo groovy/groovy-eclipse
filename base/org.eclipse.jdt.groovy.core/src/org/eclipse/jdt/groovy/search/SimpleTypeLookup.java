@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 import groovy.lang.Closure;
 
@@ -106,17 +107,12 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
     @Override
     public TypeLookupResult lookupType(ImportNode node, VariableScope scope) {
-        ClassNode baseType = node.getType();
-        if (baseType != null) {
-            return new TypeLookupResult(baseType, baseType, baseType, TypeConfidence.EXACT, scope);
-        } else {
-            // this is a * import
-            return new TypeLookupResult(VariableScope.OBJECT_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE, VariableScope.OBJECT_CLASS_NODE, TypeConfidence.INFERRED, scope);
-        }
+        ClassNode baseType = Optional.ofNullable(node.getType()).orElse(VariableScope.NULL_TYPE);
+        return new TypeLookupResult(baseType, baseType, baseType, TypeConfidence.EXACT, scope);
     }
 
     /**
-     * Returns the passed in node, unless the declaration of an InnerClassNode.
+     * @return {@code node}, unless the declaration is an {@link InnerClassNode}
      */
     @Override
     public TypeLookupResult lookupType(ClassNode node, VariableScope scope) {

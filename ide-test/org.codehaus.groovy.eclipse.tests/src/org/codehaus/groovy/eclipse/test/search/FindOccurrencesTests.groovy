@@ -361,16 +361,16 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         String name = 'HTML'
-        int len = name.length()
-        int start1 = contents.indexOf(name)
-        int start2 = contents.indexOf(name, start1 + 1)
+        int length = name.length()
+        int offset = contents.indexOf(name)
+        int start1 = contents.indexOf('javax')
+        int start2 = contents.indexOf(name, offset + 1)
         int start3 = contents.indexOf(name, start2 + 1)
         int start4 = contents.indexOf(name, start3 + 1)
-        int start = start1
-        doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len)
+        doTest(contents, offset, length, start1, 'javax.swing.text.html.HTML'.length(), start2, length, start3, length, start4, length)
     }
 
-    @Test // uses a different starting point
+    @Test // different starting point
     void testGenerics2() {
         String contents = '''\
             import javax.swing.text.html.HTML
@@ -379,16 +379,15 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         String name = 'HTML'
-        int len = name.length()
-        int start1 = contents.indexOf(name)
-        int start2 = contents.indexOf(name, start1 + 1)
+        int length = name.length()
+        int start1 = contents.indexOf('javax')
+        int start2 = contents.indexOf(name, contents.indexOf(name) + 1)
         int start3 = contents.indexOf(name, start2 + 1)
         int start4 = contents.indexOf(name, start3 + 1)
-        int start = start2
-        doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len)
+        doTest(contents, start2, length, start1, 'javax.swing.text.html.HTML'.length(), start2, length, start3, length, start4, length)
     }
 
-    @Test // uses a different starting point
+    @Test // different starting point
     void testGenerics3() {
         String contents = '''\
             import javax.swing.text.html.HTML
@@ -397,14 +396,12 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
             '''.stripIndent()
 
         String name = 'HTML'
-        int len = name.length()
-
-        int start1 = contents.indexOf(name)
-        int start2 = contents.indexOf(name, start1 + 1)
+        int length = name.length()
+        int start1 = contents.indexOf('javax')
+        int start2 = contents.indexOf(name, contents.indexOf(name) + 1)
         int start3 = contents.indexOf(name, start2 + 1)
         int start4 = contents.indexOf(name, start3 + 1)
-        int start = start4
-        doTest(contents, start, len, start1, len, start2, len, start3, len, start4, len)
+        doTest(contents, start4, length, start1, 'javax.swing.text.html.HTML'.length(), start2, length, start3, length, start4, length)
     }
 
     @Test // GRECLIPSE-1219
@@ -613,51 +610,69 @@ final class FindOccurrencesTests extends GroovyEclipseTestSuite {
         doTest(contents, start, len, start1, len, start2, len, start5, len, start6, len)
     }
 
+    @Test // on-demand imports should not be seen as Object
+    void testStarImports() {
+        String contents = '''\
+            import java.lang.Object
+            import java.lang.*
+            import foo.bar.*
+            Object object
+            '''.stripIndent()
+
+        int offset = contents.lastIndexOf('Object'), length = 'Object'.length()
+        doTest(contents, offset, length, contents.indexOf('java.lang.Object'), 16, offset, length)
+    }
+
     @Test
     void testStaticImports1() {
         addGroovySource('class Other {\n  static int FOO\n static boolean BAR() { } }', 'Other', 'p')
-        String contents =
-            'import static p.Other.FOO\n' +
-            'FOO\n' +
-            'p.Other.FOO'
-        int start = contents.indexOf('FOO')
-        int len = 'FOO'.length()
-        int start1 = start
+        String contents = '''\
+            import static p.Other.FOO
+            FOO
+            p.Other.FOO
+            '''.stripIndent()
+
+        int offset = contents.indexOf('FOO')
+        int length = 'FOO'.length()
+        int start1 = offset
         int start2 = contents.indexOf('FOO', start1 + 1)
         int start3 = contents.indexOf('FOO', start2 + 1)
-        doTest(contents, start, len, start1, len, start2, len, start3, len)
+        doTest(contents, offset, length, start1, length, start2, length, start3, length)
     }
 
     @Test
     void testStaticImports2() {
         addGroovySource('class Other {\n  static int FOO\n static boolean BAR() { } }', 'Other', 'p')
-        String contents =
-            'import static p.Other.BAR\n' +
-            'BAR\n' +
-            'p.Other.BAR'
-        int start = contents.indexOf('BAR')
-        int len = 'BAR'.length()
-        int start1 = start
+        String contents = '''\
+            import static p.Other.BAR
+            BAR
+            p.Other.BAR
+            '''.stripIndent()
+
+        int offset = contents.indexOf('BAR')
+        int length = 'BAR'.length()
+        int start1 = offset
         int start2 = contents.indexOf('BAR', start1 + 1)
         int start3 = contents.indexOf('BAR', start2 + 1)
-        doTest(contents, start, len, start1, len, start2, len, start3, len)
+        doTest(contents, offset, length, start1, length, start2, length, start3, length)
     }
 
     @Test
     void testStaticImports3() {
         addGroovySource('class Other {\n  static int FOO\n static boolean BAR() { } }', 'Other', 'p')
-        String contents =
-            'import static p.Other.BAR\n' +
-            'import p.Other\n' +
-            'Other\n' +
-            'p.Other.BAR'
-        int start = contents.indexOf('p.Other')
-        int len1 = 'p.Other'.length()
-        int len = 'Other'.length()
-        int start1 = start
-        int start2 = contents.indexOf('Other', start1 + len1)
-        int start3 = contents.indexOf('Other', start2 + 1)
-        int start4 = contents.indexOf('p.Other', start3 + 1)
-        doTest(contents, start, len1, start1, len1, start2, len, start3, len, start4, len1)
+        String contents = '''\
+            import static p.Other.BAR
+            import p.Other
+            Other
+            p.Other.BAR
+            '''.stripIndent()
+
+        int offset = contents.indexOf('p.Other')
+        int length = 'p.Other'.length()
+        int start1 = offset
+        int start2 = contents.indexOf('p.Other', start1 + length)
+        int start3 = contents.indexOf('Other', start2 + length)
+        int start4 = contents.lastIndexOf('p.Other')
+        doTest(contents, offset, length, start1, length, start2, length, start3, 'Other'.length(), start4, length)
     }
 }

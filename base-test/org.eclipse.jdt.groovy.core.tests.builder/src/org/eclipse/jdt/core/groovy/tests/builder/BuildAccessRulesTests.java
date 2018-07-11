@@ -15,6 +15,8 @@
  */
 package org.eclipse.jdt.core.groovy.tests.builder;
 
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -70,7 +72,7 @@ public final class BuildAccessRulesTests extends BuilderTestSuite {
         for (String type : types) {
             int offset = -1;
             while ((offset = source.indexOf(type.trim(), offset + 1)) != -1) {
-                problems.add(String.format(problemFormat, type.trim(), offset, offset + type.length()));
+                problems.add(String.format(problemFormat, last(type.split("\\.")).trim(), offset, offset + type.length()));
             }
         }
 
@@ -83,7 +85,7 @@ public final class BuildAccessRulesTests extends BuilderTestSuite {
     public void testAccessForImport() {
         String source = "import java.beans.BeanDescriptor";
 
-        assertAccessRestriction(source, "BeanDescriptor");
+        assertAccessRestriction(source, "java.beans.BeanDescriptor");
     }
 
     @Test
