@@ -1577,6 +1577,18 @@ private void initializeUsesNullTypeAnnotation() {
 PackageBinding getPackage0(char[] name) {
 	return this.knownPackages.get(name);
 }
+// GROOVY add -- for GroovyCompilationUnitScope.getDefaultImports()
+public PackageBinding getPackage(char[][] packageName, ModuleBinding moduleBinding) {
+	assert packageName != null && packageName.length == 2 : "Invalid packageName"; //$NON-NLS-1$
+	Binding binding = getTopLevelPackage(packageName[0]).getTypeOrPackage(packageName[1], moduleBinding);
+	if (binding == null || !binding.isValidBinding() || !(binding instanceof PackageBinding)) {
+		org.eclipse.jdt.internal.core.util.Util.log(org.eclipse.core.runtime.IStatus.WARNING,
+			"Invalid binding for default import: " + CharOperation.toString(packageName)); //$NON-NLS-1$
+		return TheNotFoundPackage;
+	}
+	return (PackageBinding) binding;
+}
+// GROOVY end
 
 /* Answer the type corresponding to the compoundName.
 * Ask the name environment for the type if its not in the cache.

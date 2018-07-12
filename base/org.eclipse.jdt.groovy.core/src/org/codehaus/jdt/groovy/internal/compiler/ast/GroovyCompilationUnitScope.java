@@ -40,6 +40,7 @@ import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 import org.eclipse.jdt.internal.core.builder.AbortIncrementalBuildException;
 import org.eclipse.jdt.internal.core.builder.NameEnvironment;
@@ -51,7 +52,7 @@ import org.eclipse.jdt.internal.core.builder.NameEnvironment;
  */
 public class GroovyCompilationUnitScope extends CompilationUnitScope {
 
-    private static final char[][] javaLang = CharOperation.splitOn('.', "java.lang".toCharArray());
+    private static final char[][] javaLang = TypeConstants.JAVA_LANG;
     // Matches ResolveVisitor - these are the additional automatic imports for groovy files
     private static final char[][] javaIo = CharOperation.splitOn('.', "java.io".toCharArray());
     private static final char[][] javaNet = CharOperation.splitOn('.', "java.net".toCharArray());
@@ -61,8 +62,8 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 
     private static final char[][] javaMathBigDecimal = CharOperation.splitOn('.', "java.math.BigDecimal".toCharArray());
     private static final char[][] javaMathBigInteger = CharOperation.splitOn('.', "java.math.BigInteger".toCharArray());
-            static final char[][] GROOVY_LANG_METACLASS = CharOperation.splitOn('.', "groovy.lang.MetaClass".toCharArray());
-            static final char[][] GROOVY_LANG_GROOVYOBJECT = CharOperation.splitOn('.', "groovy.lang.GroovyObject".toCharArray());
+    /*   */ static final char[][] GROOVY_LANG_METACLASS = CharOperation.splitOn('.', "groovy.lang.MetaClass".toCharArray());
+    /*   */ static final char[][] GROOVY_LANG_GROOVYOBJECT = CharOperation.splitOn('.', "groovy.lang.GroovyObject".toCharArray());
 
     public GroovyCompilationUnitScope(GroovyCompilationUnitDeclaration compilationUnitDeclaration, LookupEnvironment lookupEnvironment) {
         super(compilationUnitDeclaration, lookupEnvironment);
@@ -85,40 +86,38 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
 
     @Override
     protected ImportBinding[] getDefaultImports() {
-        if (defaultGroovyImports != null) return defaultGroovyImports;
-        List<ImportBinding> importBindings = new ArrayList<>();
-        Collections.addAll(importBindings, super.getDefaultImports()); // picks up 'java.lang'
+        if (defaultGroovyImports == null) {
+            List<ImportBinding> importBindings = new ArrayList<>(8);
+            Collections.addAll(importBindings, super.getDefaultImports()); // picks up 'java.lang'
 
-        // augment with the Groovy on-demand imports
-        importBindings.add(new ImportBinding(javaIo, true, environment.createPackage(javaIo), null));
-        importBindings.add(new ImportBinding(javaNet, true, environment.createPackage(javaNet), null));
-        importBindings.add(new ImportBinding(javaUtil, true, environment.createPackage(javaUtil), null));
-        importBindings.add(new ImportBinding(groovyLang, true, environment.createPackage(groovyLang), null));
-        importBindings.add(new ImportBinding(groovyUtil, true, environment.createPackage(groovyUtil), null));
+            // augment with the Groovy on-demand imports
+            importBindings.add(new ImportBinding(javaIo, true, environment.getPackage(javaIo, module()), null));
+            importBindings.add(new ImportBinding(javaNet, true, environment.getPackage(javaNet, module()), null));
+            importBindings.add(new ImportBinding(javaUtil, true, environment.getPackage(javaUtil, module()), null));
+            importBindings.add(new ImportBinding(groovyLang, true, environment.getPackage(groovyLang, module()), null));
+            importBindings.add(new ImportBinding(groovyUtil, true, environment.getPackage(groovyUtil, module()), null));
 
-        // and specific imports for BigDecimal and BigInteger
-        importBindings.add(new ImportBinding(javaMathBigDecimal, false, createTypeRef(javaMathBigDecimal), null));
-        importBindings.add(new ImportBinding(javaMathBigInteger, false, createTypeRef(javaMathBigInteger), null));
+            // and specific imports for BigDecimal and BigInteger
+            importBindings.add(new ImportBinding(javaMathBigDecimal, false, environment.getType(javaMathBigDecimal), null));
+            importBindings.add(new ImportBinding(javaMathBigInteger, false, environment.getType(javaMathBigInteger), null));
 
-        /* See https://github.com/groovy/groovy-eclipse/issues/256 and https://issues.apache.org/jira/browse/GROOVY-8063
-         *
-         * @interface Anno { Class value() }
-         *
-         * @Anno(value=Inner) // Inner cannot be resolved -- I think this is correct behavior; below enables resolution
-         * class Outer {
-         *   static class Inner {}
-         * }
-         */
-        //for (SourceTypeBinding topLevelType : topLevelTypes) {
-        //    if (topLevelType.hasMemberTypes()) // add synthetic import to help resolve inner types
-        //        importBindings.add(new ImportBinding(topLevelType.compoundName, true, topLevelType, null));
-        //}
+            /* See https://github.com/groovy/groovy-eclipse/issues/256 and https://issues.apache.org/jira/browse/GROOVY-8063
+             *
+             * @interface Anno { Class value() }
+             *
+             * @Anno(value=Inner) // Inner cannot be resolved -- I think this is correct behavior; below enables resolution
+             * class Outer {
+             *   static class Inner {}
+             * }
+             */
+            //for (SourceTypeBinding topLevelType : topLevelTypes) {
+            //    if (topLevelType.hasMemberTypes()) // add synthetic import to help resolve inner types
+            //        importBindings.add(new ImportBinding(topLevelType.compoundName, true, topLevelType, null));
+            //}
 
-        return defaultGroovyImports = importBindings.toArray(new ImportBinding[importBindings.size()]);
-    }
-
-    private ReferenceBinding createTypeRef(char[][] compoundName) {
-        return environment.getType(compoundName);
+            defaultGroovyImports = importBindings.toArray(new ImportBinding[importBindings.size()]);
+        }
+        return defaultGroovyImports;
     }
 
     @Override
