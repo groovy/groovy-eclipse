@@ -91,7 +91,9 @@ final class TriggerCharacterCompletionTests extends CompletionTestSuite {
                 closure << ' '
             }
             if (proposal.toString().contains('Closure')) {
-                closure << 'it'
+                if (!isEnabled(GroovyContentAssist.CLOSURE_NOPARENS)) {
+                    closure << 'it'
+                }
             } else {
                 closure << 'o1'
                 if (isEnabled(FORMATTER_INSERT_SPACE_BEFORE_COMMA_IN_ARRAY_INITIALIZER)) {

@@ -90,7 +90,7 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
     @Test
     void testMethodWithClosure() {
         ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, 'any'))
-        checkReplacementString(proposals, 'any { it }', 1)
+        checkReplacementString(proposals, 'any {  }', 1)
     }
 
     @Test
@@ -102,7 +102,7 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
     @Test
     void testMethodWith2Args() {
         ICompletionProposal[] proposals = createProposalsAtOffset(SCRIPTCONTENTS, getIndexOf(SCRIPTCONTENTS, 'findIndexOf'))
-        checkReplacementRegexp(proposals, /findIndexOf\(\p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*\) \{ it \}/, 1)
+        checkReplacementRegexp(proposals, /findIndexOf\(\p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*\) \{  \}/, 1)
     }
 
     @Test
@@ -168,7 +168,7 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
         addGroovySource(SCRIPTCONTENTS, nextUnitName())
 
         String contents = 'new Foo().method2'
-        String expected = 'new Foo().method2(arg) { it }'
+        String expected = 'new Foo().method2(arg) {  }'
         checkProposalApplicationNonType(contents, expected, contents.length(), 'method2')
     }
 
@@ -188,7 +188,7 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
         addGroovySource(SCRIPTCONTENTS, nextUnitName())
 
         String contents = 'new Foo().method2'
-        String expected = 'new Foo().method2(arg) c1'
+        String expected = 'new Foo().method2(arg) {  }'
         checkProposalApplicationNonType(contents, expected, contents.length(), 'method2')
     }
 
@@ -208,7 +208,7 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
         addGroovySource(SCRIPTCONTENTS, nextUnitName())
 
         String contents = 'new Foo().method3'
-        String expected = 'new Foo().method3(arg, { it }) { it }'
+        String expected = 'new Foo().method3(arg, { it }) {  }'
         checkProposalApplicationNonType(contents, expected, contents.length(), 'method3')
     }
 
@@ -228,7 +228,7 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
         addGroovySource(SCRIPTCONTENTS, nextUnitName())
 
         String contents = 'new Foo().method3'
-        String expected = 'new Foo().method3(arg, c1) c2'
+        String expected = 'new Foo().method3(arg, c1) {  }'
         checkProposalApplicationNonType(contents, expected, contents.length(), 'method3')
     }
 
@@ -334,7 +334,7 @@ final class GroovyLikeCompletionTests extends CompletionTestSuite {
     void testNamedArguments3() {
         groovyPrefs.setValue(GroovyContentAssist.NAMED_ARGUMENTS, true)
 
-        checkUniqueProposal((SCRIPTCONTENTS - ~/\s*$/) + '.', 'new Foo().', 'method3', 'method3(arg: arg, c1: { it }) { it }')
+        checkUniqueProposal((SCRIPTCONTENTS - ~/\s*$/) + '.', 'new Foo().', 'method3', 'method3(arg: arg, c1: { it }) {  }')
     }
 
     @Test

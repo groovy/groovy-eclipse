@@ -190,6 +190,23 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
         assertEquals('Completion proposal applied but different results found.', expect, actual)
     }
 
+    /**
+     * Applies the specified completion proposal to the active editor and checks
+     * against the expected replacement, the initial parameter selection,
+     * and the target cursor position after after quitting parameter linked mode.
+     */
+    protected void applyProposalAndCheckCursor(ICompletionProposal proposal, String expected,
+        int expectedSelectionOffset, int expectedSelectionLength = 0, int expectedCursorPosition = expectedSelectionOffset) {
+
+        applyProposalAndCheck(proposal, expected)
+
+        JavaContentAssistInvocationContext context = proposal.@fInvocationContext
+
+        assertEquals("Unexpected selection range offset", expectedSelectionOffset, proposal.getSelection(context.document).x);
+        assertEquals("Unexpected selection range length", expectedSelectionLength, proposal.getSelection(context.document).y);
+        assertEquals("Unexpected cursor position", expectedCursorPosition, proposal.replacementOffset + proposal.computeCursorPosition());
+    }
+
     protected void checkReplacementRegexp(ICompletionProposal[] proposals, String expectedReplacement, int expectedCount) {
         int foundCount = 0
         for (proposal in proposals) {
