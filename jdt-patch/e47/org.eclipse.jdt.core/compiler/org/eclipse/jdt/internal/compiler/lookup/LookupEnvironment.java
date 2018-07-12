@@ -1543,14 +1543,19 @@ PackageBinding getPackage0(char[] name) {
 }
 // GROOVY add -- for GroovyCompilationUnitScope.getDefaultImports()
 public PackageBinding getPackage(char[][] packageName, ModuleBinding moduleBinding) {
-	assert packageName != null && packageName.length == 2 : "Invalid packageName"; //$NON-NLS-1$
-	Binding binding = getTopLevelPackage(packageName[0]).getTypeOrPackage(packageName[1], moduleBinding);
-	if (binding == null || !binding.isValidBinding() || !(binding instanceof PackageBinding)) {
-		org.eclipse.jdt.internal.core.util.Util.log(org.eclipse.core.runtime.IStatus.WARNING,
-			"Invalid package binding for default import: " + CharOperation.toString(packageName)); //$NON-NLS-1$
-		return TheNotFoundPackage;
+	if (packageName != null && packageName.length == 2) {
+		PackageBinding parent = getTopLevelPackage(packageName[0]);
+		if (parent != null) { // null if java/groovy runtime is not on classpath
+			Binding binding = parent.getTypeOrPackage(packageName[1], moduleBinding);
+			if ((binding instanceof PackageBinding) && binding.isValidBinding()) {
+				return (PackageBinding) binding;
+			}
+		}
 	}
-	return (PackageBinding) binding;
+
+	org.eclipse.jdt.internal.core.util.Util.log(org.eclipse.core.runtime.IStatus.WARNING,
+		"Invalid package binding for default import: " + CharOperation.toString(packageName));
+	return TheNotFoundPackage;
 }
 // GROOVY end
 
