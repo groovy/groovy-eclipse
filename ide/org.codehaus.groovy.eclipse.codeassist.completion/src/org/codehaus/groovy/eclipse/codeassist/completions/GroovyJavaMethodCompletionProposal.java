@@ -542,14 +542,14 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
             } else {
                 StringBuilder buffer = new StringBuilder();
                 boolean isClosure = CharOperation.equals(CLOSURE_TYPE_SIGNATURE, type, 1, type.length);
-                boolean isTrailingClosure = (isClosure && i == n - 1);
-                if (isCodeBlock || fPreferences.isEnabled(GroovyContentAssist.CLOSURE_BRACKETS) && isClosure) {
+                boolean isTrailingBlock = (isClosure && i == n - 1 && treatTrailingClosureAsCodeBlock());
+                if ((isClosure && fPreferences.isEnabled(GroovyContentAssist.CLOSURE_BRACKETS)) || isTrailingBlock) {
                     buffer.append("{");
                     if (fPreferences.isEnabled(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_OPENING_BRACE_IN_ARRAY_INITIALIZER)) {
                         buffer.append(SPACE);
                     }
-                    // suppress 'it' for the trailing closures when NOPARENS is set
-                    if (!isTrailingClosure || !treatTrailingClosureAsCodeBlock()) {
+                    // suppress 'it' for trailing closure leterals
+                    if (!isTrailingBlock) {
                         buffer.append("it");
                     }
                     if (fPreferences.isEnabled(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_BEFORE_CLOSING_BRACE_IN_ARRAY_INITIALIZER)) {
@@ -561,7 +561,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                 }
 
                 vals = new ICompletionProposal[] {
-                    new JavaCompletionProposal(buffer.toString(), 0, buffer.length(), null, buffer.toString(), 1)
+                    new JavaCompletionProposal(buffer.toString(), 0, buffer.length(), null, buffer.toString(), 1),
                 };
             }
 
