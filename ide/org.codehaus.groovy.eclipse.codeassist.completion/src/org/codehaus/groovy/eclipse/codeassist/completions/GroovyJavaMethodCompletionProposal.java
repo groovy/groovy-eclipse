@@ -419,6 +419,19 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     }
 
     @Override
+    protected int computeCursorPosition() {
+        int pos = super.computeCursorPosition();
+        if (treatTrailingClosureAsCodeBlock()) {
+            // put cursor in a middle of a the trailing closure's brackets after linked mode
+            pos -= 1;
+            if (fPreferences.isEnabled(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_BEFORE_CLOSING_BRACE_IN_ARRAY_INITIALIZER)) {
+                pos -= 1;
+            }
+        }
+        return pos;
+    }
+
+    @Override
     protected char[] computeTriggerCharacters() {
         if (fProposal instanceof GroovyCompletionProposal) {
             boolean hasParameters = ((GroovyCompletionProposal) fProposal).hasParameters();
@@ -435,7 +448,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     @Override
     public Point getSelection(IDocument document) {
         if (fPositions != null && fPositions.size() == 1 && treatTrailingClosureAsCodeBlock()) {
-            //if only param is a trailing closure immediately place cursor between closure brackets and do not select anything
+            // if only param is a trailing closure, immediately place cursor between closure brackets with no selection
             return new Point(getReplacementOffset() + computeCursorPosition(), 0);
         }
         if (fSelectedRegion != null) {
@@ -445,39 +458,12 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     }
 
     @Override
-    protected int computeCursorPosition() {
-        int pos = super.computeCursorPosition();
-        if (treatTrailingClosureAsCodeBlock()) {
-            //put cursor in a middle of a the trailing closure's brackets after linked mode
-            pos--;
-            if (fPreferences.isEnabled(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_BEFORE_CLOSING_BRACE_IN_ARRAY_INITIALIZER)) {
-                pos--;
-            }
-        }
-        return pos;
-    }
-
-    @Override
     protected boolean needsLinkedMode() {
         if (fPositions != null && fPositions.size() == 1 && treatTrailingClosureAsCodeBlock()) {
-            //if only param is a trailing closure immediately place cursor inside a block: foo { | }
+            // if only param is a trailing closure, no linked mode is needed
             return false;
         }
         return super.needsLinkedMode();
-    }
-
-    /**
-     * Helper function to determine if this method has a trailing closure
-     * and whether it should be treated as a code block rather than a parameter
-     *
-     * @return whether the method has a trailing closure representing a code block
-     */
-    private boolean treatTrailingClosureAsCodeBlock() {
-        if (fPreferences.isEnabled(GroovyContentAssist.CLOSURE_NOPARENS)) {
-            char[][] regular = ((GroovyCompletionProposal) fProposal).getRegularParameterTypeNames();
-            return lastParamIsClosure(regular, CharOperation.NO_CHAR_CHAR);
-        }
-        return false;
     }
 
     @Override
@@ -491,8 +477,8 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                     group.addPosition(new LinkedPosition(document, baseOffset + fContextInformationPosition, 0));
                     model.addGroup(group);
                 } else {
-                    //exclude trailing closure it from the linked mode
-                    int n = treatTrailingClosureAsCodeBlock()? fPositions.size() - 1 : fPositions.size();
+                    // exclude trailing block from linked mode
+                    int n = treatTrailingClosureAsCodeBlock() ? fPositions.size() - 1 : fPositions.size();
                     for (int i = 0; i < n; i += 1) {
                         Position position = fPositions.get(i);
                         // change offset from relative to absolute
@@ -556,18 +542,16 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
             } else {
                 StringBuilder buffer = new StringBuilder();
                 boolean isClosure = CharOperation.equals(CLOSURE_TYPE_SIGNATURE, type, 1, type.length);
-                boolean isTrailingClosure = isClosure && i == n - 1;
-                boolean isCodeBlock = isTrailingClosure && treatTrailingClosureAsCodeBlock();
+                boolean isTrailingClosure = (isClosure && i == n - 1);
                 if (isCodeBlock || fPreferences.isEnabled(GroovyContentAssist.CLOSURE_BRACKETS) && isClosure) {
                     buffer.append("{");
                     if (fPreferences.isEnabled(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_OPENING_BRACE_IN_ARRAY_INITIALIZER)) {
                         buffer.append(SPACE);
                     }
-
-                    if (!isCodeBlock) { //suppress 'it' for the trailing closures when NOPARENS is set
+                    // suppress 'it' for the trailing closures when NOPARENS is set
+                    if (!isTrailingClosure || !treatTrailingClosureAsCodeBlock()) {
                         buffer.append("it");
                     }
-
                     if (fPreferences.isEnabled(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_BEFORE_CLOSING_BRACE_IN_ARRAY_INITIALIZER)) {
                         buffer.append(SPACE);
                     }
@@ -692,6 +676,17 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         }
         // we should be comparing against a fully qualified type name, but it is not always available so a simple name is close enough
         return CharOperation.equals(lastTypeName, CLOSURE_TYPE_NAME);
+    }
+
+    /**
+     * Determines if method has a trailing closure and it should be treated as a code block.
+     */
+    private boolean treatTrailingClosureAsCodeBlock() {
+        if (fPreferences.isEnabled(GroovyContentAssist.CLOSURE_NOPARENS)) {
+            char[][] regular = ((GroovyCompletionProposal) fProposal).getRegularParameterTypeNames();
+            return lastParamIsClosure(regular, CharOperation.NO_CHAR_CHAR);
+        }
+        return false;
     }
 
     protected static final char[] CLOSURE_TYPE_NAME = "Closure".toCharArray();
