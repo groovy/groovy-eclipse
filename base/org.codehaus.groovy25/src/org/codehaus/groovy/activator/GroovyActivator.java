@@ -30,7 +30,7 @@ public class GroovyActivator extends Plugin {
 
     public static final String PLUGIN_ID = "org.codehaus.groovy";
 
-    public static final String GROOVY_JAR = "lib/groovy-2.5.0-indy.jar";
+    public static final String GROOVY_JAR = "lib/groovy-2.5.1-indy.jar";
 
     public static URL GROOVY_JAR_URL;
 
@@ -67,6 +67,8 @@ public class GroovyActivator extends Plugin {
             System.out.println("------------");
         }
 
+        // disable long-lived, static PARAMETERIZED_TYPE_CACHE in GenericsUtils
+        System.setProperty("groovy.enable.parameterized.type.cache", "false");
         // enable InvokeDynamic support across the board
         System.setProperty("groovy.target.indy", "true");
 

@@ -169,9 +169,9 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.binX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.castX;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.findActualTypeByGenericsPlaceholderName;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.makeDeclaringAndActualGenericsTypeMap;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
+import static org.codehaus.groovy.ast.tools.GenericsUtils.findActualTypeByGenericsPlaceholderName;
+import static org.codehaus.groovy.ast.tools.GenericsUtils.makeDeclaringAndActualGenericsTypeMap;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.toGenericTypesString;
 import static org.codehaus.groovy.ast.tools.WideningCategories.LowestUpperBoundClassNode;
 import static org.codehaus.groovy.ast.tools.WideningCategories.isBigDecCategory;
@@ -701,12 +701,17 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     @Override
     public void visitPropertyExpression(final PropertyExpression pexp) {
-        if (visitPropertyExpressionSilent(pexp, pexp)) return;
+        typeCheckingContext.pushEnclosingPropertyExpression(pexp);
+        try {
+            if (visitPropertyExpressionSilent(pexp, pexp)) return;
 
-        if (!extension.handleUnresolvedProperty(pexp)) {
-            Expression objectExpression = pexp.getObjectExpression();
-            addStaticTypeError("No such property: " + pexp.getPropertyAsString() +
-                    " for class: " + findCurrentInstanceOfClass(objectExpression, getType(objectExpression)).toString(false), pexp);
+            if (!extension.handleUnresolvedProperty(pexp)) {
+                Expression objectExpression = pexp.getObjectExpression();
+                addStaticTypeError("No such property: " + pexp.getPropertyAsString() +
+                        " for class: " + findCurrentInstanceOfClass(objectExpression, getType(objectExpression)).toString(false), pexp);
+            }
+        } finally {
+            typeCheckingContext.popEnclosingPropertyExpression();
         }
     }
 
@@ -2087,53 +2092,58 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
 
     @Override
     public void visitConstructorCallExpression(ConstructorCallExpression call) {
-        super.visitConstructorCallExpression(call);
-        if (extension.beforeMethodCall(call)) {
-            extension.afterMethodCall(call);
-            return;
-        }
-        ClassNode receiver = call.isThisCall() ? typeCheckingContext.getEnclosingClassNode() :
-                call.isSuperCall() ? typeCheckingContext.getEnclosingClassNode().getSuperClass() : call.getType();
-        Expression arguments = call.getArguments();
-
-        ArgumentListExpression argumentList = InvocationWriter.makeArgumentList(arguments);
-
-        checkForbiddenSpreadArgument(argumentList);
-
-        ClassNode[] args = getArgumentTypes(argumentList);
-        if (args.length > 0 &&
-                typeCheckingContext.getEnclosingClosure() != null &&
-                argumentList.getExpression(0) instanceof VariableExpression &&
-                ((VariableExpression) argumentList.getExpression(0)).isThisExpression() &&
-                call.getType() instanceof InnerClassNode &&
-                call.getType().getOuterClass().equals(args[0]) &&
-                !call.getType().isStaticClass()) {
-            args[0] = CLOSURE_TYPE;
-        }
-
-
-        MethodNode node;
-        if (looksLikeNamedArgConstructor(receiver, args)
-                && findMethod(receiver, "<init>", DefaultGroovyMethods.init(args)).size() == 1
-                && findMethod(receiver, "<init>", args).isEmpty()) {
-            // bean-style constructor
-            node = typeCheckMapConstructor(call, receiver, arguments);
-            if (node != null) {
-                storeTargetMethod(call, node);
+        typeCheckingContext.pushEnclosingConstructorCall(call);
+        try {
+            super.visitConstructorCallExpression(call);
+            if (extension.beforeMethodCall(call)) {
                 extension.afterMethodCall(call);
                 return;
             }
-        }
-        node = findMethodOrFail(call, receiver, "<init>", args);
-        if (node != null) {
-            if (looksLikeNamedArgConstructor(receiver, args) && node.getParameters().length + 1 == args.length) {
-                node = typeCheckMapConstructor(call, receiver, arguments);
-            } else {
-                typeCheckMethodsWithGenericsOrFail(receiver, args, node, call);
+            ClassNode receiver = call.isThisCall() ? typeCheckingContext.getEnclosingClassNode() :
+                    call.isSuperCall() ? typeCheckingContext.getEnclosingClassNode().getSuperClass() : call.getType();
+            Expression arguments = call.getArguments();
+
+            ArgumentListExpression argumentList = InvocationWriter.makeArgumentList(arguments);
+
+            checkForbiddenSpreadArgument(argumentList);
+
+            ClassNode[] args = getArgumentTypes(argumentList);
+            if (args.length > 0 &&
+                    typeCheckingContext.getEnclosingClosure() != null &&
+                    argumentList.getExpression(0) instanceof VariableExpression &&
+                    ((VariableExpression) argumentList.getExpression(0)).isThisExpression() &&
+                    call.getType() instanceof InnerClassNode &&
+                    call.getType().getOuterClass().equals(args[0]) &&
+                    !call.getType().isStaticClass()) {
+                args[0] = CLOSURE_TYPE;
             }
-            if (node != null) storeTargetMethod(call, node);
+
+
+            MethodNode node;
+            if (looksLikeNamedArgConstructor(receiver, args)
+                    && findMethod(receiver, "<init>", DefaultGroovyMethods.init(args)).size() == 1
+                    && findMethod(receiver, "<init>", args).isEmpty()) {
+                // bean-style constructor
+                node = typeCheckMapConstructor(call, receiver, arguments);
+                if (node != null) {
+                    storeTargetMethod(call, node);
+                    extension.afterMethodCall(call);
+                    return;
+                }
+            }
+            node = findMethodOrFail(call, receiver, "<init>", args);
+            if (node != null) {
+                if (looksLikeNamedArgConstructor(receiver, args) && node.getParameters().length + 1 == args.length) {
+                    node = typeCheckMapConstructor(call, receiver, arguments);
+                } else {
+                    typeCheckMethodsWithGenericsOrFail(receiver, args, node, call);
+                }
+                if (node != null) storeTargetMethod(call, node);
+            }
+            extension.afterMethodCall(call);
+        } finally {
+            typeCheckingContext.popEnclosingConstructorCall();
         }
-        extension.afterMethodCall(call);
     }
 
     private boolean looksLikeNamedArgConstructor(ClassNode receiver, ClassNode[] args) {
@@ -3262,12 +3272,14 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                         if (typeCheckMethodsWithGenericsOrFail(chosenReceiver.getType(), args, mn.get(0), call)) {
                             returnType = adjustWithTraits(directMethodCallCandidate, chosenReceiver.getType(), args, returnType);
 
+                            /*
                             if (null != typeCheckingContext.getEnclosingReturnStatement() && !isNestedOrSandwichedMethodCall()) {
                                 ClassNode inferredType = infer(returnType, typeCheckingContext.getEnclosingMethod().getReturnType());
                                 if (null != inferredType) {
                                     returnType = inferredType;
                                 }
                             }
+                            */
 
                             storeType(call, returnType);
                             storeTargetMethod(call, directMethodCallCandidate);
@@ -3336,12 +3348,19 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     /**
-     * e.g. a(b()),         b() is nested method call
-     *      a().b().c(),    a() and b() are sandwiched method call
+     * e.g. c(b(a())),      a() and b() are nested method call, but c() is not
+     *      new C(b(a()))   a() and b() are nested method call
+     *
+     *      a().b().c(),    a() and b() are sandwiched method call, but c() is not
+     *
+     *      a().b().c       a() and b() are sandwiched method call
      *
      */
+    @SuppressWarnings("unused")
     private boolean isNestedOrSandwichedMethodCall() {
-        return typeCheckingContext.getEnclosingMethodCalls().size() > 1;
+        return typeCheckingContext.getEnclosingMethodCalls().size() > 1
+                || typeCheckingContext.getEnclosingConstructorCalls().size() > 0
+                || typeCheckingContext.getEnclosingPropertyExpressions().size() > 0;
     }
 
     /**
@@ -3804,6 +3823,10 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
         if (currentProperty != null) {
             return adjustForTargetType(currentProperty.getType(), type);
+        }
+        MethodNode enclosingMethod = typeCheckingContext.getEnclosingMethod();
+        if (enclosingMethod != null) {
+            return adjustForTargetType(enclosingMethod.getReturnType(), type);
         }
         return type;
     }

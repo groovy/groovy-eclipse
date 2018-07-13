@@ -849,9 +849,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
 
         if (currentClass.getModule().hasPackageName() && name.indexOf('.') == -1) return false;
-        LookupResult lr = null;
-        lr = classNodeResolver.resolveName(name, compilationUnit);
-        if (lr!=null) {
+
+        LookupResult lr = classNodeResolver.resolveName(name, compilationUnit);
+        if (lr != null) {
             if (lr.isSourceUnit()) {
                 SourceUnit su = lr.getSourceUnit();
                 currentClass.getCompileUnit().addClassNodeToCompile(type, su);
