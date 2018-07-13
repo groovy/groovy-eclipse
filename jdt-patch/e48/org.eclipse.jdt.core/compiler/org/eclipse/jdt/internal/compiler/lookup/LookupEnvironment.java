@@ -1579,19 +1579,23 @@ PackageBinding getPackage0(char[] name) {
 }
 // GROOVY add -- for GroovyCompilationUnitScope.getDefaultImports()
 public PackageBinding getPackage(char[][] packageName, ModuleBinding moduleBinding) {
-    if (packageName != null && packageName.length == 2) {
-        PackageBinding parent = getTopLevelPackage(packageName[0]);
-        if (parent != null) { // null if java/groovy runtime is not on classpath
-            Binding binding = parent.getTypeOrPackage(packageName[1], moduleBinding);
-            if ((binding instanceof PackageBinding) && binding.isValidBinding()) {
-                return (PackageBinding) binding;
-            }
-        }
-    }
+	if (packageName != null && packageName.length == 2) {
+		PackageBinding parent = getTopLevelPackage(packageName[0]);
+		if (parent != null) { // null if java/groovy runtime is not on classpath
+			Binding binding = parent.getTypeOrPackage(packageName[1], moduleBinding);
+			if ((binding instanceof PackageBinding) && binding.isValidBinding()) {
+				return (PackageBinding) binding;
+			}
+			org.eclipse.jdt.internal.core.util.Util.log(org.eclipse.core.runtime.IStatus.WARNING,
+				"Invalid package binding for default import: " + CharOperation.toString(packageName));
+		}
+	}
 
-    org.eclipse.jdt.internal.core.util.Util.log(org.eclipse.core.runtime.IStatus.WARNING,
-        "Invalid package binding for default import: " + CharOperation.toString(packageName));
-    return TheNotFoundPackage;
+	return new ProblemPackageBinding(CharOperation.NO_CHAR, NotFound) {
+		ReferenceBinding getType0(char[] name) {
+			return TheNotFoundType;
+		}
+	};
 }
 // GROOVY end
 

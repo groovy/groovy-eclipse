@@ -1550,12 +1550,16 @@ public PackageBinding getPackage(char[][] packageName, ModuleBinding moduleBindi
 			if ((binding instanceof PackageBinding) && binding.isValidBinding()) {
 				return (PackageBinding) binding;
 			}
+			org.eclipse.jdt.internal.core.util.Util.log(org.eclipse.core.runtime.IStatus.WARNING,
+				"Invalid package binding for default import: " + CharOperation.toString(packageName));
 		}
 	}
 
-	org.eclipse.jdt.internal.core.util.Util.log(org.eclipse.core.runtime.IStatus.WARNING,
-		"Invalid package binding for default import: " + CharOperation.toString(packageName));
-	return TheNotFoundPackage;
+	return new ProblemPackageBinding(CharOperation.NO_CHAR, NotFound) {
+		ReferenceBinding getType0(char[] name) {
+			return TheNotFoundType;
+		}
+	};
 }
 // GROOVY end
 
