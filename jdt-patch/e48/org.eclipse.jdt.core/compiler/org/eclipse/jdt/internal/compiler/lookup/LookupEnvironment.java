@@ -1592,6 +1592,7 @@ public PackageBinding getPackage(char[][] packageName, ModuleBinding moduleBindi
 	}
 
 	return new ProblemPackageBinding(CharOperation.NO_CHAR, NotFound) {
+		@Override
 		ReferenceBinding getType0(char[] name) {
 			return TheNotFoundType;
 		}
