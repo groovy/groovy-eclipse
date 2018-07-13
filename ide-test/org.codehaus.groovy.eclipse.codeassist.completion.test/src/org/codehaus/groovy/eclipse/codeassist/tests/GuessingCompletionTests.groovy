@@ -85,11 +85,26 @@ final class GuessingCompletionTests extends CompletionTestSuite {
         String contents = '''\
             Closure yyy
             def zzz = { -> }
+            def xxx(Closure c, int i) { }
+            xxx
+            '''.stripIndent()
+        String[][] expectedChoices = [
+            ['zzz', 'yyy', '{  }'] as String[],
+            ['0'] as String[]
+        ]
+        checkProposalChoices(contents, 'xxx', 'xxx({  }, 0)', expectedChoices)
+    }
+
+    @Test
+    void testParamGuessing4a() {
+        String contents = '''\
+            Closure yyy
+            def zzz = { -> }
             def xxx(Closure c) { }
             xxx
             '''.stripIndent()
         String[][] expectedChoices = [
-            ['zzz', 'yyy', '{  }'] as String[]
+            ['{  }'] as String[]
         ]
         checkProposalChoices(contents, 'xxx', 'xxx {  }', expectedChoices)
     }

@@ -273,146 +273,6 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     }
 
     @Test
-    void testTrailingClosure1a() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false') //ensure default
-        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS, true)
-        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
-        createDsld '''\
-            contribute(currentType()) {
-              method name: 'bar', type: 'void', params: ['block':Closure]
-            }
-            '''.stripIndent()
-
-        String contents = 'foo {  }'
-        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar {  }')
-        String expect = contents.replace('{  }', '{ bar {  } }')
-        applyProposalAndCheckCursor(proposal, expect, getIndexOf(expect, 'bar { '), 0)
-    }
-
-    @Test
-    void testTrailingClosure1b() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false') //ensure default
-        //closure brackets should have no effect  on a trailing closure when noparens is set
-        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
-        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
-        createDsld '''\
-            contribute(currentType()) {
-              method name: 'bar', type: 'void', params: ['block':Closure]
-            }
-            '''.stripIndent()
-
-        String contents = 'foo {  }'
-        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar {  }')
-        String expect = contents.replace('{  }', '{ bar {  } }')
-        applyProposalAndCheckCursor(proposal, expect, getIndexOf(expect, 'bar { '), 0)
-    }
-
-    @Test
-    void testTrailingClosure1c() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false') //ensure default
-        //closure brackets should have effect on a trailing closure when noparens is not set
-        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
-        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
-        createDsld '''\
-            contribute(currentType()) {
-              method name: 'bar', type: 'void', params: ['block':Closure]
-            }
-            '''.stripIndent()
-
-        String contents = 'foo {  }'
-        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar(block)')
-        String expect = contents.replace('{  }', '{ bar(block) }')
-        applyProposalAndCheckCursor(proposal, expect, getIndexOf(expect, 'bar('), 5, getIndexOf(expect, 'bar(block)'))
-    }
-
-    @Test
-    void testTrailingClosure1d() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false') //ensure default
-        //closure brackets should have effect on a non-trailing closure
-        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
-        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
-        createDsld '''\
-            contribute(currentType()) {
-              method name: 'bar', type: 'void', params: ['closure':Closure, 'block':Closure]
-            }
-            '''.stripIndent()
-
-        String contents = 'foo {  }'
-        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar(closure) {  }')
-        String expect = contents.replace('{  }', '{ bar(closure) {  } }')
-        applyProposalAndCheckCursor(proposal, expect, getIndexOf(expect, 'bar('), 7, getIndexOf(expect, 'bar(closure) { '))
-    }
-
-    @Test
-    void testTrailingClosure1e() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false') //ensure default
-        //closure brackets should have effect on a non-trailing closure
-        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS, true)
-        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
-        createDsld '''\
-            contribute(currentType()) {
-              method name: 'bar', type: 'void', params: ['closure':Closure, 'block':Closure]
-            }
-            '''.stripIndent()
-
-        String contents = 'foo {  }'
-        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar({ it }) {  }')
-        String expect = contents.replace('{  }', '{ bar({ it }) {  } }')
-        applyProposalAndCheckCursor(proposal, expect, getIndexOf(expect, 'bar('), 6, getIndexOf(expect, 'bar({ it }) { '))
-    }
-
-    @Test
-    void testTrailingClosure2a() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false') //ensure default
-        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS, true)
-        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
-        createDsld '''\
-            contribute(currentType()) {
-              method name: 'bar', type: 'void', namedParams:['name':String], params: ['block':Closure]
-            }
-            '''.stripIndent()
-
-        String contents = 'foo {  }'
-        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar(name: name) {  }')
-        String expect = contents.replace('{  }', '{ bar(name: name) {  } }')
-        applyProposalAndCheckCursor(proposal, expect, getIndexOf(expect, 'name: '), 4, getIndexOf(expect, 'bar(name: name) { '))
-    }
-
-    @Test
-    void testTrailingClosure2b() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false') //ensure default
-        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS, true)
-        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
-        createDsld '''\
-            contribute(currentType()) {
-              method name: 'bar', type: 'void', namedParams:['name':String], params: ['block':Closure]
-            }
-            '''.stripIndent()
-
-        String contents = 'foo {  }'
-        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar(name: name, { it })')
-        String expect = contents.replace('{  }', '{ bar(name: name, { it }) }')
-        applyProposalAndCheckCursor(proposal, expect, getIndexOf(expect, 'name: '), 4, getIndexOf(expect, '{ it })'))
-    }
-
-    @Test
-    void testTrailingClosure2c() {
-        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false') //ensure default
-        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
-        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
-        createDsld '''\
-            contribute(currentType()) {
-              method name: 'bar', type: 'void', namedParams:['name':String], params: ['block':Closure]
-            }
-            '''.stripIndent()
-
-        String contents = 'foo {  }'
-        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar(name: name, block)')
-        String expect = contents.replace('{  }', '{ bar(name: name, block) }')
-        applyProposalAndCheckCursor(proposal, expect, getIndexOf(expect, 'name: '), 4, getIndexOf(expect, 'block)'))
-    }
-
-    @Test
     void testDelegatesToNoParens1() {
         createDsld '''\
             contribute(currentType('Inner')) {
@@ -673,6 +533,204 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         // should see proposals from String, not Integer
         proposalExists(proposals, 'toUpperCase()', 1)
         proposalExists(proposals, 'toHexString()', 0)
+    }
+
+    @Test
+    void testTrailingClosure1() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS, true)
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
+
+        createDsld '''\
+            contribute(currentType()) {
+              method name: 'bar', type: void, params: [block: Closure]
+            }
+            '''.stripIndent()
+
+        String contents = 'foo {  }'
+        String expected = 'foo { bar {  } }'
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar {  }')
+        applyProposalAndCheckCursor(proposal, expected, getIndexOf(expected, 'bar { '))
+    }
+
+    @Test // closure brackets should have no effect  on a trailing closure when noparens is set
+    void testTrailingClosure1a() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
+
+        createDsld '''\
+            contribute(currentType()) {
+              method name: 'bar', type: void, params: [block: Closure]
+            }
+            '''.stripIndent()
+
+        String contents = 'foo {  }'
+        String expected = 'foo { bar {  } }'
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar {  }')
+        applyProposalAndCheckCursor(proposal, expected, getIndexOf(expected, 'bar { '))
+    }
+
+    @Test // closure brackets should have effect on a trailing closure when noparens is not set
+    void testTrailingClosure1b() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
+
+        createDsld '''\
+            contribute(currentType()) {
+              method name: 'bar', type: void, params: [block: Closure]
+            }
+            '''.stripIndent()
+
+        String contents = 'foo {  }'
+        String expected = 'foo { bar(block) }'
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar(block)')
+        applyProposalAndCheckCursor(proposal, expected, getIndexOf(expected, 'bar('), 5, getIndexOf(expected, 'bar(block)'))
+    }
+
+    @Test // closure brackets should have effect on a non-trailing closure
+    void testTrailingClosure2() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
+
+        createDsld '''\
+            contribute(currentType()) {
+              method name: 'bar', type: void, params: [closure: Closure, block: Closure]
+            }
+            '''.stripIndent()
+
+        String contents = 'foo {  }'
+        String expected = 'foo { bar(closure) {  } }'
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar(closure) {  }')
+        applyProposalAndCheckCursor(proposal, expected, getIndexOf(expected, 'bar('), 7, getIndexOf(expected, 'bar(closure) { '))
+    }
+
+    @Test // closure brackets should have effect on a non-trailing closure
+    void testTrailingClosure2a() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS, true)
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
+
+        createDsld '''\
+            contribute(currentType()) {
+              method name: 'bar', type: void, params: [closure: Closure, block: Closure]
+            }
+            '''.stripIndent()
+
+        String contents = 'foo {  }'
+        String expected = 'foo { bar({  }) {  } }'
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar({  }) {  }')
+        applyProposalAndCheckCursor(proposal, expected, getIndexOf(expected, 'bar('), 4, getIndexOf(expected, 'bar({  }) { '))
+    }
+
+    @Test
+    void testTrailingClosure3() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS, true)
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
+
+        createDsld '''\
+            contribute(currentType()) {
+              method name: 'bar', type: void, params: [block: Closure], namedParams: [name: String]
+            }
+            '''.stripIndent()
+
+        String contents = 'foo {  }'
+        String expected = 'foo { bar(name: name) {  } }'
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar(name: name) {  }')
+        applyProposalAndCheckCursor(proposal, expected, getIndexOf(expected, 'name: '), 4, getIndexOf(expected, 'bar(name: name) { '))
+    }
+
+    @Test
+    void testTrailingClosure3a() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS, true)
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
+
+        createDsld '''\
+            contribute(currentType()) {
+              method name: 'bar', type: void, params: [block: Closure], namedParams: [name: String]
+            }
+            '''.stripIndent()
+
+        String contents = 'foo {  }'
+        String expected = 'foo { bar(name: name, {  }) }'
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar(name: name, {  })')
+        applyProposalAndCheckCursor(proposal, expected, getIndexOf(expected, 'name: '), 4, getIndexOf(expected, '{  })'))
+    }
+
+    @Test
+    void testTrailingClosure3b() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, false)
+
+        createDsld '''\
+            contribute(currentType()) {
+              method name: 'bar', type: void, params: [block: Closure], namedParams: [name: String]
+            }
+            '''.stripIndent()
+
+        String contents = 'foo {  }'
+        String expected = 'foo { bar(name: name, block) }'
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar(name: name, block)')
+        applyProposalAndCheckCursor(proposal, expected, getIndexOf(expected, 'name: '), 4, getIndexOf(expected, 'block)'))
+    }
+
+    @Test
+    void testTrailingClosure4() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS, false)
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
+
+        createDsld '''\
+            contribute(currentType()) {
+              method name: 'bar', type: void, params: [block: Closure], namedParams: [name: String], noParens: true
+            }
+            '''.stripIndent()
+
+        String contents = 'foo {  }'
+        String expected = 'foo { bar name: name, {  } }' // noParens also causes closure literal replacement
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar name: name, {  }')
+        applyProposalAndCheckCursor(proposal, expected, getIndexOf(expected, 'name: '), 4, getIndexOf(expected, '{  }'))
+    }
+
+    @Test
+    void testTrailingClosure4a() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS, true)
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
+
+        createDsld '''\
+            contribute(currentType()) {
+              method name: 'bar', type: void, params: [block: Closure], namedParams: [name: String], noParens: true
+            }
+            '''.stripIndent()
+
+        String contents = 'foo {  }'
+        String expected = 'foo { bar name: name, {  } }'
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar name: name, {  }')
+        applyProposalAndCheckCursor(proposal, expected, getIndexOf(expected, 'name: '), 4, getIndexOf(expected, '{  }'))
+    }
+
+    @Test
+    void testTrailingClosure4b() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS, true)
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
+
+        createDsld '''\
+            contribute(currentType()) {
+              method name: 'bar', type: void, params: [block: Closure], noParens: true
+            }
+            '''.stripIndent()
+
+        String contents = 'foo {  }'
+        String expected = 'foo { bar {  } }'
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar {  }')
+        applyProposalAndCheckCursor(proposal, expected, getIndexOf(expected, 'bar '), '{  }'.length(), getIndexOf(expected, '{  }'))
     }
 
     //--------------------------------------------------------------------------

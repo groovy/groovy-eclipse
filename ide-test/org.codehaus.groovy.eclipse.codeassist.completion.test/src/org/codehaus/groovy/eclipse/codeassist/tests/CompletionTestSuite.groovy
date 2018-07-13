@@ -196,15 +196,13 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
      * and the target cursor position after after quitting parameter linked mode.
      */
     protected void applyProposalAndCheckCursor(ICompletionProposal proposal, String expected,
-        int expectedSelectionOffset, int expectedSelectionLength = 0, int expectedCursorPosition = expectedSelectionOffset) {
-
+            int expectedSelectionOffset, int expectedSelectionLength = 0, int expectedCursorPosition = expectedSelectionOffset) {
         applyProposalAndCheck(proposal, expected)
 
         JavaContentAssistInvocationContext context = proposal.@fInvocationContext
-
-        assertEquals("Unexpected selection range offset", expectedSelectionOffset, proposal.getSelection(context.document).x);
-        assertEquals("Unexpected selection range length", expectedSelectionLength, proposal.getSelection(context.document).y);
-        assertEquals("Unexpected cursor position", expectedCursorPosition, proposal.replacementOffset + proposal.computeCursorPosition());
+        assertEquals('selection range offset', expectedSelectionOffset, proposal.getSelection(context.document).x)
+        assertEquals('selection range length', expectedSelectionLength, proposal.getSelection(context.document).y)
+        assertEquals('cursor position', expectedCursorPosition, proposal.replacementOffset + proposal.cursorPosition)
     }
 
     protected void checkReplacementRegexp(ICompletionProposal[] proposals, String expectedReplacement, int expectedCount) {

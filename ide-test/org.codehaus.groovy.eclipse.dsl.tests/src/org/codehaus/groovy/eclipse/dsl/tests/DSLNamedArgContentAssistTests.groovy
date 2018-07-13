@@ -345,7 +345,7 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
             '''.stripIndent()
 
         String contents = 'foo {  }'
-        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar(named1: named1, named2: named2, reg1, reg2, { it })')
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar(named1: named1, named2: named2, reg1, reg2, {  })')
         assertProposalSignature(proposal, "bar(float named1, double named2, int reg1, long reg2, Closure closure) : void")
     }
 
@@ -361,7 +361,7 @@ final class DSLNamedArgContentAssistTests extends CompletionTestSuite {
             '''.stripIndent()
 
         String contents = 'foo {  }'
-        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar(named1: named1, named2: named2, reg1, reg2) { it }')
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar(named1: named1, named2: named2, reg1, reg2) {  }')
         assertProposalSignature(proposal, "bar(float named1, double named2, int reg1, long reg2, Closure closure) : void")
     }
 

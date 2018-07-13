@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.completions;
 
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
+
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -106,7 +108,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     @Override
     public void apply(IDocument document, char trigger, int offset) {
         try {
-            if (trigger == '{' && (fProposal.getCompletion() != null && fProposal.getCompletion().length > 0)) {
+            if (trigger == '{' && asBoolean(fProposal.getCompletion())) {
                 String replacement = getReplacementString();
                 if (replacement.endsWith("}") || fProposal.getKind() == CompletionProposal.METHOD_NAME_REFERENCE) {
                     trigger = 0; // disable insertion of trailing '{'
@@ -131,12 +133,14 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                 // change offset from relative to absolute
                 setContextInformationPosition(getReplacementOffset() + fContextInformationPosition);
 
-                if (fProposal.getCompletion() != null && fProposal.getCompletion().length > 0) {
+                if (asBoolean(fProposal.getCompletion())) {
                     // coordinate editor selection with linking mode
-                    if (fPositions == null || fPositions.isEmpty()) {
-                        fSelectedRegion = new Region(fContextInformationPosition, 0);
-                    } else {
+                    if (needsLinkedMode()) {
                         fSelectedRegion = new Region(fPositions.get(0).getOffset(), fPositions.get(0).getLength());
+                    } else if (fPositions != null) {
+                        fSelectedRegion = new Region(getReplacementOffset() + getCursorPosition(), 0);
+                    } else {
+                        fSelectedRegion = new Region(fContextInformationPosition, 0);
                     }
                 }
             }
@@ -176,7 +180,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
     @Override
     protected String computeReplacementString() {
-        if (fProposal.getCompletion() == null || fProposal.getCompletion().length == 0) {
+        if (!asBoolean(fProposal.getCompletion())) {
             setContextInformationPosition(0);
             return "";
         }
@@ -242,7 +246,6 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                 }
                 buffer.replace(i, buffer.length(), SPACE);
             } else if (fPreferences.isEnabled(GroovyContentAssist.CLOSURE_NOPARENS)) {
-                // need to check both regular and named parameters for closure
                 if (lastParamIsClosure(regularParameterTypes, CharOperation.NO_CHAR_CHAR)) {
                     indexOfLastClosure = namedParameterTypes.length + regularParameterTypes.length - 1;
                 }
@@ -314,6 +317,9 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                     if (fPreferences.isEnabled(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_COMMA_IN_METHOD_INVOCATION_ARGUMENTS)) {
                         buffer.append(SPACE);
                     }
+                } else if (!fPreferences.bCommandChaining) {
+                    fPositions.remove(i); // exclude code block from linked mode
+                    setCursorPosition(buffer.length() - (fPreferences.isEnabled(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_BEFORE_CLOSING_BRACE_IN_ARRAY_INITIALIZER) ? 2 : 1));
                 }
             }
         }
@@ -323,8 +329,8 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
     protected String recomputeReplacementString() throws JavaModelException {
         int last = (fPositions.size() - 1);
-        // disable guessing for literal
-        fProposals.remove(last);
+        // disable guessing for closure literal
+        fProposals.remove(fProposals.size() - 1);
 
         String head = getReplacementString().substring(0, fPositions.get(last).getOffset());
         String tail = getReplacementString().substring((fPositions.get(last).getOffset()) + fPositions.get(last).getLength());
@@ -353,11 +359,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         }
 
         char[][] paramTypes = Signature.getParameterTypes(fProposal.getSignature());
-        if (lastParamIsClosure(paramTypes)) {
-            fPositions.get(last).setLength(2); // select "it"
-            fPositions.get(last).setOffset(buffer.length());
-            buffer.append("it");
-        } else {
+        if (!lastParamIsClosure(paramTypes)) {
             // insert closure params for the abstract method
             IMethod sam = findSingleAbstractMethod(paramTypes[paramTypes.length - 1]);
             String[] names = sam.getParameterNames();
@@ -383,9 +385,9 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
             }
 
             buffer.append("->");
-            fPositions.get(last).setLength(0);
-            fPositions.get(last).setOffset(buffer.length());
         }
+        fPositions.get(last).setLength(0);
+        fPositions.get(last).setOffset(buffer.length());
 
         if (fPreferences.isEnabled(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_BEFORE_CLOSING_BRACE_IN_ARRAY_INITIALIZER)) {
             buffer.append(SPACE);
@@ -419,19 +421,6 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     }
 
     @Override
-    protected int computeCursorPosition() {
-        int pos = super.computeCursorPosition();
-        if (treatTrailingClosureAsCodeBlock()) {
-            // put cursor in a middle of a the trailing closure's brackets after linked mode
-            pos -= 1;
-            if (fPreferences.isEnabled(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_BEFORE_CLOSING_BRACE_IN_ARRAY_INITIALIZER)) {
-                pos -= 1;
-            }
-        }
-        return pos;
-    }
-
-    @Override
     protected char[] computeTriggerCharacters() {
         if (fProposal instanceof GroovyCompletionProposal) {
             boolean hasParameters = ((GroovyCompletionProposal) fProposal).hasParameters();
@@ -447,10 +436,6 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
     @Override
     public Point getSelection(IDocument document) {
-        if (fPositions != null && fPositions.size() == 1 && treatTrailingClosureAsCodeBlock()) {
-            // if only param is a trailing closure, immediately place cursor between closure brackets with no selection
-            return new Point(getReplacementOffset() + computeCursorPosition(), 0);
-        }
         if (fSelectedRegion != null) {
             return new Point(fSelectedRegion.getOffset(), fSelectedRegion.getLength());
         }
@@ -459,11 +444,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
     @Override
     protected boolean needsLinkedMode() {
-        if (fPositions != null && fPositions.size() == 1 && treatTrailingClosureAsCodeBlock()) {
-            // if only param is a trailing closure, no linked mode is needed
-            return false;
-        }
-        return super.needsLinkedMode();
+        return asBoolean(fPositions);
     }
 
     @Override
@@ -477,9 +458,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                     group.addPosition(new LinkedPosition(document, baseOffset + fContextInformationPosition, 0));
                     model.addGroup(group);
                 } else {
-                    // exclude trailing block from linked mode
-                    int n = treatTrailingClosureAsCodeBlock() ? fPositions.size() - 1 : fPositions.size();
-                    for (int i = 0; i < n; i += 1) {
+                    for (int i = 0, n = fPositions.size(); i < n; i += 1) {
                         Position position = fPositions.get(i);
                         // change offset from relative to absolute
                         position.setOffset(baseOffset + position.getOffset());
@@ -532,7 +511,8 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
             char[] type = parameterTypes[i];
 
             ICompletionProposal[] vals;
-            if (guess) {
+            if (guess && !(i == indexOfLastClosure && (i + 1) == n &&
+                    fPreferences.isEnabled(GroovyContentAssist.CLOSURE_NOPARENS))) {
                 boolean fillBestGuess = true;
                 String typeSignature = String.valueOf(type);
                 IJavaElement[] visibleElements = fInvocationContext.getCoreContext().getVisibleElements(typeSignature);
@@ -541,16 +521,13 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                     Signature.toString(typeSignature), String.valueOf(name), fPositions.get(i), visibleElements, fillBestGuess);
             } else {
                 StringBuilder buffer = new StringBuilder();
-                boolean isClosure = CharOperation.equals(CLOSURE_TYPE_SIGNATURE, type, 1, type.length);
-                boolean isTrailingBlock = (isClosure && i == n - 1 && treatTrailingClosureAsCodeBlock());
-                if ((isClosure && fPreferences.isEnabled(GroovyContentAssist.CLOSURE_BRACKETS)) || isTrailingBlock) {
+                boolean isClosure = (i == indexOfLastClosure ||
+                    CharOperation.equals(CLOSURE_TYPE_SIGNATURE, type, 1, type.length));
+                if (isClosure && (fPreferences.isEnabled(GroovyContentAssist.CLOSURE_BRACKETS) ||
+                        ((i + 1) == n && fPreferences.isEnabled(GroovyContentAssist.CLOSURE_NOPARENS)))) {
                     buffer.append("{");
                     if (fPreferences.isEnabled(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_OPENING_BRACE_IN_ARRAY_INITIALIZER)) {
                         buffer.append(SPACE);
-                    }
-                    // suppress 'it' for trailing closure leterals
-                    if (!isTrailingBlock) {
-                        buffer.append("it");
                     }
                     if (fPreferences.isEnabled(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_BEFORE_CLOSING_BRACE_IN_ARRAY_INITIALIZER)) {
                         buffer.append(SPACE);
@@ -561,7 +538,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                 }
 
                 vals = new ICompletionProposal[] {
-                    new JavaCompletionProposal(buffer.toString(), 0, buffer.length(), null, buffer.toString(), 1),
+                    new JavaCompletionProposal(buffer.toString(), 0, buffer.length(), null, buffer.toString(), 1)
                 };
             }
 
@@ -664,27 +641,11 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         return false;
     }
 
-    protected final boolean lastParamIsClosure(char[][] parameterTypeNames,
-            char[][] namedParameterTypeNames) {
-        char[] lastTypeName;
-        if (parameterTypeNames != null && parameterTypeNames.length > 0) {
-            lastTypeName = parameterTypeNames[parameterTypeNames.length - 1];
-        }/* else if (namedParameterTypeNames != null && namedParameterTypeNames.length > 0) {
-            lastTypeName = namedParameterTypeNames[namedParameterTypeNames.length - 1];
-        }*/ else {
-            return false;
-        }
-        // we should be comparing against a fully qualified type name, but it is not always available so a simple name is close enough
-        return CharOperation.equals(lastTypeName, CLOSURE_TYPE_NAME);
-    }
-
-    /**
-     * Determines if method has a trailing closure and it should be treated as a code block.
-     */
-    private boolean treatTrailingClosureAsCodeBlock() {
-        if (fPreferences.isEnabled(GroovyContentAssist.CLOSURE_NOPARENS)) {
-            char[][] regular = ((GroovyCompletionProposal) fProposal).getRegularParameterTypeNames();
-            return lastParamIsClosure(regular, CharOperation.NO_CHAR_CHAR);
+    protected final boolean lastParamIsClosure(char[][] parameterTypeNames, char[][] namedParameterTypeNames) {
+        if (asBoolean(parameterTypeNames)) {
+            char[] lastTypeName = parameterTypeNames[parameterTypeNames.length - 1];
+            // we should be comparing against a fully qualified type name, but it is not always available so a simple name is close enough
+            return CharOperation.equals(lastTypeName, CLOSURE_TYPE_NAME);
         }
         return false;
     }
