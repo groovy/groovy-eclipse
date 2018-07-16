@@ -1667,6 +1667,20 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testNumberWithUnderscore() {
+        String contents = ' 0b11010010_01101001_10010100_10010010 '
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('0b'), '0b11010010_01101001_10010100_10010010'.length(), NUMBER))
+    }
+
+    @Test
+    void testDecimal() {
+        String contents = ' 8881.23 '
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(1, 7, NUMBER))
+    }
+
+    @Test
     void testOctal() {
         String contents = ' 01 '
         assertHighlighting(contents,
@@ -1678,13 +1692,6 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         String contents = ' 0x1fff '
         assertHighlighting(contents,
             new HighlightedTypedPosition(1, 6, NUMBER))
-    }
-
-    @Test
-    void testDecimal() {
-        String contents = ' 8881.23 '
-        assertHighlighting(contents,
-            new HighlightedTypedPosition(1, 7, NUMBER))
     }
 
     @Test
