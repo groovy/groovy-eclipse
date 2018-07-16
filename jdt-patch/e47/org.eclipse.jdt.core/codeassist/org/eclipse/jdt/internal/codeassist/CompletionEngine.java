@@ -2263,6 +2263,11 @@ public final class CompletionEngine
 									e.insideTypeAnnotation);
 						}
 					}
+					// GROOVY add
+					finally {
+						parsedUnit.cleanUp();
+					}
+					// GROOVY end
 				}
 			}
 

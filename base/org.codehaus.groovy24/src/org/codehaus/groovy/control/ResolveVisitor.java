@@ -87,8 +87,8 @@ import java.util.Set;
  * @author Alex Tkachman
  */
 public class ResolveVisitor extends ClassCodeExpressionTransformer {
-    // GRECLIPSE private->public
-    public ClassNode currentClass;
+    // GRECLIPSE private->protected
+    protected ClassNode currentClass;
     // note: BigInteger and BigDecimal are also imported by default
     public static final String[] DEFAULT_IMPORTS = {"java.lang.", "java.io.", "java.net.", "java.util.", "groovy.lang.", "groovy.util."};
     // GRECLIPSE private->public
@@ -1538,6 +1538,10 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     // GRECLIPSE add
     protected void resetSourceUnit() {
         source = null;
+    }
+
+    protected void resetVariableScope() {
+        currentScope = null;
     }
     // GRECLIPSE end
 

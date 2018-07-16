@@ -517,9 +517,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     }
 
     private void visitClassInternal(ClassNode node) {
-        if (resolver != null) {
-            resolver.currentClass = node;
-        }
         VariableScope scope = scopes.getLast();
 
         visitAnnotations(node);

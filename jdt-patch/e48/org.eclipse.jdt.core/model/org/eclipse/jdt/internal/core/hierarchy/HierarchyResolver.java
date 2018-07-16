@@ -25,9 +25,7 @@ package org.eclipse.jdt.internal.core.hierarchy;
  * implements I & J?
  */
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.core.resources.IFile;
@@ -873,6 +871,11 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 		} catch (AbortCompilation e) {
 			// skip it silently
 		}
+		// GROOVY add
+		finally {
+			Arrays.stream(parsedUnits).filter(Objects::nonNull).forEach(CompilationUnitDeclaration::cleanUp);
+		}
+		// GROOVY end
 
 		// if no potential subtype was a real subtype of the binary focus type, no need to go further
 		// (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=54043)

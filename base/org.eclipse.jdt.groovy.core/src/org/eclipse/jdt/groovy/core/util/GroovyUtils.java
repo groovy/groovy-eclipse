@@ -376,11 +376,11 @@ public class GroovyUtils {
     }
 
     public static boolean isDeprecated(ASTNode node) {
-        if (node instanceof ClassNode) {
-            node = ((ClassNode) node).redirect();
-        } else if (node instanceof PropertyNode && ((PropertyNode) node).getField() != null) {
+        if (node instanceof PropertyNode && ((PropertyNode) node).getField() != null) {
             // use the associated field because properties are never the declaration
             node = ((PropertyNode) node).getField();
+        } else if (node instanceof ClassNode) {
+            node = ((ClassNode) node).redirect();
         }
 
         if (node instanceof JDTNode) {
@@ -390,21 +390,17 @@ public class GroovyUtils {
         int flags = 0;
         if (node instanceof ClassNode) {
             flags = ((ClassNode) node).getModifiers();
-        } else if (node instanceof MethodNode) {
-            flags = ((MethodNode) node).getModifiers();
         } else if (node instanceof FieldNode) {
             flags = ((FieldNode) node).getModifiers();
+        } else if (node instanceof MethodNode) {
+            flags = ((MethodNode) node).getModifiers();
         }
         if ((flags & ClassNode.ACC_DEPRECATED) != 0) {
             return true;
         }
 
         if (flags > 0 || node instanceof AnnotatedNode) {
-            for (AnnotationNode anno : ((AnnotatedNode) node).getAnnotations()) {
-                if (anno.getClassNode() != null && anno.getClassNode().getName().equals("java.lang.Deprecated")) {
-                    return true;
-                }
-            }
+            return getAnnotations((AnnotatedNode) node, "java.lang.Deprecated").anyMatch(x -> true);
         }
 
         return false;

@@ -37,6 +37,7 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
+import org.codehaus.groovy.control.ResolveVisitor;
 import org.codehaus.groovy.vmplugin.VMPluginFactory;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
@@ -52,6 +53,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.tests.builder.Problem;
 import org.eclipse.jdt.groovy.core.Activator;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.JavaModelManager;
@@ -125,22 +127,21 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         System.out.println("Comparing ClassNodes\njcn=" + jcn.toString() + "\n cn=" + cn.toString());
         assertEquals(cn.isGenericsPlaceHolder(), jcn.isGenericsPlaceHolder());
 
-        // Check GenericsType info
-        GenericsType[] gt_cn = cn.getGenericsTypes();
-        GenericsType[] gt_jcn = jcn.getGenericsTypes();
-        if (gt_cn == null) {
-            if (gt_jcn != null) {
-                fail("Should have been null but was " + Arrays.toString(gt_jcn));
+        GenericsType[] cnGenerics = cn.getGenericsTypes();
+        GenericsType[] jcnGenerics = jcn.getGenericsTypes();
+        if (cnGenerics == null) {
+            if (jcnGenerics != null) {
+                fail("Should have been null but was " + Arrays.toString(jcnGenerics));
             }
         } else {
-            if (gt_jcn == null) {
-                fail("Did not expect genericstypes to be null, should be " + Arrays.toString(gt_cn));
+            if (jcnGenerics == null) {
+                fail("Did not expect genericstypes to be null, should be " + Arrays.toString(cnGenerics));
             }
-            assertNotNull(gt_jcn);
-            assertEquals(gt_cn.length, gt_jcn.length);
-            for (int i = 0; i < gt_cn.length; i++) {
+            assertNotNull(jcnGenerics);
+            assertEquals(cnGenerics.length, jcnGenerics.length);
+            for (int i = 0; i < cnGenerics.length; i++) {
                 System.out.println("Comparing generics types information, index #" + i);
-                compareGenericsTypes(gt_jcn[i], gt_cn[i], d + 1);
+                compareGenericsTypes(jcnGenerics[i], cnGenerics[i], d + 1);
             }
         }
     }
@@ -311,7 +312,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         env.addClass(paths[1], "", "Client",
             "public class Client {\n" +
-            "  { new Outer.Inner(); }\n" + "}\n");
+            "  { new Outer.Inner(); }\n" +
+            "}\n");
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("Client", "Outer", "Outer$Inner");
@@ -319,7 +321,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         env.addClass(paths[1], "", "Client",
             "public class Client {\n" +
-            "  { new Outer.Inner(); }\n" + "}\n");
+            "  { new Outer.Inner(); }\n" +
+            "}\n");
 
         incrementalBuild(paths[0]);
         expectingNoProblems();
@@ -332,12 +335,12 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         env.addClass(paths[1], "", "Anno",
             "public @interface Anno {\n" +
-            "	String[] value();\n" +
+            "  String[] value();\n" +
             "}");
 
         env.addGroovyClass(paths[1], "", "Const",
             "public class Const {\n" +
-            "	public static final String instance= \"abc\";\n" +
+            "  public static final String instance= \"abc\";\n" +
             "}");
 
         incrementalBuild(paths[0]);
@@ -384,25 +387,25 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         IPath[] paths = createSimpleProject("Project", true);
 
         env.addGroovyClass(paths[1], "", "Foo",
-                "import groovy.transform.CompileStatic\n"+
-                "@CompileStatic\n"+
-                "void method(String message) {\n"+
-                "   Collection<Integer> cs;\n"+
-//					"   List<Integer> ls = new ArrayList<Integer>();\n"+
-//					"   ls.add(123);\n"+
-//					"   ls.add('abc');\n"+
-                // GRECLIPSE-1511 code
-                "	List<String> second = []\n"+
-                "	List<String> artefactResources2\n"+
-                "	second.addAll(artefactResources2)\n"+
-                "}\n"
-//					"interface List2<E> extends Collection<E> {\n"+
-//					"  boolean add(E e);\n" +
-//					"}"
-                );
+            "import groovy.transform.CompileStatic\n" +
+            "@CompileStatic\n" +
+            "void method(String message) {\n" +
+            "  Collection<Integer> cs;\n" +
+            /*"   List<Integer> ls = new ArrayList<Integer>();\n" +
+            "   ls.add(123);\n" +
+            "   ls.add('abc');\n" +*/
+            // GRECLIPSE-1511 code
+            "  List<String> second = []\n" +
+            "  List<String> artefactResources2\n" +
+            "  second.addAll(artefactResources2)\n" +
+            "}\n"
+            /*"interface List2<E> extends Collection<E> {\n" +
+            "  boolean add(E e);\n"  +
+            "}"*/
+        );
 
         incrementalBuild(paths[0]);
-//			expectingCompiledClasses("Foo","List2");
+        expectingCompiledClasses("Foo", "List2");
         expectingNoProblems();
 
         // Now compare the generics structure for List (built by jdtresolver mapping into groovy) against List2 (built by groovy)
@@ -412,14 +415,14 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         JDTClassNode jcn = JDTResolver.getCachedNode("java.util.Collection<E>");
 
         assertNotNull(jcn);
-        System.out.println("JDT ClassNode="+jcn);
+        System.out.println("JDT ClassNode=" +jcn);
 //			JDTClassNode jcn2 = jdtr.getCachedNode("List2");
 //			System.out.println(jcn2);
 
         ClassNode listcn = new ClassNode(java.util.Collection.class);
         VMPluginFactory.getPlugin().setAdditionalClassInformation(listcn);
         listcn.lazyClassInit();
-        System.out.println("Groovy ClassNode="+listcn);
+        System.out.println("Groovy ClassNode=" +listcn);
 
 //			IJavaProject ijp = env.getJavaProject("Project");
 //			GroovyCompilationUnit unit = (GroovyCompilationUnit) ijp.findType("Foo")
@@ -453,21 +456,21 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         IPath[] paths = createSimpleProject("Project", true);
 
         env.addGroovyClass(paths[1], "", "Foo",
-                "import groovy.transform.CompileStatic\n"+
-                "@CompileStatic\n"+
-                "void method(String message) {\n"+
-                "   Collection<Integer> cs;\n"+
-//					"   List<Integer> ls = new ArrayList<Integer>();\n"+
-//					"   ls.add(123);\n"+
-//					"   ls.add('abc');\n"+
-                // GRECLIPSE-1511 code
-                "	List<String> second = []\n"+
-                "	List<String> artefactResources2\n"+
-                "	second.addAll(artefactResources2)\n"+
-                "}\n"+
-                "interface ListOfFile extends ArrayList<File> {\n"+
-                "}"
-                );
+            "import groovy.transform.CompileStatic\n" +
+            "@CompileStatic\n" +
+            "void method(String message) {\n" +
+            "   Collection<Integer> cs;\n" +
+//					"   List<Integer> ls = new ArrayList<Integer>();\n" +
+//					"   ls.add(123);\n" +
+//					"   ls.add('abc');\n" +
+            // GRECLIPSE-1511 code
+            "	List<String> second = []\n" +
+            "	List<String> artefactResources2\n" +
+            "	second.addAll(artefactResources2)\n" +
+            "}\n" +
+            "interface ListOfFile extends ArrayList<File> {\n" +
+            "}"
+        );
 
         incrementalBuild(paths[0]);
 //			expectingCompiledClasses("Foo","List2");
@@ -480,7 +483,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         JDTClassNode jcn = JDTResolver.getCachedNode("ListOfFile");
 
         assertNotNull(jcn);
-        System.out.println("JDT ClassNode="+jcn);
+        System.out.println("JDT ClassNode=" +jcn);
 //			JDTClassNode jcn2 = jdtr.getCachedNode("List2");
 //			System.out.println(jcn2);
 
@@ -488,7 +491,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         ClassNode listcn = new ClassNode(java.util.Collection.class);
         VMPluginFactory.getPlugin().setAdditionalClassInformation(listcn);
         listcn.lazyClassInit();
-        System.out.println("Groovy ClassNode="+listcn);
+        System.out.println("Groovy ClassNode=" +listcn);
 
 //			IJavaProject ijp = env.getJavaProject("Project");
 //			GroovyCompilationUnit unit = (GroovyCompilationUnit) ijp.findType("Foo")
@@ -555,10 +558,10 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "@CompileStatic\n" +
             "class Foo {\n" +
             "List<String> jvmArgs = new ArrayList<String>();\n" +
-            " void method(String message) {\n" +
-            "   List<String> cmd = ['java'];\n" +
-            "	cmd.addAll(jvmArgs);\n" +
-            " }\n" +
+            "  void method(String message) {\n" +
+            "    List<String> cmd = ['java'];\n" +
+            "    cmd.addAll(jvmArgs);\n" +
+            "  }\n" +
             "}\n");
 
         incrementalBuild(paths[0]);
@@ -577,7 +580,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "class Foo {\n" +
             "@CompileStatic\n" +
             "private populateSourceDirectories() {\n" +
-            "	List<File> pluginDependencies\n" +
+            "  List<File> pluginDependencies\n" +
             "  for (zip in pluginDependencies) {\n" +
             "    registerPluginZipWithScope(zip);\n" +
             "  }\n" +
@@ -600,11 +603,11 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "import groovy.transform.CompileStatic\n" +
             "@CompileStatic\n" +
             "class Foo {\n" +
-            "private populateSourceDirectories() {\n" +
-            "	List<File> pluginDependencies\n" +
-            "   foo(pluginDependencies);\n" +
-            "}\n" +
-            "private void foo(Iterable<File> iterable) {}\n" +
+            "  private populateSourceDirectories() {\n" +
+            "    List<File> pluginDependencies\n" +
+            "    foo(pluginDependencies);\n" +
+            "  }\n" +
+            "  private void foo(Iterable<File> iterable) {}\n" +
             "}\n");
 
         incrementalBuild(paths[0]);
@@ -623,13 +626,13 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "\n" +
             "class BuildSettings  {\n" +
             "\n" +
-            "   List<File> compileDependencies = []\n" +
-            "	List<File> defaultCompileDependencies = []\n" +
+            "  List<File> compileDependencies = []\n" +
+            "  List<File> defaultCompileDependencies = []\n" +
             "\n" +
-            "    @CompileStatic\n" +
-            "    void getCompileDependencies() {\n" +
-            "        compileDependencies += defaultCompileDependencies\n" +
-            "    }\n" +
+            "  @CompileStatic\n" +
+            "  void getCompileDependencies() {\n" +
+            "    compileDependencies += defaultCompileDependencies\n" +
+            "  }\n" +
             "\n" +
             "}\n");
 
@@ -647,8 +650,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "import groovy.transform.CompileStatic;\n" +
             "@CompileStatic \n" +
             "int fact(int n) {\n" +
-            "	if (n==1) {return 1;\n" +
-            "	} else {return n+fact(n-1);}\n" +
+            "  if (n==1) {return 1;\n" +
+            "  } else {return n+fact(n-1);}\n" +
             "}\n");
 
         incrementalBuild(paths[0]);
@@ -661,8 +664,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         IPath[] paths = createSimpleProject("Project", true);
 
         env.addGroovyClass(paths[1], "", "A",
-            "class A {\n"+
-            "	public void profile(String name, groovy.lang.Closure<?> callable) {	}\n"+
+            "class A {\n" +
+            "  public void profile(String name, groovy.lang.Closure<?> callable) {}\n" +
             "}\n");
 
         incrementalBuild(paths[0]);
@@ -670,15 +673,15 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         expectingCompiledClasses("A");
 
         env.addGroovyClass(paths[1], "", "B",
-            "@groovy.transform.CompileStatic\n"+
-            "class B extends A {\n"+
-            "\n"+
-            "	def foo() {\n"+
-            "		profile(\"creating plugin manager with classes\") {\n"+
-            "			System.out.println('abc');\n"+
-            "		}\n"+
-            "	}\n"+
-            "\n"+
+            "@groovy.transform.CompileStatic\n" +
+            "class B extends A {\n" +
+            "\n" +
+            "	def foo() {\n" +
+            "		profile(\"creating plugin manager with classes\") {\n" +
+            "			System.out.println('abc');\n" +
+            "		}\n" +
+            "	}\n" +
+            "\n" +
             "}\n");
 
         incrementalBuild(paths[0]);
@@ -691,11 +694,11 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         IPath[] paths = createSimpleProject("Project", true);
 
         env.addGroovyClass(paths[1], "", "Foo",
-            "class Foo {\n"+
-            "	@groovy.transform.CompileStatic\n"+
-            "	public static void main(String[] args) {\n"+
-            "		((GroovyObject)new Foo());\n"+
-            "	}\n"+
+            "class Foo {\n" +
+            "	@groovy.transform.CompileStatic\n" +
+            "	public static void main(String[] args) {\n" +
+            "		((GroovyObject)new Foo());\n" +
+            "	}\n" +
             "}\n");
 
         incrementalBuild(paths[0]);
@@ -708,8 +711,8 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         IPath[] paths = createSimpleProject("Project", true);
 
         env.addGroovyClass(paths[1], "", "Demo",
-            "@groovy.transform.CompileStatic\n"+
-            "class Demo {\n"+
+            "@groovy.transform.CompileStatic\n" +
+            "class Demo {\n" +
             "  void doit() {\n" +
             "    def c = {\n" +
             "      Map<String, String> data = [:]\n" +
@@ -2086,9 +2089,9 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "package testpkg\n" +
             "class TestCaseChannelPersistentStore {\n" +
             // This will be added in a subsequent incremental build
-            //"public static void foo() {\n"+
-            //"  def clazz=TestCaseChannelPersistentStore.class;\n"+
-            //"}\n"+
+            //"public static void foo() {\n" +
+            //"  def clazz=TestCaseChannelPersistentStore.class;\n" +
+            //"}\n" +
             "\n" +
             "void testRefreshedChannelMap() {\n" +
             "    def x= new Runnable() {public void run() { print('running');}};\n" +
@@ -2642,7 +2645,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         JDTResolver resolver = moduleInfo.resolver;
         assertNotNull(resolver);
 
-        resolver.currentClass = moduleInfo.module.getScriptClassDummy();
+        ReflectionUtils.setPrivateField(ResolveVisitor.class, "currentClass", resolver, moduleInfo.module.getScriptClassDummy());
         ClassNode url = resolver.resolve("java.net.URL");
         assertNotNull("Should have found the java.net.URL ClassNode", url);
         assertEquals("Wrong classnode found", "java.net.URL", url.getName());
@@ -2653,7 +2656,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         IPath[] paths = createSimpleProject("Project", true);
 
         env.addGroovyClass(paths[1], "p", "Other",
-            "package p\nclass Other {\ndef x = 9 }");
+            "package p\nclass Other {\ndef x = 9\n}");
         env.addGroovyClass(paths[1], "p", "Target",
             "package p\nnew Other()");
         incrementalBuild(paths[0]);
@@ -2986,7 +2989,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         IPath[] paths = createSimpleProject("Project", false);
 
         IPath pathToA = env.addClass(paths[1], "p", "A",
-            "package p; \n"+
+            "package p; \n" +
             "// TODO need to review\n" +
             "public class A {\n" +
             "}");
@@ -3159,12 +3162,12 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         IPath[] paths = createSimpleProject("Project", true);
 
         env.addGroovyClass(paths[1], "", "Stack",
-            "class StackTester {\n"+
-            "   def o = new Stack();\n"+
-            "   public static void main(String[] args) {\n"+
-            "      System.out.println('>>'+new StackTester().o.getClass());\n"+
-            "      System.out.println(\"Hello world\");\n"+
-            "   }\n"+
+            "class StackTester {\n" +
+            "   def o = new Stack();\n" +
+            "   public static void main(String[] args) {\n" +
+            "      System.out.println('>>'+new StackTester().o.getClass());\n" +
+            "      System.out.println(\"Hello world\");\n" +
+            "   }\n" +
             "}\n");
 
         incrementalBuild(paths[0]);
@@ -3173,12 +3176,12 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         executeClass(paths[0], "StackTester", ">>class java.util.Stack\r\nHello world\r\n", "");
 
         env.addGroovyClass(paths[1], "", "Stack",
-            "class StackTester {\n"+
-            "   def o = new Stack();\n"+
-            "   public static void main(String[] args) {\n"+
-            "      System.out.println('>>'+new StackTester().o.getClass());\n"+
-            "      System.out.println(\"Hello world\");\n"+
-            "   }\n"+
+            "class StackTester {\n" +
+            "   def o = new Stack();\n" +
+            "   public static void main(String[] args) {\n" +
+            "      System.out.println('>>'+new StackTester().o.getClass());\n" +
+            "      System.out.println(\"Hello world\");\n" +
+            "   }\n" +
             "}\n");
 
         incrementalBuild(paths[0]);

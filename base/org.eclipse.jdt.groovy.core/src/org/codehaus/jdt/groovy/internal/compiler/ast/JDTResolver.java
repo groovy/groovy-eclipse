@@ -99,8 +99,8 @@ public class JDTResolver extends ResolveVisitor {
     }
 
     // allow test cases to quiz a resolver
-    public static boolean recordInstances = false;
-    public static List<JDTResolver> instances = null;
+    public static boolean recordInstances;
+    public static List<JDTResolver> instances;
     public static JDTClassNode getCachedNode(String name) {
         for (JDTResolver instance : instances) {
             JDTClassNode node = getCachedNode(instance, name);
@@ -185,7 +185,6 @@ public class JDTResolver extends ResolveVisitor {
             // probably syntax error(s)
         } finally {
             resetSourceUnit();
-            unresolvables.clear();
             assert !scopes.containsKey(classNode);
         }
     }
@@ -236,9 +235,10 @@ public class JDTResolver extends ResolveVisitor {
     public void cleanUp() {
         scopes.clear();
         inProgress.clear();
-        //nodeCache.clear();
-        //resolvedClassNodes.clear();
-        // TODO: Reset things like currentClass, currentScope, etc.?
+        currentClass = null;
+        resetVariableScope();
+        setClassNodeResolver(null);
+        // TODO: Reset things like currentMethod, currImportNode, etc.?
     }
 
     public ClassNode resolve(String name) {
@@ -249,17 +249,28 @@ public class JDTResolver extends ResolveVisitor {
             }
         }
 
-        if (unresolvables.contains(name)) {
-            return ClassHelper.DYNAMIC_TYPE;
+        for (ClassNode node : resolvedClassNodes) {
+            if (node.getName().equals(name)) {
+                return node;
+            }
         }
 
-        ClassNode type = ClassHelper.makeWithoutCaching(name);
-        if (super.resolve(type, true, true, true)) {
-            return type.redirect();
-        } else {
-            unresolvables.add(name);
-            return ClassHelper.DYNAMIC_TYPE;
+        if (!unresolvables.contains(name)) {
+            ClassNode previousClass = currentClass;
+            try {
+                currentClass = clone(compilationUnit.getFirstClassNode());
+
+                ClassNode type = ClassHelper.makeWithoutCaching(name);
+                if (super.resolve(type, true, true, true)) {
+                    return type.redirect();
+                } else {
+                    unresolvables.add(name);
+                }
+            } finally {
+                currentClass = previousClass;
+            }
         }
+        return ClassHelper.DYNAMIC_TYPE;
     }
 
     @Override
@@ -460,14 +471,20 @@ public class JDTResolver extends ResolveVisitor {
 
     // FIXASC callers could check if it is a 'funky' type before always recording a depedency
     // by 'funky' I mean that the type was constructed just to try something (org.foo.bar.java$lang$Wibble doesn't want recording!)
-    private void recordDependency(String typename) {
+    private void recordDependency(String typeName) {
         if (activeScope != null) {
-            if (typename.indexOf('.') != -1) {
-                activeScope.recordQualifiedReference(CharOperation.splitOn('.', typename.toCharArray()));
+            if (typeName.indexOf('.') != -1) {
+                activeScope.recordQualifiedReference(CharOperation.splitOn('.', typeName.toCharArray()));
             } else {
-                activeScope.recordSimpleReference(typename.toCharArray());
+                activeScope.recordSimpleReference(typeName.toCharArray());
             }
         }
+    }
+
+    private static ClassNode clone(ClassNode node) {
+        ClassNode copy = ClassHelper.makeWithoutCaching(node.getName());
+        copy.setRedirect(node);
+        return copy;
     }
 
     private static String toString(TypeBinding jdtBinding) {

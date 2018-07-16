@@ -94,8 +94,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     private static final String BIGDECIMAL_STR = "BigDecimal";
     public static final String QUESTION_MARK = "?";
 
-    // GRECLIPSE private->public
-    public ClassNode currentClass;
+    // GRECLIPSE private->protected
+    protected ClassNode currentClass;
     // GRECLIPSE private->public
     public final CompilationUnit compilationUnit;
     private SourceUnit source;
@@ -1613,6 +1613,10 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     // GRECLIPSE add
     protected void resetSourceUnit() {
         source = null;
+    }
+
+    protected void resetVariableScope() {
+        currentScope = null;
     }
     // GRECLIPSE end
 

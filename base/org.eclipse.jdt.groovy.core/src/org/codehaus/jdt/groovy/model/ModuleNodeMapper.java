@@ -30,13 +30,11 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclar
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.core.JavaModelManager.PerWorkingCopyInfo;
-import org.eclipse.jdt.internal.core.util.Util;
 
 /**
  * Stores module nodes for groovy compilation units This class is not meant to be accessed externally.
@@ -57,21 +55,6 @@ public class ModuleNodeMapper {
 
     public static int size() {
         return INSTANCE.infoToModuleMap.size();
-    }
-
-    public static boolean shouldStoreResovler() {
-        return DSL_BUNDLE_INSTALLED;
-    }
-
-    private static final boolean DSL_BUNDLE_INSTALLED;
-    static {
-        boolean result = false;
-        try {
-            result = (Platform.getBundle("org.codehaus.groovy.eclipse.dsl") != null);
-        } catch (Exception e) {
-            Util.log(e);
-        }
-        DSL_BUNDLE_INSTALLED = result;
     }
 
     //
@@ -129,11 +112,7 @@ public class ModuleNodeMapper {
                 try {
                     ModuleNode module = gcud.getModuleNode();
                     if (module != null) {
-                        JDTResolver resolver = null;
-                        if (shouldStoreResovler()) {
-                            resolver = (JDTResolver) gcud.getCompilationUnit().getResolveVisitor();
-                        }
-                        put(info, new ModuleNodeInfo(module, resolver, gcud.compilationResult()));
+                        put(info, new ModuleNodeInfo(module, (JDTResolver) gcud.getCompilationUnit().getResolveVisitor(), gcud.compilationResult()));
                     }
                 } finally {
                     lock.unlock();

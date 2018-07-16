@@ -22,6 +22,7 @@ import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -42,32 +43,32 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
 
     @Test
     void testConstructorCompletion1() {
-        String contents = 'class YYY { YYY() { } }\nnew YY\nkkk'
-        String expected = 'class YYY { YYY() { } }\nnew YYY()\nkkk'
+        String contents = 'class YYY { YYY() {} }\nnew YY\nkkk'
+        String expected = 'class YYY { YYY() {} }\nnew YYY()\nkkk'
         setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
     }
 
     @Test @NotYetImplemented // do this with Ctrl triggering of constructor proposal
     void testConstructorCompletion2() {
-        String contents = 'class YYY { YYY() { } }\nnew YY()\nkkk' // trailing parens
-        String expected = 'class YYY { YYY() { } }\nnew YYY()\nkkk'
+        String contents = 'class YYY { YYY() {} }\nnew YY()\nkkk' // trailing parens
+        String expected = 'class YYY { YYY() {} }\nnew YYY()\nkkk'
         setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
     }
 
     @Test
     void testConstructorCompletion3() {
-        String contents = 'class YYY { YYY(x) { } }\nnew YY\nkkk'
-        String expected = 'class YYY { YYY(x) { } }\nnew YYY(x)\nkkk'
+        String contents = 'class YYY { YYY(x) {} }\nnew YY\nkkk'
+        String expected = 'class YYY { YYY(x) {} }\nnew YYY(x)\nkkk'
         setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
     }
 
     @Test
     void testConstructorCompletion4() {
-        String contents = 'class YYY { YYY(x, y) { } }\nnew YY\nkkk'
-        String expected = 'class YYY { YYY(x, y) { } }\nnew YYY(x, y)\nkkk'
+        String contents = 'class YYY { YYY(x, y) {} }\nnew YY\nkkk'
+        String expected = 'class YYY { YYY(x, y) {} }\nnew YYY(x, y)\nkkk'
         setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
     }
@@ -82,20 +83,38 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
 
     @Test
     void testContructorCompletionWithinEnumDeclaration1() {
-        String contents = 'class YYY { YYY() { } }\nenum F {\n' +
-            '	Aaa() {\n@Override int foo() {\nnew YY\n}\n}\nint foo() {\n	}\n}'
-        String expected = 'class YYY { YYY() { } }\nenum F {\n' +
-            '	Aaa() {\n@Override int foo() {\nnew YYY()\n}\n}\nint foo() {\n	}\n}'
+        String contents = '''\
+            class YYY { YYY() {} }
+            enum F {
+              Aaa() {
+                @Override int foo() {
+                  new YY
+                }
+              }
+              int foo() {
+              }
+            }
+            '''.stripIndent()
+        String expected = contents.replace('new YY', 'new YYY()')
         setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
     }
 
     @Test
     void testContructorCompletionWithinEnumDeclaration2() {
-        String contents = 'class YYY { YYY() { } }\nenum F {\n' +
-            '	Aaa {\n@Override int foo() {\nnew YY\n}\n}\nint foo() {\n	}\n}'
-        String expected = 'class YYY { YYY() { } }\nenum F {\n' +
-            '	Aaa {\n@Override int foo() {\nnew YYY()\n}\n}\nint foo() {\n	}\n}'
+        String contents = '''\
+            class YYY { YYY() {} }
+            enum F {
+              Aaa { // no parens
+                @Override int foo() {
+                  new YY
+                }
+              }
+              int foo() {
+              }
+            }
+            '''
+        String expected = contents.replace('new YY', 'new YYY()')
         setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
     }
@@ -103,7 +122,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
     @Test
     void testContructorCompletionWithQualifier() {
         String contents = 'new java.text.Anno'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length());
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
         proposalExists(proposals, 'AnnotationVisitor', 0)
         proposalExists(proposals, 'Annotation', 1)
     }
@@ -345,6 +364,8 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new Anno'), 'Annotation')
     }
+
+    //--------------------------------------------------------------------------
 
     @Test
     void testNamedArgs1() {
@@ -652,7 +673,7 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         applyProposalAndCheck(findFirstProposal(proposals, 'number : __'), 'new Foo(number: __,)', ',' as char)
     }
 
-    @Test @NotYetImplemented
+    @Test @Ignore
     void testNamedArgumentTrigger2() {
         addGroovySource '''\
             class Foo {

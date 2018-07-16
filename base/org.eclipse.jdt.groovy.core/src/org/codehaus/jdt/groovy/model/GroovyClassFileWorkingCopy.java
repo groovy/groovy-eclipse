@@ -204,14 +204,7 @@ public class GroovyClassFileWorkingCopy extends GroovyCompilationUnit {
         if (compilationUnitDeclaration != null) {
             moduleNode = compilationUnitDeclaration.getModuleNode();
             moduleNode.setDescription(this.name);
-            JDTResolver resolver;
-            if (ModuleNodeMapper.shouldStoreResovler()) {
-                resolver = (JDTResolver) compilationUnitDeclaration.getCompilationUnit().getResolveVisitor();
-            } else {
-                resolver = null;
-            }
-
-            moduleNodeInfo = new ModuleNodeInfo(moduleNode, resolver);
+            moduleNodeInfo = new ModuleNodeInfo(moduleNode, (JDTResolver) compilationUnitDeclaration.getCompilationUnit().getResolveVisitor());
         }
     }
 
