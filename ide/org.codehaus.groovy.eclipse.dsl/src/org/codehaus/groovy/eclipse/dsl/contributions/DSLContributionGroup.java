@@ -338,11 +338,14 @@ public class DSLContributionGroup extends ContributionGroup {
     /**
      * Converts an object into a string
      */
+    @SuppressWarnings("rawtypes")
     private String asString(Object value) {
         if (value == null) {
             return null;
         } else if (value instanceof String) {
             return (String) value;
+        } else if (value instanceof Class) {
+            return ((Class) value).getName();
         } else if (value instanceof ClassNode) {
             return getTypeName(((ClassNode) value));
         } else if (value instanceof FieldNode) {
@@ -355,11 +358,10 @@ public class DSLContributionGroup extends ContributionGroup {
             return ((Variable) value).getName();
         } else if (value instanceof AnnotationNode) {
             return ((AnnotationNode) value).getClassNode().getName();
-        } else if (value instanceof Class) {
-            return ((Class<?>) value).getName();
-        } else {
-            return value.toString();
-        }
+        } else if (value instanceof Collection && ((Collection) value).size() == 1) {
+            return asString(((Collection) value).iterator().next());
+        } // TODO: Handle array of length 1 same as Collection?
+        return value.toString();
     }
 
     //--------------------------------------------------------------------------

@@ -25,6 +25,7 @@ import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.jdt.groovy.model.GroovyProjectFacade;
+import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
@@ -206,12 +207,8 @@ public class GroovyExtendedCompletionContext extends InternalExtendedCompletionC
     }
 
     protected ClassNode resolve(String fullyQualifiedTypeName) {
-        try {
-            return context.unit.getModuleInfo(false).resolver.resolve(fullyQualifiedTypeName);
-        } catch (NullPointerException e) {
-            // ignore; likely DSL support not available
-            return VariableScope.OBJECT_CLASS_NODE;
-        }
+        ModuleNodeInfo info = context.unit.getModuleInfo(false);
+        return info.resolver.resolve(fullyQualifiedTypeName);
     }
 
     private static String toFieldName(IMethod method) {

@@ -95,7 +95,7 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor i
         if (lastDotIndex < 0 || environment.nameLookup.isPackage(expression.substring(0, lastDotIndex).split("\\."))) {
             boolean findMembers = true; // not sure about findMembers; javadoc says method does not find member types
             environment.findTypes(expression.toCharArray(), findMembers, requestor.options.camelCaseMatch, getSearchFor(), requestor, monitor);
-        } else {
+        } else if (expression.chars().allMatch(c -> c == '.' || Character.isJavaIdentifierPart(c))) {
             // qualified expression; requires manual inner types checking
 
             String qualifier = expression.substring(0, lastDotIndex);

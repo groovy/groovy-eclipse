@@ -249,6 +249,11 @@ public class JDTResolver extends ResolveVisitor {
             }
         }
 
+        int i = name.indexOf('<');
+        if (i > 0) {
+            name = name.substring(0, i);
+        }
+
         for (ClassNode node : resolvedClassNodes) {
             if (node.getName().equals(name)) {
                 return node;
@@ -258,7 +263,7 @@ public class JDTResolver extends ResolveVisitor {
         if (!unresolvables.contains(name)) {
             ClassNode previousClass = currentClass;
             try {
-                currentClass = clone(compilationUnit.getFirstClassNode());
+                currentClass = compilationUnit.getFirstClassNode().getPlainNodeReference();
 
                 ClassNode type = ClassHelper.makeWithoutCaching(name);
                 if (super.resolve(type, true, true, true)) {
@@ -479,12 +484,6 @@ public class JDTResolver extends ResolveVisitor {
                 activeScope.recordSimpleReference(typeName.toCharArray());
             }
         }
-    }
-
-    private static ClassNode clone(ClassNode node) {
-        ClassNode copy = ClassHelper.makeWithoutCaching(node.getName());
-        copy.setRedirect(node);
-        return copy;
     }
 
     private static String toString(TypeBinding jdtBinding) {
