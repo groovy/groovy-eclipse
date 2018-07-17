@@ -208,10 +208,11 @@ contribute(currentType(meths: methods(hasArgument(annotatedBy(NamedParam))))) {
             continue
         }
 
-        Map<String, ClassNode> namedParams = [:], optionalParams = [:]
+        Map<String, ?> namedParams = [:], optionalParams = [:]
         for (AnnotationNode anno : parm.getAnnotations(NAMED_PARAM_TYPE)) {
             String name = anno.getMember('value').value
-            ClassNode type = anno.getMember('type')?.type
+            def type = anno.getMember('type')?.type
+            if (type == null) NamedParam.getMethod('type').defaultValue
             Boolean r = anno.getMember('required')?.value
             if (r == null) r = NamedParam.getMethod('required').defaultValue
 
