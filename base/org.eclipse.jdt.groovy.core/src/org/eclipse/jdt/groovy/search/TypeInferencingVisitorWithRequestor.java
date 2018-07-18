@@ -27,6 +27,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import groovy.transform.stc.ClosureParams;
 import groovy.transform.stc.ClosureSignatureHint;
 
 import org.codehaus.groovy.ast.ASTNode;
@@ -2118,7 +2119,7 @@ assert primaryExprType != null && dependentExprType != null;
                         try {
                             @SuppressWarnings("unchecked")
                             Class<? extends ClosureSignatureHint> hint = (Class<? extends ClosureSignatureHint>) StaticTypeCheckingSupport.evaluateExpression(GeneralUtils.castX(VariableScope.CLASS_CLASS_NODE, cp.getMember("value")), sourceUnit.getConfiguration());
-                            String[] opts = (String[]) StaticTypeCheckingSupport.evaluateExpression(GeneralUtils.castX(VariableScope.STRING_CLASS_NODE.makeArray(), cp.getMember("options")), sourceUnit.getConfiguration());
+                            String[] opts = (String[]) (cp.getMember("options") == null ? ClosureParams.class.getMethod("options").getDefaultValue() : StaticTypeCheckingSupport.evaluateExpression(GeneralUtils.castX(VariableScope.STRING_CLASS_NODE.makeArray(), cp.getMember("options")), sourceUnit.getConfiguration()));
 
                             // determine closure param types from ClosureSignatureHint
                             List<ClassNode[]> sigs = hint.newInstance().getClosureSignatures(methodNode, sourceUnit, resolver.compilationUnit, opts, cat.call);

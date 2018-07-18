@@ -983,6 +983,39 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
     }
 
     @Test
+    public void testClosureParamsAnnotation1() {
+        String contents =
+            "import groovy.transform.stc.*\n" +
+            "def match(@ClosureParams(value=SimpleType, options=['java.util.regex.Pattern']) Closure block) {\n" +
+            "  block(item)\n" +
+            "}\n" +
+            "\n" +
+            "match { it }";
+
+        String target = "it";
+        int offset = contents.lastIndexOf(target);
+        assertType(contents, offset, offset + target.length(), "java.util.regex.Pattern");
+    }
+
+    @Test
+    public void testClosureParamsAnnotation2() {
+        String contents =
+            "import java.util.regex.*\n" +
+            "import groovy.transform.stc.*\n" +
+            "def doItUp(List<Pattern> list, @ClosureParams(FirstParam.FirstGenericType) Closure code) {\n" +
+            "  for (item in list) {\n" +
+            "    code(item)\n" +
+            "  }\n" +
+            "}\n" +
+            "\n" +
+            "doItUp([]) { it }";
+
+        String target = "it";
+        int offset = contents.lastIndexOf(target);
+        assertType(contents, offset, offset + target.length(), "java.util.regex.Pattern");
+    }
+
+    @Test
     public void testClosureReferencesSuperClass() {
         String contents =
             "class MySuper {\n" +
