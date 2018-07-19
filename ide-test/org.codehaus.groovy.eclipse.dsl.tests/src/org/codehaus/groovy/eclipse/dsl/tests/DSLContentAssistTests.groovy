@@ -692,9 +692,9 @@ final class DSLContentAssistTests extends CompletionTestSuite {
             '''.stripIndent()
 
         String contents = 'foo {  }'
-        String expected = 'foo { bar name: name, {  } }' // noParens also causes closure literal replacement
-        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar name: name, {  }')
-        applyProposalAndCheckCursor(proposal, expected, getIndexOf(expected, 'name: '), 4, getIndexOf(expected, '{  }'))
+        String expected = 'foo { bar name: name, block }'
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'foo { ', 'bar', 'bar name: name, block')
+        applyProposalAndCheckCursor(proposal, expected, getIndexOf(expected, 'name: '), 4, getIndexOf(expected, 'block'))
     }
 
     @Test

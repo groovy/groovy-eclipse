@@ -74,6 +74,61 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
     }
 
     @Test
+    void testContructorCompletionWithClosure1() {
+        String contents = '''\
+            class Foo {
+              Foo(Number number, Closure closure) {
+                closure()
+              }
+            }
+            new Foo
+            '''.stripIndent()
+        String expected = contents.replace('new Foo', 'new Foo(null, null)')
+        checkProposalApplicationNonType(contents, expected, getLastIndexOf(contents, 'Foo'), 'Foo')
+    }
+
+    @Test
+    void testContructorCompletionWithClosure2() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+
+        String contents = '''\
+            class Foo {
+              Foo(Number number, Closure closure) {
+                closure()
+              }
+            }
+            new Foo
+            '''.stripIndent()
+        String expected = contents.replace('new Foo', 'new Foo(number, closure)')
+        checkProposalApplicationNonType(contents, expected, getLastIndexOf(contents, 'Foo'), 'Foo')
+    }
+
+    @Test
+    void testContructorCompletionWithClosure3() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
+        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
+
+        String contents = '''\
+            class Foo {
+              Foo(Number number, Closure closure) {
+                closure()
+              }
+            }
+            new Foo
+            '''.stripIndent()
+        String expected = contents.replace('new Foo', 'new Foo(number, closure)')
+        checkProposalApplicationNonType(contents, expected, getLastIndexOf(contents, 'Foo'), 'Foo')
+    }
+
+    @Test
+    void testContructorCompletionWithQualifier() {
+        String contents = 'new java.text.Anno'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
+        proposalExists(proposals, 'AnnotationVisitor', 0)
+        proposalExists(proposals, 'Annotation', 1)
+    }
+
+    @Test
     void testConstructorCompletionWithGenerics1() {
         String contents = 'List<String> list = new ArrayL'
         String expected = 'List<String> list = new ArrayList()'
@@ -117,14 +172,6 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
         String expected = contents.replace('new YY', 'new YYY()')
         setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new YY'), 'YYY')
-    }
-
-    @Test
-    void testContructorCompletionWithQualifier() {
-        String contents = 'new java.text.Anno'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
-        proposalExists(proposals, 'AnnotationVisitor', 0)
-        proposalExists(proposals, 'Annotation', 1)
     }
 
     @Test
@@ -363,6 +410,57 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
             |'''.stripMargin()
         setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'false')
         checkProposalApplicationNonType(contents, expected, getIndexOf(contents, 'new Anno'), 'Annotation')
+    }
+
+    @Test @NotYetImplemented
+    void testConstructorCompletionCanonicalTransform() {
+        String contents = '''\
+            @groovy.transform.Canonical
+            class One {
+                Number two
+            }
+            class Foo {
+              def bar() {
+                def baz = new One
+              }
+            }
+            '''.stripIndent()
+        checkUniqueProposal(contents, 'One', 'One(Number two)', '(null)')
+    }
+
+    @Test @NotYetImplemented
+    void testConstructorCompletionImmutableTransform() {
+        String contents = '''\
+            @groovy.transform.Immutable
+            class One {
+                Number two
+            }
+            class Foo {
+              def bar() {
+                def baz = new One
+              }
+            }
+            '''.stripIndent()
+        checkUniqueProposal(contents, 'One', 'One(Number two)', '(null)')
+    }
+
+    @Test @NotYetImplemented
+    void testConstructorCompletionInheritConstructorsTransform() {
+        String contents = '''\
+            class Num {
+              Num(Number n) {
+              }
+            }
+            @groovy.transform.InheritConstructors
+            class One extends Num {
+            }
+            class Foo {
+              def bar() {
+                def baz = new One
+              }
+            }
+            '''.stripIndent()
+        checkUniqueProposal(contents, 'One', 'One(Number n)', '(null)')
     }
 
     //--------------------------------------------------------------------------

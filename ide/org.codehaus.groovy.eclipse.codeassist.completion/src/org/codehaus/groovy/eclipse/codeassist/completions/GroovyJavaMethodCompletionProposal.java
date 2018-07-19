@@ -245,7 +245,8 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                     i -= 1;
                 }
                 buffer.replace(i, buffer.length(), SPACE);
-            } else if (fPreferences.isEnabled(GroovyContentAssist.CLOSURE_NOPARENS)) {
+            } else if (fPreferences.isEnabled(GroovyContentAssist.CLOSURE_NOPARENS) &&
+                    fProposal.getKind() != CompletionProposal.CONSTRUCTOR_INVOCATION) {
                 if (lastParamIsClosure(regularParameterTypes, CharOperation.NO_CHAR_CHAR)) {
                     indexOfLastClosure = namedParameterTypes.length + regularParameterTypes.length - 1;
                 }
@@ -510,9 +511,11 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
             char[] name = (i < npc ? namedParameterNames[i] : positionalParameterNames[i - npc]);
             char[] type = parameterTypes[i];
 
+            boolean isCodeBlock = (i == indexOfLastClosure && (i + 1) == n &&
+                fPreferences.isEnabled(GroovyContentAssist.CLOSURE_NOPARENS));
+
             ICompletionProposal[] vals;
-            if (guess && !(i == indexOfLastClosure && (i + 1) == n &&
-                    fPreferences.isEnabled(GroovyContentAssist.CLOSURE_NOPARENS))) {
+            if (guess && !isCodeBlock) {
                 boolean fillBestGuess = true;
                 String typeSignature = String.valueOf(type);
                 IJavaElement[] visibleElements = fInvocationContext.getCoreContext().getVisibleElements(typeSignature);
@@ -522,9 +525,9 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
             } else {
                 StringBuilder buffer = new StringBuilder();
                 boolean isClosure = (i == indexOfLastClosure ||
+                    CharOperation.equals(CLOSURE_TYPE_NAME, type, 1, type.length - 1) ||
                     CharOperation.equals(CLOSURE_TYPE_SIGNATURE, type, 1, type.length));
-                if (isClosure && (fPreferences.isEnabled(GroovyContentAssist.CLOSURE_BRACKETS) ||
-                        ((i + 1) == n && fPreferences.isEnabled(GroovyContentAssist.CLOSURE_NOPARENS)))) {
+                if (isClosure && (fPreferences.isEnabled(GroovyContentAssist.CLOSURE_BRACKETS) || isCodeBlock)) {
                     buffer.append("{");
                     if (fPreferences.isEnabled(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_OPENING_BRACE_IN_ARRAY_INITIALIZER)) {
                         buffer.append(SPACE);
