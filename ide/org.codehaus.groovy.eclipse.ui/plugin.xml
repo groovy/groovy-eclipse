@@ -1125,9 +1125,9 @@
       <hover
             activate="true"
             class="org.codehaus.groovy.eclipse.editor.GroovyExtraInformationHover"
-            description="Used JavaDoc supplied by Groovy DSL"
-            id="org.codehaus.groovy.eclipse.dsl.gdslhover"
-            label="Groovy Information Hover">
+            description="Shows the 'doc' property supplied by a Groovy DSLD or Inferencing Suggestion"
+            id="org.codehaus.groovy.eclipse.GroovyExtraHover"
+            label="Groovy Inferencing">
       </hover>
    </extension>
 

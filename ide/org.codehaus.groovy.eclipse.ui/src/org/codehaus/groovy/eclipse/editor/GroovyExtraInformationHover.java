@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.eclipse.codebrowsing.elements.IGroovyResolvedElement;
+import org.codehaus.groovy.runtime.StringGroovyMethods;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.Adapters;
 import org.eclipse.jdt.core.IJavaElement;
@@ -51,18 +52,16 @@ import org.eclipse.ui.IEditorPart;
  */
 public class GroovyExtraInformationHover extends JavadocHover {
 
+    private final JavaDebugHover debugHover = new JavaDebugHover();
+
     private final boolean alwaysReturnInformation;
 
-    private final JavaDebugHover debugHover;
-
     public GroovyExtraInformationHover() {
-        alwaysReturnInformation = false;
-        this.debugHover = new JavaDebugHover();
+        this(false);
     }
 
     public GroovyExtraInformationHover(boolean alwaysReturnInformation) {
         this.alwaysReturnInformation = alwaysReturnInformation;
-        this.debugHover = new JavaDebugHover();
     }
 
     @Override
@@ -116,7 +115,7 @@ public class GroovyExtraInformationHover extends JavadocHover {
             }
             if (elements[0] instanceof IGroovyResolvedElement) {
                 IGroovyResolvedElement resolvedElt = (IGroovyResolvedElement) elements[0];
-                if ((resolvedElt.getExtraDoc() != null && resolvedElt.getExtraDoc().length() > 0)) {
+                if (StringGroovyMethods.asBoolean(resolvedElt.getExtraDoc())) {
                     return true;
                 }
             }
@@ -131,8 +130,7 @@ public class GroovyExtraInformationHover extends JavadocHover {
         Class<?>[] types = {IJavaElement[].class, ITypeRoot.class, IRegion.class, JavadocBrowserInformationControlInput.class};
         Object[] values = {elements, getEditorInputJavaElement(), hoverRegion, null};
 
-        JavadocBrowserInformationControlInput hover = (JavadocBrowserInformationControlInput)
-            ReflectionUtils.executePrivateMethod(JavadocHover.class, "getHoverInfo", types, null, values);
+        JavadocBrowserInformationControlInput hover = ReflectionUtils.executePrivateMethod(JavadocHover.class, "getHoverInfo", types, null, values);
         if (hover != null && elements[0] instanceof IGroovyResolvedElement) {
             hover = new JavadocBrowserInformationControlInput(
                 (JavadocBrowserInformationControlInput) hover.getPrevious(), hover.getElement(),
@@ -167,9 +165,11 @@ public class GroovyExtraInformationHover extends JavadocHover {
 
         String html;
         try {
-            html = (String) ReflectionUtils.throwableExecutePrivateMethod(JavadocContentAccess2.class, "javadoc2HTML", new Class[] {IMember.class, IJavaElement.class, String.class}, null, new Object[] {elem, elem, extraDoc});
+            html = ReflectionUtils.throwableExecutePrivateMethod(JavadocContentAccess2.class, "javadoc2HTML",
+                new Class[] {IMember.class, IJavaElement.class, String.class}, null, new Object[] {elem, elem, extraDoc});
         } catch (NoSuchMethodException e) {
-            html = (String) ReflectionUtils.executePrivateMethod(JavadocContentAccess2.class, "javadoc2HTML", new Class[] {IMember.class, String.class}, null, new Object[] {elem, extraDoc});
+            html = ReflectionUtils.executePrivateMethod(JavadocContentAccess2.class, "javadoc2HTML",
+                new Class[] {IMember.class, String.class}, null, new Object[] {elem, extraDoc});
         } catch (InvocationTargetException e) {
             throw new RuntimeException(e.getCause());
         } catch (Exception e) {
