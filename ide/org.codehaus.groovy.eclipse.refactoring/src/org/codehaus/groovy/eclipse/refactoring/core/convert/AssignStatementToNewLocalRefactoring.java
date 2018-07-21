@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -90,9 +90,7 @@ public class AssignStatementToNewLocalRefactoring {
     }
 
     private boolean atExpressionStatement() {
-
         atExpressionStatement = false;
-
 
         ModuleNode moduleNode = unit.getModuleNode();
         List<ClassNode> classes = moduleNode.getClasses();
@@ -145,9 +143,12 @@ public class AssignStatementToNewLocalRefactoring {
             @Override
             public void visitReturnStatement(ReturnStatement statement) {
                 if (region.regionIsCoveredByNode(statement)) {
-                    String source = String.valueOf(unit.getContents(), statement.getStart(), statement.getLength());
-                    if (!source.matches("return\\b.*")) { // skip if return keyword is present
-                        processExpression(statement.getExpression());
+                    char[] contents = unit.getContents();
+                    if (statement.getStart() >= 0 && statement.getStart() + statement.getLength() < contents.length) {
+                        String source = String.valueOf(contents, statement.getStart(), statement.getLength());
+                        if (!source.matches("return\\b.*")) { // skip if return keyword is present
+                            processExpression(statement.getExpression());
+                        }
                     }
                 }
                 super.visitReturnStatement(statement);

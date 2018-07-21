@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -120,7 +120,7 @@ public class GenericsMapper {
                             // rbt could be "Foo<String, Object> and ubt could be "Foo<K, V>"
                             GenericsType[] ubt_gts = GroovyUtils.getGenericsTypes(ubt);
                             for (int j = 0; j < ubt_gts.length; j += 1) {
-                                if (ubt_gts[j].getType().isGenericsPlaceHolder() && ubt_gts[j].getName().equals(ugt.getName())) {
+                                if (ubt_gts[j].getType().isGenericsPlaceHolder() && ubt_gts[j].getName().equals(ugt.getName()) && ubt.redirect().isUsingGenerics()) {
                                     // to resolve "T" follow "List<T> -> List<E>" then walk resolved type hierarchy to find "List<E>"
                                     String key = GroovyUtils.getGenericsTypes(ubt.redirect())[j].getName();
                                     GenericsMapper map = gatherGenerics(rbt, ubt.redirect());
