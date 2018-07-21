@@ -15,6 +15,8 @@
  */
 package org.eclipse.jdt.groovy.search;
 
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -317,7 +319,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
                     confidence = TypeConfidence.LOOSELY_INFERRED;
                 }
 
-                return new TypeLookupResult(closestMatch.getReturnType(), closestMatch.getDeclaringClass(), closestMatch, confidence, scope);
+                return new TypeLookupResult(closestMatch.getReturnType(), closestMatch.getDeclaringClass(), closestMatch.getOriginal(), confidence, scope);
             }
         }
 
@@ -597,7 +599,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         if (!declaringType.isInterface() && !declaringType.isAbstract()) {
             List<MethodNode> candidates = declaringType.getMethods(name);
             if (!candidates.isEmpty()) {
-                return findMethodDeclaration0(candidates, argumentTypes, isStaticExpression);
+                return findMethodDeclaration0(candidates, argumentTypes, isStaticExpression).getOriginal();
             }
             return null;
         }
@@ -613,7 +615,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             MethodNode innerCandidate = null;
             List<MethodNode> candidates = type.getMethods(name);
             if (!candidates.isEmpty()) {
-                innerCandidate = findMethodDeclaration0(candidates, argumentTypes, isStaticExpression);
+                innerCandidate = findMethodDeclaration0(candidates, argumentTypes, isStaticExpression).getOriginal();
                 if (outerCandidate == null) {
                     outerCandidate = innerCandidate;
                 }
@@ -642,28 +644,48 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     protected MethodNode findMethodDeclaration0(List<MethodNode> candidates, List<ClassNode> argumentTypes, boolean isStaticExpression) {
         int argumentCount = (argumentTypes == null ? -1 : argumentTypes.size());
 
-        // remember first entry in case exact match not found
-        java.util.function.Predicate<MethodNode> compatible = mn -> !isStaticExpression || mn.isStatic();
-        MethodNode closestMatch = candidates.stream().filter(compatible).findFirst().orElse(candidates.get(0));
-
-        // prefer retrieving the method with the same number of parameters as arguments
-        // if none exists, then arbitrarily choose the first; TODO: handle variadic methods
+        MethodNode closestMatch = null;
         for (MethodNode candidate : candidates) {
             Parameter[] parameters = candidate.getParameters();
-            if (parameters.length == 0 && argumentCount == 0) {
-                return candidate.getOriginal();
+            if (parameters.length == 0) {
+                if (argumentCount == 0) {
+                    return candidate;
+                }
+                continue;
             }
-            if (parameters.length == argumentCount) {
+            if (argumentCount == parameters.length || (argumentCount >= parameters.length - 1 && GenericsMapper.isVargs(parameters))) {
                 Boolean suitable = isTypeCompatible(argumentTypes, parameters);
                 if (Boolean.TRUE.equals(suitable)) {
-                    return candidate.getOriginal();
+                    return candidate;
                 }
-                if (!Boolean.FALSE.equals(suitable) || closestMatch.getParameters().length != argumentCount) {
-                    closestMatch = candidate.getOriginal();
+                if (!Boolean.FALSE.equals(suitable)) {
+                    closestMatch = closer(candidate, closestMatch, argumentTypes);
                 }
             }
         }
-        return closestMatch;
+        if (closestMatch != null) {
+            return closestMatch;
+        }
+
+        // prefer method with the same number of parameters as arguments
+        if (argumentCount > 0) {
+            for (MethodNode candidate : candidates) {
+                Parameter[] parameters = candidate.getParameters();
+                if (argumentCount == parameters.length) {
+                    return candidate;
+                }
+            }
+        }
+
+        if (isStaticExpression) {
+            for (MethodNode candidate : candidates) {
+                if (candidate.isStatic()) {
+                    return candidate;
+                }
+            }
+        }
+
+        return candidates.get(0);
     }
 
     //--------------------------------------------------------------------------
@@ -671,6 +693,16 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
     protected static final AccessorSupport[] READER = {AccessorSupport.GETTER, AccessorSupport.ISSER};
     protected static final AccessorSupport[] WRITER = {AccessorSupport.SETTER};
+
+    protected static MethodNode closer(MethodNode next, MethodNode last, List<ClassNode> args) {
+        if (last != null) {
+            long d1 = CategoryTypeLookup.calculateParameterDistance(args, last.getParameters());
+            long d2 = CategoryTypeLookup.calculateParameterDistance(args, next.getParameters());
+            if (d1 < d2)
+                return last;
+        }
+        return next;
+    }
 
     protected static ASTNode createLengthField(ClassNode declaringType) {
         FieldNode lengthField = new FieldNode("length", FieldNode.ACC_PUBLIC, VariableScope.INTEGER_CLASS_NODE, declaringType, null);
@@ -820,8 +852,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      */
     protected static boolean isLooseMatch(List<ClassNode> arguments, Parameter[] parameters) {
         int argCount = (arguments == null ? -1 : arguments.size());
-        if (parameters.length != argCount && !(GenericsMapper.isVargs(parameters) &&
-                (parameters.length - 1 == argCount || parameters.length < argCount))) {
+        if (argCount != parameters.length && !(GenericsMapper.isVargs(parameters) &&
+                (argCount == parameters.length - 1 || argCount > parameters.length))) {
             return true;
         } else if (argCount > 0 && arguments.get(argCount - 1).equals(VariableScope.CLOSURE_CLASS_NODE)) {
             ClassNode lastType = GroovyUtils.getBaseType(parameters[parameters.length - 1].getType());
@@ -838,21 +870,31 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      * @return {@link Boolean#TRUE true} for exact match, {@code null} for loose match, and {@link Boolean#FALSE false} for not a match
      */
     protected static Boolean isTypeCompatible(List<ClassNode> arguments, Parameter[] parameters) {
-        // TODO: Add handling for variadic methods/constructors.
-        // TODO: Can anything be learned from org.codehaus.groovy.ast.ClassNode.tryFindPossibleMethod(String, Expression)?
-
         Boolean result = Boolean.TRUE;
-        for (int i = 0, n = parameters.length; i < n; i += 1) {
-            ClassNode parameter = parameters[i].getType(), argument = arguments.get(i);
+        for (int i = 0, n = Math.max(arguments.size(), parameters.length); i < n; i += 1) {
+            ClassNode parameter = parameters[Math.min(i, parameters.length - 1)].getType();
+            ClassNode argument = i < arguments.size() ? arguments.get(i) : parameter;
+
+            if (i >= parameters.length) {
+                // argument that does not align with a parameter must be vararg
+                assert parameter.isArray(); parameter = parameter.getComponentType();
+            } else if (i == (n - 1) && arguments.size() == parameters.length && parameter.isArray()) {
+                // argument aligned with the last parameter (an array) may be a vararg
+                if (!argument.isArray()) parameter = parameter.getComponentType();
+            }
 
             // test parameter and argument for exact and loose match
             Boolean partialResult = isTypeCompatible(argument, parameter);
             if (partialResult == null) {
                 result = null; // loose
             } else if (!partialResult) {
-                result = Boolean.FALSE;
-                break;
+                return Boolean.FALSE;
             }
+        }
+
+        if (arguments.size() != parameters.length || !arguments.isEmpty() &&
+                last(arguments).isArray() != last(parameters).getType().isArray()) {
+            return null;
         }
         return result;
     }

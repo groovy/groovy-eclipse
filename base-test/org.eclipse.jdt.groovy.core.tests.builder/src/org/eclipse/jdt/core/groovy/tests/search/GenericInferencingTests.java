@@ -1028,11 +1028,11 @@ public final class GenericInferencingTests extends InferencingTestSuite {
     public void testStaticMethodOverloads11() {
         String contents =
             "class Preconditions {\n" +
-            "  static <T> T checkNotNull(T ref) { null }\n" +
-            "  static <T> T checkNotNull(T ref, Object errorMessage) { null }\n" +
-            "  static <T> T checkNotNull(T ref, String errorMessageTemplate, Object arg1) { null }\n" +
-            "  static <T> T checkNotNull(T ref, String errorMessageTemplate, Object arg1, Object arg2) { null }\n" +
-            "  static <T> T checkNotNull(T ref, String errorMessageTemplate, Object... errorMessageArgs) { null }\n" +
+            "  static <T> T checkNotNull(T ref) {}\n" +
+            "  static <T> T checkNotNull(T ref, Object errorMessage) {}\n" +
+            "  static <T> T checkNotNull(T ref, String errorMessageTemplate, Object arg1) {}\n" +
+            "  static <T> T checkNotNull(T ref, String errorMessageTemplate, Object arg1, Object arg2) {}\n" +
+            "  static <T> T checkNotNull(T ref, String errorMessageTemplate, Object... errorMessageArgs) {}\n" +
             "}\n" +
             "String s = Preconditions.checkNotNull('blah', 'Should not be null')";
 
@@ -1046,68 +1046,66 @@ public final class GenericInferencingTests extends InferencingTestSuite {
 
     @Test @Ignore
     public void testJira1718() throws Exception {
-        // the type checking script
-        IPath robotPath = env.addPackage(project.getFolder("src").getFullPath(), "p2");
+        IPath p2 = env.addPackage(project.getFolder("src").getFullPath(), "p2");
 
-        env.addGroovyClass(robotPath, "Renderer",
+        env.addGroovyClass(p2, "Renderer",
             "package p2\n" +
             "interface Renderer<T> {\n" +
-            "Class<T> getTargetType()\n" +
-            "void render(T object, String context)\n" +
+            "  Class<T> getTargetType()\n" +
+            "  void render(T object, String context)\n" +
             "}\n");
 
-        env.addGroovyClass(robotPath, "AbstractRenderer",
+        env.addGroovyClass(p2, "AbstractRenderer",
             "package p2\n" +
             "abstract class AbstractRenderer<T> implements Renderer<T> {\n" +
-            "private Class<T> targetType\n" +
-            "public Class<T> getTargetType() {\n" +
-            "return null\n" +
-            "}\n" +
-            "public void render(T object, String context) {\n" +
-            "}\n" +
+            "  private Class<T> targetType\n" +
+            "  Class<T> getTargetType() {\n" +
+            "    return null\n" +
+            "  }\n" +
+            "  void render(T object, String context) {\n" +
+            "  }\n" +
             "}\n");
 
-        env.addGroovyClass(robotPath, "DefaultRenderer",
+        env.addGroovyClass(p2, "DefaultRenderer",
             "package p2\n" +
             "class DefaultRenderer<T> implements Renderer<T> {\n" +
-            "Class<T> targetType\n" +
-            "DefaultRenderer(Class<T> targetType) {\n" +
-            "this.targetType = targetType\n" +
-            "}\n" +
-            "public Class<T> getTargetType() {\n" +
-            "return null\n" +
-            "}\n" +
-            "public void render(T object, String context) {\n" +
-            "}\n" +
-            "}");
+            "  Class<T> targetType\n" +
+            "  DefaultRenderer(Class<T> targetType) {\n" +
+            "    this.targetType = targetType\n" +
+            "  }\n" +
+            "  Class<T> getTargetType() {\n" +
+            "    return null\n" +
+            "  }\n" +
+            "  void render(T object, String context) {\n" +
+            "  }\n" +
+            "}\n");
 
-        env.addGroovyClass(robotPath, "RendererRegistry",
+        env.addGroovyClass(p2, "RendererRegistry",
             "package p2\n" +
             "interface RendererRegistry {\n" +
-            "public <T> Renderer<T> findRenderer(String contentType, T object)\n" +
+            "  public <T> Renderer<T> findRenderer(String contentType, T object)\n" +
             "}\n");
 
-        env.addGroovyClass(robotPath, "DefaultRendererRegistry",
+        env.addGroovyClass(p2, "DefaultRendererRegistry",
             "package p2\n" +
             "class DefaultRendererRegistry implements RendererRegistry {\n" +
-            "def <T> Renderer<T> findRenderer(String contentType, T object) {\n" +
-            "return null\n" +
-            "}\n" +
+            "  def <T> Renderer<T> findRenderer(String contentType, T object) {\n" +
+            "    return null\n" +
+            "  }\n" +
             "}\n");
 
-        IPath path = env.addGroovyClass(robotPath, "LinkingRenderer",
+        IPath path = env.addGroovyClass(p2, "LinkingRenderer",
             "package p2\n" +
-            "import groovy.transform.CompileStatic\n" +
-            "@CompileStatic\n" +
+            "@groovy.transform.CompileStatic\n" +
             "class LinkingRenderer<T> extends AbstractRenderer<T> {\n" +
-            "public void render(T object, String context) {\n" +
-            "DefaultRendererRegistry registry = new DefaultRendererRegistry()\n" +
-            "Renderer htmlRenderer = registry.findRenderer(\"HTML\", object)\n" +
-            "if (htmlRenderer == null) {\n" +
-            "htmlRenderer = new DefaultRenderer(targetType)\n" +
-            "}\n" +
-            "htmlRenderer.render(object, context)\n" +
-            "}\n" +
+            "  void render(T object, String context) {\n" +
+            "    DefaultRendererRegistry registry = new DefaultRendererRegistry()\n" +
+            "    Renderer htmlRenderer = registry.findRenderer('HTML', object)\n" +
+            "    if (htmlRenderer == null) {\n" +
+            "      htmlRenderer = new DefaultRenderer(targetType)\n" +
+            "    }\n" +
+            "    htmlRenderer.render(object, context)\n" + // TODO: Cannot call p2.Renderer<java.lang.Object>#render(java.lang.Object<java.lang.Object>, java.lang.String) with arguments [T, java.lang.String]
+            "  }\n" +
             "}\n");
 
         IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(path);

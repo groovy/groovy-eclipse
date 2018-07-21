@@ -396,20 +396,19 @@ public final class DGMInferencingTests extends InferencingTestSuite {
     @Test
     public void testDGM48() {
         String contents = "int[] ints = [1, 2, 3]\n" +
-            "String dgm(Object[] arr) { null }\n" +
-            "Object dgm(Object obj) { null }\n" +
+            "String dgm(Object[] arr) {}\n" +
+            "Object dgm(Object obj) {}\n" +
             "def result = dgm(ints)\n";
         assertExprType(contents, "result", "java.lang.Object");
     }
 
     @Test
     public void testDGM48a() {
-        // TODO: runtime preference seems to be the Object method
         String contents = "int[] ints = [1, 2, 3]\n" +
-            "Object dgm(Object obj) { null }\n" +
-            "String dgm(Object[] arr) { null }\n" +
+            "Object dgm(Object obj) {}\n" +
+            "String dgm(Object[] arr) {}\n" +
             "def result = dgm(ints)\n";
-        assertExprType(contents, "result", "java.lang.String");
+        assertExprType(contents, "result", "java.lang.Object");
     }
 
     @Test

@@ -2567,4 +2567,16 @@ public final class InferencingTests extends InferencingTestSuite {
         MethodNode m = assertDeclaration(contents, offset, offset + 4, "Issue405", "meth", DeclarationKind.METHOD);
         Assert.assertEquals("Expected 'meth(String, Date, Date)' but was 'meth(String, MyEnum)'", 3, m.getParameters().length);
     }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/644
+    public void testMethodOverloadsAndImperfectArgumentMatching2() {
+        String contents = "Arrays.toString(new Object())";
+
+        String target = "toString";
+        int offset = contents.indexOf(target);
+        MethodNode m = assertDeclaration(contents, offset, offset + target.length(), "java.util.Arrays", "toString", DeclarationKind.METHOD);
+
+        String arrayType = m.getParameters()[0].getType().toString(false);
+        Assert.assertEquals("Expected '" + target + "(Object[])' but was '" + target + "(" + arrayType + ")'", "java.lang.Object[]", arrayType);
+    }
 }
