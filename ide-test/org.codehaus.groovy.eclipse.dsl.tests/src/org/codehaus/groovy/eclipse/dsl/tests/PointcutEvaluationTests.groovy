@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -329,7 +329,7 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testAnnotation7Fail() {
+    void testAnnotation7() {
         addGroovySource('@Deprecated\nclass Foo { \n def f }', nextUnitName(), 'p')
         doTestOfLastMatch('Foo', 'currentType( fields("g") & annotatedBy("java.lang.Deprecated") )', null)
     }
@@ -338,6 +338,22 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
     void testAnnotation8() {
         addGroovySource('class Foo { \n @Deprecated def f\n @Deprecated def g() { } }', nextUnitName(), 'p')
         doTestOfLastMatch('Foo', 'currentType( fields( annotatedBy("java.lang.Deprecated") ) & methods( annotatedBy("java.lang.Deprecated") ) )', 'p.Foo')
+    }
+
+    @Test
+    void testAnnotation9() {
+        addGroovySource('@interface Tag { String value(); }', 'Tag', 'a')
+        addGroovySource('@interface Tags { Tag[] value(); }', 'Tags', 'a')
+        addGroovySource('import a.*; @Tags([@Tag("one"), @Tag("two")]) class Bar { def baz() {} }', 'Bar', 'foo')
+        doTestOfLastMatch('foo.Bar', 'currentType(annotatedBy("a.Tag"))', 'foo.Bar')
+    }
+
+    @Test
+    void testAnnotation9a() {
+        addGroovySource('@interface Tag { String value(); }', 'Tag', 'a')
+        addGroovySource('@interface Tags { Tag[] value(); }', 'Tags', 'a')
+        addGroovySource('import a.*; @Tags(@Tag("one")) class Bar { def baz() {} }', 'Bar', 'foo')
+        doTestOfLastMatch('foo.Bar', 'currentType(annotatedBy("a.Tag"))', 'foo.Bar')
     }
 
     @Test

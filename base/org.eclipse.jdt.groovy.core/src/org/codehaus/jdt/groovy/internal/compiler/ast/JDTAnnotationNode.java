@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import java.util.Map;
 
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
@@ -117,11 +118,9 @@ public class JDTAnnotationNode extends AnnotationNode {
         }
     }
 
-    // FIXASC does not cope with all variants of value types, see AnnotationVisitor.visitExpression() for the code to utilise
     private Expression createExpressionFor(TypeBinding b, Object value) {
         if (b.isArrayType()) {
             ListExpression listExpression = new ListExpression();
-            // FIXASC is it a groovy optimization that if the value is expected to be an array you don't have to write it as such
             if (value.getClass().isArray()) {
                 Object[] values = (Object[]) value;
                 for (Object v : values) {
@@ -132,24 +131,35 @@ public class JDTAnnotationNode extends AnnotationNode {
                 listExpression.addExpression(createExpressionFor(((ArrayBinding) b).leafComponentType, value));
             }
             return listExpression;
-        } else if (b.isEnum()) {
+        }
+
+        if (CharOperation.equals(b.signature(), jlString)) {
+            return new ConstantExpression(((StringConstant) value).stringValue());
+        }
+
+        if (b.isClass()) {
+            return new ClassExpression(resolver.convertToClassNode((TypeBinding) value));
+        }
+
+        if (b.isAnnotationType()) {
+            return new AnnotationConstantExpression(new JDTAnnotationNode((AnnotationBinding) value, resolver));
+        }
+
+        if (b.isEnum()) {
             ClassNode enumType = resolver.convertToClassNode(b);
             String fieldName = String.valueOf(((FieldBinding) value).name);
             return new PropertyExpression(new ClassExpression(enumType), fieldName);
-        } else if (CharOperation.equals(b.signature(), jlString)) {
-            String v = ((StringConstant) value).stringValue();
-            return new ConstantExpression(v);
-        } else if (b.isBaseType()) {
+        }
+
+        if (b.isBaseType()) {
             char[] sig = b.signature();
             if (CharOperation.equals(sig, baseInt)) {
                 return new ConstantExpression(((IntConstant) value).intValue());
             } else {
-                throw new GroovyEclipseBug("NYI for signature " + new String(sig));
+                throw new GroovyEclipseBug("NYI for signature " + String.valueOf(sig));
             }
-        } else if (b.isClass()) {
-            ClassExpression classExpression = new ClassExpression(resolver.convertToClassNode((TypeBinding) value));
-            return classExpression;
         }
+
         throw new GroovyEclipseBug("Problem in JDTAnnotatioNode.createExpressionFor(binding=" + b + " value=" + value + ")");
     }
 }

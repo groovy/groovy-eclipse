@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,18 +17,23 @@ package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.eclipse.core.resources.IStorage;
 
 /**
- * the match returns true if the pattern passed in has an annotated node that has an annotation
- * with the supplied characteristics most likely, a name.  This is similar to {@link AnnotatedByPointcut} on when it matches.
- * However, the difference is that the matched results are the annotations themselves rather than the things they
- * are annotating
+ * Matches any {@code AnnotatedNode} that has an annotation with the supplied
+ * characteristics. <p> Example: {@code annotatedBy(SuppressWarnings.class)}
  */
 public class FindAnnotationPointcut extends FilteringPointcut<AnnotationNode> {
 
@@ -36,40 +41,52 @@ public class FindAnnotationPointcut extends FilteringPointcut<AnnotationNode> {
         super(containerIdentifier, pointcutName, AnnotationNode.class);
     }
 
-//    FIXADE pointcut with two hasAttributes is not working
-
-    /**
-     * Converts toMatch to a collection of annotation nodes.  Might be null or empty list
-     * In either of these cases, this is considered a non-match
-     * @param toMatch the object to explode
-     */
     @Override
-    protected Collection<AnnotationNode> explodeObject(Object toMatch) {
-        if (toMatch instanceof Collection) {
-            Collection<AnnotationNode> annotations = new ArrayList<>();
-            for (Object obj : (Collection<?>) toMatch) {
-                Collection<AnnotationNode> explodedElt = explodeObject(obj);
-                if (explodedElt != null) {
-                    annotations.addAll(explodedElt);
+    protected Collection<AnnotationNode> explodeObject(Object object) {
+        Collection<AnnotationNode> result = new ArrayList<>();
+        explodeObject(object, result);
+        return result;
+    }
+
+    protected void explodeObject(Object object, Collection<AnnotationNode> result) {
+        if (object instanceof AnnotationNode) {
+            AnnotationNode annotation = (AnnotationNode) object;
+            if (isCollectorAnnotation(annotation)) {
+                Expression expression = annotation.getMember("value");
+                if (expression instanceof ListExpression) {
+                    List<Expression> expressions =
+                        ((ListExpression) expression).getExpressions();
+                    explodeObject(expressions, result);
+                } else {
+                    explodeObject(expression, result);
                 }
             }
-            return annotations;
-        } else if (toMatch instanceof AnnotationNode) {
-            return Collections.singleton((AnnotationNode) toMatch);
-        } else if (toMatch instanceof AnnotatedNode) {
-            return new ArrayList<>(((AnnotatedNode) toMatch).getAnnotations());
+            result.add(annotation);
+        } else if (object instanceof AnnotationConstantExpression) {
+            explodeObject(((ConstantExpression) object).getValue(), result);
+        } else if (object instanceof AnnotatedNode) {
+            explodeObject(((AnnotatedNode) object).getAnnotations(), result);
+        } else if (object instanceof Collection) {
+            ((Collection<?>) object).forEach(item -> explodeObject(item, result));
+        }
+    }
+
+    @Override
+    protected AnnotationNode filterObject(AnnotationNode result, GroovyDSLDContext context, String firstArgAsString) {
+        if (firstArgAsString.equals(result.getClassNode().getName())) {
+            return result;
         }
         return null;
     }
 
-    /**
-     * Matches if the annotation has the class name of that is passed in
-     */
-    @Override
-    protected AnnotationNode filterObject(AnnotationNode result, GroovyDSLDContext context, String firstArgAsString) {
-        if (result.getClassNode().getName().equals(firstArgAsString)) {
-            return result;
+    protected static boolean isCollectorAnnotation(AnnotationNode annotation) {
+        List<MethodNode> methods = annotation.getClassNode().getMethods();
+        if (methods.size() == 1 && methods.get(0).getName().equals("value")) {
+            ClassNode returnType = methods.get(0).getReturnType();
+            if (returnType.isArray()) {
+                return returnType.getComponentType().implementsInterface(ClassHelper.Annotation_TYPE);
+            }
         }
-        return null;
+        return false;
     }
 }
