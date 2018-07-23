@@ -33,6 +33,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.ITypeRequestor.VisitStatus;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
+import org.eclipse.jdt.groovy.search.TypeInferencingVisitorWithRequestor;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.codeassist.InternalCompletionContext;
@@ -192,11 +193,11 @@ public class ContentAssistContext {
     }
 
     /**
-     * The completion text that is being used for completion
-     * (may be different than the default if doing a method context completon
+     * The expression text that is being used for completion. It may be different
+     * than the default if doing a method context completion.
      */
     public String getPerceivedCompletionExpression() {
-        return completionExpression;
+        return completionExpression.replaceAll("^(?:@|new\\b)|\\s+", "");
     }
 
     public String getQualifiedCompletionExpression() {
@@ -205,14 +206,15 @@ public class ContentAssistContext {
 
     public VariableScope getPerceivedCompletionScope() {
         if (currentScope == null && completionNode != null) {
-            new TypeInferencingVisitorFactory().createVisitor(unit).visitCompilationUnit(
-                (ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) -> {
-                    if (node == completionNode) {
-                        currentScope = result.scope;
-                        return VisitStatus.STOP_VISIT;
-                    }
-                    return VisitStatus.CONTINUE;
-                });
+            TypeInferencingVisitorWithRequestor visitor = new TypeInferencingVisitorFactory().createVisitor(unit);
+            visitor.visitCompilationUnit((ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) -> {
+                if (node == completionNode) {
+                    currentScope = result.scope;
+                    return VisitStatus.STOP_VISIT;
+                }
+                return VisitStatus.CONTINUE;
+            });
+            // TODO: visitor.resolver.cleanUp();
         }
         return currentScope;
     }

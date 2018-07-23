@@ -456,7 +456,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
     }
 
     private ICompletionProposal proposeType(AcceptedType type) {
-        int completionOffset = (isImport || type.mustBeQualified ? offset : context.completionLocation - context.completionExpression.length());
+        int completionOffset = (isImport || type.mustBeQualified ? offset : context.completionLocation - context.getPerceivedCompletionExpression().length());
 
         GroovyCompletionProposal proposal = createProposal(CompletionProposal.TYPE_REF, completionOffset);
         proposal.setAccessibility(type.accessibility);
