@@ -30,6 +30,7 @@ import org.eclipse.jdt.core.compiler.CharOperation
 import org.eclipse.jdt.internal.codeassist.impl.AssistOptions
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.contentassist.ICompletionProposal
+import org.junit.Before
 import org.junit.Test
 
 final class MethodCompletionTests extends CompletionTestSuite {
@@ -73,6 +74,11 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     //--------------------------------------------------------------------------
+
+    @Before
+    void setUp() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'true')
+    }
 
     @Test
     void testAfterParens1() {
@@ -146,8 +152,8 @@ final class MethodCompletionTests extends CompletionTestSuite {
         GroovyCompilationUnit gunit = addGroovySource(contents, nextUnitName())
         ClassNode clazz = extract(gunit)
         List<MethodNode> methods = clazz.getMethods('is')
-        for (MethodNode method : methods) {
-            if (method.getParameters().length == 2) {
+        for (method in methods) {
+            if (method.parameters.length == 2) {
                 GroovyMethodProposal proposal = new GroovyMethodProposal(method)
                 char[][] names = proposal.createAllParameterNames(gunit)
                 checkNames(['self'.toCharArray(), 'other'.toCharArray()] as char[][], names)
@@ -170,13 +176,13 @@ final class MethodCompletionTests extends CompletionTestSuite {
         GroovyCompilationUnit gunit = addGroovySource(contents, nextUnitName())
         ClassNode clazz = extract(gunit)
         List<MethodNode> methods = clazz.getMethods('m')
-        for (MethodNode method : methods) {
-            if (method.getParameters().length == 1) {
+        for (method in methods) {
+            if (method.parameters.length == 1) {
                 GroovyMethodProposal proposal = new GroovyMethodProposal(method)
                 char[][] names = proposal.createAllParameterNames(gunit)
                 checkNames(['x'.toCharArray()] as char[][], names)
             }
-            if (method.getParameters().length == 2) {
+            if (method.parameters.length == 2) {
                 GroovyMethodProposal proposal = new GroovyMethodProposal(method)
                 char[][] names = proposal.createAllParameterNames(gunit)
                 checkNames(['x'.toCharArray(), 'y'.toCharArray()] as char[][], names)
@@ -591,5 +597,72 @@ final class MethodCompletionTests extends CompletionTestSuite {
             '''.stripIndent()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'com'))
         proposalExists(proposals, 'compareTo', 1)
+    }
+
+    @Test
+    void testTrailingClosure1() {
+        String contents = 'def foo(Closure block) {}\nfoo'
+        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'false')
+        ICompletionProposal proposal = findFirstProposal(
+            createProposalsAtOffset(contents, contents.length()), 'foo(Closure block)')
+
+        // replacement should be "foo()" with initial cursor inside parens and exit position after parens
+        applyProposalAndCheckCursor(proposal, contents + '()', contents.length() + 1, 0, contents.length() + 2)
+    }
+
+    @Test
+    void testTrailingClosure1a() {
+        String contents = 'def foo(Collection items, Closure block) {}\nfoo'
+        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'false')
+        ICompletionProposal proposal = findFirstProposal(
+            createProposalsAtOffset(contents, contents.length()), 'foo(Collection items, Closure block)')
+
+        // replacement should be "foo()" with initial cursor inside parens and exit position after parens
+        applyProposalAndCheckCursor(proposal, contents + '()', contents.length() + 1, 0, contents.length() + 2)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/633
+    void testTrailingClosure2() {
+        String contents = 'def foo(Closure block) {}\nfoo'
+        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'false')
+        ICompletionProposal proposal = findFirstProposal(
+            createProposalsAtOffset(contents, contents.length()), 'foo(Closure block)')
+
+        String expected = contents + ' {  }'
+        applyProposalAndCheck(proposal, expected, '{' as char)
+
+        def selection = proposal.getSelection(proposal.@fInvocationContext.document)
+        assert selection.x == getLastIndexOf(expected, '{ ') && selection.y == 0
+        assert proposal.replacementOffset + proposal.cursorPosition == getLastIndexOf(expected, '{ ')
+    }
+
+    @Test
+    void testTrailingClosure2a() {
+        String contents = 'def foo(Collection items, Closure block) {}\nfoo'
+        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'false')
+        ICompletionProposal proposal = findFirstProposal(
+            createProposalsAtOffset(contents, contents.length()), 'foo(Collection items, Closure block)')
+
+        def expected = contents + '() {  }'
+        applyProposalAndCheck(proposal, expected, '{' as char)
+
+        def selection = proposal.getSelection(proposal.@fInvocationContext.document)
+        assert selection.x == getLastIndexOf(expected, '(') && selection.y == 0
+        assert proposal.replacementOffset + proposal.cursorPosition == getLastIndexOf(expected, '{ ')
+    }
+
+    @Test
+    void testTrailingFunctionalInterface() {
+        String contents = 'def foo(Comparator c) {}\nfoo'
+        setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'false')
+        ICompletionProposal proposal = findFirstProposal(
+            createProposalsAtOffset(contents, contents.length()), 'foo(Comparator c)')
+
+        def expected = contents + ' { o1, o2 -> }'
+        applyProposalAndCheck(proposal, expected, '{' as char)
+
+        def selection = proposal.getSelection(proposal.@fInvocationContext.document)
+        assert selection.x == expected.lastIndexOf('o1') && selection.y == 'o1'.length()
+        assert proposal.replacementOffset + proposal.cursorPosition == getLastIndexOf(expected, '->')
     }
 }

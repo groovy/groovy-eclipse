@@ -19,6 +19,7 @@ import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -114,7 +115,6 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                     trigger = 0; // disable insertion of trailing '{'
 
                 } else if (fProposal.getKind() == CompletionProposal.CONSTRUCTOR_INVOCATION ||
-                        !fPreferences.isEnabled(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES) ||
                         !lastParamAcceptsClosure(Signature.getParameterTypes(fProposal.getSignature()))) {
                     // prepare for insertion of new block after replacement
                     if (fPreferences.isEnabled(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_BEFORE_OPENING_BRACE_IN_BLOCK)) {
@@ -124,6 +124,10 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                     // replace the last argument with a closure literal
                     setReplacementString(recomputeReplacementString());
                     trigger = 0; // disable insertion of trailing '{'
+
+                    if (!fPreferences.isEnabled(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES)) {
+                        setCursorPosition(fPositions.remove(fPositions.size() - 1).getOffset());
+                    }
                 }
             }
 
@@ -196,7 +200,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         // if no whitespace in the method name and no arguments, there is nothing groovy to do
         if (!hasWhitespace && (!hasParameters() || !hasArgumentList())) {
             String replacementString = super.computeReplacementString();
-            if (replacementString.endsWith(");")) {
+            if (replacementString.endsWith(RPAREN + SEMICOLON)) {
                 replacementString = replacementString.substring(0, replacementString.length() - 1);
             }
             return replacementString;
@@ -329,9 +333,19 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     }
 
     protected String recomputeReplacementString() throws JavaModelException {
+        if (fProposals != null) {
+            // disable guessing for closure literal
+            fProposals.remove(fProposals.size() - 1);
+        } else {
+            assert fPositions == null;
+            fPositions = new ArrayList<>();
+            fProposals = Collections.EMPTY_LIST;
+            fPositions.add(new Position(getContextInformationPosition()));
+            if (Signature.getParameterCount(fProposal.getSignature()) > 1) {
+                fPositions.add(new Position(getContextInformationPosition()));
+            }
+        }
         int last = (fPositions.size() - 1);
-        // disable guessing for closure literal
-        fProposals.remove(fProposals.size() - 1);
 
         String head = getReplacementString().substring(0, fPositions.get(last).getOffset());
         String tail = getReplacementString().substring((fPositions.get(last).getOffset()) + fPositions.get(last).getLength());
@@ -340,9 +354,9 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
             if (!tail.isEmpty()) {
                 // remove opening paren if there is one param
                 if (last == 0) {
-                    head = head.substring(0, head.indexOf('('));
+                    head = head.substring(0, head.lastIndexOf(LPAREN));
                 } else {
-                    head = head.substring(0, head.lastIndexOf(',')) + tail;
+                    head = head.substring(0, Math.max(head.lastIndexOf(COMMA), head.lastIndexOf(LPAREN) + 1)) + tail;
                 }
                 if (!head.endsWith(SPACE) && fPreferences.isEnabled(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_BEFORE_OPENING_BRACE_IN_BLOCK)) {
                     head += SPACE;
