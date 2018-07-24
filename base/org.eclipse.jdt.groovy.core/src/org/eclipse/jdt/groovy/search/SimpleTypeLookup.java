@@ -670,10 +670,15 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         // prefer method with the same number of parameters as arguments
         if (argumentCount > 0) {
             for (MethodNode candidate : candidates) {
-                Parameter[] parameters = candidate.getParameters();
-                if (argumentCount == parameters.length) {
-                    return candidate;
+                if (argumentCount == candidate.getParameters().length) {
+                    if (isCompatible(candidate, isStaticExpression)) {
+                        return candidate;
+                    }
+                    closestMatch = candidate;
                 }
+            }
+            if (closestMatch != null) {
+                return closestMatch;
             }
         }
 

@@ -221,6 +221,20 @@ public final class StaticInferencingTests extends InferencingTestSuite {
         assertUnknown(contents, "mixin");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/646
+    public void testStaticReference8() {
+        String contents = "class Unit {}\n" +
+            "class Assert {\n" +
+            "  protected void assertType(String src, String expected) {}\n" +
+            "  protected void assertType(String src, int off, int len, String expected) {}\n" +
+            "  public static void assertType(Unit src, int off, int len, String expected) {}\n" +
+            "}\n" +
+            "Unit unit = null; int offset = 0" +
+            "Assert.assertType(unit, offset, offset + 'string'.length(), 'java.util.Collection')";
+
+        assertKnown(contents, "assertType", "Assert", "java.lang.Void");
+    }
+
     //
 
     @Test // GRECLIPSE-855: should be able to find the type, but with unknown confidence
