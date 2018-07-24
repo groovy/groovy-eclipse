@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.dsl.tests
 
 import static org.eclipse.jdt.core.JavaCore.createCompilationUnitFrom
 
+import org.codehaus.groovy.ast.expr.ConstantExpression
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.core.groovy.tests.search.InferencingTestSuite
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence
@@ -44,8 +45,8 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
 
     private void assertDsldUnknown(GroovyCompilationUnit unit, String expr) {
         int start = unit.source.lastIndexOf(expr), until = start + expr.length()
-        TypeConfidence exprCnf = InferencingTestSuite.doVisit(start, until, unit, false).result.confidence
-        assert exprCnf == TypeConfidence.UNKNOWN
+        def result = InferencingTestSuite.doVisit(start, until, unit, false).result
+        assert result.confidence == TypeConfidence.UNKNOWN
     }
 
     private void assertUnknown(String contents, String expr) {
@@ -53,6 +54,19 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
     }
 
     //
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/638
+    void testBindings0() {
+        GroovyCompilationUnit unit = addDsldSource('''\
+            bind(methods: enclosingMethod()).accept {
+            }
+            '''.stripIndent())
+
+        int start = unit.source.indexOf('methods'), until = start + 'methods'.length()
+        def result = InferencingTestSuite.doVisit(start, until, unit, false).result
+        assert result.declaration instanceof ConstantExpression
+        assert result.type.name == 'java.lang.String'
+    }
 
     @Test
     void testBindings1() {

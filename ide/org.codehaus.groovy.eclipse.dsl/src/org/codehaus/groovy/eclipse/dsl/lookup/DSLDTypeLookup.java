@@ -79,19 +79,22 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
 
     @Override
     protected TypeAndDeclaration lookupTypeAndDeclaration(ClassNode declaringType, String name, VariableScope scope) {
-        if (!(scope.getCurrentNode() instanceof ConstantExpression) || !(scope.getEnclosingNode() instanceof MapEntryExpression) ||
-            scope.getCurrentNode() != ((MapEntryExpression) scope.getEnclosingNode()).getKeyExpression() || inPointcutExpression(scope)) {
-
+        if (!isMapKey(scope) || inPointcutExpression(scope)) {
             context.setStatic(isStatic());
             context.setCurrentScope(scope);
             context.setTargetType(declaringType);
+            // this call satisfies pointcut expression bindings; map keys don't require any further processing
             List<IContributionElement> contributions = store.findContributions(context, disabledScriptsAsSet);
 
-            declaringType = context.getCurrentType(); // may have changed via a setDelegateType
-            for (IContributionElement contribution : contributions) {
-                TypeAndDeclaration td = contribution.lookupType(name, declaringType, context.getResolverCache());
-                if (td != null) {
-                    return td;
+            if (!isMapKey(scope)) {
+                // may have changed via a setDelegateType
+                declaringType = context.getCurrentType();
+                ResolverCache resolverCache = context.getResolverCache();
+                for (IContributionElement contribution : contributions) {
+                    TypeAndDeclaration td = contribution.lookupType(name, declaringType, resolverCache);
+                    if (td != null) {
+                        return td;
+                    }
                 }
             }
         }
@@ -132,8 +135,14 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
         return TypeConfidence.INFERRED;
     }
 
+    private boolean isMapKey(VariableScope scope) {
+        return (scope.getCurrentNode() instanceof ConstantExpression &&
+                scope.getEnclosingNode() instanceof MapEntryExpression &&
+                scope.getCurrentNode() == ((MapEntryExpression) scope.getEnclosingNode()).getKeyExpression());
+    }
+
     private boolean inPointcutExpression(VariableScope scope) {
         return (context.simpleFileName != null && context.simpleFileName.endsWith(".dsld") && (scope.getEnclosingClosure() == null ||
-            scope.getAllEnclosingMethodCallExpressions().stream().noneMatch(cat -> cat.call.getMethodAsString().matches("accept|contribute"))));
+                scope.getAllEnclosingMethodCallExpressions().stream().noneMatch(cat -> cat.call.getMethodAsString().matches("accept|contribute"))));
     }
 }
