@@ -67,9 +67,6 @@ public class GroovyActivator extends Plugin {
             System.out.println("------------");
         }
 
-        // enable InvokeDynamic support across the board
-        System.setProperty("groovy.target.indy", "true");
-
         super.start(context);
         try {
             initialize();

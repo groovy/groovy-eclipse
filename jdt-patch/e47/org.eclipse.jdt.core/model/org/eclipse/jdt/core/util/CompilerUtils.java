@@ -20,7 +20,10 @@ import java.util.Map;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.core.IClasspathContainer;
+import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.util.Util;
 
@@ -57,6 +60,9 @@ public class CompilerUtils {
 				} else {
 					options.groovyFlags = 0;
 				}
+				if (hasInvokeDynamicSupport(javaProject)) {
+					options.groovyFlags |= InvokeDynamic;
+				}
 			} else {
 				options.buildGroovyFiles = 1;
 				options.groovyFlags = 0;
@@ -80,10 +86,14 @@ public class CompilerUtils {
 				options.put(CompilerOptions.OPTIONG_GroovyProjectName, javaProject.getElementName());
 				options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.ENABLED);
 				if (isProbablyGrailsProject(project)) {
-					// will need bit manipulation here when another flag added
 					options.put(CompilerOptions.OPTIONG_GroovyFlags, Integer.toString(IsGrails));
 				} else {
 					options.put(CompilerOptions.OPTIONG_GroovyFlags, "0");
+				}
+				if (hasInvokeDynamicSupport(javaProject)) {
+					options.merge(CompilerOptions.OPTIONG_GroovyFlags, Integer.toString(CompilerUtils.InvokeDynamic), (String one, String two) -> {
+						return Integer.toString(Integer.parseInt(one) | Integer.parseInt(two));
+					});
 				}
 			} else {
 				options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.DISABLED);
@@ -94,6 +104,24 @@ public class CompilerUtils {
 			options.put(CompilerOptions.OPTIONG_BuildGroovyFiles, CompilerOptions.DISABLED);
 			options.put(CompilerOptions.OPTIONG_GroovyFlags, "0");
 		}
+	}
+
+	private static boolean hasInvokeDynamicSupport(IJavaProject javaProject) throws CoreException {
+		for (IClasspathEntry unresolved : javaProject.getRawClasspath()) {
+			if (unresolved.getEntryKind() == IClasspathEntry.CPE_CONTAINER &&
+					unresolved.getPath().toString().startsWith("GROOVY_SUPPORT")) {
+				IClasspathContainer container = JavaCore.getClasspathContainer(unresolved.getPath(), javaProject);
+				for (IClasspathEntry resolved : container.getClasspathEntries()) {
+					String[] tokens = resolved.getPath().lastSegment().toString().split("-");
+					if (tokens.length == 3 && "groovy".equals(tokens[0]) &&
+							Character.isDigit(tokens[1].charAt(0))) {
+						return tokens[2].startsWith("indy");
+					}
+				}
+				break;
+			}
+		}
+		return false;
 	}
 
 	/**

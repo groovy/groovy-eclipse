@@ -15,7 +15,6 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
-import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -4568,31 +4567,23 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     // Test the visibility of a package-private source type from another package
     @Test
     public void testVisibility() {
-        String[] contents = {
+        runConformTest(new String[] {
             "p/First.groovy",
-            "package p;\n"+
-            "import q.Second;\n"+
-            "public class First {\n"+
-            "  public static void main(String[] argv) {\n"+
-            "    new First().getIt();\n"+
-            "    print \"success\"\n"+
-            "  }\n"+
-            "  public Second getIt() { return null;}\n"+
+            "package p;\n" +
+            "import q.Second;\n" +
+            "public class First {\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    new First().getIt();\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
+            "  public Second getIt() { return null;}\n" +
             "}\n",
 
             "q/Second.java",
-            "package q;\n"+
+            "package q;\n" +
             "class Second {}\n",
-        };
-
-        if (!isAtLeastGroovy(25)) {
-            runConformTest(contents, "success");
-        } else {
-            String stderr = Float.parseFloat(System.getProperty("java.specification.version")) > 8 ?
-                "java.lang.IllegalAccessError: failed to access class q.Second from class p.First" :
-                "java.lang.BootstrapMethodError: java.lang.IllegalAccessError: tried to access class q.Second from class p.First";
-            runConformTest(contents, "", stderr);
-        }
+        },
+        "success");
     }
 
     @Test

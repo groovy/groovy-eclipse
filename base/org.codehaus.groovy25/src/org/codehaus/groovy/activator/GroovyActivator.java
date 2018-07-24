@@ -67,10 +67,8 @@ public class GroovyActivator extends Plugin {
             System.out.println("------------");
         }
 
-        // disable long-lived, static PARAMETERIZED_TYPE_CACHE in GenericsUtils
+        // disable long-lived PARAMETERIZED_TYPE_CACHE in GenericsUtils
         System.setProperty("groovy.enable.parameterized.type.cache", "false");
-        // enable InvokeDynamic support across the board
-        System.setProperty("groovy.target.indy", "true");
 
         super.start(context);
         try {
