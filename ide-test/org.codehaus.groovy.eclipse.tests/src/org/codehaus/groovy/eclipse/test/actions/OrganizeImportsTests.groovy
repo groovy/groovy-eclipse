@@ -566,6 +566,19 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
+    void testRetainImport11() {
+        String contents = '''\
+            import java.lang.annotation.*
+
+            import groovy.lang.DelegatesTo.*
+            import groovy.lang.DelegatesTo.Target
+
+            Target target
+            '''
+        doContentsCompareTest(contents)
+    }
+
+    @Test
     void testChoices() {
         String contents = '''
             FourthClass f = null
@@ -1292,6 +1305,44 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(contents)
     }
 
+    @Test
+    void testDefaultImport6() {
+        String originalContents = '''\
+            import java.awt.*
+            import java.util.*
+            import java.util.List
+
+            List list
+            '''
+        String expectedContents = '''\
+            import java.awt.*
+            import java.util.List
+
+            List list
+            '''
+
+        doContentsCompareTest(originalContents, expectedContents)
+    }
+
+    @Test
+    void testDefaultImport7() {
+        String originalContents = '''\
+            import java.sql.*
+            import java.util.*
+            import java.sql.Date
+
+            Date date
+            '''
+        String expectedContents = '''\
+            import java.sql.*
+            import java.sql.Date
+
+            Date date
+            '''
+
+        doContentsCompareTest(originalContents, expectedContents)
+    }
+
     @Test // GRECLIPSE-1553
     void testCompileStaticAndMapStyleConstructor() {
         createGroovyType 'example2', 'Bar', '''
@@ -1464,6 +1515,25 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             '''
 
         doContentsCompareTest(originalContents, expectedContents)
+    }
+
+    @Test
+    void testOrganizeWithExtraImports5() {
+        addConfigScript '''\
+            withConfig(configuration) {
+              imports {
+                star 'java.sql'
+              }
+            }
+            '''
+
+        String contents = '''\
+            import java.sql.Date
+
+            Date sqlDateNotUtilDate
+            '''
+
+        doContentsCompareTest(contents)
     }
 
     @Test @NotYetImplemented

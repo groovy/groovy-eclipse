@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.stream.StreamSupport;
 
 import groovy.transform.Field;
 
@@ -64,6 +63,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.SourceRange;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
+import org.eclipse.jdt.core.dom.rewrite.ImportRewrite.ImportRewriteContext;
 import org.eclipse.jdt.core.search.TypeNameMatch;
 import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.groovy.core.util.DepthFirstVisitor;
@@ -82,6 +82,12 @@ public class OrganizeGroovyImports {
     private static final Pattern ALIASED_IMPORT = Pattern.compile("\\sas\\s");
     private static final Pattern STATIC_CONSTANT = Pattern.compile("[A-Z][A-Z0-9_]+");
     private static final ClassNode SCRIPT_FIELD_CLASS_NODE = ClassHelper.make(Field.class);
+    private static final ImportRewriteContext FORCE_RETENTION = new ImportRewriteContext() {
+        @Override
+        public int findInContext(String qualifier, String name, int kind) {
+            return RES_NAME_UNKNOWN_NEEDS_EXPLICIT_IMPORT;
+        }
+    };
 
     private final SubMonitor monitor;
     private IChooseImportQuery query;
@@ -148,7 +154,7 @@ public class OrganizeGroovyImports {
                                 importsSlatedForRemoval.put(className, imp);
                             } else {
                                 String fullName = className + " as " + imp.getAlias();
-                                rewriter.addImport(fullName);
+                                rewriter.addImport(fullName, FORCE_RETENTION);
                                 importsSlatedForRemoval.put(fullName, imp);
                             }
                         } else {
@@ -173,9 +179,12 @@ public class OrganizeGroovyImports {
 
                 monitor.worked(4);
 
-                // remove all default imports
+                // implicit type/static imports are not handled by ImportRewrite
                 for (ImportNode imp : allImports) {
-                    if (isDefaultImport(imp, allImports)) {
+                    boolean isDefault = (!imp.isStatic() && !isAliased(imp) && (
+                        ClassHelper.BigDecimal_TYPE.equals(imp.getType()) ||
+                        ClassHelper.BigInteger_TYPE.equals(imp.getType())));
+                    if (isDefault || (imp.getEnd() < 1 && !(imp.isStar() && !imp.isStatic()))) {
                         String key;
                         if (imp.isStar()) {
                             if (!imp.isStatic()) {
@@ -241,7 +250,7 @@ public class OrganizeGroovyImports {
 
     /**
      * There are cases where a type is seen as unresolved but can be found
-     * amongst the imports of the module or within the default imports.
+     * amongst the imports of the module.
      * <p>
      * One such case is the use of a parameterized type, but not all type
      * params have been satisfied correctly.  Another involves annotation
@@ -263,13 +272,6 @@ public class OrganizeGroovyImports {
                 } else {
                     typeImports.add(imp.getText());
                 }
-            }
-        }
-        for (String imp : DEFAULT_IMPORTS) {
-            if (imp.endsWith(".")) {
-                starImports.add(imp);
-            } else {
-                typeImports.add(imp + " as " + imp.substring(imp.lastIndexOf('.') + 1));
             }
         }
 
@@ -351,65 +353,6 @@ public class OrganizeGroovyImports {
             }
         }
         return true;
-    }
-
-    private static final Set<String> DEFAULT_IMPORTS = new LinkedHashSet<>();
-    static {
-        DEFAULT_IMPORTS.add("java.lang.");
-        DEFAULT_IMPORTS.add("java.util.");
-        DEFAULT_IMPORTS.add("java.io.");
-        DEFAULT_IMPORTS.add("java.net.");
-        DEFAULT_IMPORTS.add("groovy.lang.");
-        DEFAULT_IMPORTS.add("groovy.util.");
-        DEFAULT_IMPORTS.add("java.math.BigDecimal");
-        DEFAULT_IMPORTS.add("java.math.BigInteger");
-    }
-
-    /**
-     * Checks to see if this import statment is a default import.
-     */
-    private static boolean isDefaultImport(ImportNode imp, Iterable<ImportNode> imports) {
-        if (imp.getEnd() < 1) {
-            return true;
-        }
-
-        if (imp.isStatic() || (imp.getType() != null &&
-                !imp.getType().getNameWithoutPackage().equals(imp.getAlias()))) {
-            return false;
-        }
-
-        String pkg;
-        if (imp.getType() != null) {
-            pkg = imp.getType().getPackageName();
-            if (pkg == null) {
-                pkg = ".";
-            } else {
-                pkg = pkg + ".";
-            }
-            if ("java.math.".equals(pkg)) {
-                pkg = imp.getType().getName();
-            }
-        } else {
-            pkg = imp.getPackageName();
-            if (pkg == null) {
-                pkg = ".";
-            }
-        }
-
-        return (DEFAULT_IMPORTS.contains(pkg) || isDefaultImport(pkg, imports));
-    }
-
-    /**
-     * Determines if specified package matches a hidden star import, which
-     * may have been added by compiler configuration or AST transformation.
-     *
-     * @param pkg package name ending in '.'
-     */
-    private static boolean isDefaultImport(String pkg, Iterable<ImportNode> imports) {
-        return StreamSupport.stream(imports.spliterator(), false)
-            .filter(i -> i.getEnd() < 1 && i.getType() == null)
-            .map(ImportNode::getPackageName)
-            .anyMatch(p -> pkg.equals(p));
     }
 
     private static boolean isAliased(ImportNode imp) {

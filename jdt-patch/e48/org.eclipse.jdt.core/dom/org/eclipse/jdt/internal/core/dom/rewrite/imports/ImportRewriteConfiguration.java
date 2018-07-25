@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2015 Google Inc and others.
  * All rights reserved. This program and the accompanying materials
@@ -17,6 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.codehaus.jdt.groovy.integration.LanguageSupportFactory;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IPackageDeclaration;
@@ -161,6 +163,11 @@ public final class ImportRewriteConfiguration {
 				Set<String> implicitImportContainerNames = new HashSet<String>();
 
 				implicitImportContainerNames.add("java.lang"); //$NON-NLS-1$
+				// GROOVY add
+				if (LanguageSupportFactory.isInterestingSourceFile(compilationUnit.getElementName())) {
+					implicitImportContainerNames.addAll(LanguageSupportFactory.getImplicitImportContainers(compilationUnit));
+				}
+				// GROOVY end
 
 				IJavaElement packageFragment = compilationUnit.getParent();
 				String compilationUnitPackageName = packageFragment.getElementName();

@@ -18,6 +18,7 @@ package org.codehaus.jdt.groovy.integration.internal;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -26,6 +27,8 @@ import groovy.lang.Binding;
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovyShell;
 
+import org.codehaus.groovy.ast.ImportNode;
+import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Phases;
@@ -135,6 +138,32 @@ public class GroovyLanguageSupport implements LanguageSupport {
     public SourceElementParser getSourceElementParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations, boolean optimizeStringLiterals, boolean useSourceJavadocParser) {
         ProblemReporter problemReporter = new ProblemReporter(DefaultErrorHandlingPolicies.proceedWithAllProblems(), options, new DefaultProblemFactory());
         return new MultiplexingSourceElementRequestorParser(problemReporter, requestor, problemFactory, options, reportLocalDeclarations, optimizeStringLiterals);
+    }
+
+    @Override
+    public Collection<String> getImplicitImportContainers(org.eclipse.jdt.core.ICompilationUnit compilationUnit) {
+        Collection<String> implicitImportContainerNames = new ArrayList<>(8);
+        implicitImportContainerNames.add("java.io");
+        implicitImportContainerNames.add("java.net");
+        implicitImportContainerNames.add("java.lang");
+        implicitImportContainerNames.add("java.util");
+        implicitImportContainerNames.add("groovy.lang");
+        implicitImportContainerNames.add("groovy.util");
+
+        ModuleNode module = ((GroovyCompilationUnit) compilationUnit).getModuleNode();
+        if (module != null) {
+            for (ImportNode starImport : module.getStarImports()) {
+                if (starImport.getEnd() < 1) { // is it implicit?
+                    String packageName = starImport.getPackageName();
+                    // strip trailing "." from on-demand import's package name
+                    packageName = packageName.substring(0, packageName.length() - 1);
+
+                    implicitImportContainerNames.add(packageName);
+                }
+            }
+        }
+
+        return implicitImportContainerNames;
     }
 
     @Override

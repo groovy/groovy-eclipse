@@ -15,6 +15,8 @@
  */
 package org.codehaus.jdt.groovy.integration;
 
+import java.util.Collection;
+
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
@@ -79,6 +81,10 @@ public class LanguageSupportFactory {
 
 	public static ImportMatchLocatorParser getImportMatchLocatorParser(ProblemReporter problemReporter, MatchLocator locator) {
 		return getLanguageSupport().getImportMatchLocatorParserParser(problemReporter, locator);
+	}
+
+	public static Collection<String> getImplicitImportContainers(org.eclipse.jdt.core.ICompilationUnit compilationUnit) {
+		return getLanguageSupport().getImplicitImportContainers(compilationUnit);
 	}
 
 	public static CompilationUnit newCompilationUnit(PackageFragment parent, String name, WorkingCopyOwner owner) {

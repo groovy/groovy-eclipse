@@ -60,8 +60,6 @@ final class NewGroovyTestCaseWizardTests extends GroovyEclipseTestSuite {
         String expected = '''\
             |package test
             |
-            |import groovy.util.GroovyTestCase
-            |
             |class GroovyProjectTestCase extends GroovyTestCase {
             |
             |}
@@ -82,8 +80,6 @@ final class NewGroovyTestCaseWizardTests extends GroovyEclipseTestSuite {
 
         String expected = '''\
             |package test
-            |
-            |import groovy.util.GroovyTestCase
             |
             |class GroovyProjectTestCase extends GroovyTestCase {
             |

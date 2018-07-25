@@ -112,15 +112,27 @@ final class AddImportOnSelectionTests extends GroovyEditorTestSuite {
     // types
 
     @Test
-    void testAddImportOnSuperType1() {
+    void testAddImportOnSuperType0() {
         addImportOnSelection "class B extends B${CARET}ufferedReader {}"
-        assertEditorContents "import java.io.BufferedReader\n\nclass B extends BufferedReader {}"
+        assertEditorContents "class B extends BufferedReader {}"
+    }
+
+    @Test
+    void testAddImportOnSuperType0a() {
+        addImportOnSelection "class B extends java.io.B${CARET}ufferedReader {}"
+        assertEditorContents "class B extends BufferedReader {}"
+    }
+
+    @Test
+    void testAddImportOnSuperType1() {
+        addImportOnSelection "class B extends Float${CARET}Buffer {}"
+        assertEditorContents "import java.nio.FloatBuffer\n\nclass B extends FloatBuffer {}"
     }
 
     @Test
     void testAddImportOnSuperType1a() {
-        addImportOnSelection "class B extends java.io.B${CARET}ufferedReader {}"
-        assertEditorContents "import java.io.BufferedReader\n\nclass B extends BufferedReader {}"
+        addImportOnSelection "class B extends java.nio.Float${CARET}Buffer {}"
+        assertEditorContents "import java.nio.FloatBuffer\n\nclass B extends FloatBuffer {}"
     }
 
     @Test
@@ -149,26 +161,26 @@ final class AddImportOnSelectionTests extends GroovyEditorTestSuite {
 
     @Test
     void testAddImportOnTypeCast1() {
-        addImportOnSelection "def x = (Collect${CARET}ion) [1,2,3]"
-        assertEditorContents "import java.util.Collection\n\ndef x = (Collection) [1,2,3]"
+        addImportOnSelection "def x = (Float${CARET}Buffer) [1,2,3]"
+        assertEditorContents "import java.nio.FloatBuffer\n\ndef x = (FloatBuffer) [1,2,3]"
     }
 
     @Test
     void testAddImportOnTypeCast1a() {
-        addImportOnSelection "def x = (java.util.Collect${CARET}ion) [1,2,3]"
-        assertEditorContents "import java.util.Collection\n\ndef x = (Collection) [1,2,3]"
+        addImportOnSelection "def x = (java.nio.Float${CARET}Buffer) [1,2,3]"
+        assertEditorContents "import java.nio.FloatBuffer\n\ndef x = (FloatBuffer) [1,2,3]"
     }
 
     @Test
     void testAddImportOnTypeCoercion1() {
-        addImportOnSelection "def x = [1,2,3] as Hash${CARET}Set"
-        assertEditorContents "import java.util.HashSet\n\ndef x = [1,2,3] as HashSet"
+        addImportOnSelection "def x = [1,2,3] as Float${CARET}Buffer"
+        assertEditorContents "import java.nio.FloatBuffer\n\ndef x = [1,2,3] as FloatBuffer"
     }
 
     @Test
     void testAddImportOnTypeCoercion1a() {
-        addImportOnSelection "def x = [1,2,3] as java.util.Hash${CARET}Set"
-        assertEditorContents "import java.util.HashSet\n\ndef x = [1,2,3] as HashSet"
+        addImportOnSelection "def x = [1,2,3] as java.nio.Float${CARET}Buffer"
+        assertEditorContents "import java.nio.FloatBuffer\n\ndef x = [1,2,3] as FloatBuffer"
     }
 
     @Test
@@ -185,8 +197,8 @@ final class AddImportOnSelectionTests extends GroovyEditorTestSuite {
 
     @Test
     void testAddImportOnAnonymousInnerClass() {
-        addImportOnSelection "class C { def meth() { def x = new ArrayL${CARET}ist() {}; } }"
-        assertEditorContents "import java.util.ArrayList\n\nclass C { def meth() { def x = new ArrayList() {}; } }"
+        addImportOnSelection "class C { def meth() { def x = new Float${CARET}Buffer() {}; } }"
+        assertEditorContents "import java.nio.FloatBuffer\n\nclass C { def meth() { def x = new FloatBuffer() {}; } }"
     }
 
     // inner/outer variations
@@ -212,37 +224,37 @@ final class AddImportOnSelectionTests extends GroovyEditorTestSuite {
     @Test
     void testAddImportOnOuterClass1() {
         addImportOnSelection "M${CARET}ap.Entry entry = null"
-        assertEditorContents "import java.util.Map\n\nMap.Entry entry = null"
+        assertEditorContents "Map.Entry entry = null"
     }
 
     @Test
     void testAddImportOnOuterClass1a() {
         addImportOnSelection "Map${CARET}.Entry entry = null"
-        assertEditorContents "import java.util.Map\n\nMap.Entry entry = null"
+        assertEditorContents "Map.Entry entry = null"
     }
 
     @Test
     void testAddImportOnOuterClass1b() {
         addImportOnSelection "${CARET}Map.Entry entry = null"
-        assertEditorContents "import java.util.Map\n\nMap.Entry entry = null"
+        assertEditorContents "Map.Entry entry = null"
     }
 
     @Test
     void testAddImportOnQualifiedOuterClass1() {
-        addImportOnSelection "java.util.M${CARET}ap.Entry entry = null"
-        assertEditorContents "import java.util.Map\n\nMap.Entry entry = null"
+        addImportOnSelection "java.util.concurrent.Thread${CARET}PoolExecutor.AbortPolicy policy = null"
+        assertEditorContents "import java.util.concurrent.ThreadPoolExecutor\n\nThreadPoolExecutor.AbortPolicy policy = null"
     }
 
     @Test
     void testAddImportOnQualifiedOuterClass1a() {
-        addImportOnSelection "java.util.Map${CARET}.Entry entry = null"
-        assertEditorContents "import java.util.Map\n\nMap.Entry entry = null"
+        addImportOnSelection "java.util.concurrent.ThreadPoolExecutor${CARET}.AbortPolicy policy = null"
+        assertEditorContents "import java.util.concurrent.ThreadPoolExecutor\n\nThreadPoolExecutor.AbortPolicy policy = null"
     }
 
     @Test
     void testAddImportOnQualifiedOuterClass1b() {
-        addImportOnSelection "java.util.${CARET}Map.Entry entry = null"
-        assertEditorContents "import java.util.Map\n\nMap.Entry entry = null"
+        addImportOnSelection "java.util.concurrent.${CARET}Thread${CARET}PoolExecutor.AbortPolicy policy = null"
+        assertEditorContents "import java.util.concurrent.ThreadPoolExecutor\n\nThreadPoolExecutor.AbortPolicy policy = null"
     }
 
     @Test
@@ -327,14 +339,14 @@ final class AddImportOnSelectionTests extends GroovyEditorTestSuite {
 
     @Test
     void testAddImportOnConstructorCall1() {
-        addImportOnSelection "def d = new java.util.Da${CARET}te(123L)"
-        assertEditorContents "import java.util.Date\n\ndef d = new Date(123L)"
+        addImportOnSelection "def d = new java.sql.Da${CARET}te(123L)"
+        assertEditorContents "import java.sql.Date\n\ndef d = new Date(123L)"
     }
 
     @Test
     void testAddImportOnConstructorCall2() {
-        addImportOnSelection "def l = new java.util.Array${CARET}List<String>()"
-        assertEditorContents "import java.util.ArrayList\n\ndef l = new ArrayList<String>()"
+        addImportOnSelection "def l = new java.util.concurrent.Future${CARET}Task<String>()"
+        assertEditorContents "import java.util.concurrent.FutureTask\n\ndef l = new FutureTask<String>()"
     }
 
     @Test
@@ -959,13 +971,13 @@ final class AddImportOnSelectionTests extends GroovyEditorTestSuite {
     @Test
     void testAddImportOnCountingLoopParams2() {
         addImportOnSelection """\
-            for (java.util.I${CARET}terator i = [].iterator(); i.hasNext();) {
+            for (java.nio.Float${CARET}Buffer b = buffer(); b.hasRemaining();) {
             }
             """
         assertEditorContents """\
-            import java.util.Iterator
+            import java.nio.FloatBuffer
 
-            for (Iterator i = [].iterator(); i.hasNext();) {
+            for (FloatBuffer b = buffer(); b.hasRemaining();) {
             }
             """.stripIndent()
     }
@@ -1031,15 +1043,15 @@ final class AddImportOnSelectionTests extends GroovyEditorTestSuite {
         addImportOnSelection """\
             try {
               getClass().getResourceAsStream('...').read()
-            } catch (java.io.IO${CARET}Exception ex) {
+            } catch (java.nio.Buffer${CARET}OverflowException ex) {
             }
             """
         assertEditorContents """\
-            import java.io.IOException
+            import java.nio.BufferOverflowException
 
             try {
               getClass().getResourceAsStream('...').read()
-            } catch (IOException ex) {
+            } catch (BufferOverflowException ex) {
             }
             """.stripIndent()
     }

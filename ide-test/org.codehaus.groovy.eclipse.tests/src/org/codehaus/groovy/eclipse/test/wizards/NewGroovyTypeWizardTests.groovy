@@ -159,8 +159,6 @@ final class NewGroovyTypeWizardTests extends GroovyEclipseTestSuite {
             | */
             |package test1
             |
-            |import java.util.ArrayList
-            |
             |/**
             | * Type
             | */
@@ -192,8 +190,6 @@ final class NewGroovyTypeWizardTests extends GroovyEclipseTestSuite {
             | * File
             | */
             |package test1
-            |
-            |import java.util.ArrayList
             |
             |/**
             | * Type
