@@ -78,6 +78,392 @@ public class OrganizeGroovyImports {
 
     // TODO: Handle import and package annotations
 
+    private static final Pattern ALIASED_IMPORT = Pattern.compile("\\sas\\s");
+    private static final Pattern STATIC_CONSTANT = Pattern.compile("[A-Z][A-Z0-9_]+");
+    private static final ClassNode SCRIPT_FIELD_CLASS_NODE = ClassHelper.make(Field.class);
+
+    private final SubMonitor monitor;
+    private IChooseImportQuery query;
+    private final GroovyCompilationUnit unit;
+    private Map<String, UnresolvedTypeData> missingTypes;
+    private Map<String, ImportNode> importsSlatedForRemoval;
+
+    public OrganizeGroovyImports(GroovyCompilationUnit unit, IChooseImportQuery query) {
+        this(unit, query, null);
+    }
+
+    public OrganizeGroovyImports(GroovyCompilationUnit unit, IChooseImportQuery query, IProgressMonitor monitor) {
+        this.unit = unit;
+        this.query = query;
+        this.monitor = SubMonitor.convert(monitor, "Organize import statements", 7);
+    }
+
+    public boolean calculateAndApplyMissingImports() throws JavaModelException {
+        TextEdit edit = calculateMissingImports();
+        if (edit != null) {
+            unit.applyTextEdit(edit, monitor.split(0));
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public TextEdit calculateMissingImports() {
+        String event = null;
+        if (GroovyLogManager.manager.hasLoggers()) {
+            event = unit.getElementName();
+            GroovyLogManager.manager.logStart(event);
+            GroovyLogManager.manager.log(TraceCategory.ORGANIZE_IMPORTS, event);
+        }
+        try {
+            ModuleNodeInfo info = unit.getModuleInfo(true);
+            if (info.isEmpty() || isUnclean(info, unit)) {
+                return null;
+            }
+
+            missingTypes = new HashMap<>();
+            importsSlatedForRemoval = new HashMap<>();
+
+            try {
+                // Configure the import rewriter to keep all existing imports. This is different from how
+                // JDT does organize imports, but this prevents annotations on imports from being removed.
+                // However, this leads to GRECLIPSE-1390 where imports are no longer reordered and sorted.
+                Iterable<ImportNode> allImports = GroovyUtils.getAllImportNodes(info.module);
+                ImportRewrite rewriter = CodeStyleConfiguration.createImportRewrite(unit, !isSafeToReorganize(allImports));
+
+                for (ImportNode imp : allImports) {
+                    if (imp.isStar()) {
+                        if (!imp.isStatic()) {
+                            rewriter.addImport(imp.getPackageName() + "*");
+                        } else {
+                            rewriter.addStaticImport(imp.getClassName().replace('$', '.'), "*", true);
+                        }
+                        // GRECLIPSE-929: Ensure that on-demand (i.e. star) imports are never removed.
+                    } else {
+                        String className = imp.getClassName().replace('$', '.');
+                        if (!imp.isStatic()) {
+                            if (!isAliased(imp)) {
+                                rewriter.addImport(className);
+                                importsSlatedForRemoval.put(className, imp);
+                            } else {
+                                String fullName = className + " as " + imp.getAlias();
+                                rewriter.addImport(fullName);
+                                importsSlatedForRemoval.put(fullName, imp);
+                            }
+                        } else {
+                            if (!isAliased(imp)) {
+                                rewriter.addStaticImport(className, imp.getFieldName(), true);
+                                importsSlatedForRemoval.put(className + '.' + imp.getFieldName(), imp);
+                            } else {
+                                rewriter.addStaticImport(className, imp.getFieldName() + " as " + imp.getAlias(), true);
+                                importsSlatedForRemoval.put(className + '.' + imp.getFieldName() + " as " + imp.getAlias(), imp);
+                            }
+                        }
+                    }
+                }
+
+                monitor.worked(1);
+
+                // scan for imports that are not referenced
+                for (ClassNode clazz : (Iterable<ClassNode>) info.module.getClasses()) {
+                    GroovyClassVisitor visitor = new FindUnresolvedReferencesVisitor();
+                    visitor.visitClass(clazz); // modifies missingTypes and importsSlatedForRemoval
+                }
+
+                monitor.worked(4);
+
+                // remove all default imports
+                for (ImportNode imp : allImports) {
+                    if (isDefaultImport(imp)) {
+                        String key;
+                        if (imp.isStar()) {
+                            if (!imp.isStatic()) {
+                                key = imp.getPackageName() + "*";
+                            } else {
+                                key = imp.getClassName().replace('$', '.') + ".*";
+                            }
+                        } else {
+                            key = imp.getClassName().replace('$', '.');
+                            if (imp.isStatic()) {
+                                key += "." + imp.getFieldName();
+                            }
+                            if (isAliased(imp)) {
+                                key += " as " + imp.getAlias();
+                            }
+                        }
+                        importsSlatedForRemoval.put(key, imp);
+                    }
+                }
+
+                // remove imports that were not matched to a source element
+                for (Map.Entry<String, ImportNode> entry : importsSlatedForRemoval.entrySet()) {
+                    trace("Remove import '%s'", entry.getKey());
+                    if (!entry.getValue().isStatic()) {
+                        rewriter.removeImport(entry.getKey());
+                    } else {
+                        rewriter.removeStaticImport(entry.getKey());
+                    }
+                }
+
+                monitor.worked(1);
+
+                // deal with the missing types
+                if (!missingTypes.isEmpty()) {
+                    pruneMissingTypes(allImports);
+                    if (!missingTypes.isEmpty()) {
+                        monitor.subTask("Resolve missing types");
+                        monitor.setWorkRemaining(missingTypes.size() + 1);
+                        for (IType type : resolveMissingTypes(monitor.split(1))) {
+                            trace("Missing type '%s'", type);
+                            rewriter.addImport(type.getFullyQualifiedName('.'));
+                        }
+                    }
+                }
+
+                TextEdit rewrite = rewriter.rewriteImports(monitor.split(1));
+                trace("%s", rewrite);
+                return rewrite;
+            } catch (Exception e) {
+                GroovyPlugin.getDefault().logError("Exception thrown when organizing imports for " + unit.getElementName(), e);
+            } finally {
+                importsSlatedForRemoval = null;
+                missingTypes = null;
+                monitor.done();
+            }
+            return null;
+        } finally {
+            if (event != null) {
+                GroovyLogManager.manager.logEnd(event, TraceCategory.ORGANIZE_IMPORTS);
+            }
+        }
+    }
+
+    /**
+     * There are cases where a type is seen as unresolved but can be found
+     * amongst the imports of the module or within the default imports.
+     * <p>
+     * One such case is the use of a parameterized type, but not all type
+     * params have been satisfied correctly.  Another involves annotation
+     * types that have not been identified correctly as annotations.
+     */
+    private void pruneMissingTypes(Iterable<ImportNode> imports) throws JavaModelException {
+        Set<String> starImports = new LinkedHashSet<>();
+        Set<String> typeImports = new LinkedHashSet<>();
+
+        if (unit.getModuleNode().getPackageName() != null) {
+            starImports.add(unit.getModuleNode().getPackageName());
+        } else {
+            starImports.add("");
+        }
+        for (ImportNode imp : imports) {
+            if (!imp.isStatic()) {
+                if (imp.isStar()) {
+                    starImports.add(imp.getPackageName());
+                } else {
+                    typeImports.add(imp.getText());
+                }
+            }
+        }
+        for (String imp : DEFAULT_IMPORTS) {
+            if (imp.endsWith(".")) {
+                starImports.add(imp);
+            } else {
+                typeImports.add(imp + " as " + imp.substring(imp.lastIndexOf('.') + 1));
+            }
+        }
+
+        // check each missing type against the module's single-type and on-demand imports
+        on: for (Iterator<String> it = missingTypes.keySet().iterator(); it.hasNext();) {
+            String typeName = it.next();
+            for (String imp : typeImports) {
+                if (imp.endsWith(' ' + typeName)) {
+                    it.remove();
+                    continue on;
+                }
+            }
+            for (String imp : starImports) {
+                IType type = unit.getJavaProject().findType(imp + typeName, (IProgressMonitor) null);
+                if (type != null) {
+                    it.remove();
+                    continue on;
+                }
+            }
+        }
+    }
+
+    private IType[] resolveMissingTypes(IProgressMonitor monitor) throws JavaModelException {
+        // fill in all the potential matches
+        new TypeSearch().searchForTypes(unit, missingTypes, monitor);
+
+        List<TypeNameMatch> missingTypesNoChoiceRequired = new ArrayList<>();
+        List<TypeNameMatch[]> missingTypesChoiceRequired = new ArrayList<>();
+        List<ISourceRange> ranges = new ArrayList<>();
+
+        // go through all the resovled matches and look for ambiguous matches
+        for (UnresolvedTypeData data : missingTypes.values()) {
+            int foundInfosSize = data.foundInfos.size();
+            if (foundInfosSize == 1) {
+                missingTypesNoChoiceRequired.add(data.foundInfos.get(0));
+            } else if (foundInfosSize > 1) {
+                missingTypesChoiceRequired.add(data.foundInfos.toArray(new TypeNameMatch[foundInfosSize]));
+                ranges.add(data.range);
+            }
+        }
+
+        TypeNameMatch[][] missingTypesArr = missingTypesChoiceRequired.toArray(new TypeNameMatch[0][]);
+        TypeNameMatch[] chosen;
+        if (missingTypesArr.length > 0) {
+            chosen = query.chooseImports(missingTypesArr, ranges.toArray(new ISourceRange[0]));
+        } else {
+            chosen = new TypeNameMatch[0];
+        }
+
+        if (chosen != null) {
+            IType[] typeMatches = new IType[missingTypesNoChoiceRequired.size() + chosen.length];
+
+            int index = 0;
+            for (TypeNameMatch typeNameMatch : missingTypesNoChoiceRequired) {
+                typeMatches[index++] = typeNameMatch.getType();
+            }
+            for (int i = 0, n = chosen.length; i < n; i += 1) {
+                typeMatches[index++] = ((JavaSearchTypeNameMatch) chosen[i]).getType();
+            }
+
+            return typeMatches;
+        } else {
+            // dialog was canceled; do nothing
+            return new IType[0];
+        }
+    }
+
+    /**
+     * GRECLIPSE-1390
+     * Reorganizing imports (ie- sorting and grouping them) will remove annotations on import statements
+     * In general, we want to reorganize, but it is not safe to do so if the are any annotations on imports
+     * @param allImports all the imports in the compilation unit
+     * @return true iff it is safe to reorganize imports
+     */
+    private static boolean isSafeToReorganize(Iterable<ImportNode> allImports) {
+        for (ImportNode imp : allImports) {
+            if (imp.getAnnotations() != null && !imp.getAnnotations().isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static final Set<String> DEFAULT_IMPORTS = new LinkedHashSet<>();
+    static {
+        DEFAULT_IMPORTS.add("java.lang.");
+        DEFAULT_IMPORTS.add("java.util.");
+        DEFAULT_IMPORTS.add("java.io.");
+        DEFAULT_IMPORTS.add("java.net.");
+        DEFAULT_IMPORTS.add("groovy.lang.");
+        DEFAULT_IMPORTS.add("groovy.util.");
+        DEFAULT_IMPORTS.add("java.math.BigDecimal");
+        DEFAULT_IMPORTS.add("java.math.BigInteger");
+    }
+
+    /**
+     * Checks to see if this import statment is a default import.
+     */
+    private static boolean isDefaultImport(ImportNode imp) {
+        if (imp.getEnd() < 1) {
+            return true;
+        }
+
+        if (imp.isStatic()) {
+            return false;
+        }
+
+        if (imp.getType() != null && !imp.getType().getNameWithoutPackage().equals(imp.getAlias())) {
+            return false;
+        }
+
+        // now get the package name
+        String pkg;
+        if (imp.getType() != null) {
+            pkg = imp.getType().getPackageName();
+            if (pkg == null) {
+                pkg = ".";
+            } else {
+                pkg = pkg + ".";
+            }
+            if ("java.math.".equals(pkg)) {
+                pkg = imp.getType().getName();
+            }
+        } else {
+            pkg = imp.getPackageName();
+            if (pkg == null) {
+                pkg = ".";
+            }
+        }
+
+        return DEFAULT_IMPORTS.contains(pkg);
+    }
+
+    private static boolean isAliased(ImportNode imp) {
+        String alias = imp.getAlias();
+        if (alias == null) {
+            return false;
+        }
+        String fieldName = imp.getFieldName();
+        if (fieldName != null) {
+            return !fieldName.equals(alias);
+        }
+        String className = imp.getClassName();
+        if (className != null) {
+            // it is possible to import from the default package
+            boolean aliasIsSameAsClassName = className.endsWith(alias) &&
+                (className.length() == alias.length() || className.endsWith("." + alias) || className.endsWith("$" + alias));
+            return !aliasIsSameAsClassName;
+        }
+        return false;
+    }
+
+    /** Determines if organize imports is unsafe due to syntax errors or other conditions. */
+    private static boolean isUnclean(ModuleNodeInfo info, GroovyCompilationUnit unit) {
+        try {
+            if (info.module.encounteredUnrecoverableError() || !unit.isConsistent()) {
+                return true;
+            }
+            CategorizedProblem[] problems = info.result.getProblems();
+            if (problems != null && problems.length > 0) {
+                for (CategorizedProblem problem : problems) {
+                    if (problem.isError() && problem.getCategoryID() == CategorizedProblem.CAT_INTERNAL) {
+                        String message = problem.getMessage();
+                        if (message.contains("unexpected token")) {
+                            trace("Stopping due to error in compilation unit: %s", message);
+                            return true;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            return true;
+        }
+        return false;
+    }
+
+    private static void trace(String message, Object... arguments) {
+        if (GroovyLogManager.manager.hasLoggers()) {
+            GroovyLogManager.manager.log(TraceCategory.ORGANIZE_IMPORTS, String.format(message, arguments));
+        }
+    }
+
+    //--------------------------------------------------------------------------
+
+    @FunctionalInterface
+    public interface IChooseImportQuery {
+        /**
+         * Selects imports from a list of choices.
+         * @param openChoices From each array, a type reference has to be selected
+         * @param ranges For each choice the range of the corresponding  type reference.
+         * @return Returns {@code null} to cancel the operation, or the selected imports.
+         */
+        TypeNameMatch[] chooseImports(TypeNameMatch[][] openChoices, ISourceRange[] ranges);
+    }
+
     private class FindUnresolvedReferencesVisitor extends DepthFirstVisitor {
 
         private ClassNode current;
@@ -292,7 +678,7 @@ public class OrganizeGroovyImports {
                 until = node.getNameEnd();
             if (until < 1) {
                 start = node.getStart();
-                until = node.getEnd()-1;
+                until = node.getEnd() - 1;
 
                 // getEnd() includes generics; try to constrain the range
                 if (until > 0 && isNotEmpty(generics)) {
@@ -345,7 +731,6 @@ public class OrganizeGroovyImports {
                     partialName = name.replaceAll(Pattern.quote(name.substring(innerIndex)) + "(?:\\b|$)", "").replace('$', '.');
                     doNotRemoveImport(partialName);
                 }
-
             } else if (length > name.length()) {
                 GroovyPlugin.getDefault().logError(String.format(
                     "Expected a fully-qualified name for %s at [%d..%d] line %d, but source length (%d) > name length (%d)%n",
@@ -378,394 +763,6 @@ public class OrganizeGroovyImports {
 
         private void doNotRemoveImport(Object which) {
             importsSlatedForRemoval.remove(which);
-        }
-    }
-
-    private static final Pattern ALIASED_IMPORT = Pattern.compile("\\sas\\s");
-    private static final Pattern STATIC_CONSTANT = Pattern.compile("[A-Z][A-Z0-9_]+");
-    private static final ClassNode SCRIPT_FIELD_CLASS_NODE = ClassHelper.make(Field.class);
-
-    @FunctionalInterface
-    public interface IChooseImportQuery {
-        /**
-         * Selects imports from a list of choices.
-         * @param openChoices From each array, a type reference has to be selected
-         * @param ranges For each choice the range of the corresponding  type reference.
-         * @return Returns {@code null} to cancel the operation, or the selected imports.
-         */
-        TypeNameMatch[] chooseImports(TypeNameMatch[][] openChoices, ISourceRange[] ranges);
-    }
-
-    //--------------------------------------------------------------------------
-
-    private final SubMonitor monitor;
-    private IChooseImportQuery query;
-    private final GroovyCompilationUnit unit;
-    private Map<String, UnresolvedTypeData> missingTypes;
-    private Map<String, ImportNode> importsSlatedForRemoval;
-
-    public OrganizeGroovyImports(GroovyCompilationUnit unit, IChooseImportQuery query) {
-        this(unit, query, null);
-    }
-
-    public OrganizeGroovyImports(GroovyCompilationUnit unit, IChooseImportQuery query, IProgressMonitor monitor) {
-        this.unit = unit;
-        this.query = query;
-        this.monitor = SubMonitor.convert(monitor, "Organize import statements", 7);
-    }
-
-    public boolean calculateAndApplyMissingImports() throws JavaModelException {
-        TextEdit edit = calculateMissingImports();
-        if (edit != null) {
-            unit.applyTextEdit(edit, monitor.split(0));
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public TextEdit calculateMissingImports() {
-        String event = null;
-        if (GroovyLogManager.manager.hasLoggers()) {
-            GroovyLogManager.manager.logStart(event = unit.getElementName());
-            GroovyLogManager.manager.log(TraceCategory.ORGANIZE_IMPORTS, event);
-        }
-        try {
-
-        ModuleNodeInfo info = unit.getModuleInfo(true);
-        if (info.isEmpty() || isUnclean(info, unit)) {
-            return null;
-        }
-
-        missingTypes = new HashMap<>();
-        importsSlatedForRemoval = new HashMap<>();
-
-        try {
-            // Configure the import rewriter to keep all existing imports. This is different from how
-            // JDT does organize imports, but this prevents annotations on imports from being removed.
-            // However, this leads to GRECLIPSE-1390 where imports are no longer reordered and sorted.
-            Iterable<ImportNode> allImports = GroovyUtils.getAllImportNodes(info.module);
-            ImportRewrite rewriter = CodeStyleConfiguration.createImportRewrite(unit, !isSafeToReorganize(allImports));
-
-            for (ImportNode imp : allImports) {
-                if (imp.isStar()) {
-                    if (!imp.isStatic()) {
-                        rewriter.addImport(imp.getPackageName() + "*");
-                    } else {
-                        rewriter.addStaticImport(imp.getClassName().replace('$', '.'), "*", true);
-                    }
-                    // GRECLIPSE-929: Ensure that on-demand (i.e. star) imports are never removed.
-                } else {
-                    String className = imp.getClassName().replace('$', '.');
-                    if (!imp.isStatic()) {
-                        if (!isAliased(imp)) {
-                            rewriter.addImport(className);
-                            importsSlatedForRemoval.put(className, imp);
-                        } else {
-                            String fullName = className + " as " + imp.getAlias();
-                            rewriter.addImport(fullName);
-                            importsSlatedForRemoval.put(fullName, imp);
-                        }
-                    } else {
-                        if (!isAliased(imp)) {
-                            rewriter.addStaticImport(className, imp.getFieldName(), true);
-                            importsSlatedForRemoval.put(className + '.' + imp.getFieldName(), imp);
-                        } else {
-                            rewriter.addStaticImport(className, imp.getFieldName() + " as " + imp.getAlias(), true);
-                            importsSlatedForRemoval.put(className + '.' + imp.getFieldName() + " as " + imp.getAlias(), imp);
-                        }
-                    }
-                }
-            }
-
-            monitor.worked(1);
-
-            // scan for imports that are not referenced
-            for (ClassNode clazz : (Iterable<ClassNode>) info.module.getClasses()) {
-                GroovyClassVisitor visitor = new FindUnresolvedReferencesVisitor();
-                visitor.visitClass(clazz); // modifies missingTypes and importsSlatedForRemoval
-            }
-
-            monitor.worked(4);
-
-            // remove all default imports
-            for (ImportNode imp : allImports) {
-                if (isDefaultImport(imp)) {
-                    String key;
-                    if (imp.isStar()) {
-                        if (!imp.isStatic()) {
-                            key = imp.getPackageName() + "*";
-                        } else {
-                            key = imp.getClassName().replace('$', '.') + ".*";
-                        }
-                    } else {
-                        key = imp.getClassName().replace('$', '.');
-                        if (imp.isStatic()) {
-                            key += "." + imp.getFieldName();
-                        }
-                        if (isAliased(imp)) {
-                            key += " as " + imp.getAlias();
-                        }
-                    }
-                    importsSlatedForRemoval.put(key, imp);
-                }
-            }
-
-            // remove imports that were not matched to a source element
-            for (Map.Entry<String, ImportNode> entry : importsSlatedForRemoval.entrySet()) {
-                trace("Remove import '%s'", entry.getKey());
-                if (!entry.getValue().isStatic()) {
-                    rewriter.removeImport(entry.getKey());
-                } else {
-                    rewriter.removeStaticImport(entry.getKey());
-                }
-            }
-
-            monitor.worked(1);
-
-            // deal with the missing types
-            if (!missingTypes.isEmpty()) {
-                pruneMissingTypes(allImports);
-                if (!missingTypes.isEmpty()) {
-                    monitor.subTask("Resolve missing types");
-                    monitor.setWorkRemaining(missingTypes.size() + 1);
-                    for (IType type : resolveMissingTypes(monitor.split(1))) {
-                        trace("Missing type '%s'", type);
-                        rewriter.addImport(type.getFullyQualifiedName('.'));
-                    }
-                }
-            }
-
-            TextEdit rewrite = rewriter.rewriteImports(monitor.split(1));
-            trace("%s", rewrite);
-            return rewrite;
-
-        } catch (Exception e) {
-            GroovyPlugin.getDefault().logError("Exception thrown when organizing imports for " + unit.getElementName(), e);
-        } finally {
-            importsSlatedForRemoval = null;
-            missingTypes = null;
-            monitor.done();
-        }
-        return null;
-
-        } finally {
-            if (event != null) {
-                GroovyLogManager.manager.logEnd(event, TraceCategory.ORGANIZE_IMPORTS);
-            }
-        }
-    }
-
-    /**
-     * There are cases where a type is seen as unresolved but can be found
-     * amongst the imports of the module or within the default imports.
-     * <p>
-     * One such case is the use of a parameterized type, but not all type
-     * params have been satisfied correctly.  Another involves annotation
-     * types that have not been identified correctly as annotations.
-     */
-    private void pruneMissingTypes(Iterable<ImportNode> imports) throws JavaModelException {
-        Set<String> starImports = new LinkedHashSet<>();
-        Set<String> typeImports = new LinkedHashSet<>();
-
-        if (unit.getModuleNode().getPackageName() != null) {
-            starImports.add(unit.getModuleNode().getPackageName());
-        } else {
-            starImports.add("");
-        }
-        for (ImportNode in : imports) {
-            if (!in.isStatic()) {
-                if (in.isStar()) {
-                    starImports.add(in.getPackageName());
-                } else {
-                    typeImports.add(in.getText());
-                }
-            }
-        }
-        for (String di : DEFAULT_IMPORTS) {
-            if (di.endsWith(".")) {
-                starImports.add(di);
-            } else {
-                typeImports.add(di + " as " + di.substring(di.lastIndexOf('.') + 1));
-            }
-        }
-
-        // check each missing type against the module's single-type and on-demand imports
-        on: for (Iterator<String> it = missingTypes.keySet().iterator(); it.hasNext();) {
-            String typeName = it.next();
-            for (String ti : typeImports) {
-                if (ti.endsWith(' ' + typeName)) {
-                    it.remove();
-                    continue on;
-                }
-            }
-            for (String si : starImports) {
-                IType type = unit.getJavaProject().findType(si + typeName, (IProgressMonitor) null);
-                if (type != null) {
-                    it.remove();
-                    continue on;
-                }
-            }
-        }
-    }
-
-    private IType[] resolveMissingTypes(IProgressMonitor monitor) throws JavaModelException {
-        // fill in all the potential matches
-        new TypeSearch().searchForTypes(unit, missingTypes, monitor);
-
-        List<TypeNameMatch> missingTypesNoChoiceRequired = new ArrayList<>();
-        List<TypeNameMatch[]> missingTypesChoiceRequired = new ArrayList<>();
-        List<ISourceRange> ranges = new ArrayList<>();
-
-        // go through all the resovled matches and look for ambiguous matches
-        for (UnresolvedTypeData data : missingTypes.values()) {
-            int foundInfosSize = data.foundInfos.size();
-            if (foundInfosSize == 1) {
-                missingTypesNoChoiceRequired.add(data.foundInfos.get(0));
-            } else if (foundInfosSize > 1) {
-                missingTypesChoiceRequired.add(data.foundInfos.toArray(new TypeNameMatch[foundInfosSize]));
-                ranges.add(data.range);
-            }
-        }
-
-        TypeNameMatch[][] missingTypesArr = missingTypesChoiceRequired.toArray(new TypeNameMatch[0][]);
-        TypeNameMatch[] chosen;
-        if (missingTypesArr.length > 0) {
-            chosen = query.chooseImports(missingTypesArr, ranges.toArray(new ISourceRange[0]));
-        } else {
-            chosen = new TypeNameMatch[0];
-        }
-
-        if (chosen != null) {
-            IType[] typeMatches = new IType[missingTypesNoChoiceRequired.size() + chosen.length];
-
-            int index = 0;
-            for (TypeNameMatch typeNameMatch : missingTypesNoChoiceRequired) {
-                typeMatches[index++] = typeNameMatch.getType();
-            }
-            for (int i = 0, n = chosen.length; i < n; i += 1) {
-                typeMatches[index++] = ((JavaSearchTypeNameMatch) chosen[i]).getType();
-            }
-
-            return typeMatches;
-        } else {
-            // dialog was canceled; do nothing
-            return new IType[0];
-        }
-    }
-
-    /**
-     * GRECLIPSE-1390
-     * Reorganizing imports (ie- sorting and grouping them) will remove annotations on import statements
-     * In general, we want to reorganize, but it is not safe to do so if the are any annotations on imports
-     * @param allImports all the imports in the compilation unit
-     * @return true iff it is safe to reorganize imports
-     */
-    private static boolean isSafeToReorganize(Iterable<ImportNode> allImports) {
-        for (ImportNode imp : allImports) {
-            if (imp.getAnnotations() != null && !imp.getAnnotations().isEmpty()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static final Set<String> DEFAULT_IMPORTS = new LinkedHashSet<>();
-    static {
-        DEFAULT_IMPORTS.add("java.lang.");
-        DEFAULT_IMPORTS.add("java.util.");
-        DEFAULT_IMPORTS.add("java.io.");
-        DEFAULT_IMPORTS.add("java.net.");
-        DEFAULT_IMPORTS.add("groovy.lang.");
-        DEFAULT_IMPORTS.add("groovy.util.");
-        DEFAULT_IMPORTS.add("java.math.BigDecimal");
-        DEFAULT_IMPORTS.add("java.math.BigInteger");
-    }
-
-    /**
-     * Checks to see if this import statment is a default import.
-     */
-    private static boolean isDefaultImport(ImportNode imp) {
-        if (imp.getEnd() < 1) {
-            return true;
-        }
-
-        if (imp.isStatic()) {
-            return false;
-        }
-
-        if (imp.getType() != null && !imp.getType().getNameWithoutPackage().equals(imp.getAlias())) {
-            return false;
-        }
-
-        // now get the package name
-        String pkg;
-        if (imp.getType() != null) {
-            pkg = imp.getType().getPackageName();
-            if (pkg == null) {
-                pkg = ".";
-            } else {
-                pkg = pkg + ".";
-            }
-            if (pkg.equals("java.math.")) {
-                pkg = imp.getType().getName();
-            }
-        } else {
-            pkg = imp.getPackageName();
-            if (pkg == null) {
-                pkg = ".";
-            }
-        }
-
-        return DEFAULT_IMPORTS.contains(pkg);
-    }
-
-    private static boolean isAliased(ImportNode imp) {
-        String alias = imp.getAlias();
-        if (alias == null) {
-            return false;
-        }
-        String fieldName = imp.getFieldName();
-        if (fieldName != null) {
-            return !fieldName.equals(alias);
-        }
-        String className = imp.getClassName();
-        if (className != null) {
-            // it is possible to import from the default package
-            boolean aliasIsSameAsClassName = className.endsWith(alias) &&
-                (className.length() == alias.length() || className.endsWith("." + alias) || className.endsWith("$" + alias));
-            return !aliasIsSameAsClassName;
-        }
-        return false;
-    }
-
-    /** Determines if organize imports is unsafe due to syntax errors or other conditions. */
-    private static boolean isUnclean(ModuleNodeInfo info, GroovyCompilationUnit unit) {
-        try {
-            if (info.module.encounteredUnrecoverableError() || !unit.isConsistent()) {
-                return true;
-            }
-            CategorizedProblem[] problems = info.result.getProblems();
-            if (problems != null && problems.length > 0) {
-                for (CategorizedProblem problem : problems) {
-                    if (problem.isError() && problem.getCategoryID() == CategorizedProblem.CAT_INTERNAL) {
-                        String message = problem.getMessage();
-                        if (message.contains("unexpected token")) {
-                             trace("Stopping due to error in compilation unit: %s", message);
-                            return true;
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            return true;
-        }
-        return false;
-    }
-
-    private static void trace(String message, Object... arguments) {
-        if (GroovyLogManager.manager.hasLoggers()) {
-            GroovyLogManager.manager.log(TraceCategory.ORGANIZE_IMPORTS, String.format(message, arguments));
         }
     }
 }
