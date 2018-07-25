@@ -1413,6 +1413,59 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(contents)
     }
 
+    @Test
+    void testOrganizeWithExtraImports3() {
+        addConfigScript '''\
+            withConfig(configuration) {
+              imports {
+                star 'groovy.transform'
+              }
+            }
+            '''
+
+        String originalContents = '''\
+            import groovy.transform.CompileStatic
+
+            @CompileStatic
+            def method() {
+            }
+            '''
+        String expectedContents = '''\
+            @CompileStatic
+            def method() {
+            }
+            '''
+
+        doContentsCompareTest(originalContents, expectedContents)
+    }
+
+    @Test
+    void testOrganizeWithExtraImports4() {
+        addConfigScript '''\
+            withConfig(configuration) {
+              imports {
+                star 'java.lang.annotation'
+              }
+            }
+            '''
+
+        String originalContents = '''\
+            import java.lang.annotation.*
+            import java.lang.annotation.ElementType
+
+            @Target(ElementType.TYPE)
+            @interface Tag {
+            }
+            '''
+        String expectedContents = '''\
+            @Target(ElementType.TYPE)
+            @interface Tag {
+            }
+            '''
+
+        doContentsCompareTest(originalContents, expectedContents)
+    }
+
     @Test @NotYetImplemented
     void testOrganizeWithInterleavedComments() {
         String originalContents = '''\

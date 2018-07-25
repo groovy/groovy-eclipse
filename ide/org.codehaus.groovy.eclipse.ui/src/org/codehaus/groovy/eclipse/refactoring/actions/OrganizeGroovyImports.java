@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.StreamSupport;
 
 import groovy.transform.Field;
 
@@ -174,7 +175,7 @@ public class OrganizeGroovyImports {
 
                 // remove all default imports
                 for (ImportNode imp : allImports) {
-                    if (isDefaultImport(imp)) {
+                    if (isDefaultImport(imp, allImports)) {
                         String key;
                         if (imp.isStar()) {
                             if (!imp.isStatic()) {
@@ -367,20 +368,16 @@ public class OrganizeGroovyImports {
     /**
      * Checks to see if this import statment is a default import.
      */
-    private static boolean isDefaultImport(ImportNode imp) {
+    private static boolean isDefaultImport(ImportNode imp, Iterable<ImportNode> imports) {
         if (imp.getEnd() < 1) {
             return true;
         }
 
-        if (imp.isStatic()) {
+        if (imp.isStatic() || (imp.getType() != null &&
+                !imp.getType().getNameWithoutPackage().equals(imp.getAlias()))) {
             return false;
         }
 
-        if (imp.getType() != null && !imp.getType().getNameWithoutPackage().equals(imp.getAlias())) {
-            return false;
-        }
-
-        // now get the package name
         String pkg;
         if (imp.getType() != null) {
             pkg = imp.getType().getPackageName();
@@ -399,7 +396,20 @@ public class OrganizeGroovyImports {
             }
         }
 
-        return DEFAULT_IMPORTS.contains(pkg);
+        return (DEFAULT_IMPORTS.contains(pkg) || isDefaultImport(pkg, imports));
+    }
+
+    /**
+     * Determines if specified package matches a hidden star import, which
+     * may have been added by compiler configuration or AST transformation.
+     *
+     * @param pkg package name ending in '.'
+     */
+    private static boolean isDefaultImport(String pkg, Iterable<ImportNode> imports) {
+        return StreamSupport.stream(imports.spliterator(), false)
+            .filter(i -> i.getEnd() < 1 && i.getType() == null)
+            .map(ImportNode::getPackageName)
+            .anyMatch(p -> pkg.equals(p));
     }
 
     private static boolean isAliased(ImportNode imp) {
@@ -421,7 +431,9 @@ public class OrganizeGroovyImports {
         return false;
     }
 
-    /** Determines if organize imports is unsafe due to syntax errors or other conditions. */
+    /**
+     * Determines if organize imports is unsafe due to syntax errors or other conditions.
+     */
     private static boolean isUnclean(ModuleNodeInfo info, GroovyCompilationUnit unit) {
         try {
             if (info.module.encounteredUnrecoverableError() || !unit.isConsistent()) {
