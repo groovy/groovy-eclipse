@@ -28,7 +28,7 @@
 			tycho jdt compiler. These two properties define what compiler will be used
 			for those bundles.
 		-->
-		<groovy-eclipse-compiler-version>2.9.3-01</groovy-eclipse-compiler-version>
+		<groovy-eclipse-compiler-version>3.0.0-01</groovy-eclipse-compiler-version>
 
 		<!-- This should be the oldest supported Groovy version. -->
 		<groovy-eclipse-batch-version>2.4.15-01</groovy-eclipse-batch-version>
