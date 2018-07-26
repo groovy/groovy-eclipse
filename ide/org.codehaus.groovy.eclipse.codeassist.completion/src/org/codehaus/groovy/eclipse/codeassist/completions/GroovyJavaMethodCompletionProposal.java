@@ -601,7 +601,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
     protected final IMethod findSingleAbstractMethod(char[] typeSignature) throws JavaModelException {
         char[] name = CharOperation.concat(Signature.getSignatureQualifier(typeSignature), Signature.getSignatureSimpleName(typeSignature), '.');
-        IType type = fInvocationContext.getCompilationUnit().getJavaProject().getJavaProject().findType(String.valueOf(name));
+        IType type = fInvocationContext.getProject().getJavaProject().findType(String.valueOf(name));
         if (type.exists()) {
             for (IMethod m : type.getMethods()) {
                 if (Flags.isAbstract(m.getFlags())) {

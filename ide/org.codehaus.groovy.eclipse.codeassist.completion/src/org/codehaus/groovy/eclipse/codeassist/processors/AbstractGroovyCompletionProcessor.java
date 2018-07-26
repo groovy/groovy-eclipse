@@ -32,8 +32,8 @@ public abstract class AbstractGroovyCompletionProcessor implements IGroovyComple
 
     public AbstractGroovyCompletionProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
         this.context = context;
-        this.nameEnvironment = nameEnvironment;
         this.javaContext = javaContext;
+        this.nameEnvironment = nameEnvironment;
     }
 
     public final ContentAssistContext getContext() {
@@ -52,7 +52,7 @@ public abstract class AbstractGroovyCompletionProcessor implements IGroovyComple
         return new IProposalCreator[] {
             new FieldProposalCreator(),
             new MethodProposalCreator(),
-            new CategoryProposalCreator()
+            new CategoryProposalCreator(),
         };
     }
 
