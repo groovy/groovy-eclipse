@@ -60,7 +60,7 @@ public class LanguageSupportFactory {
 	public static final int CommentRecorderParserVariant = 2;
 
 	public static Parser getParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean parseLiteralExpressionsAsConstants, int variant) {
-		return getLanguageSupport().getParser(requestor, compilerOptions,problemReporter, parseLiteralExpressionsAsConstants, variant);
+		return getLanguageSupport().getParser(requestor, compilerOptions, problemReporter, parseLiteralExpressionsAsConstants, variant);
 	}
 
 	public static CompletionParser getCompletionParser(CompilerOptions compilerOptions, ProblemReporter problemReposrter, boolean storeExtraSourceEnds, IProgressMonitor monitor) {
