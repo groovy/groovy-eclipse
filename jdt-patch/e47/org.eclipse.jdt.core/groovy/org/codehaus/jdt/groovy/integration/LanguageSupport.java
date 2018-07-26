@@ -15,6 +15,9 @@
  */
 package org.codehaus.jdt.groovy.integration;
 
+import java.util.Collection;
+import java.util.Collections;
+
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IClassFile;
@@ -52,20 +55,19 @@ public interface LanguageSupport {
 
 	Parser getParser(Object requestor, CompilerOptions compilerOptions, ProblemReporter problemReporter, boolean parseLiteralExpressionsAsConstants, int variant);
 
-	CompletionParser getCompletionParser(CompilerOptions compilerOptions, ProblemReporter problemReposrter,
-			boolean storeExtraSourceEnds, IProgressMonitor monitor);
+	CompletionParser getCompletionParser(CompilerOptions compilerOptions, ProblemReporter problemReposrter, boolean storeExtraSourceEnds, IProgressMonitor monitor);
 
-
-	IndexingParser getIndexingParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations,
-			boolean optimizeStringLiterals, boolean useSourceJavadocParser);
+	IndexingParser getIndexingParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations, boolean optimizeStringLiterals, boolean useSourceJavadocParser);
 
 	MatchLocatorParser getMatchLocatorParserParser(ProblemReporter problemReporter, MatchLocator locator);
 
-	SourceElementParser getSourceElementParser(ISourceElementRequestor requestor, IProblemFactory problemFactory,
-			CompilerOptions options, boolean reportLocalDeclarations, boolean optimizeStringLiterals,
-			boolean useSourceJavadocParser);
+	SourceElementParser getSourceElementParser(ISourceElementRequestor requestor, IProblemFactory problemFactory, CompilerOptions options, boolean reportLocalDeclarations, boolean optimizeStringLiterals, boolean useSourceJavadocParser);
 
 	ImportMatchLocatorParser getImportMatchLocatorParserParser(ProblemReporter problemReporter, MatchLocator locator);
+
+	default Collection<String> getImplicitImportContainers(org.eclipse.jdt.core.ICompilationUnit compilationUnit) {
+		return Collections.EMPTY_SET;
+	}
 
 	CompilationUnit newCompilationUnit(PackageFragment parent, String name, WorkingCopyOwner owner);
 
