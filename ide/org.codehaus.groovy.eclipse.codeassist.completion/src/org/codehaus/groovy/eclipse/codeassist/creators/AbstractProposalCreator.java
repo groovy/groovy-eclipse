@@ -30,6 +30,7 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.groovy.search.VariableScope;
@@ -162,10 +163,13 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
     }
 
     protected FieldNode createMockField(MethodNode method) {
-        FieldNode field = new FieldNode(ProposalUtils.createMockFieldName(method.getName()), method.getModifiers(), method.getReturnType(), method.getDeclaringClass(), null);
-        field.setDeclaringClass(method.getDeclaringClass());
-        field.setSourcePosition(method);
-        return field;
+        String fieldName = ProposalUtils.createMockFieldName(method.getName());
+        ClassNode fieldType = AccessorSupport.isSetter(method) ? DefaultGroovyMethods.last(method.getParameters()).getType() : method.getReturnType();
+
+        FieldNode fieldNode = new FieldNode(fieldName, method.getModifiers(), fieldType, method.getDeclaringClass(), null);
+        fieldNode.setDeclaringClass(method.getDeclaringClass());
+        fieldNode.setSourcePosition(method);
+        return fieldNode;
     }
 
     /**

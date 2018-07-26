@@ -26,35 +26,77 @@ final class FieldCompletionTests extends CompletionTestSuite {
 
     @Test
     void testSafeDeferencing() {
-        String contents = 'public class SomeClass {\nint someProperty\nvoid someMethod() { someProperty?.x}}'
+        String contents = '''\
+            class SomeClass {
+              int someProperty
+              void someMethod() {
+                someProperty?.x
+              }
+            }
+            '''.stripIndent()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '?.'))
         proposalExists(proposals, 'abs', 1)
     }
 
     @Test
     void testSpaces1() {
-        String contents = 'public class SomeClass {\nint someProperty\nvoid someMethod() { \nnew SomeClass()    .  \n}}'
+        String contents = '''\
+            class SomeClass {
+              int someProperty
+              void someMethod() {
+                new SomeClass()    .  ;
+              }
+            }
+            '''.stripIndent()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
         proposalExists(proposals, 'someProperty', 1)
     }
 
     @Test
     void testSpaces2() {
-        String contents = 'public class SomeClass {\nint someProperty\nvoid someMethod() { \nnew SomeClass()    .  \n}}'
+        String contents = '''\
+            class SomeClass {
+              int someProperty
+              void someMethod() {
+                new SomeClass()    .  ;
+              }
+            }
+            '''.stripIndent()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '. '))
         proposalExists(proposals, 'someProperty', 1)
     }
 
     @Test
     void testSpaces3() {
-        String contents = 'public class SomeClass {\nint someProperty\nvoid someMethod() { \nnew SomeClass()    .  \n}}'
+        String contents = '''\
+            class SomeClass {
+              int someProperty
+              void someMethod() {
+                new SomeClass()    .  ;
+              }
+            }
+            '''.stripIndent()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '. '))
         proposalExists(proposals, 'someProperty', 1)
     }
 
     @Test // GRECLIPSE-616
     void testProperties1() {
-        String contents = 'class Other { def x } \n new Other().x'
+        String contents = '''\
+            class Other {
+              def x
+            }
+            new Other().
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
+        proposalExists(proposals, 'getX', 1)
+        proposalExists(proposals, 'setX', 1)
+        proposalExists(proposals, 'x', 1)
+    }
+
+    @Test
+    void testProperties1a() {
+        String contents = 'class Other { def x }\nOther o; o.'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
         proposalExists(proposals, 'getX', 1)
         proposalExists(proposals, 'setX', 1)
@@ -63,7 +105,21 @@ final class FieldCompletionTests extends CompletionTestSuite {
 
     @Test
     void testProperties2() {
-        String contents = 'class Other { public def x } \n new Other().x'
+        String contents = '''\
+            class Other {
+              public def x
+            }
+            new Other().
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
+        proposalExists(proposals, 'getX', 0)
+        proposalExists(proposals, 'setX', 0)
+        proposalExists(proposals, 'x', 1)
+    }
+
+    @Test
+    void testProperties2a() {
+        String contents = 'class Other { public def x }\nOther o; o.'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
         proposalExists(proposals, 'getX', 0)
         proposalExists(proposals, 'setX', 0)
@@ -72,47 +128,12 @@ final class FieldCompletionTests extends CompletionTestSuite {
 
     @Test
     void testProperties3() {
-        String contents = 'class Other { private def x } \n new Other().x'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
-        proposalExists(proposals, 'getX', 0)
-        proposalExists(proposals, 'setX', 0)
-        proposalExists(proposals, 'x', 1)
-    }
-
-    @Test
-    void testProperties4() {
-        String contents = 'class Other { public static final int x = 9 } \n new Other().x'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
-        proposalExists(proposals, 'getX', 0)
-        proposalExists(proposals, 'setX', 0)
-        proposalExists(proposals, 'x', 1)
-    }
-
-    @Test
-    void testProperties5() {
-        addJavaSource 'class Pojo { int x = 9; }'
-
-        String contents = 'new Pojo().x'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
-        proposalExists(proposals, 'getX', 0)
-        proposalExists(proposals, 'setX', 0)
-        proposalExists(proposals, 'x', 1)
-    }
-
-    // now repeat the tests above. but with content assist on method calls instead of constructor calls
-
-    @Test
-    void testProperties1a() {
-        String contents = 'class Other { def x } \n def o = new Other()\no.x'
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
-        proposalExists(proposals, 'getX', 1)
-        proposalExists(proposals, 'setX', 1)
-        proposalExists(proposals, 'x', 1)
-    }
-
-    @Test
-    void testProperties2a() {
-        String contents = 'class Other { public def x } \n def o = new Other()\no.x'
+        String contents = '''\
+            class Other {
+              private def x
+            }
+            new Other().
+            '''.stripIndent()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
         proposalExists(proposals, 'getX', 0)
         proposalExists(proposals, 'setX', 0)
@@ -121,7 +142,21 @@ final class FieldCompletionTests extends CompletionTestSuite {
 
     @Test
     void testProperties3a() {
-        String contents = 'class Other { private def x } \n def o = new Other()\no.x'
+        String contents = 'class Other { private def x }\nOther o; o.'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
+        proposalExists(proposals, 'getX', 0)
+        proposalExists(proposals, 'setX', 0)
+        proposalExists(proposals, 'x', 1)
+    }
+
+    @Test
+    void testProperties4() {
+        String contents = '''\
+            class Other {
+              public static final int x = 9
+            }
+            new Other().
+            '''.stripIndent()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
         proposalExists(proposals, 'getX', 0)
         proposalExists(proposals, 'setX', 0)
@@ -130,7 +165,18 @@ final class FieldCompletionTests extends CompletionTestSuite {
 
     @Test
     void testProperties4a() {
-        String contents = 'class Other { public static final int x = 9 } \n def o = new Other()\no.x'
+        String contents = 'class Other { public static final int x = 9 }\nOther o; o.'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
+        proposalExists(proposals, 'getX', 0)
+        proposalExists(proposals, 'setX', 0)
+        proposalExists(proposals, 'x', 1)
+    }
+
+    @Test
+    void testProperties5() {
+        addJavaSource 'class Other { int x = 9; }', 'Other'
+
+        String contents = 'new Other().'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
         proposalExists(proposals, 'getX', 0)
         proposalExists(proposals, 'setX', 0)
@@ -139,10 +185,9 @@ final class FieldCompletionTests extends CompletionTestSuite {
 
     @Test
     void testProperties5a() {
-        // java class...no properties
-        addJavaSource('class Other { int x = 9; }', 'Other')
+        addJavaSource 'class Other { int x = 9; }', 'Other'
 
-        String contents = 'def o = new Other()\no.x'
+        String contents = 'Other o; o.'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
         proposalExists(proposals, 'getX', 0)
         proposalExists(proposals, 'setX', 0)
@@ -151,91 +196,104 @@ final class FieldCompletionTests extends CompletionTestSuite {
 
     @Test // GRECLIPSE-1162
     void testProperties6() {
-        String contents = 'class Other { boolean x } \n def o = new Other()\no.x'
+        String contents = 'class Other { boolean x }\n new Other().'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
-        proposalExists(proposals, 'getX', 1)
-        proposalExists(proposals, 'setX', 1)
-        proposalExists(proposals, 'isX', 1)
-        proposalExists(proposals, 'x', 1)
+        proposalExists(proposals, 'setX(boolean value) : void', 1)
+        proposalExists(proposals, 'getX() : boolean', 1)
+        proposalExists(proposals, 'isX() : boolean', 1)
+        proposalExists(proposals, 'x : boolean', 1)
     }
 
     @Test // GRECLIPSE-1162
     void testProperties6a() {
-        String contents = 'class Other { boolean xx } \n def o = new Other()\no.x'
+        String contents = 'class Other { boolean xx }\n new Other().'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
-        proposalExists(proposals, 'getXx', 1)
-        proposalExists(proposals, 'setXx', 1)
-        proposalExists(proposals, 'isXx', 1)
-        proposalExists(proposals, 'xx', 1)
+        proposalExists(proposals, 'setXx(boolean value) : void', 1)
+        proposalExists(proposals, 'getXx() : boolean', 1)
+        proposalExists(proposals, 'isXx() : boolean', 1)
+        proposalExists(proposals, 'xx : boolean', 1)
     }
 
     @Test // GRECLIPSE-1162
     void testProperties7() {
-        String contents = 'class Other { boolean isX() {} } \n def o = new Other()\no.x'
+        String contents = 'class Other { boolean isX() {} }\n new Other().'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
-        proposalExists(proposals, 'isX', 1)
-        proposalExists(proposals, 'x', 1)
+        proposalExists(proposals, 'isX() : boolean', 1)
+        proposalExists(proposals, 'x : boolean', 1)
     }
 
     @Test // GRECLIPSE-1162
     void testProperties7a() {
-        String contents = 'class Other { boolean isXx() {} } \n def o = new Other()\no.x'
+        String contents = 'class Other { boolean isXx() {} }\n new Other().'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
-        proposalExists(proposals, 'isXx', 1)
-        proposalExists(proposals, 'xx', 1)
+        proposalExists(proposals, 'isXx() : boolean', 1)
+        proposalExists(proposals, 'xx : boolean', 1)
     }
 
     @Test // GRECLIPSE-1162
     void testProperties8() {
-        String contents = 'class Other { boolean isxx() {} } \n def o = new Other()\no.x'
+        String contents = 'class Other { boolean isxx() {} }\n new Other().'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
-        proposalExists(proposals, 'isxx', 1)
-        proposalExists(proposals, 'xx', 0)
+        proposalExists(proposals, 'isxx() : boolean', 1)
+        proposalExists(proposals, 'xx : boolean', 0)
     }
 
     @Test // GRECLIPSE-1162
     void testProperties9() {
-        String contents = 'class Other { boolean getxx() {} } \n def o = new Other()\no.x'
+        String contents = 'class Other { boolean getxx() {} }\n new Other().'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
-        proposalExists(proposals, 'getxx', 1)
-        proposalExists(proposals, 'xx', 0)
+        proposalExists(proposals, 'getxx() : boolean', 1)
+        proposalExists(proposals, 'xx : boolean', 0)
     }
 
     @Test // GRECLIPSE-1698
     void testProperties10() {
-        String contents = 'class Other { boolean getXXxx() {} } \n def o = new Other()\no.x'
+        String contents = 'class Other { boolean getXXxx() {} }\n new Other().'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
-        proposalExists(proposals, 'getXXxx', 1)
-        proposalExists(proposals, 'XXxx', 1)
+        proposalExists(proposals, 'getXXxx() : boolean', 1)
+        proposalExists(proposals, 'XXxx : boolean', 1)
     }
 
     @Test // GRECLIPSE-1698
     void testProperties11() {
-        String contents = 'class Other { boolean isXXxx() {} } \n def o = new Other()\no.x'
+        String contents = 'class Other { boolean isXXxx() {} }\n new Other().'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
-        proposalExists(proposals, 'isXXxx', 1)
-        proposalExists(proposals, 'XXxx', 1)
+        proposalExists(proposals, 'isXXxx() : boolean', 1)
+        proposalExists(proposals, 'XXxx : boolean', 1)
     }
 
     @Test // GRECLIPSE-1698
     void testProperties12() {
-        String contents = 'class Other { boolean getxXxx() {} } \n def o = new Other()\no.x'
+        String contents = 'class Other { boolean getxXxx() {} }\n new Other().'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
-        proposalExists(proposals, 'getxXxx', 1)
-        proposalExists(proposals, 'xXxx', 0)
+        proposalExists(proposals, 'getxXxx() : boolean', 1)
+        proposalExists(proposals, 'xXxx : boolean', 0)
     }
 
     @Test // GRECLIPSE-1698
     void testProperties13() {
-        String contents = 'class Other { boolean isxXxx() {} } \n def o = new Other()\no.x'
+        String contents = 'class Other { boolean isxXxx() {} }\n new Other().'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
-        proposalExists(proposals, 'isxXxx', 1)
-        proposalExists(proposals, 'xXxx', 0)
+        proposalExists(proposals, 'isxXxx() : boolean', 1)
+        proposalExists(proposals, 'xXxx : boolean', 0)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/651
+    void testProperties14() {
+        String contents = '''\
+            class Other {
+              void setXxx(String xxx) {}
+            }
+            new Other().
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, 'setXxx(String xxx) : void', 1)
+        proposalExists(proposals, 'xxx : String', 1)
     }
 
     @Test
     void testClosure1() {
-        String contents = 'class Other { def xxx = { a, b -> }  } \n def o = new Other()\no.x'
+        String contents = 'class Other { def xxx = { a, b -> }  }\n new Other().'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
         // the field
         proposalExists(proposals, 'xxx', 2)
@@ -245,7 +303,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
 
     @Test
     void testClosure2() {
-        String contents = 'class Other { def xxx = { int a, int b -> }  } \n def o = new Other()\no.x'
+        String contents = 'class Other { def xxx = { int a, int b -> }  }\n new Other().'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
         // the field
         proposalExists(proposals, 'xxx', 2)
@@ -255,7 +313,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
 
     @Test
     void testClosure3() {
-        String contents = 'class Other { def xxx = { }  } \n def o = new Other()\no.x'
+        String contents = 'class Other { def xxx = { }  }\n new Other().'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
         // the field
         proposalExists(proposals, 'xxx', 2)
