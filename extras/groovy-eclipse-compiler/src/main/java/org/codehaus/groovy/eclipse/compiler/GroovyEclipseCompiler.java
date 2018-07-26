@@ -347,16 +347,16 @@ public class GroovyEclipseCompiler extends AbstractCompiler {
 
             cli.addArguments(new String[] {"-jar", groovyEclipseLocation});
 
-            File argumentsFile = createFileWithArguments(args, config.getOutputLocation());
-            cli.addArguments(new String[] {"@" + argumentsFile.getCanonicalPath().replace(File.separatorChar, '/')});
+            if (isNotBlank(config.getMeminitial())) {
+                cli.addArguments(new String[] {"-J-Xms" + config.getMeminitial()});
+            }
 
             if (isNotBlank(config.getMaxmem())) {
                 cli.addArguments(new String[] {"-J-Xmx" + config.getMaxmem()});
             }
 
-            if (isNotBlank(config.getMeminitial())) {
-                cli.addArguments(new String[] {"-J-Xms" + config.getMeminitial()});
-            }
+            File argumentsFile = createFileWithArguments(args, config.getOutputLocation());
+            cli.addArguments(new String[] {"@" + argumentsFile.getCanonicalPath().replace(File.separatorChar, '/')});
         } catch (IOException e) {
             throw new CompilerException("Error creating file with javac arguments", e);
         }
