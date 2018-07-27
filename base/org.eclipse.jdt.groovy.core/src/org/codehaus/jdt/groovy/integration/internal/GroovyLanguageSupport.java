@@ -142,7 +142,7 @@ public class GroovyLanguageSupport implements LanguageSupport {
 
     @Override
     public Collection<String> getImplicitImportContainers(org.eclipse.jdt.core.ICompilationUnit compilationUnit) {
-        Collection<String> implicitImportContainerNames = new ArrayList<>(8);
+        Collection<String> implicitImportContainerNames = new ArrayList<>();
         implicitImportContainerNames.add("java.io");
         implicitImportContainerNames.add("java.net");
         implicitImportContainerNames.add("java.lang");

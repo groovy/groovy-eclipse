@@ -451,7 +451,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
 
         // get proposals from providers (TODO: Should this move into proposalCreatorLoop?)
         try {
-            context.currentScope = requestor.currentScope != null ? requestor.currentScope : createTopLevelScope(completionType);
+            context.currentScope = (requestor.currentScope != null ? requestor.currentScope : createTopLevelScope(completionType));
             List<IProposalProvider> providers = ProposalProviderRegistry.getRegistry().getProvidersFor(context.unit);
             for (IProposalProvider provider : providers) {
                 try {
