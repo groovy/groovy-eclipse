@@ -630,10 +630,10 @@ public class OrganizeGroovyImports {
 
             GenericsType[] generics = type.getGenericsTypes();
             int start = node.getNameStart(),
-                until = node.getNameEnd();
-            if (until < 1) {
+                until = node.getNameEnd()+1;
+            if (until <= 1) {
                 start = node.getStart();
-                until = node.getEnd() - 1;
+                until = node.getEnd();
 
                 // getEnd() includes generics; try to constrain the range
                 if (until > 0 && isNotEmpty(generics)) {
