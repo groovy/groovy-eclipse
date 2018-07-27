@@ -122,6 +122,9 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
             visitImport(importNode);
         }
         for (ClassNode classNode : node.getClasses()) {
+            if (GroovyUtils.isAnonymous(classNode)) {
+                continue; // visited under ctor call expr
+            }
             // GRECLIPSE-781: visit script's run method last
             if (classNode.isScript()) {
                 runMethod = classNode.getMethod("run", Parameter.EMPTY_ARRAY);

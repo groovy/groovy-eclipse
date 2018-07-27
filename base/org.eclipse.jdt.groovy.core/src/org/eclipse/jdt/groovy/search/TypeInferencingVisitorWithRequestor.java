@@ -989,8 +989,16 @@ assert primaryExprType != null && dependentExprType != null;
     public void visitConstructorCallExpression(ConstructorCallExpression node) {
         boolean shouldContinue = handleSimpleExpression(node);
         if (shouldContinue) {
-            ClassNode type = node.getType();
-            visitClassReference(node.isUsingAnonymousInnerClass() ? type.getUnresolvedSuperClass() : type);
+            final ClassNode type = node.getType();
+            if (node.isUsingAnonymousInnerClass()) {
+                // in "new Type() { ... }", Type is super class or interface
+                Stream<ClassNode> superTypes = Stream.concat(
+                    Stream.of(type.getUnresolvedSuperClass()),
+                    Stream.of(type.getUnresolvedInterfaces()));
+                superTypes.filter(t -> t.getEnd() > 0).forEach(this::visitClassReference);
+            } else {
+                visitClassReference(type);
+            }
             if (node.getArguments() instanceof TupleExpression) {
                 TupleExpression tuple = (TupleExpression) node.getArguments();
                 if (isNotEmpty(tuple.getExpressions())) {
@@ -1010,9 +1018,6 @@ assert primaryExprType != null && dependentExprType != null;
                 IJavaElement enclosingElement0 = enclosingElement;
                 enclosingDeclarationNode = type;
                 try {
-                    for (ClassNode face : type.getInterfaces()) {
-                        if (face.getEnd() > 0) visitClassReference(face);
-                    }
                     for (Statement stmt : type.getObjectInitializerStatements()) {
                         stmt.visit(this);
                     }

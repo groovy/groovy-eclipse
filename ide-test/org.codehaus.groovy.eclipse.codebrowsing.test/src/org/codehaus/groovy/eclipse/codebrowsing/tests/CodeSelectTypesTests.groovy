@@ -439,16 +439,33 @@ final class CodeSelectTypesTests extends BrowsingTestSuite {
     }
 
     @Test
+    void testSelectAnonymousInnerEnum() {
+        String contents = 'enum Outer { ONE() { def m() { true } } \n abstract def m(); }'
+        assertCodeSelect(contents, new SourceRange(contents.indexOf('ONE() {') + 7, 0), null)
+    }
+
+    @Test
     void testSelectAnonymousInnerType() {
-        String contents = 'class Outer { def meth() { def m = new Map() { } } }'
+        String contents = 'def entry = new Map.Entry() {}'
         assertCodeSelect([contents], 'Map')
+        assertCodeSelect([contents], 'Entry')
         assertCodeSelect([contents], '{', null)
     }
 
     @Test
-    void testSelectAnonymousInnerEnum() {
-        String contents = 'enum Outer { ONE() { def m() { true } } \n abstract def m(); }'
-        assertCodeSelect(contents, new SourceRange(contents.indexOf('ONE() {') + 7, 0), null)
+    void testSelectAnonymousInnerType2() {
+        String contents = 'def runner = new java.lang.Runnable() {}'
+        assertCodeSelect([contents], 'Runnable')
+        assertCodeSelect([contents], 'lang', 'java.lang')
+        assertCodeSelect([contents], 'java', 'java')
+    }
+
+    @Test
+    void testSelectAnonymousInnerType3() {
+        String contents = 'def throwable = new java.lang.Exception() {}'
+        assertCodeSelect([contents], 'Exception')
+        assertCodeSelect([contents], 'lang', 'java.lang')
+        assertCodeSelect([contents], 'java', 'java')
     }
 
     @Test
