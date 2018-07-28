@@ -737,6 +737,24 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     // Built-in contributions:
 
     @Test
+    void testNamedParamsAnnotation1() {
+        assumeTrue(isAtLeastGroovy(25)) // @NamedParams added in Groovy 2.5
+
+        String contents = '''\
+            |import groovy.transform.*
+            |
+            |def meth(@NamedParams([@NamedParam('name'), @NamedParam(value='type', type=String)]) Map args) { }
+            |
+            |meth()
+            |'''.stripMargin()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'meth', 1)
+        proposalExists(proposals, 'name : __ - java.lang.Object', 1)
+        proposalExists(proposals, 'type : __ - java.lang.String', 1)
+    }
+
+    @Test
     void testNamedVariantTransform1() {
         assumeTrue(isAtLeastGroovy(25)) // @NamedVariant added in Groovy 2.5
 

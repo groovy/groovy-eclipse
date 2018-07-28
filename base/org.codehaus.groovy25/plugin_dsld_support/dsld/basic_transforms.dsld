@@ -20,7 +20,9 @@ import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.runtime.MetaClassHelper
 
-import static org.codehaus.groovy.transform.NamedVariantASTTransformation.*
+import static org.codehaus.groovy.transform.NamedVariantASTTransformation.NAMED_PARAM_TYPE
+
+@Field static final ClassNode NAMED_PARAMS_TYPE = ClassHelper.makeWithoutCaching(NamedParams)
 
 // http://groovy-lang.org/metaprogramming.html#_available_ast_transformations
 
@@ -209,7 +211,8 @@ contribute(currentType(meths: methods(hasArgument(annotatedBy(NamedParam))))) {
         }
 
         Map<String, ?> namedParams = [:], optionalParams = [:]
-        for (AnnotationNode anno : parm.getAnnotations(NAMED_PARAM_TYPE)) {
+        for (AnnotationNode anno : parm.getAnnotations(NAMED_PARAM_TYPE) ?:
+                parm.getAnnotations(NAMED_PARAMS_TYPE).collectMany { it.getMember('value').expressions*.value }) {
             String name = anno.getMember('value').value
             def type = anno.getMember('type')?.type
             if (type == null) NamedParam.getMethod('type').defaultValue
