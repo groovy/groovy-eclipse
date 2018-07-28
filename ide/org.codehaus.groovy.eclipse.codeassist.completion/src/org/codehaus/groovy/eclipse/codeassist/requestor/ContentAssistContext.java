@@ -197,10 +197,12 @@ public class ContentAssistContext {
      * than the default if doing a method context completion.
      */
     public String getPerceivedCompletionExpression() {
+        if (completionExpression == null) return null;
         return completionExpression.replaceAll("^(?:@|new\\b)|\\s+", "");
     }
 
     public String getQualifiedCompletionExpression() {
+        if (fullCompletionExpression == null) return null;
         return fullCompletionExpression.replaceAll("^(?:@|new\\b)|\\s+", "");
     }
 
@@ -214,7 +216,6 @@ public class ContentAssistContext {
                 }
                 return VisitStatus.CONTINUE;
             });
-            // TODO: visitor.resolver.cleanUp();
         }
         return currentScope;
     }
