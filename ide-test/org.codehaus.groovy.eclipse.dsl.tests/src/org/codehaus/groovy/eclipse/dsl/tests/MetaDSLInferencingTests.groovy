@@ -28,7 +28,7 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
 
     @Before
     void setUp() {
-        addJavaSource('public interface IPointcut { Object accept(@groovy.lang.DelegatesTo(IPointcut.class) groovy.lang.Closure<?> c); }', 'IPointcut', 'p')
+        addJavaSource('import groovy.lang.*; public interface IPointcut { void accept(@DelegatesTo(value=IPointcut.class, strategy=Closure.DELEGATE_FIRST) Closure c); }', 'IPointcut', 'p')
         addPlainText(getTestResourceContents('DSLD_meta_script.dsld'), 'DSLD_meta_script.dsld')
         buildProject()
     }

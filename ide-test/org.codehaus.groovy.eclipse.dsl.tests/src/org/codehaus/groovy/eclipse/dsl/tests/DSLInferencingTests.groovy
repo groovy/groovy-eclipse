@@ -83,14 +83,138 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
     @Test
     void testContiribution1() {
         createDsls('contribute(currentType("Foo")) { delegatesTo "Other" }')
-        String contents =
-            'class Foo { }\n' +
-            'class Other { Class<String> blar() { } }\n' +
-            'new Foo().blar()'
-        int start = contents.lastIndexOf('blar')
-        int end = start + 'blar'.length()
-        assertType(contents, start, end, 'java.lang.Class<java.lang.String>')
-        assertDeclaringType(contents, start, end, 'Other')
+        String contents = '''\
+            class Foo {}
+            class Other { Class<String> blar() {} }
+            new Foo().blar()
+            '''.stripIndent()
+
+        int offset = contents.lastIndexOf('blar')
+        assertType(contents, offset, offset + 'blar'.length(), 'java.lang.Class<java.lang.String>')
+        assertDeclaringType(contents, offset, offset + 'blar'.length(), 'Other')
+    }
+
+    @Test
+    void testContiribution2() {
+        createDsls('contribute(currentType("Foo")) { property name:"something", type:Runnable }')
+        String contents = '''\
+            class Foo {
+              def bar(@DelegatesTo(value=String, strategy=Closure.OWNER_FIRST) Closure block) {
+              }
+              def baz() {
+                bar {
+                  owner
+                  delegate
+                  something
+                }
+              }
+            }
+            '''.stripIndent()
+
+        String target = 'owner'
+        int offset = contents.indexOf(target)
+        assertType(contents, offset, offset + target.length(), 'Foo')
+
+        target = 'delegate'
+        offset = contents.indexOf(target)
+        assertType(contents, offset, offset + target.length(), 'java.lang.String')
+
+        target = 'something'
+        offset = contents.indexOf(target)
+        assertType(contents, offset, offset + target.length(), 'java.lang.Runnable')
+        assertDeclaringType(contents, offset, offset + target.length(), 'Foo') // aka "owner"
+    }
+
+    @Test
+    void testContiribution3() {
+        createDsls('contribute(currentType("Foo")) { property name:"something", type:Runnable }')
+        String contents = '''\
+            class Foo {
+              def bar(@DelegatesTo(value=String, strategy=Closure.DELEGATE_FIRST) Closure block) {
+              }
+              def baz() {
+                bar {
+                  owner
+                  delegate
+                  something
+                }
+              }
+            }
+            '''.stripIndent()
+
+        String target = 'owner'
+        int offset = contents.indexOf(target)
+        assertType(contents, offset, offset + target.length(), 'Foo')
+
+        target = 'delegate'
+        offset = contents.indexOf(target)
+        assertType(contents, offset, offset + target.length(), 'java.lang.String')
+
+        target = 'something'
+        offset = contents.indexOf(target)
+        assertType(contents, offset, offset + target.length(), 'java.lang.Runnable')
+        assertDeclaringType(contents, offset, offset + target.length(), 'Foo') // aka "owner"
+    }
+
+    @Test
+    void testContiribution4() {
+        createDsls('contribute(currentType("Foo")) { property name:"something", type:Runnable }')
+        String contents = '''\
+            class Foo {
+              def bar(@DelegatesTo(value=String, strategy=Closure.OWNER_ONLY) Closure block) {
+              }
+              def baz() {
+                bar {
+                  owner
+                  delegate
+                  something
+                }
+              }
+            }
+            '''.stripIndent()
+
+        String target = 'owner'
+        int offset = contents.indexOf(target)
+        assertType(contents, offset, offset + target.length(), 'Foo')
+
+        target = 'delegate'
+        offset = contents.indexOf(target)
+        assertType(contents, offset, offset + target.length(), 'java.lang.String')
+
+        target = 'something'
+        offset = contents.indexOf(target)
+        assertType(contents, offset, offset + target.length(), 'java.lang.Runnable')
+        assertDeclaringType(contents, offset, offset + target.length(), 'Foo') // aka "owner"
+    }
+
+    @Test
+    void testContiribution5() {
+        createDsls('contribute(currentType("Foo")) { property name:"something", type:Runnable }')
+        String contents = '''\
+            class Foo {
+              def bar(@DelegatesTo(value=String, strategy=Closure.DELEGATE_ONLY) Closure block) {
+              }
+              def baz() {
+                bar {
+                  owner
+                  delegate
+                  something
+                }
+              }
+            }
+            '''.stripIndent()
+
+        String target = 'owner'
+        int offset = contents.indexOf(target)
+        assertType(contents, offset, offset + target.length(), 'Foo')
+
+        target = 'delegate'
+        offset = contents.indexOf(target)
+        assertType(contents, offset, offset + target.length(), 'java.lang.String')
+
+        target = 'something'
+        offset = contents.indexOf(target)
+        assertUnknownConfidence(contents, offset, offset + target.length(), 'Foo')
     }
 
     @Test
@@ -765,7 +889,7 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
 
         String contents = '''\
             class Foo {
-              def meth(@DelegatesTo(Foo) Closure c) { }
+              def meth(Closure code) {}
             }
             new Foo().meth { hi }
             '''.stripIndent()
@@ -774,7 +898,7 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
         assertType(contents, offset, offset + 'hi'.length(), 'java.lang.Integer')
     }
 
-    @Test // GRECLIPSE-1295
+    @Test
     void testCurrentTypeIsEnclosingType1() {
         createDsls '''\
             contribute(currentTypeIsEnclosingType()) {
@@ -784,14 +908,32 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
 
         String contents = '''\
             class Foo {
-              def meth(@DelegatesTo(Foo) Closure c) { }
+              def meth(@DelegatesTo(Foo) Closure code) {}
             }
             new Foo().meth { hi }
             '''.stripIndent()
 
-        int start = contents.lastIndexOf('hi')
-        int end = start + 'hi'.length()
-        assertUnknownConfidence(contents, start, end, 'Foo')
+        int offset = contents.lastIndexOf('hi')
+        assertType(contents, offset, offset + 'hi'.length(), 'java.lang.Integer')
+    }
+
+    @Test // GRECLIPSE-1295
+    void testCurrentTypeIsEnclosingType2() {
+        createDsls '''\
+            contribute(currentTypeIsEnclosingType()) {
+              property name: 'hi', type: int
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            class Foo {
+              def meth(@DelegatesTo(value=Foo, strategy=Closure.DELEGATE_ONLY) Closure code) {}
+            }
+            new Foo().meth { hi } // enclosing type of closure is script type
+            '''.stripIndent()
+
+        int offset = contents.lastIndexOf('hi')
+        assertUnknownConfidence(contents, offset, offset + 'hi'.length(), 'Foo')
     }
 
     @Test // GRECLIPSE-1301
@@ -909,7 +1051,7 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
         String contents = SET_DELEGATE_TYPE_SCRIPT
         int start = contents.lastIndexOf('BAZ2')
         int end = start + 'BAZ2'.length()
-        assertUnknownConfidence(contents, start, end, 'java.lang.Integer')
+        assertType(contents, start, end, 'java.lang.Integer')
     }
 
     @Test

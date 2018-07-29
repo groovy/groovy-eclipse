@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,9 @@ package org.codehaus.groovy.eclipse.dsl.pointcuts;
 import java.util.Collection;
 
 import groovy.lang.Closure;
+import groovy.lang.DelegatesTo;
 
+import org.codehaus.groovy.eclipse.dsl.contributions.IContributionGroup;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IStorage;
 
@@ -62,11 +64,19 @@ public interface IPointcut {
     Collection<?> matches(GroovyDSLDContext pattern, Object toMatch);
 
     /**
+     * Do a fast match on this pattern.  Return false, if there is no way that any pattern that is contained inside
+     * of this one could ever match.  Return true if there is a chance.
+     *
+     * For example if the {@link IPointcut} looks at file names or file paths and there this initial pattern does
+     * not match, then there are no sub-patterns that can ever match.
+     */
+    boolean fastMatch(GroovyDSLDContext pattern);
+
+    /**
      * A unique identifier for the container that created this context.
      * @return a unique identifier
      */
     IStorage getContainerIdentifier();
-
 
     /**
      * Recursively rewrites this query so that it can run faster
@@ -81,7 +91,6 @@ public interface IPointcut {
      */
     void addArgument(String name, Object argument);
 
-
     /**
      * Adds an argument for this pointcut.  Variant of {@link #addArgument(String, Object)} that
      * does not take a name
@@ -91,43 +100,30 @@ public interface IPointcut {
 
     void verify() throws PointcutVerificationException;
 
-
     Object getFirstArgument();
+
     String getFirstArgumentName();
+
     Object[] getArgumentValues();
+
     String[] getArgumentNames();
 
     void setProject(IProject project);
-
 
     /**
      * Associates the {@link IContributionGroup} with this pointcut.
      * The pointcut and the contribution group are registered in the {@link DSLDStore}
      * @param contributionGroupClosure the closure that will be used by an {@link IContributionGroup}
      */
-    void accept(@SuppressWarnings("rawtypes") Closure contributionGroupClosure);
-
-    /**
-     * Do a fast match on this pattern.  Return false, if there is no way that any pattern that is contained inside
-     * of this one could ever match.  Return true if there is a chance.
-     *
-     * For example if the {@link IPointcut} looks at file names or file paths and there this initial pattern does
-     * not match, then there are no sub-patterns that can ever match.
-     *
-     * @param pattern
-     * @return
-     */
-    boolean fastMatch(GroovyDSLDContext pattern);
+    void accept(@DelegatesTo(value = IContributionGroup.class, strategy = Closure.DELEGATE_FIRST) @SuppressWarnings("rawtypes") Closure contributionGroupClosure);
 
     /**
      * User-readable name of the pointcut
-     * @return
      */
     String getPointcutName();
 
     /**
      * Extended name printed out during errors
-     * @return
      */
     String getPointcutDebugName();
 }

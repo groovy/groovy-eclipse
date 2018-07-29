@@ -15,6 +15,13 @@
  */
 package org.eclipse.jdt.groovy.search;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+
+import groovy.lang.Closure;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
@@ -115,31 +122,27 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
                 return null; // var type is explicitly declared
             }
 
-            ClassNode declaringType;
+            List<TypeAndScope> declaringTypes;
             if (objectExpressionType != null) {
-                declaringType = objectExpressionType;
+                declaringTypes = Collections.singletonList(new TypeAndScope(objectExpressionType, scope));
                 if (isStaticObjectExpression && objectExpressionType.isUsingGenerics() && objectExpressionType.equals(VariableScope.CLASS_CLASS_NODE)) {
-                    declaringType = objectExpressionType.getGenericsTypes()[0].getType();
+                    declaringTypes = Collections.singletonList(new TypeAndScope(objectExpressionType.getGenericsTypes()[0].getType(), scope));
                 }
             } else {
-                declaringType = scope.getDelegateOrThis();
-                if (declaringType == null) {
-                    declaringType = scope.getEnclosingTypeDeclaration();
-                    if (declaringType == null) {
-                        // part of an import statment
-                        declaringType = VariableScope.OBJECT_CLASS_NODE;
-                    }
-                }
+                declaringTypes = new ArrayList<>(); // implicit "this" candidates
+                TypeAndScope.populate(declaringTypes, scope, scope.getEnclosingClosureResolveStrategy());
             }
 
             try {
                 // I would have liked to pass these values into lookupTypeAndDeclaration, but I can't break API here...
                 currentExpression = expression; isStatic = isStaticObjectExpression;
 
-                TypeAndDeclaration result = lookupTypeAndDeclaration(declaringType, name, scope);
-                if (result != null) {
-                    TypeConfidence confidence = checkConfidence(expression, result.confidence, result.declaration, result.extraDoc);
-                    return new TypeLookupResult(result.type, result.declaringType == null ? declaringType : result.declaringType, result.declaration, confidence, scope, result.extraDoc);
+                for (TypeAndScope pair : declaringTypes) {
+                    TypeAndDeclaration result = lookupTypeAndDeclaration(pair.declaringType, name, pair.variableScope);
+                    if (result != null) {
+                        TypeConfidence confidence = checkConfidence(expression, result.confidence, result.declaration, result.extraDoc);
+                        return new TypeLookupResult(result.type, result.declaringType != null ? result.declaringType : pair.declaringType, result.declaration, confidence, pair.variableScope, result.extraDoc);
+                    }
                 }
             } finally {
                 currentExpression = null; isStatic = null;
@@ -187,30 +190,11 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
     protected abstract TypeAndDeclaration lookupTypeAndDeclaration(ClassNode declaringType, String name, VariableScope scope);
 
     public static class TypeAndDeclaration {
-
-        public TypeAndDeclaration(ClassNode type, ASTNode declaration) {
-            this.type = type;
-            this.declaration = declaration;
-            this.declaringType = null;
-            this.extraDoc = null;
-            this.confidence = null;
-        }
-
-        public TypeAndDeclaration(ClassNode type, ASTNode declaration, ClassNode declaringType) {
-            this.type = type;
-            this.declaration = declaration;
-            this.declaringType = declaringType;
-            this.extraDoc = null;
-            this.confidence = null;
-        }
-
-        public TypeAndDeclaration(ClassNode type, ASTNode declaration, ClassNode declaringType, String extraDoc) {
-            this.type = type;
-            this.declaration = declaration;
-            this.declaringType = declaringType;
-            this.extraDoc = extraDoc;
-            this.confidence = null;
-        }
+        protected final ClassNode type;
+        protected final ASTNode declaration;
+        protected final ClassNode declaringType;
+        protected final String extraDoc;
+        protected final TypeConfidence confidence;
 
         public TypeAndDeclaration(ClassNode type, ASTNode declaration, ClassNode declaringType, String extraDoc, TypeConfidence confidence) {
             this.type = type;
@@ -220,10 +204,52 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
             this.confidence = confidence;
         }
 
-        protected final ClassNode type;
-        protected final ClassNode declaringType;
-        protected final ASTNode declaration;
-        protected final String extraDoc;
-        protected final TypeConfidence confidence;
+        public TypeAndDeclaration(ClassNode type, ASTNode declaration, ClassNode declaringType, String extraDoc) {
+            this(type, declaration, declaringType, extraDoc, null);
+        }
+
+        public TypeAndDeclaration(ClassNode type, ASTNode declaration, ClassNode declaringType) {
+            this(type, declaration, declaringType, null);
+        }
+
+        public TypeAndDeclaration(ClassNode type, ASTNode declaration) {
+            this(type, declaration, null);
+        }
+    }
+
+    private static class TypeAndScope {
+        final ClassNode declaringType;
+        final VariableScope variableScope;
+
+        private TypeAndScope(ClassNode declaringType, VariableScope variableScope) {
+            this.declaringType = Objects.requireNonNull(declaringType);
+            this.variableScope = Objects.requireNonNull(variableScope);
+        }
+
+        private static void populate(List<TypeAndScope> types, VariableScope scope, int resolveStrategy) {
+            if (resolveStrategy == Closure.DELEGATE_FIRST || resolveStrategy == Closure.DELEGATE_ONLY) {
+                types.add(new TypeAndScope(scope.getDelegate(), scope));
+            }
+            if (resolveStrategy < Closure.DELEGATE_ONLY) {
+                ClassNode owner = scope.getOwner();
+                if (owner != null) {
+                    VariableScope outer = owner.getNodeMetaData("outer.scope");
+                    if (outer != null) { // owner is an enclosing closure
+                        VariableScope.CallAndType cat = outer.getEnclosingMethodCallExpression();
+                        populate(types, outer, (cat == null ? 0 : cat.getResolveStrategy(outer.getEnclosingClosure())));
+                    } else {
+                        types.add(new TypeAndScope(owner, scope));
+                    }
+                } else {
+                    types.add(new TypeAndScope(scope.getThis(), scope));
+                }
+                if (resolveStrategy < Closure.DELEGATE_FIRST && scope.getEnclosingClosure() != null) {
+                    types.add(new TypeAndScope(scope.getDelegate(), scope));
+                }
+            }
+            if (resolveStrategy <= Closure.TO_SELF && (resolveStrategy > 0 || scope.getEnclosingClosure() != null)) {
+                types.add(new TypeAndScope(VariableScope.CLOSURE_CLASS_NODE, scope));
+            }
+        }
     }
 }
