@@ -243,14 +243,19 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
                                             addDelegatesToClosure(closure, resolved[0], strategy);
 
                                         } else if (delegatesToValue == null || (delegatesToValue instanceof ClassExpression && delegatesToValue.getType().getName().equals("groovy.lang.DelegatesTo$Target"))) {
-                                            int j = indexOfDelegatesToTarget(parameters, (String) evaluateExpression(castX(STRING_CLASS_NODE, delegatesToTarget), config), config);
-                                            if (j >= 0 && j < arguments.size()) {
-                                                Expression target = arguments.get(j);
-                                                ClassNode targetType = target.getType(); // TODO: Look up expression type (unless j is 0 and it's a category method).
-                                                if (generics != null && generics >= 0 && targetType.isUsingGenerics()) {
-                                                    targetType.getGenericsTypes()[generics].getType();
+                                            try {
+                                                String targetName = (String) (delegatesToTarget != null ? evaluateExpression(castX(STRING_CLASS_NODE, delegatesToTarget), config) : DelegatesTo.class.getMethod("target").getDefaultValue());
+                                                int j = indexOfDelegatesToTarget(parameters, targetName, config);
+                                                if (j >= 0 && j < arguments.size()) {
+                                                    Expression target = arguments.get(j);
+                                                    ClassNode targetType = target.getType(); // TODO: Look up expression type (unless j is 0 and it's a category method).
+                                                    if (generics != null && generics >= 0 && targetType.isUsingGenerics()) {
+                                                        targetType.getGenericsTypes()[generics].getType();
+                                                    }
+                                                    addDelegatesToClosure(closure, targetType, strategy);
                                                 }
-                                                addDelegatesToClosure(closure, targetType, strategy);
+                                            } catch (NoSuchMethodException e) {
+                                                e.printStackTrace();
                                             }
                                         }
                                     }
@@ -312,13 +317,13 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
         /**
          * Finds param with DelegatesTo.Target annotation that has matching value string.
          */
-        private static int indexOfDelegatesToTarget(Parameter[] parameters, String target, CompilerConfiguration config) {
+        private static int indexOfDelegatesToTarget(Parameter[] parameters, String target, CompilerConfiguration config) throws NoSuchMethodException {
             for (int i = 0, n = parameters.length; i < n; i += 1) {
                 List<AnnotationNode> annotations = parameters[i].getAnnotations();
                 if (annotations != null && !annotations.isEmpty()) {
                     for (AnnotationNode annotation : annotations) {
                         if (annotation.getClassNode().getName().equals("groovy.lang.DelegatesTo$Target")) {
-                            String value = (String) evaluateExpression(castX(STRING_CLASS_NODE, annotation.getMember("value")), config);
+                            String value = (String) (annotation.getMember("value") != null ? evaluateExpression(castX(STRING_CLASS_NODE, annotation.getMember("value")), config) : DelegatesTo.Target.class.getMethod("value").getDefaultValue());
                             if (value.equals(target)) {
                                 return i;
                             }

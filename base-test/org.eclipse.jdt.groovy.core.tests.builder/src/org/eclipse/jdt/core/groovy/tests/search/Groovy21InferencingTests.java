@@ -101,6 +101,28 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     @Test
     public void testDelegatesToTarget1() {
         createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
+            "@Target Object self, @DelegatesTo(strategy=Closure.DELEGATE_FIRST) Closure code) { } }");
+
+        String contents = "class A { def x }\n" +
+            "class B { def x, y\n" +
+            "  def m(A a) {\n" +
+            "    use (C) {\n" +
+            "      a.cat {" + // delegate is A, owner is B
+            "        x\n" +
+            "        y\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf('x');
+        assertDeclaringType(contents, offset, offset + 1, "A");
+        offset = contents.lastIndexOf('y');
+        assertDeclaringType(contents, offset, offset + 1, "B");
+    }
+
+    @Test
+    public void testDelegatesToTarget2() {
+        createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
             "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.DELEGATE_FIRST) Closure code) { } }");
 
         String contents = "class A { def x }\n" +
@@ -121,7 +143,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test // uses constant instead of literal for target
-    public void testDelegatesToTarget1a() {
+    public void testDelegatesToTarget2a() {
         createUnit("C", "import groovy.lang.DelegatesTo.Target\n" +
             "class C {\n" +
             "  private static final String SELF = 'self'\n" +
@@ -149,7 +171,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDelegatesToTarget2() {
+    public void testDelegatesToTarget3() {
         createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
             "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.DELEGATE_ONLY) Closure code) { } }");
 
@@ -171,7 +193,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDelegatesToTarget3() {
+    public void testDelegatesToTarget4() {
         createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
             "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.OWNER_FIRST) Closure code) { } }");
 
@@ -196,7 +218,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test
-    public void testDelegatesToTarget4() {
+    public void testDelegatesToTarget5() {
         createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
             "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.OWNER_ONLY) Closure code) { } }");
 
@@ -218,7 +240,7 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
     }
 
     @Test // seemingly invalid combination
-    public void testDelegatesToTarget5() {
+    public void testDelegatesToTarget6() {
         createUnit("C", "import groovy.lang.DelegatesTo.Target; class C { static def cat(\n" +
             "@Target('self') Object self, @DelegatesTo(target='self', strategy=Closure.TO_SELF) Closure code) { } }");
 
