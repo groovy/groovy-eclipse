@@ -264,6 +264,66 @@ public final class Groovy21InferencingTests extends InferencingTestSuite {
         assertType(contents, offset, offset + toFind.length(), "java.util.List");
     }
 
+    @Test
+    public void testDelegatesToResolveStrategy2() {
+        String contents =
+            "class A {}\n" +
+            "class B { \n" +
+            "  def m(@DelegatesTo(value=A, strategy=Closure.OWNER_ONLY) Closure code) {\n" +
+            "  }\n" +
+            "  def x() {\n" +
+            "    m {" + // delegate is A, owner is B
+            "      delegate\n" +
+            "      owner\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf("delegate");
+        assertType(contents, offset, offset + "delegate".length(), "A");
+        offset = contents.lastIndexOf("owner");
+        assertType(contents, offset, offset + "owner".length(), "B");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/657
+    public void testDelegatesToResolveStrategy3() {
+        String contents =
+            "class A {}\n" +
+            "class B { \n" +
+            "  def m(@DelegatesTo(value=A, strategy=Closure.DELEGATE_ONLY) Closure code) {\n" +
+            "  }\n" +
+            "  def x() {\n" +
+            "    m {" + // delegate is A, owner is B
+            "      delegate\n" +
+            "      owner\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf("delegate");
+        assertType(contents, offset, offset + "delegate".length(), "A");
+        offset = contents.lastIndexOf("owner");
+        assertType(contents, offset, offset + "owner".length(), "B");
+    }
+
+    @Test
+    public void testDelegatesToResolveStrategy4() {
+        String contents =
+            "class A {}\n" +
+            "class B { \n" +
+            "  def m(@DelegatesTo(value=A, strategy=Closure.TO_SELF) Closure code) {\n" +
+            "  }\n" +
+            "  def x() {\n" +
+            "    m {" + // delegate is A, owner is B
+            "      delegate\n" +
+            "      owner\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+        int offset = contents.lastIndexOf("delegate");
+        assertType(contents, offset, offset + "delegate".length(), "A");
+        offset = contents.lastIndexOf("owner");
+        assertType(contents, offset, offset + "owner".length(), "B");
+    }
+
     @Test // https://github.com/groovy/groovy-eclipse/issues/389
     public void testEnumOverrides() {
         String contents =
