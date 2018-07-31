@@ -1405,7 +1405,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
         currentClass = node;
         // GRECLIPSE add
-        if (!commencingResolution()) return;
+        if (commencingResolution()) try {
         // GRECLIPSE end
         resolveGenericsHeader(node.getGenericsTypes());
 
@@ -1458,15 +1458,33 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
 
         checkCyclicInheritence(node, node.getUnresolvedSuperClass(), node.getInterfaces());
-        
+
         super.visitClass(node);
 
         // GRECLIPSE add
         finishedResolution();
+        } finally {
         // GRECLIPSE end
         currentClass = oldNode;
+        // GRECLIPSE add
+        }
+        // GRECLIPSE end
     }
-    
+
+    // GRECLIPSE add
+    /**
+     * @return {@code true} if resolution should continue, {@code false} otherwise (because, for example, it previously succeeded for this unit)
+     */
+    protected boolean commencingResolution() {
+        // template method
+        return true;
+    }
+
+    protected void finishedResolution() {
+        // template method
+    }
+    // GRECLIPSE end
+
     private void checkCyclicInheritence(ClassNode originalNode, ClassNode parentToCompare, ClassNode[] interfacesToCompare) {
         if(!originalNode.isInterface()) {
             if(parentToCompare == null) return;
@@ -1621,18 +1639,4 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     public void setClassNodeResolver(ClassNodeResolver classNodeResolver) {
         this.classNodeResolver = classNodeResolver;
     }
-
-    // GRECLIPSE add
-    /**
-     * @return {@code true} if resolution should continue, {@code false} otherwise (because, for example, it previously succeeded for this unit)
-     */
-    protected boolean commencingResolution() {
-        // template method
-        return true;
-    }
-
-    protected void finishedResolution() {
-        // template method
-    }
-    // GRECLIPSE end
 }
