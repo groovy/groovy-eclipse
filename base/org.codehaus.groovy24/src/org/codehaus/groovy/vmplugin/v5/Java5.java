@@ -48,6 +48,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.MalformedParameterizedTypeException;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -61,7 +62,7 @@ import java.util.List;
  * @author Jochen Theodorou
  */
 public class Java5 implements VMPlugin {
-    private static Class[] EMPTY_CLASS_ARRAY = new Class[0];
+    private static final Class[] EMPTY_CLASS_ARRAY = new Class[0];
     private static final Class[] PLUGIN_DGM = {PluginDefaultGroovyMethods.class};
 
     public void setAdditionalClassInformation(ClassNode cn) {
@@ -400,7 +401,7 @@ public class Java5 implements VMPlugin {
             Method[] methods = clazz.getDeclaredMethods();
             for (Method m : methods) {
                 ClassNode ret = makeClassNode(compileUnit, m.getGenericReturnType(), m.getReturnType());
-                Parameter[] params = makeParameters(compileUnit, m.getGenericParameterTypes(), m.getParameterTypes(), m.getParameterAnnotations());
+                Parameter[] params = makeParameters(compileUnit, m.getGenericParameterTypes(), m.getParameterTypes(), m.getParameterAnnotations(), m);
                 ClassNode[] exceptions = makeClassNodes(compileUnit, m.getGenericExceptionTypes(), m.getExceptionTypes());
                 MethodNode mn = new MethodNode(m.getName(), m.getModifiers(), ret, params, exceptions, null);
                 mn.setSynthetic(m.isSynthetic());
@@ -411,7 +412,7 @@ public class Java5 implements VMPlugin {
             }
             Constructor[] constructors = clazz.getDeclaredConstructors();
             for (Constructor ctor : constructors) {
-                Parameter[] params = makeParameters(compileUnit, ctor.getGenericParameterTypes(), ctor.getParameterTypes(), ctor.getParameterAnnotations());
+                Parameter[] params = makeParameters(compileUnit, ctor.getGenericParameterTypes(), ctor.getParameterTypes(), ctor.getParameterAnnotations(), ctor);
                 ClassNode[] exceptions = makeClassNodes(compileUnit, ctor.getGenericExceptionTypes(), ctor.getExceptionTypes());
                 classNode.addConstructor(ctor.getModifiers(), params, exceptions, null);
             }
@@ -475,6 +476,7 @@ public class Java5 implements VMPlugin {
         return back.getPlainNodeReference();
     }
 
+    /* GRECLIPSE edit
     private Parameter[] makeParameters(CompileUnit cu, Type[] types, Class[] cls, Annotation[][] parameterAnnotations) {
         Parameter[] params = Parameter.EMPTY_ARRAY;
         if (types.length > 0) {
@@ -492,6 +494,28 @@ public class Java5 implements VMPlugin {
         setAnnotationMetaData(annotations, parameter);
         return parameter;
     }
+    */
+    private Parameter[] makeParameters(CompileUnit cu, Type[] types, Class[] cls, Annotation[][] parameterAnnotations, Member member) {
+        Parameter[] params = Parameter.EMPTY_ARRAY;
+        final int n;
+        if ((n = types.length) > 0) {
+            params = new Parameter[n];
+            String[] names = new String[n];
+            fillParameterNames(names, member);
+            for (int i = 0; i < n; i += 1) {
+                setAnnotationMetaData(parameterAnnotations[i],
+                    params[i] = new Parameter(makeClassNode(cu, types[i], cls[i]), names[i]));
+            }
+        }
+        return params;
+    }
+
+    protected void fillParameterNames(String[] names, Member member) {
+        for (int i = 0, n = names.length; i < n; i += 1) {
+            names[i] = "param" + i;
+        }
+    }
+    // GRECLIPSE end
 
     public void invalidateCallSites() {}
 

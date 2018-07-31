@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -32,7 +33,7 @@ public class JDTFieldNode extends FieldNode implements JDTNode {
 
     private FieldBinding fieldBinding;
     private JDTResolver resolver;
-    private int bits;
+    private volatile int bits;
 
     public JDTFieldNode(FieldBinding fieldBinding, JDTResolver resolver, String name, int modifiers, ClassNode type, JDTClassNode declaringType, Expression initializerExpression) {
         super(name, modifiers, type, declaringType, initializerExpression);
@@ -52,20 +53,23 @@ public class JDTFieldNode extends FieldNode implements JDTNode {
 
     private void ensureAnnotationsInitialized() {
         if ((bits & ANNOTATIONS_INITIALIZED) == 0) {
-            // If the backing declaring entity for the member is not a SourceTypeBinding then the
-            // annotations will have already been discarded/lost
-            AnnotationBinding[] annotationBindings = fieldBinding.getAnnotations();
-            for (AnnotationBinding annotationBinding : annotationBindings) {
-                super.addAnnotation(new JDTAnnotationNode(annotationBinding, this.resolver));
+            synchronized (this) {
+                if ((bits & ANNOTATIONS_INITIALIZED) == 0) {
+                    // if the declaring entity for the member is not a SourceTypeBinding
+                    // then the annotations will have already been discarded/lost
+                    for (AnnotationBinding annotationBinding : fieldBinding.getAnnotations()) {
+                        super.addAnnotation(new JDTAnnotationNode(annotationBinding, resolver));
+                    }
+                }
+                bits |= ANNOTATIONS_INITIALIZED;
             }
-            bits |= ANNOTATIONS_INITIALIZED;
         }
     }
 
     @Override
     public List<AnnotationNode> getAnnotations() {
         ensureAnnotationsInitialized();
-        return super.getAnnotations();
+        return Collections.unmodifiableList(super.getAnnotations());
     }
 
     @Override

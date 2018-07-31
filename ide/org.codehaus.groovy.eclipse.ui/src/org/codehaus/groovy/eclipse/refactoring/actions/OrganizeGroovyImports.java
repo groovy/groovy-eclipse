@@ -53,6 +53,7 @@ import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.refactoring.actions.TypeSearch.UnresolvedTypeData;
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -348,7 +349,7 @@ public class OrganizeGroovyImports {
      */
     private static boolean isSafeToReorganize(Iterable<ImportNode> allImports) {
         for (ImportNode imp : allImports) {
-            if (imp.getAnnotations() != null && !imp.getAnnotations().isEmpty()) {
+            if (DefaultGroovyMethods.asBoolean(imp.getAnnotations())) {
                 return false;
             }
         }

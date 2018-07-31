@@ -56,6 +56,9 @@ public class AnnotatedNode extends ASTNode implements GroovydocHolder<AnnotatedN
     }
 
     public void addAnnotation(AnnotationNode value) {
+        // GRECLIPSE add
+        if (value == null) return;
+        // GRECLIPSE end
         checkInit();
         annotations.add(value);
     }
@@ -98,9 +101,6 @@ public class AnnotatedNode extends ASTNode implements GroovydocHolder<AnnotatedN
         return declaringClass;
     }
 
-    /**
-     * @param declaringClass - The declaringClass to set.
-     */
     public void setDeclaringClass(ClassNode declaringClass) {
         this.declaringClass = declaringClass;
     }
@@ -115,18 +115,6 @@ public class AnnotatedNode extends ASTNode implements GroovydocHolder<AnnotatedN
 
     public void setHasNoRealSourcePosition(boolean value) {
         this.hasNoRealSourcePositionFlag = value;
-    }
-
-    @Override
-    public Groovydoc getGroovydoc() {
-        Groovydoc groovydoc = this.<Groovydoc>getNodeMetaData(DOC_COMMENT);
-
-        return null == groovydoc ? Groovydoc.EMPTY_GROOVYDOC : groovydoc;
-    }
-
-    @Override
-    public AnnotatedNode getInstance() {
-        return this;
     }
 
     // GRECLIPSE add
@@ -156,4 +144,16 @@ public class AnnotatedNode extends ASTNode implements GroovydocHolder<AnnotatedN
         }
     }
     // GRECLIPSE end
+
+    @Override
+    public Groovydoc getGroovydoc() {
+        Groovydoc groovydoc = this.<Groovydoc>getNodeMetaData(DOC_COMMENT);
+
+        return null == groovydoc ? Groovydoc.EMPTY_GROOVYDOC : groovydoc;
+    }
+
+    @Override
+    public AnnotatedNode getInstance() {
+        return this;
+    }
 }

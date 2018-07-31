@@ -330,25 +330,21 @@ public class JDTClassNode extends ClassNode implements JDTNode {
             // If they need to be correct we need to retrieve the method decl from the binding scope
 
             int modifiers = methodBinding.modifiers;
-            if (jdtBinding.isInterface() && !Flags.isStatic(modifiers) && !Flags.isSynthetic(modifiers) && /*!Flags.isDefaultMethod(modifiers)*/ (modifiers & 0x10000) == 0) {
+            if (jdtBinding.isInterface() && !Flags.isStatic(modifiers) && !Flags.isSynthetic(modifiers) && !Flags.isDefaultMethod(modifiers)) {
                 modifiers |= Flags.AccAbstract;
             }
 
             ClassNode returnType = methodBinding.returnType != null ?
                 resolver.convertToClassNode(methodBinding.returnType) : ClassHelper.DYNAMIC_TYPE;
 
-            Parameter[] parameters = makeParameters(methodBinding.parameters);
+            Parameter[] parameters = makeParameters(methodBinding.parameters, methodBinding.parameterNames);
 
             // initialize parameter annotations
             AnnotationBinding[][] parameterAnnotations = methodBinding.getParameterAnnotations();
             if (parameterAnnotations != null) {
                 for (int i = 0, n = parameters.length; i < n; i += 1) {
-                    Parameter parameter = parameters[i];
-                    AnnotationBinding[] annotations = parameterAnnotations[i];
-                    if (annotations != null && annotations.length > 0) {
-                        for (AnnotationBinding annotation : annotations) {
-                            parameter.addAnnotation(new JDTAnnotationNode(annotation, resolver));
-                        }
+                    for (AnnotationBinding annotationBinding : parameterAnnotations[i]) {
+                        parameters[i].addAnnotation(new JDTAnnotationNode(annotationBinding, resolver));
                     }
                 }
             }
@@ -372,27 +368,33 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         }
     }
 
-    private Parameter[] makeParameters(TypeBinding[] jdtParameters) {
+    private Parameter[] makeParameters(TypeBinding[] parameterTypes, char[][] parameterNames) {
         int nParameters; Parameter[] parameters = Parameter.EMPTY_ARRAY;
-        if (jdtParameters != null && (nParameters = jdtParameters.length) > 0) {
+        if (parameterTypes != null && (nParameters = parameterTypes.length) > 0) {
             parameters = new Parameter[nParameters];
             for (int i = 0; i < nParameters; i += 1) {
-                parameters[i] = makeParameter(jdtParameters[i], i);
+                String parameterName;
+                if (i < parameterNames.length) {
+                    parameterName = String.valueOf(parameterNames[i]);
+                } else if (i < argNames.length) {
+                    parameterName = argNames[i];
+                } else {
+                    parameterName = "arg" + i;
+                }
+                parameters[i] = makeParameter(parameterTypes[i], parameterName);
             }
         }
         return parameters;
     }
 
-    private Parameter makeParameter(TypeBinding parameterType, int parameterPosition) {
+    private Parameter makeParameter(TypeBinding parameterType, String parameterName) {
         TypeBinding erasureType;
         if (parameterType instanceof ParameterizedTypeBinding) {
             erasureType = ((ParameterizedTypeBinding) parameterType).genericType();
         } else {
             erasureType = new JDTClassNodeBuilder(resolver).toRawType(parameterType);
         }
-        ClassNode paramType = makeClassNode(parameterType, erasureType);
-        String paramName = (parameterPosition < argNames.length ? argNames[parameterPosition] : "arg" + parameterPosition);
-        return new Parameter(paramType, paramName);
+        return new Parameter(makeClassNode(parameterType, erasureType), parameterName);
     }
 
     /**
@@ -411,7 +413,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
     private ConstructorNode constructorBindingToConstructorNode(MethodBinding methodBinding) {
         int modifiers = methodBinding.modifiers;
-        Parameter[] parameters = makeParameters(methodBinding.parameters);
+        Parameter[] parameters = makeParameters(methodBinding.parameters, methodBinding.parameterNames);
         ClassNode[] thrownExceptions = ClassNode.EMPTY_ARRAY;
         if (methodBinding.thrownExceptions != null) {
             thrownExceptions = new ClassNode[methodBinding.thrownExceptions.length];
@@ -485,7 +487,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                         long tagBits = ((SourceTypeBinding) jdtBinding).getAnnotationTagBits();
                     }
                     for (AnnotationBinding annotationBinding : jdtBinding.getAnnotations()) {
-                        addAnnotation(new JDTAnnotationNode(annotationBinding, resolver));
+                        this.addAnnotation(new JDTAnnotationNode(annotationBinding, resolver));
                     }
                     bits |= ANNOTATIONS_INITIALIZED;
                 }
