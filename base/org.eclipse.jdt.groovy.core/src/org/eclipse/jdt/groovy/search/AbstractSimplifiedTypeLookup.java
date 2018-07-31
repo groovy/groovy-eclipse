@@ -241,7 +241,11 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
                         types.add(new TypeAndScope(owner, scope));
                     }
                 } else {
-                    types.add(new TypeAndScope(scope.getThis(), scope));
+                    ClassNode thisOrThat = scope.getThis();
+                    if (thisOrThat == null) thisOrThat = scope.getEnclosingTypeDeclaration();
+                    if (thisOrThat == null) thisOrThat = VariableScope.GROOVY_OBJECT_CLASS_NODE;
+
+                    types.add(new TypeAndScope(thisOrThat, scope));
                 }
                 if (resolveStrategy < Closure.DELEGATE_FIRST && scope.getEnclosingClosure() != null) {
                     types.add(new TypeAndScope(scope.getDelegate(), scope));
