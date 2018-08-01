@@ -125,9 +125,6 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
             List<TypeAndScope> declaringTypes;
             if (objectExpressionType != null) {
                 declaringTypes = Collections.singletonList(new TypeAndScope(objectExpressionType, scope));
-                if (isStaticObjectExpression && objectExpressionType.isUsingGenerics() && objectExpressionType.equals(VariableScope.CLASS_CLASS_NODE)) {
-                    declaringTypes = Collections.singletonList(new TypeAndScope(objectExpressionType.getGenericsTypes()[0].getType(), scope));
-                }
             } else {
                 declaringTypes = new ArrayList<>(); // implicit "this" candidates
                 TypeAndScope.populate(declaringTypes, scope, scope.getEnclosingClosureResolveStrategy());
@@ -135,13 +132,19 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
 
             try {
                 // I would have liked to pass these values into lookupTypeAndDeclaration, but I can't break API here...
-                currentExpression = expression; isStatic = isStaticObjectExpression;
-
+                currentExpression = expression;
                 for (TypeAndScope pair : declaringTypes) {
-                    TypeAndDeclaration result = lookupTypeAndDeclaration(pair.declaringType, name, pair.variableScope);
+                    ClassNode declaringType = pair.declaringType;
+                    if (declaringType.isUsingGenerics() && declaringType.equals(VariableScope.CLASS_CLASS_NODE)) {
+                        declaringType = declaringType.getGenericsTypes()[0].getType(); isStatic = Boolean.TRUE;
+                    } else {
+                        isStatic = Boolean.valueOf(isStaticObjectExpression);
+                    }
+
+                    TypeAndDeclaration result = lookupTypeAndDeclaration(declaringType, name, pair.variableScope);
                     if (result != null) {
                         TypeConfidence confidence = checkConfidence(expression, result.confidence, result.declaration, result.extraDoc);
-                        return new TypeLookupResult(result.type, result.declaringType != null ? result.declaringType : pair.declaringType, result.declaration, confidence, pair.variableScope, result.extraDoc);
+                        return new TypeLookupResult(result.type, result.declaringType != null ? result.declaringType : declaringType, result.declaration, confidence, pair.variableScope, result.extraDoc);
                     }
                 }
             } finally {
@@ -240,12 +243,8 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
                     } else {
                         types.add(new TypeAndScope(owner, scope));
                     }
-                } else {
-                    ClassNode thisOrThat = scope.getThis();
-                    if (thisOrThat == null) thisOrThat = scope.getEnclosingTypeDeclaration();
-                    if (thisOrThat == null) thisOrThat = VariableScope.GROOVY_OBJECT_CLASS_NODE;
-
-                    types.add(new TypeAndScope(thisOrThat, scope));
+                } else if ((owner = scope.getThis()) != null) {
+                    types.add(new TypeAndScope(owner, scope));
                 }
                 if (resolveStrategy < Closure.DELEGATE_FIRST && scope.getEnclosingClosure() != null) {
                     types.add(new TypeAndScope(scope.getDelegate(), scope));
