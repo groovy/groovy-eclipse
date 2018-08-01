@@ -1,7 +1,8 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.codehaus.groovy
-Bundle-Name: Groovy
+Automatic-Module-Name: org.codehaus.groovy
+Bundle-Name: Groovy Runtime
 Bundle-Vendor: Codehaus.org
 Bundle-Version: 2.6.0.qualifier
 Bundle-ClassPath: eclipse-trace.jar,

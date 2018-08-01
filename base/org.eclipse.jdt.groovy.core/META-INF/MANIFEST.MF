@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.eclipse.jdt.groovy.core;singleton:=true
-Bundle-Name: Groovy-Eclipse Integration
+Bundle-Name: Groovy-Eclipse integration
 Bundle-Vendor: Codehaus.org
 Bundle-Version: 3.0.0.qualifier
 Bundle-ClassPath: nlcl.jar, .
