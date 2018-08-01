@@ -37,6 +37,7 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.vmplugin.v5.Java5;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration.FieldDeclarationWithInitializer;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.compiler.CharOperation;
@@ -80,9 +81,6 @@ import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
  * (eg. members).
  */
 public class JDTClassNode extends ClassNode implements JDTNode {
-
-    // arbitrary choice of first eight; maintaining these as a constant array prevents 10000 strings called 'arg0' consuming memory
-    private static final String[] argNames = {"arg0", "arg1", "arg2", "arg3", "arg4", "arg5", "arg6", "arg7"};
 
     private static final ClassNode unboundWildcard; // represents plain old '?'
     static {
@@ -376,8 +374,8 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                 String parameterName;
                 if (i < parameterNames.length) {
                     parameterName = String.valueOf(parameterNames[i]);
-                } else if (i < argNames.length) {
-                    parameterName = argNames[i];
+                } else if (i < Java5.ARGS.length) {
+                    parameterName = Java5.ARGS[i];
                 } else {
                     parameterName = "arg" + i;
                 }
