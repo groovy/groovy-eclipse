@@ -512,9 +512,12 @@ public class Java5 implements VMPlugin {
 
     protected void fillParameterNames(String[] names, Member member) {
         for (int i = 0, n = names.length; i < n; i += 1) {
-            names[i] = "param" + i;
+            names[i] = (i < ARGS.length ? ARGS[i] : "arg" + i);
         }
     }
+
+    // arbitrary choice of first ten; maintaining this array prevents many thousands of "argN" string/char[] instances
+    public static final String[] ARGS = {"arg0", "arg1", "arg2", "arg3", "arg4", "arg5", "arg6", "arg7", "arg8", "arg9"};
     // GRECLIPSE end
 
     public void invalidateCallSites() {}

@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CancellationException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -241,6 +242,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             for (IType type : unit.getTypes()) {
                 visitJDT(type, requestor);
             }
+        } catch (CancellationException e) {
+            throw e; // propagate
         } catch (VisitCompleted vc) {
             // can ignore
         } catch (Exception e) {
@@ -406,6 +409,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             if (vc.status == VisitStatus.STOP_VISIT) {
                 throw vc;
             }
+        } catch (CancellationException e) {
+            throw e; // propagate
         } catch (Exception e) {
             log(e, "Error visiting method %s in class %s", method.getElementName(), method.getParent().getElementName());
         } finally {
@@ -497,9 +502,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                             }
                             completeExpressionStack.removeLast();
                         }
-                    } catch (VisitCompleted e) {
-                        if (e.status == VisitStatus.STOP_VISIT) {
-                            throw e;
+                    } catch (VisitCompleted vc) {
+                        if (vc.status == VisitStatus.STOP_VISIT) {
+                            throw vc;
                         }
                     }
                     //fallthrough
