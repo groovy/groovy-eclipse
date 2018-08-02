@@ -92,6 +92,7 @@ import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.ast.tools.WideningCategories;
 import org.codehaus.groovy.classgen.BytecodeExpression;
+import org.codehaus.groovy.classgen.Verifier;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.MetaClassHelper;
@@ -898,20 +899,6 @@ assert primaryExprType != null && dependentExprType != null;
         VariableScope scope = new VariableScope(parent, node, false);
         scopes.add(scope);
 
-        ClassNode[] inferredParamTypes = inferClosureParamTypes(node, scope);
-        if (node.isParameterSpecified()) {
-            Parameter[] parameters = node.getParameters();
-            for (int i = 0, n = parameters.length; i < n; i += 1) {
-                // only change the type of the parameter if it's not explicitly defined
-                if (parameters[i].isDynamicTyped() && !VariableScope.OBJECT_CLASS_NODE.equals(inferredParamTypes[i])) {
-                    parameters[i].setType(inferredParamTypes[i]);
-                }
-            }
-            handleParameterList(parameters);
-        } else if (node.getParameters() != null && !scope.containsInThisScope("it")) {
-            scope.addVariable("it", inferredParamTypes[0], VariableScope.CLOSURE_CLASS_NODE);
-        }
-
         // if enclosing closure, owner type is 'Closure', otherwise it's 'typeof(this)'
         if (parent.getEnclosingClosure() != null) {
             ClassNode closureType = GenericsUtils.nonGeneric(VariableScope.CLOSURE_CLASS_NODE);
@@ -955,6 +942,20 @@ assert primaryExprType != null && dependentExprType != null;
                 scope.addVariable("delegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
             }
             scope.addVariable("getDelegate", delegateType, VariableScope.CLOSURE_CLASS_NODE);
+        }
+
+        ClassNode[] inferredParamTypes = inferClosureParamTypes(node, scope);
+        if (node.isParameterSpecified()) {
+            Parameter[] parameters = node.getParameters();
+            for (int i = 0, n = parameters.length; i < n; i += 1) {
+                // only change the type of the parameter if it's not explicitly defined
+                if (parameters[i].isDynamicTyped() && !VariableScope.OBJECT_CLASS_NODE.equals(inferredParamTypes[i])) {
+                    parameters[i].setType(inferredParamTypes[i]);
+                }
+            }
+            handleParameterList(parameters);
+        } else if (node.getParameters() != null && !scope.containsInThisScope("it")) {
+            scope.addVariable("it", inferredParamTypes[0], VariableScope.CLOSURE_CLASS_NODE);
         }
 
         //GRECLIPSE-598 make sure enclosingAssignment is set before visitClosureExpression() to make assignedVariable pointcut work
@@ -1816,7 +1817,7 @@ assert primaryExprType != null && dependentExprType != null;
 
                 visitAnnotations(param);
                 visitClassReference(param.getOriginType());
-                Expression init = param.getInitialExpression();
+                Expression init = Optional.ofNullable(param.getInitialExpression()).orElse(param.getNodeMetaData(Verifier.INITIAL_EXPRESSION));
                 if (init != null) {
                     init.visit(this);
                 }

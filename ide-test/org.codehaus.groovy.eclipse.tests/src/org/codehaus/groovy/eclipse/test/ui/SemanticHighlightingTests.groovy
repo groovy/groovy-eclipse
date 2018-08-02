@@ -517,6 +517,19 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testParamDefault() {
+        String contents = '''\
+            def closure = { int i = 2 ->
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('closure'), 'closure'.length(), VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('i'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('2'), 1, NUMBER))
+    }
+
+    @Test
     void testNamedParams() {
         String contents = '''\
             class Person { String firstName, lastName }

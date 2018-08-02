@@ -158,10 +158,10 @@ public abstract class SearchTestSuite extends BuilderTestSuite {
         if (contentsIsScript) {
             firstMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent];
         } else {
-            // if not a script, then the first match is always enclosed in the type,
+            // if not a script, then the first match is always enclosed in the type
             firstMatchEnclosingElement = findType(secondClassName, second);
         }
-        // match is enclosed in run method (for script), or x method for class
+        // match is enclosed in run method (for script), or nth method for class
         secondMatchEnclosingElement = findType(secondClassName, second).getChildren()[offsetInParent];
 
         checkMatches(secondContents, firstClassName, pattern, second, firstMatchEnclosingElement, secondMatchEnclosingElement);
