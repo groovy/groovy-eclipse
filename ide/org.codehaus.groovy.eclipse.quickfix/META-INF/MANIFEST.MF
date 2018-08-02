@@ -3,23 +3,23 @@ Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.quickfix;singleton:=true
 Bundle-Name: Groovy Quick Fix
 Bundle-Vendor: Codehaus.org
-Bundle-Version: 3.0.0.qualifier
+Bundle-Version: 3.1.0.qualifier
 Export-Package: org.codehaus.groovy.eclipse.quickassist,
  org.codehaus.groovy.eclipse.quickassist.proposals;x-friends:="org.codehaus.groovy.eclipse.quickfix.test",
  org.codehaus.groovy.eclipse.quickfix,
  org.codehaus.groovy.eclipse.quickfix.proposals;x-friends:="org.codehaus.groovy.eclipse.quickfix.test",
  org.codehaus.groovy.eclipse.quickfix.templates;x-friends:="org.codehaus.groovy.eclipse.quickfix.test"
 Require-Bundle: org.codehaus.groovy;bundle-version="[2.4.15,3)",
- org.codehaus.groovy.eclipse.codeassist.completion;bundle-version="3.0.0",
- org.codehaus.groovy.eclipse.codebrowsing;bundle-version="3.0.0",
- org.codehaus.groovy.eclipse.core;bundle-version="3.0.0",
- org.codehaus.groovy.eclipse.dsl;bundle-version="3.0.0",
- org.codehaus.groovy.eclipse.refactoring;bundle-version="3.0.0",
- org.codehaus.groovy.eclipse.ui;bundle-version="3.0.0",
+ org.codehaus.groovy.eclipse.codeassist.completion;bundle-version="3.1.0",
+ org.codehaus.groovy.eclipse.codebrowsing;bundle-version="3.1.0",
+ org.codehaus.groovy.eclipse.core;bundle-version="3.1.0",
+ org.codehaus.groovy.eclipse.dsl;bundle-version="3.1.0",
+ org.codehaus.groovy.eclipse.refactoring;bundle-version="3.1.0",
+ org.codehaus.groovy.eclipse.ui;bundle-version="3.1.0",
  org.eclipse.core.resources,
  org.eclipse.core.runtime,
- org.eclipse.jdt.core;bundle-version="[3.13.0,4.0.0)",
- org.eclipse.jdt.groovy.core;bundle-version="3.0.0",
+ org.eclipse.jdt.core;bundle-version="[3.13.0,4)",
+ org.eclipse.jdt.groovy.core;bundle-version="3.1.0",
  org.eclipse.jface.text;visibility:=reexport,
  org.eclipse.ltk.core.refactoring,
  org.eclipse.ui,

@@ -4,14 +4,14 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-SymbolicName: org.eclipse.jdt.groovy.core.tests.compiler;singleton:=true
 Bundle-Name: Compiler Tests
 Bundle-Vendor: Codehaus.org
-Bundle-Version: 3.0.0.qualifier
+Bundle-Version: 3.1.0.qualifier
 Export-Package: org.eclipse.jdt.groovy.core.tests,
  org.eclipse.jdt.groovy.core.tests.basic,
  org.eclipse.jdt.groovy.core.tests.xform
 Require-Bundle: org.codehaus.groovy;bundle-version="[2.4.15,3)";visibility:=reexport,
- org.eclipse.core.resources;bundle-version="[3.12.0,4.0.0)";visibility:=reexport,
- org.eclipse.core.runtime;bundle-version="[3.13.0,4.0.0)";visibility:=reexport,
- org.eclipse.jdt.core;bundle-version="[3.13.0,4.0.0)";visibility:=reexport,
+ org.eclipse.core.resources;bundle-version="[3.12.0,4)";visibility:=reexport,
+ org.eclipse.core.runtime;bundle-version="[3.13.0,4)";visibility:=reexport,
+ org.eclipse.jdt.core;bundle-version="[3.13.0,4)";visibility:=reexport,
  org.eclipse.jdt.core.tests.compiler;visibility:=reexport,
  org.eclipse.jdt.groovy.core;visibility:=reexport,
  org.junit;bundle-version="[4.12.0,5)";visibility:=reexport
