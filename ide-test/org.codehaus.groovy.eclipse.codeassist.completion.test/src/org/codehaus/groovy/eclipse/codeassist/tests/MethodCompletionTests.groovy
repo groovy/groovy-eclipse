@@ -364,6 +364,26 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
+    void testClass6() {
+        String contents = '''\
+            Class cls
+            cls.can
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'can'))
+        proposalExists(proposals, 'canonicalName', 1)
+    }
+
+    @Test
+    void testClass7() {
+        String contents = '''\
+            Class cls
+            cls.get
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'get'))
+        proposalExists(proposals, 'getCanonicalName', 1)
+    }
+
+    @Test
     void testStaticMethods() {
         String contents = '''\
             import java.util.regex.Pattern
