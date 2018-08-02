@@ -3,7 +3,7 @@
 
 	<artifactId>groovy-eclipse-compiler-tests</artifactId>
 	<groupId>org.codehaus.groovy</groupId>
-	<version>3.0.0-01</version>
+	<version>3.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<properties>

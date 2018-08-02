@@ -3,7 +3,7 @@
 
 	<artifactId>groovy-eclipse-quickstart</artifactId>
 	<groupId>org.codehaus.groovy</groupId>
-	<version>3.0.0-SNAPSHOT</version>
+	<version>3.0.1-SNAPSHOT</version>
 
 	<name>Archetype - groovy-eclipse-quickstart</name>
 	<description>Creates an archetype project that uses the groovy-eclipse-compiler to compile a few Groovy and Java classes.</description>
