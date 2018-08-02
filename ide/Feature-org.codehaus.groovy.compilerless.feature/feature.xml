@@ -19,6 +19,8 @@
 
    <includes id="org.codehaus.groovy.headless.feature" version="0.0.0"/>
 
+   <includes id="org.codehaus.groovy.eclipse.photon" version="0.0.0" optional="true"/>
+
    <plugin
          id="org.codehaus.groovy.eclipse.astviews"
          download-size="0"
@@ -45,14 +47,6 @@
 
    <plugin
          id="org.codehaus.groovy.eclipse.dsl"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"
-   />
-
-   <plugin
-         id="org.codehaus.groovy.eclipse.mining"
          download-size="0"
          install-size="0"
          version="0.0.0"

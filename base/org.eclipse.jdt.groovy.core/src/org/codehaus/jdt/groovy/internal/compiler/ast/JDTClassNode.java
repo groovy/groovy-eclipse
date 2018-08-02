@@ -82,15 +82,6 @@ import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
  */
 public class JDTClassNode extends ClassNode implements JDTNode {
 
-    private static final ClassNode UNBOUND_WILDCARD; // represents plain old '?'
-    static {
-        UNBOUND_WILDCARD = ClassHelper.makeWithoutCaching("?");
-        UNBOUND_WILDCARD.setRedirect(ClassHelper.OBJECT_TYPE);
-    }
-
-    //--------------------------------------------------------------------------
-
-    /** Configuration flags */
     private volatile int bits;
     private boolean beingInitialized;
     private boolean anyGenericsInitialized;
