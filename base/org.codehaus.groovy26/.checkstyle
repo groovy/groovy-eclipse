@@ -27,6 +27,7 @@
         <file-match-pattern match-pattern="groovy/ast/ClassNode.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/CodeVisitorSupport.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/CompileUnit.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/ast/ConstructorNode.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/GenericsType.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/GroovyCodeVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/ImportNode.java" include-pattern="false" />
