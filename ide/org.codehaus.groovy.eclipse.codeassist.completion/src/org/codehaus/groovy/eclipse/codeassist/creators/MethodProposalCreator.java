@@ -84,6 +84,7 @@ public class MethodProposalCreator extends AbstractProposalCreator {
             if (enclosingTypeDeclaration != null && firstTime && isPrimary && type.getModule() != null) {
                 findStaticImportProposals(proposals, prefix, type.getModule());
                 findStaticFavoriteProposals(proposals, prefix, type.getModule());
+                demoteLowVisibilityProposals(proposals, type); // de-emphasize other's secrets
             }
         }
 

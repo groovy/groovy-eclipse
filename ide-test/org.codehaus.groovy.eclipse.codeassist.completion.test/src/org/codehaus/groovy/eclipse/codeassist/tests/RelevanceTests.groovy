@@ -80,6 +80,40 @@ final class RelevanceTests extends CompletionTestSuite {
         assertProposalOrdering(proposals, 'toString', 'toZZZ')
     }
 
+    @Test
+    void testClosureMethodsAndProperties1() {
+        String contents = '''\
+            def closure = { ->
+              d
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getLastIndexOf(contents, 'd')))
+        assertProposalOrdering(proposals, 'dump()', 'delegate', 'directive', 'defaultMetaClass')
+    }
+
+    @Test
+    void testClosureMethodsAndProperties2() {
+        String contents = '''\
+            def closure = { ->
+              get
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getLastIndexOf(contents, 'get')))
+        assertProposalOrdering(proposals, 'getAt', 'getMetaClass()', 'getDelegate()', 'getDirective()', 'getDefaultMetaClass()')
+    }
+
+    @Test
+    void testStaticImportFieldsAndMethods() {
+        String contents = '''\
+            import static java.util.Arrays.*
+            def method() {
+              |
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents.replace('|', ' '), getIndexOf(contents, '|')))
+        assertProposalOrdering(proposals, 'asList', 'copyOf', '$assertionsDisabled', 'INSERTIONSORT_THRESHOLD', 'MIN_ARRAY_SORT_GRAN', 'legacyMergeSort', 'rangeCheck', 'defaultMetaClass', 'getDefaultMetaClass()')
+    }
+
     @Test @Ignore('Need to find "public" in assertProposalOrdering without breaking other tests')
     void testNewMethodThenModifier() {
         String contents = '''\
