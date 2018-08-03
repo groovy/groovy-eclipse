@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,15 +23,15 @@ class ConvertLocalToFieldTestsData {
 		String fieldName
 		boolean expectWarning
 
-		public TestCase(input, expected = null, fieldName = "target", expectWarning = false) {
+		public TestCase(String input, String expected = null, String fieldName = "target", boolean expectWarning = false) {
 			this.input = input
 			this.expected = expected
 			this.fieldName = fieldName
 			this.expectWarning = expectWarning
 		}
 
-		int getSelectionOffset() { return input.indexOf("target/**/") }
-		int getSelectionLength() { return "target".length() }
+		int getSelectionOffset() { input.indexOf('target/**/') }
+		int getSelectionLength() { 'target'.length() }
 	}
 
 	static Map<String, TestCase> testCases = [
