@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,6 +52,7 @@ import org.codehaus.groovy.eclipse.codebrowsing.selection.FindSurroundingNode;
 import org.codehaus.groovy.eclipse.codebrowsing.selection.FindSurroundingNode.VisitKind;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
+import org.codehaus.groovy.eclipse.refactoring.core.utils.StatusHelper;
 import org.codehaus.groovy.eclipse.refactoring.formatter.DefaultGroovyFormatter;
 import org.codehaus.groovy.eclipse.refactoring.formatter.FormatterPreferences;
 import org.codehaus.groovy.runtime.MetaClassHelper;
@@ -78,7 +79,6 @@ import org.eclipse.jdt.internal.corext.refactoring.JDTRefactoringDescriptorComme
 import org.eclipse.jdt.internal.corext.refactoring.JavaRefactoringArguments;
 import org.eclipse.jdt.internal.corext.refactoring.JavaRefactoringDescriptorUtil;
 import org.eclipse.jdt.internal.corext.refactoring.RefactoringCoreMessages;
-import org.eclipse.jdt.internal.corext.refactoring.base.JavaStatusContext;
 import org.eclipse.jdt.internal.corext.refactoring.util.ResourceUtil;
 import org.eclipse.jdt.internal.corext.util.JavaConventionsUtil;
 import org.eclipse.jdt.internal.corext.util.Messages;
@@ -164,7 +164,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
 
             IASTFragment expr = getSelectedFragment();
             if (expr == null) {
-                return RefactoringStatus.createFatalErrorStatus("Must select a full expression", JavaStatusContext.create(unit, new SourceRange(start, length)));
+                return RefactoringStatus.createFatalErrorStatus("Must select a full expression", StatusHelper.createContext(unit, new SourceRange(start, length)));
             }
 
             int trimmedLength = expr.getTrimmedLength(unit);
@@ -173,7 +173,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
             // need to handle this case.
             // the selected length must be somewhere >= the trimmed (no whitespace) length and <= the non-trimeed (w/ whitespace) length
             if (expr.getStart() != start || length > exprLength || length < trimmedLength) {
-                return RefactoringStatus.createFatalErrorStatus("Must select a full expression", JavaStatusContext.create(unit, new SourceRange(start, length)));
+                return RefactoringStatus.createFatalErrorStatus("Must select a full expression", StatusHelper.createContext(unit, new SourceRange(start, length)));
             }
 
             RefactoringStatus result = Checks.validateModifiesFiles(ResourceUtil.getFiles(new ICompilationUnit[] {unit}), getValidationContext());
@@ -281,11 +281,11 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
         for (IASTFragment matchingExpr : matchingExprs) {
             if (isDeclaration(matchingExpr)) {
                 String msg = "The selected expression is a declaration.  Extracting may cause an error.";
-                result.addError(msg, JavaStatusContext.create(unit, new SourceRange(matchingExpr.getStart(), matchingExpr.getLength())));
+                result.addError(msg, StatusHelper.createContext(unit, new SourceRange(matchingExpr.getStart(), matchingExpr.getLength())));
             }
             if (isLeftValue(matchingExpr)) {
                 String msg = RefactoringCoreMessages.ExtractTempRefactoring_assigned_to;
-                result.addWarning(msg, JavaStatusContext.create(unit, new SourceRange(matchingExpr.getStart(), matchingExpr.getLength())));
+                result.addWarning(msg, StatusHelper.createContext(unit, new SourceRange(matchingExpr.getStart(), matchingExpr.getLength())));
             }
         }
         return result;
@@ -638,7 +638,7 @@ public class ExtractGroovyLocalRefactoring extends Refactoring {
         try {
             elt = unit.getElementAt(start);
             if (elt instanceof IMember) {
-                return JavaStatusContext.create((IMember) elt);
+                return StatusHelper.createContext((IMember) elt);
             }
         } catch (JavaModelException e) {
             GroovyCore.logException("Error finding refactoring context", e);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.ASTNodeFinder;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.Region;
 import org.codehaus.groovy.eclipse.refactoring.Activator;
+import org.codehaus.groovy.eclipse.refactoring.core.utils.StatusHelper;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IFile;
@@ -49,7 +50,6 @@ import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.internal.core.LocalVariable;
 import org.eclipse.jdt.internal.corext.refactoring.RefactoringCoreMessages;
-import org.eclipse.jdt.internal.corext.refactoring.base.JavaStatusContext;
 import org.eclipse.jdt.internal.corext.refactoring.rename.JavaRenameProcessor;
 import org.eclipse.jdt.internal.corext.refactoring.rename.RenameModifications;
 import org.eclipse.jdt.internal.corext.refactoring.util.ResourceUtil;
@@ -143,7 +143,7 @@ public class GroovyRenameLocalVariableProcessor extends JavaRenameProcessor {
             if (parent instanceof IMethod) {
                 return RefactoringStatus.createWarningStatus("Warning: new variable name " +
                         getNewElementName() + " shadows a variable in " + localVariable.getParent().getElementName(),
-                        JavaStatusContext.create((IMethod) parent));
+                        StatusHelper.createContext((IMethod) parent));
             } else {
                 return RefactoringStatus.createWarningStatus("Warning: new variable name " +
                         getNewElementName() + " shadows a variable in " + localVariable.getParent().getElementName());

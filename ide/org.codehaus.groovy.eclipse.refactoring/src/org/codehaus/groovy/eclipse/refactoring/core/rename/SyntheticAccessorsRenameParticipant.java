@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import java.util.Set;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.search.SyntheticAccessorSearchRequestor;
+import org.codehaus.groovy.eclipse.refactoring.core.utils.StatusHelper;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
@@ -49,7 +50,6 @@ import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.internal.corext.refactoring.Checks;
 import org.eclipse.jdt.internal.corext.refactoring.RefactoringCoreMessages;
 import org.eclipse.jdt.internal.corext.refactoring.SearchResultGroup;
-import org.eclipse.jdt.internal.corext.refactoring.base.JavaStatusContext;
 import org.eclipse.jdt.internal.corext.refactoring.base.ReferencesInBinaryContext;
 import org.eclipse.jdt.internal.corext.refactoring.rename.RenameFieldProcessor;
 import org.eclipse.jdt.internal.corext.refactoring.rename.RenameMethodProcessor;
@@ -123,7 +123,7 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
             if (match.getAccuracy() == SearchMatch.A_INACCURATE) {
                 final RefactoringStatusEntry entry = new RefactoringStatusEntry(RefactoringStatus.WARNING,
                     RefactoringCoreMessages.RefactoringSearchEngine_potential_matches,
-                    JavaStatusContext.create(JavaCore.createCompilationUnitFrom((IFile) match.getResource()),
+                    StatusHelper.createContext(JavaCore.createCompilationUnitFrom((IFile) match.getResource()),
                         new SourceRange(match.getOffset(), match.getLength())));
                 status.addEntry(entry);
             }
