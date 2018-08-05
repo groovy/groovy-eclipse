@@ -15,8 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.editor;
 
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +23,7 @@ import java.util.regex.Pattern;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightingExtenderRegistry;
+import org.codehaus.groovy.eclipse.preferences.PreferenceConstants;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
@@ -58,7 +57,8 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
         super(colorManager, preferenceStore, editor, IJavaPartitions.JAVA_PARTITIONING);
 
         // replace Java's string scanner to enable Groovy's color choice
-        AbstractJavaScanner stringScanner = new SingleTokenJavaScanner(colorManager, preferenceStore, GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
+        AbstractJavaScanner stringScanner = new SingleTokenJavaScanner(colorManager,
+            PreferenceConstants.getPreferenceStore(), PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
         ReflectionUtils.setPrivateField(JavaSourceViewerConfiguration.class, "fStringScanner", this, stringScanner);
 
         // replace Java's code scanner to enable Groovy's token rules
@@ -90,7 +90,7 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
         if (GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS.equals(contentType) || IJavaPartitions.JAVA_STRING.equals(contentType)) {
             // TODO: Should GroovyMultilineStringAutoEditStrategy delegate to JavaStringAutoIndentStrategy instead of DefaultIndentLineAutoEditStrategy?
             // TODO: GroovyMultilineStringAutoEditStrategy does nothing; was there some intended behavior that is incomplete?
-            strategies = new IAutoEditStrategy[] { new GroovyMultilineStringAutoEditStrategy(contentType) };
+            strategies = new IAutoEditStrategy[] {new GroovyMultilineStringAutoEditStrategy(contentType)};
         } else {
             strategies = super.getAutoEditStrategies(sourceViewer, contentType);
             for (int i = 0, n = strategies.length; i < n; i += 1) {
@@ -112,7 +112,7 @@ public class GroovyConfiguration extends JavaSourceViewerConfiguration {
             IJavaPartitions.JAVA_SINGLE_LINE_COMMENT,
             IJavaPartitions.JAVA_STRING,
             IJavaPartitions.JAVA_CHARACTER,
-            GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS
+            GroovyPartitionScanner.GROOVY_MULTILINE_STRINGS,
         };
     }
 

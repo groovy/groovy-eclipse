@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,10 @@ package org.codehaus.groovy.eclipse.editor;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.codehaus.groovy.eclipse.GroovyPlugin;
-import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
+import org.codehaus.groovy.eclipse.preferences.PreferenceConstants;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.jdt.internal.ui.text.AbstractJavaScanner;
 import org.eclipse.jdt.internal.ui.text.CombinedWordRule;
-import org.eclipse.jdt.internal.ui.text.CombinedWordRule.WordMatcher;
 import org.eclipse.jdt.internal.ui.text.JavaWhitespaceDetector;
 import org.eclipse.jdt.internal.ui.text.JavaWordDetector;
 import org.eclipse.jdt.ui.text.IColorManager;
@@ -50,7 +48,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
     protected class OperatorRule implements IRule {
 
         /** Java operators */
-        private final char[] JAVA_OPERATORS = { ';', '(', ')', '{', '}', '.', '=', '/', '\\', '+', '-', '*', '[', ']', '<', '>', ':', '?', '!', ',', '|', '&', '^', '%', '~' };
+        private final char[] JAVA_OPERATORS = {';', '(', ')', '{', '}', '.', '=', '/', '\\', '+', '-', '*', '[', ']', '<', '>', ':', '?', '!', ',', '|', '&', '^', '%', '~'};
 
         /** Token to return for this rule */
         private final IToken fToken;
@@ -104,7 +102,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
     private static final class BracketRule implements IRule {
 
         /** Java brackets */
-        private final char[] JAVA_BRACKETS = { '(', ')', '{', '}', '[', ']' };
+        private final char[] JAVA_BRACKETS = {'(', ')', '{', '}', '[', ']'};
 
         /** Token to return for this rule */
         private final IToken fToken;
@@ -159,7 +157,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
      *
      * @since 3.1
      */
-    private static class AnnotationRule implements IRule {
+    protected static class AnnotationRule implements IRule {
         /**
          * A resettable scanner supports marking a position in a scanner and
          * unreading back to the marked position.
@@ -175,7 +173,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
              *
              * @param scanner the delegate scanner
              */
-            public ResettableScanner(final ICharacterScanner scanner) {
+            private ResettableScanner(final ICharacterScanner scanner) {
                 Assert.isNotNull(scanner);
                 fDelegate = scanner;
                 mark();
@@ -217,11 +215,12 @@ public class GroovyTagScanner extends AbstractJavaScanner {
              * Resets the scanner to the marked position.
              */
             public void reset() {
-                while (fReadCount > 0)
+                while (fReadCount > 0) {
                     unread();
-
-                while (fReadCount < 0)
+                }
+                while (fReadCount < 0) {
                     read();
+                }
             }
         }
 
@@ -329,21 +328,10 @@ public class GroovyTagScanner extends AbstractJavaScanner {
         }
     }
 
-    private static final String[] types = {
-        "boolean",
-        "byte",
-        "char",
-        "double",
-        "float",
-        "int",
-        "interface",
-        "long",
-        "short",
-        "void",
-    };
-    private static final String[] keywords = {
+    private static final String[] KEYWORDS = {
         "abstract",
-        "assert",
+        "as",
+      //"assert",
         "break",
         "case",
         "catch",
@@ -363,6 +351,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
         "if",
         "implements",
         "import",
+        "in",
         "instanceof",
         "interface",
         "native",
@@ -372,7 +361,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
         "private",
         "protected",
         "public",
-        //"return", use the special return keyword now so returns can be highlighted differently
+      //"return",
         "static",
         "super",
         "switch",
@@ -380,32 +369,39 @@ public class GroovyTagScanner extends AbstractJavaScanner {
         "this",
         "throw",
         "throws",
+        "trait",
         "transient",
         "true",
         "try",
-        "void",
         "volatile",
         "while",
     };
-    private static final String[] groovyKeywords = {
-        "as",
-        "in",
-        "def",
-        "trait",
-    };
-    private static final String   returnKeyword = "return";
 
-    private static final String[] fgTokenProperties = {
-        PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR,
+    private static final String[] PRIMITIVES = {
+        "boolean",
+        "byte",
+        "char",
+        "def",
+        "double",
+        "float",
+        "int",
+        "interface",
+        "long",
+        "short",
+        "void",
+    };
+
+    private static final String[] TOKEN_PROPERTIES = {
         PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR,
-        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR,
-        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR,
-        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR,
+        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_PRIMITIVES_COLOR,
+        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_KEYWORDS_COLOR,
+        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ASSERT_COLOR,
+        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR,
+        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR,
         PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR,
         PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR,
         PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR,
-        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR,
-        PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR,
+        PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR,
     };
 
     private final List<IRule> initialAdditionalRules;
@@ -440,7 +436,7 @@ public class GroovyTagScanner extends AbstractJavaScanner {
      * @param additionalGJDKKeywords Additional keywords for sub-types to add new kinds of gjdk syntax highlightin
      */
     public GroovyTagScanner(IColorManager manager, List<IRule> initialAdditionalRules, List<IRule> additionalRules, List<String> additionalGroovyKeywords, List<String> additionalGJDKKeywords) {
-        super(manager, GroovyPlugin.getDefault().getPreferenceStore());
+        super(manager, PreferenceConstants.getPreferenceStore());
         this.initialAdditionalRules = initialAdditionalRules;
         this.additionalRules = additionalRules;
         this.additionalGroovyKeywords = additionalGroovyKeywords;
@@ -450,7 +446,34 @@ public class GroovyTagScanner extends AbstractJavaScanner {
 
     @Override
     protected String[] getTokenProperties() {
-        return fgTokenProperties;
+        return TOKEN_PROPERTIES;
+    }
+
+    @Override
+    protected String getBoldKey(String colorKey) {
+        return fixStyleKey(super.getBoldKey(colorKey));
+    }
+
+    @Override
+    protected String getItalicKey(String colorKey) {
+        return fixStyleKey(super.getItalicKey(colorKey));
+    }
+
+    @Override
+    protected String getStrikethroughKey(String colorKey) {
+        return fixStyleKey(super.getStrikethroughKey(colorKey));
+    }
+
+    @Override
+    protected String getUnderlineKey(String colorKey) {
+        return fixStyleKey(super.getUnderlineKey(colorKey));
+    }
+
+    protected String fixStyleKey(String styleKey) {
+        if (styleKey.startsWith("semanticHighlighting")) {
+            return styleKey.replaceFirst("\\.color_(\\w+)", ".$1");
+        }
+        return styleKey;
     }
 
     @Override
@@ -467,68 +490,65 @@ public class GroovyTagScanner extends AbstractJavaScanner {
 
         // Add JLS3 rule for /@\s*interface/
         AnnotationRule atInterfaceRule = new AnnotationRule(
-            getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR),
+            getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_KEYWORDS_COLOR),
             getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR));
         rules.add(atInterfaceRule);
 
-        // combined rule for all keywords
-        JavaWordDetector wordDetector = new JavaWordDetector();
-        Token token = getToken(PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR);
-        CombinedWordRule combinedWordRule = new CombinedWordRule(wordDetector, token);
-
-        // Java keywords
-        WordMatcher javaKeywordsMatcher = new WordMatcher();
-        token = getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR);
-        for (int i = 0; i < keywords.length; i++) {
-            javaKeywordsMatcher.addWord(keywords[i], token);
-        }
-        combinedWordRule.addWordMatcher(javaKeywordsMatcher);
-
-        // Java types
-        WordMatcher javaTypesMatcher = new WordMatcher();
-        token = getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR);
-        for (int i = 0; i < types.length; i++) {
-            javaTypesMatcher.addWord(types[i], token);
-        }
-        combinedWordRule.addWordMatcher(javaTypesMatcher);
-
-        // Groovy Keywords, including additional keywords
-        WordMatcher groovyKeywordsMatcher = new WordMatcher();
-        token = getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR);
-        for (int i = 0; i < groovyKeywords.length; i++) {
-            groovyKeywordsMatcher.addWord(groovyKeywords[i], token);
-        }
-        if (additionalGroovyKeywords != null) {
-            for (String additional : additionalGroovyKeywords) {
-                groovyKeywordsMatcher.addWord(additional, token);
-            }
-        }
-        combinedWordRule.addWordMatcher(groovyKeywordsMatcher);
-
-        // additional GJDK words
-        WordMatcher gjdkWordsMatcher = new WordMatcher();
-        token = getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR);
-        if (additionalGJDKWords != null) {
-            for (String additional : additionalGJDKWords) {
-                gjdkWordsMatcher.addWord(additional, token);
-            }
-        }
-        combinedWordRule.addWordMatcher(gjdkWordsMatcher);
-
-        // Add rule for brackets
-        // this rule must come before the operator rule
-        token = getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR);
+        // brackets; this rule must come before the operator rule
+        Token token = getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR);
         rules.add(new BracketRule(token));
 
-        // Add rule for operators
+        // operators
         token = getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR);
         rules.add(new OperatorRule(token));
 
-        // Add word rule for keyword 'return'.
-        CombinedWordRule.WordMatcher returnWordRule = new CombinedWordRule.WordMatcher();
-        token = getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR);
-        returnWordRule.addWord(returnKeyword, token);
-        combinedWordRule.addWordMatcher(returnWordRule);
+        // combined rule for all "words"
+        JavaWordDetector wordDetector = new JavaWordDetector();
+        token = getToken(PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR);
+        CombinedWordRule combinedWordRule = new CombinedWordRule(wordDetector, token);
+
+            // keywords
+            CombinedWordRule.WordMatcher keywordsMatcher = new CombinedWordRule.WordMatcher();
+            token = getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_KEYWORDS_COLOR);
+            for (String keyword : KEYWORDS) {
+                keywordsMatcher.addWord(keyword, token);
+            }
+            if (additionalGroovyKeywords != null) {
+                for (String keyword : additionalGroovyKeywords) {
+                    keywordsMatcher.addWord(keyword, token);
+                }
+            }
+            combinedWordRule.addWordMatcher(keywordsMatcher);
+
+            // keyword 'assert'
+            CombinedWordRule.WordMatcher assertWordRule = new CombinedWordRule.WordMatcher();
+            token = getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ASSERT_COLOR);
+            assertWordRule.addWord("assert", token);
+            combinedWordRule.addWordMatcher(assertWordRule);
+
+            // keyword 'return'
+            CombinedWordRule.WordMatcher returnWordRule = new CombinedWordRule.WordMatcher();
+            token = getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR);
+            returnWordRule.addWord("return", token);
+            combinedWordRule.addWordMatcher(returnWordRule);
+
+            // primitive keywords
+            CombinedWordRule.WordMatcher typesMatcher = new CombinedWordRule.WordMatcher();
+            token = getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_PRIMITIVES_COLOR);
+            for (String primitive : PRIMITIVES) {
+                typesMatcher.addWord(primitive, token);
+            }
+            combinedWordRule.addWordMatcher(typesMatcher);
+
+            // additional GJDK words
+            CombinedWordRule.WordMatcher gjdkWordsMatcher = new CombinedWordRule.WordMatcher();
+            token = getToken(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR);
+            if (additionalGJDKWords != null) {
+                for (String additional : additionalGJDKWords) {
+                    gjdkWordsMatcher.addWord(additional, token);
+                }
+            }
+            combinedWordRule.addWordMatcher(gjdkWordsMatcher);
 
         rules.add(combinedWordRule);
 

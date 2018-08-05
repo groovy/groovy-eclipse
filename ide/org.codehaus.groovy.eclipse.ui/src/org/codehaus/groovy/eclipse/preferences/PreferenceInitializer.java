@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.codehaus.groovy.eclipse.preferences;
 
 import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.*;
+import static org.codehaus.groovy.eclipse.preferences.PreferenceConstants.*;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
@@ -44,16 +45,11 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         prefs.setDefault(GROOVY_EDITOR_HIGHLIGHT_SLASHY_STRINGS, true);
 
         // Syntax coloring
-        setSyntaxElementDefault(prefs, GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR, 127, 0, 85, true);
-        setSyntaxElementDefault(prefs, GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR, 127, 0, 85, true);
-        setSyntaxElementDefault(prefs, GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR, 127, 0, 85, true);
-        setSyntaxElementDefault(prefs, GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR, 127, 0, 85, true); //keyword
-        setSyntaxElementDefault(prefs, GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR, 102, 204, 255, false); //method
-        setSyntaxElementDefault(prefs, GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR, 100, 100, 100, false);
-        setSyntaxElementDefault(prefs, GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR, 255, 0, 204, false);
-        setSyntaxElementDefault(prefs, GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR, 0, 0, 0, false);
-        setSyntaxElementDefault(prefs, GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR, 0, 0, 0, false);
-        setSyntaxElementDefault(prefs, GROOVY_EDITOR_DEFAULT_COLOR, 0, 0, 0, false);
+        setSyntaxElementDefault(prefs, GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR, 255, 0, 204, false);
+        setSyntaxElementDefault(prefs, GROOVY_EDITOR_HIGHLIGHT_PRIMITIVES_COLOR, 127, 0, 85, true);
+        setSyntaxElementDefault(prefs, GROOVY_EDITOR_HIGHLIGHT_KEYWORDS_COLOR,   127, 0, 85, true);
+        setSyntaxElementDefault(prefs, GROOVY_EDITOR_HIGHLIGHT_ASSERT_COLOR,     127, 0, 85, true);
+        setSyntaxElementDefault(prefs, GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR,     127, 0, 85, true);
     }
 
     private void setSyntaxElementDefault(IPreferenceStore prefs, String pref, int r, int g, int b, boolean bold) {

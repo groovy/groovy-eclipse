@@ -23,9 +23,9 @@ import static org.junit.Assume.assumeTrue
 import groovy.transform.NotYetImplemented
 
 import org.codehaus.groovy.eclipse.GroovyPlugin
-import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants
 import org.codehaus.groovy.eclipse.editor.highlighting.GatherSemanticReferences
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition
+import org.codehaus.groovy.eclipse.preferences.PreferenceConstants
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory

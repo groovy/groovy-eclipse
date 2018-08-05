@@ -31,13 +31,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
+import org.codehaus.groovy.eclipse.preferences.PreferenceConstants;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
-import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer;
 import org.eclipse.jdt.internal.ui.javaeditor.SemanticHighlightingPresenter;
@@ -54,7 +53,6 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchPartSite;
-import org.eclipse.ui.texteditor.ChainedPreferenceStore;
 
 public class GroovySemanticReconciler implements IJavaReconcilingListener {
 
@@ -62,7 +60,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     private static final String STRING_HIGHLIGHT_PREFERENCE             = PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR.replaceFirst("\\.color$", "");
     private static final String NUMBER_HIGHLIGHT_PREFERENCE             = "semanticHighlighting.number";
     private static final String COMMENT_HIGHLIGHT_PREFERENCE            = "java_single_line_comment";
-    private static final String KEYWORD_HIGHLIGHT_PREFERENCE            = PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR.replaceFirst("\\.color$", "");
+    private static final String KEYWORD_HIGHLIGHT_PREFERENCE            = PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_KEYWORDS_COLOR.replaceFirst("\\.color$", "");
     private static final String VARIABLE_HIGHLIGHT_PREFERENCE           = "semanticHighlighting.localVariable";
     private static final String PARAMETER_HIGHLIGHT_PREFERENCE          = "semanticHighlighting.parameterVariable";
     private static final String ANNOTATION_HIGHLIGHT_PREFERENCE         = "semanticHighlighting.annotationElementReference";
@@ -123,11 +121,9 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     private Object groovyMethodUseHighlighting;
     private Object staticMethodUseHighlighting;
 
-
     public GroovySemanticReconciler() {
         // TODO: Reload colors and styles when preferences are changed.
-        IPreferenceStore prefs = new ChainedPreferenceStore(new IPreferenceStore[] {
-            GroovyPlugin.getDefault().getPreferenceStore(), JavaPlugin.getDefault().getPreferenceStore()});
+        IPreferenceStore prefs = PreferenceConstants.getPreferenceStore();
 
         Color groovyColor      = loadColorFrom(prefs, GROOVY_HIGHLIGHT_PREFERENCE);
         Color numberColor      = loadColorFrom(prefs, NUMBER_HIGHLIGHT_PREFERENCE);
