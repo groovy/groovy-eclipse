@@ -2154,9 +2154,14 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
         for (DeclarationExpression e : declarationExpressionList) {
             VariableExpression variableExpression = (VariableExpression) e.getLeftExpression();
-
             modifierManager.processVariableExpression(variableExpression);
             modifierManager.attachAnnotations(e);
+            // GRECLIPSE add
+            ModifierNode var = modifierManager.get(VAR);
+            if (var != null) {
+                e.setNodeMetaData("reserved.type.name", var);
+            }
+            // GRECLIPSE end
         }
 
         int size = declarationExpressionList.size();

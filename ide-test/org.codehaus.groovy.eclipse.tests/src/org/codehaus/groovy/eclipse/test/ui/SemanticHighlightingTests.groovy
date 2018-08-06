@@ -956,6 +956,32 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testVarKeyword1() {
+        String contents = '''\
+            def abc = null
+            int ijk = null
+            var xyz = null
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('abc'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('ijk'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('xyz'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('var'), 3, isParrotParser() ? RESERVED : UNKNOWN))
+    }
+
+    @Test
+    void testVarKeyword2() {
+        String contents = '''\
+            var var = null
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('var'), 3, isParrotParser() ? RESERVED : UNKNOWN),
+            new HighlightedTypedPosition(contents.lastIndexOf('var'), 3, VARIABLE))
+    }
+
+    @Test
     void testThisAndSuper() {
         // the keywords super and this are identified/highlighted by GroovyTagScanner
         String contents = '''\
