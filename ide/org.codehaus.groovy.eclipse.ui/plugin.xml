@@ -1208,4 +1208,20 @@
       </keyword>
    </extension>
 
+   <extension
+         point="org.eclipse.e4.ui.css.swt.theme">
+      <stylesheet
+            uri="e4_dark.css">
+         <themeid
+               refid="org.eclipse.e4.ui.css.theme.e4_dark">
+         </themeid>
+      </stylesheet>
+      <stylesheet
+            uri="e4_light.css">
+         <themeid
+               refid="org.eclipse.e4.ui.css.theme.e4_default">
+         </themeid>
+      </stylesheet>
+   </extension>
+
 </plugin>

@@ -1,0 +1,13 @@
+IEclipsePreferences#org-codehaus-groovy-eclipse-ui:org-codehaus-groovy-eclipse-ui {
+	preferences:
+		'groovy.editor.highlight.gjdk.color=255,133,153'
+		'groovy.editor.highlight.gjdk.color_bold=false'
+		'groovy.editor.highlight.javakeywords.color=204,108,29'
+		'groovy.editor.highlight.javakeywords.color_bold=false'
+		'groovy.editor.highlight.javatypes.color=204,108,29'
+		'groovy.editor.highlight.javatypes.color_bold=false'
+		'groovy.editor.highlight.assert.color=204,108,29'
+		'groovy.editor.highlight.assert.color_bold=false'
+		'groovy.editor.highlight.return.color=204,108,29'
+		'groovy.editor.highlight.return.color_bold=false'
+}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,10 @@
  */
 package org.codehaus.groovy.eclipse.preferences;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.IAdaptable;
-import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IPersistentPreferenceStore;
 import org.eclipse.jface.preference.IPreferenceNode;
@@ -42,33 +38,27 @@ import org.eclipse.ui.IWorkbenchPropertyPage;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 public abstract class FieldEditorOverlayPage extends FieldEditorPreferencePage implements IWorkbenchPropertyPage {
-    // Stores all created field editors
-    private final List<FieldEditor> editors = new ArrayList<>();
+    // Cache for page id
+    private String pageID;
 
     // Stores owning element of properties
     private IAdaptable element;
 
-    // Additional buttons for property pages
-    // private Button useWorkspaceSettingsButton, useProjectSettingsButton,
-    // configureButton;
-    // Overlay preference store for property pages
-    private IPreferenceStore overlayStore;
-
     // The image descriptor of this pages title image
     private ImageDescriptor image;
 
-    // Cache for page id
-    private String pageID;
+    // Overlay preference store for property pages
+    private IPreferenceStore overlayStore;
 
-    public FieldEditorOverlayPage(final int style) {
+    public FieldEditorOverlayPage(int style) {
         super(style);
     }
 
-    public FieldEditorOverlayPage(final String title, final int style) {
+    public FieldEditorOverlayPage(String title, int style) {
         super(title, style);
     }
 
-    public FieldEditorOverlayPage(final String title, final ImageDescriptor image, final int style) {
+    public FieldEditorOverlayPage(String title, ImageDescriptor image, int style) {
         super(title, image, style);
         this.image = image;
     }
@@ -76,20 +66,8 @@ public abstract class FieldEditorOverlayPage extends FieldEditorPreferencePage i
     /**
      * Returns the id of the current preference page as defined in plugin.xml.
      * Subclasses must implement.
-     *
-     * @return the qualifier
      */
     protected abstract String getPageId();
-
-    /**
-     * Receives the object that owns the properties shown in this property page.
-     *
-     * @see org.eclipse.ui.IWorkbenchPropertyPage#setElement(org.eclipse.core.runtime.IAdaptable)
-     */
-    @Override
-    public void setElement(final IAdaptable element) {
-        this.element = element;
-    }
 
     /**
      * Delivers the object that owns the properties shown in this property page.
@@ -102,24 +80,22 @@ public abstract class FieldEditorOverlayPage extends FieldEditorPreferencePage i
     }
 
     /**
+     * Receives the object that owns the properties shown in this property page.
+     *
+     * @see org.eclipse.ui.IWorkbenchPropertyPage#setElement(org.eclipse.core.runtime.IAdaptable)
+     */
+    @Override
+    public void setElement(IAdaptable element) {
+        this.element = element;
+    }
+
+    /**
      * Returns true if this instance represents a property page.
      *
      * @return true for property pages, false for preference pages
      */
     public boolean isPropertyPage() {
-        return getElement() != null;
-    }
-
-    /**
-     * We override the addField method. This allows us to store each field
-     * editor added by subclasses in a list for later processing.
-     *
-     * @see org.eclipse.jface.preference.FieldEditorPreferencePage#addField(org.eclipse.jface.preference.FieldEditor)
-     */
-    @Override
-    protected void addField(final FieldEditor editor) {
-        editors.add(editor);
-        super.addField(editor);
+        return (getElement() != null);
     }
 
     /**
@@ -143,8 +119,7 @@ public abstract class FieldEditorOverlayPage extends FieldEditorPreferencePage i
     }
 
     private IPreferenceStore createPreferenceStore() {
-        IProject proj = Adapters.adapt(getElement(), IProject.class);
-        return preferenceStore(proj);
+        return preferenceStore(Adapters.adapt(getElement(), IProject.class));
     }
 
     protected IPersistentPreferenceStore preferenceStore(IProject proj) {
