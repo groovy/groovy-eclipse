@@ -105,7 +105,7 @@ public class MethodParameterCodeMiningProvider extends AbstractCodeMiningProvide
     }
 
     private ICodeMining newMethodParameterCodeMining(Expression argument, Parameter parameter) {
-        LineContentCodeMining codeMining = new LineContentCodeMining(new Position(argument.getStart()), this) {};
+        LineContentCodeMining codeMining = new LineContentCodeMining(new Position(argument.getStart(), 1), this) {};
         codeMining.setLabel(parameter.getName() + ':');
         return codeMining;
     }
