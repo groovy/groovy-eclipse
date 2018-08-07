@@ -1464,6 +1464,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         // GRECLIPSE add
         finishedResolution();
         } finally {
+        if (currentClass == node)
         // GRECLIPSE end
         currentClass = oldNode;
         // GRECLIPSE add

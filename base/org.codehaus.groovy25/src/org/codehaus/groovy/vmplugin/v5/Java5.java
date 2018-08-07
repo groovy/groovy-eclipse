@@ -330,6 +330,7 @@ public class Java5 implements VMPlugin {
         }
     }
 
+    @SuppressWarnings("incomplete-switch")
     protected int getElementCode(ElementType value) {
         switch (value) {
             case TYPE:

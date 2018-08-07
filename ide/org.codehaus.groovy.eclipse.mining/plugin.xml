@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension point="org.eclipse.ui.workbench.texteditor.codeMiningProviders">
+      <codeMiningProvider
+            class="org.codehaus.groovy.eclipse.mining.internal.MethodParameterCodeMiningProvider"
+            id="org.codehaus.groovy.eclipse.mining.method_parameter"
+            label="Method parameter metadata">
+         <enabledWhen>
+            <with variable="editorInput">
+               <or>
+                  <adapt type="org.eclipse.core.resources.IFile">
+                     <test property="org.eclipse.core.resources.contentTypeId"
+                           value="org.eclipse.jdt.groovy.core.groovySource" />
+                  </adapt>
+                  <!--adapt type="org.eclipse.jdt.core.IClassFile">
+                     <instanceof value="org.eclipse.jdt.core.IClassFile" />
+                  </adapt-->
+               </or>
+            </with>
+         </enabledWhen>
+      </codeMiningProvider>
+   </extension>
+</plugin>
