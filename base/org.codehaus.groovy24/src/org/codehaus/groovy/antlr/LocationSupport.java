@@ -47,7 +47,7 @@ public class LocationSupport {
         this.lineEndings = lineEndings;
     }
 
-    public LocationSupport(List<StringBuffer> lines) {
+    public LocationSupport(List<? extends CharSequence> lines) {
         this(lines != null ? processLineEndings(lines) : NO_LINE_ENDINGS);
     }
 
@@ -94,7 +94,7 @@ public class LocationSupport {
 
     public int[] getRowCol(int offset) {
         for (int i = 1, n = lineEndings.length; i < n; i += 1) {
-            if (lineEndings[i] > offset) {
+            if (lineEndings[i] > offset || (i + 1 == n && lineEndings[i] == offset)) {
                 return new int[] {i, offset - lineEndings[i - 1] + 1};
             }
         }

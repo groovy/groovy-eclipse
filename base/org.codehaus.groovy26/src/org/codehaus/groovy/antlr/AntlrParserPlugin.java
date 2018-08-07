@@ -1215,7 +1215,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             // GRECLIPSE edit
             //    throw new ASTRuntimeException(methodDef, "You defined a method without body. Try adding a body, or declare it abstract.");
             //}
-                getController().addError(new SyntaxException(
+                if (getController() != null) getController().addError(new SyntaxException(
                     "You defined a method without body. Try adding a body, or declare it abstract.", methodDef.getLine(), methodDef.getColumn()));
                 // create a fake node that can pretend to be the body
                 code = statementListNoChild(null, methodDef);
@@ -3646,23 +3646,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         AST node = typeNode.getFirstChild();
         if (node != null) {
             if (isType(INDEX_OP, node) || isType(ARRAY_DECLARATOR, node)) {
-                // GRECLIPSE edit
+                // GRECLIPSE edit -- retain generics
                 //answer = makeType(node).makeArray();
                 answer = makeTypeWithArguments(node).makeArray();
-
-                // check array node for trailing whitespace
-                GroovySourceAST root = (GroovySourceAST) node;
-                int start = locations.findOffset(root.getLine(), root.getColumn());
-                int until = locations.findOffset(root.getLineLast(), root.getColumnLast());
-                char[] sourceChars = getController().readSourceRange(start, until - start);
-                if (sourceChars != null) {
-                    int i = (sourceChars.length - 1);
-                    while (i >= 0 && Character.isWhitespace(sourceChars[i])) {
-                        i -= 1; until -= 1;
-                    }
-                    int[] row_col = locations.getRowCol(until);
-                    root.setLineLast(row_col[0]); root.setColumnLast(row_col[1]);
-                }
                 // GRECLIPSE end
             } else {
                 checkTypeArgs(node, false);
@@ -3673,6 +3659,25 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                     answer = newAnswer;
                 }
             }
+            // GRECLIPSE add
+            if (getController() != null) {
+                // check for trailing whitespace
+                GroovySourceAST root = (GroovySourceAST) node;
+                int start = locations.findOffset(root.getLine(), root.getColumn());
+                int until = locations.findOffset(root.getLineLast(), root.getColumnLast());
+                char[] sourceChars = getController().readSourceRange(start, until - start);
+                if (sourceChars != null) {
+                    int idx = (sourceChars.length - 1), off = until;
+                    while (idx >= 0 && Character.isWhitespace(sourceChars[idx])) {
+                        idx -= 1; off -= 1;
+                    }
+                    if (off < until) {
+                        int[] row_col = locations.getRowCol(off);
+                        root.setLineLast(row_col[0]); root.setColumnLast(row_col[1]);
+                    }
+                }
+            }
+            // GRECLIPSE end
             configureAST(answer, node);
         }
         return answer;
