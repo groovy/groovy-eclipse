@@ -232,7 +232,7 @@ public class JDTResolver extends ResolveVisitor {
         resolvedClassNodes.add(currentClass);
     }
 
-    public synchronized void cleanUp() {
+    public void cleanUp() {
         scopes.clear();
         inProgress.clear();
         currentClass = null;
@@ -261,20 +261,18 @@ public class JDTResolver extends ResolveVisitor {
         }
 
         if (!unresolvables.contains(name)) {
-            synchronized (this) {
-                ClassNode previousClass = currentClass;
-                try {
-                    currentClass = compilationUnit.getFirstClassNode().getPlainNodeReference();
+            ClassNode previousClass = currentClass;
+            try {
+                currentClass = compilationUnit.getFirstClassNode().getPlainNodeReference();
 
-                    ClassNode type = ClassHelper.makeWithoutCaching(name);
-                    if (super.resolve(type, true, true, true)) {
-                        return type.redirect();
-                    } else {
-                        unresolvables.add(name);
-                    }
-                } finally {
-                    currentClass = previousClass;
+                ClassNode type = ClassHelper.makeWithoutCaching(name);
+                if (super.resolve(type, true, true, true)) {
+                    return type.redirect();
+                } else {
+                    unresolvables.add(name);
                 }
+            } finally {
+                currentClass = previousClass;
             }
         }
         return ClassHelper.DYNAMIC_TYPE;

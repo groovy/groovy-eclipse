@@ -23,9 +23,9 @@ import static org.junit.Assume.assumeTrue
 import groovy.transform.NotYetImplemented
 
 import org.codehaus.groovy.eclipse.GroovyPlugin
-import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants
 import org.codehaus.groovy.eclipse.editor.highlighting.GatherSemanticReferences
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition
+import org.codehaus.groovy.eclipse.preferences.PreferenceConstants
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory
@@ -517,6 +517,19 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testParamDefault() {
+        String contents = '''\
+            def closure = { int i = 2 ->
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('closure'), 'closure'.length(), VARIABLE),
+            new HighlightedTypedPosition(contents.lastIndexOf('i'), 1, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('2'), 1, NUMBER))
+    }
+
+    @Test
     void testNamedParams() {
         String contents = '''\
             class Person { String firstName, lastName }
@@ -940,6 +953,115 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.lastIndexOf('f'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('it'), 2, GROOVY_CALL))
+    }
+
+    @Test
+    void testVarKeyword1() {
+        String contents = '''\
+            def abc = null
+            int ijk = null
+            var xyz = null
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('abc'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('ijk'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('xyz'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('var'), 3, isParrotParser() ? RESERVED : UNKNOWN))
+    }
+
+    @Test
+    void testVarKeyword2() {
+        String contents = '''\
+            var var = null
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('var'), 3, isParrotParser() ? RESERVED : UNKNOWN),
+            new HighlightedTypedPosition(contents.lastIndexOf('var'), 3, VARIABLE))
+    }
+
+    @Test
+    void testVarKeyword3() {
+        assumeTrue(isParrotParser())
+
+        String contents = '''\
+            var (x, y, z) = [1, 2, 3]
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('var'), 3, RESERVED),
+            new HighlightedTypedPosition(contents.indexOf('x'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('y'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('z'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('2'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('3'), 1, NUMBER))
+    }
+
+    @Test
+    void testVarKeyword4() {
+        assumeTrue(isParrotParser())
+
+        String contents = '''\
+            for (var item : list) {
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('var'), 3, RESERVED),
+            new HighlightedTypedPosition(contents.indexOf('item'), 4, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('list'), 4, UNKNOWN))
+    }
+
+    @Test
+    void testVarKeyword5() {
+        assumeTrue(isParrotParser())
+
+        String contents = '''\
+            for (var item in list) {
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('var'), 3, RESERVED),
+            new HighlightedTypedPosition(contents.indexOf('item'), 4, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('list'), 4, UNKNOWN))
+    }
+
+    @Test
+    void testVarKeyword6() {
+        assumeTrue(isParrotParser())
+
+        String contents = '''\
+            for (var i = 0; i < n; i += 1) {
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('var'), 3, RESERVED),
+            new HighlightedTypedPosition(contents.indexOf('i ='), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('0'), 1, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('i <'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('n'), 1, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('i +'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('1'), 1, NUMBER))
+    }
+
+    @Test
+    void testVarKeyword7() {
+        assumeTrue(isParrotParser())
+
+        String contents = '''\
+            try (var str = getClass().getResourceAsStream('rsrc')) {
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('var'), 3, RESERVED),
+            new HighlightedTypedPosition(contents.indexOf('str'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('getClass'), 'getClass'.length(), METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('getResourceAsStream'), 'getResourceAsStream'.length(), METHOD_CALL))
     }
 
     @Test

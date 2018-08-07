@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Copyright (c) 2007, 2014 IBM Corporation and others.
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v1.0
+    which accompanies this distribution, and is available at
+    http://www.eclipse.org/legal/epl-v10.html
+    
+    Contributors:
+        IBM Corporation - initial API and implementation
+ -->
+
+<!-- build script to create a batch compiler from org.eclipse.jdt.core -->
+<project name="Eclipse Batch Compiler" default="export-all" basedir="..">
+	<target name="init">
+		<tstamp/>
+		<property name="bundleVersion" value="3.10.0.qualifier"/>
+		<fail unless="bundleVersion" message="Property 'bundleVersion' must be provided by caller"/>
+		<condition property="bundleVersionOK">
+			<matches pattern="\d+\.\d+\.\d+.*" string="${bundleVersion}"/>
+		</condition>
+		<fail message="bundleVersion variable had unexpected format. Should be digits.digits.digits,ANY but was ${bundleVersion}" unless="bundleVersionOK"/>
+		<script language="javascript">
+			var bundleVersion = project.getProperty("bundleVersion");
+			var pattern = new RegExp(/^(\d+)\.(\d+)\.(\d+)\.(.*)$/);
+			var sArray = pattern.exec(bundleVersion); // sArray 0 is "whole match"
+			project.setProperty("bundleVersionMajor", sArray[1]);
+			project.setProperty("bundleVersionMinor", sArray[2]);
+			project.setProperty("bundleVersionService", sArray[3]);
+			project.setProperty("bundleVersionQualifer", sArray[4])
+		</script>
+		<property name="ecj-temp-folder" value="${basedir}/ecj-temp-folder" />
+		<property name="ecj-temp-src-folder" value="${basedir}/ecj-temp-src-folder" />
+		<mkdir dir="${ecj-temp-src-folder}" />
+		<mkdir dir="${ecj-temp-folder}"/>
+	</target>
+	
+	<target name="extract-batch-compiler" depends="init">
+		<property name="target.folder" value="${basedir}/bin"/>
+		<replace file="${target.folder}/org/eclipse/jdt/internal/compiler/batch/messages.properties" token="bundle_qualifier" value="${bundleVersionQualifer}"/>
+		<echo message="Extract .class file and properties for the batch compiler" />
+		<copy todir="${ecj-temp-folder}">
+			<fileset dir="${target.folder}">
+				<include name="org/eclipse/jdt/internal/compiler/**"/>
+				<include name="org/eclipse/jdt/core/compiler/**"/>
+				<exclude name="**/package.htm*"/>
+				<exclude name="org/eclipse/jdt/core/compiler/CompilationParticipant*.class"/>
+				<exclude name="org/eclipse/jdt/core/compiler/BuildContext.class"/>
+				<exclude name="org/eclipse/jdt/core/compiler/IScanner.class"/>
+				<exclude name="org/eclipse/jdt/core/compiler/ITerminalSymbols*.class"/>
+				<exclude name="org/eclipse/jdt/core/compiler/ReconcileContext*.class"/>
+				<exclude name="org/eclipse/jdt/internal/compiler/DocumentElementParser*.class"/>
+				<exclude name="org/eclipse/jdt/internal/compiler/IDocumentElementRequestor.class"/>
+				<exclude name="org/eclipse/jdt/internal/compiler/ISourceElementRequestor*.class"/>
+				<exclude name="org/eclipse/jdt/internal/compiler/SourceElementParser*.class"/>
+				<exclude name="org/eclipse/jdt/internal/compiler/SourceElementRequestorAdapter*.class"/>
+				<exclude name="org/eclipse/jdt/internal/compiler/SourceJavadocParser*.class"/>
+				<exclude name="org/eclipse/jdt/internal/compiler/parser/SourceTypeConverter*.class"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="extract-_jsr199" depends="init">
+		<property name="target.folder" value="${basedir}/../org.eclipse.jdt.compiler.tool/bin"/>
+		<echo message="Extract .class file and properties for the jsr199" />
+		<copy todir="${ecj-temp-folder}" failonerror="false">
+			<fileset dir="${target.folder}"/>
+		</copy>
+	</target>
+	
+	<target name="extract-_jsr269" depends="init">
+		<property name="jsr_project" value="org.eclipse.jdt.compiler.apt"/>
+		<property name="target.folder" value="${basedir}/../org.eclipse.jdt.compiler.apt/bin"/>
+		<echo message="Extract .class file and properties for the jsr269" />
+		<copy todir="${ecj-temp-folder}" failonerror="false">
+			<fileset dir="${target.folder}"/>
+		</copy>
+	</target>
+
+	<target name="extract-ant-adapter-compiler" depends="init">
+		<property name="target.folder" value="${basedir}/antbin"/>
+		<echo message="Extract .class file and properties for the ant adapter" />
+		<mkdir dir="${ecj-temp-folder}"/>
+		<copy todir="${ecj-temp-folder}">
+			<fileset dir="${target.folder}">
+				<exclude name="org/eclipse/jdt/core/CheckDebugAttributes*.*"/>
+				<exclude name="org/eclipse/jdt/core/BuildJarIndex*.*"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="export" depends="init">
+		<property name="buildLabel" value="head" />
+		<property name="dest" value="../../ecj-export" />
+		<mkdir dir="${dest}" />
+		<echo message="UPDATE ecj-${buildLabel}.jar" />
+		<delete file="${dest}/ecj-${buildLabel}.jar" failonerror="false"/>
+		<copy todir="${ecj-temp-folder}">
+			<fileset dir="scripts/binary" />
+			<fileset dir="scripts" includes="ecj.1"/>
+		</copy>
+		<replace file="${ecj-temp-folder}/META-INF/MANIFEST.MF" token="qualifier" value="${bundleVersionQualifer}"/>
+		<zip zipfile="${dest}/ecj-${buildLabel}.jar">
+			<fileset dir="${ecj-temp-folder}">
+				<include name="**/*"/>
+			</fileset>
+			<fileset dir="scripts">
+				<include name="about.html" />
+			</fileset>
+		</zip>
+
+		<echo message="UPDATE ecjsrc-${buildLabel}.jar" />
+		<delete file="${dest}/ecjsrc-${buildLabel}.jar" failonerror="false"/>
+		<copy todir="${ecj-temp-src-folder}">
+			<fileset dir="scripts/source" />
+		</copy>
+		<copy todir="${ecj-temp-src-folder}/scripts/binary">
+			<fileset dir="scripts/binary" />
+		</copy>
+		<replace file="${ecj-temp-src-folder}/META-INF/MANIFEST.MF" token="qualifier" value="${bundleVersionQualifer}"/>
+		<replace file="${ecj-temp-src-folder}/scripts/binary/META-INF/MANIFEST.MF" token="qualifier" value="${bundleVersionQualifer}"/>
+		<zip zipfile="${dest}/ecjsrc-${buildLabel}.jar">
+			<zipfileset dir="ecj-temp-src-folder" />
+			<zipfileset dir="batch">
+				<exclude name="org/eclipse/jdt/internal/compiler/batch/messages.properties"/>
+			</zipfileset>
+			<fileset dir="${ecj-temp-folder}">
+				<include name="**/messages.properties"/>
+				<include name="ecj.1"/>
+			</fileset>
+			<zipfileset dir="compiler" />
+			<zipfileset dir="antadapter">
+				<exclude name="org/eclipse/jdt/core/CheckDebugAttributes.java"/>
+				<exclude name="org/eclipse/jdt/core/BuildJarIndex.java"/>
+			</zipfileset>
+			<zipfileset dir="scripts">
+				<include name="about.html" />
+				<include name="build.xml" />
+			</zipfileset>
+		</zip>
+		<antcall target="cleanup"/>
+	</target>
+
+	<target name="export_src_bin">
+		<property name="dest" value="../../ecj-export" />
+		<mkdir dir="${dest}" />
+		<echo message="UPDATE ecj_all.jar" />
+		<delete file="${dest}/ecj_all.jar" failonerror="false"/>
+		<mkdir dir="${ecj-temp-src-folder}/src" />
+		<copy todir="${ecj-temp-folder}">
+			<fileset dir="scripts" includes="ecj.1"/>
+			<fileset dir="scripts/binary" />
+		</copy>
+		<replace file="${ecj-temp-folder}/META-INF/MANIFEST.MF" token="qualifier" value="${bundleVersionQualifer}"/>
+
+		<copy todir="${ecj-temp-src-folder}/src">
+			<fileset dir="batch" />
+			<fileset dir="compiler" />
+			<fileset dir="antadapter">
+				<exclude name="org/eclipse/jdt/core/CheckDebugAttributes.java"/>
+				<exclude name="org/eclipse/jdt/core/BuildJarIndex.java"/>
+			</fileset>
+		</copy>
+
+		<zip zipfile="${dest}/ecj_all.jar">
+			<fileset dir="${ecj-temp-folder}">
+				<include name="**/*"/>
+				<include name="about.html"/>
+			</fileset>
+			<fileset dir="${ecj-temp-src-folder}">
+				<exclude name="META-INF/**"/>
+			</fileset>
+			<fileset dir="scripts">
+				<include name="about.html" />
+			</fileset>
+		</zip>
+
+		<delete dir="${ecj-temp-src-folder}" failonerror="false"/>
+	</target>
+
+	<target name="cleanup">
+		<delete dir="${ecj-temp-folder}" failonerror="false"/>
+		<delete dir="${ecj-temp-src-folder}" failonerror="false"/>
+	</target>
+
+	<target name="export-all" depends="init">
+		<antcall target="extract-batch-compiler"/>
+		<antcall target="extract-ant-adapter-compiler"/>
+		<antcall target="extract-_jsr199"/>
+		<antcall target="extract-_jsr269"/>
+		<antcall target="export_src_bin"/>
+		<antcall target="export"/>
+		<antcall target="cleanup"/>
+	</target>
+</project>

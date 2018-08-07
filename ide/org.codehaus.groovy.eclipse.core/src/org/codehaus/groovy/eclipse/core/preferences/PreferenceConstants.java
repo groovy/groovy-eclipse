@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,32 +19,6 @@ package org.codehaus.groovy.eclipse.core.preferences;
  * Constant definitions for plug-in preferences
  */
 public interface PreferenceConstants {
-
-    public static final String GROOVY_EDITOR_HIGHLIGHT = "groovy.editor.highlight";
-
-    public static final String GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR = GROOVY_EDITOR_HIGHLIGHT + ".gjdk.color";
-
-    public static final String GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR = GROOVY_EDITOR_HIGHLIGHT + ".javakeywords.color";
-
-    public static final String GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR = GROOVY_EDITOR_HIGHLIGHT + ".groovykeywords.color";
-
-    public static final String GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR = GROOVY_EDITOR_HIGHLIGHT + ".javatypes.color";
-
-    public static final String GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR = GROOVY_EDITOR_HIGHLIGHT + ".strings.color";
-
-    public static final String GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR = GROOVY_EDITOR_HIGHLIGHT + ".annotation.color";
-
-    public static final String GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR = GROOVY_EDITOR_HIGHLIGHT + ".bracket.color";
-
-    public static final String GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR = GROOVY_EDITOR_HIGHLIGHT + ".return.color";
-
-    public static final String GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR = GROOVY_EDITOR_HIGHLIGHT + ".operator.color";
-
-    public static final String GROOVY_EDITOR_DEFAULT_COLOR = GROOVY_EDITOR_HIGHLIGHT + ".default.color";
-
-    public static final String GROOVY_EDITOR_HIGHLIGHT_SLASHY_STRINGS = GROOVY_EDITOR_HIGHLIGHT + ".slashy";
-
-    public static final String GROOVY_EDITOR_BOLD_SUFFIX = "_bold";
 
     /**
      * this preference will add the plugin trace statements to the error in
@@ -67,10 +41,7 @@ public interface PreferenceConstants {
 
     public static final String GROOVY_JUNIT_MONOSPACE_FONT = "groovy.junit.monospace.font";
 
-
     public static final String GROOVY_ASK_TO_CONVERT_LEGACY_PROJECTS = "groovy.plugin.ask.to.convert";
-
-    public static final String GROOVY_SEMANTIC_HIGHLIGHTING = "groovy.semantic.highlighting";
 
     // if true, then groovy internal stack frames are de-emphasized
     public static final String GROOVY_DEBUG_FILTER_STACK = "groovy.debug.filter.stack";

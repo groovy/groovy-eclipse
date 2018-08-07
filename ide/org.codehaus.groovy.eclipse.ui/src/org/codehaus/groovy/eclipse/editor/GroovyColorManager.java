@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.editor;
 
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX;
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR;
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT;
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR;
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR;
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR;
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR;
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR;
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR;
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR;
-import static org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR;
-
-import org.codehaus.groovy.eclipse.GroovyPlugin;
+import org.codehaus.groovy.eclipse.preferences.PreferenceConstants;
 import org.eclipse.jdt.internal.ui.text.JavaColorManager;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
@@ -36,51 +24,57 @@ import org.eclipse.jface.util.PropertyChangeEvent;
 
 public class GroovyColorManager extends JavaColorManager {
 
-    private IPropertyChangeListener changeListener = (PropertyChangeEvent event) -> {
-        if (event.getProperty().startsWith(GROOVY_EDITOR_HIGHLIGHT) &&
-                !(event.getProperty().endsWith(GROOVY_EDITOR_BOLD_SUFFIX))) {
-            if (event.getNewValue() != event.getOldValue()) {
-                unbindColor(event.getProperty());
-            }
+    private IPropertyChangeListener propertyChangeListener = (PropertyChangeEvent event) -> {
+        if (event.getNewValue() != event.getOldValue() && fKeyTable.containsKey(event.getProperty())) {
+            unbindColor(event.getProperty());
         }
     };
 
     public GroovyColorManager() {
-        GroovyPlugin.getDefault().getPreferenceStore().addPropertyChangeListener(changeListener);
         initialize();
+        PreferenceConstants.getPreferenceStore().addPropertyChangeListener(propertyChangeListener);
     }
 
     @Override
     public void dispose() {
         super.dispose();
-        GroovyPlugin.getDefault().getPreferenceStore().removePropertyChangeListener(changeListener);
+        PreferenceConstants.getPreferenceStore().removePropertyChangeListener(propertyChangeListener);
     }
 
     public void initialize() {
-        bindColor(GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR, PreferenceConverter.getColor(getGroovyPreferenceStore(), GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR));
-        bindColor(GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR, PreferenceConverter.getColor(getGroovyPreferenceStore(), GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR));
-        bindColor(GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR, PreferenceConverter.getColor(getGroovyPreferenceStore(), GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR));
-        bindColor(GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR, PreferenceConverter.getColor(getGroovyPreferenceStore(), GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR));
-        bindColor(GROOVY_EDITOR_DEFAULT_COLOR, PreferenceConverter.getColor(getGroovyPreferenceStore(), GROOVY_EDITOR_DEFAULT_COLOR));
-        bindColor(GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR, PreferenceConverter.getColor(getGroovyPreferenceStore(), GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR));
-        bindColor(GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR, PreferenceConverter.getColor(getGroovyPreferenceStore(), GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR));
-        bindColor(GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR, PreferenceConverter.getColor(getGroovyPreferenceStore(), GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR));
-        bindColor(GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR, PreferenceConverter.getColor(getGroovyPreferenceStore(), GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR));
+        IPreferenceStore preferenceStore = PreferenceConstants.getPreferenceStore();
+        bindColor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR,
+            PreferenceConverter.getColor(preferenceStore, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR));
+        bindColor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_PRIMITIVES_COLOR,
+            PreferenceConverter.getColor(preferenceStore, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_PRIMITIVES_COLOR));
+        bindColor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_KEYWORDS_COLOR,
+            PreferenceConverter.getColor(preferenceStore, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_KEYWORDS_COLOR));
+        bindColor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ASSERT_COLOR,
+            PreferenceConverter.getColor(preferenceStore, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ASSERT_COLOR));
+        bindColor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR,
+            PreferenceConverter.getColor(preferenceStore, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR));
+        bindColor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR,
+            PreferenceConverter.getColor(preferenceStore, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR));
+        bindColor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR,
+            PreferenceConverter.getColor(preferenceStore, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR));
+        bindColor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR,
+            PreferenceConverter.getColor(preferenceStore, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR));
+        bindColor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR,
+            PreferenceConverter.getColor(preferenceStore, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR));
+        bindColor(PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR,
+            PreferenceConverter.getColor(preferenceStore, PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR));
     }
 
     public void uninitialize() {
-        unbindColor(GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR);
-        unbindColor(GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR);
-        unbindColor(GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR);
-        unbindColor(GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
-        unbindColor(GROOVY_EDITOR_DEFAULT_COLOR);
-        unbindColor(GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR);
-        unbindColor(GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR);
-        unbindColor(GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR);
-        unbindColor(GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR);
-    }
-
-    private IPreferenceStore getGroovyPreferenceStore() {
-        return GroovyPlugin.getDefault().getPreferenceStore();
+        unbindColor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR);
+        unbindColor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_PRIMITIVES_COLOR);
+        unbindColor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_KEYWORDS_COLOR);
+        unbindColor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ASSERT_COLOR);
+        unbindColor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR);
+        unbindColor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
+        unbindColor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR);
+        unbindColor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR);
+        unbindColor(PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR);
+        unbindColor(PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR);
     }
 }

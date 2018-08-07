@@ -382,7 +382,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             // if completionType refers to the closure delegate, use instance (non-static) semantics
             proposalCreatorLoop(groovyProposals, creators, requestor, context, completionType, isStatic1, false);
 
-            if (completionType.equals(VariableScope.CLASS_CLASS_NODE) &&
+            if (completionType.equals(VariableScope.CLASS_CLASS_NODE) && completionType.isUsingGenerics() &&
                     !completionType.getGenericsTypes()[0].getType().equals(VariableScope.CLASS_CLASS_NODE) &&
                     !completionType.getGenericsTypes()[0].getType().equals(VariableScope.OBJECT_CLASS_NODE)) {
                 // "Foo.bar" and "Foo.@bar" are static; "Foo.&bar" and "Foo::bar" are not static

@@ -40,6 +40,7 @@ import org.codehaus.groovy.eclipse.codebrowsing.selection.FindAllOccurrencesVisi
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.refactoring.Activator;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
+import org.codehaus.groovy.eclipse.refactoring.core.utils.StatusHelper;
 import org.codehaus.groovy.eclipse.refactoring.formatter.DefaultGroovyFormatter;
 import org.codehaus.groovy.eclipse.refactoring.formatter.FormatterPreferences;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -65,7 +66,6 @@ import org.eclipse.jdt.internal.corext.refactoring.JDTRefactoringDescriptorComme
 import org.eclipse.jdt.internal.corext.refactoring.JavaRefactoringArguments;
 import org.eclipse.jdt.internal.corext.refactoring.JavaRefactoringDescriptorUtil;
 import org.eclipse.jdt.internal.corext.refactoring.RefactoringCoreMessages;
-import org.eclipse.jdt.internal.corext.refactoring.base.JavaStatusContext;
 import org.eclipse.jdt.internal.corext.refactoring.code.ExtractConstantRefactoring;
 import org.eclipse.jdt.internal.corext.util.CodeFormatterUtil;
 import org.eclipse.jdt.internal.corext.util.JdtFlags;
@@ -476,7 +476,7 @@ public class ExtractGroovyConstantRefactoring extends ExtractConstantRefactoring
         try {
             elt = getCu().getElementAt(getSelectionStart());
             if (elt instanceof IMember) {
-                return JavaStatusContext.create((IMember) elt);
+                return StatusHelper.createContext((IMember) elt);
             }
         } catch (JavaModelException e) {
             GroovyCore.logException("Error finding refactoring context", e);

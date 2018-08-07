@@ -2,7 +2,7 @@
 
 <feature id="org.codehaus.groovy24.feature"
       label="%featureName"
-      version="3.0.0.qualifier"
+      version="3.1.0.qualifier"
       provider-name="%providerName"
       plugin="org.codehaus.groovy.eclipse">
 
@@ -14,7 +14,7 @@
       %copyright
    </copyright>
 
-   <license url="license.html">
+   <license url="%licenseURL">
       %license
    </license>
 

@@ -30,6 +30,8 @@ import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
+import org.codehaus.groovy.eclipse.codeassist.proposals.AbstractGroovyProposal;
+import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
@@ -37,20 +39,60 @@ import org.eclipse.jdt.groovy.search.VariableScope;
 
 public abstract class AbstractProposalCreator implements IProposalCreator {
 
-    protected VariableScope currentScope;
-
     public void setCurrentScope(VariableScope currentScope) {
         this.currentScope = currentScope;
     }
-
-    protected Set<String> favoriteStaticMembers;
+    protected VariableScope currentScope;
 
     public void setFavoriteStaticMembers(Set<String> favoriteStaticMembers) {
         this.favoriteStaticMembers = favoriteStaticMembers;
     }
+    protected Set<String> favoriteStaticMembers;
+
+    //--------------------------------------------------------------------------
 
     protected boolean checkName(String name) {
         return (name.charAt(0) != '<' && !name.contains("$"));
+    }
+
+    protected static FieldNode createMockField(MethodNode method) {
+        String fieldName = ProposalUtils.createMockFieldName(method.getName());
+        ClassNode fieldType = AccessorSupport.isSetter(method) ? DefaultGroovyMethods.last(method.getParameters()).getType() : method.getReturnType();
+
+        FieldNode fieldNode = new FieldNode(fieldName, method.getModifiers(), fieldType, method.getDeclaringClass(), null);
+        fieldNode.setDeclaringClass(method.getDeclaringClass());
+        fieldNode.setSourcePosition(method);
+        return fieldNode;
+    }
+
+    protected static void demoteLowVisibilityProposals(List<IGroovyProposal> proposals, ClassNode completionType) {
+        for (IGroovyProposal proposal : proposals) {
+            if (proposal instanceof AbstractGroovyProposal) {
+                AbstractGroovyProposal groovyProposal = (AbstractGroovyProposal) proposal;
+
+                int flags = groovyProposal.getAssociatedNodeFlags();
+                ClassNode declaringType = groovyProposal.getAssociatedNode().getDeclaringClass();
+
+                if (!Flags.isPublic(flags) && !declaringType.equals(completionType) &&
+                    !(Flags.isProtected(flags) && completionType.isDerivedFrom(declaringType))) {
+
+                    groovyProposal.setRelevanceMultiplier(groovyProposal.getRelevanceMultiplier() * 0.05f);
+                }
+            }
+        }
+    }
+
+    /**
+     * Determine the kind of accessor the prefix corresponds to, if any
+     */
+    protected static AccessorSupport findLooselyMatchedAccessorKind(String prefix, String methodName, boolean isCategory) {
+        AccessorSupport accessor = AccessorSupport.create(methodName, isCategory);
+        if (accessor.isAccessor()) {
+            String newName = ProposalUtils.createMockFieldName(methodName);
+            return ProposalUtils.looselyMatches(prefix, newName) ? accessor : AccessorSupport.NONE;
+        } else {
+            return AccessorSupport.NONE;
+        }
     }
 
     /**
@@ -111,10 +153,7 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
         return superTypes;
     }
 
-    /**
-     * find the most accessible element
-     */
-    private static boolean leftIsMoreAccessible(FieldNode field, FieldNode existing) {
+    protected static boolean leftIsMoreAccessible(FieldNode field, FieldNode existing) {
         int leftAcc;
         switch (field.getModifiers() & (Flags.AccPublic | Flags.AccPrivate | Flags.AccProtected)) {
         case Flags.AccPublic:
@@ -156,33 +195,10 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
      * @param declaringClass declaring type of the method
      * @param methodName name of method to check
      */
-    protected boolean hasNoField(ClassNode declaringClass, String methodName) {
+    protected static boolean hasNoField(ClassNode declaringClass, String methodName) {
         return (!"getClass".equals(methodName) &&
             declaringClass.getField(ProposalUtils.createMockFieldName(methodName)) == null &&
             declaringClass.getField(ProposalUtils.createCapitalMockFieldName(methodName)) == null);
-    }
-
-    protected FieldNode createMockField(MethodNode method) {
-        String fieldName = ProposalUtils.createMockFieldName(method.getName());
-        ClassNode fieldType = AccessorSupport.isSetter(method) ? DefaultGroovyMethods.last(method.getParameters()).getType() : method.getReturnType();
-
-        FieldNode fieldNode = new FieldNode(fieldName, method.getModifiers(), fieldType, method.getDeclaringClass(), null);
-        fieldNode.setDeclaringClass(method.getDeclaringClass());
-        fieldNode.setSourcePosition(method);
-        return fieldNode;
-    }
-
-    /**
-     * Determine the kind of accessor the prefix corresponds to, if any
-     */
-    protected AccessorSupport findLooselyMatchedAccessorKind(String prefix, String methodName, boolean isCategory) {
-        AccessorSupport accessor = AccessorSupport.create(methodName, isCategory);
-        if (accessor.isAccessor()) {
-            String newName = ProposalUtils.createMockFieldName(methodName);
-            return ProposalUtils.looselyMatches(prefix, newName) ? accessor : AccessorSupport.NONE;
-        } else {
-            return AccessorSupport.NONE;
-        }
     }
 
     protected static ClassNode tryResolveClassNode(String typeName, ModuleNode module) {

@@ -116,6 +116,9 @@ public class MethodNode extends AnnotatedNode implements Opcodes {
     public void setParameters(Parameter[] parameters) {
         invalidateCachedData();
         VariableScope scope = new VariableScope();
+        // GRECLIPSE add
+        this.hasDefaultValue = false;
+        // GRECLIPSE end
         this.parameters = parameters;
         if (parameters != null && parameters.length > 0) {
             for (Parameter para : parameters) {

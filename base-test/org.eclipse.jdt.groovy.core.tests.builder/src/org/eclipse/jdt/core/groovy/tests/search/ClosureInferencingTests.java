@@ -476,7 +476,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "}";
         int start = contents.lastIndexOf("time");
         int end = start + "time".length();
-        assertType(contents, start, end, "java.lang.Long", false);
+        assertType(contents, start, end, "java.lang.Long");
     }
 
     @Test
@@ -487,7 +487,7 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "}";
         int start = contents.lastIndexOf("time");
         int end = start + "time".length();
-        assertType(contents, start, end, "java.lang.Void", false);
+        assertType(contents, start, end, "java.lang.Void");
     }
 
     @Test
@@ -499,7 +499,25 @@ public final class ClosureInferencingTests extends InferencingTestSuite {
             "}";
         int start = contents.lastIndexOf("time");
         int end = start + "time".length();
-        assertType(contents, start, end, "java.lang.Long", false);
+        assertType(contents, start, end, "java.lang.Long");
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/660
+    public void testClosure27() {
+        String contents =
+            "new Date().with { one, two = delegate ->\n" +
+            "}";
+        int offset = contents.indexOf("delegate");
+        assertType(contents, offset, offset + "delegate".length(), "java.util.Date");
+    }
+
+    @Test
+    public void testClosure28() {
+        String contents =
+            "def closure = { int i = 2 ->\n" +
+            "}";
+        int offset = contents.indexOf("2");
+        assertType(contents, offset, offset + 1, "java.lang.Integer");
     }
 
     @Test // closure within closure

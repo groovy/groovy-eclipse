@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.refactoring.test.extract
+
+import groovy.transform.NotYetImplemented
 
 import org.codehaus.groovy.eclipse.refactoring.core.extract.ConvertGroovyLocalToFieldRefactoring
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSuite
@@ -30,8 +32,11 @@ final class ConvertLocalToFieldTests extends RefactoringTestSuite {
         null
     }
 
-    private void runTest(String testName) {
+    private void runTest(String testName = test.methodName) {
         ConvertLocalToFieldTestsData.TestCase testCase = ConvertLocalToFieldTestsData.getTestCases().get(testName)
+    }
+
+    private void runTest(ConvertLocalToFieldTestsData.TestCase testCase) {
         GroovyCompilationUnit cu = (GroovyCompilationUnit) createCU(packageP, 'Test.groovy', testCase.getInput())
 
         ConvertGroovyLocalToFieldRefactoring refactoring =
@@ -69,6 +74,8 @@ final class ConvertLocalToFieldTests extends RefactoringTestSuite {
         RefactoringCore.getUndoManager().performRedo(null, new NullProgressMonitor())
         assertEqualLines('invalid redo', testCase.getExpected(), cu.getSource())
     }
+
+    //--------------------------------------------------------------------------
 
     @Test
     void testMethodToModule() {
@@ -177,21 +184,115 @@ final class ConvertLocalToFieldTests extends RefactoringTestSuite {
 
     @Test
     void testClosure() {
-        runTest('testClosure')
+        runTest()
     }
 
     @Test
     void testClosureVariableConflict() {
-        runTest('testClosureVariableConflict')
+        runTest()
     }
 
     @Test
     void testClosureParameterList() {
-        runTest('testClosureParameterList')
+        runTest()
     }
 
     @Test
     void testClosureImplicitIt() {
-        runTest('testClosureImplicitIt')
+        runTest()
+    }
+
+    @Test @NotYetImplemented
+    void testWithinFieldInitializer1() {
+        def testCase = new ConvertLocalToFieldTestsData.TestCase('''\
+            class Pogo {
+              private Object field = { ->
+                def target/**/ = null
+              }
+            }
+            '''.stripIndent(), '''\
+            class Pogo {
+            \tprivate def target
+              private Object field = { ->
+                target/**/ = null
+              }
+            }
+            '''.stripIndent())
+        runTest(testCase)
+    }
+
+    @Test
+    void testWithinFieldInitializer2() {
+        def testCase = new ConvertLocalToFieldTestsData.TestCase('''\
+            @groovy.transform.Field
+            Object field = { ->
+              def target/**/ = null
+            }
+            '''.stripIndent(), '''\
+            @groovy.transform.Field def target
+            @groovy.transform.Field
+            Object field = { ->
+              target/**/ = null
+            }
+            '''.stripIndent())
+        runTest(testCase)
+    }
+
+    @Test
+    void testWithinObjectInitializer() {
+        def testCase = new ConvertLocalToFieldTestsData.TestCase('''\
+            class Pogo {
+              {
+                def target/**/ = null
+              }
+            }
+            '''.stripIndent(), '''\
+            class Pogo {
+            \tprivate def target
+              {
+                target/**/ = null
+              }
+            }
+            '''.stripIndent())
+        runTest(testCase)
+    }
+
+    @Test @NotYetImplemented
+    void testWithinStaticInitializer() {
+        def testCase = new ConvertLocalToFieldTestsData.TestCase('''\
+            class Pogo {
+              static {
+                def target/**/ = null
+              }
+            }
+            '''.stripIndent(), '''\
+            class Pogo {
+            \tprivate static def target
+              static {
+                target/**/ = null
+              }
+            }
+            '''.stripIndent())
+        runTest(testCase)
+    }
+
+    @Test @NotYetImplemented // not sure if this is legal, but wanted case to test enclosing checks
+    void testWithinAnnotationClosure() {
+        createCU(packageP, 'Tag.groovy', '@interface Tag { Class value() }')
+        def testCase = new ConvertLocalToFieldTestsData.TestCase('''\
+            @Tag(value = { ->
+              def target/**/ = null
+            })
+            class Pogo {
+            }
+            '''.stripIndent(), '''\
+            @Tag(value = { ->
+              Pogo.target/**/ = null
+            })
+            class Pogo {
+            \tprivate static def target
+            }
+            '''.stripIndent())
+        runTest(testCase)
     }
 }

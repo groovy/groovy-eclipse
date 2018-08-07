@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 package org.codehaus.groovy.eclipse.test.ui
 
 import org.codehaus.groovy.eclipse.GroovyPlugin
-import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants
 import org.codehaus.groovy.eclipse.editor.GroovyTagScanner
+import org.codehaus.groovy.eclipse.preferences.PreferenceConstants
 import org.eclipse.jface.preference.PreferenceConverter
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.IDocument
@@ -38,18 +38,53 @@ final class GroovyTagScannerTests {
     }
 
     @Test
-    void testGJDKColor() {
-        tryString('def', PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR)
+    void testKeyword1() {
+        tryString('def', PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_PRIMITIVES_COLOR)
     }
 
     @Test
-    void testJavaTypeColor() {
-        tryString('int', PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR)
+    void testKeyword2() {
+        tryString('int', PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_PRIMITIVES_COLOR)
     }
 
     @Test
-    void testJavaKeywordColor() {
-        tryString('for', PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR)
+    void testKeyword3() {
+        tryString('void', PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_PRIMITIVES_COLOR)
+    }
+
+    @Test
+    void testKeyword4() {
+        tryString('as', PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_KEYWORDS_COLOR)
+    }
+
+    @Test
+    void testKeyword5() {
+        tryString('if', PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_KEYWORDS_COLOR)
+    }
+
+    @Test
+    void testKeyword6() {
+        tryString('in', PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_KEYWORDS_COLOR)
+    }
+
+    @Test
+    void testKeyword7() {
+        tryString('interface', PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_KEYWORDS_COLOR)
+    }
+
+    @Test
+    void testKeyword8() {
+        tryString('@interface', PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_KEYWORDS_COLOR)
+    }
+
+    @Test
+    void testKeyword9() {
+        tryString('assert', PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ASSERT_COLOR)
+    }
+
+    @Test
+    void testKeyword10() {
+        tryString('return', PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR)
     }
 
     //

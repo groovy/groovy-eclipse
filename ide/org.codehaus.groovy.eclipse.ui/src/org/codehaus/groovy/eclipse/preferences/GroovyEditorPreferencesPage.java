@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,13 @@
  */
 package org.codehaus.groovy.eclipse.preferences;
 
+import java.util.Arrays;
+
+import groovy.lang.Tuple2;
+
 import org.codehaus.groovy.eclipse.GroovyPlugin;
-import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.codehaus.groovy.eclipse.editor.GroovyColorManager;
+import org.eclipse.debug.internal.ui.preferences.BooleanFieldEditor2;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.ui.text.IJavaColorConstants;
 import org.eclipse.jface.preference.BooleanFieldEditor;
@@ -26,9 +30,7 @@ import org.eclipse.jface.preference.FieldEditor;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
@@ -51,47 +53,6 @@ import org.eclipse.ui.preferences.IWorkbenchPreferenceContainer;
  */
 public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage implements IWorkbenchPreferencePage {
 
-    class SpacerFieldEditor extends FieldEditor {
-
-        private Label spacer;
-
-        public SpacerFieldEditor(Composite parent) {
-            spacer = new Label(parent, SWT.NONE);
-            GridData gd = new GridData();
-            spacer.setLayoutData(gd);
-        }
-
-        @Override
-        protected void adjustForNumColumns(int numColumns) {
-            ((GridData) spacer.getLayoutData()).horizontalSpan = numColumns;
-        }
-
-        @Override
-        protected void doFillIntoGrid(Composite parent, int numColumns) {
-            GridData gd = new GridData();
-            gd.horizontalSpan = numColumns;
-            spacer.setLayoutData(gd);
-        }
-
-        @Override
-        protected void doLoad() {}
-
-        @Override
-        public void store() {}
-
-        @Override
-        protected void doLoadDefault() {}
-
-        @Override
-        protected void doStore() {}
-
-        @Override
-        public int getNumberOfControls() {
-            return 0;
-        }
-
-    }
-
     public GroovyEditorPreferencesPage() {
         super(GRID);
         setPreferenceStore(GroovyPlugin.getDefault().getPreferenceStore());
@@ -104,56 +65,25 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage implemen
      */
     @Override
     public void createFieldEditors() {
+        // Category Methods
+        /*Tuple2<ColorFieldEditor, BooleanFieldEditor2> categoryMethodEditor =*/ createColorEditor(
+            PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR, "GroovyEditorPreferencesPage.GJDK_method_color");
 
-        // GJDK Color
-        final ColorFieldEditor gjdkEditor = createColorEditor(
-                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GJDK_COLOR,
-                "GroovyEditorPreferencesPage.GJDK_method_color");
+        // Primitive Types (includes def, var, and void)
+        Tuple2<ColorFieldEditor, BooleanFieldEditor2> primitivesEditor = createColorEditor(
+            PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_PRIMITIVES_COLOR, "GroovyEditorPreferencesPage.Primitives_color");
 
-        // Groovy Keywords
-        final ColorFieldEditor gKeywordEditor = createColorEditor(
-                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_GROOVYKEYWORDS_COLOR,
-                "GroovyEditorPreferencesPage.Groovy_keyword_color");
+        // Other Keywords (excludes assert and return)
+        Tuple2<ColorFieldEditor, BooleanFieldEditor2> keywordEditor = createColorEditor(
+            PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_KEYWORDS_COLOR, "GroovyEditorPreferencesPage.Keywords_color");
 
-        // Primitive Types
-        final ColorFieldEditor javaTypesEditor = createColorEditor(
-                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVATYPES_COLOR,
-                "GroovyEditorPreferencesPage.Java_types_color");
-
-        // Java Keywords
-        final ColorFieldEditor javaKeywordEditor = createColorEditor(
-                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_JAVAKEYWORDS_COLOR,
-                "GroovyEditorPreferencesPage.Java_keyword_color");
+        // Assert Keyword
+        Tuple2<ColorFieldEditor, BooleanFieldEditor2> assertEditor = createColorEditor(
+            PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ASSERT_COLOR, "GroovyEditorPreferencesPage.Assert_color");
 
         // Return Keyword
-        final ColorFieldEditor returnEditor = createColorEditor(
-                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR,
-                "GroovyEditorPreferencesPage.Return_color");
-
-        // Strings
-        final ColorFieldEditor stringEditor = createColorEditor(
-                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR,
-                "GroovyEditorPreferencesPage.String_color");
-
-        // Annotations
-        final ColorFieldEditor annotationEditor = createColorEditor(
-                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_ANNOTATION_COLOR,
-                "GroovyEditorPreferencesPage.Annotation_color");
-
-        // Brackets
-        final ColorFieldEditor bracketEditor = createColorEditor(
-                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_BRACKET_COLOR,
-                "GroovyEditorPreferencesPage.Bracket_color");
-
-        // Operators
-        final ColorFieldEditor operatorEditor = createColorEditor(
-                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_OPERATOR_COLOR,
-                "GroovyEditorPreferencesPage.Operator_color");
-
-        // Default
-        final ColorFieldEditor defaultEditor = createColorEditor(
-                PreferenceConstants.GROOVY_EDITOR_DEFAULT_COLOR,
-                "GroovyEditorPreferencesPage.Groovy_Default_color");
+        Tuple2<ColorFieldEditor, BooleanFieldEditor2> returnEditor = createColorEditor(
+            PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_RETURN_COLOR, "GroovyEditorPreferencesPage.Return_color");
 
         // Semantic highlighting
         Label l = new Label(getFieldEditorParent(), SWT.NONE);
@@ -165,68 +95,54 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage implemen
         c.setLayout(new FillLayout(SWT.VERTICAL));
 
         addField(new BooleanFieldEditor(
-                PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING,
-                Messages.getString("GroovyEditorPreferencesPage.SemanticHighlightingToggle"), c));
+            PreferenceConstants.GROOVY_SEMANTIC_HIGHLIGHTING,
+            Messages.getString("GroovyEditorPreferencesPage.SemanticHighlightingToggle"), c));
         addField(new BooleanFieldEditor(
-                PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_SLASHY_STRINGS,
-                Messages.getString("GroovyEditorPreferencesPage.DollarSlashyHighlightingToggle"), c));
+            PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_SLASHY_STRINGS,
+            Messages.getString("GroovyEditorPreferencesPage.DollarSlashyHighlightingToggle"), c));
 
         PreferenceLinkArea area = new PreferenceLinkArea(c, SWT.WRAP,
-                "org.eclipse.jdt.ui.preferences.JavaEditorColoringPreferencePage",
-                "\n" + Messages.getString("GroovyEditorPreferencesPage.InheritedJavaColorsDescription"),
-                (IWorkbenchPreferenceContainer) getContainer(), null);
+            "org.eclipse.jdt.ui.preferences.JavaEditorColoringPreferencePage",
+            "\n" + Messages.getString("GroovyEditorPreferencesPage.InheritedJavaColorsDescription"),
+            (IWorkbenchPreferenceContainer) getContainer(), null);
         area.getControl().setLayoutData(gd);
 
-        // Change to Java Defaults
+        // Copy Java Preferences
         Composite parent = getFieldEditorParent();
         Button javaColorButton = new Button(parent, SWT.BUTTON1);
 
         javaColorButton.setText(Messages.getString("GroovyEditorPreferencesPage.Copy_Java_Color_Preferences"));
-        javaColorButton.addSelectionListener(new SelectionListener() {
-            @Override
-            public void widgetSelected(SelectionEvent event) {
-                IPreferenceStore store = JavaPlugin.getDefault().getPreferenceStore();
-                RGB rgb = PreferenceConverter.getColor(store, IJavaColorConstants.JAVA_KEYWORD);
-                gjdkEditor.getColorSelector().setColorValue(rgb);
-                gKeywordEditor.getColorSelector().setColorValue(rgb);
-                javaTypesEditor.getColorSelector().setColorValue(rgb);
-                javaKeywordEditor.getColorSelector().setColorValue(rgb);
+        javaColorButton.addSelectionListener(SelectionListener.widgetSelectedAdapter(event -> {
+            IPreferenceStore store = JavaPlugin.getDefault().getPreferenceStore();
 
-                rgb = PreferenceConverter.getColor(store, IJavaColorConstants.JAVA_STRING);
-                stringEditor.getColorSelector().setColorValue(rgb);
+            Arrays.asList(primitivesEditor, keywordEditor, assertEditor).forEach(
+                tuple -> copyColorAndStyle(tuple, store, IJavaColorConstants.JAVA_KEYWORD));
 
-                rgb = PreferenceConverter.getColor(store, IJavaColorConstants.JAVA_BRACKET);
-                bracketEditor.getColorSelector().setColorValue(rgb);
-
-                rgb = PreferenceConverter.getColor(store, IJavaColorConstants.JAVA_OPERATOR);
-                operatorEditor.getColorSelector().setColorValue(rgb);
-
-                rgb = PreferenceConverter.getColor(store, IJavaColorConstants.JAVA_ANNOTATION);
-                annotationEditor.getColorSelector().setColorValue(rgb);
-
-                rgb = PreferenceConverter.getColor(store, IJavaColorConstants.JAVA_KEYWORD_RETURN);
-                returnEditor.getColorSelector().setColorValue(rgb);
-
-                rgb = PreferenceConverter.getColor(store, IJavaColorConstants.JAVA_DEFAULT);
-                defaultEditor.getColorSelector().setColorValue(rgb);
-            }
-
-            @Override
-            public void widgetDefaultSelected(SelectionEvent event) {
-            }
-        });
+            copyColorAndStyle(returnEditor, store, IJavaColorConstants.JAVA_KEYWORD_RETURN);
+        }));
     }
 
-    private ColorFieldEditor createColorEditor(String preference, String nls) {
+    private Tuple2<ColorFieldEditor, BooleanFieldEditor2> createColorEditor(String preference, String nls) {
         Composite parent = getFieldEditorParent();
-        addField(new SpacerFieldEditor(parent));
-        ColorFieldEditor colorFieldEditor = new ColorFieldEditor(preference, Messages.getString(nls), parent);
-        addField(colorFieldEditor);
-        addField(new BooleanFieldEditor(
+
+        Tuple2<ColorFieldEditor, BooleanFieldEditor2> editors = new Tuple2<>(
+            new ColorFieldEditor(preference, Messages.getString(nls), parent),
+            new BooleanFieldEditor2(
                 preference + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX,
-                Messages.getString("GroovyEditorPreferencesPage.BoldToggle"),
-                BooleanFieldEditor.SEPARATE_LABEL, getFieldEditorParent()));
-        return colorFieldEditor;
+                "  " + Messages.getString("GroovyEditorPreferencesPage.BoldToggle"),
+                BooleanFieldEditor.SEPARATE_LABEL, getFieldEditorParent())
+        );
+
+        addField(new SpacerFieldEditor(parent));
+        addField(editors.getFirst());
+        addField(editors.getSecond());
+
+        return editors;
+    }
+
+    private void copyColorAndStyle(Tuple2<ColorFieldEditor, BooleanFieldEditor2> tuple, IPreferenceStore store, String pref) {
+        tuple.getFirst().getColorSelector().setColorValue(PreferenceConverter.getColor(store, pref));
+        tuple.getSecond().getChangeControl(null).setSelection(store.getBoolean(pref + PreferenceConstants.GROOVY_EDITOR_BOLD_SUFFIX));
     }
 
     @Override
@@ -247,5 +163,49 @@ public class GroovyEditorPreferencesPage extends FieldEditorOverlayPage implemen
             colorManager.initialize();
         }
         return success;
+    }
+
+    private static class SpacerFieldEditor extends FieldEditor {
+
+        private Label spacer;
+
+        private SpacerFieldEditor(Composite parent) {
+            spacer = new Label(parent, SWT.NONE);
+            GridData gd = new GridData();
+            spacer.setLayoutData(gd);
+        }
+
+        @Override
+        protected void adjustForNumColumns(int numColumns) {
+            ((GridData) spacer.getLayoutData()).horizontalSpan = numColumns;
+        }
+
+        @Override
+        protected void doFillIntoGrid(Composite parent, int numColumns) {
+            GridData gd = new GridData();
+            gd.horizontalSpan = numColumns;
+            spacer.setLayoutData(gd);
+        }
+
+        @Override
+        protected void doLoad() {
+        }
+
+        @Override
+        protected void doLoadDefault() {
+        }
+
+        @Override
+        protected void doStore() {
+        }
+
+        @Override
+        public int getNumberOfControls() {
+            return 0;
+        }
+
+        @Override
+        public void store() {
+        }
     }
 }

@@ -103,5 +103,5 @@ Require-Bundle: org.eclipse.core.runtime,
  org.junit;resolution:=optional
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.activator.GroovyActivator
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Eclipse-BundleShape: dir

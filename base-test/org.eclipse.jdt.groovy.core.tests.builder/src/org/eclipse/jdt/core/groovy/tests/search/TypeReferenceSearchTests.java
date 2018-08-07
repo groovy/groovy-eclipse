@@ -103,27 +103,27 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
 
     @Test
     public void testSearchForTypesClass2() throws Exception {
-        doTestForTwoInClass("class Second extends First { First x() { } }");
+        doTestForTwoInClass("class Second extends First { First x() {}\n}");
     }
 
     @Test
     public void testSearchForTypesClass3() throws Exception {
-        doTestForTwoInClass("class Second extends First { def x(First y) { } }");
+        doTestForTwoInClass("class Second extends First { def x(First y) {}\n}");
     }
 
     @Test
     public void testSearchForTypesClass4() throws Exception {
-        doTestForTwoInClass("class Second extends First { def x(First ... y) { } }");
+        doTestForTwoInClass("class Second extends First { def x(First ... y) {}\n}");
     }
 
     @Test
     public void testSearchForTypesClass5() throws Exception {
-        doTestForTwoInClassUseWithDefaultMethod("class Second extends First { def x(y = new First()) { } }");
+        doTestForTwoTypeReferences(FIRST_CONTENTS_CLASS, "class Second extends First { def x(y = new First()) {}\n}", false, 0);
     }
 
     @Test
     public void testSearchForTypesClass6() throws Exception {
-        doTestForTwoInClassWithImplements("class Second implements First { def x(First y) { } }");
+        doTestForTwoTypeReferences(FIRST_CONTENTS_INTERFACE, "class Second implements First { def x(First y) {}\n}", false, 0);
     }
 
     @Test
@@ -465,16 +465,5 @@ public final class TypeReferenceSearchTests extends SearchTestSuite {
 
     private void doTestForTwoInClass(String secondContents) throws Exception {
         doTestForTwoTypeReferences(FIRST_CONTENTS_CLASS, secondContents, false, 0);
-    }
-
-    private void doTestForTwoInClassUseWithDefaultMethod(String secondContents) throws Exception {
-        // capture the default method that is created instead of the original method
-        // it seems that the order of the method variants is switched depending on whether or not
-        // concrete asts are requested.
-        doTestForTwoTypeReferences(FIRST_CONTENTS_CLASS, secondContents, false, 1);
-    }
-
-    private void doTestForTwoInClassWithImplements(String secondContents) throws Exception {
-        doTestForTwoTypeReferences(FIRST_CONTENTS_INTERFACE, secondContents, false, 0);
     }
 }

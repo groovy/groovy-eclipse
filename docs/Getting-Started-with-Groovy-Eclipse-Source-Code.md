@@ -185,8 +185,9 @@ From the root directory of the repository, execute the following command to buil
 mvn -Pe47  clean install
 ```
 
-Replace e47 with a different option to build it for an older Eclipse version:
+Replace e47 with a different option to build it for another Eclipse version:
 
+* e49
 * e48
 * e47
 

@@ -20,5 +20,5 @@ import org.eclipse.jdt.core.dom.AST;
 public abstract class JavaConstants {
 
     /** Highest supported Java Language Specification (JLS) level. */
-    public static final int AST_LEVEL = AST.JLS9;
+    public static final int AST_LEVEL = AST.JLS10;
 }

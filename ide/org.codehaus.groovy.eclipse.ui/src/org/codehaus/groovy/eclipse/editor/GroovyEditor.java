@@ -615,25 +615,12 @@ public class GroovyEditor extends CompilationUnitEditor {
 
     private void installGroovySemanticHighlighting() {
         try {
-            semanticReconciler = new GroovySemanticReconciler();
-            // fReconcilingListeners.getListeners() contains fSemanticManager.getReconciler()
-            org.eclipse.core.runtime.ListenerList<IJavaReconcilingListener> list =
-                ReflectionUtils.throwableGetPrivateField(CompilationUnitEditor.class, "fReconcilingListeners", this);
-            synchronized (list) {
-                Object[] listeners = list.getListeners();
-                for (int i = 0, n = listeners.length; i < n; i += 1) {
-                    if (listeners[i] == fSemanticManager.getReconciler()) {
-                        listeners[i] = semanticReconciler;
-                        break;
-                    }
-                }
-            }
-
             fSemanticManager.uninstall();
+            semanticReconciler = new GroovySemanticReconciler();
             semanticReconciler.install(this, (JavaSourceViewer) getSourceViewer());
-            ReflectionUtils.throwableExecutePrivateMethod(CompilationUnitEditor.class, "addReconcileListener",
+            ReflectionUtils.executePrivateMethod(CompilationUnitEditor.class, "addReconcileListener",
                 new Class[] {IJavaReconcilingListener.class}, this, new Object[] {semanticReconciler});
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             GroovyPlugin.getDefault().logError("GroovyEditor: failed to install semantic reconciler", e);
         }
     }
@@ -642,17 +629,17 @@ public class GroovyEditor extends CompilationUnitEditor {
         if (semanticHighlightingInstalled()) {
             try {
                 semanticReconciler.uninstall();
-                ReflectionUtils.throwableExecutePrivateMethod(CompilationUnitEditor.class, "removeReconcileListener",
+                ReflectionUtils.executePrivateMethod(CompilationUnitEditor.class, "removeReconcileListener",
                     new Class[] {IJavaReconcilingListener.class}, this, new Object[] {semanticReconciler});
                 semanticReconciler = null;
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 GroovyPlugin.getDefault().logError("GroovyEditor: failed to uninstall semantic reconciler", e);
             }
         }
     }
 
     private boolean semanticHighlightingInstalled() {
-        return (semanticReconciler != null);
+        return semanticReconciler != null;
     }
 
     @Override

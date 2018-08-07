@@ -945,6 +945,11 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         parameter.setLineNumber(ctx.variableModifiersOpt().getStart().getLine());
         parameter.setColumnNumber(ctx.variableModifiersOpt().getStart().getCharPositionInLine() + 1);
         parameter.setStart(locationSupport.findOffset(parameter.getLineNumber(), parameter.getColumnNumber()));
+
+        ModifierNode var = new ModifierManager(this, this.visitVariableModifiersOpt(ctx.variableModifiersOpt())).get(VAR);
+        if (var != null) {
+            parameter.setNodeMetaData("reserved.type.name", var);
+        }
         // GRECLIPSE end
 
         return new Tuple2<>(parameter, (Expression) this.visit(ctx.expression()));
@@ -2097,6 +2102,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             modifierManager.processVariableExpression((VariableExpression) e);
             list.add(e);
         }
+        /* GRECLIPSE edit
         return configureAST(
                 new DeclarationListStatement(
                         configureAST(
@@ -2114,6 +2120,17 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 ),
                 ctx
         );
+        */
+        DeclarationExpression de = new DeclarationExpression(new ArgumentListExpression(list),
+            this.createGroovyTokenByType(ctx.ASSIGN().getSymbol(), Types.ASSIGN),
+            this.visitVariableInitializer(ctx.variableInitializer()));
+        ModifierNode var = modifierManager.get(VAR);
+        if (var != null) {
+            de.setNodeMetaData("reserved.type.name", var);
+        }
+        configureAST(modifierManager.attachAnnotations(de), ctx);
+        return configureAST(new DeclarationListStatement(de), ctx);
+        // GRECLIPSE end
     }
 
     @Override
@@ -2154,9 +2171,14 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
 
         for (DeclarationExpression e : declarationExpressionList) {
             VariableExpression variableExpression = (VariableExpression) e.getLeftExpression();
-
             modifierManager.processVariableExpression(variableExpression);
             modifierManager.attachAnnotations(e);
+            // GRECLIPSE add
+            ModifierNode var = modifierManager.get(VAR);
+            if (var != null) {
+                e.setNodeMetaData("reserved.type.name", var);
+            }
+            // GRECLIPSE end
         }
 
         int size = declarationExpressionList.size();

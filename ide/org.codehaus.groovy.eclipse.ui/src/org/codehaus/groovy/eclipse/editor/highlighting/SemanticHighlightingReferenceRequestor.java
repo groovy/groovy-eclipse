@@ -33,6 +33,7 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
+import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.GStringExpression;
 import org.codehaus.groovy.ast.expr.MapEntryExpression;
@@ -134,6 +135,10 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             /*pos = handleMethodReference((MethodPointerExpression) node);*/
 
         } else if (node instanceof Parameter) {
+            ASTNode var = node.getNodeMetaData("reserved.type.name");
+            if (var != null) {
+                typedPosition.add(new HighlightedTypedPosition(var.getStart(), var.getLength(), HighlightKind.RESERVED));
+            }
             pos = handleVariableExpression((Parameter) node, result.scope);
 
         } else if (node instanceof VariableExpression) {
@@ -167,9 +172,14 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         } else if (node instanceof MapEntryExpression) {
             pos = handleMapEntryExpression((MapEntryExpression) node);
 
+        } else if (node instanceof DeclarationExpression) {
+            ASTNode var = node.getNodeMetaData("reserved.type.name");
+            if (var != null) {
+                pos = new HighlightedTypedPosition(var.getStart(), var.getLength(), HighlightKind.RESERVED);
+            }
         } else if (DEBUG) {
             String type = node.getClass().getSimpleName();
-            if (!type.matches("ClassNode|(Class|Binary|ArgumentList|Closure(List)?|Declaration|Property|List|Map)Expression"))
+            if (!type.matches("ClassNode|(Class|Binary|ArgumentList|Closure(List)?|Property|List|Map)Expression"))
                 System.err.println("found: " + type);
         }
 

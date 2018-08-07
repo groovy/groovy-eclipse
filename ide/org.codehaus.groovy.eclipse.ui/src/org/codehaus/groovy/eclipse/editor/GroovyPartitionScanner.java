@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,9 +24,7 @@ import static org.eclipse.jdt.ui.text.IJavaPartitions.JAVA_STRING;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.codehaus.groovy.eclipse.GroovyPlugin;
-import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
-import org.eclipse.jface.preference.IPreferenceStore;
+import org.codehaus.groovy.eclipse.preferences.PreferenceConstants;
 import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.text.TextAttribute;
 import org.eclipse.jface.text.rules.EndOfLineRule;
@@ -51,7 +49,7 @@ public class GroovyPartitionScanner extends RuleBasedPartitionScanner {
     /**
      * @since 3.0
      */
-    public final static String[] LEGAL_CONTENT_TYPES = new String[] {
+    public static final String[] LEGAL_CONTENT_TYPES = new String[] {
         JAVA_CHARACTER,
         JAVA_STRING,
         JAVA_DOC,
@@ -88,11 +86,9 @@ public class GroovyPartitionScanner extends RuleBasedPartitionScanner {
         // single-line comments
         rules.add(new EndOfLineRule("//", endlineComment));
 
-
         Object textAttr = null;
         if (withColor) {
-            IPreferenceStore prefs = GroovyPlugin.getDefault().getPreferenceStore();
-            RGB rgb = PreferenceConverter.getColor(prefs, PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
+            RGB rgb = PreferenceConverter.getColor(PreferenceConstants.getPreferenceStore(), PreferenceConstants.GROOVY_EDITOR_HIGHLIGHT_STRINGS_COLOR);
             textAttr = new TextAttribute(new Color(null, rgb), null, SWT.ITALIC);
         }
         IToken groovyString = new Token(textAttr != null ? textAttr : GROOVY_MULTILINE_STRINGS);
@@ -118,6 +114,7 @@ public class GroovyPartitionScanner extends RuleBasedPartitionScanner {
         public boolean isWordStart(char c) {
             return (c == '/');
         }
+
         @Override
         public boolean isWordPart(char c) {
             return (c == '*' || c == '/');
@@ -128,9 +125,9 @@ public class GroovyPartitionScanner extends RuleBasedPartitionScanner {
 
         private final IToken fSuccessToken;
 
-        public WordPredicateRule(IToken successToken) {
+        WordPredicateRule(IToken successToken) {
             super(new EmptyCommentDetector());
-            fSuccessToken= successToken;
+            fSuccessToken = successToken;
             addWord("/**/", fSuccessToken); //$NON-NLS-1$
         }
 

@@ -1297,6 +1297,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         newDeclExpr.setDeclaringClass(de.getDeclaringClass());
         fixDeclaringClass(newDeclExpr);
         newDeclExpr.setSourcePosition(de);
+        // GRECLIPSE add
+        newDeclExpr.copyNodeMetaData(de);
+        // GRECLIPSE end
         newDeclExpr.addAnnotations(de.getAnnotations());
         return newDeclExpr;
     }
@@ -1526,7 +1529,6 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         // GRECLIPSE add
         finishedResolution();
         } finally {
-        if (currentClass == node)
         // GRECLIPSE end
         currentClass = oldNode;
         // GRECLIPSE add

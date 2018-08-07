@@ -231,7 +231,8 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
 
         private static void populate(List<TypeAndScope> types, VariableScope scope, int resolveStrategy) {
             if (resolveStrategy == Closure.DELEGATE_FIRST || resolveStrategy == Closure.DELEGATE_ONLY) {
-                types.add(new TypeAndScope(scope.getDelegate(), scope));
+                ClassNode delegate = scope.getDelegate();
+                types.add(new TypeAndScope(delegate, scope));
             }
             if (resolveStrategy < Closure.DELEGATE_ONLY) {
                 ClassNode owner = scope.getOwner();
@@ -247,7 +248,9 @@ public abstract class AbstractSimplifiedTypeLookup implements ITypeLookupExtensi
                     types.add(new TypeAndScope(owner, scope));
                 }
                 if (resolveStrategy < Closure.DELEGATE_FIRST && scope.getEnclosingClosure() != null) {
-                    types.add(new TypeAndScope(scope.getDelegate(), scope));
+                    ClassNode delegate = scope.getDelegate();
+                    if (delegate != null && !delegate.equals(owner))
+                        types.add(new TypeAndScope(delegate, scope));
                 }
             }
             if (resolveStrategy <= Closure.TO_SELF && (resolveStrategy > 0 || scope.getEnclosingClosure() != null)) {

@@ -73,6 +73,9 @@
       storageURI="scope://Workspace"
       label="Target Platform">
     <choice
+        value="2018-09"
+        label="Eclipse 2018-09 - 4.9"/>
+    <choice
         value="Photon"
         label="Eclipse Photon - 4.8"/>
     <choice
@@ -116,7 +119,15 @@
   </setupTask>
   <setupTask
       xsi:type="setup.p2:P2Task"
-      filter="(| (scope.product.version.name=photon) (scope.product.version.name=latest))">
+      filter="(| (scope.product.version.name=2018-09) (scope.product.version.name=latest))">
+    <requirement
+        name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
+    <repository
+        url="http://dist.springsource.org/snapshot/GRECLIPSE/e4.9"/>
+  </setupTask>
+  <setupTask
+      xsi:type="setup.p2:P2Task"
+      filter="(| (scope.product.version.name=photon) (scope.product.version.name=latest.released))">
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
@@ -124,7 +135,7 @@
   </setupTask>
   <setupTask
       xsi:type="setup.p2:P2Task"
-      filter="(| (scope.product.version.name=oxygen) (scope.product.version.name=latest.released))">
+      filter="(scope.product.version.name=oxygen)">
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
@@ -185,6 +196,13 @@
   </setupTask>
   <setupTask
       xsi:type="projects:ProjectsImportTask"
+      filter="(eclipse.target.platform=2018-09)">
+    <sourceLocator
+        rootFolder="${git.clone.Groovy-Eclipse.location}/jdt-patch/e49"
+        locateNestedProjects="true"/>
+  </setupTask>
+  <setupTask
+      xsi:type="projects:ProjectsImportTask"
       filter="(eclipse.target.platform=Photon)">
     <sourceLocator
         rootFolder="${git.clone.Groovy-Eclipse.location}/jdt-patch/e48"
@@ -214,6 +232,13 @@
           name="org.eclipse.m2e.sdk.feature.feature.group"/>
       <requirement
           name="org.eclipse.test.feature.group"/>
+      <repositoryList
+          name="2018-09">
+        <repository
+            url="http://download.eclipse.org/releases/2018-09"/>
+        <repository
+            url="http://download.eclipse.org/eclipse/updates/4.9milestone"/>
+      </repositoryList>
       <repositoryList
           name="Photon">
         <repository

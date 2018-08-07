@@ -86,6 +86,7 @@ public class FieldProposalCreator extends AbstractProposalCreator {
             if (enclosingTypeDeclaration != null && isFirstTime && isPrimary && type.getModule() != null) {
                 findStaticImportProposals(proposals, prefix, type.getModule());
                 findStaticFavoriteProposals(proposals, prefix, type.getModule());
+                demoteLowVisibilityProposals(proposals, type); // de-emphasize other's secrets
             }
         }
 

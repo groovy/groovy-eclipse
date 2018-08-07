@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,6 +50,7 @@ import org.codehaus.groovy.eclipse.refactoring.formatter.FormatterPreferences;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
 import org.eclipse.jdt.groovy.core.util.DepthFirstVisitor;
@@ -90,7 +91,6 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
     private DeclarationExpression declarationExpression;
     private ClassNode containingClassNode;
     private ModuleNode moduleNode;
-
     private MethodNode methodNode;
 
     private CompilationUnitChange change;
@@ -247,12 +247,12 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
 
             this.variableExpressionInDeclaration = variableExpressionInDeclaration;
 
-            ClassNode containingClassNode = getContainingClassNode();
-            if (containingClassNode == null) {
+            ClassNode containingClass = getContainingClassNode();
+            if (containingClass == null) {
                 result.merge(RefactoringStatus.createFatalErrorStatus("Cannot find enclosing class declaration."));
                 return result;
             }
-            if (containingClassNode.isInterface() || containingClassNode.isAnnotationDefinition()) {
+            if (containingClass.isInterface() || containingClass.isAnnotationDefinition()) {
                 result.merge(RefactoringStatus.createFatalErrorStatus("Cannot add field to an interface or annotation definition."));
                 return result;
             }
@@ -311,32 +311,36 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
             this.change = change;
 
             return status;
+        } catch (BadLocationException e) {
+            throw new OperationCanceledException(e.getMessage());
         } finally {
             monitor.done();
         }
     }
 
-    private TextEditGroup createFieldTextEditGroup() {
+    private TextEditGroup createFieldTextEditGroup() throws BadLocationException {
         TextEdit textEdit = null;
 
-        ClassNode classNode = getContainingClassNode();
-        MethodNode methodNode = getContainingMethodNode();
-        if (methodNode.isScriptBody() && getContainingClosureExpression() == null) {
+        ClassNode containingClass = getContainingClassNode();
+        MethodNode containingMethod = getContainingMethodNode();
+        if (containingMethod != null && containingMethod.isScriptBody() && getContainingClosureExpression() == null) {
             textEdit = new InsertEdit(getDeclarationOffset(), "@groovy.transform.Field ");
+        } else if (containingClass != null && containingClass.isScript()) {
+            textEdit = new InsertEdit(containingClass.getStart(), createFieldText(0) + ASTTools.getLineDelimeter(unit));
         } else {
-            try {
-                char[] contents = unit.getContents();
-                int methodOffset = methodNode.getStart();
-                int methodLineOffset = methodNode.getStart() - methodNode.getColumnNumber() + 1;
-                int insertOffset = classNode.isScript() ? classNode.getStart() : CharOperation.indexOf('{', contents, classNode.getStart()) + 1;
-
-                String methodIndentation = String.valueOf(CharOperation.subarray(contents, methodLineOffset, methodOffset));
-                String fieldText = createFieldText(ASTTools.getCurrentIntentation(methodIndentation));
-                String newline = ASTTools.getLineDelimeter(unit);
-
-                textEdit = new InsertEdit(insertOffset, classNode.isScript() ? fieldText + newline : newline + fieldText);
-            } catch (Exception e) {
+            char[] contents = unit.getContents();
+            int indentationLevel = 1;
+            if (containingMethod != null && containingMethod.getEnd() > 0) {
+                int methodLineOffset = containingMethod.getStart() - containingMethod.getColumnNumber() + 1;
+                String methodIndentation = String.valueOf(CharOperation.subarray(contents, methodLineOffset, containingMethod.getStart()));
+                indentationLevel = ASTTools.getCurrentIntentation(methodIndentation);
             }
+
+            int insertOffset = CharOperation.indexOf('{', contents, containingClass.getStart()) + 1;
+            String fieldText = createFieldText(indentationLevel);
+            String newline = ASTTools.getLineDelimeter(unit);
+
+            textEdit = new InsertEdit(insertOffset, newline + fieldText);
         }
 
         TextEditGroup group = new TextEditGroup("Create field.");
@@ -356,7 +360,7 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
             sb.append("@groovy.transform.Field ");
         } else {
             String visibility = JdtFlags.getVisibilityString(getVisibility());
-            if (!visibility.equals("")) {
+            if (!"".equals(visibility)) {
                 sb.append(visibility).append(' ');
             }
         }
@@ -376,7 +380,7 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
 
     private TextEditGroup declarationToReferenceTextEditGroup() {
         TextEditGroup group = new TextEditGroup("Convert local variable declaration to reference.");
-        if (!getContainingMethodNode().isScriptBody() || getContainingClosureExpression() != null) {
+        if ((getContainingMethodNode() != null && !getContainingMethodNode().isScriptBody()) || getContainingClosureExpression() != null) {
             int typeOrDefLength = variableExpressionInDeclaration.getStart() - getDeclarationOffset();
             group.addTextEdit(new ReplaceEdit(getDeclarationOffset(), typeOrDefLength, ""));
         }
@@ -385,7 +389,7 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
 
     private TextEditGroup renameVariableReferencesTextEditGroup(RefactoringStatus status) {
         TextEditGroup group = new TextEditGroup("Update local variables to reference field.");
-        if (!getContainingMethodNode().isScriptBody() || getContainingClosureExpression() != null) {
+        if ((getContainingMethodNode() != null && !getContainingMethodNode().isScriptBody() || getContainingClosureExpression() != null)) {
             final Set<VariableExpression> references = new HashSet<>();
             GroovyClassVisitor referencesVisitor = new DepthFirstVisitor() {
                 @Override
@@ -435,14 +439,13 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
 
     private ClassNode getContainingClassNode() {
         if (containingClassNode == null) {
-            ModuleNode moduleNode = getModuleNode();
-            if (moduleNode == null) {
+            if (getModuleNode() == null) {
                 return null;
             }
             if (declarationExpression == null) {
                 return null;
             }
-            containingClassNode = ASTTools.getContainingClassNode(moduleNode, variableExpressionInDeclaration.getStart());
+            containingClassNode = ASTTools.getContainingClassNode(getModuleNode(), variableExpressionInDeclaration.getStart());
         }
         return containingClassNode;
     }
@@ -574,7 +577,6 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
             try {
                 visitor.visitModule(getModuleNode());
             } catch (VisitCompleteException expected) {
-                ;
             }
         }
     }
