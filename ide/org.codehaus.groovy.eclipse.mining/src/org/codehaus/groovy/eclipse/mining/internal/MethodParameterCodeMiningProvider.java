@@ -25,6 +25,7 @@ import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCall;
 import org.codehaus.groovy.eclipse.codeassist.completions.NamedArgsMethodNode;
@@ -60,8 +61,9 @@ public class MethodParameterCodeMiningProvider extends AbstractCodeMiningProvide
                             MethodCall methodCall = null;
                             if (node instanceof MethodCall) {
                                 methodCall = (MethodCall) node;
-                            } else if (result.scope.getEnclosingNode() instanceof MethodCall) {
+                            } else if (node instanceof ConstantExpression && result.scope.getEnclosingNode() instanceof MethodCall) {
                                 methodCall = (MethodCall) result.scope.getEnclosingNode();
+                                assert node.getText().equals(methodCall.getMethodAsString());
                             }
 
                             if (methodCall != null) {
