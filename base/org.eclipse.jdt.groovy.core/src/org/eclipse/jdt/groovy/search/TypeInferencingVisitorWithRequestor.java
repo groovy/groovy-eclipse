@@ -1757,21 +1757,20 @@ assert primaryExprType != null && dependentExprType != null;
     //--------------------------------------------------------------------------
 
     private boolean handleStatement(Statement node) {
-        // don't check the lookups because statements have no type.
-        // but individual requestors may choose to end the visit here
         VariableScope scope = scopes.getLast();
         ClassNode declaring = scope.getDelegateOrThis();
-        scope.setPrimaryNode(false);
 
         if (node instanceof BlockStatement) {
             for (ITypeLookup lookup : lookups) {
                 if (lookup instanceof ITypeLookupExtension) {
-                    // must ensure that declaring type information at the start of the block is invoked
+                    // ensure that declaring type information is invoked at start of the block
                     ((ITypeLookupExtension) lookup).lookupInBlock((BlockStatement) node, scope);
                 }
             }
         }
 
+        // don't check the lookups because statements have no type;
+        // but individual requestors may choose to end the visit here
         TypeLookupResult noLookup = new TypeLookupResult(declaring, declaring, declaring, TypeConfidence.EXACT, scope);
         VisitStatus status = notifyRequestor(node, requestor, noLookup);
         switch (status) {

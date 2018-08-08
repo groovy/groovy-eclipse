@@ -104,28 +104,30 @@ public class DSLContributionGroup extends ContributionGroup {
         synchronized (this) {
             List<IContributionElement> result;
             try {
-                this.contributions = new ArrayList<>();
-                this.scope = pattern.getCurrentScope();
-                this.project = pattern.getCurrentProject();
-                this.resolver = pattern.getResolverCache();
-                this.bindings = matches.getBindings();
-                this.currentType = pattern.getCurrentType();
-                this.wormhole = scope.getWormhole();
-                this.staticScope = pattern.isStatic();
-                this.isPrimaryExpression = pattern.isPrimaryNode();
+                contributions = new ArrayList<>();
+                scope = pattern.getCurrentScope();
+                project = pattern.getCurrentProject();
+                bindings = matches.getBindings();
+                resolver = pattern.getResolverCache();
+                wormhole = scope.getWormhole();
+                currentType = pattern.getCurrentType();
+                staticScope = pattern.isStatic();
+                isPrimaryExpression = pattern.isPrimaryNode();
                 contributionClosure.call();
             } catch (Exception e) {
                 GroovyLogManager.manager.logException(TraceCategory.DSL, e);
             } finally {
+                // if a contribution group changed the delegate, pass that along
+                if (!currentType.equals(pattern.getCurrentType()))
+                    pattern.setTargetType(currentType);
                 result = contributions;
-                // must set targetType here in case someone changed the delegate on us
-                pattern.setTargetType(currentType);
-                this.contributions = null;
-                this.scope = null;
-                this.resolver = null;
-                this.bindings = null;
-                this.currentType = null;
-                this.wormhole = null;
+                contributions = null;
+                scope = null;
+                project = null;
+                bindings = null;
+                resolver = null;
+                wormhole = null;
+                currentType = null;
             }
             return result;
         }
@@ -149,16 +151,16 @@ public class DSLContributionGroup extends ContributionGroup {
 
     private ClassNode asClassNode(Object value) {
         if (value == null) {
-          return null;
-      } else if (value instanceof String) {
-          return resolver.resolve((String) value);
-      } else if (value instanceof ClassNode) {
-          return (ClassNode) value;
-      } else if (value instanceof Class) {
-          return resolver.resolve(((Class<?>) value).getName());
-      } else {
-          return resolver.resolve(value.toString());
-      }
+            return null;
+        } else if (value instanceof String) {
+            return resolver.resolve((String) value);
+        } else if (value instanceof ClassNode) {
+            return (ClassNode) value;
+        } else if (value instanceof Class) {
+            return resolver.resolve(((Class<?>) value).getName());
+        } else {
+            return resolver.resolve(value.toString());
+        }
     }
 
     private ParameterContribution[] extractParams(Map<String, Object> args, String paramKind) {
@@ -188,8 +190,7 @@ public class DSLContributionGroup extends ContributionGroup {
             return (Boolean) object;
         }
         String str = object.toString();
-        return str.equalsIgnoreCase("true") ||
-               str.equalsIgnoreCase("yes");
+        return ("true".equalsIgnoreCase(str) || "yes".equalsIgnoreCase(str));
     }
 
     /**
@@ -204,7 +205,7 @@ public class DSLContributionGroup extends ContributionGroup {
                 sb.append(getTypeName(gt.getType()));
                 sb.append(',');
             }
-            sb.replace(sb.length()-1, sb.length(), ">");
+            sb.replace(sb.length() - 1, sb.length(), ">");
         }
         return sb.toString();
     }
@@ -302,9 +303,9 @@ public class DSLContributionGroup extends ContributionGroup {
 
     private ParameterContribution[] toParameterContributionRemoveFirst(Parameter[] params) {
         if (params != null) {
-            ParameterContribution[] contribs = new ParameterContribution[params.length-1];
+            ParameterContribution[] contribs = new ParameterContribution[params.length - 1];
             for (int i = 1; i < params.length; i += 1) {
-                contribs[i-1] = new ParameterContribution(params[i]);
+                contribs[i - 1] = new ParameterContribution(params[i]);
             }
             return contribs;
         } else {
@@ -324,7 +325,7 @@ public class DSLContributionGroup extends ContributionGroup {
         return getBoolean("isDeprecated", args);
     }
 
-    private boolean getBoolean(String name, Map<?,?> args) {
+    private boolean getBoolean(String name, Map<?, ?> args) {
         Object maybeStatic = args.get(name);
         if (maybeStatic == null) {
             return false;
@@ -378,15 +379,15 @@ public class DSLContributionGroup extends ContributionGroup {
         String name = asString(args.get("name"));
 
         Object value = args.get("type");
-        String returnType = value == null ? "java.lang.Object" : asString(value);
+        String returnType = (value == null ? "java.lang.Object" : asString(value));
 
         value = args.get("declaringType");
-        String declaringType = value == null ? getTypeName(currentType) : asString(value);
+        String declaringType = (value == null ? getTypeName(currentType) : asString(value));
 
         value = args.get("provider");
-        String provider = value == null ? this.provider : asString(value); // might be null
+        String provider = (value == null ? this.provider : asString(value));
         value = args.get("doc");
-        String doc = value == null ? null : asString(value); // might be null
+        String doc = (value == null ? null : asString(value));
 
         boolean useNamedArgs = asBoolean(args.get("useNamedArgs"));
         boolean noParens = asBoolean(args.get("noParens"));
@@ -398,8 +399,9 @@ public class DSLContributionGroup extends ContributionGroup {
         boolean isStatic = isStatic(args);
         boolean isDeprecated = isDeprecated(args);
         if (!staticScope || (staticScope && isStatic)) {
-            contributions.add(new MethodContributionElement(name == null ? NO_NAME : name, params, namedParams, optionalParams, returnType == null ? NO_TYPE
-                    : returnType, declaringType, isStatic, provider == null ? this.provider : provider, doc, useNamedArgs, noParens, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
+            contributions.add(new MethodContributionElement(name == null ? NO_NAME : name, params, namedParams, optionalParams,
+                returnType == null ? NO_TYPE : returnType, declaringType, isStatic, provider == null ? this.provider : provider,
+                    doc, useNamedArgs, noParens, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
         }
     }
 
@@ -410,20 +412,20 @@ public class DSLContributionGroup extends ContributionGroup {
         String name = asString(args.get("name"));
 
         Object value = args.get("type");
-        String type = value == null ? NO_TYPE : asString(value);
+        String type = (value == null ? NO_TYPE : asString(value));
 
         value = args.get("declaringType");
-        String declaringType = value == null ? getTypeName(currentType) : asString(value);
+        String declaringType = (value == null ? getTypeName(currentType) : asString(value));
 
         value = args.get("provider");
-        String provider = value == null ? this.provider : asString(value); // might be null
-        String doc = asString(args.get("doc")); // might be null
+        String provider = (value == null ? this.provider : asString(value));
+        String doc = asString(args.get("doc"));
 
         boolean isStatic = isStatic(args);
         boolean isDeprecated = isDeprecated(args);
         if (!staticScope || (staticScope && isStatic)) {
             contributions.add(new PropertyContributionElement(name == null ? NO_NAME : name, type,
-                    declaringType, isStatic, provider, doc, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
+                declaringType, isStatic, provider, doc, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
         }
     }
 
@@ -503,11 +505,11 @@ public class DSLContributionGroup extends ContributionGroup {
     void setDelegateType(Object arg) {
         ClassNode delegate = asClassNode(arg);
         if (delegate != null) {
-            // also need to set targetType, but only if primary expression
+            contributions.add(new EmptyContributionElement(currentType));
             scope.addVariable("delegate", delegate, VariableScope.CLOSURE_CLASS_NODE);
             scope.addVariable("getDelegate", delegate, VariableScope.CLOSURE_CLASS_NODE);
-            contributions.add(new EmptyContributionElement(currentType));
 
+            // also need to set targetType, but only if primary expression
             if (isPrimaryExpression) {
                 // must save for later
                 currentType = delegate;

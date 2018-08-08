@@ -102,19 +102,16 @@ public class DSLDTypeLookup extends AbstractSimplifiedTypeLookup implements ITyp
     }
 
     /**
-     * setDelegateType must be called even for empty block statements
+     * {@code setDelegateType} must be triggered even for empty blocks.
      */
     @Override
     public void lookupInBlock(BlockStatement node, VariableScope scope) {
-        context.setPrimaryNode(true);
         context.setCurrentScope(scope);
+        context.setPrimaryNode(true);
         context.setStatic(scope.isStatic());
-        ClassNode delegateOrThis = scope.getDelegateOrThis();
-        if (delegateOrThis != null) {
-            context.setTargetType(delegateOrThis);
-            store.findContributions(context, disabledScriptsAsSet);
-        }
-        // no need to return anything; setDelegateType is called and evaluated implicitly
+        context.setTargetType(scope.getDelegateOrThis());
+
+        store.findContributions(context, disabledScriptsAsSet);
     }
 
     /*

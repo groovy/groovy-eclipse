@@ -224,7 +224,7 @@ public class GroovyDSLDContext {
 
     public void setCurrentScope(VariableScope currentScope) {
         this.currentScope = currentScope;
-        isPrimaryNode = currentScope.isPrimaryNode();
+        setPrimaryNode(currentScope.isPrimaryNode());
     }
 
     public ClassNode getCurrentType() {

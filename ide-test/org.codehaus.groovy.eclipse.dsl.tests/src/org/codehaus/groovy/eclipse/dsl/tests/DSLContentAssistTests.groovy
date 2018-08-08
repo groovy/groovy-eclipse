@@ -491,7 +491,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     }
 
     @Test // GRECLIPSE-1324
-    void testEmptyClosure1() {
+    void testStatementPosition1() {
         createDsld '''\
             contribute(currentType(Integer) & enclosingCallName('foo')) {
               setDelegateType(String)
@@ -505,7 +505,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
               // here
             }
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '\n  '))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.indexOf('/'))
         // should see proposals from String, not Integer
         proposalExists(proposals, 'substring', 2)
         proposalExists(proposals, 'bytes', 1)
@@ -515,7 +515,7 @@ final class DSLContentAssistTests extends CompletionTestSuite {
     }
 
     @Test // GRECLIPSE-1324
-    void testEmptyClosure2() {
+    void testStatementPosition2() {
         createDsld '''\
             contribute(currentType(Integer) & enclosingCallName('foo')) {
               setDelegateType(String)
@@ -526,13 +526,37 @@ final class DSLContentAssistTests extends CompletionTestSuite {
             def foo(@DelegatesTo(Integer) Closure cl) {
             }
             foo {
-              to
+              something
             }
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, ' to') + 1)
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'something') + 1)
         // should see proposals from String, not Integer
         proposalExists(proposals, 'toUpperCase()', 1)
         proposalExists(proposals, 'toHexString()', 0)
+    }
+
+    @Test
+    void testStatementPosition3() {
+        // 1 and 2 hit on return statement; make sure block statement gives same result
+        createDsld '''\
+            contribute(isScript() & enclosingCallName('foo') & inClosure() & isThisType()) {
+              setDelegateType(String)
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            def foo(Closure block) {
+            }
+            foo {
+              // here
+              something
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.indexOf('/'))
+        // should see proposals from String
+        proposalExists(proposals, 'bytes', 1)
+        proposalExists(proposals, 'capitalize', 1)
+        proposalExists(proposals, 'toUpperCase()', 1)
     }
 
     @Test
