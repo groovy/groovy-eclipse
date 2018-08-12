@@ -66,7 +66,6 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.IProblem;
-import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.groovy.core.util.CharArraySequence;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
@@ -488,7 +487,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             // check for required supporting type reference
             if (type.qualifiedTypeName.length != type.simpleTypeName.length) {
                 int lastDotIndex = context.fullCompletionExpression.lastIndexOf('.');
-                if (lastDotIndex > 0 && !context.getQualifiedCompletionExpression().startsWith(String.valueOf(firstSegment(type.packageName, '.')) + '.')) {
+                if (lastDotIndex > 0 && !completionExpression.startsWith(String.valueOf(firstSegment(type.packageName, '.')) + '.')) {
                     char[] typeName = CharOperation.subarray(type.qualifiedTypeName, 0, CharOperation.lastIndexOf('$', type.qualifiedTypeName));
 
                     // expression is partially-qualified; check type name availability
@@ -501,6 +500,10 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
 
                         proposal.setRequiredProposals(new CompletionProposal[] {typeProposal});
                     }
+                }
+                if (lastDotIndex > 0) {
+                    // boost inner types that satisfy qualifier above DGMs
+                    proposal.setRelevance(Relevance.MEDIUM.getRelevance());
                 }
             }
 
@@ -862,10 +865,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
     }
 
     private static boolean isCamelCaseMatch(String pattern, String candidate) {
-        if (pattern == null || pattern.length() == 0) {
-            return true;
-        }
-        return SearchPattern.camelCaseMatch(pattern, candidate);
+        return AbstractGroovyCompletionProcessor.matches(pattern, candidate, true);
     }
 
     /**

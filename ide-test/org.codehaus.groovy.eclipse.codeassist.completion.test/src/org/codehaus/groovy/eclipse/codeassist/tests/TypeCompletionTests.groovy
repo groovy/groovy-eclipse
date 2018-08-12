@@ -138,6 +138,34 @@ final class TypeCompletionTests extends CompletionTestSuite {
     }
 
     @Test
+    void testCompleteFullyQualifiedInnerType1() {
+        String contents = 'java.util.Map.'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
+        proposalExists(proposals, 'Entry', 1, true)
+    }
+
+    @Test
+    void testCompleteFullyQualifiedInnerType2() {
+        String contents = 'java.util.Map.E'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
+        proposalExists(proposals, 'Entry', 1, true)
+    }
+
+    @Test
+    void testCompletePartiallyQualifiedInnerType1() {
+        String contents = 'Map.'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
+        proposalExists(proposals, 'Entry', 1, true)
+    }
+
+    @Test
+    void testCompletePartiallyQualifiedInnerType2() {
+        String contents = 'Map.E'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.length())
+        proposalExists(proposals, 'Entry', 1, true)
+    }
+
+    @Test
     void testCompletePackageInClass() {
         String contents = 'class Foo { javax.swing.text.html.p }'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.p'))

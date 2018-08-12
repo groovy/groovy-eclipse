@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,11 +53,6 @@ public enum Relevance {
      */
     VERY_HIGH;
 
-    @Deprecated
-    public int getRelavance() {
-        return getRelevance();
-    }
-
     public int getRelevance() {
         return (int) Math.pow(10, ordinal());
     }
@@ -70,6 +65,6 @@ public enum Relevance {
      * @return the actual relavance of the associated proposal
      */
     public int getRelevance(float multiplier) {
-        return Math.max(1, (int) (getRelavance() * multiplier));
+        return Math.max(1, (int) (getRelevance() * multiplier));
     }
 }

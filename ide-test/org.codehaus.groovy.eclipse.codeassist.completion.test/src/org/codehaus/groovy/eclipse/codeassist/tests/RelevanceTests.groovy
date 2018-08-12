@@ -453,4 +453,15 @@ final class RelevanceTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'St')))
         assertProposalOrdering(proposals, 'StringWriterIOException - groovy.lang', 'StackOverflowError - java.lang', 'Stack - java.util')
     }
+
+    @Test
+    void testInnerClassType() {
+        // types normally rank very low; but when an inner type matches qualifier ending in '.', the
+        // proposal needs some help to be seen amongst DGMs, Class, Object, and GroovyObject members
+        String contents = '''\
+            Map.
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, '.')))
+        assertProposalOrdering(proposals, 'Entry - java.util.Map', 'any() : boolean', 'array : boolean')
+    }
 }

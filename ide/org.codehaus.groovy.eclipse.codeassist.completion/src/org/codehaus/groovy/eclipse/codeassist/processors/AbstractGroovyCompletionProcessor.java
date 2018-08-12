@@ -62,10 +62,13 @@ public abstract class AbstractGroovyCompletionProcessor implements IGroovyComple
         return proposal;
     }
 
-    protected static boolean matches(String prefix, String candidate, boolean camelCaseMatch) {
-        if (!camelCaseMatch) {
-            return candidate.startsWith(prefix);
+    protected static boolean matches(String pattern, String candidate, boolean camelCaseMatch) {
+        if (pattern == null || pattern.isEmpty()) {
+            return true;
         }
-        return SearchPattern.camelCaseMatch(prefix, candidate);
+        if (!camelCaseMatch) {
+            return candidate.startsWith(pattern);
+        }
+        return SearchPattern.camelCaseMatch(pattern, candidate);
     }
 }
