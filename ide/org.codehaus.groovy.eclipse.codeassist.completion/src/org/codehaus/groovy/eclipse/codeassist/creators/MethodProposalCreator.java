@@ -60,7 +60,7 @@ public class MethodProposalCreator extends AbstractProposalCreator {
         for (MethodNode method : allMethods) {
             String methodName = method.getName();
             if ((!isStatic || method.isStatic() || method.getDeclaringClass().equals(VariableScope.OBJECT_CLASS_NODE)) && checkName(methodName)) {
-                if (ProposalUtils.looselyMatches(prefix, methodName)) {
+                if (matcher.test(prefix, methodName)) {
                     GroovyMethodProposal proposal = new GroovyMethodProposal(method);
                     setRelevanceMultiplier(proposal, firstTime, isStatic);
                     proposals.add(proposal);
@@ -110,7 +110,7 @@ public class MethodProposalCreator extends AbstractProposalCreator {
     private void findStaticImportProposals(List<IGroovyProposal> proposals, String prefix, ModuleNode module) {
         for (Map.Entry<String, ImportNode> entry : module.getStaticImports().entrySet()) {
             String fieldName = entry.getValue().getFieldName();
-            if (ProposalUtils.looselyMatches(prefix, fieldName)) {
+            if (matcher.test(prefix, fieldName)) {
                 List<MethodNode> methods = entry.getValue().getType().getDeclaredMethods(fieldName);
                 if (methods != null) {
                     for (MethodNode method : methods) {
@@ -125,7 +125,7 @@ public class MethodProposalCreator extends AbstractProposalCreator {
             ClassNode type = entry.getValue().getType();
             if (type != null) {
                 for (MethodNode method : type.getMethods()) {
-                    if (method.isStatic() && ProposalUtils.looselyMatches(prefix, method.getName())) {
+                    if (method.isStatic() && matcher.test(prefix, method.getName())) {
                         addIfNotPresent(proposals, new GroovyMethodProposal(method));
                     }
                 }
@@ -149,14 +149,14 @@ public class MethodProposalCreator extends AbstractProposalCreator {
 
             if ("*".equals(fieldName)) {
                 for (MethodNode method : typeNode.getMethods()) {
-                    if (method.isStatic() && ProposalUtils.looselyMatches(prefix, method.getName())) {
+                    if (method.isStatic() && matcher.test(prefix, method.getName())) {
                         GroovyMethodProposal proposal = new GroovyMethodProposal(method);
                         proposal.setRequiredStaticImport(typeName + '.' + method.getName());
                         addIfNotPresent(proposals, proposal);
                     }
                 }
             } else {
-                if (ProposalUtils.looselyMatches(prefix, fieldName)) {
+                if (matcher.test(prefix, fieldName)) {
                     List<MethodNode> methods = typeNode.getDeclaredMethods(fieldName);
                     for (MethodNode method : methods) {
                         if (method.isStatic()) {

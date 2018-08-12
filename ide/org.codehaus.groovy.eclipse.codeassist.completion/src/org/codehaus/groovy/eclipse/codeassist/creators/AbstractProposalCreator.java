@@ -23,6 +23,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiPredicate;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
@@ -48,6 +49,11 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
         this.favoriteStaticMembers = favoriteStaticMembers;
     }
     protected Set<String> favoriteStaticMembers;
+
+    public void setNameMatchingStrategy(BiPredicate<String, String> strategy) {
+        this.matcher = strategy;
+    }
+    protected BiPredicate<String, String> matcher = ProposalUtils::looselyMatches;
 
     //--------------------------------------------------------------------------
 
@@ -85,11 +91,11 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
     /**
      * Determine the kind of accessor the prefix corresponds to, if any
      */
-    protected static AccessorSupport findLooselyMatchedAccessorKind(String prefix, String methodName, boolean isCategory) {
+    protected AccessorSupport findLooselyMatchedAccessorKind(String prefix, String methodName, boolean isCategory) {
         AccessorSupport accessor = AccessorSupport.create(methodName, isCategory);
         if (accessor.isAccessor()) {
             String newName = ProposalUtils.createMockFieldName(methodName);
-            return ProposalUtils.looselyMatches(prefix, newName) ? accessor : AccessorSupport.NONE;
+            return matcher.test(prefix, newName) ? accessor : AccessorSupport.NONE;
         } else {
             return AccessorSupport.NONE;
         }

@@ -105,7 +105,7 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor i
                 if (outerType != null && outerType.exists() && qualifier.endsWith(outerType.getElementName()))
                 try {
                     for (IType innerType : outerType.getTypes()) {
-                        if (isAcceptable(innerType, getSearchFor()) && matches(pattern, innerType.getElementName(), requestor.options.camelCaseMatch)) {
+                        if (isAcceptable(innerType, getSearchFor()) && ProposalUtils.matches(pattern, innerType.getElementName(), requestor.options.camelCaseMatch, requestor.options.substringMatch)) {
                             requestor.acceptType(innerType.getPackageFragment().getElementName().toCharArray(), innerType.getElementName().toCharArray(),
                                 CharOperation.splitOn('$', outerType.getTypeQualifiedName().toCharArray()), innerType.getFlags(), ProposalUtils.getTypeAccessibility(innerType));
                         }

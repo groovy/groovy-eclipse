@@ -33,7 +33,6 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.eclipse.GroovyLogManager;
 import org.codehaus.groovy.eclipse.TraceCategory;
-import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
@@ -57,7 +56,7 @@ public class FieldProposalCreator extends AbstractProposalCreator {
 
         for (FieldNode field : allFields) {
             // in static context, only allow static fields
-            if ((!isStatic || field.isStatic()) && ProposalUtils.looselyMatches(prefix, field.getName())) {
+            if ((!isStatic || field.isStatic()) && matcher.test(prefix, field.getName())) {
                 // de-emphasize 'this' references inside closure
                 float relevanceMultiplier = !isFirstTime ? 0.1f : 1.0f;
                 if (field.isEnum()) relevanceMultiplier *= 5.0f;
@@ -110,7 +109,7 @@ public class FieldProposalCreator extends AbstractProposalCreator {
     private void findStaticImportProposals(List<IGroovyProposal> proposals, String prefix, ModuleNode module) {
         for (Map.Entry<String, ImportNode> entry : module.getStaticImports().entrySet()) {
             String fieldName = entry.getValue().getFieldName();
-            if (fieldName != null && ProposalUtils.looselyMatches(prefix, fieldName)) {
+            if (fieldName != null && matcher.test(prefix, fieldName)) {
                 FieldNode field = entry.getValue().getType().getField(fieldName);
                 if (field != null && field.isStatic()) {
                     proposals.add(new GroovyFieldProposal(field));
@@ -121,7 +120,7 @@ public class FieldProposalCreator extends AbstractProposalCreator {
             ClassNode type = entry.getValue().getType();
             if (type != null) {
                 for (FieldNode field : type.getFields()) {
-                    if (field.isStatic() && ProposalUtils.looselyMatches(prefix, field.getName())) {
+                    if (field.isStatic() && matcher.test(prefix, field.getName())) {
                         proposals.add(new GroovyFieldProposal(field));
                     }
                 }
@@ -145,14 +144,14 @@ public class FieldProposalCreator extends AbstractProposalCreator {
 
             if ("*".equals(fieldName)) {
                 for (FieldNode field : typeNode.getFields()) {
-                    if (field.isStatic() && ProposalUtils.looselyMatches(prefix, field.getName())) {
+                    if (field.isStatic() && matcher.test(prefix, field.getName())) {
                         GroovyFieldProposal proposal = new GroovyFieldProposal(field);
                         proposal.setRequiredStaticImport(typeName + '.' + field.getName());
                         proposals.add(proposal);
                     }
                 }
             } else {
-                if (ProposalUtils.looselyMatches(prefix, fieldName)) {
+                if (matcher.test(prefix, fieldName)) {
                     FieldNode field = typeNode.getField(fieldName);
                     if (field != null && field.isStatic()) {
                         GroovyFieldProposal proposal = new GroovyFieldProposal(field);

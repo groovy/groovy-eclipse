@@ -19,6 +19,7 @@ import static org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.*
 
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
 import org.eclipse.jdt.core.JavaCore
+import org.eclipse.jdt.internal.codeassist.impl.AssistOptions
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.IDocument
@@ -70,6 +71,7 @@ final class TriggerCharacterCompletionTests extends CompletionTestSuite {
     @Test
     void testTriggerForMethodProposals() {
         String contents = '[].sort'; int offset = contents.length()
+        setJavaPreference(AssistOptions.OPTION_SubstringMatch, 'disabled')
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, offset))
         /* expecting:
         sort(Comparator c) : void - List

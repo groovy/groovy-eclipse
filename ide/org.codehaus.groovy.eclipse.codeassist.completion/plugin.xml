@@ -34,7 +34,8 @@
       <javaCompletionProposalComputer
             activate="true"
             categoryId="org.codehaus.groovy.eclipse.codeassist.category"
-            class="org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer">
+            class="org.codehaus.groovy.eclipse.codeassist.requestor.GroovyCompletionProposalComputer"
+            needsSortingAfterFiltering="true">
          <partition
                type="__dftl_partition_content_type">
          </partition>

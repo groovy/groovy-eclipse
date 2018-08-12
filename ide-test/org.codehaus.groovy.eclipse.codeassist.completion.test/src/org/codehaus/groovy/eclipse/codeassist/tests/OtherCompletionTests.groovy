@@ -69,8 +69,8 @@ final class OtherCompletionTests extends CompletionTestSuite {
             }
             '''.stripIndent()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'foo.ba'))
-        proposalExists(proposals, 'bar', 1)
-        assert proposals[0].displayString == 'bar() : String - StringExtension (Groovy)'
+        ICompletionProposal proposal = findFirstProposal(proposals, 'bar')
+        assert proposal.displayString == 'bar() : String - StringExtension (Groovy)'
 
         proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'this.collect'))
         Arrays.sort(proposals, { ICompletionProposal o1, ICompletionProposal o2 ->

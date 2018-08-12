@@ -43,6 +43,7 @@ import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
+import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.creators.AbstractProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.creators.CategoryProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.creators.FieldProposalCreator;
@@ -68,6 +69,7 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
+import org.eclipse.jdt.internal.codeassist.impl.AssistOptions;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
@@ -504,6 +506,8 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
 
     private void proposalCreatorLoop(Collection<IGroovyProposal> proposals, Collection<IProposalCreator> creators,
             ExpressionCompletionRequestor requestor, ContentAssistContext context, ClassNode completionType, boolean isStatic, boolean isClosureThis) {
+        AssistOptions options = new AssistOptions(getJavaContext().getProject().getOptions(true));
+
         for (IProposalCreator creator : creators) {
             if (isClosureThis && !creator.redoForLoopClosure()) {
                 // avoid duplicate DGMs by not proposing category proposals twice
@@ -512,6 +516,9 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             if (creator instanceof AbstractProposalCreator) {
                 ((AbstractProposalCreator) creator).setCurrentScope(requestor.currentScope);
                 ((AbstractProposalCreator) creator).setFavoriteStaticMembers(context.getFavoriteStaticMembers());
+                ((AbstractProposalCreator) creator).setNameMatchingStrategy((String pattern, String candidate) -> {
+                    return ProposalUtils.matches(pattern, candidate, options.camelCaseMatch, options.substringMatch);
+                });
             }
             Set<ClassNode> categories = requestor.categories;
             String expression = context.getPerceivedCompletionExpression();

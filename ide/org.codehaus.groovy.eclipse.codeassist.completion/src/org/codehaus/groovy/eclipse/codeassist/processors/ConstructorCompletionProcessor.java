@@ -100,7 +100,7 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
                 if (outerType != null && outerType.exists() && qualifier.endsWith(outerType.getElementName()))
                 try {
                     for (IType innerType : outerType.getTypes()) {
-                        if (matches(pattern, innerType.getElementName(), requestor.options.camelCaseMatch)) {
+                        if (ProposalUtils.matches(pattern, innerType.getElementName(), requestor.options.camelCaseMatch, requestor.options.substringMatch)) {
                             int extraFlags = 0; //ConstructorPattern.decodeExtraFlags(innerType.getFlags())
 
                             boolean hasConstructor = false;

@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codeassist;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,6 +30,7 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
@@ -199,74 +199,6 @@ public class ProposalUtils {
     }
 
     /**
-     * Match ignoring case and checking camel case.
-     */
-    public static boolean looselyMatches(String prefix, String target) {
-        if (target == null || prefix == null) {
-            return false;
-        }
-
-        // Zero length string matches everything.
-        if (prefix.length() == 0) {
-            return true;
-        }
-
-        // Exclude a bunch right away
-        if (prefix.charAt(0) != target.charAt(0)) {
-            return false;
-        }
-
-        if (target.startsWith(prefix)) {
-            return true;
-        }
-
-        String lowerCase = target.toLowerCase();
-        if (lowerCase.startsWith(prefix)) {
-            return true;
-        }
-
-        // Test for camel characters in the prefix.
-        if (prefix.equals(prefix.toLowerCase())) {
-            return false;
-        }
-
-        String[] prefixParts = toCamelCaseParts(prefix);
-        String[] targetParts = toCamelCaseParts(target);
-
-        if (prefixParts.length > targetParts.length) {
-            return false;
-        }
-
-        for (int i = 0; i < prefixParts.length; ++i) {
-            if (!targetParts[i].startsWith(prefixParts[i])) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * Converts an input string into parts delimited by upper case characters. Used for camel case matches.
-     * e.g. GroClaL = ['Gro','Cla','L'] to match say 'GroovyClassLoader'.
-     * e.g. mA = ['m','A']
-     */
-    private static String[] toCamelCaseParts(String str) {
-        List<String> parts = new ArrayList<>();
-        for (int i = str.length() - 1; i >= 0; --i) {
-            if (Character.isUpperCase(str.charAt(i))) {
-                parts.add(str.substring(i));
-                str = str.substring(0, i);
-            }
-        }
-        if (str.length() != 0) {
-            parts.add(str);
-        }
-        Collections.reverse(parts);
-        return parts.toArray(new String[parts.size()]);
-    }
-
-    /**
      * Creates a name for a field if this is a getter or a setter method name.
      */
     public static String createMockFieldName(String methodName) {
@@ -303,5 +235,22 @@ public class ProposalUtils {
             }
         }
         return false;
+    }
+
+    /**
+     * Match ignoring case and checking camel case.
+     */
+    public static boolean looselyMatches(String prefix, String target) {
+        return matches(prefix, target, true, false);
+    }
+
+    public static boolean matches(String pattern, String candidate, boolean camelCaseMatch, boolean substringMatch) {
+        if (pattern == null || pattern.isEmpty()) {
+            return true;
+        }
+        if (camelCaseMatch && SearchPattern.camelCaseMatch(pattern, candidate)) {
+            return true;
+        }
+        return substringMatch ? candidate.toLowerCase().contains(pattern) : candidate.startsWith(pattern);
     }
 }

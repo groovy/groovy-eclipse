@@ -555,14 +555,14 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
                                     // instead of proposing no-arg constructor, propose type's properties as named arguments
                                     proposals.remove(constructorProposal);
                                     for (PropertyNode prop : resolved.getProperties()) { String name = prop.getName();
-                                        if (!"metaClass".equals(name) && !usedParams.contains(name) && isCamelCaseMatch(context.completionExpression, name)) {
+                                        if (!"metaClass".equals(name) && !usedParams.contains(name) && ProposalUtils.matches(context.completionExpression, name, options.camelCaseMatch, options.substringMatch)) {
                                             GroovyNamedArgumentProposal namedArgument = new GroovyNamedArgumentProposal(name, prop.getType(), null, String.valueOf(ctor.simpleTypeName));
                                             proposals.add(namedArgument.createJavaProposal(context, javaContext));
                                         }
                                     }
                                     for (MethodNode meth : resolved.getMethods()) {
                                         if (!meth.isStatic() && AccessorSupport.isSetter(meth)) { String name = Introspector.decapitalize(meth.getName().substring(3));
-                                            if (!"metaClass".equals(name) && !usedParams.contains(name) && resolved.getProperty(name) == null && isCamelCaseMatch(context.completionExpression, name)) {
+                                            if (!"metaClass".equals(name) && !usedParams.contains(name) && resolved.getProperty(name) == null && ProposalUtils.matches(context.completionExpression, name, options.camelCaseMatch, options.substringMatch)) {
                                                 GroovyNamedArgumentProposal namedArgument = new GroovyNamedArgumentProposal(name, meth.getParameters()[0].getType(), null, String.valueOf(ctor.simpleTypeName));
                                                 proposals.add(namedArgument.createJavaProposal(context, javaContext));
                                             }
@@ -862,10 +862,6 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
             return binding.reference.getSimpleName();
         }
         return binding.compoundName[binding.compoundName.length - 1];
-    }
-
-    private static boolean isCamelCaseMatch(String pattern, String candidate) {
-        return AbstractGroovyCompletionProcessor.matches(pattern, candidate, true);
     }
 
     /**

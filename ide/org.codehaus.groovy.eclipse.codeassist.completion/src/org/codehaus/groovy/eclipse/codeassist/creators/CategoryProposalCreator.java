@@ -71,8 +71,8 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
                 String methodName = method.getName();
                 if (method.isStatic() && method.isPublic()) {
                     Parameter[] params = method.getParameters();
-                    // need to check if the method is being accessed directly or as a property (eg- getText() --> text)
-                    if (ProposalUtils.looselyMatches(prefix, methodName)) {
+
+                    if (matcher.test(prefix, methodName)) {
                         if (params.length > 0 && GroovyUtils.isAssignable(selfType, params[0].getType()) && !isDuplicate(method, existingMethodProposals)) {
                             groovyProposals.add(new CategoryMethodProposal(method));
 
@@ -83,7 +83,10 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
                             }
                             methodList.add(method);
                         }
-                    } else if (params.length == 1 && findLooselyMatchedAccessorKind(prefix, methodName, true).isAccessorKind(method, true) && !existingPropertyProposals.contains(methodName) && hasNoField(selfType, methodName) && GroovyUtils.isAssignable(selfType, params[0].getType())) {
+                    }
+
+                    if (params.length == 1 && findLooselyMatchedAccessorKind(prefix, methodName, true).isAccessorKind(method, true) &&
+                            !existingPropertyProposals.contains(methodName) && hasNoField(selfType, methodName) && GroovyUtils.isAssignable(selfType, params[0].getType())) {
                         // add property variant of accessor name
                         groovyProposals.add(new CategoryPropertyProposal(method));
 
