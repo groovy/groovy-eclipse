@@ -131,7 +131,7 @@ public abstract class AbstractGroovyProposal implements IGroovyProposal {
             relevance *= 0.9f; // promote fields
         }
 
-        return relevance;
+        return Math.max(relevance, RelevanceConstants.R_INTERESTING);
     }
 
     private Relevance getRelevanceClass() {
