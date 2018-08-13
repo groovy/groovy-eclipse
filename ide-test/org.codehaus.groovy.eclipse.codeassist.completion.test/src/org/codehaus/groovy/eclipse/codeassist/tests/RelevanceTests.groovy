@@ -25,6 +25,36 @@ import org.junit.Test
 final class RelevanceTests extends CompletionTestSuite {
 
     @Test
+    void testExactMatchThenPrefixMatchThenIgnoreCaseThenCamelCaseThenSubstring() {
+        String contents = '''\
+            class Outer {
+              def aToZ() {}
+              def toz() {}
+              def Toz() {}
+              def toZAbc() {}
+              def tozXyz() {}
+            }
+            new Outer().toz
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getLastIndexOf(contents, 'toz')))
+        assertProposalOrdering(proposals, 'toz', 'tozXyz', 'Toz', 'toZAbc', 'aToZ')
+    }
+
+    @Test
+    void testLocalThenFieldThenMethodThenDGM() {
+        String contents = '''\
+            class Outer {
+              def f
+              def m() {
+                def p
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'def p\n')))
+        assertProposalOrdering(proposals, 'p', 'f', 'getF', 'm', 'find')
+    }
+
+    @Test
     void testParamThenFieldThenMethodThenDGM() {
         String contents = '''\
             class Outer {
@@ -35,20 +65,6 @@ final class RelevanceTests extends CompletionTestSuite {
             }
             '''.stripIndent()
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'null\n')))
-        assertProposalOrdering(proposals, 'p', 'f', 'getF', 'm', 'find')
-    }
-
-    @Test
-    void testLocalVarThenFieldThenMethodThenDGM() {
-        String contents = '''\
-            class Outer {
-              def f
-              def m() {
-                def p
-              }
-            }
-            '''.stripIndent()
-        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'def p\n')))
         assertProposalOrdering(proposals, 'p', 'f', 'getF', 'm', 'find')
     }
 

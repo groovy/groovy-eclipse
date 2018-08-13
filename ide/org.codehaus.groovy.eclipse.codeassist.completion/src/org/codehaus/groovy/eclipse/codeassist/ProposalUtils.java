@@ -251,6 +251,6 @@ public class ProposalUtils {
         if (camelCaseMatch && SearchPattern.camelCaseMatch(pattern, candidate)) {
             return true;
         }
-        return substringMatch ? candidate.toLowerCase().contains(pattern) : candidate.startsWith(pattern);
+        return substringMatch ? CharOperation.substringMatch(pattern, candidate) : candidate.startsWith(pattern);
     }
 }

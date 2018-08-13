@@ -26,8 +26,12 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
+import org.codehaus.groovy.runtime.StringGroovyMethods;
+import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.core.search.SearchPattern;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
+import org.eclipse.jdt.internal.codeassist.RelevanceConstants;
 
 public abstract class AbstractGroovyProposal implements IGroovyProposal {
 
@@ -82,17 +86,44 @@ public abstract class AbstractGroovyProposal implements IGroovyProposal {
         int relevance = getRelevanceClass().getRelevance(getRelevanceMultiplier());
 
         AnnotatedNode node = getAssociatedNode();
-        if (node != null && context.lhsType != null) {
-            ClassNode type = null;
-            if (node instanceof FieldNode) {
-                type = ((FieldNode) node).getType();
-            } else if (node instanceof MethodNode) {
-                type = ((MethodNode) node).getReturnType();
-            } else if (node instanceof PropertyNode) {
-                type = ((PropertyNode) node).getType();
+        if (node != null) {
+            if (context.lhsType != null) {
+                ClassNode type = null;
+                if (node instanceof FieldNode) {
+                    type = ((FieldNode) node).getType();
+                } else if (node instanceof MethodNode) {
+                    type = ((MethodNode) node).getReturnType();
+                } else if (node instanceof PropertyNode) {
+                    type = ((PropertyNode) node).getType();
+                }
+                if (type != null && GroovyUtils.isAssignable(type, context.lhsType)) {
+                    relevance = Math.max(relevance, Relevance.HIGH.getRelevance());
+                }
             }
-            if (type != null && GroovyUtils.isAssignable(type, context.lhsType)) {
-                relevance = Math.max(relevance, Relevance.HIGH.getRelevance());
+
+            if (StringGroovyMethods.asBoolean(context.completionExpression)) {
+                String name = null;
+                if (node instanceof FieldNode) {
+                    name = ((FieldNode) node).getName();
+                } else if (node instanceof MethodNode) {
+                    name = ((MethodNode) node).getName();
+                } else if (node instanceof PropertyNode) {
+                    name = ((PropertyNode) node).getName();
+                }
+                if (StringGroovyMethods.asBoolean(name)) {
+                    String expr = context.getPerceivedCompletionExpression();
+                    if (name.equals(expr)) {
+                        relevance += RelevanceConstants.R_EXACT_NAME + RelevanceConstants.R_CASE;
+                    } else if (name.equalsIgnoreCase(expr)) {
+                        relevance += RelevanceConstants.R_EXACT_NAME;
+                    } else if (/*name.startsWithIgnoreCase(expr)*/CharOperation.prefixEquals(expr.toCharArray(), name.toCharArray(), false)) {
+                        if (name.startsWith(expr)) relevance += RelevanceConstants.R_CASE;
+                    } else if (/*options.camelCaseMatch &&*/ SearchPattern.camelCaseMatch(expr, name)) {
+                        relevance += RelevanceConstants.R_CAMEL_CASE;
+                    } else if (/*options.substringMatch &&*/ CharOperation.substringMatch(expr, name)) {
+                        relevance += RelevanceConstants.R_SUBSTRING;
+                    }
+                }
             }
         }
 
