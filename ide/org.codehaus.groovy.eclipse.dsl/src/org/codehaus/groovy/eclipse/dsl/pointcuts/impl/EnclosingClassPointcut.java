@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,11 @@
  */
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
+import static org.codehaus.groovy.transform.trait.Traits.isTrait;
+
 import java.util.Collection;
 import java.util.Collections;
 
-import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.AbstractPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
@@ -72,15 +73,5 @@ public class EnclosingClassPointcut extends AbstractPointcut {
             System.err.println("First argument to enclosingClass pointcut was not a Class, String, or IPointcut: " + firstArgument);
         }
         return null;
-    }
-
-    // TODO: Replace with org.codehaus.groovy.transform.trait.Traits#isTrait when the minimum supported Groovy >= 2.3.
-    private static boolean isTrait(ClassNode type) {
-        for (AnnotationNode node : type.getAnnotations()) {
-            if ("groovy.transform.Trait".equals(node.getClassNode().getName())) {
-                return true;
-            }
-        }
-        return false;
     }
 }

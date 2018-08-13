@@ -37,11 +37,9 @@ import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
-import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ImportBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LazilyResolvedMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
-import org.eclipse.jdt.internal.compiler.lookup.MissingTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
@@ -55,7 +53,7 @@ public class GroovyClassScope extends ClassScope {
     // SET FOR TESTING ONLY, enables tests to listen for interesting events
     public static EventListener debugListener;
 
-    private TraitHelper traitHelper = new TraitHelper();
+    private final TraitHelper traitHelper = new TraitHelper();
 
     public GroovyClassScope(Scope parent, TypeDeclaration typeDecl) {
         super(parent, typeDecl);
@@ -72,17 +70,16 @@ public class GroovyClassScope extends ClassScope {
      */
     @Override
     protected MethodBinding[] augmentMethodBindings(MethodBinding[] methodBindings) {
-        // don't add these methods to annotations
-        SourceTypeBinding binding = referenceContext.binding;
-        if (binding != null && (binding.isInterface() || binding.isAnnotationType())) {
+        SourceTypeBinding typeBinding = referenceContext.binding;
+        if (typeBinding == null || typeBinding.isInterface() || typeBinding.isAnnotationType()) {
             return methodBindings;
         }
-        boolean implementsGroovyLangObject = false;
 
-        ReferenceBinding[] superInterfaces = binding.superInterfaces != null ? binding.superInterfaces : new ReferenceBinding[0];
-        for (int i = 0, n = superInterfaces.length; i < n; i += 1) {
-            char[][] interfaceName = superInterfaces[i].compoundName;
-            if (CharOperation.equals(interfaceName, GroovyCompilationUnitScope.GROOVY_LANG_GROOVYOBJECT)) {
+        ReferenceBinding[] superInterfaces = (typeBinding.superInterfaces != null ? typeBinding.superInterfaces : new ReferenceBinding[0]);
+
+        boolean implementsGroovyLangObject = false;
+        for (ReferenceBinding face : superInterfaces) {
+            if (CharOperation.equals(face.compoundName, GroovyCompilationUnitScope.GROOVY_LANG_GROOVYOBJECT)) {
                 implementsGroovyLangObject = true;
                 break;
             }
@@ -90,7 +87,6 @@ public class GroovyClassScope extends ClassScope {
 
         List<MethodBinding> groovyMethods = new ArrayList<>();
 
-        // If we don't then a supertype did and these methods do not have to be added here
         if (implementsGroovyLangObject) {
             if (debugListener != null) {
                 debugListener.record("augment: type " + String.valueOf(referenceContext.name) + " having GroovyObject methods added");
@@ -115,90 +111,64 @@ public class GroovyClassScope extends ClassScope {
             createMethod("getMetaClass", false, "", null, bindingGLM, groovyMethods, methodBindings, null);
             createMethod("setMetaClass", false, "", new TypeBinding[] {bindingGLM}, TypeBinding.VOID, groovyMethods, methodBindings, null);
         }
-        // FIXASC decide what difference this makes - should we not be adding anything at all?
-        // will not be an instance of GroovyTypeDeclaration if created through SourceTypeConverter
-        if (this.referenceContext instanceof GroovyTypeDeclaration) {
-            GroovyTypeDeclaration typeDeclaration = (GroovyTypeDeclaration) this.referenceContext;
 
-            boolean useOldWay = false;
-            if (useOldWay) {
-                // FIXASC the methods created here need to be a subtype of
-                // MethodBinding because they need their source position to be the
-                // property
-                List<PropertyNode> properties = typeDeclaration.properties;
-                for (PropertyNode property : properties) {
-                    String name = property.getName();
-                    FieldBinding fBinding = typeDeclaration.binding.getField(name.toCharArray(), false);
-                    // null binding indicates there was a problem resolving its type
-                    if (fBinding != null && !(fBinding.type instanceof MissingTypeBinding)) {
-                        String getterName = "get" + MetaClassHelper.capitalize(name);
-                        createMethod(getterName, property.isStatic(), "", null, fBinding.type, groovyMethods, methodBindings, typeDeclaration);
-                        if (!fBinding.isFinal()) {
-                            String setterName = "set" + MetaClassHelper.capitalize(name);
-                            createMethod(setterName, property.isStatic(), "", new TypeBinding[] {fBinding.type}, TypeBinding.VOID, groovyMethods, methodBindings, typeDeclaration);
-                        }
-                        if (fBinding.type == TypeBinding.BOOLEAN) {
-                            createMethod("is" + MetaClassHelper.capitalize(name), property.isStatic(), "", null, fBinding.type, groovyMethods, methodBindings, typeDeclaration);
-                        }
-                    }
+        if (referenceContext instanceof GroovyTypeDeclaration) {
+            GroovyTypeDeclaration typeDecl = (GroovyTypeDeclaration) referenceContext;
+            // create property accessors without resolving the types
+            for (PropertyNode property : typeDecl.properties) {
+                String name = property.getName();
+                String capitalizedName = MetaClassHelper.capitalize(name);
+
+                createGetterMethod(name, "get" + capitalizedName, property.isStatic(), groovyMethods, methodBindings, typeDecl);
+
+                if ("boolean".equals(property.getType().getName())) { // What about "java.lang.Boolean"?
+                    createGetterMethod(name, "is" + capitalizedName, property.isStatic(), groovyMethods, methodBindings, typeDecl);
                 }
-            } else {
-                // Create getters/setters without resolving the types.
-                List<PropertyNode> properties = typeDeclaration.properties;
-                for (PropertyNode property : properties) {
-                    String name = property.getName();
-                    String capitalizedName = MetaClassHelper.capitalize(name);
-                    // Create getter
-                    createGetterMethod(name, "get" + capitalizedName, property.isStatic(), groovyMethods, methodBindings, typeDeclaration);
-                    // Create setter if non-final property
-                    if (!Modifier.isFinal(property.getModifiers())) {
-                        createSetterMethod(name, "set" + capitalizedName, property.isStatic(), groovyMethods, methodBindings, typeDeclaration, property.getType().getName());
-                    }
-                    // Create isA if type is boolean
-                    String propertyType = property.getType().getName();
-                    if ("boolean".equals(propertyType)) {
-                        createGetterMethod(name, "is" + capitalizedName, property.isStatic(), groovyMethods, methodBindings, typeDeclaration);
-                    }
+
+                if (!Modifier.isFinal(property.getModifiers())) {
+                    createSetterMethod(name, "set" + capitalizedName, property.isStatic(), groovyMethods, methodBindings, typeDecl, property.getType().getName());
                 }
             }
         }
 
-        Map<String, MethodBinding> methodsMap = new HashMap<>();
+        Map<String, MethodBinding> traitMethods = new HashMap<>();
         for (ReferenceBinding face : superInterfaces) {
             if (traitHelper.isTrait(face)) {
                 ReferenceBinding helperBinding = traitHelper.getHelperBinding(face);
                 for (MethodBinding method : face.availableMethods()) {
-                    if (method.isPrivate() || method.isStatic()) {
-                        continue;
-                    }
-                    if (isNotActuallyAbstract(method, helperBinding)) {
-                        methodsMap.put(getMethodAsString(method), method);
+                    if (!method.isPrivate() && !method.isStatic() &&
+                            isNotActuallyAbstract(method, helperBinding)) {
+                        traitMethods.put(getMethodAsString(method), method);
                     }
                 }
             }
         }
-        if (!methodsMap.isEmpty()) {
+        if (!traitMethods.isEmpty()) {
             Set<String> canBeOverridden = new HashSet<>();
-            ReferenceBinding superclass = binding.superclass();
-            while (superclass != null) {
+
+            ReferenceBinding superclass = typeBinding;
+            while ((superclass = superclass.superclass()) != null) {
                 for (MethodBinding method : superclass.availableMethods()) {
-                    if (method.isPrivate() || method.isPublic() || method.isStatic()) {
-                        continue;
+                    if (!method.isPrivate() && !method.isPublic() && !method.isStatic()) {
+                        canBeOverridden.add(getMethodAsString(method));
                     }
-                    canBeOverridden.add(getMethodAsString(method));
                 }
-                superclass = superclass.superclass();
             }
             for (MethodBinding method : methodBindings) {
                 canBeOverridden.remove(getMethodAsString(method));
             }
+
             for (String key : canBeOverridden) {
-                MethodBinding method = methodsMap.get(key);
+                MethodBinding method = traitMethods.remove(key);
                 if (method != null) {
-                    method = new MethodBinding(method, binding);
+                    method = new MethodBinding(method, typeBinding);
                     method.modifiers &= ~Modifier.ABSTRACT;
                     groovyMethods.add(method);
                 }
+            }
+
+            for (MethodBinding method : traitMethods.values()) {
+                method.modifiers &= ~Modifier.ABSTRACT;
             }
         }
 
@@ -229,8 +199,7 @@ public class GroovyClassScope extends ClassScope {
             if (methodDeclaration != null) {
                 return !Flags.isAbstract(methodDeclaration.modifiers);
             }
-        }
-        if (methodBinding.declaringClass instanceof BinaryTypeBinding) {
+        } else if (methodBinding.declaringClass instanceof BinaryTypeBinding) {
             if (helperBinding != null) {
                 for (MethodBinding m : helperBinding.methods()) {
                     if (!Arrays.equals(methodBinding.selector, m.selector)) {
@@ -295,14 +264,15 @@ public class GroovyClassScope extends ClassScope {
             if (isStatic) {
                 modifiers |= Flags.AccStatic;
             }
-            if (this.referenceContext.binding.isInterface()) {
+            if (referenceContext.binding.isInterface()) {
                 modifiers |= Flags.AccAbstract;
             }
             char[] methodName = name.toCharArray();
-            /*
-             * if (typeDeclaration != null) { // check we are not attempting to override a final method MethodBinding[]
-             * existingBindings = typeDeclaration.binding.getMethods(name.toCharArray()); int stop = 1; }
-             */
+
+            /*if (typeDeclaration != null) { // check we are not attempting to override a final method MethodBinding[]
+                existingBindings = typeDeclaration.binding.getMethods(name.toCharArray());
+            }*/
+
             MethodBinding mb = new MethodBinding(modifiers, methodName, returnType, parameterTypes, null, referenceContext.binding);
             // FIXASC parameter names - what value would it have to set them correctly?
             groovyMethods.add(mb);
@@ -344,13 +314,14 @@ public class GroovyClassScope extends ClassScope {
             if (isStatic) {
                 modifiers |= Flags.AccStatic;
             }
-            if (this.referenceContext.binding.isInterface()) {
+            if (referenceContext.binding.isInterface()) {
                 modifiers |= Flags.AccAbstract;
             }
-            /*
-             * if (typeDeclaration != null) { // check we are not attempting to override a final method MethodBinding[]
-             * existingBindings = typeDeclaration.binding.getMethods(name.toCharArray()); int stop = 1; }
-             */
+
+            /*if (typeDeclaration != null) { // check we are not attempting to override a final method MethodBinding[]
+                existingBindings = typeDeclaration.binding.getMethods(name.toCharArray());
+            }*/
+
             MethodBinding mb = new LazilyResolvedMethodBinding(true, propertyName, modifiers, nameAsCharArray, null, referenceContext.binding);
             // FIXASC parameter names - what value would it have to set them correctly?
             groovyMethods.add(mb);
@@ -401,7 +372,7 @@ public class GroovyClassScope extends ClassScope {
             if (isStatic) {
                 modifiers |= Flags.AccStatic;
             }
-            if (this.referenceContext.binding.isInterface()) {
+            if (referenceContext.binding.isInterface()) {
                 modifiers |= Flags.AccAbstract;
             }
             char[] methodName = name.toCharArray();
@@ -419,6 +390,7 @@ public class GroovyClassScope extends ClassScope {
     @Override
     public void buildFieldsAndMethods() {
         super.buildFieldsAndMethods();
+
         GroovyTypeDeclaration[] anonymousTypes = ((GroovyTypeDeclaration) referenceContext).getAnonymousTypes();
         if (anonymousTypes != null) {
             for (GroovyTypeDeclaration anonType : anonymousTypes) {
@@ -434,10 +406,9 @@ public class GroovyClassScope extends ClassScope {
     }
 
     /**
-     * This is fix for generic methods with default parameter values. For those methods type variables and parameter arguments
-     * should be the same as it is for all other methods.
-     *
-     * @param method method to be fixed
+     * This is fix for generic methods with default parameter values. For those
+     * methods type variables and parameter arguments should be the same as it
+     * is for all other methods.
      */
     private void fixupTypeParameters(MethodBinding method) {
         if (method.typeVariables == null || method.typeVariables.length == 0) {

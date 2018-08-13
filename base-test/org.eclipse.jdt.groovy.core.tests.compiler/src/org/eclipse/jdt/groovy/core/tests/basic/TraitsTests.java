@@ -509,15 +509,15 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Sample.groovy",
             "interface MessageHandler {\n" +
-            "  void on(String message, Map payload)\n" +
+            "  void on(String message, Map<?, ?> payload)\n" +
             "}\n" +
             "trait DefaultHandler implements MessageHandler {\n" +
-            "  void on(String message, Map payload) {\n" +
+            "  void on(String message, Map<?, ?> payload) {\n" +
             "    println \"Received $message with payload $payload\"\n" +
             "  }\n" +
             "}\n" +
             "class SimpleHandlerWithLogging implements DefaultHandler {\n" +
-            "  void on(String message, Map payload) {\n" +
+            "  void on(String message, Map<?, ?> payload) {\n" +
             "    println \"Seeing $message with payload $payload\"\n" +
             "    DefaultHandler.super.on(message, payload)\n" +
             "  }\n" +
@@ -534,15 +534,15 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Sample.groovy",
             "interface MessageHandler {\n" +
-            "  void on(String message, Map payload)\n" +
+            "  void on(String message, Map<?, ?> payload)\n" +
             "}\n" +
             "trait DefaultHandler implements MessageHandler {\n" +
-            "  void on(String message, Map payload) {\n" +
+            "  void on(String message, Map<?, ?> payload) {\n" +
             "    println \"Received $message with payload $payload\"\n" +
             "  }\n" +
             "}\n" +
             "trait SayHandler implements MessageHandler {\n" +
-            "  void on(String message, Map payload) {\n" +
+            "  void on(String message, Map<?, ?> payload) {\n" +
             "    if (message.startsWith('say')) {\n" +
             "      println \"I say ${message - 'say'}!\"\n" +
             "    } else {\n" +
@@ -551,7 +551,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n" +
             "trait LoggingHandler implements MessageHandler {\n" +
-            "  void on(String message, Map payload) {\n" +
+            "  void on(String message, Map<?, ?> payload) {\n" +
             "    println \"Seeing $message with payload $payload\"\n" +
             "    super.on(message, payload)\n" +
             "  }\n" +
@@ -570,15 +570,15 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         String[] sources = {
             "Sample.groovy",
             "interface MessageHandler {\n" +
-            "  void on(String message, Map payload)\n" +
+            "  void on(String message, Map<?, ?> payload)\n" +
             "}\n" +
             "trait DefaultHandler implements MessageHandler {\n" +
-            "  void on(String message, Map payload) {\n" +
+            "  void on(String message, Map<?, ?> payload) {\n" +
             "    println \"Received $message with payload $payload\"\n" +
             "  }\n" +
             "}\n" +
             "trait SayHandler implements MessageHandler {\n" +
-            "  void on(String message, Map payload) {\n" +
+            "  void on(String message, Map<?, ?> payload) {\n" +
             "    if (message.startsWith('say')) {\n" +
             "      println \"I say ${message - 'say'}!\"\n" +
             "    } else {\n" +
@@ -587,7 +587,7 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "}\n" +
             "trait LoggingHandler implements MessageHandler {\n" +
-            "  void on(String message, Map payload) {\n" +
+            "  void on(String message, Map<?, ?> payload) {\n" +
             "    println \"Seeing $message with payload $payload\"\n" +
             "    super.on(message, payload)\n" +
             "  }\n" +

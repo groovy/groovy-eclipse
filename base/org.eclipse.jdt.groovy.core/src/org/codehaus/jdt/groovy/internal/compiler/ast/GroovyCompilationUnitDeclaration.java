@@ -994,7 +994,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
                 // star imports
                 for (ImportNode importPackage : importPackages) {
-                    String importText = importPackage.getText();
                     int endOffset = endOffset(importPackage), nameEndOffset = -2, nameStartOffset = -1;
                     if (endOffset > 0) {
                         nameEndOffset = importPackage.getNameEnd() + 1;
@@ -2216,6 +2215,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         private int getModifiers(MethodNode node) {
             int modifiers = node.getModifiers();
             modifiers &= ~(Flags.AccSynthetic | Flags.AccTransient);
+            /*if (!node.isAbstract() && !node.isPrivate() && isTrait(node.getDeclaringClass())) {
+                modifiers |= Flags.AccDefaultMethod;
+            }*/
             if (node.isSyntheticPublic() && hasPackageScopeXform(node, PackageScopeTarget.METHODS)) {
                 modifiers &= ~Flags.AccPublic;
             }
@@ -2224,12 +2226,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
         private int getModifiers(ConstructorNode node) {
             int modifiers = node.getModifiers();
-            try {
-                PackageScopeTarget type = PackageScopeTarget.valueOf("CONSTRUCTORS");
-                if (node.isSyntheticPublic() && hasPackageScopeXform(node, type)) {
-                    modifiers &= ~Flags.AccPublic;
-                }
-            } catch (IllegalArgumentException unavailable) {}
+            if (node.isSyntheticPublic() && hasPackageScopeXform(node, PackageScopeTarget.CONSTRUCTORS)) {
+                modifiers &= ~Flags.AccPublic;
+            }
             return modifiers;
         }
 

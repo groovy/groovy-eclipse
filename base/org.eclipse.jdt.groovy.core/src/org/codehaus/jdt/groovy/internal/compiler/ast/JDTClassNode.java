@@ -37,6 +37,7 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.groovy.vmplugin.v5.Java5;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration.FieldDeclarationWithInitializer;
 import org.eclipse.jdt.core.Flags;
@@ -315,11 +316,8 @@ public class JDTClassNode extends ClassNode implements JDTNode {
      */
     private MethodNode methodBindingToMethodNode(MethodBinding methodBinding) {
         try {
-            // FIXASC What value is there in getting the parameter names correct? (for methods and ctors)
-            // If they need to be correct we need to retrieve the method decl from the binding scope
-
             int modifiers = methodBinding.modifiers;
-            if (jdtBinding.isInterface() && !Flags.isStatic(modifiers) && !Flags.isSynthetic(modifiers) && !Flags.isDefaultMethod(modifiers)) {
+            if (jdtBinding.isInterface() && !Flags.isStatic(modifiers) && !Flags.isSynthetic(modifiers) && !Flags.isDefaultMethod(modifiers) && !Traits.isTrait(this)) {
                 modifiers |= Flags.AccAbstract;
             }
 
