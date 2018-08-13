@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -111,6 +111,36 @@ public final class FieldReferenceSearchTests extends SearchTestSuite {
             "    def nothing = super.xxx()\n" +  // yes...field reference used as a closure
             "  }\n" +
             "}");
+    }
+
+    @Test
+    public void testFieldReferencesInClass5() throws Exception {
+        createUnit("other", "Other",
+            "class Third {\n" +
+            "  private String xxx\n" +
+            "  String getXxx() { xxx }\n" +
+            "  void setXxx(String xxx) { this.xxx = xxx }\n" +
+            "}\n" +
+            "\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class Other {" +
+            "  Other() {\n" +
+            "    def t = new Third(xxx: 'abc')\n" +
+            "    def m = t.&setXxx\n" +
+            "    m('xyz')\n" +
+            "  }\n" +
+            "}\n");
+
+        doTestForTwoFieldReferencesInClass(
+            "class Second extends First {\n" +
+            "  int getXxx() {\n" +
+            "    return this.xxx\n" +
+            "  }\n" +
+            "  def whatever\n" +
+            "  void setXxx(int value) {\n" +
+            "    this.xxx = value\n" +
+            "  }\n" +
+            "}\n");
     }
 
     @Test

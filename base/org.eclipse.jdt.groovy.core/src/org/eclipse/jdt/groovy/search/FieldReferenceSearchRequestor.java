@@ -70,6 +70,10 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 
     @Override
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
+        if (result.declaringType == null) {
+            return VisitStatus.CONTINUE;
+        }
+
         boolean doCheck = false;
         boolean isAssignment = false;
         boolean isDeclaration = false;
@@ -114,7 +118,7 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
             }
         }
 
-        if (doCheck && end > 0 && result.declaringType != null) {
+        if (doCheck && end > 0) {
             // don't want to double accept nodes; this could happen with field and object initializers can get pushed into multiple constructors
             Position position = new Position(start, end - start);
             if (!acceptedPositions.contains(position)) {
