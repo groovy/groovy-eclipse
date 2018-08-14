@@ -149,6 +149,16 @@ public class ASTNode {
         return (T) metaDataMap.get(key);
     }
 
+    // GRECLIPSE add
+    public <T> T getNodeMetaData(Object key, java.util.function.Function<?, ? extends T> valFn) {
+        if (key == null) throw new GroovyBugError("Tried to get/set meta data with null key on " + this + ".");
+        if (metaDataMap == null) {
+            metaDataMap = new ListHashMap();
+        }
+        return (T) metaDataMap.computeIfAbsent(key, valFn);
+    }
+    // GRECLIPSE end
+
     /**
      * Copies all node meta data from the other node to this one
      * @param other - the other node
@@ -225,10 +235,12 @@ public class ASTNode {
         return metaDataMap;
     }
 
+    /* GRECLIPSE edit
     @Override
     public boolean equals(Object o) {
         return this == o;
     }
+    */
 
     @Override
     public int hashCode() {

@@ -2339,7 +2339,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testTraits() {
+    void testTraits1() {
         String contents = '''\
             trait Whatever {
               private String field
@@ -2380,6 +2380,30 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.lastIndexOf('param'), 5, PARAMETER),
             new HighlightedTypedPosition(contents.lastIndexOf('property'), 8, FIELD),
             new HighlightedTypedPosition(contents.lastIndexOf('unknown'), 7, UNKNOWN))
+    }
+
+    @Test
+    void testTraits3() {
+        addGroovySource('''\
+            trait T {
+              String getFoo() { 'foo' }
+            }
+            abstract class A implements T {
+            }
+            '''.stripIndent())
+        String contents = '''\
+            class C extends A {
+              static void main(args) {
+                new C().getFoo()
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('main'), 4, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('args'), 4, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('C'), 1, CTOR_CALL),
+            new HighlightedTypedPosition(contents.lastIndexOf('getFoo'), 6, METHOD_CALL))
     }
 
     //

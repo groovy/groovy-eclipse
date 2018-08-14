@@ -18,6 +18,7 @@ package org.eclipse.jdt.groovy.search;
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -58,6 +59,7 @@ import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.classgen.asm.OptimizingStatementWriter.StatementMeta;
+import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
@@ -595,8 +597,8 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      * then will return an arbitrary one.
      */
     protected MethodNode findMethodDeclaration(String name, ClassNode declaringType, List<ClassNode> argumentTypes, boolean isStaticExpression) {
-        // concrete types return all declared methods from getMethods(String)
-        if (!declaringType.isInterface() && !declaringType.isAbstract()) {
+        // concrete types (without mixins/traits) return all declared methods from getMethods(String)
+        if (!declaringType.isAbstract() && !declaringType.isInterface() && !implementsTrait(declaringType)) {
             List<MethodNode> candidates = declaringType.getMethods(name);
             if (!candidates.isEmpty()) {
                 return findMethodDeclaration0(candidates, argumentTypes, isStaticExpression).getOriginal();
@@ -809,6 +811,19 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         } else {
             return typeOfDeclaration;
         }
+    }
+
+    protected static boolean implementsTrait(ClassNode concreteType) {
+        return concreteType.getNodeMetaData(Traits.class, x -> {
+            ClassNode type = concreteType.redirect();
+            do {
+                if (Traits.isTrait(type) || Arrays.stream(type.getInterfaces()).anyMatch(Traits::isTrait)) {
+                    return Boolean.TRUE;
+                }
+                type = type.getSuperClass();
+            } while (type != null);
+            return Boolean.FALSE;
+        }).booleanValue();
     }
 
     protected static boolean isThisObjectExpression(VariableScope scope) {

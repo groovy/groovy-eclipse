@@ -18,6 +18,7 @@
  */
 package org.codehaus.groovy.ast;
 
+import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.util.ListHashMap;
 
 import java.util.Map;
@@ -143,14 +144,24 @@ public class ASTNode implements NodeMetaDataHandler {
     }
 
     @Override
+    public void copyNodeMetaData(NodeMetaDataHandler other) {
+        helper.copyNodeMetaData(other);
+    }
+
+    @Override
     public <T> T getNodeMetaData(Object key) {
         return helper.getNodeMetaData(key);
     }
 
-    @Override
-    public void copyNodeMetaData(NodeMetaDataHandler other) {
-        helper.copyNodeMetaData(other);
+    // GRECLIPSE add
+    public <T> T getNodeMetaData(Object key, java.util.function.Function<?, ? extends T> valFn) {
+        if (key == null) throw new GroovyBugError("Tried to get/set meta data with null key on " + this + ".");
+        if (metaDataMap == null) {
+            setMetaDataMap(new ListHashMap());
+        }
+        return (T) metaDataMap.computeIfAbsent(key, valFn);
     }
+    // GRECLIPSE end
 
     @Override
     public void setNodeMetaData(Object key, Object value) {
@@ -173,8 +184,8 @@ public class ASTNode implements NodeMetaDataHandler {
     }
 
     @Override
-    public ListHashMap getMetaDataMap() {
-        return (ListHashMap) metaDataMap;
+    public Map<?, ?> getMetaDataMap() {
+        return metaDataMap;
     }
 
     @Override
