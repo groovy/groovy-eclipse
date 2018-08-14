@@ -216,8 +216,10 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
         try {
             //ClassNode type = ((EclipseSourceUnit) module.getContext()).resolver.resolve(typeName);
             Class<?> t = module.getContext().getClassLoader().loadClass(typeName, true, true, true);
-            return ClassHelper.make(t);
-        } catch (ClassNotFoundException e) {
+            ClassNode typeNode = ClassHelper.make(t);
+            typeNode.lazyClassInit();
+            return typeNode;
+        } catch (ClassNotFoundException | NoClassDefFoundError e) {
             return null;
         }
     }
