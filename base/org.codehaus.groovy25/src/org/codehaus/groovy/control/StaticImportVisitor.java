@@ -281,26 +281,28 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
         }
 
         if (mce.isImplicitThis() || isExplicitThisOrSuper) {
-            if (mce.isImplicitThis() && currentClass.tryFindPossibleMethod(mce.getMethodAsString(), args) == null) {
-                Expression ret = findStaticMethodImportFromModule(method, args);
-                if (ret != null) {
-                    // GRECLIPSE add
-                    if (!((MethodCall) ret).getMethodAsString().equals(method.getText())) {
-                        // store the identifier to facilitate organizing static imports
-                        ret.putNodeMetaData("static.import.alias", method.getText());
-                    }
-                    // GRECLIPSE end
-                    setSourcePosition(ret, mce);
-                    return ret;
-                }
-                if (method instanceof ConstantExpression && !inLeftExpression) {
-                    // could be a closure field
-                    String methodName = (String) ((ConstantExpression) method).getValue();
-                    ret = findStaticFieldOrPropAccessorImportFromModule(methodName);
+            if (mce.isImplicitThis()) {
+                if (null == currentClass.tryFindPossibleMethod(mce.getMethodAsString(), args)) {
+                    Expression ret = findStaticMethodImportFromModule(method, args);
                     if (ret != null) {
-                        ret = new MethodCallExpression(ret, "call", args);
+                        // GRECLIPSE add
+                        if (!((MethodCall) ret).getMethodAsString().equals(method.getText())) {
+                            // store the identifier to facilitate organizing static imports
+                            ret.putNodeMetaData("static.import.alias", method.getText());
+                        }
+                        // GRECLIPSE end
                         setSourcePosition(ret, mce);
                         return ret;
+                    }
+                    if (method instanceof ConstantExpression && !inLeftExpression) {
+                        // could be a closure field
+                        String methodName = (String) ((ConstantExpression) method).getValue();
+                        ret = findStaticFieldOrPropAccessorImportFromModule(methodName);
+                        if (ret != null) {
+                            ret = new MethodCallExpression(ret, "call", args);
+                            setSourcePosition(ret, mce);
+                            return ret;
+                        }
                     }
                 }
             } else if (currentMethod!=null && currentMethod.isStatic() && isExplicitSuper) {

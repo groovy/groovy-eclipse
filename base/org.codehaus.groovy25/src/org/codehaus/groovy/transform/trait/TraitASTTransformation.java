@@ -200,14 +200,14 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
             fieldHelper = new InnerClassNode(
                     cNode,
                     Traits.fieldHelperClassName(cNode),
-                    ACC_STATIC | ACC_PUBLIC | ACC_INTERFACE | ACC_ABSTRACT,
+                    ACC_STATIC | ACC_PUBLIC | ACC_INTERFACE | ACC_ABSTRACT | ACC_SYNTHETIC,
                     ClassHelper.OBJECT_TYPE
             );
             if (hasStatic) {
                 staticFieldHelper = new InnerClassNode(
                         cNode,
                         Traits.staticFieldHelperClassName(cNode),
-                        ACC_STATIC | ACC_PUBLIC | ACC_INTERFACE | ACC_ABSTRACT,
+                        ACC_STATIC | ACC_PUBLIC | ACC_INTERFACE | ACC_ABSTRACT | ACC_SYNTHETIC,
                         ClassHelper.OBJECT_TYPE
                 );
             }
@@ -224,7 +224,10 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
                             methodNode.getLineNumber(), methodNode.getColumnNumber()));
                     return null;
                 }
-                helper.addMethod(processMethod(cNode, helper, methodNode, fieldHelper, fieldNames));
+                if (!methodNode.isAbstract()) {
+                    // add non-abstract methods; abstract methods covered from trait interface
+                    helper.addMethod(processMethod(cNode, helper, methodNode, fieldHelper, fieldNames));
+                }
                 if (methodNode.isPrivate() || methodNode.isStatic()) {
                     nonPublicAPIMethods.add(methodNode);
                 }
@@ -546,7 +549,7 @@ public class TraitASTTransformation extends AbstractASTTransformation implements
         Parameter[] newParams = new Parameter[initialParams.length + 1];
         newParams[0] = createSelfParameter(traitClass, methodNode.isStatic());
         System.arraycopy(initialParams, 0, newParams, 1, initialParams.length);
-        final int mod = methodNode.isPrivate()?ACC_PRIVATE:ACC_PUBLIC;
+        final int mod = methodNode.isPrivate() ? ACC_PRIVATE : ACC_PUBLIC | (methodNode.isFinal() ? ACC_FINAL : 0);
         MethodNode mNode = new MethodNode(
                 methodNode.getName(),
                 mod | ACC_STATIC,

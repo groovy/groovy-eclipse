@@ -944,9 +944,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         }
 
         for (Parameter parameter : parameters) {
-            // GRECLIPSE add
-            if (!parameter.hasInitialExpression()) continue;
-            // GRECLIPSE end
+            if (!parameter.hasInitialExpression()) continue; // GROOVY-8728 make idempotent
             // remove default expression and store it as node metadata
             parameter.putNodeMetaData(Verifier.INITIAL_EXPRESSION, parameter.getInitialExpression());
             parameter.setInitialExpression(null);

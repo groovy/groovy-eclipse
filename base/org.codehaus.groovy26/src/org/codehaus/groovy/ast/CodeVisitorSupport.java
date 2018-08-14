@@ -32,7 +32,6 @@ import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.ElvisOperatorExpression;
-import org.codehaus.groovy.ast.expr.EmptyExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.GStringExpression;
@@ -350,9 +349,4 @@ public abstract class CodeVisitorSupport implements GroovyCodeVisitor {
 
     public void visitBytecodeExpression(BytecodeExpression cle) {
     }
-
-    // GRECLIPSE add
-    public void visitEmptyExpression(EmptyExpression expression) {
-    }
-    // GRECLIPSE end
 }
