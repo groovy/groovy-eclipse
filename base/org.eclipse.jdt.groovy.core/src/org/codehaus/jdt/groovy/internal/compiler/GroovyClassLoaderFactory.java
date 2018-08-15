@@ -295,7 +295,11 @@ public final class GroovyClassLoaderFactory {
                         } catch (Exception e) {
                             defaultCategories = Collections.EMPTY_SET;
                             defaultStaticCategories = Collections.EMPTY_SET;
-                            Util.log(e, "Failed to find Default Groovy Methods with " + this);
+
+                            if (GroovyLogManager.manager.hasLoggers()) {
+                                GroovyLogManager.manager.log(TraceCategory.CLASSPATH,
+                                    "Failed to find Default Groovy Methods with " + this + "\n\t" + e.getMessage());
+                            }
                         }
                     }
                 }
