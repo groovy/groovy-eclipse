@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -174,7 +174,7 @@ public final class BinarySearchTests extends SearchTestSuite {
         String toFind = "age_1";
         IField field = type.getField(toFind);
         MockSearchRequestor requestor = performSearch(field);
-        assertMatches(toFind, requestor, 4, 2);
+        assertMatches(toFind, requestor, 2, 2); // all was 4, but in binary synthetic accessor is indistinguishable from source method
     }
 
     @Test
@@ -183,7 +183,7 @@ public final class BinarySearchTests extends SearchTestSuite {
         String toFind = "name_1";
         IField field = type.getField(toFind);
         MockSearchRequestor requestor = performSearch(field);
-        assertMatches(toFind, requestor, 4, 2);
+        assertMatches(toFind, requestor, 2, 2); // all was 4, but in binary synthetic accessor is indistinguishable from source method
     }
 
     @Test
@@ -201,7 +201,7 @@ public final class BinarySearchTests extends SearchTestSuite {
         String toFind = "fieldInInitializer";
         IField method = type.getField(toFind);
         MockSearchRequestor requestor = performSearch(method);
-        assertMatches(toFind, requestor, 2, 1);
+        assertMatches(toFind, requestor, 1, 1); // all was 2, but in binary synthetic accessor is indistinguishable from source method
     }
 
     @Test

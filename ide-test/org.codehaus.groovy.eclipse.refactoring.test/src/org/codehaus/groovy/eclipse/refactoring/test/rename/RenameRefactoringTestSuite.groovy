@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,35 +50,20 @@ abstract class RenameRefactoringTestSuite extends GroovyEclipseTestSuite {
 
     protected void assertContents(ICompilationUnit[] existingUnits, List<String> expectedContents) {
         def sb = new StringBuilder()
-        existingUnits.eachWithIndex { unit, i ->
+        existingUnits.eachWithIndex { existingUnit, i ->
             if (expectedContents[i] != null) {
-                String actualContents = String.valueOf(unit.contents)
-                if (!actualContents.equals(expectedContents[i])) {
-                    sb.append('\n-----EXPECTING-----\n')
-                    sb.append(expectedContents[i])
-                    sb.append('\n--------WAS--------\n')
-                    sb.append(actualContents)
-                }
-            } else if (existingUnits[i].exists()) {
-                // unit should have been deleted
-                sb.append('\nUnit ' + unit.elementName + ' should have been deleted.\n')
-                sb.append('Instead had the following contents:\n')
-                sb.append(unit.contents)
+                assertContents(existingUnit, expectedContents[i])
+            } else if (existingUnits[i].exists()) { // unit should have been deleted
+                sb.append('\nUnit ' + existingUnit.elementName + ' should have been deleted.\n')
+                sb.append('Instead had the following contents:\n').append(existingUnit.contents)
+                Assert.fail('Refactoring produced unexpected results:' + sb)
             }
         }
-        if (sb.length() > 0) Assert.fail('Refactoring produced unexpected results:' + sb)
     }
 
-    protected void assertContents(ICompilationUnit existingUnits, String expectedContents) {
-        def sb = new StringBuilder()
-        String actualContents = String.valueOf(existingUnits.contents)
-        if (!actualContents.equals(expectedContents)) {
-            sb.append('\n-----EXPECTING-----\n')
-            sb.append(expectedContents)
-            sb.append('\n--------WAS--------\n')
-            sb.append(actualContents)
-        }
-        if (sb.length() > 0) Assert.fail('Refactoring produced unexpected results:' + sb)
+    protected void assertContents(ICompilationUnit existingUnit, String expectedContents) {
+        String actualContents = String.valueOf(existingUnit.contents)
+        Assert.assertEquals('Refactoring produced unexpected results:', expectedContents, actualContents)
     }
 
     protected RefactoringStatus performRefactoring(Refactoring refactor, boolean providesUndo) {
@@ -89,7 +74,7 @@ abstract class RenameRefactoringTestSuite extends GroovyEclipseTestSuite {
         change.setUndoManager(undoer, refactor.name)
 undoer.flush()
         executePerformOperation(change, ResourcesPlugin.getWorkspace())
-        RefactoringStatus status = create.getConditionCheckingStatus()
+        RefactoringStatus status = create.conditionCheckingStatus
         assert change.changeExecuted() || !change.changeExecutionFailed() : 'Change was not executed'
         if (providesUndo) {
             assert change.undoChange != null : 'Undo does not exist'

@@ -35,6 +35,7 @@ import org.eclipse.jdt.internal.compiler.ast.Argument;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
@@ -76,7 +77,7 @@ public class GroovyClassScope extends ClassScope {
             return methodBindings;
         }
 
-        ReferenceBinding[] superInterfaces = (typeBinding.superInterfaces != null ? typeBinding.superInterfaces : new ReferenceBinding[0]);
+        ReferenceBinding[] superInterfaces = (typeBinding.superInterfaces != null ? typeBinding.superInterfaces : Binding.NO_SUPERINTERFACES);
 
         boolean implementsGroovyLangObject = false;
         for (ReferenceBinding face : superInterfaces) {
@@ -111,7 +112,7 @@ public class GroovyClassScope extends ClassScope {
                 .ifPresent(groovyMethods::add);
             createMethod("setProperty", false, new TypeBinding[] {bindingJLS, bindingJLO}, TypeBinding.VOID, methodBindings)
                 .ifPresent(groovyMethods::add);
-            createMethod("getMetaClass", false, new TypeBinding[] {}, bindingGLM, methodBindings)
+            createMethod("getMetaClass", false, Binding.NO_TYPES, bindingGLM, methodBindings)
                 .ifPresent(groovyMethods::add);
             createMethod("setMetaClass", false, new TypeBinding[] {bindingGLM}, TypeBinding.VOID, methodBindings)
                 .ifPresent(groovyMethods::add);

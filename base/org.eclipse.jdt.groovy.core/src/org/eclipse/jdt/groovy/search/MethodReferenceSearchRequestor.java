@@ -197,7 +197,6 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
     @Override
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
         if (result.declaringType == null) {
-            // GRECLIPSE-1180: probably a literal of some kind
             return VisitStatus.CONTINUE;
         }
 
@@ -210,7 +209,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
                 start = ((AnnotatedNode) node).getNameStart();
                 end = ((AnnotatedNode) node).getNameEnd() + 1;
 
-            // check for non-synthetic match; SyntheticAccessorSearchRequestor matches "foo.bar" to "getBar()" w/o backing field
+            // check for non-synthetic match; SyntheticAccessorSearchRequestor matches "foo.bar" to "getBar()", etc.
             } else if (node.getText().equals(methodName) || isNotSynthetic(node.getText(), result.declaringType)) {
                 start = node.getStart();
                 end = node.getEnd();
@@ -221,8 +220,8 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
             // don't want to double accept nodes; this could happen with field and object initializers can get pushed into multiple constructors
             Position position = new Position(start, end - start);
             if (!acceptedPositions.contains(position)) {
-                if (nameAndArgsMatch(GroovyUtils.getBaseType(result.declaringType), isDeclaration ?
-                        GroovyUtils.getParameterTypes(((MethodNode) node).getParameters()) : result.scope.getMethodCallArgumentTypes())) {
+                if (nameAndArgsMatch(GroovyUtils.getBaseType(result.declaringType), isDeclaration
+                        ? GroovyUtils.getParameterTypes(((MethodNode) node).getParameters()) : result.scope.getMethodCallArgumentTypes())) {
                     if (enclosingElement.getOpenable() instanceof GroovyClassFileWorkingCopy) {
                         enclosingElement = ((GroovyClassFileWorkingCopy) enclosingElement.getOpenable()).convertToBinary(enclosingElement);
                     }

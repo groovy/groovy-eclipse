@@ -60,13 +60,11 @@ import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.classgen.asm.OptimizingStatementWriter.StatementMeta;
 import org.codehaus.groovy.transform.trait.Traits;
-import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
-import org.eclipse.jdt.internal.compiler.lookup.LazilyResolvedMethodBinding;
 
 /**
  * Determines types using AST inspection.
@@ -862,8 +860,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
      */
     protected static boolean isSynthetic(MethodNode method) {
         // TODO: What about 'method.getDeclaringClass().equals(ClassHelper.GROOVY_OBJECT_TYPE)'?
-        return method.isSynthetic() || method.getDeclaringClass().equals(VariableScope.CLOSURE_CLASS_NODE) ||
-            (method instanceof JDTMethodNode && ((JDTMethodNode) method).getJdtBinding() instanceof LazilyResolvedMethodBinding);
+        return method.isSynthetic() || method.getDeclaringClass().equals(VariableScope.CLOSURE_CLASS_NODE);
     }
 
     /**

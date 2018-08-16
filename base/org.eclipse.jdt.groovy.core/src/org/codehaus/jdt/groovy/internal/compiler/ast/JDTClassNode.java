@@ -62,6 +62,7 @@ import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
+import org.eclipse.jdt.internal.compiler.lookup.LazilyResolvedMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.MemberTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
@@ -346,6 +347,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
             MethodNode methodNode = new JDTMethodNode(methodBinding, resolver, String.valueOf(methodBinding.selector), modifiers, returnType, parameters, exceptions, null);
             methodNode.setGenericsTypes(new JDTClassNodeBuilder(resolver).configureTypeVariables(methodBinding.typeVariables()));
+            methodNode.setSynthetic(methodBinding instanceof LazilyResolvedMethodBinding); // see GroovyClassScope
             return methodNode;
         } catch (AbortCompilation e) {
             throw e;

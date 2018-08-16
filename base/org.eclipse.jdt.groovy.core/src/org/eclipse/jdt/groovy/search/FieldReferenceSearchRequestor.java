@@ -21,6 +21,7 @@ import java.util.Set;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.FieldExpression;
@@ -48,7 +49,7 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 
     protected final String fieldName, declaringQualifiedName;
     protected final Set<Position> acceptedPositions = new HashSet<>();
-    protected final boolean readAccess, writeAccess, findReferences, findDeclarations;
+    protected final boolean readAccess, writeAccess, findReferences, findDeclarations, findPseudoProperties;
 
     public FieldReferenceSearchRequestor(FieldPattern pattern, SearchRequestor requestor, SearchParticipant participant) {
         this.requestor = requestor;
@@ -66,6 +67,7 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
         writeAccess = (Boolean) ReflectionUtils.getPrivateField(VariablePattern.class, "writeAccess", pattern);
         findReferences = (Boolean) ReflectionUtils.getPrivateField(VariablePattern.class, "findReferences", pattern);
         findDeclarations = (Boolean) ReflectionUtils.getPrivateField(VariablePattern.class, "findDeclarations", pattern);
+        findPseudoProperties = requestor.getClass().getName().contains("SyntheticAccessorSearch"); // accessor as property
     }
 
     @Override
@@ -76,37 +78,27 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 
         boolean doCheck = false;
         boolean isAssignment = false;
-        boolean isDeclaration = false;
+        boolean isDeclaration = (node instanceof FieldNode);
         int start = 0;
         int end = 0;
 
-        if (node instanceof ConstantExpression) {
-            // check for "foo.bar" where "bar" refers to "getBar()" or "setBar(...)" with backing field or property
-            if (fieldName.equals(((ConstantExpression) node).getText()) && (result.confidence == TypeConfidence.UNKNOWN ||
-                    result.declaringType.getField(fieldName) != null || result.declaringType.getProperty(fieldName) != null)) {
+        if (isDeclaration) {
+            FieldNode fieldNode = (FieldNode) node;
+            if (fieldName.equals(fieldNode.getName())) {
                 doCheck = true;
-                isAssignment = EqualityVisitor.checkForAssignment(node, result.enclosingAssignment);
-                start = node.getStart();
-                end = node.getEnd();
+                // assume all FieldNodes are assignments -- not true if there is no initializer, but we
+                // can't know this at this point since initializer has already been moved to the <init>
+                isAssignment = true; //fieldNode.hasInitialExpression();
+                start = fieldNode.getNameStart();
+                end = fieldNode.getNameEnd() + 1;
             }
         } else if (node instanceof FieldExpression) {
             if (fieldName.equals(((FieldExpression) node).getFieldName())) {
                 doCheck = true;
                 isAssignment = EqualityVisitor.checkForAssignment(node, result.enclosingAssignment);
-                // fully-qualified field expressions in static contexts will have an sloc of the entire qualified name
+                // fully-qualified field expressions in static contexts will have sloc of the entire qualified name
                 start = node.getEnd() - fieldName.length();
                 end = node.getEnd();
-            }
-        } else if (node instanceof FieldNode) {
-            FieldNode fnode = (FieldNode) node;
-            if (fieldName.equals(fnode.getName())) {
-                doCheck = true;
-                // assume all FieldNodes are assignments -- not true if there is no initializer, but we
-                // can't know this at this point since initializer has already been moved to the <init>
-                isAssignment = true;
-                isDeclaration = true;
-                start = fnode.getNameStart();
-                end = fnode.getNameEnd() + 1; // arrrgh...why +1?
             }
         } else if (node instanceof VariableExpression) {
             if (fieldName.equals(((VariableExpression) node).getName()) &&
@@ -115,6 +107,22 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
                 isAssignment = EqualityVisitor.checkForAssignment(node, result.enclosingAssignment);
                 start = node.getStart();
                 end = node.getEnd();
+            }
+        } else if (node instanceof ConstantExpression) {
+            if (fieldName.equals(((ConstantExpression) node).getText())) {
+                if (result.declaration instanceof FieldNode || result.declaration instanceof PropertyNode || result.confidence == TypeConfidence.UNKNOWN) {
+                    doCheck = true;
+                    isAssignment = EqualityVisitor.checkForAssignment(node, result.enclosingAssignment);
+                    start = node.getStart();
+                    end = node.getEnd();
+
+                // check for "foo.bar" where "bar" refers to generated/synthetic "getBar()", "isBar()" or "setBar(...)"
+                } else if (result.declaration instanceof MethodNode && (((MethodNode) result.declaration).isSynthetic() || findPseudoProperties)) {
+                    doCheck = true;
+                    isAssignment = ((MethodNode) result.declaration).getName().startsWith("set");
+                    start = node.getStart();
+                    end = node.getEnd();
+                }
             }
         }
 
@@ -156,11 +164,8 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
         } else if (declaringQualifiedName.isEmpty()) {
             // no type specified, accept all
             return true;
-        } else if (declaringType.getName().equals(declaringQualifiedName)) {
-            return true;
-        } else {
-            return false;
         }
+        return declaringType.getName().equals(declaringQualifiedName);
     }
 
     private int getAccuracy(TypeConfidence confidence, boolean isCompleteMatch) {
