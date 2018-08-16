@@ -610,7 +610,7 @@ public class VariableScope implements Iterable<VariableScope.VariableInfo> {
     }
 
     public boolean isFieldAccessDirect() {
-        return (!isOwnerStatic() && getEnclosingClosureScope() == null);
+        return (getEnclosingClosureScope() == null);
     }
 
     public ModuleNode getEnclosingModuleNode() {

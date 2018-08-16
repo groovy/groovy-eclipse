@@ -15,6 +15,10 @@
  */
 package org.eclipse.jdt.core.groovy.tests.search;
 
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
+
+import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.junit.Assert;
@@ -22,7 +26,7 @@ import org.junit.Test;
 
 public final class StaticInferencingTests extends InferencingTestSuite {
 
-    private void assertKnown(String source, String target, String declaringType, String expressionType) {
+    private ASTNode assertKnown(String source, String target, String declaringType, String expressionType) {
         int offset = source.lastIndexOf(target);
         GroovyCompilationUnit unit = createUnit("Search", source);
         SearchRequestor requestor = doVisit(offset, offset + target.length(), unit, false);
@@ -31,6 +35,8 @@ public final class StaticInferencingTests extends InferencingTestSuite {
             TypeLookupResult.TypeConfidence.UNKNOWN, requestor.result.confidence);
         Assert.assertEquals(declaringType, requestor.result.declaringType.getName());
         Assert.assertEquals(expressionType, printTypeName(requestor.result.type));
+
+        return requestor.result.declaration;
     }
 
     private void assertUnknown(String source, String target) {
@@ -233,6 +239,60 @@ public final class StaticInferencingTests extends InferencingTestSuite {
             "Assert.assertType(unit, offset, offset + 'string'.length(), 'java.util.Collection')";
 
         assertKnown(contents, "assertType", "Assert", "java.lang.Void");
+    }
+
+    @Test
+    public void testStaticReference9() {
+        String contents =
+            "class Static {\n" +
+            "  static def foo\n" +
+            "  static {\n" +
+            "    foo\n" +
+            "  }\n" +
+            "}\n";
+        ASTNode decl = assertKnown(contents, "foo", "Static", "java.lang.Object");
+        Assert.assertThat(decl, instanceOf(FieldNode.class)); // not MethodNode
+    }
+
+    @Test
+    public void testStaticReference9a() {
+        String contents =
+            "class Static {\n" +
+            "  static def foo\n" +
+            "  static def method() {\n" +
+            "    foo\n" +
+            "  }\n" +
+            "}\n";
+        ASTNode decl = assertKnown(contents, "foo", "Static", "java.lang.Object");
+        Assert.assertThat(decl, instanceOf(FieldNode.class)); // not MethodNode
+    }
+
+    @Test
+    public void testStaticReference10() {
+        String contents =
+            "class Static {\n" +
+            "  static def foo\n" +
+            "  static def getFoo() {}\n" +
+            "  static {\n" +
+            "    foo\n" +
+            "  }\n" +
+            "}\n";
+        ASTNode decl = assertKnown(contents, "foo", "Static", "java.lang.Object");
+        Assert.assertThat(decl, instanceOf(FieldNode.class)); // not MethodNode
+    }
+
+    @Test
+    public void testStaticReference10a() {
+        String contents =
+            "class Static {\n" +
+            "  static def foo\n" +
+            "  static def getFoo() {}\n" +
+            "  static def method() {\n" +
+            "    foo\n" +
+            "  }\n" +
+            "}\n";
+        ASTNode decl = assertKnown(contents, "foo", "Static", "java.lang.Object");
+        Assert.assertThat(decl, instanceOf(FieldNode.class)); // not MethodNode
     }
 
     //
