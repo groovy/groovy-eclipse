@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.groovy.search;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -28,6 +29,7 @@ import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.PropertyNode;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyTypeDeclaration;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
@@ -61,7 +63,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 
     protected final String methodName;
     protected final String declaringTypeName;
-    protected final String[] parameterTypeNames;
+    protected final String[] parameterTypeNames, parameterTypeSignatures;
     protected final boolean findReferences, findDeclarations, skipPseudoProperties;
 
     protected final Set<Position> acceptedPositions = new HashSet<>();
@@ -74,7 +76,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
         this.participant = participant;
 
         this.methodName = String.valueOf(pattern.selector);
-        String[] parameterTypeSignatures = getParameterTypeSignatures(pattern);
+        parameterTypeSignatures = getParameterTypeSignatures(pattern);
         IType declaringType = ReflectionUtils.getPrivateField(MethodPattern.class, "declaringType", pattern);
 
         char[] declaringQualifiedName = null;
@@ -197,7 +199,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 
     @Override
     public VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
-        if (result.declaringType == null) {
+        if (result.declaringType == null || !(result.declaration instanceof MethodNode)) {
             return VisitStatus.CONTINUE;
         }
 
@@ -205,18 +207,26 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
         int start = 0;
         int end = 0;
 
-        if (result.declaration instanceof MethodNode && ((MethodNode) result.declaration).getName().equals(methodName)) {
+        if (methodName.equals(((MethodNode) result.declaration).getName())) {
             if (isDeclaration || node instanceof StaticMethodCallExpression) {
                 start = ((AnnotatedNode) node).getNameStart();
                 end = ((AnnotatedNode) node).getNameEnd() + 1;
 
                 // check for "foo.bar" where "bar" refers to "getBar()", "isBar()" or "setBar(...)"
                 if (!isDeclaration && (end - start) < ((StaticMethodCallExpression) node).getMethod().length() && skipPseudoProperties) {
-                    end = 0;
+                    start = end = 0;
                 }
 
             // check for non-synthetic match; SyntheticAccessorSearchRequestor matches "foo.bar" to "getBar()", etc.
-            } else if (node.getText().equals(methodName) || (isNotSynthetic(node.getText(), result.declaringType) && !skipPseudoProperties)) {
+            } else if (methodName.equals(node.getText()) || (isNotSynthetic(node.getText(), result.declaringType) && !skipPseudoProperties)) {
+                start = node.getStart();
+                end = node.getEnd();
+            }
+
+        // check for pseudo-properties on behalf of SyntheticAccessorsRenameParticipant
+        } else if (node instanceof ConstantExpression) {
+            if (methodName.equals(node.getText()) && Arrays.equals(parameterTypeSignatures,
+                    GroovyUtils.getParameterTypeSignatures((MethodNode) result.declaration, false))) {
                 start = node.getStart();
                 end = node.getEnd();
             }

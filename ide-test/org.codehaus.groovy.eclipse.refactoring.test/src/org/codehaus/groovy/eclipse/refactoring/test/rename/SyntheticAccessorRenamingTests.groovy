@@ -717,7 +717,7 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
         ))
     }
 
-    @Test // this has compile errors, but it should still work
+    @Test @NotYetImplemented // this has compile errors, but it should still work
     void testStaticGetterOnly2() {
         performRefactoringAndUndo('getFlar', new TestSource(
             pack: 'p', name: 'First.groovy',
@@ -823,7 +823,7 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
         ))
     }
 
-    @Test // this has compile errors, but it should still work
+    @Test @NotYetImplemented // this has compile errors, but it should still work
     void testStaticIsserOnly2() {
         performRefactoringAndUndo('isFlar', new TestSource(
             pack: 'p', name: 'First.groovy',
@@ -929,7 +929,7 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
         ))
     }
 
-    @Test // this has compile errors, but it should still work
+    @Test @NotYetImplemented // this has compile errors, but it should still work
     void testStaticSetterOnly2() {
         performRefactoringAndUndo('setFlar', new TestSource(
             pack: 'p', name: 'First.groovy',

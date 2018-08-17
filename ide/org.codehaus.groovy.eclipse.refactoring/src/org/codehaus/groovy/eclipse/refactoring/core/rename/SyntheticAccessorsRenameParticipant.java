@@ -42,11 +42,18 @@ import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
+import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.SourceRange;
 import org.eclipse.jdt.core.refactoring.CompilationUnitChange;
+import org.eclipse.jdt.core.search.IJavaSearchConstants;
+import org.eclipse.jdt.core.search.SearchEngine;
 import org.eclipse.jdt.core.search.SearchMatch;
+import org.eclipse.jdt.core.search.SearchParticipant;
+import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.core.search.SearchRequestor;
+import org.eclipse.jdt.internal.core.search.JavaSearchParticipant;
 import org.eclipse.jdt.internal.corext.refactoring.Checks;
 import org.eclipse.jdt.internal.corext.refactoring.RefactoringCoreMessages;
 import org.eclipse.jdt.internal.corext.refactoring.SearchResultGroup;
@@ -85,7 +92,7 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
         matches = new ArrayList<>();
         try {
             if (shouldUpdateReferences()) {
-                findExtraReferences(SubMonitor.convert(pm, "Finding Groovy property references", 10));
+                findExtraReferences(SubMonitor.convert(pm, "Finding Groovy property references", 20));
             }
             checkForBinaryRefs(status);
             checkForPotentialMatches(status);
@@ -112,7 +119,32 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
     private void findExtraReferences(IProgressMonitor pm) throws CoreException {
         SyntheticAccessorSearchRequestor requestor = new SyntheticAccessorSearchRequestor();
         requestor.findSyntheticMatches(renameTarget, matches::add, SubMonitor.convert(pm, "Find synthetic property accessors", 10));
-        //something.findNonSyntheticMatches(renameTarget, matches::add, SubMonitor.convert(pm, "Find property-style uses of non-synthetic methods", 10));
+
+        // when searching for an accessor method, also search for pseudo-property uses of the method; "foo.bar" for "getBar()", "isBar()" or "setBar(...)"
+        if (renameTarget.getElementType() == IJavaElement.METHOD && renameTarget.getElementName().matches("(?:[gs]et|is)\\p{javaJavaIdentifierPart}+") &&
+                ((IMethod) renameTarget).getParameters().length == (renameTarget.getElementName().startsWith("set") ? 1 : 0) &&
+                GroovyNature.hasGroovyNature(renameTarget.getJavaProject().getProject())) {
+
+            String name = renameTarget.getElementName();
+            name = Introspector.decapitalize(name.substring(name.startsWith("is") ? 2 : 3));
+            IMethod method = ((IType) renameTarget.getParent()).getMethod(name, ((IMethod) renameTarget).getParameterTypes());
+            if (!method.exists()) {
+                method = SyntheticAccessorSearchRequestor.syntheticMemberProxy(
+                    IMethod.class, method, ((IMethod) renameTarget).getReturnType());
+
+                SearchPattern pattern = SearchPattern.createPattern(method, IJavaSearchConstants.REFERENCES);
+                SearchParticipant[] searchParticipants = new SearchParticipant[] {new JavaSearchParticipant()};
+                new SearchEngine().search(pattern, searchParticipants, SearchEngine.createWorkspaceScope(), new SearchRequestor() {
+                    @Override
+                    public void acceptSearchMatch(SearchMatch match) throws CoreException {
+                        matches.add(match);
+                    }
+                }, SubMonitor.convert(pm, "Find property-style uses of non-synthetic methods", 10));
+
+                return;
+            }
+        }
+        pm.worked(10);
     }
 
     private void checkForBinaryRefs(RefactoringStatus status) throws JavaModelException {

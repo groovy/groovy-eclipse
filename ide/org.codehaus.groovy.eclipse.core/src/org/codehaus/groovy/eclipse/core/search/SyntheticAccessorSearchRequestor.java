@@ -48,7 +48,7 @@ import org.eclipse.jdt.internal.core.search.JavaSearchParticipant;
 public class SyntheticAccessorSearchRequestor {
 
     public void findSyntheticMatches(IJavaElement element, ISearchRequestor requestor, IProgressMonitor monitor) throws CoreException {
-        findSyntheticMatches(element, IJavaSearchConstants.REFERENCES | IJavaSearchConstants.IGNORE_RETURN_TYPE, new SearchParticipant[] {new JavaSearchParticipant()}, SearchEngine.createWorkspaceScope(), requestor, monitor);
+        findSyntheticMatches(element, IJavaSearchConstants.REFERENCES, new SearchParticipant[] {new JavaSearchParticipant()}, SearchEngine.createWorkspaceScope(), requestor, monitor);
     }
 
     public void findSyntheticMatches(IJavaElement element, int limitTo, SearchParticipant[] participants, IJavaSearchScope scope, final ISearchRequestor requestor, IProgressMonitor monitor) throws CoreException {
@@ -151,7 +151,7 @@ public class SyntheticAccessorSearchRequestor {
      * {@link JavaModelException}s are not thrown for typical operations.
      */
     @SuppressWarnings("unchecked")
-    private static <T extends IMember> T syntheticMemberProxy(Class<T> face, final IMember delegate, final String signature) {
+    public static <T extends IMember> T syntheticMemberProxy(Class<T> face, final IMember delegate, final String signature) {
         return (T) Proxy.newProxyInstance(delegate.getClass().getClassLoader(), new Class[] {face}, new InvocationHandler() {
             @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
