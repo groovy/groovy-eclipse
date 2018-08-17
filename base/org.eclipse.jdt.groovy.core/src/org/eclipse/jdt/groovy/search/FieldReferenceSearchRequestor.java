@@ -49,7 +49,7 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
 
     protected final String fieldName, declaringQualifiedName;
     protected final Set<Position> acceptedPositions = new HashSet<>();
-    protected final boolean readAccess, writeAccess, findReferences, findDeclarations, findPseudoProperties;
+    protected final boolean readAccess, writeAccess, findReferences, findDeclarations;
 
     public FieldReferenceSearchRequestor(FieldPattern pattern, SearchRequestor requestor, SearchParticipant participant) {
         this.requestor = requestor;
@@ -67,7 +67,6 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
         writeAccess = (Boolean) ReflectionUtils.getPrivateField(VariablePattern.class, "writeAccess", pattern);
         findReferences = (Boolean) ReflectionUtils.getPrivateField(VariablePattern.class, "findReferences", pattern);
         findDeclarations = (Boolean) ReflectionUtils.getPrivateField(VariablePattern.class, "findDeclarations", pattern);
-        findPseudoProperties = requestor.getClass().getName().contains("SyntheticAccessorSearch"); // accessor as property
     }
 
     @Override
@@ -117,7 +116,7 @@ public class FieldReferenceSearchRequestor implements ITypeRequestor {
                     end = node.getEnd();
 
                 // check for "foo.bar" where "bar" refers to generated/synthetic "getBar()", "isBar()" or "setBar(...)"
-                } else if (result.declaration instanceof MethodNode && (((MethodNode) result.declaration).isSynthetic() || findPseudoProperties)) {
+                } else if (result.declaration instanceof MethodNode && (((MethodNode) result.declaration).isSynthetic())) {
                     doCheck = true;
                     isAssignment = ((MethodNode) result.declaration).getName().startsWith("set");
                     start = node.getStart();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -88,34 +88,17 @@ public class GroovyOccurrencesFinder implements IOccurrencesFinder {
         int i = 0;
         for (Entry<ASTNode, Integer> entry : occurences.entrySet()) {
             ASTNode node = entry.getKey();
-            int flag = entry.getValue();
+            int flags = entry.getValue();
             OccurrenceLocation occurrenceLocation;
-            if (node instanceof FieldNode) {
-                FieldNode c = (FieldNode) node;
-                occurrenceLocation = new OccurrenceLocation(c.getNameStart(), c.getNameEnd() - c.getNameStart() + 1, flag, "Occurrence of ''" + getElementName() + "''");
-            } else if (node instanceof MethodNode) {
-                MethodNode c = (MethodNode) node;
-                occurrenceLocation = new OccurrenceLocation(c.getNameStart(), c.getNameEnd() - c.getNameStart() + 1, flag, "Occurrence of ''" + getElementName() + "''");
+            if ((node instanceof ClassNode && ((ClassNode) node).getNameEnd() > 0) || node instanceof FieldNode || node instanceof MethodNode || node instanceof StaticMethodCallExpression) {
+                AnnotatedNode n = (AnnotatedNode) node;
+                occurrenceLocation = new OccurrenceLocation(n.getNameStart(), n.getNameEnd() - n.getNameStart() + 1, flags, "Occurrence of ''" + getElementName() + "''");
             } else if (node instanceof Parameter) {
-                // should be finding the start and end of the name region only,
-                // but this finds the entire declaration
-                Parameter c = (Parameter) node;
-                int start = c.getNameStart();
-                int length = c.getNameEnd() - c.getNameStart();
-                occurrenceLocation = new OccurrenceLocation(start, length, flag, "Occurrence of ''" + getElementName() + "''");
-            } else if (node instanceof ClassNode && ((ClassNode) node).getNameEnd() > 0) {
-                // class declaration
-                ClassNode c = (ClassNode) node;
-                occurrenceLocation = new OccurrenceLocation(c.getNameStart(), c.getNameEnd() - c.getNameStart() + 1, flag, "Occurrence of ''" + getElementName() + "''");
-            } else if (node instanceof StaticMethodCallExpression) {
-                // special case...for static method calls, the start and end are
-                // of the entire expression, but we just want the name.
-                StaticMethodCallExpression smce = (StaticMethodCallExpression) node;
-                occurrenceLocation = new OccurrenceLocation(smce.getStart(), Math.min(smce.getLength(), smce.getMethod().length()), flag, "Occurrence of ''" + getElementName() + "''");
+                Parameter p = (Parameter) node;
+                occurrenceLocation = new OccurrenceLocation(p.getNameStart(), p.getNameEnd() - p.getNameStart(), flags, "Occurrence of ''" + getElementName() + "''");
             } else {
-                SourceRange range = getSourceRange(node);
-
-                occurrenceLocation = new OccurrenceLocation(range.getOffset(), range.getLength(), flag, "Occurrence of ''" + getElementName() + "''");
+                SourceRange r = getSourceRange(node);
+                occurrenceLocation = new OccurrenceLocation(r.getOffset(), r.getLength(), flags, "Occurrence of ''" + getElementName() + "''");
             }
             locations[i++] = occurrenceLocation;
         }

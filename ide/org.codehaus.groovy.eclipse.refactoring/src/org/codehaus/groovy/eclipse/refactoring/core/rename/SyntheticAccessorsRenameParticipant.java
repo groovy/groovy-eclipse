@@ -15,18 +15,18 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.core.rename;
 
+import java.beans.Introspector;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.groovy.eclipse.core.search.SyntheticAccessorSearchRequestor;
 import org.codehaus.groovy.eclipse.refactoring.core.utils.StatusHelper;
+import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
@@ -68,15 +68,10 @@ import org.eclipse.text.edits.TextEdit;
 import org.eclipse.text.edits.TextEditGroup;
 
 /**
- * A rename refactoring participant for renaming synthetic groovy properties and
- * accessors.
- *
- * Renames calls to synthetic getters, setters and issers in groovy and java
- * files for
- * groovy properties
- *
- * Renames accesses to synthetic groovy properties that are backed by a getter,
- * setter, and/or isser.
+ * A rename refactoring participant for renaming synthetic Groovy properties and
+ * accessors.  Renames calls to synthetic getters, setters and issers in groovy
+ * and java files for groovy properties.  Renames accesses to synthetic groovy
+ * properties that are backed by a getter, setter, and/or isser.
  */
 public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
 
@@ -87,23 +82,20 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
     @Override
     public RefactoringStatus checkConditions(IProgressMonitor pm, CheckConditionsContext context) throws OperationCanceledException {
         RefactoringStatus status = new RefactoringStatus();
-
+        matches = new ArrayList<>();
         try {
             if (shouldUpdateReferences()) {
-                matches = findExtraReferences(SubMonitor.convert(pm, "Finding synthetic Groovy references", 10));
-            } else {
-                matches = Collections.emptyList();
+                findExtraReferences(SubMonitor.convert(pm, "Finding Groovy property references", 10));
             }
-            checkForBinaryRefs(matches, status);
-            SearchResultGroup[] grouped = convert(matches);
-            Checks.excludeCompilationUnits(grouped, status);
-            status.merge(Checks.checkCompileErrorsInAffectedFiles(grouped));
-            checkForPotentialRefs(matches, status);
+            checkForBinaryRefs(status);
+            checkForPotentialMatches(status);
+            SearchResultGroup[] groups = convertMatches();
+            Checks.excludeCompilationUnits(groups, status);
+            status.merge(Checks.checkCompileErrorsInAffectedFiles(groups));
         } catch (CoreException e) {
             GroovyCore.logException(e.getLocalizedMessage(), e);
             return RefactoringStatus.createFatalErrorStatus(e.getLocalizedMessage());
         }
-
         return status;
     }
 
@@ -114,12 +106,49 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
         } else if (processor instanceof RenameMethodProcessor) {
             return ((RenameMethodProcessor) processor).getUpdateReferences();
         }
-        // shouldn't get here
         return true;
     }
 
-    private void checkForPotentialRefs(List<SearchMatch> toCheck, RefactoringStatus status) {
-        for (SearchMatch match : toCheck) {
+    private void findExtraReferences(IProgressMonitor pm) throws CoreException {
+        SyntheticAccessorSearchRequestor requestor = new SyntheticAccessorSearchRequestor();
+        requestor.findSyntheticMatches(renameTarget, matches::add, SubMonitor.convert(pm, "Find synthetic property accessors", 10));
+        //something.findNonSyntheticMatches(renameTarget, matches::add, SubMonitor.convert(pm, "Find property-style uses of non-synthetic methods", 10));
+    }
+
+    private void checkForBinaryRefs(RefactoringStatus status) throws JavaModelException {
+        ReferencesInBinaryContext binaryRefs = new ReferencesInBinaryContext(
+            "Elements containing binary references to refactored element ''" + renameTarget.getElementName() + "''");
+        for (Iterator<SearchMatch> it = matches.iterator(); it.hasNext();) {
+            SearchMatch match = it.next();
+            if (isBinaryElement(match.getElement())) {
+                if (match.getAccuracy() == SearchMatch.A_ACCURATE) {
+                    // binary classpaths are often incomplete -> avoiding false
+                    // positives from inaccurate matches
+                    binaryRefs.add(match);
+                }
+                it.remove();
+            }
+        }
+        binaryRefs.addErrorIfNecessary(status);
+    }
+
+    private static boolean isBinaryElement(Object element) throws JavaModelException {
+        if (element instanceof IMember) {
+            return ((IMember) element).isBinary();
+        } else if (element instanceof IClassFile) {
+            return false;
+        } else if (element instanceof ICompilationUnit) {
+            return true;
+        } else if (element instanceof IPackageFragment) {
+            return isBinaryElement(((IPackageFragment) element).getParent());
+        } else if (element instanceof IPackageFragmentRoot) {
+            return ((IPackageFragmentRoot) element).getKind() == IPackageFragmentRoot.K_BINARY;
+        }
+        return false;
+    }
+
+    private void checkForPotentialMatches(RefactoringStatus status) {
+        for (SearchMatch match : matches) {
             if (match.getAccuracy() == SearchMatch.A_INACCURATE) {
                 final RefactoringStatusEntry entry = new RefactoringStatusEntry(RefactoringStatus.WARNING,
                     RefactoringCoreMessages.RefactoringSearchEngine_potential_matches,
@@ -130,60 +159,19 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
         }
     }
 
-    private void checkForBinaryRefs(List<SearchMatch> toCheck, RefactoringStatus status) throws JavaModelException {
-        ReferencesInBinaryContext binaryRefs = new ReferencesInBinaryContext(
-            "Elements containing binary references to refactored element ''" + renameTarget.getElementName() + "''");
-        for (Iterator<SearchMatch> iter = toCheck.iterator(); iter.hasNext();) {
-            SearchMatch match = iter.next();
-            if (isBinaryElement(match.getElement())) {
-                if (match.getAccuracy() == SearchMatch.A_ACCURATE) {
-                    // binary classpaths are often incomplete -> avoiding false
-                    // positives from inaccurate matches
-                    binaryRefs.add(match);
-                }
-                iter.remove();
+    private SearchResultGroup[] convertMatches() {
+        Map<IResource, SearchResultGroup> groups = new HashMap<>(matches.size());
+
+        for (SearchMatch match : matches) {
+            if (match.getResource() != null) {
+                groups.computeIfAbsent(match.getResource(), mr -> new SearchResultGroup(mr, new SearchMatch[0])).add(match);
             }
         }
-        binaryRefs.addErrorIfNecessary(status);
+
+        return groups.values().toArray(new SearchResultGroup[groups.size()]);
     }
 
-    private boolean isBinaryElement(Object element) throws JavaModelException {
-        if (element instanceof IMember) {
-            return ((IMember) element).isBinary();
-        } else if (element instanceof ICompilationUnit) {
-            return true;
-        } else if (element instanceof IClassFile) {
-            return false;
-        } else if (element instanceof IPackageFragment) {
-            return isBinaryElement(((IPackageFragment) element).getParent());
-        } else if (element instanceof IPackageFragmentRoot) {
-            return ((IPackageFragmentRoot) element).getKind() == IPackageFragmentRoot.K_BINARY;
-        }
-        return false;
-    }
-
-    private SearchResultGroup[] convert(List<SearchMatch> toGroup) {
-        Map<IResource, List<SearchMatch>> groups = new HashMap<>(toGroup.size());
-        for (SearchMatch searchMatch : toGroup) {
-            if (searchMatch.getResource() == null) {
-                // likely a binary match. These are handled elsewhere
-                continue;
-            }
-            List<SearchMatch> group = groups.get(searchMatch.getResource());
-            if (group == null) {
-                group = new ArrayList<>();
-                groups.put(searchMatch.getResource(), group);
-            }
-            group.add(searchMatch);
-        }
-
-        SearchResultGroup[] results = new SearchResultGroup[groups.size()];
-        int i = 0;
-        for (Entry<IResource, List<SearchMatch>> group : groups.entrySet()) {
-            results[i++] = new SearchResultGroup(group.getKey(), group.getValue().toArray(new SearchMatch[0]));
-        }
-        return results;
-    }
+    //--------------------------------------------------------------------------
 
     @Override
     public Change createChange(IProgressMonitor pm) throws CoreException, OperationCanceledException {
@@ -216,10 +204,6 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
         return false;
     }
 
-    private String accessorName(String prefix, String name) {
-        return prefix + Character.toUpperCase(name.charAt(0)) + name.substring(1);
-    }
-
     private void addChange(CompositeChange finalChange, IMember enclosingElement, int offset, int length,
         String newName) {
         CompilationUnitChange existingChange = findOrCreateChange(enclosingElement, finalChange);
@@ -242,25 +226,6 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
             new TextEditGroup("Update synthetic Groovy accessor", occurrenceEdit)));
     }
 
-    private String basename(String fullName) {
-        int baseStart;
-        if (fullName.startsWith("is") && fullName.length() > 2 && Character.isUpperCase(fullName.charAt(2))) {
-            baseStart = 2;
-        } else if ((fullName.startsWith("get") || fullName.startsWith("set")) &&
-            fullName.length() > 3 &&
-            Character.isUpperCase(fullName.charAt(3))) {
-            baseStart = 3;
-        } else {
-            baseStart = -1;
-        }
-
-        if (baseStart > 0) {
-            return Character.toLowerCase(fullName.charAt(baseStart)) + fullName.substring(baseStart + 1);
-        } else {
-            return fullName;
-        }
-    }
-
     private void createMatchedChanges(List<SearchMatch> references, CompositeChange finalChange,
         Map<String, String> nameMap) throws JavaModelException {
         for (SearchMatch searchMatch : references) {
@@ -273,13 +238,6 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
                 }
             }
         }
-    }
-
-    private List<SearchMatch> findExtraReferences(IProgressMonitor pm) throws CoreException {
-        SyntheticAccessorSearchRequestor synthRequestor = new SyntheticAccessorSearchRequestor();
-        final List<SearchMatch> matches = new ArrayList<>();
-        synthRequestor.findSyntheticMatches(renameTarget, match -> matches.add(match), SubMonitor.convert(pm, "Find synthetic accessors", 10));
-        return matches;
     }
 
     private String findMatchName(SearchMatch searchMatch, Set<String> keySet) throws JavaModelException {
@@ -328,9 +286,9 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
     }
 
     private Map<String, String> getNameMap() {
-        Map<String, String> nameMap = new HashMap<>();
-        String newBaseName = basename(getArguments().getNewName());
-        String oldBaseName = basename(renameTarget.getElementName());
+        Map<String, String> nameMap = new HashMap<>(4);
+        String newBaseName = propertyName(getArguments().getNewName());
+        String oldBaseName = propertyName(renameTarget.getElementName());
 
         nameMap.put(oldBaseName, newBaseName);
         nameMap.put(accessorName("is", oldBaseName), accessorName("is", newBaseName));
@@ -338,5 +296,24 @@ public class SyntheticAccessorsRenameParticipant extends RenameParticipant {
         nameMap.put(accessorName("set", oldBaseName), accessorName("set", newBaseName));
 
         return nameMap;
+    }
+
+    private static String accessorName(String prefix, String name) {
+        return prefix + MetaClassHelper.capitalize(name);
+    }
+
+    private static String propertyName(String fullName) {
+        int prefixLength = 0;
+        if (fullName.startsWith("is")) {
+            prefixLength = 2;
+        } else if (fullName.startsWith("get") || fullName.startsWith("set")) {
+            prefixLength = 3;
+        }
+
+        if (fullName.length() == prefixLength) {
+            return fullName;
+        }
+
+        return Introspector.decapitalize(fullName.substring(prefixLength));
     }
 }

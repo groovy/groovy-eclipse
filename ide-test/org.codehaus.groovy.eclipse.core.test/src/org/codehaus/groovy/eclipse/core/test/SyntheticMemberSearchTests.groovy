@@ -13,6 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/*
+ * Copyright 2009-2018 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.codehaus.groovy.eclipse.core.test
 
 import org.codehaus.groovy.eclipse.core.search.SyntheticAccessorSearchRequestor
@@ -43,7 +58,7 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
         gType = gUnit.getType('G')
     }
 
-    @Test
+    @Test // references to property itself and synthetic accessors
     void testSearchInGroovy1() {
         String contents = '''\
             new p.G().prop
@@ -54,7 +69,6 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
         addGroovySource(contents, nextUnitName())
         List<SearchMatch> matches = performSearch('prop')
 
-        // expecting 3 matches since the explicit property reference will not be found since it is not synthetic
         assertNumMatch(3, matches)
         assertNoMatch('run', 'prop', contents, matches)
         assertMatch('run', 'isProp', contents, matches)
@@ -62,7 +76,7 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
         assertMatch('run', 'setProp', contents, matches)
     }
 
-    @Test
+    @Test // references to pseudo-property and non-synthetic accessors
     void testSearchInGroovy2() {
         String contents = '''\
             new p.G().explicit
@@ -73,14 +87,14 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
         addGroovySource(contents, nextUnitName())
         List<SearchMatch> matches = performSearch('getExplicit')
 
-        assertNumMatch(1, matches)
-        assertMatch('run', 'explicit', contents, matches)
+        assertNumMatch(0, matches)
+        assertNoMatch('run', 'explicit', contents, matches)
         assertNoMatch('run', 'isExplicit', contents, matches)
         assertNoMatch('run', 'getExplicit', contents, matches)
         assertNoMatch('run', 'setExplicit', contents, matches)
     }
 
-    @Test
+    @Test // references to pseudo-property and non-synthetic accessors
     void testSearchInGroovy3() {
         String contents = '''\
             new p.G().explicit
@@ -91,14 +105,14 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
         addGroovySource(contents, nextUnitName())
         List<SearchMatch> matches = performSearch('setExplicit')
 
-        assertNumMatch(1, matches)
-        assertMatch('run', 'explicit', contents, matches)
+        assertNumMatch(0, matches)
+        assertNoMatch('run', 'explicit', contents, matches)
         assertNoMatch('run', 'isExplicit', contents, matches)
         assertNoMatch('run', 'getExplicit', contents, matches)
         assertNoMatch('run', 'setExplicit', contents, matches)
     }
 
-    @Test
+    @Test // references to pseudo-property and non-synthetic accessors
     void testSearchInGroovy4() {
         String contents = '''\
             new p.G().explicit
@@ -109,8 +123,8 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
         addGroovySource(contents, nextUnitName())
         List<SearchMatch> matches = performSearch('isExplicit')
 
-        assertNumMatch(1, matches)
-        assertMatch('run', 'explicit', contents, matches)
+        assertNumMatch(0, matches)
+        assertNoMatch('run', 'explicit', contents, matches)
         assertNoMatch('run', 'isExplicit', contents, matches)
         assertNoMatch('run', 'getExplicit', contents, matches)
         assertNoMatch('run', 'setExplicit', contents, matches)
@@ -154,7 +168,6 @@ final class SyntheticMemberSearchTests extends GroovyEclipseTestSuite {
         addJavaSource(contents, 'ClassB')
         List<SearchMatch> matches = performSearch('prop')
 
-        // expecting 3 matches since the explicit property reference will not be found since it is not synthetic
         assertNumMatch(3, matches)
         assertNoMatch('run', 'prop', contents, matches)
         assertMatch('run', 'isProp()', contents, matches)

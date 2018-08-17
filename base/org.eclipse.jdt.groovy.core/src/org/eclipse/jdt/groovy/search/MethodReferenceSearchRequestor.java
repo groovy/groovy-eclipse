@@ -62,10 +62,10 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
     protected final String methodName;
     protected final String declaringTypeName;
     protected final String[] parameterTypeNames;
+    protected final boolean findReferences, findDeclarations, skipPseudoProperties;
 
-    protected final boolean findDeclarations, findReferences;
     protected final Set<Position> acceptedPositions = new HashSet<>();
-    protected static final int MAX_PARAMS = 10; // indices available in each boolean array of:
+    protected static final int MAX_PARAMS = 10; // indices available in each array of:
     protected final Map<ClassNode, boolean[]> cachedParameterCounts = new HashMap<>();
     protected final Map<ClassNode, Boolean> cachedDeclaringNameMatches = new HashMap<>();
 
@@ -115,6 +115,7 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
 
         findReferences = (Boolean) ReflectionUtils.getPrivateField(MethodPattern.class, "findReferences", pattern);
         findDeclarations = (Boolean) ReflectionUtils.getPrivateField(MethodPattern.class, "findDeclarations", pattern);
+        skipPseudoProperties = requestor.getClass().getName().equals("org.eclipse.jdt.internal.corext.refactoring.rename.MethodOccurenceCollector");
     }
 
     protected static String[] getParameterTypeNames(MethodPattern pattern, String[] parameterTypeSignatures, IType declaringType) {
@@ -209,8 +210,13 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
                 start = ((AnnotatedNode) node).getNameStart();
                 end = ((AnnotatedNode) node).getNameEnd() + 1;
 
+                // check for "foo.bar" where "bar" refers to "getBar()", "isBar()" or "setBar(...)"
+                if (!isDeclaration && (end - start) < ((StaticMethodCallExpression) node).getMethod().length() && skipPseudoProperties) {
+                    end = 0;
+                }
+
             // check for non-synthetic match; SyntheticAccessorSearchRequestor matches "foo.bar" to "getBar()", etc.
-            } else if (node.getText().equals(methodName) || isNotSynthetic(node.getText(), result.declaringType)) {
+            } else if (node.getText().equals(methodName) || (isNotSynthetic(node.getText(), result.declaringType) && !skipPseudoProperties)) {
                 start = node.getStart();
                 end = node.getEnd();
             }

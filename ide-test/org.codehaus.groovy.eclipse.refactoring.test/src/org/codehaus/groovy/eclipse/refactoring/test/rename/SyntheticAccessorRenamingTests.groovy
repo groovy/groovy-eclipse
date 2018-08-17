@@ -76,9 +76,12 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
                   boolean foo
                   def run() {
                     foo
-                    getFoo()
-                    setFoo()
                     isFoo()
+                    getFoo()
+                    setFoo(true)
+                    this.&isFoo
+                    this.&getFoo
+                    this.&setFoo
                   }
                 }
                 '''.stripIndent(),
@@ -88,9 +91,49 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
                   boolean flar
                   def run() {
                     flar
-                    getFlar()
-                    setFlar()
                     isFlar()
+                    getFlar()
+                    setFlar(true)
+                    this.&isFlar
+                    this.&getFlar
+                    this.&setFlar
+                  }
+                }
+                '''.stripIndent(),
+        ))
+    }
+
+    @Test
+    void testSingleFileRename2() {
+        performRefactoringAndUndo('flar', new TestSource(
+            pack: 'p', name: 'First.groovy',
+            contents: '''\
+                package p
+                class First {
+                  static boolean foo
+                  static {
+                    foo
+                    isFoo()
+                    getFoo()
+                    setFoo(true)
+                    this.&isFoo
+                    this.&getFoo
+                    this.&setFoo
+                  }
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package p
+                class First {
+                  static boolean flar
+                  static {
+                    flar
+                    isFlar()
+                    getFlar()
+                    setFlar(true)
+                    this.&isFlar
+                    this.&getFlar
+                    this.&setFlar
                   }
                 }
                 '''.stripIndent(),
@@ -98,21 +141,24 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
     }
 
     @Test // don't automatically rename if the accessors are explicitly named
-    void testSingleFileRename2() {
+    void testSingleFileRename3() {
         performRefactoringAndUndo('flar', new TestSource(
             pack: 'p', name: 'First.groovy',
             contents: '''\
                 package p
                 class First {
                   def foo
-                  def getFoo() { }
-                  void setFoo() { }
-                  def isFoo() { }
+                  def getFoo() {}
+                  boolean isFoo() {}
+                  void setFoo(val) {}
                   def run() {
                     foo
-                    getFoo()
-                    setFoo()
                     isFoo()
+                    getFoo()
+                    setFoo(null)
+                    this.&isFoo
+                    this.&getFoo
+                    this.&setFoo
                   }
                 }
                 '''.stripIndent(),
@@ -120,14 +166,60 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
                 package p
                 class First {
                   def flar
-                  def getFoo() { }
-                  void setFoo() { }
-                  def isFoo() { }
+                  def getFoo() {}
+                  boolean isFoo() {}
+                  void setFoo(val) {}
                   def run() {
                     flar
-                    getFoo()
-                    setFoo()
                     isFoo()
+                    getFoo()
+                    setFoo(null)
+                    this.&isFoo
+                    this.&getFoo
+                    this.&setFoo
+                  }
+                }
+                '''.stripIndent()
+        ))
+    }
+
+    @Test // don't automatically rename if the accessors are explicitly named
+    void testSingleFileRename4() {
+        performRefactoringAndUndo('flar', new TestSource(
+            pack: 'p', name: 'First.groovy',
+            contents: '''\
+                package p
+                class First {
+                  static def foo
+                  static def getFoo() {}
+                  static boolean isFoo() {}
+                  static void setFoo(val) {}
+                  static {
+                    foo
+                    isFoo()
+                    getFoo()
+                    setFoo(null)
+                    this.&isFoo
+                    this.&getFoo
+                    this.&setFoo
+                  }
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package p
+                class First {
+                  static def flar
+                  static def getFoo() {}
+                  static boolean isFoo() {}
+                  static void setFoo(val) {}
+                  static {
+                    flar
+                    isFoo()
+                    getFoo()
+                    setFoo(null)
+                    this.&isFoo
+                    this.&getFoo
+                    this.&setFoo
                   }
                 }
                 '''.stripIndent()
@@ -156,41 +248,76 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
                 package q
                 def f = new p.First()
                 f.foo
-                f.getFoo()
-                f.setFoo()
                 f.isFoo()
+                f.getFoo()
+                f.setFoo(true)
                 '''.stripIndent(),
             finalContents: '''\
                 package q
                 def f = new p.First()
                 f.flar
-                f.getFlar()
-                f.setFlar()
                 f.isFlar()
+                f.getFlar()
+                f.setFlar(true)
                 '''.stripIndent()
         ))
     }
 
-    @Test // don't automatically rename if the accessors are explicitly named
+    @Test
     void testMultiFileRename2() {
         performRefactoringAndUndo('flar', new TestSource(
             pack: 'p', name: 'First.groovy',
             contents: '''\
                 package p
                 class First {
+                  static boolean foo
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package p
+                class First {
+                  static boolean flar
+                }
+                '''.stripIndent()
+        ), new TestSource(
+            pack: 'q', name: 'Script.groovy',
+            contents: '''\
+                package q
+                p.First.foo
+                p.First.isFoo()
+                p.First.getFoo()
+                p.First.setFoo(true)
+                '''.stripIndent(),
+            finalContents: '''\
+                package q
+                p.First.flar
+                p.First.isFlar()
+                p.First.getFlar()
+                p.First.setFlar(true)
+                '''.stripIndent()
+        ))
+    }
+
+    @Test // don't automatically rename if the accessors are explicitly named
+    void testMultiFileRename3() {
+        performRefactoringAndUndo('flar', new TestSource(
+            pack: 'p', name: 'First.groovy',
+            contents: '''\
+                package p
+                class First {
                   def foo
-                  def getFoo() { }
-                  void setFoo() { }
-                  def isFoo() { }
+                  def getFoo() {}
+                  boolean isFoo() {}
+                  void setFoo(val) {}
                 }
                 '''.stripIndent(),
             finalContents: '''\
                 package p
                 class First {
                   def flar
-                  def getFoo() { }
-                  void setFoo() { }
-                  def isFoo() { }
+                  def getFoo() {}
+                  boolean isFoo() {}
+                  void setFoo(val) {}
                 }
                 '''.stripIndent()
         ), new TestSource(
@@ -199,17 +326,58 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
                 package q
                 def f = new p.First()
                 f.foo
-                f.getFoo()
-                f.setFoo()
                 f.isFoo()
+                f.getFoo()
+                f.setFoo(null)
                 '''.stripIndent(),
             finalContents: '''\
                 package q
                 def f = new p.First()
                 f.foo
-                f.getFoo()
-                f.setFoo()
                 f.isFoo()
+                f.getFoo()
+                f.setFoo(null)
+                '''.stripIndent()
+        ))
+    }
+
+    @Test // don't automatically rename if the accessors are explicitly named
+    void testMultiFileRename4() {
+        performRefactoringAndUndo('flar', new TestSource(
+            pack: 'p', name: 'First.groovy',
+            contents: '''\
+                package p
+                class First {
+                  static def foo
+                  static def getFoo() {}
+                  static boolean isFoo() {}
+                  static void setFoo(val) {}
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package p
+                class First {
+                  static def flar
+                  static def getFoo() {}
+                  static boolean isFoo() {}
+                  static void setFoo(val) {}
+                }
+                '''.stripIndent()
+        ), new TestSource(
+            pack: 'q', name: 'Script.groovy',
+            contents: '''\
+                package q
+                p.First.foo
+                p.First.isFoo()
+                p.First.getFoo()
+                p.First.setFoo(null)
+                '''.stripIndent(),
+            finalContents: '''\
+                package q
+                p.First.foo
+                p.First.isFoo()
+                p.First.getFoo()
+                p.First.setFoo(null)
                 '''.stripIndent()
         ))
     }
@@ -237,9 +405,9 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
                 class Java {
                   void m(p.First f) {
                     f.foo = null;
-                    f.getFoo();
-                    f.setFoo(null);
                     f.isFoo();
+                    f.getFoo();
+                    f.setFoo(true);
                   }
                 }
                 '''.stripIndent(),
@@ -248,9 +416,9 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
                 class Java {
                   void m(p.First f) {
                     f.flar = null;
-                    f.getFlar();
-                    f.setFlar(null);
                     f.isFlar();
+                    f.getFlar();
+                    f.setFlar(true);
                   }
                 }
                 '''.stripIndent()
@@ -265,18 +433,18 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
                 package p
                 class First {
                   def foo
-                  def getFoo() { }
-                  void setFoo(arg) { }
-                  def isFoo() { }
+                  def getFoo() {}
+                  boolean isFoo() {}
+                  void setFoo(val) {}
                 }
                 '''.stripIndent(),
             finalContents: '''\
                 package p
                 class First {
                   def flar
-                  def getFoo() { }
-                  void setFoo(arg) { }
-                  def isFoo() { }
+                  def getFoo() {}
+                  boolean isFoo() {}
+                  void setFoo(val) {}
                 }
                 '''.stripIndent()
         ), new TestSource(
@@ -286,9 +454,9 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
                 class Java {
                   void m(p.First f) {
                     f.foo = null;
+                    f.isFoo();
                     f.getFoo();
                     f.setFoo(null);
-                    f.isFoo();
                   }
                 }
                 '''.stripIndent(),
@@ -297,9 +465,9 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
                 class Java {
                   void m(p.First f) {
                     f.flar = null;
+                    f.isFoo();
                     f.getFoo();
                     f.setFoo(null);
-                    f.isFoo();
                   }
                 }
                 '''.stripIndent()
@@ -313,13 +481,13 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
             contents: '''\
                 package p
                 class First {
-                  def getFoo() { }
+                  def getFoo() {}
                 }
                 '''.stripIndent(),
             finalContents: '''\
                 package p
                 class First {
-                  def getFlar() { }
+                  def getFlar() {}
                 }
                 '''.stripIndent()
         ), new TestSource(
@@ -366,13 +534,13 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
             contents: '''\
                 package p
                 class First {
-                  def isFoo() { }
+                  def isFoo() {}
                 }
                 '''.stripIndent(),
             finalContents: '''\
                 package p
                 class First {
-                  def isFlar() { }
+                  def isFlar() {}
                 }
                 '''.stripIndent()
         ), new TestSource(
@@ -419,13 +587,13 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
             contents: '''\
                 package p
                 class First {
-                  void setFoo(value) { }
+                  void setFoo(value) {}
                 }
                 '''.stripIndent(),
             finalContents: '''\
                 package p
                 class First {
-                  void setFlar(value) { }
+                  void setFlar(value) {}
                 }
                 '''.stripIndent()
         ), new TestSource(
@@ -472,13 +640,13 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
             contents: '''\
                 package p
                 class First {
-                  void setFoo(value) { }
+                  void setFoo(value) {}
                 }
                 '''.stripIndent(),
             finalContents: '''\
                 package p
                 class First {
-                  void setFooBar(value) { }
+                  void setFooBar(value) {}
                 }
                 '''.stripIndent()
         ), new TestSource(
@@ -505,13 +673,13 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
             contents: '''\
                 package p
                 class First {
-                  static def getFoo() { }
+                  static def getFoo() {}
                 }
                 '''.stripIndent(),
             finalContents: '''\
                 package p
                 class First {
-                  static def getFlar() { }
+                  static def getFlar() {}
                 }
                 '''.stripIndent()
         ), new TestSource(
@@ -549,20 +717,20 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
         ))
     }
 
-    @Test @NotYetImplemented // this has compile errors, but it should still work
+    @Test // this has compile errors, but it should still work
     void testStaticGetterOnly2() {
         performRefactoringAndUndo('getFlar', new TestSource(
             pack: 'p', name: 'First.groovy',
             contents: '''\
                 package p
                 class First {
-                  static def getFoo() { }
+                  static def getFoo() {}
                 }
                 '''.stripIndent(),
             finalContents: '''\
                 package p
                 class First {
-                  static def getFlar() { }
+                  static def getFlar() {}
                 }
                 '''.stripIndent()
         ), new TestSource(
@@ -611,13 +779,13 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
             contents: '''\
                 package p
                 class First {
-                  static boolean isFoo() { }
+                  static boolean isFoo() {}
                 }
                 '''.stripIndent(),
             finalContents: '''\
                 package p
                 class First {
-                  static boolean isFlar() { }
+                  static boolean isFlar() {}
                 }
                 '''.stripIndent()
         ), new TestSource(
@@ -655,20 +823,20 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
         ))
     }
 
-    @Test @NotYetImplemented // this has compile errors, but it should still work
+    @Test // this has compile errors, but it should still work
     void testStaticIsserOnly2() {
         performRefactoringAndUndo('isFlar', new TestSource(
             pack: 'p', name: 'First.groovy',
             contents: '''\
                 package p
                 class First {
-                  static boolean isFoo() { }
+                  static boolean isFoo() {}
                 }
                 '''.stripIndent(),
             finalContents: '''\
                 package p
                 class First {
-                  static boolean isFlar() { }
+                  static boolean isFlar() {}
                 }
                 '''.stripIndent()
         ), new TestSource(
@@ -717,13 +885,13 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
             contents: '''\
                 package p
                 class First {
-                  static void setFoo(value) { }
+                  static void setFoo(value) {}
                 }
                 '''.stripIndent(),
             finalContents: '''\
                 package p
                 class First {
-                  static void setFlar(value) { }
+                  static void setFlar(value) {}
                 }
                 '''.stripIndent()
         ), new TestSource(
@@ -761,20 +929,20 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
         ))
     }
 
-    @Test @NotYetImplemented // this has compile errors, but it should still work
+    @Test // this has compile errors, but it should still work
     void testStaticSetterOnly2() {
         performRefactoringAndUndo('setFlar', new TestSource(
             pack: 'p', name: 'First.groovy',
             contents: '''\
                 package p
                 class First {
-                  static void setFoo(value) { }
+                  static void setFoo(value) {}
                 }
                 '''.stripIndent(),
             finalContents: '''\
                 package p
                 class First {
-                  static void setFlar(value) { }
+                  static void setFlar(value) {}
                 }
                 '''.stripIndent()
         ), new TestSource(
@@ -823,13 +991,13 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
             contents: '''\
                 package p
                 class First {
-                  static void setFoo(value) { }
+                  static void setFoo(value) {}
                 }
                 '''.stripIndent(),
             finalContents: '''\
                 package p
                 class First {
-                  static void setFooBar(value) { }
+                  static void setFooBar(value) {}
                 }
                 '''.stripIndent()
         ), new TestSource(
@@ -933,5 +1101,275 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
         ))
     }
 
-    // TODO: Repeat testFieldAndGetterAndSetterN with rename accessors enabled.
+    @Test
+    void testFieldAndGetterAndSetter3() {
+        renameGetters = renameSetters = true
+
+        performRefactoringAndUndo('fooBar', new TestSource(
+            pack: 'p', name: 'First.groovy',
+            contents: '''\
+                package p
+                class First {
+                  private int foo = 0
+                  int getFoo() { return this.foo }
+                  void setFoo(int value) { this.foo = value }
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package p
+                class First {
+                  private int fooBar = 0
+                  int getFooBar() { return this.fooBar }
+                  void setFooBar(int value) { this.fooBar = value }
+                }
+                '''.stripIndent()
+        ), new TestSource(
+            pack: 'q', name: 'Script.groovy',
+            contents: '''\
+                package q
+                def m(p.First f) {
+                  int i = f.@foo
+                  i = f.foo
+                  f.foo = i
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package q
+                def m(p.First f) {
+                  int i = f.@fooBar
+                  i = f.fooBar
+                  f.fooBar = i
+                }
+                '''.stripIndent()
+        ))
+    }
+
+    @Test // field and accessor types don't match exactly
+    void testFieldAndGetterAndSetter4() {
+        renameGetters = renameSetters = true
+
+        performRefactoringAndUndo('fooBar', new TestSource(
+            pack: 'p', name: 'First.groovy',
+            contents: '''\
+                package p
+                import java.util.concurrent.atomic.AtomicInteger
+                class First {
+                  private final AtomicInteger foo = new AtomicInteger()
+                  int getFoo() { this.foo.get() }
+                  void setFoo(int value) { this.foo.set(value) }
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package p
+                import java.util.concurrent.atomic.AtomicInteger
+                class First {
+                  private final AtomicInteger fooBar = new AtomicInteger()
+                  int getFooBar() { this.fooBar.get() }
+                  void setFoo(int value) { this.fooBar.set(value) }
+                }
+                '''.stripIndent()
+        ), new TestSource(
+            pack: 'q', name: 'Script.groovy',
+            contents: '''\
+                package q
+                def m(p.First f) {
+                  int i = f.@foo.get()
+                  i = f.foo
+                  f.foo = i
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package q
+                def m(p.First f) {
+                  int i = f.@fooBar.get()
+                  i = f.fooBar
+                  f.foo = i
+                }
+                '''.stripIndent()
+        ))
+    }
+
+    @Test
+    void testAliasedAccess() {
+        performRefactoringAndUndo('getFooBar', new TestSource(
+            pack: 'p', name: 'First.groovy',
+            contents: '''\
+                package p
+                import static p.First.getFoo as blah
+                import static p.First.getFoo as getF
+                class First {
+                  static def getFoo() { 'foo' }
+                  static def foo
+                  static {
+                    blah()
+                    foo
+                    f
+                  }
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package p
+                import static p.First.getFooBar as blah
+                import static p.First.getFooBar as getF
+                class First {
+                  static def getFooBar() { 'foo' }
+                  static def foo
+                  static {
+                    blah()
+                    foo
+                    f
+                  }
+                }
+                '''.stripIndent()
+        ))
+    }
+
+    @Test @NotYetImplemented
+    void testDelegateAccess() {
+        performRefactoringAndUndo('fooBar', new TestSource(
+            pack: 'p', name: 'First.groovy',
+            contents: '''\
+                package p
+                class First {
+                  def foo
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package p
+                class First {
+                  def fooBar
+                }
+                '''.stripIndent()
+        ), new TestSource(
+            pack: 'q', name: 'Second.groovy',
+            contents: '''\
+                package q
+                class Second {
+                  @Delegate First first
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package q
+                class Second {
+                  @Delegate First first
+                }
+                '''.stripIndent()
+        ), new TestSource(
+            pack: 'r', name: 'Script.groovy',
+            contents: '''\
+                package r
+                def s = new q.Second()
+                s.foo
+                s.getFoo()
+                s.setFoo(null)
+                '''.stripIndent(),
+            finalContents: '''\
+                package r
+                def s = new q.Second()
+                s.fooBar
+                s.getFooBar()
+                s.setFooBar(null)
+                '''.stripIndent()
+        ))
+    }
+
+    @Test @NotYetImplemented
+    void testSubclassAccess() {
+        performRefactoringAndUndo('fooBar', new TestSource(
+            pack: 'p', name: 'First.groovy',
+            contents: '''\
+                package p
+                class First {
+                  def foo
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package p
+                class First {
+                  def fooBar
+                }
+                '''.stripIndent()
+        ), new TestSource(
+            pack: 'q', name: 'Second.groovy',
+            contents: '''\
+                package q
+                class Second extends First {
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package q
+                class Second extends First {
+                }
+                '''.stripIndent()
+        ), new TestSource(
+            pack: 'r', name: 'Script.groovy',
+            contents: '''\
+                package r
+                def s = new q.Second()
+                s.foo
+                s.getFoo()
+                s.setFoo(null)
+                '''.stripIndent(),
+            finalContents: '''\
+                package r
+                def s = new q.Second()
+                s.fooBar
+                s.getFooBar()
+                s.setFooBar(null)
+                '''.stripIndent()
+        ))
+    }
+
+    @Test @NotYetImplemented
+    void testSubclassOverride() {
+        performRefactoringAndUndo('fooBar', new TestSource(
+            pack: 'p', name: 'First.groovy',
+            contents: '''\
+                package p
+                class First {
+                  def foo
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package p
+                class First {
+                  def fooBar
+                }
+                '''.stripIndent()
+        ), new TestSource(
+            pack: 'q', name: 'Second.groovy',
+            contents: '''\
+                package q
+                class Second extends First {
+                  @Override
+                  def getFoo() {}
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package q
+                class Second extends First {
+                  @Override
+                  def getFooBar() {}
+                }
+                '''.stripIndent()
+        ), new TestSource(
+            pack: 'r', name: 'Script.groovy',
+            contents: '''\
+                package r
+                def s = new q.Second()
+                s.foo
+                s.getFoo()
+                s.setFoo(null)
+                '''.stripIndent(),
+            finalContents: '''\
+                package r
+                def s = new q.Second()
+                s.fooBar
+                s.getFooBar()
+                s.setFooBar(null)
+                '''.stripIndent()
+        ))
+    }
+
+    // TODO: .&, ::, .'getFoo', new First(foo: ...)
 }

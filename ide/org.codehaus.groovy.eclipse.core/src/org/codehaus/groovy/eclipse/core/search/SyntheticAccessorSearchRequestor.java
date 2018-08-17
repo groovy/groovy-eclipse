@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,8 +47,8 @@ import org.eclipse.jdt.internal.core.search.JavaSearchParticipant;
  */
 public class SyntheticAccessorSearchRequestor {
 
-    public void findSyntheticMatches(IJavaElement element, ISearchRequestor uiRequestor, IProgressMonitor monitor) throws CoreException {
-        findSyntheticMatches(element, IJavaSearchConstants.REFERENCES | IJavaSearchConstants.IGNORE_RETURN_TYPE, new SearchParticipant[] {new JavaSearchParticipant()}, SearchEngine.createWorkspaceScope(), uiRequestor, monitor);
+    public void findSyntheticMatches(IJavaElement element, ISearchRequestor requestor, IProgressMonitor monitor) throws CoreException {
+        findSyntheticMatches(element, IJavaSearchConstants.REFERENCES | IJavaSearchConstants.IGNORE_RETURN_TYPE, new SearchParticipant[] {new JavaSearchParticipant()}, SearchEngine.createWorkspaceScope(), requestor, monitor);
     }
 
     public void findSyntheticMatches(IJavaElement element, int limitTo, SearchParticipant[] participants, IJavaSearchScope scope, final ISearchRequestor requestor, IProgressMonitor monitor) throws CoreException {
@@ -102,13 +102,13 @@ public class SyntheticAccessorSearchRequestor {
         }
 
         IField field = (IField) element;
-        boolean isser = prefix.equals("is");
-        boolean setter = prefix.equals("set");
+        boolean isser = "is".equals(prefix);
+        boolean setter = "set".equals(prefix);
 
         if (setter && Flags.isFinal(field.getFlags())) {
             return null;
         }
-        if (isser && !field.getTypeSignature().equals("Z")) {
+        if (isser && !field.getTypeSignature().equals("Z")) { // TODO: What about "java.lang.Boolean"?
             return null;
         }
 
@@ -138,7 +138,8 @@ public class SyntheticAccessorSearchRequestor {
             prefixLength = 3;
         }
 
-        final IField field = ((IType) element.getParent()).getField(Introspector.decapitalize(name.substring(prefixLength)));
+        name = Introspector.decapitalize(name.substring(prefixLength));
+        final IField field = ((IType) element.getParent()).getField(name);
         // only return if field doesn't exist since otherwise, this method wouldn't be synthetic
         return field.exists() ? null : syntheticMemberProxy(IField.class, field, "Z"); // type signature appears unused
     }

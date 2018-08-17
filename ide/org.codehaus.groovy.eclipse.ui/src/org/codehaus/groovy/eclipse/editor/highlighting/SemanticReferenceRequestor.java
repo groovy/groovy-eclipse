@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
@@ -42,30 +41,19 @@ public abstract class SemanticReferenceRequestor implements ITypeRequestor {
     protected static Position getPosition(ASTNode node) {
         int start, length;
         if (node instanceof FieldNode || node instanceof MethodNode || node instanceof PropertyNode ||
-                (node instanceof ClassNode && ((ClassNode) node).getNameEnd() > 0)) {
-            AnnotatedNode an = (AnnotatedNode) node;
-            start = an.getNameStart();
-            length = an.getNameEnd() - start + 1;
+                (node instanceof ClassNode && ((ClassNode) node).getNameEnd() > 0) ||
+                node instanceof StaticMethodCallExpression) {
+            AnnotatedNode n = (AnnotatedNode) node;
+            start = n.getNameStart();
+            length = n.getNameEnd() - start + 1;
         } else if (node instanceof Parameter) {
             Parameter p = (Parameter) node;
             start = p.getNameStart();
             length = p.getNameEnd() - start;
-        } else if (node instanceof ImportNode) {
-            ClassNode clazz = ((ImportNode) node).getType();
-            start = clazz.getStart();
-            length = clazz.getLength();
-        } else if (node instanceof StaticMethodCallExpression) {
-            start = node.getStart();
-            length = ((StaticMethodCallExpression) node).getMethod().length();
         } else if (node instanceof MethodCallExpression) {
             Expression e = ((MethodCallExpression) node).getMethod();
-            // FIXADE : determine if we need to ignore funky method calls that
-            // use things like GStrings in the
-            // name
-            // if (e instanceof ConstantExpression) {
             start = e.getStart();
             length = e.getLength();
-            // }
         } else {
             start = node.getStart();
             length = node.getLength();
