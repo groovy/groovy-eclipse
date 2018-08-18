@@ -305,7 +305,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testMethodsAsProperties() {
+    void testMethodsAsProperties1() {
         String contents = '''\
             import java.lang.management.ManagementFactory
             // compact form:
@@ -341,6 +341,24 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     @Test
     void testMethodsAsProperties3() {
         addGroovySource '''\
+            class Foo {
+              private static final String value = ''
+              static String getValue() {
+                return value
+              }
+            }
+            '''.stripIndent()
+
+        String contents = 'new Foo().value'
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('Foo'), 3, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('value'), 5, STATIC_CALL))
+    }
+
+    @Test
+    void testMethodsAsProperties4() {
+        addGroovySource '''\
             interface Bar { def getOne() }
             interface Baz extends Bar { def getTwo() }
             '''.stripIndent()
@@ -363,7 +381,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testDefaultGroovyMethods() {
+    void testDefaultGroovyMethods1() {
         String contents = '["one", "two"].grep().first()'
 
         assertHighlighting(contents,
@@ -530,7 +548,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testNamedParams() {
+    void testNamedParams1() {
         String contents = '''\
             class Person { String firstName, lastName }
             def p = new Person(firstName: 'John', lastName: 'Doe')
@@ -596,7 +614,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testChainAssign() {
+    void testChainAssign1() {
         String contents = '''\
             class C {
               String fld
@@ -793,7 +811,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testForParams() {
+    void testForParams1() {
         assumeTrue(isParrotParser())
 
         String contents = '''\
@@ -1273,7 +1291,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testAnnoElems() {
+    void testAnnoElems1() {
         String contents = '''\
             @Grab( module = 'something:anything' )
             import groovy.transform.*
@@ -1349,7 +1367,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testGString() {
+    void testGString1() {
         String contents = '''\
             class X {
               int i;
@@ -1846,7 +1864,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test // GRECLIPSE-878
-    void testMapKey() {
+    void testMapKey1() {
         String contents = 'def map = [key: "value"]'
 
         assertHighlighting(contents,
@@ -1888,7 +1906,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testWithBlock() {
+    void testWithBlock1() {
         addGroovySource '''\
             class Foo {
               String val
@@ -2037,7 +2055,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testLazyInitExpr() {
+    void testLazyInitExpr1() {
         String contents = '''\
             class X {
               String x
@@ -2108,7 +2126,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testMethodPointer() {
+    void testMethodPointer1() {
         String contents = '''\
             def x = ''.&length
             def y = Math.&random

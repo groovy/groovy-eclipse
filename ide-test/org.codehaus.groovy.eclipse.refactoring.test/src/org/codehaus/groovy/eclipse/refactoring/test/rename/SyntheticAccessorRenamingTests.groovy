@@ -717,7 +717,7 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
         ))
     }
 
-    @Test @NotYetImplemented // this has compile errors, but it should still work
+    @Test // this has compile errors, but it should still work
     void testStaticGetterOnly2() {
         performRefactoringAndUndo('getFlar', new TestSource(
             pack: 'p', name: 'First.groovy',
@@ -760,14 +760,43 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
             contents: '''\
                 package r
                 import static p.First.getFoo
-                foo
                 getFoo()
                 '''.stripIndent(),
             finalContents: '''\
                 package r
                 import static p.First.getFlar
-                flar
                 getFlar()
+                '''.stripIndent()
+        ))
+    }
+
+    @Test @NotYetImplemented
+    void testStaticGetterOnly3() {
+        performRefactoringAndUndo('getFlar', new TestSource(
+            pack: 'p', name: 'First.groovy',
+            contents: '''\
+                package p
+                class First {
+                  static def getFoo() {}
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package p
+                class First {
+                  static def getFlar() {}
+                }
+                '''.stripIndent()
+        ), new TestSource(
+            pack: 'r', name: 'Script.groovy',
+            contents: '''\
+                package r
+                import static p.First.getFoo
+                foo
+                '''.stripIndent(),
+            finalContents: '''\
+                package r
+                import static p.First.getFlar
+                flar
                 '''.stripIndent()
         ))
     }
@@ -823,7 +852,7 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
         ))
     }
 
-    @Test @NotYetImplemented // this has compile errors, but it should still work
+    @Test // this has compile errors, but it should still work
     void testStaticIsserOnly2() {
         performRefactoringAndUndo('isFlar', new TestSource(
             pack: 'p', name: 'First.groovy',
@@ -866,14 +895,43 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
             contents: '''\
                 package r
                 import static p.First.isFoo
-                foo
                 isFoo()
                 '''.stripIndent(),
             finalContents: '''\
                 package r
                 import static p.First.isFlar
-                flar
                 isFlar()
+                '''.stripIndent()
+        ))
+    }
+
+    @Test @NotYetImplemented
+    void testStaticIsserOnly3() {
+        performRefactoringAndUndo('isFlar', new TestSource(
+            pack: 'p', name: 'First.groovy',
+            contents: '''\
+                package p
+                class First {
+                  static boolean isFoo() {}
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package p
+                class First {
+                  static boolean isFlar() {}
+                }
+                '''.stripIndent()
+        ), new TestSource(
+            pack: 'r', name: 'Script.groovy',
+            contents: '''\
+                package r
+                import static p.First.isFoo
+                foo
+                '''.stripIndent(),
+            finalContents: '''\
+                package r
+                import static p.First.isFlar
+                flar
                 '''.stripIndent()
         ))
     }
@@ -929,7 +987,7 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
         ))
     }
 
-    @Test @NotYetImplemented // this has compile errors, but it should still work
+    @Test // this has compile errors, but it should still work
     void testStaticSetterOnly2() {
         performRefactoringAndUndo('setFlar', new TestSource(
             pack: 'p', name: 'First.groovy',
@@ -972,20 +1030,49 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
             contents: '''\
                 package r
                 import static p.First.setFoo
-                foo = null
                 setFoo(null)
                 '''.stripIndent(),
             finalContents: '''\
                 package r
                 import static p.First.setFlar
-                flar = null
                 setFlar(null)
                 '''.stripIndent()
         ))
     }
 
-    @Test
+    @Test @NotYetImplemented
     void testStaticSetterOnly3() {
+        performRefactoringAndUndo('setFlar', new TestSource(
+            pack: 'p', name: 'First.groovy',
+            contents: '''\
+                package p
+                class First {
+                  static void setFoo(value) {}
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package p
+                class First {
+                  static void setFlar(value) {}
+                }
+                '''.stripIndent()
+        ), new TestSource(
+            pack: 'r', name: 'Script.groovy',
+            contents: '''\
+                package r
+                import static p.First.setFoo
+                foo = null
+                '''.stripIndent(),
+            finalContents: '''\
+                package r
+                import static p.First.setFlar
+                flar = null
+                '''.stripIndent()
+        ))
+    }
+
+    @Test
+    void testStaticSetterOnly4() {
         performRefactoringAndUndo('setFooBar', new TestSource(
             pack: 'p', name: 'First.groovy',
             contents: '''\
@@ -1227,149 +1314,264 @@ final class SyntheticAccessorRenamingTests extends RenameRefactoringTestSuite {
     @Test @NotYetImplemented
     void testDelegateAccess() {
         performRefactoringAndUndo('fooBar', new TestSource(
-            pack: 'p', name: 'First.groovy',
+            pack: 'p', name: 'OneTwo.groovy',
             contents: '''\
                 package p
-                class First {
+                class One {
                   def foo
                 }
+                class Two {
+                  @Delegate One one
+                }
                 '''.stripIndent(),
             finalContents: '''\
                 package p
-                class First {
+                class One {
                   def fooBar
                 }
-                '''.stripIndent()
-        ), new TestSource(
-            pack: 'q', name: 'Second.groovy',
-            contents: '''\
-                package q
-                class Second {
-                  @Delegate First first
-                }
-                '''.stripIndent(),
-            finalContents: '''\
-                package q
-                class Second {
-                  @Delegate First first
+                class Two {
+                  @Delegate One one
                 }
                 '''.stripIndent()
         ), new TestSource(
-            pack: 'r', name: 'Script.groovy',
+            pack: 'q', name: 'Script.groovy',
             contents: '''\
-                package r
-                def s = new q.Second()
-                s.foo
-                s.getFoo()
-                s.setFoo(null)
+                package q
+                import p.Two
+                def two = new Two()
+                two.foo
+                two.getFoo()
+                two.setFoo(null)
                 '''.stripIndent(),
             finalContents: '''\
-                package r
-                def s = new q.Second()
-                s.fooBar
-                s.getFooBar()
-                s.setFooBar(null)
+                package q
+                import p.Two
+                def two = new Two()
+                two.fooBar
+                two.getFooBar()
+                two.setFooBar(null)
+                '''.stripIndent()
+        ))
+    }
+
+    @Test
+    void testSubclassAccess1() {
+        performRefactoringAndUndo('fooBar', new TestSource(
+            pack: 'p', name: 'OneTwo.groovy',
+            contents: '''\
+                package p
+                class One {
+                  static def foo
+                }
+                class Two extends One {
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package p
+                class One {
+                  static def fooBar
+                }
+                class Two extends One {
+                }
+                '''.stripIndent()
+        ), new TestSource(
+            pack: 'q', name: 'Script.groovy',
+            contents: '''\
+                package q
+                p.Two.foo
+                p.Two.getFoo()
+                p.Two.setFoo(null)
+                '''.stripIndent(),
+            finalContents: '''\
+                package q
+                p.Two.fooBar
+                p.Two.getFooBar()
+                p.Two.setFooBar(null)
+                '''.stripIndent()
+        ))
+    }
+
+    @Test
+    void testSubclassAccess2() {
+        performRefactoringAndUndo('fooBar', new TestSource(
+            pack: 'p', name: 'OneTwo.groovy',
+            contents: '''\
+                package p
+                class One {
+                  def foo
+                }
+                class Two extends One {
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package p
+                class One {
+                  def fooBar
+                }
+                class Two extends One {
+                }
+                '''.stripIndent()
+        ), new TestSource(
+            pack: 'q', name: 'Script.groovy',
+            contents: '''\
+                package q
+                def two = new p.Two()
+                two.foo
+                two.getFoo()
+                two.setFoo(null)
+                '''.stripIndent(),
+            finalContents: '''\
+                package q
+                def two = new p.Two()
+                two.fooBar
+                two.getFooBar()
+                two.setFooBar(null)
                 '''.stripIndent()
         ))
     }
 
     @Test @NotYetImplemented
-    void testSubclassAccess() {
-        performRefactoringAndUndo('fooBar', new TestSource(
-            pack: 'p', name: 'First.groovy',
+    void testSubclassOverride1() {
+        renameGetters = renameSetters = true
+        performRefactoringAndUndo('ecks', new TestSource(
+            pack: 'p', name: 'One.groovy',
             contents: '''\
                 package p
-                class First {
-                  def foo
+                class One {
+                  def x
+                  def getX() {}
                 }
                 '''.stripIndent(),
             finalContents: '''\
                 package p
-                class First {
-                  def fooBar
+                class One {
+                  def ecks
+                  def getEcks() {}
                 }
                 '''.stripIndent()
         ), new TestSource(
-            pack: 'q', name: 'Second.groovy',
+            pack: 'q', name: 'Two.groovy',
             contents: '''\
                 package q
-                class Second extends First {
+                class Two extends One {
+                  @Override
+                  def getX() {}
                 }
                 '''.stripIndent(),
             finalContents: '''\
                 package q
-                class Second extends First {
+                class Two extends One {
+                  @Override
+                  def getEcks() {}
                 }
                 '''.stripIndent()
         ), new TestSource(
             pack: 'r', name: 'Script.groovy',
             contents: '''\
                 package r
-                def s = new q.Second()
-                s.foo
-                s.getFoo()
-                s.setFoo(null)
+                def two = new q.Two()
+                two.x
+                two.getX()
+                two.setX(null)
                 '''.stripIndent(),
             finalContents: '''\
                 package r
-                def s = new q.Second()
-                s.fooBar
-                s.getFooBar()
-                s.setFooBar(null)
+                def two = new q.Two()
+                two.ecks
+                two.getEcks()
+                two.setEcks(null)
                 '''.stripIndent()
         ))
     }
 
     @Test @NotYetImplemented
-    void testSubclassOverride() {
-        performRefactoringAndUndo('fooBar', new TestSource(
-            pack: 'p', name: 'First.groovy',
+    void testSubclassOverride2() {
+        renameGetters = renameSetters = true
+        performRefactoringAndUndo('ecks', new TestSource(
+            pack: 'p', name: 'One.groovy',
             contents: '''\
                 package p
-                class First {
-                  def foo
+                class One {
+                  def x
                 }
                 '''.stripIndent(),
             finalContents: '''\
                 package p
-                class First {
-                  def fooBar
+                class One {
+                  def ecks
                 }
                 '''.stripIndent()
         ), new TestSource(
-            pack: 'q', name: 'Second.groovy',
+            pack: 'q', name: 'Two.groovy',
             contents: '''\
                 package q
-                class Second extends First {
+                class Two extends One {
                   @Override
-                  def getFoo() {}
+                  def getX() {}
                 }
                 '''.stripIndent(),
             finalContents: '''\
                 package q
-                class Second extends First {
+                class Two extends One {
                   @Override
-                  def getFooBar() {}
+                  def getEcks() {}
                 }
                 '''.stripIndent()
         ), new TestSource(
             pack: 'r', name: 'Script.groovy',
             contents: '''\
                 package r
-                def s = new q.Second()
-                s.foo
-                s.getFoo()
-                s.setFoo(null)
+                def two = new q.Two()
+                two.x
+                two.getX()
+                two.setX(null)
                 '''.stripIndent(),
             finalContents: '''\
                 package r
-                def s = new q.Second()
-                s.fooBar
-                s.getFooBar()
-                s.setFooBar(null)
+                def two = new q.Two()
+                two.ecks
+                two.getEcks()
+                two.setEcks(null)
                 '''.stripIndent()
         ))
     }
 
-    // TODO: .&, ::, .'getFoo', new First(foo: ...)
+    @Test
+    void testConstructorAccess() {
+        performRefactoringAndUndo('boo', new TestSource(
+            pack: 'p', name: 'OneTwo.groovy',
+            contents: '''\
+                package p
+                class One {
+                  def foo
+                }
+                class Two extends One {
+                  def bar
+                }
+                '''.stripIndent(),
+            finalContents: '''\
+                package p
+                class One {
+                  def boo
+                }
+                class Two extends One {
+                  def bar
+                }
+                '''.stripIndent()
+        ), new TestSource(
+            pack: 'q', name: 'Script.groovy',
+            contents: '''\
+                package q
+                def one = new p.One(foo: null)
+                def two = new p.Two(foo: null, bar: null)
+                '''.stripIndent(),
+            finalContents: '''\
+                package q
+                def one = new p.One(boo: null)
+                def two = new p.Two(boo: null, bar: null)
+                '''.stripIndent()
+        ))
+    }
+
+    // TODO: .&getFoo, ::getFoo, .'getFoo'
 }

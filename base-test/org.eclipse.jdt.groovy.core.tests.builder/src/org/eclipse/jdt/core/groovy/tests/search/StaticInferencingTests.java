@@ -19,6 +19,8 @@ import static org.hamcrest.core.IsInstanceOf.instanceOf;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.junit.Assert;
@@ -170,8 +172,37 @@ public final class StaticInferencingTests extends InferencingTestSuite {
 
     @Test
     public void testStaticReference1() {
-        String contents = "class GGG { static int length }\nGGG.length";
-        assertKnown(contents, "length", "GGG", "java.lang.Integer");
+        String contents =
+            "class GGG {\n" +
+            "  static int length\n" +
+            "}\n" +
+            "GGG.length";
+        ASTNode decl = assertKnown(contents, "length", "GGG", "java.lang.Integer");
+        Assert.assertThat(decl, instanceOf(PropertyNode.class));
+    }
+
+    @Test
+    public void testStaticReference1a() {
+        String contents =
+            "class GGG {\n" +
+            "  static int length\n" +
+            "  static int getLength() { length }\n" +
+            "}\n" +
+            "GGG.length";
+        ASTNode decl = assertKnown(contents, "length", "GGG", "java.lang.Integer");
+        Assert.assertThat(decl, instanceOf(MethodNode.class)); // not FieldNode
+    }
+
+    @Test
+    public void testStaticReference1b() {
+        String contents =
+            "class GGG {\n" +
+            "  static int length\n" +
+            "  static int getLength() { length }\n" +
+            "}\n" +
+            "new GGG().length";
+        ASTNode decl = assertKnown(contents, "length", "GGG", "java.lang.Integer");
+        Assert.assertThat(decl, instanceOf(MethodNode.class)); // not FieldNode
     }
 
     @Test // GRECLIPSE-1544

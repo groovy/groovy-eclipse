@@ -513,7 +513,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     protected ASTNode findDeclaration(String name, ClassNode declaringType, boolean isLhsExpression, boolean isStaticExpression, boolean directFieldAccess, List<ClassNode> methodCallArgumentTypes) {
         if (declaringType.isArray()) {
             // only length exists on arrays
-            if (name.equals("length")) {
+            if ("length".equals(name)) {
                 return createLengthField(declaringType);
             }
             // otherwise search on object
@@ -530,7 +530,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
 
         // look for canonical accessor method
         MethodNode accessor = AccessorSupport.findAccessorMethodForPropertyName(name, declaringType, false, !isLhsExpression ? READER : WRITER);
-        if (accessor != null && !isSynthetic(accessor) && (accessor.isStatic() == isStaticExpression) &&
+        if (accessor != null && !isSynthetic(accessor) && isCompatible(accessor, isStaticExpression) &&
                 !(directFieldAccess && declaringType.equals(accessor.getDeclaringClass()))) {
             return accessor;
         }
