@@ -720,19 +720,19 @@
     </module>
     <module name="RegexpSingleline">
         <property name="message" value="Superfluous ''()'' should be removed" />
-        <property name="format" value="@(?:\w+\.)*\w+\(\s*\)" />
+        <property name="format" value="(?&lt;!\.)@(?:\w+\.)*\w+\(\s*\)" />
         <property name="fileExtensions" value="groovy" />
         <property name="id" value="groovyAnnotationStyle:EmptyParens" />
     </module>
     <module name="RegexpSingleline">
         <property name="message" value="Superfluous ''[]'' should be removed" />
-        <property name="format" value="@(?:\w+\.)*\w+\(\s*(?:\w+\s*=\s*)?\[\s*(?:[^,\]]*|([&apos;&quot;])[^&apos;&quot;]*\1)\]\s*\)" />
+        <property name="format" value="(?&lt;!\.)@(?:\w+\.)*\w+\(\s*(?:\w+\s*=\s*)?\[\s*(?:[^,\]]*|([&apos;&quot;])[^&apos;&quot;]*\1)\]\s*\)" />
         <property name="fileExtensions" value="groovy" />
         <property name="id" value="groovyAnnotationStyle:SingleValue" />
     </module>
     <module name="RegexpSingleline">
         <property name="message" value="Superfluous ''value='' should be removed" />
-        <property name="format" value="@(?:\w+\.)*\w+\(\s*value\s*=\s*(?:(?:\w+\.)*\w+|\[[^\]]*\]|([&apos;&quot;])[^&apos;&quot;]*\1)\)" />
+        <property name="format" value="(?&lt;!\.)@(?:\w+\.)*\w+\(\s*value\s*=\s*(?:(?:\w+\.)*\w+|\[[^\]]*\]|([&apos;&quot;])[^&apos;&quot;]*\1)\)" />
         <property name="fileExtensions" value="groovy" />
         <property name="id" value="groovyAnnotationStyle:ValueLiteral" />
     </module>
