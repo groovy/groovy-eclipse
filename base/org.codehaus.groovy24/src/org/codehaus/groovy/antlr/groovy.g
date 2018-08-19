@@ -366,7 +366,13 @@ tokens {
         return #(create(ident.getType(), ident.getText(), ident, next));
     }
 
-    private Stack<Integer> commentStartPositions = new Stack<Integer>();
+    public AST missingIdentifier0(Token prev, Token next) {
+        AST node = missingIdentifier(prev, next);
+        node.setText("");
+        return node;
+    }
+
+    private Stack<Integer> commentStartPositions = new Stack<>();
 
     public void startComment(int line, int column) {
         commentStartPositions.push((line << 16) + column);
@@ -1850,7 +1856,7 @@ varInitializer
             // if empty assignment was found, produce something compatible with content assist
             int index = 0;
             if (ASSIGN == LT(index).getType() || ASSIGN == LT(--index).getType()) {
-                astFactory.addASTChild(currentAST, missingIdentifier(LT(index), LT(index + 1)));
+                astFactory.addASTChild(currentAST, missingIdentifier0(LT(index), LT(index + 1)));
                 #varInitializer = (AST) currentAST.root;
                 reportError(e);
             } else {
@@ -3083,7 +3089,7 @@ assignmentExpression[int lc_stmt]
                     SR_ASSIGN, BSR_ASSIGN, SL_ASSIGN, BAND_ASSIGN, BXOR_ASSIGN, BOR_ASSIGN, STAR_STAR_ASSIGN};
                 int index = 0;
                 if (Arrays.binarySearch(types, LT(index).getType()) >= 0 || Arrays.binarySearch(types, LT(--index).getType()) >= 0) {
-                    astFactory.addASTChild(currentAST, missingIdentifier(LT(index), LT(index + 1)));
+                    astFactory.addASTChild(currentAST, missingIdentifier0(LT(index), LT(index + 1)));
                     #assignmentExpression = (AST) currentAST.root;
                     reportError(e);
                 } else {
@@ -3188,6 +3194,22 @@ shiftExpression[int lc_stmt]
             additiveExpression[0]
         )*
     ;
+// GRECLIPSE add
+    exception
+    catch [NoViableAltException e] {
+        // if incomplete range was found, produce something compatible with content assist
+        if (currentAST != null && currentAST.root != null &&
+                (currentAST.root.getType() == RANGE_INCLUSIVE ||
+                 currentAST.root.getType() == RANGE_EXCLUSIVE)) {
+            int i = 0; while (LT(i).getType() != currentAST.root.getType()) i-=1;
+            astFactory.addASTChild(currentAST, missingIdentifier0(LT(i), LT(1)));
+            #shiftExpression = (AST) currentAST.root;
+            reportError(e);
+        } else {
+            throw e;
+        }
+    }
+// GRECLIPSE end
 
 
 // binary addition/subtraction (level 5)

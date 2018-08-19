@@ -48,6 +48,7 @@ import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.NamedArgumentListExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
+import org.codehaus.groovy.ast.expr.RangeExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
@@ -542,7 +543,6 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         for (ConstantExpression stringExpr : expression.getStrings()) {
             if (check(stringExpr)) {
                 // no completions available within string literals
-                context = null;
                 throw new VisitCompleteException();
             }
         }
@@ -644,6 +644,21 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         super.visitPropertyExpression(expression);
 
         createContext(expression, blockStack.getLast(), ContentAssistLocation.EXPRESSION);
+    }
+
+    @Override
+    public void visitRangeExpression(RangeExpression expression) {
+        if (!check(expression)) {
+            return;
+        }
+
+        super.visitRangeExpression(expression);
+
+        if (completionOffset <= expression.getFrom().getEnd() || completionOffset >= expression.getTo().getStart()) {
+            createContext(expression, blockStack.getLast(), ContentAssistLocation.STATEMENT);
+        }
+        // no completions within the operator
+        throw new VisitCompleteException();
     }
 
     @Override

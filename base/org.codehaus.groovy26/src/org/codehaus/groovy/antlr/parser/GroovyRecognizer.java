@@ -330,6 +330,12 @@ public class GroovyRecognizer extends groovyjarjarantlr.LLkParser       implemen
         return (AST)astFactory.make( (new ASTArray(1)).add(create(ident.getType(),ident.getText(),ident,next)));
     }
 
+    public AST missingIdentifier0(Token prev, Token next) {
+        AST node = missingIdentifier(prev, next);
+        node.setText("");
+        return node;
+    }
+
     private Stack<Integer> commentStartPositions = new Stack<>();
 
     public void startComment(int line, int column) {
@@ -3087,7 +3093,7 @@ inputState.guessing--;
                 // if empty assignment was found, produce something compatible with content assist
                 int index = 0;
                 if (ASSIGN == LT(index).getType() || ASSIGN == LT(--index).getType()) {
-                astFactory.addASTChild(currentAST, missingIdentifier(LT(index), LT(index + 1)));
+                astFactory.addASTChild(currentAST, missingIdentifier0(LT(index), LT(index + 1)));
                 varInitializer_AST = (AST) currentAST.root;
                 reportError(e);
                 } else {
@@ -8758,7 +8764,7 @@ inputState.guessing--;
                     SR_ASSIGN, BSR_ASSIGN, SL_ASSIGN, BAND_ASSIGN, BXOR_ASSIGN, BOR_ASSIGN, STAR_STAR_ASSIGN};
                     int index = 0;
                     if (Arrays.binarySearch(types, LT(index).getType()) >= 0 || Arrays.binarySearch(types, LT(--index).getType()) >= 0) {
-                    astFactory.addASTChild(currentAST, missingIdentifier(LT(index), LT(index + 1)));
+                    astFactory.addASTChild(currentAST, missingIdentifier0(LT(index), LT(index + 1)));
                     assignmentExpression_AST = (AST) currentAST.root;
                     reportError(e);
                     } else {
@@ -10547,42 +10553,67 @@ inputState.guessing--;
         ASTPair currentAST = new ASTPair();
         AST shiftExpression_AST = null;
         
-        additiveExpression(lc_stmt);
-        astFactory.addASTChild(currentAST, returnAST);
-        {
-        _loop495:
-        do {
-            if ((_tokenSet_90.member(LA(1)))) {
-                {
-                switch ( LA(1)) {
-                case SR:
-                case BSR:
-                case SL:
-                {
+        try {      // for error handling
+            additiveExpression(lc_stmt);
+            astFactory.addASTChild(currentAST, returnAST);
+            {
+            _loop495:
+            do {
+                if ((_tokenSet_90.member(LA(1)))) {
                     {
                     switch ( LA(1)) {
+                    case SR:
+                    case BSR:
                     case SL:
                     {
-                        AST tmp250_AST = null;
-                        tmp250_AST = astFactory.create(LT(1));
-                        astFactory.makeASTRoot(currentAST, tmp250_AST);
-                        match(SL);
+                        {
+                        switch ( LA(1)) {
+                        case SL:
+                        {
+                            AST tmp250_AST = null;
+                            tmp250_AST = astFactory.create(LT(1));
+                            astFactory.makeASTRoot(currentAST, tmp250_AST);
+                            match(SL);
+                            break;
+                        }
+                        case SR:
+                        {
+                            AST tmp251_AST = null;
+                            tmp251_AST = astFactory.create(LT(1));
+                            astFactory.makeASTRoot(currentAST, tmp251_AST);
+                            match(SR);
+                            break;
+                        }
+                        case BSR:
+                        {
+                            AST tmp252_AST = null;
+                            tmp252_AST = astFactory.create(LT(1));
+                            astFactory.makeASTRoot(currentAST, tmp252_AST);
+                            match(BSR);
+                            break;
+                        }
+                        default:
+                        {
+                            throw new NoViableAltException(LT(1), getFilename());
+                        }
+                        }
+                        }
                         break;
                     }
-                    case SR:
+                    case RANGE_INCLUSIVE:
                     {
-                        AST tmp251_AST = null;
-                        tmp251_AST = astFactory.create(LT(1));
-                        astFactory.makeASTRoot(currentAST, tmp251_AST);
-                        match(SR);
+                        AST tmp253_AST = null;
+                        tmp253_AST = astFactory.create(LT(1));
+                        astFactory.makeASTRoot(currentAST, tmp253_AST);
+                        match(RANGE_INCLUSIVE);
                         break;
                     }
-                    case BSR:
+                    case RANGE_EXCLUSIVE:
                     {
-                        AST tmp252_AST = null;
-                        tmp252_AST = astFactory.create(LT(1));
-                        astFactory.makeASTRoot(currentAST, tmp252_AST);
-                        match(BSR);
+                        AST tmp254_AST = null;
+                        tmp254_AST = astFactory.create(LT(1));
+                        astFactory.makeASTRoot(currentAST, tmp254_AST);
+                        match(RANGE_EXCLUSIVE);
                         break;
                     }
                     default:
@@ -10591,41 +10622,37 @@ inputState.guessing--;
                     }
                     }
                     }
-                    break;
+                    nls();
+                    additiveExpression(0);
+                    astFactory.addASTChild(currentAST, returnAST);
                 }
-                case RANGE_INCLUSIVE:
-                {
-                    AST tmp253_AST = null;
-                    tmp253_AST = astFactory.create(LT(1));
-                    astFactory.makeASTRoot(currentAST, tmp253_AST);
-                    match(RANGE_INCLUSIVE);
-                    break;
+                else {
+                    break _loop495;
                 }
-                case RANGE_EXCLUSIVE:
-                {
-                    AST tmp254_AST = null;
-                    tmp254_AST = astFactory.create(LT(1));
-                    astFactory.makeASTRoot(currentAST, tmp254_AST);
-                    match(RANGE_EXCLUSIVE);
-                    break;
-                }
-                default:
-                {
-                    throw new NoViableAltException(LT(1), getFilename());
-                }
-                }
-                }
-                nls();
-                additiveExpression(0);
-                astFactory.addASTChild(currentAST, returnAST);
+                
+            } while (true);
             }
-            else {
-                break _loop495;
-            }
-            
-        } while (true);
+            shiftExpression_AST = (AST)currentAST.root;
         }
-        shiftExpression_AST = (AST)currentAST.root;
+        catch (NoViableAltException e) {
+            if (inputState.guessing==0) {
+                
+                // if incomplete range was found, produce something compatible with content assist
+                if (currentAST != null && currentAST.root != null &&
+                (currentAST.root.getType() == RANGE_INCLUSIVE ||
+                currentAST.root.getType() == RANGE_EXCLUSIVE)) {
+                int i = 0; while (LT(i).getType() != currentAST.root.getType()) i-=1;
+                astFactory.addASTChild(currentAST, missingIdentifier0(LT(i), LT(1)));
+                shiftExpression_AST = (AST) currentAST.root;
+                reportError(e);
+                } else {
+                throw e;
+                }
+                
+            } else {
+                throw e;
+            }
+        }
         returnAST = shiftExpression_AST;
     }
     

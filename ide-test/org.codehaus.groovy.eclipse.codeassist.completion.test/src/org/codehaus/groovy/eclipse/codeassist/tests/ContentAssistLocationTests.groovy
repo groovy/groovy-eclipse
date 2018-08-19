@@ -37,7 +37,7 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
         def unit = addGroovySource(contents, nextUnitName())
         ContentAssistContext context = new GroovyCompletionProposalComputer().createContentAssistContext(unit, offset, new Document(unit.buffer.contents))
 
-        assert context.location == expectedLocation
+        assert context?.location == expectedLocation
         if (withContext != null) {
             DefaultGroovyMethods.with(context, withContext)
         }
@@ -266,7 +266,7 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
         }
     }
 
-    @Test @NotYetImplemented
+    @Test
     void testStatement23() {
         String contents = '''\
             0..
@@ -274,6 +274,40 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
         assertLocation(contents, getIndexOf(contents, '..'), ContentAssistLocation.STATEMENT) {
             assert completionNode instanceof RangeExpression
         }
+    }
+
+    @Test
+    void testStatement23a() {
+        String contents = '''\
+            0..<
+            '''.stripIndent()
+        assertLocation(contents, getIndexOf(contents, '..<'), ContentAssistLocation.STATEMENT) {
+            assert completionNode instanceof RangeExpression
+        }
+    }
+
+    @Test
+    void testStatement23b() {
+        String contents = '''\
+            0..
+            '''.stripIndent()
+        assertLocation(contents, getIndexOf(contents, '.'), null)
+    }
+
+    @Test
+    void testStatement23c() {
+        String contents = '''\
+            0..<
+            '''.stripIndent()
+        assertLocation(contents, getIndexOf(contents, '.'), null)
+    }
+
+    @Test
+    void testStatement23d() {
+        String contents = '''\
+            0..<
+            '''.stripIndent()
+        assertLocation(contents, getIndexOf(contents, '..'), null)
     }
 
     @Test
