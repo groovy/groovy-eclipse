@@ -625,7 +625,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
     @Override
     public void visitPropertyExpression(PropertyExpression expression) {
-        if (!check(expression) && !check(expression.getProperty())) {
+        if (!check(expression)) {
             return;
         }
 
@@ -642,6 +642,8 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         }
 
         super.visitPropertyExpression(expression);
+
+        createContext(expression, blockStack.getLast(), ContentAssistLocation.EXPRESSION);
     }
 
     @Override

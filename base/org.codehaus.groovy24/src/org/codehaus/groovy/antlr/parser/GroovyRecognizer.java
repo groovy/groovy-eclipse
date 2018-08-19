@@ -12029,8 +12029,8 @@ inputState.guessing--;
                 
                 if (np_AST == null) {
                 GroovySourceToken ident = new GroovySourceToken(IDENT);
-                ident.setLine(((SourceInfo) LT(0)).getLineLast());
-                ident.setColumn(((SourceInfo) LT(0)).getColumnLast());
+                ident.setLine(((SourceInfo) operator).getLineLast());
+                ident.setColumn(((SourceInfo) operator).getColumnLast());
                 ident.setLineLast(((SourceInfo) LT(0)).getLineLast());
                 ident.setColumnLast(((SourceInfo) LT(0)).getColumnLast());
                 np_AST = (AST)astFactory.make( (new ASTArray(1)).add(create(ident.getType(),ident.getText(),ident,null)));

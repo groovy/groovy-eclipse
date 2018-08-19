@@ -2791,8 +2791,8 @@ pathElement[AST prefix] {Token operator = LT(1);}
         {
             if (#np == null) {
                 GroovySourceToken ident = new GroovySourceToken(IDENT);
-                ident.setLine(((SourceInfo) LT(0)).getLineLast());
-                ident.setColumn(((SourceInfo) LT(0)).getColumnLast());
+                ident.setLine(((SourceInfo) operator).getLineLast());
+                ident.setColumn(((SourceInfo) operator).getColumnLast());
                 ident.setLineLast(((SourceInfo) LT(0)).getLineLast());
                 ident.setColumnLast(((SourceInfo) LT(0)).getColumnLast());
                 #np = #(create(ident.getType(),ident.getText(),ident,null));

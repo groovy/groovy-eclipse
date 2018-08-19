@@ -266,6 +266,16 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
         }
     }
 
+    @Test @NotYetImplemented
+    void testStatement23() {
+        String contents = '''\
+            0..
+            '''.stripIndent()
+        assertLocation(contents, getIndexOf(contents, '..'), ContentAssistLocation.STATEMENT) {
+            assert completionNode instanceof RangeExpression
+        }
+    }
+
     @Test
     void testExpression1() {
         String contents = 'a.a'
@@ -347,6 +357,16 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
             '''.stripIndent()
         assertLocation(contents, getIndexOf(contents, 'val'), ContentAssistLocation.EXPRESSION) {
             assert completionNode instanceof ClassExpression
+        }
+    }
+
+    @Test
+    void testExpression12() {
+        String contents = '''\
+            0.
+            '''.stripIndent()
+        assertLocation(contents, getIndexOf(contents, '.'), ContentAssistLocation.EXPRESSION) {
+            assert completionNode instanceof PropertyExpression
         }
     }
 
