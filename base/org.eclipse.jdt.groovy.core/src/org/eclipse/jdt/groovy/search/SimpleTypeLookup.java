@@ -81,9 +81,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     @Override
     public TypeLookupResult lookupType(Expression node, VariableScope scope, ClassNode objectExpressionType, boolean isStaticObjectExpression) {
         TypeConfidence[] confidence = {TypeConfidence.EXACT};
-        if (ClassHelper.isPrimitiveType(objectExpressionType)) {
-            objectExpressionType = ClassHelper.getWrapper(objectExpressionType);
-        }
+        objectExpressionType = GroovyUtils.getWrapperTypeIfPrimitive(objectExpressionType);
         ClassNode declaringType = objectExpressionType != null ? objectExpressionType : findDeclaringType(node, scope, confidence);
         TypeLookupResult result = findType(node, declaringType, scope, confidence[0],
             isStaticObjectExpression || (objectExpressionType == null && scope.isStatic()), objectExpressionType == null);
@@ -229,7 +227,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             } else if (cexp.isEmptyStringExpression() || VariableScope.STRING_CLASS_NODE.equals(nodeType)) {
                 return new TypeLookupResult(VariableScope.STRING_CLASS_NODE, null, node, confidence, scope);
             } else if (ClassHelper.isNumberType(nodeType) || VariableScope.BIG_DECIMAL_CLASS.equals(nodeType) || VariableScope.BIG_INTEGER_CLASS.equals(nodeType)) {
-                return new TypeLookupResult(ClassHelper.isPrimitiveType(nodeType) ? ClassHelper.getWrapper(nodeType) : nodeType, null, null, confidence, scope);
+                return new TypeLookupResult(GroovyUtils.getWrapperTypeIfPrimitive(nodeType), null, null, confidence, scope);
             } else {
                 return new TypeLookupResult(nodeType, null, null, TypeConfidence.UNKNOWN, scope);
             }

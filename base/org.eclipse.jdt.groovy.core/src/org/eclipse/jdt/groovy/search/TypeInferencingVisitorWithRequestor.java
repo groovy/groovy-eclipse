@@ -2068,7 +2068,7 @@ assert primaryExprType != null && dependentExprType != null;
                         } else if (expression instanceof ConstantExpression && ((ConstantExpression) expression).isNullExpression()) {
                             types.add(VariableScope.NULL_TYPE); // sentinel for wildcard matching
                         } else if (ClassHelper.isNumberType(exprType) || VariableScope.BIG_DECIMAL_CLASS.equals(exprType) || VariableScope.BIG_INTEGER_CLASS.equals(exprType)) {
-                            types.add(ClassHelper.isPrimitiveType(exprType) ? ClassHelper.getWrapper(exprType) : exprType);
+                            types.add(GroovyUtils.getWrapperTypeIfPrimitive(exprType));
                         } else if (expression instanceof GStringExpression || (expression instanceof ConstantExpression && ((ConstantExpression) expression).isEmptyStringExpression())) {
                             types.add(VariableScope.STRING_CLASS_NODE);
                         } else if (expression instanceof BooleanExpression || (expression instanceof ConstantExpression && (((ConstantExpression) expression).isTrueExpression() || ((ConstantExpression) expression).isFalseExpression()))) {

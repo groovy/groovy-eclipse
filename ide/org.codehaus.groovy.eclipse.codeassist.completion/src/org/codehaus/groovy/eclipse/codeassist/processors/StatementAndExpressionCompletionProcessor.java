@@ -25,7 +25,6 @@ import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.ImportNode;
@@ -61,6 +60,7 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.ISourceReference;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.groovy.search.ITypeRequestor;
 import org.eclipse.jdt.groovy.search.TypeInferencingVisitorFactory;
@@ -213,9 +213,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             } else if (enclosing instanceof MethodCallExpression && ((MethodCallExpression) enclosing).isSpreadSafe()) {
                 resultingType = VariableScope.extractElementType(resultingType);
             }
-            if (ClassHelper.isPrimitiveType(resultingType)) {
-                resultingType = ClassHelper.getWrapper(resultingType);
-            }
+            resultingType = GroovyUtils.getWrapperTypeIfPrimitive(resultingType);
         }
 
         /**

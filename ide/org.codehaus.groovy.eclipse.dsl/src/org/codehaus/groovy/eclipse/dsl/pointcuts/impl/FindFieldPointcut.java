@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.eclipse.core.resources.IStorage;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 
 /**
  * the match returns true if the pattern passed in has a field with the
@@ -55,7 +55,7 @@ public class FindFieldPointcut extends FilteringPointcut<FieldNode> {
         } else if (toMatch instanceof FieldNode) {
             return Collections.singleton((FieldNode) toMatch);
         } else if (toMatch instanceof ClassNode) {
-            return new ArrayList<>(ClassHelper.getWrapper((ClassNode) toMatch).getFields());
+            return new ArrayList<>(GroovyUtils.getWrapperTypeIfPrimitive((ClassNode) toMatch).getFields());
         }
         return null;
     }
