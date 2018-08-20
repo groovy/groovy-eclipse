@@ -20,7 +20,6 @@ import static org.junit.Assume.assumeTrue;
 
 import org.eclipse.jdt.groovy.core.tests.basic.GroovyCompilerTestSuite;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -77,7 +76,7 @@ public final class NamedVariantTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "Color(r:1, g:2, b:3) 0");
     }
 
-    @Test @Ignore("Cannot cast object '{}' with class 'java.util.LinkedHashMap' to class 'java.lang.Integer'")
+    @Test
     public void testNamedVariant3() {
         String[] sources = {
             "Script.groovy",
@@ -92,7 +91,7 @@ public final class NamedVariantTests extends GroovyCompilerTestSuite {
             "  final Integer r, g, b\n" +
             "  \n" +
             "  @NamedVariant @VisibilityOptions(Visibility.PUBLIC)\n" +
-            "  private Color(Integer r, Integer g, Integer b) {\n" +
+            "  private Color(@NamedParam Integer r, @NamedParam Integer g, @NamedParam Integer b) {\n" +
             "    this.r = r\n" +
             "    this.g = g\n" +
             "    this.b = b\n" +
