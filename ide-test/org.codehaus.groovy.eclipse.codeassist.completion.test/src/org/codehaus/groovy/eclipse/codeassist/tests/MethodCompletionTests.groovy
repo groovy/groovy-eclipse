@@ -685,4 +685,52 @@ final class MethodCompletionTests extends CompletionTestSuite {
         assert selection.x == expected.lastIndexOf('o1') && selection.y == 'o1'.length()
         assert proposal.replacementOffset + proposal.cursorPosition == getLastIndexOf(expected, '->')
     }
+
+    @Test
+    void testRangeExpressionCompletion1() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_AUTOACTIVATION, 'true')
+        String contents = '''\
+            def range = 0.
+            '''.stripIndent()
+        ICompletionProposal proposal = findFirstProposal(
+            createProposalsAtOffset(contents, getLastIndexOf(contents, '.')), 'hashCode')
+        char[] triggers = proposal.triggerCharacters
+        assert !triggers.contains('.' as char)
+
+        // simulate typing while content assist popup is displayed
+        proposal.isPrefix('h', proposal.displayString)
+
+        triggers = proposal.triggerCharacters
+        assert triggers.contains('.' as char)
+    }
+
+    @Test
+    void testRangeExpressionCompletion2() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_AUTOACTIVATION, 'true')
+        String contents = '''\
+            def other = 0.h
+            '''.stripIndent()
+        ICompletionProposal proposal = findFirstProposal(
+            createProposalsAtOffset(contents, getLastIndexOf(contents, 'h')), 'hashCode')
+        char[] triggers = proposal.triggerCharacters
+        assert triggers.contains('.' as char)
+
+        // simulate typing while content assist popup is displayed
+        proposal.isPrefix('', proposal.displayString)
+
+        //triggers = proposal.triggerCharacters
+        //assert !triggers.contains('.' as char)
+    }
+
+    @Test
+    void testRangeExpressionCompletion3() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_AUTOACTIVATION, 'true')
+        String contents = '''\
+            def other = 0.
+            '''.stripIndent()
+        ICompletionProposal proposal = findFirstProposal(
+            createProposalsAtOffset(contents, getLastIndexOf(contents, '.')), 'equals')
+        char[] triggers = proposal.triggerCharacters
+        assert !triggers.contains('.' as char)
+    }
 }

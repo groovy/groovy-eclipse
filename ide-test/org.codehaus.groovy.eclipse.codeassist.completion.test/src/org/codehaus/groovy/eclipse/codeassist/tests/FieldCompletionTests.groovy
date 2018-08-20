@@ -643,4 +643,40 @@ final class FieldCompletionTests extends CompletionTestSuite {
             java.util.regex.Pattern.DOTALL
             '''.stripIndent())
     }
+
+    @Test
+    void testRangeExpressionCompletion1() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_AUTOACTIVATION, 'true')
+        String contents = '''\
+            def range = 0.
+            '''.stripIndent()
+        ICompletionProposal proposal = findFirstProposal(
+            createProposalsAtOffset(contents, getLastIndexOf(contents, '.')), 'BYTES')
+        char[] triggers = proposal.triggerCharacters
+        assert !triggers.contains('.' as char)
+
+        // simulate typing while content assist popup is displayed
+        proposal.isPrefix('b', proposal.displayString)
+
+        triggers = proposal.triggerCharacters
+        assert triggers.contains('.' as char)
+    }
+
+    @Test
+    void testRangeExpressionCompletion2() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_AUTOACTIVATION, 'true')
+        String contents = '''\
+            def other = 0.b
+            '''.stripIndent()
+        ICompletionProposal proposal = findFirstProposal(
+            createProposalsAtOffset(contents, getLastIndexOf(contents, 'b')), 'BYTES')
+        char[] triggers = proposal.triggerCharacters
+        assert triggers.contains('.' as char)
+
+        // simulate typing while content assist popup is displayed
+        proposal.isPrefix('', proposal.displayString)
+
+        //triggers = proposal.triggerCharacters
+        //assert !triggers.contains('.' as char)
+    }
 }

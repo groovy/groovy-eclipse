@@ -82,11 +82,12 @@ import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
 
 public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProposal {
 
-    public GroovyJavaMethodCompletionProposal(CompletionProposal proposal, ProposalFormattingOptions options, JavaContentAssistInvocationContext context, String contributor) {
-        super(proposal, context);
+    public GroovyJavaMethodCompletionProposal(CompletionProposal proposal, ProposalFormattingOptions options, JavaContentAssistInvocationContext javaContext, String contributor) {
+        super(proposal, javaContext);
         fContextInformationPosition = -1;
         fContributor = (contributor == null ? "" : contributor.trim());
-        fPreferences = new ReplacementPreferences(options, getFormatterPrefs(), context.getProject());
+        fPrefix = getPrefix(javaContext.getDocument(), javaContext.getInvocationOffset());
+        fPreferences = new ReplacementPreferences(options, getFormatterPrefs(), javaContext.getProject());
     }
 
     protected final String fContributor;
@@ -97,6 +98,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     }
     protected ImportRewrite fImportRewite;
 
+    protected String fPrefix;
     // initialized during application:
     protected IRegion fSelectedRegion;
     protected String fPositionCategory;
@@ -437,11 +439,24 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
 
     @Override
     protected char[] computeTriggerCharacters() {
-        if (fProposal instanceof GroovyCompletionProposal) {
-            boolean hasParameters = ((GroovyCompletionProposal) fProposal).hasParameters();
-            return (!hasParameters ? ProposalUtils.METHOD_TRIGGERS : ProposalUtils.METHOD_WITH_ARGUMENTS_TRIGGERS);
+        if (hasParameters()) { // TODO: Add check for method pointer / reference
+            // TODO: If not ctor and no trailing closure or SAM type, remove '{'
+            return ProposalUtils.METHOD_WITH_ARGUMENTS_TRIGGERS;
         }
-        return super.computeTriggerCharacters();
+
+        // in case of auto-activation, remove '.' trigger to allow typing range
+        if (fPrefix.isEmpty() && ProposalUtils.isContentAssistAutoActiavted()) {
+            return ProposalUtils.getContentAssistContext(fInvocationContext).map(context -> {
+                // check for completion like "0." or "foo." as candidate for range
+                String q = context.getQualifiedCompletionExpression();
+                if (q.endsWith(".") && q.indexOf('.') == q.lastIndexOf('.')) {
+                    return CharOperation.remove(ProposalUtils.METHOD_TRIGGERS, '.');
+                }
+                return (char[]) null;
+            }).orElse(ProposalUtils.METHOD_TRIGGERS);
+        }
+
+        return ProposalUtils.METHOD_TRIGGERS;
     }
 
     @Override
@@ -455,6 +470,14 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
             return new Point(fSelectedRegion.getOffset(), fSelectedRegion.getLength());
         }
         return super.getSelection(document);
+    }
+
+    @Override
+    protected boolean isPrefix(String prefix, String string) {
+        if (!hasParameters()) {
+            ReflectionUtils.setPrivateField(LazyJavaCompletionProposal.class, "fTriggerCharactersComputed", this, Boolean.FALSE);
+        }
+        fPrefix = prefix; return super.isPrefix(prefix, string);
     }
 
     @Override

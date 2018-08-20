@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.codeassist.completions;
 
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.eclipse.jdt.core.CompletionProposal;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.internal.ui.text.java.FieldProposalInfo;
 import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
@@ -33,8 +34,34 @@ public class GroovyJavaFieldCompletionProposal extends JavaCompletionProposal {
             proposal.getRelevance(),
             false, // inJavadoc
             javaContext);
-
         setProposalInfo(new FieldProposalInfo(javaContext.getProject(), proposal));
-        setTriggerCharacters(ProposalUtils.VAR_TRIGGER);
+        fPrefix = getPrefix(javaContext.getDocument(), javaContext.getInvocationOffset());
     }
+
+    @Override
+    public char[] getTriggerCharacters() {
+        char[] triggerCharacters;
+        // in case of auto-activation, remove '.' trigger to allow typing range
+        if (fPrefix.isEmpty() && ProposalUtils.isContentAssistAutoActiavted()) {
+            triggerCharacters = ProposalUtils.getContentAssistContext(fInvocationContext).map(context -> {
+                // check for completion like "0." or "foo." as candidate for range
+                String q = context.getQualifiedCompletionExpression();
+                if (q.endsWith(".") && q.indexOf('.') == q.lastIndexOf('.')) {
+                    return CharOperation.remove(ProposalUtils.VAR_TRIGGER, '.');
+                }
+                return (char[]) null;
+            }).orElse(ProposalUtils.VAR_TRIGGER);
+        } else {
+            triggerCharacters = ProposalUtils.VAR_TRIGGER;
+        }
+        setTriggerCharacters(triggerCharacters);
+        return super.getTriggerCharacters();
+    }
+
+    @Override
+    protected boolean isPrefix(String prefix, String string) {
+        fPrefix = prefix; return super.isPrefix(prefix, string);
+    }
+
+    protected String fPrefix;
 }

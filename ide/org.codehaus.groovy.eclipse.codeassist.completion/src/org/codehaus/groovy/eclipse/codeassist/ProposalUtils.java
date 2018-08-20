@@ -17,12 +17,15 @@ package org.codehaus.groovy.eclipse.codeassist;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.eclipse.codeassist.completions.GroovyExtendedCompletionContext;
 import org.codehaus.groovy.eclipse.codeassist.completions.NamedArgsMethodNode;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
+import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaElement;
@@ -31,7 +34,9 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
+import org.eclipse.jdt.internal.codeassist.InternalCompletionContext;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
@@ -39,7 +44,9 @@ import org.eclipse.jdt.internal.core.PackageFragmentRoot;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.internal.ui.viewsupport.ImageDescriptorRegistry;
+import org.eclipse.jdt.ui.PreferenceConstants;
 import org.eclipse.jdt.ui.text.java.CompletionProposalLabelProvider;
+import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.swt.graphics.Image;
@@ -102,29 +109,6 @@ public class ProposalUtils {
     }
 
     /**
-     * Can be null if access restriction cannot be resolved for given type.
-     */
-    public static AccessRestriction getTypeAccessibility(IType type) {
-        PackageFragmentRoot root = (PackageFragmentRoot) type.getAncestor(IJavaElement.PACKAGE_FRAGMENT_ROOT);
-        try {
-            IClasspathEntry entry = root.getResolvedClasspathEntry();
-            // Alternative:
-            // entry = ((JavaProject) typeProject).getClasspathEntryFor(root.getPath());
-            if (entry instanceof ClasspathEntry) {
-                AccessRuleSet accessRuleSet = ((ClasspathEntry) entry).getAccessRuleSet();
-                if (accessRuleSet != null) {
-                    char[] packageName = type.getPackageFragment().getElementName().toCharArray();
-                    char[][] packageChars = CharOperation.splitOn('.', packageName);
-                    char[] fileWithoutExtension = type.getElementName().toCharArray();
-                    return accessRuleSet.getViolatedRestriction(CharOperation.concatWith(packageChars, fileWithoutExtension, '/'));
-                }
-            }
-        } catch (JavaModelException ignore) {
-        }
-        return null;
-    }
-
-    /**
      * Includes named params but not optional params.
      */
     public static char[] createMethodSignature(MethodNode node) {
@@ -184,16 +168,6 @@ public class ProposalUtils {
         }
     }
 
-    private static final CompletionProposalLabelProvider labelProvider = new CompletionProposalLabelProvider();
-
-    public static Image getImage(CompletionProposal proposal) {
-        return registry.get(labelProvider.createImageDescriptor(proposal));
-    }
-
-    public static Image getParameterImage() {
-        return registry.get(JavaPluginImages.DESC_OBJS_LOCAL_VARIABLE);
-    }
-
     public static StyledString createDisplayString(CompletionProposal proposal) {
         return labelProvider.createStyledLabel(proposal);
     }
@@ -228,6 +202,52 @@ public class ProposalUtils {
         return methodName.length() > 3 ? methodName.substring(3) : "$$$$$";
     }
 
+    public static Optional<ContentAssistContext> getContentAssistContext(JavaContentAssistInvocationContext javaContext) {
+        if (javaContext.getCoreContext().isExtended()) {
+            GroovyExtendedCompletionContext groovyContext = ReflectionUtils.getPrivateField(
+                InternalCompletionContext.class, "extendedContext", javaContext.getCoreContext());
+
+            ContentAssistContext context = ReflectionUtils.getPrivateField(
+                GroovyExtendedCompletionContext.class, "context", groovyContext);
+
+            return Optional.ofNullable(context);
+        }
+        return Optional.empty();
+    }
+
+    private static final CompletionProposalLabelProvider labelProvider = new CompletionProposalLabelProvider();
+
+    public static Image getImage(CompletionProposal proposal) {
+        return registry.get(labelProvider.createImageDescriptor(proposal));
+    }
+
+    public static Image getParameterImage() {
+        return registry.get(JavaPluginImages.DESC_OBJS_LOCAL_VARIABLE);
+    }
+
+    /**
+     * Can be null if access restriction cannot be resolved for given type.
+     */
+    public static AccessRestriction getTypeAccessibility(IType type) {
+        PackageFragmentRoot root = (PackageFragmentRoot) type.getAncestor(IJavaElement.PACKAGE_FRAGMENT_ROOT);
+        try {
+            IClasspathEntry entry = root.getResolvedClasspathEntry();
+            // Alternative:
+            // entry = ((JavaProject) typeProject).getClasspathEntryFor(root.getPath());
+            if (entry instanceof ClasspathEntry) {
+                AccessRuleSet accessRuleSet = ((ClasspathEntry) entry).getAccessRuleSet();
+                if (accessRuleSet != null) {
+                    char[] packageName = type.getPackageFragment().getElementName().toCharArray();
+                    char[][] packageChars = CharOperation.splitOn('.', packageName);
+                    char[] fileWithoutExtension = type.getElementName().toCharArray();
+                    return accessRuleSet.getViolatedRestriction(CharOperation.concatWith(packageChars, fileWithoutExtension, '/'));
+                }
+            }
+        } catch (JavaModelException ignore) {
+        }
+        return null;
+    }
+
     public static boolean hasWhitespace(char[] chars) {
         for (char c : chars) {
             if (CharOperation.isWhitespace(c)) {
@@ -235,6 +255,10 @@ public class ProposalUtils {
             }
         }
         return false;
+    }
+
+    public static boolean isContentAssistAutoActiavted() { // TODO: Determine if current invocation was auto-activated
+        return JavaPlugin.getDefault().getPreferenceStore().getBoolean(PreferenceConstants.CODEASSIST_AUTOACTIVATION);
     }
 
     /**
