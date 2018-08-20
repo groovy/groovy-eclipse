@@ -161,6 +161,9 @@ public class ParameterGuesserDelegate {
 
         // replacement offset and length are not known at this time, so they must be supplied from Position upon request
         JavaCompletionProposal javaProposal = new JavaCompletionProposal(replacement, 0, 0, image, null, 1, false, invocationContext) {
+            private int getInitialGuessLength() {
+                return fInvocationContext.getViewer().getSelectedRange().y;
+            }
             @Override
             public int getReplacementLength() {
                 return position.getLength();
@@ -171,10 +174,10 @@ public class ParameterGuesserDelegate {
             }
             @Override
             public void setReplacementOffset(int offset) {
-                if (offset > getReplacementOffset() && getReplacementLength() > super.getReplacementLength()) {
-                    offset = getReplacementOffset() + (getReplacementLength() - super.getReplacementLength());
+                if (offset > position.getOffset() && position.getLength() > getInitialGuessLength()) {
+                    offset = position.getOffset() + (position.getLength() - getInitialGuessLength());
                     // advance replacement offset to account for inserted qualifier and reset length
-                    position.setOffset(offset); position.setLength(super.getReplacementLength());
+                    position.setOffset(offset); position.setLength(getInitialGuessLength());
                 }
             }
         };

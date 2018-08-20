@@ -16,10 +16,8 @@
 package org.codehaus.groovy.eclipse.codeassist.tests
 
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
-import org.eclipse.jdt.internal.codeassist.impl.AssistOptions
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.contentassist.ICompletionProposal
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
@@ -27,10 +25,11 @@ final class GuessingCompletionTests extends CompletionTestSuite {
 
     @Before
     void setUp() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_INSERT_COMPLETION, 'true')
         setJavaPreference(PreferenceConstants.CODEASSIST_FILL_ARGUMENT_NAMES, 'true')
         setJavaPreference(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS, 'true')
-        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS, true)
-        GroovyContentAssist.default.preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
+        GroovyContentAssist.getDefault().preferenceStore.setValue(GroovyContentAssist.CLOSURE_BRACKETS, true)
+        GroovyContentAssist.getDefault().preferenceStore.setValue(GroovyContentAssist.CLOSURE_NOPARENS, true)
     }
 
     @Test
@@ -112,7 +111,6 @@ final class GuessingCompletionTests extends CompletionTestSuite {
     @Test
     void testParamGuessing5() {
         setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
-        setJavaPreference(AssistOptions.OPTION_SuggestStaticImports, AssistOptions.DISABLED)
 
         addGroovySource '''\
             import java.util.concurrent.TimeUnit
@@ -138,9 +136,43 @@ final class GuessingCompletionTests extends CompletionTestSuite {
 
         // check the parameter guesses
         ICompletionProposal[] choices = proposal.choices[0]
-        Assert.assertEquals(['MILLIS', 'DAYS', 'HOURS', 'MINUTES', 'SECONDS', 'MILLISECONDS', 'MICROSECONDS', 'NANOSECONDS', 'null'].join('\n'),
-            choices*.displayString.join('\n'))
+        assert choices*.displayString == ['MILLIS', 'DAYS', 'HOURS', 'MINUTES', 'SECONDS', 'MILLISECONDS', 'MICROSECONDS', 'NANOSECONDS', 'null']
 
+        applyProposalAndCheck(choices[1], '''\
+            |import static java.util.concurrent.TimeUnit.MILLISECONDS as MILLIS
+            |
+            |pack.Util.util(java.util.concurrent.TimeUnit.DAYS)
+            |'''.stripMargin())
+    }
+
+    @Test
+    void testParamGuessing5a() {
+        setJavaPreference(PreferenceConstants.CODEASSIST_ADDIMPORT, 'false')
+        setJavaPreference(PreferenceConstants.CODEASSIST_INSERT_COMPLETION, 'false')
+
+        addGroovySource '''\
+            import java.util.concurrent.TimeUnit
+            class Util {
+              static void util(TimeUnit units) {
+              }
+            }
+            '''.stripIndent(), 'Util', 'pack'
+
+        String contents = '''\
+            |import static java.util.concurrent.TimeUnit.MILLISECONDS as MILLIS
+            |
+            |pack.Util.ut
+            |'''.stripMargin()
+        ICompletionProposal proposal = checkUniqueProposal(contents, 'ut', 'util', 'util(MILLIS)')
+
+        // apply initial proposal to generate parameter proposals
+        applyProposalAndCheck(proposal, '''\
+            |import static java.util.concurrent.TimeUnit.MILLISECONDS as MILLIS
+            |
+            |pack.Util.util(MILLIS)
+            |'''.stripMargin());
+
+        ICompletionProposal[] choices = proposal.choices[0]
         applyProposalAndCheck(choices[1], '''\
             |import static java.util.concurrent.TimeUnit.MILLISECONDS as MILLIS
             |
