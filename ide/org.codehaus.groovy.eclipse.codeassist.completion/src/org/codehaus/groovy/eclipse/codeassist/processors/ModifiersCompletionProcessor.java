@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,18 +15,14 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
-import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.createDisplayString;
-import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.getImage;
-
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jdt.core.CompletionProposal;
-import org.eclipse.jdt.internal.codeassist.InternalCompletionProposal;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
+import org.eclipse.jdt.internal.corext.util.Strings;
 import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
@@ -34,30 +30,20 @@ import org.eclipse.jface.viewers.StyledString;
 
 public class ModifiersCompletionProcessor extends AbstractGroovyCompletionProcessor {
 
-    /* Others.  Not used
-        "extends",
-        "implements",
-        "import",
-        "interface",
-        "strictfp",
-        "throws",
-     */
-
-    // just the keywords that may be available in a class body
-    private static String[] keywords = {
+    private static final String[] CLASS_MEMBER_KEYWORDS = {
         "abstract",
         "def",
         "final",
         "native",
-        "package",
+      //"package", TODO: Replace with "@PackageScope"?
         "private",
         "protected",
         "public",
         "static",
         "synchronized",
         "transient",
-        "volatile",
         "void",
+        "volatile",
     };
 
     public ModifiersCompletionProcessor(ContentAssistContext context, JavaContentAssistInvocationContext javaContext, SearchableEnvironment nameEnvironment) {
@@ -67,28 +53,20 @@ public class ModifiersCompletionProcessor extends AbstractGroovyCompletionProces
     @Override
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
         String completionExpression = getContext().completionExpression;
-        List<ICompletionProposal> proposals = new LinkedList<>();
-        for (String keyword : keywords) {
+        List<ICompletionProposal> proposals = new ArrayList<>();
+        for (String keyword : CLASS_MEMBER_KEYWORDS) {
             if (keyword.startsWith(completionExpression)) {
-                proposals.add(createProposal(keyword, getContext()));
+                proposals.add(createProposal(keyword, completionExpression, getContext().completionLocation));
             }
         }
         return proposals;
     }
 
-    private ICompletionProposal createProposal(String keyword, ContentAssistContext context) {
-        InternalCompletionProposal proposal = createProposal(CompletionProposal.KEYWORD, context.completionLocation);
-        proposal.setName(keyword.toCharArray());
-        proposal.setCompletion(keyword.toCharArray());
-        proposal.setReplaceRange(context.completionLocation - context.completionExpression.length(), context.completionEnd);
-
-        int start = proposal.getReplaceStart();
-        int length = context.completionExpression.length();
-        StyledString label = createDisplayString(proposal);
+    protected ICompletionProposal createProposal(String keyword, String completionExpression, int completionLocation) {
+        int length = completionExpression.length();
+        int offset = (completionLocation - length);
         int relevance = Relevance.LOWEST.getRelevance(5);
-
-        JavaCompletionProposal jcp = new JavaCompletionProposal(String.valueOf(proposal.getCompletion()), start, length, null, label, relevance);
-        jcp.setImage(getImage(proposal));
-        return jcp;
+        StyledString displayString = Strings.markJavaElementLabelLTR(new StyledString(keyword));
+        return new JavaCompletionProposal(keyword, offset, length, null, displayString, relevance);
     }
 }
