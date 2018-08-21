@@ -41,18 +41,18 @@ public enum AccessorSupport {
     }
 
     public boolean isAccessorKind(MethodNode node, boolean isCategory) {
-        int args = isCategory ? 1 : 0;
+        int paramCount = (isCategory ? 1 : 0);
         ClassNode returnType = node.getReturnType();
         switch (this) {
         case GETTER:
-            return (node.getParameters() == null || node.getParameters().length == args) &&
-                !returnType.equals(VariableScope.VOID_CLASS_NODE);
+            return (node.getParameters() == null || node.getParameters().length == paramCount) &&
+                !VariableScope.VOID_CLASS_NODE.equals(returnType);
         case SETTER:
-            return node.getParameters() != null && node.getParameters().length == args + 1 &&
-                (returnType.equals(VariableScope.VOID_CLASS_NODE) || returnType.equals(VariableScope.OBJECT_CLASS_NODE));
+            return node.getParameters() != null && node.getParameters().length == paramCount + 1 &&
+                (VariableScope.VOID_CLASS_NODE.equals(returnType) || VariableScope.OBJECT_CLASS_NODE.equals(returnType));
         case ISSER:
-            return !isCategory && (node.getParameters() == null || node.getParameters().length == args) &&
-                (returnType.equals(ClassHelper.boolean_TYPE) /*|| returnType.equals(VariableScope.BOOLEAN_CLASS_NODE) || returnType.equals(VariableScope.OBJECT_CLASS_NODE)*/);
+            return !isCategory && (node.getParameters() == null || node.getParameters().length == paramCount) &&
+                ClassHelper.boolean_TYPE.equals(returnType);
         default:
             return false;
         }
@@ -96,7 +96,7 @@ public enum AccessorSupport {
                         }
                     }
                     // one implicit accessor exists in Object
-                    if (!isCategory && kind == GETTER && methodName.equals("getClass")) {
+                    if (!isCategory && kind == GETTER && "getClass".equals(methodName)) {
                         return ClassHelper.OBJECT_TYPE.getMethod("getClass", Parameter.EMPTY_ARRAY);
                     }
                 }
@@ -116,17 +116,18 @@ public enum AccessorSupport {
     }
 
     /**
-     * @return true if the methodNode looks like a getter method for a property: method starting get<Something> with a non void return type and taking no parameters
+     * @return {@code true} if the methodNode looks like a getter method for a property:
+     *         method starting <tt>get<i>Something</i></tt> with a non-void return type and taking no parameters
      */
     public static boolean isGetter(MethodNode node) {
-        return !node.isVoidMethod() && node.getParameters().length == 0 &&
+        return (!node.isVoidMethod() && node.getParameters().length == 0 &&
             ((node.getName().startsWith("get") && node.getName().length() > 3) ||
-             (node.getName().startsWith("is") && node.getName().length() > 2));
+                (node.getName().startsWith("is") && node.getName().length() > 2)));
     }
 
     public static boolean isSetter(MethodNode node) {
-        return /*node.isVoidMethod() &&*/ node.getParameters().length == 1 &&
-            node.getName().startsWith("set") && node.getName().length() > 3;
+        return (/*node.isVoidMethod() &&*/ node.getParameters().length == 1 &&
+            node.getName().startsWith("set") && node.getName().length() > 3);
         // TODO: not varagrs?
     }
 

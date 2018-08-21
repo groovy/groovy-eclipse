@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.eclipse.jdt.core.Flags;
@@ -126,7 +127,7 @@ public class GroovyClassScope extends ClassScope {
                 createGetterMethod(name, "get" + capitalizedName, property.isStatic(), methodBindings)
                     .ifPresent(groovyMethods::add);
 
-                if ("boolean".equals(property.getType().getName())) { // What about "java.lang.Boolean"?
+                if (ClassHelper.boolean_TYPE.equals(property.getType())) {
                     createGetterMethod(name, "is" + capitalizedName, property.isStatic(), methodBindings)
                         .ifPresent(groovyMethods::add);
                 }

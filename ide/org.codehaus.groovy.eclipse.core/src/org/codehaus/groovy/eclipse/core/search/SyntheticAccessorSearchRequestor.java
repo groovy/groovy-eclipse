@@ -108,7 +108,7 @@ public class SyntheticAccessorSearchRequestor {
         if (setter && Flags.isFinal(field.getFlags())) {
             return null;
         }
-        if (isser && !field.getTypeSignature().equals("Z")) { // TODO: What about "java.lang.Boolean"?
+        if (isser && !field.getTypeSignature().equals("Z")) {
             return null;
         }
 
