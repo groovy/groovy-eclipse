@@ -696,9 +696,9 @@ final class MethodCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'getFrom', 1)
         proposalExists(proposals, 'isReverse', 1)
         proposalExists(proposals, 'containsWithinBounds', 1)
-        // and some proposals from java.util.List as well
-        proposalExists(proposals, 'iterator', 1)
-        proposalExists(proposals, 'listIterator', 2)
+        // and some proposals from the java.util.List interface
+        proposalExists(proposals, 'iterator() : Iterator - List', 1)
+        proposalExists(proposals, 'listIterator() : ListIterator - List', 1)
     }
 
     @Test
