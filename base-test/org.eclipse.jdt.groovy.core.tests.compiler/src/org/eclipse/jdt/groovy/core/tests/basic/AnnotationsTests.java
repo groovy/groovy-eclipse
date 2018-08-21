@@ -48,6 +48,17 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
         };
 
         runConformTest(sources, "abc");
+
+        checkGCUDeclaration("A.groovy",
+            "public @B class A {\n" +
+            "  public A() {\n" +
+            "  }\n" +
+            "  public static void main(public String... argv) {\n" +
+            "  }\n" +
+            "}\n" +
+            "public @interface B extends java.lang.annotation.Annotation {\n" +
+            "  public abstract String value() default \"\";\n" +
+            "}\n");
     }
 
     @Test
@@ -570,7 +581,8 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("X.groovy", "public @Anno class X {");
 
-        checkDisassemblyFor("p/X.class", "@p.Anno\n" +
+        checkDisassemblyFor("p/X.class",
+            "@p.Anno\n" +
             "public class p.X implements groovy.lang.GroovyObject {\n");
     }
 
@@ -595,13 +607,11 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "success");
 
-        String expectedOutput = "public static @Anno void main(public String... argv) {";
-        checkGCUDeclaration("X.groovy", expectedOutput);
+        checkGCUDeclaration("X.groovy", "public static @Anno void main(public String... argv) {");
 
-        expectedOutput =
+        checkDisassemblyFor("p/X.class",
             "  @p.Anno\n" +
-            "  public static void main(java.lang.String... argv);\n";
-        checkDisassemblyFor("p/X.class", expectedOutput);
+            "  public static void main(java.lang.String... argv);\n");
     }
 
     @Test
@@ -626,13 +636,11 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "success");
 
-        String expectedOutput = "private @Anno String s;";
-        checkGCUDeclaration("X.groovy", expectedOutput);
+        checkGCUDeclaration("X.groovy", "private @Anno String s;");
 
-        expectedOutput =
+        checkDisassemblyFor("p/X.class",
             "  @p.Anno\n" +
-            "  private java.lang.String s;\n";
-        checkDisassemblyFor("p/X.class", expectedOutput);
+            "  private java.lang.String s;\n");
     }
 
     @Test
@@ -769,8 +777,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "success");
 
-        String expectedOutput = "public @Anno X(public String s) {";
-        checkGCUDeclaration("X.groovy", expectedOutput);
+        checkGCUDeclaration("X.groovy", "public @Anno X(public String s) {");
 
         checkDisassemblyFor("p/X.class",
             "  @p.Anno\n" +
@@ -799,11 +806,9 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "success");
 
-        String expectedOutput = "public @Anno void foo() {";
-        checkGCUDeclaration("X.groovy", expectedOutput);
+        checkGCUDeclaration("X.groovy", "public @Anno void foo() {");
 
-        expectedOutput = "public @Anno void foo(public String s) {";
-        checkGCUDeclaration("X.groovy", expectedOutput);
+        checkGCUDeclaration("X.groovy", "public @Anno void foo(public String s) {");
     }
 
     @Test
@@ -832,8 +837,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "success");
 
-        String expectedOutput = "public @Anno(Target.class) class X";
-        checkGCUDeclaration("X.groovy", expectedOutput);
+        checkGCUDeclaration("X.groovy", "public @Anno(Target.class) class X");
     }
 
     @Test
@@ -862,8 +866,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "success");
 
-        String expectedOutput = "public @Anno(p.Target.class) class X";
-        checkGCUDeclaration("X.groovy", expectedOutput);
+        checkGCUDeclaration("X.groovy", "public @Anno(p.Target.class) class X");
     }
 
     @Test
@@ -892,8 +895,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "success");
 
-        String expectedOutput = "public @Anno(Target.class) void foo(public String s) {";
-        checkGCUDeclaration("X.groovy", expectedOutput);
+        checkGCUDeclaration("X.groovy", "public @Anno(Target.class) void foo(public String s) {");
     }
 
     @Test
@@ -922,8 +924,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "success");
 
-        String expectedOutput = "public @Anno(p.Target.class) void foo(public String s) {";
-        checkGCUDeclaration("X.groovy", expectedOutput);
+        checkGCUDeclaration("X.groovy", "public @Anno(p.Target.class) void foo(public String s) {");
     }
 
     @Test
@@ -952,8 +953,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "success");
 
-        String expectedOutput = "public @Anno(Target.class) int foo";
-        checkGCUDeclaration("X.groovy", expectedOutput);
+        checkGCUDeclaration("X.groovy", "public @Anno(Target.class) int foo");
     }
 
     @Test
@@ -1042,8 +1042,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "success");
 
-        String expectedOutput = "public @Anno(p.Target.class) int foo";
-        checkGCUDeclaration("X.groovy", expectedOutput);
+        checkGCUDeclaration("X.groovy", "public @Anno(p.Target.class) int foo");
     }
 
     @Test

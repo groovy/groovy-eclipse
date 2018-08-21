@@ -61,6 +61,7 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Janitor;
@@ -1413,19 +1414,21 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 MethodNode methodNode, CompilationResult compilationResult) {
             if (classNode.isAnnotationDefinition()) {
                 AnnotationMethodDeclaration methodDeclaration = new AnnotationMethodDeclaration(compilationResult);
-                int modifiers = getModifiers(methodNode);
                 methodDeclaration.annotations = createAnnotations(methodNode.getAnnotations());
-                methodDeclaration.modifiers = modifiers;
+                methodDeclaration.selector = methodNode.getName().toCharArray();
+                methodDeclaration.modifiers = getModifiers(methodNode);
                 if (methodNode.hasAnnotationDefault()) {
                     methodDeclaration.modifiers |= ClassFileConstants.AccAnnotationDefault;
+                    methodDeclaration.defaultValue = createAnnotationMemberExpression(
+                        ((ExpressionStatement) methodNode.getCode()).getExpression());
                 }
-                methodDeclaration.selector = methodNode.getName().toCharArray();
+                methodDeclaration.returnType = createTypeReferenceForClassNode(methodNode.getReturnType());
                 fixupSourceLocationsForMethodDeclaration(methodDeclaration, methodNode);
-                ClassNode returnType = methodNode.getReturnType();
-                methodDeclaration.returnType = createTypeReferenceForClassNode(returnType);
                 return methodDeclaration;
             } else {
                 MethodDeclaration methodDeclaration = new MethodDeclaration(compilationResult);
+                methodDeclaration.annotations = createAnnotations(methodNode.getAnnotations());
+                methodDeclaration.selector = methodNode.getName().toCharArray();
                 GenericsType[] generics = methodNode.getGenericsTypes();
                 if (generics != null && generics.length > 0) {
                     methodDeclaration.typeParameters = createTypeParametersForGenerics(generics);
@@ -1435,15 +1438,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 // Note: modifiers for the MethodBinding constructed for this declaration will be created marked with
                 // AccVarArgs if the bitset for the type reference in the final argument is marked IsVarArgs
                 int modifiers = getModifiers(methodNode);
-
-                methodDeclaration.annotations = createAnnotations(methodNode.getAnnotations());
                 methodDeclaration.modifiers = modifiers;
-                methodDeclaration.selector = methodNode.getName().toCharArray();
                 Parameter[] params = methodNode.getParameters();
                 ClassNode returnType = methodNode.getReturnType();
 
                 // source of 'static main(args)' would become 'static Object main(Object args)' - so transform here
-                if (Flags.isStatic(modifiers) && params != null && params.length == 1 && methodNode.getName().equals("main")) {
+                if (Flags.isStatic(modifiers) && params != null && params.length == 1 && "main".equals(methodNode.getName())) {
                     Parameter p = params[0];
                     if (p.getType() == null || p.getType().getName().equals(ClassHelper.OBJECT)) {
                         String name = p.getName();
