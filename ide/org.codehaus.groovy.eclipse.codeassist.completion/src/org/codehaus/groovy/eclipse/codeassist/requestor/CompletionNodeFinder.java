@@ -648,17 +648,15 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
     @Override
     public void visitRangeExpression(RangeExpression expression) {
-        if (!check(expression)) {
-            return;
-        }
-
         super.visitRangeExpression(expression);
 
-        if (completionOffset <= expression.getFrom().getEnd() || completionOffset >= expression.getTo().getStart()) {
-            createContext(expression, blockStack.getLast(), ContentAssistLocation.STATEMENT);
+        if (completionOffset > expression.getStart() && completionOffset <= expression.getEnd()) {
+            if (completionOffset <= expression.getFrom().getEnd() || completionOffset >= expression.getTo().getStart()) {
+                createContext(expression, blockStack.getLast(), ContentAssistLocation.STATEMENT);
+            }
+            // no completions within the operator
+            throw new VisitCompleteException();
         }
-        // no completions within the operator
-        throw new VisitCompleteException();
     }
 
     @Override

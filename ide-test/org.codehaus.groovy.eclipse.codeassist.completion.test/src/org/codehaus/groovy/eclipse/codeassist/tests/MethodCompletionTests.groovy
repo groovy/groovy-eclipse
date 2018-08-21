@@ -688,6 +688,21 @@ final class MethodCompletionTests extends CompletionTestSuite {
 
     @Test
     void testRangeExpressionCompletion1() {
+        String contents = '''\
+            (0..1).
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, 'getTo', 1)
+        proposalExists(proposals, 'getFrom', 1)
+        proposalExists(proposals, 'isReverse', 1)
+        proposalExists(proposals, 'containsWithinBounds', 1)
+        // and some proposals from java.util.List as well
+        proposalExists(proposals, 'iterator', 1)
+        proposalExists(proposals, 'listIterator', 2)
+    }
+
+    @Test
+    void testRangeExpressionCompletion2() {
         setJavaPreference(PreferenceConstants.CODEASSIST_AUTOACTIVATION, 'true')
         String contents = '''\
             def range = 0.
@@ -705,7 +720,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testRangeExpressionCompletion2() {
+    void testRangeExpressionCompletion3() {
         setJavaPreference(PreferenceConstants.CODEASSIST_AUTOACTIVATION, 'true')
         String contents = '''\
             def other = 0.h
@@ -723,7 +738,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testRangeExpressionCompletion3() {
+    void testRangeExpressionCompletion4() {
         setJavaPreference(PreferenceConstants.CODEASSIST_AUTOACTIVATION, 'true')
         String contents = '''\
             def other = 0.

@@ -646,6 +646,17 @@ final class FieldCompletionTests extends CompletionTestSuite {
 
     @Test
     void testRangeExpressionCompletion1() {
+        String contents = '''\
+            (0..1).
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '.'))
+        proposalExists(proposals, 'to : Comparable', 1)
+        proposalExists(proposals, 'from : Comparable', 1)
+        proposalExists(proposals, 'reverse : boolean', 1)
+    }
+
+    @Test
+    void testRangeExpressionCompletion2() {
         setJavaPreference(PreferenceConstants.CODEASSIST_AUTOACTIVATION, 'true')
         String contents = '''\
             def range = 0.
@@ -663,7 +674,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
     }
 
     @Test
-    void testRangeExpressionCompletion2() {
+    void testRangeExpressionCompletion3() {
         setJavaPreference(PreferenceConstants.CODEASSIST_AUTOACTIVATION, 'true')
         String contents = '''\
             def other = 0.b
