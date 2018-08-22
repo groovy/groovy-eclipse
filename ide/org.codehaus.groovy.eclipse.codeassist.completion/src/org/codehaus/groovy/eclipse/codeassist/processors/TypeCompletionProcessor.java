@@ -146,7 +146,7 @@ public class TypeCompletionProcessor extends AbstractGroovyCompletionProcessor i
             return (context.location == ContentAssistLocation.ANNOTATION || context.location == ContentAssistLocation.IMPORT);
         }
         // check for parameter name completion
-        if (context.location == ContentAssistLocation.PARAMETER) {
+        if (context.location == ContentAssistLocation.PARAMETER && context.completionNode != null) {
             AnnotatedNode completionNode = (AnnotatedNode) context.completionNode;
             if (completionNode.getStart() < completionNode.getNameStart() &&
                     context.completionLocation >= completionNode.getNameStart()) {

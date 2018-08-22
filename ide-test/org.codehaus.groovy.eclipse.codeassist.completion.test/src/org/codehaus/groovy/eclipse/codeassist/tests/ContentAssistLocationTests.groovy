@@ -650,6 +650,50 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     }
 
     @Test
+    void testClassBody5() {
+        String contents = '''\
+            def list = new List() {
+              x
+            }
+            '''.stripIndent()
+        assertLocation(contents.replace('x', ''), contents.indexOf('x'), ContentAssistLocation.CLASS_BODY)
+    }
+
+    @Test
+    void testClassBody6() {
+        String contents = '''\
+            def list = new List() {
+              x
+              @Override
+              boolean isEmpty() { true }
+            }
+            '''.stripIndent()
+        assertLocation(contents.replace('x', ''), contents.indexOf('x'), ContentAssistLocation.CLASS_BODY)
+    }
+
+    @Test
+    void testClassBody7() {
+        String contents = '''\
+            def list = new List() {
+              @Override
+              boolean isEmpty() { true }
+              x
+            }
+            '''.stripIndent()
+        assertLocation(contents.replace('x', ''), contents.indexOf('x'), ContentAssistLocation.CLASS_BODY)
+    }
+
+    @Test
+    void testClassBody8() {
+        String contents = '''\
+            def list = new ArrayList(7) {
+              x
+            }
+            '''.stripIndent()
+        assertLocation(contents.replace('x', ''), contents.indexOf('x'), ContentAssistLocation.CLASS_BODY)
+    }
+
+    @Test
     void testExtends1() {
         String contents = 'class A extends T { void t }'
         int loc = contents.indexOf('ds') + 4

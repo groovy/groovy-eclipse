@@ -251,7 +251,7 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
         Statement body = node.getCode();
         if (body != null) {
-            if (completionOffset > node.getStart() && completionOffset < body.getStart() && !node.isScriptBody()) {
+            if (completionOffset > Math.max(node.getStart(), node.getNameEnd() + 1) && completionOffset < body.getStart() && !node.isScriptBody()) {
                 // probably inside an empty parameters list
                 createContext(null, node, ContentAssistLocation.PARAMETER);
             }
@@ -505,14 +505,24 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
             return;
         }
 
-        Expression arguments = expression.getArguments();
-        checkForAfterClosingParen(expression, arguments);
+        visitAnnotations(expression.getAnnotations());
         ClassNode constructorType = expression.getType();
 
-        if (check(constructorType)) {
+        if (completionOffset < expression.getNameStart()) {
+            createContext(expression, blockStack.getLast(), expressionOrStatement());
+        }
+        if (completionOffset >= expression.getNameStart() && completionOffset <= expression.getNameEnd() + 1) {
             createContext(constructorType, blockStack.getLast(), ContentAssistLocation.CONSTRUCTOR);
         }
+        // TODO: Does name range include type parameters?
 
+        // see https://github.com/groovy/groovy-eclipse/issues/395
+        if (expression.isUsingAnonymousInnerClass()) {
+            visitClass(constructorType);
+        }
+
+        Expression arguments = expression.getArguments();
+        checkForAfterClosingParen(expression, arguments);
         try {
             // see comments in visitMethodCallExpression
             visitArguments(arguments, expression);
