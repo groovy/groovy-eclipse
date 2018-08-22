@@ -5242,93 +5242,110 @@ inputState.guessing--;
         ASTPair currentAST = new ASTPair();
         AST conditionalExpression_AST = null;
         
-        logicalOrExpression(lc_stmt);
-        astFactory.addASTChild(currentAST, returnAST);
-        {
-        boolean synPredMatched461 = false;
-        if (((LA(1)==ELVIS_OPERATOR||LA(1)==NLS) && (_tokenSet_51.member(LA(2))))) {
-            int _m461 = mark();
-            synPredMatched461 = true;
-            inputState.guessing++;
-            try {
-                {
-                nls();
-                match(ELVIS_OPERATOR);
-                }
-            }
-            catch (RecognitionException pe) {
-                synPredMatched461 = false;
-            }
-            rewind(_m461);
-inputState.guessing--;
-        }
-        if ( synPredMatched461 ) {
-            nls();
-            AST tmp150_AST = null;
-            tmp150_AST = astFactory.create(LT(1));
-            astFactory.makeASTRoot(currentAST, tmp150_AST);
-            match(ELVIS_OPERATOR);
-            nls();
-            conditionalExpression(0);
+        try {      // for error handling
+            logicalOrExpression(lc_stmt);
             astFactory.addASTChild(currentAST, returnAST);
-        }
-        else {
-            boolean synPredMatched463 = false;
-            if (((LA(1)==QUESTION||LA(1)==NLS) && (_tokenSet_52.member(LA(2))))) {
-                int _m463 = mark();
-                synPredMatched463 = true;
+            {
+            boolean synPredMatched461 = false;
+            if (((LA(1)==ELVIS_OPERATOR||LA(1)==NLS) && (_tokenSet_51.member(LA(2))))) {
+                int _m461 = mark();
+                synPredMatched461 = true;
                 inputState.guessing++;
                 try {
                     {
                     nls();
-                    match(QUESTION);
+                    match(ELVIS_OPERATOR);
                     }
                 }
                 catch (RecognitionException pe) {
-                    synPredMatched463 = false;
+                    synPredMatched461 = false;
                 }
-                rewind(_m463);
+                rewind(_m461);
 inputState.guessing--;
             }
-            if ( synPredMatched463 ) {
-                try {      // for error handling
-                    nls();
-                    AST tmp151_AST = null;
-                    tmp151_AST = astFactory.create(LT(1));
-                    astFactory.makeASTRoot(currentAST, tmp151_AST);
-                    match(QUESTION);
-                    nls();
-                    assignmentExpression(0);
-                    astFactory.addASTChild(currentAST, returnAST);
-                    nls();
-                    match(COLON);
-                    nls();
-                    conditionalExpression(0);
-                    astFactory.addASTChild(currentAST, returnAST);
-                }
-                catch (RecognitionException e) {
-                    if (inputState.guessing==0) {
-                        
-                        // keep AST if recognition failed at or after ':'
-                        if (currentAST.root.getNumberOfChildren() > 1) {
-                        reportError(e);
-                        } else {
-                        throw e;
-                        }
-                        
-                    } else {
-                        throw e;
-                    }
-                }
-            }
-            else if ((_tokenSet_53.member(LA(1))) && (_tokenSet_54.member(LA(2)))) {
+            if ( synPredMatched461 ) {
+                nls();
+                AST tmp150_AST = null;
+                tmp150_AST = astFactory.create(LT(1));
+                astFactory.makeASTRoot(currentAST, tmp150_AST);
+                match(ELVIS_OPERATOR);
+                nls();
+                conditionalExpression(0);
+                astFactory.addASTChild(currentAST, returnAST);
             }
             else {
-                throw new NoViableAltException(LT(1), getFilename());
+                boolean synPredMatched463 = false;
+                if (((LA(1)==QUESTION||LA(1)==NLS) && (_tokenSet_52.member(LA(2))))) {
+                    int _m463 = mark();
+                    synPredMatched463 = true;
+                    inputState.guessing++;
+                    try {
+                        {
+                        nls();
+                        match(QUESTION);
+                        }
+                    }
+                    catch (RecognitionException pe) {
+                        synPredMatched463 = false;
+                    }
+                    rewind(_m463);
+inputState.guessing--;
+                }
+                if ( synPredMatched463 ) {
+                    try {      // for error handling
+                        nls();
+                        AST tmp151_AST = null;
+                        tmp151_AST = astFactory.create(LT(1));
+                        astFactory.makeASTRoot(currentAST, tmp151_AST);
+                        match(QUESTION);
+                        nls();
+                        assignmentExpression(0);
+                        astFactory.addASTChild(currentAST, returnAST);
+                        nls();
+                        match(COLON);
+                        nls();
+                        conditionalExpression(0);
+                        astFactory.addASTChild(currentAST, returnAST);
+                    }
+                    catch (RecognitionException e) {
+                        if (inputState.guessing==0) {
+                            
+                            // keep AST if recognition failed at or after ':'
+                            if (currentAST.root.getNumberOfChildren() > 1) {
+                            reportError(e);
+                            } else {
+                            throw e;
+                            }
+                            
+                        } else {
+                            throw e;
+                        }
+                    }
+                }
+                else if ((_tokenSet_53.member(LA(1))) && (_tokenSet_54.member(LA(2)))) {
+                }
+                else {
+                    throw new NoViableAltException(LT(1), getFilename());
+                }
+                }
+                }
+                conditionalExpression_AST = (AST)currentAST.root;
             }
+            catch (NoViableAltException e) {
+                if (inputState.guessing==0) {
+                    
+                    if (currentAST != null && currentAST.root != null && currentAST.root.getType() == LT && LT(1).getType() == GT) {
+                    // assume failed recognition of generics in new expression or statement
+                    conditionalExpression_AST = currentAST.root.getFirstChild();
+                    reportError(e); consumeUntil(NLS); // try to move on
+                    } else {
+                    throw e;
+                    }
+                    
+                } else {
+                    throw e;
+                }
             }
-            }
-            conditionalExpression_AST = (AST)currentAST.root;
             returnAST = conditionalExpression_AST;
         }
         

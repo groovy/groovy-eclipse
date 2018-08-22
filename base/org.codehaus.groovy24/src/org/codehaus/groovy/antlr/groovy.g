@@ -3119,6 +3119,18 @@ conditionalExpression[int lc_stmt]
             // GRECLIPSE end
         )?
     ;
+// GRECLIPSE add
+    exception
+    catch [NoViableAltException e] {
+        if (currentAST != null && currentAST.root != null && currentAST.root.getType() == LT && LT(1).getType() == GT) {
+            // assume failed recognition of generics in new expression or statement
+            #conditionalExpression = currentAST.root.getFirstChild();
+            reportError(e); consumeUntil(NLS); // try to move on
+        } else {
+            throw e;
+        }
+    }
+// GRECLIPSE end
 
 
 // logical or (||)  (level 13)

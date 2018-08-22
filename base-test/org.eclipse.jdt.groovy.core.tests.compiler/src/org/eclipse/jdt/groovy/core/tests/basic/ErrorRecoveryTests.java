@@ -19,12 +19,14 @@ import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -34,7 +36,7 @@ import org.junit.Test;
 public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
 
     @Test
-    public void testBasicBlockParsingRecovery() {
+    public void testParsingRecovery_BasicBlock() {
         // syntax error in one method should not impact outer class structure
         runNegativeTest(new String[] {
             "X.groovy",
@@ -69,7 +71,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testIncompleteAssignmentParsingRecovery1() {
+    public void testParsingRecovery_IncompleteAssignment1() {
         runNegativeTest(new String[] {
             "X.groovy",
             "int err = ",
@@ -95,7 +97,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testIncompleteAssignmentParsingRecovery1a() {
+    public void testParsingRecovery_IncompleteAssignment1a() {
         runNegativeTest(new String[] {
             "X.groovy",
             "int err\n" +
@@ -122,7 +124,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testIncompleteAssignmentParsingRecovery1b() {
+    public void testParsingRecovery_IncompleteAssignment1b() {
         runNegativeTest(new String[] {
             "X.groovy",
             "int err\n" +
@@ -149,7 +151,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testIncompleteAssignmentParsingRecovery1c() {
+    public void testParsingRecovery_IncompleteAssignment1c() {
         runNegativeTest(new String[] {
             "X.groovy",
             "int err\n" +
@@ -176,7 +178,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testIncompleteAssignmentParsingRecovery2() {
+    public void testParsingRecovery_IncompleteAssignment2() {
         runNegativeTest(new String[] {
             "X.groovy",
             "public class X {\n" +
@@ -199,7 +201,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testIncompleteAssignmentParsingRecovery2a() {
+    public void testParsingRecovery_IncompleteAssignment2a() {
         runNegativeTest(new String[] {
             "X.groovy",
             "public class X {\n" +
@@ -225,7 +227,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testIncompleteAssignmentParsingRecovery3() {
+    public void testParsingRecovery_IncompleteAssignment3() {
         runNegativeTest(new String[] {
             "X.groovy",
             "public class X {\n" +
@@ -257,7 +259,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testIncompleteAssignmentParsingRecovery4() {
+    public void testParsingRecovery_IncompleteAssignment4() {
         // previous version of assignment recovery was trying to add missing identifier for error within init expression
         runNegativeTest(new String[] {
             "X.groovy",
@@ -287,7 +289,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testParsingRecoveryIncompleteIfCondition1_1046() {
+    public void testParsingRecovery_IncompleteIfCondition1() {
         runConformTest(new String[] {
             "X.groovy",
             "File f = new File('c:\\test')\n" +
@@ -302,7 +304,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testParsingRecoveryIncompleteIfCondition2_1046() {
+    public void testParsingRecovery_IncompleteIfCondition2() {
         runNegativeTest(new String[] {
             "X.groovy",
             "File f = new File('c:\\test')\n" +
@@ -321,7 +323,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testParsingRecoveryIncompleteRangeExpression1() {
+    public void testParsingRecovery_IncompleteRangeExpression1() {
         runNegativeTest(new String[] {
             "X.groovy",
             "0..\n" +
@@ -349,7 +351,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testParsingRecoveryIncompleteRangeExpression2() {
+    public void testParsingRecovery_IncompleteRangeExpression2() {
         runNegativeTest(new String[] {
             "X.groovy",
             "0..<\n" +
@@ -377,7 +379,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testParsingRecoveryIncompleteRangeExpression3() {
+    public void testParsingRecovery_IncompleteRangeExpression3() {
         runNegativeTest(new String[] {
             "X.groovy",
             "for (i in 0..) ;\n" +
@@ -405,7 +407,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testParsingRecoveryIncompleteRangeExpression4() {
+    public void testParsingRecovery_IncompleteRangeExpression4() {
         runNegativeTest(new String[] {
             "X.groovy",
             "for (i in 0..<) ;\n" +
@@ -433,7 +435,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testParsingRecoveryIncompleteRangeExpression5() {
+    public void testParsingRecovery_IncompleteRangeExpression5() {
         runNegativeTest(new String[] {
             "X.groovy",
             "class X {\n" +
@@ -460,7 +462,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testParsingRecoveryIncompleteRangeExpression6() {
+    public void testParsingRecovery_IncompleteRangeExpression6() {
         runNegativeTest(new String[] {
             "X.groovy",
             "class X {\n" +
@@ -487,7 +489,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testParsingRecoveryIncompleteRangeExpression7() {
+    public void testParsingRecovery_IncompleteRangeExpression7() {
         runNegativeTest(new String[] {
             "X.groovy",
             "class X {\n" +
@@ -514,7 +516,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testParsingRecoveryIncompleteRangeExpression8() {
+    public void testParsingRecovery_IncompleteRangeExpression8() {
         runNegativeTest(new String[] {
             "X.groovy",
             "class X {\n" +
@@ -541,7 +543,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testParsingRecoveryIncompleteRangeExpression9() {
+    public void testParsingRecovery_IncompleteRangeExpression9() {
         runNegativeTest(new String[] {
             "X.groovy",
             "class X {\n" +
@@ -646,12 +648,12 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     public void testParsingRecovery_GRE1085_1() {
         runNegativeTest(new String[] {
             "X.groovy",
-            "package foo\n"+
-            "\n"+
-            "class X {\n"+
-            "  public void foo() {\n"+
-            "    foo:\n"+
-            "  }\n"+
+            "package foo\n" +
+            "\n" +
+            "class X {\n" +
+            "  public void foo() {\n" +
+            "    foo:\n" +
+            "  }\n" +
             "}\n",
         },
         "----------\n" +
@@ -662,12 +664,12 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         "----------\n");
 
         checkGCUDeclaration("X.groovy",
-            "package foo;\n"+
-            "public class X {\n"+
-            "  public X() {\n"+
-            "  }\n"+
-            "  public void foo() {\n"+
-            "  }\n"+
+            "package foo;\n" +
+            "public class X {\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "  public void foo() {\n" +
+            "  }\n" +
             "}\n");
     }
 
@@ -675,12 +677,12 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     public void testParsingRecovery_GRE1085_2() {
         runNegativeTest(new String[] {
             "X.groovy",
-            "package foo\n"+
-            "\n"+
-            "class X {\n"+
-            "  public void foo() {\n"+
-            "    foo:\"abc\",\n"+
-            "  }\n"+
+            "package foo\n" +
+            "\n" +
+            "class X {\n" +
+            "  public void foo() {\n" +
+            "    foo:\"abc\",\n" +
+            "  }\n" +
             "}\n",
         },
         "----------\n" +
@@ -691,12 +693,12 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         "----------\n");
 
         checkGCUDeclaration("X.groovy",
-            "package foo;\n"+
-            "public class X {\n"+
-            "  public X() {\n"+
-            "  }\n"+
-            "  public void foo() {\n"+
-            "  }\n"+
+            "package foo;\n" +
+            "public class X {\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "  public void foo() {\n" +
+            "  }\n" +
             "}\n");
     }
 
@@ -704,12 +706,12 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     public void testParsingRecovery_GRE1085_3() {
         runNegativeTest(new String[] {
             "X.groovy",
-            "package foo\n"+
-            "\n"+
-            "class X {\n"+
-            "  public void foo() {\n"+
-            "    foo:,\n"+
-            "  }\n"+
+            "package foo\n" +
+            "\n" +
+            "class X {\n" +
+            "  public void foo() {\n" +
+            "    foo:,\n" +
+            "  }\n" +
             "}\n",
         },
         "----------\n" +
@@ -720,12 +722,12 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         "----------\n");
 
         checkGCUDeclaration("X.groovy",
-            "package foo;\n"+
-            "public class X {\n"+
-            "  public X() {\n"+
-            "  }\n"+
-            "  public void foo() {\n"+
-            "  }\n"+
+            "package foo;\n" +
+            "public class X {\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "  public void foo() {\n" +
+            "  }\n" +
             "}\n");
     }
 
@@ -733,12 +735,12 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     public void testParsingRecovery_GRE1192_1() {
         runNegativeTest(new String[] {
             "X.groovy",
-            "class X {\n"+
-            "\tdef m() {\n"+
-            "\t}\n"+
-            "\tdef x = {\n"+
-            "\t  nuthin s,\n"+
-            "\t}\n"+
+            "class X {\n" +
+            "\tdef m() {\n" +
+            "\t}\n" +
+            "\tdef x = {\n" +
+            "\t  nuthin s,\n" +
+            "\t}\n" +
             "}\n",
         },
         "----------\n" +
@@ -749,12 +751,12 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         "----------\n");
 
         checkGCUDeclaration("X.groovy",
-            "public class X {\n"+
-            "  private java.lang.Object x;\n"+
-            "  public X() {\n"+
-            "  }\n"+
-            "  public java.lang.Object m() {\n"+
-            "  }\n"+
+            "public class X {\n" +
+            "  private java.lang.Object x;\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "  public java.lang.Object m() {\n" +
+            "  }\n" +
             "}\n");
     }
 
@@ -762,7 +764,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     public void testParsingRecovery_GRE1046_1() {
         runNegativeTest(new String[] {
             "X.groovy",
-            "File f = new File();\n"+
+            "File f = new File();\n" +
             "if (f.)\n",
         },
         "----------\n" +
@@ -784,7 +786,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         // trickier than above, this is also missing the closing paren
         runNegativeTest(new String[] {
             "X.groovy",
-            "File f = new File();\n"+
+            "File f = new File();\n" +
             "if (f.\n",
         },
         "----------\n" +
@@ -801,7 +803,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         // missing close paren
         runNegativeTest(new String[] {
             "X.groovy",
-            "import java.awt.BorderLayout;\n"+
+            "import java.awt.BorderLayout;\n" +
             "panel.add (textField, BorderLayout.\n",
         },
         "----------\n" +
@@ -824,7 +826,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         // missing close paren
         runNegativeTest(new String[] {
             "X.groovy",
-            "import java.awt.BorderLayout;\n"+
+            "import java.awt.BorderLayout;\n" +
             "String s = ('foo' + BorderLayout.\n",
         },
         "----------\n" +
@@ -912,10 +914,10 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     public void testParsingRecovery_GRE468_1() {
         runNegativeTest(new String[] {
             "X.groovy",
-            "class X {\n"+
-            " int y()\n"+
-            " def m() {\n"+
-            " }\n"+
+            "class X {\n" +
+            " int y()\n" +
+            " def m() {\n" +
+            " }\n" +
             "}\n",
         },
         "----------\n" +
@@ -926,159 +928,24 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         "----------\n");
 
         checkGCUDeclaration("X.groovy",
-            "public class X {\n"+
-            "  public X() {\n"+
-            "  }\n"+
-            "  public int y() {\n"+
-            "  }\n"+
-            "  public java.lang.Object m() {\n"+
-            "  }\n"+
-            "}\n");
-    }
-
-    @Test
-    public void testParsingRecovery_GRE766() {
-        // missing end curly, but that shouldn't cause us to discard what we successfully parsed
-        runNegativeTest(new String[] {
-            "X.groovy",
-            "public class X {\n"+
-            "   def swingit() {\n"+
-            "       swing.actions() {\n"+
-            "           echoAction= swing.action(name: 'Echo back',\n"+
-            "           enabled: bind(source: model, sourceProperty: 'loggedin'),\n"+
-            "           closure: { controller.setEchoBack(it.source.selected) })\n"+
-            "       }\n"+
-            "   }\n",
-        },
-        "----------\n" +
-        "1. ERROR in X.groovy (at line 8)\n" +
-        "\t}\n" +
-        "\n" +
-        "\t ^\n" +
-        "Groovy:unexpected token:  @ line 8, column 5.\n" +
-        "----------\n");
-
-        ModuleNode mn = getModuleNode("X.groovy");
-        ClassNode cn = mn.getClasses().get(0);
-        assertEquals("X", cn.getName());
-        assertNotNull(cn.getDeclaredMethod("swingit", Parameter.EMPTY_ARRAY));
-    }
-
-    @Test
-    public void testParsingRecovery_GRE494() {
-        runNegativeTest(new String[] {
-            "X.groovy",
-            "class X {\n"+
-            "   \n"+
-            "   def getNumber() {\n"+
-            "       return 42\n"+
-            "   }\n"+
-            "\n"+
-            "   asdf\n"+
-            "       \n"+
-            "   static main(args) {\n"+
-            "       print new X().getNumber()\n"+
-            "   }\n"+
-            "}\n",
-        },
-        "----------\n" +
-        "1. ERROR in X.groovy (at line 7)\n" +
-        "\tasdf\n" +
-        "\t^\n" +
-        "Groovy:unexpected token: asdf @ line 7, column 4.\n" +
-        "----------\n");
-
-        checkGCUDeclaration("X.groovy",
-            "public class X {\n" +
-            "  private java.lang.Object asdf;\n"+
-            "  public X() {\n" +
-            "  }\n" +
-            "  public java.lang.Object getNumber() {\n" +
-            "  }\n" +
-            "  public static void main(public java.lang.String... args) {\n" +
-            "  }\n" +
-            "}\n");
-    }
-
-    @Test
-    public void testParsingRecovery_GRE494_2() {
-        runNegativeTest(new String[] {
-            "X.groovy",
-            "class X {\n"+
-            "  int intField\n"+
-            "\n"+
-            "belo\n"+
-            "\n"+
-            "}\n",
-        },
-        "----------\n" +
-        "1. ERROR in X.groovy (at line 4)\n" +
-        "\tbelo\n" +
-        "\t^\n" +
-        "Groovy:unexpected token: belo @ line 4, column 1.\n" +
-        "----------\n");
-
-        checkGCUDeclaration("X.groovy",
-            "public class X {\n" +
-            "  private int intField;\n" +
-            "  private java.lang.Object belo;\n"+
-            "  public X() {\n" +
-            "  }\n" +
-            "}\n");
-    }
-
-    @Test @Ignore
-    public void testParsingMissingCurlyRecovery1_GRE468() {
-        runNegativeTest(new String[] {
-            "X.groovy",
-            "class X { int y() }\n",
-        },
-        "----------\n" +
-        "1. ERROR in X.groovy (at line 1)\n" +
-        "\tclass X { int y() }\n" +
-        "\t               ^\n" +
-        "Groovy:Method body missing @ line 1, column 15.\n" +
-        "----------\n");
-
-        checkGCUDeclaration("X.groovy",
-            "public class X extends java.lang.Object {\n" +
-            "  public X() {\n" +
-            "  }\n" +
-            "  public int y() {\n" +
-            "  }\n" +
-            "}\n");
-    }
-
-    @Test @Ignore
-    public void testParsingMissingCurlyRecovery2_GRE468() {
-        runNegativeTest(new String[] {
-            "X.groovy",
-            "class X { int y() { }\n",
-        },
-        "----------\n" +
-        "1. ERROR in XXX.groovy (at line 1)\n" +
-        "\tclass X { int y() }\n" +
-        "\t           ^\n" +
-        "Groovy:You defined a method without body. Try adding a body, or declare it abstract. at line: 1 column: 11. File: X.groovy @ line 1, column 11.\n" +
-        "----------\n");
-
-        checkGCUDeclaration("X.groovy",
             "public class X {\n" +
             "  public X() {\n" +
             "  }\n" +
             "  public int y() {\n" +
+            "  }\n" +
+            "  public java.lang.Object m() {\n" +
             "  }\n" +
             "}\n");
     }
 
     @Test // new reference missing () in a method body
-    public void testParsingRecovery1_GRE468() {
+    public void testParsingRecovery_GRE468_2() {
         runNegativeTest(new String[] {
             "X.groovy",
-            "class X {\n"+
-            "  public void m() {\n"+
-            "  new Earth\n"+
-            "  }\n"+
+            "class X {\n" +
+            "  public void m() {\n" +
+            "  new Earth\n" +
+            "  }\n" +
             "}",
         },
         "----------\n" +
@@ -1103,15 +970,15 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test // new reference missing () followed by valid code
-    public void testParsingRecovery2_GRE468() {
+    public void testParsingRecovery_GRE468_3() {
         runNegativeTest(new String[] {
             "X.groovy",
-            "class X {\n"+
-            "  public void m() {\n"+
-            "  new Earth\n"+
-            "  def a = 42\n"+
-            "  print a\n"+
-            "  }\n"+
+            "class X {\n" +
+            "  public void m() {\n" +
+            "  new Earth\n" +
+            "  def a = 42\n" +
+            "  print a\n" +
+            "  }\n" +
             "}",
         },
         "----------\n" +
@@ -1136,10 +1003,10 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test // missing type name for new call
-    public void testParsingRecovery3_GRE468() {
+    public void testParsingRecovery_GRE468_4() {
         runNegativeTest(new String[] {
             "X.groovy",
-            "new\n"+
+            "new\n" +
             "def a = 5\n",
         },
         "----------\n" +
@@ -1163,17 +1030,17 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testParsingRecovery4_GRE468() {
+    public void testParsingRecovery_GRE468_5() {
         runNegativeTest(new String[] {
             "X.groovy",
-            "class X {\n"+
-            "  public void m() {\n"+
-            "  new Earth\n"+
-            "     new Air\n"+
-            "    new\n"+
-            " new Fire\n"+
-            " def leppard = 'cool'\n"+
-            "  }\n"+
+            "class X {\n" +
+            "  public void m() {\n" +
+            "  new Earth\n" +
+            "     new Air\n" +
+            "    new\n" +
+            " new Fire\n" +
+            " def leppard = 'cool'\n" +
+            "  }\n" +
             "}",
         },
         "----------\n" +
@@ -1223,14 +1090,14 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test // missing type name for new call
-    public void testParsingRecovery5_GRE468() {
+    public void testParsingRecovery_GRE468_6() {
         runNegativeTest(new String[] {
             "X.groovy",
-            "class X { \n"+
-            " static {\n"+
-            "new\n"+
-            "def a = 5\n"+
-            "}\n"+
+            "class X { \n" +
+            " static {\n" +
+            "new\n" +
+            "def a = 5\n" +
+            "}\n" +
             "}",
         },
         "----------\n" +
@@ -1250,11 +1117,11 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testParsingRecovery6_GRE468() {
+    public void testParsingRecovery_GRE468_7() {
         runNegativeTest(new String[] {
             "X.groovy",
-            "class X {\n"+
-            "  def x = new A\n"+
+            "class X {\n" +
+            "  def x = new A\n" +
             "}",
         },
         "----------\n" +
@@ -1278,11 +1145,11 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testParsingRecovery7_GRE468() {
+    public void testParsingRecovery_GRE468_8() {
         runNegativeTest(new String[] {
             "X.groovy",
-            "import javax.swing.text.html.HTML\n"+
-            "HTML h\n"+
+            "import javax.swing.text.html.HTML\n" +
+            "HTML h\n" +
             "new Earth",
         },
         "----------\n" +
@@ -1300,154 +1167,15 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("X.groovy", null);
     }
 
-    @Test @Ignore // variations: 'import' 'import static' 'import ' 'import static ' 'import com.' 'import static com.'
-    public void testParsingRecoveryImports1_GRE538() {
-        runNegativeTest(new String[] {
-            "X.groovy",
-            "import\n"+
-            "\n"+
-            "class X {}\n",
-        },
-        "----------\n" +
-        "1. ERROR in X.groovy (at line 1)\n" +
-        "\timport\n" +
-        "\t ^\n" +
-        "Groovy:Invalid import specification @ line 1, column 1.\n" +
-        "----------\n");
-
-        // import statement is not mapped from groovy to JDT world so does not appear in the declaration here
-        checkGCUDeclaration("X.groovy",
-            "public class X {\n" +
-            "  public X() {\n" +
-            "  }\n" +
-            "}\n");
-        // check it made it through the parse though
-        ModuleNode mn = getModuleNode("X.groovy");
-        assertEquals(1, mn.getImports().size());
-        ClassNode cn = mn.getImports().get(0).getType();
-        assertNull(cn);
-    }
-
-    @Test @Ignore
-    public void testParsingRecoveryImports2_GRE538() {
-        runNegativeTest(new String[] {
-            "X.groovy",
-            "import \n"+
-            "\n"+
-            "class X {}\n",
-        },
-        "----------\n" +
-        "1. ERROR in X.groovy (at line 1)\n" +
-        "\timport \n" +
-        "\t ^\n" +
-        "Groovy:Invalid import specification @ line 1, column 1.\n" +
-        "----------\n");
-
-        // import statement is not mapped from groovy to JDT world so does not appear in the declaration here
-        checkGCUDeclaration("X.groovy",
-            "public class X {\n" +
-            "  public X() {\n" +
-            "  }\n" +
-            "}\n");
-        // check it made it through the parse though
-        ModuleNode mn = getModuleNode("X.groovy");
-        assertEquals(1, mn.getImports().size());
-        ClassNode cn = mn.getImports().get(0).getType();
-        assertNull(cn);
-    }
-
-    @Test @Ignore
-    public void testParsingRecoveryImports3_GRE538() {
-        runNegativeTest(new String[] {
-            "X.groovy",
-            "import static \n"+
-            "\n"+
-            "class X {}\n",
-        },
-        "----------\n" +
-        "1. ERROR in X.groovy (at line 1)\n" +
-        "\timport static \n" +
-        "\t ^\n" +
-        "Groovy:Invalid import specification @ line 1, column 8.\n" +
-        "----------\n");
-
-        // import statement is not mapped from groovy to JDT world so does not appear in the declaration here
-        checkGCUDeclaration("X.groovy",
-            "public class X {\n" +
-            "  public X() {\n" +
-            "  }\n" +
-            "}\n");
-        // check it made it through the parse though
-        ModuleNode mn = getModuleNode("X.groovy");
-        assertEquals(1, mn.getImports().size());
-        ClassNode cn = mn.getImports().get(0).getType();
-        assertNull(cn);
-    }
-
-    @Test @Ignore
-    public void testParsingRecoveryImports4_GRE538() {
-        runNegativeTest(new String[] {
-            "X.groovy",
-            "import com.\n"+
-            "\n"+
-            "class X {}\n",
-        },
-        "----------\n" +
-        "1. ERROR in X.groovy (at line 1)\n" +
-        "\timport\n" +
-        "\t ^\n" +
-        "Groovy:Invalid import specification @ line 1, column 1.\n" +
-        "----------\n");
-
-        // import statement is not mapped from groovy to JDT world so does not appear in the declaration here
-        checkGCUDeclaration("X.groovy",
-            "public class X {\n" +
-            "  public X() {\n" +
-            "  }\n" +
-            "}\n");
-        // check it made it through the parse though
-        ModuleNode mn = getModuleNode("X.groovy");
-        assertEquals(1, mn.getImports().size());
-        ClassNode cn = mn.getImports().get(0).getType();
-        assertNull(cn);
-    }
-
-    @Test @Ignore
-    public void testParsingRecoveryImports5_GRE538() {
-        runNegativeTest(new String[] {
-            "X.groovy",
-            "import static com.\n"+
-            "\n"+
-            "class X {}\n",
-        },
-        "----------\n" +
-        "1. ERROR in XXX.groovy (at line 1)\n" +
-        "\timport\n" +
-        "\t ^\n" +
-        "Groovy:Invalid import specification @ line 1, column 1.\n" +
-        "----------\n");
-
-        // import statement is not mapped from groovy to JDT world so does not appear in the declaration here
-        checkGCUDeclaration("X.groovy",
-            "public class X {\n" +
-            "  public X() {\n" +
-            "  }\n" +
-            "}\n");
-        // check it made it through the parse though
-        ModuleNode mn = getModuleNode("X.groovy");
-        assertEquals(1, mn.getImports().size());
-        ClassNode cn = mn.getImports().get(0).getType();
-        assertNull(cn);
-    }
-
     @Test
-    public void testParsingRecovery8_GRE468() {
+    public void testParsingRecovery_GRE468_9() {
         runNegativeTest(new String[] {
             "X.groovy",
-            "import javax.swing.text.html.HTML\n"+
-            "HTML h\n"+
+            "import javax.swing.text.html.HTML\n" +
+            "HTML h\n" +
             "new String()\n",
-        },"");
+        },
+        "");
 
         checkGCUDeclaration("X.groovy",
             "import javax.swing.text.html.HTML;\n" +
@@ -1463,96 +1191,345 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "}\n");
     }
 
-    @Test @Ignore
-    public void testUnrecoverableErrors_GRE949() {
+    @Test
+    public void testParsingRecovery_GRE766() {
+        // missing end curly, but that shouldn't cause us to discard what we successfully parsed
         runNegativeTest(new String[] {
             "X.groovy",
-            "package a\n" +
-            "import javax.swing.text.html.HTML; \n" +
-            "   void nuthin() {\n" +
-            "         if (! (this instanceof HTML/*_*/) {\n" +
-            "            \n" +
-            "         }\n" +
-            "    } ",
+            "public class X {\n" +
+            "   def swingit() {\n" +
+            "       swing.actions() {\n" +
+            "           echoAction= swing.action(name: 'Echo back',\n" +
+            "           enabled: bind(source: model, sourceProperty: 'loggedin'),\n" +
+            "           closure: { controller.setEchoBack(it.source.selected) })\n" +
+            "       }\n" +
+            "   }\n",
+        },
+        "----------\n" +
+        "1. ERROR in X.groovy (at line 8)\n" +
+        "\t}\n" +
+        "\n" +
+        "\t ^\n" +
+        "Groovy:unexpected token:  @ line 8, column 5.\n" +
+        "----------\n");
+
+        ModuleNode mn = getModuleNode("X.groovy");
+        ClassNode cn = mn.getClasses().get(0);
+        assertEquals("X", cn.getName());
+        assertNotNull(cn.getDeclaredMethod("swingit", Parameter.EMPTY_ARRAY));
+    }
+
+    @Test
+    public void testParsingRecovery_GRE494_1() {
+        runNegativeTest(new String[] {
+            "X.groovy",
+            "class X {\n" +
+            "   \n" +
+            "   def getNumber() {\n" +
+            "       return 42\n" +
+            "   }\n" +
+            "\n" +
+            "   asdf\n" +
+            "       \n" +
+            "   static main(args) {\n" +
+            "       print new X().getNumber()\n" +
+            "   }\n" +
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in X.groovy (at line 7)\n" +
+        "\tasdf\n" +
+        "\t^\n" +
+        "Groovy:unexpected token: asdf @ line 7, column 4.\n" +
+        "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "public class X {\n" +
+            "  private java.lang.Object asdf;\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "  public java.lang.Object getNumber() {\n" +
+            "  }\n" +
+            "  public static void main(public java.lang.String... args) {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testParsingRecovery_GRE494_2() {
+        runNegativeTest(new String[] {
+            "X.groovy",
+            "class X {\n" +
+            "  int intField\n" +
+            "\n" +
+            "belo\n" +
+            "\n" +
+            "}\n",
         },
         "----------\n" +
         "1. ERROR in X.groovy (at line 4)\n" +
-        "\tif (! (this instanceof HTML/*_*/) {\n" +
-        "\t                       ^\n" +
-        "Groovy:unable to resolve class HTML\n" +
-        "----------\n" +
-        "2. ERROR in X.groovy (at line 7)\n" +
-        "\t} \n" +
+        "\tbelo\n" +
         "\t^\n" +
-        "Groovy:expecting \')\', found \'}\' @ line 7, column 5.\n" +
+        "Groovy:unexpected token: belo @ line 4, column 1.\n" +
         "----------\n");
 
+        checkGCUDeclaration("X.groovy",
+            "public class X {\n" +
+            "  private int intField;\n" +
+            "  private java.lang.Object belo;\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test // variations: 'import' 'import static' 'import ' 'import static ' 'import com.' 'import static com.'
+    public void testParsingRecovery_Imports1() {
         runNegativeTest(new String[] {
             "X.groovy",
-            "package com.foo\n"+
-            "\n"+
-            "import javax.swing.text.html.HTML\n"+
-            "\n"+
-            "void nuthin() {\n"+
-            "if (! (this instanceof HTMLAccessibleContext/*_*/) {\n"+
-            "\n"+
-            "}\n"+
-            "}",
+            "import\n" +
+            "\n" +
+            "class X {}\n",
         },
         "----------\n" +
-        "1. ERROR in X.groovy (at line 6)\n" +
-        "\tif (! (this instanceof HTMLAccessibleContext/_/) {\n" +
-        "\t                                            ^\n" +
-        "Groovy:unexpected token: / @ line 6, column 45.\n" +
+        "1. ERROR in X.groovy (at line 1)\n" +
+        "\timport\n" +
+        "\t^^^^^^\n" +
+        "Groovy:unable to resolve class ?\n" +
         "----------\n");
 
+        // import statement is not mapped from groovy to JDT world so does not appear in the declaration here
+        checkGCUDeclaration("X.groovy",
+            "public class X {\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "}\n");
+        // check it made it through the parse though
         ModuleNode mn = getModuleNode("X.groovy");
-        assertTrue(mn.encounteredUnrecoverableError());
+        assertEquals(1, mn.getImports().size());
+        assertNotNull(mn.getImports().get(0).getType());
     }
 
     @Test
-    public void testUnrecoverableErrors_GRE755_2() {
+    public void testParsingRecovery_Imports2() {
         runNegativeTest(new String[] {
             "X.groovy",
-            "class X {\n"+
-            "  def x=\"\n"+
-            "}\n",
-        },"----------\n" +
-        "1. ERROR in X.groovy (at line 2)\n" +
-        "\tdef x=\"\n" +
-        "}\n" +
-        "\t       ^\n" +
-        "Groovy:expecting anything but \'\'\\n\'\'; got it anyway @ line 2, column 10.\n" +
+            "import \n" +
+            "\n" +
+            "class X {}\n",
+        },
+        "----------\n" +
+        "1. ERROR in X.groovy (at line 1)\n" +
+        "\timport \n" +
+        "\t^^^^^^^\n" +
+        "Groovy:unable to resolve class ?\n" +
         "----------\n");
+
+        // import statement is not mapped from groovy to JDT world so does not appear in the declaration here
+        checkGCUDeclaration("X.groovy",
+            "public class X {\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "}\n");
+        // check it made it through the parse though
         ModuleNode mn = getModuleNode("X.groovy");
-        assertTrue(mn.encounteredUnrecoverableError());
+        assertEquals(1, mn.getImports().size());
+        assertNotNull(mn.getImports().get(0).getType());
     }
 
     @Test
-    public void testUnrecoverableErrors_GRE755_3() {
+    public void testParsingRecovery_Imports3() {
         runNegativeTest(new String[] {
             "X.groovy",
-            "package a\n"+
-            "\n"+
-            "def foo(Nuthin\n",
-        },"----------\n" +
-        "1. ERROR in X.groovy (at line 3)\n" +
-        "\tdef foo(Nuthin\n" +
+            "import static \n" +
+            "\n" +
+            "class X {}\n",
+        },
+        "----------\n" +
+        "1. ERROR in X.groovy (at line 1)\n" +
+        "\timport static \n" +
+        "\t^^^^^^^^^^^^^^\n" +
+        "Groovy:unable to resolve class ?\n" +
+        "----------\n");
+
+        // import statement is not mapped from groovy to JDT world so does not appear in the declaration here
+        checkGCUDeclaration("X.groovy",
+            "public class X {\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "}\n");
+        // check it made it through the parse though
+        ModuleNode mn = getModuleNode("X.groovy");
+        assertEquals(1, mn.getImports().size());
+        assertNotNull(mn.getImports().get(0).getType());
+    }
+
+    @Test
+    public void testParsingRecovery_Imports4() {
+        runNegativeTest(new String[] {
+            "X.groovy",
+            "import com.\n" +
+            "\n" +
+            "class X {}\n",
+        },
+        "----------\n" +
+        "1. ERROR in X.groovy (at line 1)\n" +
+        "\timport com.\n" +
         "\t        ^\n" +
-        "Groovy:unexpected token: Nuthin @ line 3, column 9.\n" +
+        "Groovy:Invalid import @ line 1, column 8.\n" +
         "----------\n");
-        ModuleNode mn = getModuleNode("X.groovy");
 
-        assertFalse(mn.encounteredUnrecoverableError());
+        checkGCUDeclaration("X.groovy",
+            "public class X {\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "}\n");
+        ModuleNode mn = getModuleNode("X.groovy");
+        assertEquals(0, mn.getImports().size());
     }
 
     @Test
-    public void testRecoveryParameterCompletion() {
+    public void testParsingRecovery_Imports5() {
         runNegativeTest(new String[] {
             "X.groovy",
-            "package com.example.foo\n"+
-            "class X {\n"+
-            "public void foo(XMLConstants\n"+
+            "import static com.\n" +
+            "\n" +
+            "class X {}\n",
+        },
+        "----------\n" +
+        "1. ERROR in X.groovy (at line 1)\n" +
+        "\timport static com.\n" +
+        "\t              ^^^^\n" +
+        "Only a type can be imported. com resolves to a package\n" +
+        "----------\n" +
+        "2. ERROR in X.groovy (at line 1)\n" +
+        "\timport static com.\n" +
+        "\t              ^^^\n" +
+        "Groovy:unable to resolve class com\n" +
+        "----------\n" +
+        "3. ERROR in X.groovy (at line 1)\n" +
+        "\timport static com.\n" +
+        "\t               ^\n" +
+        "Groovy:Invalid import @ line 1, column 15.\n" +
+        "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "public class X {\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "}\n");
+        ModuleNode mn = getModuleNode("X.groovy");
+        assertEquals(0, mn.getImports().size());
+    }
+
+    @Test
+    public void testParsingRecovery_InstrusivePathExpr1() {
+        runNegativeTest(new String[] {
+            "X.groovy",
+            "package a\n" +
+            "\n" +
+            "import java.text.NumberFormat\n" +
+            "\n" +
+            "class X {\n" +
+            "  static void main(args) {\n" +
+            "    NumberFormat.\n" + // added after next line
+            "    Set s = []\n" +
+            "  }\n" +
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in X.groovy (at line 8)\n" +
+        "\tSet s = []\n" +
+        "\t    ^\n" +
+        "Groovy:Apparent variable 's' was found in a static scope but doesn't refer to a local variable, static field or class. Possible causes:\n" +
+        "----------\n");
+
+        ModuleNode mn = getModuleNode("X.groovy");
+        assertFalse(mn.encounteredUnrecoverableError());
+        MethodNode main = mn.getClasses().get(0).getMethod("main",
+            new Parameter[] {new Parameter(ClassHelper.STRING_TYPE.makeArray(), "args")});
+        assertFalse("Expected at least path expression 'NumberFormat.' in block", ((BlockStatement) main.getCode()).getStatements().isEmpty());
+    }
+
+    @Test
+    public void testParsingRecovery_InstrusivePathExpr2() {
+        runNegativeTest(new String[] {
+            "X.groovy",
+            "package a\n" +
+            "\n" +
+            "import java.text.NumberFormat\n" +
+            "\n" +
+            "class X {\n" +
+            "  static void main(args) {\n" +
+            "    NumberFormat.\n" + // added after next line
+            "    Set<Integer> s = []\n" +
+            "  }\n" +
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in X.groovy (at line 8)\n" +
+        "\tSet<Integer> s = []\n" +
+        "\t           ^\n" +
+        "Groovy:unexpected token: > @ line 8, column 16.\n" +
+        "----------\n");
+
+        ModuleNode mn = getModuleNode("X.groovy");
+        assertFalse(mn.encounteredUnrecoverableError());
+        MethodNode main = mn.getClasses().get(0).getMethod("main",
+            new Parameter[] {new Parameter(ClassHelper.STRING_TYPE.makeArray(), "args")});
+        assertFalse("Expected at least path expression 'NumberFormat.' in block", ((BlockStatement) main.getCode()).getStatements().isEmpty());
+    }
+
+    @Test
+    public void testParsingRecovery_MissingCurly1() {
+        runNegativeTest(new String[] {
+            "X.groovy",
+            "class X { int y() }\n",
+        },
+        "----------\n" +
+        "1. ERROR in X.groovy (at line 1)\n" +
+        "\tclass X { int y() }\n" +
+        "\t           ^\n" +
+        "Groovy:You defined a method without body. Try adding a body, or declare it abstract. @ line 1, column 11.\n" +
+        "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "public class X {\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "  public int y() {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testParsingRecovery_MissingCurly2() {
+        runNegativeTest(new String[] {
+            "X.groovy",
+            "class X { int y() { }\n",
+        },
+        "----------\n" +
+        "1. ERROR in X.groovy (at line 1)\n" +
+        "\tclass X { int y() { }\n\n" +
+        "\t                     ^\n" +
+        "Groovy:unexpected token:  @ line 1, column 22.\n" +
+        "----------\n");
+
+        checkGCUDeclaration("X.groovy",
+            "public class X {\n" +
+            "  public X() {\n" +
+            "  }\n" +
+            "  public int y() {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
+    @Test
+    public void testParsingRecovery_ParameterCompletion() {
+        runNegativeTest(new String[] {
+            "X.groovy",
+            "package com.example.foo\n" +
+            "class X {\n" +
+            "public void foo(XMLConstants\n" +
             "}\n",
         },
         "----------\n" +
@@ -1576,7 +1553,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
     }
 
     @Test // parser should correctly parse this code, but should return with an error
-    public void testSafeDereferencingParserRecovery() {
+    public void testParsingRecovery_SafeDereferencing() {
         runNegativeTest(new String[] {
             "X.groovy",
             "public class X {\n" +
@@ -1601,5 +1578,92 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "  public void someMethod() {\n" +
             "  }\n" +
             "}\n");
+    }
+
+    @Test @Ignore
+    public void testUnrecoverableErrors_GRE949() {
+        runNegativeTest(new String[] {
+            "X.groovy",
+            "package a\n" +
+            "import javax.swing.text.html.HTML\n" +
+            "\n" +
+            "void nuthin() {\n" +
+            "  if (! (this instanceof HTML/*_*/) {\n" +
+            "    \n" +
+            "  }\n" +
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in X.groovy (at line 4)\n" +
+        "\tif (! (this instanceof HTML/*_*/) {\n" +
+        "\t                       ^\n" +
+        "Groovy:unable to resolve class HTML\n" +
+        "----------\n" +
+        "2. ERROR in X.groovy (at line 7)\n" +
+        "\t} \n" +
+        "\t^\n" +
+        "Groovy:expecting \')\', found \'}\' @ line 7, column 5.\n" +
+        "----------\n");
+
+        runNegativeTest(new String[] {
+            "X.groovy",
+            "package com.foo\n" +
+            "\n" +
+            "import javax.swing.text.html.HTML\n" +
+            "\n" +
+            "void nuthin() {\n" +
+            "if (! (this instanceof HTMLAccessibleContext/*_*/) {\n" +
+            "\n" +
+            "}\n" +
+            "}",
+        },
+        "----------\n" +
+        "1. ERROR in X.groovy (at line 6)\n" +
+        "\tif (! (this instanceof HTMLAccessibleContext/_/) {\n" +
+        "\t                                            ^\n" +
+        "Groovy:unexpected token: / @ line 6, column 45.\n" +
+        "----------\n");
+
+        ModuleNode mn = getModuleNode("X.groovy");
+        assertTrue(mn.encounteredUnrecoverableError());
+    }
+
+    @Test
+    public void testUnrecoverableErrors_GRE755_1() {
+        runNegativeTest(new String[] {
+            "X.groovy",
+            "class X {\n" +
+            "  def x=\"\n" +
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in X.groovy (at line 2)\n" +
+        "\tdef x=\"\n" +
+        "}\n" +
+        "\t       ^\n" +
+        "Groovy:expecting anything but \'\'\\n\'\'; got it anyway @ line 2, column 10.\n" +
+        "----------\n");
+
+        ModuleNode mn = getModuleNode("X.groovy");
+        assertTrue(mn.encounteredUnrecoverableError());
+    }
+
+    @Test
+    public void testUnrecoverableErrors_GRE755_2() {
+        runNegativeTest(new String[] {
+            "X.groovy",
+            "package a\n" +
+            "\n" +
+            "def foo(Nuthin\n",
+        },
+        "----------\n" +
+        "1. ERROR in X.groovy (at line 3)\n" +
+        "\tdef foo(Nuthin\n" +
+        "\t        ^\n" +
+        "Groovy:unexpected token: Nuthin @ line 3, column 9.\n" +
+        "----------\n");
+
+        ModuleNode mn = getModuleNode("X.groovy");
+        assertFalse(mn.encounteredUnrecoverableError());
     }
 }
