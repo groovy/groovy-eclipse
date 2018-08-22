@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.createTypeSig
 import static org.codehaus.groovy.eclipse.codeassist.ProposalUtils.getImage;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -39,6 +39,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.Signature;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.search.GenericsMapper;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
@@ -58,23 +59,22 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
 
     @Override
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
-        List<MethodNode> unimplementedMethods = getAllUnimplementedMethods(getClassNode());
-        List<ICompletionProposal> proposals = new LinkedList<>();
+        List<ICompletionProposal> proposals = new ArrayList<>();
+
         ContentAssistContext context = getContext();
         IType enclosingType = context.getEnclosingType();
         if (enclosingType != null) {
-            for (MethodNode method : unimplementedMethods) {
-                proposals.add(createProposal(method, context, enclosingType));
+            for (MethodNode method : getAllUnimplementedMethods(getClassNode())) {
+                proposals.add(createProposal(method, enclosingType));
             }
         }
-        // now add proposals from relevant proposal providers
+        // add proposals from relevant proposal providers
         try {
-            List<IProposalProvider> providers = ProposalProviderRegistry.getRegistry().getProvidersFor(context.unit);
-            for (IProposalProvider provider : providers) {
-                List<MethodNode> newProposals = provider.getNewMethodProposals(context);
-                if (newProposals != null) {
-                    for (MethodNode methodNode : newProposals) {
-                        proposals.add(createProposal(methodNode, context, enclosingType));
+            for (IProposalProvider provider : ProposalProviderRegistry.getRegistry().getProvidersFor(context.unit)) {
+                List<MethodNode> methods = provider.getNewMethodProposals(context);
+                if (methods != null) {
+                    for (MethodNode method : methods) {
+                        proposals.add(createProposal(method, enclosingType));
                     }
                 }
             }
@@ -85,17 +85,41 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
         return proposals;
     }
 
-    private ClassNode getClassNode() {
-        // if the current completion is inside a script, then the containing code block will be a Block object, not a ClassNode
-        // Must get class node in a different way.
-        return getContext().containingCodeBlock instanceof ClassNode ?
-                (ClassNode) getContext().containingCodeBlock :
-                    getScript();
+    private ICompletionProposal createProposal(MethodNode method, IType enclosingType) {
+        ContentAssistContext context = getContext();
+        int length = context.completionExpression.length();
+        int offset = context.completionLocation - length;
+        int relevance = Relevance.VERY_HIGH.getRelevance(); // TODO: Lower relevance for methods from Object.
+        String[] parameterTypeNames = getParameterTypeNames(method);
+
+        GroovyCompletionProposal proposal = createProposal(CompletionProposal.METHOD_DECLARATION, context.completionLocation);
+        proposal.setCompletion(createMethod(method));
+        proposal.setDeclarationKey(method.getDeclaringClass().getName().toCharArray());
+        proposal.setDeclarationSignature(createTypeSignature(method.getDeclaringClass()));
+        proposal.setDeclarationTypeName(method.getDeclaringClass().getName().toCharArray());
+        proposal.setFlags(method.getModifiers());
+        proposal.setName(method.getName().toCharArray());
+        proposal.setParameterNames(getParameterNames(method));
+        proposal.setParameterTypeNames(CharOperation.toCharArrays(Arrays.asList(parameterTypeNames)));
+        proposal.setSignature(createMethodSignatureStr(method).toCharArray());
+        proposal.setTypeName(method.getReturnType().getName().toCharArray());
+
+        OverrideCompletionProposal override = new OverrideCompletionProposal(
+            context.unit.getJavaProject(), context.unit, method.getName(), parameterTypeNames, offset, length, createDisplayString(proposal), String.valueOf(proposal.getCompletion()));
+        override.setImage(getImage(proposal));
+        override.setRelevance(relevance);
+        return override;
     }
 
-    private ClassNode getScript() {
+    //--------------------------------------------------------------------------
+
+    private ClassNode getClassNode() {
+        // if the current completion is inside a script, then the containing code block will be a Block object, not a ClassNode
+        if (getContext().containingCodeBlock instanceof ClassNode) {
+            return (ClassNode) getContext().containingCodeBlock;
+        }
         ModuleNode module = getContext().unit.getModuleNode();
-        for (ClassNode clazz : (Iterable<ClassNode>) module.getClasses()) {
+        for (ClassNode clazz : module.getClasses()) {
             if (clazz.isScript()) {
                 return clazz;
             }
@@ -103,48 +127,10 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
         throw new IllegalArgumentException("Expecting script in current module: " + module.getPackageName());
     }
 
-    private ICompletionProposal createProposal(MethodNode method,
-            ContentAssistContext context, IType enclosingType) {
-        int relevance = Relevance.VERY_HIGH.getRelevance();
-
-        GroovyCompletionProposal proposal = createProposal(CompletionProposal.METHOD_DECLARATION, context.completionLocation);
-        String methodSignature = createMethodSignatureStr(method);
-        proposal.setSignature(methodSignature.toCharArray());
-        proposal.setDeclarationSignature(createTypeSignature(method.getDeclaringClass()));
-        proposal.setName(method.getName().toCharArray());
-        proposal.setDeclarationTypeName(method.getDeclaringClass().getName().toCharArray());
-        proposal.setTypeName(method.getReturnType().getName().toCharArray());
-        proposal.setParameterNames(getParameterNames(method));
-        String[] parameterTypeNamesStr = getParameterTypeNames(method);
-        char[][] parameterTypeNames = new char[parameterTypeNamesStr.length][];
-        for (int i = 0; i < parameterTypeNames.length; i++) {
-            parameterTypeNames[i] = parameterTypeNamesStr[i].toCharArray();
-        }
-        proposal.setParameterTypeNames(parameterTypeNames);
-        StringBuffer completion = new StringBuffer();
-        createMethod(method, completion);
-        proposal.setCompletion(completion.toString().toCharArray());
-        proposal.setDeclarationKey(method.getDeclaringClass().getName().toCharArray());
-        proposal.setReplaceRange(context.completionLocation
-                - context.completionExpression.length(), context.completionEnd);
-        proposal.setFlags(method.getModifiers());
-        proposal.setRelevance(relevance);
-
-        OverrideCompletionProposal override = new OverrideCompletionProposal(context.unit.getJavaProject(), context.unit,
-                method.getName(), parameterTypeNamesStr, context.completionLocation, context.completionExpression.length(),
-                createDisplayString(proposal), String.valueOf(proposal.getCompletion()));
-        override.setImage(getImage(proposal));
-        override.setRelevance(relevance);
-        override.setReplacementOffset(context.completionLocation - context.completionExpression.length());
-        override.setReplacementLength(context.completionExpression.length());
-        override.setRelevance(proposal.getRelevance());
-        return override;
-    }
-
     private char[][] getParameterNames(MethodNode method) {
         Parameter[] parameters = method.getParameters();
         char[][] paramNames = new char[parameters.length][];
-        for (int i = 0; i < paramNames.length; i++) {
+        for (int i = 0; i < paramNames.length; i += 1) {
             paramNames[i] = parameters[i].getName().toCharArray();
         }
         return paramNames;
@@ -218,7 +204,7 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
     private List<MethodNode> getAllUnimplementedMethods(ClassNode declaring) {
         List<MethodNode> allMethods = declaring.getAllDeclaredMethods();
         List<MethodNode> thisClassMethods = declaring.getMethods();
-        List<MethodNode> unimplementedMethods = new ArrayList<>(allMethods.size()-thisClassMethods.size());
+        List<MethodNode> unimplementedMethods = new ArrayList<>(allMethods.size() - thisClassMethods.size());
 
         // uggh n^2 loop.  Can be made more efficient by doing declaring.getMethods(allMethodNode.getName())
         for (MethodNode allMethodNode : allMethods) {
@@ -234,8 +220,8 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
                             // now check param types
                             Parameter[] allMethodParams = allMethodNode.getParameters();
                             Parameter[] thisClassParams = thisClassMethod.getParameters();
-                            for (int i = 0; i < thisClassParams.length; i++) {
-                                if (! allMethodParams[i].getType().getName().equals(thisClassParams[i].getType().getName())) {
+                            for (int i = 0; i < thisClassParams.length; i += 1) {
+                                if (!allMethodParams[i].getType().getName().equals(thisClassParams[i].getType().getName())) {
                                     continue inner;
                                 }
                             }
@@ -253,20 +239,14 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
         return unimplementedMethods;
     }
 
-    /**
-     * @param allMethodNode
-     * @return
-     */
-    private boolean isOverridableMethod(MethodNode methodNode) {
+    private static boolean isOverridableMethod(MethodNode methodNode) {
         String name = methodNode.getName();
-        return !name.contains("$") && !name.contains("<") &&
-            !methodNode.isPrivate() &&
-            !methodNode.isStatic() &&
-            (methodNode.getModifiers() & Opcodes.ACC_FINAL) == 0 ;
+        return (!name.contains("$") && !name.contains("<") &&
+            !methodNode.isPrivate() && !methodNode.isStatic() && !methodNode.isFinal());
     }
 
-
-    private void createMethod(MethodNode method, StringBuffer completion) {
+    private static char[] createMethod(MethodNode method) {
+        StringBuffer completion = new StringBuffer();
         //// Modifiers
         // flush uninteresting modifiers
         int insertedModifiers = method.getModifiers() & ~(Opcodes.ACC_NATIVE | Opcodes.ACC_ABSTRACT | Opcodes.ACC_PUBLIC);
@@ -274,20 +254,19 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
 
         //// Type parameters
         // ignore too difficult and not really needed for Groovy
-
-//        GenericsType[] typeVariableBindings = method.getGenericsTypes();
-//        if(typeVariableBindings != null && typeVariableBindings.length != 0) {
-//            completion.append('<');
-//            for (int i = 0; i < typeVariableBindings.length; i++) {
-//                if(i != 0) {
-//                    completion.append(',');
-//                    completion.append(' ');
-//                }
-//                createTypeVariable(typeVariableBindings[i], completion);
-//            }
-//            completion.append('>');
-//            completion.append(' ');
-//        }
+        /*GenericsType[] typeVariableBindings = method.getGenericsTypes();
+        if(typeVariableBindings != null && typeVariableBindings.length != 0) {
+            completion.append('<');
+            for (int i = 0; i < typeVariableBindings.length; i++) {
+                if(i != 0) {
+                    completion.append(',');
+                    completion.append(' ');
+                }
+                createTypeVariable(typeVariableBindings[i], completion);
+            }
+            completion.append('>');
+            completion.append(' ');
+        }*/
 
         //// Return type
         createType(method.getReturnType(), completion, false);
@@ -302,7 +281,7 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
         Parameter[] parameters = method.getParameters();
         int length = parameters.length;
         for (int i = 0; i < length; i++) {
-            if(i != 0) {
+            if (i != 0) {
                 completion.append(',');
                 completion.append(' ');
             }
@@ -320,49 +299,50 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
             completion.append(' ');
             completion.append("throws");
             completion.append(' ');
-            for(int i = 0; i < exceptions.length ; i++){
-                if(i != 0) {
+            for (int i = 0; i < exceptions.length; i++) {
+                if (i != 0) {
                     completion.append(' ');
                     completion.append(',');
                 }
                 createType(exceptions[i], completion, false);
             }
         }
+
+        return completion.toString().toCharArray();
     }
 
-    // ignore.  Too difficult and not really needed for groovy.
-//    private void createTypeVariable(GenericsType typeVariable, StringBuffer completion) {
-//        completion.append(typeVariable.getName());
-//
-//        if (typeVariable.getUpperBounds() != null && typeVariable.getUpperBounds().length > 0) {
-//            for (int i = 0; i < typeVariable.getUpperBounds().length; i++) {
-//                if (i > 0) {
-//                }
-//                completion.append(' ');
-//                completion.append("extends");
-//                completion.append(' ');
-//                createType(typeVariable.getUpperBounds()[0], completion);
-//
-//            }
-//        }
-//        if (typeVariable.get != null && typeVariable.superInterfaces != Binding.NO_SUPERINTERFACES) {
-//           if (typeVariable.firstBound != typeVariable.superclass) {
-//               completion.append(' ');
-//               completion.append("extends");
-//               completion.append(' ');
-//           }
-//           for (int i = 0, length = typeVariable.superInterfaces.length; i < length; i++) {
-//               if (i > 0 || typeVariable.firstBound == typeVariable.superclass) {
-//                   completion.append(' ');
-//                   completion.append(EXTENDS);
-//                   completion.append(' ');
-//               }
-//               createType(typeVariable.superInterfaces[i], scope, completion);
-//           }
-//        }
-//    }
+    // Ignore; too difficult and not really needed for Groovy.
+    /*private static void createTypeVariable(GenericsType typeVariable, StringBuffer completion) {
+        completion.append(typeVariable.getName());
 
-    private void createType(ClassNode type, StringBuffer completion, boolean isParameter) {
+        if (typeVariable.getUpperBounds() != null && typeVariable.getUpperBounds().length > 0) {
+            for (int i = 0; i < typeVariable.getUpperBounds().length; i++) {
+                if (i > 0) {
+                }
+                completion.append(' ');
+                completion.append("extends");
+                completion.append(' ');
+                createType(typeVariable.getUpperBounds()[0], completion);
+            }
+        }
+        if (typeVariable.get != null && typeVariable.superInterfaces != Binding.NO_SUPERINTERFACES) {
+            if (typeVariable.firstBound != typeVariable.superclass) {
+                completion.append(' ');
+                completion.append("extends");
+                completion.append(' ');
+            }
+            for (int i = 0, length = typeVariable.superInterfaces.length; i < length; i++) {
+                if (i > 0 || typeVariable.firstBound == typeVariable.superclass) {
+                    completion.append(' ');
+                    completion.append(EXTENDS);
+                    completion.append(' ');
+                }
+                createType(typeVariable.superInterfaces[i], scope, completion);
+            }
+        }
+    }*/
+
+    private static void createType(ClassNode type, StringBuffer completion, boolean isParameter) {
         int arrayCount = 0;
         while (type.getComponentType() != null) {
             arrayCount++;
