@@ -1065,10 +1065,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "public class X {\n" +
             "  public X() {\n" +
             "  }\n" +
-            // for: public static void main(String[] args) {
-            //"  public static void main(public String... args) {\n" +
-            // for: static main(args) {
-            "  public static void main(public java.lang.String... args) {\n" +
+            "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
             "}\n"
         );
@@ -1091,7 +1088,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "public class X {\n" +
             "  public X() {\n" +
             "  }\n" +
-            "  public static void main(public java.lang.String... args) {\n" +
+            "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
             "}\n"
         );
@@ -1120,7 +1117,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "  }\n"+
             "  public X() {\n" +
             "  }\n" +
-            "  public static void main(public java.lang.String... args) {\n" +
+            "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
             "}\n"
         );
@@ -4003,9 +4000,9 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "public class G {\n" +
             "  public G() {\n" +
             "  }\n" +
-            "  public void m(public String s, public Integer i) {\n" +
+            "  public void m(String s, Integer i) {\n" +
             "  }\n" +
-            "  public void m(public String s) {\n" +
+            "  public void m(String s) {\n" +
             "  }\n" +
             "}\n";
         checkGCUDeclaration("G.groovy",expectedOutput);
@@ -4050,13 +4047,13 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "public class G {\n" +
             "  public G() {\n" +
             "  }\n" +
-            "  public void m(public String s, public Integer i, public String j, public String k, public float f, public String l) {\n" +
+            "  public void m(String s, Integer i, String j, String k, float f, String l) {\n" +
             "  }\n" +
-            "  public void m(public String s, public Integer i, public String j, public String k, public String l) {\n" +
+            "  public void m(String s, Integer i, String j, String k, String l) {\n" +
             "  }\n" +
-            "  public void m(public String s, public Integer i, public String k, public String l) {\n" +
+            "  public void m(String s, Integer i, String k, String l) {\n" +
             "  }\n" +
-            "  public void m(public String s, public String k, public String l) {\n" +
+            "  public void m(String s, String k, String l) {\n" +
             "  }\n" +
             "}\n";
         checkGCUDeclaration("G.groovy", expectedOutput);
@@ -4111,16 +4108,16 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "package p;\n" +
             "public class G {\n" +
             "  private java.lang.Object msg;\n" +
-            "  public G(public Integer i, public String m) {\n" +
+            "  public G(Integer i, String m) {\n" +
             "  }\n" +
-            "  public G(public Integer i) {\n" +
+            "  public G(Integer i) {\n" +
             "  }\n" +
-            "  public void print(public int i) {\n" +
+            "  public void print(int i) {\n" +
             "  }\n" +
             "  public void print() {\n" +
             "  }\n" +
             "}\n";
-        checkGCUDeclaration("G.groovy", expectedOutput );
+        checkGCUDeclaration("G.groovy", expectedOutput);
         expectedOutput =
             "  \n" +
             "  public G(Integer i, String m);\n" +

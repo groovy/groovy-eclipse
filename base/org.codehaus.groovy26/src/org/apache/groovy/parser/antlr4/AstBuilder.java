@@ -3726,7 +3726,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             // and remove the final modifier from classNode to allow the sub class
             superClass.setModifiers(superClass.getModifiers() & ~Opcodes.ACC_FINAL);
         } else { // anonymous inner class
-            anonymousInnerClass = new InnerClassNode(outerClass, fullName, Opcodes.ACC_PUBLIC, superClass);
+            anonymousInnerClass = new InnerClassNode(outerClass, fullName, /*GRECLIPSE Opcodes.ACC_PUBLIC*/0, superClass);
         }
 
         anonymousInnerClass.setUsingGenerics(false);

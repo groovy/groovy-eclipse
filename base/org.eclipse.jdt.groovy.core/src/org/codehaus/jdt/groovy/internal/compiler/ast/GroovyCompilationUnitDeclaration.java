@@ -1713,7 +1713,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 } else {
                     pos = toPos(parameter.getStart(), parameter.getEnd() - 1);
                 }
-                arguments[i] = new Argument(parameter.getName().toCharArray(), pos, parameterTypeReference, Flags.AccPublic);
+                arguments[i] = new Argument(parameter.getName().toCharArray(), pos, parameterTypeReference, Flags.AccDefault);
                 arguments[i].annotations = createAnnotations(parameter.getAnnotations());
                 arguments[i].declarationSourceStart = pstart;
             }
@@ -2195,7 +2195,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 modifiers &= ~(Flags.AccAbstract | Flags.AccFinal);
             }
             if (!isInner) {
-                // TODO: does this make types visible that shouldn't be?
                 modifiers &= ~(Flags.AccProtected | Flags.AccPrivate | Flags.AccStatic);
             }
             if (/*node.isSyntheticPublic() &&*/ hasPackageScopeXform(node, PackageScopeTarget.CLASS)) {

@@ -53,7 +53,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
             "public @B class A {\n" +
             "  public A() {\n" +
             "  }\n" +
-            "  public static void main(public String... argv) {\n" +
+            "  public static void main(String... argv) {\n" +
             "  }\n" +
             "}\n" +
             "public @interface B extends java.lang.annotation.Annotation {\n" +
@@ -607,7 +607,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "success");
 
-        checkGCUDeclaration("X.groovy", "public static @Anno void main(public String... argv) {");
+        checkGCUDeclaration("X.groovy", "public static @Anno void main(String... argv) {");
 
         checkDisassemblyFor("p/X.class",
             "  @p.Anno\n" +
@@ -777,7 +777,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "success");
 
-        checkGCUDeclaration("X.groovy", "public @Anno X(public String s) {");
+        checkGCUDeclaration("X.groovy", "public @Anno X(String s) {");
 
         checkDisassemblyFor("p/X.class",
             "  @p.Anno\n" +
@@ -808,7 +808,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
         checkGCUDeclaration("X.groovy", "public @Anno void foo() {");
 
-        checkGCUDeclaration("X.groovy", "public @Anno void foo(public String s) {");
+        checkGCUDeclaration("X.groovy", "public @Anno void foo(String s) {");
     }
 
     @Test
@@ -895,7 +895,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "success");
 
-        checkGCUDeclaration("X.groovy", "public @Anno(Target.class) void foo(public String s) {");
+        checkGCUDeclaration("X.groovy", "public @Anno(Target.class) void foo(String s) {");
     }
 
     @Test
@@ -924,7 +924,7 @@ public final class AnnotationsTests extends GroovyCompilerTestSuite {
 
         runConformTest(sources, "success");
 
-        checkGCUDeclaration("X.groovy", "public @Anno(p.Target.class) void foo(public String s) {");
+        checkGCUDeclaration("X.groovy", "public @Anno(p.Target.class) void foo(String s) {");
     }
 
     @Test

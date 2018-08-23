@@ -87,9 +87,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "public class X extends groovy.lang.Script {\n" +
             "  public X() {\n" +
             "  }\n" +
-            "  public X(public groovy.lang.Binding context) {\n" +
+            "  public X(groovy.lang.Binding context) {\n" +
             "  }\n" +
-            "  public static void main(public java.lang.String... args) {\n" +
+            "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
             "  public java.lang.Object run() {\n" +
             "  }\n" +
@@ -114,9 +114,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "public class X extends groovy.lang.Script {\n" +
             "  public X() {\n" +
             "  }\n" +
-            "  public X(public groovy.lang.Binding context) {\n" +
+            "  public X(groovy.lang.Binding context) {\n" +
             "  }\n" +
-            "  public static void main(public java.lang.String... args) {\n" +
+            "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
             "  public java.lang.Object run() {\n" +
             "  }\n" +
@@ -141,9 +141,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "public class X extends groovy.lang.Script {\n" +
             "  public X() {\n" +
             "  }\n" +
-            "  public X(public groovy.lang.Binding context) {\n" +
+            "  public X(groovy.lang.Binding context) {\n" +
             "  }\n" +
-            "  public static void main(public java.lang.String... args) {\n" +
+            "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
             "  public java.lang.Object run() {\n" +
             "  }\n" +
@@ -168,9 +168,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "public class X extends groovy.lang.Script {\n" +
             "  public X() {\n" +
             "  }\n" +
-            "  public X(public groovy.lang.Binding context) {\n" +
+            "  public X(groovy.lang.Binding context) {\n" +
             "  }\n" +
-            "  public static void main(public java.lang.String... args) {\n" +
+            "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
             "  public java.lang.Object run() {\n" +
             "  }\n" +
@@ -341,9 +341,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "public class X extends groovy.lang.Script {\n" +
             "  public X() {\n" +
             "  }\n" +
-            "  public X(public groovy.lang.Binding context) {\n" +
+            "  public X(groovy.lang.Binding context) {\n" +
             "  }\n" +
-            "  public static void main(public java.lang.String... args) {\n" +
+            "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
             "  public java.lang.Object run() {\n" +
             "  }\n" +
@@ -369,9 +369,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "public class X extends groovy.lang.Script {\n" +
             "  public X() {\n" +
             "  }\n" +
-            "  public X(public groovy.lang.Binding context) {\n" +
+            "  public X(groovy.lang.Binding context) {\n" +
             "  }\n" +
-            "  public static void main(public java.lang.String... args) {\n" +
+            "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
             "  public java.lang.Object run() {\n" +
             "  }\n" +
@@ -397,9 +397,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "public class X extends groovy.lang.Script {\n" +
             "  public X() {\n" +
             "  }\n" +
-            "  public X(public groovy.lang.Binding context) {\n" +
+            "  public X(groovy.lang.Binding context) {\n" +
             "  }\n" +
-            "  public static void main(public java.lang.String... args) {\n" +
+            "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
             "  public java.lang.Object run() {\n" +
             "  }\n" +
@@ -425,9 +425,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "public class X extends groovy.lang.Script {\n" +
             "  public X() {\n" +
             "  }\n" +
-            "  public X(public groovy.lang.Binding context) {\n" +
+            "  public X(groovy.lang.Binding context) {\n" +
             "  }\n" +
-            "  public static void main(public java.lang.String... args) {\n" +
+            "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
             "  public java.lang.Object run() {\n" +
             "  }\n" +
@@ -1020,9 +1020,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "public class X extends groovy.lang.Script {\n" +
             "  public X() {\n" +
             "  }\n" +
-            "  public X(public groovy.lang.Binding context) {\n" +
+            "  public X(groovy.lang.Binding context) {\n" +
             "  }\n" +
-            "  public static void main(public java.lang.String... args) {\n" +
+            "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
             "  public java.lang.Object run() {\n" +
             "  }\n" +
@@ -1182,9 +1182,9 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "public class X extends groovy.lang.Script {\n" +
             "  public X() {\n" +
             "  }\n" +
-            "  public X(public groovy.lang.Binding context) {\n" +
+            "  public X(groovy.lang.Binding context) {\n" +
             "  }\n" +
-            "  public static void main(public java.lang.String... args) {\n" +
+            "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
             "  public java.lang.Object run() {\n" +
             "  }\n" +
@@ -1250,7 +1250,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  public java.lang.Object getNumber() {\n" +
             "  }\n" +
-            "  public static void main(public java.lang.String... args) {\n" +
+            "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
             "}\n");
     }
