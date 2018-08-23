@@ -19,14 +19,13 @@ import java.util.List;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.PropertyNode;
+import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
-import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
-import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 
 public class GroovyTypeDeclaration extends TypeDeclaration {
@@ -52,10 +51,10 @@ public class GroovyTypeDeclaration extends TypeDeclaration {
     // FIXASC Is this always what we want to do - are there any other implications?
     @Override
     public void parseMethods(Parser parser, CompilationUnitDeclaration unit) {
-    // prevent Groovy types from having their methods re-parsed
-    //	if (parser instanceof MultiplexingCommentRecorderParser) {
-    //		super.parseMethods(parser, unit);
-    //	}
+        // prevent Groovy types from having their methods re-parsed
+        /*if (parser instanceof MultiplexingCommentRecorderParser) {
+            super.parseMethods(parser, unit);
+        }*/
     }
 
     @Override
@@ -66,24 +65,16 @@ public class GroovyTypeDeclaration extends TypeDeclaration {
 
     //--------------------------------------------------------------------------
 
-    /**
-     * Anonymous types that are declared in this type's methods
-     */
     private GroovyTypeDeclaration[] anonymousTypes;
 
+    private static final GroovyTypeDeclaration[] NO_TYPES = {};
+
     public GroovyTypeDeclaration[] getAnonymousTypes() {
-        return anonymousTypes;
+        return (anonymousTypes != null ? anonymousTypes : NO_TYPES);
     }
 
     public void addAnonymousType(GroovyTypeDeclaration anonymousType) {
-        if (anonymousTypes == null) {
-            anonymousTypes = new GroovyTypeDeclaration[] { anonymousType };
-        } else {
-            GroovyTypeDeclaration[] newTypes = new GroovyTypeDeclaration[anonymousTypes.length + 1];
-            System.arraycopy(anonymousTypes, 0, newTypes, 0, anonymousTypes.length);
-            newTypes[anonymousTypes.length] = anonymousType;
-            anonymousTypes = newTypes;
-        }
+        anonymousTypes = (GroovyTypeDeclaration[]) ArrayUtils.add(getAnonymousTypes(), anonymousType);
     }
 
     /**
@@ -91,29 +82,16 @@ public class GroovyTypeDeclaration extends TypeDeclaration {
      * type, even if the super type is an interface. This is because during parse time we don't know if the super type is a class or
      * interface, se we need to wait until after the resolve phase to fix this.
      */
-    public void fixAnonymousTypeBinding(GroovyCompilationUnitScope groovyCompilationUnitScope) {
-        if ((this.bits & ASTNode.IsAnonymousType) != 0) {
-            if (classNode.getInterfaces() != null &&
-                classNode.getInterfaces().length == 1 &&
-                classNode.getSuperClass().getName().equals("java.lang.Object")) {
+    public void fixAnonymousTypeBinding() {
+        if (classNode.getInterfaces() != null &&
+            classNode.getInterfaces().length == 1 &&
+            classNode.getSuperClass().getName().equals("java.lang.Object")) {
 
-                this.superInterfaces = new TypeReference[] { this.superclass };
-                this.binding.superInterfaces = new ReferenceBinding[] { (ReferenceBinding) this.superclass.resolvedType };
-                this.superclass = null;
-            }
-        }
-        if (anonymousTypes != null) {
-            fixAnonymousTypeDeclarations(anonymousTypes, groovyCompilationUnitScope);
-        }
-    }
-
-    private void fixAnonymousTypeDeclarations(GroovyTypeDeclaration[] types, Scope parentScope) {
-        for (GroovyTypeDeclaration type : types) {
-            GroovyClassScope anonScope = new GroovyClassScope(parentScope, type);
-            type.scope = anonScope;
-            if (type.anonymousTypes != null) {
-                fixAnonymousTypeDeclarations(type.anonymousTypes, anonScope);
-            }
+            superInterfaces = new TypeReference[] {superclass};
+            binding.superInterfaces = new ReferenceBinding[] {
+                (ReferenceBinding) superclass.resolvedType,
+            };
+            superclass = null;
         }
     }
 }

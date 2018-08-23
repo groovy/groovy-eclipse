@@ -22,6 +22,7 @@ import java.util.List;
 import org.codehaus.groovy.ast.ClassNode;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.ArrayUtils;
+import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
@@ -131,8 +132,9 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
             GroovyCompilationUnitDeclaration unitDecl = (GroovyCompilationUnitDeclaration) referenceContext;
 
             for (TypeDeclaration typeDecl : unitDecl.types) {
-                if (typeDecl instanceof GroovyTypeDeclaration) {
-                    ((GroovyTypeDeclaration) typeDecl).fixAnonymousTypeBinding(this);
+                if (typeDecl instanceof GroovyTypeDeclaration &&
+                        (typeDecl.bits & ASTNode.IsAnonymousType) != 0) {
+                    ((GroovyTypeDeclaration) typeDecl).fixAnonymousTypeBinding();
                 }
             }
         }
