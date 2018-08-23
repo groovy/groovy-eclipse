@@ -1613,6 +1613,8 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
         // GRECLIPSE add
         ASTNode nameNode = configureAST(new ConstantExpression(enumConstant.getName()), ctx.identifier());
         enumConstant.setNameStart(nameNode.getStart()); enumConstant.setNameEnd(nameNode.getEnd() - 1);
+        anonymousInnerClassNode.setNameStart(enumConstant.getNameStart());
+        anonymousInnerClassNode.setNameEnd(enumConstant.getNameEnd());
         // GRECLIPSE end
         return configureAST(enumConstant, ctx);
     }

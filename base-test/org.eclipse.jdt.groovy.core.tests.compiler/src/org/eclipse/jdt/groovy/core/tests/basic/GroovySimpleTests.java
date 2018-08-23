@@ -690,24 +690,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testAnonymousClasses_GE1531() {
-        runNegativeTest(new String[] {
-            "Foo.groovy",
-            "class Foo {\n"+
-            "  def foo () {\n"+
-            "    new java.lang.Runnable() {}\n"+
-            "  }\n"+
-            "}\n",
-        },
-        "----------\n" +
-        "1. ERROR in Foo.groovy (at line 3)\n" +
-        "\tnew java.lang.Runnable() {}\n" +
-        "\t    ^^^^^^^^^^^^^^^^^^\n" +
-        "Groovy:Can\'t have an abstract method in a non-abstract class. The class 'Foo$1' must be declared abstract or the method 'void run()' must be implemented.\n" +
-        "----------\n");
-    }
-
-    @Test
     public void testPrimitiveLikeTypeNames_GRE891_4() {
         runConformTest(new String[] {
             "pkg/Foo.java",
@@ -5878,99 +5860,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         assertEquals("BBB", cn.getName());
     }
 
-    @Test
-    public void testInnerClass1() {
-        runConformTest(new String[] {
-            "A.groovy",
-            "def foo = new Runnable() {\n" +
-            "	void run() {\n" +
-            "		println \"hi!\";\n" +
-            "	}\n" +
-            "}\n" +
-            "foo.run()"
-        }, "hi!");
-    }
-
-    @Test
-    public void testInnerClass2() {
-        runConformTest(new String[] {
-            "A.groovy",
-            "def foo = new Runnable() {\n" +
-            "	void run() {\n" +
-            "		println \"bye!\";\n" +
-            "	}\n" +
-            "}\n" +
-            "foo = new Runnable() {\n" +
-            "	void run() {\n" +
-            "		println \"hi!\";\n" +
-            "	}\n" +
-            "}\n" +
-            "foo.run()"
-        }, "hi!");
-    }
-
-    @Test
-    public void testInnerClass3() {
-        runConformTest(new String[] {
-            "A.groovy",
-            "def foo() {\n" +
-            "	new Runnable() {\n" +
-            "		void run() {\n" +
-            "			println \"hi!\";\n" +
-            "		}\n" +
-            "	}\n" +
-            "}\n" +
-            "foo().run()"
-        }, "hi!");
-    }
-
-    @Test
-    public void testInnerClass4() {
-        runConformTest(new String[] {
-            "A.groovy",
-            "class Foo {\n" +
-            "	def foo = new Runnable() {\n" +
-            "		void run() {\n" +
-            "			println \"hi!\";\n" +
-            "		}\n" +
-            "	}\n" +
-            "}\n" +
-            "new Foo().foo.run()"
-        }, "hi!");
-    }
-
-    @Test
-    public void testInnerClass5() {
-        runNegativeTest(new String[] {
-            "A.groovy",
-            "def foo = new Runnable() {\n" +
-            "	void bad() {\n" +
-            "		println \"hi!\";\n" +
-            "	}\n" +
-            "}"
-        }, "----------\n" +
-          "1. ERROR in A.groovy (at line 1)\n" +
-           "	def foo = new Runnable() {\n" +
-           "	              ^^^^^^^^\n" +
-           "Groovy:Can't have an abstract method in a non-abstract class. The class 'A$1' must be declared abstract or the method 'void run()' must be implemented.\n" +
-           "----------\n");
-    }
-
-    @Test
-    public void testAbstractMethodWithinEnum_STS3803() {
-        runConformTest(new String[] {
-            "Bad.groovy",
-            "enum Bad {\n" +
-            "	A() {\n" +
-            "		@Override\n" +
-            "		int foo() {\n" +
-            "			1\n" +
-            "		}\n" +
-            "	}\n" +
-            "	abstract int foo()\n" +
-            "}"});
-    }
-
     @Test @Ignore
     public void testSts3930() {
         runConformTest(new String[] {
@@ -5992,7 +5881,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test @Ignore("FIXASC testcase for this. infinite loops (B extends B<String>")
-    public void testInfiniteLoop() {
+    public void testCyclicReference() {
         runConformTest(new String[] {
             "p/B.groovy",
             "package p;\n" +
@@ -6005,9 +5894,188 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
 
             "p/A.java",
             "package p;\n" +
-            "public class A<T> {}\n"
+            "public class A<T> {}\n",
         },
         "");
+    }
+
+    @Test
+    public void testInnerClass1() {
+        runConformTest(new String[] {
+            "A.groovy",
+            "def foo = new Runnable() {\n" +
+            "  void run() {\n" +
+            "    println 'hi!'\n" +
+            "  }\n" +
+            "}\n" +
+            "foo.run()\n",
+        },
+        "hi!");
+
+        checkGCUDeclaration("A.groovy",
+            "public class A extends groovy.lang.Script {\n" +
+            "  public A() {\n" +
+            "  }\n" +
+            "  public A(groovy.lang.Binding context) {\n" +
+            "  }\n" +
+            "  public static void main(java.lang.String... args) {\n" +
+            "  }\n" +
+            "  public java.lang.Object run() {\n" +
+            "    new Runnable() {\n" +
+            "      public 1() {\n" +
+            "      }\n" +
+            "      public void run() {\n" +
+            "      }\n" +
+            "    };\n" +
+            "  }\n" +
+            "}");
+    }
+
+    @Test
+    public void testInnerClass1a() {
+        runConformTest(new String[] {
+            "A.groovy",
+            "class A {" +
+            "  def foo = new Runnable() {\n" +
+            "    void run() {\n" +
+            "      println 'hi!'\n" +
+            "    }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new A().foo.run()\n" +
+            "  }\n" +
+            "}\n",
+        },
+        "hi!");
+
+        checkGCUDeclaration("A.groovy",
+            "public class A {\n" +
+            "  private java.lang.Object foo;\n" +
+//            "  {\n" +
+//            "    new Runnable() {\n" +
+//            "      public 1() {\n" +
+//            "      }\n" +
+//            "      public void run() {\n" +
+//            "      }\n" +
+//            "    };\n" +
+//            "  }\n" +
+            "  public A() {\n" +
+            "  }\n" +
+            "  public static void main(java.lang.String... args) {\n" +
+            "  }\n" +
+            "}");
+    }
+
+    @Test
+    public void testInnerClass2() {
+        runConformTest(new String[] {
+            "A.groovy",
+            "def foo = new Runnable() {\n" +
+            "  void run() {\n" +
+            "    println 'bye!'\n" +
+            "  }\n" +
+            "}\n" +
+            "foo = new Runnable() {\n" +
+            "  void run() {\n" +
+            "    println 'hi!'\n" +
+            "  }\n" +
+            "}\n" +
+            "foo.run()",
+        },
+        "hi!");
+    }
+
+    @Test
+    public void testInnerClass3() {
+        runConformTest(new String[] {
+            "A.groovy",
+            "def foo() {\n" +
+            "  new Runnable() {\n" +
+            "    void run() {\n" +
+            "      println 'hi!'\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "foo().run()",
+        },
+        "hi!");
+    }
+
+    @Test
+    public void testInnerClass4() {
+        runConformTest(new String[] {
+            "A.groovy",
+            "class Foo {\n" +
+            "  def foo = new Runnable() {\n" +
+            "    void run() {\n" +
+            "      println 'hi!'\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n" +
+            "new Foo().foo.run()\n",
+        },
+        "hi!");
+    }
+
+    @Test
+    public void testInnerClass5() {
+        runNegativeTest(new String[] {
+            "A.groovy",
+            "def foo = new Runnable() {\n" +
+            "  void bad() {\n" +
+            "    println 'hi!'\n" +
+            "  }\n" +
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in A.groovy (at line 1)\n" +
+        "\tdef foo = new Runnable() {\n" +
+        "\t              ^^^^^^^^\n" +
+        "Groovy:Can't have an abstract method in a non-abstract class. The class 'A$1' must be declared abstract or the method 'void run()' must be implemented.\n" +
+        "----------\n");
+    }
+
+    @Test
+    public void testAbstractMethodWithinEnum1() {
+        runNegativeTest(new String[] {
+            "Good.groovy",
+            "enum Good {\n" +
+            "  A() {\n" +
+            "    @Override\n" +
+            "    int foo() {\n" +
+            "      1\n" +
+            "    }\n" +
+            "  }\n" +
+            "  abstract int foo()\n" +
+            "}"
+        },
+        "");
+
+        checkGCUDeclaration("Good.groovy",
+            "public enum Good {\n" +
+            "  A,\n" +
+            "  private Good() {\n" +
+            "  }\n" +
+            "  public abstract int foo();\n" +
+            "}");
+    }
+
+    @Test
+    public void testAbstractMethodWithinEnum2() {
+        runNegativeTest(new String[] {
+            "Bad.groovy",
+            "enum Bad {\n" +
+            "  A() {\n" +
+            "  }\n" +
+            "  abstract int foo()\n" +
+            "}"
+        },
+        "----------\n" +
+        "1. ERROR in Bad.groovy (at line 2)\n" +
+        "\tA() {\n" +
+        "\t^\n" +
+        "Groovy:Can't have an abstract method in enum constant A. Implement method 'int foo()'.\n" +
+        "----------\n");
     }
 
     //--------------------------------------------------------------------------

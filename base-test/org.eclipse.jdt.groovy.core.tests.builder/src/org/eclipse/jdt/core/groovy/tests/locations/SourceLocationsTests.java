@@ -129,10 +129,13 @@ public final class SourceLocationsTests extends BuilderTestSuite {
 
         // now check the AST
         assertEquals(bd + "\nhas incorrect source start value", start, bd.getStartPosition());
-        int sourceEnd = bd.getStartPosition() + bd.getLength();
-        // It seems like field declarations should not include the trailing ';' in their source end if one exists
-        if (bd instanceof FieldDeclaration) sourceEnd -= 1;
-        assertEquals(bd + "\nhas incorrect source end value", end, sourceEnd);
+        int bodyEnd = bd.getStartPosition() + bd.getLength();
+        if (bd instanceof FieldDeclaration) {
+            bodyEnd -= 1; // fields seem to be including ';' or phantom semicolon
+        } else if (bd instanceof MethodDeclaration) {
+            end -= 1; // methods end body inside closing '}' or ';'
+        }
+        assertEquals(bd + "\nhas incorrect source end value", end, bodyEnd);
 
         String nameStartTag = "/*" + astKind + memberNumber + "sn*/";
         int nameStart = source.indexOf(nameStartTag) + nameStartTag.length();

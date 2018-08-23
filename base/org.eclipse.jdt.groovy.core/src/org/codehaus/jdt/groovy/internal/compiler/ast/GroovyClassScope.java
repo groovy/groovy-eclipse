@@ -356,18 +356,13 @@ public class GroovyClassScope extends ClassScope {
     public void buildFieldsAndMethods() {
         super.buildFieldsAndMethods();
 
-        GroovyTypeDeclaration[] anonymousTypes = ((GroovyTypeDeclaration) referenceContext).getAnonymousTypes();
-        if (anonymousTypes != null) {
-            for (GroovyTypeDeclaration anonType : anonymousTypes) {
-                anonType.scope = new GroovyClassScope(this, anonType);
-                anonType.resolve(anonType.enclosingScope);
-            }
-        }
-        // STS-3930 add
         for (MethodBinding method : referenceContext.binding.methods()) {
-            fixupTypeParameters(method);
+            fixTypeParameters(method);
         }
-        // STS-3930 end
+
+        for (GroovyTypeDeclaration anonType : ((GroovyTypeDeclaration) referenceContext).getAnonymousTypes()) {
+            anonType.scope = new GroovyClassScope(this, anonType);
+        }
     }
 
     /**
@@ -375,7 +370,7 @@ public class GroovyClassScope extends ClassScope {
      * methods type variables and parameter arguments should be the same as it
      * is for all other methods.
      */
-    private void fixupTypeParameters(MethodBinding method) {
+    private void fixTypeParameters(MethodBinding method) {
         if (method.typeVariables == null || method.typeVariables.length == 0) {
             return;
         }
@@ -409,11 +404,13 @@ public class GroovyClassScope extends ClassScope {
     @Override
     public boolean shouldReport(int problem) {
         switch (problem) {
+        case IProblem.EnumConstantMustImplementAbstractMethod:
         case IProblem.AbstractMethodMustBeImplemented:
         case IProblem.FinalMethodCannotBeOverridden:
         case IProblem.MethodReducesVisibility:
         case IProblem.IncompatibleReturnType:
         case IProblem.SuperclassMustBeAClass:
+        case IProblem.UndefinedConstructor:
         case IProblem.MethodNameClash:
         case IProblem.VarargsConflict:
             return false;

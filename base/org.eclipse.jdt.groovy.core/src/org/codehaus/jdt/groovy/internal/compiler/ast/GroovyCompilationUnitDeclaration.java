@@ -91,6 +91,7 @@ import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.Activator;
+import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.internal.compiler.ClassFile;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
@@ -127,6 +128,7 @@ import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.SingleMemberAnnotation;
 import org.eclipse.jdt.internal.compiler.ast.SingleNameReference;
 import org.eclipse.jdt.internal.compiler.ast.SingleTypeReference;
+import org.eclipse.jdt.internal.compiler.ast.Statement;
 import org.eclipse.jdt.internal.compiler.ast.StringLiteral;
 import org.eclipse.jdt.internal.compiler.ast.TrueLiteral;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
@@ -136,7 +138,6 @@ import org.eclipse.jdt.internal.compiler.ast.Wildcard;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
-import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
@@ -1153,22 +1154,16 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     typeDeclaration.name = innerClassNode.getNameWithoutPackage().substring(outerClassNode.getNameWithoutPackage().length() + 1).toCharArray();
 
                     // record that we need to set the parent of this inner type later
-                    List<TypeDeclaration> inners = innersToRecord.get(outerClassNode);
-                    if (inners == null) {
-                        inners = new ArrayList<>();
-                        innersToRecord.put(outerClassNode, inners);
-                    }
-                    inners.add(typeDeclaration);
+                    innersToRecord.computeIfAbsent(outerClassNode, x -> new ArrayList<>()).add(typeDeclaration);
 
                     if (GroovyUtils.isAnonymous(classNode)) {
                         typeDeclaration.bits |= (ASTNode.IsAnonymousType | ASTNode.IsLocalType);
-                        typeDeclaration.allocation = new QualifiedAllocationExpression(typeDeclaration);
-                        typeDeclaration.allocation.enclosingInstance = new NullLiteral(typeDeclaration.sourceStart, typeDeclaration.sourceEnd);
-                        typeDeclaration.allocation.sourceStart = typeDeclaration.sourceStart;
-                        typeDeclaration.allocation.sourceEnd = typeDeclaration.bodyEnd;
-                        typeDeclaration.allocation.statementEnd = typeDeclaration.bodyEnd;
-                        typeDeclaration.allocation.type = typeDeclaration.superclass;
-                        typeDeclaration.name = CharOperation.NO_CHAR;
+                        typeDeclaration.bits |= (typeDeclaration.superclass.bits & ASTNode.HasTypeAnnotations);
+                        QualifiedAllocationExpression allocation = new QualifiedAllocationExpression(typeDeclaration);
+                        allocation.sourceStart = isEnum ? typeDeclaration.sourceStart : typeDeclaration.sourceStart - 4; // approx. offset of "new"
+                        allocation.sourceEnd = typeDeclaration.bodyEnd;
+                        // TODO: allocation.typeArguments = something
+                        allocation.type = typeDeclaration.superclass;
                     }
                 } else {
                     typeDeclarations.add(typeDeclaration);
@@ -1176,12 +1171,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 fromClassNodeToDecl.put(classNode, typeDeclaration);
             }
 
-            // For inner types, now attach them to their parents. This was not done earlier as sometimes the types are processed in
-            // such an order that inners are dealt with before outers
+            // now attach local types to their parents; this was not done earlier as sometimes
+            // the types are processed in such an order that inners are dealt with before outers
             for (Map.Entry<ClassNode, List<TypeDeclaration>> innersToRecordEntry : innersToRecord.entrySet()) {
                 ClassNode outer = innersToRecordEntry.getKey();
                 TypeDeclaration outerTypeDeclaration = fromClassNodeToDecl.get(outer);
-                // Check if there is a problem locating the parent for the inner
                 if (outerTypeDeclaration == null) {
                     throw new GroovyEclipseBug("Failed to find the type declaration for " + outer.getText());
                 }
@@ -1191,38 +1185,21 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     GroovyTypeDeclaration innerTypeDeclaration = (GroovyTypeDeclaration) iterator.next();
                     if ((innerTypeDeclaration.bits & ASTNode.IsAnonymousType) != 0) {
                         iterator.remove();
-
-                        // bootstrap unit and type scopes
-                        if (unitDeclaration.scope == null) {
-                            CompilerOptions opts = unitDeclaration.compilerOptions != null
-                                ? unitDeclaration.compilerOptions : new CompilerOptions();
-                            unitDeclaration.scope = unitDeclaration.buildCompilationUnitScope(
-                                new LookupEnvironment(null, opts, unitDeclaration.problemReporter, null));
-                        }
-                        if (outerTypeDeclaration.scope == null) {
-                            outerTypeDeclaration.scope = new ClassScope(unitDeclaration.scope, outerTypeDeclaration);
-                        }
-
                         // set enclosing scope of anon. inner
                         Object location = anonymousLocations.get(innerTypeDeclaration.getClassNode());
                         if (location instanceof AbstractMethodDeclaration) {
                             AbstractMethodDeclaration methodDeclaration = (AbstractMethodDeclaration) location;
                             methodDeclaration.bits |= ASTNode.HasLocalType;
 
-                            innerTypeDeclaration.enclosingScope = new MethodScope(outerTypeDeclaration.scope, methodDeclaration, methodDeclaration.isStatic());
-                        } else if (location instanceof FieldNode) {
-                            FieldNode fieldNode = (FieldNode) location;
-                            if (!fieldNode.isStatic()) {
-                                if (outerTypeDeclaration.initializerScope == null) {
-                                    outerTypeDeclaration.initializerScope = new MethodScope(outerTypeDeclaration.scope, outerTypeDeclaration.scope.referenceContext, false);
-                                }
-                                innerTypeDeclaration.enclosingScope = outerTypeDeclaration.initializerScope;
-                            } else {
-                                if (outerTypeDeclaration.staticInitializerScope == null) {
-                                    outerTypeDeclaration.staticInitializerScope = new MethodScope(outerTypeDeclaration.scope, outerTypeDeclaration.scope.referenceContext, true);
-                                }
-                                innerTypeDeclaration.enclosingScope = outerTypeDeclaration.staticInitializerScope;
-                            }
+                            innerTypeDeclaration.enclosingScope = new MethodScope(null, methodDeclaration, methodDeclaration.isStatic());
+                            methodDeclaration.statements = (Statement[]) ArrayUtils.add(methodDeclaration.statements != null
+                                ? methodDeclaration.statements : new Statement[0], innerTypeDeclaration.allocation);
+                        } else if (location instanceof FieldDeclaration) {
+                            FieldDeclaration fieldDeclaration = (FieldDeclaration) location;
+                            fieldDeclaration.bits |= ASTNode.HasLocalType;
+
+                            innerTypeDeclaration.enclosingScope = new MethodScope(null, outerTypeDeclaration, fieldDeclaration.isStatic());
+                            // TODO: Add to statements of object/static initializer
                         } else if (!innerTypeDeclaration.getClassNode().isEnum()) {
                             throw new GroovyEclipseBug("Enclosing scope not found for anon. inner class: " + innerTypeDeclaration.getClassNode().getName());
                         }
@@ -1278,7 +1255,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                                     @Override
                                     public void visitConstructorCallExpression(ConstructorCallExpression call) {
                                         if (call.isUsingAnonymousInnerClass()) {
-                                            anonymousLocations.put(call.getType(), fieldNode);
+                                            anonymousLocations.put(call.getType(), fieldDeclaration);
                                         }
                                         super.visitConstructorCallExpression(call);
                                     }
@@ -2388,50 +2365,55 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
          * Try to get the source locations for type declarations to be as correct as possible
          */
         private void fixupSourceLocationsForTypeDeclaration(GroovyTypeDeclaration typeDeclaration, ClassNode classNode) {
-            // start and end of the name of class
-            if (classNode instanceof InnerClassNode) {
-                // anonynymous inner classes do not have start and end set aproproately
+            if (GroovyUtils.isAnonymous(classNode)) {
+                // offset of type name
                 typeDeclaration.sourceStart = classNode.getNameStart();
-                typeDeclaration.sourceEnd = classNode.getNameEnd();
+                // offset of ')'
+                typeDeclaration.sourceEnd = classNode.getStart() - 2;
+                // offset of '{' plus 1
+                typeDeclaration.bodyStart = classNode.getStart() + 1;
+                // offset of '}'
+                typeDeclaration.bodyEnd = classNode.getEnd() - 1;
+
+                typeDeclaration.declarationSourceStart = typeDeclaration.sourceStart;
+                typeDeclaration.declarationSourceEnd = typeDeclaration.bodyEnd;
             } else {
-                // scripts do not have a name, so use start instead
+                // start and end of the type name; scripts do not have a name, so use start instead
                 typeDeclaration.sourceStart = Math.max(classNode.getNameStart(), classNode.getStart());
                 typeDeclaration.sourceEnd = Math.max(classNode.getNameEnd(), classNode.getStart());
-            }
-            // start and end of the entire declaration including Javadoc and ending at the last close bracket
-            int line = classNode.getLineNumber();
-            Javadoc doc = findJavadoc(line);
-            if (doc != null) {
-                if (unitDeclaration.imports != null && unitDeclaration.imports.length > 0) {
-                    if (doc.sourceStart < unitDeclaration.imports[unitDeclaration.imports.length - 1].sourceStart) {
-                        // ignore the doc if it should be associated with and import statement
-                        doc = null;
-                    }
-                } else if (unitDeclaration.currentPackage != null) {
-                    if (doc.sourceStart < unitDeclaration.currentPackage.sourceStart) {
-                        // ignore the doc if it should be associated with the package statement
-                        doc = null;
+
+                // start and end of the entire declaration including Javadoc and ending at the last close bracket
+                int line = classNode.getLineNumber();
+                Javadoc doc = findJavadoc(line);
+                if (doc != null) {
+                    if (unitDeclaration.imports != null && unitDeclaration.imports.length > 0) {
+                        if (doc.sourceStart < unitDeclaration.imports[unitDeclaration.imports.length - 1].sourceStart) {
+                            // ignore the doc if it should be associated with and import statement
+                            doc = null;
+                        }
+                    } else if (unitDeclaration.currentPackage != null) {
+                        if (doc.sourceStart < unitDeclaration.currentPackage.sourceStart) {
+                            // ignore the doc if it should be associated with the package statement
+                            doc = null;
+                        }
                     }
                 }
+
+                typeDeclaration.javadoc = doc;
+                typeDeclaration.declarationSourceStart = (doc != null ? doc.sourceStart : classNode.getStart());
+                // without the -1 we can hit AIOOBE in org.eclipse.jdt.internal.core.Member.getJavadocRange where it
+                // calls getText() because the source range length causes us to ask for more data than is in the buffer
+                // What does this mean? For hovers, the AIOOBE is swallowed and you just see no hover box.
+                typeDeclaration.declarationSourceEnd = classNode.getEnd() - 1;
+
+                // TODO: start past the opening brace and end before the closing brace
+                //       except that scripts do not have a name, use the start instead
+                typeDeclaration.bodyStart = Math.max(classNode.getNameEnd(), classNode.getStart());
+                typeDeclaration.bodyEnd = typeDeclaration.declarationSourceEnd;
+
+                // start of the modifiers after the javadoc
+                typeDeclaration.modifiersSourceStart = classNode.getStart();
             }
-
-            typeDeclaration.javadoc = doc;
-            typeDeclaration.declarationSourceStart = doc == null ? classNode.getStart() : doc.sourceStart;
-            // Without the -1 we can hit AIOOBE in org.eclipse.jdt.internal.core.Member.getJavadocRange where it calls getText()
-            // because the source range length causes us to ask for more data than is in the buffer. What does this mean?
-            // For hovers, the AIOOBE is swallowed and you just see no hover box.
-            typeDeclaration.declarationSourceEnd = classNode.getEnd() - 1;
-
-            // * start at the opening brace and end at the closing brace
-            // except that scripts do not have a name, use the start instead
-            // FIXADE this is not exactly right since getNameEnd() comes before extends and implements clauses
-            typeDeclaration.bodyStart = Math.max(classNode.getNameEnd(), classNode.getStart());
-
-            // seems to be the same as declarationSourceEnd
-            typeDeclaration.bodyEnd = classNode.getEnd() - 1;
-
-            // start of the modifiers after the javadoc
-            typeDeclaration.modifiersSourceStart = classNode.getStart();
         }
 
         /**
@@ -2446,22 +2428,17 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             int line = ctorNode.getLineNumber();
             Javadoc doc = findJavadoc(line);
             ctorDeclaration.javadoc = doc;
-            ctorDeclaration.declarationSourceStart = doc == null ? ctorNode.getStart() : doc.sourceStart;
+            ctorDeclaration.declarationSourceStart = (doc != null ? doc.sourceStart : ctorNode.getStart());
             ctorDeclaration.declarationSourceEnd = ctorNode.getEnd() - 1;
 
             // start of method's modifier list (after Javadoc is ended)
             ctorDeclaration.modifiersSourceStart = ctorNode.getStart();
 
             // opening bracket
-            ctorDeclaration.bodyStart =
-            // try for opening bracket
-            ctorNode.getCode() != null ? ctorNode.getCode().getStart()
-                    :
-                    // handle abstract constructor. not sure if this can ever happen, but you never know with Groovy
-                    ctorNode.getNameEnd();
+            ctorDeclaration.bodyStart = (ctorNode.getCode() != null ? ctorNode.getCode().getStart() : ctorNode.getNameEnd() + 1);
 
-            // closing bracket or ';' same as declarationSourceEnd
-            ctorDeclaration.bodyEnd = ctorNode.getEnd() - 1;
+            // closing bracket or ';'
+            ctorDeclaration.bodyEnd = ctorDeclaration.declarationSourceEnd - 1;
         }
 
         /**
@@ -2477,23 +2454,19 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             int line = methodNode.getLineNumber();
             Javadoc doc = findJavadoc(line);
             methodDeclaration.javadoc = doc;
-            methodDeclaration.declarationSourceStart = doc == null ? methodNode.getStart() : doc.sourceStart;
+            methodDeclaration.declarationSourceStart = (doc != null ? doc.sourceStart : methodNode.getStart());
             methodDeclaration.declarationSourceEnd = methodNode.getEnd() - 1;
 
             // start of method's modifier list (after Javadoc is ended)
             methodDeclaration.modifiersSourceStart = methodNode.getStart();
 
-            // opening bracket
-            methodDeclaration.bodyStart =
-            // try for opening bracket
-            methodNode.getCode() != null ? methodNode.getCode().getStart()
-                    :
-                    // run() method for script has no opening bracket
-                    // also need to handle abstract methods
-            Math.max(methodNode.getNameEnd(), methodNode.getStart());
+            // opening bracket -- abstract methods, annotation methods, and script run() methods have no opening bracket
+            methodDeclaration.bodyStart = (methodNode.getCode() != null ? methodNode.getCode().getStart() : Math.max(methodNode.getNameEnd(), methodNode.getStart()));
 
-            // closing bracket or ';' same as declarationSourceEnd
-            methodDeclaration.bodyEnd = methodNode.getEnd() - 1;
+            // closing bracket or ';'
+            methodDeclaration.bodyEnd = methodDeclaration.declarationSourceEnd;
+            if (!(methodDeclaration instanceof AnnotationMethodDeclaration))
+                methodDeclaration.bodyEnd -= 1;
         }
 
         /**
@@ -2518,10 +2491,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
             if (isEnumField) {
                 // they have no 'leading' type declaration or modifiers
-                fieldDeclaration.declarationSourceStart = doc == null ? fieldNode.getStart() : doc.sourceStart;
+                fieldDeclaration.declarationSourceStart = (doc != null ? doc.sourceStart : fieldNode.getStart());
                 fieldDeclaration.declarationSourceEnd = fieldNode.getEnd() - 1;
             } else {
-                fieldDeclaration.declarationSourceStart = doc == null ? fieldNode.getStart() : doc.sourceStart;
+                fieldDeclaration.declarationSourceStart = (doc != null ? doc.sourceStart : fieldNode.getStart());
                 // the end of the fragment including initializer (and trailing ',')
                 fieldDeclaration.declarationSourceEnd = fieldNode.getEnd() - 1;
             }

@@ -1085,6 +1085,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 // a method in which case we need to configure the inner class
                 innerClass.setSuperClass(classNode.getPlainNodeReference());
                 innerClass.setModifiers(classNode.getModifiers() | Opcodes.ACC_FINAL);
+                // GRECLIPSE add
+                innerClass.setNameStart(locations.findOffset(savedLine, savedColumn));
+                innerClass.setNameEnd(innerClass.getNameStart() + identifier.length() - 1);
+                // GRECLIPSE end
                 // we use a ClassExpression for transportation to EnumVisitor
                 Expression inner = new ClassExpression(innerClass);
                 if (init == null) {

@@ -876,12 +876,12 @@ public void abstractMethodInConcreteClass(SourceTypeBinding type) {
 	}
 }
 public void abstractMethodMustBeImplemented(SourceTypeBinding type, MethodBinding abstractMethod) {
-	// GROOVY add -- fired off by method verifier
-	if (type.scope != null && !type.scope.shouldReport(IProblem.IncompatibleReturnType)) {
-		return;
-	}
-	// GROOVY end
 	if (type.isEnum() && type.isLocalType()) {
+		// GROOVY add
+		if (type.scope != null && !type.scope.parent.classScope().shouldReport(IProblem.EnumConstantMustImplementAbstractMethod)) {
+			return;
+		}
+		// GROOVY end
 		FieldBinding field = type.scope.enclosingMethodScope().initializedField;
 		FieldDeclaration decl = field.sourceField();
 		this.handle(
@@ -901,6 +901,13 @@ public void abstractMethodMustBeImplemented(SourceTypeBinding type, MethodBindin
 			decl.sourceStart(),
 			decl.sourceEnd());
 	} else {
+		// GROOVY add
+		if (type.scope != null) {
+			org.eclipse.jdt.internal.compiler.lookup.ClassScope scope =
+				(!type.isLocalType() ? type.scope : type.scope.parent.classScope());
+			if (!scope.shouldReport(IProblem.AbstractMethodMustBeImplemented)) return;
+		}
+		// GROOVY end
 		this.handle(
 			// Must implement the inherited abstract method %1
 			// 8.4.3 - Every non-abstract subclass of an abstract type, A, must provide a concrete implementation of all of A's methods.
@@ -3978,7 +3985,15 @@ public void invalidConstructor(Statement statement, MethodBinding targetConstruc
 			needImplementation(statement); // want to fail to see why we were here...
 			break;
 	}
-
+	// GROOVY add
+	if (statement instanceof QualifiedAllocationExpression) {
+		QualifiedAllocationExpression alloc = (QualifiedAllocationExpression) statement;
+		if (alloc.anonymousType != null && alloc.anonymousType.scope != null && alloc.anonymousType.scope.parent != null) {
+			org.eclipse.jdt.internal.compiler.lookup.ClassScope scope = alloc.anonymousType.scope.parent.classScope();
+			if (scope != null && !scope.shouldReport(IProblem.UndefinedConstructor)) return;
+		}
+	}
+	// GROOVY end
 	this.handle(
 		id,
 		new String[] {new String(targetConstructor.declaringClass.readableName()), typesAsString(shownConstructor, false)},
@@ -9317,10 +9332,10 @@ public void varargsConflict(MethodBinding method1, MethodBinding method2, Source
 	// Groovy 'guesses' about varargs rather than remembering from the declaration *sigh*
 	ReferenceBinding rb1 = method1.declaringClass;
 	ReferenceBinding rb2 = method2.declaringClass;
-	if (rb1 != null && (rb1 instanceof SourceTypeBinding) && ((SourceTypeBinding)rb1).scope != null && !((SourceTypeBinding) rb1).scope.shouldReport(IProblem.VarargsConflict)) {
+	if (rb1 instanceof SourceTypeBinding && ((SourceTypeBinding) rb1).scope != null && !((SourceTypeBinding) rb1).scope.shouldReport(IProblem.VarargsConflict)) {
 		return;
 	}
-	if (rb2 != null && (rb2 instanceof SourceTypeBinding) && ((SourceTypeBinding)rb2).scope != null && !((SourceTypeBinding) rb2).scope.shouldReport(IProblem.VarargsConflict)) {
+	if (rb2 instanceof SourceTypeBinding && ((SourceTypeBinding) rb2).scope != null && !((SourceTypeBinding) rb2).scope.shouldReport(IProblem.VarargsConflict)) {
 		return;
 	}
 	// GROOVY end
