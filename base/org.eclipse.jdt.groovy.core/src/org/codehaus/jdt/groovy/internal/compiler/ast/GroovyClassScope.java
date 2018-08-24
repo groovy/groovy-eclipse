@@ -361,7 +361,17 @@ public class GroovyClassScope extends ClassScope {
         }
 
         for (GroovyTypeDeclaration anonType : ((GroovyTypeDeclaration) referenceContext).getAnonymousTypes()) {
-            anonType.scope = new GroovyClassScope(this, anonType);
+            if (anonType.scope == null) {
+                if (anonType.getClassNode().isEnum()) {
+                    anonType.scope = new GroovyClassScope(this, anonType);
+                    // TODO: anonType.resolve(anonType.scope.parent); or ?
+                } else {
+                    anonType.enclosingScope.parent = this;
+                    anonType.allocation.resolveType(anonType.enclosingScope);
+                    assert anonType.binding != null && anonType.scope != null;
+                    // TODO: Replace anonType.scope with new GroovyClassScope?
+                }
+            }
         }
     }
 

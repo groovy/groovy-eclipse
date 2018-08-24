@@ -5922,6 +5922,9 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  public java.lang.Object run() {\n" +
             "    new Runnable() {\n" +
+            "      x() {\n" +
+            "        super();\n" +
+            "      }\n" +
             "      public void run() {\n" +
             "      }\n" +
             "    };\n" +
@@ -5949,6 +5952,9 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("A.groovy",
             "public class A {\n" +
             "  private java.lang.Object foo = new Runnable() {\n" +
+            "    x() {\n" +
+            "      super();\n" +
+            "    }\n" +
             "    public void run() {\n" +
             "    }\n" +
             "  };\n" +

@@ -1157,6 +1157,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     innersToRecord.computeIfAbsent(outerClassNode, x -> new ArrayList<>()).add(typeDeclaration);
 
                     if (innerClassNode.isAnonymous()) {
+                        typeDeclaration.name = CharOperation.NO_CHAR;
                         typeDeclaration.bits |= (ASTNode.IsAnonymousType | ASTNode.IsLocalType);
                         typeDeclaration.bits |= (typeDeclaration.superclass.bits & ASTNode.HasTypeAnnotations);
                         QualifiedAllocationExpression allocation = new QualifiedAllocationExpression(typeDeclaration);
