@@ -142,19 +142,23 @@ public class RepeatableAnnotationTest extends AbstractComparableTest {
 					"}\n"
 				}, 
 				"");
-		this.runNegativeTest(
+		Runner runner = new Runner();
+		runner.testFiles =
 			new String[] {
 				"X.java",
 				"@Foo @Foo public class X { /* Problem */\n" +
 				"}\n"
-			},
+			};
+		runner.expectedCompilerLog =
 			"----------\n" + 
 			"1. ERROR in X.java (at line 1)\n" + 
 			"	@Foo @Foo public class X { /* Problem */\n" + 
 			"	^^^^\n" + 
 			"The annotation @Foo cannot be repeated at this location since its container annotation type @FooContainer is disallowed at this location\n" + 
-			"----------\n",
-			null, false /* don't flush*/);
+			"----------\n";
+		runner.shouldFlushOutputDirectory = false;
+		runner.javacTestOptions = JavacTestOptions.JavacHasABug.JavacBug8044196;
+		runner.runNegativeTest();
 	}
 
 	// Test that a single, repeatable annotation can exist just fine an occurrence of its container annotation

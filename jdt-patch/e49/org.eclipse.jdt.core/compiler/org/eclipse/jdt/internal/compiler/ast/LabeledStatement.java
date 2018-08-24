@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -67,8 +67,8 @@ public class LabeledStatement extends Statement {
 			mergedInfo = statementInfo.mergedWith(labelContext.initsOnBreak);
 			if (reinjectNullInfo) {
 				// an embedded loop has had no chance to reinject forgotten null info
-				((UnconditionalFlowInfo)mergedInfo).addInitializationsFrom(flowInfo.unconditionalFieldLessCopy()).
-					addInitializationsFrom(labelContext.initsOnBreak.unconditionalFieldLessCopy());
+				((UnconditionalFlowInfo)mergedInfo).addNullInfoFrom(flowInfo.unconditionalFieldLessCopy()).
+					addNullInfoFrom(labelContext.initsOnBreak.unconditionalFieldLessCopy());
 			}
 			this.mergedInitStateIndex =
 				currentScope.methodScope().recordInitializationStates(mergedInfo);

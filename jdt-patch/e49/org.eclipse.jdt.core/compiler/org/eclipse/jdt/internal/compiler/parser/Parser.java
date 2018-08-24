@@ -811,6 +811,10 @@ public class Parser implements TerminalTokens, ParserBasicInformation, Conflicte
 	public static int tAction(int state, int sym) {
 		return term_action[term_check[base_action[state]+sym] == sym ? base_action[state] + sym : base_action[state]];
 	}
+	/** Overridable hook, to allow CompletionParser to synthesize a few trailing tokens at (faked) EOF. */
+	protected int actFromTokenOrSynthetic(int previousAct) {
+		return tAction(previousAct, this.currentToken);
+	}
 	protected int astLengthPtr;
 
 	protected int[] astLengthStack;
@@ -11348,12 +11352,7 @@ protected boolean moveRecoveryCheckpoint() {
 	do {
 		try {
 			this.scanner.lookBack[0] = this.scanner.lookBack[1] = TokenNameNotAToken; // stay clear of the voodoo in the present method
-			this.nextIgnoredToken = this.scanner.getNextToken();
-			if(this.scanner.currentPosition == this.scanner.startPosition){
-				this.scanner.currentPosition++; // on fake completion identifier
-				this.nextIgnoredToken = -1;
-			}
-
+			this.nextIgnoredToken = this.scanner.getNextNotFakedToken();
 		} catch(InvalidInputException e){
 			pos = this.scanner.currentPosition;
 		} finally {
@@ -11564,7 +11563,7 @@ try {
 				stackLength);
 		}
 		this.stack[this.stateStackTop] = act;
-		this.unstackedAct = act = tAction(act, this.currentToken);
+		this.unstackedAct = act = actFromTokenOrSynthetic(act);
 		if (act == ERROR_ACTION || this.restartRecovery) {
 			if (DEBUG_AUTOMATON) {
 				if (this.restartRecovery) {

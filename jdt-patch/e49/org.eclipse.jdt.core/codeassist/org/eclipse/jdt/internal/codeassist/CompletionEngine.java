@@ -2462,7 +2462,7 @@ public final class CompletionEngine
 					// no need for field initialization
 					this.problemReporter,
 					compilationResult);
-				if (compilationUnit.types != null)
+				if (compilationUnit != null && compilationUnit.types != null)
 					typeDeclaration = compilationUnit.types[0];
 			} else {
 				compilationUnit = new CompilationUnitDeclaration(this.problemReporter, compilationResult, 0);

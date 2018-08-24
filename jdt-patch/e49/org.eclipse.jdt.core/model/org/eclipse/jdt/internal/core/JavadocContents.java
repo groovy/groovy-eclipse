@@ -447,7 +447,7 @@ public class JavadocContents {
 					buffer.insert(0, '.');
 				}
 			}
-			typeQualifiedName = new String(buffer.toString());
+			typeQualifiedName = buffer.toString();
 		} else {
 			typeQualifiedName = this.type.getElementName();
 		}

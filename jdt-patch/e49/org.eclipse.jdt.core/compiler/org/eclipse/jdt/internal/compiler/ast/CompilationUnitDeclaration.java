@@ -34,6 +34,7 @@ import org.eclipse.jdt.internal.compiler.lookup.LocalTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
 import org.eclipse.jdt.internal.compiler.lookup.ModuleBinding;
+import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 import org.eclipse.jdt.internal.compiler.parser.NLSTag;
@@ -554,8 +555,17 @@ public void recordStringLiteral(StringLiteral literal, boolean fromRecovery) {
 	this.stringLiterals[this.stringLiteralsPtr++] = literal;
 }
 
-public void recordSuppressWarnings(IrritantSet irritants, Annotation annotation, int scopeStart, int scopeEnd, ReferenceContext context) {
+private boolean isLambdaExpressionCopyContext(ReferenceContext context) {
 	if (context instanceof LambdaExpression && context != ((LambdaExpression) context).original())
+		return true; // Do not record from copies. See https://bugs.eclipse.org/bugs/show_bug.cgi?id=441929
+	Scope cScope = context instanceof AbstractMethodDeclaration ? ((AbstractMethodDeclaration) context).scope :
+		context instanceof TypeDeclaration ? ((TypeDeclaration) context).scope : 
+		context instanceof LambdaExpression ? ((LambdaExpression) context).scope :
+			null;
+	return cScope != null ? isLambdaExpressionCopyContext(cScope.parent.referenceContext()) : false;
+}
+public void recordSuppressWarnings(IrritantSet irritants, Annotation annotation, int scopeStart, int scopeEnd, ReferenceContext context) {
+	if (isLambdaExpressionCopyContext(context))
 		return; // Do not record from copies. See https://bugs.eclipse.org/bugs/show_bug.cgi?id=441929
 		
 	if (this.suppressWarningIrritants == null) {

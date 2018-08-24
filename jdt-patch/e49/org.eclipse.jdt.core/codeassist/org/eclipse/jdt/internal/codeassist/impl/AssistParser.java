@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -116,7 +116,7 @@ public abstract class AssistParser extends Parser {
 	protected boolean isFirst = false;
 
 	public AssistParser snapShot;
-	private static final int[] RECOVERY_TOKENS = new int [] { TokenNameSEMICOLON, TokenNameRPAREN,};
+	protected static final int[] RECOVERY_TOKENS = { TokenNameSEMICOLON, TokenNameRPAREN, TokenNameRBRACE, TokenNameRBRACKET};
 
 
 public AssistParser(ProblemReporter problemReporter) {
@@ -2231,9 +2231,12 @@ protected int fallBackToSpringForward(Statement unused) {
 			
 	// If triggered fake EOF at completion site, see if the real next token would have passed muster.
 	if (this.currentToken == TokenNameEOF) {
-		if (this.scanner.eofPosition < this.scanner.source.length) {
+		int extendedEnd = this.scanner.source.length;
+		if (this.referenceContext instanceof AbstractMethodDeclaration)
+			extendedEnd = ((AbstractMethodDeclaration) this.referenceContext).bodyEnd; // no use parsing beyond the method's body end
+		if (this.scanner.eofPosition < extendedEnd) {
 			shouldStackAssistNode();
-			this.scanner.eofPosition = this.scanner.source.length;
+			this.scanner.eofPosition = extendedEnd;
 			nextToken = getNextToken();
 			if (automatonWillShift(nextToken, automatonState)) {
 				this.currentToken = nextToken;

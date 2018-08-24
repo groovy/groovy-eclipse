@@ -512,7 +512,7 @@ public String getSuperclassTypeSignature() throws JavaModelException {
 	if (superclassName == null) {
 		return null;
 	}
-	return new String(Signature.createTypeSignature(superclassName, false));
+	return Signature.createTypeSignature(superclassName, false);
 }
 
 /**
@@ -538,7 +538,7 @@ public String[] getSuperInterfaceTypeSignatures() throws JavaModelException {
 	}
 	String[] strings= new String[names.length];
 	for (int i= 0; i < names.length; i++) {
-		strings[i]= new String(Signature.createTypeSignature(names[i], false));
+		strings[i]= Signature.createTypeSignature(names[i], false);
 	}
 	return strings;
 }

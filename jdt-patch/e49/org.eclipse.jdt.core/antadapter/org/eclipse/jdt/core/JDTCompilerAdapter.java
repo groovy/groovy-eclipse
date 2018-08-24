@@ -522,7 +522,7 @@ public class JDTCompilerAdapter extends DefaultCompilerAdapter {
 			niceSourceList.append("s"); //$NON-NLS-1$
 		}
 		niceSourceList.append(" to be compiled:"); //$NON-NLS-1$
-		niceSourceList.append(lSep);
+		niceSourceList.append(System.lineSeparator());
 
 		String[] encodedFiles = null, encodedDirs = null;
 		int encodedFilesLength = 0, encodedDirsLength = 0;
@@ -574,7 +574,7 @@ public class JDTCompilerAdapter extends DefaultCompilerAdapter {
 				}
 			}
 			cmd.createArgument().setValue(arg);
-			niceSourceList.append("    " + arg + lSep); //$NON-NLS-1$
+			niceSourceList.append("    " + arg + System.lineSeparator()); //$NON-NLS-1$
 		}
 
 		this.attributes.log(niceSourceList.toString(), Project.MSG_VERBOSE);

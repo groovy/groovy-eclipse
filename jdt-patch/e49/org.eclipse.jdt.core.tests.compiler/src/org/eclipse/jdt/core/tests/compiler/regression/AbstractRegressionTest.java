@@ -234,26 +234,7 @@ static class JavacCompiler {
 		if (rawVersion == null) {
 			rawVersion = getVersion(this.javacPathName);
 		}
-		if (rawVersion.indexOf("1.4") != -1 ||
-				this.javacPathName.indexOf("1.4") != -1
-				/* in fact, SUN javac 1.4 does not support the -version option;
-				 * this is a imperfect heuristic to catch the case */) {
-			this.version = JavaCore.VERSION_1_4;
-		} else if (rawVersion.indexOf("1.5") != -1) {
-			this.version = JavaCore.VERSION_1_5;
-		} else if (rawVersion.indexOf("1.6") != -1) {
-			this.version = JavaCore.VERSION_1_6;
-		} else if (rawVersion.indexOf("1.7") != -1) {
-			this.version = JavaCore.VERSION_1_7;
-		} else if (rawVersion.indexOf("1.8") != -1) {
-			this.version = JavaCore.VERSION_1_8;
-		} else if(rawVersion.startsWith("9")) {
-			this.version = JavaCore.VERSION_9;
-		} else if(rawVersion.startsWith("10")) {
-			this.version = JavaCore.VERSION_10;
-		} else {
-			throw new RuntimeException("unknown javac version: " + rawVersion);
-		}
+		this.version = versionFromRawVersion(rawVersion, this.javacPathName);
 		this.compliance = CompilerOptions.versionToJdkLevel(this.version);
 		this.minor = minorFromRawVersion(this.version, rawVersion);
 		this.rawVersion = rawVersion;
@@ -287,6 +268,29 @@ static class JavacCompiler {
 			if (fetchVersionProcess != null) {
 				fetchVersionProcess.destroy(); // closes process streams
 			}
+		}
+	}
+	static String versionFromRawVersion(String rawVersion, String javacPathName) {
+		if (rawVersion.indexOf("1.4") != -1 ||
+				(javacPathName != null &&
+				javacPathName.indexOf("1.4") != -1)
+				/* in fact, SUN javac 1.4 does not support the -version option;
+				 * this is a imperfect heuristic to catch the case */) {
+			return JavaCore.VERSION_1_4;
+		} else if (rawVersion.indexOf("1.5") != -1) {
+			return JavaCore.VERSION_1_5;
+		} else if (rawVersion.indexOf("1.6") != -1) {
+			return JavaCore.VERSION_1_6;
+		} else if (rawVersion.indexOf("1.7") != -1) {
+			return JavaCore.VERSION_1_7;
+		} else if (rawVersion.indexOf("1.8") != -1) {
+			return JavaCore.VERSION_1_8;
+		} else if(rawVersion.startsWith("9")) {
+			return JavaCore.VERSION_9;
+		} else if(rawVersion.startsWith("10")) {
+			return JavaCore.VERSION_10;
+		} else {
+			throw new RuntimeException("unknown javac version: " + rawVersion);
 		}
 	}
 	// projects known raw versions to minors; minors should grow with time, so
@@ -348,6 +352,18 @@ static class JavacCompiler {
 			}
 			if ("1.8.0_162".equals(rawVersion)) {
 				return 2100;
+			}
+			if ("1.8.0_171".equals(rawVersion)) {
+				return 2200;
+			}
+			if ("1.8.0_172".equals(rawVersion)) {
+				return 2300;
+			}
+			if ("1.8.0_181".equals(rawVersion)) {
+				return 2400;
+			}
+			if ("1.8.0_182".equals(rawVersion)) {
+				return 2500;
 			}
 		}
 		if (version == JavaCore.VERSION_9) {
@@ -433,6 +449,18 @@ static class JavaRuntime {
 		if (cached == null) {
 			cached = new JavaRuntime(compiler.rootDirectoryPath, compiler.version, compiler.rawVersion, compiler.minor);
 			runtimes.put(compiler.rawVersion, cached);
+		}
+		return cached;
+	}
+	public static JavaRuntime fromCurrentVM() throws IOException, InterruptedException {
+		String rawVersion = System.getProperty("java.version");
+		JavaRuntime cached = (JavaRuntime) runtimes.get(rawVersion);
+		if (cached == null) {
+			String jreRootDirPath = Util.getJREDirectory();
+			String version = JavacCompiler.versionFromRawVersion(rawVersion, jreRootDirPath);
+			int minor = JavacCompiler.minorFromRawVersion(version, rawVersion);
+			cached = new JavaRuntime(jreRootDirPath, version, rawVersion, minor);
+			runtimes.put(rawVersion, cached);
 		}
 		return cached;
 	}
@@ -543,6 +571,7 @@ protected static class JavacTestOptions {
 	}
 	public static class Excuse extends JavacTestOptions {
 		protected int mismatchType;
+		public boolean isIntermittent;
 		Excuse(int mismatchType) {
 			this.mismatchType = mismatchType;
 		}
@@ -758,6 +787,10 @@ protected static class JavacTestOptions {
 			this.pivotCompliance = pivotCompliance;
 			this.pivotMinor = pivotMinor;
 		}
+		public JavacHasABug(int mismatchType, long pivotCompliance, int pivotMinor, boolean intermittent) {
+			this(mismatchType, pivotCompliance, pivotMinor);
+			this.isIntermittent = intermittent;
+		}
 		Excuse excuseFor(JavacCompiler compiler) {
 			if (this.minorsFixed != null) {
 				if (compiler.compliance == ClassFileConstants.JDK1_8) {
@@ -857,7 +890,9 @@ protected static class JavacTestOptions {
 			JavacBug8204534 = RUN_JAVAC ? // https://bugs.openjdk.java.net/browse/JDK-8204534
 				new JavacHasABug(MismatchType.EclipseErrorsJavacNone, ((long)55)<<16, 0000) : null, // FIXME: use JDK11
 			JavacBug8207032 = RUN_JAVAC ? // https://bugs.openjdk.java.net/browse/JDK-8207032
-				new JavacHasABug(MismatchType.EclipseErrorsJavacNone) : null;
+				new JavacHasABug(MismatchType.EclipseErrorsJavacNone) : null,
+			JavacBug8044196 = RUN_JAVAC ? // likely https://bugs.openjdk.java.net/browse/JDK-8044196, intermittently masked by https://bugs.openjdk.java.net/browse/JDK-8029161
+				new JavacHasABug(MismatchType.EclipseErrorsJavacNone, ClassFileConstants.JDK9, 0000, true) : null;
 
 		// bugs that have been fixed but that we've not identified
 		public static JavacHasABug
@@ -2208,7 +2243,7 @@ protected void runJavac(
 				if ((expectedOutputString != null || expectedErrorString != null) &&
 						!javacTestErrorFlag && mismatch == 0 && sourceFileNames != null &&
 						!className.endsWith(PACKAGE_INFO_NAME) && !className.endsWith(MODULE_INFO_NAME)) {
-					JavaRuntime runtime = JavaRuntime.runtimeFor(compiler);
+					JavaRuntime runtime = JavaRuntime.fromCurrentVM();
 					StringBuffer stderr = new StringBuffer();
 					StringBuffer stdout = new StringBuffer();
 					String vmOptions = "";
@@ -2316,7 +2351,10 @@ void handleMismatch(JavacCompiler compiler, String testName, String[] testFiles,
 		}
 	}
 	if (excuse != null) {
-		fail(testName + ": unused excuse " + excuse + " for compiler " + compiler);
+		if (excuse.isIntermittent)
+			System.err.println(testName + ": unused execuse (intermittent bug) "+excuse + " for compiler " + compiler);
+		else
+			fail(testName + ": unused excuse " + excuse + " for compiler " + compiler);
 	}
 }
 

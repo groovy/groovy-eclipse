@@ -5220,7 +5220,7 @@ public void test449063() {
 		null,
 		customOptions,
 		null,
-		(isJRE9Plus
+		(reflectNestedClassUseDollar
 		? "Test$Tuple<java.lang.Integer, java.lang.String>\n" +
 		  "Test$Tuple<java.lang.String, java.lang.Double>"
 		: "Test.Test$Tuple<java.lang.Integer, java.lang.String>\n" +
@@ -5296,7 +5296,7 @@ public void test449063a() {
 		null,
 		customOptions,
 		null,
-		(isJRE9Plus
+		(reflectNestedClassUseDollar
 		? "Test$Tuple<java.lang.Integer, java.lang.String>\n" +
 		  "Test$Tuple<java.lang.String, java.lang.Double>"
 		: "Test.Test$Tuple<java.lang.Integer, java.lang.String>\n" +
@@ -5511,7 +5511,7 @@ public void test449063e() {
 			"    }\n" + 
 			"}"
 			},
-			(isJRE9Plus
+			(reflectNestedClassUseDollar
 			? "Test$Tuple<java.lang.Integer, java.lang.String>\n" +
 			  "Test$Tuple<java.lang.String, java.lang.Double>"
 			: "Test.Test$Tuple<java.lang.Integer, java.lang.String>\n" +

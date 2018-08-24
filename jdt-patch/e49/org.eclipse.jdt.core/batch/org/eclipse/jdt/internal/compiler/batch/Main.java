@@ -642,7 +642,7 @@ public class Main implements ProblemSeverities, SuffixConstants {
 					printErr(this.main.bind(
 								severity,
 								Integer.toString(globalErrorCount),
-								new String(fileName)));
+								fileName));
 					final String errorReportSource = errorReportSource(problem, null, 0);
 					this.printlnErr(errorReportSource);
 					this.printlnErr(problem.getMessage());

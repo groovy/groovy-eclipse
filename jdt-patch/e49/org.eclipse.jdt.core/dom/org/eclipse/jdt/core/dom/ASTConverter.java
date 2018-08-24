@@ -208,7 +208,7 @@ class ASTConverter {
 						try {
 							this.scannerUsable = typeDeclaration.isScannerUsableOnThisDeclaration();
 						// GROOVY end
-							typeDecl.bodyDeclarations().add(convert(isInterface, nextMethodDeclaration));
+						typeDecl.bodyDeclarations().add(convert(isInterface, nextMethodDeclaration));
 						// GROOVY add
 						} finally {
 							this.scannerUsable = originalValue;

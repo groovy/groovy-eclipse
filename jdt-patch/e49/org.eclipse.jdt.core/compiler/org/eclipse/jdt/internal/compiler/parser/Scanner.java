@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -209,7 +209,7 @@ public class Scanner implements TerminalTokens {
 		newEntry6 = 0;
 	public boolean insideRecovery = false;
 	int lookBack[] = new int[2]; // fall back to spring forward.
-	int nextToken = TokenNameNotAToken; // allows for one token push back, only the most recent token can be reliably ungotten.
+	protected int nextToken = TokenNameNotAToken; // allows for one token push back, only the most recent token can be reliably ungotten.
 	private VanguardScanner vanguardScanner;
 	private VanguardParser vanguardParser;
 	ConflictedParser activeParser = null;
@@ -4941,5 +4941,10 @@ public int fastForward(Statement unused) {
 				break;
 		}
 	}
+}
+
+/** Overridable hook, to allow CompletionScanner to hide a faked identifier token. */
+protected int getNextNotFakedToken() throws InvalidInputException {
+	return getNextToken();
 }
 }

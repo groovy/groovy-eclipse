@@ -108,8 +108,7 @@ public class ASTRewriteFlattener extends ASTVisitor {
 	 * @return the serialized
 	 */
 	public String getResult() {
-		// convert to a string, but lose any extra space in the string buffer by copying
-		return new String(this.result.toString());
+		return this.result.toString();
 	}
 
 	/**

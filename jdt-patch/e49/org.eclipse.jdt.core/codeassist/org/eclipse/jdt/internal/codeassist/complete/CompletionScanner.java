@@ -863,10 +863,29 @@ protected int getNextToken0() throws InvalidInputException {
 	/* might be completing at very end of file (e.g. behind a dot) */
 	if (this.completionIdentifier == null &&
 		this.startPosition == this.cursorLocation + 1){
+		this.endOfEmptyToken = this.currentPosition - 1;
 		this.currentPosition = this.startPosition; // for being detected as empty free identifier
 		return TokenNameIdentifier;
 	}
 	return TokenNameEOF;
+}
+@Override
+protected int getNextNotFakedToken() throws InvalidInputException {
+	int token;
+	boolean fromUnget = false;
+	if (this.nextToken != TokenNameNotAToken) {
+		token = this.nextToken;
+		this.nextToken = TokenNameNotAToken;
+		fromUnget = true;
+	} else {
+		token = getNextToken();
+	}
+	if (this.currentPosition == this.startPosition) {
+		if (!fromUnget)
+			this.currentPosition++; // on fake completion identifier
+		return -1;
+	}
+	return token;
 }
 @Override
 public final void getNextUnicodeChar() throws InvalidInputException {

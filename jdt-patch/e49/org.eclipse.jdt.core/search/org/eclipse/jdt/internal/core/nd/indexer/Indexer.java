@@ -564,7 +564,7 @@ public final class Indexer {
 				NdType nextDeletion = toDelete.getType(numChildren - 1);
 				if (DEBUG_INSERTIONS) {
 					Package.logInfo("Deleting " + nextDeletion.getTypeId().getFieldDescriptor().getString() + " from "  //$NON-NLS-1$//$NON-NLS-2$
-							+ new String(toDelete.getLocation().getString()) + " " + toDelete.address); //$NON-NLS-1$
+							+ toDelete.getLocation().getString() + " " + toDelete.address); //$NON-NLS-1$
 				}
 				nextDeletion.delete();
 			} finally {

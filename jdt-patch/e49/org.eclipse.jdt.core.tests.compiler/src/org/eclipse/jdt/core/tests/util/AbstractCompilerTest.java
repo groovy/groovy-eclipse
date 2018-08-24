@@ -48,6 +48,7 @@ public class AbstractCompilerTest extends TestCase {
 	protected long complianceLevel;
 	protected boolean enableAPT = false;
 	protected static boolean isJRE9Plus = false; // Stop gap, so tests need not be run at 9, but some tests can be adjusted for JRE 9
+	protected static boolean reflectNestedClassUseDollar;
 
 	/**
 	 * Build a test suite made of test suites for all possible running VM compliances .
@@ -342,6 +343,22 @@ public class AbstractCompilerTest extends TestCase {
 		return ClassFileConstants.JDK1_3;
 	}
 
+	static void initReflectionVersion() {
+		if (isJRE9Plus) {
+			reflectNestedClassUseDollar = true;
+			System.out.println("reflectNestedClassUseDollar="+reflectNestedClassUseDollar+" due to isJRE9Plus");
+		} else {
+			String version = System.getProperty("java.version");
+			if (version.startsWith("1.8.0_")) {
+				int build = Integer.parseInt(version.substring("1.8.0_".length()));
+				reflectNestedClassUseDollar = build >= 171; 
+			} else {
+				throw new IllegalStateException("Unrecognized Java version: "+version);
+			}
+			System.out.println("reflectNestedClassUseDollar="+reflectNestedClassUseDollar+" based on version="+version);
+		}
+	}
+
 	/*
 	 * Returns the possible compliance levels this VM instance can run.
 	 */
@@ -349,6 +366,7 @@ public class AbstractCompilerTest extends TestCase {
 		if (possibleComplianceLevels == UNINITIALIZED) {
 			String specVersion = System.getProperty("java.specification.version");
 			isJRE9Plus = CompilerOptions.VERSION_9.equals(specVersion) || CompilerOptions.VERSION_10.equals(specVersion);
+			initReflectionVersion();
 			String compliances = System.getProperty("compliance");
 			if (compliances != null) {
 				possibleComplianceLevels = 0;

@@ -181,7 +181,8 @@ public class CompletionParser extends AssistParser {
 	private boolean inReferenceExpression;
 	private IProgressMonitor monitor;
 	private int resumeOnSyntaxError = 0;
-
+	private boolean consumedEnhancedFor;
+	
 public CompletionParser(ProblemReporter problemReporter, boolean storeExtraSourceEnds) {
 	super(problemReporter);
 	this.reportSyntaxErrorIsRequired = false;
@@ -2617,6 +2618,13 @@ protected void consumeEnhancedForStatement() {
 	}
 }
 @Override
+protected void consumeEnhancedForStatementHeader(){
+	this.consumedEnhancedFor = true;
+	super.consumeEnhancedForStatementHeader();
+
+}
+
+@Override
 protected void consumeEnhancedForStatementHeaderInit(boolean hasModifiers) {
 	super.consumeEnhancedForStatementHeaderInit(hasModifiers);
 	this.hasUnusedModifiers = false;
@@ -3791,6 +3799,8 @@ protected void consumeToken(int token) {
 	int previous = this.previousToken;
 	int prevIdentifierPtr = this.previousIdentifierPtr;
 
+	isInsideEnhancedForLoopWithoutBlock(token);
+	
 	if (isInsideMethod() || isInsideFieldInitialization() || isInsideAnnotation() || isInsideEnumConstantnitialization()) {
 		switch(token) {
 			case TokenNameLPAREN:
@@ -4342,6 +4352,13 @@ protected void consumeToken(int token) {
 
 		}
 	}
+}
+private void isInsideEnhancedForLoopWithoutBlock(int token) {
+	if( this.consumedEnhancedFor == true && token != TokenNameLBRACE) {
+		consumeOpenFakeBlock();
+	}
+	this.consumedEnhancedFor = false;
+	
 }
 @Override
 protected void consumeInvocationExpression() { // on error, a message send's error reductions will take the expression path rather than the statement path since that is a dead end.
@@ -5719,6 +5736,23 @@ private boolean foundToken(int token) {
 		i--;
 	}
 	return false;
+}
+@Override
+protected int actFromTokenOrSynthetic(int previousAct) {
+	int newAct = tAction(previousAct, this.currentToken);
+	if (this.hasError && !this.diet && newAct == ERROR_ACTION && this.currentToken == TerminalTokens.TokenNameEOF) {
+		if (requireExtendedRecovery()) {
+			// during extended recovery, if EOF would be wrong, try a few things to reduce our stacks:
+			for (int tok : RECOVERY_TOKENS) {
+				newAct = tAction(previousAct, tok);
+				if (newAct != ERROR_ACTION) {
+					this.currentToken = tok; // this worked, pretend we really got this from the Scanner
+					return newAct;
+				}
+			}
+		}
+	}
+	return newAct;
 }
 
 protected boolean isInImportStatement() {

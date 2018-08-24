@@ -2807,6 +2807,100 @@ public void _testBug533435() {
             }
         });
 }
+public void testBug537804_comment0() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_5) return; // uses an annotation
+	runConformTest(
+		new String[] {
+			"Test.java",
+			"public class Test\n" + 
+			"{\n" + 
+			"	private boolean dummy;\n" + 
+			"\n" + 
+			"//Test\n" + 
+			"	void testMethod()\n" + 
+			"	{\n" + 
+			"		@SuppressWarnings(\"unused\")\n" + 
+			"		boolean action;\n" + 
+			"\n" + 
+			"		OUTER:\n" + 
+			"		{\n" + 
+			"			while (true)\n" + 
+			"			{\n" + 
+			"				if (dummy)\n" + 
+			"					break OUTER;\n" + 
+			"\n" + 
+			"				action = true;\n" + 
+			"				break;\n" + 
+			"			}\n" + 
+			"\n" + 
+			"			return;\n" + 
+			"		}\n" + 
+			"\n" + 
+			"		return;\n" + 
+			"	}\n" + 
+			"\n" + 
+			"//Main Method\n" + 
+			"	public static void main(String[] arguments)\n" + 
+			"	{\n" + 
+			"		//No operation\n" + 
+			"	}\n" + 
+			"}\n"
+		});
+}
+public void testBug537804_comment5() {
+	runNegativeTest(
+		new String[] {
+			"Test.java",
+			"public class Test\n" + 
+			"{\n" + 
+			"	private boolean dummy;\n" + 
+			"\n" + 
+			"//Test\n" + 
+			"	void testMethod()\n" + 
+			"	{\n" + 
+			"		boolean action;\n" + 
+			"\n" + 
+			"		OUTER:\n" + 
+			"		{\n" + 
+			"			while (true)\n" + 
+			"			{\n" + 
+			"				if (dummy)\n" + 
+			"					break OUTER;\n" + 
+			"\n" + 
+			"				action = true;\n" + 
+			"				break;\n" + 
+			"			}\n" + 
+			"\n" + 
+			"			if (action) //Okay.\n" + 
+			"				noOp();\n" + 
+			"\n" + 
+			"			return;\n" + 
+			"		}\n" + 
+			"\n" + 
+			"		if (action) //Missing error: 'action' may not be initialized!\n" + 
+			"			noOp();\n" + 
+			"\n" + 
+			"		return;\n" + 
+			"	}\n" + 
+			"	void noOp()\n" + 
+			"	{\n" + 
+			"		//No operation\n" + 
+			"	}\n" + 
+			"\n" + 
+			"//Main Method\n" + 
+			"	public static void main(String[] arguments)\n" + 
+			"	{\n" + 
+			"		//No operation\n" + 
+			"	}\n" + 
+			"}\n"
+		},
+		"----------\n" +
+		"1. ERROR in Test.java (at line 27)\n" + 
+		"	if (action) //Missing error: \'action\' may not be initialized!\n" + 
+		"	    ^^^^^^\n" + 
+		"The local variable action may not have been initialized\n" + 
+		"----------\n");
+}
 public static Class testClass() {
 	return FlowAnalysisTest.class;
 }

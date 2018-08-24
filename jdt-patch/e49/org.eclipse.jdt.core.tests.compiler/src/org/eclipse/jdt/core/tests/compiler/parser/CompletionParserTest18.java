@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2016 IBM Corporation and others.
+ * Copyright (c) 2013, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -2134,13 +2134,13 @@ public void test446765() {
 					"  void test() {\n" + 
 					"    new Stepper<Void>((<no type> r) -> {\n" + 
 					"}) {\n" + 
-					"      private void step1() {\n" + 
-					"        Y y;\n" + 
-					"        y.request((<no type> response) -> {\n" + 
+					"  private void step1() {\n" + 
+					"    Y y;\n" + 
+					"    y.request((<no type> response) -> {\n" + 
 					"  <CompleteOnName:response.>;\n" + 
 					"});\n" + 
-					"      }\n" + 
-					"    };\n" + 
+					"  }\n" + 
+					"}.run();\n" + 
 					"  }\n" + 
 					"}\n";
 
@@ -2261,7 +2261,8 @@ public void test422468() { // computing visible elements in lambda scope.
 			"      {\n" + 
 			"        goo((<no type> xyz) -> {\n" + 
 			"  X xLambdaLocal;\n" + 
-			"  System.out.println(<CompleteOnName:xyz.>);\n" + 
+			"  System.out.println(<CompleteOnName:xyz.>);\n" +
+			"  ;\n" + 
 			"});\n" + 
 			"      }\n" + 
 			"    }\n" + 

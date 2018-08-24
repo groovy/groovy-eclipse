@@ -15,7 +15,7 @@ public class ManifestIndexer extends AbstractIndexer {
 	public void indexDocument() {
 		byte[] entry = this.document.getByteContents();
 		String text = new String(entry, Charset.defaultCharset());
-		String[] kv = new String(text).split(":"); //$NON-NLS-1$
+		String[] kv = text.split(":"); //$NON-NLS-1$
 		if (kv != null && kv.length > 1 && kv[0] != null && kv[1] != null) {
 			if (kv[0].equals(AUTOMATIC_MODULE_NAME)) {
 				addModuleDeclaration(kv[1].toCharArray());

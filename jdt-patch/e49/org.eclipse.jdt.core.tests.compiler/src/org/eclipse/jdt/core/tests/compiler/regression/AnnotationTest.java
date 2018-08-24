@@ -11866,4 +11866,95 @@ public void testBug506888f() throws Exception {
 	assertEquals(1, requestor.problemArguments.length);
 	assertEquals(JavaCore.COMPILER_PB_UNUSED_PARAMETER, requestor.problemArguments[0]);
 }
+public void testBug537593_001() {
+	if (this.complianceLevel < ClassFileConstants.JDK1_8)
+		return;
+	class MyCompilerRequestor implements ICompilerRequestor {
+		String[] problemArguments = null;
+
+		@Override
+		public void acceptResult(CompilationResult result) {
+			for (CategorizedProblem problem : result.getAllProblems()) {
+				String[] arguments = problem.getArguments();
+				if (arguments != null && arguments.length > 0) {
+					this.problemArguments = arguments;
+					return;
+				}
+			}
+		}
+	}
+
+	if (this.complianceLevel <= ClassFileConstants.JDK1_5) {
+		return;
+	}
+	String[] files = new String[] {
+			"X.java",
+			"\n" +
+			"public class X {\n" +
+			"\n" +
+			"	protected void bar(Z z) {\n" +
+			"		System.out.println(z.toString());\n" +
+			"	}\n" +
+			"\n" +
+			"	public void foo() {\n" +
+			"		bar(() -> {\n" +
+			"			foo2(new I() {\n" +
+			"				@SuppressWarnings({\"unused\"})\n" +
+			"				public void bar2() {}\n" +
+			"			});\n" +
+			"		});\n" +
+			"	}\n" +
+			"	public static void main(String[] args) {}\n" +
+			"\n" +
+			"	public Z foo2(I i) {\n" +
+			"		return i == null ? null : null;\n" +
+			"	}\n" +
+			"}\n" +
+			"\n" +
+			"interface Z {\n" +
+			"	void apply();\n" +
+			"}\n" +
+			"\n" +
+			"interface I {}\n" +
+			"\n",
+	};
+
+	Map options = getCompilerOptions();
+	Object[] opts = {
+			CompilerOptions.OPTION_ReportUnusedDeclaredThrownException,
+			CompilerOptions.OPTION_ReportUnusedDeclaredThrownExceptionExemptExceptionAndThrowable,
+			CompilerOptions.OPTION_ReportUnusedDeclaredThrownExceptionIncludeDocCommentReference,
+			CompilerOptions.OPTION_ReportUnusedDeclaredThrownExceptionWhenOverriding,
+			CompilerOptions.OPTION_ReportUnusedExceptionParameter,
+			CompilerOptions.OPTION_ReportUnusedImport,
+			CompilerOptions.OPTION_ReportUnusedLabel,
+			CompilerOptions.OPTION_ReportUnusedLocal,
+			CompilerOptions.OPTION_ReportUnusedObjectAllocation,
+			CompilerOptions.OPTION_ReportUnusedParameter,
+			CompilerOptions.OPTION_ReportUnusedParameterWhenOverridingConcrete,
+			CompilerOptions.OPTION_ReportUnusedParameterIncludeDocCommentReference,
+			CompilerOptions.OPTION_ReportUnusedPrivateMember,
+			CompilerOptions.OPTION_ReportUnusedTypeArgumentsForMethodInvocation,
+			CompilerOptions.OPTION_ReportUnusedTypeParameter,
+			CompilerOptions.OPTION_ReportUnusedWarningToken,
+			CompilerOptions.OPTION_ReportRedundantSuperinterface,
+			CompilerOptions.OPTION_ReportRedundantSpecificationOfTypeArguments,
+	};
+	for (Object option : opts)
+		options.put(option, CompilerOptions.WARNING);
+	MyCompilerRequestor requestor = new MyCompilerRequestor();
+	runTest(files,
+			false,
+			"",
+			"" /*expectedOutputString */,
+			"" /* expectedErrorString */,
+			false /* forceExecution */,
+			null /* classLib */,
+			true /* shouldFlushOutputDirectory */,
+			null /* vmArguments */,
+			options,
+			new Requestor(true, requestor, false, true),
+			JavacTestOptions.DEFAULT);
+	assertNull(requestor.problemArguments);
+}
 }

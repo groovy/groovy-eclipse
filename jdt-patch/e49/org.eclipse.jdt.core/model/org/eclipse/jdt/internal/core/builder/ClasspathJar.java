@@ -110,7 +110,19 @@ IModule initializeModule() {
 	ZipFile file = null;
 	try {
 		file = new ZipFile(this.zipFilename);
-		ClassFileReader classfile = ClassFileReader.read(file, IModule.MODULE_INFO_CLASS); // FIXME: use jar cache
+		String releasePath = "META-INF/versions/" + this.compliance + '/' + IModule.MODULE_INFO_CLASS; //$NON-NLS-1$
+		System.out.println("Reading for module from: " + this.zipFilename); //$NON-NLS-1$
+		ClassFileReader classfile = null;
+		try {
+			classfile = ClassFileReader.read(file, releasePath);
+			System.out.println("Read classfile : " + classfile); //$NON-NLS-1$
+		} catch (Exception e) {
+			e.printStackTrace();
+			// move on to the default
+		}
+		if (classfile == null) {
+			classfile = ClassFileReader.read(file, IModule.MODULE_INFO_CLASS); // FIXME: use jar cache
+		}
 		if (classfile != null) {
 			mod = classfile.getModuleDeclaration();
 		}

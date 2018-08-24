@@ -402,8 +402,10 @@ public void accept(ISourceType[] sourceTypes, PackageBinding packageBinding, Acc
 				// no need for field initialization
 				this.lookupEnvironment.problemReporter,
 				result);
-		this.lookupEnvironment.buildTypeBindings(unit, accessRestriction);
-		this.lookupEnvironment.completeTypeBindings(unit, true);
+		if(unit != null) {
+			this.lookupEnvironment.buildTypeBindings(unit, accessRestriction);
+			this.lookupEnvironment.completeTypeBindings(unit, true);
+		}
 	}
 }
 protected Parser basicParser() {

@@ -3342,7 +3342,7 @@ public class Util {
 		}
 		int length = args.length;
 		for(int i = startingIndex;	i< length ; i++){
-			args[i] = new String(paramTypeSignatures[i-startingIndex]);
+			args[i] = paramTypeSignatures[i-startingIndex];
 		}
 		method = type.getMethod(new String(selector), args);
 		

@@ -199,8 +199,7 @@ public final String getLocalizedMessage(int id, int elaborationId, String[] prob
 		}
 	}
 
-	// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=120410
-	return new String(output.toString());
+	return output.toString();
 }
 /**
  * @param problem CategorizedProblem

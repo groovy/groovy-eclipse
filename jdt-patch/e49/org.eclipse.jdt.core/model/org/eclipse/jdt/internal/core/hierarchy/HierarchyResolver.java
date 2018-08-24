@@ -753,7 +753,7 @@ public void resolve(Openable[] openables, HashSet localTypes, IProgressMonitor m
 					// We would have got all the necessary local types by now and hence there is no further need 
 					// to parse the method bodies. Parser.getMethodBodies, which is called latter in this function, 
 					// will not parse the method statements if ASTNode.HasAllMethodBodies is set. 
-					if (containsLocalType) 	parsedUnit.bits |= ASTNode.HasAllMethodBodies;
+					if (containsLocalType && parsedUnit != null) parsedUnit.bits |= ASTNode.HasAllMethodBodies;
 				} else {
 					// create parsed unit from file
 					IFile file = (IFile) cu.getResource();

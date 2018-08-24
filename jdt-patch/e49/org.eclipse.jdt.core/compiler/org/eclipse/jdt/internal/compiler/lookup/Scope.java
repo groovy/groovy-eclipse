@@ -2137,7 +2137,7 @@ public abstract class Scope {
 										if (TypeBinding.equalsEquals(receiverType, fieldBinding.declaringClass) || compilerOptions().complianceLevel >= ClassFileConstants.JDK1_4) {
 											// found a valid field in the 'immediate' scope (i.e. not inherited)
 											// OR in 1.4 mode (inherited shadows enclosing)
-											if (foundField == null) {
+											if (foundField == null || foundField.problemId() == ProblemReasons.NotVisible) {
 												if (depth > 0){
 													invocationSite.setDepth(depth);
 													invocationSite.setActualReceiverType(receiverType);

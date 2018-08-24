@@ -88,7 +88,7 @@ public char[] getContents() {
 				}
 			}
 		} else if (this.autoModuleName != null) { // fab a module
-			contents = new String("module " + this.autoModuleName + "{}").toCharArray();  //$NON-NLS-1$//$NON-NLS-2$
+			contents = ("module " + this.autoModuleName + "{}").toCharArray();  //$NON-NLS-1$//$NON-NLS-2$
 			this.sourceFileName = "module-info.java"; //$NON-NLS-1$
 			this.compoundName = new char[][] { "module-info".toCharArray()}; //$NON-NLS-1$
 		} else {
