@@ -1156,7 +1156,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     // record that we need to set the parent of this inner type later
                     innersToRecord.computeIfAbsent(outerClassNode, x -> new ArrayList<>()).add(typeDeclaration);
 
-                    if (GroovyUtils.isAnonymous(classNode)) {
+                    if (innerClassNode.isAnonymous()) {
                         typeDeclaration.bits |= (ASTNode.IsAnonymousType | ASTNode.IsLocalType);
                         typeDeclaration.bits |= (typeDeclaration.superclass.bits & ASTNode.HasTypeAnnotations);
                         QualifiedAllocationExpression allocation = new QualifiedAllocationExpression(typeDeclaration);
@@ -1173,33 +1173,30 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
             // now attach local types to their parents; this was not done earlier as sometimes
             // the types are processed in such an order that inners are dealt with before outers
-            for (Map.Entry<ClassNode, List<TypeDeclaration>> innersToRecordEntry : innersToRecord.entrySet()) {
-                ClassNode outer = innersToRecordEntry.getKey();
-                TypeDeclaration outerTypeDeclaration = fromClassNodeToDecl.get(outer);
+            for (Map.Entry<ClassNode, List<TypeDeclaration>> entry : innersToRecord.entrySet()) {
+                TypeDeclaration outerTypeDeclaration = fromClassNodeToDecl.get(entry.getKey());
                 if (outerTypeDeclaration == null) {
-                    throw new GroovyEclipseBug("Failed to find the type declaration for " + outer.getText());
+                    throw new GroovyEclipseBug("Failed to find the type declaration for " + entry.getKey().getText());
                 }
 
-                List<TypeDeclaration> newInnersList = innersToRecordEntry.getValue();
-                for (Iterator<TypeDeclaration> iterator = newInnersList.iterator(); iterator.hasNext();) {
+                List<TypeDeclaration> memberTypes = entry.getValue();
+                for (Iterator<TypeDeclaration> iterator = memberTypes.iterator(); iterator.hasNext();) {
                     GroovyTypeDeclaration innerTypeDeclaration = (GroovyTypeDeclaration) iterator.next();
                     if ((innerTypeDeclaration.bits & ASTNode.IsAnonymousType) != 0) {
-                        iterator.remove();
-                        // set enclosing scope of anon. inner
+                        iterator.remove(); // remove local type from member type list
+
                         Object location = anonymousLocations.get(innerTypeDeclaration.getClassNode());
                         if (location instanceof AbstractMethodDeclaration) {
                             AbstractMethodDeclaration methodDeclaration = (AbstractMethodDeclaration) location;
                             methodDeclaration.bits |= ASTNode.HasLocalType;
-
-                            innerTypeDeclaration.enclosingScope = new MethodScope(null, methodDeclaration, methodDeclaration.isStatic());
                             methodDeclaration.statements = (Statement[]) ArrayUtils.add(methodDeclaration.statements != null
-                                ? methodDeclaration.statements : new Statement[0], innerTypeDeclaration.allocation);
+                                        ? methodDeclaration.statements : new Statement[0], innerTypeDeclaration.allocation);
+                            innerTypeDeclaration.enclosingScope = new MethodScope(null, methodDeclaration, methodDeclaration.isStatic());
                         } else if (location instanceof FieldDeclaration) {
                             FieldDeclaration fieldDeclaration = (FieldDeclaration) location;
                             fieldDeclaration.bits |= ASTNode.HasLocalType;
-
+                            fieldDeclaration.initialization = innerTypeDeclaration.allocation;
                             innerTypeDeclaration.enclosingScope = new MethodScope(null, outerTypeDeclaration, fieldDeclaration.isStatic());
-                            // TODO: Add to statements of object/static initializer
                         } else if (!innerTypeDeclaration.getClassNode().isEnum()) {
                             throw new GroovyEclipseBug("Enclosing scope not found for anon. inner class: " + innerTypeDeclaration.getClassNode().getName());
                         }
@@ -1207,7 +1204,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         ((GroovyTypeDeclaration) outerTypeDeclaration).addAnonymousType(innerTypeDeclaration);
                     }
                 }
-                outerTypeDeclaration.memberTypes = newInnersList.toArray(new TypeDeclaration[newInnersList.size()]);
+                outerTypeDeclaration.memberTypes = memberTypes.toArray(new TypeDeclaration[memberTypes.size()]);
             }
 
             // clean up
@@ -1291,19 +1288,17 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
             List<ConstructorNode> constructorNodes = classNode.getDeclaredConstructors();
 
-            char[] ctorName = null;
+            char[] ctorName; boolean isAnon = false;
             if (classNode instanceof InnerClassNode) {
-                InnerClassNode innerClassNode = (InnerClassNode) classNode;
-                ClassNode outerClass = innerClassNode.getOuterClass();
-                String outername = outerClass.getNameWithoutPackage();
-                String newInner = innerClassNode.getNameWithoutPackage().substring(outername.length() + 1);
-                ctorName = newInner.toCharArray();
+                isAnon = ((InnerClassNode) classNode).isAnonymous();
+                int qualLength = classNode.getOuterClass().getNameWithoutPackage().length() + 1;
+                ctorName = classNode.getNameWithoutPackage().substring(qualLength).toCharArray();
             } else {
                 ctorName = classNode.getNameWithoutPackage().toCharArray();
             }
 
-            // add default constructor if no other constructors exist (and not trait/interface)
-            if (constructorNodes.isEmpty() && !classNode.isInterface() && !isTrait(classNode)) {
+            // add default constructor if no other constructors exist (and not trait/interface/anonymous)
+            if (constructorNodes.isEmpty() && !isAnon && !classNode.isInterface() && !isTrait(classNode)) {
                 ConstructorDeclaration constructor = new ConstructorDeclaration(unitDeclaration.compilationResult);
                 constructor.bits |= ASTNode.IsDefaultConstructor;
                 if (isEnum) {
@@ -1556,7 +1551,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 }
                 return arrayInitializer;
 
-            } else if (expr instanceof  AnnotationConstantExpression) {
+            } else if (expr instanceof AnnotationConstantExpression) {
                 Annotation[] annos = createAnnotations(Collections.singletonList(
                     (AnnotationNode) ((AnnotationConstantExpression) expr).getValue()));
                 assert annos != null && annos.length == 1;
