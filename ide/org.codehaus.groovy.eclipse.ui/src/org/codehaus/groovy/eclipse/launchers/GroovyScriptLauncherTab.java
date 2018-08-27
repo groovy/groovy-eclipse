@@ -16,11 +16,18 @@
 
 package org.codehaus.groovy.eclipse.launchers;
 
+import static org.codehaus.jdt.groovy.model.GroovyProjectFacade.isGroovyScript;
+
+import java.util.ArrayList;
 import java.util.List;
 
-import org.codehaus.jdt.groovy.model.GroovyProjectFacade;
+import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.debug.ui.ILaunchConfigurationTab;
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IPackageFragment;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 
@@ -28,6 +35,26 @@ public class GroovyScriptLauncherTab extends AbstractGroovyLauncherTab implement
 
     @Override
     protected List<IType> findAllRunnableTypes(IJavaProject javaProject) throws JavaModelException {
-        return new GroovyProjectFacade(javaProject).findAllScripts();
+        List<IType> results = new ArrayList<>();
+
+        for (IPackageFragmentRoot root : javaProject.getAllPackageFragmentRoots()) {
+            if (!root.isReadOnly()) {
+                for (IJavaElement child : root.getChildren()) {
+                    if (child.getElementType() == IJavaElement.PACKAGE_FRAGMENT) {
+                        for (ICompilationUnit unit : ((IPackageFragment) child).getCompilationUnits()) {
+                            if (unit instanceof GroovyCompilationUnit) {
+                                for (IType type : unit.getTypes()) {
+                                    if (isGroovyScript(type)) {
+                                        results.add(type);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return results;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 package org.codehaus.groovy.eclipse.ui;
-
-import java.util.List;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -77,11 +75,13 @@ public class GroovyResourcePropertyTester extends PropertyTester {
     }
 
     private boolean isRunnable(ICompilationUnit unit) throws JavaModelException {
-        boolean result = false;
         if (unit instanceof GroovyCompilationUnit) {
-            List<IType> runnables = GroovyProjectFacade.findAllRunnableTypes(unit);
-            result = (!runnables.isEmpty());
+            for (IType type : unit.getAllTypes()) {
+                if (GroovyProjectFacade.hasRunnableMain(type)) {
+                    return true;
+                }
+            }
         }
-        return result;
+        return false;
     }
 }

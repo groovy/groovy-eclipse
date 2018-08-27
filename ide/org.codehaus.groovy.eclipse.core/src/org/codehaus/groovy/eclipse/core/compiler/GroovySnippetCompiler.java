@@ -25,7 +25,6 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration;
-import org.codehaus.jdt.groovy.model.GroovyProjectFacade;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.WorkingCopyOwner;
@@ -49,11 +48,11 @@ public class GroovySnippetCompiler {
 
     private INameEnvironment nameEnvironment;
 
-    public GroovySnippetCompiler(GroovyProjectFacade project) {
+    public GroovySnippetCompiler(JavaProject project) {
         try {
-            nameEnvironment = new SearchableEnvironment((JavaProject) project.getProject(), (WorkingCopyOwner) null, false);
+            nameEnvironment = new SearchableEnvironment(project, (WorkingCopyOwner) null, false);
         } catch (JavaModelException e) {
-            GroovyCore.logException("Problem initializing snippet compiler for project " + project.getProject().getElementName(), e);
+            GroovyCore.logException("Problem initializing snippet compiler for project " + project.getElementName(), e);
         }
     }
 

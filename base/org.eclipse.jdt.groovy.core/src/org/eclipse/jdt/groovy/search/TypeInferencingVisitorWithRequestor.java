@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -105,7 +106,7 @@ import org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.codehaus.jdt.groovy.model.GroovyProjectFacade;
+import org.codehaus.jdt.groovy.model.JavaCoreUtil;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IStatus;
@@ -167,27 +168,36 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     private ConstructorCallExpression enclosingConstructorCall;
 
     /**
-     * The head of the stack is the current property/attribute/methodcall/binary expression being visited. This stack is used so we
-     * can keep track of the type of the object expressions in these property expressions
+     * The head of the stack is the current property/attribute/methodcall/binary
+     * expression being visited. This stack is used so we can keep track of the
+     * type of the object expressions in these property expressions.
      */
     private final LinkedList<ASTNode> completeExpressionStack = new LinkedList<>();
 
     /**
-     * Keeps track of the type of the object expression corresponding to each frame of the property expression.
-     */
-    private final LinkedList<ClassNode> primaryTypeStack = new LinkedList<>();
-
-    /**
-     * Keeps track of the declaring type of the current dependent expression. Dependent expressions are dependent on a primary
-     * expression to find type information. this field is only applicable for {@link PropertyExpression}s and
-     * {@link MethodCallExpression}s.
+     * Tracks the declaring type of the current dependent expression. Dependent
+     * expressions are dependent on a primary expression to find type information.
+     * This field is only applicable for {@link PropertyExpression}s and {@link MethodCallExpression}s.
      */
     private final LinkedList<Tuple> dependentDeclarationStack = new LinkedList<>();
 
     /**
-     * Keeps track of the type of the type of the property field corresponding to each frame of the property expression.
+     * Tracks the type of the type of the property field corresponding to each
+     * frame of the property expression.
      */
     private final LinkedList<ClassNode> dependentTypeStack = new LinkedList<>();
+
+    /**
+     * Tracks the type of the object expression corresponding to each frame of
+     * the property expression.
+     */
+    private final LinkedList<ClassNode> primaryTypeStack = new LinkedList<>();
+
+    /**
+     * Tracks the anonymous inner class counts for type members.  Required for
+     * calls to {@code IMember.getType("", occurrenceCount);}
+     */
+    private Map<IJavaElement, AtomicInteger> occurrenceCounts = new HashMap<>();
 
     private final AssignmentStorer assignmentStorer = new AssignmentStorer();
 
@@ -254,6 +264,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 e.printStackTrace();
             }
         } finally {
+            occurrenceCounts.clear();
             scopes.removeLast();
         }
         if (DEBUG) {
@@ -662,19 +673,30 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
      * @param node anonymous inner class for enum constant
      */
     private void visitMethodOverrides(ClassNode node) {
-        scopes.add(new VariableScope(scopes.getLast(), node, false));
+        assert node.isEnum() && node.getEnclosingMethod() == null;
         ASTNode  enclosingDeclaration0 = enclosingDeclarationNode;
-        IJavaElement enclosingElement0 = enclosingElement;
-        enclosingDeclarationNode = node;
+        IJavaElement enclosingElement0 = enclosingElement; // enum
+        enclosingDeclarationNode = scopes.getLast().getEnclosingFieldDeclaration();
         try {
+            IField enumConstant = ((IType) enclosingElement).getField(((FieldNode) enclosingDeclarationNode).getName());
+            assert enumConstant != null && enumConstant.exists();
             for (MethodNode method : node.getMethods()) {
                 if (method.getEnd() > 0) {
-                    enclosingElement = findAnonType(node).getMethod(method.getName(), GroovyUtils.getParameterTypeSignatures(method, true));
+                    // TODO: How does the JDT find a method under an enum constant?
+                    enclosingElement = Stream.of(enumConstant.getChildren()).filter(e -> {
+                        if (e instanceof IMethod && e.getElementName().equals(method.getName())) {
+                            /*return Arrays.equals(((IMethod) e).getParameterTypes(),
+                                GroovyUtils.getParameterTypeSignatures(method, enumConstant.isBinary()));*/
+                        }
+                        return false;
+                    }).findFirst().orElse(enclosingElement0);
+
                     visitMethodInternal(method, false);
                 }
             }
+        } catch (JavaModelException e) {
+            log(e, "Error visiting children of %s", enclosingDeclarationNode);
         } finally {
-            scopes.removeLast().bubbleUpdates();
             enclosingElement = enclosingElement0;
             enclosingDeclarationNode = enclosingDeclaration0;
         }
@@ -1024,18 +1046,20 @@ assert primaryExprType != null && dependentExprType != null;
                 IJavaElement enclosingElement0 = enclosingElement;
                 enclosingDeclarationNode = type;
                 try {
+                    IType anon = findAnonType(type);
+
                     for (Statement stmt : type.getObjectInitializerStatements()) {
                         stmt.visit(this);
                     }
                     for (FieldNode field : type.getFields()) {
                         if (field.getEnd() > 0) {
-                            enclosingElement = findAnonType(type).getField(field.getName());
+                            enclosingElement = anon.getField(field.getName());
                             visitFieldInternal(field);
                         }
                     }
                     for (MethodNode method : type.getMethods()) {
                         if (method.getEnd() > 0) {
-                            enclosingElement = findAnonType(type).getMethod(method.getName(), GroovyUtils.getParameterTypeSignatures(method, true));
+                            enclosingElement = JavaCoreUtil.findMethod(method, anon);
                             visitMethodInternal(method, false);
                         }
                     }
@@ -1895,9 +1919,20 @@ assert primaryExprType != null && dependentExprType != null;
 
     //
 
-    private IType findAnonType(ClassNode node) {
-        assert GroovyUtils.isAnonymous(node) : node.getName() + " is not anonymous";
-        return new GroovyProjectFacade(enclosingElement).groovyClassToJavaType(node);
+    private IType findAnonType(ClassNode type) {
+        int occurrenceCount = occurrenceCounts.computeIfAbsent(
+            enclosingElement, x -> new AtomicInteger()).incrementAndGet();
+        try {
+            for (IJavaElement child : ((IMember) enclosingElement).getChildren()) {
+                if (child instanceof IType && ((IType) child).isAnonymous() &&
+                          ((IType) child).getOccurrenceCount() == occurrenceCount) {
+                    return (IType) child;
+                }
+            }
+        } catch (JavaModelException e) {
+            log(e, "Error visiting children of %s", type.getName());
+        }
+        return null;
     }
 
     private ClassNode findClassNode(String name) {
@@ -2722,7 +2757,7 @@ assert primaryExprType != null && dependentExprType != null;
     }
 
     private static boolean isEnumInit(StaticMethodCallExpression node) {
-        return (node.getOwnerType().isEnum() && node.getMethod().equals("$INIT"));
+        return (node.getOwnerType().isEnum() && node.getMethodAsString().equals("$INIT"));
     }
 
     private static boolean isLazy(FieldNode fieldNode) {

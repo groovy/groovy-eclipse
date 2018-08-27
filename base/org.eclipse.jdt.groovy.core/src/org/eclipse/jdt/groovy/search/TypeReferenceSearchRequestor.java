@@ -24,10 +24,9 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.jdt.groovy.model.GroovyClassFileWorkingCopy;
+import org.codehaus.jdt.groovy.model.JavaCoreUtil;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.search.SearchMatch;
 import org.eclipse.jdt.core.search.SearchParticipant;
@@ -182,14 +181,9 @@ public class TypeReferenceSearchRequestor implements ITypeRequestor {
         IJavaElement element = enclosingElement;
         if (findDeclaration) {
             // don't use the enclosing element, but rather use the declaration of the type
-            try {
-                ClassNode type = GroovyUtils.getBaseType(result.type);
-                IJavaElement e = enclosingElement.getJavaProject().findType(type.getName().replace('$', '.'), new NullProgressMonitor());
-                if (e != null) {
-                    element = e;
-                }
-            } catch (JavaModelException e) {
-                Util.log(e);
+            IJavaElement type = JavaCoreUtil.findType(GroovyUtils.getBaseType(result.type).getName(), enclosingElement);
+            if (type != null) {
+                element = type;
             }
         }
         return new TypeReferenceMatch(element, getAccuracy(result.confidence), start, end - start, false, participant, element.getResource());

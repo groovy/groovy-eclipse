@@ -1164,7 +1164,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         allocation.sourceStart = isEnum ? typeDeclaration.sourceStart : typeDeclaration.sourceStart - 4; // approx. offset of "new"
                         allocation.sourceEnd = typeDeclaration.bodyEnd;
                         // TODO: allocation.typeArguments = something
-                        allocation.type = typeDeclaration.superclass;
+                        if (!isEnum) allocation.type = typeDeclaration.superclass;
                     }
                 } else {
                     typeDeclarations.add(typeDeclaration);
@@ -1242,11 +1242,12 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         fieldDeclaration.annotations = createAnnotations(fieldNode.getAnnotations());
                         if (!isEnumField) {
                             fieldDeclaration.modifiers = getModifiers(fieldNode);
-                            fieldDeclaration.type = createTypeReferenceForClassNode(fieldNode.getType());
+                            fieldDeclaration.initializer = fieldNode.getInitialExpression();
                             if (fieldNode.isStatic() && fieldNode.isFinal() && fieldNode.getInitialExpression() instanceof ConstantExpression) {
                                 // this needs to be set for static finals to correctly determine constant status
                                 fieldDeclaration.initialization = createConstantExpression((ConstantExpression) fieldNode.getInitialExpression());
                             }
+                            fieldDeclaration.type = createTypeReferenceForClassNode(fieldNode.getType());
 
                             if (anonymousLocations != null && fieldNode.getInitialExpression() != null) {
                                 fieldNode.getInitialExpression().visit(new CodeVisitorSupport() {
@@ -1260,7 +1261,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                                 });
                             }
                         }
-                        fieldDeclaration.initializer = fieldNode.getInitialExpression();
                         fixupSourceLocationsForFieldDeclaration(fieldDeclaration, fieldNode, isEnumField);
 
                         fieldDeclarations.add(fieldDeclaration);

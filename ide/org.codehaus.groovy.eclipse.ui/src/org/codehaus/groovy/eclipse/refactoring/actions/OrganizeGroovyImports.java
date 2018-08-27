@@ -55,6 +55,7 @@ import org.codehaus.groovy.eclipse.TraceCategory;
 import org.codehaus.groovy.eclipse.refactoring.actions.TypeSearch.UnresolvedTypeData;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
+import org.codehaus.jdt.groovy.model.JavaCoreUtil;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
@@ -286,7 +287,7 @@ public class OrganizeGroovyImports {
                 }
             }
             for (String imp : starImports) {
-                IType type = unit.getJavaProject().findType(imp + typeName, (IProgressMonitor) null);
+                IType type = JavaCoreUtil.findType(imp + typeName, unit);
                 if (type != null) {
                     it.remove();
                     continue on;

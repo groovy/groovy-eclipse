@@ -25,7 +25,6 @@ import java.util.Arrays;
 import org.codehaus.groovy.eclipse.core.builder.GroovyClasspathContainer;
 import org.codehaus.groovy.runtime.IOGroovyMethods;
 import org.codehaus.jdt.groovy.model.GroovyNature;
-import org.codehaus.jdt.groovy.model.GroovyProjectFacade;
 import org.eclipse.core.internal.events.BuildCommand;
 import org.eclipse.core.resources.ICommand;
 import org.eclipse.core.resources.IContainer;
@@ -99,10 +98,6 @@ public class TestProject {
 
     public IPackageFragmentRoot getSourceFolder() {
         return sourceFolder;
-    }
-
-    public GroovyProjectFacade getGroovyProjectFacade() {
-        return new GroovyProjectFacade(javaProject);
     }
 
     public boolean hasGroovyContainer() throws Exception {

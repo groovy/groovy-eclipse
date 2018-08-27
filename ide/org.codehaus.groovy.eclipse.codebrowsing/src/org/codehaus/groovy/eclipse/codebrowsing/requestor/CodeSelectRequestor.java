@@ -50,6 +50,7 @@ import org.codehaus.jdt.groovy.internal.compiler.ast.JDTFieldNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyProjectFacade;
+import org.codehaus.jdt.groovy.model.JavaCoreUtil;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
@@ -86,7 +87,6 @@ public class CodeSelectRequestor implements ITypeRequestor {
     private final Region nodeRegion;
     private final Region selectRegion;
     private final GroovyCompilationUnit gunit;
-    private final GroovyProjectFacade project;
 
     private ASTNode requestedNode;
     private IJavaElement requestedElement;
@@ -101,7 +101,6 @@ public class CodeSelectRequestor implements ITypeRequestor {
         this.selectRegion = selectRegion;
 
         gunit = unit;
-        project = new GroovyProjectFacade(unit);
     }
 
     public ASTNode getRequestedNode() {
@@ -235,7 +234,14 @@ public class CodeSelectRequestor implements ITypeRequestor {
                 ClassNode declaringType = findDeclaringType(result);
                 if (declaringType != null) {
                     // find it in the java model
-                    IType type = project.groovyClassToJavaType(declaringType);
+                    IType type = (IType) enclosingElement.getAncestor(IJavaElement.TYPE);
+                    if (type == null || !type.getFullyQualifiedName().equals(declaringType.getName())) {
+                        if (!GroovyUtils.isAnonymous(declaringType)) {
+                            type = JavaCoreUtil.findType(declaringType.getName(), enclosingElement);
+                        } else {
+                            type = new GroovyProjectFacade(enclosingElement).groovyClassToJavaType(declaringType);
+                        }
+                    }
                     if (type == null && !gunit.isOnBuildPath()) {
                         // try to find it in the current compilation unit
                         type = gunit.getType(declaringType.getNameWithoutPackage());
@@ -243,6 +249,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
                             type = null;
                         }
                     }
+
                     if (type != null) {
                         if (qualifier == null) {
                             // find the requested java element

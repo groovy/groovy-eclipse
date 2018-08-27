@@ -204,7 +204,7 @@ abstract class GroovyEclipseTestSuite {
     }
 
     protected final GroovySnippetCompiler getGroovySnippetCompiler() {
-        new GroovySnippetCompiler(testProject.groovyProjectFacade)
+        new GroovySnippetCompiler(testProject.javaProject)
     }
 
     protected final IPackageFragmentRoot getPackageFragmentRoot() {

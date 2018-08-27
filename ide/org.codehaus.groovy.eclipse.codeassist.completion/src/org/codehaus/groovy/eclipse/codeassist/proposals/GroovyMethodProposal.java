@@ -29,7 +29,7 @@ import org.codehaus.groovy.eclipse.codeassist.processors.GroovyCompletionProposa
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.codehaus.groovy.eclipse.codeassist.requestor.MethodInfoContentAssistContext;
-import org.eclipse.core.runtime.NullProgressMonitor;
+import org.codehaus.jdt.groovy.model.JavaCoreUtil;
 import org.eclipse.jdt.core.CompletionFlags;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -357,7 +357,7 @@ public class GroovyMethodProposal extends AbstractGroovyProposal {
 
     private IType findDeclaringType(ICompilationUnit unit, MethodNode method) throws JavaModelException {
         if (cachedDeclaringType == null) {
-            cachedDeclaringType = unit.getJavaProject().findType(method.getDeclaringClass().getName(), new NullProgressMonitor());
+            cachedDeclaringType = JavaCoreUtil.findType(method.getDeclaringClass().getName(), unit);
         }
         return cachedDeclaringType;
     }

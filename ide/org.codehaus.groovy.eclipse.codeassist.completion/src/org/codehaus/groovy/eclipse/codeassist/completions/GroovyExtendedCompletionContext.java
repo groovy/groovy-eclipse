@@ -24,7 +24,7 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
-import org.codehaus.jdt.groovy.model.GroovyProjectFacade;
+import org.codehaus.jdt.groovy.model.JavaCoreUtil;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
@@ -134,7 +134,7 @@ public class GroovyExtendedCompletionContext extends InternalExtendedCompletionC
         // add enum constants if target type is an enum
         if (targetType.isEnum()) {
             try {
-                IType enumType = new GroovyProjectFacade(enclosingElement).groovyClassToJavaType(targetType);
+                IType enumType = JavaCoreUtil.findType(targetType.getName(), enclosingElement);
                 for (IField enumField : enumType.getFields()) {
                     if (enumField.isEnumConstant()) {
                         visibleElements.putIfAbsent(enumField.getElementName(), enumField);
