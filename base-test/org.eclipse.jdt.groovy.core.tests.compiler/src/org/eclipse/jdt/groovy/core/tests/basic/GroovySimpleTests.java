@@ -6029,7 +6029,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in A.groovy (at line 1)\n" +
         "\tdef foo = new Runnable() {\n" +
-        "\t              ^^^^^^^^\n" +
+        "\t              ^^^^^^^^^^\n" +
         "Groovy:Can't have an abstract method in a non-abstract class. The class 'A$1' must be declared abstract or the method 'void run()' must be implemented.\n" +
         "----------\n");
     }
@@ -6072,7 +6072,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "----------\n" +
         "1. ERROR in Bad.groovy (at line 2)\n" +
         "\tA() {\n" +
-        "\t^\n" +
+        "\t^^^\n" +
         "Groovy:Can't have an abstract method in enum constant A. Implement method 'int foo()'.\n" +
         "----------\n");
     }

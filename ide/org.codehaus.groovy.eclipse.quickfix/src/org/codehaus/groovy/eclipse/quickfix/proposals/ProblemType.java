@@ -26,11 +26,9 @@ public enum ProblemType {
     // missing semi-colons will have different IProblem values in different places
     MISSING_SEMI_COLON_TYPE(IProblem.ParsingErrorInsertToComplete, (String[]) null),
     MISSING_SEMI_COLON_TYPE_VARIANT(IProblem.ParsingErrorInsertTokenAfter, (String[]) null),
-
-    UNIMPLEMENTED_METHODS_TYPE("Groovy:Can't have an abstract method in a non-abstract class."),
     MISSING_CLASSPATH_CONTAINER_TYPE(IProblem.IsClassPathCorrect, "groovy.lang.GroovyObject", "groovy.lang.MetaClass"),
     MISSING_IMPORTS_TYPE("Groovy:unable to resolve class", " is not an annotation in @", "Groovy:[Static type checking] - The variable "),
-
+    UNIMPLEMENTED_METHODS_TYPE("Can't have an abstract method in a non-abstract class", "Can't have an abstract method in enum constant"),
     STATIC_TYPE_CHECKING_CANNOT_ASSIGN("Groovy:[Static type checking] - Cannot assign value of type", "Groovy:[Static type checking] - Cannot return value of type");
 
     /**

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,16 +68,10 @@ public class GroovyQuickFixResolverRegistry {
     protected Map<ProblemType, List<IQuickFixResolver>> getRegistry() {
         if (registry == null) {
             registry = new EnumMap<>(ProblemType.class);
-            IQuickFixResolver[] registeredResolvers = getRegisteredResolvers(getQuickFixProblem());
-            for (IQuickFixResolver resolver : registeredResolvers) {
-                List<ProblemType> types = resolver.getProblemTypes();
-                for (ProblemType type : types) {
-                    List<IQuickFixResolver> resolvers = registry.get(type);
-                    if (resolvers == null) {
-                        resolvers = new ArrayList<>(registeredResolvers.length);
-                        registry.put(type, resolvers);
-                    }
-                    resolvers.add(resolver);
+            for (IQuickFixResolver resolver : getRegisteredResolvers(getQuickFixProblem())) {
+                for (ProblemType type : resolver.getProblemTypes()) {
+                    registry.computeIfAbsent(type, x -> new ArrayList<>())
+                        .add(resolver);
                 }
             }
         }

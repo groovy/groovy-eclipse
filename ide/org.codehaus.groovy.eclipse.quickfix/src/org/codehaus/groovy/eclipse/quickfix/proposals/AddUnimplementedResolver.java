@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 package org.codehaus.groovy.eclipse.quickfix.proposals;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.eclipse.jdt.internal.ui.text.correction.LocalCorrectionsSubProcessor;
@@ -30,21 +29,22 @@ public class AddUnimplementedResolver extends AbstractQuickFixResolver {
     }
 
     @Override
-    public List<IJavaCompletionProposal> getQuickFixProposals() {
-        Collection<ICommandAccess> proposals = new ArrayList<>(2);
-        LocalCorrectionsSubProcessor.addUnimplementedMethodsProposals(
-            getQuickFixProblem().getContext(), getQuickFixProblem().getLocation(), proposals);
-        List<IJavaCompletionProposal> newProposals = new ArrayList<>();
-        for (ICommandAccess command : proposals) {
-            if (command instanceof IJavaCompletionProposal) {
-                newProposals.add((IJavaCompletionProposal) command);
-            }
-        }
-        return newProposals;
+    protected ProblemType[] getTypes() {
+        return new ProblemType[] {ProblemType.UNIMPLEMENTED_METHODS_TYPE};
     }
 
     @Override
-    protected ProblemType[] getTypes() {
-        return new ProblemType[] {ProblemType.UNIMPLEMENTED_METHODS_TYPE};
+    public List<IJavaCompletionProposal> getQuickFixProposals() {
+        List<ICommandAccess> commands = new ArrayList<>(2);
+        LocalCorrectionsSubProcessor.addUnimplementedMethodsProposals(
+            getQuickFixProblem().getContext(), getQuickFixProblem().getLocation(), commands);
+
+        List<IJavaCompletionProposal> proposals = new ArrayList<>(2);
+        for (ICommandAccess command : commands) {
+            if (command instanceof IJavaCompletionProposal) {
+                proposals.add((IJavaCompletionProposal) command);
+            }
+        }
+        return proposals;
     }
 }

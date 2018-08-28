@@ -190,6 +190,11 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
         if (node instanceof AnnotatedNode && ((AnnotatedNode) node).getNameEnd() > 0) {
             start = ((AnnotatedNode) node).getNameStart();
             end = ((AnnotatedNode) node).getNameEnd();
+
+            if (node instanceof InnerClassNode && ((InnerClassNode) node).isAnonymous()) {
+                assert node.getStart() > ((AnnotatedNode) node).getNameEnd();
+                end = node.getStart() - 2; // cover constructor arguments
+            }
         } else if (!(node instanceof DeclarationExpression)) {
             start = node.getStart();
             end = node.getEnd() - 1;
@@ -210,13 +215,6 @@ public abstract class ClassCodeVisitorSupport extends CodeVisitorSupport impleme
                 // GRECLIPSE end
         );
     }
-
-    // GRECLIPSE add
-    @Deprecated
-    protected void addTypeError(String msg, ClassNode node) {
-        addError(msg, node);
-    }
-    // GRECLIPSE end
 
     // GRECLIPSE edit
     //protected abstract SourceUnit getSourceUnit();
