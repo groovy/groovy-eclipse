@@ -52,6 +52,7 @@ import org.codehaus.groovy.ast.PackageNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.TaskEntry;
 import org.codehaus.groovy.ast.expr.AnnotationConstantExpression;
+import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
@@ -59,7 +60,10 @@ import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
+import org.codehaus.groovy.ast.expr.MethodCall;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.PropertyExpression;
+import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.control.CompilationUnit;
@@ -1149,10 +1153,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 if (isInner) {
                     InnerClassNode innerClassNode = (InnerClassNode) classNode;
                     ClassNode outerClassNode = innerClassNode.getOuterClass();
-
-                    // produces a name like "1" but seems to be required to make matches
-                    typeDeclaration.name = innerClassNode.getNameWithoutPackage().substring(outerClassNode.getNameWithoutPackage().length() + 1).toCharArray();
-
                     // record that we need to set the parent of this inner type later
                     innersToRecord.computeIfAbsent(outerClassNode, x -> new ArrayList<>()).add(typeDeclaration);
 
@@ -1163,8 +1163,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         QualifiedAllocationExpression allocation = new QualifiedAllocationExpression(typeDeclaration);
                         allocation.sourceStart = isEnum ? typeDeclaration.sourceStart : typeDeclaration.sourceStart - 4; // approx. offset of "new"
                         allocation.sourceEnd = typeDeclaration.bodyEnd;
-                        // TODO: allocation.typeArguments = something
                         if (!isEnum) allocation.type = typeDeclaration.superclass;
+                        // TODO: allocation.typeArguments = something
+                    } else {
+                        typeDeclaration.name = innerClassNode.getNameWithoutPackage().substring(outerClassNode.getNameWithoutPackage().length() + 1).toCharArray();
                     }
                 } else {
                     typeDeclarations.add(typeDeclaration);
@@ -1192,13 +1194,17 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                             methodDeclaration.bits |= ASTNode.HasLocalType;
                             methodDeclaration.statements = (Statement[]) ArrayUtils.add(methodDeclaration.statements != null
                                         ? methodDeclaration.statements : new Statement[0], innerTypeDeclaration.allocation);
-                            innerTypeDeclaration.enclosingScope = new MethodScope(null, methodDeclaration, methodDeclaration.isStatic());
+                            // methodDeclaration.scope is null at this time; defer return value
+                            innerTypeDeclaration.enclosingScope = () -> methodDeclaration.scope;
                         } else if (location instanceof FieldDeclaration) {
                             FieldDeclaration fieldDeclaration = (FieldDeclaration) location;
                             fieldDeclaration.bits |= ASTNode.HasLocalType;
                             fieldDeclaration.initialization = innerTypeDeclaration.allocation;
-                            innerTypeDeclaration.enclosingScope = new MethodScope(null, outerTypeDeclaration, fieldDeclaration.isStatic());
-                        } else if (!innerTypeDeclaration.getClassNode().isEnum()) {
+
+                            if (innerTypeDeclaration.getClassNode().isEnum()) innerTypeDeclaration.allocation.enumConstant = fieldDeclaration;
+                            // outerTypeDeclaration.[i|staticI]nitializerScope is null at this time; defer creation of anonymous inner's enclosing scope
+                            innerTypeDeclaration.enclosingScope = () -> new MethodScope(fieldDeclaration.isStatic() ? outerTypeDeclaration.staticInitializerScope : outerTypeDeclaration.initializerScope, outerTypeDeclaration, fieldDeclaration.isStatic());
+                        } else {
                             throw new GroovyEclipseBug("Enclosing scope not found for anon. inner class: " + innerTypeDeclaration.getClassNode().getName());
                         }
 
@@ -1257,6 +1263,28 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                                             anonymousLocations.put(call.getType(), fieldDeclaration);
                                         }
                                         super.visitConstructorCallExpression(call);
+                                    }
+                                });
+                            }
+                        } else if (anonymousLocations != null) {
+                            MethodNode clinit = classNode.getMethod("<clinit>", Parameter.EMPTY_ARRAY);
+                            if (clinit != null && clinit.getCode() != null) {
+                                clinit.getCode().visit(new CodeVisitorSupport() {
+                                    private void checkForEnumConstantInitialization(MethodCall call, ClassNode thisType) {
+                                        if (call.getMethodAsString().equals("$INIT") && GroovyUtils.isAnonymous(thisType) &&
+                                                fieldNode.getName().equals(((ArgumentListExpression) call.getArguments()).getExpression(0).getText())) {
+                                            anonymousLocations.put(thisType, fieldDeclaration);
+                                        }
+                                    }
+                                    @Override
+                                    public void visitStaticMethodCallExpression(StaticMethodCallExpression call) {
+                                        checkForEnumConstantInitialization(call, call.getOwnerType());
+                                        super.visitStaticMethodCallExpression(call);
+                                    }
+                                    @Override
+                                    public void visitMethodCallExpression(MethodCallExpression call) {
+                                        checkForEnumConstantInitialization(call, call.getType());
+                                        super.visitMethodCallExpression(call);
                                     }
                                 });
                             }
@@ -2166,6 +2194,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             }
             if (node.isEnum()) {
                 modifiers &= ~(Flags.AccAbstract | Flags.AccFinal);
+                if (isInner && ((InnerClassNode) node).isAnonymous()) {
+                    modifiers &= ~(Flags.AccEnum | Flags.AccPublic);
+                }
             }
             if (!isInner) {
                 modifiers &= ~(Flags.AccProtected | Flags.AccPrivate | Flags.AccStatic);

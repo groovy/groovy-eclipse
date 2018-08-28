@@ -682,15 +682,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             assert enumConstant != null && enumConstant.exists();
             for (MethodNode method : node.getMethods()) {
                 if (method.getEnd() > 0) {
-                    // TODO: How does the JDT find a method under an enum constant?
-                    enclosingElement = Stream.of(enumConstant.getChildren()).filter(e -> {
-                        if (e instanceof IMethod && e.getElementName().equals(method.getName())) {
-                            /*return Arrays.equals(((IMethod) e).getParameterTypes(),
-                                GroovyUtils.getParameterTypeSignatures(method, enumConstant.isBinary()));*/
-                        }
-                        return false;
-                    }).findFirst().orElse(enclosingElement0);
-
+                    enclosingElement = JavaCoreUtil.findMethod(method, (IType) enumConstant.getChildren()[0]);
                     visitMethodInternal(method, false);
                 }
             }

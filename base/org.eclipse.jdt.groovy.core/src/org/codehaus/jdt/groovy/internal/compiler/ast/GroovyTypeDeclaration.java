@@ -16,6 +16,7 @@
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.PropertyNode;
@@ -23,9 +24,7 @@ import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
-import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 
 public class GroovyTypeDeclaration extends TypeDeclaration {
@@ -44,9 +43,9 @@ public class GroovyTypeDeclaration extends TypeDeclaration {
 
     private final ClassNode classNode;
 
-    protected BlockScope enclosingScope;
-
     protected List<PropertyNode> properties;
+
+    protected Supplier<BlockScope> enclosingScope;
 
     // FIXASC Is this always what we want to do - are there any other implications?
     @Override
@@ -75,23 +74,5 @@ public class GroovyTypeDeclaration extends TypeDeclaration {
 
     public void addAnonymousType(GroovyTypeDeclaration anonymousType) {
         anonymousTypes = (GroovyTypeDeclaration[]) ArrayUtils.add(getAnonymousTypes(), anonymousType);
-    }
-
-    /**
-     * Fixes the super types of anonymous inner classes These kinds of classes are always constructed so that they extend the super
-     * type, even if the super type is an interface. This is because during parse time we don't know if the super type is a class or
-     * interface, se we need to wait until after the resolve phase to fix this.
-     */
-    public void fixAnonymousTypeBinding() {
-        if (classNode.getInterfaces() != null &&
-            classNode.getInterfaces().length == 1 &&
-            classNode.getSuperClass().getName().equals("java.lang.Object")) {
-
-            superInterfaces = new TypeReference[] {superclass};
-            binding.superInterfaces = new ReferenceBinding[] {
-                (ReferenceBinding) superclass.resolvedType,
-            };
-            superclass = null;
-        }
     }
 }
