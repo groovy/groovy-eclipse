@@ -293,7 +293,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
     }
 
-    //------------------------------------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
 
     /**
      * Returns the Groovy compilation unit shared by all files in the same project.
@@ -570,7 +570,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
     }
 
-    //------------------------------------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
 
     @Override
     public CompilationUnitScope buildCompilationUnitScope(LookupEnvironment lookupEnvironment) {
@@ -850,7 +850,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         this.isScript = true;
     }
 
-    //------------------------------------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
 
     /**
      * Helps check if some class node is trait.
@@ -1114,15 +1114,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             List<TypeDeclaration> typeDeclarations = new ArrayList<>();
             Map<ClassNode, TypeDeclaration> fromClassNodeToDecl = new HashMap<>();
 
-            CompilationResult compilationResult = unitDeclaration.compilationResult;
-            char[] mainName = toMainName(compilationResult.getFileName());
+            char[] mainName = toMainName(unitDeclaration.compilationResult.getFileName());
             Map<ClassNode, List<TypeDeclaration>> innersToRecord = new HashMap<>();
             for (ClassNode classNode : moduleClassNodes) {
                 if (!classNode.isPrimaryClassNode()) {
                     continue;
                 }
 
-                GroovyTypeDeclaration typeDeclaration = new GroovyTypeDeclaration(compilationResult, classNode);
+                GroovyTypeDeclaration typeDeclaration = new GroovyTypeDeclaration(unitDeclaration.compilationResult, classNode);
                 typeDeclaration.annotations = createAnnotations(classNode.getAnnotations());
 
                 boolean isInner;
@@ -1147,7 +1146,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 configureSuperClass(typeDeclaration, classNode.getSuperClass(), isEnum, isTrait(classNode));
                 configureSuperInterfaces(typeDeclaration, classNode);
                 typeDeclaration.fields = createFieldDeclarations(classNode, isEnum);
-                typeDeclaration.methods = createMethodAndConstructorDeclarations(classNode, isEnum, typeDeclaration, compilationResult);
+                typeDeclaration.methods = createConstructorAndMethodDeclarations(classNode, isEnum, typeDeclaration);
                 typeDeclaration.properties = classNode.getProperties();
 
                 if (isInner) {
@@ -1221,19 +1220,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         /**
-         * Build JDT representations of all the fields on the groovy type. <br>
-         * Enum field handling<br>
-         * Groovy handles them as follows: they have the ACC_ENUM bit set and the type is the type of the declaring enum type. When
-         * building declarations, if you want the SourceTypeBinding to correctly build an enum field binding (in
-         * SourceTypeBinding.resolveTypeFor(FieldBinding)) then you need to: (1) avoid setting modifiers, the enum fields are not
-         * expected to have any modifiers (2) leave the type as null, that is how these things are identified by JDT.
+         * Build JDT representations of all the fields on the Groovy type.
          */
         private FieldDeclaration[] createFieldDeclarations(ClassNode classNode, boolean isEnum) {
             List<FieldDeclaration> fieldDeclarations = new ArrayList<>();
             List<FieldNode> fieldNodes = classNode.getFields();
-            boolean isTrait = isTrait(classNode);
-            if (fieldNodes != null) {
-                for (final FieldNode fieldNode : fieldNodes) {
+            if (fieldNodes != null && !fieldNodes.isEmpty()) {
+                boolean isTrait = isTrait(classNode);
+                for (FieldNode fieldNode : fieldNodes) {
                     if (isTrait && !(fieldNode.isPublic() && fieldNode.isStatic() && fieldNode.isFinal())) {
                         continue;
                     }
@@ -1299,22 +1293,20 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         /**
-         * Build JDT representations of all the method/ctors on the groovy type.
+         * Build JDT representations of all the constructors and methods on the Groovy type.
          */
-        private AbstractMethodDeclaration[] createMethodAndConstructorDeclarations(ClassNode classNode, boolean isEnum,
-                GroovyTypeDeclaration typeDeclaration, CompilationResult compilationResult) {
-            List<AbstractMethodDeclaration> accumulatedDeclarations = new ArrayList<>();
-            createConstructorDeclarations(classNode, isEnum, accumulatedDeclarations);
-            createMethodDeclarations(classNode, isEnum, typeDeclaration, accumulatedDeclarations);
-            return accumulatedDeclarations.toArray(new AbstractMethodDeclaration[accumulatedDeclarations.size()]);
+        private AbstractMethodDeclaration[] createConstructorAndMethodDeclarations(ClassNode classNode, boolean isEnum,
+                GroovyTypeDeclaration typeDeclaration) {
+            List<AbstractMethodDeclaration> methodDeclarations = new ArrayList<>();
+            createConstructorDeclarations(classNode, isEnum, methodDeclarations);
+            createMethodDeclarations(classNode, isEnum, typeDeclaration, methodDeclarations);
+            return methodDeclarations.toArray(new AbstractMethodDeclaration[methodDeclarations.size()]);
         }
 
         /**
-         * Build JDT representations of all the constructors on the groovy type.
+         * Build JDT representations of all the constructors on the Groovy type.
          */
-        private void createConstructorDeclarations(ClassNode classNode, boolean isEnum,
-                List<AbstractMethodDeclaration> accumulatedMethodDeclarations) {
-
+        private void createConstructorDeclarations(ClassNode classNode, boolean isEnum, List<AbstractMethodDeclaration> methodDeclarations) {
             List<ConstructorNode> constructorNodes = classNode.getDeclaredConstructors();
 
             char[] ctorName; boolean isAnon = false;
@@ -1336,21 +1328,40 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     constructor.modifiers = Flags.AccPublic;
                 }
                 constructor.selector = ctorName;
-                accumulatedMethodDeclarations.add(constructor);
+                methodDeclarations.add(constructor);
             }
 
             for (ConstructorNode constructorNode : constructorNodes) {
-                final ConstructorDeclaration constructorDeclaration = new ConstructorDeclaration(unitDeclaration.compilationResult);
-                fixupSourceLocationsForConstructorDeclaration(constructorDeclaration, constructorNode);
-                constructorDeclaration.annotations = createAnnotations(constructorNode.getAnnotations());
-                constructorDeclaration.modifiers = isEnum ? Flags.AccPrivate : getModifiers(constructorNode);
-                constructorDeclaration.selector = ctorName;
-                constructorDeclaration.arguments = createArguments(constructorNode.getParameters(), false);
-                constructorDeclaration.thrownExceptions = createTypeReferencesForClassNodes(constructorNode.getExceptions());
+                ConstructorDeclaration constructorDecl = new ConstructorDeclaration(unitDeclaration.compilationResult);
+                fixupSourceLocationsForConstructorDeclaration(constructorDecl, constructorNode);
+                constructorDecl.annotations = createAnnotations(constructorNode.getAnnotations());
+                constructorDecl.arguments = createArguments(constructorNode.getParameters(), false);
+                constructorDecl.modifiers = isEnum ? Flags.AccPrivate : getModifiers(constructorNode);
+                constructorDecl.selector = ctorName;
+                constructorDecl.thrownExceptions = createTypeReferencesForClassNodes(constructorNode.getExceptions());
+
+                methodDeclarations.add(constructorDecl);
+
                 if (constructorNode.hasDefaultValue()) {
-                    createConstructorVariants(constructorNode, constructorDeclaration, accumulatedMethodDeclarations, unitDeclaration.compilationResult, isEnum);
-                } else {
-                    accumulatedMethodDeclarations.add(constructorDeclaration);
+                    for (Argument[] variantArgs : getVariantsAllowingForDefaulting(constructorNode.getParameters(), constructorDecl.arguments)) {
+                        ConstructorDeclaration variantDecl = new ConstructorDeclaration(unitDeclaration.compilationResult);
+                        variantDecl.annotations = constructorDecl.annotations;
+                        variantDecl.arguments = variantArgs;
+                        variantDecl.javadoc = constructorDecl.javadoc;
+                        variantDecl.modifiers = constructorDecl.modifiers;
+                        variantDecl.selector = constructorDecl.selector;
+                        variantDecl.thrownExceptions = constructorDecl.thrownExceptions;
+
+                        variantDecl.declarationSourceStart = 0;
+                        variantDecl.declarationSourceEnd = -1;
+                        variantDecl.modifiersSourceStart = 0;
+                        variantDecl.sourceStart = 0;
+                        variantDecl.sourceEnd = -1;
+                        variantDecl.bodyStart = 0;
+                        variantDecl.bodyEnd = -1;
+
+                        addUnlessDuplicate(methodDeclarations, variantDecl);
+                    }
                 }
 
                 if (anonymousLocations != null && constructorNode.getCode() != null) {
@@ -1358,7 +1369,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         @Override
                         public void visitConstructorCallExpression(ConstructorCallExpression call) {
                             if (call.isUsingAnonymousInnerClass()) {
-                                anonymousLocations.put(call.getType(), constructorDeclaration);
+                                anonymousLocations.put(call.getType(), constructorDecl);
                             }
                             super.visitConstructorCallExpression(call);
                         }
@@ -1368,53 +1379,64 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         /**
-         * Build JDT representations of all the methods on the groovy type
-         *
-         * @param typeDeclaration the type declaration the method is being created for
+         * Build JDT representations of all the methods on the Groovy type.
          */
-        private void createMethodDeclarations(ClassNode classNode, boolean isEnum,
-                GroovyTypeDeclaration typeDeclaration, List<AbstractMethodDeclaration> accumulatedDeclarations) {
-            boolean isTrait = isTrait(classNode);
-            List<MethodNode> methods = classNode.getMethods();
-            for (MethodNode methodNode : methods) {
+        private void createMethodDeclarations(ClassNode classNode, boolean isEnum, GroovyTypeDeclaration typeDeclaration, List<AbstractMethodDeclaration> methodDeclarations) {
+            List<MethodNode> methodNodes = classNode.getMethods();
+            if (methodNodes != null && !methodNodes.isEmpty()) {
+                boolean isTrait = isTrait(classNode);
+                for (MethodNode methodNode : methodNodes) {
+                    if (isEnum && methodNode.isSynthetic()) {
+                        continue;
+                    }
+                    if (isTrait && (!methodNode.isPublic() || methodNode.isStatic())) {
+                        continue;
+                    }
 
-                if (isEnum && methodNode.isSynthetic()) {
-                    continue;
-                }
-                if (isTrait && (!methodNode.isPublic() || methodNode.isStatic())) {
-                    continue;
-                }
-                final MethodDeclaration methodDeclaration = createMethodDeclaration(classNode, isEnum, methodNode, unitDeclaration.compilationResult);
-                if (methodNode.isAbstract()) {
-                    typeDeclaration.bits |= ASTNode.HasAbstractMethods;
-                }
-                if (methodNode.hasDefaultValue()) {
-                    createMethodVariants(classNode, methodNode, isEnum, methodDeclaration, accumulatedDeclarations, unitDeclaration.compilationResult);
-                } else {
-                    accumulatedDeclarations.add(methodDeclaration);
-                }
+                    MethodDeclaration methodDecl = createMethodDeclaration(classNode, isEnum, methodNode);
+                    methodDeclarations.add(methodDecl);
 
-                if (anonymousLocations != null && methodNode.getCode() != null) {
-                    methodNode.getCode().visit(new CodeVisitorSupport() {
-                        @Override
-                        public void visitConstructorCallExpression(ConstructorCallExpression call) {
-                            if (call.isUsingAnonymousInnerClass()) {
-                                anonymousLocations.put(call.getType(), methodDeclaration);
-                            }
-                            super.visitConstructorCallExpression(call);
+                    if (methodNode.isAbstract()) {
+                        typeDeclaration.bits |= ASTNode.HasAbstractMethods;
+                    }
+                    if (methodNode.hasDefaultValue()) {
+                        for (Argument[] variantArgs : getVariantsAllowingForDefaulting(methodNode.getParameters(), methodDecl.arguments)) {
+                            MethodDeclaration variantDecl = createMethodDeclaration(classNode, isEnum, methodNode);
+                            variantDecl.arguments = variantArgs;
+
+                            variantDecl.declarationSourceStart = 0;
+                            variantDecl.declarationSourceEnd = -1;
+                            variantDecl.modifiersSourceStart = 0;
+                            variantDecl.sourceStart = 0;
+                            variantDecl.sourceEnd = -1;
+                            variantDecl.bodyStart = 0;
+                            variantDecl.bodyEnd = -1;
+
+                            addUnlessDuplicate(methodDeclarations, variantDecl);
                         }
-                    });
+                    }
+
+                    if (anonymousLocations != null && methodNode.getCode() != null) {
+                        methodNode.getCode().visit(new CodeVisitorSupport() {
+                            @Override
+                            public void visitConstructorCallExpression(ConstructorCallExpression call) {
+                                if (call.isUsingAnonymousInnerClass()) {
+                                    anonymousLocations.put(call.getType(), methodDecl);
+                                }
+                                super.visitConstructorCallExpression(call);
+                            }
+                        });
+                    }
                 }
             }
         }
 
         /**
-         * Create a JDT MethodDeclaration that represents a groovy MethodNode
+         * Create a JDT {@link MethodDeclaration} that represents a Groovy {@link MethodNode}.
          */
-        private MethodDeclaration createMethodDeclaration(ClassNode classNode, boolean isEnum,
-                MethodNode methodNode, CompilationResult compilationResult) {
+        private MethodDeclaration createMethodDeclaration(ClassNode classNode, boolean isEnum, MethodNode methodNode) {
             if (classNode.isAnnotationDefinition()) {
-                AnnotationMethodDeclaration methodDeclaration = new AnnotationMethodDeclaration(compilationResult);
+                AnnotationMethodDeclaration methodDeclaration = new AnnotationMethodDeclaration(unitDeclaration.compilationResult);
                 methodDeclaration.annotations = createAnnotations(methodNode.getAnnotations());
                 methodDeclaration.selector = methodNode.getName().toCharArray();
                 methodDeclaration.modifiers = getModifiers(methodNode);
@@ -1427,7 +1449,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 fixupSourceLocationsForMethodDeclaration(methodDeclaration, methodNode);
                 return methodDeclaration;
             } else {
-                MethodDeclaration methodDeclaration = new MethodDeclaration(compilationResult);
+                MethodDeclaration methodDeclaration = new MethodDeclaration(unitDeclaration.compilationResult);
                 methodDeclaration.annotations = createAnnotations(methodNode.getAnnotations());
                 methodDeclaration.selector = methodNode.getName().toCharArray();
                 GenericsType[] generics = methodNode.getGenericsTypes();
@@ -1464,40 +1486,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             }
         }
 
-        /**
-         * Called if a constructor has some 'defaulting' arguments and will compute all the variants (including the one with all
-         * parameters).
-         */
-        private void createConstructorVariants(ConstructorNode constructorNode, ConstructorDeclaration constructorDecl,
-                List<AbstractMethodDeclaration> accumulatedDeclarations, CompilationResult compilationResult, boolean isEnum) {
-
-            List<Argument[]> variants = getVariantsAllowingForDefaulting(constructorNode.getParameters(), constructorDecl.arguments);
-
-            for (Argument[] variant : variants) {
-                ConstructorDeclaration constructorDeclaration = new ConstructorDeclaration(compilationResult);
-                constructorDeclaration.annotations = createAnnotations(constructorNode.getAnnotations());
-                constructorDeclaration.modifiers = isEnum ? Flags.AccPrivate : Flags.AccPublic;
-                constructorDeclaration.selector = constructorDecl.selector;
-                constructorDeclaration.arguments = variant;
-                fixupSourceLocationsForConstructorDeclaration(constructorDeclaration, constructorNode);
-                addUnlessDuplicate(accumulatedDeclarations, constructorDeclaration);
-            }
-        }
-
-        /**
-         * Called if a method has some 'defaulting' arguments and will compute all the variants (including the one with all parameters).
-         */
-        private void createMethodVariants(ClassNode classNode, MethodNode method, boolean isEnum, MethodDeclaration methodDecl,
-                List<AbstractMethodDeclaration> accumulatedDeclarations, CompilationResult compilationResult) {
-            List<Argument[]> variants = getVariantsAllowingForDefaulting(method.getParameters(), methodDecl.arguments);
-            for (Argument[] variant : variants) {
-                MethodDeclaration variantMethodDeclaration = genMethodDeclarationVariant(classNode, method, isEnum, variant,
-                        methodDecl.returnType, compilationResult);
-                addUnlessDuplicate(accumulatedDeclarations, variantMethodDeclaration);
-            }
-        }
-
-        //--------------------------------------------------------------------------------------------------------------
+        //----------------------------------------------------------------------
 
         private void configureSuperClass(TypeDeclaration typeDeclaration, ClassNode superclass, boolean isEnum, boolean isTrait) {
             if ((isEnum && superclass.getName().equals("java.lang.Enum")) || isTrait) {
@@ -1614,7 +1603,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 if (text == null || text.length == 0) text = expr.getText().toCharArray();
                 char[][] toks = CharOperation.splitOn('.', text);
 
-                final int n = "class".equals(String.valueOf(toks[toks.length - 1]).trim()) ? toks.length - 1 : toks.length;
+                int n = "class".equals(String.valueOf(toks[toks.length - 1]).trim()) ? toks.length - 1 : toks.length;
                 long[] poss = positionsFor(toks, expr.getStart(), expr.getEnd());
 
                 return new ClassLiteralAccess(expr.getEnd(), n == 1 ? new SingleTypeReference(toks[0], poss[0])
@@ -1863,7 +1852,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             final int n = classNodes.length;
             if (n == 0) return null;
 
-            final TypeReference[] refs = new TypeReference[n];
+            TypeReference[] refs = new TypeReference[n];
             for (int i = 0; i < n; i += 1) {
                 refs[i] = createTypeReferenceForClassNode(classNodes[i]);
             }
@@ -2098,7 +2087,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             nameToPrimitiveTypeId.put("void", TypeIds.T_void);
         }
 
-        //--------------------------------------------------------------------------------------------------------------
+        //----------------------------------------------------------------------
 
         /**
          * For some input array (usually representing a reference), work out the offset positions, assuming they are dotted. <br>
@@ -2542,40 +2531,29 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         }
 
         /**
-         * Create a JDT representation of a groovy MethodNode - but with some parameters defaulting
-         */
-        private MethodDeclaration genMethodDeclarationVariant(ClassNode classNode, MethodNode methodNode, boolean isEnum,
-                Argument[] alternativeArguments, TypeReference returnType, CompilationResult compilationResult) {
-            MethodDeclaration methodDeclaration = createMethodDeclaration(classNode, isEnum, methodNode, compilationResult);
-            methodDeclaration.arguments = alternativeArguments;
-            fixupSourceLocationsForMethodDeclaration(methodDeclaration, methodNode);
-            return methodDeclaration;
-        }
-
-        /**
          * In the given list of groovy parameters, some are defined as defaulting to an initial value. This method computes all the
          * variants of defaulting parameters allowed and returns a List of Argument arrays. Each argument array represents a variation.
          */
-        private List<Argument[]> getVariantsAllowingForDefaulting(Parameter[] groovyParams, Argument[] jdtArguments) {
+        private static List<Argument[]> getVariantsAllowingForDefaulting(Parameter[] groovyParameters, Argument[] javaArguments) {
             List<Argument[]> variants = new ArrayList<>();
 
-            int psCount = groovyParams.length;
-            Parameter[] wipableParameters = new Parameter[psCount];
-            System.arraycopy(groovyParams, 0, wipableParameters, 0, psCount);
+            final int nParams = groovyParameters.length;
+            Parameter[] wipableParameters = new Parameter[nParams];
+            System.arraycopy(groovyParameters, 0, wipableParameters, 0, nParams);
 
             // Algorithm: wipableParameters is the 'full list' of parameters at the start. As the loop is repeated, all the non-null
             // values in the list indicate a parameter variation. On each repeat we null the last one in the list that
             // has an initial expression. This is repeated until there are no more left to null.
 
-            List<Argument> oneVariation = new ArrayList<>();
-            int nextToLetDefault = -1;
+            List<Argument> variantArgs = new ArrayList<>(nParams);
+            int nextToLetDefault;
             do {
-                oneVariation.clear();
+                variantArgs.clear();
                 nextToLetDefault = -1;
-                // Create a variation based on the non null entries left in th elist
-                for (int p = 0; p < psCount; p++) {
+                // create a variation based on the non-null entries left in the array
+                for (int p = 0; p < nParams; p += 1) {
                     if (wipableParameters[p] != null) {
-                        oneVariation.add(jdtArguments[p]);
+                        variantArgs.add(javaArguments[p]);
                         if (wipableParameters[p].hasInitialExpression()) {
                             nextToLetDefault = p;
                         }
@@ -2584,9 +2562,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 if (nextToLetDefault != -1) {
                     wipableParameters[nextToLetDefault] = null;
                 }
-                Argument[] argumentsVariant = (oneVariation.size() == 0 ? null
-                        : oneVariation.toArray(new Argument[oneVariation.size()]));
-                variants.add(argumentsVariant);
+                int nArgs = variantArgs.size();
+                if (nArgs < nParams) { // no need to return the original arguments
+                    variants.add(nArgs == 0 ? null : variantArgs.toArray(new Argument[nArgs]));
+                }
             } while (nextToLetDefault != -1);
 
             return variants;

@@ -5900,7 +5900,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testInnerClass1() {
+    public void testAnonymousInnerClass1() {
         runConformTest(new String[] {
             "A.groovy",
             "def foo = new Runnable() {\n" +
@@ -5933,7 +5933,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testInnerClass1a() {
+    public void testAnonymousInnerClass2() {
         runConformTest(new String[] {
             "A.groovy",
             "class A {" +
@@ -5966,7 +5966,83 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testInnerClass2() {
+    public void testAnonymousInnerClass3() {
+        runConformTest(new String[] {
+            "A.groovy",
+            "class A {" +
+            "  def foo(int bar) {\n" +
+            "    new Runnable() {\n" +
+            "      void run() {\n" +
+            "        println 'hi!'\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new A().foo(0).run()\n" +
+            "  }\n" +
+            "}\n",
+        },
+        "hi!");
+
+        checkGCUDeclaration("A.groovy",
+            "public class A {\n" +
+            "  public A() {\n" +
+            "  }\n" +
+            "  public java.lang.Object foo(int bar) {\n" +
+            "    new Runnable() {\n" +
+            "      x() {\n" +
+            "        super();\n" +
+            "      }\n" +
+            "      public void run() {\n" +
+            "      }\n" +
+            "    };\n" +
+            "  }\n" +
+            "  public static void main(java.lang.String... args) {\n" +
+            "  }\n" +
+            "}");
+    }
+
+    @Test
+    public void testAnonymousInnerClass4() {
+        runConformTest(new String[] {
+            "A.groovy",
+            "class A {" +
+            "  def foo(int bar, int baz = 0) {\n" +
+            "    new Runnable() {\n" +
+            "      void run() {\n" +
+            "        println 'hi!'\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new A().foo(0, 1).run()\n" +
+            "  }\n" +
+            "}\n",
+        },
+        "hi!");
+
+        checkGCUDeclaration("A.groovy",
+            "public class A {\n" +
+            "  public A() {\n" +
+            "  }\n" +
+            "  public java.lang.Object foo(int bar, int baz) {\n" +
+            "    new Runnable() {\n" +
+            "      x() {\n" +
+            "        super();\n" +
+            "      }\n" +
+            "      public void run() {\n" +
+            "      }\n" +
+            "    };\n" +
+            "  }\n" +
+            "  public java.lang.Object foo(int bar) {\n" +
+            "  }\n" +
+            "  public static void main(java.lang.String... args) {\n" +
+            "  }\n" +
+            "}");
+    }
+
+    @Test
+    public void testAnonymousInnerClass5() {
         runConformTest(new String[] {
             "A.groovy",
             "def foo = new Runnable() {\n" +
@@ -5985,7 +6061,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testInnerClass3() {
+    public void testAnonymousInnerClass6() {
         runConformTest(new String[] {
             "A.groovy",
             "def foo() {\n" +
@@ -6001,7 +6077,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testInnerClass4() {
+    public void testAnonymousInnerClass7() {
         runConformTest(new String[] {
             "A.groovy",
             "class Foo {\n" +
@@ -6017,7 +6093,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testInnerClass5() {
+    public void testAnonymousInnerClass8() {
         runNegativeTest(new String[] {
             "A.groovy",
             "def foo = new Runnable() {\n" +

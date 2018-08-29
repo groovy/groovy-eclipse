@@ -49,7 +49,6 @@ import org.codehaus.groovy.eclipse.core.GroovyCore;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTFieldNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTMethodNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
-import org.codehaus.jdt.groovy.model.GroovyProjectFacade;
 import org.codehaus.jdt.groovy.model.JavaCoreUtil;
 import org.eclipse.jdt.core.IField;
 import org.eclipse.jdt.core.IJavaElement;
@@ -236,11 +235,8 @@ public class CodeSelectRequestor implements ITypeRequestor {
                     // find it in the java model
                     IType type = (IType) enclosingElement.getAncestor(IJavaElement.TYPE);
                     if (type == null || !type.getFullyQualifiedName().equals(declaringType.getName())) {
-                        if (!GroovyUtils.isAnonymous(declaringType)) {
-                            type = JavaCoreUtil.findType(declaringType.getName(), enclosingElement);
-                        } else {
-                            type = new GroovyProjectFacade(enclosingElement).groovyClassToJavaType(declaringType);
-                        }
+                        assert !GroovyUtils.isAnonymous(declaringType) : "Anonymous type here!";
+                        type = JavaCoreUtil.findType(declaringType.getName(), enclosingElement);
                     }
                     if (type == null && !gunit.isOnBuildPath()) {
                         // try to find it in the current compilation unit

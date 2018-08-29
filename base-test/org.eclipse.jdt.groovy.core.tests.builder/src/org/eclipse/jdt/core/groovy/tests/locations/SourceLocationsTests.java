@@ -18,6 +18,7 @@ package org.eclipse.jdt.core.groovy.tests.locations;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assume.assumeTrue;
 
 import java.util.List;
@@ -33,7 +34,6 @@ import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.SourceRange;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.BodyDeclaration;
@@ -74,23 +74,45 @@ public final class SourceLocationsTests extends BuilderTestSuite {
 
         IJavaElement[] children = decl.getChildren();
         List<BodyDeclaration> bodyDecls = typeDecl.bodyDeclarations();
-        for (int i = 0, j= 0; i < children.length; i += 1, j += 1) {
-            // look for method variants that use default params
-            if (i > 0 && (children[i] instanceof IMethod) && children[i].getElementName().equals(children[i-1].getElementName())) {
-                j -= 1;
-            }
-            // check for multiple declaration fragments inside a field declaration
-            // start locations and end locations for fragments are not calculated entirely correctly
-            // the first fragment has a start and end of the entire declaration
-            // the subsequent fragments have a start at the name start and an end after the fragment's optional expression (or the name end if there is none.
-            // so, here check to see if the name start and source start are the same.  If so, then this is a second fragment
+        for (int i = 0, j = 0, n = children.length; i < n; i += 1, j += 1) {
+            // look for method variants that are the result of parameters with default values
+            if (i > 0 && (children[i] instanceof IMethod) && children[i].getElementName().equals(children[i - 1].getElementName())) {
+                IMethod variant = (IMethod) children[i];
 
-            if (decl.isEnum()) {
-                // not properly testing synthetic enum members yet
-                IMember member = (IMember) children[i];
-                assertEquals(new SourceRange(0, 0), member.getSourceRange());
+                ISourceRange range = variant.getSourceRange();
+                assertEquals(0, range.getOffset());
+                assertEquals(0, range.getLength());
+
+                range = variant.getNameRange();
+                assertEquals(0, range.getOffset());
+                assertEquals(0, range.getLength());
+
+                // TODO: variant.getJavadocRange() should match original
+
+                BodyDeclaration bodyDecl = bodyDecls.get(i);
+                assertEquals(0, bodyDecl.getStartPosition());
+                assertEquals(0, bodyDecl.getLength());
+
+                assertNull(((MethodDeclaration) bodyDecl).getBody());
             } else {
-                assertDeclaration((IMember) children[i], bodyDecls.get(i), j, source);
+                IMember member = (IMember) children[i];
+
+                // check for multiple declaration fragments inside a field declaration
+                // start locations and end locations for fragments are not calculated
+                // entirely correctly the first fragment has a start and end of the
+                // entire declaration the subsequent fragments have a start at the name
+                // start and an end after the fragment's optional expression (or the
+                // name end if there is none. so, here check to see if the name start
+                // and source start are the same.  If so, then this is a second fragment
+
+                if (decl.isEnum()) {
+                    // not properly testing synthetic enum members yet
+                    ISourceRange range = member.getSourceRange();
+                    assertEquals(0, range.getOffset());
+                    assertEquals(0, range.getLength());
+                } else {
+                    assertDeclaration(member, bodyDecls.get(i), j, source);
+                }
             }
         }
     }
@@ -186,11 +208,11 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         IType script = unit.getTypes()[0];
         IMethod runMethod = script.getMethod("run", new String[0]);
         int start = source.indexOf(startText);
-        int end = source.lastIndexOf(endText)+endText.length();
+        int end = source.lastIndexOf(endText) + endText.length();
         assertEquals("Wrong start for script class.  Text:\n" + source, start, script.getSourceRange().getOffset());
-        assertEquals("Wrong end for script class.  Text:\n" + source, end, script.getSourceRange().getOffset()+script.getSourceRange().getLength());
+        assertEquals("Wrong end for script class.  Text:\n" + source, end, script.getSourceRange().getOffset() + script.getSourceRange().getLength());
         assertEquals("Wrong start for run method.  Text:\n" + source, start, runMethod.getSourceRange().getOffset());
-        assertEquals("Wrong end for run method.  Text:\n" + source, end, runMethod.getSourceRange().getOffset()+script.getSourceRange().getLength());
+        assertEquals("Wrong end for run method.  Text:\n" + source, end, runMethod.getSourceRange().getOffset() + script.getSourceRange().getLength());
     }
 
     private static void assertUnit(ICompilationUnit unit, String source) throws Exception {
@@ -300,9 +322,9 @@ public final class SourceLocationsTests extends BuilderTestSuite {
             "  /*m0s*/def /*m0sn*/main/*m0en*/(args = \"hi!\") /*m0sb*/{\n" +
             "    System.out.println(\"Hello world\")\n" +
             "  }/*m0e*/\n" +
-            "  /*m1s*/def /*m1sn*/main2/*m1en*/(args = \"hi!\", blargs = \"bye\") /*m1sb*/{\n" +
+            "  /*m2s*/def /*m2sn*/main2/*m2en*/(args = \"hi!\", blargs = \"bye\") /*m2sb*/{\n" +
             "    System.out.println(\"Hello world\")\n" +
-            "  }/*m1e*/\n" +
+            "  }/*m2e*/\n" +
             "}/*t0e*/\n";
         assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }
@@ -361,35 +383,35 @@ public final class SourceLocationsTests extends BuilderTestSuite {
     @Test
     public void testSourceLocationsForScript2() throws Exception {
         String source = "package p1;\n" +
-            "def x() { }";
-        assertScript(source, createCompUnit("p1", "Hello", source), "def x", "{ }");
+            "def x() {}";
+        assertScript(source, createCompUnit("p1", "Hello", source), "def x", "{}");
     }
 
     @Test
     public void testSourceLocationsForScript3() throws Exception {
         String source = "package p1;\n" +
-            "x() \n def x() { }";
-        assertScript(source, createCompUnit("p1", "Hello", source), "x()", "{ }");
+            "x() \n def x() {}";
+        assertScript(source, createCompUnit("p1", "Hello", source), "x()", "{}");
     }
 
     @Test
     public void testSourceLocationsForScript4() throws Exception {
         String source = "package p1;\n" +
-            "def x() { }\nx()";
+            "def x() {}\nx()";
         assertScript(source, createCompUnit("p1", "Hello", source), "def x", "x()");
     }
 
     @Test
     public void testSourceLocationsForScript5() throws Exception {
         String source = "package p1;\n" +
-            "def x() { }\nx()\ndef y() { }";
-        assertScript(source, createCompUnit("p1", "Hello", source), "def x", "def y() { }");
+            "def x() {}\nx()\ndef y() {}";
+        assertScript(source, createCompUnit("p1", "Hello", source), "def x", "def y() {}");
     }
 
     @Test
     public void testSourceLocationsForScript6() throws Exception {
         String source = "package p1;\n" +
-            "x()\n def x() { }\n\ndef y() { }\ny()";
+            "x()\n def x() {}\n\ndef y() {}\ny()";
         assertScript(source, createCompUnit("p1", "Hello", source), "x()", "\ny()");
     }
 
@@ -467,6 +489,7 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         IPath root = createGenericProject();
         IPath path = env.addGroovyClass(root, "", "Hello", source);
         incrementalBuild();
-        expectingSpecificProblemFor(root, new Problem("p/Hello", "Groovy:Operator (\"===\" at 3:11:  \"===\" ) not supported @ line 3, column 11.", path, 34, 37, 60, IMarker.SEVERITY_ERROR));
+        expectingSpecificProblemFor(root, new Problem("p/Hello",
+            "Groovy:Operator (\"===\" at 3:11:  \"===\" ) not supported @ line 3, column 11.", path, 34, 37, 60, IMarker.SEVERITY_ERROR));
     }
 }
