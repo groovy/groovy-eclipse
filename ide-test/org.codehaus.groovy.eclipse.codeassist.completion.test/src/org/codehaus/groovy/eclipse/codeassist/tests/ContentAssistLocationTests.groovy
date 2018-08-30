@@ -686,11 +686,25 @@ final class ContentAssistLocationTests extends CompletionTestSuite {
     @Test
     void testClassBody8() {
         String contents = '''\
-            def list = new ArrayList(7) {
+            def list = new ArrayList(42) {
               x
             }
             '''.stripIndent()
         assertLocation(contents.replace('x', ''), contents.indexOf('x'), ContentAssistLocation.CLASS_BODY)
+    }
+
+    @Test
+    void testClassBody9() {
+        String contents = '''\
+            class A {
+              @Lazy def list = new ArrayList(42) {
+                x
+              }
+            }
+            '''.stripIndent()
+        assertLocation(contents.replace('x', ''), contents.indexOf('x'), ContentAssistLocation.CLASS_BODY) {
+            assert enclosingGroovyType.name == 'A$1'
+        }
     }
 
     @Test

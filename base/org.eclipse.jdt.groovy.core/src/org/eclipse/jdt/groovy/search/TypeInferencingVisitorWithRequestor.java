@@ -104,6 +104,7 @@ import org.codehaus.groovy.transform.sc.ListOfExpressionsExpression;
 import org.codehaus.groovy.transform.sc.transformers.CompareToNullExpression;
 import org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
+import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyEclipseBug;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.JavaCoreUtil;
@@ -383,19 +384,21 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
 
         if (isLazy(fieldNode)) {
-            MethodNode lazyMethod = findLazyMethod(field.getElementName());
-            if (lazyMethod != null) {
-                scopes.add(new VariableScope(scopes.getLast(), lazyMethod, lazyMethod.isStatic()));
+            MethodNode fieldInit = findLazyMethod(field.getElementName());
+            if (fieldInit != null && fieldInit.getEnd() < 1) {
+                scopes.add(new VariableScope(scopes.getLast(), fieldInit, fieldInit.isStatic()));
                 ASTNode enclosingDeclarationNode0 = enclosingDeclarationNode;
-                enclosingDeclarationNode = lazyMethod;
+                enclosingDeclarationNode = fieldInit;
+                enclosingElement = field;
                 try {
-                    visitConstructorOrMethod(lazyMethod, lazyMethod instanceof ConstructorNode);
+                    visitConstructorOrMethod(fieldInit, fieldInit instanceof ConstructorNode);
                 } catch (VisitCompleted vc) {
                     if (vc.status == VisitStatus.STOP_VISIT) {
                         throw vc;
                     }
                 } finally {
                     scopes.removeLast().bubbleUpdates();
+                    enclosingElement = enclosingElement0;
                     enclosingDeclarationNode = enclosingDeclarationNode0;
                 }
             }
@@ -1924,7 +1927,7 @@ assert primaryExprType != null && dependentExprType != null;
         } catch (JavaModelException e) {
             log(e, "Error visiting children of %s", type.getName());
         }
-        return null;
+        throw new GroovyEclipseBug("Failed to locate anon. type " + type.getName());
     }
 
     private ClassNode findClassNode(String name) {
@@ -2498,7 +2501,7 @@ assert primaryExprType != null && dependentExprType != null;
                 try {
                     count = (Integer) ReflectionUtils.throwableGetPrivateField(SourceType.class, "localOccurrenceCount", (SourceType) type);
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    throw new GroovyEclipseBug(e);
                 }
                 sb.insert(0, count);
             } else {

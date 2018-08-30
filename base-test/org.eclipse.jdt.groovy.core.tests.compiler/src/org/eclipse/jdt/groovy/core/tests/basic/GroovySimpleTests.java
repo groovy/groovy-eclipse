@@ -5966,6 +5966,39 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testAnonymousInnerClass2a() {
+        runConformTest(new String[] {
+            "A.groovy",
+            "class A {" +
+            "  @Lazy def foo = new Runnable() {\n" +
+            "    void run() {\n" +
+            "      println 'hi!'\n" +
+            "    }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new A().foo.run()\n" +
+            "  }\n" +
+            "}\n",
+        },
+        "hi!");
+
+        checkGCUDeclaration("A.groovy",
+            "public class A {\n" +
+            "  private @Lazy java.lang.Object foo = new Runnable() {\n" +
+            "    x() {\n" +
+            "      super();\n" +
+            "    }\n" +
+            "    public void run() {\n" +
+            "    }\n" +
+            "  };\n" +
+            "  public A() {\n" +
+            "  }\n" +
+            "  public static void main(java.lang.String... args) {\n" +
+            "  }\n" +
+            "}");
+    }
+
+    @Test
     public void testAnonymousInnerClass3() {
         runConformTest(new String[] {
             "A.groovy",
@@ -6108,6 +6141,70 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "\t              ^^^^^^^^^^\n" +
         "Groovy:Can't have an abstract method in a non-abstract class. The class 'A$1' must be declared abstract or the method 'void run()' must be implemented.\n" +
         "----------\n");
+    }
+
+    @Test
+    public void testAnonymousInnerClass9() {
+        runNegativeTest(new String[] {
+            "A.groovy",
+            "class A {\n" +
+            "  static {\n" +
+            "    def foo = new Runnable() {\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in A.groovy (at line 3)\n" +
+        "\tdef foo = new Runnable() {\n" +
+        "\t              ^^^^^^^^^^\n" +
+        "Groovy:Can't have an abstract method in a non-abstract class. The class 'A$1' must be declared abstract or the method 'void run()' must be implemented.\n" +
+        "----------\n");
+
+        checkGCUDeclaration("A.groovy",
+            "public class A {\n" +
+            "  public A() {\n" +
+            "  }\n" +
+            "  static void <clinit>() {\n" +
+            "    new Runnable() {\n" +
+            "      x() {\n" +
+            "        super();\n" +
+            "      }\n" +
+            "    };\n" +
+            "  }\n" +
+            "}");
+    }
+
+    @Test @Ignore
+    public void testAnonymousInnerClass9a() {
+        runNegativeTest(new String[] {
+            "A.groovy",
+            "class A {\n" +
+            "  {\n" +
+            "    def foo = new Runnable() {\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in A.groovy (at line 1)\n" +
+        "\tdef foo = new Runnable() {\n" +
+        "\t              ^^^^^^^^^^\n" +
+        "Groovy:Can't have an abstract method in a non-abstract class. The class 'A$1' must be declared abstract or the method 'void run()' must be implemented.\n" +
+        "----------\n");
+
+        checkGCUDeclaration("A.groovy",
+            "public class A {\n" +
+            "  public A() {\n" +
+            "  }\n" +
+            "  void <init>() {\n" +
+            "    new Runnable() {\n" +
+            "      x() {\n" +
+            "        super();\n" +
+            "      }\n" +
+            "    };\n" +
+            "  }\n" +
+            "}");
     }
 
     @Test

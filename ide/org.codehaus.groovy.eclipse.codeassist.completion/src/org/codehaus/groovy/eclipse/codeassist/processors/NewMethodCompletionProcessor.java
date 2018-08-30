@@ -29,7 +29,6 @@ import java.util.Map;
 import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
@@ -64,7 +63,7 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
         ContentAssistContext context = getContext();
         IType enclosingType = context.getEnclosingType();
         if (enclosingType != null) {
-            for (MethodNode method : getAllUnimplementedMethods(getClassNode())) {
+            for (MethodNode method : getAllUnimplementedMethods(context.getEnclosingGroovyType())) {
                 proposals.add(createProposal(method, enclosingType));
             }
         }
@@ -106,26 +105,13 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
 
         OverrideCompletionProposal override = new OverrideCompletionProposal(
             context.unit.getJavaProject(), context.unit, method.getName(), parameterTypeNames, offset, length, createDisplayString(proposal), String.valueOf(proposal.getCompletion()));
+        // TODO: override.setCursorPosition(???);
         override.setImage(getImage(proposal));
         override.setRelevance(relevance);
         return override;
     }
 
     //--------------------------------------------------------------------------
-
-    private ClassNode getClassNode() {
-        // if the current completion is inside a script, then the containing code block will be a Block object, not a ClassNode
-        if (getContext().containingCodeBlock instanceof ClassNode) {
-            return (ClassNode) getContext().containingCodeBlock;
-        }
-        ModuleNode module = getContext().unit.getModuleNode();
-        for (ClassNode clazz : module.getClasses()) {
-            if (clazz.isScript()) {
-                return clazz;
-            }
-        }
-        throw new IllegalArgumentException("Expecting script in current module: " + module.getPackageName());
-    }
 
     private char[][] getParameterNames(MethodNode method) {
         Parameter[] parameters = method.getParameters();
@@ -144,8 +130,8 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
         ClassNode declaringClass = method.getDeclaringClass();
         if (declaringClass.getGenericsTypes() != null && declaringClass.getGenericsTypes().length > 0) {
             if (!mappers.containsKey(declaringClass)) {
-                ClassNode thiz = getClassNode();
-                mapper = GenericsMapper.gatherGenerics(findResolvedType(thiz, declaringClass), declaringClass);
+                ClassNode thiz = findResolvedType(getContext().getEnclosingGroovyType(), declaringClass);
+                mapper = GenericsMapper.gatherGenerics(thiz, declaringClass);
             } else {
                 mapper = mappers.get(declaringClass);
             }

@@ -99,7 +99,9 @@ import org.codehaus.groovy.ast.stmt.WhileStatement;
 import org.codehaus.groovy.classgen.BytecodeExpression;
 import org.codehaus.groovy.classgen.Verifier;
 import org.codehaus.groovy.runtime.GeneratedClosure;
+import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.transform.FieldASTTransformation;
+import org.codehaus.groovy.transform.LazyASTTransformation;
 import org.eclipse.core.runtime.Assert;
 
 /**
@@ -211,7 +213,19 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         }
         visitVariable(node);
 
-        // visit enum field initializer inline with enum field
+        // visit lazy field initializer inline with field
+        for (ASTNode anno : getTransformNodes(node.getDeclaringClass(), LazyASTTransformation.class)) {
+            if (node.getAnnotations().contains(anno)) {
+                MethodNode init = node.getDeclaringClass().getDeclaredMethod(
+                    "get" + MetaClassHelper.capitalize(node.getName().substring(1)), Parameter.EMPTY_ARRAY);
+                if (init != null && init.getEnd() < 1) {
+                    visitMethod(init);
+                }
+                break;
+            }
+        }
+
+        // visit enum field initializer inline with field
         if (node.isEnum() && node.isStatic() && !node.getName().matches("(MAX|MIN)_VALUE|\\$VALUES")) {
             MethodNode clinit = node.getDeclaringClass().getMethod("<clinit>", Parameter.EMPTY_ARRAY);
             for (Statement stmt : ((BlockStatement) clinit.getCode()).getStatements()) {
