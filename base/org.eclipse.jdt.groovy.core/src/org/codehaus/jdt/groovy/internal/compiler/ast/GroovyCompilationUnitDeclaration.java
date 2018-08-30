@@ -143,6 +143,7 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
+import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
@@ -1147,7 +1148,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 configureSuperInterfaces(typeDeclaration, classNode);
                 typeDeclaration.fields = createFieldDeclarations(classNode, isEnum);
                 typeDeclaration.methods = createConstructorAndMethodDeclarations(classNode, isEnum, typeDeclaration);
-                typeDeclaration.properties = classNode.getProperties();
 
                 if (isInner) {
                     InnerClassNode innerClassNode = (InnerClassNode) classNode;
@@ -1283,7 +1283,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                                 });
                             }
                         }
-                        fixupSourceLocationsForFieldDeclaration(fieldDeclaration, fieldNode, isEnumField);
+                        fixupSourceLocationsForFieldDeclaration(fieldDeclaration, fieldNode);
 
                         fieldDeclarations.add(fieldDeclaration);
                     }
@@ -1325,7 +1325,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 if (isEnum) {
                     constructor.modifiers = Flags.AccPrivate;
                 } else {
-                    constructor.modifiers = Flags.AccPublic;
+                    int modifiers = getModifiers(classNode, classNode instanceof InnerClassNode);
+                    constructor.modifiers = modifiers & ExtraCompilerModifiers.AccVisibilityMASK;
                 }
                 constructor.selector = ctorName;
                 methodDeclarations.add(constructor);
@@ -2399,8 +2400,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 typeDeclaration.sourceEnd = Math.max(classNode.getNameEnd(), classNode.getStart());
 
                 // start and end of the entire declaration including Javadoc and ending at the last close bracket
-                int line = classNode.getLineNumber();
-                Javadoc doc = findJavadoc(line);
+                Javadoc doc = findJavadoc(classNode.getLineNumber());
                 if (doc != null) {
                     if (unitDeclaration.imports != null && unitDeclaration.imports.length > 0) {
                         if (doc.sourceStart < unitDeclaration.imports[unitDeclaration.imports.length - 1].sourceStart) {
@@ -2435,99 +2435,80 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         /**
          * Try to get the source locations for constructor declarations to be as correct as possible
          */
-        private void fixupSourceLocationsForConstructorDeclaration(ConstructorDeclaration ctorDeclaration, ConstructorNode ctorNode) {
-            ctorDeclaration.sourceStart = ctorNode.getNameStart();
-            ctorDeclaration.sourceEnd = ctorNode.getNameEnd();
+        private void fixupSourceLocationsForConstructorDeclaration(ConstructorDeclaration constructorDecl, ConstructorNode constructorNode) {
+            Javadoc doc = findJavadoc(constructorNode.getLineNumber());
+            constructorDecl.javadoc = doc;
 
-            // start and end of method declaration including JavaDoc
-            // ending with closing '}' or ';' if abstract
-            int line = ctorNode.getLineNumber();
-            Javadoc doc = findJavadoc(line);
-            ctorDeclaration.javadoc = doc;
-            ctorDeclaration.declarationSourceStart = (doc != null ? doc.sourceStart : ctorNode.getStart());
-            ctorDeclaration.declarationSourceEnd = ctorNode.getEnd() - 1;
+            constructorDecl.declarationSourceStart = (doc != null ? doc.sourceStart : constructorNode.getStart());
+            constructorDecl.modifiersSourceStart = constructorNode.getStart(); // TODO: includes annotations?
+            constructorDecl.declarationSourceEnd = constructorNode.getEnd()-1;
+            constructorDecl.sourceStart = constructorNode.getNameStart();
+            constructorDecl.sourceEnd = constructorNode.getNameEnd();
 
-            // start of method's modifier list (after Javadoc is ended)
-            ctorDeclaration.modifiersSourceStart = ctorNode.getStart();
+            // opening bracket -- should it be first character after?
+            constructorDecl.bodyStart = (constructorNode.getCode() != null ? constructorNode.getCode().getStart()
+                : constructorNode.getNameEnd() + 1); // approximate position of anticipated '{'
 
-            // opening bracket
-            ctorDeclaration.bodyStart = (ctorNode.getCode() != null ? ctorNode.getCode().getStart() : ctorNode.getNameEnd() + 1);
-
-            // closing bracket or ';'
-            ctorDeclaration.bodyEnd = ctorDeclaration.declarationSourceEnd - 1;
+            // last character before closing bracket
+            constructorDecl.bodyEnd = constructorDecl.declarationSourceEnd - 1;
         }
 
         /**
          * Try to get the source locations for method declarations to be as correct as possible
          */
-        private void fixupSourceLocationsForMethodDeclaration(MethodDeclaration methodDeclaration, MethodNode methodNode) {
-            // run() method for scripts has no name, so use the start of the method instead
-            methodDeclaration.sourceStart = Math.max(methodNode.getNameStart(), methodNode.getStart());
-            methodDeclaration.sourceEnd = Math.max(methodNode.getNameEnd(), methodNode.getStart());
+        private void fixupSourceLocationsForMethodDeclaration(MethodDeclaration methodDecl, MethodNode methodNode) {
+            Javadoc doc = findJavadoc(methodNode.getLineNumber());
+            methodDecl.javadoc = doc;
 
-            // start and end of method declaration including JavaDoc
-            // ending with closing '}' or ';' if abstract
-            int line = methodNode.getLineNumber();
-            Javadoc doc = findJavadoc(line);
-            methodDeclaration.javadoc = doc;
-            methodDeclaration.declarationSourceStart = (doc != null ? doc.sourceStart : methodNode.getStart());
-            methodDeclaration.declarationSourceEnd = methodNode.getEnd() - 1;
+            methodDecl.declarationSourceStart = (doc != null ? doc.sourceStart : methodNode.getStart());
+            methodDecl.modifiersSourceStart = methodNode.getStart(); // TODO: includes annotations?
+            methodDecl.declarationSourceEnd = methodNode.getEnd()-1;
 
-            // start of method's modifier list (after Javadoc is ended)
-            methodDeclaration.modifiersSourceStart = methodNode.getStart();
+            // script run() methods have no name, so use the start of the method instead
+            methodDecl.sourceStart = Math.max(methodNode.getNameStart(), methodNode.getStart());
+            methodDecl.sourceEnd = Math.max(methodNode.getNameEnd(), methodNode.getStart());
 
             // opening bracket -- abstract methods, annotation methods, and script run() methods have no opening bracket
-            methodDeclaration.bodyStart = (methodNode.getCode() != null ? methodNode.getCode().getStart() : Math.max(methodNode.getNameEnd(), methodNode.getStart()));
+            methodDecl.bodyStart = (methodNode.getCode() != null ? methodNode.getCode().getStart() : methodDecl.sourceEnd);
 
-            // closing bracket or ';'
-            methodDeclaration.bodyEnd = methodDeclaration.declarationSourceEnd;
-            if (!(methodDeclaration instanceof AnnotationMethodDeclaration))
-                methodDeclaration.bodyEnd -= 1;
+            // last character before closing bracket or semicolon
+            methodDecl.bodyEnd = methodDecl.declarationSourceEnd - 1;
+            if (methodDecl instanceof AnnotationMethodDeclaration) {
+                methodDecl.bodyEnd += 1; // no '}' and usually no ';'
+            }
         }
 
         /**
          * Try to get the source locations for field declarations to be as correct as possible
          */
-        private void fixupSourceLocationsForFieldDeclaration(FieldDeclaration fieldDeclaration, FieldNode fieldNode, boolean isEnumField) {
+        private void fixupSourceLocationsForFieldDeclaration(FieldDeclaration fieldDecl, FieldNode fieldNode) {
+            Javadoc doc = findJavadoc(fieldNode.getLineNumber());
+            fieldDecl.javadoc = doc;
+
+            fieldDecl.declarationSourceStart = (doc != null ? doc.sourceStart : fieldNode.getStart());
+            fieldDecl.modifiersSourceStart = fieldNode.getStart(); // TODO: includes annotations?
+            fieldDecl.declarationSourceEnd = fieldNode.getEnd()-1;
+
+            fieldDecl.sourceStart = fieldNode.getNameStart();
+            fieldDecl.sourceEnd = fieldNode.getNameEnd();
+
+            // Here, we distinguish between the declaration and the fragment, e.g.- def x = 9, y = "l"
+            // 'x = 9,' and 'y = "l"' are the fragments and 'def x = 9, y = "l"' is the declaration
+
+            // end of the entire field declaration (after all fragments and including ';' if exists)
+            fieldDecl.declarationEnd = fieldNode.getEnd();
+
             // TODO (groovy) each area marked with a '*' is only approximate
             // and can be revisited to make more precise
 
-            // Here, we distinguish between the declaration and the fragment
-            // e.g.- def x = 9, y = "l"
-            // 'x = 9,' and 'y = "l"' are the fragments and 'def x = 9, y = "l"' is the declaration
-
-            // the start and end of the fragment name
-            fieldDeclaration.sourceStart = fieldNode.getNameStart();
-            fieldDeclaration.sourceEnd = fieldNode.getNameEnd();
-
-            // start of the declaration (including javadoc?)
-            int line = fieldNode.getLineNumber();
-            Javadoc doc = findJavadoc(line);
-            fieldDeclaration.javadoc = doc;
-
-            if (isEnumField) {
-                // they have no 'leading' type declaration or modifiers
-                fieldDeclaration.declarationSourceStart = (doc != null ? doc.sourceStart : fieldNode.getStart());
-                fieldDeclaration.declarationSourceEnd = fieldNode.getEnd() - 1;
-            } else {
-                fieldDeclaration.declarationSourceStart = (doc != null ? doc.sourceStart : fieldNode.getStart());
-                // the end of the fragment including initializer (and trailing ',')
-                fieldDeclaration.declarationSourceEnd = fieldNode.getEnd() - 1;
-            }
-            // * first character of the declaration's modifier
-            fieldDeclaration.modifiersSourceStart = fieldNode.getStart();
-
-            // end of the entire Field declaration (after all fragments and including ';' if exists)
-            fieldDeclaration.declarationEnd = fieldNode.getEnd();
-
             // * end of the type declaration part of the declaration (the same for each fragment)
             // eg- int x, y corresponds to the location after 'int'
-            fieldDeclaration.endPart1Position = fieldNode.getNameStart();
+            fieldDecl.endPart1Position = fieldNode.getNameStart();
 
             // * just before the start of the next fragment
             // (or the end of the entire declaration if it is the last one)
             // (how is this different from declarationSourceEnd?)
-            fieldDeclaration.endPart2Position = fieldNode.getEnd() - 1;
+            fieldDecl.endPart2Position = fieldNode.getEnd() - 1;
         }
 
         /**

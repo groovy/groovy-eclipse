@@ -121,7 +121,7 @@ public class GroovyClassScope extends ClassScope {
 
         // create property accessors without resolving the types
         if (referenceContext instanceof GroovyTypeDeclaration) {
-            for (PropertyNode property : ((GroovyTypeDeclaration) referenceContext).properties) {
+            for (PropertyNode property : ((GroovyTypeDeclaration) referenceContext).getClassNode().getProperties()) {
                 String name = property.getName(), capitalizedName = MetaClassHelper.capitalize(name);
 
                 createGetterMethod(name, "get" + capitalizedName, property.isStatic(), methodBindings)

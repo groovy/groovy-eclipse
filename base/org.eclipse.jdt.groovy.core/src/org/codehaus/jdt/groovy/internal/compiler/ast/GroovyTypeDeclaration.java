@@ -15,11 +15,9 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.PropertyNode;
 import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
@@ -42,8 +40,6 @@ public class GroovyTypeDeclaration extends TypeDeclaration {
     }
 
     private final ClassNode classNode;
-
-    protected List<PropertyNode> properties;
 
     protected Supplier<BlockScope> enclosingScope;
 
