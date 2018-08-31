@@ -390,6 +390,29 @@ tokens {
             comments.add(comment);
         }
     }
+
+    public void tryBlockRecovery(RecognitionException e, Token first, int start) throws RecognitionException, TokenStreamException {
+        int end = mark();
+        // rewind to the first token on the same line as opening '{' (aka first)
+        rewind(start);
+        while (LT(0) != null && LT(0).getLine() == first.getLine()) {
+            rewind(mark() - 1);
+        }
+        // advance through all tokens that have greater indentation
+        int col = LT(1).getColumn();
+        do {
+            consume();
+        } while (LT(1).getColumn() > col && LT(1).getType() != EOF); // TODO: skip 'case', 'default', comments? and statement labels -- they may be in same column as first token
+
+        // if a closing '}' was found in the proper position, create a basic block
+        if (LT(1).getColumn() == col && LT(1).getType() == RCURLY) {
+            consume();
+            reportError(e);
+        } else {
+            rewind(end);
+            throw e;
+        }
+    }
     // GRECLIPSE end
 
     /**
@@ -1626,19 +1649,29 @@ interfaceField!
         )
     ;
 
-constructorBody  {Token first = LT(1);}
+constructorBody  {Token first = LT(1); int start = mark();} // GRECLIPSE add
      :   LCURLY! nls!
          (   (explicitConstructorInvocation) =>   // Java compatibility hack
                  eci:explicitConstructorInvocation! (sep! bb1:blockBody[sepToken]!)?
              |   bb2:blockBody[EOF]!
          )
-         RCURLY!
-         {if (#eci != null)
-              #constructorBody = #(create(SLIST,"{",first,LT(1)),eci,bb1);
+         RCURLY! // GRECLIPSE edit
+         {LT(0).setColumn(LT(0).getColumn() + 1);
+          if (#eci != null)
+              #constructorBody = #(create(SLIST,"{",first,LT(0)),eci,bb1);
           else
-              #constructorBody = #(create(SLIST,"{",first,LT(1)),bb2);}
+              #constructorBody = #(create(SLIST,"{",first,LT(0)),bb2);}
      ;
-
+// GRECLIPSE add
+    exception
+    catch [RecognitionException e] {
+        tryBlockRecovery(e, first, start);
+        LT(0).setColumn(LT(0).getColumn() + 1);
+        #constructorBody = (#eci == null
+            ? #(create(SLIST,"{",first,LT(0)),bb2)
+            : #(create(SLIST,"{",first,LT(0)),eci,bb1));
+    }
+// GRECLIPSE end
 
 /** Catch obvious constructor calls, but not the expr.super(...) calls */
 explicitConstructorInvocation
@@ -1718,11 +1751,9 @@ variableDefinitions[AST mods, AST t] {Token first = cloneToken(LT(1));
         // parse the formal parameter declarations.
         LPAREN! param:parameterDeclarationList! RPAREN!
 
-        /*OBS*rt:declaratorBrackets[#t]*/
-
         // get the list of exceptions that this method is
         // declared to throw
-        ((nls "throws") =>  tc:throwsClause!  )?
+        ((nls "throws") => tc:throwsClause!)?
 
         // the method body is an open block
         // but, it may have an optional constructor call (for constructors only)
@@ -1730,12 +1761,13 @@ variableDefinitions[AST mods, AST t] {Token first = cloneToken(LT(1));
         // which look like method declarations
         // since the block is optional and nls is part of sep we have to be sure
         // a newline is followed by a block or ignore the nls too
-        ((nls! LCURLY) =>  (nlsWarn! mb:openBlock!))?
+        // GRECLIPSE edit
+        //((nls! LCURLY) => (nlsWarn! mb:openBlock!))?
+        ((nls! LCURLY) => (nlsWarn! mb:methodBody!))?
 
-        {   if (#qid != null)  #id = #qid;
-            #variableDefinitions =
-                    #(create(METHOD_DEF,"METHOD_DEF",first,LT(1)),
-                      mods, #(create(TYPE,"TYPE",first,LT(1)),t), id, param, tc, mb);
+        {int i = (#mb != null ? 0 : 1);
+         if (#qid != null) #id = #qid;
+         #variableDefinitions = #(create(METHOD_DEF,"METHOD_DEF",first,LT(i)),mods,#(create(TYPE,"TYPE",first,LT(i)),t),id,param,tc,mb);
         }
     ;
 
@@ -1750,23 +1782,15 @@ constructorDefinition[AST mods]  {Token first = cloneToken(LT(1));
     :
         id:IDENT
 
-        // parse the formal parameter declarations.
+        // parse the formal parameter declarations
         LPAREN! param:parameterDeclarationList! RPAREN!
-
-        /*OBS*rt:declaratorBrackets[#t]*/
 
         // get the list of exceptions that this method is
         // declared to throw
-        ((nls "throws") => tc:throwsClause!  )? nlsWarn!
-        // the method body is an open block
-        // but, it may have an optional constructor call (for constructors only)
+        ((nls "throws") => tc:throwsClause!)? nlsWarn!
 
-        // TODO assert that the id matches the class
-        { isConstructorIdent(id); }
-
-        cb:constructorBody!
-        {   #constructorDefinition =  #(create(CTOR_IDENT,"CTOR_IDENT",first,LT(1)),  mods, param, tc, cb);
-        }
+        cb:constructorBody! // GRECLIPSE edit
+        {#constructorDefinition = #(create(CTOR_IDENT,"CTOR_IDENT",first,LT(0)),mods,param,tc,cb);}
      ;
 
 /** Declaration of a variable. This can be a class/instance variable,
@@ -2017,34 +2041,28 @@ openBlock  {Token first = LT(1); int start = mark();} // GRECLIPSE add
         bb:blockBody[EOF]!
         RCURLY!
         {#openBlock = #(create(SLIST,"{",first,LT(1)),bb);}
-
-        // GRECLIPSE add
-        exception
-        catch [RecognitionException e] {
-            int end = mark();
-            // rewind to the first token on the same line as opening '{' (aka first)
-            rewind(start);
-            while (LT(0) != null && LT(0).getLine() == first.getLine()) {
-                rewind(mark() - 1);
-            }
-            // advance through all tokens that have greater indentation
-            int col = LT(1).getColumn();
-            do {
-                consume();
-            } while (LT(1).getColumn() > col && LT(1).getType() != EOF); // TODO: skip 'case', 'default', comments? and statement labels -- they may be in same column as first token
-
-            // if a closing '}' was found in the proper position, create a basic block
-            if (LT(1).getColumn() == col && LT(1).getType() == RCURLY) {
-                match(RCURLY);
-                reportError(e);
-                #openBlock = #(create(SLIST,"{",first,LT(1)));
-            } else {
-                rewind(end);
-                throw e;
-            }
-        }
-        // GRECLIPSE end
     ;
+// GRECLIPSE add
+    exception
+    catch [RecognitionException e] {
+        tryBlockRecovery(e, first, start);
+        #openBlock = #(create(SLIST,"{",first,LT(1)));
+    }
+
+methodBody  {Token first = LT(1); int start = mark();}
+    :   LCURLY! nls!
+        bb:blockBody[EOF]!
+        RCURLY!
+        {LT(0).setColumn(LT(0).getColumn() + 1);
+         #methodBody = #(create(SLIST,"{",first,LT(0)),bb);}
+    ;
+    exception
+    catch [RecognitionException e] {
+        tryBlockRecovery(e, first, start);
+        LT(0).setColumn(LT(0).getColumn() + 1);
+        #methodBody = #(create(SLIST,"{",first,LT(0)));
+    }
+// GRECLIPSE end
 
 /** A block body is a parade of zero or more statements or expressions. */
 blockBody[int prevToken]

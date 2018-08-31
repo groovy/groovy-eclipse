@@ -390,6 +390,29 @@ tokens {
             comments.add(comment);
         }
     }
+
+    public void tryBlockRecovery(RecognitionException e, Token first, int start) throws RecognitionException, TokenStreamException {
+        int end = mark();
+        // rewind to the first token on the same line as opening '{' (aka first)
+        rewind(start);
+        while (LT(0) != null && LT(0).getLine() == first.getLine()) {
+            rewind(mark() - 1);
+        }
+        // advance through all tokens that have greater indentation
+        int col = LT(1).getColumn();
+        do {
+            consume();
+        } while (LT(1).getColumn() > col && LT(1).getType() != EOF); // TODO: skip 'case', 'default', comments? and statement labels -- they may be in same column as first token
+
+        // if a closing '}' was found in the proper position, create a basic block
+        if (LT(1).getColumn() == col && LT(1).getType() == RCURLY) {
+            consume();
+            reportError(e);
+        } else {
+            rewind(end);
+            throw e;
+        }
+    }
     // GRECLIPSE end
 
     /**
@@ -691,17 +714,6 @@ importStatement
     // GRECLIPSE end
     ;
 
-// TODO REMOVE
-// A type definition is either a class, interface, enum or annotation with possible additional semis.
-//typeDefinition
-//      options {defaultErrorHandler = true;}
-//      :       m:modifiers!
-//              typeDefinitionInternal[#m]
-//      |       SEMI!
-//      ;
-
-// Added this production, even though 'typeDefinition' seems to be obsolete,
-// as this is referenced by many other parts of the grammar.
 // Protected type definitions production for reuse in other productions
 protected typeDefinitionInternal[AST mods]
     :   cd:classDefinition[#mods]       // inner class
@@ -754,10 +766,6 @@ genericMethod!
         }
     ;
 
-
-// *TODO* We must also audit the various occurrences of warning
-// suppressions like "options { greedy = true; }".
-
 /** A declaration with one declarator and no initialization, like a parameterDeclaration.
  *  Used to parse loops like <code>for (int x in y)</code> (up to the <code>in</code> keyword).
  */
@@ -797,13 +805,6 @@ singleDeclaration
  *  syntaxes, or to have the parser query the symbol table.  Parse-time queries are evil.
  *  And we want both {String x} and {println x}.  So we need a syntactic razor-edge to slip
  *  between 'println' and 'String'.)
- *
- *   *TODO* The declarationStart production needs to be strengthened to recognize
- *  things like {List<String> foo}.
- *  Right now it only knows how to skip square brackets after the type, not
- *  angle brackets.
- *  This probably turns out to be tricky because of >> vs. > >. If so,
- *  just put a TODO comment in.
  */
 declarationStart!
     :   (     ("def" nls)
@@ -846,20 +847,6 @@ constructorStart!
 
 
 /** Used only as a lookahead predicate for nested type declarations. */
-
-/*TODO* The lookahead in typeDeclarationStart needs to skip annotations, not
-just stop at '@', because variable and method declarations can also be
-annotated.
-> typeDeclarationStart!
->     :   (modifier!)* ("class" | "interface" | "enum" | "trait" | AT )
-S.B. something like
->     :   (modifier! | annotationTokens!)* ("class" | "interface" |
-> "enum" )
-(And maybe @interface, if Java 5 allows nested annotation types? Don't
-know offhand.)
-Where annotationTokens can be a quick paren-skipper, as in other
-places: '@' ident '(' balancedTokens ')'.
-*/
 
 typeDeclarationStart!
     :   modifiersOpt! ("class" | "interface" | "enum" | "trait" | AT "interface")
@@ -1308,8 +1295,6 @@ if (modifiers != null) {
         { currentClass = prevCurrentClass; }
     ;
 
-//TODO - where has superClassClause! production gone???
-
 // Definition of a Java Interface
 interfaceDefinition![AST modifiers]  {Token first = cloneToken(LT(1));
                                       if (modifiers != null) {
@@ -1614,7 +1599,6 @@ classField!  {Token first = LT(1);}
         dd:declaration
         {#classField = #dd;}
     |
-        //TODO - unify typeDeclaration and typeDefinitionInternal names
         // type declaration
         (typeDeclarationStart)=>
         mods:modifiersOpt!
@@ -1657,7 +1641,6 @@ interfaceField!
         dg:genericMethod
         {#interfaceField = #dg;}
     |
-        //TODO - unify typeDeclaration and typeDefinitionInternal names
         // type declaration
         (typeDeclarationStart)=>
         mods:modifiersOpt
@@ -1666,19 +1649,29 @@ interfaceField!
         )
     ;
 
-constructorBody  {Token first = LT(1);}
+constructorBody  {Token first = LT(1); int start = mark();} // GRECLIPSE add
      :   LCURLY! nls!
          (   (explicitConstructorInvocation) =>   // Java compatibility hack
                  eci:explicitConstructorInvocation! (sep! bb1:blockBody[sepToken]!)?
              |   bb2:blockBody[EOF]!
          )
-         RCURLY!
-         {if (#eci != null)
-              #constructorBody = #(create(SLIST,"{",first,LT(1)),eci,bb1);
+         RCURLY! // GRECLIPSE edit
+         {LT(0).setColumn(LT(0).getColumn() + 1);
+          if (#eci != null)
+              #constructorBody = #(create(SLIST,"{",first,LT(0)),eci,bb1);
           else
-              #constructorBody = #(create(SLIST,"{",first,LT(1)),bb2);}
+              #constructorBody = #(create(SLIST,"{",first,LT(0)),bb2);}
      ;
-
+// GRECLIPSE add
+    exception
+    catch [RecognitionException e] {
+        tryBlockRecovery(e, first, start);
+        LT(0).setColumn(LT(0).getColumn() + 1);
+        #constructorBody = (#eci == null
+            ? #(create(SLIST,"{",first,LT(0)),bb2)
+            : #(create(SLIST,"{",first,LT(0)),eci,bb1));
+    }
+// GRECLIPSE end
 
 /** Catch obvious constructor calls, but not the expr.super(...) calls */
 explicitConstructorInvocation
@@ -1755,11 +1748,9 @@ variableDefinitions[AST mods, AST t] {Token first = cloneToken(LT(1));
         // parse the formal parameter declarations.
         LPAREN! param:parameterDeclarationList! RPAREN!
 
-        /*OBS*rt:declaratorBrackets[#t]*/
-
         // get the list of exceptions that this method is
         // declared to throw
-        ((nls "throws") =>  tc:throwsClause!  )?
+        ((nls "throws") => tc:throwsClause!)?
 
         // the method body is an open block
         // but, it may have an optional constructor call (for constructors only)
@@ -1767,12 +1758,13 @@ variableDefinitions[AST mods, AST t] {Token first = cloneToken(LT(1));
         // which look like method declarations
         // since the block is optional and nls is part of sep we have to be sure
         // a newline is followed by a block or ignore the nls too
-        ((nls! LCURLY) =>  (nlsWarn! mb:openBlock!))?
+        // GRECLIPSE edit
+        //((nls! LCURLY) => (nlsWarn! mb:openBlock!))?
+        ((nls! LCURLY) => (nlsWarn! mb:methodBody!))?
 
-        {   if (#qid != null)  #id = #qid;
-            #variableDefinitions =
-                    #(create(METHOD_DEF,"METHOD_DEF",first,LT(1)),
-                      mods, #(create(TYPE,"TYPE",first,LT(1)),t), id, param, tc, mb);
+        {int i = (#mb != null ? 0 : 1);
+         if (#qid != null) #id = #qid;
+         #variableDefinitions = #(create(METHOD_DEF,"METHOD_DEF",first,LT(i)),mods,#(create(TYPE,"TYPE",first,LT(i)),t),id,param,tc,mb);
         }
     ;
 
@@ -1787,23 +1779,15 @@ constructorDefinition[AST mods]  {Token first = cloneToken(LT(1));
     :
         id:IDENT
 
-        // parse the formal parameter declarations.
+        // parse the formal parameter declarations
         LPAREN! param:parameterDeclarationList! RPAREN!
-
-        /*OBS*rt:declaratorBrackets[#t]*/
 
         // get the list of exceptions that this method is
         // declared to throw
-        ((nls "throws") => tc:throwsClause!  )? nlsWarn!
-        // the method body is an open block
-        // but, it may have an optional constructor call (for constructors only)
+        ((nls "throws") => tc:throwsClause!)? nlsWarn!
 
-        // TODO assert that the id matches the class
-        { isConstructorIdent(id); }
-
-        cb:constructorBody!
-        {   #constructorDefinition =  #(create(CTOR_IDENT,"CTOR_IDENT",first,LT(1)),  mods, param, tc, cb);
-        }
+        cb:constructorBody! // GRECLIPSE edit
+        {#constructorDefinition = #(create(CTOR_IDENT,"CTOR_IDENT",first,LT(0)),mods,param,tc,cb);}
      ;
 
 /** Declaration of a variable. This can be a class/instance variable,
@@ -1831,7 +1815,6 @@ variableName
 
 /** After some type names, where zero or more empty bracket pairs are allowed.
  *  We use ARRAY_DECLARATOR to represent this.
- *  TODO:  Is there some more Groovy way to view this in terms of the indexed property syntax?
  */
 declaratorBrackets[AST typ]
     :   {#declaratorBrackets=typ;}
@@ -2055,34 +2038,28 @@ openBlock  {Token first = LT(1); int start = mark();} // GRECLIPSE add
         bb:blockBody[EOF]!
         RCURLY!
         {#openBlock = #(create(SLIST,"{",first,LT(1)),bb);}
-
-        // GRECLIPSE add
-        exception
-        catch [RecognitionException e] {
-            int end = mark();
-            // rewind to the first token on the same line as opening '{' (aka first)
-            rewind(start);
-            while (LT(0) != null && LT(0).getLine() == first.getLine()) {
-                rewind(mark() - 1);
-            }
-            // advance through all tokens that have greater indentation
-            int col = LT(1).getColumn();
-            do {
-                consume();
-            } while (LT(1).getColumn() > col && LT(1).getType() != EOF); // TODO: skip 'case', 'default', comments? and statement labels -- they may be in same column as first token
-
-            // if a closing '}' was found in the proper position, create a basic block
-            if (LT(1).getColumn() == col && LT(1).getType() == RCURLY) {
-                match(RCURLY);
-                reportError(e);
-                #openBlock = #(create(SLIST,"{",first,LT(1)));
-            } else {
-                rewind(end);
-                throw e;
-            }
-        }
-        // GRECLIPSE end
     ;
+// GRECLIPSE add
+    exception
+    catch [RecognitionException e] {
+        tryBlockRecovery(e, first, start);
+        #openBlock = #(create(SLIST,"{",first,LT(1)));
+    }
+
+methodBody  {Token first = LT(1); int start = mark();}
+    :   LCURLY! nls!
+        bb:blockBody[EOF]!
+        RCURLY!
+        {LT(0).setColumn(LT(0).getColumn() + 1);
+         #methodBody = #(create(SLIST,"{",first,LT(0)),bb);}
+    ;
+    exception
+    catch [RecognitionException e] {
+        tryBlockRecovery(e, first, start);
+        LT(0).setColumn(LT(0).getColumn() + 1);
+        #methodBody = #(create(SLIST,"{",first,LT(0)));
+    }
+// GRECLIPSE end
 
 /** A block body is a parade of zero or more statements or expressions. */
 blockBody[int prevToken]
@@ -2389,11 +2366,6 @@ branchStatement {Token first = LT(1);}
     |   "throw"! throwE:expression[0]!
         {#branchStatement = #(create(LITERAL_throw,"throw",first,LT(1)),throwE);}
 
-
-    // TODO - decide on definitive 'assert' statement in groovy (1.4 and|or groovy)
-    // asserts
-    // 1.4+ ...
-    //      |   "assert"^ expression[0] ( COLON! expression[0] )?
 
     // groovy assertion...
     |   "assert"! assertAle: assignmentLessExpression!
@@ -4690,18 +4662,6 @@ options {
                 ttype = IDENT;
             }
 
-        /* The grammar allows a few keywords to follow dot.
-         * TODO: Reinstate this logic if we change or remove keywordPropertyNames.
-            if (ttype != IDENT && lastSigTokenType == DOT) {
-                // A few keywords can follow a dot:
-                switch (ttype) {
-                case LITERAL_this: case LITERAL_super: case LITERAL_class:
-                    break;
-                default:
-                    ttype = LITERAL_in;  // the poster child for bad dotted names
-                }
-            }
-        */
             $setType(ttype);
 
             // check if "assert" keyword is enabled
@@ -4756,24 +4716,6 @@ options {
 }
     {boolean isDecimal=false; Token t=null;}
     :
-/*OBS*
-        '.' {_ttype = DOT;}
-        (
-            (('0'..'9')+ (EXPONENT)? (f1:FLOAT_SUFFIX {t=f1;})?
-            {
-                if (t != null && t.getText().toUpperCase().indexOf('F')>=0) {
-                    _ttype = NUM_FLOAT;
-                }
-                else {
-                    _ttype = NUM_DOUBLE; // assume double
-                }
-            })
-        |
-            // JDK 1.5 token for variable length arguments
-            (".." {_ttype = TRIPLE_DOT;})
-        )?
-    |
-*OBS*/
         // TODO:  This complex pattern seems wrong.  Verify or fix.
         (   '0' {isDecimal = true;} // special case for just '0'
             (   // hex digits
