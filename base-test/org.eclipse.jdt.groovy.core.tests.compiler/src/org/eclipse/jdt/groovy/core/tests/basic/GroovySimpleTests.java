@@ -6175,7 +6175,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "}");
     }
 
-    @Test @Ignore
+    @Test
     public void testAnonymousInnerClass9a() {
         runNegativeTest(new String[] {
             "A.groovy",
@@ -6187,7 +6187,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "}\n",
         },
         "----------\n" +
-        "1. ERROR in A.groovy (at line 1)\n" +
+        "1. ERROR in A.groovy (at line 3)\n" +
         "\tdef foo = new Runnable() {\n" +
         "\t              ^^^^^^^^^^\n" +
         "Groovy:Can't have an abstract method in a non-abstract class. The class 'A$1' must be declared abstract or the method 'void run()' must be implemented.\n" +
@@ -6196,8 +6196,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("A.groovy",
             "public class A {\n" +
             "  public A() {\n" +
-            "  }\n" +
-            "  void <init>() {\n" +
             "    new Runnable() {\n" +
             "      x() {\n" +
             "        super();\n" +

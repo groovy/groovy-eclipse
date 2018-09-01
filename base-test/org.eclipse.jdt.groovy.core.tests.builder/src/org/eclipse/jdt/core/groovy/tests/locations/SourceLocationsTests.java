@@ -119,7 +119,7 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         }
     }
 
-    private static void assertDeclaration(IMember decl, BodyDeclaration bd, int memberNumber, String source) throws Exception {
+    private static void assertDeclaration(IMember decl, BodyDeclaration body, int memberNumber, String source) throws Exception {
         char astKind;
         switch (decl.getElementType()) {
         case IJavaElement.METHOD:
@@ -137,41 +137,38 @@ public final class SourceLocationsTests extends BuilderTestSuite {
 
         String startTag = "/*" + astKind + memberNumber + "s*/";
         int start = source.indexOf(startTag) + startTag.length();
-        if (source.substring(start).startsWith("/*")) {
+        while (source.substring(start).startsWith("/*")) {
             start = source.indexOf("*/", start) + 2;
         }
 
         String endTag = "/*" + astKind + memberNumber + "e*/";
-        int len = (isParrotParser() || (decl instanceof IMethod && !Flags.isAbstract(((IMethod) decl).getFlags())) ? 0 : endTag.length());
+        int len = (isParrotParser() || (decl instanceof IMethod && decl.getNameRange().getLength() > 0 && !Flags.isAbstract(((IMethod) decl).getFlags())) ? 0 : endTag.length());
         int end = source.indexOf(endTag) + len;
-        while (len == 0 && source.substring(0, end).endsWith("*/")) {
+        if (len == 0 && source.substring(0, end).endsWith("*/")) {
             end = source.substring(0, end).lastIndexOf("/*");
         }
 
         ISourceRange declRange = decl.getSourceRange();
         assertEquals(decl + "\nhas incorrect source start value", start, declRange.getOffset());
+        assertEquals(body + "\nhas incorrect source start value", start, body.getStartPosition());
         assertEquals(decl + "\nhas incorrect source end value", end, declRange.getOffset() + declRange.getLength());
 
-        // now check the AST
-        assertEquals(bd + "\nhas incorrect source start value", start, bd.getStartPosition());
-        int bodyEnd = bd.getStartPosition() + bd.getLength(); // adjust for possible ';'
-        if (decl instanceof IMethod && Flags.isAbstract(((IMethod) decl).getFlags()) &&
-                !Flags.isAnnotation(decl.getDeclaringType().getFlags())) {
-            bodyEnd += 1;
-        } else if (bd instanceof FieldDeclaration) {
-            bodyEnd -= 1;
-        }
-        assertEquals(bd + "\nhas incorrect source end value", end, bodyEnd);
-
         String nameStartTag = "/*" + astKind + memberNumber + "sn*/";
-        int nameStart = source.indexOf(nameStartTag) + nameStartTag.length();
+        int nameStart = source.indexOf(nameStartTag);
+        if (nameStart == -1) {
+            nameStart = start + 1;
+        } else {
+            nameStart += nameStartTag.length();
+        }
 
         String nameEndTag = "/*" + astKind + memberNumber + "en*/";
         int nameEnd = source.indexOf(nameEndTag);
-        // because the name of the constructor is not stored in the Antlr AST,
-        // we calculate offsets of the constructor name by looking at the end
-        // of the modifiers and the start of the opening paren
-        if (astKind == 'm' && ((IMethod) decl).isConstructor() && !isParrotParser()) {
+        if (nameEnd == -1) {
+            nameEnd = nameStart;
+        } else if (astKind == 'm' && ((IMethod) decl).isConstructor() && !isParrotParser()) {
+            // because the name of the constructor is not stored in the Antlr AST,
+            // we calculate offsets of the constructor name by looking at the end
+            // of the modifiers and the start of the opening paren
             nameEnd += nameEndTag.length();
         }
 
@@ -179,32 +176,37 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         assertEquals(decl + "\nhas incorrect source start value", nameStart, nameDeclRange.getOffset());
         assertEquals(decl + "\nhas incorrect source end value", nameEnd, nameDeclRange.getOffset() + nameDeclRange.getLength());
 
-        // now check the AST
-        if (bd instanceof FieldDeclaration) {
-            SimpleName name = ((VariableDeclarationFragment) ((FieldDeclaration) bd).fragments().get(0)).getName();
-
-            assertEquals(bd + "\nhas incorrect source start value", nameStart, name.getStartPosition());
-            assertEquals(bd + "\nhas incorrect source end value", nameEnd, name.getStartPosition() + name.getLength());
-        } else if (bd instanceof MethodDeclaration) {
-            SimpleName name = ((MethodDeclaration) bd).getName();
-
-            assertEquals(bd + "\nhas incorrect source start value", nameStart, name.getStartPosition());
-            assertEquals(bd + "\nhas incorrect source end value", nameEnd, name.getStartPosition() + name.getLength());
+        if (body instanceof FieldDeclaration) {
+            SimpleName name = ((VariableDeclarationFragment) ((FieldDeclaration) body).fragments().get(0)).getName();
+            assertEquals(body + "\nhas incorrect source start value", nameStart, name.getStartPosition());
+            assertEquals(body + "\nhas incorrect source end value", nameEnd, name.getStartPosition() + name.getLength());
+        } else if (body instanceof MethodDeclaration) {
+            SimpleName name = ((MethodDeclaration) body).getName();
+            assertEquals(body + "\nhas incorrect source start value", nameStart, name.getStartPosition());
+            assertEquals(body + "\nhas incorrect source end value", nameEnd, name.getStartPosition() + (nameEnd - nameStart));
         }
 
         if (astKind == 'm') {
             // body start is only calculated for methods
             String bodyStartTag = "/*" + astKind + memberNumber + "sb*/";
             int bodyStart = source.indexOf(bodyStartTag) + bodyStartTag.length();
-            if (bd instanceof MethodDeclaration) {
-                MethodDeclaration md = (MethodDeclaration) bd;
+            if (body instanceof MethodDeclaration) {
+                MethodDeclaration md = (MethodDeclaration) body;
                 // will be null for interfaces or abstract methods
                 if (md.getBody() != null) {
                     int actualBodyStart = md.getBody().getStartPosition();
-                    assertEquals(bd + "\nhas incorrect body start value", bodyStart, actualBodyStart);
+                    assertEquals(body + "\nhas incorrect body start value", bodyStart, actualBodyStart);
                 }
             }
         }
+
+        int bodyEnd = body.getStartPosition() + body.getLength();
+        if (decl instanceof IMethod && (decl.getNameRange().getLength() == 0 || (Flags.isAbstract(((IMethod) decl).getFlags()) && !Flags.isAnnotation(decl.getDeclaringType().getFlags())))) {
+            bodyEnd += 1; // construcotrs and methods with a body have been set back by 1 for JDT compatibility
+        } else if (body instanceof FieldDeclaration) {
+            bodyEnd -= 1; // adjust for possible ';'
+        }
+        assertEquals(body + "\nhas incorrect source end value", end, bodyEnd);
     }
 
     private static void assertScript(String source, ICompilationUnit unit, String startText, String endText) throws Exception {
@@ -503,6 +505,18 @@ public final class SourceLocationsTests extends BuilderTestSuite {
         String source =
             "package p1\n" +
             "/*t0s*/enum /*t0sn*/Hello/*t0en*/ {\n" +
+            "}/*t0e*/\n";
+        assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
+    }
+
+    @Test
+    public void testSourceLocationsObjectInitializers() throws Exception {
+        String source =
+            "package p1\n" +
+            "/*t0s*/class /*t0sn*/Hello/*t0en*/ {\n" +
+            "  /*m0s*//*m0sb*/{\n" +
+            "    int i = 0\n" +
+            "  }/*m0e*/\n" +
             "}/*t0e*/\n";
         assertUnitWithSingleType(source, createCompUnit("p1", "Hello", source));
     }

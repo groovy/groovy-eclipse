@@ -66,6 +66,7 @@ import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
+import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Janitor;
@@ -132,7 +133,6 @@ import org.eclipse.jdt.internal.compiler.ast.QualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.SingleMemberAnnotation;
 import org.eclipse.jdt.internal.compiler.ast.SingleNameReference;
 import org.eclipse.jdt.internal.compiler.ast.SingleTypeReference;
-import org.eclipse.jdt.internal.compiler.ast.Statement;
 import org.eclipse.jdt.internal.compiler.ast.StringLiteral;
 import org.eclipse.jdt.internal.compiler.ast.TrueLiteral;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
@@ -403,15 +403,13 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     }
                 }
             }
-        } else {
+        } else if (types != null) {
             // GRECLIPSE-1773
             // We should create problem types if some types are not compiled successfully as it is done for Java types.
             // Otherwise incremental builder is not able to recompile dependencies of broken types.
-            if (types != null) {
-                for (TypeDeclaration type : types) {
-                    if (type.binding != null) {
-                        ClassFile.createProblemType(type, compilationResult);
-                    }
+            for (TypeDeclaration type : types) {
+                if (type.binding != null) {
+                    ClassFile.createProblemType(type, compilationResult);
                 }
             }
         }
@@ -1149,6 +1147,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 typeDeclaration.fields = createFieldDeclarations(classNode, isEnum);
                 typeDeclaration.methods = createConstructorAndMethodDeclarations(classNode, isEnum, typeDeclaration);
 
+                for (Statement statement : classNode.getObjectInitializerStatements()) {
+                    if (statement.getEnd() > 0 && typeDeclaration.methods.length > 0)
+                        statement.visit(new AnonInnerFinder(typeDeclaration.methods[0]));
+                }
+
                 if (isInner) {
                     InnerClassNode innerClassNode = (InnerClassNode) classNode;
                     ClassNode outerClassNode = innerClassNode.getOuterClass();
@@ -1158,7 +1161,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     if (innerClassNode.isAnonymous()) {
                         typeDeclaration.name = CharOperation.NO_CHAR;
                         typeDeclaration.bits |= (ASTNode.IsAnonymousType | ASTNode.IsLocalType);
-                        typeDeclaration.bits |= (typeDeclaration.superclass.bits & ASTNode.HasTypeAnnotations);
+                        //typeDeclaration.bits |= (typeDeclaration.superclass.bits & ASTNode.HasTypeAnnotations);
                         QualifiedAllocationExpression allocation = new QualifiedAllocationExpression(typeDeclaration);
                         allocation.sourceStart = isEnum ? typeDeclaration.sourceStart : typeDeclaration.sourceStart - 4; // approx. offset of "new"
                         allocation.sourceEnd = typeDeclaration.bodyEnd;
@@ -1191,8 +1194,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         if (location instanceof AbstractMethodDeclaration) {
                             AbstractMethodDeclaration methodDeclaration = (AbstractMethodDeclaration) location;
                             methodDeclaration.bits |= ASTNode.HasLocalType;
-                            methodDeclaration.statements = (Statement[]) ArrayUtils.add(methodDeclaration.statements != null
-                                        ? methodDeclaration.statements : new Statement[0], innerTypeDeclaration.allocation);
+                            methodDeclaration.statements = (org.eclipse.jdt.internal.compiler.ast.Statement[]) ArrayUtils.add(methodDeclaration.statements != null
+                                        ? methodDeclaration.statements : new org.eclipse.jdt.internal.compiler.ast.Statement[0], innerTypeDeclaration.allocation);
                             // methodDeclaration.scope is null at this time; defer return value
                             innerTypeDeclaration.enclosingScope = () -> methodDeclaration.scope;
                         } else if (location instanceof FieldDeclaration) {
@@ -1250,15 +1253,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                             fieldDeclaration.type = createTypeReferenceForClassNode(fieldNode.getType());
 
                             if (anonymousLocations != null && fieldNode.getInitialExpression() != null) {
-                                fieldNode.getInitialExpression().visit(new CodeVisitorSupport() {
-                                    @Override
-                                    public void visitConstructorCallExpression(ConstructorCallExpression call) {
-                                        if (call.isUsingAnonymousInnerClass()) {
-                                            anonymousLocations.put(call.getType(), fieldDeclaration);
-                                        }
-                                        super.visitConstructorCallExpression(call);
-                                    }
-                                });
+                                fieldNode.getInitialExpression().visit(new AnonInnerFinder(fieldDeclaration));
                             }
                         } else if (anonymousLocations != null) {
                             MethodNode clinit = classNode.getMethod("<clinit>", Parameter.EMPTY_ARRAY);
@@ -1320,16 +1315,26 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
 
             // add default constructor if no other constructors exist (and not trait/interface/anonymous)
             if (constructorNodes.isEmpty() && !isAnon && !classNode.isInterface() && !isTrait(classNode)) {
-                ConstructorDeclaration constructor = new ConstructorDeclaration(unitDeclaration.compilationResult);
-                constructor.bits |= ASTNode.IsDefaultConstructor;
+                ConstructorDeclaration constructorDecl = new ConstructorDeclaration(unitDeclaration.compilationResult);
+                LinkedList<Statement> initializerStatements = (LinkedList<Statement>) classNode.getObjectInitializerStatements();
+                if (initializerStatements.isEmpty()) {
+                    constructorDecl.bits |= ASTNode.IsDefaultConstructor;
+                } else {
+                    constructorDecl.declarationSourceStart = initializerStatements.getFirst().getStart();
+                    constructorDecl.declarationSourceEnd = initializerStatements.getLast().getEnd() - 1;
+                    constructorDecl.sourceStart = constructorDecl.declarationSourceStart + 1;
+                    constructorDecl.sourceEnd = constructorDecl.declarationSourceStart;
+                    constructorDecl.bodyStart = constructorDecl.declarationSourceStart;
+                    constructorDecl.bodyEnd = constructorDecl.declarationSourceEnd - 1;
+                }
                 if (isEnum) {
-                    constructor.modifiers = Flags.AccPrivate;
+                    constructorDecl.modifiers = Flags.AccPrivate;
                 } else {
                     int modifiers = getModifiers(classNode, classNode instanceof InnerClassNode);
-                    constructor.modifiers = modifiers & ExtraCompilerModifiers.AccVisibilityMASK;
+                    constructorDecl.modifiers = modifiers & ExtraCompilerModifiers.AccVisibilityMASK;
                 }
-                constructor.selector = ctorName;
-                methodDeclarations.add(constructor);
+                constructorDecl.selector = ctorName;
+                methodDeclarations.add(constructorDecl);
             }
 
             for (ConstructorNode constructorNode : constructorNodes) {
@@ -1366,15 +1371,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 }
 
                 if (anonymousLocations != null && constructorNode.getCode() != null) {
-                    constructorNode.getCode().visit(new CodeVisitorSupport() {
-                        @Override
-                        public void visitConstructorCallExpression(ConstructorCallExpression call) {
-                            if (call.isUsingAnonymousInnerClass()) {
-                                anonymousLocations.put(call.getType(), constructorDecl);
-                            }
-                            super.visitConstructorCallExpression(call);
-                        }
-                    });
+                    constructorNode.getCode().visit(new AnonInnerFinder(constructorDecl));
                 }
             }
         }
@@ -1418,15 +1415,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     }
 
                     if (anonymousLocations != null && methodNode.getCode() != null) {
-                        methodNode.getCode().visit(new CodeVisitorSupport() {
-                            @Override
-                            public void visitConstructorCallExpression(ConstructorCallExpression call) {
-                                if (call.isUsingAnonymousInnerClass()) {
-                                    anonymousLocations.put(call.getType(), methodDecl);
-                                }
-                                super.visitConstructorCallExpression(call);
-                            }
-                        });
+                        methodNode.getCode().visit(new AnonInnerFinder(methodDecl));
                     }
                 }
             }
@@ -1505,7 +1494,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             ClassNode[] interfaces = classNode.getInterfaces();
             if (interfaces != null && interfaces.length > 0) {
                 typeDeclaration.superInterfaces = new TypeReference[interfaces.length];
-                for (int i = 0; i < interfaces.length; i++) {
+                for (int i = 0, n = interfaces.length; i < n; i += 1) {
                     typeDeclaration.superInterfaces[i] = createTypeReferenceForClassNode(interfaces[i]);
                 }
             } else {
@@ -2413,9 +2402,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                             doc = null;
                         }
                     }
+                    typeDeclaration.javadoc = doc;
                 }
 
-                typeDeclaration.javadoc = doc;
                 typeDeclaration.declarationSourceStart = (doc != null ? doc.sourceStart : classNode.getStart());
                 // without the -1 we can hit AIOOBE in org.eclipse.jdt.internal.core.Member.getJavadocRange where it
                 // calls getText() because the source range length causes us to ask for more data than is in the buffer
@@ -2616,6 +2605,21 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 throw new IllegalStateException("Cannot verify type reference of this class " + toVerify.getClass());
             }
             return toVerify;
+        }
+
+        private class AnonInnerFinder extends CodeVisitorSupport {
+            private AnonInnerFinder(Object enclosingDecl) {
+                this.enclosingDecl = enclosingDecl;
+            }
+            private final Object enclosingDecl;
+
+            @Override
+            public void visitConstructorCallExpression(ConstructorCallExpression call) {
+                if (call.isUsingAnonymousInnerClass()) {
+                    anonymousLocations.put(call.getType(), enclosingDecl);
+                }
+                super.visitConstructorCallExpression(call);
+            }
         }
     }
 

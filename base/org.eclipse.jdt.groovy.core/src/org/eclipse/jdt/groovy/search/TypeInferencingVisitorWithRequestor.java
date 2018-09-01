@@ -276,16 +276,71 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
     public void visitJDT(IType type, ITypeRequestor requestor) {
         ClassNode node = findClassNode(createName(type));
         if (node == null) {
-            // probably some sort of AST transformation is making this node invisible
+            // probably some AST transformation is making this node invisible
             return;
         }
+
         scopes.add(new VariableScope(scopes.getLast(), node, false));
         ASTNode  enclosingDeclaration0 = enclosingDeclarationNode;
         IJavaElement enclosingElement0 = enclosingElement;
         enclosingDeclarationNode = node;
         enclosingElement = type;
         try {
-            visitClassInternal(node);
+            visitAnnotations(node);
+            if (isMetaAnnotation(node)) {
+                // visit relocated @AnnotationCollector annotations
+                MethodNode value = node.getMethod("value", NO_PARAMETERS);
+                if (value != null && value.getEnd() < 1) {
+                    visitClassCodeContainer(value.getCode());
+                }
+            }
+
+            // visit name "node"
+            TypeLookupResult result = new TypeLookupResult(node, node, node, TypeConfidence.EXACT, scopes.getLast());
+            VisitStatus status = notifyRequestor(node, requestor, result);
+            switch (status) {
+            case CONTINUE:
+                break;
+            case CANCEL_BRANCH:
+                return;
+            case CANCEL_MEMBER:
+            case STOP_VISIT:
+                throw new VisitCompleted(status);
+            }
+
+            if (!node.isEnum()) {
+                visitGenericTypes(node);
+                for (ClassNode face : node.getInterfaces()) {
+                    visitClassReference(face);
+                }
+                visitClassReference(node.getUnresolvedSuperClass());
+            }
+
+            // visit <clinit> body because this is where static field initializers
+            // are placed; only visit field initializers here -- it's important to
+            // get the right variable scope for the initializer to ensure that the
+            // field is one of the enclosing nodes
+            MethodNode clinit = node.getMethod("<clinit>", NO_PARAMETERS);
+            if (clinit != null && clinit.getCode() instanceof BlockStatement) {
+                for (Statement element : ((BlockStatement) clinit.getCode()).getStatements()) {
+                    // only visit the static initialization of a field
+                    if (element instanceof ExpressionStatement && ((ExpressionStatement) element).getExpression() instanceof BinaryExpression) {
+                        BinaryExpression expr = (BinaryExpression) ((ExpressionStatement) element).getExpression();
+                        if (expr.getLeftExpression() instanceof FieldExpression) {
+                            FieldNode fieldNode = ((FieldExpression) expr.getLeftExpression()).getField();
+                            if (fieldNode != null && fieldNode.isStatic() && !fieldNode.getName().matches("(MAX|MIN)_VALUE|\\$VALUES") && expr.getRightExpression() != null) {
+                                // create the field scope so that it looks like we are visiting within the context of the field
+                                scopes.add(new VariableScope(scopes.getLast(), fieldNode, true));
+                                try {
+                                    expr.getRightExpression().visit(this);
+                                } finally {
+                                    scopes.removeLast().bubbleUpdates();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
             try {
                 for (IMember member : membersOf(type, node.isScript())) {
@@ -301,6 +356,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         break;
                     }
                 }
+
+                // TODO: Should all methods w/o peer in JDT model have their bodies visited?  Below are two cases in particular.
 
                 if (!type.isEnum()) {
                     if (node.isScript()) {
@@ -321,17 +378,8 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         List<MethodNode> traitMethods = node.getNodeMetaData("trait.methods");
                         if (traitMethods != null) {
                             for (MethodNode method : traitMethods) {
-                                visitMethodInternal(method, false);
+                                visitMethodInternal(method);
                             }
-                        }
-                    }
-
-                    // visit synthetic default constructor; this is where the object initializers are stuffed
-                    // this constructor has no JDT counterpart since it doesn't exist in the source code
-                    if (!type.getMethod(type.getElementName(), NO_PARAMS).exists()) {
-                        ConstructorNode defConstructor = findDefaultConstructor(node);
-                        if (defConstructor != null) {
-                            visitMethodInternal(defConstructor, true);
                         }
                     }
                 }
@@ -386,20 +434,11 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         if (isLazy(fieldNode)) {
             MethodNode fieldInit = findLazyMethod(field.getElementName());
             if (fieldInit != null && fieldInit.getEnd() < 1) {
-                scopes.add(new VariableScope(scopes.getLast(), fieldInit, fieldInit.isStatic()));
-                ASTNode enclosingDeclarationNode0 = enclosingDeclarationNode;
-                enclosingDeclarationNode = fieldInit;
                 enclosingElement = field;
                 try {
-                    visitConstructorOrMethod(fieldInit, fieldInit instanceof ConstructorNode);
-                } catch (VisitCompleted vc) {
-                    if (vc.status == VisitStatus.STOP_VISIT) {
-                        throw vc;
-                    }
+                    visitMethodInternal(fieldInit);
                 } finally {
-                    scopes.removeLast().bubbleUpdates();
                     enclosingElement = enclosingElement0;
-                    enclosingDeclarationNode = enclosingDeclarationNode0;
                 }
             }
         }
@@ -413,25 +452,16 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
         this.requestor = requestor;
 
-        scopes.add(new VariableScope(scopes.getLast(), methodNode, methodNode.isStatic()));
-        ASTNode  enclosingDeclaration0 = enclosingDeclarationNode;
         IJavaElement enclosingElement0 = enclosingElement;
-        enclosingDeclarationNode = methodNode;
         enclosingElement = method;
         try {
-            visitConstructorOrMethod(methodNode, method.isConstructor());
-        } catch (VisitCompleted vc) {
-            if (vc.status == VisitStatus.STOP_VISIT) {
-                throw vc;
-            }
-        } catch (CancellationException e) {
+            visitMethodInternal(methodNode);
+        } catch (VisitCompleted | CancellationException e) {
             throw e; // propagate
         } catch (Exception e) {
             log(e, "Error visiting method %s in class %s", method.getElementName(), method.getParent().getElementName());
         } finally {
-            scopes.removeLast().bubbleUpdates();
             enclosingElement = enclosingElement0;
-            enclosingDeclarationNode = enclosingDeclaration0;
         }
     }
 
@@ -537,83 +567,6 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
     }
 
-    private void visitClassInternal(ClassNode node) {
-        VariableScope scope = scopes.getLast();
-
-        visitAnnotations(node);
-
-        TypeLookupResult result = new TypeLookupResult(node, node, node, TypeConfidence.EXACT, scope);
-        VisitStatus status = notifyRequestor(node, requestor, result);
-        switch (status) {
-        case CONTINUE:
-            break;
-        case CANCEL_BRANCH:
-            return;
-        case CANCEL_MEMBER:
-        case STOP_VISIT:
-            throw new VisitCompleted(status);
-        }
-
-        if (!node.isEnum()) {
-            visitGenericTypes(node);
-            visitClassReference(node.getUnresolvedSuperClass());
-        }
-
-        for (ClassNode face : node.getInterfaces()) {
-            visitClassReference(face);
-        }
-
-        // TODO: Should all methods w/o peer in JDT model have their bodies visited?  Below are two cases in particular.
-
-        if (isMetaAnnotation(node)) {
-            // visit relocated @AnnotationCollector annotations
-            MethodNode value = node.getMethod("value", NO_PARAMETERS);
-            if (value != null && value.getEnd() < 1) {
-                visitClassCodeContainer(value.getCode());
-            }
-        }
-
-        // visit <clinit> body because this is where static field initializers
-        // are placed; only visit field initializers here -- it's important to
-        // get the right variable scope for the initializer to ensure that the
-        // field is one of the enclosing nodes
-        MethodNode clinit = node.getMethod("<clinit>", NO_PARAMETERS);
-        if (clinit != null && clinit.getCode() instanceof BlockStatement) {
-            for (Statement element : ((BlockStatement) clinit.getCode()).getStatements()) {
-                // only visit the static initialization of a field
-                if (element instanceof ExpressionStatement && ((ExpressionStatement) element).getExpression() instanceof BinaryExpression) {
-                    BinaryExpression expr = (BinaryExpression) ((ExpressionStatement) element).getExpression();
-                    if (expr.getLeftExpression() instanceof FieldExpression) {
-                        FieldNode fieldNode = ((FieldExpression) expr.getLeftExpression()).getField();
-                        if (fieldNode != null && fieldNode.isStatic() && !fieldNode.getName().matches("(MAX|MIN)_VALUE|\\$VALUES") && expr.getRightExpression() != null) {
-                            // create the field scope so that it looks like we are visiting within the context of the field
-                            VariableScope fieldScope = new VariableScope(scope, fieldNode, true);
-                            scopes.add(fieldScope);
-                            try {
-                                expr.getRightExpression().visit(this);
-                            } finally {
-                                scopes.removeLast().bubbleUpdates();
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // I'm not actually sure that there will be anything here. I think these will all be moved to a constructor
-        for (Statement element : node.getObjectInitializerStatements()) {
-            element.visit(this);
-        }
-
-        // visit synthetic no-arg constructors because that's where the non-static initializers are
-        for (ConstructorNode constructor : node.getDeclaredConstructors()) {
-            if (constructor.isSynthetic() && (constructor.getParameters() == null || constructor.getParameters().length == 0)) {
-                visitConstructor(constructor);
-            }
-        }
-        // don't visit contents, the visitJDT methods are used instead
-    }
-
     private void visitClassReference(ClassNode node) {
         TypeLookupResult result = null;
         node = GroovyUtils.getBaseType(node);
@@ -656,12 +609,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         }
     }
 
-    private void visitMethodInternal(MethodNode node, boolean isCtor) {
+    private void visitMethodInternal(MethodNode node) {
         scopes.add(new VariableScope(scopes.getLast(), node, node.isStatic()));
         ASTNode enclosingDeclaration0 = enclosingDeclarationNode;
         enclosingDeclarationNode = node;
         try {
-            visitConstructorOrMethod(node, isCtor);
+            visitConstructorOrMethod(node, node instanceof ConstructorNode);
         } catch (VisitCompleted vc) {
             if (vc.status == VisitStatus.STOP_VISIT) {
                 throw vc;
@@ -686,7 +639,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             for (MethodNode method : node.getMethods()) {
                 if (method.getEnd() > 0) {
                     enclosingElement = JavaCoreUtil.findMethod(method, (IType) enumConstant.getChildren()[0]);
-                    visitMethodInternal(method, false);
+                    visitMethodInternal(method);
                 }
             }
         } catch (JavaModelException e) {
@@ -1055,7 +1008,7 @@ assert primaryExprType != null && dependentExprType != null;
                     for (MethodNode method : type.getMethods()) {
                         if (method.getEnd() > 0) {
                             enclosingElement = JavaCoreUtil.findMethod(method, anon);
-                            visitMethodInternal(method, false);
+                            visitMethodInternal(method);
                         }
                     }
                 } finally {
@@ -2627,15 +2580,6 @@ assert primaryExprType != null && dependentExprType != null;
     public static Expression findCategoryTarget(ClassNode node) {
         return GroovyUtils.getAnnotations(node, "groovy.lang.Category")
             .findFirst().map(an -> an.getMember("value")).orElse(null);
-    }
-
-    private static ConstructorNode findDefaultConstructor(ClassNode node) {
-        for (ConstructorNode constructor : node.getDeclaredConstructors()) {
-            if (constructor.getParameters() == null || constructor.getParameters().length == 0) {
-                return constructor;
-            }
-        }
-        return null;
     }
 
     private static Parameter findTargetParameter(Expression arg, MethodCallExpression call, MethodNode declaration, boolean isGroovyMethod) {
