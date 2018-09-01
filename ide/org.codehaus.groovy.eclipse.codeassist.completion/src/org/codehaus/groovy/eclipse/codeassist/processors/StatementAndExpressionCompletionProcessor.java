@@ -577,7 +577,7 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         }
 
         List<IProposalCreator> creators = new ArrayList<>(4);
-        Collections.addAll(creators, getAllProposalCreators());
+        Collections.addAll(creators, getProposalCreators());
         return creators;
     }
 

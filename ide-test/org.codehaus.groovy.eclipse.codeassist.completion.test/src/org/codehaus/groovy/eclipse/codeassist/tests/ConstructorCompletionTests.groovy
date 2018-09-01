@@ -387,6 +387,17 @@ final class ConstructorCompletionTests extends CompletionTestSuite {
     }
 
     @Test
+    void testConstructorCompletionInnerClass12() {
+        String contents = '''\
+            new Map.Entry() {
+            }'''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'Map'))
+        proposalExists(proposals, 'Map - java.util', 1)
+        proposalExists(proposals, 'MapWithDefault - groovy.lang', 1)
+        proposalExists(proposals, 'MapWithDefault(Map<K,V> m, Closure initClosure) - groovy.lang.MapWithDefault', 1)
+    }
+
+    @Test
     void testContructorCompletionImportHandling0() {
         String contents = '''\
             def a = new java.text.Anno

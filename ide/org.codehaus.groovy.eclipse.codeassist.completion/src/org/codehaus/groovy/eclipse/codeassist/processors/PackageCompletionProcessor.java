@@ -21,7 +21,6 @@ import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
@@ -55,20 +54,7 @@ public class PackageCompletionProcessor extends AbstractGroovyCompletionProcesso
             return Collections.emptyList();
         }
 
-        int replacementStart;
-        switch (context.location) {
-        case ANNOTATION:
-        case CONSTRUCTOR:
-            // skip over "new " for constructor invocation
-            replacementStart = context.completionNode.getStart();
-            break;
-        case METHOD_CONTEXT:
-            replacementStart = ((Expression) context.completionNode).getNameStart();
-            break;
-        default:
-            replacementStart = (context.completionLocation - context.fullCompletionExpression.replaceFirst("^\\s+", "").length());
-        }
-
+        int replacementStart = getReplacementStartOffset();
         SearchableEnvironment environment = getNameEnvironment();
         GroovyProposalTypeSearchRequestor requestor = new GroovyProposalTypeSearchRequestor(
             context, getJavaContext(), replacementStart, -1, environment.nameLookup, monitor);

@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.eclipse.codeassist.creators.CategoryProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.creators.FieldProposalCreator;
 import org.codehaus.groovy.eclipse.codeassist.creators.IProposalCreator;
@@ -47,12 +49,31 @@ public abstract class AbstractGroovyCompletionProcessor implements IGroovyComple
         return javaContext;
     }
 
-    protected IProposalCreator[] getAllProposalCreators() {
+    protected IProposalCreator[] getProposalCreators() {
         return new IProposalCreator[] {
             new FieldProposalCreator(),
             new MethodProposalCreator(),
             new CategoryProposalCreator(),
         };
+    }
+
+    protected int getReplacementStartOffset() {
+        int replacementStart;
+        switch (context.location) {
+        case ANNOTATION:
+        case CONSTRUCTOR:
+            replacementStart = context.completionNode.getStart();
+            if (context.completionNode instanceof ClassNode && ((ClassNode) context.completionNode).getNameStart() > 0) {
+                replacementStart = ((ClassNode) context.completionNode).getNameStart();
+            }
+            break;
+        case METHOD_CONTEXT:
+            replacementStart = ((Expression) context.completionNode).getNameStart();
+            break;
+        default:
+            replacementStart = (context.completionLocation - context.fullCompletionExpression.replaceFirst("^\\s+", "").length());
+        }
+        return replacementStart;
     }
 
     protected final GroovyCompletionProposal createProposal(int kind, int completionOffset) {

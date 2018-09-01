@@ -66,24 +66,23 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
     @Override
     public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
         ContentAssistContext context = getContext();
-        char[] completionChars; int completionStart;
+        char[] completionChars;
         switch (context.location) {
         case CONSTRUCTOR:
             context.extend(getJavaContext().getCoreContext(), null);
-            completionStart = context.completionNode.getStart(); // skip "new "
             completionChars = context.getQualifiedCompletionExpression().toCharArray();
             break;
         case METHOD_CONTEXT:
-            completionStart = ((Expression) context.completionNode).getNameStart();
             completionChars = ((Expression) context.completionNode).getType().getName().replace('$', '.').toCharArray();
             break;
         default:
             throw new IllegalStateException("Invalid constructor completion location: " + context.location.name());
         }
 
+        int replacementStart = getReplacementStartOffset();
         SearchableEnvironment environment = getNameEnvironment();
         GroovyProposalTypeSearchRequestor requestor = new GroovyProposalTypeSearchRequestor(
-            context, getJavaContext(), completionStart, -1, environment.nameLookup, monitor);
+            context, getJavaContext(), replacementStart, -1, environment.nameLookup, monitor);
 
         int lastDotIndex = CharOperation.lastIndexOf('.', completionChars);
         // check for unqualified or fully-qualified (by packages) expression
