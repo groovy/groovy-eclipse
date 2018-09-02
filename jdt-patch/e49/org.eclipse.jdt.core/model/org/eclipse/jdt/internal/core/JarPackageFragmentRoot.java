@@ -14,8 +14,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
@@ -68,7 +69,6 @@ public class JarPackageFragmentRoot extends PackageFragmentRoot {
 	boolean knownToBeModuleLess;
 
 	private boolean multiVersion;
-	public String versionPath;
 
 	/**
 	 * Constructs a package fragment root which is the root of the Java package directory hierarchy
@@ -96,8 +96,8 @@ public class JarPackageFragmentRoot extends PackageFragmentRoot {
 	@Override
 	protected boolean computeChildren(OpenableElementInfo info, IResource underlyingResource) throws JavaModelException {
 		final HashtableOfArrayToObject rawPackageInfo = new HashtableOfArrayToObject();
-		final Set<String> overridden = new HashSet<>();
-		IJavaElement[] children;
+		final Map<String, String> overridden = new HashMap<>();
+		IJavaElement[] children = NO_ELEMENTS;
 		try {
 			// always create the default package
 			rawPackageInfo.put(CharOperation.NO_STRINGS, new ArrayList[] { EMPTY_LIST, EMPTY_LIST });
@@ -139,19 +139,38 @@ public class JarPackageFragmentRoot extends PackageFragmentRoot {
 				ZipFile jar = null;
 				try {
 					jar = getJar();
-					String version = "META-INF/versions/" + projectCompliance + "/";  //$NON-NLS-1$//$NON-NLS-2$
-					int versionPathLength = version.length();
+					String version = "META-INF/versions/";  //$NON-NLS-1$
+					List<String> versions = new ArrayList<>();
 					if (projectLevel >= ClassFileConstants.JDK9 && jar.getEntry(version) != null) {
-						this.multiVersion = true;
-						this.versionPath = version;
+						int earliestJavaVersion = ClassFileConstants.MAJOR_VERSION_9;
+						long latestJDK = CompilerOptions.releaseToJDKLevel(projectCompliance);
+						int latestJavaVer = (int) (latestJDK >> 16);
+
+						for(int i = latestJavaVer; i >= earliestJavaVersion; i--) {
+							String s = "" + + (i - 44); //$NON-NLS-1$
+							String versionPath = version + s;
+							if (jar.getEntry(versionPath) != null) {
+								versions.add(s);
+							}
+						}
 					}
-					for (Enumeration e= jar.entries(); e.hasMoreElements();) {
-						ZipEntry member= (ZipEntry) e.nextElement();
+					
+					String[] supportedVersions = versions.toArray(new String[versions.size()]);
+					if (supportedVersions.length > 0) {
+						this.multiVersion = true;
+					}
+					int length = version.length();
+					for (Enumeration<? extends ZipEntry> e= jar.entries(); e.hasMoreElements();) {
+						ZipEntry member= e.nextElement();
 						String name = member.getName();
-						if (this.multiVersion && name.length() > versionPathLength && name.startsWith(version)) {
-							name = name.substring(version.length());
-							if (org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(name)) {
-								overridden.add(name);
+						if (this.multiVersion && name.length() > (length + 2) && name.startsWith(version)) {
+							int end = name.indexOf('/', length);
+							if (end >= name.length()) continue;
+							String versionPath = name.substring(0, end);
+							String ver = name.substring(length, end);
+							if(versions.contains(ver) && org.eclipse.jdt.internal.compiler.util.Util.isClassFileName(name)) {
+								name = name.substring(end + 1);
+								overridden.put(name, versionPath);
 							}
 						}
 						initRawPackageInfo(rawPackageInfo, name, member.isDirectory(), CompilerOptions.versionFromJdkLevel(classLevel));
@@ -180,7 +199,6 @@ public class JarPackageFragmentRoot extends PackageFragmentRoot {
 				throw new JavaModelException(e);
 			}
 		}
-
 		info.setChildren(children);
 		((JarPackageFragmentRootInfo) info).rawPackageInfo = rawPackageInfo;
 		((JarPackageFragmentRootInfo) info).overriddenClasses = overridden;
@@ -285,9 +303,8 @@ public class JarPackageFragmentRoot extends PackageFragmentRoot {
 			JarPackageFragmentRootInfo elementInfo;
 			try {
 				elementInfo = (JarPackageFragmentRootInfo) getElementInfo();
-				if (elementInfo.overriddenClasses.contains(classname)) {
-					return this.versionPath == null ? classname : this.versionPath + classname;
-				}
+				String versionPath = elementInfo.overriddenClasses.get(classname);
+				return versionPath == null ? classname : versionPath + '/' + classname;
 			} catch (JavaModelException e) {
 				// move on
 			}

@@ -93,6 +93,8 @@ protected String readJarContent(final SimpleSet packageSet) {
 	String modInfo = null;
 	for (Enumeration e = this.zipFile.entries(); e.hasMoreElements(); ) {
 		String fileName = ((ZipEntry) e.nextElement()).getName();
+		if (fileName.startsWith("META-INF/")) //$NON-NLS-1$
+			continue;
 		if (modInfo == null) {
 			int folderEnd = fileName.lastIndexOf('/');
 			folderEnd += 1;
@@ -111,11 +113,9 @@ IModule initializeModule() {
 	try {
 		file = new ZipFile(this.zipFilename);
 		String releasePath = "META-INF/versions/" + this.compliance + '/' + IModule.MODULE_INFO_CLASS; //$NON-NLS-1$
-		System.out.println("Reading for module from: " + this.zipFilename); //$NON-NLS-1$
 		ClassFileReader classfile = null;
 		try {
 			classfile = ClassFileReader.read(file, releasePath);
-			System.out.println("Read classfile : " + classfile); //$NON-NLS-1$
 		} catch (Exception e) {
 			e.printStackTrace();
 			// move on to the default

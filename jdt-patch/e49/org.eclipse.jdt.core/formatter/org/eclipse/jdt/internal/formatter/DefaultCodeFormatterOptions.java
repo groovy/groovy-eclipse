@@ -143,6 +143,9 @@ public class DefaultCodeFormatterOptions {
 	public int alignment_for_union_type_in_multicatch;
 
 	public boolean align_type_members_on_columns;
+	public boolean align_variable_declarations_on_columns;
+	public boolean align_assignment_statements_on_columns;
+	public boolean align_with_spaces;
 	public int align_fields_grouping_blank_lines;
 
 	public String brace_position_for_annotation_type_declaration;
@@ -484,7 +487,10 @@ public class DefaultCodeFormatterOptions {
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_TYPE_PARAMETERS, getAlignment(this.alignment_for_type_parameters));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_UNION_TYPE_IN_MULTICATCH, getAlignment(this.alignment_for_union_type_in_multicatch));
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGN_TYPE_MEMBERS_ON_COLUMNS, this.align_type_members_on_columns ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
+		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGN_VARIABLE_DECLARATIONS_ON_COLUMNS, this.align_variable_declarations_on_columns ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
+		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGN_ASSIGNMENT_STATEMENTS_ON_COLUMNS, this.align_assignment_statements_on_columns ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGN_FIELDS_GROUPING_BLANK_LINES, Integer.toString(this.align_fields_grouping_blank_lines));
+		options.put(DefaultCodeFormatterConstants.FORMATTER_ALIGN_WITH_SPACES, this.align_with_spaces ? DefaultCodeFormatterConstants.TRUE : DefaultCodeFormatterConstants.FALSE);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_BRACE_POSITION_FOR_ANNOTATION_TYPE_DECLARATION, this.brace_position_for_annotation_type_declaration);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_BRACE_POSITION_FOR_ANONYMOUS_TYPE_DECLARATION, this.brace_position_for_anonymous_type_declaration);
 		options.put(DefaultCodeFormatterConstants.FORMATTER_BRACE_POSITION_FOR_ARRAY_INITIALIZER, this.brace_position_for_array_initializer);
@@ -1045,6 +1051,14 @@ public class DefaultCodeFormatterOptions {
 		if (alignTypeMembersOnColumnsOption != null) {
 			this.align_type_members_on_columns = DefaultCodeFormatterConstants.TRUE.equals(alignTypeMembersOnColumnsOption);
 		}
+		final Object alignVariableDeclarationsOnColumnsOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_ALIGN_VARIABLE_DECLARATIONS_ON_COLUMNS);
+		if (alignVariableDeclarationsOnColumnsOption != null) {
+			this.align_variable_declarations_on_columns = DefaultCodeFormatterConstants.TRUE.equals(alignVariableDeclarationsOnColumnsOption);
+		}
+		final Object alignAssignmentStatementsOnColumnsOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_ALIGN_ASSIGNMENT_STATEMENTS_ON_COLUMNS);
+		if (alignAssignmentStatementsOnColumnsOption != null) {
+			this.align_assignment_statements_on_columns = DefaultCodeFormatterConstants.TRUE.equals(alignAssignmentStatementsOnColumnsOption);
+		}
 		final Object alignGroupSepartionBlankLinesOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_ALIGN_FIELDS_GROUPING_BLANK_LINES);
 		if (alignTypeMembersOnColumnsOption != null) {
 			try {
@@ -1054,6 +1068,10 @@ public class DefaultCodeFormatterOptions {
 			} catch(ClassCastException e) {
 				this.align_fields_grouping_blank_lines = Integer.MAX_VALUE;
 			}
+		}
+		final Object alignWithSpaces = settings.get(DefaultCodeFormatterConstants.FORMATTER_ALIGN_WITH_SPACES);
+		if (alignWithSpaces != null) {
+			this.align_with_spaces = DefaultCodeFormatterConstants.TRUE.equals(alignWithSpaces);
 		}
 		final Object bracePositionForAnnotationTypeDeclarationOption = settings.get(DefaultCodeFormatterConstants.FORMATTER_BRACE_POSITION_FOR_ANNOTATION_TYPE_DECLARATION);
 		if (bracePositionForAnnotationTypeDeclarationOption != null) {
@@ -2489,6 +2507,9 @@ public class DefaultCodeFormatterOptions {
 		this.alignment_for_type_parameters = Alignment.M_NO_ALIGNMENT;
 		this.alignment_for_union_type_in_multicatch = Alignment.M_COMPACT_SPLIT;
 		this.align_type_members_on_columns = false;
+		this.align_variable_declarations_on_columns = false;
+		this.align_assignment_statements_on_columns = false;
+		this.align_with_spaces = false;
 		this.align_fields_grouping_blank_lines = Integer.MAX_VALUE;
 		this.brace_position_for_annotation_type_declaration = DefaultCodeFormatterConstants.END_OF_LINE;
 		this.brace_position_for_anonymous_type_declaration = DefaultCodeFormatterConstants.END_OF_LINE;
@@ -2806,6 +2827,9 @@ public class DefaultCodeFormatterOptions {
 		this.alignment_for_type_parameters = Alignment.M_NO_ALIGNMENT;
 		this.alignment_for_union_type_in_multicatch = Alignment.M_COMPACT_SPLIT;
 		this.align_type_members_on_columns = false;
+		this.align_variable_declarations_on_columns = false;
+		this.align_assignment_statements_on_columns = false;
+		this.align_with_spaces = false;
 		this.align_fields_grouping_blank_lines = Integer.MAX_VALUE;
 		this.brace_position_for_annotation_type_declaration = DefaultCodeFormatterConstants.END_OF_LINE;
 		this.brace_position_for_anonymous_type_declaration = DefaultCodeFormatterConstants.END_OF_LINE;

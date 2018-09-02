@@ -58,7 +58,7 @@ public class TextEditsBuilder extends TokenTraverser {
 		this.options = options;
 		this.regions = adaptRegions(regions);
 
-		this.alignChar = this.options.tab_char;
+		this.alignChar = this.options.align_with_spaces ? DefaultCodeFormatterOptions.SPACE : this.options.tab_char;
 		this.sourceLimit = source.length();
 		this.parent = null;
 
