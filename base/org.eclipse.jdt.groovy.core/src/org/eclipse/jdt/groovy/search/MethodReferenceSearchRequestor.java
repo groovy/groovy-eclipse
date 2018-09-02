@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
@@ -388,24 +389,17 @@ public class MethodReferenceSearchRequestor implements ITypeRequestor {
     }
 
     private int getAccuracy(TypeConfidence confidence) {
-        if (shouldAlwaysBeAccurate() || confidence == TypeConfidence.EXACT) {
+        //                                        improves call hierarchy and prevents "possible matches" warnings in refactoring wizard
+        if (confidence == TypeConfidence.EXACT || ACCURATE_REQUESTOR.matcher(requestor.getClass().getName()).find()) {
             return SearchMatch.A_ACCURATE;
         }
         return SearchMatch.A_INACCURATE;
     }
 
-    /**
-     * Checks to see if this requestor has something to do with refactoring, if
-     * so, we always want an accurate match otherwise we get complaints in the
-     * refactoring wizard of "possible matches"
-     */
-    private boolean shouldAlwaysBeAccurate() {
-        return (requestor.getClass().getPackage().getName().indexOf("refactoring") != -1);
-    }
+    private static final Pattern ACCURATE_REQUESTOR = Pattern.compile("\\.(?:callhierarchy|refactoring)\\.");
 
     private static boolean supportsOverride(IMethod method) throws JavaModelException {
-        int flags = method.getFlags();
-        return !(Flags.isPrivate(flags) || Flags.isStatic(flags));
+        return !(Flags.isPrivate(method.getFlags()) || Flags.isStatic(method.getFlags()));
     }
 
     private static boolean isNotSynthetic(String name, ClassNode type) {
