@@ -801,6 +801,9 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public boolean equals(Object o) {
+        // GRECLIPSE add
+        if (o==null) return false;
+        // GRECLIPSE end
         if (redirect!=null) return redirect().equals(o);
         if (!(o instanceof ClassNode)) return false;
         ClassNode cn = (ClassNode) o;
@@ -864,6 +867,11 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      *         inner class
      */
     public FieldNode getOuterField(String name) {
+        // GRECLIPSE add
+        if (redirect != null) {
+            return redirect().getOuterField(name);
+        }
+        // GRECLIPSE end
         return null;
     }
 
@@ -871,6 +879,11 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * Helper method to avoid casting to inner class
      */
     public ClassNode getOuterClass() {
+        // GRECLIPSE add
+        if (redirect != null) {
+            return redirect().getOuterClass();
+        }
+        // GRECLIPSE end
         return null;
     }
 
@@ -890,7 +903,16 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
         return result;
         */
-        return Collections.EMPTY_LIST;
+        ClassNode outer = getOuterClass();
+        if (outer == null) {
+            return Collections.emptyList();
+        }
+        List<ClassNode> result = new LinkedList<>();
+        do {
+            result.add(outer);
+        } while ((outer = outer.getOuterClass()) != null);
+
+        return result;
     }
 
     /**
@@ -1595,7 +1617,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         final Map<String,FieldNode> index = r.fieldIndex;
         index.put(newName, index.remove(oldName));
     }
-    
+
     public void removeField(String oldName) {
         ClassNode r = redirect();
         if (r.fieldIndex == null)
@@ -1648,7 +1670,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     // GRECLIPSE end
 
     private Map<CompilePhase, Map<Class<? extends ASTTransformation>, Set<ASTNode>>> getTransformInstances() {
-        if(transformInstances == null){
+        if (transformInstances == null) {
             transformInstances = new EnumMap<CompilePhase, Map<Class <? extends ASTTransformation>, Set<ASTNode>>>(CompilePhase.class);
             for (CompilePhase phase : CompilePhase.values()) {
                 transformInstances.put(phase, new LinkedHashMap<Class <? extends ASTTransformation>, Set<ASTNode>>());

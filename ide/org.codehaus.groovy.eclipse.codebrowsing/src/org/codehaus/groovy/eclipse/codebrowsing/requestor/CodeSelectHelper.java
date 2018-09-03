@@ -20,7 +20,6 @@ import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ImportNode;
-import org.codehaus.groovy.ast.InnerClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.CastExpression;
@@ -218,7 +217,7 @@ public class CodeSelectHelper implements ICodeSelectHelper {
 
     protected static boolean isTypeDeclaration(ASTNode node, ModuleNode module) {
         // don't use inner class nodes since they really should resolve to the super type
-        if (node instanceof ClassNode && !(node instanceof InnerClassNode)) {
+        if (node instanceof ClassNode && ((ClassNode) node).getOuterClass() == null) {
             for (ClassNode clazz : module.getClasses()) {
                 if (clazz.equals(node)) {
                     return true;

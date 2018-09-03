@@ -39,27 +39,26 @@ import org.eclipse.jface.text.Position;
 public abstract class SemanticReferenceRequestor implements ITypeRequestor {
 
     protected static Position getPosition(ASTNode node) {
-        int start, length;
+        int offset, length;
         if (node instanceof FieldNode || node instanceof MethodNode || node instanceof PropertyNode ||
-                (node instanceof ClassNode && ((ClassNode) node).getNameEnd() > 0) ||
-                node instanceof StaticMethodCallExpression) {
+                (node instanceof ClassNode && ((ClassNode) node).getNameEnd() > 0) || node instanceof StaticMethodCallExpression) {
             AnnotatedNode n = (AnnotatedNode) node;
-            start = n.getNameStart();
-            length = n.getNameEnd() - start + 1;
+            offset = n.getNameStart();
+            length = n.getNameEnd() - offset + 1;
         } else if (node instanceof Parameter) {
             Parameter p = (Parameter) node;
-            start = p.getNameStart();
-            length = p.getNameEnd() - start;
+            offset = p.getNameStart();
+            length = p.getNameEnd() - offset;
         } else if (node instanceof MethodCallExpression) {
             Expression e = ((MethodCallExpression) node).getMethod();
-            start = e.getStart();
+            offset = e.getStart();
             length = e.getLength();
         } else {
-            start = node.getStart();
+            offset = node.getStart();
             length = node.getLength();
         }
 
-        return new Position(start, length);
+        return new Position(offset, length);
     }
 
     protected static boolean isFinal(ASTNode node) {

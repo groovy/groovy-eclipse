@@ -585,6 +585,19 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         return Collections.unmodifiableList(super.getProperties());
     }
 
+    @Override
+    public ClassNode getOuterClass() {
+        if (jdtBinding.isNestedType()) {
+            return resolver.convertToClassNode(jdtBinding.enclosingType());
+        }
+        return super.getOuterClass();
+    }
+
+    @Override
+    public FieldNode getOuterField(String name) {
+        return getOuterClass().getDeclaredField(name);
+    }
+
     /**
      * Some AST transforms are written such that they refer to typeClass on a ClassNode.
      * This is not available under Eclipse. However, we can support it in a rudimentary
@@ -609,6 +622,10 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         throw new GroovyBugError("JDTClassNode.getTypeClass() cannot locate class for " + getName() + " using transform loader " + transformLoader);
     }
 
+    public boolean isAnonymous() {
+        return jdtBinding.isAnonymousType();
+    }
+
     @Override
     public boolean isDeprecated() {
         return jdtBinding.isDeprecated();
@@ -624,13 +641,8 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         return true; // JDTClassNodes are created because of a JDT Reference Binding file so are always 'resolved' (although not initialized upon creation)
     }
 
-    // TODO: Remove when Groovy 2.4 is hard minimum.
-    public boolean isReallyResolved() {
-        return true;
-    }
-
     @Override
     public boolean mightHaveInners() {
-        return (jdtBinding.memberTypes().length != 0);
+        return (jdtBinding.memberTypes().length > 0);
     }
 }

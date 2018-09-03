@@ -43,7 +43,7 @@ public class GatherSemanticReferences {
                 SemanticHighlightingReferenceRequestor requestor = new SemanticHighlightingReferenceRequestor(unit);
                 TypeInferencingVisitorWithRequestor visitor = factory.createVisitor(unit);
                 visitor.visitCompilationUnit(requestor);
-                return requestor.typedPosition;
+                return requestor.typedPositions;
             } catch (Exception e) {
                 GroovyCore.logException("Semantic highlighting gather failed", e);
             }

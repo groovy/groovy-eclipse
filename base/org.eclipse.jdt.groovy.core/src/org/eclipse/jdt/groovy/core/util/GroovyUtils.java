@@ -49,6 +49,7 @@ import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
+import org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTNode;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.internal.core.util.Util;
@@ -329,7 +330,13 @@ public class GroovyUtils {
     }
 
     public static boolean isAnonymous(ClassNode node) {
-        return (node instanceof InnerClassNode && ((InnerClassNode) node).isAnonymous());
+        if (node instanceof InnerClassNode) {
+            return ((InnerClassNode) node).isAnonymous();
+        }
+        if (node != null && node.redirect() instanceof JDTClassNode) {
+            return ((JDTClassNode) node.redirect()).isAnonymous();
+        }
+        return false;
     }
 
     /**

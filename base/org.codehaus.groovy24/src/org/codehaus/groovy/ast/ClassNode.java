@@ -139,8 +139,8 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public static final ClassNode[] EMPTY_ARRAY = new ClassNode[0];
-    public static final ClassNode THIS = new ClassNode(Object.class);
-    public static final ClassNode SUPER = new ClassNode(Object.class);
+    public static final ClassNode THIS = new ImmutableClassNode(Object.class);
+    public static final ClassNode SUPER = new ImmutableClassNode(Object.class);
 
     private String name;
     private int modifiers;
@@ -865,6 +865,11 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      *         inner class
      */
     public FieldNode getOuterField(String name) {
+        // GRECLIPSE add
+        if (redirect != null) {
+            return redirect().getOuterField(name);
+        }
+        // GRECLIPSE end
         return null;
     }
 
@@ -872,8 +877,28 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * Helper method to avoid casting to inner class
      */
     public ClassNode getOuterClass() {
+        // GRECLIPSE add
+        if (redirect != null) {
+            return redirect().getOuterClass();
+        }
+        // GRECLIPSE end
         return null;
     }
+
+    // GRECLIPSE add
+    public List<ClassNode> getOuterClasses() {
+        ClassNode outer = getOuterClass();
+        if (outer == null) {
+            return Collections.emptyList();
+        }
+        List<ClassNode> result = new LinkedList<>();
+        do {
+            result.add(outer);
+        } while ((outer = outer.getOuterClass()) != null);
+
+        return result;
+    }
+    // GRECLIPSE end
 
     /**
      * Adds a statement to the object initializer.
@@ -1500,12 +1525,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         throw new GroovyBugError("ClassNode#getTypeClass for " + getName() + " called before the type class is set");
     }
 
-    // GRECLIPSE add
-    public boolean hasClass() {
-        return (clazz != null || redirect().clazz != null);
-    }
-    // GRECLIPSE end
-
     public boolean hasPackageName() {
         return redirect().name.indexOf('.') > 0;
     }
@@ -1650,22 +1669,26 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public String getClassInternalName() {
-        return isRedirectNode() ? redirect().getClassInternalName() : null;
+        return (isRedirectNode() ? redirect().getClassInternalName() : null);
+    }
+
+    public boolean hasClass() {
+        return (clazz != null || redirect().clazz != null);
     }
 
     public boolean isPrimitive() {
-        return (clazz != null) ? clazz.isPrimitive() : false;
+        return (clazz != null && clazz.isPrimitive());
     }
 
     /**
      * @return true if this classnode might have inners, conservatively it says yes if it is unsure.
      */
     public boolean mightHaveInners() {
-        ClassNode redirect = redirect();
-        if (redirect.hasClass()) {
+        ClassNode r = redirect();
+        if (r.hasClass()) {
             return true;
         }
-        return redirect.innerClasses != null && !redirect.innerClasses.isEmpty();
+        return (r.innerClasses != null && !r.innerClasses.isEmpty());
     }
     // GRECLIPSE end
 

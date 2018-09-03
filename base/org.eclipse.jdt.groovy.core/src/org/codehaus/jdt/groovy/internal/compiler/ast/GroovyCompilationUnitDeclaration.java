@@ -348,10 +348,10 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
             }
 
             for (GroovyClass clazz : classes) {
-                ClassNode classnode = clazz.getClassNode();
+                ClassNode classNode = clazz.getClassNode();
                 if (DEBUG) {
                     log("Looking at class " + clazz.getName());
-                    log("ClassNode where it came from " + classnode);
+                    log("ClassNode where it came from " + classNode);
                 }
                 // Only care about those coming about because of this groovySourceUnit
                 if (clazz.getSourceUnit() == groovySourceUnit) {
@@ -369,12 +369,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     }
                     if (binding == null) {
                         // closures will be represented as InnerClassNodes
-                        ClassNode current = classnode;
-                        while (current instanceof InnerClassNode && binding == null) {
-                            current = ((InnerClassNode) current).getOuterClass();
+                        ClassNode current = classNode;
+                        while ((current = current.getOuterClass()) != null && binding == null) {
                             binding = findBinding(types, current);
                             if (DEBUG) {
-                                log("Had another look because it is in an InnerClassNode, found binding? " + (binding != null));
+                                log("Had another look within enclosing class; found binding? " + (binding != null));
                             }
                         }
                     }
@@ -1124,7 +1123,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 typeDeclaration.annotations = createAnnotations(classNode.getAnnotations());
 
                 boolean isInner;
-                if (classNode instanceof InnerClassNode) {
+                if (classNode.getOuterClass() != null) {
                     isInner = true;
                 } else {
                     isInner = false;
@@ -1330,7 +1329,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 if (isEnum) {
                     constructorDecl.modifiers = Flags.AccPrivate;
                 } else {
-                    int modifiers = getModifiers(classNode, classNode instanceof InnerClassNode);
+                    int modifiers = getModifiers(classNode, classNode.getOuterClass() != null);
                     constructorDecl.modifiers = modifiers & ExtraCompilerModifiers.AccVisibilityMASK;
                 }
                 constructorDecl.selector = ctorName;

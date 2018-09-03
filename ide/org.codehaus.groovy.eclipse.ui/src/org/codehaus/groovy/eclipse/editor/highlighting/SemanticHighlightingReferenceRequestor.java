@@ -70,7 +70,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
     private static final boolean DEBUG = false;
 
     /** Positions of interesting syntax elements within {@link #unit} in increasing lexical order. */
-    protected final SortedSet<HighlightedTypedPosition> typedPosition = new TreeSet<>((p1, p2) -> {
+    protected final SortedSet<HighlightedTypedPosition> typedPositions = new TreeSet<>((p1, p2) -> {
         int result = p1.compareTo(p2);
         if (result == 0) {
             // order matching positions by highlighting style
@@ -105,7 +105,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             // GRECLIPSE-1327: check to see if this is a synthetic call() on a closure reference
             if (isRealASTNode(node)) {
                 Position p = getPosition(node);
-                typedPosition.add(new HighlightedTypedPosition(p, HighlightKind.UNKNOWN));
+                typedPositions.add(new HighlightedTypedPosition(p, HighlightKind.UNKNOWN));
                 // don't continue past an unknown reference
                 return VisitStatus.CANCEL_BRANCH;
             }
@@ -137,7 +137,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         } else if (node instanceof Parameter) {
             ASTNode var = node.getNodeMetaData("reserved.type.name");
             if (var != null) {
-                typedPosition.add(new HighlightedTypedPosition(var.getStart(), var.getLength(), HighlightKind.RESERVED));
+                typedPositions.add(new HighlightedTypedPosition(var.getStart(), var.getLength(), HighlightKind.RESERVED));
             }
             pos = handleVariableExpression((Parameter) node, result.scope);
 
@@ -160,7 +160,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
                         if (pat.charAt(idx - 1) != '\\') {
                             int i = idx, j = (idx = pat.indexOf('\n', idx));
                             int offset = (node.getStart() + i), length = ((j == -1 ? pat.length() : j) - i);
-                            typedPosition.add(new HighlightedTypedPosition(offset, length, HighlightKind.COMMENT));
+                            typedPositions.add(new HighlightedTypedPosition(offset, length, HighlightKind.COMMENT));
                         }
                     }
                 }
@@ -185,7 +185,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
 
         //                                        expression nodes can still be valid and have an offset of 0 and a length of 1
         if (pos != null && pos.getLength() > 0 && (node instanceof Expression || pos.getOffset() > 0 || pos.getLength() > 1)) {
-            typedPosition.add(pos);
+            typedPositions.add(pos);
         }
 
         return VisitStatus.CONTINUE;
