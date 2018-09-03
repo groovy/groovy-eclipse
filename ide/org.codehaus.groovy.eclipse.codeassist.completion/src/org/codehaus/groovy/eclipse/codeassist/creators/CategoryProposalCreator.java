@@ -17,10 +17,10 @@ package org.codehaus.groovy.eclipse.codeassist.creators;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -56,11 +56,15 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
 
     @Override
     public List<IGroovyProposal> findAllProposals(ClassNode selfType, Set<ClassNode> categories, String prefix, boolean isStatic, boolean isPrimary) {
+        if (categories == null || categories.isEmpty()) {
+            return Collections.emptyList();
+        }
+
         DGMProposalFilter filter = new DGMProposalFilter();
         Set<String> existingPropertyProposals = new HashSet<>();
         Map<String, List<MethodNode>> existingMethodProposals = new HashMap<>();
 
-        List<IGroovyProposal> groovyProposals = new LinkedList<>();
+        List<IGroovyProposal> groovyProposals = new ArrayList<>();
         for (ClassNode category : categories) {
             boolean isDefaultCategory = isDefaultCategory(category);
             for (MethodNode method : category.getAllDeclaredMethods()) {
@@ -76,12 +80,7 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
                         if (params.length > 0 && GroovyUtils.isAssignable(selfType, params[0].getType()) && !isDuplicate(method, existingMethodProposals)) {
                             groovyProposals.add(new CategoryMethodProposal(method));
 
-                            List<MethodNode> methodList = existingMethodProposals.get(methodName);
-                            if (methodList == null) {
-                                methodList = new ArrayList<>(2);
-                                existingMethodProposals.put(methodName, methodList);
-                            }
-                            methodList.add(method);
+                            existingMethodProposals.computeIfAbsent(methodName, x -> new ArrayList<>(2)).add(method);
                         }
                     }
 
