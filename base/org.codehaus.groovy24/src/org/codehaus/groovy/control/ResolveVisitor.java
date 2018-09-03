@@ -1437,6 +1437,19 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 addError("unable to resolve class " + type.getName(), type);
             }
             */
+            for (ImportNode importNode : module.getStarImports()) {
+                if (importNode.getEnd() > 0) {
+                    String importName = importNode.getPackageName();
+                    importName = importName.substring(0, importName.length()-1);
+                    ClassNode type = ClassHelper.makeWithoutCaching(importName);
+                    if (resolve(type, false, false, true)) {
+                        importNode.setType(type);
+                        type.setStart(importNode.getStart() + 7);
+                        type.setEnd(type.getStart() + importName.length());
+                    }
+                }
+            }
+            // GRECLIPSE end
             for (ImportNode importNode : module.getStaticImports().values()) {
                 ClassNode type = importNode.getType();
                 if (resolve(type, true, true, true)) continue;

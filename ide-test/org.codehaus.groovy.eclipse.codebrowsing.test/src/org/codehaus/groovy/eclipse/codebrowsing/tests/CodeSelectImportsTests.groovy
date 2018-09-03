@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,20 +21,8 @@ import org.junit.Test
 final class CodeSelectImportsTests extends BrowsingTestSuite {
 
     @Test
-    void testCodeSelectOnImportType() {
+    void testCodeSelectOnImportType1() {
         String source = '''\
-            import java.util.regex.Pattern
-            Pattern p = ~/123/
-            '''.stripIndent()
-
-        def elem = assertCodeSelect([source], 'Pattern')
-        assert elem.inferredElement instanceof ClassNode
-    }
-
-    @Test
-    void testCodeSelectOnImportType1a() {
-        String source = '''\
-            import java.util.regex.Matcher
             import java.util.regex.Pattern
             Pattern p = ~/123/
             '''.stripIndent()
@@ -46,6 +34,18 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectOnImportType2() {
         String source = '''\
+            import java.util.regex.Matcher
+            import java.util.regex.Pattern
+            Pattern p = ~/123/
+            '''.stripIndent()
+
+        def elem = assertCodeSelect([source], 'Pattern')
+        assert elem.inferredElement instanceof ClassNode
+    }
+
+    @Test
+    void testCodeSelectOnImportType3() {
+        String source = '''\
             import java.lang.Thread.State
             import java.util.regex.Pattern
             Pattern p = ~/123/
@@ -56,13 +56,32 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testCodeSelectOnImportType2a() {
+    void testCodeSelectOnImportType4() {
         String source = '''\
             import java.lang.Thread.State
             def p = ~/123/
             '''.stripIndent()
 
         assertCodeSelect([source], 'Thread')
+    }
+
+    @Test
+    void testCodeSelectOnImportType5() {
+        String source = '''\
+            import java.lang.Thread.*
+            '''.stripIndent()
+
+        assertCodeSelect([source], 'Thread')
+    }
+
+    @Test
+    void testCodeSelectOnImportType6() {
+        String source = '''\
+            import java.util.Map.Entry.*
+            '''.stripIndent()
+
+        assertCodeSelect([source], 'Map')
+        assertCodeSelect([source], 'Entry')
     }
 
     @Test
@@ -76,7 +95,7 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testCodeSelectOnImportPackage1a() {
+    void testCodeSelectOnImportPackage2() {
         String source = '''\
             import java.lang.Thread.State
             def p = ~/123/
@@ -86,7 +105,7 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testCodeSelectOnImportPackage2() {
+    void testCodeSelectOnImportPackage3() {
         String source = '''\
             import java.util.regex.*
             Pattern p = ~/123/
@@ -96,7 +115,7 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testCodeSelectOnImportPackage2a() {
+    void testCodeSelectOnImportPackage4() {
         String source = '''\
             import java.lang.Thread.*
             def p = ~/123/
@@ -116,7 +135,7 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testCodeSelectOnImportWildcard1a() {
+    void testCodeSelectOnImportWildcard2() {
         String source = '''\
             import java.util.regex.*;
             Pattern p = ~/123/
@@ -126,7 +145,7 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testCodeSelectOnImportWildcard2() {
+    void testCodeSelectOnImportWildcard3() {
         String source = '''\
             import static java.util.regex.Pattern.*
             def p = compile('123')
@@ -136,7 +155,7 @@ final class CodeSelectImportsTests extends BrowsingTestSuite {
     }
 
     @Test
-    void testCodeSelectOnImportWildcard2a() {
+    void testCodeSelectOnImportWildcard4() {
         String source = '''\
             import static java.util.regex.Pattern.*;
             def p = compile('123')

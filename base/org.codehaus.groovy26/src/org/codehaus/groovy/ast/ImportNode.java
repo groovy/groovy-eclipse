@@ -30,7 +30,7 @@ import groovyjarjarasm.asm.Opcodes;
  */
 public class ImportNode extends AnnotatedNode implements Opcodes {
 
-    private final ClassNode type;
+    private ClassNode type;
     private final String alias;
     private final String fieldName;
     private final String packageName;
@@ -168,6 +168,10 @@ public class ImportNode extends AnnotatedNode implements Opcodes {
 
     public void setFieldNameExpr(ConstantExpression fieldNameExpr) {
         this.fieldNameExpr = fieldNameExpr;
+    }
+
+    public void setType(ClassNode type) {
+        this.type = type;
     }
 
     public String toString() {
