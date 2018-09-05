@@ -95,6 +95,6 @@ public class JDTMethodNode extends MethodNode implements JDTNode {
 
     @Override
     public boolean isDeprecated() {
-        return methodBinding.isDeprecated();
+        return methodBinding.isViewedAsDeprecated();
     }
 }

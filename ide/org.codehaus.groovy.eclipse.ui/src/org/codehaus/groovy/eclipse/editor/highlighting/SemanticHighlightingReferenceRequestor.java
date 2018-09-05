@@ -24,6 +24,8 @@ import java.util.regex.PatternSyntaxException;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ConstructorNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.ImportNode;
@@ -44,6 +46,7 @@ import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.VariableScope;
@@ -109,8 +112,17 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
                 // don't continue past an unknown reference
                 return VisitStatus.CANCEL_BRANCH;
             }
-        } else if (GroovyUtils.isDeprecated(result.declaration)) {
+        } else if (!(node instanceof ClassExpression) && GroovyUtils.isDeprecated(result.declaration)) {
             pos = new HighlightedTypedPosition(getPosition(node), HighlightKind.DEPRECATED);
+            if (node instanceof ClassNode && ((ClassNode) node).getNameEnd() < 1) {
+                int offset = pos.getOffset(), length = pos.getLength();
+                if (offset >= 0 && length > 0 && offset + length < unitLength()) {
+                    offset = CharOperation.lastIndexOf('.', contents, offset, offset + length);
+                    if (offset++ > pos.getOffset()) {
+                        pos.setLength(length - (offset - pos.getOffset())); pos.setOffset(offset);
+                    }
+                }
+            }
 
         } else if (result.declaration instanceof FieldNode || result.declaration instanceof PropertyNode) {
             pos = handleFieldOrProperty((AnnotatedNode) node, result.declaration);
@@ -186,6 +198,22 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
         //                                        expression nodes can still be valid and have an offset of 0 and a length of 1
         if (pos != null && pos.getLength() > 0 && (node instanceof Expression || pos.getOffset() > 0 || pos.getLength() > 1)) {
             typedPositions.add(pos);
+        }
+
+        if (node instanceof ClassNode && ((ClassNode) node).getNameEnd() < 1) {
+            int start = node.getStart(), until = node.getEnd();
+            node = ((ClassNode) node).getOuterClass();
+            if (node != null && until < unitLength()) {
+                until = CharOperation.lastIndexOf('.', contents, start, until);
+                if (until > start) {
+                    ClassNode outer = ClassHelper.makeWithoutCaching(((ClassNode) node).getName());
+                    outer.setRedirect((ClassNode) node);
+                    outer.setStart(start);
+                    outer.setEnd(until);
+
+                    acceptASTNode(outer, new TypeLookupResult(outer, outer, outer, TypeLookupResult.TypeConfidence.EXACT, result.scope), enclosingElement);
+                }
+            }
         }
 
         return VisitStatus.CONTINUE;

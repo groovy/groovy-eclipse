@@ -94,6 +94,6 @@ public class JDTFieldNode extends FieldNode implements JDTNode {
 
     @Override
     public boolean isDeprecated() {
-        return fieldBinding.isDeprecated();
+        return fieldBinding.isViewedAsDeprecated();
     }
 }
