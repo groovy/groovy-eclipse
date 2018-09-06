@@ -46,6 +46,7 @@ import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.BindingSet;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
+import org.codehaus.groovy.vmplugin.v5.Java5;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.groovy.search.GenericsMapper;
 import org.eclipse.jdt.groovy.search.VariableScope;
@@ -528,8 +529,7 @@ public class DSLContributionGroup extends ContributionGroup {
 
         String[] names = null;
 
-        // adapted from GroovyMethodProposal.createAllParameterNames(ICompilationUnit)
-        if (parameters[0].getName().equals("arg0") || parameters[0].getName().equals("param0")) {
+        if (Java5.ARGS[0].equals(parameters[0].getName())) {
             ClassNode declaringClass = node.getDeclaringClass();
             if (declaringClass instanceof org.codehaus.jdt.groovy.internal.compiler.ast.JDTClassNode) {
                 try {
@@ -538,9 +538,9 @@ public class DSLContributionGroup extends ContributionGroup {
                         String[] parameterTypeSignatures = new String[parameters.length];
                         for (int i = 0; i < parameters.length; i += 1) {
                             if (declaringType.isBinary()) {
-                                parameterTypeSignatures[i] = ProposalUtils.createTypeSignatureStr(parameters[i].getType());
+                                parameterTypeSignatures[i] = String.valueOf(ProposalUtils.createTypeSignature(parameters[i].getType()));
                             } else {
-                                parameterTypeSignatures[i] = ProposalUtils.createUnresolvedTypeSignatureStr(parameters[i].getType());
+                                parameterTypeSignatures[i] = String.valueOf(ProposalUtils.createUnresolvedTypeSignature(parameters[i].getType()));
                             }
                         }
 

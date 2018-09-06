@@ -684,8 +684,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     protected final boolean lastParamIsClosure(char[][] parameterTypeNames, char[][] namedParameterTypeNames) {
         if (asBoolean(parameterTypeNames)) {
             char[] lastTypeName = parameterTypeNames[parameterTypeNames.length - 1];
-            // we should be comparing against a fully qualified type name, but it is not always available so a simple name is close enough
-            return CharOperation.equals(lastTypeName, CLOSURE_TYPE_NAME);
+            return CharOperation.equals(lastTypeName, CLOSURE_TYPE_SIGNATURE, 0, CLOSURE_TYPE_SIGNATURE.length - 1);
         }
         return false;
     }

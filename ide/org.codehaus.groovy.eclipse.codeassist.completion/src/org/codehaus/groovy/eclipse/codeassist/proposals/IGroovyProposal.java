@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,19 @@
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
+import org.eclipse.jdt.internal.codeassist.CompletionEngine;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
 
 public interface IGroovyProposal {
-    IJavaCompletionProposal createJavaProposal(ContentAssistContext context, JavaContentAssistInvocationContext javaContext);
+
+    // Implement one of the following, depending on your need for CompletionEngine:
+
+    default IJavaCompletionProposal createJavaProposal(ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
+        return createJavaProposal(null, context, javaContext);
+    }
+
+    default IJavaCompletionProposal createJavaProposal(CompletionEngine engine, ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
+        return createJavaProposal(context, javaContext);
+    }
 }

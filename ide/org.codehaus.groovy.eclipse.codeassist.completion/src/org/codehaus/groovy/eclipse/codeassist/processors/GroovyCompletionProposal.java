@@ -19,6 +19,7 @@ import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.internal.codeassist.CompletionEngine;
 import org.eclipse.jdt.internal.codeassist.InternalCompletionProposal;
 import org.eclipse.jdt.internal.core.NameLookup;
@@ -68,7 +69,13 @@ public class GroovyCompletionProposal extends InternalCompletionProposal {
     @Override
     public char[][] findParameterNames(IProgressMonitor monitor) {
         if (!asBoolean(optionalParameterNames)) {
-            return super.findParameterNames(monitor);
+            char[][] parameterNames = super.findParameterNames(monitor);
+            if (asBoolean(parameterNames) && asBoolean(parameterTypeNames)) {
+                while (parameterNames.length > parameterTypeNames.length) { // DGM?
+                    parameterNames = (char[][]) ArrayUtils.remove(parameterNames, 0);
+                }
+            }
+            return parameterNames;
         }
         return CharOperation.arrayConcat(namedParameterNames, regularParameterNames);
     }

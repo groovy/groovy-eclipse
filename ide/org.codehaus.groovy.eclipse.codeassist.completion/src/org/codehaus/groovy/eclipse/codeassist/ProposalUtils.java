@@ -26,6 +26,7 @@ import org.codehaus.groovy.eclipse.codeassist.completions.GroovyExtendedCompleti
 import org.codehaus.groovy.eclipse.codeassist.completions.NamedArgsMethodNode;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
+import org.codehaus.groovy.vmplugin.v5.Java5;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaElement;
@@ -34,8 +35,8 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.search.SearchPattern;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
-import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.codeassist.InternalCompletionContext;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
 import org.eclipse.jdt.internal.compiler.env.AccessRuleSet;
@@ -54,6 +55,10 @@ import org.eclipse.swt.graphics.Image;
 public class ProposalUtils {
 
     private ProposalUtils() {}
+
+    public static final char[] ARG_ = {'%'};
+    public static final char[] ARG0 = Java5.ARGS[0].toCharArray();
+    public static final char[] ARG1 = Java5.ARGS[1].toCharArray();
 
     // See org.eclipse.jdt.ui.text.java.CompletionProposalCollector
 
@@ -80,91 +85,6 @@ public class ProposalUtils {
             // exception in initialization when testing
             e.printStackTrace();
             registry = null;
-        }
-    }
-
-    public static char[] createTypeSignature(ClassNode node) {
-        return createTypeSignatureStr(node).toCharArray();
-    }
-
-    public static String createTypeSignatureStr(ClassNode node) {
-        if (node == null) {
-            node = VariableScope.OBJECT_CLASS_NODE;
-        }
-        String name = node.getName();
-        if (name.startsWith("[")) {
-            return name;
-        } else {
-            return Signature.createTypeSignature(name, true);
-        }
-    }
-
-    public static String createUnresolvedTypeSignatureStr(ClassNode node) {
-        String name = node.getNameWithoutPackage();
-        if (name.startsWith("[")) {
-            return name;
-        } else {
-            return Signature.createTypeSignature(name, false);
-        }
-    }
-
-    /**
-     * Includes named params but not optional params.
-     */
-    public static char[] createMethodSignature(MethodNode node) {
-        return createMethodSignatureStr(node, 0).toCharArray();
-    }
-
-    /**
-     * Includes named params but not optional params.
-     *
-     * @param ignoreParameters number of parameters to ignore at the start
-     */
-    public static char[] createMethodSignature(MethodNode node, int ignoreParameters) {
-        return createMethodSignatureStr(node, ignoreParameters).toCharArray();
-    }
-
-    /**
-     * Includes named params but not optional params.
-     */
-    public static String createMethodSignatureStr(MethodNode node) {
-        return createMethodSignatureStr(node, 0);
-    }
-
-    /**
-     * Includes named params but not optional params.
-     *
-     * @param ignoreParameters number of parameters to ignore at the start
-     */
-    public static String createMethodSignatureStr(MethodNode node, int ignoreParameters) {
-        String returnType = createTypeSignatureStr(node.getReturnType());
-        Parameter[] parameters;
-        if (node instanceof NamedArgsMethodNode) {
-            parameters = ((NamedArgsMethodNode) node).getVisibleParams();
-        } else {
-            parameters = node.getParameters();
-        }
-        String[] parameterTypes = new String[parameters.length - ignoreParameters];
-        for (int i = 0, n = parameterTypes.length; i < n; i += 1) {
-            parameterTypes[i] = createTypeSignatureStr(parameters[i + ignoreParameters].getType());
-        }
-        return node.getName() + Signature.createMethodSignature(parameterTypes, returnType);
-    }
-
-    public static char[] createSimpleTypeName(ClassNode node) {
-        String name = node.getName();
-        if (name.startsWith("[")) {
-            int arrayCount = Signature.getArrayCount(name);
-            String noArrayName = Signature.getElementType(name);
-            String simpleName = Signature.getSignatureSimpleName(noArrayName);
-            StringBuilder sb = new StringBuilder();
-            sb.append(simpleName);
-            for (int i = 0; i < arrayCount; i++) {
-                sb.append("[]");
-            }
-            return sb.toString().toCharArray();
-        } else {
-            return node.getNameWithoutPackage().toCharArray();
         }
     }
 
@@ -202,6 +122,43 @@ public class ProposalUtils {
         return methodName.length() > 3 ? methodName.substring(3) : "$$$$$";
     }
 
+    public static char[] createMethodSignature(MethodNode node) {
+        return createMethodSignature(node, 0);
+    }
+
+    /**
+     * @param ignoreParameters number of parameters to ignore at the start
+     */
+    public static char[] createMethodSignature(MethodNode node, int ignoreParameters) {
+        Parameter[] parameters = (node instanceof NamedArgsMethodNode ? ((NamedArgsMethodNode) node).getVisibleParams() : node.getParameters());
+        char[][] parameterTypes = new char[parameters.length - ignoreParameters][];
+        for (int i = 0, n = parameterTypes.length; i < n; i += 1) {
+            parameterTypes[i] = createTypeSignature(parameters[i + ignoreParameters].getType());
+        }
+        char[] returnType = createTypeSignature(node.getReturnType());
+
+        StringBuilder signature = new StringBuilder();
+        signature.append(node.getName());
+        signature.append(Signature.createMethodSignature(parameterTypes, returnType));
+
+        char[] chars = new char[signature.length()];
+        signature.getChars(0, chars.length, chars, 0);
+        return chars;
+    }
+
+    public static char[] createTypeSignature(ClassNode node) {
+        return GroovyUtils.getTypeSignatureWithoutGenerics(node, true, true).toCharArray();
+    }
+
+    public static char[] createUnresolvedTypeSignature(ClassNode node) {
+        return GroovyUtils.getTypeSignatureWithoutGenerics(node, true, false).toCharArray();
+    }
+
+    public static char[] createSimpleTypeName(ClassNode node) {
+        if (GroovyUtils.getBaseType(node).isGenericsPlaceHolder()) node = node.redirect();
+        return Signature.toCharArray(GroovyUtils.getTypeSignatureWithoutGenerics(node, false, true).toCharArray());
+    }
+
     public static Optional<ContentAssistContext> getContentAssistContext(JavaContentAssistInvocationContext javaContext) {
         if (javaContext.getCoreContext().isExtended()) {
             GroovyExtendedCompletionContext groovyContext = ReflectionUtils.getPrivateField(
@@ -223,6 +180,30 @@ public class ProposalUtils {
 
     public static Image getParameterImage() {
         return registry.get(JavaPluginImages.DESC_OBJS_LOCAL_VARIABLE);
+    }
+
+    public static char[][] getParameterNames(Parameter[] parameters) {
+        int n = parameters.length;
+        if (n > 0) {
+            char[][] names = new char[n][];
+            for (int i = 0; i < n; i += 1) {
+                names[i] = parameters[i].getName().toCharArray();
+            }
+            return names;
+        }
+        return CharOperation.NO_CHAR_CHAR;
+    }
+
+    public static char[][] getParameterTypeNames(Parameter[] parameters) {
+        int n = parameters.length;
+        if (n > 0) {
+            char[][] names = new char[n][];
+            for (int i = 0; i < n; i += 1) {
+                names[i] = Signature.toCharArray(createTypeSignature(parameters[i].getType()));
+            }
+            return names;
+        }
+        return CharOperation.NO_CHAR_CHAR;
     }
 
     /**

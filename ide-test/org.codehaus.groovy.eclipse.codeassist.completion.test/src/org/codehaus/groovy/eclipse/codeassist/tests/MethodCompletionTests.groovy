@@ -16,17 +16,8 @@
 package org.codehaus.groovy.eclipse.codeassist.tests
 
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
-import static org.junit.Assert.fail
 import static org.junit.Assume.assumeTrue
 
-import org.codehaus.groovy.ast.ClassNode
-import org.codehaus.groovy.ast.MethodNode
-import org.codehaus.groovy.ast.stmt.ExpressionStatement
-import org.codehaus.groovy.ast.stmt.ReturnStatement
-import org.codehaus.groovy.ast.stmt.Statement
-import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal
-import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
-import org.eclipse.jdt.core.compiler.CharOperation
 import org.eclipse.jdt.internal.codeassist.impl.AssistOptions
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.contentassist.ICompletionProposal
@@ -34,46 +25,6 @@ import org.junit.Before
 import org.junit.Test
 
 final class MethodCompletionTests extends CompletionTestSuite {
-
-    private List<MethodNode> delegateTestParameterNames(GroovyCompilationUnit unit) {
-        waitForIndex()
-        List<MethodNode> methods = extract(unit).getMethods('m')
-        for (method in methods) {
-            if (method.parameters.length == 1) {
-                GroovyMethodProposal proposal = new GroovyMethodProposal(method)
-                char[][] names = proposal.createAllParameterNames(unit)
-                checkNames(['x'.toCharArray()] as char[][], names)
-            }
-            if (method.parameters.length == 2) {
-                GroovyMethodProposal proposal = new GroovyMethodProposal(method)
-                char[][] names = proposal.createAllParameterNames(unit)
-                checkNames(['x'.toCharArray(), 'y'.toCharArray()] as char[][], names)
-            }
-        }
-        return methods
-    }
-
-    private static ClassNode extract(GroovyCompilationUnit unit) {
-        Statement state = unit.moduleNode.statementBlock.statements.get(0)
-        if (state instanceof ReturnStatement) {
-            ReturnStatement ret = (ReturnStatement) state
-            return ret.expression.type
-        } else if (state instanceof ExpressionStatement) {
-            ExpressionStatement expr = (ExpressionStatement) state
-            return expr.expression.type
-        } else {
-            fail('Invalid statement kind for ' + state + '\nExpecting return statement or expression statement')
-            return null
-        }
-    }
-
-    private static void checkNames(char[][] expected, char[][] names) {
-        if (!CharOperation.equals(expected, names)) {
-            fail('Wrong number of parameter names.  Expecting:\n' + CharOperation.toString(expected) + '\n\nbut found:\n' + CharOperation.toString(names))
-        }
-    }
-
-    //--------------------------------------------------------------------------
 
     @Before
     void setUp() {
@@ -143,84 +94,6 @@ final class MethodCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'cause', 1)
     }
 
-    @Test
-    void testParameterNames1() {
-        String contents = '''\
-            import org.codehaus.groovy.runtime.DefaultGroovyMethods
-            new DefaultGroovyMethods()
-            '''.stripIndent()
-        GroovyCompilationUnit gunit = addGroovySource(contents, nextUnitName())
-        ClassNode clazz = extract(gunit)
-        List<MethodNode> methods = clazz.getMethods('is')
-        for (method in methods) {
-            if (method.parameters.length == 2) {
-                GroovyMethodProposal proposal = new GroovyMethodProposal(method)
-                char[][] names = proposal.createAllParameterNames(gunit)
-                checkNames(['self'.toCharArray(), 'other'.toCharArray()] as char[][], names)
-            }
-        }
-        if (methods.size() != 1) {
-            fail('expecting to find 1 \"is\" method, but instead found ' + methods.size() + ':\n' + methods)
-        }
-    }
-
-    @Test
-    void testParameterNames2() {
-        String contents = '''\
-            MyClass
-            class MyClass {
-              def m(int x) { }
-              def m(String x, int y) { }
-            }
-            '''.stripIndent()
-        GroovyCompilationUnit gunit = addGroovySource(contents, nextUnitName())
-        ClassNode clazz = extract(gunit)
-        List<MethodNode> methods = clazz.getMethods('m')
-        for (method in methods) {
-            if (method.parameters.length == 1) {
-                GroovyMethodProposal proposal = new GroovyMethodProposal(method)
-                char[][] names = proposal.createAllParameterNames(gunit)
-                checkNames(['x'.toCharArray()] as char[][], names)
-            }
-            if (method.parameters.length == 2) {
-                GroovyMethodProposal proposal = new GroovyMethodProposal(method)
-                char[][] names = proposal.createAllParameterNames(gunit)
-                checkNames(['x'.toCharArray(), 'y'.toCharArray()] as char[][], names)
-            }
-        }
-        if (methods.size() != 2) {
-            fail('expecting to find 2 "m" methods, but instead found ' + methods.size() + ':\n' + methods)
-        }
-    }
-
-    @Test
-    void testParameterNames3() {
-        addGroovySource('class MyClass { def m(int x) { }\ndef m(String x, int y) { } }', 'MyClass')
-        GroovyCompilationUnit gunit = addGroovySource('new MyClass()', nextUnitName())
-        List<MethodNode> methods = null
-        for (int i = 0; i < 5; i++) {
-            methods = delegateTestParameterNames(gunit)
-            if (methods.size() == 2) {
-                return // as expected
-            }
-        }
-        fail('expecting to find 2 "m" methods, but instead found ' + methods.size() + ':\n' + methods)
-    }
-
-    @Test
-    void testParameterNames4() {
-        addJavaSource('public class MyJavaClass { void m(int x) { } void m(String x, int y) { } }', 'MyJavaClass')
-        GroovyCompilationUnit gunit = addGroovySource('new MyJavaClass()', nextUnitName())
-        List<MethodNode> methods = null
-        for (int i = 0; i < 5; i++) {
-            methods = delegateTestParameterNames(gunit)
-            if (methods.size() == 2) {
-                return // as expected
-            }
-        }
-        fail('expecting to find 2 "m" methods, but instead found ' + methods.size() + ':\n' + methods)
-    }
-
     @Test // GRECLIPSE-1374
     void testParensExprs1() {
         String contents = '''\
@@ -270,6 +143,44 @@ final class MethodCompletionTests extends CompletionTestSuite {
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '\n'))
         proposalExists(proposals, 'isValue', 1)
         proposalExists(proposals, 'setValue', 1)
+    }
+
+    @Test
+    void testOverride1() {
+        String contents = '''\
+            interface I {
+              String m(List<String> strings, Object[] objects)
+            }
+            class A implements I {
+              x
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), getIndexOf(contents, 'x'))
+        proposalExists(proposals, 'm(List strings, Object[] objects) : String - Override method in \'I\'', 1)
+        proposalExists(proposals, 'equals(Object obj) : boolean - Override method in \'Object\'', 1)
+    }
+
+    @Test
+    void testOverride2() {
+        String contents = '''\
+            class A implements Comparable<String> {
+              x
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), getIndexOf(contents, 'x'))
+        proposalExists(proposals, 'compareTo(T o) : int - Override method in \'Comparable\'', 1)
+    }
+
+    @Test
+    void testOverride3() {
+        String contents = '''\
+            import java.util.concurrent.Callable
+            class A implements Callable<String> {
+              x
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), getIndexOf(contents, 'x'))
+        proposalExists(proposals, 'call() : V - Override method in \'Callable\'', 1)
     }
 
     @Test // GRECLIPSE-1752

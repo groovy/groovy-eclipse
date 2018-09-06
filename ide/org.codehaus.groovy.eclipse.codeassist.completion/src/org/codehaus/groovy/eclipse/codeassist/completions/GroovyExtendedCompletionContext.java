@@ -190,7 +190,7 @@ public class GroovyExtendedCompletionContext extends InternalExtendedCompletionC
         String base = Signature.getElementType(typeSignature);
         String name = Signature.getSignatureSimpleName(base);
         String qual = Signature.getSignatureQualifier(base);
-        if (qual.length() > 0) {
+        if (!qual.isEmpty()) {
             name = qual + '.' + name;
         }
 

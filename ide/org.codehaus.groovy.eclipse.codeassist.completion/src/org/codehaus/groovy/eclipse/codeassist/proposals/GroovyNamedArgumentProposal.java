@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.proposals;
 
-
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
@@ -44,7 +43,7 @@ public class GroovyNamedArgumentProposal implements IGroovyProposal {
     }
 
     public GroovyNamedArgumentProposal(String paramName, ClassNode paramType, MethodNode ownerMethod, String contributor) {
-        this(paramName, ProposalUtils.createTypeSignatureStr(paramType), ownerMethod, contributor);
+        this(paramName, String.valueOf(ProposalUtils.createTypeSignature(paramType)), ownerMethod, contributor);
     }
 
     @Override

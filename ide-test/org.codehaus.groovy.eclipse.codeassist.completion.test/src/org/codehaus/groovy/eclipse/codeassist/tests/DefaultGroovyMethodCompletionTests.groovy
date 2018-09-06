@@ -147,6 +147,15 @@ final class DefaultGroovyMethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
+    void testDGMParameters() {
+        String contents = '[].collect', target = 'collect'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, target))
+        proposalExists(proposals, 'collect(Collection collector, Closure transform)', 1)
+        proposalExists(proposals, 'collect(Closure transform)', 1)
+        proposalExists(proposals, 'collect()', 1)
+    }
+
+    @Test
     void testPropertyDGM() {
         String contents = '''\
             import java.util.regex.*

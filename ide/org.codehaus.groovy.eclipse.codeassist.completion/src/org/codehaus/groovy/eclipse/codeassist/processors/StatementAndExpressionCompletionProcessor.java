@@ -55,6 +55,7 @@ import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jdt.core.CompletionRequestor;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.ISourceRange;
@@ -69,6 +70,7 @@ import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.eclipse.jdt.groovy.search.TypeLookupResult.TypeConfidence;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.groovy.search.VariableScope.VariableInfo;
+import org.eclipse.jdt.internal.codeassist.CompletionEngine;
 import org.eclipse.jdt.internal.codeassist.impl.AssistOptions;
 import org.eclipse.jdt.internal.core.SearchableEnvironment;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
@@ -486,11 +488,15 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
             GroovyContentAssist.logError("Exception accessing proposal provider registry", e);
         }
 
-        List<ICompletionProposal> javaProposals = new ArrayList<>(groovyProposals.size());
         JavaContentAssistInvocationContext javaContext = getJavaContext();
+        SearchableEnvironment searchableEnvironment = getNameEnvironment();
+        CompletionRequestor completionRequestor = new CompletionRequestor() { @Override public void accept(org.eclipse.jdt.core.CompletionProposal proposal) {} };
+        CompletionEngine engine = new CompletionEngine(searchableEnvironment, completionRequestor, javaContext.getProject().getOptions(true), javaContext.getProject(), null, monitor);
+
+        List<ICompletionProposal> javaProposals = new ArrayList<>(groovyProposals.size());
         for (IGroovyProposal groovyProposal : groovyProposals) {
             try {
-                IJavaCompletionProposal javaProposal = groovyProposal.createJavaProposal(context, javaContext);
+                IJavaCompletionProposal javaProposal = groovyProposal.createJavaProposal(engine, context, javaContext);
                 if (javaProposal != null) {
                     javaProposals.add(javaProposal);
                 }

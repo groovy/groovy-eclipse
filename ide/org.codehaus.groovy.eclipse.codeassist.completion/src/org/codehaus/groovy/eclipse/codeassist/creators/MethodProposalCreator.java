@@ -34,6 +34,7 @@ import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
+import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
@@ -192,11 +193,11 @@ public class MethodProposalCreator extends AbstractProposalCreator {
 
     private static void addIfNotPresent(List<IGroovyProposal> proposals, GroovyMethodProposal proposal) {
         if (!proposals.isEmpty()) {
-            String sig = ProposalUtils.createMethodSignatureStr(proposal.getMethod());
+            char[] sig = ProposalUtils.createMethodSignature(proposal.getMethod());
             for (IGroovyProposal igp : proposals) {
                 if (igp instanceof GroovyMethodProposal) {
                     GroovyMethodProposal gmp = (GroovyMethodProposal) igp;
-                    if (gmp.getMethod().isStatic() && sig.equals(ProposalUtils.createMethodSignatureStr(gmp.getMethod()))) {
+                    if (gmp.getMethod().isStatic() && CharOperation.equals(sig, ProposalUtils.createMethodSignature(gmp.getMethod()))) {
                         return;
                     }
                 }

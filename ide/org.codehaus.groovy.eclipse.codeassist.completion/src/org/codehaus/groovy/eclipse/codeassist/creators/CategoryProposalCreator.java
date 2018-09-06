@@ -36,7 +36,6 @@ import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.Flags;
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
@@ -45,6 +44,7 @@ import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
+import org.eclipse.jdt.internal.codeassist.CompletionEngine;
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal;
 import org.eclipse.jdt.internal.ui.text.java.MemberProposalInfo;
 import org.eclipse.jdt.internal.ui.text.java.MethodProposalInfo;
@@ -165,8 +165,8 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
         }
 
         @Override
-        protected char[][] createAllParameterNames(ICompilationUnit unit) {
-            return (char[][]) ArrayUtils.remove(super.createAllParameterNames(unit), 0);
+        protected char[][] getParameterNames(Parameter[] parameters) {
+            return (char[][]) ArrayUtils.remove(super.getParameterNames(parameters), 0);
         }
 
         @Override
@@ -175,8 +175,8 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
         }
 
         @Override
-        public IJavaCompletionProposal createJavaProposal(ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
-            IJavaCompletionProposal javaProposal = super.createJavaProposal(context, javaContext);
+        public IJavaCompletionProposal createJavaProposal(CompletionEngine engine, ContentAssistContext context, JavaContentAssistInvocationContext javaContext) {
+            IJavaCompletionProposal javaProposal = super.createJavaProposal(engine, context, javaContext);
             if (javaProposal instanceof LazyJavaCompletionProposal) {
                 //ProposalInfo proposalInfo = ((LazyJavaCompletionProposal) javaProposal).getProposalInfo();
                 ProposalInfo proposalInfo = ReflectionUtils.executePrivateMethod(LazyJavaCompletionProposal.class, "getProposalInfo", javaProposal);
