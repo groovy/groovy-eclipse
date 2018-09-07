@@ -16,10 +16,15 @@
 package org.codehaus.groovy.eclipse.codeassist.processors;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Queue;
+import java.util.stream.Collectors;
 
 import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.ClassNode;
@@ -35,7 +40,6 @@ import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.CompletionRequestor;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.search.GenericsMapper;
 import org.eclipse.jdt.groovy.search.VariableScope;
@@ -56,14 +60,14 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
     }
 
     @Override
-    public List<ICompletionProposal> generateProposals(IProgressMonitor monitor) {
+    public List<ICompletionProposal> generateProposals(IProgressMonitor progressMonitor) {
         List<ICompletionProposal> proposals = new ArrayList<>();
 
         ContentAssistContext context = getContext();
         IType enclosingType = context.getEnclosingType();
         if (enclosingType != null) {
-            for (MethodNode method : getAllUnimplementedMethods(context.completionExpression, context.getEnclosingGroovyType())) {
-                proposals.add(createProposal(method, enclosingType));
+            for (MethodNode method : collectUnimplementedMethods(context.completionExpression, context.getEnclosingGroovyType())) {
+                proposals.add(createProposal(method, enclosingType, progressMonitor));
             }
         }
         // add proposals from relevant proposal providers
@@ -72,7 +76,7 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
                 List<MethodNode> methods = provider.getNewMethodProposals(context);
                 if (methods != null) {
                     for (MethodNode method : methods) {
-                        proposals.add(createProposal(method, enclosingType));
+                        proposals.add(createProposal(method, enclosingType, progressMonitor));
                     }
                 }
             }
@@ -83,125 +87,82 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
         return proposals;
     }
 
-    private ICompletionProposal createProposal(MethodNode method, IType enclosingType) {
+    private ICompletionProposal createProposal(MethodNode method, IType enclosingType, IProgressMonitor progressMonitor) {
         ContentAssistContext context = getContext();
-        int length = context.completionExpression.length();
-        int offset = context.completionLocation - length;
         IJavaProject project = getJavaContext().getProject();
-        char[][] parameterNames = ProposalUtils.getParameterNames(method.getParameters());
-        String[] parameterTypeNames = getParameterTypeNames(method); // resolves generic types
+        ClassNode declaringClass = method.getDeclaringClass();
 
         GroovyCompletionProposal proposal = createProposal(CompletionProposal.METHOD_DECLARATION, context.completionLocation);
-        proposal.setDeclarationSignature(ProposalUtils.createTypeSignature(method.getDeclaringClass()));
+        proposal.setDeclarationSignature(ProposalUtils.createTypeSignature(declaringClass));
         proposal.setSignature(ProposalUtils.createMethodSignature(method));
         proposal.setName(method.getName().toCharArray());
         proposal.setFlags(method.getModifiers()); // TODO: Mix in Flags.AccVarargs?
 
+        char[][] parameterNames = ProposalUtils.getParameterNames(method.getParameters());
         if (parameterNames.length > 0 && CharOperation.equals(parameterNames[0], ProposalUtils.ARG0)) {
-            for (int i = 0; i < parameterNames.length; i += 1) { parameterNames[i] = ProposalUtils.ARG_; }
-            proposal.setDeclarationTypeName(ProposalUtils.createSimpleTypeName(method.getDeclaringClass()));
-            proposal.setDeclarationPackageName(Optional.ofNullable(method.getDeclaringClass().getPackageName()).map(String::toCharArray).orElse(CharOperation.NO_CHAR));
             proposal.setCompletionEngine(new CompletionEngine(getNameEnvironment(), new CompletionRequestor() { @Override public void accept(CompletionProposal proposal) {} }, null, project, null, null));
+            proposal.setDeclarationPackageName(Optional.ofNullable(declaringClass.getPackageName()).map(String::toCharArray).orElse(CharOperation.NO_CHAR));
+            proposal.setDeclarationTypeName(ProposalUtils.createSimpleTypeName(declaringClass));
+            for (int i = 0; i < parameterNames.length; i += 1) {
+                parameterNames[i] = ProposalUtils.ARG_;
+            }
+            proposal.findParameterNames(progressMonitor);
         } else {
             proposal.setParameterNames(parameterNames);
         }
 
+        if (declaringClass.isUsingGenerics() /*|| method.isUsingGenerics()*/) {
+            GenericsMapper mapper = mappers.computeIfAbsent(declaringClass, x -> {
+                ClassNode enclosingClass = findResolvedType(context.getEnclosingGroovyType(), declaringClass);
+                return GenericsMapper.gatherGenerics(enclosingClass, declaringClass);
+            });
+            method = VariableScope.resolveTypeParameterization(mapper, method);
+            proposal.setSignature(ProposalUtils.createMethodSignature(method));
+        }
         proposal.setCompletion(createMethodCompletion(method, parameterNames));
+
+        int length = context.completionExpression.length(), offset = context.completionLocation - length;
+        String[] parameterTypeNames = CharOperation.toStrings(ProposalUtils.getParameterTypeNames(method.getParameters()));
 
         OverrideCompletionProposal override = new OverrideCompletionProposal(project, context.unit, method.getName(),
             parameterTypeNames, offset, length, ProposalUtils.createDisplayString(proposal), String.valueOf(proposal.getCompletion()));
         override.setImage(ProposalUtils.getImage(proposal));
         // TODO: override.setCursorPosition(offset within body of new method);
-        override.setRelevance(Relevance.VERY_HIGH.getRelevance(VariableScope.OBJECT_CLASS_NODE.equals(method.getDeclaringClass()) ? 0.9f : 1.0f));
+        override.setRelevance(Relevance.VERY_HIGH.getRelevance(VariableScope.OBJECT_CLASS_NODE.equals(declaringClass) ? 0.99f : 1.00f));
         return override;
     }
 
-    private ClassNode findResolvedType(ClassNode target, ClassNode toResolve) {
-        if (target != null) {
-            if (target.equals(toResolve)) {
-                return target;
-            }
-            ClassNode result = findResolvedType(target.getUnresolvedSuperClass(false), toResolve);
-            if (result != null) {
-                return result;
-            }
-            for (ClassNode inter : target.getUnresolvedInterfaces(false)) {
-                result = findResolvedType(inter, toResolve);
-                if (result != null) {
-                    return result;
-                }
-            }
-
-            ClassNode redirect = target.redirect();
-            if (redirect != target) {
-                return findResolvedType(redirect, toResolve);
-            }
-        }
-        return null;
-    }
-
-    private String[] getParameterTypeNames(MethodNode method) {
-        GenericsMapper mapper = null;
-        ClassNode declaringClass = method.getDeclaringClass();
-        if (declaringClass.getGenericsTypes() != null && declaringClass.getGenericsTypes().length > 0) {
-            mapper = mappers.computeIfAbsent(declaringClass, x -> {
-                ClassNode enclosingClass = findResolvedType(getContext().getEnclosingGroovyType(), declaringClass);
-                return GenericsMapper.gatherGenerics(enclosingClass, declaringClass);
-            });
-        }
-        Parameter[] parameters = method.getParameters();
-        String[] paramTypeNames = new String[parameters.length];
-        for (int i = 0; i < paramTypeNames.length; i += 1) {
-            ClassNode paramType = parameters[i].getType();
-            if (mapper != null && paramType.getGenericsTypes() != null && paramType.getGenericsTypes().length > 0) {
-                paramType = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(paramType));
-            }
-            paramTypeNames[i] = Signature.toString(String.valueOf(ProposalUtils.createTypeSignature(paramType)));
-        }
-        return paramTypeNames;
-    }
-
-    private Map<ClassNode, GenericsMapper> mappers = new HashMap<>();
+    private final Map<ClassNode, GenericsMapper> mappers = new HashMap<>();
 
     //--------------------------------------------------------------------------
 
-    private static List<MethodNode> getAllUnimplementedMethods(String completionExpression, ClassNode declaringType) {
-        List<MethodNode> thisClassMethods = declaringType.getMethods();
-        List<MethodNode> allMethods = declaringType.getAllDeclaredMethods();
-        List<MethodNode> unimplementedMethods = new ArrayList<>(allMethods.size() - thisClassMethods.size());
+    private static List<MethodNode> collectUnimplementedMethods(String completionExpression, ClassNode declaringType) {
+        Map<String, MethodNode> methods = new LinkedHashMap<>();
+        Queue<ClassNode> types = new LinkedList<>();
+        types.add(declaringType);
+        do {
+            ClassNode type = types.remove();
+            Collections.addAll(types, type.getInterfaces());
+            if (type.getSuperClass() != null) types.add(type.getSuperClass());
 
-        // uggh n^2 loop.  Can be made more efficient by doing declaring.getMethods(allMethodNode.getName())
-        for (MethodNode allMethodNode : allMethods) {
-            String name = allMethodNode.getName();
-            if (name.startsWith(completionExpression)) {
-                boolean canBeOverridden = (!name.contains("$") && !name.contains("<") &&
-                    !allMethodNode.isPrivate() && !allMethodNode.isStatic() && !allMethodNode.isFinal());
-                if (canBeOverridden) {
-                    boolean found = false;
-                    inner:
-                    for (MethodNode thisClassMethod : thisClassMethods) {
-                        if (allMethodNode.getParameters().length == thisClassMethod.getParameters().length &&
-                            allMethodNode.getName().equals(thisClassMethod.getName())) {
-                            // now check param types
-                            Parameter[] allMethodParams = allMethodNode.getParameters();
-                            Parameter[] thisClassParams = thisClassMethod.getParameters();
-                            for (int i = 0; i < thisClassParams.length; i += 1) {
-                                if (!allMethodParams[i].getType().getName().equals(thisClassParams[i].getType().getName())) {
-                                    continue inner;
-                                }
-                            }
-                            found = true;
-                            break inner;
-                        }
-                    }
-                    if (!found) {
-                        unimplementedMethods.add(allMethodNode);
-                    }
-                    found = false;
+            for (MethodNode meth : type.getMethods()) {
+                String name = meth.getName();
+                if (name.startsWith(completionExpression) &&
+                        !name.contains("$") && !name.contains("<")) {
+                    methods.putIfAbsent(meth.getTypeDescriptor(), meth);
                 }
             }
+        } while (!types.isEmpty());
+
+        // remove implemented or re-declared methods
+        for (MethodNode meth : declaringType.getMethods()) {
+            methods.remove(meth.getTypeDescriptor());
         }
-        return unimplementedMethods;
+
+        // restrict to methods that can be overridden
+        return methods.values().stream().filter(meth ->
+            !meth.isFinal() && !meth.isPrivate() && !meth.isStatic()
+        ).collect(Collectors.toList());
     }
 
     private static char[] createMethodCompletion(MethodNode method, char[][] parameterNames) {
@@ -249,5 +210,29 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
         char[] chars = new char[completion.length()];
         completion.getChars(0, chars.length, chars, 0);
         return chars;
+    }
+
+    private static ClassNode findResolvedType(ClassNode target, ClassNode toResolve) {
+        if (target != null) {
+            if (target.equals(toResolve)) {
+                return target;
+            }
+            ClassNode result = findResolvedType(target.getUnresolvedSuperClass(false), toResolve);
+            if (result != null) {
+                return result;
+            }
+            for (ClassNode inter : target.getUnresolvedInterfaces(false)) {
+                result = findResolvedType(inter, toResolve);
+                if (result != null) {
+                    return result;
+                }
+            }
+
+            ClassNode redirect = target.redirect();
+            if (redirect != target) {
+                return findResolvedType(redirect, toResolve);
+            }
+        }
+        return null;
     }
 }

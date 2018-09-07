@@ -168,7 +168,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
             }
             '''.stripIndent()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), getIndexOf(contents, 'x'))
-        proposalExists(proposals, 'compareTo(T o) : int - Override method in \'Comparable\'', 1)
+        proposalExists(proposals, 'compareTo(String o) : int - Override method in \'Comparable\'', 1)
     }
 
     @Test
@@ -180,7 +180,19 @@ final class MethodCompletionTests extends CompletionTestSuite {
             }
             '''.stripIndent()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), getIndexOf(contents, 'x'))
-        proposalExists(proposals, 'call() : V - Override method in \'Callable\'', 1)
+        proposalExists(proposals, 'call() : String - Override method in \'Callable\'', 1)
+    }
+
+    @Test
+    void testOverride4() {
+        String contents = '''\
+            // Comparator redeclares equals(Object)
+            class A implements Comparator<String> {
+              x
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), getIndexOf(contents, 'x'))
+        proposalExists(proposals, 'equals(Object obj) : boolean - Override method in \'Comparator\'', 1)
     }
 
     @Test // GRECLIPSE-1752
