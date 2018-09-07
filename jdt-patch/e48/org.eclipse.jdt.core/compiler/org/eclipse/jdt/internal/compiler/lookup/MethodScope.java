@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  *  * Copyright (c) 2000, 2017 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -392,7 +393,13 @@ MethodBinding createMethod(AbstractMethodDeclaration method) {
 	Argument[] argTypes = method.arguments;
 	int argLength = argTypes == null ? 0 : argTypes.length;
 	if (argLength > 0) {
+		// GROOVY add
+		method.binding.parameterNames = new char[argLength][];
+		// GROOVY end
 		Argument argument = argTypes[--argLength];
+		// GROOVY add
+		method.binding.parameterNames[argLength] = argument.name;
+		// GROOVY end
 		if (argument.isVarArgs() && sourceLevel >= ClassFileConstants.JDK1_5)
 			method.binding.modifiers |= ClassFileConstants.AccVarargs;
 		if (CharOperation.equals(argument.name, ConstantPool.This)) {
@@ -400,6 +407,9 @@ MethodBinding createMethod(AbstractMethodDeclaration method) {
 		}
 		while (--argLength >= 0) {
 			argument = argTypes[argLength];
+			// GROOVY add
+			method.binding.parameterNames[argLength] = argument.name;
+			// GROOVY end
 			if (argument.isVarArgs() && sourceLevel >= ClassFileConstants.JDK1_5)
 				problemReporter().illegalVararg(argument, method);
 			if (CharOperation.equals(argument.name, ConstantPool.This)) {
