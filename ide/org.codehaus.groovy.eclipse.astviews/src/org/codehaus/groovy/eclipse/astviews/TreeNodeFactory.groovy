@@ -15,6 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.astviews
 
+import java.beans.Introspector
+import java.lang.reflect.Method
+
 import groovy.transform.PackageScope
 
 import org.codehaus.groovy.GroovyBugError
@@ -74,7 +77,7 @@ import org.codehaus.groovy.ast.ASTNode
 }
 
 @PackageScope abstract class TreeNode implements ITreeNode {
-    private static final ITreeNode[] NO_CHILDREN = new ITreeNode[0]
+    protected static final ITreeNode[] NO_CHILDREN = new ITreeNode[0]
 
     ITreeNode parent
     Object value
@@ -112,28 +115,23 @@ import org.codehaus.groovy.ast.ASTNode
 
 @PackageScope class DefaultTreeNode extends TreeNode {
     ITreeNode[] loadChildren() {
-        def methods = value.class.methods
-        methods = methods?.findAll { (it.name.startsWith('get') && it.parameterTypes.length == 0) || it.name == 'redirect' }
-        def children = methods?.findResults { method ->
-            def name = method.name == 'redirect' ? method.name : method.name[3..-1]
-            name = name[0].toLowerCase() + name[1..-1]
-            try {
-                return TreeNodeFactory.createTreeNode(this, value."${method.name}"(), name)
-            } catch (GroovyBugError e) {
-                // Some getters are not for us.
-                return null
-            } catch (NullPointerException e) {
-                // For some reason ClassNode.getAbstractMethods() has a problem - ClassNode.superclass is null.
-                return null
-            } catch (ClassCastException e) {
-                // DeclarationExpression.getTupleExpression() will return a CCE on Groovy 18+ if the expression is not a Tuple expression
-                return null
+        Collection<ITreeNode> children = Arrays.asList(value.class.methods).findResults { Method method ->
+            if (method.name =~ /^(is|get|redirect)/ && method.parameterTypes.length == 0) {
+                String name = method.name
+                if (name.startsWith('is')) {
+                    name = Introspector.decapitalize(name.substring(2))
+                } else if (name.startsWith('get')) {
+                    name = Introspector.decapitalize(name.substring(3))
+                }
+                try {
+                    return TreeNodeFactory.createTreeNode(this, value."${method.name}"(), name)
+                } catch (GroovyBugError | ClassCastException | NullPointerException ignore) {
+                }
             }
+            return null
         }
-        if (children == null) {
-            children = NO_CHILDREN
-        }
-        return children
+
+        return children as ITreeNode[]
     }
 }
 
