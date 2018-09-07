@@ -2304,6 +2304,53 @@ public void test_default_nullness_002() {
 		"Illegal redefinition of parameter o, inherited method from X declares this parameter as @Nullable\n" +
 		"----------\n");
 }
+
+public void test_default_nullness_002_custom() {
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(JavaCore.COMPILER_NULLABLE_ANNOTATION_NAME, "org.foo.Nullable");
+	runner.customOptions.put(JavaCore.COMPILER_NONNULL_BY_DEFAULT_ANNOTATION_NAME, "org.foo.NonNullByDefault");
+	runner.testFiles =
+		new String[] {
+			CUSTOM_NULLABLE_NAME,
+			CUSTOM_NULLABLE_CONTENT,
+			CUSTOM_NNBD_NAME,
+			CUSTOM_NNBD_CONTENT,
+			"X.java",
+			"import org.foo.*;\n" +
+			"@NonNullByDefault\n" +
+			"public class X {\n" +
+			"    Object getObject(@Nullable Object o) {\n" +
+			"        return new Object();\n" +
+			"    }\n" +
+			"}\n",
+			"Y.java",
+			"import org.foo.*;\n" +
+			"@NonNullByDefault\n" +
+			"public class Y extends X {\n" +
+			"    @Override\n" +
+			"    @Nullable Object getObject(Object o) {\n" + // complain illegal return redef and inherited annot is not repeated
+			"        return o;\n" +
+			"    }\n" +
+			"}\n",
+		};
+	runner.expectedCompilerLog =
+		// main error:
+		"----------\n" +
+		"1. ERROR in Y.java (at line 5)\n" +
+		"	@Nullable Object getObject(Object o) {\n" +
+		"	^^^^^^^^^^^^^^^^\n" +
+		"The return type is incompatible with '@NonNull Object' returned from X.getObject(Object) (mismatching null constraints)\n" +
+		"----------\n" +
+		// additional error:
+		"2. ERROR in Y.java (at line 5)\n" +
+		"	@Nullable Object getObject(Object o) {\n" +
+		"	                           ^^^^^^\n" +
+		"Illegal redefinition of parameter o, inherited method from X declares this parameter as @Nullable\n" +
+		"----------\n";
+	runner.runNegativeTest();
+}
+
 // package default is non-null
 public void test_default_nullness_003() {
 	Map customOptions = getCompilerOptions();

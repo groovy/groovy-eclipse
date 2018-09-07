@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2016 GK Software AG and others.
+ * Copyright (c) 2010, 2018 GK Software AG and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -58,6 +58,14 @@ public abstract class AbstractNullAnnotationTest extends AbstractComparableTest 
 			"@Retention(RetentionPolicy.CLASS)\n" +
 			"@Target({METHOD,PARAMETER,LOCAL_VARIABLE,TYPE_USE})\n" +
 			"public @interface Nullable {\n" +
+			"}\n";
+	static final String CUSTOM_NNBD_NAME = "org/foo/NonNullByDefault.java";
+	static final String CUSTOM_NNBD_CONTENT = "package org.foo;\n" +
+			"import java.lang.annotation.*;\n" +
+			"import static java.lang.annotation.ElementType.*;\n" +
+			"@Retention(RetentionPolicy.CLASS)\n" +
+			"@Target({PACKAGE, TYPE, METHOD, CONSTRUCTOR })\n" +
+			"public @interface NonNullByDefault {\n" + // has no details, so default default locations should be applied
 			"}\n";
 
 	public AbstractNullAnnotationTest(String name) {

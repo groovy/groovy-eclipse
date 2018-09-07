@@ -4928,6 +4928,91 @@ public void testDefault05() {
 		"----------\n");
 }
 
+//default default
+public void testDefault05_custom() {
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(JavaCore.COMPILER_NULLABLE_ANNOTATION_NAME, "org.foo.Nullable");
+	runner.customOptions.put(JavaCore.COMPILER_NONNULL_ANNOTATION_NAME, "org.foo.NonNull");
+	runner.customOptions.put(JavaCore.COMPILER_NONNULL_BY_DEFAULT_ANNOTATION_NAME, "org.foo.NonNullByDefault");
+	runner.testFiles =
+		new String[] {
+			CUSTOM_NULLABLE_NAME,
+			CUSTOM_NULLABLE_CONTENT,
+			CUSTOM_NONNULL_NAME,
+			CUSTOM_NONNULL_CONTENT,
+			CUSTOM_NNBD_NAME,
+			CUSTOM_NNBD_CONTENT,
+			"test/package-info.java",
+			"@org.foo.NonNullByDefault\n" +
+			"package test;\n",
+			"test/X.java",
+			"package test;\n" +
+			"public class X {\n" +
+			"	Number field; // ERR since uninitialized\n" +
+			"	void test1(Number[] ns) {\n" +
+			"		ns[0] = null; // OK since not affected by default\n" +
+			"	}\n" +
+			"	void test2(java.lang.Number[] ns) {\n" +
+			"		ns[0] = null; // OK since not affected by default\n" +
+			"	}\n" +
+			"}\n"
+		};
+	runner.expectedCompilerLog =
+		"----------\n" + 
+		"1. ERROR in test\\X.java (at line 3)\n" + 
+		"	Number field; // ERR since uninitialized\n" + 
+		"	       ^^^^^\n" + 
+		"The @NonNull field field may not have been initialized\n" + 
+		"----------\n";
+	runner.runNegativeTest();
+}
+
+//default default
+public void testDefault05_custom2() {
+	Runner runner = new Runner();
+	runner.customOptions = getCompilerOptions();
+	runner.customOptions.put(JavaCore.COMPILER_NULLABLE_ANNOTATION_NAME, "org.foo.Nullable");
+	runner.customOptions.put(JavaCore.COMPILER_NONNULL_ANNOTATION_NAME, "org.foo.NonNull");
+	runner.customOptions.put(JavaCore.COMPILER_NONNULL_BY_DEFAULT_ANNOTATION_NAME, "org.foo.NonNullByDefault");
+	runner.testFiles =
+		new String[] {
+			CUSTOM_NULLABLE_NAME,
+			CUSTOM_NULLABLE_CONTENT,
+			CUSTOM_NONNULL_NAME,
+			CUSTOM_NONNULL_CONTENT,
+			CUSTOM_NNBD_NAME,
+			CUSTOM_NNBD_CONTENT
+		};
+	runner.runConformTest();
+	runner.shouldFlushOutputDirectory = false;
+	runner.testFiles =
+		new String[] {
+			"test/package-info.java",
+			"@org.foo.NonNullByDefault\n" +
+			"package test;\n",
+			"test/X.java",
+			"package test;\n" +
+			"public class X {\n" +
+			"	Number field; // ERR since uninitialized\n" +
+			"	void test1(Number[] ns) {\n" +
+			"		ns[0] = null; // OK since not affected by default\n" +
+			"	}\n" +
+			"	void test2(java.lang.Number[] ns) {\n" +
+			"		ns[0] = null; // OK since not affected by default\n" +
+			"	}\n" +
+			"}\n"
+		};
+	runner.expectedCompilerLog =
+		"----------\n" + 
+		"1. ERROR in test\\X.java (at line 3)\n" + 
+		"	Number field; // ERR since uninitialized\n" + 
+		"	       ^^^^^\n" + 
+		"The @NonNull field field may not have been initialized\n" + 
+		"----------\n";
+	runner.runNegativeTest();
+}
+
 // apply default to type parameter - inner class
 public void testDefault06() {
 	runNegativeTestWithLibs(
