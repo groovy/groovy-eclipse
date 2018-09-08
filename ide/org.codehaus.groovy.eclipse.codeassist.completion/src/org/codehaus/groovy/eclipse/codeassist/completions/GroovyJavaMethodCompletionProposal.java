@@ -44,7 +44,6 @@ import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.codeassist.InternalCompletionContext;
-import org.eclipse.jdt.internal.corext.template.java.SignatureUtil;
 import org.eclipse.jdt.internal.ui.JavaPlugin;
 import org.eclipse.jdt.internal.ui.javaeditor.EditorHighlightingSynchronizer;
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor;
@@ -535,7 +534,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     protected void computeReplacementProposals(char[][] namedParameterNames, char[][] positionalParameterNames, int indexOfLastClosure) {
         boolean guess = (fInvocationContext.getCoreContext().isExtended() &&
             fPreferences.isEnabled(PreferenceConstants.CODEASSIST_GUESS_METHOD_ARGUMENTS));
-        char[][] parameterTypes = Signature.getParameterTypes(SignatureUtil.fix83600(fProposal.getSignature()));
+        char[][] parameterTypes = Signature.getParameterTypes(fProposal.getSignature());
 
         int npc = namedParameterNames.length, n = npc + positionalParameterNames.length;
 
@@ -546,7 +545,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
             fPositions.add(new Position(0));
 
             char[] name = (i < npc ? namedParameterNames[i] : positionalParameterNames[i - npc]);
-            char[] type = parameterTypes[i];
+            char[] type = Signature.getTypeErasure(parameterTypes[i]);
 
             boolean isCodeBlock = (i == indexOfLastClosure && (i + 1) == n &&
                 fPreferences.isEnabled(GroovyContentAssist.CLOSURE_NOPARENS));
@@ -561,9 +560,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                     Signature.toString(typeSignature), String.valueOf(name), fPositions.get(i), visibleElements, fillBestGuess);
             } else {
                 StringBuilder buffer = new StringBuilder();
-                boolean isClosure = (i == indexOfLastClosure ||
-                    CharOperation.equals(CLOSURE_TYPE_NAME, type, 1, type.length - 1) ||
-                    CharOperation.equals(CLOSURE_TYPE_SIGNATURE, type, 1, type.length));
+                boolean isClosure = (i == indexOfLastClosure || CharOperation.equals(CLOSURE_TYPE_SIGNATURE, type, 1, type.length));
                 if (isClosure && (fPreferences.isEnabled(GroovyContentAssist.CLOSURE_BRACKETS) || isCodeBlock)) {
                     buffer.append("{");
                     if (fPreferences.isEnabled(DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_OPENING_BRACE_IN_ARRAY_INITIALIZER)) {
@@ -577,9 +574,7 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
                     buffer.append(name);
                 }
 
-                vals = new ICompletionProposal[] {
-                    new JavaCompletionProposal(buffer.toString(), 0, buffer.length(), null, buffer.toString(), 1)
-                };
+                vals = new ICompletionProposal[] {new JavaCompletionProposal(buffer.toString(), 0, buffer.length(), null, buffer.toString(), 1)};
             }
 
             fProposals.add(vals);
@@ -623,7 +618,8 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
     }
 
     protected final IMethod findSingleAbstractMethod(char[] typeSignature) throws JavaModelException {
-        char[] name = CharOperation.concat(Signature.getSignatureQualifier(typeSignature), Signature.getSignatureSimpleName(typeSignature), '.');
+        char[] name = CharOperation.concat(Signature.getSignatureQualifier(typeSignature),
+            Signature.getSignatureSimpleName(Signature.getTypeErasure(typeSignature)), '.');
         IType type = fInvocationContext.getProject().getJavaProject().findType(String.valueOf(name));
         if (type.exists()) {
             for (IMethod m : type.getMethods()) {

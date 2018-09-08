@@ -156,7 +156,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
             }
             '''.stripIndent()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), getIndexOf(contents, 'x'))
-        proposalExists(proposals, 'm(List strings, Object[] objects) : String - Override method in \'I\'', 1)
+        proposalExists(proposals, 'm(List<String> strings, Object[] objects) : String - Override method in \'I\'', 1)
         proposalExists(proposals, 'equals(Object obj) : boolean - Override method in \'Object\'', 1)
     }
 
@@ -620,8 +620,8 @@ final class MethodCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'isReverse', 1)
         proposalExists(proposals, 'containsWithinBounds', 1)
         // and some proposals from the java.util.List interface
-        proposalExists(proposals, 'iterator() : Iterator - List', 1)
-        proposalExists(proposals, 'listIterator() : ListIterator - List', 1)
+        proposalExists(proposals, 'iterator() : Iterator<E> - List', 1)
+        proposalExists(proposals, 'listIterator() : ListIterator<E> - List', 1)
     }
 
     @Test

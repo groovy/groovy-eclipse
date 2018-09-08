@@ -147,11 +147,11 @@ public class ProposalUtils {
     }
 
     public static char[] createTypeSignature(ClassNode node) {
-        return GroovyUtils.getTypeSignatureWithoutGenerics(node, true, true).toCharArray();
+        return GroovyUtils.getTypeSignature(node, true, true).toCharArray();
     }
 
     public static char[] createUnresolvedTypeSignature(ClassNode node) {
-        return GroovyUtils.getTypeSignatureWithoutGenerics(node, true, false).toCharArray();
+        return GroovyUtils.getTypeSignature(node, true, false).toCharArray();
     }
 
     public static char[] createSimpleTypeName(ClassNode node) {
@@ -199,7 +199,7 @@ public class ProposalUtils {
         if (n > 0) {
             char[][] names = new char[n][];
             for (int i = 0; i < n; i += 1) {
-                names[i] = Signature.toCharArray(createTypeSignature(parameters[i].getType()));
+                names[i] = Signature.toCharArray(Signature.getTypeErasure(createTypeSignature(parameters[i].getType())));
             }
             return names;
         }

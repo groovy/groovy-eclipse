@@ -47,7 +47,7 @@ final class OtherCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'i', 1)
     }
 
-    @Test // GRECLIPSE-422: type signatures were popping up in various places in the display string
+    @Test
     void testCategoryMethodDisplayString() {
         addJavaSource '''\
             public class StringExtension {
@@ -77,9 +77,9 @@ final class OtherCompletionTests extends CompletionTestSuite {
             o2.displayString <=> o1.displayString
         })
         proposalExists(proposals, 'collect', 3)
-        assert proposals[0].displayString ==~ /collect\(Collection \p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*, Closure \p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*\) : Collection - DefaultGroovyMethods \(Groovy\)/ : printProposals(proposals)
-        assert proposals[1].displayString ==~ /collect\(Closure \p{javaJavaIdentifierStart}\p{javaJavaIdentifierPart}*\) : List - DefaultGroovyMethods \(Groovy\)/ : printProposals(proposals)
-        assert proposals[2].displayString ==~ /collect\(\) : Collection - DefaultGroovyMethods \(Groovy\)/ : printProposals(proposals)
+        assert proposals[0].displayString == 'collect(Collection<T> collector, Closure<? extends T> transform) : Collection<T> - DefaultGroovyMethods (Groovy)'
+        assert proposals[1].displayString == 'collect(Closure<T> transform) : List<T> - DefaultGroovyMethods (Groovy)'
+        assert proposals[2].displayString == 'collect() : Collection - DefaultGroovyMethods (Groovy)'
     }
 
     @Test

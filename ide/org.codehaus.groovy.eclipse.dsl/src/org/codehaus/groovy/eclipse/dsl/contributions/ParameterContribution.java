@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.dsl.contributions;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
 
 /**
@@ -46,11 +47,7 @@ public class ParameterContribution {
 
     public Parameter toParameter(ResolverCache resolver) {
         if (cachedParameter == null) {
-            if (resolver != null) {
-                cachedParameter = new Parameter(resolver.resolve(type), name);
-            } else {
-                cachedParameter = new Parameter(ClassHelper.DYNAMIC_TYPE, name);
-            }
+            cachedParameter = new Parameter(resolver != null ? GenericsUtils.nonGeneric(resolver.resolve(type)) : ClassHelper.DYNAMIC_TYPE, name);
         }
         return cachedParameter;
     }
