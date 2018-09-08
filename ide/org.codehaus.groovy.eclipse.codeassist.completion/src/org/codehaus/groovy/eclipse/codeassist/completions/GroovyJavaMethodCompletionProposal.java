@@ -685,7 +685,6 @@ public class GroovyJavaMethodCompletionProposal extends JavaMethodCompletionProp
         return false;
     }
 
-    protected static final char[] CLOSURE_TYPE_NAME = "Closure".toCharArray();
     protected static final char[] CLOSURE_TYPE_SIGNATURE = "groovy.lang.Closure;".toCharArray();
 
     //--------------------------------------------------------------------------

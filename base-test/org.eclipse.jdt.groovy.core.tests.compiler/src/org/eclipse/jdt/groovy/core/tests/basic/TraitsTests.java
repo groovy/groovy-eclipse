@@ -36,6 +36,25 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testTraits() {
+        String[] sources = {
+            "T.groovy",
+            "trait T {\n" +
+            "  String getFoo() {\n" +
+            "    'foo'\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runNegativeTest(sources, "");
+
+        checkGCUDeclaration("T.groovy",
+            "public @groovy.transform.Trait interface T {\n" +
+            "  public String getFoo();\n" +
+            "}");
+    }
+
+    @Test
     public void testTraits1() {
         String[] sources = {
             "Test.groovy",

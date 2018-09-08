@@ -17,7 +17,7 @@ Export-Package: org.codehaus.groovy.eclipse.core,
  org.codehaus.groovy.eclipse.core.templates,
  org.codehaus.groovy.eclipse.core.util
 Import-Package: org.eclipse.debug.core;resolution:=optional
-Require-Bundle: org.codehaus.groovy,
+Require-Bundle: org.codehaus.groovy;bundle-version="[2.4.15,3)",
  org.codehaus.groovy.eclipse.compilerResolver;bundle-version="3.1.0",
  org.eclipse.core.resources,
  org.eclipse.core.runtime,

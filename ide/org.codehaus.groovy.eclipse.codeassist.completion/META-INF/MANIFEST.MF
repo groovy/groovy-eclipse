@@ -7,6 +7,7 @@ Bundle-Version: 3.1.0.qualifier
 Export-Package: org.codehaus.groovy.eclipse.codeassist,
  org.codehaus.groovy.eclipse.codeassist.completions,
  org.codehaus.groovy.eclipse.codeassist.creators,
+ org.codehaus.groovy.eclipse.codeassist.preferences,
  org.codehaus.groovy.eclipse.codeassist.processors,
  org.codehaus.groovy.eclipse.codeassist.proposals,
  org.codehaus.groovy.eclipse.codeassist.relevance,
