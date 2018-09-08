@@ -156,7 +156,8 @@ public class OrganizeGroovyImports {
                                 importsSlatedForRemoval.put(className, imp);
                             } else {
                                 String fullName = className + " as " + imp.getAlias();
-                                rewriter.addImport(fullName, FORCE_RETENTION);
+                                rewriter.addImport(fullName, imp.getEnd() > 0 ? FORCE_RETENTION
+                                    : rewriter.getDefaultImportRewriteContext());
                                 importsSlatedForRemoval.put(fullName, imp);
                             }
                         } else {
@@ -656,7 +657,7 @@ public class OrganizeGroovyImports {
                 visitTypeParameters(generics, name);
             }
 
-            if (!node.isResolved() && node.redirect() != current) {
+            if (!node.isResolved() && !current.getModule().getClasses().contains(node.redirect())) {
                 // aliases come through as unresolved types
                 if (ALIASED_IMPORT.matcher(name).find()) {
                     doNotRemoveImport(name);

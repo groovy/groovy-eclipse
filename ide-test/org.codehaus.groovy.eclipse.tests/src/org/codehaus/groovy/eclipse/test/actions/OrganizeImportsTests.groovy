@@ -1536,6 +1536,47 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(contents)
     }
 
+    @Test
+    void testOrganizeWithExtraImports6() {
+        addConfigScript '''\
+            withConfig(configuration) {
+              imports {
+                star 'groovy.transform'
+                alias 'Regexp', 'java.util.regex.Pattern'
+              }
+            }
+            '''
+
+        addGroovySource '''\
+            @Canonical
+            class One {
+              String string
+              Number number
+              private Regexp pattern
+              void setPattern(Regexp pattern) {
+                this.pattern = pattern
+              }
+            }
+            '''.stripIndent(), 'One', 'main'
+
+        String contents = '''\
+            @CompileStatic
+            final class Tests {
+              @org.junit.Test
+              void testCtors() {
+                One one = new One('value') // error: Cannot find matching method
+                Two two = new Two('value')
+              }
+            }
+            @Canonical @CompileStatic
+            class Two {
+              String value
+            }
+            '''.stripIndent()
+
+        doContentsCompareTest(contents)
+    }
+
     @Test @NotYetImplemented
     void testOrganizeWithInterleavedComments() {
         String originalContents = '''\
