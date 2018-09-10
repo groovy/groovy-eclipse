@@ -714,7 +714,7 @@ public final class InferencingTests extends InferencingTestSuite {
     public void testClassReference4b() {
         String contents = "Class clazz = String; clazz.package";
         assertExprType(contents, "package", "java.lang.Package");
-        assertDeclType(contents, "package", "java.lang.Class");
+        assertDeclType(contents, "package", "java.lang.Class<java.lang.Object>");
     }
 
     @Test // GRECLIPSE-1229: constructors with map parameters
@@ -1637,7 +1637,7 @@ public final class InferencingTests extends InferencingTestSuite {
             "  }\n" +
             "}";
         int offset = contents.indexOf("a.remove") + 2;
-        MethodNode m = assertDeclaration(contents, offset, offset + "remove".length(), "java.util.List", "remove", DeclarationKind.METHOD);
+        MethodNode m = assertDeclaration(contents, offset, offset + "remove".length(), "java.util.List<java.lang.Object>", "remove", DeclarationKind.METHOD);
         Assert.assertEquals("Should resolve to remove(int) due to return type of inner call", "int", printTypeName(m.getParameters()[0].getType()));
     }
 

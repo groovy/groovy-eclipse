@@ -39,7 +39,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.CompletionRequestor;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.search.GenericsMapper;
 import org.eclipse.jdt.groovy.search.VariableScope;
@@ -64,10 +63,9 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
         List<ICompletionProposal> proposals = new ArrayList<>();
 
         ContentAssistContext context = getContext();
-        IType enclosingType = context.getEnclosingType();
-        if (enclosingType != null) {
+        if (context.getEnclosingType() != null) {
             for (MethodNode method : collectUnimplementedMethods(context.completionExpression, context.getEnclosingGroovyType())) {
-                proposals.add(createProposal(method, enclosingType, progressMonitor));
+                proposals.add(createProposal(method, progressMonitor));
             }
         }
         // add proposals from relevant proposal providers
@@ -76,7 +74,7 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
                 List<MethodNode> methods = provider.getNewMethodProposals(context);
                 if (methods != null) {
                     for (MethodNode method : methods) {
-                        proposals.add(createProposal(method, enclosingType, progressMonitor));
+                        proposals.add(createProposal(method, progressMonitor));
                     }
                 }
             }
@@ -87,7 +85,7 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
         return proposals;
     }
 
-    private ICompletionProposal createProposal(MethodNode method, IType enclosingType, IProgressMonitor progressMonitor) {
+    private ICompletionProposal createProposal(MethodNode method, IProgressMonitor progressMonitor) {
         ContentAssistContext context = getContext();
         IJavaProject project = getJavaContext().getProject();
         ClassNode declaringClass = method.getDeclaringClass();

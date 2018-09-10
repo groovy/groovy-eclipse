@@ -390,7 +390,7 @@ public final class DGMInferencingTests extends InferencingTestSuite {
             "  it\n" +
             "}\n";
         int start = contents.lastIndexOf("collect"), until = start + "collect".length();
-        assertTypeOneOf(contents, start, until, "java.util.List", "java.util.List<T>", "java.util.List<java.lang.Object<T>>");
+        assertTypeOneOf(contents, start, until, "java.util.List", "java.util.List<java.lang.Object>");
     }
 
     @Test

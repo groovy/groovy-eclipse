@@ -155,7 +155,7 @@ final class MethodCompletionTests extends CompletionTestSuite {
               x
             }
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), getIndexOf(contents, 'x'))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
         proposalExists(proposals, 'm(List<String> strings, Object[] objects) : String - Override method in \'I\'', 1)
         proposalExists(proposals, 'equals(Object obj) : boolean - Override method in \'Object\'', 1)
     }
@@ -167,31 +167,42 @@ final class MethodCompletionTests extends CompletionTestSuite {
               x
             }
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), getIndexOf(contents, 'x'))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
         proposalExists(proposals, 'compareTo(String o) : int - Override method in \'Comparable\'', 1)
     }
 
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/711
     void testOverride3() {
+        String contents = '''\
+            class A implements Comparable {
+              x
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
+        proposalExists(proposals, 'compareTo(Object o) : int - Override method in \'Comparable\'', 1)
+    }
+
+    @Test
+    void testOverride4() {
         String contents = '''\
             import java.util.concurrent.Callable
             class A implements Callable<String> {
               x
             }
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), getIndexOf(contents, 'x'))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
         proposalExists(proposals, 'call() : String - Override method in \'Callable\'', 1)
     }
 
     @Test
-    void testOverride4() {
+    void testOverride5() {
         String contents = '''\
             // Comparator redeclares equals(Object)
             class A implements Comparator<String> {
               x
             }
             '''.stripIndent()
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), getIndexOf(contents, 'x'))
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
         proposalExists(proposals, 'equals(Object obj) : boolean - Override method in \'Comparator\'', 1)
     }
 

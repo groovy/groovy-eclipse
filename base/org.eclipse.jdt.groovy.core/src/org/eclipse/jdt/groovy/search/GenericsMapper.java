@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.groovy.search;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -60,8 +61,14 @@ public class GenericsMapper {
             GenericsType[] rgts = GroovyUtils.getGenericsTypes(rCandidate);
             GenericsType[] ugts = GroovyUtils.getGenericsTypes(uCandidate);
 
-            int n = Math.min(rgts.length, ugts.length);
-            Map<String, ClassNode> resolved = (n <= 0) ? Collections.EMPTY_MAP : new TreeMap<>();
+            int n = ugts.length;
+            if (n > 0 && rgts.length < 1) {
+                rgts = new GenericsType[n]; // assume rCandidate is a raw type
+                Arrays.fill(rgts, new GenericsType(VariableScope.OBJECT_CLASS_NODE));
+            }
+            assert rgts.length == ugts.length;
+
+            Map<String, ClassNode> resolved = (n > 0 ? new TreeMap<>() : Collections.EMPTY_MAP);
             for (int i = 0; i < n; i += 1) {
                 // now try to resolve the parameter in the context of the
                 // most recently visited type. If it doesn't exist, then
