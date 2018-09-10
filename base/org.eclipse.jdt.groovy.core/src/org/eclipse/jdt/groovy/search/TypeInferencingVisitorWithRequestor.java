@@ -456,6 +456,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
         enclosingElement = method;
         try {
             visitMethodInternal(methodNode);
+            // visit relocated @Transactional, et al. method bodies
+            Optional<List<MethodNode>> decorated = Optional.ofNullable(methodNode.getNodeMetaData("$DECORATED"));
+            decorated.ifPresent(decoratedMethodNodes -> decoratedMethodNodes.forEach(this::visitMethodInternal));
         } catch (VisitCompleted | CancellationException e) {
             throw e; // propagate
         } catch (Exception e) {
