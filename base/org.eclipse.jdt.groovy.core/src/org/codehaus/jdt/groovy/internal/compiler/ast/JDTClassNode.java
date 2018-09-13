@@ -19,6 +19,7 @@ import static java.beans.Introspector.decapitalize;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -42,6 +43,8 @@ import org.codehaus.groovy.vmplugin.v5.Java5;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyCompilationUnitDeclaration.FieldDeclarationWithInitializer;
 import org.eclipse.jdt.core.Flags;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.groovy.core.util.ArrayUtils;
+import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.search.AccessorSupport;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
@@ -295,16 +298,6 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                     addField(fNode);
                 }
             }
-
-            if (mightHaveInners()) {
-                Stream.of(jdtBinding.memberTypes()).map(resolver::convertToClassNode).forEach(cn -> {
-                    @SuppressWarnings("unused") // InnerClassNode constructor adds reference to this.innerClasses
-                    ClassNode icn = new InnerClassNode(this, cn.getName(), cn.getModifiers(), cn.getSuperClass()) {{
-                        isPrimaryNode = false;
-                        setRedirect(cn);
-                    }};
-                });
-            }
         } catch (AbortCompilation e) {
             throw e;
         } catch (RuntimeException e) {
@@ -476,7 +469,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                         long tagBits = ((SourceTypeBinding) jdtBinding).getAnnotationTagBits();
                     }
                     for (AnnotationBinding annotationBinding : jdtBinding.getAnnotations()) {
-                        this.addAnnotation(new JDTAnnotationNode(annotationBinding, resolver));
+                        addAnnotation(new JDTAnnotationNode(annotationBinding, resolver));
                     }
                     bits |= ANNOTATIONS_INITIALIZED;
                 }
@@ -586,6 +579,38 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     }
 
     @Override
+    public Iterator<InnerClassNode> getInnerClasses() {
+        if ((bits & INNER_TYPES_INITIALIZED) == 0) {
+            synchronized (this) {
+                if ((bits & INNER_TYPES_INITIALIZED) == 0) {
+                    bits |= INNER_TYPES_INITIALIZED;
+                    if (mightHaveInners()) {
+                        // workaround for https://github.com/groovy/groovy-eclipse/issues/714
+                        if (jdtBinding instanceof BinaryTypeBinding && jdtBinding == jdtBinding.prototype() && Traits.isTrait(this)) {
+                            ReferenceBinding[] memberTypes = ReflectionUtils.getPrivateField(BinaryTypeBinding.class, "memberTypes", jdtBinding);
+                            for (int i = 0; i < memberTypes.length; i += 1) {
+                                if (String.valueOf(memberTypes[i].sourceName).endsWith("$Trait$FieldHelper$1")) {
+                                    memberTypes = (ReferenceBinding[]) ArrayUtils.remove(memberTypes, i--);
+                                }
+                            }
+                            ReflectionUtils.setPrivateField(BinaryTypeBinding.class, "memberTypes", jdtBinding, memberTypes);
+                        }
+                        // workaround end
+                        Stream.of(jdtBinding.memberTypes()).map(resolver::convertToClassNode).forEach(cn -> {
+                            @SuppressWarnings("unused") // InnerClassNode constructor adds itself to this.innerClasses
+                            ClassNode icn = new InnerClassNode(this, cn.getName(), cn.getModifiers(), cn.getSuperClass()) {{
+                                isPrimaryNode = false;
+                                setRedirect(cn);
+                            }};
+                        });
+                    }
+                }
+            }
+        }
+        return (innerClasses == null ? Collections.EMPTY_LIST : Collections.unmodifiableList(innerClasses)).iterator();
+    }
+
+    @Override
     public ClassNode getOuterClass() {
         if (jdtBinding.isNestedType()) {
             return resolver.convertToClassNode(jdtBinding.enclosingType());
@@ -643,6 +668,6 @@ public class JDTClassNode extends ClassNode implements JDTNode {
 
     @Override
     public boolean mightHaveInners() {
-        return (jdtBinding.memberTypes().length > 0);
+        return jdtBinding.hasMemberTypes();
     }
 }

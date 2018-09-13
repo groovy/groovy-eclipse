@@ -401,9 +401,9 @@ public class ConvertGroovyLocalToFieldRefactoring extends PromoteTempToFieldRefa
             };
 
             referencesVisitor.visitClass(getContainingClassNode());
-            Iterator<InnerClassNode> innerClasses = getContainingClassNode().getInnerClasses();
-            while (innerClasses != null && innerClasses.hasNext()) {
-                ClassNode innerClass = innerClasses.next();
+
+            for (Iterator<InnerClassNode> it = getContainingClassNode().getInnerClasses(); it.hasNext();) {
+                InnerClassNode innerClass = it.next();
                 referencesVisitor.visitClass(innerClass);
             }
 

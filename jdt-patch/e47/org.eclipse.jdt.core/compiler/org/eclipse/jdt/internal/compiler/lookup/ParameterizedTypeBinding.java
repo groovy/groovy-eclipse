@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2005, 2018 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -39,7 +40,7 @@
  *								Bug 435805 - [1.8][compiler][null] Java 8 compiler does not recognize declaration style null annotations
  *								Bug 456508 - Unexpected RHS PolyTypeBinding for: <code-snippet>
  *								Bug 390064 - [compiler][resource] Resource leak warning missing when extending parameterized class
- *     Jesper S MÃ¸ller  - Contributions for bug 381345 : [1.8] Take care of the Java 8 major version
+ *     Jesper S Møller  - Contributions for bug 381345 : [1.8] Take care of the Java 8 major version
  *								Bug 527554 - [18.3] Compiler support for JEP 286 Local-Variable Type
  *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.lookup;
@@ -748,18 +749,31 @@ public class ParameterizedTypeBinding extends ReferenceBinding implements Substi
 		return null;
 	}
 
-	 /**
+	/**
 	 * @see org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding#getField(char[], boolean)
 	 */
 	public FieldBinding getField(char[] fieldName, boolean needResolve) {
 		fields(); // ensure fields have been initialized... must create all at once unlike methods
 		return ReferenceBinding.binarySearch(fieldName, this.fields);
 	}
-	 
- 	/**
+
+	/**
 	 * @see org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding#getMemberType(char[])
 	 */
 	public ReferenceBinding getMemberType(char[] typeName) {
+		// GROOVY add
+		if (this.memberTypes == null && this.type.hasMemberTypes() &&
+				this.type instanceof BinaryTypeBinding && this.type == this.type.prototype()) { //$IDENTITY-COMPARISON$
+			boolean found = false;
+			for (ReferenceBinding memberType : ((BinaryTypeBinding) this.type).memberTypes) {
+				if (CharOperation.fragmentEquals(typeName, memberType.sourceName, CharOperation.lastIndexOf('$', memberType.sourceName) + 1, true)) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) return null;
+		}
+		// GROOVY end
 		memberTypes(); // ensure memberTypes have been initialized... must create all at once unlike methods
 		int typeLength = typeName.length;
 		for (int i = this.memberTypes.length; --i >= 0;) {

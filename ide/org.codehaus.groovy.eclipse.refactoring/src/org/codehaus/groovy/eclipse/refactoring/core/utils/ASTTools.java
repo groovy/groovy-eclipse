@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -284,12 +284,11 @@ public class ASTTools {
             }
         } else {
             // look for inner classes
-            Iterator<InnerClassNode> innerClasses = containingClassNode.getInnerClasses();
-            while (innerClasses != null && innerClasses.hasNext()) {
-                InnerClassNode inner = innerClasses.next();
-                if (inner.getStart() <= offset && inner.getEnd() >= offset) {
-                    containingClassNode = inner;
-                    innerClasses = inner.getInnerClasses();
+            for (Iterator<InnerClassNode> it = containingClassNode.getInnerClasses(); it.hasNext();) {
+                InnerClassNode innerClass = it.next();
+                if (innerClass.getStart() <= offset && innerClass.getEnd() >= offset) {
+                    containingClassNode = innerClass;
+                    it = innerClass.getInnerClasses();
                 }
             }
         }

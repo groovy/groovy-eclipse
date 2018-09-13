@@ -1604,12 +1604,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     // GRECLIPSE add
-    public void forgetInnerClass(InnerClassNode icn) {
-        if (innerClasses != null) {
-            innerClasses.remove(icn); // GRECLIPSE-1167
-        }
-    }
-
     public String getClassInternalName() {
         return (isRedirectNode() ? redirect().getClassInternalName() : null);
     }
@@ -1622,15 +1616,8 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         return (clazz != null && clazz.isPrimitive());
     }
 
-    /**
-     * @return true if this classnode might have inners, conservatively it says yes if it is unsure.
-     */
     public boolean mightHaveInners() {
-        ClassNode r = redirect();
-        if (r.hasClass()) {
-            return true;
-        }
-        return (r.innerClasses != null && !r.innerClasses.isEmpty());
+        return (hasClass() ? true : getInnerClasses().hasNext());
     }
     // GRECLIPSE end
 

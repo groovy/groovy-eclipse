@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,18 +22,19 @@ import org.codehaus.groovy.ast.ClassNode;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 
 /**
- * Common interface for Groovy ASTNodes backed by a JDT binding
+ * Common interface for Groovy {@code ASTNode}s backed by a JDT binding.
  */
 public interface JDTNode {
 
     int ANNOTATIONS_INITIALIZED = 0x0001;
-    int PROPERTIES_INITIALIZED = 0x0002;
+    int INNER_TYPES_INITIALIZED = 0x0002;
+    int PROPERTIES_INITIALIZED  = 0x0004;
 
-    JDTResolver getResolver();
+    List<AnnotationNode> getAnnotations(ClassNode type);
 
     List<AnnotationNode> getAnnotations();
 
-    List<AnnotationNode> getAnnotations(ClassNode type);
+    JDTResolver getResolver();
 
     Binding getJdtBinding();
 
