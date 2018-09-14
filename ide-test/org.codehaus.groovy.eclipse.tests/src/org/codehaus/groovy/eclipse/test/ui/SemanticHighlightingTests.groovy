@@ -2355,6 +2355,31 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testLocalType1() {
+        addGroovySource '''\
+            interface I<T> extends Serializable {
+              T bar()
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            class Whatever {
+              def foo = new I<String>() {
+                private static final long serialVersionUID = 123
+                String bar() { 'baz' }
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('foo'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('bar'), 3, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('123'), 3, NUMBER),
+            new HighlightedTypedPosition(contents.indexOf('I'), 1, CTOR_CALL),
+            new HighlightedTypedPosition(contents.indexOf('serialVersionUID'), 'serialVersionUID'.length(), STATIC_VALUE))
+    }
+
+    @Test
     void testTraits1() {
         String contents = '''\
             trait Whatever {

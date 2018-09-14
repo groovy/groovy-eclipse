@@ -101,35 +101,35 @@ public class MultiplexingSourceElementRequestorParser extends SourceElementParse
     }
 
     @Override
-    public CompilationUnitDeclaration parseCompilationUnit(ICompilationUnit unit, boolean fullParse, IProgressMonitor pm) {
-        if (ContentTypeUtils.isGroovyLikeFileName(unit.getFileName())) {
+    public CompilationUnitDeclaration parseCompilationUnit(ICompilationUnit compilationUnit, boolean fullParse, IProgressMonitor progressMonitor) {
+        if (ContentTypeUtils.isGroovyLikeFileName(compilationUnit.getFileName())) {
             // ASSUMPTIONS:
             // 1) there is no difference between a diet and full parse in the groovy works, so can ignore the fullParse parameter
-            // 2) parsing is for the entire CU (ie- from character 0, to unit.getContents().length)
+            // 2) parsing is for the entire CU (ie- from character 0, to compilationUnit.getContents().length)
             // 3) nodesToCategories map is not necessary. I think it has something to do with JavaDoc, but not sure
-
-            CompilationResult compilationResult = new CompilationResult(unit, 0, 0, options.maxProblemsPerUnit);
 
             // FIXASC Is it ok to use a new parser here everytime? If we don't we sometimes recurse back into the first one.
             // FIXASC ought to reuse to ensure types end up in same groovy CU
             GroovyParser groovyParser = new GroovyParser(this.groovyParser.requestor, options, problemReporter, false, true);
-            CompilationUnitDeclaration cud = groovyParser.dietParse(unit, compilationResult);
+            CompilationResult compilationResult = new CompilationResult(compilationUnit, 0, 0, options.maxProblemsPerUnit);
+            CompilationUnitDeclaration compUnitDecl = groovyParser.dietParse(compilationUnit, compilationResult);
 
+            assert scanner.source == null; scanner.source = compilationUnit.getContents();
             SourceElementNotifier notifier = ReflectionUtils.getPrivateField(SourceElementParser.class, "notifier", this);
-            notifier.notifySourceElementRequestor(cud, 0, unit.getContents().length, groovyReportReferenceInfo, createSourceEnds(cud), Collections.EMPTY_MAP); // we don't care about the @category tag, so pass empty map
+            notifier.notifySourceElementRequestor(compUnitDecl, 0, scanner.source.length, groovyReportReferenceInfo, createSourceEnds(compUnitDecl), Collections.EMPTY_MAP);
 
-            return cud;
+            return compUnitDecl;
         } else {
-            return super.parseCompilationUnit(unit, fullParse, pm);
+            return super.parseCompilationUnit(compilationUnit, fullParse, progressMonitor);
         }
     }
 
     @Override
-    public CompilationUnitDeclaration dietParse(ICompilationUnit sourceUnit, CompilationResult compilationResult) {
-        if (ContentTypeUtils.isGroovyLikeFileName(sourceUnit.getFileName())) {
-            return groovyParser.dietParse(sourceUnit, compilationResult);
+    public CompilationUnitDeclaration dietParse(ICompilationUnit compilationUnit, CompilationResult compilationResult) {
+        if (ContentTypeUtils.isGroovyLikeFileName(compilationUnit.getFileName())) {
+            return groovyParser.dietParse(compilationUnit, compilationResult);
         } else {
-            return super.dietParse(sourceUnit, compilationResult);
+            return super.dietParse(compilationUnit, compilationResult);
         }
     }
 

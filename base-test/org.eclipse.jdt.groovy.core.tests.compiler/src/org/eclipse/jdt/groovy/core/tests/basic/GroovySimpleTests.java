@@ -6205,6 +6205,46 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "}");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/715
+    public void testAnonymousInnerClass10() {
+        runConformTest(new String[] {
+            "A.groovy",
+            "class A {" +
+            "  def foo = new I<String>() {\n" +
+            "    private static final long serialVersionUID = 1L\n" +
+            "    String bar() {\n" +
+            "      println 'hi!'\n" +
+            "    }\n" +
+            "  }\n" +
+            "  static main(args) {\n" +
+            "    new A().foo.bar()\n" +
+            "  }\n" +
+            "}\n",
+
+            "I.groovy",
+            "interface I<T> extends Serializable {\n" +
+            "  T bar()\n" +
+            "}\n",
+        },
+        "hi!");
+
+        checkGCUDeclaration("A.groovy",
+            "public class A {\n" +
+            "  private java.lang.Object foo = new I<String>() {\n" +
+            "    private static final long serialVersionUID = 1L;\n" +
+            "    x() {\n" +
+            "      super();\n" +
+            "    }\n" +
+            "    public String bar() {\n" +
+            "    }\n" +
+            "  };\n" +
+            "  public A() {\n" +
+            "  }\n" +
+            "  public static void main(java.lang.String... args) {\n" +
+            "  }\n" +
+            "}\n");
+    }
+
     @Test
     public void testAbstractMethodWithinEnum1() {
         runNegativeTest(new String[] {
