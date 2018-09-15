@@ -124,8 +124,17 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
                 }
             }
 
-        } else if (result.declaration instanceof FieldNode || result.declaration instanceof PropertyNode) {
+        } else if (result.declaration instanceof FieldNode) {
             pos = handleFieldOrProperty((AnnotatedNode) node, result.declaration);
+
+        } else if (result.declaration instanceof PropertyNode) {
+            if (!((PropertyNode) result.declaration).getField().hasNoRealSourcePosition()) {
+                pos = handleFieldOrProperty((AnnotatedNode) node, result.declaration);
+            } else {
+                HighlightKind kind = ((PropertyNode) result.declaration).isStatic()
+                            ? HighlightKind.STATIC_CALL : HighlightKind.METHOD_CALL;
+                pos = new HighlightedTypedPosition(node.getStart(), node.getLength(), kind);
+            }
 
         } else if (node instanceof MethodNode) {
             if (result.enclosingAnnotation == null) {
@@ -232,7 +241,7 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
 
         int offset, length;
         if (node == decl) {
-            // declaration length includes the type and init
+            // declaration offsets include the type and init
             offset = node.getNameStart();
             length = node.getNameEnd() - node.getNameStart() + 1;
         } else {

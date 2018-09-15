@@ -379,6 +379,59 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
+    void testMethodsAsProperties5() {
+        String contents = '''\
+            class C {
+              Object getFoo() {}
+              boolean isBar() {}
+              void setBaz(to) {}
+              void method() {
+                foo
+                bar
+                baz
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('getFoo'), 6, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('isBar' ), 5, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('setBaz'), 6, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('to'), 2, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('method'), 6, METHOD),
+            new HighlightedTypedPosition(contents.indexOf('foo'), 3, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('bar'), 3, METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('baz'), 3, METHOD_CALL))
+    }
+
+    @Test
+    void testMethodsAsProperties6() {
+        String contents = '''\
+            class C {
+              static Object getFoo() {}
+              static boolean isBar() {}
+              static void setBaz(to) {}
+              static void main(args) {
+                foo
+                bar
+                baz
+              }
+            }
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('getFoo'), 6, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('isBar' ), 5, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('setBaz'), 6, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('to'), 2, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('main'), 4, STATIC_METHOD),
+            new HighlightedTypedPosition(contents.indexOf('args'), 4, PARAMETER),
+            new HighlightedTypedPosition(contents.indexOf('foo'), 3, STATIC_CALL),
+            new HighlightedTypedPosition(contents.indexOf('bar'), 3, STATIC_CALL),
+            new HighlightedTypedPosition(contents.indexOf('baz'), 3, STATIC_CALL))
+    }
+
+    @Test
     void testDefaultGroovyMethods1() {
         String contents = '["one", "two"].grep().first()'
 

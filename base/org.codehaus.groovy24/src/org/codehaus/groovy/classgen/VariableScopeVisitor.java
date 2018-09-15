@@ -53,6 +53,7 @@ import org.codehaus.groovy.syntax.Types;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import static java.beans.Introspector.decapitalize;
 import static java.lang.reflect.Modifier.isFinal;
 
 /**
@@ -186,8 +187,9 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
             // GRECLIPSE edit
             //if (pName != null && pName.equals(name))
             //    return new PropertyNode(pName, mn.getModifiers(), ClassHelper.OBJECT_TYPE, cn, null, null, null);
-            if (pName != null && pName.equals(name)) {
-                PropertyNode property = new PropertyNode(pName, mn.getModifiers(), getPropertyType(mn), cn, null, null, null);
+            if (name.equals(pName)) {
+                PropertyNode property = new PropertyNode(name, mn.getModifiers(), getPropertyType(mn), cn, null, null, null);
+                property.getField().setHasNoRealSourcePosition(true); property.getField().setSynthetic(true);
                 property.getField().setDeclaringClass(cn);
                 property.setDeclaringClass(cn);
                 return property;
@@ -204,17 +206,9 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         return findClassMember(cn.getOuterClass(), name);
     }
 
-    // GRECLIPSE add
-    private ClassNode getPropertyType(MethodNode m) {
-        if (m.getReturnType() != ClassHelper.VOID_TYPE) {
-            return m.getReturnType();
-        }
-        return m.getParameters()[0].getType();
-    }
-    // GRECLIPSE end
-
     private static String getPropertyName(MethodNode m) {
         String name = m.getName();
+        /* GRECLIPSE edit
         if (!(name.startsWith("set") || name.startsWith("get"))) return null;
         String pname = name.substring(3);
         if (pname.length() == 0) return null;
@@ -227,7 +221,32 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
             return null;
         }
         return pname;
+        */
+        if (name.startsWith("set") || name.startsWith("get") || name.startsWith("is")) {
+            String pname = decapitalize(name.substring(name.startsWith("is") ? 2 : 3));
+            if (!pname.isEmpty()) {
+                if (name.startsWith("set")) {
+                    if (m.getParameters().length == 1) {
+                        return pname;
+                    }
+                } else if (m.getParameters().length == 0 && !ClassHelper.VOID_TYPE.equals(m.getReturnType())) {
+                    if (name.startsWith("get") || ClassHelper.boolean_TYPE.equals(m.getReturnType())) {
+                        return pname;
+                    }
+                }
+            }
+        }
+        return null;
     }
+
+    // GRECLIPSE add
+    private static ClassNode getPropertyType(MethodNode m) {
+        if (ClassHelper.VOID_TYPE.equals(m.getReturnType())) {
+            return m.getParameters()[0].getType();
+        }
+        return m.getReturnType();
+    }
+    // GRECLIPSE end
 
     // -------------------------------
     // different Variable based checks
