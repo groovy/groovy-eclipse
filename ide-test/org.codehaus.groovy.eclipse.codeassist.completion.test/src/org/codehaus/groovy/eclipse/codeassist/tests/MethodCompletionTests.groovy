@@ -206,6 +206,42 @@ final class MethodCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'equals(Object obj) : boolean - Override method in \'Comparator\'', 1)
     }
 
+    @Test
+    void testOverride6() {
+        addGroovySource '''\
+            trait T {
+              String getFoo() { 'foo' }
+            }
+            '''.stripIndent()
+
+        String contents = '''\
+            class A implements T {
+              x
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
+        proposalExists(proposals, 'getFoo() : String - Override method in \'T\'', 1)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/705
+    void testOverride6a() {
+        addGroovySource '''\
+            trait T {
+              String getFoo() { 'foo' }
+            }
+            '''.stripIndent()
+
+        buildProject()
+
+        String contents = '''\
+            class A implements T {
+              x
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
+        proposalExists(proposals, 'getFoo() : String - Override method in \'T\'', 1)
+    }
+
     @Test // GRECLIPSE-1752
     void testStatic1() {
         String contents = '''\

@@ -34,12 +34,14 @@ import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.relevance.Relevance;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
+import org.codehaus.groovy.transform.trait.Traits.TraitBridge;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.CompletionProposal;
 import org.eclipse.jdt.core.CompletionRequestor;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.compiler.CharOperation;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.GenericsMapper;
 import org.eclipse.jdt.groovy.search.VariableScope;
 import org.eclipse.jdt.internal.codeassist.CompletionEngine;
@@ -145,8 +147,7 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
 
             for (MethodNode meth : type.getMethods()) {
                 String name = meth.getName();
-                if (name.startsWith(completionExpression) &&
-                        !name.contains("$") && !name.contains("<")) {
+                if (name.startsWith(completionExpression) && name.indexOf('$') < 0 && name.indexOf('<') < 0 && !isTraitBridge(meth)) {
                     methods.putIfAbsent(meth.getTypeDescriptor(), meth);
                 }
             }
@@ -154,7 +155,8 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
 
         // remove implemented or re-declared methods
         for (MethodNode meth : declaringType.getMethods()) {
-            methods.remove(meth.getTypeDescriptor());
+            if (!isTraitBridge(meth))
+                methods.remove(meth.getTypeDescriptor());
         }
 
         // restrict to methods that can be overridden
@@ -232,5 +234,9 @@ public class NewMethodCompletionProcessor extends AbstractGroovyCompletionProces
             }
         }
         return null;
+    }
+
+    private static boolean isTraitBridge(MethodNode method) {
+        return GroovyUtils.getAnnotations(method, TraitBridge.class.getName()).anyMatch(x -> true);
     }
 }
