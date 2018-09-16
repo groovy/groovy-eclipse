@@ -15,13 +15,13 @@
  */
 package org.eclipse.jdt.groovy.search;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 
 import org.codehaus.groovy.ast.ClassNode;
@@ -64,7 +64,9 @@ public class GenericsMapper {
             int n = ugts.length;
             if (n > 0 && rgts.length < 1) {
                 rgts = new GenericsType[n]; // assume rCandidate is a raw type
-                Arrays.fill(rgts, new GenericsType(VariableScope.OBJECT_CLASS_NODE));
+                for (int i = 0; i < n; i += 1) {
+                    rgts[i] = new GenericsType(Optional.ofNullable(ugts[i].getUpperBounds()).map(bounds -> bounds[0]).orElse(VariableScope.OBJECT_CLASS_NODE));
+                }
             }
             assert rgts.length == ugts.length;
 

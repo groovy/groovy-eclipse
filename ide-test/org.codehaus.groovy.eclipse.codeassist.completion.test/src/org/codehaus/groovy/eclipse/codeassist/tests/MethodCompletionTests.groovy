@@ -183,6 +183,38 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
+    void testOverride3a() {
+        addGroovySource '''\
+            interface I<T extends CharSequence> {
+              void m(T chars)
+            }
+            '''.stripIndent()
+        String contents = '''\
+            class A implements I {
+              x
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
+        proposalExists(proposals, 'm(CharSequence chars) : void - Override method in \'I\'', 1)
+    }
+
+    @Test
+    void testOverride3b() {
+        addGroovySource '''\
+            interface I<T extends CharSequence & Serializable> {
+              void m(T chars)
+            }
+            '''.stripIndent()
+        String contents = '''\
+            class A implements I {
+              x
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('x', ''), contents.indexOf('x'))
+        proposalExists(proposals, 'm(CharSequence chars) : void - Override method in \'I\'', 1)
+    }
+
+    @Test
     void testOverride4() {
         String contents = '''\
             import java.util.concurrent.Callable
