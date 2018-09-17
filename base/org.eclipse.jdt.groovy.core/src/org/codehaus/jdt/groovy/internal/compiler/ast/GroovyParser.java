@@ -38,7 +38,6 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.CharOperation;
-import org.eclipse.jdt.core.util.CompilerUtils;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.groovy.core.util.ScriptFolderSelector;
@@ -126,15 +125,6 @@ public class GroovyParser {
             unit.removeOutputPhaseOperation();
             unit.setResolveVisitor(resolver);
             unit.tweak(isReconcile);
-
-            // GRAILS add
-            if (allowTransforms && (compilerOptions.groovyFlags & CompilerUtils.IsGrails) != 0) {
-                unit.addPhaseOperation(new GrailsInjector(classLoaders[1]), Phases.CANONICALIZATION);
-                new Grails20TestSupport(compilerOptions, classLoaders[1]).addGrailsTestCompilerCustomizers(unit);
-                unit.addPhaseOperation(new GrailsGlobalPluginAwareEntityInjector(classLoaders[1]), Phases.CANONICALIZATION);
-            }
-            // GRAILS end
-
             return unit;
         };
     }
