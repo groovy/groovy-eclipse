@@ -159,7 +159,7 @@ public class GroovyProposalTypeSearchRequestor implements ISearchRequestor {
         // if contextOnly then do not insert any text, only show context information
         this.contextOnly = (context.location == ContentAssistLocation.METHOD_CONTEXT);
         this.shouldAcceptConstructors = (context.location == ContentAssistLocation.METHOD_CONTEXT || context.location == ContentAssistLocation.CONSTRUCTOR);
-        this.completionExpression = (contextOnly ? ((MethodInfoContentAssistContext) context).methodName.replace('$', '.') : context.getQualifiedCompletionExpression());
+        this.completionExpression = (contextOnly ? context.getPerceivedCompletionExpression().replace('$', '.') : context.getQualifiedCompletionExpression());
 
         this.groovyRewriter = new GroovyImportRewriteFactory(this.unit, this.module);
         this.options = new AssistOptions(javaContext.getProject().getOptions(true));

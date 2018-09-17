@@ -25,16 +25,22 @@ import java.util.function.Consumer;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.CodeVisitorSupport;
+import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.Variable;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MapEntryExpression;
-import org.codehaus.groovy.ast.expr.MapExpression;
+import org.codehaus.groovy.ast.expr.NamedArgumentListExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistContext;
 import org.codehaus.groovy.eclipse.codeassist.requestor.ContentAssistLocation;
+import org.codehaus.groovy.eclipse.codeassist.requestor.MethodInfoContentAssistContext;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.Flags;
@@ -72,8 +78,13 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
             context.extend(getJavaContext().getCoreContext(), null);
             completionChars = context.getQualifiedCompletionExpression().toCharArray();
             break;
+        case STATEMENT:
+            context = findCtorCallContext(context);
+            if (context == null)
+                return Collections.emptyList();
+            // falls through
         case METHOD_CONTEXT:
-            completionChars = ((Expression) context.completionNode).getType().getName().replace('$', '.').toCharArray();
+            completionChars = context.getPerceivedCompletionNode().getText().replace('$', '.').toCharArray();
             break;
         default:
             throw new IllegalStateException("Invalid constructor completion location: " + context.location.name());
@@ -144,32 +155,97 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
         return requestor.processAcceptedConstructors(findUsedParameters(context), resolver);
     }
 
-    protected static Set<String> findUsedParameters(ContentAssistContext context) {
-        if (context.location != ContentAssistLocation.METHOD_CONTEXT) {
-            return Collections.emptySet();
+    protected static ContentAssistContext findCtorCallContext(ContentAssistContext context) {
+        if (context.completionNode instanceof VariableExpression || context.completionNode instanceof ConstantExpression) {
+            ASTNode containingCode = context.containingCodeBlock;
+            if (containingCode instanceof MethodNode) {
+                containingCode = ((MethodNode) containingCode).getCode();
+            } else if (containingCode instanceof Variable) {
+                containingCode = ((Variable) containingCode).getInitialExpression();
+            }
+
+            ConstructorCallExpression[] enclosingCall = new ConstructorCallExpression[1];
+
+            if (containingCode != null) containingCode.visit(new CodeVisitorSupport() {
+                @Override
+                public void visitConstructorCallExpression(ConstructorCallExpression call) {
+                    if (context.completionLocation > call.getNameStart() && context.completionLocation < call.getEnd()) {
+                        Expression args = call.getArguments();
+                        if (args instanceof TupleExpression) {
+                            for (Expression expr : ((TupleExpression) args).getExpressions()) {
+                                if (expr == context.completionNode) {
+                                    enclosingCall[0] = call;
+                                    return;
+                                }
+                                if (expr instanceof NamedArgumentListExpression) {
+                                    args = expr;
+                                }
+                            }
+                        }
+                        if (args instanceof NamedArgumentListExpression) {
+                            for (MapEntryExpression entry : ((NamedArgumentListExpression) args).getMapEntryExpressions()) {
+                                if (entry.getKeyExpression() == context.completionNode) {
+                                    enclosingCall[0] = call;
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                    super.visitConstructorCallExpression(call);
+                }
+            });
+
+            if (enclosingCall[0] != null) {
+                ConstructorCallExpression call = enclosingCall[0];
+
+                ClassNode type = call.getType();
+                if (call.isUsingAnonymousInnerClass()) {
+                    type = call.getType().getUnresolvedSuperClass(false);
+                    if (type == ClassHelper.OBJECT_TYPE)
+                        type = call.getType().getUnresolvedInterfaces(false)[0];
+                }
+
+                return new MethodInfoContentAssistContext(
+                    context.completionLocation,
+                    context.completionExpression,
+                    context.fullCompletionExpression,
+                    call, // completionNode
+                    context.containingCodeBlock,
+                    context.lhsNode,
+                    context.unit,
+                    context.containingDeclaration,
+                    context.completionEnd,
+                    type, // methodExpression
+                    type.getNameWithoutPackage(),
+                    call.getNameEnd() + 1);
+            }
         }
-        Set<String> usedParams = new HashSet<>();
-        ASTNode completionNode = context.completionNode;
-        if (completionNode instanceof ConstructorCallExpression) {
-            // next find out if there are any existing named args
-            ConstructorCallExpression call = (ConstructorCallExpression) completionNode;
-            Expression arguments = call.getArguments();
-            if (arguments instanceof TupleExpression) {
-                for (Expression maybeArg : ((TupleExpression) arguments).getExpressions()) {
-                    if (maybeArg instanceof MapExpression) {
-                        arguments = maybeArg;
+        return null;
+    }
+
+    protected static Set<String> findUsedParameters(ContentAssistContext context) {
+        Set<String> usedParams = Collections.emptySet();
+
+        if (context.location == ContentAssistLocation.METHOD_CONTEXT && context.completionNode instanceof ConstructorCallExpression) {
+            ConstructorCallExpression call = (ConstructorCallExpression) context.completionNode;
+            Expression args = call.getArguments();
+            if (args instanceof TupleExpression) {
+                for (Expression expr : ((TupleExpression) args).getExpressions()) {
+                    if (expr instanceof NamedArgumentListExpression) {
+                        args = expr;
                         break;
                     }
                 }
             }
-            // now remove the arguments that are already written
-            if (arguments instanceof MapExpression) {
+            if (args instanceof NamedArgumentListExpression) {
+                usedParams = new HashSet<>();
                 // do extra filtering to determine what parameters are still available
-                for (MapEntryExpression entry : ((MapExpression) arguments).getMapEntryExpressions()) {
+                for (MapEntryExpression entry : ((NamedArgumentListExpression) args).getMapEntryExpressions()) {
                     usedParams.add(entry.getKeyExpression().getText());
                 }
             }
         }
+
         return usedParams;
     }
 }

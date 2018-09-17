@@ -516,27 +516,21 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
         }
         // TODO: Does name range include type parameters?
 
-        // see https://github.com/groovy/groovy-eclipse/issues/395
         if (expression.isUsingAnonymousInnerClass()) {
-            visitClass(constructorType);
+            visitClass(constructorType); // see https://github.com/groovy/groovy-eclipse/issues/395
+
+            constructorType = expression.getType().getUnresolvedSuperClass(false);
+            if (constructorType == ClassHelper.OBJECT_TYPE)
+                constructorType = expression.getType().getUnresolvedInterfaces(false)[0];
         }
 
         Expression arguments = expression.getArguments();
         checkForAfterClosingParen(expression, arguments);
-        try {
-            // see comments in visitMethodCallExpression
-            visitArguments(arguments, expression);
-        } catch (VisitCompleteException e) {
-            // see https://github.com/groovy/groovy-eclipse/issues/331 and https://github.com/groovy/groovy-eclipse/issues/409
-            if (context.location != ContentAssistLocation.STATEMENT || lhsNode instanceof ConstantExpression) {
-                throw e;
-            }
-            // completing constructor argument
-        }
 
-        // completion invocation offset is outside of type name and argument expressions; it is probably after opening paren or separating comma
+        visitArguments(arguments, expression);
 
-        createContextForCallContext(expression, constructorType, constructorType.getUnresolvedName());
+        // at a paren, at a comma, or at the start of an argument expression; do constructor context
+        createContextForCallContext(expression, constructorType, constructorType.getNameWithoutPackage(), expression.getNameEnd() + 1);
     }
 
     @Override
@@ -599,14 +593,11 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
         Expression objectExpression = expression.getObjectExpression();
         Expression methodExpression = expression.getMethod();
-        Expression arguments = expression.getArguments();
 
         // Could be a groovy 1.8 style command expression
         checkForCommandExpression(objectExpression, methodExpression);
 
-        // here, we check to see if we are after the closing paren or before it.
-        // not quite as easy as I would have hoped since the AST doesn't track
-        // this information
+        Expression arguments = expression.getArguments();
         checkForAfterClosingParen(methodExpression, arguments);
 
         objectExpression.visit(this);
@@ -619,18 +610,10 @@ public class CompletionNodeFinder extends DepthFirstVisitor {
 
         methodExpression.visit(this);
 
-        // here do a check if we are inside of a method call, but we are not at
-        // any particular expression (ie- this is the METHOD_CONTEXT)
-        // there is a special case that when we are at the first character of
-        // any expression in an argument list,
-        // we want to do the context instead of normal completion.
-        // do that check below
         visitArguments(arguments, expression);
 
-        // if we get here, then we still want to do the context
-        // we are either at a paren, at a comma, or at a start of an expression
+        // at a paren, at a comma, or at the start of an argument expression; do method context
         createContextForCallContext(expression, methodExpression, methodExpression.getText());
-            // this is not exactly right since it will fail on funky kinds of method calls, like those that are called by a GString
     }
 
     @Override

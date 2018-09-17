@@ -154,6 +154,7 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
             new TypeCompletionProcessorFactory(),
             new PackageCompletionProcessorFactory(),
             new ExpressionCompletionProcessorFactory(),
+            new ConstructorCompletionProcessorFactory(),
             new LocalVariableCompletionProcessorFactory(),
             new NewVariableCompletionProcessorFactory()
         )));
@@ -229,7 +230,8 @@ public class GroovyCompletionProposalComputer implements IJavaCompletionProposal
                 for (IProposalFilter filter : filters) {
                     try {
                         if (filter instanceof IProposalFilterExtension) {
-                            List<ICompletionProposal> newProposals = ((IProposalFilterExtension) filter).filterExtendedProposals(proposals, assistContext, javaContext);
+                            List<ICompletionProposal> newProposals =
+                                ((IProposalFilterExtension) filter).filterExtendedProposals(proposals, assistContext, javaContext);
                             if (newProposals != null) {
                                 proposals = newProposals;
                             }
