@@ -1076,35 +1076,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         );
     }
 
-    @Test
-    public void testInnerTypes() {
-        runConformTest(new String[] {
-            "p/X.groovy",
-            "package p;\n" +
-            "public class X {\n" +
-            " class Inner {}\n"+
-            "  static main(args) {\n"+
-            "    print \"success\"\n" +
-            "  }\n"+
-            "}\n",
-        },
-        "success");
-
-        checkGCUDeclaration("X.groovy",
-            "package p;\n" +
-            "public class X {\n" +
-            "  public class Inner {\n" +
-            "    public Inner() {\n"+
-            "    }\n"+
-            "  }\n"+
-            "  public X() {\n" +
-            "  }\n" +
-            "  public static void main(java.lang.String... args) {\n" +
-            "  }\n" +
-            "}\n"
-        );
-    }
-
     @Test // GROOVY-4219
     public void testGRE637() {
         runConformTest(new String[] {
@@ -2198,64 +2169,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testInnerTypeReferencing_GRE339() {
-        runConformTest(new String[] {
-            "Script.groovy",
-            "class Script {\n"+
-            "  public static void main(String[] argv) {\n"+
-            "    print Outer.Inner.VAR\n"+
-            "  }\n"+
-            "}",
-
-            "Outer.java",
-            "public class Outer {\n"+
-            "	  static class Inner {\n"+
-            "	    static String VAR = \"value\";\n"+
-            "	  }\n"+
-            "	}\n",
-        },
-        "value");
-    }
-
-    // interface
-    @Test
-    public void testInnerTypeReferencing_GRE339_2() {
-        runConformTest(new String[] {
-            "Script.groovy",
-            "class Script {\n"+
-            "  public static void main(String[] argv) {\n"+
-            "    print Outer.Inner.VAR\n"+
-            "  }\n"+
-            "}",
-
-            "Outer.java",
-            "public interface Outer {\n"+
-            "	  interface Inner {\n"+
-            "	    static String VAR = \"value\";\n"+
-            "	  }\n"+
-            "	}\n",
-        },
-        "value");
-    }
-
-    // pure script
-    @Test
-    public void testInnerTypeReferencing_GRE339_3() {
-        runConformTest(new String[] {
-            "script.groovy",
-            "print Outer.Inner.VAR\n",
-
-            "Outer.java",
-            "public interface Outer {\n"+
-            "	  interface Inner {\n"+
-            "	    static String VAR = \"value\";\n"+
-            "	  }\n"+
-            "	}\n",
-        },
-        "value");
-    }
-
-    @Test
     public void testStaticProperties_GRE364() {
         runNegativeTest(new String[] {
             "Foo.groovy",
@@ -2476,67 +2389,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "}\n",
         },
         "success");
-    }
-
-    @Test
-    public void testEnums() {
-        runNegativeTest(new String[] {
-            "p/X.groovy",
-            "package p;\n" +
-            "public enum X {\n" +
-            "}\n",
-        },
-        "");
-    }
-
-    @Test
-    public void testEnums2() {
-        try {
-            JDTResolver.recordInstances = true;
-            runConformTest(new String[] {
-                "EE.groovy",
-                "enum EE {A,B,C;}\n",
-
-                "Foo.java",
-                "public class Foo<E extends Foo<E>> implements Comparable<E> {" +
-                "  public int compareTo(E b) { return 0;}\n"+
-                "}\n",
-
-                "Goo.java",
-                "public class Goo<X extends Goo<X>> extends Foo<X> {}\n",
-                "Bar.groovy",
-                "abstract class Bar extends Goo<Bar> {" +
-                "  int compareTo(Bar b) { return 0;}\n"+
-                "  EE getEnum() { return null; }\n"+
-                "}\n",
-            });
-
-            // Check on the state of Comparable
-            JDTClassNode classnode = JDTResolver.getCachedNode("java.lang.Comparable<E>");
-            assertNotNull(classnode);
-            // Should have one method
-            List<MethodNode> methods = classnode.getMethods();
-            assertEquals(1,methods.size());
-            assertEquals("int compareTo(java.lang.Object)",methods.get(0).getTypeDescriptor());
-
-            classnode.lazyClassInit();
-        } finally {
-            JDTResolver.instances.clear();
-            JDTResolver.recordInstances=false;
-        }
-
-        runConformTest(new String[] {
-            "Foo.groovy",
-            "class Foo<E extends Foo<E>> implements Comparable<E> {" +
-            "  int compareTo(Object b) { return 0;}\n"+
-            "}\n" +
-            "\n",
-
-            "Bar.groovy",
-            "abstract class Bar extends Foo<Bar> {" +
-            "  int compareTo(Bar b) { return 0;}\n"+
-            "}\n",
-        });
     }
 
     @Test
@@ -4254,24 +4106,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "success");
     }
 
-    @Test
-    public void testEnum() {
-        runConformTest(new String[] {
-            "p/Foo.groovy",
-            "package p;\n"+
-            "public class Foo /*extends Supertype<Goo>*/ {\n"+
-            "  public static void main(String[] argv) {\n"+
-            "    print Goo.R\n"+
-            "  }\n"+
-            "}\n",
-
-            "p/Goo.java",
-            "package p;\n"+
-            "enum Goo { R,G,B; }",
-        },
-        "R");
-    }
-
     // Type already implements invokeMethod(String,Object) - should not be an error, just don't add the method
     @Test
     public void testDuplicateGroovyObjectMethods() {
@@ -5143,25 +4977,6 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testInners_1185() {
-        runConformTest(new String[] {
-            "WithInnerClass.groovy",
-            "class WithInnerClass {\n"+
-            "\n"+
-            "  interface InnerInterface {\n"+
-            "	 void foo()\n"+
-            "  }\n"+
-            "\n"+
-            "  private final InnerInterface foo = new InnerInterface() {\n"+
-            "	  void foo() {\n" +
-            "\n" +
-            "	  }\n" +
-            "  }\n"+
-            "}"
-        });
-    }
-
-    @Test
     public void testInvokingVarargs02_GtoJ() {
         runConformTest(new String[] {
             "p/Run.groovy",
@@ -5860,21 +5675,22 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         assertEquals("BBB", cn.getName());
     }
 
-    @Test @Ignore
+    @Test
     public void testSts3930() {
         runConformTest(new String[] {
-            "GroovyDemo.groovy",
-            "package demo\n"+
+            "demo/GroovyDemo.groovy",
+            "package demo\n" +
             "class GroovyDemo {\n" +
-            "    static <T> List someMethod(Class<T> factoryClass, ClassLoader classLoader = GroovyDemo.class.classLoader) {}\n" +
-            "}",
+            "  static <T> List someMethod(Class<T> factoryClass, ClassLoader classLoader = this.classLoader) {\n" +
+            "  }\n" +
+            "}\n",
 
-            "JavaDemo.java",
-            "package demo;\n"+
+            "demo/JavaDemo.java",
+            "package demo;\n" +
             "public class JavaDemo {\n" +
-            "    public static void someMethod() {\n" +
-            "        GroovyDemo.someMethod(JavaDemo.class);\n" +
-            "    }\n" +
+            "  public static void staticMethod() {\n" +
+            "    GroovyDemo.someMethod(JavaDemo.class);\n" +
+            "  }\n" +
             "}\n",
         },
         "");
@@ -5886,15 +5702,217 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "p/B.groovy",
             "package p;\n" +
             "class B extends B<String> {\n" +
-            "  public static void main(String[] argv) {\n"+
-            "    new B();\n"+
-            "    print \"success\"\n"+
+            "  public static void main(String[] argv) {\n" +
+            "    new B();\n" +
+            "    print \"success\"\n" +
             "  }\n"+
             "}\n",
 
             "p/A.java",
             "package p;\n" +
             "public class A<T> {}\n",
+        },
+        "");
+    }
+
+    @Test
+    public void testEnums1() {
+        runConformTest(new String[] {
+            "p/Foo.groovy",
+            "package p;\n" +
+            "class Foo {\n" +
+            "  static void main(args) {\n" +
+            "    print Goo.R\n" +
+            "  }\n" +
+            "}\n",
+
+            "p/Goo.java",
+            "package p;\n" +
+            "enum Goo { R,G,B; }",
+        },
+        "R");
+    }
+
+    @Test
+    public void testEnums2() {
+        runNegativeTest(new String[] {
+            "p/X.groovy",
+            "package p;\n" +
+            "public enum X {\n" +
+            "}\n",
+        },
+        "");
+    }
+
+    @Test
+    public void testEnums3() {
+        try {
+            JDTResolver.recordInstances = true;
+            runConformTest(new String[] {
+                "EE.groovy",
+                "enum EE {A,B,C;}\n",
+
+                "Foo.java",
+                "public class Foo<E extends Foo<E>> implements Comparable<E> {" +
+                "  public int compareTo(E b) { return 0;}\n"+
+                "}\n",
+
+                "Goo.java",
+                "public class Goo<X extends Goo<X>> extends Foo<X> {}\n",
+                "Bar.groovy",
+                "abstract class Bar extends Goo<Bar> {" +
+                "  int compareTo(Bar b) { return 0;}\n" +
+                "  EE getEnum() { return null; }\n" +
+                "}\n",
+            });
+
+            // Check on the state of Comparable
+            JDTClassNode classnode = JDTResolver.getCachedNode("java.lang.Comparable<E>");
+            assertNotNull(classnode);
+            // Should have one method
+            List<MethodNode> methods = classnode.getMethods();
+            assertEquals(1,methods.size());
+            assertEquals("int compareTo(java.lang.Object)",methods.get(0).getTypeDescriptor());
+
+            classnode.lazyClassInit();
+        } finally {
+            JDTResolver.instances.clear();
+            JDTResolver.recordInstances=false;
+        }
+
+        runConformTest(new String[] {
+            "Foo.groovy",
+            "class Foo<E extends Foo<E>> implements Comparable<E> {" +
+            "  int compareTo(Object b) { return 0;}\n" +
+            "}\n" +
+            "\n",
+
+            "Bar.groovy",
+            "abstract class Bar extends Foo<Bar> {" +
+            "  int compareTo(Bar b) { return 0;}\n" +
+            "}\n",
+        });
+    }
+
+    @Test
+    public void testInnerTypeReferencing_GRE339() {
+        runConformTest(new String[] {
+            "Script.groovy",
+            "class Script {\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    print Outer.Inner.VALUE\n" +
+            "  }\n" +
+            "}\n",
+
+            "Outer.java",
+            "public class Outer {\n" +
+            "  public static class Inner {\n" +
+            "    public static final String VALUE = \"value\";\n" +
+            "  }\n" +
+            "}\n",
+        },
+        "value");
+    }
+
+    @Test // interface
+    public void testInnerTypeReferencing_GRE339_2() {
+        runConformTest(new String[] {
+            "Script.groovy",
+            "class Script {\n" +
+            "  public static void main(String[] argv) {\n" +
+            "    print Outer.Inner.VALUE\n" +
+            "  }\n" +
+            "}\n",
+
+            "Outer.java",
+            "public interface Outer {\n" +
+            "  public interface Inner {\n" +
+            "    String VALUE = \"value\";\n" +
+            "  }\n"+
+            "}\n",
+        },
+        "value");
+    }
+
+    @Test // pure script
+    public void testInnerTypeReferencing_GRE339_3() {
+        runConformTest(new String[] {
+            "script.groovy",
+            "print Outer.Inner.VALUE\n",
+
+            "Outer.java",
+            "public interface Outer {\n"+
+            "  public interface Inner {\n"+
+            "    String VALUE = \"value\";\n"+
+            "  }\n"+
+            "}\n",
+        },
+        "value");
+    }
+
+    @Test
+    public void testInnerClass1() {
+        runConformTest(new String[] {
+            "p/X.groovy",
+            "package p;\n" +
+            "public class X {\n" +
+            " class Inner {}\n" +
+            "  static main(args) {\n" +
+            "    print \"success\"\n" +
+            "  }\n" +
+            "}\n",
+        },
+        "success");
+
+        checkGCUDeclaration("X.groovy",
+            "package p;\n" +
+            "public class X {\n" +
+            "  public class Inner {\n" +
+            "    public Inner() {\n"+
+            "    }\n"+
+            "  }\n"+
+            "  public X() {\n" +
+            "  }\n" +
+            "  public static void main(java.lang.String... args) {\n" +
+            "  }\n" +
+            "}\n"
+        );
+    }
+
+    @Test @Ignore // https://github.com/groovy/groovy-eclipse/issues/718
+    public void testInnerClass2() {
+        runConformTest(new String[] {
+            "Outer.groovy",
+            "class Outer {\n" +
+            "  class Inner {\n" +
+            "    static {\n" +
+            "      println '<clinit>'\n" +
+            "    }\n" +
+            "  }\n" +
+            "  def method() {\n" +
+            "    new Inner()\n" +
+            "  }\n" +
+            "  static void main(args) {\n" +
+            "    new Outer().method()\n" +
+            "  }\n" +
+            "}\n",
+        },
+        "<clinit>");
+    }
+
+    @Test
+    public void testInnerClass3() {
+        runNegativeTest(new String[] {
+            "WithInnerClass.groovy",
+            "class WithInnerClass {\n" +
+            "  interface InnerInterface {\n" +
+            "    void foo()\n" +
+            "  }\n" +
+            "  private final InnerInterface foo = new InnerInterface() {\n" +
+            "     void foo() {\n" +
+            "     }\n" +
+            "  }\n"+
+            "}\n",
         },
         "");
     }
