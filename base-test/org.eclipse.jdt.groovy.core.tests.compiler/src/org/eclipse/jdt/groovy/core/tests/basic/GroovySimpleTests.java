@@ -5879,7 +5879,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         );
     }
 
-    @Test @Ignore // https://github.com/groovy/groovy-eclipse/issues/718
+    @Test // https://github.com/groovy/groovy-eclipse/issues/718
     public void testInnerClass2() {
         runConformTest(new String[] {
             "Outer.groovy",
@@ -5894,6 +5894,24 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  static void main(args) {\n" +
             "    new Outer().method()\n" +
+            "  }\n" +
+            "}\n",
+        },
+        "<clinit>");
+    }
+
+    @Test
+    public void testInnerClass2a() {
+        runConformTest(new String[] {
+            "Outer.groovy",
+            "class Outer {\n" +
+            "  static class Inner {\n" +
+            "    static {\n" +
+            "      println '<clinit>'\n" +
+            "    }\n" +
+            "  }\n" +
+            "  static void main(args) {\n" +
+            "    new Inner()\n" +
             "  }\n" +
             "}\n",
         },
@@ -6183,7 +6201,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "public class A {\n" +
             "  public A() {\n" +
             "  }\n" +
-            "  static void <clinit>() {\n" +
+            "  <clinit>() {\n" +
             "    new Runnable() {\n" +
             "      x() {\n" +
             "        super();\n" +

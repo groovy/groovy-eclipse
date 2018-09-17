@@ -110,6 +110,7 @@ import org.eclipse.jdt.internal.compiler.ast.ArrayQualifiedTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.ArrayTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.CharLiteral;
 import org.eclipse.jdt.internal.compiler.ast.ClassLiteralAccess;
+import org.eclipse.jdt.internal.compiler.ast.Clinit;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ConstructorDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.DoubleLiteral;
@@ -1195,8 +1196,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                             methodDeclaration.bits |= ASTNode.HasLocalType;
                             methodDeclaration.statements = (org.eclipse.jdt.internal.compiler.ast.Statement[]) ArrayUtils.add(methodDeclaration.statements != null
                                         ? methodDeclaration.statements : new org.eclipse.jdt.internal.compiler.ast.Statement[0], innerTypeDeclaration.allocation);
-                            // methodDeclaration.scope is null at this time; defer return value
-                            innerTypeDeclaration.enclosingScope = () -> methodDeclaration.scope;
+                            // methodDeclaration.scope/outerTypeDeclaration.staticInitializerScope is null at this time; defer creation of anonymous inner's enclosing scope
+                            innerTypeDeclaration.enclosingScope = () -> methodDeclaration.isClinit() ? outerTypeDeclaration.staticInitializerScope : methodDeclaration.scope;
                         } else if (location instanceof FieldDeclaration) {
                             FieldDeclaration fieldDeclaration = (FieldDeclaration) location;
                             fieldDeclaration.bits |= ASTNode.HasLocalType;
@@ -1340,7 +1341,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 ConstructorDeclaration constructorDecl = new ConstructorDeclaration(unitDeclaration.compilationResult);
                 fixupSourceLocationsForConstructorDeclaration(constructorDecl, constructorNode);
                 constructorDecl.annotations = createAnnotations(constructorNode.getAnnotations());
-                constructorDecl.arguments = createArguments(constructorNode.getParameters(), false);
+                constructorDecl.arguments = createArguments(constructorNode.getParameters());
                 constructorDecl.modifiers = isEnum ? Flags.AccPrivate : getModifiers(constructorNode);
                 constructorDecl.selector = ctorName;
                 constructorDecl.thrownExceptions = createTypeReferencesForClassNodes(constructorNode.getExceptions());
@@ -1390,7 +1391,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                         continue;
                     }
 
-                    MethodDeclaration methodDecl = createMethodDeclaration(classNode, isEnum, methodNode);
+                    AbstractMethodDeclaration methodDecl = createMethodDeclaration(classNode, isEnum, methodNode);
                     methodDeclarations.add(methodDecl);
 
                     if (methodNode.isAbstract()) {
@@ -1398,7 +1399,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     }
                     if (methodNode.hasDefaultValue()) {
                         for (Argument[] variantArgs : getVariantsAllowingForDefaulting(methodNode.getParameters(), methodDecl.arguments)) {
-                            MethodDeclaration variantDecl = createMethodDeclaration(classNode, isEnum, methodNode);
+                            AbstractMethodDeclaration variantDecl = createMethodDeclaration(classNode, isEnum, methodNode);
                             variantDecl.arguments = variantArgs;
 
                             variantDecl.declarationSourceStart = 0;
@@ -1423,7 +1424,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         /**
          * Create a JDT {@link MethodDeclaration} that represents a Groovy {@link MethodNode}.
          */
-        private MethodDeclaration createMethodDeclaration(ClassNode classNode, boolean isEnum, MethodNode methodNode) {
+        private AbstractMethodDeclaration createMethodDeclaration(ClassNode classNode, boolean isEnum, MethodNode methodNode) {
             if (classNode.isAnnotationDefinition()) {
                 AnnotationMethodDeclaration methodDeclaration = new AnnotationMethodDeclaration(unitDeclaration.compilationResult);
                 methodDeclaration.annotations = createAnnotations(methodNode.getAnnotations());
@@ -1438,15 +1439,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 fixupSourceLocationsForMethodDeclaration(methodDeclaration, methodNode);
                 return methodDeclaration;
             } else {
-                MethodDeclaration methodDeclaration = new MethodDeclaration(unitDeclaration.compilationResult);
+                AbstractMethodDeclaration methodDeclaration = methodNode.isStaticConstructor()
+                    ? new Clinit(unitDeclaration.compilationResult) : new MethodDeclaration(unitDeclaration.compilationResult);
                 methodDeclaration.annotations = createAnnotations(methodNode.getAnnotations());
                 methodDeclaration.selector = methodNode.getName().toCharArray();
-                GenericsType[] generics = methodNode.getGenericsTypes();
-                if (generics != null && generics.length > 0) {
-                    methodDeclaration.typeParameters = createTypeParametersForGenerics(generics);
-                }
 
-                boolean isMain = false;
                 // Note: modifiers for the MethodBinding constructed for this declaration will be created marked with
                 // AccVarArgs if the bitset for the type reference in the final argument is marked IsVarArgs
                 int modifiers = getModifiers(methodNode);
@@ -1467,8 +1464,14 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     }
                 }
 
-                methodDeclaration.arguments = createArguments(params, isMain);
-                methodDeclaration.returnType = createTypeReferenceForClassNode(returnType);
+                methodDeclaration.arguments = createArguments(params);
+                if (methodDeclaration instanceof MethodDeclaration) {
+                    GenericsType[] generics = methodNode.getGenericsTypes();
+                    if (generics != null && generics.length > 0) {
+                        ((MethodDeclaration) methodDeclaration).typeParameters = createTypeParametersForGenerics(generics);
+                    }
+                    ((MethodDeclaration) methodDeclaration).returnType = createTypeReferenceForClassNode(returnType);
+                }
                 methodDeclaration.thrownExceptions = createTypeReferencesForClassNodes(methodNode.getExceptions());
                 fixupSourceLocationsForMethodDeclaration(methodDeclaration, methodNode);
                 return methodDeclaration;
@@ -1676,7 +1679,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         /**
          * Creates JDT Argument representations of Groovy parameters.
          */
-        private Argument[] createArguments(Parameter[] ps, boolean isMain) {
+        private Argument[] createArguments(Parameter[] ps) {
             if (ps == null || ps.length == 0) {
                 return null;
             }
@@ -2444,7 +2447,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         /**
          * Try to get the source locations for method declarations to be as correct as possible
          */
-        private void fixupSourceLocationsForMethodDeclaration(MethodDeclaration methodDecl, MethodNode methodNode) {
+        private void fixupSourceLocationsForMethodDeclaration(AbstractMethodDeclaration methodDecl, MethodNode methodNode) {
             Javadoc doc = findJavadoc(methodNode.getLineNumber());
             methodDecl.javadoc = doc;
 

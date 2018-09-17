@@ -1111,7 +1111,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "public class X {\n" +
             "  public X() {\n" +
             "  }\n" +
-            "  static void <clinit>() {\n" +
+            "  <clinit>() {\n" +
             "  }\n" +
             "}\n");
     }

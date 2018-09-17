@@ -316,12 +316,12 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                 visitClassReference(node.getUnresolvedSuperClass());
             }
 
-            // visit <clinit> body because this is where static field initializers
-            // are placed; only visit field initializers here -- it's important to
-            // get the right variable scope for the initializer to ensure that the
-            // field is one of the enclosing nodes
             MethodNode clinit = node.getMethod("<clinit>", NO_PARAMETERS);
             if (clinit != null && clinit.getCode() instanceof BlockStatement) {
+                // visit <clinit> body because this is where static field initializers
+                // are placed; only visit field initializers here -- it's important to
+                // get the right variable scope for the initializer to ensure that the
+                // field is one of the enclosing nodes
                 for (Statement element : ((BlockStatement) clinit.getCode()).getStatements()) {
                     // only visit the static initialization of a field
                     if (element instanceof ExpressionStatement && ((ExpressionStatement) element).getExpression() instanceof BinaryExpression) {
@@ -339,6 +339,9 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                             }
                         }
                     }
+                }
+                if (!node.isEnum()) {
+                    visitMethodInternal(clinit);
                 }
             }
 
