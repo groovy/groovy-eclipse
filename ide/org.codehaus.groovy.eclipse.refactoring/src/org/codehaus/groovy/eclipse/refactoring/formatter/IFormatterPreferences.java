@@ -37,5 +37,7 @@ public interface IFormatterPreferences {
 
     boolean isRemoveUnnecessarySemicolons();
 
+    boolean isCombineClosures();
+
     int getLongListLength();
 }

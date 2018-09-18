@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.refactoring.formatter;
 
 import static org.codehaus.groovy.eclipse.refactoring.PreferenceConstants.DEFAULT_BRACES_END;
 import static org.codehaus.groovy.eclipse.refactoring.PreferenceConstants.DEFAULT_BRACES_START;
+import static org.codehaus.groovy.eclipse.refactoring.PreferenceConstants.DEFAULT_COMBINE_CLOSURES;
 import static org.codehaus.groovy.eclipse.refactoring.PreferenceConstants.DEFAULT_INDENT_EMPTY_LINES;
 import static org.codehaus.groovy.eclipse.refactoring.PreferenceConstants.DEFAULT_INDENT_MULTILINE;
 import static org.codehaus.groovy.eclipse.refactoring.PreferenceConstants.DEFAULT_INDENT_SIZE;
@@ -67,6 +68,7 @@ public class FormatterPreferencesOnStore implements IFormatterPreferences {
     private boolean smartPaste;
     private boolean indentEmptyLines;
     private boolean removeUnnecessarySemicolons;
+    private boolean combineClosures;
     private int longListLength;
 
     ////////////////////////////////////////////////////
@@ -155,6 +157,17 @@ public class FormatterPreferencesOnStore implements IFormatterPreferences {
         if (pRemoveUnnecessarySemicolons != null) {
             removeUnnecessarySemicolons = pRemoveUnnecessarySemicolons.equals("true");
         }
+
+        combineClosures = DEFAULT_COMBINE_CLOSURES;
+        String pCombineClosures = preferences.getString(PreferenceConstants.GROOVY_FORMATTER_COMBINE_CLOSURES);
+        if (pCombineClosures != null) {
+            if (pCombineClosures.equals("true")) {
+                combineClosures = true;
+            } else if (pCombineClosures.equals("false")) {
+                combineClosures = false;
+            }
+        }
+
         longListLength = DEFAULT_LONG_LIST_LENGTH;
         int pLongListLength = preferences.getInt(PreferenceConstants.GROOVY_FORMATTER_LONG_LIST_LENGTH);
         if (pLongListLength > 0) {
@@ -210,6 +223,11 @@ public class FormatterPreferencesOnStore implements IFormatterPreferences {
     @Override
     public boolean isRemoveUnnecessarySemicolons() {
         return removeUnnecessarySemicolons;
+    }
+
+    @Override
+    public boolean isCombineClosures() {
+        return combineClosures;
     }
 
     @Override

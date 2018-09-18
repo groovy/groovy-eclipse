@@ -216,4 +216,22 @@ final class FormatterPreferencesTests extends GroovyEclipseTestSuite {
         formatPrefs = new FormatterPreferences(gunit)
         assert !formatPrefs.isRemoveUnnecessarySemicolons()
     }
+
+    /**
+     * Closure preferences should come from the preferences store used by the Groovy preferences page.
+     */
+    @Test
+    void testClosurePrefs() {
+        FormatterPreferencesPage preferencesPage = new FormatterPreferencesPage()
+        IPreferenceStore groovyPrefs = preferencesPage.getPreferenceStore()
+        assert groovyPrefs.contains(GROOVY_FORMATTER_COMBINE_CLOSURES) : 'Using the wrong preferences store?'
+
+        groovyPrefs.setValue(GROOVY_FORMATTER_COMBINE_CLOSURES, true)
+        FormatterPreferences formatPrefs = new FormatterPreferences(gunit)
+        assert formatPrefs.isCombineClosures()
+
+        groovyPrefs.setValue(GROOVY_FORMATTER_COMBINE_CLOSURES, false)
+        formatPrefs = new FormatterPreferences(gunit)
+        assert !formatPrefs.isCombineClosures()
+    }
 }

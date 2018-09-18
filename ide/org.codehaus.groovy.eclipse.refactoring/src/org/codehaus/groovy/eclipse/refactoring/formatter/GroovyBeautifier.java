@@ -108,7 +108,7 @@ public class GroovyBeautifier {
                     replaceNLSWithSpace(edits, posClStart, posParamDelim);
                 }
                 // combine closure with only one statments with less than 5 tokens to one line
-                if (codeblock.getStatements().size() == 1 && (posCLEnd - posClStart) < 10) {
+                if (preferences.isCombineClosures() && codeblock.getStatements().size() == 1 && (posCLEnd - posClStart) < 10) {
                     replaceNLSWithSpace(edits, posParamDelim, posCLEnd);
                     ignoreToken.add(formatter.getTokens().get(posCLEnd));
                 } else {

@@ -72,6 +72,9 @@ public class FormatterPreferencesPage extends FieldEditorOverlayPage implements 
         addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_FORMATTER_REMOVE_UNNECESSARY_SEMICOLONS,
                 "Remove unnecessary semicolons", getFieldEditorParent()));
 
+        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_FORMATTER_COMBINE_CLOSURES,
+                "Combine closures with only one statement to one line", getFieldEditorParent()));
+
         PreferenceLinkArea area = new PreferenceLinkArea(getFieldEditorParent(),
                 SWT.WRAP,
                 "org.eclipse.jdt.ui.preferences.CodeFormatterPreferencePage",

@@ -43,5 +43,6 @@ public class FormatterPreferenceInitializer extends AbstractPreferenceInitialize
         store.setDefault(PreferenceConstants.GROOVY_FORMATTER_LONG_LIST_LENGTH, PreferenceConstants.DEFAULT_LONG_LIST_LENGTH);
 
         store.setDefault(PreferenceConstants.GROOVY_FORMATTER_REMOVE_UNNECESSARY_SEMICOLONS, false);
+        store.setDefault(PreferenceConstants.GROOVY_FORMATTER_COMBINE_CLOSURES, PreferenceConstants.DEFAULT_COMBINE_CLOSURES);
     }
 }

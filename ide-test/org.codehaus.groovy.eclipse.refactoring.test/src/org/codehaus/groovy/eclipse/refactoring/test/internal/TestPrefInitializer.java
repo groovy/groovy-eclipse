@@ -107,6 +107,11 @@ public final class TestPrefInitializer {
             pref.setValue(PreferenceConstants.GROOVY_FORMATTER_REMOVE_UNNECESSARY_SEMICOLONS, removeUnnecessarySemicolons);
         }
 
+        String combineClosures = properties.get("combineClosures");
+        if (combineClosures != null) {
+            pref.setValue(PreferenceConstants.GROOVY_FORMATTER_COMBINE_CLOSURES, combineClosures);
+        }
+
         return pref;
     }
 }

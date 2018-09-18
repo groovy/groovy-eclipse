@@ -56,6 +56,8 @@ public class PreferenceConstants {
 
     public static final boolean DEFAULT_REMOVE_UNNECESSARY_SEMICOLONS = false;
 
+    public static final boolean DEFAULT_COMBINE_CLOSURES = true;
+
     public static final int DEFAULT_LONG_LIST_LENGTH = 30;
 
     public static final String P_PATH = "pathPreference";
@@ -77,6 +79,8 @@ public class PreferenceConstants {
 
 
     public static final String GROOVY_FORMATTER_REMOVE_UNNECESSARY_SEMICOLONS = "groovy.formatter.remove.unnecessary.semicolons";
+
+    public static final String GROOVY_FORMATTER_COMBINE_CLOSURES = "groovy.formatter.combine.closures";
 
     // Save Actions
     public static final String GROOVY_SAVE_ACTION_REMOVE_UNNECESSARY_SEMICOLONS = "groovy.SaveAction.RemoveUnnecessarySemicolons";
