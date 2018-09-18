@@ -147,58 +147,50 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
         }
     }
 
-    /*
-     * Not quite the right name for this method, because on an incremental build
-     * it will find BinaryTypeBindings for types that were SourceTypeBindings
-     * during the full build
-     */
-    public ClassNode lookupClassNodeForSource(String typename, JDTResolver jdtResolver) {
-        char[][] compoundName = CharOperation.splitOn('.', typename.toCharArray());
-        TypeBinding jdtBinding = null;
-        try {
-            jdtBinding = getType(compoundName, compoundName.length);
-        } catch (AbortCompilation t) {
-            if (t.silentException instanceof AbortIncrementalBuildException) {
-                jdtBinding = null;
-            } else {
-                throw t;
-            }
-        }
+    public ClassNode lookupClassNodeForBinary(String typeName, JDTResolver jdtResolver) {
+        char[][] compoundName = CharOperation.splitOn('.', typeName.toCharArray());
+        TypeBinding jdtBinding = getType(compoundName, compoundName.length);
 
-        if (jdtBinding instanceof SourceTypeBinding || jdtBinding instanceof BinaryTypeBinding) {
-            return jdtResolver.convertToClassNode(jdtBinding);
-        }
-
-        // FIXASC better to look it up properly as a member type rather than catch the problem and unwrap!
         if (jdtBinding instanceof ProblemReferenceBinding) {
             ProblemReferenceBinding prBinding = (ProblemReferenceBinding) jdtBinding;
             if (prBinding.problemId() == ProblemReasons.InternalNameProvided) {
                 jdtBinding = prBinding.closestMatch();
-                if (jdtBinding instanceof SourceTypeBinding || jdtBinding instanceof BinaryTypeBinding) {
-                    return jdtResolver.convertToClassNode(jdtBinding);
-                }
             }
         }
-
-        return null;
-    }
-
-    public ClassNode lookupClassNodeForBinary(String typename, JDTResolver jdtResolver) {
-        char[][] compoundName = CharOperation.splitOn('.', typename.toCharArray());
-        TypeBinding jdtBinding = getType(compoundName, compoundName.length);
 
         if (jdtBinding instanceof BinaryTypeBinding) {
             return jdtResolver.convertToClassNode(jdtBinding);
         }
 
+        return null;
+    }
+
+    /*
+     * Not quite the right name for this method, because on an incremental build
+     * it will find BinaryTypeBindings for types that were SourceTypeBindings
+     * during the full build.
+     */
+    public ClassNode lookupClassNodeForSource(String typeName, JDTResolver jdtResolver) {
+        char[][] compoundName = CharOperation.splitOn('.', typeName.toCharArray());
+        TypeBinding jdtBinding = null;
+        try {
+            jdtBinding = getType(compoundName, compoundName.length);
+        } catch (AbortCompilation t) {
+            if (!(t.silentException instanceof AbortIncrementalBuildException)) {
+                throw t;
+            }
+        }
+
         if (jdtBinding instanceof ProblemReferenceBinding) {
             ProblemReferenceBinding prBinding = (ProblemReferenceBinding) jdtBinding;
             if (prBinding.problemId() == ProblemReasons.InternalNameProvided) {
                 jdtBinding = prBinding.closestMatch();
-                if (jdtBinding instanceof BinaryTypeBinding) {
-                    return jdtResolver.convertToClassNode(jdtBinding);
-                }
             }
+        }
+
+        if ((jdtBinding instanceof SourceTypeBinding || jdtBinding instanceof BinaryTypeBinding) &&
+                (CharOperation.equals(compoundName, ((ReferenceBinding) jdtBinding).compoundName) || typeName.equals(jdtBinding.debugName()))) {
+            return jdtResolver.convertToClassNode(jdtBinding);
         }
 
         return null;

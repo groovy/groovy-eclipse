@@ -5935,6 +5935,29 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         "");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/708
+    public void testInnerClass4() {
+        runNegativeTest(new String[] {
+            "Script.groovy",
+            "import p.Sideways.Inner\n",
+
+            "p/Outer.groovy",
+            "package p\n" +
+            "class Outer {\n" +
+            "  static class Inner {\n" +
+            "  }\n" +
+            "}\n" +
+            "class Sideways extends Outer {\n" +
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in Script.groovy (at line 1)\n" +
+        "\timport p.Sideways.Inner\n" +
+        "\t       ^^^^^^^^^^^^^^^^\n" +
+        "Groovy:unable to resolve class p.Sideways.Inner\n" +
+        "----------\n");
+    }
+
     @Test
     public void testAnonymousInnerClass1() {
         runConformTest(new String[] {
