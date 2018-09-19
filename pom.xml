@@ -121,7 +121,7 @@
 				<repository>
 					<id>eclipse49</id>
 					<layout>p2</layout>
-					<url>http://download.eclipse.org/eclipse/updates/4.9milestones</url>
+					<url>http://download.eclipse.org/eclipse/updates/4.9</url>
 				</repository>
 			</repositories>
 			<modules>

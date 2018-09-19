@@ -74,13 +74,13 @@
       label="Target Platform">
     <choice
         value="2018-09"
-        label="Eclipse 2018-09 - 4.9"/>
+        label="Eclipse 4.9 (2018-09)"/>
     <choice
         value="Photon"
-        label="Eclipse Photon - 4.8"/>
+        label="Eclipse 4.8 (Photon)"/>
     <choice
         value="Oxygen"
-        label="Eclipse Oxygen - 4.7"/>
+        label="Eclipse 4.7 (Oxygen)"/>
     <description>Choose the compatibility level of the target platform</description>
   </setupTask>
   <setupTask
@@ -119,7 +119,7 @@
   </setupTask>
   <setupTask
       xsi:type="setup.p2:P2Task"
-      filter="(| (scope.product.version.name=2018-09) (scope.product.version.name=latest))">
+      filter="(| (scope.product.version.name=2018-09) (scope.product.version.name=latest) (scope.product.version.name=latest.released))">
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
@@ -127,7 +127,7 @@
   </setupTask>
   <setupTask
       xsi:type="setup.p2:P2Task"
-      filter="(| (scope.product.version.name=photon) (scope.product.version.name=latest.released))">
+      filter="(scope.product.version.name=photon)">
     <requirement
         name="org.codehaus.groovy.m2eclipse.feature.feature.group"/>
     <repository
@@ -237,7 +237,7 @@
         <repository
             url="http://download.eclipse.org/releases/2018-09"/>
         <repository
-            url="http://download.eclipse.org/eclipse/updates/4.9milestone"/>
+            url="http://download.eclipse.org/eclipse/updates/4.9"/>
       </repositoryList>
       <repositoryList
           name="Photon">
