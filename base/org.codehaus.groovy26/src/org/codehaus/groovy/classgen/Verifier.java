@@ -856,11 +856,10 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                 }
                 addPropertyMethod(newMethod);
                 // GRECLIPSE add
-                // make sure it is known that this is a variant of another method
-                newMethod.setSourcePosition(method);
-                newMethod.setNameStart(method.getNameStart());
-                newMethod.setNameEnd(method.getNameEnd());
                 newMethod.setOriginal(method);
+                newMethod.setSourcePosition(method);
+                newMethod.setNameEnd(method.getNameEnd());
+                newMethod.setNameStart(method.getNameStart());
                 // GRECLIPSE end
                 newMethod.setGenericsTypes(method.getGenericsTypes());
                 newMethod.putNodeMetaData(DEFAULT_PARAMETER_GENERATED, true);

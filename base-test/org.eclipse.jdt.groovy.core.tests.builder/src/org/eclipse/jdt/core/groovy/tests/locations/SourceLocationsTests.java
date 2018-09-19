@@ -85,9 +85,9 @@ public final class SourceLocationsTests extends BuilderTestSuite {
                 assertEquals(0, range.getOffset());
                 assertEquals(0, range.getLength());
 
-                range = variant.getNameRange();
-                assertEquals(0, range.getOffset());
-                assertEquals(0, range.getLength());
+                range = variant.getNameRange(); // should match original
+                assertEquals(((IMethod) children[i]).getNameRange().getOffset(), range.getOffset());
+                assertEquals(((IMethod) children[i]).getNameRange().getLength(), range.getLength());
 
                 // TODO: variant.getJavadocRange() should match original
 

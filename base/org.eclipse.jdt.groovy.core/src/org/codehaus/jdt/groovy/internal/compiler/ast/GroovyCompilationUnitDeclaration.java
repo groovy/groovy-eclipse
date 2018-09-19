@@ -1405,8 +1405,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                             variantDecl.declarationSourceStart = 0;
                             variantDecl.declarationSourceEnd = -1;
                             variantDecl.modifiersSourceStart = 0;
-                            variantDecl.sourceStart = 0;
-                            variantDecl.sourceEnd = -1;
+                            // preserve sourceStart/sourceEnd
                             variantDecl.bodyStart = 0;
                             variantDecl.bodyEnd = -1;
 
