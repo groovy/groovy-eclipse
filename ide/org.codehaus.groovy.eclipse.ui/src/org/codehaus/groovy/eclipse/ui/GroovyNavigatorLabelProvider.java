@@ -21,11 +21,15 @@ import org.codehaus.groovy.eclipse.ui.decorators.GroovyPluginImages;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jdt.groovy.core.util.ContentTypeUtils;
+import org.eclipse.jdt.ui.ProblemsLabelDecorator;
+import org.eclipse.jface.viewers.ILabelDecorator;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.swt.graphics.Image;
 
 public class GroovyNavigatorLabelProvider implements ILabelProvider {
+
+    protected ILabelDecorator labelDecorator = new ProblemsLabelDecorator(getImageDescriptorRegistry());
 
     @Override
     public void addListener(ILabelProviderListener listener) {
@@ -42,7 +46,7 @@ public class GroovyNavigatorLabelProvider implements ILabelProvider {
     @Override
     public Image getImage(Object element) {
         if (element instanceof GroovyCompilationUnit) {
-            return newGroovySourceImage();
+            return labelDecorator.decorateImage(newGroovySourceImage(), element);
         }
 
         boolean isGradle = false;
@@ -67,13 +71,13 @@ public class GroovyNavigatorLabelProvider implements ILabelProvider {
         return true;
     }
 
-    private static Image newGradleScriptImage() {
+    protected static Image newGradleScriptImage() {
         return getImageDescriptorRegistry().get(
             // Gradle files are a special case; image should be from Buildship plugin if it's present otherwise use Groovy's
             GroovyPluginImages.DESC_GRADLE_FILE != null ? GroovyPluginImages.DESC_GRADLE_FILE : GroovyPluginImages.DESC_GROOVY_FILE);
     }
 
-    private static Image newGroovySourceImage() {
+    protected static Image newGroovySourceImage() {
         return getImageDescriptorRegistry().get(GroovyPluginImages.DESC_GROOVY_FILE);
     }
 }
