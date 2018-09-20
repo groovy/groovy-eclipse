@@ -4862,6 +4862,9 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
         checkGCUDeclaration("Good.groovy",
             "public enum Good {\n" +
             "  A() {\n" +
+            "    x() {\n" +
+            "      super();\n" +
+            "    }\n" +
             "    public @Override int foo() {\n" +
             "    }\n" +
             "  },\n" +

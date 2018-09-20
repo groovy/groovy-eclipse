@@ -1,24 +1,20 @@
 package p;
 
-import groovy.transform.CompileStatic;
-
-@CompileStatic
 enum A {
 
   ONE() {
     @Override
-    String foo() {
+    String getFoo() {
       'bar'
     }
   },
 
   TWO() {
     @Override
-    String foo() {
+    String getFoo() {
       'baz'
     }
   }
 
-  String foo() {
-  }
+  abstract String getFoo()
 }

@@ -5,14 +5,14 @@ import groovy.transform.CompileStatic;
 @CompileStatic
 enum A {
 
-  A() {
+  ONE() {
     @Override
     String getFoo() {
       'bar'
     }
   },
 
-  B() {
+  TWO() {
     @Override
     String getFoo() {
       'baz'

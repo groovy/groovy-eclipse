@@ -1,8 +1,5 @@
 package p;
 
-import groovy.transform.CompileStatic;
-
-@CompileStatic
 enum A {
 
   ONE() {
@@ -19,6 +16,5 @@ enum A {
     }
   }
 
-  String foo() {
-  }
+  abstract String foo()
 }

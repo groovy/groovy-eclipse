@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,16 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.test.rename
 
+import static org.eclipse.jdt.internal.core.refactoring.descriptors.RefactoringSignatureDescriptorFactory.createRenameJavaElementDescriptor
+
 import org.codehaus.groovy.eclipse.refactoring.test.RefactoringTestSuite
+import org.codehaus.jdt.groovy.model.JavaCoreUtil
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IMethod
 import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.core.refactoring.IJavaRefactorings
 import org.eclipse.jdt.core.refactoring.descriptors.RenameJavaElementDescriptor
-import org.eclipse.jdt.internal.core.refactoring.descriptors.RefactoringSignatureDescriptorFactory
 import org.eclipse.ltk.core.refactoring.RefactoringCore
 import org.junit.Ignore
 import org.junit.Test
@@ -34,123 +36,130 @@ final class RenameMethodTests extends RefactoringTestSuite {
         'RenameMethod/'
     }
 
-    private void runTest(String typeName, String methodName, String newMethodName, List<String> signatures, boolean updateReferences, boolean createDelegate) {
-        ICompilationUnit cu = createCUfromTestFile(packageP, 'A')
-        IType classA = getType(cu, typeName)
-        if (classA == null) {
-            classA = cu.getJavaProject().findType(typeName)
+    private void runTest(String typeName, String methodName, String newMethodName, List<String> paramSignatures = Collections.EMPTY_LIST,
+            boolean updateReferences = true, boolean createDelegate = false, boolean deprecateDelegate = true) {
+        ICompilationUnit unit = createCUfromTestFile(packageP, 'A')
+        IType type = getType(unit, typeName)
+        if (type == null) {
+            type = JavaCoreUtil.findType(typeName, unit)
         }
-        IMethod method = classA.getMethod(methodName, signatures as String[])
-        RenameJavaElementDescriptor descriptor = RefactoringSignatureDescriptorFactory.createRenameJavaElementDescriptor(IJavaRefactorings.RENAME_METHOD)
-        descriptor.setUpdateReferences(updateReferences)
-        descriptor.setJavaElement(method)
-        descriptor.setNewName(newMethodName)
-        descriptor.setKeepOriginal(createDelegate)
-        descriptor.setDeprecateDelegate(true)
+        IMethod method = type.getMethod(methodName, paramSignatures as String[])
+
+        RenameJavaElementDescriptor descriptor = createRenameJavaElementDescriptor(IJavaRefactorings.RENAME_METHOD)
+        descriptor.deprecateDelegate = deprecateDelegate
+        descriptor.javaElement = method
+        descriptor.keepOriginal = createDelegate
+        descriptor.newName = newMethodName
+        descriptor.updateReferences = updateReferences
 
         assert performRefactoring(descriptor) == null : 'was supposed to pass'
-        assertEqualLines('invalid renaming', getFileContents(getOutputTestFileName('A')), cu.getSource())
+        assertEqualLines('invalid renaming', getFileContents(getOutputTestFileName('A')), unit.source)
 
         assert RefactoringCore.getUndoManager().anythingToUndo() : 'anythingToUndo'
         assert !RefactoringCore.getUndoManager().anythingToRedo() : '! anythingToRedo'
-        //assert Refactoring.getUndoManager().getRefactoringLog().size() == 1 : '1 to undo'
 
         RefactoringCore.getUndoManager().performUndo(null, new NullProgressMonitor())
-        assertEqualLines('invalid undo', getFileContents(getInputTestFileName('A')), cu.getSource())
+        assertEqualLines('invalid undo', getFileContents(getInputTestFileName('A')), unit.source)
 
         assert !RefactoringCore.getUndoManager().anythingToUndo() : '! anythingToUndo'
         assert RefactoringCore.getUndoManager().anythingToRedo() : 'anythingToRedo'
-        //assert Refactoring.getUndoManager().getRedoStack().size() == 1 : '1 to redo'
 
         RefactoringCore.getUndoManager().performRedo(null, new NullProgressMonitor())
-        assertEqualLines('invalid redo', getFileContents(getOutputTestFileName('A')), cu.getSource())
+        assertEqualLines('invalid redo', getFileContents(getOutputTestFileName('A')), unit.source)
     }
 
     // NOTE: Test method names are matched to test case data stored externally
 
     @Test
     void test1() {
-        runTest('A', 'm', 'k', [], true, false)
+        runTest('A', 'm', 'k')
     }
 
     @Test
     void test2() {
-        runTest('A', 'm', 'k', [], true, false)
+        runTest('A', 'm', 'k')
     }
 
     @Test
     void test3() {
-        runTest('A', 'm', 'k', ['QD;'], true, false)
+        runTest('A', 'm', 'k', ['QD;'])
     }
 
     @Test
     void test4() {
-        runTest('A', 'm', 'k', [], true, false)
+        runTest('A', 'm', 'k')
     }
 
     @Test
     void test5() {
-        runTest('A', 'm', 'k', [], true, false)
+        runTest('A', 'm', 'k')
     }
 
     @Test
     void test6() {
-        runTest('A', 'm', 'k', [], true, false)
+        runTest('A', 'm', 'k')
     }
 
     @Test
     void test7() {
-        runTest('A', 'm', 'k', [], true, false)
+        runTest('A', 'm', 'k')
     }
 
     @Test
     void test8() {
-        runTest('B', 'm', 'k', [], true, false)
+        runTest('B', 'm', 'k')
     }
 
     @Test
     void test9() {
-        runTest('A', 'm', 'k', [], true, false)
+        runTest('A', 'm', 'k')
     }
 
     @Test
     void test10() {
-        createCU(packageP.parent.createPackageFragment('o', true, null), 'Other.java', 'package o;\npublic class Other { public static int FOO() { return 0; }\n }')
+        createCU(packageP.parent.createPackageFragment('o', true, null), 'Other.java',
+            'package o;\npublic class Other { public static int FOO() { return 0; }\n }')
 
-        runTest('o.Other', 'FOO', 'BAR', [], true, false)
+        runTest('o.Other', 'FOO', 'BAR')
     }
 
     @Test
     void testAnonOverrides() {
-        // rename I.run() to I.sam() and anon. inners in A should change
-        runTest('I', 'run', 'sam', [], true, false);
+        // rename I.run() to sam() and anon. inners in A should change
+        runTest('I', 'run', 'sam')
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/389
     void testEnumOverrides() {
-        // rename A.getFoo() to A.foo() and enum constant overrides should change
-        runTest('A', 'getFoo', 'foo', [], true, false)
+        // rename A.getFoo() to foo() and enum constant overrides should change
+        runTest('A', 'getFoo', 'foo')
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/390
     void testEnumOverrides2() {
-        // rename A.getFoo() to A.foo() and enum constant overrides should change
-        runTest('A', 'getFoo', 'foo', [], true, false)
+        // rename A.getFoo() to foo() and enum constant overrides should change
+        runTest('A', 'getFoo', 'foo')
+    }
+
+    @Test @Ignore('Need to get ref to method in enum const') // https://github.com/groovy/groovy-eclipse/issues/389
+    void testEnumOverrides3() {
+        // rename A.ONE.getFoo() to foo() and enum constant overrides should change
+        runTest('A$1', 'getFoo', 'foo')
     }
 
     @Test
     void testInitializer1() {
-        runTest('A', 'm', 'k', [], true, false)
+        runTest('A', 'm', 'k')
     }
 
     @Test
     void testInitializer2() {
-        runTest('A', 'm', 'k', [], true, false)
+        runTest('A', 'm', 'k')
     }
 
     @Test
     void testInitializer3() {
-        runTest('A', 'm', 'k', [], true, false)
+        runTest('A', 'm', 'k')
     }
 
     // org.codehaus.jdt.groovy.internal.compiler.ast.GroovyTypeDeclaration#parseMethods was set to no-op and so no bodies avail for refactor

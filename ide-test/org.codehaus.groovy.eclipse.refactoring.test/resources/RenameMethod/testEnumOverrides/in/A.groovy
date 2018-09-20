@@ -5,12 +5,13 @@ enum A {
 	ONE() {
 		@Override
 		String getFoo() {
+			"bar"
 		}
 	},
 	TWO() {
 		@Override
 		String getFoo() {
-			"bar"
+			"baz"
 		}
 	}
 

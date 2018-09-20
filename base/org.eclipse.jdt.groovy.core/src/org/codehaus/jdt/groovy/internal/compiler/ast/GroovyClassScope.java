@@ -15,6 +15,8 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
+import static org.eclipse.jdt.internal.compiler.ast.AbstractVariableDeclaration.ENUM_CONSTANT;
+
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,6 +35,8 @@ import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.Argument;
+import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.QualifiedAllocationExpression;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
 import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
@@ -43,6 +47,7 @@ import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.lookup.ImportBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LazilyResolvedMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
+import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
@@ -361,11 +366,18 @@ public class GroovyClassScope extends ClassScope {
         }
 
         for (GroovyTypeDeclaration anonType : ((GroovyTypeDeclaration) referenceContext).getAnonymousTypes()) {
-            if (anonType.scope == null) {
-                if (anonType.getClassNode().isEnum()) {
-                    anonType.scope = buildClassScope(anonType.enclosingScope.get(), anonType);
-                } else {
-                    anonType.allocation.resolveType(anonType.enclosingScope.get());
+            if (anonType.scope == null && !anonType.getClassNode().isEnum()) {
+                anonType.allocation.resolveType(anonType.enclosingScope.get());
+            }
+        }
+
+        for (FieldDeclaration field : referenceContext.fields) {
+            if (field.getKind() == ENUM_CONSTANT && field.initialization instanceof QualifiedAllocationExpression) {
+                QualifiedAllocationExpression initialization = (QualifiedAllocationExpression) field.initialization;
+                if (initialization.anonymousType != null && initialization.anonymousType.scope == null) { // unresolved enum const body
+                    MethodScope scope = (field.isStatic() ? referenceContext.staticInitializerScope : referenceContext.initializerScope);
+                    if (field.binding.type == null) field.binding.type = scope.enclosingSourceType();
+                    field.resolve(scope);
                 }
             }
         }
