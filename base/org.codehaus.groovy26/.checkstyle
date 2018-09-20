@@ -41,6 +41,7 @@
         <file-match-pattern match-pattern="groovy/ast/expr/StaticMethodCallExpression.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/ast/stmt/EmptyStatement.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/AnnotationVisitor.java" include-pattern="false" />
+        <file-match-pattern match-pattern="groovy/classgen/AsmClassGenerator.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/ClassCompletionVerifier.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/EnumVisitor.java" include-pattern="false" />
         <file-match-pattern match-pattern="groovy/classgen/ExtendedVerifier.java" include-pattern="false" />
