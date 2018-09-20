@@ -321,10 +321,10 @@ abstract class CompletionTestSuite extends GroovyEclipseTestSuite {
     }
 
     protected void assertProposalSignature(ICompletionProposal proposal, String expected) {
-        String actual = proposal.getDisplayString()
+        String actual = proposal.displayString
         int descrSeparator = actual.indexOf('-')
         if (descrSeparator != -1) {
-            actual = actual.substring(0, descrSeparator).trim();
+            actual = actual.substring(0, descrSeparator).trim()
         }
         assertEquals(expected, actual)
     }

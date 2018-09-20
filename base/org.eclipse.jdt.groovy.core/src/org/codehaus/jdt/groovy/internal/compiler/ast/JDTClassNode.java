@@ -69,12 +69,12 @@ import org.eclipse.jdt.internal.compiler.lookup.LazilyResolvedMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
 import org.eclipse.jdt.internal.compiler.lookup.MemberTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
-import org.eclipse.jdt.internal.compiler.lookup.MethodVerifier;
 import org.eclipse.jdt.internal.compiler.lookup.ParameterizedTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.RawTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SyntheticMethodBinding;
+import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
@@ -258,17 +258,16 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                         addMethod(mNode);
                     }
                 }
-            } else if (jdtBinding instanceof SourceTypeBinding) {
+            } else if (jdtBinding instanceof SourceTypeBinding && (jdtBinding.tagBits & TagBits.HasMissingType) == 0) {
                 SourceTypeBinding jdtSourceTypeBinding = (SourceTypeBinding) jdtBinding;
-                ClassScope classScope = jdtSourceTypeBinding.scope;
-                // a null scope indicates it has already been 'cleaned up' so nothing to do (CUDeclaration.cleanUp())
-                if (classScope != null) {
-                    CompilationUnitScope cuScope = classScope.compilationUnitScope();
-                    LookupEnvironment environment = classScope.environment();
-                    MethodVerifier verifier = environment.methodVerifier();
-                    cuScope.verifyMethods(verifier);
-                }
                 if (jdtSourceTypeBinding.isPrototype()) {
+                    ClassScope classScope = jdtSourceTypeBinding.scope;
+                    // a null scope indicates it has already been 'cleaned up' so nothing to do (CUDeclaration.cleanUp())
+                    if (classScope != null) {
+                        CompilationUnitScope cuScope = classScope.compilationUnitScope();
+                        LookupEnvironment environment = classScope.environment();
+                        cuScope.verifyMethods(environment.methodVerifier());
+                    }
                     // Synthetic bindings are created for features like covariance, where the method implementing an interface method uses a
                     // different return type (interface I { A foo(); } class C implements I { AA foo(); } - this needs a method 'A foo()' in C.
                     SyntheticMethodBinding[] syntheticMethodBindings = jdtSourceTypeBinding.syntheticMethods();
@@ -315,8 +314,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
                 modifiers |= Flags.AccAbstract;
             }
 
-            ClassNode returnType = methodBinding.returnType != null ?
-                resolver.convertToClassNode(methodBinding.returnType) : ClassHelper.DYNAMIC_TYPE;
+            ClassNode returnType = methodBinding.returnType != null ? resolver.convertToClassNode(methodBinding.returnType) : ClassHelper.DYNAMIC_TYPE;
 
             Parameter[] parameters = makeParameters(methodBinding.parameters, methodBinding.parameterNames);
 

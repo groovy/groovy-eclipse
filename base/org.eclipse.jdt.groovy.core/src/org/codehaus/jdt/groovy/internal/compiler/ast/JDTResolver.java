@@ -362,7 +362,6 @@ public class JDTResolver extends ResolveVisitor {
     protected boolean resolveToOuter(ClassNode type) {
         if (activeScope != null) {
             // ask the JDT for a binary or source type, visible from this scope
-            /*node = activeScope.lookupClassNodeForBinary(type.getName(), this);*/
             char[][] compoundName = CharOperation.splitOn('.', type.getName().toCharArray());
             TypeBinding jdtBinding = null;
             try {
