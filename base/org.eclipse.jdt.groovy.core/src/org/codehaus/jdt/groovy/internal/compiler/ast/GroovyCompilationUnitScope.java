@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.codehaus.groovy.ast.ClassNode;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
@@ -27,7 +26,6 @@ import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
-import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.Binding;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
@@ -41,8 +39,6 @@ import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
-import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
-import org.eclipse.jdt.internal.core.builder.AbortIncrementalBuildException;
 import org.eclipse.jdt.internal.core.builder.NameEnvironment;
 
 /**
@@ -145,55 +141,6 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
                 }
             }
         }
-    }
-
-    public ClassNode lookupClassNodeForBinary(String typeName, JDTResolver jdtResolver) {
-        char[][] compoundName = CharOperation.splitOn('.', typeName.toCharArray());
-        TypeBinding jdtBinding = getType(compoundName, compoundName.length);
-
-        if (jdtBinding instanceof ProblemReferenceBinding) {
-            ProblemReferenceBinding prBinding = (ProblemReferenceBinding) jdtBinding;
-            if (prBinding.problemId() == ProblemReasons.InternalNameProvided) {
-                jdtBinding = prBinding.closestMatch();
-            }
-        }
-
-        if (jdtBinding instanceof BinaryTypeBinding) {
-            return jdtResolver.convertToClassNode(jdtBinding);
-        }
-
-        return null;
-    }
-
-    /*
-     * Not quite the right name for this method, because on an incremental build
-     * it will find BinaryTypeBindings for types that were SourceTypeBindings
-     * during the full build.
-     */
-    public ClassNode lookupClassNodeForSource(String typeName, JDTResolver jdtResolver) {
-        char[][] compoundName = CharOperation.splitOn('.', typeName.toCharArray());
-        TypeBinding jdtBinding = null;
-        try {
-            jdtBinding = getType(compoundName, compoundName.length);
-        } catch (AbortCompilation t) {
-            if (!(t.silentException instanceof AbortIncrementalBuildException)) {
-                throw t;
-            }
-        }
-
-        if (jdtBinding instanceof ProblemReferenceBinding) {
-            ProblemReferenceBinding prBinding = (ProblemReferenceBinding) jdtBinding;
-            if (prBinding.problemId() == ProblemReasons.InternalNameProvided) {
-                jdtBinding = prBinding.closestMatch();
-            }
-        }
-
-        if ((jdtBinding instanceof SourceTypeBinding || jdtBinding instanceof BinaryTypeBinding) &&
-                (CharOperation.equals(compoundName, ((ReferenceBinding) jdtBinding).compoundName) || typeName.equals(jdtBinding.debugName()))) {
-            return jdtResolver.convertToClassNode(jdtBinding);
-        }
-
-        return null;
     }
 
     @Override

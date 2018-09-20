@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import groovy.lang.GroovyClassLoader;
-
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.control.CompilationFailedException;
@@ -39,8 +37,16 @@ import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
 import org.eclipse.jdt.internal.compiler.ast.SingleTypeReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction;
+import org.eclipse.jdt.internal.compiler.lookup.BinaryTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.MissingTypeBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
+import org.eclipse.jdt.internal.compiler.lookup.ProblemReferenceBinding;
+import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
+import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
+import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
+import org.eclipse.jdt.internal.core.builder.AbortIncrementalBuildException;
 
 /**
  * An extension to the standard groovy ResolveVisitor that can ask JDT for types when groovy cannot find them. A groovy project in
@@ -329,21 +335,7 @@ public class JDTResolver extends ResolveVisitor {
         if (DEBUG) {
             log("resolveFromCompileUnit", type, foundit);
         }
-        if (foundit) {
-            return true;
-        }
-        if (activeScope != null) {
-            // Ask JDT for a source file, visible from this scope
-            ClassNode node = activeScope.lookupClassNodeForSource(type.getName(), this);
-            if (DEBUG) {
-                log("resolveFromCompileUnit (jdt) ", type, node != null);
-            }
-            if (node != null) {
-                type.setRedirect(node);
-                return true;
-            }
-        }
-        return false;
+        return foundit;
     }
 
     @Override
@@ -368,9 +360,34 @@ public class JDTResolver extends ResolveVisitor {
 
     @Override
     protected boolean resolveToOuter(ClassNode type) {
-        ClassNode node;
         if (activeScope != null) {
-            node = activeScope.lookupClassNodeForBinary(type.getName(), this);
+            // ask the JDT for a binary or source type, visible from this scope
+            /*node = activeScope.lookupClassNodeForBinary(type.getName(), this);*/
+            char[][] compoundName = CharOperation.splitOn('.', type.getName().toCharArray());
+            TypeBinding jdtBinding = null;
+            try {
+                jdtBinding = activeScope.getType(compoundName, compoundName.length); // TODO: Use getImport(char[][], boolean, boolean) in some cases?
+            } catch (AbortCompilation t) {
+                if (!(t.silentException instanceof AbortIncrementalBuildException)) {
+                    throw t;
+                }
+            }
+            if (jdtBinding instanceof ProblemReferenceBinding) {
+                ProblemReferenceBinding prBinding = (ProblemReferenceBinding) jdtBinding;
+                if (prBinding.problemId() == ProblemReasons.InternalNameProvided) {
+                    jdtBinding = prBinding.closestMatch();
+                } else if (prBinding.problemId() == ProblemReasons.NotFound &&
+                    prBinding.closestMatch() instanceof MissingTypeBinding && currImportNode != null && currImportNode.isStar()) {
+                    MissingTypeBinding mtBinding = (MissingTypeBinding) prBinding.closestMatch();
+                    mtBinding.fPackage.knownTypes.put(compoundName[compoundName.length - 1], null);
+                }
+            }
+
+            ClassNode node = null;
+            if ((jdtBinding instanceof BinaryTypeBinding || jdtBinding instanceof SourceTypeBinding) &&
+                    (CharOperation.equals(compoundName, ((ReferenceBinding) jdtBinding).compoundName) || type.getName().equals(jdtBinding.debugName()))) {
+                node = convertToClassNode(jdtBinding);
+            }
             if (DEBUG) {
                 log("resolveToOuter (jdt)", type, node != null);
             }
@@ -379,23 +396,17 @@ public class JDTResolver extends ResolveVisitor {
                 return true;
             }
         }
+
         // Rudimentary grab support - if the compilation unit has our special classloader and as grab has occurred, try and find the class through it
-        GroovyClassLoader loader = compilationUnit.getClassLoader();
-        if (loader instanceof GrapeAwareGroovyClassLoader) {
-            GrapeAwareGroovyClassLoader gagcl = (GrapeAwareGroovyClassLoader) loader;
-            if (gagcl.grabbed) {
-                Class<?> cls;
+        if (compilationUnit.getClassLoader() instanceof GrapeAwareGroovyClassLoader) {
+            GrapeAwareGroovyClassLoader loader = (GrapeAwareGroovyClassLoader) compilationUnit.getClassLoader();
+            if (loader.grabbed) {
                 try {
-                    cls = loader.loadClass(type.getName(), false, true);
-                } catch (ClassNotFoundException | CompilationFailedException e) {
-                    return false;
+                    Class<?> cls = loader.loadClass(type.getName(), false, true);
+                    type.setRedirect(ClassHelper.make(cls));
+                    return true;
+                } catch (ClassNotFoundException | CompilationFailedException ignore) {
                 }
-                if (cls == null) {
-                    return false;
-                }
-                node = ClassHelper.make(cls);
-                type.setRedirect(node);
-                return true;
             }
         }
         return false;

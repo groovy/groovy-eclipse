@@ -111,7 +111,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     private final Set<String> resolutionFailedCache = new HashSet<String>();
     // GRECLIPSE end
     private boolean checkingVariableTypeInDeclaration = false;
-    private ImportNode currImportNode = null;
+    // GRECLIPSE private->protected
+    protected ImportNode currImportNode;
     private MethodNode currentMethod;
     private ClassNodeResolver classNodeResolver;
 
@@ -1505,6 +1506,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             */
             for (ImportNode importNode : module.getStarImports()) {
                 if (importNode.getEnd() > 0) {
+                    currImportNode = importNode;
                     String importName = importNode.getPackageName();
                     importName = importName.substring(0, importName.length()-1);
                     ClassNode type = ClassHelper.makeWithoutCaching(importName);
@@ -1513,6 +1515,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                         type.setStart(importNode.getStart() + 7);
                         type.setEnd(type.getStart() + importName.length());
                     }
+                    currImportNode = null;
                 }
             }
             // GRECLIPSE end
