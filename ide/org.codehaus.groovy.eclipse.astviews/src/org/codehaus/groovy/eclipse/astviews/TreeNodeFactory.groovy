@@ -22,6 +22,7 @@ import groovy.transform.PackageScope
 
 import org.codehaus.groovy.GroovyBugError
 import org.codehaus.groovy.ast.ASTNode
+import org.codehaus.groovy.ast.ClassNode
 
 @PackageScope class TreeNodeFactory {
 
@@ -115,23 +116,38 @@ import org.codehaus.groovy.ast.ASTNode
 
 @PackageScope class DefaultTreeNode extends TreeNode {
     ITreeNode[] loadChildren() {
-        Collection<ITreeNode> children = Arrays.asList(value.class.methods).findResults { Method method ->
-            if (method.name =~ /^(is|get|redirect)/ && method.parameterTypes.length == 0) {
-                String name = method.name
-                if (name.startsWith('is')) {
-                    name = Introspector.decapitalize(name.substring(2))
-                } else if (name.startsWith('get')) {
-                    name = Introspector.decapitalize(name.substring(3))
-                }
-                try {
-                    return TreeNodeFactory.createTreeNode(this, value."${method.name}"(), name)
-                } catch (GroovyBugError | ClassCastException | NullPointerException ignore) {
-                }
+        List<Method> methods = Arrays.asList(value.class.methods).findAll { Method method ->
+            method.name =~ /^(is|get|redirect)/ && method.parameterTypes.length == 0 && method.declaringClass.name != 'java.lang.Object'
+        }
+        // remove some redundant methods
+        if (value instanceof ClassNode) {
+            methods = methods.findAll { Method method ->
+                !(method.name ==~ 'get(AbstractMethods|AllDeclaredMethods|AllInterfaces|FieldIndex|Module|PlainNodeReference)')
+            }
+        }
+        if (value instanceof ASTNode) {
+            methods = methods.findAll { Method method ->
+                !(method.name ==~ 'getMetaDataMap')
+            }
+        }
+
+        Collection<ITreeNode> children = methods.findResults { Method method ->
+            String name = method.name
+            if (name.startsWith('is')) {
+                name = Introspector.decapitalize(name.substring(2))
+            } else if (name.startsWith('get')) {
+                name = Introspector.decapitalize(name.substring(3))
+            }
+            try {
+                Object value = this.value."${method.name}"()
+                if (name != 'text' || !(value =~ /^<not implemented .*/))
+                    return TreeNodeFactory.createTreeNode(this, value, name)
+            } catch (GroovyBugError | ClassCastException | NullPointerException ignore) {
             }
             return null
         }
 
-        return children as ITreeNode[]
+        return (children as ITreeNode[]).sort(true) { it.displayName }
     }
 }
 
