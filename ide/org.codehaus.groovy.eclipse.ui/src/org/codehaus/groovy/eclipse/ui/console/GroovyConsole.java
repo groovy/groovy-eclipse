@@ -118,7 +118,7 @@ public class GroovyConsole extends TextConsole {
                 } else if (type.equals(TraceCategory.DSL.label)) {
                     color = Display.getDefault().getSystemColor(SWT.COLOR_MAGENTA);
                 } else {
-                    color = registry.get(JFacePreferences.INFORMATION_FOREGROUND_COLOR);
+                    color = registry.get(/*JFacePreferences.INFORMATION_FOREGROUND_COLOR*/"org.eclipse.ui.workbench.INFORMATION_FOREGROUND");
                 }
                 return new StyleRange(offset, length, color, null);
             }).toArray(StyleRange[]::new);
