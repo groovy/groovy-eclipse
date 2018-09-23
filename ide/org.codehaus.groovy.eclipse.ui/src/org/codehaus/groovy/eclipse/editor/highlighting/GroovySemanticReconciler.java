@@ -103,6 +103,7 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
     // make these configurable
     private Object mapKeyHighlighting;
     private Object tagKeyHighlighting;
+    private Object stringRefHighlighting;
     private Object numberRefHighlighting;
     private Object regexpRefHighlighting;
     private Object commentRefHighlighting;
@@ -145,8 +146,9 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
 
         mapKeyHighlighting = newHighlightingStyle(stringColor);
         tagKeyHighlighting = newHighlightingStyle(tagKeyColor, loadStyleFrom(prefs, ANNOTATION_HIGHLIGHT_PREFERENCE));
+        stringRefHighlighting = newHighlightingStyle(stringColor, loadStyleFrom(prefs, STRING_HIGHLIGHT_PREFERENCE));
         numberRefHighlighting = newHighlightingStyle(numberColor, loadStyleFrom(prefs, NUMBER_HIGHLIGHT_PREFERENCE));
-        regexpRefHighlighting = newHighlightingStyle(stringColor, SWT.ITALIC | loadStyleFrom(prefs, STRING_HIGHLIGHT_PREFERENCE));
+        regexpRefHighlighting = newHighlightingStyle(stringColor, loadStyleFrom(prefs, STRING_HIGHLIGHT_PREFERENCE) | SWT.ITALIC);
         commentRefHighlighting = newHighlightingStyle(commentColor);
         keywordRefHighlighting = newHighlightingStyle(keywordColor, loadStyleFrom(prefs, KEYWORD_HIGHLIGHT_PREFERENCE));
         reservedRefHighlighting = newHighlightingStyle(reservedColor, loadStyleFrom(prefs, RESERVED_HIGHLIGHT_PREFERENCE));
@@ -332,6 +334,9 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
             break;
         case NUMBER:
             style = numberRefHighlighting;
+            break;
+        case STRING:
+            style = stringRefHighlighting;
             break;
         case REGEXP:
             style = regexpRefHighlighting;

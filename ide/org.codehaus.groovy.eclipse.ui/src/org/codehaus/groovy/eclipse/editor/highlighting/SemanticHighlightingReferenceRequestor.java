@@ -15,6 +15,8 @@
  */
 package org.codehaus.groovy.eclipse.editor.highlighting;
 
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.last;
+
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -378,42 +380,41 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
     }
 
     private HighlightedTypedPosition handleConstantExpression(ConstantExpression expr) {
-        int offset = expr.getStart(),
-            length = expr.getLength();
-
-        HighlightedTypedPosition pos = null;
-        if (!lastGString.includes(offset)) {
-            if (isNumber(expr.getType())) {
-                pos = new HighlightedTypedPosition(offset, length, HighlightKind.NUMBER);
-            } else if (offset < unitLength() && expr.getEnd() <= unitLength()) {
-                // check for /.../ or $/.../$ form of string literal (usually a regex literal)
-                boolean slashy = contents[offset] == '/' && contents[expr.getEnd() - 1] == '/';
-                boolean dollar = !slashy && contents[offset] == '$' && contents[offset + 1] == '/' &&
-                        contents[expr.getEnd() - 2] == '/' && contents[expr.getEnd() - 1] == '$';
-                if (slashy || dollar) {
-                    pos = new HighlightedTypedPosition(offset, length, HighlightKind.REGEXP);
-                }
-            }
+        if (isNumber(expr.getType())) {
+            return new HighlightedTypedPosition(expr.getStart(), expr.getLength(), HighlightKind.NUMBER);
+        } else if (!lastGString.includes(expr.getStart()) && isSlashy(expr)) {
+            return new HighlightedTypedPosition(expr.getStart(), expr.getLength(), HighlightKind.REGEXP);
         }
-        return pos;
+        return null;
     }
 
     private HighlightedTypedPosition handleGStringExpression(GStringExpression expr) {
-        int offset = expr.getStart(),
-            length = expr.getLength();
-
         // save to help deal with forthcoming ConstantExpression nodes
-        lastGString = new Position(offset, length);
+        lastGString = new Position(expr.getStart(), expr.getLength());
 
-        // check for slashy form of GString
-        if (expr.getEnd() <= unitLength()) {
-            String source = String.valueOf(contents, offset, length);
-            if ((source.startsWith("/") && source.endsWith("/")) ||
-                    (source.startsWith("$/") && source.endsWith("/$"))) {
-                return new HighlightedTypedPosition(lastGString, HighlightKind.REGEXP);
+        boolean isSlashy = isSlashy(expr);
+        boolean isTriple = !isSlashy && isTriple(expr);
+        int pre = (isTriple ? 3 : (contents[expr.getStart()] == '$' ? 2 : 1));
+
+        for (ConstantExpression string : expr.getStrings()) {
+            int offset = string.getStart() + pre,
+                length = string.getLength() - pre;
+            if (string != last(expr.getStrings())) {
+                pre = (contents[offset + length - 1] == '{' ? 2 : 1);
+            } else {
+                pre = (isTriple ? 3 : (contents[expr.getStart()] == '$' ? 2 : 1));
             }
+            length -= pre; // adjust for trailing "$" or "${" or end quote(s)
+
+            if (length > 0 && lastGString.includes(offset + length)) {
+                typedPositions.add(new HighlightedTypedPosition(offset, length,
+                        isSlashy ? HighlightKind.REGEXP : HighlightKind.STRING));
+            }
+
+            pre -= 1; // prepare for leading "" or "}"
         }
-        return null;
+
+        return new HighlightedTypedPosition(lastGString, HighlightKind.GROOVY_CALL);
     }
 
     private HighlightedTypedPosition handleMapEntryExpression(MapEntryExpression expr) {
@@ -454,5 +455,26 @@ public class SemanticHighlightingReferenceRequestor extends SemanticReferenceReq
             }
         }
         return true;
+    }
+
+    private boolean isSlashy(Expression expr) {
+        if (expr.getStart() < expr.getEnd() && expr.getEnd() <= unitLength()) {
+            // check for /.../ or $/.../$ form of string literal (usually a regex literal)
+            boolean slashy = contents[expr.getStart()] == '/' && contents[expr.getEnd() - 1] == '/';
+            boolean dollar = !slashy && contents[expr.getStart()] == '$' && contents[expr.getStart() + 1] == '/' &&
+                                        contents[expr.getEnd() - 2] == '/' && contents[expr.getEnd() - 1] == '$';
+            if (slashy || dollar) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isTriple(Expression expr) {
+        if (expr.getStart() < expr.getEnd() && expr.getEnd() <= unitLength()) {
+            String source = String.valueOf(contents, expr.getStart(), expr.getLength());
+            return source.startsWith("\"\"\"");
+        }
+        return false;
     }
 }

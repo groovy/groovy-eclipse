@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.test.ui
 
+import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.GROOVY_CALL as GSTRING
 import static org.codehaus.groovy.eclipse.editor.highlighting.HighlightedTypedPosition.HighlightKind.*
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isParrotParser
 import static org.junit.Assert.assertEquals
@@ -1150,23 +1151,47 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     }
 
     @Test
-    void testGStringThisAndSuper() {
+    void testGStringThisAndSuper1() {
         // except when appearing within a GString
         String contents = '''\
             "this: $this, super: $super"
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('this:'), 6, STRING),
+            new HighlightedTypedPosition(contents.indexOf('$this') + 1, 4, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf(', super: '), 9, STRING),
+            new HighlightedTypedPosition(contents.indexOf('$super') + 1, 5, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('"'), '"this: $this, super: $super"'.length(), GSTRING))
+    }
+
+    @Test
+    void testGStringThisAndSuper2() {
+        String contents = '''\
             "this: ${this}, super: ${super}"
+            '''.stripIndent()
+
+        assertHighlighting(contents,
+            new HighlightedTypedPosition(contents.indexOf('this:'), 6, STRING),
+            new HighlightedTypedPosition(contents.indexOf('${this}') + 2, 4, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf(', super: '), 9, STRING),
+            new HighlightedTypedPosition(contents.indexOf('${super}') + 2, 5, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('"'), '"this: ${this}, super: ${super}"'.length(), GSTRING))
+    }
+
+    @Test
+    void testGStringThisAndSuper3() {
+        String contents = '''\
             "${this.hashCode()}, ${super.hashCode()}"
             '''.stripIndent()
 
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('$this') + 1, 4, KEYWORD),
-            new HighlightedTypedPosition(contents.indexOf('$super') + 1, 5, KEYWORD),
-            new HighlightedTypedPosition(contents.indexOf('${this}') + 2, 4, KEYWORD),
-            new HighlightedTypedPosition(contents.indexOf('${super}') + 2, 5, KEYWORD),
-            new HighlightedTypedPosition(contents.indexOf('${this.') + 2, 4, KEYWORD),
-            new HighlightedTypedPosition(contents.indexOf('${super.') + 2, 5, KEYWORD),
+            new HighlightedTypedPosition(contents.indexOf('this'), 4, KEYWORD),
             new HighlightedTypedPosition(contents.indexOf('hashCode'), 'hashCode'.length(), METHOD_CALL),
-            new HighlightedTypedPosition(contents.lastIndexOf('hashCode'), 'hashCode'.length(), METHOD_CALL))
+            new HighlightedTypedPosition(contents.indexOf(', '), 2, STRING),
+            new HighlightedTypedPosition(contents.indexOf('super'), 5, KEYWORD),
+            new HighlightedTypedPosition(contents.lastIndexOf('hashCode'), 'hashCode'.length(), METHOD_CALL),
+            new HighlightedTypedPosition(contents.indexOf('"'), '"${this.hashCode()}, ${super.hashCode()}"'.length(), GSTRING))
     }
 
     @Test
@@ -1435,8 +1460,11 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('j)'), 1, PARAMETER),
             new HighlightedTypedPosition(contents.indexOf('k;'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('$i') + 1, 1, FIELD),
+            new HighlightedTypedPosition(contents.indexOf(' + '), 3, STRING),
             new HighlightedTypedPosition(contents.indexOf('$j') + 1, 1, PARAMETER),
-            new HighlightedTypedPosition(contents.indexOf('$k') + 1, 1, VARIABLE))
+            new HighlightedTypedPosition(contents.lastIndexOf(' + '), 3, STRING),
+            new HighlightedTypedPosition(contents.indexOf('$k') + 1, 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('"'), '"$i + $j + $k"'.length(), GSTRING))
     }
 
     @Test
@@ -1457,8 +1485,11 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('j)'), 1, PARAMETER),
             new HighlightedTypedPosition(contents.indexOf('k;'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('i}'), 1, FIELD),
+            new HighlightedTypedPosition(contents.indexOf(' + '), 3, STRING),
             new HighlightedTypedPosition(contents.indexOf('j}'), 1, PARAMETER),
-            new HighlightedTypedPosition(contents.indexOf('k}'), 1, VARIABLE))
+            new HighlightedTypedPosition(contents.lastIndexOf(' + '), 3, STRING),
+            new HighlightedTypedPosition(contents.indexOf('k}'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('"'), '"${i} + ${j} + ${k}"'.length(), GSTRING))
     }
 
     @Test
@@ -1467,7 +1498,10 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         assertHighlighting(contents,
             new HighlightedTypedPosition(contents.indexOf('a'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('b'), 1, VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('$a') + 1, 1, VARIABLE))
+            new HighlightedTypedPosition(contents.indexOf('/'), 1, STRING),
+            new HighlightedTypedPosition(contents.indexOf('$a') + 1, 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('/b/c'), '/b/c'.length(), STRING),
+            new HighlightedTypedPosition(contents.indexOf('"'), '"/$a/b/c"'.length(), GSTRING))
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/511
@@ -1477,9 +1511,12 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             def url = "/${encode('head','UTF-8')}/tail"
             '''.stripIndent()
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('url'), 3, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('encode'), 'encode'.length(), DEPRECATED),
-            new HighlightedTypedPosition(contents.lastIndexOf('encode'), 'encode'.length(), STATIC_CALL))
+            new HighlightedTypedPosition(contents.indexOf('url'), 3, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('/'), '/'.length(), STRING),
+            new HighlightedTypedPosition(contents.lastIndexOf('encode'), 'encode'.length(), STATIC_CALL),
+            new HighlightedTypedPosition(contents.indexOf('/tail'), '/tail'.length(), STRING),
+            new HighlightedTypedPosition(contents.indexOf('"'), '"/${encode(\'head\',\'UTF-8\')}/tail"'.length(), GSTRING))
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/511
@@ -1492,9 +1529,12 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             }
             '''.stripIndent()
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('url'), 3, FIELD),
             new HighlightedTypedPosition(contents.indexOf('encode'), 'encode'.length(), DEPRECATED),
-            new HighlightedTypedPosition(contents.lastIndexOf('encode'), 'encode'.length(), STATIC_CALL))
+            new HighlightedTypedPosition(contents.indexOf('url'), 3, FIELD),
+            new HighlightedTypedPosition(contents.indexOf('/'), '/'.length(), STRING),
+            new HighlightedTypedPosition(contents.lastIndexOf('encode'), 'encode'.length(), STATIC_CALL),
+            new HighlightedTypedPosition(contents.indexOf('/tail'), '/tail'.length(), STRING),
+            new HighlightedTypedPosition(contents.indexOf('"'), '"/${encode(\'head\',\'UTF-8\')}/tail"'.length(), GSTRING))
     }
 
     @Test
@@ -1531,7 +1571,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('a'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('/a/'), 3, REGEXP),
             new HighlightedTypedPosition(contents.indexOf('b'), 1, VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('/$'), '/$a/'.length(), REGEXP),
+            new HighlightedTypedPosition(contents.indexOf('/$'), '/$a/'.length(), GSTRING),
             new HighlightedTypedPosition(contents.lastIndexOf('a'), 1, VARIABLE))
     }
 
@@ -1542,7 +1582,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('a'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('/a/'), 3, REGEXP),
             new HighlightedTypedPosition(contents.indexOf('b'), 1, VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('/$'), '/${a}/'.length(), REGEXP),
+            new HighlightedTypedPosition(contents.indexOf('/$'), '/${a}/'.length(), GSTRING),
             new HighlightedTypedPosition(contents.lastIndexOf('a'), 1, VARIABLE))
     }
 
@@ -1550,35 +1590,35 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
     void testSlashyString5() {
         String contents = '/\\/with slash/'
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('/\\/with slash/'), '/\\/with slash/'.length(), REGEXP))
+            new HighlightedTypedPosition(contents.indexOf('/'), '/\\/with slash/'.length(), REGEXP))
     }
 
     @Test
     void testSlashyString6() {
         String contents = '/with slash\\//'
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('/with slash\\//'), '/with slash\\//'.length(), REGEXP))
+            new HighlightedTypedPosition(contents.indexOf('/'), '/with slash\\//'.length(), REGEXP))
     }
 
     @Test
     void testMultiLineSlashyString1() {
         String contents = '$/\nSlashy String\n/$'
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('$/\nSlashy String\n/$'), '$/\nSlashy String\n/$'.length(), REGEXP))
+            new HighlightedTypedPosition(contents.indexOf('$/'), '$/\nSlashy String\n/$'.length(), REGEXP))
     }
 
     @Test
     void testMultiLineSlashyString2() {
         String contents = '$/\nSlashy$ String\n/$'
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('$/\nSlashy$ String\n/$'), '$/\nSlashy$ String\n/$'.length(), REGEXP))
+            new HighlightedTypedPosition(contents.indexOf('$/'), '$/\nSlashy$ String\n/$'.length(), REGEXP))
     }
 
     @Test
     void testMultiLineSlashyString3() {
         String contents = '$/\nSlashy String$\n/$'
         assertHighlighting(contents,
-            new HighlightedTypedPosition(contents.indexOf('$/\nSlashy String$\n/$'), '$/\nSlashy String$\n/$'.length(), REGEXP))
+            new HighlightedTypedPosition(contents.indexOf('$/'), '$/\nSlashy String$\n/$'.length(), REGEXP))
     }
 
     @Test
@@ -1588,8 +1628,10 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('a'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('/a/'), 3, REGEXP),
             new HighlightedTypedPosition(contents.indexOf('b'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('$/') + 2, 1, REGEXP),
             new HighlightedTypedPosition(contents.lastIndexOf('a'), 1, VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('$/'), '$/\n${a}$\n/$'.length(), REGEXP))
+            new HighlightedTypedPosition(contents.indexOf('${a}') + 4, 2, REGEXP),
+            new HighlightedTypedPosition(contents.indexOf('$/'), '$/\n${a}$\n/$'.length(), GSTRING))
     }
 
     @Test
@@ -1599,8 +1641,10 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('a'), 1, VARIABLE),
             new HighlightedTypedPosition(contents.indexOf('/a/'), 3, REGEXP),
             new HighlightedTypedPosition(contents.indexOf('b'), 1, VARIABLE),
+            new HighlightedTypedPosition(contents.indexOf('$/') + 2, 1, REGEXP),
             new HighlightedTypedPosition(contents.lastIndexOf('a'), 1, VARIABLE),
-            new HighlightedTypedPosition(contents.indexOf('$/'), '$/\n$a$\n/$'.length(), REGEXP))
+            new HighlightedTypedPosition(contents.indexOf('$a') + 2, 2, REGEXP),
+            new HighlightedTypedPosition(contents.indexOf('$/'), '$/\n$a$\n/$'.length(), GSTRING))
     }
 
     @Test
@@ -2471,9 +2515,13 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
             new HighlightedTypedPosition(contents.indexOf('method'), 6, METHOD),
             new HighlightedTypedPosition(contents.indexOf('param'), 5, PARAMETER),
             new HighlightedTypedPosition(contents.lastIndexOf('field'), 5, FIELD),
+            new HighlightedTypedPosition(contents.lastIndexOf('field') + 5, 1, STRING),
             new HighlightedTypedPosition(contents.lastIndexOf('param'), 5, PARAMETER),
+            new HighlightedTypedPosition(contents.lastIndexOf('param') + 5, 1, STRING),
             new HighlightedTypedPosition(contents.lastIndexOf('property'), 8, FIELD),
-            new HighlightedTypedPosition(contents.lastIndexOf('unknown'), 7, UNKNOWN))
+            new HighlightedTypedPosition(contents.lastIndexOf('property') + 8, 1, STRING),
+            new HighlightedTypedPosition(contents.lastIndexOf('unknown'), 7, UNKNOWN),
+            new HighlightedTypedPosition(contents.indexOf('"'), '"$field $param $property $unknown"'.length(), GSTRING))
     }
 
     @Test
@@ -2507,6 +2555,7 @@ final class SemanticHighlightingTests extends GroovyEclipseTestSuite {
         def references = new GatherSemanticReferences(
             addGroovySource(contents, "Highlighting${++counter}"))
         references.factory = new TypeInferencingVisitorFactory() {
+            @Override
             TypeInferencingVisitorWithRequestor createVisitor(GroovyCompilationUnit gcu) {
                 def visitor = super.createVisitor(gcu)
                 visitor.DEBUG = true // enable checks
