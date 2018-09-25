@@ -24,6 +24,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 import groovy.transform.Field;
@@ -139,6 +140,7 @@ public class OrganizeGroovyImports {
                 // However, this leads to GRECLIPSE-1390 where imports are no longer reordered and sorted.
                 Iterable<ImportNode> allImports = GroovyUtils.getAllImportNodes(info.module);
                 ImportRewrite rewriter = CodeStyleConfiguration.createImportRewrite(unit, !isSafeToReorganize(allImports));
+                Function<ImportNode, ImportRewriteContext> context = imp -> imp.getEnd() > 0 ? FORCE_RETENTION : rewriter.getDefaultImportRewriteContext();
 
                 for (ImportNode imp : allImports) {
                     if (imp.isStar()) {
@@ -156,8 +158,7 @@ public class OrganizeGroovyImports {
                                 importsSlatedForRemoval.put(className, imp);
                             } else {
                                 String fullName = className + " as " + imp.getAlias();
-                                rewriter.addImport(fullName, imp.getEnd() > 0 ? FORCE_RETENTION
-                                    : rewriter.getDefaultImportRewriteContext());
+                                rewriter.addImport(fullName, context.apply(imp));
                                 importsSlatedForRemoval.put(fullName, imp);
                             }
                         } else {
@@ -165,7 +166,7 @@ public class OrganizeGroovyImports {
                                 rewriter.addStaticImport(className, imp.getFieldName(), true);
                                 importsSlatedForRemoval.put(className + '.' + imp.getFieldName(), imp);
                             } else {
-                                rewriter.addStaticImport(className, imp.getFieldName() + " as " + imp.getAlias(), true);
+                                rewriter.addStaticImport(className, imp.getFieldName() + " as " + imp.getAlias(), true, context.apply(imp));
                                 importsSlatedForRemoval.put(className + '.' + imp.getFieldName() + " as " + imp.getAlias(), imp);
                             }
                         }

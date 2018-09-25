@@ -1277,25 +1277,6 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test // GRECLIPSE-1392
-    void testDefaultImport4() {
-        // test that aliased default import not removed
-        String originalContents = '''\
-            import java.util.List as LL
-            import groovy.util.Proxy as PP
-            LL
-            PP
-            '''
-        String expectedContents = '''\
-            import java.util.List as LL
-
-            import groovy.util.Proxy as PP
-            LL
-            PP
-            '''
-        doContentsCompareTest(originalContents, expectedContents)
-    }
-
-    @Test // GRECLIPSE-1392
     void testDefaultImport5() {
         // test that static import whose container is default is not removed
         String contents = '''\

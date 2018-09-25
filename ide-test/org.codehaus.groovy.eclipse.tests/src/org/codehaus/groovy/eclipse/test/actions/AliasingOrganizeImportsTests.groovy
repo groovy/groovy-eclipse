@@ -32,7 +32,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainTypeAlias() {
+    void testRetainTypeAlias1() {
         String contents = '''\
             import org.w3c.dom.Node as N
             N x
@@ -78,7 +78,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainAlias6() {
+    void testRetainTypeAlias6() {
         createGroovyType 'a.b.c.d', 'E', '''\
             interface E { interface F { interface G { String H = 'I' } } }
             '''
@@ -90,7 +90,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainAlias6a() {
+    void testRetainTypeAlias6a() {
         createGroovyType 'a.b.c.d', 'E', '''\
             interface E { interface F { interface G { String H = 'I' } } }
             '''
@@ -102,7 +102,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainAlias6b() {
+    void testRetainTypeAlias6b() {
         createGroovyType 'a.b.c.d', 'E', '''\
             interface E { interface F { interface G { String H = 'I' } } }
             '''
@@ -114,7 +114,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainAlias6c() {
+    void testRetainTypeAlias6c() {
         createGroovyType 'a.b.c.d', 'E', '''\
             interface E { interface F { interface G { String H = 'I' } } }
             '''
@@ -126,7 +126,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainAlias7() {
+    void testRetainTypeAlias7() {
         createGroovyType 'a.b.c.d', 'E', '''\
             interface E { interface F { interface G { String H = 'I' } } }
             '''
@@ -138,7 +138,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainAlias7a() {
+    void testRetainTypeAlias7a() {
         createGroovyType 'a.b.c.d', 'E', '''\
             interface E { interface F { interface G { String H = 'I' } } }
             '''
@@ -150,7 +150,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainAlias7b() {
+    void testRetainTypeAlias7b() {
         createGroovyType 'a.b.c.d', 'E', '''\
             interface E { interface F { interface G { String H = 'I' } } }
             '''
@@ -162,7 +162,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainAlias8() {
+    void testRetainTypeAlias8() {
         createGroovyType 'a.b.c.d', 'E', '''\
             interface E { interface F { interface G { String H = 'I' } } }
             '''
@@ -174,7 +174,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainAlias8a() {
+    void testRetainTypeAlias8a() {
         createGroovyType 'a.b.c.d', 'E', '''\
             interface E { interface F { interface G { String H = 'I' } } }
             '''
@@ -186,7 +186,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRemoveTypeAlias() {
+    void testRemoveTypeAlias1() {
         String originalContents = '''\
             import org.w3c.dom.Node as N
             def x
@@ -198,7 +198,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRemoveTypeAlias1() {
+    void testRemoveTypeAlias2() {
         String originalContents = '''\
             import java.util.List as L
             def x
@@ -210,7 +210,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainInnerTypeAlias() {
+    void testRetainInnerTypeAlias1() {
         String contents = '''\
             import java.util.Map.Entry as E
             E x
@@ -228,7 +228,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRemoveInnerTypeAlias() {
+    void testRemoveInnerTypeAlias1() {
         String originalContents = '''\
             import java.util.Map.Entry as E
             def x
@@ -240,7 +240,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainStaticAlias() {
+    void testRetainStaticAlias1() {
         String contents = '''\
             import static java.lang.Math.PI as Pie
             def x = Pie
@@ -321,8 +321,22 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
         doContentsCompareTest(contents)
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/731
+    void testRetainStaticAlias8() {
+        addJavaSource('enum E { ONE, TWO; }', 'E', 'p')
+
+        String contents = '''\
+            import static p.E.*
+            import static p.E.ONE as WON
+            ONE
+            TWO
+            WON
+            '''
+        doContentsCompareTest(contents)
+    }
+
     @Test
-    void testRemoveStaticAlias() {
+    void testRemoveStaticAlias1() {
         String originalContents = '''\
             import static java.lang.Math.PI as P
             def x
@@ -358,7 +372,25 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRetainAnnotatedStaticAlias() {
+    void testRemoveStaticAlias4() {
+        addJavaSource('enum E { ONE, TWO; }', 'E', 'p')
+
+        String originalContents = '''\
+            import static p.E.*
+            import static p.E.ONE as UNUSED
+            ONE
+            TWO
+            '''
+        String expectedContents = '''\
+            import static p.E.*
+            ONE
+            TWO
+            '''
+        doContentsCompareTest(originalContents, expectedContents)
+    }
+
+    @Test
+    void testRetainAnnotatedStaticAlias1() {
         String contents = '''\
             @Deprecated
             import static java.lang.Math.PI as P
@@ -380,7 +412,7 @@ final class AliasingOrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test // STS-3314
-    void testMultiAliasing() {
+    void testMultiAliasing1() {
         String contents = '''\
             import javax.xml.soap.Node as SoapNode
 
