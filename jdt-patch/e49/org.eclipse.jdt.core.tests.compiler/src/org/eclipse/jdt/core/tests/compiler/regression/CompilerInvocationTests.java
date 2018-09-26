@@ -1,9 +1,12 @@
 /*******************************************************************************
  * Copyright (c) 2006, 2018 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
+ *
+ * This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -111,12 +114,15 @@ public void test001_irritant_warning_token() {
 			}
 		}
 	}
+	// Add one for "preview", which doesn't have any irritant at the moment
+	matcher.put("preview", "preview");
 	String [] allTokens = CompilerOptions.warningTokens;
 	int length = allTokens.length;
 	matcher.put("all", "all"); // all gets undetected in the From/To loop
 	assertEquals(allTokens.length, matcher.size());
 	for (int i = 0; i < length; i++) {
-		assertNotNull(matcher.get(allTokens[i]));
+		Object object = matcher.get(allTokens[i]);
+		assertNotNull(object);
 	}
 }
 
@@ -1152,6 +1158,7 @@ public void test011_problem_categories() {
 		expectedProblemAttributes.put("UsingTerminallyDeprecatedSinceVersionPackage", new ProblemAttributes(CategorizedProblem.CAT_MODULE));
 		expectedProblemAttributes.put("UsingTerminallyDeprecatedSinceVersionType", new ProblemAttributes(CategorizedProblem.CAT_DEPRECATION));
 		expectedProblemAttributes.put("UsingTerminallyDeprecatedSinceVersionType", new ProblemAttributes(CategorizedProblem.CAT_DEPRECATION));
+		expectedProblemAttributes.put("VarCannotBeMixedWithNonVarParams", new ProblemAttributes(CategorizedProblem.CAT_SYNTAX));
 		expectedProblemAttributes.put("VarIsNotAllowedHere", new ProblemAttributes(CategorizedProblem.CAT_SYNTAX));
 		expectedProblemAttributes.put("VarIsReserved", new ProblemAttributes(CategorizedProblem.CAT_SYNTAX));
 		expectedProblemAttributes.put("VarIsReservedInFuture", new ProblemAttributes(CategorizedProblem.CAT_SYNTAX));
@@ -2085,6 +2092,7 @@ public void test012_compiler_problems_tuning() {
 		expectedProblemAttributes.put("IllegalArrayOfUnionType", SKIP);
 		expectedProblemAttributes.put("IllegalArrayTypeInIntersectionCast", SKIP);
 		expectedProblemAttributes.put("ProblemNotAnalysed", SKIP);
+		expectedProblemAttributes.put("VarCannotBeMixedWithNonVarParams", SKIP);
 		expectedProblemAttributes.put("VarIsNotAllowedHere", SKIP);
 		expectedProblemAttributes.put("VarIsReserved", SKIP);
 		expectedProblemAttributes.put("VarIsReservedInFuture", SKIP);

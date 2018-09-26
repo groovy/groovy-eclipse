@@ -203,6 +203,8 @@ public class CompilerOptions {
 	public static final String OPTION_ReportAPILeak = "org.eclipse.jdt.core.compiler.problem.APILeak"; //$NON-NLS-1$
 	public static final String OPTION_ReportUnstableAutoModuleName = "org.eclipse.jdt.core.compiler.problem.unstableAutoModuleName";   //$NON-NLS-1$
 
+	public static final String OPTION_EnablePreviews = "org.eclipse.jdt.core.compiler.problem.EnablePreviews"; //$NON-NLS-1$
+
 	// GROOVY add
 	// This first one is the MASTER OPTION and if null, rather than ENABLED or DISABLED then the compiler will abort
 	// FIXASC (M3) aborting is just a short term action to enable us to ensure the right paths into the compiler configure it
@@ -232,6 +234,7 @@ public class CompilerOptions {
 	public static final String VERSION_1_8 = "1.8"; //$NON-NLS-1$
 	public static final String VERSION_9 = "9"; //$NON-NLS-1$
 	public static final String VERSION_10 = "10"; //$NON-NLS-1$
+	public static final String VERSION_11 = "11"; //$NON-NLS-1$
 	public static final String ERROR = "error"; //$NON-NLS-1$
 	public static final String WARNING = "warning"; //$NON-NLS-1$
 	public static final String INFO = "info"; //$NON-NLS-1$
@@ -534,6 +537,9 @@ public class CompilerOptions {
 	/** Not directly configurable, derived from other options by LookupEnvironment.usesNullTypeAnnotations() */
 	public Boolean useNullTypeAnnotations = null;
 
+	/** Master flag to enabled/disable all preview features */
+	public boolean enablePreviewFeatures;
+
 	// keep in sync with warningTokenToIrritant and warningTokenFromIrritant
 	public final static String[] warningTokens = {
 		"all", //$NON-NLS-1$
@@ -564,6 +570,7 @@ public class CompilerOptions {
 		"unlikely-arg-type", //$NON-NLS-1$
 		"unqualified-field-access", //$NON-NLS-1$
 		"unused", //$NON-NLS-1$
+		"preview", //$NON-NLS-1$
 	};
 
 	/**
@@ -773,7 +780,8 @@ public class CompilerOptions {
 	}
 
 	public static String versionFromJdkLevel(long jdkLevel) {
-		switch ((int)(jdkLevel>>16)) {
+		int major = (int)(jdkLevel>>16);
+		switch (major) {
 			case ClassFileConstants.MAJOR_VERSION_1_1 :
 				if (jdkLevel == ClassFileConstants.JDK1_1)
 					return VERSION_1_1;
@@ -814,28 +822,22 @@ public class CompilerOptions {
 				if (jdkLevel == ClassFileConstants.JDK10)
 					return VERSION_10;
 				break;
+			default:
+				if(major > ClassFileConstants.MAJOR_VERSION_10) {
+					return "" + (major - ClassFileConstants.MAJOR_VERSION_0); //$NON-NLS-1$
+				} 
+				return  Util.EMPTY_STRING; // unknown version
+				
 		}
 		return Util.EMPTY_STRING; // unknown version
 	}
 
 	public static long releaseToJDKLevel(String release) {
 		if (release != null && release.length() > 0) {
-			switch(release.charAt(0)) {
-				case '6':
-					return ClassFileConstants.JDK1_6;
-				case '7':
-					return ClassFileConstants.JDK1_7;
-				case '8':
-					return ClassFileConstants.JDK1_8;
-				case '9':
-					return ClassFileConstants.JDK9;
-				case '1':
-					if (release.length() > 1 && release.charAt(1) == '0')
-						return ClassFileConstants.JDK10;
-					else 
-						return 0;
-				default:
-					return 0; // unknown
+			int major = Integer.parseInt(release) + ClassFileConstants.MAJOR_VERSION_0;
+			if (major <= ClassFileConstants.MAJOR_LATEST_VERSION) {
+				long jdkLevel = ((long) major << 16) + ClassFileConstants.MINOR_VERSION_0;
+				return jdkLevel;
 			}
 		}
 		return 0;
@@ -866,19 +868,22 @@ public class CompilerOptions {
 						return 0; // unknown
 				}
 			} else {
-				switch (version.charAt(0)) {
-					case '9':
-						return ClassFileConstants.JDK9;
-					case '1':
-						if (version.length() > 1 && version.charAt(1) == '0') {
-							return ClassFileConstants.JDK10; // Level for JDK 10
-						} else {
-							int versionAfterTen = Integer.parseInt("" + version.charAt(1)); //$NON-NLS-1$
-							int majorVersion = ClassFileConstants.MAJOR_VERSION_10 + versionAfterTen;
-							long jdkLevel = ((long)majorVersion << 16) + ClassFileConstants.MINOR_VERSION_0;
-							return jdkLevel;
-						}
-					// No default - let it go through the remaining checks.
+				try {
+					int index = version.indexOf('.');
+					if (index != -1) {
+						version = version.substring(0, index);
+					} else {
+						index = version.indexOf('-');
+						if (index != -1)
+							version = version.substring(0, index);
+					}
+					int major = Integer.parseInt(version) + ClassFileConstants.MAJOR_VERSION_0;
+					if (major <= ClassFileConstants.MAJOR_LATEST_VERSION) {
+						long jdkLevel = ((long) major << 16) + ClassFileConstants.MINOR_VERSION_0;
+						return jdkLevel;
+					}
+				} catch (NumberFormatException e) {
+					// do nothing and return 0 at the end
 				}
 			}
 		}
@@ -1163,6 +1168,11 @@ public class CompilerOptions {
 				if ("null".equals(warningToken)) //$NON-NLS-1$
 					return IrritantSet.NULL;
 				break;
+			case 'p' :
+				if ("preview".equals(warningToken)) { //$NON-NLS-1$
+					return IrritantSet.PREVIEW;
+				}
+				break;
 			case 'r' :
 				if ("rawtypes".equals(warningToken)) //$NON-NLS-1$
 					return IrritantSet.RAW;
@@ -1349,6 +1359,7 @@ public class CompilerOptions {
 		optionsMap.put(OPTION_ReportUnlikelyEqualsArgumentType, getSeverityString(UnlikelyEqualsArgumentType));
 		optionsMap.put(OPTION_ReportAPILeak, getSeverityString(APILeak));
 		optionsMap.put(OPTION_ReportUnstableAutoModuleName, getSeverityString(UnstableAutoModuleName));
+		optionsMap.put(OPTION_EnablePreviews, this.enablePreviewFeatures ? ENABLED : DISABLED);
 		return optionsMap;
 	}
 
@@ -1547,6 +1558,7 @@ public class CompilerOptions {
 		this.reportMissingEnumCaseDespiteDefault = false;
 
 		this.complainOnUninternedIdentityComparison = false;
+		this.enablePreviewFeatures = false;
 	}
 
 	public void set(Map<String, String> optionsMap) {
@@ -1625,6 +1637,9 @@ public class CompilerOptions {
 		if ((optionValue = optionsMap.get(OPTION_TargetPlatform)) != null) {
 			long level = versionToJdkLevel(optionValue);
 			if (level != 0) {
+				if (this.enablePreviewFeatures) {
+					level |= ClassFileConstants.MINOR_VERSION_PREVIEW;
+				}
 				this.targetJDK = level;
 			}
 			if (this.targetJDK >= ClassFileConstants.JDK1_5) this.inlineJsrBytecode = true; // forced from 1.5 mode on
@@ -2053,6 +2068,15 @@ public class CompilerOptions {
 				this.complainOnUninternedIdentityComparison = true;
 			} else if (DISABLED.equals(optionValue)) {
 				this.complainOnUninternedIdentityComparison = false;
+			}
+		}
+		if ((optionValue = optionsMap.get(OPTION_EnablePreviews)) != null) {
+			if (ENABLED.equals(optionValue)) {
+				this.enablePreviewFeatures = true;
+				if (this.targetJDK != 0)
+					this.targetJDK |= ClassFileConstants.MINOR_VERSION_PREVIEW;
+			} else if (DISABLED.equals(optionValue)) {
+				this.enablePreviewFeatures = false;
 			}
 		}
 		// GROOVY add

@@ -2099,6 +2099,10 @@ public class DefaultBytecodeVisitor implements IBytecodeVisitor {
 				appendConstantMethodHandle(this.buffer, Messages.classformat_ldc_w_methodhandle,
 						IOpcodeMnemonics.LDC, index, constantPoolEntry);
 				break;
+			case IConstantPoolConstant.CONSTANT_Dynamic :
+				appendConstantDynamic(this.buffer, Messages.classformat_ldc_w_dynamic,
+						IOpcodeMnemonics.LDC, index, constantPoolEntry);
+				break;
 		}
 		writeNewLine();
 	}
@@ -2121,6 +2125,16 @@ public class DefaultBytecodeVisitor implements IBytecodeVisitor {
 				Integer.toString(((IConstantPoolEntry2) constantPoolEntry).getReferenceIndex())
 			}));
 	}
+	private StringBuffer appendConstantDynamic(StringBuffer s, String messageKind, int opcode,
+			int index, IConstantPoolEntry entry) {
+		return s.append(Messages.bind(messageKind, new String[] {
+				OpcodeStringValues.BYTECODE_NAMES[opcode],
+				Integer.toString(index),
+				Integer.toString(((IConstantPoolEntry2) entry).getBootstrapMethodAttributeIndex()),
+				new String(entry.getFieldName()),
+				returnClassName(Signature.toCharArray(entry.getFieldDescriptor()))
+			}));
+	}
 	/**
 	 * @see IBytecodeVisitor#_ldc2_w(int, int, IConstantPoolEntry)
 	 */
@@ -2141,6 +2155,19 @@ public class DefaultBytecodeVisitor implements IBytecodeVisitor {
 					Integer.toString(index),
 					Double.toString(constantPoolEntry.getDoubleValue())
 				}));
+				break;
+			case IConstantPoolConstant.CONSTANT_MethodType :
+				appendConstantMethodType(this.buffer, Messages.classformat_ldc_w_methodhandle,
+						IOpcodeMnemonics.LDC2_W, index, constantPoolEntry);
+				break;
+			case IConstantPoolConstant.CONSTANT_MethodHandle :
+				appendConstantMethodHandle(this.buffer, Messages.classformat_ldc_w_methodhandle,
+						IOpcodeMnemonics.LDC2_W, index, constantPoolEntry);
+				break;
+			case IConstantPoolConstant.CONSTANT_Dynamic :
+				appendConstantDynamic(this.buffer, Messages.classformat_ldc_w_dynamic,
+						IOpcodeMnemonics.LDC2_W, index, constantPoolEntry);
+				break;
 		}
 		writeNewLine();
 	}

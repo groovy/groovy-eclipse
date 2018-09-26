@@ -247,6 +247,7 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 	public TypeBinding resolveType(BlockScope blockScope, boolean skipKosherCheck) {
 		
 		boolean argumentsTypeElided = argumentsTypeElided();
+		boolean argumentsTypeVar = argumentsTypeVar(blockScope);
 		int argumentsLength = this.arguments == null ? 0 : this.arguments.length;
 		
 		if (this.constant != Constant.NotAConstant) {
@@ -255,7 +256,7 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 			if (this.original == this)
 				this.ordinal = recordFunctionalType(blockScope);
 			
-			if (!argumentsTypeElided) {
+			if (!argumentsTypeElided && !argumentsTypeVar) {
 				for (int i = 0; i < argumentsLength; i++)
 					this.argumentTypes[i] = this.arguments[i].type.resolveType(blockScope, true /* check bounds*/);
 			}
@@ -288,7 +289,7 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 			int parametersLength = this.descriptor.parameters.length;
 			if (parametersLength != argumentsLength) {
             	this.scope.problemReporter().lambdaSignatureMismatched(this);
-            	if (argumentsTypeElided || this.original != this) // no interest in continuing to error check copy.
+            	if (argumentsTypeElided || argumentsTypeVar || this.original != this) // no interest in continuing to error check copy.
             		return this.resolvedType = null; // FUBAR, bail out ...
             	else {
             		this.resolvedType = null; // continue to type check.
@@ -313,7 +314,7 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 			
 			TypeBinding argumentType;
 			final TypeBinding expectedParameterType = haveDescriptor && i < this.descriptor.parameters.length ? this.descriptor.parameters[i] : null;
-			argumentType = argumentsTypeElided ? expectedParameterType : this.argumentTypes[i];
+			argumentType = (argumentsTypeElided || argumentsTypeVar) ? expectedParameterType : this.argumentTypes[i];
 			if (argumentType == null) {
 				argumentsHaveErrors = true;
 			} else if (argumentType == TypeBinding.VOID) {
@@ -328,7 +329,7 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 				}
 			}
 		}
-		if (!argumentsTypeElided && !argumentsHaveErrors) {
+		if (!argumentsTypeElided && !argumentsTypeVar && !argumentsHaveErrors) {
 			ReferenceBinding groundType = null;
 			ReferenceBinding expectedSAMType = null;
 			if (this.expectedType instanceof IntersectionTypeBinding18)
@@ -359,11 +360,13 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 		}
 		boolean parametersHaveErrors = false;
 		boolean genericSignatureNeeded = this.requiresGenericSignature || blockScope.compilerOptions().generateGenericSignatureForLambdaExpressions;
+		TypeBinding[] expectedParameterTypes = new TypeBinding[argumentsLength];
 		for (int i = 0; i < argumentsLength; i++) {
 			Argument argument = this.arguments[i];
 			TypeBinding argumentType;
 			final TypeBinding expectedParameterType = haveDescriptor && i < this.descriptor.parameters.length ? this.descriptor.parameters[i] : null;
-			argumentType = argumentsTypeElided ? expectedParameterType : this.argumentTypes[i];
+			argumentType = (argumentsTypeElided || argumentsTypeVar) ? expectedParameterType : this.argumentTypes[i];
+			expectedParameterTypes[i] = expectedParameterType;
 			if (argumentType != null && argumentType != TypeBinding.VOID) {
 				if (haveDescriptor && expectedParameterType != null && argumentType.isValidBinding() && TypeBinding.notEquals(argumentType, expectedParameterType)) {
 					if (expectedParameterType.isProperType(true)) {
@@ -393,6 +396,11 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 				}
 			}
 		}
+		if (argumentsTypeVar) {
+			for (int i = 0; i < argumentsLength; ++i) {
+				this.arguments[i].type.resolvedType = expectedParameterTypes[i];
+			}
+		}
 		// only assign parameters if no problems are found
 		if (!argumentsHaveErrors) {
 			this.binding.parameters = newParameters;
@@ -400,7 +408,7 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 				this.binding.setParameterAnnotations(parameterAnnotations);
 		}
 	
-		if (!argumentsTypeElided && !argumentsHaveErrors && this.binding.isVarargs()) {
+		if (!argumentsTypeElided && !argumentsTypeVar && !argumentsHaveErrors && this.binding.isVarargs()) {
 			if (!this.binding.parameters[this.binding.parameters.length - 1].isReifiable()) {
 				this.scope.problemReporter().possibleHeapPollutionFromVararg(this.arguments[this.arguments.length - 1]);
 			}
@@ -430,7 +438,7 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 		} // TODO (stephan): else? (can that happen?)
 
 		if (haveDescriptor && !argumentsHaveErrors && blockScope.compilerOptions().isAnnotationBasedNullAnalysisEnabled) {
-			if (!argumentsTypeElided) {
+			if (!argumentsTypeElided && !argumentsTypeVar) {
 				AbstractMethodDeclaration.createArgumentBindings(this.arguments, this.binding, this.scope); // includes validation
 				// no application of null-ness default, hence also no warning regarding redundant null annotation
 				mergeParameterNullAnnotations(blockScope);
@@ -526,6 +534,27 @@ public class LambdaExpression extends FunctionalExpression implements IPolyExpre
 	@Override
 	public boolean argumentsTypeElided() {
 		return this.arguments.length > 0 && this.arguments[0].hasElidedType();
+	}
+
+	private boolean argumentsTypeVar(BlockScope blockScope) {
+		if (blockScope.compilerOptions().complianceLevel < ClassFileConstants.getComplianceLevelForJavaVersion(ClassFileConstants.MAJOR_VERSION_11)) return false;
+		boolean retval = false, isVar = false, mixReported = false;
+		Argument[] args =  this.arguments;
+		for (int i = 0, l = args.length; i < l; ++i) {
+			Argument arg = args[i];
+			TypeReference type = arg.type;
+			if (type == null) continue;
+			boolean prev = isVar;
+			retval |= isVar = type.isTypeNameVar(blockScope);
+			if (i > 0 && prev != isVar && !mixReported) { // report only once per list
+				blockScope.problemReporter().varCannotBeMixedWithNonVarParams(isVar ? arg : args[i - 1]);
+				mixReported = true;
+			}
+			if (isVar && (type.dimensions() > 0 || type.extraDimensions() > 0)) {
+				blockScope.problemReporter().varLocalCannotBeArray(arg);
+			}
+		}
+		return retval;
 	}
 
 	private void analyzeExceptions() {

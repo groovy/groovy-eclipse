@@ -440,10 +440,15 @@ public class ReferenceExpression extends FunctionalExpression implements IPolyEx
 		
 		if (this.isConstructorReference()) {
 			ReferenceBinding allocatedType = codegenBinding.declaringClass;
-			if (codegenBinding.isPrivate() && TypeBinding.notEquals(enclosingSourceType, (allocatedType = codegenBinding.declaringClass))) {
+			if (codegenBinding.isPrivate() &&
+					TypeBinding.notEquals(enclosingSourceType, (allocatedType = codegenBinding.declaringClass))) {
 				if ((allocatedType.tagBits & TagBits.IsLocalType) != 0) {
 					codegenBinding.tagBits |= TagBits.ClearPrivateModifier;
 				} else {
+					if (currentScope.enclosingSourceType().isNestmateOf(this.binding.declaringClass)) {
+						this.syntheticAccessor = codegenBinding;
+						return;
+					}
 					this.syntheticAccessor = ((SourceTypeBinding) allocatedType).addSyntheticMethod(codegenBinding, false);
 					currentScope.problemReporter().needToEmulateMethodAccess(codegenBinding, this);
 				}

@@ -895,7 +895,7 @@ public class ConstantPool implements ClassFileConstants, TypeIds {
 
 		return index;
 	}
-	public int literalIndexForInvokeDynamic(int bootStrapIndex, char[] selector, char[] descriptor) {
+	private int literalIndexForInvokeAndConstantDynamic(int bootStrapIndex, char[] selector, char[] descriptor, int tag) {
 		int index;
 		if ((index = putInDynamicCacheIfAbsent(bootStrapIndex, selector, descriptor, this.currentIndex)) < 0) {
 			this.currentIndex++;
@@ -909,7 +909,7 @@ public class ConstantPool implements ClassFileConstants, TypeIds {
 			}
 			this.offsets[index] = this.currentOffset;
 
-			writeU1(InvokeDynamicTag);
+			writeU1(tag);
 			int classIndexOffset = this.currentOffset;
 			if (this.currentOffset + 4 >= this.poolContent.length) {
 				resizePoolContents(4);
@@ -924,6 +924,13 @@ public class ConstantPool implements ClassFileConstants, TypeIds {
 			this.poolContent[classIndexOffset] = (byte) nameAndTypeIndex;
 		}
 		return index;
+	}
+	// CONSTANT_Dynamic_info JVMS 4.4.10 /jep 309
+	public int literalIndexForDynamic(int bootStrapIndex, char[] selector, char[] descriptor) {
+		return literalIndexForInvokeAndConstantDynamic(bootStrapIndex, selector, descriptor, DynamicTag);
+	}
+	public int literalIndexForInvokeDynamic(int bootStrapIndex, char[] selector, char[] descriptor) {
+		return literalIndexForInvokeAndConstantDynamic(bootStrapIndex, selector, descriptor, InvokeDynamicTag);
 	}
 	public int literalIndexForField(char[] declaringClass, char[] name, char[] signature) {
 		int index;

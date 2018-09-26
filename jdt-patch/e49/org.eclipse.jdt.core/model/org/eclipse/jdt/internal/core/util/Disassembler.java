@@ -1,7 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
- *
- * This program and the accompanying materials
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-2.0/
@@ -22,6 +21,7 @@ import org.eclipse.jdt.core.Signature;
 import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.core.util.*;
 import org.eclipse.jdt.internal.compiler.codegen.AttributeNamesConstants;
+import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
 import org.eclipse.jdt.internal.compiler.lookup.TypeConstants;
 
 /**
@@ -989,24 +989,10 @@ public class Disassembler extends ClassFileBytesDisassembler {
 			String versionNumber = VERSION_UNKNOWN;
 			if (minorVersion == 3 && majorVersion == 45) {
 				versionNumber = JavaCore.VERSION_1_1;
-			} else if (minorVersion == 0 && majorVersion == 46) {
-				versionNumber = JavaCore.VERSION_1_2;
-			} else if (minorVersion == 0 && majorVersion == 47) {
-				versionNumber = JavaCore.VERSION_1_3;
-			} else if (minorVersion == 0 && majorVersion == 48) {
-				versionNumber = JavaCore.VERSION_1_4;
-			} else if (minorVersion == 0 && majorVersion == 49) {
-				versionNumber = JavaCore.VERSION_1_5;
-			} else if (minorVersion == 0 && majorVersion == 50) {
-				versionNumber = JavaCore.VERSION_1_6;
-			} else if (minorVersion == 0 && majorVersion == 51) {
-				versionNumber = JavaCore.VERSION_1_7;
-			} else if (minorVersion == 0 && majorVersion == 52) {
-				versionNumber = JavaCore.VERSION_1_8;
-			} else if (minorVersion == 0 && majorVersion == 53) {
-				versionNumber = JavaCore.VERSION_9;
-			} else if (minorVersion == 0 && majorVersion == 54) {
-				versionNumber = JavaCore.VERSION_10;
+			} else {
+				versionNumber = CompilerOptions.versionFromJdkLevel((majorVersion << 16) + minorVersion);
+				if (versionNumber.length() == 0)
+					versionNumber = VERSION_UNKNOWN;
 			}
 			buffer.append(
 				Messages.bind(Messages.classfileformat_versiondetails,
@@ -1035,6 +1021,7 @@ public class Disassembler extends ClassFileBytesDisassembler {
 			writeNewLine(buffer, lineSeparator, 0);
 		}
 	
+		INestMembersAttribute nestMembersAttribute = classFileReader.getNestMembersAttribute();
 		IInnerClassesAttribute innerClassesAttribute = classFileReader.getInnerClassesAttribute();
 		IClassFileAttribute runtimeVisibleAnnotationsAttribute = Util.getAttribute(classFileReader, IAttributeNamesConstants.RUNTIME_VISIBLE_ANNOTATIONS);
 		IClassFileAttribute runtimeInvisibleAnnotationsAttribute = Util.getAttribute(classFileReader, IAttributeNamesConstants.RUNTIME_INVISIBLE_ANNOTATIONS);
@@ -1164,6 +1151,7 @@ public class Disassembler extends ClassFileBytesDisassembler {
 			IClassFileAttribute[] attributes = classFileReader.getAttributes();
 			int length = attributes.length;
 			IEnclosingMethodAttribute enclosingMethodAttribute = (IEnclosingMethodAttribute) Util.getAttribute(classFileReader, IAttributeNamesConstants.ENCLOSING_METHOD);
+			INestHostAttribute nestHostAttribute = (INestHostAttribute) Util.getAttribute(classFileReader, IAttributeNamesConstants.NEST_HOST);
 			int remainingAttributesLength = length;
 			if (innerClassesAttribute != null) {
 				remainingAttributesLength--;
@@ -1183,8 +1171,16 @@ public class Disassembler extends ClassFileBytesDisassembler {
 			if (moduleAttribute != null) {
 				remainingAttributesLength--;
 			}
+			if (nestHostAttribute != null) {
+				remainingAttributesLength--;
+			}
+			if (nestMembersAttribute != null) {
+				remainingAttributesLength--;
+			}
 			if (innerClassesAttribute != null
 					|| enclosingMethodAttribute != null
+					|| nestHostAttribute != null
+					|| nestMembersAttribute != null
 					|| bootstrapMethods != null
 					|| moduleAttribute != null
 					|| remainingAttributesLength != 0) {
@@ -1198,6 +1194,12 @@ public class Disassembler extends ClassFileBytesDisassembler {
 			}
 			if (enclosingMethodAttribute != null) {
 				disassemble(enclosingMethodAttribute, buffer, lineSeparator, 0);
+			}
+			if (nestHostAttribute != null) {
+				disassemble(nestHostAttribute, buffer, lineSeparator, 0);
+			}
+			if (nestMembersAttribute != null) {
+				disassemble(nestMembersAttribute, buffer, lineSeparator, 0);
 			}
 			if (bootstrapMethods != null) {
 				disassemble((IBootstrapMethodsAttribute) bootstrapMethods, buffer, lineSeparator, 0, classFileReader.getConstantPool());
@@ -1219,6 +1221,8 @@ public class Disassembler extends ClassFileBytesDisassembler {
 					for (int i = 0; i < length; i++) {
 						IClassFileAttribute attribute = attributes[i];
 						if (attribute != innerClassesAttribute
+								&& attribute != nestHostAttribute
+								&& attribute != nestMembersAttribute
 								&& attribute != sourceAttribute
 								&& attribute != signatureAttribute
 								&& attribute != enclosingMethodAttribute
@@ -1337,6 +1341,43 @@ public class Disassembler extends ClassFileBytesDisassembler {
 		buffer.append(';');		
 	}
 
+	private void disassemble(INestHostAttribute nestHostAttribute, StringBuffer buffer, String lineSeparator, int tabNumber) {
+		writeNewLine(buffer, lineSeparator, tabNumber);
+		writeNewLine(buffer, lineSeparator, tabNumber); // additional line
+		buffer.append(Messages.disassembler_nesthost);
+		buffer
+			.append(Messages.disassembler_constantpoolindex)
+			.append(nestHostAttribute.getNestHostIndex())
+			.append(" ")//$NON-NLS-1$
+			.append(nestHostAttribute.getNestHostName());
+	}
+
+	private void disassemble(INestMembersAttribute nestMembersAttribute, StringBuffer buffer, String lineSeparator, int tabNumber) {
+		writeNewLine(buffer, lineSeparator, tabNumber);
+		writeNewLine(buffer, lineSeparator, tabNumber); // additional line
+		buffer.append(Messages.disassembler_nestmembers);
+		writeNewLine(buffer, lineSeparator, tabNumber + 1);
+		INestMemberAttributeEntry[] entries = nestMembersAttribute.getNestMemberAttributesEntries();
+		int length = entries.length;
+		int nestMemberIndex;
+		INestMemberAttributeEntry entry;
+		for (int i = 0; i < length; i++) {
+			if (i != 0) {
+				buffer.append(Messages.disassembler_comma);
+				writeNewLine(buffer, lineSeparator, tabNumber + 1);
+			}
+			entry = entries[i];
+			nestMemberIndex = entry.getNestMemberIndex();
+			buffer
+				.append(Messages.disassembler_constantpoolindex)
+				.append(nestMemberIndex);
+			if (nestMemberIndex != 0) {
+				buffer
+					.append(Messages.disassembler_space)
+					.append(entry.getNestMemberName());
+			}
+		}
+	}
 	private void disassemble(IPackageVisibilityInfo iPackageVisibilityInfo, StringBuffer buffer, String lineSeparator,
 			int tabNumber, boolean isExports) {
 		buffer.append(isExports ? "exports" : "opens"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -1796,7 +1837,8 @@ public class Disassembler extends ClassFileBytesDisassembler {
 			}
 			IConstantPoolEntry constantPoolEntry = constantPool.decodeEntry(i);
 			String[] methodDescription;
-			switch (constantPool.getEntryKind(i)) {
+			int kind = constantPool.getEntryKind(i);
+			switch (kind) {
 				case IConstantPoolConstant.CONSTANT_Class :
 					buffer.append(
 						Messages.bind(Messages.disassembler_constantpool_class,
@@ -1927,6 +1969,19 @@ public class Disassembler extends ClassFileBytesDisassembler {
 								new String(constantPoolEntry.getMethodName()),
 								new String(constantPoolEntry.getMethodDescriptor())
 							}));
+					break;
+				case IConstantPoolConstant.CONSTANT_Dynamic :
+					entry2 = (IConstantPoolEntry2) constantPoolEntry;
+					buffer.append(
+						Messages.bind(Messages.disassembler_constantpool_dynamic,
+							new String[] {
+								Integer.toString(i),
+								Integer.toString(entry2.getBootstrapMethodAttributeIndex()),
+								Integer.toString(entry2.getNameAndTypeIndex()),
+								new String(constantPoolEntry.getFieldName()),
+								new String(constantPoolEntry.getFieldDescriptor())
+							}));
+					break;
 			}
 		}
 	}

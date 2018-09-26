@@ -50,4 +50,7 @@ public interface AttributeNamesConstants {
 	final char[] RuntimeInvisibleTypeAnnotationsName = "RuntimeInvisibleTypeAnnotations".toCharArray(); //$NON-NLS-1$
 	// jep118
 	final char[] MethodParametersName = "MethodParameters".toCharArray(); //$NON-NLS-1$
+	// jep181
+	final char[] NestHost = "NestHost".toCharArray(); //$NON-NLS-1$
+	final char[] NestMembers = "NestMembers".toCharArray(); //$NON-NLS-1$
 }

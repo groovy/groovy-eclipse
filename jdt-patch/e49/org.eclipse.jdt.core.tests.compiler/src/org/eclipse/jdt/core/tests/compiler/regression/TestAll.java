@@ -1,9 +1,12 @@
 /*******************************************************************************
  * Copyright (c) 2000, 2018 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
+ *
+ * This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -169,6 +172,11 @@ public static Test suite() {
 	ArrayList since_10 = new ArrayList();
 	since_10.add(JEP286Test.class);
 	
+	// add 11 specific test here (check duplicates)
+	ArrayList since_11 = new ArrayList();
+	 since_11.add(JEP323VarLambdaParamsTest.class);
+	 since_11.add(JEP181NestTest.class);
+
 	// Build final test suite
 	TestSuite all = new TestSuite(TestAll.class.getName());
 	all.addTest(new TestSuite(StandAloneASTParserTest.class));
@@ -252,6 +260,19 @@ public static Test suite() {
 		tests_10.addAll(since_10);
 		TestCase.resetForgottenFilters(tests_10);
 		all.addTest(AbstractCompilerTest.buildComplianceTestSuite(ClassFileConstants.JDK10, tests_10));
+	}
+	if ((possibleComplianceLevels & AbstractCompilerTest.F_11) != 0) {
+		ArrayList tests_11 = (ArrayList)standardTests.clone();
+		tests_11.addAll(since_1_4);
+		tests_11.addAll(since_1_5);
+		tests_11.addAll(since_1_6);
+		tests_11.addAll(since_1_7);
+		tests_11.addAll(since_1_8);
+		tests_11.addAll(since_9);
+		tests_11.addAll(since_10);
+		tests_11.addAll(since_11);
+		TestCase.resetForgottenFilters(tests_11);
+		all.addTest(AbstractCompilerTest.buildComplianceTestSuite(ClassFileConstants.getComplianceLevelForJavaVersion(ClassFileConstants.MAJOR_VERSION_11), tests_11));
 	}
 	all.addTest(new TestSuite(Jsr14Test.class));
 	return all;

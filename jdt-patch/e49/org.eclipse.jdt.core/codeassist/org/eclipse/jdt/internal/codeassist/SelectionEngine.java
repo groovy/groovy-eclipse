@@ -57,6 +57,7 @@ import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.DefaultErrorHandlingPolicies;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
+import org.eclipse.jdt.internal.compiler.ast.Argument;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ConstructorDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
@@ -1475,6 +1476,13 @@ public final class SelectionEngine extends Engine implements ISearchRequestor {
 					}
 				}
 				return true;
+			}
+			@Override
+			public boolean visit(
+		    		Argument argument, BlockScope scope) {
+				if (argument.type instanceof SingleTypeReference && ((SingleTypeReference)argument.type).token == assistIdentifier)
+					throw new SelectionNodeFound(argument.binding.type);
+				return true; // do nothing by default, keep traversing
 			}
 			@Override
 			public boolean visit(TypeDeclaration typeDeclaration, CompilationUnitScope scope) {

@@ -78,6 +78,9 @@ public class ClassFileReader extends ClassFileStruct implements IBinaryType {
 	private char[][][] missingTypeNames;
 	private int enclosingNameAndTypeIndex;
 	private char[] enclosingMethod;
+	private char[] nestHost;
+	private int nestMembersCount;
+	private char[][] nestMembers;
 
 private static String printTypeModifiers(int modifiers) {
 	java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
@@ -259,6 +262,10 @@ public ClassFileReader(byte[] classFileBytes, char[] fileName, boolean fullyInit
 					this.constantPoolOffsets[i] = readOffset;
 					readOffset += ClassFileConstants.ConstantMethodTypeFixedSize;
 					break;
+				case ClassFileConstants.DynamicTag :
+					this.constantPoolOffsets[i] = readOffset;
+					readOffset += ClassFileConstants.ConstantDynamicFixedSize;
+					break;
 				case ClassFileConstants.InvokeDynamicTag :
 					this.constantPoolOffsets[i] = readOffset;
 					readOffset += ClassFileConstants.ConstantInvokeDynamicFixedSize;
@@ -433,6 +440,27 @@ public ClassFileReader(byte[] classFileBytes, char[] fileName, boolean fullyInit
 						this.moduleDeclaration = ModuleInfo.createModule(this.reference, this.constantPoolOffsets, readOffset);
 						this.moduleName = this.moduleDeclaration.name();
 					}
+					break;
+				case 'N' :
+					if (CharOperation.equals(attributeName, AttributeNamesConstants.NestHost)) {
+						utf8Offset =
+							this.constantPoolOffsets[u2At(this.constantPoolOffsets[u2At(readOffset + 6)] + 1)];
+ 						this.nestHost = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
+					} else if (CharOperation.equals(attributeName, AttributeNamesConstants.NestMembers)) {
+						int offset = readOffset + 6;
+						this.nestMembersCount = u2At(offset);
+						if (this.nestMembersCount != 0) {
+							offset += 2;
+							this.nestMembers = new char[this.nestMembersCount][];
+							for (int j = 0; j < this.nestMembersCount; j++) {
+								utf8Offset =
+									this.constantPoolOffsets[u2At(this.constantPoolOffsets[u2At(offset)] + 1)];
+		 						this.nestMembers[j] = utf8At(utf8Offset + 3, u2At(utf8Offset + 1));
+		 						offset += 2;
+							}
+						}
+					}
+					break;
 			}
 			readOffset += (6 + u4At(readOffset + 2));
 		}
@@ -451,6 +479,10 @@ public ClassFileReader(byte[] classFileBytes, char[] fileName, boolean fullyInit
 			ClassFormatException.ErrTruncatedInput,
 			readOffset);
 	}
+}
+
+public char[] getNestHost() {
+	return this.nestHost;
 }
 
 @Override

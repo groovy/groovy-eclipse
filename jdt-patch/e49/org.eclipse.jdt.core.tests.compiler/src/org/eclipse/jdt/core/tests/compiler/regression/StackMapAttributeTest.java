@@ -1,9 +1,12 @@
 /*******************************************************************************
  * Copyright (c) 2006, 2018 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
+ *
+ * This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -6178,7 +6181,9 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 			"  // Stack: 1, Locals: 2\n" + 
 			"  private java.lang.Object bar();\n" + 
 			"     0  aload_0 [this]\n" + 
-			"     1  invokespecial X.bar2() : java.lang.Object [25]\n" + 
+			"     1  " + 
+			(isMinimumCompliant(ClassFileConstants.JDK11) ? "invokevirtual" : "invokespecial") +
+			" X.bar2() : java.lang.Object [25]\n" + 
 			"     4  astore_1 [o]\n" + 
 			"     5  aload_1 [o]\n" + 
 			"     6  ifnull 14\n" + 
@@ -6244,7 +6249,9 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 			"  // Stack: 1, Locals: 2\n" + 
 			"  private java.lang.Object bar();\n" + 
 			"     0  aload_0 [this]\n" + 
-			"     1  invokespecial X.bar2() : java.lang.Object [31]\n" + 
+			"     1  " + 
+			(isMinimumCompliant(ClassFileConstants.JDK11) ? "invokevirtual" : "invokespecial") +
+			" X.bar2() : java.lang.Object [31]\n" + 
 			"     4  astore_1 [o]\n" + 
 			"     5  aload_1 [o]\n" + 
 			"     6  ifnull 14\n" + 
@@ -7678,6 +7685,8 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 					"\n",
 					ClassFileBytesDisassembler.DETAILED);
 
+			String xBarCall = isMinimumCompliant(ClassFileConstants.JDK11) ?
+					"invokevirtual X.bar() : int [18]\n" : "invokespecial X.bar() : int [18]\n";
 			String expectedOutput =
 					"  // Method descriptor #6 ()V\n" + 
 					"  // Stack: 2, Locals: 4\n" + 
@@ -7688,13 +7697,13 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 					"     3  iconst_1\n" + 
 					"     4  if_icmpne 24\n" + 
 					"     7  aload_0 [this]\n" + 
-					"     8  invokespecial X.bar() : int [18]\n" + 
+					"     8  " + xBarCall + 
 					"    11  istore_2 [n]\n" + 
 					"    12  iload_2 [n]\n" + 
 					"    13  bipush 35\n" + 
 					"    15  if_icmpne 32\n" + 
 					"    18  aload_0 [this]\n" + 
-					"    19  invokespecial X.bar() : int [18]\n" + 
+					"    19  " + xBarCall + 
 					"    22  pop\n" + 
 					"    23  return\n" + 
 					"    24  new java.lang.Exception [16]\n" + 
@@ -7704,17 +7713,17 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 					"    32  iload_1 [i]\n" + 
 					"    33  ifne 50\n" + 
 					"    36  aload_0 [this]\n" + 
-					"    37  invokespecial X.bar() : int [18]\n" + 
+					"    37  " + xBarCall + 
 					"    40  pop\n" + 
 					"    41  return\n" + 
 					"    42  astore_3\n" + 
 					"    43  aload_0 [this]\n" + 
-					"    44  invokespecial X.bar() : int [18]\n" + 
+					"    44  " + xBarCall + 
 					"    47  pop\n" + 
 					"    48  aload_3\n" + 
 					"    49  athrow\n" + 
 					"    50  aload_0 [this]\n" + 
-					"    51  invokespecial X.bar() : int [18]\n" + 
+					"    51  " + xBarCall + 
 					"    54  pop\n" + 
 					"    55  return\n" + 
 					"      Exception Table:\n" + 
@@ -7799,6 +7808,8 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 					"\n",
 					ClassFileBytesDisassembler.DETAILED);
 
+			String xBarCall = (isMinimumCompliant(ClassFileConstants.JDK11) ?
+					"invokevirtual" : "invokespecial") + " X.bar() : int [28]\n";
 			String expectedOutput =
 					"  // Method descriptor #6 ()V\n" + 
 					"  // Stack: 3, Locals: 6\n" + 
@@ -7822,7 +7833,7 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 					"     27  aload 4 [fis]\n" + 
 					"     29  invokevirtual java.io.FileInputStream.close() : void [25]\n" + 
 					"     32  aload_0 [this]\n" + // return 1
-					"     33  invokespecial X.bar() : int [28]\n" + 
+					"     33  " + xBarCall + 
 					"     36  pop\n" + 
 					"     37  return\n" + 
 					"     38  aload 4 [fis]\n" + 
@@ -7855,25 +7866,25 @@ public class StackMapAttributeTest extends AbstractRegressionTest {
 					"     87  bipush 35\n" + 
 					"     89  if_icmpne 122\n" + 
 					"     92  aload_0 [this]\n" + 	// return 2
-					"     93  invokespecial X.bar() : int [28]\n" + 
+					"     93  " + xBarCall + 
 					"     96  pop\n" + 
 					"     97  return\n" + 
 					"     98  astore_2 [e]\n" + 
 					"     99  aload_0 [this]\n" + 
-					"    100  invokespecial X.bar() : int [28]\n" + 
+					"    100  " + xBarCall + 
 					"    103  pop\n" + 
 					"    104  aload_0 [this]\n" + 
-					"    105  invokespecial X.bar() : int [28]\n" + 
+					"    105  " + xBarCall + 
 					"    108  pop\n" + 
 					"    109  goto 127\n" + 
 					"    112  astore 5\n" + 
 					"    114  aload_0 [this]\n" + 
-					"    115  invokespecial X.bar() : int [28]\n" + 
+					"    115  " + xBarCall + 
 					"    118  pop\n" + 
 					"    119  aload 5\n" + 
 					"    121  athrow\n" + 
 					"    122  aload_0 [this]\n" + 
-					"    123  invokespecial X.bar() : int [28]\n" + 
+					"    123  " + xBarCall + 
 					"    126  pop\n" + 
 					"    127  return\n" + 
 					"      Exception Table:\n" + 

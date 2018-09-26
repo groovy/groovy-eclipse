@@ -92,7 +92,7 @@ public class CopyResourceElementsOperation extends MultiOperation implements Suf
 		initializeASTParser();
 	}
 	private void initializeASTParser() {
-		this.parser = ASTParser.newParser(AST.JLS10);
+		this.parser = ASTParser.newParser(AST.JLS11);
 	}
 	/**
 	 * Returns the children of <code>source</code> which are affected by this operation.

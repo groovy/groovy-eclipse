@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2018 IBM Corporation.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v2.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v20.html
+ *
+ * Contributors:
+ *     IBM Corporation - initial API and implementation
+ *******************************************************************************/
 package org.eclipse.jdt.internal.compiler.batch;
 
 import java.io.File;
@@ -96,7 +106,7 @@ public class ClasspathJep247 extends ClasspathJrt {
 		if (this.compliance == null) {
 			return;
 		}
-		this.releaseInHex = Integer.toHexString(Integer.parseInt(this.compliance));
+		this.releaseInHex = Integer.toHexString(Integer.parseInt(this.compliance)).toUpperCase();
 		Path filePath = this.jdkHome.toPath().resolve("lib").resolve("ct.sym"); //$NON-NLS-1$ //$NON-NLS-2$
 		URI t = filePath.toUri();
 		if (!Files.exists(filePath)) {

@@ -1,9 +1,12 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2014 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
+ *
+ * This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -203,30 +206,53 @@ public void test004() {
 // error since its base class does not have a no-arg constructor for the synthesized default constructor
 // to invoke.
 public void test005() {
-	this.runNegativeTest(
-		new String[] {
+	String[]  testFiles = new String[] {
 			"A.java",
 			"public class A {\n" +
-		    "	public A(String s) {\n" +
-		    "		B.test();\n" +
-		    "	}\n" +
-            "\n" +
-		    "	private static class B extends A {\n" +
-		    "		public B () { super(\"\"); }\n" +
-		    "	private static void test() {};\n" +
-		    "	}\n" +
+			"	public A(String s) {\n" +
+			"		B.test();\n" +
+			"	}\n" +
+			"\n" +
+			"	private static class B extends A {\n" +
+			"		public B () { super(\"\"); }\n" +
+			"	private static void test() {};\n" +
+			"	}\n" +
 			"}\n"
-		},
-		"----------\n" + 
-		"1. WARNING in A.java (at line 3)\n" + 
-		"	B.test();\n" + 
-		"	^^^^^^^^\n" + 
-		"Access to enclosing method test() from the type A.B is emulated by a synthetic accessor method\n" + 
-		"----------\n");
+			};
+	if (!isMinimumCompliant(ClassFileConstants.JDK11)) {
+		this.runNegativeTest(testFiles,
+				"----------\n" + 
+				"1. WARNING in A.java (at line 3)\n" + 
+				"	B.test();\n" + 
+				"	^^^^^^^^\n" + 
+				"Access to enclosing method test() from the type A.B is emulated by a synthetic accessor method\n" + 
+				"----------\n");
+	} else {
+		this.runConformTest(testFiles);
+	}
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=265142, wrong unused warning reported. Test to ensure that
 //we DO complain about the constructor of B not being used when its base class has a no-arg constructor
 public void test006() {
+	String errMessage = isMinimumCompliant(ClassFileConstants.JDK11) ?
+			"----------\n" + 
+			"1. WARNING in A.java (at line 8)\n" + 
+			"	public B () { super(\"\"); }\n" + 
+			"	       ^^^^\n" + 
+			"The constructor A.B() is never used locally\n" + 
+			"----------\n"
+			:
+			"----------\n" + 
+			"1. WARNING in A.java (at line 3)\n" + 
+			"	B.test();\n" + 
+			"	^^^^^^^^\n" + 
+			"Access to enclosing method test() from the type A.B is emulated by a synthetic accessor method\n" + 
+			"----------\n" + 
+			"2. WARNING in A.java (at line 8)\n" + 
+			"	public B () { super(\"\"); }\n" + 
+			"	       ^^^^\n" + 
+			"The constructor A.B() is never used locally\n" + 
+			"----------\n";
 	this.runNegativeTest(
 		new String[] {
 			"A.java",
@@ -242,17 +268,7 @@ public void test006() {
 		    "   }\n" +
 			"}\n"
 		},
-		"----------\n" + 
-		"1. WARNING in A.java (at line 3)\n" + 
-		"	B.test();\n" + 
-		"	^^^^^^^^\n" + 
-		"Access to enclosing method test() from the type A.B is emulated by a synthetic accessor method\n" + 
-		"----------\n" + 
-		"2. WARNING in A.java (at line 8)\n" + 
-		"	public B () { super(\"\"); }\n" + 
-		"	       ^^^^\n" + 
-		"The constructor A.B() is never used locally\n" + 
-		"----------\n");
+		errMessage);
 }
 //https://bugs.eclipse.org/bugs/show_bug.cgi?id=265142, wrong unused warning reported. Test to ensure that
 //we can compile the program successfully after deleting the unused constructor.

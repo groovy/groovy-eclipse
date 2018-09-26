@@ -434,7 +434,7 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 
 	public static class CompilationParticipants {
 
-		private final static int MAX_SOURCE_LEVEL = 10 ; // 1.1 to 1.8 and 9, 10
+		private final static int MAX_SOURCE_LEVEL = 11 ; // 1.1 to 1.8 and 9, 10
 
 		/*
 		 * The registered compilation participants (a table from int (source level) to Object[])
@@ -569,29 +569,11 @@ public class JavaModelManager implements ISaveParticipant, IContentTypeChangeLis
 		private int indexForSourceLevel(String sourceLevel) {
 			if (sourceLevel == null) return 0;
 			int majVersion = (int) (CompilerOptions.versionToJdkLevel(sourceLevel) >>> 16);
-			switch (majVersion) {
-				case ClassFileConstants.MAJOR_VERSION_1_2:
-					return 1;
-				case ClassFileConstants.MAJOR_VERSION_1_3:
-					return 2;
-				case ClassFileConstants.MAJOR_VERSION_1_4:
-					return 3;
-				case ClassFileConstants.MAJOR_VERSION_1_5:
-					return 4;
-				case ClassFileConstants.MAJOR_VERSION_1_6:
-					return 5;
-				case ClassFileConstants.MAJOR_VERSION_1_7:
-					return 6;
-				case ClassFileConstants.MAJOR_VERSION_1_8:
-					return 7;
-				case ClassFileConstants.MAJOR_VERSION_9:
-					return 8;
-				case ClassFileConstants.MAJOR_VERSION_10:
-					return 9;
-				default:
-					// all other cases including ClassFileConstants.MAJOR_VERSION_1_1
-					return 0;
+			if (majVersion > ClassFileConstants.MAJOR_VERSION_1_2) {
+				return (majVersion - ClassFileConstants.MAJOR_VERSION_1_1);
 			}
+			// all other cases including ClassFileConstants.MAJOR_VERSION_1_1
+			return 0;
 		}
 
 		private int sortParticipants(ArrayList<IConfigurationElement> group, IConfigurationElement[] configElements, int index) {

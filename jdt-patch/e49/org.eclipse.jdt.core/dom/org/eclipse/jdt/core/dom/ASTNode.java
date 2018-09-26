@@ -2057,6 +2057,21 @@ public abstract class ASTNode {
 		}
 	}
 	/**
+     * Checks that this AST operation is not used when
+     * building JLS2, JLS3, JLS4, JLS8, JLS9 or JLS10 level ASTs.
+     * <p>
+     * Use this method to prevent access to new properties that have been added in JLS11
+     * </p>
+     *
+	 * @exception UnsupportedOperationException if this operation is used below JLS11
+	 * @since 3.14 
+	 */
+	final void unsupportedBelow11() {
+		if (this.ast.apiLevel < AST.JLS11_INTERNAL) {
+			throw new UnsupportedOperationException("Operation only supported in ASTs with level JLS11 and above"); //$NON-NLS-1$
+		}
+	}
+	/**
      * Checks that this AST operation is only used when
      * building JLS2 level ASTs.
      * <p>

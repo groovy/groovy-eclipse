@@ -1283,6 +1283,23 @@ public boolean isClass() {
 	return (this.modifiers & (ClassFileConstants.AccInterface | ClassFileConstants.AccAnnotation | ClassFileConstants.AccEnum)) == 0;
 }
 
+private static SourceTypeBinding getSourceTypeBinding(ReferenceBinding ref) {
+	if (ref instanceof SourceTypeBinding)
+		return (SourceTypeBinding) ref;
+	if (ref instanceof ParameterizedTypeBinding) {
+		ParameterizedTypeBinding ptb = (ParameterizedTypeBinding) ref;
+		return ptb.type instanceof SourceTypeBinding ? (SourceTypeBinding) ptb.type : null;
+	}
+	return null;
+}
+public  boolean isNestmateOf(ReferenceBinding other) {
+	SourceTypeBinding s1 = getSourceTypeBinding(this);
+	SourceTypeBinding s2 = getSourceTypeBinding(other);
+	if (s1 == null || s2 == null) return false;
+
+	return s1.isNestmateOf(s2);
+}
+
 @Override
 public boolean isProperType(boolean admitCapture18) {
 	ReferenceBinding outer = enclosingType();

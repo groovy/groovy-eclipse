@@ -152,8 +152,9 @@ public static ClasspathLocation forLibrary(String libraryPathname, AccessRuleSet
 
 static ClasspathLocation forLibrary(IFile library, AccessRuleSet accessRuleSet, IPath annotationsPath,
 										boolean autoModule, String compliance) {
-	return compliance == null ? new ClasspathJar(library, accessRuleSet, annotationsPath, autoModule) :
-					new ClasspathMultiReleaseJar(library, accessRuleSet, annotationsPath, autoModule, compliance);
+	return (CompilerOptions.versionToJdkLevel(compliance) < ClassFileConstants.JDK9) ?
+			new ClasspathJar(library, accessRuleSet, annotationsPath, autoModule) :
+				new ClasspathMultiReleaseJar(library, accessRuleSet, annotationsPath, autoModule, compliance);
 }
 public static ClasspathLocation forLibrary(ZipFile zipFile, AccessRuleSet accessRuleSet, IPath externalAnnotationPath, boolean isOnModulePath, String compliance) {
 	return (CompilerOptions.versionToJdkLevel(compliance) < ClassFileConstants.JDK9) ?

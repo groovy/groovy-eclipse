@@ -1,9 +1,12 @@
 /*******************************************************************************
  * Copyright (c) 2010, 2018 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
+ *
+ * This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -58,7 +61,7 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 		super(name);
 	}
 	
-	private static final int AST_JLS_LATEST = AST.JLS10;
+	private static final int AST_JLS_LATEST = AST.JLS11;
 
 	public ASTNode runConversion(
 			int astLevel,
@@ -1585,7 +1588,7 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 					super.acceptAST(sourceFilePath, ast);
 				}
 			};
-			ASTParser parser = ASTParser.newParser(AST.JLS10);
+			ASTParser parser = ASTParser.newParser(AST.JLS11);
 			parser.setResolveBindings(true);
 			parser.setStatementsRecovery(true);
 			parser.setBindingsRecovery(true);
@@ -1616,7 +1619,7 @@ public class StandAloneASTParserTest extends AbstractRegressionTest {
 				"       for (var i = 0; i < 10; ++i) {}\n" +
 				"	}\n" +
 				"}";
-	    ASTParser parser = ASTParser.newParser(AST.JLS10);
+	    ASTParser parser = ASTParser.newParser(AST.JLS11);
 	    parser.setSource(contents.toCharArray());
 		parser.setStatementsRecovery(true);
 		parser.setBindingsRecovery(true);

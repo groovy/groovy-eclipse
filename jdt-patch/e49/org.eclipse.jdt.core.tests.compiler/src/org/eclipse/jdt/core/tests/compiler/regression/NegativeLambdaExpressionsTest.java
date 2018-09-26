@@ -1,10 +1,13 @@
 /*******************************************************************************
  * Copyright (c) 2011, 2018 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
+ *
+ * This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- * 
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Jesper S Moller - Contributions for
@@ -6637,6 +6640,25 @@ public void test406773() {
 		Map compilerOptions = getCompilerOptions();
 		compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBeStatic, CompilerOptions.ERROR);
 		compilerOptions.put(CompilerOptions.OPTION_ReportMethodCanBePotentiallyStatic, CompilerOptions.ERROR);
+		String errMessage = isMinimumCompliant(ClassFileConstants.JDK11) ?
+				"----------\n" + 
+				"1. ERROR in X.java (at line 5)\n" + 
+				"	void foo() {\n" + 
+				"	     ^^^^^\n" + 
+				"The method foo() from the type X can potentially be declared as static\n" + 
+				"----------\n"
+				:
+				"----------\n" + 
+				"1. ERROR in X.java (at line 5)\n" + 
+				"	void foo() {\n" + 
+				"	     ^^^^^\n" + 
+				"The method foo() from the type X can potentially be declared as static\n" + 
+				"----------\n" + 
+				"2. WARNING in X.java (at line 10)\n" + 
+				"	I i = X::new;\n" + 
+				"	      ^^^^^^\n" + 
+				"Access to enclosing constructor X(int) is emulated by a synthetic accessor method\n" + 
+				"----------\n";
 		this.runNegativeTest(
 			false,
 			JavacTestOptions.SKIP, /* skip, because we are using custom error settings here */
@@ -6679,17 +6701,7 @@ public void test406773() {
 					"	}\n" +
 					"}\n"
 			},
-			"----------\n" + 
-			"1. ERROR in X.java (at line 5)\n" + 
-			"	void foo() {\n" + 
-			"	     ^^^^^\n" + 
-			"The method foo() from the type X can potentially be declared as static\n" + 
-			"----------\n" + 
-			"2. WARNING in X.java (at line 10)\n" + 
-			"	I i = X::new;\n" + 
-			"	      ^^^^^^\n" + 
-			"Access to enclosing constructor X(int) is emulated by a synthetic accessor method\n" + 
-			"----------\n",
+			errMessage,
 			null /* no extra class libraries */,
 			true /* flush output directory */,
 			compilerOptions /* custom options */
@@ -9419,6 +9431,50 @@ public void test433458a() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=433588, [1.8][compiler] ECJ compiles an ambiguous call in the presence of an unrelated unused method.
 public void test433588() {
+	String errMessage = isMinimumCompliant(ClassFileConstants.JDK11) ?
+			"----------\n" + 
+			"1. WARNING in X.java (at line 15)\n" + 
+			"	public final @SafeVarargs void forEachOrdered(Consumer<? super T> action, Consumer<? super T>... actions) throws E {}\n" + 
+			"	                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+			"The method forEachOrdered(Consumer<? super T>, Consumer<? super T>...) from the type X.AbstractStream<T,E,STREAM,SELF,CONSUMER> is never used locally\n" + 
+			"----------\n" + 
+			"2. ERROR in X.java (at line 29)\n" + 
+			"	lines1.forEachOrdered(s -> Files.isHidden(Paths.get(s)));\n" + 
+			"	       ^^^^^^^^^^^^^^\n" + 
+			"The method forEachOrdered(X.IOConsumer<? super String>) is ambiguous for the type X.IOStream<String>\n" + 
+			"----------\n" + 
+			"3. ERROR in X.java (at line 30)\n" + 
+			"	lines1.forEachOrdered(s -> System.out.println(s));\n" + 
+			"	       ^^^^^^^^^^^^^^\n" + 
+			"The method forEachOrdered(X.IOConsumer<? super String>) is ambiguous for the type X.IOStream<String>\n" + 
+			"----------\n"
+			:
+			"----------\n" + 
+			"1. WARNING in X.java (at line 15)\n" + 
+			"	public final @SafeVarargs void forEachOrdered(Consumer<? super T> action, Consumer<? super T>... actions) throws E {}\n" + 
+			"	                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
+			"The method forEachOrdered(Consumer<? super T>, Consumer<? super T>...) from the type X.AbstractStream<T,E,STREAM,SELF,CONSUMER> is never used locally\n" + 
+			"----------\n" + 
+			"2. WARNING in X.java (at line 17)\n" + 
+			"	private static class UnStream<T> extends AbstractStream<T, RuntimeException, Stream<T>, UnStream<T>, Consumer<? super T>> {}\n" + 
+			"	                     ^^^^^^^^\n" + 
+			"Access to enclosing constructor X.AbstractStream<T,E,STREAM,SELF,CONSUMER>() is emulated by a synthetic accessor method\n" + 
+			"----------\n" + 
+			"3. WARNING in X.java (at line 18)\n" + 
+			"	private static class IOStream<T> extends AbstractStream<T, IOException, Stream<T>, IOStream<T>, IOConsumer<? super T>> {}\n" + 
+			"	                     ^^^^^^^^\n" + 
+			"Access to enclosing constructor X.AbstractStream<T,E,STREAM,SELF,CONSUMER>() is emulated by a synthetic accessor method\n" + 
+			"----------\n" + 
+			"4. ERROR in X.java (at line 29)\n" + 
+			"	lines1.forEachOrdered(s -> Files.isHidden(Paths.get(s)));\n" + 
+			"	       ^^^^^^^^^^^^^^\n" + 
+			"The method forEachOrdered(X.IOConsumer<? super String>) is ambiguous for the type X.IOStream<String>\n" + 
+			"----------\n" + 
+			"5. ERROR in X.java (at line 30)\n" + 
+			"	lines1.forEachOrdered(s -> System.out.println(s));\n" + 
+			"	       ^^^^^^^^^^^^^^\n" + 
+			"The method forEachOrdered(X.IOConsumer<? super String>) is ambiguous for the type X.IOStream<String>\n" + 
+			"----------\n";
 	this.runNegativeTest(
 		new String[] {
 			"X.java",
@@ -9458,35 +9514,44 @@ public void test433588() {
 			"	}\n" +
 			"}\n"
 		},
-		"----------\n" + 
-		"1. WARNING in X.java (at line 15)\n" + 
-		"	public final @SafeVarargs void forEachOrdered(Consumer<? super T> action, Consumer<? super T>... actions) throws E {}\n" + 
-		"	                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n" + 
-		"The method forEachOrdered(Consumer<? super T>, Consumer<? super T>...) from the type X.AbstractStream<T,E,STREAM,SELF,CONSUMER> is never used locally\n" + 
-		"----------\n" + 
-		"2. WARNING in X.java (at line 17)\n" + 
-		"	private static class UnStream<T> extends AbstractStream<T, RuntimeException, Stream<T>, UnStream<T>, Consumer<? super T>> {}\n" + 
-		"	                     ^^^^^^^^\n" + 
-		"Access to enclosing constructor X.AbstractStream<T,E,STREAM,SELF,CONSUMER>() is emulated by a synthetic accessor method\n" + 
-		"----------\n" + 
-		"3. WARNING in X.java (at line 18)\n" + 
-		"	private static class IOStream<T> extends AbstractStream<T, IOException, Stream<T>, IOStream<T>, IOConsumer<? super T>> {}\n" + 
-		"	                     ^^^^^^^^\n" + 
-		"Access to enclosing constructor X.AbstractStream<T,E,STREAM,SELF,CONSUMER>() is emulated by a synthetic accessor method\n" + 
-		"----------\n" + 
-		"4. ERROR in X.java (at line 29)\n" + 
-		"	lines1.forEachOrdered(s -> Files.isHidden(Paths.get(s)));\n" + 
-		"	       ^^^^^^^^^^^^^^\n" + 
-		"The method forEachOrdered(X.IOConsumer<? super String>) is ambiguous for the type X.IOStream<String>\n" + 
-		"----------\n" + 
-		"5. ERROR in X.java (at line 30)\n" + 
-		"	lines1.forEachOrdered(s -> System.out.println(s));\n" + 
-		"	       ^^^^^^^^^^^^^^\n" + 
-		"The method forEachOrdered(X.IOConsumer<? super String>) is ambiguous for the type X.IOStream<String>\n" + 
-		"----------\n");
+		errMessage);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=433588, [1.8][compiler] ECJ compiles an ambiguous call in the presence of an unrelated unused method.
 public void test433588a() {
+	String errMessage = isMinimumCompliant(ClassFileConstants.JDK11) ?
+			"----------\n" + 
+			"1. ERROR in X.java (at line 29)\n" + 
+			"	lines1.forEachOrdered(s -> Files.isHidden(Paths.get(s)));\n" + 
+			"	       ^^^^^^^^^^^^^^\n" + 
+			"The method forEachOrdered(X.IOConsumer<? super String>) is ambiguous for the type X.IOStream<String>\n" + 
+			"----------\n" + 
+			"2. ERROR in X.java (at line 30)\n" + 
+			"	lines1.forEachOrdered(s -> System.out.println(s));\n" + 
+			"	       ^^^^^^^^^^^^^^\n" + 
+			"The method forEachOrdered(X.IOConsumer<? super String>) is ambiguous for the type X.IOStream<String>\n" + 
+			"----------\n"
+			:
+			"----------\n" + 
+			"1. WARNING in X.java (at line 17)\n" + 
+			"	private static class UnStream<T> extends AbstractStream<T, RuntimeException, Stream<T>, UnStream<T>, Consumer<? super T>> {}\n" + 
+			"	                     ^^^^^^^^\n" + 
+			"Access to enclosing constructor X.AbstractStream<T,E,STREAM,SELF,CONSUMER>() is emulated by a synthetic accessor method\n" + 
+			"----------\n" + 
+			"2. WARNING in X.java (at line 18)\n" + 
+			"	private static class IOStream<T> extends AbstractStream<T, IOException, Stream<T>, IOStream<T>, IOConsumer<? super T>> {}\n" + 
+			"	                     ^^^^^^^^\n" + 
+			"Access to enclosing constructor X.AbstractStream<T,E,STREAM,SELF,CONSUMER>() is emulated by a synthetic accessor method\n" + 
+			"----------\n" + 
+			"3. ERROR in X.java (at line 29)\n" + 
+			"	lines1.forEachOrdered(s -> Files.isHidden(Paths.get(s)));\n" + 
+			"	       ^^^^^^^^^^^^^^\n" + 
+			"The method forEachOrdered(X.IOConsumer<? super String>) is ambiguous for the type X.IOStream<String>\n" + 
+			"----------\n" + 
+			"4. ERROR in X.java (at line 30)\n" + 
+			"	lines1.forEachOrdered(s -> System.out.println(s));\n" + 
+			"	       ^^^^^^^^^^^^^^\n" + 
+			"The method forEachOrdered(X.IOConsumer<? super String>) is ambiguous for the type X.IOStream<String>\n" + 
+			"----------\n";
 	this.runNegativeTest(
 		new String[] {
 			"X.java",
@@ -9526,27 +9591,7 @@ public void test433588a() {
 			"	}\n" +
 			"}\n"
 		},
-		"----------\n" + 
-		"1. WARNING in X.java (at line 17)\n" + 
-		"	private static class UnStream<T> extends AbstractStream<T, RuntimeException, Stream<T>, UnStream<T>, Consumer<? super T>> {}\n" + 
-		"	                     ^^^^^^^^\n" + 
-		"Access to enclosing constructor X.AbstractStream<T,E,STREAM,SELF,CONSUMER>() is emulated by a synthetic accessor method\n" + 
-		"----------\n" + 
-		"2. WARNING in X.java (at line 18)\n" + 
-		"	private static class IOStream<T> extends AbstractStream<T, IOException, Stream<T>, IOStream<T>, IOConsumer<? super T>> {}\n" + 
-		"	                     ^^^^^^^^\n" + 
-		"Access to enclosing constructor X.AbstractStream<T,E,STREAM,SELF,CONSUMER>() is emulated by a synthetic accessor method\n" + 
-		"----------\n" + 
-		"3. ERROR in X.java (at line 29)\n" + 
-		"	lines1.forEachOrdered(s -> Files.isHidden(Paths.get(s)));\n" + 
-		"	       ^^^^^^^^^^^^^^\n" + 
-		"The method forEachOrdered(X.IOConsumer<? super String>) is ambiguous for the type X.IOStream<String>\n" + 
-		"----------\n" + 
-		"4. ERROR in X.java (at line 30)\n" + 
-		"	lines1.forEachOrdered(s -> System.out.println(s));\n" + 
-		"	       ^^^^^^^^^^^^^^\n" + 
-		"The method forEachOrdered(X.IOConsumer<? super String>) is ambiguous for the type X.IOStream<String>\n" + 
-		"----------\n");
+		errMessage);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=433735, [1.8] Discrepancy with javac when dealing with local classes in lambda expressions
 public void test433735() {

@@ -8,7 +8,7 @@
  * https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     Benjamin Muskalla - Contribution for bug 239066
@@ -9523,6 +9523,14 @@ public void varIsReservedTypeNameInFuture(ASTNode decl) {
 public void varIsNotAllowedHere(ASTNode astNode) {
 	this.handle(
 		IProblem.VarIsNotAllowedHere,
+		NoArgument,
+		NoArgument,
+		astNode.sourceStart,
+		astNode.sourceEnd);
+}
+public void varCannotBeMixedWithNonVarParams(ASTNode astNode) {
+	this.handle(
+		IProblem.VarCannotBeMixedWithNonVarParams,
 		NoArgument,
 		NoArgument,
 		astNode.sourceStart,

@@ -1,9 +1,12 @@
 /*******************************************************************************
  * Copyright (c) 2016, 2018 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
+ *
+ * This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -4024,7 +4027,7 @@ public void testBug521362_emptyFile() {
 		     "\"" + OUTPUT_DIR +  File.separator + "X.java\""
 		     + " --release 5 -d \"" + OUTPUT_DIR + "\"",
 		     "",
-		     "release version 5 is not supported\n",
+		     "release 5 is not found in the system\n",
 		     true);
 	}
 	public void testReleaseOption7() throws Exception {
@@ -4293,7 +4296,7 @@ public void testBug521362_emptyFile() {
 			" --release 60 \"" + OUTPUT_DIR +  File.separator + "foo" + File.separator + "Module.java\" " +
 			"\"" +  OUTPUT_DIR +  File.separator + "foo" + File.separator + "X.java\" ",
 	        "",
-    		"release 60 is not found in the system\n",
+	        "release version 60 is not supported\n",
 	        true,
 	        /*not tested with javac*/"");
 	}

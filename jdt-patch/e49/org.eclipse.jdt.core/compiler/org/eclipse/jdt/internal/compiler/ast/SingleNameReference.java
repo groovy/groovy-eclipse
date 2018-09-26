@@ -928,7 +928,8 @@ public void manageSyntheticAccessIfNecessary(BlockScope currentScope, FlowInfo f
 		FieldBinding fieldBinding = (FieldBinding) this.binding;
 		FieldBinding codegenField = fieldBinding.original();
 		if (((this.bits & ASTNode.DepthMASK) != 0)
-			&& (codegenField.isPrivate() // private access
+			&& ((codegenField.isPrivate() // private access
+					&& !currentScope.enclosingSourceType().isNestmateOf(codegenField.declaringClass) )
 				|| (codegenField.isProtected() // implicit protected access
 						&& codegenField.declaringClass.getPackage() != currentScope.enclosingSourceType().getPackage()))) {
 			if (this.syntheticAccessors == null)

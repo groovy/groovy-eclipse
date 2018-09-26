@@ -179,7 +179,7 @@ public void initialize() {
 		return;
 	}
 	this.release = getReleaseOptionFromCompliance(this.release);
-	this.releaseInHex = Integer.toHexString(Integer.parseInt(this.release));
+	this.releaseInHex = Integer.toHexString(Integer.parseInt(this.release)).toUpperCase();
 	Path lib = Paths.get(this.zipFilename).getParent();
 	Path filePath = Paths.get(lib.toString(),  "ct.sym"); //$NON-NLS-1$
 	URI t = filePath.toUri();

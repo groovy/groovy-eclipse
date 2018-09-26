@@ -270,28 +270,14 @@ public class CodeAttribute extends ClassFileAttribute implements ICodeAttribute 
 				case IOpcodeMnemonics.LDC :
 					index = u1At(this.classFileBytes, 1, pc);
 					constantPoolEntry = this.constantPool.decodeEntry(index);
-					if (constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_Float
-						&& constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_Integer
-						&& constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_String
-						&& constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_Class
-						&& constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_MethodType
-						&& constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_MethodHandle) {
-							throw new ClassFormatException(ClassFormatException.INVALID_CONSTANT_POOL_ENTRY);
-					}
+					checkConstantAndThrow(constantPoolEntry.getKind());
 					visitor._ldc(pc - this.codeOffset, index, constantPoolEntry);
 					pc+=2;
 					break;
 				case IOpcodeMnemonics.LDC_W :
 					index = u2At(this.classFileBytes, 1, pc);
 					constantPoolEntry = this.constantPool.decodeEntry(index);
-					if (constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_Float
-						&& constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_Integer
-						&& constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_String
-						&& constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_Class
-						&& constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_MethodType
-						&& constantPoolEntry.getKind() != IConstantPoolConstant.CONSTANT_MethodHandle) {
-							throw new ClassFormatException(ClassFormatException.INVALID_CONSTANT_POOL_ENTRY);
-					}
+					checkConstantAndThrow(constantPoolEntry.getKind());
 					visitor._ldc_w(pc - this.codeOffset, index, constantPoolEntry);
 					pc+=3;
 					break;
@@ -1202,6 +1188,11 @@ public class CodeAttribute extends ClassFileAttribute implements ICodeAttribute 
 			if (pc >= (this.codeLength + this.codeOffset)) {
 				break;
 			}
+		}
+	}
+	private void checkConstantAndThrow(int kind) throws ClassFormatException {
+		if (kind == IConstantPoolConstant.CONSTANT_Long ||	kind == IConstantPoolConstant.CONSTANT_Double) {
+				throw new ClassFormatException(ClassFormatException.INVALID_CONSTANT_POOL_ENTRY);
 		}
 	}
 }

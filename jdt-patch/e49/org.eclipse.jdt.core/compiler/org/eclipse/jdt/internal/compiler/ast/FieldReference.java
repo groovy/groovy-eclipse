@@ -548,7 +548,8 @@ public void manageSyntheticAccessIfNecessary(BlockScope currentScope, FlowInfo f
 	// if field from parameterized type got found, use the original field at codegen time
 	FieldBinding codegenBinding = this.binding.original();
 	if (this.binding.isPrivate()) {
-		if ((TypeBinding.notEquals(currentScope.enclosingSourceType(), codegenBinding.declaringClass))
+		if (!currentScope.enclosingSourceType().isNestmateOf(codegenBinding.declaringClass) &&
+			(TypeBinding.notEquals(currentScope.enclosingSourceType(), codegenBinding.declaringClass))
 				&& this.binding.constant(currentScope) == Constant.NotAConstant) {
 			if (this.syntheticAccessors == null)
 				this.syntheticAccessors = new MethodBinding[2];

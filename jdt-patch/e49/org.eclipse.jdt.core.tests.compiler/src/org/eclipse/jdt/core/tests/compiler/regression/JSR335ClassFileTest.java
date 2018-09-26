@@ -1,9 +1,12 @@
 /*******************************************************************************
  * Copyright (c) 2013, 2018 Jesper Steen Moller, IBM and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
+ *
+ * This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
  *     Jesper Steen Moller - initial API and implementation
@@ -18,6 +21,7 @@ import java.util.Map;
 import junit.framework.Test;
 
 import org.eclipse.jdt.core.ToolFactory;
+import org.eclipse.jdt.core.tests.util.AbstractCompilerTest;
 import org.eclipse.jdt.core.tests.util.Util;
 import org.eclipse.jdt.core.util.ClassFileBytesDisassembler;
 import org.eclipse.jdt.core.util.ClassFormatException;
@@ -35,9 +39,7 @@ public JSR335ClassFileTest(String name) {
 // No need for a tearDown()
 protected void setUp() throws Exception {
 	super.setUp();
-	this.versionString = (this.complianceLevel < ClassFileConstants.JDK9)
-			? "version 1.8 : 52.0"
-			: (this.complianceLevel < ClassFileConstants.JDK10 ? "version 9 : 53.0" : "version 10 : 54.0");
+	this.versionString = AbstractCompilerTest.getVersionString(this.complianceLevel);
 }
 
 /*
@@ -2348,6 +2350,14 @@ public void test016() throws Exception {
 		},
 		"Lambda");
 
+	String nestConstant = "";
+	String nestHost = ""; 
+	CompilerOptions options = new CompilerOptions(getCompilerOptions());
+	if (options.complianceLevel >= ClassFileConstants.JDK11) {
+		nestConstant = "    constant #77 utf8: \"NestHost\"\n";
+		nestHost = "\n" + 
+				"Nest Host: #53 X\n";
+	}
 	String expectedOutput =
 			"// Compiled from X.java (" + this.versionString + ", super bit)\n" + 
 			"class X$1Y {\n" + 
@@ -2428,6 +2438,7 @@ public void test016() throws Exception {
 			"    constant #74 class: #75 java/lang/invoke/MethodHandles\n" + 
 			"    constant #75 utf8: \"java/lang/invoke/MethodHandles\"\n" + 
 			"    constant #76 utf8: \"Lookup\"\n" + 
+			nestConstant +
 			"  \n" + 
 			"  // Field descriptor #6 LX;\n" + 
 			"  final synthetic X this$0;\n" + 
@@ -2484,7 +2495,8 @@ public void test016() throws Exception {
 			"     inner name: #71 Y, accessflags: 0 default],\n" + 
 			"    [inner class info: #72 java/lang/invoke/MethodHandles$Lookup, outer class info: #74 java/lang/invoke/MethodHandles\n" + 
 			"     inner name: #76 Lookup, accessflags: 25 public static final]\n" + 
-			"  Enclosing Method: #53  #55 X.foo()V\n" + 
+			"  Enclosing Method: #53  #55 X.foo()V\n" +
+			nestHost +
 			"Bootstrap methods:\n" + 
 			"  0 : # 64 invokestatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;" + 
 			"Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;\n" + 
@@ -2525,6 +2537,14 @@ public void test017() throws Exception {
 		},
 		"Lambda");
 
+	String nestConstant = "";
+	String nestHost = ""; 
+	CompilerOptions options = new CompilerOptions(getCompilerOptions());
+	if (options.complianceLevel >= ClassFileConstants.JDK11) {
+		nestConstant = "    constant #77 utf8: \"NestHost\"\n";
+		nestHost = "\n" + 
+				"Nest Host: #53 X\n";
+	}
 	String expectedOutput =
 			"// Compiled from X.java (" + this.versionString + ", super bit)\n" + 
 			"class X$1Y {\n" + 
@@ -2604,7 +2624,8 @@ public void test017() throws Exception {
 			"    constant #73 utf8: \"java/lang/invoke/MethodHandles$Lookup\"\n" + 
 			"    constant #74 class: #75 java/lang/invoke/MethodHandles\n" + 
 			"    constant #75 utf8: \"java/lang/invoke/MethodHandles\"\n" + 
-			"    constant #76 utf8: \"Lookup\"\n" + 
+			"    constant #76 utf8: \"Lookup\"\n" +
+			nestConstant +
 			"  \n" + 
 			"  // Field descriptor #6 LX;\n" + 
 			"  final synthetic X this$0;\n" + 
@@ -2661,7 +2682,8 @@ public void test017() throws Exception {
 			"     inner name: #71 Y, accessflags: 0 default],\n" + 
 			"    [inner class info: #72 java/lang/invoke/MethodHandles$Lookup, outer class info: #74 java/lang/invoke/MethodHandles\n" + 
 			"     inner name: #76 Lookup, accessflags: 25 public static final]\n" + 
-			"  Enclosing Method: #53  #55 X.foo()V\n" + 
+			"  Enclosing Method: #53  #55 X.foo()V\n" +
+			nestHost +
 			"Bootstrap methods:\n" + 
 			"  0 : # 64 invokestatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;" + 
 			"Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;\n" + 
