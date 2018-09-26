@@ -1027,7 +1027,7 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
     }
 
     @Test
-    void testRepeatStaticImport() {
+    void testRepeatStaticImport1() {
         String originalContents = '''\
             import static java.util.Collections.emptyList
             import static java.util.Collections.emptyList
@@ -1038,6 +1038,22 @@ final class OrganizeImportsTests extends OrganizeImportsTestSuite {
             List list = emptyList();
             '''
         doContentsCompareTest(originalContents, expectedContents)
+    }
+
+    @Test @NotYetImplemented // https://github.com/groovy/groovy-eclipse/issues/732
+    void testRepeatStaticImport2() {
+        addJavaSource('class A { public static boolean isSomething(String s) { return true; } }', 'A', 'p')
+        addJavaSource('class B { public static boolean isSomething(Iterable i) { return true; } }', 'B', 'p')
+
+        String contents = '''\
+            import static p.A.isSomething
+            import static p.B.isSomething
+            String s
+            Iterable i
+            isSomething(s)
+            isSomething(i)
+            '''
+        doContentsCompareTest(contents)
     }
 
     @Test // GRECLIPSE-929

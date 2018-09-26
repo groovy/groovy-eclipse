@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -381,7 +382,7 @@ public abstract class InferencingTestSuite extends SearchTestSuite {
         public VisitStatus acceptASTNode(ASTNode visitorNode, TypeLookupResult visitorResult, IJavaElement enclosingElement) {
             // might have AST nodes with overlapping locations, so result may not be null
             if (this.result == null &&
-                    visitorNode.getStart() == start && visitorNode.getEnd() == end &&
+                    visitorNode.getStart() == start && (visitorNode.getEnd() == end || (visitorNode instanceof AnnotatedNode && ((AnnotatedNode) visitorNode).getNameEnd() + 1 == end)) &&
                     !(visitorNode instanceof Statement /* ignore any statement */) &&
                     !(visitorNode instanceof TupleExpression /* ignore wrapper */) &&
                     !(visitorNode instanceof MethodNode /* ignore the run() method */) &&

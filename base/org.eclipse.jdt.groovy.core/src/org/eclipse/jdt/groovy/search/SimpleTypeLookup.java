@@ -151,7 +151,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             return ((FieldExpression) node).getField().getDeclaringClass();
 
         } else if (node instanceof StaticMethodCallExpression) {
-            return ((StaticMethodCallExpression) node).getOwnerType();
+            return null; //((StaticMethodCallExpression) node).getOwnerType();
 
         } else if (node instanceof ConstantExpression && scope.isMethodCall()) {
             // method call without an object expression; requires same handling as a free variable
@@ -289,19 +289,35 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             return new TypeLookupResult(nodeType, declaringType, declaration, confidence, scope);
 
         } else if (node instanceof StaticMethodCallExpression) {
-            String methodName = ((StaticMethodCallExpression) node).getMethod();
-            ClassNode ownerType = ((StaticMethodCallExpression) node).getOwnerType();
-
             List<MethodNode> candidates = new LinkedList<>();
-            if (!ownerType.isInterface()) {
-                candidates.addAll(ownerType.getMethods(methodName));
-            } else {
-                LinkedHashSet<ClassNode> faces = new LinkedHashSet<>();
-                VariableScope.findAllInterfaces(ownerType, faces, false);
-                for (ClassNode face : faces) {
-                    candidates.addAll(face.getMethods(methodName));
+            java.util.function.BiConsumer<ClassNode, String> collector = (classNode, methodName) -> {
+                if (classNode.isAbstract() || classNode.isInterface() || implementsTrait(classNode)) {
+                    LinkedHashSet<ClassNode> abstractTypes = new LinkedHashSet<>();
+                    VariableScope.findAllInterfaces(classNode, abstractTypes, false);
+                    for (ClassNode abstractType : abstractTypes) {
+                        candidates.addAll(abstractType.getMethods(methodName));
+                    }
+                } else {
+                    candidates.addAll(classNode.getMethods(methodName));
+                }
+            };
+
+            String methodName = ((StaticMethodCallExpression) node).getMethod();
+            collector.accept(((StaticMethodCallExpression) node).getOwnerType(), methodName);
+
+            // Workaround for https://issues.apache.org/jira/browse/GROOVY-7744:
+            /*String alias = node.getNodeMetaData("static.import.alias");
+            // deal with "import static a.B.C as Z" and "import static d.E.F as Z"
+            for (ImportNode staticImport : scope.getEnclosingModuleNode().getStaticImports().values()) {
+                if (staticImport.getAlias().equals(alias != null ? alias : methodName)) {
+                    collector.accept(staticImport.getType(), staticImport.getFieldName());
                 }
             }
+            // deal with "import static a.B.C as Z" and "import static d.E.*" where type E has member Z
+            for (ImportNode staticImport : scope.getEnclosingModuleNode().getStaticStarImports().values()) {
+                collector.accept(staticImport.getType(), alias != null ? alias : methodName);
+            }*/
+
             for (Iterator<MethodNode> it = candidates.iterator(); it.hasNext();) {
                 if (!it.next().isStatic()) it.remove();
             }

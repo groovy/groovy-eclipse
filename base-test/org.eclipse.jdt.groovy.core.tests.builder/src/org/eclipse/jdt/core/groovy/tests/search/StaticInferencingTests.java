@@ -24,6 +24,7 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.jdt.groovy.search.TypeLookupResult;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public final class StaticInferencingTests extends InferencingTestSuite {
@@ -459,5 +460,74 @@ public final class StaticInferencingTests extends InferencingTestSuite {
 
         String contents = "import static p.Other.dump\n";
         assertKnown(contents, "dump", "p.Other", "java.lang.Void");
+    }
+
+    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-7744")
+    public void testStaticImport11() throws Exception {
+        createUnit("p", "A", "package p\nclass A {\nstatic boolean isSomething(String s) {}\n}");
+        createUnit("p", "B", "package p\nclass B {\nstatic boolean isSomething(Iterable i) {}\n}");
+
+        String contents =
+            "import static p.A.isSomething\n" +
+            "import static p.B.isSomething\n" +
+            "class C {\n" +
+            "  static boolean isSomething(Object[] a) {}\n" +
+            "  static void m(String s, Iterable i, Object[] a) {\n" +
+            "    isSomething(s)\n" +
+            "    isSomething(i)\n" +
+            "    isSomething(a)\n" +
+            "  }\n" +
+            "\n";
+        int offset = contents.indexOf("isSomething(s)");
+        assertDeclaringType(contents, offset, offset + "isSomething".length(), "p.A");
+            offset = contents.indexOf("isSomething(i)");
+        assertDeclaringType(contents, offset, offset + "isSomething".length(), "p.B");
+            offset = contents.indexOf("isSomething(a)");
+        assertDeclaringType(contents, offset, offset + "isSomething".length(), "C");
+    }
+
+    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-7744")
+    public void testStaticImport12() throws Exception {
+        createUnit("p", "A", "package p\nclass A {\nstatic boolean isSomething(String s) {}\n}");
+        createUnit("p", "B", "package p\nclass B {\nstatic boolean isSomething(Iterable i) {}\n}");
+
+        String contents =
+            "import static p.A.*\n" +
+            "import static p.B.*\n" +
+            "class C {\n" +
+            "  static boolean isSomething(Object[] a) {}\n" +
+            "  static void m(String s, Iterable i, Object[] a) {\n" +
+            "    isSomething(s)\n" +
+            "    isSomething(i)\n" +
+            "    isSomething(a)\n" +
+            "  }\n" +
+            "\n";
+        int offset = contents.indexOf("isSomething(s)");
+        assertDeclaringType(contents, offset, offset + "isSomething".length(), "p.A");
+            offset = contents.indexOf("isSomething(i)");
+        assertDeclaringType(contents, offset, offset + "isSomething".length(), "p.B");
+            offset = contents.indexOf("isSomething(a)");
+        assertDeclaringType(contents, offset, offset + "isSomething".length(), "C");
+    }
+
+    @Test @Ignore("https://issues.apache.org/jira/browse/GROOVY-7744")
+    public void testStaticImport13() throws Exception {
+        createUnit("p", "A", "package p\nclass A {\nstatic boolean isSomething(String s) {}\n}");
+        createUnit("p", "B", "package p\nclass B {\nstatic boolean isSomething(Iterable i) {}\n}");
+
+        String contents =
+            "import static p.A.isSomething as wasSomething\n" +
+            "import static p.B.isSomething as wasSomething\n" +
+            "static boolean wasSomething(Object[] a) {}\n" +
+            "String s; Iterable i; Object[] a\n" +
+            "wasSomething(s)\n" +
+            "wasSomething(i)\n" +
+            "wasSomething(a)\n";
+        int offset = contents.indexOf("wasSomething(s)");
+        assertDeclaringType(contents, offset, offset + "wasSomething".length(), "p.A");
+            offset = contents.indexOf("wasSomething(i)");
+        assertDeclaringType(contents, offset, offset + "wasSomething".length(), "p.B");
+            offset = contents.indexOf("wasSomething(a)");
+        assertDeclaringType(contents, offset, offset + "wasSomething".length(), "Search");
     }
 }
