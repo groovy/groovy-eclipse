@@ -2780,7 +2780,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         env.addGroovyClass(paths[1], "q", "DefaultNamed",
             "package q;\n" +
-            "public class DefaultNamed {\n" +
+            "class DefaultNamed {\n" +
             "    public String name() { 'name' }\n" +
             "}\n");
 
@@ -2844,6 +2844,55 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         executeClass(paths[0], "Runner", "new name", "");
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/733
+    public void testTraitGenerics() throws Exception {
+        IPath[] paths = createSimpleProject("Project", true);
+
+        env.addGroovyClass(paths[1], "p", "Event",
+            "package p\n" +
+            "class Event<T> {\n" +
+            "  Event(String id, T payload) {\n" +
+            "  }\n" +
+            "  Event<T> setReplyTo(Object replyTo) {\n" +
+            "  }\n" +
+            "}\n");
+
+        env.addGroovyClass(paths[1], "p", "Events",
+            "package p\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "trait Events {\n" +
+            "  def <E extends Event<?>> Registration<Object, Closure<E>> on(Class key, Closure consumer) {\n" +
+            "  }\n" +
+            "}\n" +
+            "interface Registration<K, V> {}\n");
+
+        env.addGroovyClass(paths[1], "q", "Service",
+            "package q\n" +
+            "class Service implements p.Events {\n" +
+            "}\n");
+
+        env.addGroovyClass(paths[1], "q", "ServiceWrapper",
+            "package q\n" +
+            "class ServiceWrapper {\n" +
+            "  Service service\n" +
+            "}\n");
+
+        fullBuild(paths[0]);
+        expectingNoProblems();
+
+        // modify the body of the wrapper
+        env.addGroovyClass(paths[1], "q", "ServiceWrapper",
+            "package q\n" +
+            "class ServiceWrapper {\n" +
+            "  Service service\n" +
+            "  def logger\n" +
+            "}\n");
+
+        incrementalBuild(paths[0]);
+        expectingCompiledClasses("q.ServiceWrapper");
+        expectingNoProblems(); // not "Inconsistent classfile encountered: The undefined type parameter T is referenced from within Service"
+    }
+
     @Test // see GroovyCompilationUnitDeclaration#processToPhase(int)
     public void testTraitGRE1776() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);
@@ -2856,7 +2905,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         env.addGroovyClass(paths[1], "q", "MyClass",
             "package q\n" +
             "import p.MyTrait\n" +
-            "public class MyClass implements MyTrait {}\n");
+            "class MyClass implements MyTrait {}\n");
 
         incrementalBuild(paths[0]);
         expectingCompiledClasses("p.MyTrait", "p.MyTrait$Trait$Helper", "q.MyClass");

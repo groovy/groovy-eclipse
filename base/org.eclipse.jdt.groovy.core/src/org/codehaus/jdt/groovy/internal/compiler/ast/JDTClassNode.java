@@ -217,7 +217,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         // the preceding code sets 'groovyDecl', later used to 'initializeProperties'.
 
         // From this point onward... the code is only about initializing fields, constructors and methods.
-        if (redirect != null) {
+        if (isRedirectNode()) {
             // The code in ClassNode seems set up to get field information *always* from the end of the 'redirect' chain.
             // So, the redirect target should be responsible for its own members initialisation.
 

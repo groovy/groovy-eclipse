@@ -187,7 +187,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     private Map<CompilePhase, Map<Class<? extends ASTTransformation>, Set<ASTNode>>> transformInstances;
 
     // use this to synchronize access for the lazy init
-    protected Object lazyInitLock = new Object();
+    protected final Object lazyInitLock = new Object();
 
     // clazz!=null when resolved
     protected Class clazz;
@@ -199,8 +199,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     protected ClassNode componentType;
     // if not null this instance is handled as proxy
     // for the redirect
-    // GRECLIPSE private->protected
-    protected ClassNode redirect;
+    private ClassNode redirect;
     // flag if the classes or its members are annotated
     private boolean annotated;
 
@@ -1311,7 +1310,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             ret.append(">");
         }
         if (redirect != null && showRedirect) {
-            ret.append(" -> ").append(redirect().toString());
+            ret.append(" -> ").append(redirect.toString());
         }
         return ret.toString();
     }
@@ -1540,6 +1539,17 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     public boolean isAnnotated() {
         return this.annotated;
     }
+
+    // GRECLIPSE add
+    public GenericsType asGenericsType() {
+        if (!isGenericsPlaceHolder()) {
+            return new GenericsType(this);
+        } else {
+            ClassNode upper = (redirect != null ? redirect : this);
+            return new GenericsType(this, new ClassNode[]{upper}, null);
+        }
+    }
+    // GRECLIPSE end
 
     public GenericsType[] getGenericsTypes() {
         return genericsTypes;

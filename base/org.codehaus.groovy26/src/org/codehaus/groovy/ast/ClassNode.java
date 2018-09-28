@@ -192,21 +192,20 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     protected Class clazz;
     // only false when this classNode is constructed from a class
     // GRECLIPSE private->protected
-    protected volatile boolean lazyInitDone=true;
+    protected volatile boolean lazyInitDone = true;
     // not null if if the ClassNode is an array
     // GRECLIPSE private->protected
-    protected ClassNode componentType = null;
+    protected ClassNode componentType;
     // if not null this instance is handled as proxy
     // for the redirect
-    // GRECLIPSE private->protected
-    protected ClassNode redirect=null;
+    private ClassNode redirect;
     // flag if the classes or its members are annotated
     private boolean annotated;
 
     // type spec for generics
     // GRECLIPSE private->protected
-    protected GenericsType[] genericsTypes=null;
-    private boolean usesGenerics=false;
+    protected GenericsType[] genericsTypes;
+    private boolean usesGenerics;
 
     // if set to true the name getGenericsTypes consists
     // of 1 element describing the name of the placeholder
@@ -913,6 +912,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         } while ((outer = outer.getOuterClass()) != null);
 
         return result;
+        // GRECLIPSE end
     }
 
     /**
@@ -1359,7 +1359,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             ret.append(">");
         }
         if (redirect != null && showRedirect) {
-            ret.append(" -> ").append(redirect().toString());
+            ret.append(" -> ").append(redirect.toString());
         }
         return ret.toString();
     }
@@ -1539,6 +1539,17 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     public boolean isAnnotated() {
         return this.annotated;
     }
+
+    // GRECLIPSE add
+    public GenericsType asGenericsType() {
+        if (!isGenericsPlaceHolder()) {
+            return new GenericsType(this);
+        } else {
+            ClassNode upper = (redirect != null ? redirect : this);
+            return new GenericsType(this, new ClassNode[]{upper}, null);
+        }
+    }
+    // GRECLIPSE end
 
     public GenericsType[] getGenericsTypes() {
         return genericsTypes;
