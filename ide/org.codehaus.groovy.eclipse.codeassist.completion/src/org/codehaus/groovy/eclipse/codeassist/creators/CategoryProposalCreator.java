@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
@@ -51,8 +52,11 @@ import org.eclipse.jdt.internal.ui.text.java.MethodProposalInfo;
 import org.eclipse.jdt.internal.ui.text.java.ProposalInfo;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext;
+import org.eclipse.jface.viewers.StyledString;
 
 public class CategoryProposalCreator extends AbstractProposalCreator {
+
+    protected static final String GROOVY_METHOD_CONTRIBUTOR = "Groovy";
 
     @Override
     public List<IGroovyProposal> findAllProposals(ClassNode selfType, Set<ClassNode> categories, String prefix, boolean isStatic, boolean isPrimary) {
@@ -141,7 +145,7 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
     protected class CategoryMethodProposal extends GroovyMethodProposal {
 
         protected CategoryMethodProposal(MethodNode method) {
-            super(method, "Groovy");
+            super(method, GROOVY_METHOD_CONTRIBUTOR);
 
             if (isDefaultCategory(method.getDeclaringClass())) {
                 setRelevanceMultiplier(0.1f);
@@ -245,6 +249,12 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
             } else {
                 setRelevanceMultiplier(5);
             }
+        }
+
+        @Override
+        protected StyledString createDisplayString(FieldNode field) {
+            return super.createDisplayString(field).append(new StyledString(
+                " (" + GROOVY_METHOD_CONTRIBUTOR + ")", StyledString.DECORATIONS_STYLER));
         }
     }
 }

@@ -101,7 +101,7 @@ public class GroovyFieldProposal extends AbstractGroovyProposal {
         return new GroovyJavaFieldCompletionProposal(proposal, createDisplayString(field), javaContext);
     }
 
-    private StyledString createDisplayString(FieldNode field) {
+    protected StyledString createDisplayString(FieldNode field) {
         return new StyledString().append(field.getName())
             .append(" : ")
             .append(ProposalUtils.createSimpleTypeName(field.getType()))
