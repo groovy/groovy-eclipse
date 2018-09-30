@@ -34,7 +34,6 @@ import org.codehaus.groovy.eclipse.codeassist.ProposalUtils;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
-import org.eclipse.jdt.core.compiler.CharOperation;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
@@ -116,7 +115,7 @@ public class MethodProposalCreator extends AbstractProposalCreator {
                 if (methods != null) {
                     for (MethodNode method : methods) {
                         if (method.isStatic()) {
-                            addIfNotPresent(proposals, new GroovyMethodProposal(method));
+                            proposals.add(new GroovyMethodProposal(method));
                         }
                     }
                 }
@@ -127,7 +126,7 @@ public class MethodProposalCreator extends AbstractProposalCreator {
             if (type != null) {
                 for (MethodNode method : type.getMethods()) {
                     if (method.isStatic() && matcher.test(prefix, method.getName())) {
-                        addIfNotPresent(proposals, new GroovyMethodProposal(method));
+                        proposals.add(new GroovyMethodProposal(method));
                     }
                 }
             }
@@ -153,7 +152,7 @@ public class MethodProposalCreator extends AbstractProposalCreator {
                     if (method.isStatic() && matcher.test(prefix, method.getName())) {
                         GroovyMethodProposal proposal = new GroovyMethodProposal(method);
                         proposal.setRequiredStaticImport(typeName + '.' + method.getName());
-                        addIfNotPresent(proposals, proposal);
+                        proposals.add(proposal);
                     }
                 }
             } else {
@@ -163,7 +162,7 @@ public class MethodProposalCreator extends AbstractProposalCreator {
                         if (method.isStatic()) {
                             GroovyMethodProposal proposal = new GroovyMethodProposal(method);
                             proposal.setRequiredStaticImport(favoriteStaticMember);
-                            addIfNotPresent(proposals, proposal);
+                            proposals.add(proposal);
                         }
                     }
                 }
@@ -189,20 +188,5 @@ public class MethodProposalCreator extends AbstractProposalCreator {
         }
 
         proposal.setRelevanceMultiplier(relevanceMultiplier);
-    }
-
-    private static void addIfNotPresent(List<IGroovyProposal> proposals, GroovyMethodProposal proposal) {
-        if (!proposals.isEmpty()) {
-            char[] sig = ProposalUtils.createMethodSignature(proposal.getMethod());
-            for (IGroovyProposal igp : proposals) {
-                if (igp instanceof GroovyMethodProposal) {
-                    GroovyMethodProposal gmp = (GroovyMethodProposal) igp;
-                    if (gmp.getMethod().isStatic() && CharOperation.equals(sig, ProposalUtils.createMethodSignature(gmp.getMethod()))) {
-                        return;
-                    }
-                }
-            }
-        }
-        proposals.add(proposal);
     }
 }

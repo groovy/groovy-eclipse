@@ -115,7 +115,7 @@ final class RelevanceTests extends CompletionTestSuite {
             }
             '''.stripIndent()
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getLastIndexOf(contents, 'get')))
-        assertProposalOrdering(proposals, 'getAt', 'getMetaClass()', 'getDelegate()', 'getDirective()', 'getDefaultMetaClass()')
+        assertProposalOrdering(proposals, 'getAt', 'getDelegate()', 'getDirective()', 'getMetaClass()', 'getDefaultMetaClass()')
     }
 
     @Test

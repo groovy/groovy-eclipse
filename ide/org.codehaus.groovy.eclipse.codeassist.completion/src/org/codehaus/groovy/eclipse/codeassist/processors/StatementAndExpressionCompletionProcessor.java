@@ -19,7 +19,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -253,19 +255,23 @@ public class StatementAndExpressionCompletionProcessor extends AbstractGroovyCom
         CompletionEngine engine = new CompletionEngine(searchableEnvironment, completionRequestor, javaContext.getProject().getOptions(true), javaContext.getProject(), null, monitor);
         //@formatter:on
 
-        List<ICompletionProposal> javaProposals = new ArrayList<>(groovyProposals.size());
+        Map<String, IJavaCompletionProposal> javaProposals = new LinkedHashMap<>(groovyProposals.size());
         for (IGroovyProposal groovyProposal : groovyProposals) {
             try {
                 IJavaCompletionProposal javaProposal = groovyProposal.createJavaProposal(engine, context, javaContext);
                 if (javaProposal != null) {
-                    javaProposals.add(javaProposal);
+                    String[] displayTokens = javaProposal.getDisplayString().split(" : ");
+                    IJavaCompletionProposal p = javaProposals.put(displayTokens[0], javaProposal);
+                    if (p != null && displayTokens.length > 1 && displayTokens[1].contains("DefaultGroovyMethods")) {
+                        javaProposals.put(displayTokens[0], p);
+                    }
                 }
             } catch (Exception e) {
                 GroovyContentAssist.logError("Exception when creating groovy completion proposal", e);
             }
         }
 
-        return javaProposals;
+        return new ArrayList<>(javaProposals.values());
     }
 
     private void proposalCreatorLoop(Collection<IGroovyProposal> proposals, Collection<IProposalCreator> creators, ExpressionCompletionRequestor requestor,

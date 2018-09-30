@@ -18,9 +18,6 @@ package org.codehaus.groovy.eclipse.codeassist.creators;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -65,10 +62,7 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
         }
 
         DGMProposalFilter filter = new DGMProposalFilter();
-        Set<String> existingPropertyProposals = new HashSet<>();
-        Map<String, List<MethodNode>> existingMethodProposals = new HashMap<>();
-
-        List<IGroovyProposal> groovyProposals = new ArrayList<>();
+        List<IGroovyProposal> proposals = new ArrayList<>();
         for (ClassNode category : categories) {
             boolean isDefaultCategory = isDefaultCategory(category);
             for (MethodNode method : category.getAllDeclaredMethods()) {
@@ -81,55 +75,20 @@ public class CategoryProposalCreator extends AbstractProposalCreator {
                     Parameter[] params = method.getParameters();
 
                     if (matcher.test(prefix, methodName)) {
-                        if (params.length > 0 && GroovyUtils.isAssignable(selfType, params[0].getType()) && !isDuplicate(method, existingMethodProposals)) {
-                            groovyProposals.add(new CategoryMethodProposal(method));
-
-                            existingMethodProposals.computeIfAbsent(methodName, x -> new ArrayList<>(2)).add(method);
+                        if (params.length > 0 && GroovyUtils.isAssignable(selfType, params[0].getType())) {
+                            proposals.add(new CategoryMethodProposal(method));
                         }
                     }
 
                     if (params.length == 1 && findLooselyMatchedAccessorKind(prefix, methodName, true).isAccessorKind(method, true) &&
-                            !existingPropertyProposals.contains(methodName) && hasNoField(selfType, methodName) && GroovyUtils.isAssignable(selfType, params[0].getType())) {
-                        // add property variant of accessor name
-                        groovyProposals.add(new CategoryPropertyProposal(method));
-
-                        existingPropertyProposals.add(methodName);
+                            hasNoField(selfType, methodName) && GroovyUtils.isAssignable(selfType, params[0].getType())) {
+                        // add property variant of accessor method
+                        proposals.add(new CategoryPropertyProposal(method));
                     }
                 }
             }
         }
-        return groovyProposals;
-    }
-
-    /**
-     * Checks that the new method hasn't already been added.
-     */
-    protected boolean isDuplicate(MethodNode newMethod, Map<String, List<MethodNode>> existingMethodProposals) {
-        List<MethodNode> otherMethods = existingMethodProposals.get(newMethod.getName());
-        if (otherMethods != null) {
-            Parameter[] newParameters = newMethod.getParameters();
-            iterator: for (Iterator<MethodNode> it = otherMethods.iterator(); it.hasNext();) {
-                MethodNode otherMethod = it.next();
-                Parameter[] otherParameters = otherMethod.getParameters();
-                if (otherParameters.length == newParameters.length) {
-                    for (int i = 1, n = otherParameters.length; i < n; i += 1) {
-                        if (!otherParameters[i].getType().getName().equals(newParameters[i].getType().getName())) {
-                            // there is a mismatched parameter
-                            continue iterator;
-                        }
-                    }
-
-                    // all parameters match
-                    /*if (GroovyUtils.isAssignable(otherParameters[0].getType(), newParameters[0].getType())) {
-                        it.remove();
-                        break;
-                    } else {*/
-                        return true;
-                    /*}*/
-                }
-            }
-        }
-        return false;
+        return proposals;
     }
 
     protected boolean isDefaultCategory(ClassNode category) {
