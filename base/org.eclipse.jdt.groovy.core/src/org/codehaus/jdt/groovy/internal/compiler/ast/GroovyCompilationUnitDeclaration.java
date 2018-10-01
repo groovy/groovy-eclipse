@@ -146,7 +146,6 @@ import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.ExtraCompilerModifiers;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
-import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
@@ -1202,10 +1201,8 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                             FieldDeclaration fieldDeclaration = (FieldDeclaration) location;
                             fieldDeclaration.bits |= ASTNode.HasLocalType;
                             fieldDeclaration.initialization = innerTypeDeclaration.allocation;
-
-                            if (innerTypeDeclaration.getClassNode().isEnum()) innerTypeDeclaration.allocation.enumConstant = fieldDeclaration;
-                            // outerTypeDeclaration.[i|staticI]nitializerScope is null at this time; defer creation of anonymous inner's enclosing scope
-                            innerTypeDeclaration.enclosingScope = () -> new MethodScope(fieldDeclaration.isStatic() ? outerTypeDeclaration.staticInitializerScope : outerTypeDeclaration.initializerScope, outerTypeDeclaration, fieldDeclaration.isStatic());
+                            if (innerTypeDeclaration.getClassNode().isEnum())
+                                innerTypeDeclaration.allocation.enumConstant = fieldDeclaration;
                         } else {
                             throw new GroovyEclipseBug("Enclosing scope not found for anon. inner class: " + innerTypeDeclaration.getClassNode().getName());
                         }

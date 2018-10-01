@@ -358,7 +358,7 @@ public class GroovyClassScope extends ClassScope {
     }
 
     @Override
-    public void buildFieldsAndMethods() {
+    protected void buildFieldsAndMethods() {
         super.buildFieldsAndMethods();
 
         for (MethodBinding method : referenceContext.binding.methods()) {
@@ -366,17 +366,19 @@ public class GroovyClassScope extends ClassScope {
         }
 
         for (GroovyTypeDeclaration anonType : ((GroovyTypeDeclaration) referenceContext).getAnonymousTypes()) {
-            if (anonType.scope == null && !anonType.getClassNode().isEnum()) {
+            if (anonType.scope == null && anonType.enclosingScope != null) {
                 anonType.allocation.resolveType(anonType.enclosingScope.get());
             }
         }
 
         for (FieldDeclaration field : referenceContext.fields) {
-            if (field.getKind() == ENUM_CONSTANT && field.initialization instanceof QualifiedAllocationExpression) {
+            if (field.initialization instanceof QualifiedAllocationExpression) {
                 QualifiedAllocationExpression initialization = (QualifiedAllocationExpression) field.initialization;
-                if (initialization.anonymousType != null && initialization.anonymousType.scope == null) { // unresolved enum const body
+                if (initialization.anonymousType != null && initialization.anonymousType.scope == null) { // anon. inner initialization
                     MethodScope scope = (field.isStatic() ? referenceContext.staticInitializerScope : referenceContext.initializerScope);
-                    if (field.binding.type == null) field.binding.type = scope.enclosingSourceType();
+                    if (field.binding.type == null) {
+                        field.binding.type = (field.getKind() == ENUM_CONSTANT ? scope.enclosingSourceType() : field.type.resolveType(scope));
+                    }
                     field.resolve(scope);
                 }
             }
