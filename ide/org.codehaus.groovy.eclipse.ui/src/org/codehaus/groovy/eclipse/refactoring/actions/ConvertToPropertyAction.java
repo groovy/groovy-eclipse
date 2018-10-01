@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.refactoring.actions;
 
+import static java.beans.Introspector.decapitalize;
 import static java.util.regex.Pattern.compile;
 
 import static org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.FORMATTER_INSERT_SPACE_AFTER_ASSIGNMENT_OPERATOR;
@@ -34,7 +35,6 @@ import org.codehaus.groovy.eclipse.codebrowsing.requestor.ASTNodeFinder;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.Region;
 import org.codehaus.groovy.eclipse.codebrowsing.selection.FindSurroundingNode;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
-import org.codehaus.groovy.eclipse.refactoring.core.utils.StringUtils;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.ModuleNodeMapper.ModuleNodeInfo;
 import org.eclipse.jdt.core.JavaCore;
@@ -96,7 +96,7 @@ public class ConvertToPropertyAction extends Action {
                             String propertyName = match.group(1);
 
                             // replace "getPropertyName()" with "propertyName"
-                            return new ReplaceEdit(offset, length, StringUtils.uncapitalize(propertyName));
+                            return new ReplaceEdit(offset, length, decapitalize(propertyName));
 
                         } else if (args.getExpressions().size() == 1 && (match = compile("set(\\p{javaJavaIdentifierPart}+)").matcher(call.getMethodAsString())).matches()) {
                             int offset = node.getStart(),
@@ -107,7 +107,7 @@ public class ConvertToPropertyAction extends Action {
                             // with "propertyName = value_expression" (check prefs for spaces around assignment)
                             MultiTextEdit edits = new MultiTextEdit();
                             Map<String, String> options = gcu.getJavaProject().getOptions(true);
-                            StringBuilder replacement = new StringBuilder(StringUtils.uncapitalize(propertyName));
+                            StringBuilder replacement = new StringBuilder(decapitalize(propertyName));
                             if (JavaCore.INSERT.equals(options.get(FORMATTER_INSERT_SPACE_BEFORE_ASSIGNMENT_OPERATOR)))
                                 replacement.append(' ');
                             replacement.append('=');

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,12 @@ package org.codehaus.groovy.eclipse.test.actions
 import static org.eclipse.jdt.core.JavaCore.*
 import static org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants.*
 
+import groovy.transform.CompileStatic
+
 import org.codehaus.groovy.eclipse.test.ui.GroovyEditorTestSuite
 import org.junit.Test
 
+@CompileStatic
 final class ConvertToPropertyActionTests extends GroovyEditorTestSuite {
 
     private static final String ACTION_ID = 'org.codehaus.groovy.eclipse.ui.convertToProperty'
@@ -31,28 +34,49 @@ final class ConvertToPropertyActionTests extends GroovyEditorTestSuite {
     }
 
     @Test
-    void testGetterToProperty() {
+    void testGetterToProperty1() {
         convertToProperty "new Date().get${CARET}Hours();"
-        assertEditorContents "new Date().hours;"
+        assertEditorContents 'new Date().hours;'
     }
 
     @Test
     void testGetterToProperty2() {
-        addGroovySource 'class Foo { def getURL() { null } }', 'Foo'
+        addGroovySource 'class Foo { def getURL() {} }', 'Foo'
         convertToProperty "new Foo().get${CARET}URL()"
-        assertEditorContents "new Foo().URL"
+        assertEditorContents 'new Foo().URL'
     }
 
     @Test
-    void testIsserToProperty() {
+    void testGetterToProperty3() {
+        addGroovySource 'class Foo { def getURLEncoder() {} }', 'Foo'
+        convertToProperty "new Foo().get${CARET}URLEncoder()"
+        assertEditorContents 'new Foo().URLEncoder'
+    }
+
+    @Test
+    void testIsserToProperty1() {
         convertToProperty "[].is${CARET}Empty();"
-        assertEditorContents "[].empty;"
+        assertEditorContents '[].empty;'
     }
 
     @Test
-    void testSetterToProperty() {
+    void testSetterToProperty1() {
         convertToProperty "new Date().set${CARET}Time(1234L);"
-        assertEditorContents "new Date().time = 1234L;"
+        assertEditorContents 'new Date().time = 1234L;'
+    }
+
+    @Test
+    void testSetterToProperty2() {
+        addGroovySource 'class Foo { void setURL(url) {} }', 'Foo'
+        convertToProperty "new Foo().set${CARET}URL(null)"
+        assertEditorContents 'new Foo().URL = null'
+    }
+
+    @Test
+    void testSetterToProperty3() {
+        addGroovySource 'class Foo { void setURLEncoder(encoder) {} }', 'Foo'
+        convertToProperty "new Foo().set${CARET}URLEncoder(null)"
+        assertEditorContents 'new Foo().URLEncoder = null'
     }
 
     @Test
@@ -120,7 +144,7 @@ final class ConvertToPropertyActionTests extends GroovyEditorTestSuite {
     @Test
     void testStaticSetterToProperty() {
         convertToProperty "URL.setURL${CARET}StreamHandlerFactory(null)"
-        assertEditorContents "URL.uRLStreamHandlerFactory = null"
+        assertEditorContents "URL.URLStreamHandlerFactory = null"
     }
 
     @Test
