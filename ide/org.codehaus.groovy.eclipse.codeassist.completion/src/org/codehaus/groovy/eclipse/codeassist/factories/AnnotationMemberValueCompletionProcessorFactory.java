@@ -148,7 +148,7 @@ public class AnnotationMemberValueCompletionProcessorFactory implements IGroovyC
                 List<ClassNode> completionTypes = new ArrayList<>(2);
                 if (context.containingDeclaration instanceof ClassNode) {
                     completionTypes.add((ClassNode) context.containingDeclaration);
-                } else {
+                } else if (context.containingDeclaration.getDeclaringClass() != null) {
                     completionTypes.add(context.containingDeclaration.getDeclaringClass());
                 }
                 ClassNode memberType = (member != null ? member.getReturnType() : ClassHelper.VOID_TYPE);
