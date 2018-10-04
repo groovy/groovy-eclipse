@@ -1296,10 +1296,11 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
     public String toString(boolean showRedirect) {
         if (isArray()) {
-            return componentType.toString(showRedirect)+"[]";
+            return getComponentType().toString(showRedirect)+"[]";
         }
-        StringBuilder ret = new StringBuilder(getName());
-        if (placeholder) ret = new StringBuilder(getUnresolvedName());
+        boolean placeholder = isGenericsPlaceHolder();
+        StringBuilder ret = new StringBuilder(!placeholder ? getName() : getUnresolvedName());
+        GenericsType[] genericsTypes = getGenericsTypes();
         if (!placeholder && genericsTypes != null) {
             ret.append(" <");
             for (int i = 0; i < genericsTypes.length; i++) {
@@ -1309,7 +1310,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             }
             ret.append(">");
         }
-        if (redirect != null && showRedirect) {
+        if (isRedirectNode() && showRedirect) {
             ret.append(" -> ").append(redirect.toString());
         }
         return ret.toString();
@@ -1587,27 +1588,6 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         }
         return n;
     }
-
-    // GRECLIPSE add
-    public ClassNode[] getPlainNodeReferencesFor(ClassNode[] classNodes) {
-        if (classNodes == null) {
-            return null;
-        }
-        if (classNodes.length == 0) {
-            return ClassNode.EMPTY_ARRAY;
-        }
-        ClassNode[] result = new ClassNode[classNodes.length];
-        for (int i = 0, n = classNodes.length; i < n; i += 1) {
-            ClassNode cn = classNodes[i];
-            if (cn.usesGenerics) {
-                result[i] = cn.getPlainNodeReference();
-            } else {
-                result[i] = cn;
-            }
-        }
-        return result;
-    }
-    // GRECLIPSE end
 
     public boolean isAnnotationDefinition() {
         return redirect().isPrimaryNode &&

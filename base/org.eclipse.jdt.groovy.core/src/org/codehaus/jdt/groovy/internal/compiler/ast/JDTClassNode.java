@@ -76,7 +76,6 @@ import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.SyntheticMethodBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TagBits;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
-import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
 import org.eclipse.jdt.internal.compiler.problem.AbortCompilation;
 
 /**
@@ -502,29 +501,32 @@ public class JDTClassNode extends ClassNode implements JDTNode {
     }
 
     @Override
+    public void setUsingGenerics(boolean b) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setGenericsPlaceHolder(boolean b) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void setGenericsTypes(GenericsType[] genericsTypes) {
         anyGenericsInitialized = true;
         super.setGenericsTypes(genericsTypes);
     }
 
     void setUpGenerics() {
-        if (!anyGenericsInitialized)
-        try {
+        if (!anyGenericsInitialized) {
+            final GenericsType[] generics;
             if (jdtBinding instanceof RawTypeBinding) {
-                // nothing to do
+                generics = null;
             } else if (jdtBinding instanceof ParameterizedTypeBinding) {
-                GenericsType[] gts = new JDTClassNodeBuilder(resolver).configureTypeArguments(((ParameterizedTypeBinding) jdtBinding).arguments);
-                setGenericsTypes(gts);
-            } else {
-                // SourceTB, BinaryTB, TypeVariableB, WildcardB
-                TypeVariableBinding[] typeVariables = jdtBinding.typeVariables();
-                GenericsType[] generics = new JDTClassNodeBuilder(resolver).configureTypeVariables(typeVariables);
-                if (generics != null) {
-                    setGenericsTypes(generics);
-                }
+                generics = new JDTClassNodeBuilder(resolver).configureTypeArguments(((ParameterizedTypeBinding) jdtBinding).arguments);
+            } else { // BinaryTypeBinding, SourceTypeBinding, TypeVariableBinding, WildcardBinding
+                generics = new JDTClassNodeBuilder(resolver).configureTypeVariables(jdtBinding.typeVariables());
             }
-        } finally {
-            anyGenericsInitialized = true;
+            setGenericsTypes(generics);
         }
     }
 

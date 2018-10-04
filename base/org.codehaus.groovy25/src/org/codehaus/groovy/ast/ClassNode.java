@@ -1310,10 +1310,11 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
     public String toString(boolean showRedirect) {
         if (isArray()) {
-            return componentType.toString(showRedirect)+"[]";
+            return getComponentType().toString(showRedirect)+"[]";
         }
-        StringBuilder ret = new StringBuilder(getName());
-        if (placeholder) ret = new StringBuilder(getUnresolvedName());
+        boolean placeholder = isGenericsPlaceHolder();
+        StringBuilder ret = new StringBuilder(!placeholder ? getName() : getUnresolvedName());
+        GenericsType[] genericsTypes = getGenericsTypes();
         if (!placeholder && genericsTypes != null) {
             ret.append(" <");
             for (int i = 0; i < genericsTypes.length; i++) {
@@ -1323,7 +1324,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             }
             ret.append(">");
         }
-        if (redirect != null && showRedirect) {
+        if (isRedirectNode() && showRedirect) {
             ret.append(" -> ").append(redirect.toString());
         }
         return ret.toString();
