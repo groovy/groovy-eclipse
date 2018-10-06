@@ -15,9 +15,7 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.codehaus.groovy.ast.ClassHelper;
@@ -71,7 +69,7 @@ class JDTClassNodeBuilder {
         }
 
         if (type instanceof BaseTypeBinding) {
-            return configureBaseTypeBinding((BaseTypeBinding) type);
+            return configureBaseType((BaseTypeBinding) type);
         } else if (type instanceof BinaryTypeBinding) {
             return configureBinaryType((BinaryTypeBinding) type);
         } else if (type instanceof SourceTypeBinding) {
@@ -115,8 +113,7 @@ class JDTClassNodeBuilder {
         for (int i = 0; i < n; i += 1) {
             ClassNode t = configureType(bindings[i]);
             if (bindings[i] instanceof WildcardBinding) {
-                GenericsType[] gen = t.getGenericsTypes();
-                gts[i] = gen[0];
+                gts[i] = t.getGenericsTypes()[0];
             } else {
                 gts[i] = new GenericsType(t);
             }
@@ -151,10 +148,7 @@ class JDTClassNodeBuilder {
             return ptb.environment().convertToRawType(ptb.genericType(), false);
         } else if (tb instanceof TypeVariableBinding) {
             TypeBinding fb = ((TypeVariableBinding) tb).firstBound;
-            if (fb == null) {
-                return tb.erasure(); // Should be JLObject
-            }
-            return fb;
+            return (fb != null ? fb : tb.erasure());
         } else if (tb instanceof BinaryTypeBinding) {
             if (tb.isGenericType()) {
                 LookupEnvironment le = ReflectionUtils.getPrivateField(BinaryTypeBinding.class, "environment", tb);
@@ -178,9 +172,8 @@ class JDTClassNodeBuilder {
     private ClassNode configureGenericArray(ArrayBinding genericArrayType) {
         TypeBinding component = genericArrayType.leafComponentType;
         ClassNode node = resolver.convertToClassNode(component);
-        int dims = genericArrayType.dimensions;
         ClassNode result = node;
-        for (int d = 0; d < dims; d += 1) {
+        for (int n = genericArrayType.dimensions; n > 0; n -= 1) {
             result = result.makeArray();
         }
         return result;
@@ -200,15 +193,12 @@ class JDTClassNodeBuilder {
         cn.setGenericsPlaceHolder(true);
         ClassNode cn2 = ClassHelper.makeWithoutCaching(tv.debugName());
         cn2.setGenericsPlaceHolder(true);
-        GenericsType[] gts = new GenericsType[] { new GenericsType(cn2) };
-        cn.setGenericsTypes(gts);
         cn.setRedirect(ClassHelper.OBJECT_TYPE);
+        cn.setGenericsTypes(new GenericsType[] {new GenericsType(cn2)});
         typeVariableConfigurationInProgress.put(tv, cn);
         // doing a bit of what is in Java5.makeClassNode() where it sorts out its front/back GR1563
-        TypeBinding tb = tv.firstBound;
-        if (tb != null && !tb.debugName().equals("java.lang.Object")) {
-            ClassNode back = configureType(tb);
-            cn.setRedirect(back);
+        if (tv.firstBound != null && !tv.firstBound.debugName().equals("java.lang.Object")) {
+            cn.setRedirect(configureType(tv.firstBound));
         }
         typeVariableConfigurationInProgress.remove(tv);
         return cn;
@@ -236,20 +226,19 @@ class JDTClassNodeBuilder {
     }
 
     private TypeBinding[] getBounds(TypeVariableBinding tv) {
-        List<TypeBinding> bounds = new ArrayList<>();
         if (tv.firstBound == null) {
             TypeBinding erasure = tv.erasure();
             if (erasure == null) {
                 erasure = resolver.getScope().getJavaLangObject();
             }
-            return new TypeBinding[] { erasure }; // Should be JLObject
+            return new TypeBinding[] {erasure};
+        } else {
+            TypeBinding[] others = tv.otherUpperBounds();
+            TypeBinding[] bounds = new TypeBinding[1 + others.length];
+            System.arraycopy(others, 0, bounds, 1, others.length);
+            bounds[0] = tv.firstBound;
+            return bounds;
         }
-        bounds.add(tv.firstBound);
-        TypeBinding[] obs = tv.otherUpperBounds();
-        for (int i = 0; i < obs.length; i++) {
-            bounds.add(obs[i]);
-        }
-        return bounds.toArray(new TypeBinding[bounds.size()]);
     }
 
     /**
@@ -259,15 +248,10 @@ class JDTClassNodeBuilder {
         ClassNode base = ClassHelper.makeWithoutCaching("?");
         base.setRedirect(ClassHelper.OBJECT_TYPE);
 
-        ClassNode[] uppers = configureTypes(getUpperbounds(wildcardType));
-
-        ClassNode[] lowers = configureTypes(getLowerbounds(wildcardType));
-        ClassNode lower = null;
-        if (lowers != null && lowers.length > 0) {
-            lower = lowers[0];
-        }
-
-        GenericsType t = new GenericsType(base, uppers, lower);
+        ClassNode[] uppers = configureTypes(getUpperBounds(wildcardType));
+        ClassNode[] lowers = configureTypes(getLowerBounds(wildcardType));
+        GenericsType t = new GenericsType(base, uppers,
+            lowers != null && lowers.length > 0 ? lowers[0] : null);
         t.setWildcard(true);
 
         ClassNode ref = ClassHelper.makeWithoutCaching(Object.class, false);
@@ -275,16 +259,16 @@ class JDTClassNodeBuilder {
         return ref;
     }
 
-    private TypeBinding[] getLowerbounds(WildcardBinding wildcardType) {
+    private TypeBinding[] getLowerBounds(WildcardBinding wildcardType) {
         if (wildcardType.boundKind == Wildcard.SUPER) {
-            return new TypeBinding[] { wildcardType.bound };
+            return new TypeBinding[] {wildcardType.bound};
         }
         return Binding.NO_TYPES;
     }
 
-    private TypeBinding[] getUpperbounds(WildcardBinding wildcardType) {
+    private TypeBinding[] getUpperBounds(WildcardBinding wildcardType) {
         if (wildcardType.boundKind == Wildcard.EXTENDS) {
-            int nBounds = (wildcardType.otherBounds == null) ? 1 : 1 + wildcardType.otherBounds.length;
+            int nBounds = (wildcardType.otherBounds == null ? 1 : 1 + wildcardType.otherBounds.length);
             TypeBinding[] bounds = new TypeBinding[nBounds];
             bounds[0] = wildcardType.bound;
             nBounds -= 1;
@@ -303,10 +287,9 @@ class JDTClassNodeBuilder {
             return new JDTClassNode((RawTypeBinding) rt, resolver); // doesn't need generics initializing
         }
         TypeBinding rt = toRawType(parameterizedType);
-        if ((rt instanceof ParameterizedTypeBinding) && !(rt instanceof RawTypeBinding)) {
+        if (rt instanceof ParameterizedTypeBinding && !(rt instanceof RawTypeBinding)) {
             // the type was the inner type of a parameterized type
             return new JDTClassNode((ParameterizedTypeBinding) rt, resolver); // doesn't need generics initializing
-
         }
         ClassNode base = configureType(rt);
         if (base instanceof JDTClassNode) {
@@ -315,16 +298,14 @@ class JDTClassNodeBuilder {
             // that code when called for Iterable will set the redirect to point to the generics. That is what
             // we are trying to achieve here.
             if (!(parameterizedType instanceof RawTypeBinding)) {
-                ClassNode cn = configureType(parameterizedType.genericType());
-                ((JDTClassNode) base).setRedirect(cn);
+                base.setRedirect(configureType(parameterizedType.genericType()));
             }
         }
-        GenericsType[] gts = configureTypeArguments(parameterizedType.arguments);
-        base.setGenericsTypes(gts);
+        base.setGenericsTypes(configureTypeArguments(parameterizedType.arguments));
         return base;
     }
 
-    private ClassNode configureBaseTypeBinding(BaseTypeBinding type) {
+    private ClassNode configureBaseType(BaseTypeBinding type) {
         switch (type.id) {
         case TypeIds.T_boolean:
             return ClassHelper.boolean_TYPE;
