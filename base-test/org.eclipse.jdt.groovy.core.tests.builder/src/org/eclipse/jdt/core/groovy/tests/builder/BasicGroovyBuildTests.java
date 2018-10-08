@@ -2651,6 +2651,56 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
         assertEquals("Wrong classnode found", "java.net.URL", url.getName());
     }
 
+    @Test // https://github.com/groovy/groovy-eclipse/issues/737
+    public void testNoResolveFailurePropagation1() throws Exception {
+        IPath[] paths = createSimpleProject("Project", true);
+
+        env.addGroovyClass(paths[1], "p", "One",
+            "package p;\n" +
+            "class One {\n" +
+            "  def pat(str) {\n" +
+            "    Pattern.compile(str)\n" + // not resolvable
+            "  }\n" +
+            "}\n");
+        env.addGroovyClass(paths[1], "p", "Two",
+            "package p;\n" +
+            "import java.util.regex.Pattern\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class Two {\n" +
+            "  One one\n" +
+            "  def m() {\n" +
+            "    Pattern pattern = null\n" +
+            "  }\n" +
+            "}\n");
+        fullBuild(paths[0]);
+        expectingNoProblems();
+    }
+
+    @Test
+    public void testNoResolveFailurePropagation2() throws Exception {
+        IPath[] paths = createSimpleProject("Project", true);
+
+        env.addGroovyClass(paths[1], "p", "One",
+            "package p;\n" +
+            "class One {\n" +
+            "  def policy() {\n" +
+            "    ThreadPoolExecutor.AbortPolicy\n" + // not resolvable
+            "  }\n" +
+            "}\n");
+        env.addGroovyClass(paths[1], "p", "Two",
+            "package p;\n" +
+            "import java.util.concurrent.ThreadPoolExecutor\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class Two {\n" +
+            "  One one\n" +
+            "  def m() {\n" +
+            "    ThreadPoolExecutor.AbortPolicy policy = null\n" +
+            "  }\n" +
+            "}\n");
+        fullBuild(paths[0]);
+        expectingNoProblems();
+    }
+
     @Test // GRECLIPSE-1170
     public void testFieldInitializerFromOtherFile() throws Exception {
         IPath[] paths = createSimpleProject("Project", true);

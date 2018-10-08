@@ -143,11 +143,11 @@ public class JDTResolver extends ResolveVisitor {
     private Set<ClassNode> resolvedClassNodes = new HashSet<>();
 
     /**
-     * Records the type names that aren't resolvable for the current resolution
-     * (cleared in finishedResolution()). This means we won't constantly attempt
-     * to lookup something that is not found through the same routes repeatedly.
+     * Records the type names that aren't resolvable for the current resolution.
+     * This means we will not repeatedly attempt to lookup something that is not
+     * found through the same routes.
      */
-    private Set<String> unresolvables = new HashSet<>();
+    private Map<String, Set<String>> unresolvables = new HashMap<>();
 
     //--------------------------------------------------------------------------
 
@@ -186,8 +186,9 @@ public class JDTResolver extends ResolveVisitor {
     @Override
     public void startResolving(ClassNode classNode, SourceUnit sourceUnit) {
         try {
+            unresolvables.put(classNode.getModule().getMainClassName(), new HashSet<>());
             super.startResolving(classNode, sourceUnit);
-        } catch (AbortResolutionException e) {
+        } catch (AbortResolutionException ignore) {
             // probably syntax error(s)
         } finally {
             resetSourceUnit();
@@ -249,9 +250,9 @@ public class JDTResolver extends ResolveVisitor {
 
     public ClassNode resolve(String name) {
         if (name.charAt(0) == 'j' || name.length() <= BOOLEAN_LENGTH) {
-            ClassNode commonRedirect = COMMON_TYPES.get(name);
-            if (commonRedirect != null) {
-                return commonRedirect;
+            ClassNode commonType = COMMON_TYPES.get(name);
+            if (commonType != null) {
+                return commonType;
             }
         }
 
@@ -266,17 +267,20 @@ public class JDTResolver extends ResolveVisitor {
             }
         }
 
-        if (!unresolvables.contains(name)) {
+        ClassNode firstClass = compilationUnit.getFirstClassNode();
+        String mainClassName = firstClass.getModule().getMainClassName();
+        Set<String> unresolvable = unresolvables.computeIfAbsent(mainClassName, x -> new HashSet<>());
+        if (!unresolvable.contains(name)) {
             synchronized (this) {
                 ClassNode previousClass = currentClass;
                 try {
-                    currentClass = compilationUnit.getFirstClassNode().getPlainNodeReference();
+                    currentClass = firstClass.getPlainNodeReference();
 
                     ClassNode type = ClassHelper.makeWithoutCaching(name);
                     if (super.resolve(type, true, true, true)) {
                         return type.redirect();
                     } else {
-                        unresolvables.add(name);
+                        unresolvable.add(name);
                     }
                 } finally {
                     currentClass = previousClass;
@@ -297,13 +301,14 @@ public class JDTResolver extends ResolveVisitor {
             }
         }
 
-        if (unresolvables.contains(name)) {
+        Set<String> unresolvable = unresolvables.get(currentClass.getModule().getMainClassName());
+        if (unresolvable.contains(name)) {
             return false;
         }
 
         boolean b = super.resolve(type, testModuleImports, testDefaultImports, testStaticInnerClasses);
         if (!b) {
-            unresolvables.add(name);
+            unresolvable.add(name);
         }
         return b;
     }
