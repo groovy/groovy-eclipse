@@ -53,7 +53,7 @@ import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.implem
 /**
  * Utility methods to deal with generic types.
  *
- * @author Cedric Champeau
+ * @author Cédric Champeau
  * @author Paul King
  */
 public class GenericsUtils {
@@ -421,6 +421,28 @@ public class GenericsUtils {
         GenericsType[] sgts = current.getGenericsTypes();
         if (sgts != null) {
             for (GenericsType sgt : sgts) {
+                // GRECLIPSE add
+                if (sgt.isPlaceholder()) {
+                    ClassNode redirect = ClassHelper.OBJECT_TYPE;
+                    if (sgt.getUpperBounds() != null && sgt.getUpperBounds().length > 0) {
+                        redirect = sgt.getUpperBounds()[0];
+                    } else if (sgt.getLowerBound() != null) {
+                        redirect = sgt.getLowerBound();
+                    }
+                    ClassNode type = ClassHelper.makeWithoutCaching(sgt.getName());
+                    type.setGenericsPlaceHolder(true);
+                    if (!redirect.isRedirectNode()) {
+                        type.setRedirect(redirect);
+                    } else { try {
+                        java.lang.reflect.Field r =
+                            ClassNode.class.getDeclaredField("redirect");
+                        r.setAccessible(true);
+                        r.set(type, redirect);
+                        } catch (Exception e) { throw new RuntimeException(e); }
+                    }
+                    ret.put(sgt.getName(), type);
+                } else
+                // GRECLIPSE end
                 ret.put(sgt.getName(), sgt.getType());
             }
         }
@@ -579,9 +601,11 @@ public class GenericsUtils {
     }
 
     /**
-     * transforms generics types from an old context to a new context using the given spec. This method assumes
-     * all generics types will be placeholders. WARNING: The resulting generics types may or may not be placeholders
+     * Transforms generics types from an old context to a new context using the
+     * given spec. This method assumes all generics types will be placeholders.
+     * WARNING: The resulting generics types may or may not be placeholders
      * after the transformation.
+     *
      * @param genericsSpec the generics context information spec
      * @param oldPlaceHolders the old placeholders
      * @return the new generics types

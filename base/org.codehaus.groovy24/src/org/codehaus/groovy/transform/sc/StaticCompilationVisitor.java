@@ -97,7 +97,7 @@ import static groovyjarjarasm.asm.Opcodes.ACC_SYNTHETIC;
  * Static compilation relies on static type checking, which explains why this visitor extends the type checker
  * visitor.
  *
- * @author Cedric Champeau
+ * @author Cédric Champeau
  */
 public class StaticCompilationVisitor extends StaticTypeCheckingVisitor {
     private static final ClassNode TYPECHECKED_CLASSNODE = ClassHelper.make(TypeChecked.class);

@@ -80,7 +80,7 @@ import static org.codehaus.groovy.transform.trait.SuperCallTraitTransformer.UNRE
  * <li>potentially a utility inner class to assist with implementing trait fields</li>
  * </ul>
  *
- * @author Cedric Champeau
+ * @author Cédric Champeau
  */
 @GroovyASTTransformation(phase = CompilePhase.SEMANTIC_ANALYSIS)
 public class TraitASTTransformation extends AbstractASTTransformation implements CompilationUnitAware {
