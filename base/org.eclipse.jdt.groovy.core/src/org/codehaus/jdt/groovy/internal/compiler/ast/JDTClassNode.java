@@ -384,7 +384,7 @@ public class JDTClassNode extends ClassNode implements JDTNode {
         ClassNode back = resolver.convertToClassNode(c);
         if (!(t instanceof BinaryTypeBinding || t instanceof SourceTypeBinding)) {
             ClassNode front = new JDTClassNodeBuilder(resolver).configureType(t);
-            front.setRedirect(back);
+            JDTClassNodeBuilder.setRedirect(front, back);
             return front;
         }
         return back;

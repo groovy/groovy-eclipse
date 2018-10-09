@@ -421,28 +421,6 @@ public class GenericsUtils {
         GenericsType[] sgts = current.getGenericsTypes();
         if (sgts != null) {
             for (GenericsType sgt : sgts) {
-                // GRECLIPSE add
-                if (sgt.isPlaceholder()) {
-                    ClassNode redirect = ClassHelper.OBJECT_TYPE;
-                    if (sgt.getUpperBounds() != null && sgt.getUpperBounds().length > 0) {
-                        redirect = sgt.getUpperBounds()[0];
-                    } else if (sgt.getLowerBound() != null) {
-                        redirect = sgt.getLowerBound();
-                    }
-                    ClassNode type = ClassHelper.makeWithoutCaching(sgt.getName());
-                    type.setGenericsPlaceHolder(true);
-                    if (!redirect.isRedirectNode()) {
-                        type.setRedirect(redirect);
-                    } else { try {
-                        java.lang.reflect.Field r =
-                            ClassNode.class.getDeclaredField("redirect");
-                        r.setAccessible(true);
-                        r.set(type, redirect);
-                        } catch (Exception e) { throw new RuntimeException(e); }
-                    }
-                    ret.put(sgt.getName(), type);
-                } else
-                // GRECLIPSE end
                 ret.put(sgt.getName(), sgt.getType());
             }
         }

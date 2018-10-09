@@ -189,18 +189,21 @@ class JDTClassNodeBuilder {
         if (nodeInProgress != null) {
             return nodeInProgress;
         }
+
         ClassNode cn = ClassHelper.makeWithoutCaching(tv.debugName());
         cn.setGenericsPlaceHolder(true);
         ClassNode cn2 = ClassHelper.makeWithoutCaching(tv.debugName());
         cn2.setGenericsPlaceHolder(true);
-        cn.setRedirect(ClassHelper.OBJECT_TYPE);
         cn.setGenericsTypes(new GenericsType[] {new GenericsType(cn2)});
+
         typeVariableConfigurationInProgress.put(tv, cn);
-        // doing a bit of what is in Java5.makeClassNode() where it sorts out its front/back GR1563
         if (tv.firstBound != null && !tv.firstBound.debugName().equals("java.lang.Object")) {
-            cn.setRedirect(configureType(tv.firstBound));
+            setRedirect(cn, configureType(tv.firstBound));
+        } else {
+            cn.setRedirect(ClassHelper.OBJECT_TYPE);
         }
         typeVariableConfigurationInProgress.remove(tv);
+
         return cn;
     }
 
@@ -208,20 +211,19 @@ class JDTClassNodeBuilder {
      * Based on Java5.configureTypeVariableDefinition()
      */
     private GenericsType configureTypeVariableDefinition(TypeVariableBinding tv) {
-        ClassNode base = configureTypeVariableReference(tv);
-        ClassNode redirect = base.redirect();
-        base.setRedirect(null);
+        ClassNode cn = configureTypeVariableReference(tv);
+        ClassNode redirect = removeRedirect(cn);
         TypeBinding[] tBounds = getBounds(tv);
         GenericsType gt;
         if (tBounds.length == 0) {
-            gt = new GenericsType(base);
+            gt = new GenericsType(cn);
         } else {
             ClassNode[] cBounds = configureTypes(tBounds);
-            gt = new GenericsType(base, cBounds, null);
-            gt.setName(base.getName());
+            gt = new GenericsType(cn, cBounds, null);
+            gt.setName(cn.getName());
             gt.setPlaceholder(true);
         }
-        base.setRedirect(redirect);
+        setRedirect(cn, redirect);
         return gt;
     }
 
@@ -291,18 +293,18 @@ class JDTClassNodeBuilder {
             // the type was the inner type of a parameterized type
             return new JDTClassNode((ParameterizedTypeBinding) rt, resolver); // doesn't need generics initializing
         }
-        ClassNode base = configureType(rt);
-        if (base instanceof JDTClassNode) {
-            ((JDTClassNode) base).setJdtBinding(parameterizedType);
+        ClassNode cn = configureType(rt);
+        if (cn instanceof JDTClassNode) {
+            ((JDTClassNode) cn).setJdtBinding(parameterizedType);
             // the messing about in here is for a few reasons. Contrast it with the ClassHelper.makeWithoutCaching
             // that code when called for Iterable will set the redirect to point to the generics. That is what
             // we are trying to achieve here.
             if (!(parameterizedType instanceof RawTypeBinding)) {
-                base.setRedirect(configureType(parameterizedType.genericType()));
+                setRedirect(cn, configureType(parameterizedType.genericType()));
             }
         }
-        base.setGenericsTypes(configureTypeArguments(parameterizedType.arguments));
-        return base;
+        cn.setGenericsTypes(configureTypeArguments(parameterizedType.arguments));
+        return cn;
     }
 
     private ClassNode configureBaseType(BaseTypeBinding type) {
@@ -364,5 +366,20 @@ class JDTClassNodeBuilder {
 
     private ClassNode configureSourceType(SourceTypeBinding type) {
         return new JDTClassNode(type, resolver);
+    }
+
+    //--------------------------------------------------------------------------
+
+    static ClassNode removeRedirect(ClassNode node) {
+        ClassNode redirect = ReflectionUtils.getPrivateField(ClassNode.class, "redirect", node);
+        node.setRedirect(null);
+        return redirect;
+    }
+
+    static void setRedirect(ClassNode node, ClassNode redirect) {
+        if (node.isPrimaryClassNode()) throw new GroovyEclipseBug(
+            "Tried to set a redirect for a primary ClassNode (" + node.getName() + "->" + redirect.getName() + ")");
+        if (node != redirect)
+            ReflectionUtils.setPrivateField(ClassNode.class, "redirect", node, redirect);
     }
 }
