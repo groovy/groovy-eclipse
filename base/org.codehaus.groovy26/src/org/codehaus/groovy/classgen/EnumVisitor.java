@@ -441,7 +441,7 @@ public class EnumVisitor extends ClassCodeVisitorSupport {
                         // GRECLIPSE edit
                         //new SyntaxException(msg + '\n', exp.getLineNumber(), exp.getColumnNumber(), exp.getLastLineNumber(), exp.getLastColumnNumber()), sourceUnit)
                         new PreciseSyntaxException(msg + '\n', exp.getLineNumber(), exp.getColumnNumber(), start, end), sourceUnit)
-                        // GRECLIPSE edit
+                        // GRECLIPSE end
         );
     }
 

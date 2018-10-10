@@ -371,6 +371,33 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testCompileStatic8638() {
+        String[] sources = {
+            "Foo.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Foo {\n" +
+            "  protected void bar(Multimap<String, Integer> mmap) {\n" +
+            "    Map<String, Collection<Integer>> map = mmap.asMap()\n" +
+            "    Set<Map.Entry<String, Collection<Integer>>> entrySet = map.entrySet()\n" +
+            "    Iterator<Map.Entry<String, Collection<Integer>>> iter = entrySet.iterator()\n" +
+            "    while (iter.hasNext()) {\n" +
+            "      Map.Entry<String, Collection<Integer>> group = iter.next()\n" +
+            "      Collection<Integer> values = group.value\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+
+            "Multimap.java",
+            "import java.util.*;\n" +
+            "interface Multimap<K, V> {\n" +
+            "  Map<K, Collection<V>> asMap();\n" +
+            "}\n",
+        };
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
     public void testCompileStatic8839() {
         String[] sources = {
             "p/Main.groovy",

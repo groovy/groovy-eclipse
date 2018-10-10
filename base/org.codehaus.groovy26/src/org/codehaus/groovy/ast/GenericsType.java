@@ -63,26 +63,6 @@ public class GenericsType extends ASTNode {
     // GRECLIPSE add
     public GenericsType() {
     }
-
-    public String toDetailsString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("GenericsType[name=").append(name).append(",placeholder=").append(placeholder);
-        sb.append(",resolved=").append(resolved).append(",wildcard=").append(wildcard);
-        sb.append(",type=").append(type);
-        if (lowerBound != null) {
-            sb.append(",lowerBound=").append(lowerBound);
-        }
-        if (upperBounds != null) {
-            sb.append(",upperBounds=[");
-            for (int i = 0, n = upperBounds.length; i < n; i += 1) {
-                if (i > 0) sb.append(',');
-                sb.append(upperBounds[i]);
-            }
-        }
-        sb.append("]]");
-        sb.append(getClass().getName());
-        return sb.toString();
-    }
     // GRECLIPSE end
 
     public ClassNode getType() {

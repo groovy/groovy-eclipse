@@ -1765,7 +1765,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             GenericsType genericsType = visitTypeParameter(typeParameterContext);
             list.add(genericsType);
         }
-        return list.toArray(new GenericsType[0]);
+        return list.toArray(GenericsType.EMPTY_ARRAY);
     }
 
     @Override
@@ -2912,7 +2912,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             GenericsType genericsType = createGenericsType(classNode);
             list.add(genericsType);
         }
-        return list.toArray(new GenericsType[0]);
+        return list.toArray(GenericsType.EMPTY_ARRAY);
     }
 
     @Override
@@ -4498,7 +4498,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
             GenericsType genericsType = visitTypeArgument(typeArgumentContext);
             list.add(genericsType);
         }
-        return list.toArray(new GenericsType[0]);
+        return list.toArray(GenericsType.EMPTY_ARRAY);
     }
 
     @Override

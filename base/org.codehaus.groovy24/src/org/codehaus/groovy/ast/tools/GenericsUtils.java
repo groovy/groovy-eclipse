@@ -57,7 +57,7 @@ import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.implem
  * @author Paul King
  */
 public class GenericsUtils {
-    public static final GenericsType[] EMPTY_GENERICS_ARRAY = new GenericsType[0];
+    public static final GenericsType[] EMPTY_GENERICS_ARRAY = GenericsType.EMPTY_ARRAY;
     public static final String JAVA_LANG_OBJECT = "java.lang.Object";
 
     /**
@@ -274,7 +274,7 @@ public class GenericsUtils {
         if (type.isArray()) {
             return makeClassSafeWithGenerics(type.getComponentType(), genericTypes).makeArray();
         }
-        GenericsType[] gtypes = new GenericsType[0];
+        GenericsType[] gtypes = EMPTY_GENERICS_ARRAY;
         if (genericTypes != null) {
             gtypes = new GenericsType[genericTypes.length];
             System.arraycopy(genericTypes, 0, gtypes, 0, gtypes.length);
@@ -327,7 +327,7 @@ public class GenericsUtils {
         }
         if (type == null) type = ClassHelper.OBJECT_TYPE;
         GenericsType[] oldgTypes = type.getGenericsTypes();
-        GenericsType[] newgTypes = GenericsType.EMPTY_ARRAY;
+        GenericsType[] newgTypes = EMPTY_GENERICS_ARRAY;
         if (oldgTypes != null) {
             newgTypes = new GenericsType[oldgTypes.length];
             for (int i = 0; i < newgTypes.length; i++) {
