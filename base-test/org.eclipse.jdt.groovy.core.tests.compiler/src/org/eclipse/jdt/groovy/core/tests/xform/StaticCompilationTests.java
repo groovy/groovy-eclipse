@@ -28,15 +28,35 @@ import org.junit.Test;
 public final class StaticCompilationTests extends GroovyCompilerTestSuite {
 
     @Test
+    public void testCompileDynamic() {
+        String[] sources = {
+            "Foo.groovy",
+            "@groovy.transform.CompileStatic\n" +
+            "class Foo {\n" +
+            "  int prop\n" +
+            "  int computeStatic(int input) {\n" +
+            "    prop + input\n" +
+            "  }\n" +
+            "  @groovy.transform.CompileDynamic\n" +
+            "  int computeDynamic(int input) {\n" +
+            "    missing(prop, input)\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
     public void testCompileStatic1() {
         String[] sources = {
             "Foo.groovy",
-            "import groovy.transform.CompileStatic\n"+
-            "@CompileStatic\n"+
-            "void method(String message) {\n"+
-            "   List<Integer> ls = new ArrayList<Integer>();\n"+
-            "   ls.add(123);\n"+
-            "   ls.add('abc');\n"+
+            "import groovy.transform.CompileStatic\n" +
+            "@CompileStatic\n" +
+            "void method(String message) {\n" +
+            "   List<Integer> ls = new ArrayList<Integer>();\n" +
+            "   ls.add(123);\n" +
+            "   ls.add('abc');\n" +
             "}\n",
         };
 
@@ -58,30 +78,30 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic2() {
         String[] sources = {
             "One.groovy",
-            "import groovy.transform.CompileStatic;\n"+
-            "\n"+
-            "import java.util.Properties;\n"+
-            "\n"+
-            "class One { \n"+
-            "   @CompileStatic\n"+
-            "   private String getPropertyValue(String propertyName, Properties props, String defaultValue) {\n"+
-            "       // First check whether we have a system property with the given name.\n"+
-            "       def value = getValueFromSystemOrBuild(propertyName, props)\n"+
-            "\n"+
-            "       // Return the BuildSettings value if there is one, otherwise\n"+
-            "       // use the default.\n"+
-            "       return value != null ? value : defaultValue \n"+
-            "   }\n"+
-            "\n"+
-            "   @CompileStatic\n"+
-            "   private getValueFromSystemOrBuild(String propertyName, Properties props) {\n"+
-            "       def value = System.getProperty(propertyName)\n"+
-            "       if (value != null) return value\n"+
-            "\n"+
-            "       // Now try the BuildSettings config.\n"+
-            "       value = props[propertyName]\n"+
-            "       return value\n"+
-            "   }\n"+
+            "import groovy.transform.CompileStatic;\n" +
+            "\n" +
+            "import java.util.Properties;\n" +
+            "\n" +
+            "class One { \n" +
+            "   @CompileStatic\n" +
+            "   private String getPropertyValue(String propertyName, Properties props, String defaultValue) {\n" +
+            "       // First check whether we have a system property with the given name.\n" +
+            "       def value = getValueFromSystemOrBuild(propertyName, props)\n" +
+            "\n" +
+            "       // Return the BuildSettings value if there is one, otherwise\n" +
+            "       // use the default.\n" +
+            "       return value != null ? value : defaultValue \n" +
+            "   }\n" +
+            "\n" +
+            "   @CompileStatic\n" +
+            "   private getValueFromSystemOrBuild(String propertyName, Properties props) {\n" +
+            "       def value = System.getProperty(propertyName)\n" +
+            "       if (value != null) return value\n" +
+            "\n" +
+            "       // Now try the BuildSettings config.\n" +
+            "       value = props[propertyName]\n" +
+            "       return value\n" +
+            "   }\n" +
             "}\n",
         };
 
@@ -92,11 +112,11 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic3() {
         String[] sources = {
             "Foo.groovy",
-            "import groovy.transform.CompileStatic;\n"+
-            "\n"+
-            "@CompileStatic void test() {\n"+
-            "   int littleInt = 3\n"+
-            "   Integer objectInt = littleInt\n"+
+            "import groovy.transform.CompileStatic;\n" +
+            "\n" +
+            "@CompileStatic void test() {\n" +
+            "   int littleInt = 3\n" +
+            "   Integer objectInt = littleInt\n" +
             "}\n",
         };
 
@@ -108,18 +128,18 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
         // verify generics are correct for the 'Closure<?>' as CompileStatic will attempt an exact match
         String[] sources = {
             "A.groovy",
-            "class A {\n"+
-            "  public void profile(String name, groovy.lang.Closure<?> callable) { }\n"+
+            "class A {\n" +
+            "  public void profile(String name, groovy.lang.Closure<?> callable) { }\n" +
             "}\n",
 
             "B.groovy",
-            "@groovy.transform.CompileStatic\n"+
-            "class B extends A {\n"+
-            "  def foo() {\n"+
-            "    profile('creating plugin manager with classes') {\n"+
-            "      println 'abc'\n"+
-            "    }\n"+
-            "  }\n"+
+            "@groovy.transform.CompileStatic\n" +
+            "class B extends A {\n" +
+            "  def foo() {\n" +
+            "    profile('creating plugin manager with classes') {\n" +
+            "      println 'abc'\n" +
+            "    }\n" +
+            "  }\n" +
             "}\n",
         };
 
@@ -230,17 +250,17 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic1505() {
         String[] sources = {
             "DynamicQuery.groovy",
-            "import groovy.transform.TypeChecked\n"+
-            "@TypeChecked\n"+
-            "class DynamicQuery {\n"+
-            "  public static void main(String[]argv) {\n"+
-            "    new DynamicQuery().foo(null);\n"+
-            "  }\n"+
-            "  private foo(Map sumpin) {\n"+
-            "    Map foo\n"+
-            "    foo.collect{ Map.Entry it -> it.key }\n"+
-            "    print 'abc';\n"+
-            "  }\n"+
+            "import groovy.transform.TypeChecked\n" +
+            "@TypeChecked\n" +
+            "class DynamicQuery {\n" +
+            "  public static void main(String[]argv) {\n" +
+            "    new DynamicQuery().foo(null);\n" +
+            "  }\n" +
+            "  private foo(Map sumpin) {\n" +
+            "    Map foo\n" +
+            "    foo.collect{ Map.Entry it -> it.key }\n" +
+            "    print 'abc';\n" +
+            "  }\n" +
             "}\n",
         };
 
@@ -251,14 +271,14 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic1506() {
         String[] sources = {
             "LoggerTest.groovy",
-            "import groovy.transform.*\n"+
-            "import groovy.util.logging.*\n"+
-            "@CompileStatic @Log\n"+
-            "class LoggerTest {\n"+
-            "  static void main(String... args) {\n"+
-            "    LoggerTest.log.info('one')\n"+
-            "    log.info('two')\n"+
-            "  }\n"+
+            "import groovy.transform.*\n" +
+            "import groovy.util.logging.*\n" +
+            "@CompileStatic @Log\n" +
+            "class LoggerTest {\n" +
+            "  static void main(String... args) {\n" +
+            "    LoggerTest.log.info('one')\n" +
+            "    log.info('two')\n" +
+            "  }\n" +
             "}\n",
         };
         vmArguments = new String[] {"-Djava.util.logging.SimpleFormatter.format=%4$s %5$s%6$s%n"};
@@ -270,13 +290,13 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic1511() {
         String[] sources = {
             "Foo.groovy",
-            "@groovy.transform.CompileStatic\n"+
-            "def meth() {\n"+
-            "   List<String> second = []\n"+
-            "   List<String> artefactResources2 = []\n"+
-            "   second.addAll(artefactResources2)\n"+
-            "   println 'abc'\n"+
-            "}\n"+
+            "@groovy.transform.CompileStatic\n" +
+            "def meth() {\n" +
+            "   List<String> second = []\n" +
+            "   List<String> artefactResources2 = []\n" +
+            "   second.addAll(artefactResources2)\n" +
+            "   println 'abc'\n" +
+            "}\n" +
             "meth();\n",
         };
 
@@ -287,12 +307,12 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic1514() {
         String[] sources = {
             "C.groovy",
-            "@SuppressWarnings('rawtypes')\n"+
-            "@groovy.transform.CompileStatic\n"+
-            "class C {\n"+
-            "  def xxx(List list) {\n"+
-            "    list.unique().each { }\n"+
-            "  }\n"+
+            "@SuppressWarnings('rawtypes')\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class C {\n" +
+            "  def xxx(List list) {\n" +
+            "    list.unique().each { }\n" +
+            "  }\n" +
             "}\n",
         };
 
@@ -323,9 +343,9 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     public void testCompileStatic1521() {
         String[] sources = {
             "Foo.groovy",
-            "@groovy.transform.CompileStatic\n"+
-            "class Foo {\n"+
-            "  enum Status { ON, OFF }\n"+
+            "@groovy.transform.CompileStatic\n" +
+            "class Foo {\n" +
+            "  enum Status { ON, OFF }\n" +
             "}\n",
         };
 
@@ -333,19 +353,41 @@ public final class StaticCompilationTests extends GroovyCompilerTestSuite {
     }
 
     @Test
-    public void testCompileDynamic() {
+    public void testCompileStatic8342() {
         String[] sources = {
-            "A.groovy",
+            "Foo.groovy",
             "@groovy.transform.CompileStatic\n" +
-            "class A {\n" +
-            "  int prop\n" +
-            "  int computeStatic(int input) {\n" +
-            "    prop + input\n" +
+            "class Foo {\n" +
+            "  protected <T> List<T[]> bar(T thing) {\n" +
+            "    return Collections.emptyList()\n" +
             "  }\n" +
-            "  @groovy.transform.CompileDynamic\n" +
-            "  int computeDynamic(int input) {\n" +
-            "    missing(prop, input)\n" +
+            "  protected void baz() {\n" +
+            "    List<Integer[]> list = bar(1)\n" +
             "  }\n" +
+            "}\n",
+        };
+
+        runNegativeTest(sources, "");
+    }
+
+    @Test
+    public void testCompileStatic8839() {
+        String[] sources = {
+            "p/Main.groovy",
+            "package p\n" +
+            "import q.ResultHandle\n" +
+            "@groovy.transform.CompileStatic\n" +
+            "class Main {\n" +
+            "  protected Map<String, ResultHandle[]> getResultsByType() {\n" +
+            "    Map<String, ResultHandle[]> resultsByType = [:]\n" +
+            "    // populate resultsByType\n" +
+            "    return resultsByType\n" +
+            "  }\n" +
+            "}\n",
+
+            "q/ResultHandle.java",
+            "package q;\n" +
+            "public class ResultHandle {\n" +
             "}\n",
         };
 
