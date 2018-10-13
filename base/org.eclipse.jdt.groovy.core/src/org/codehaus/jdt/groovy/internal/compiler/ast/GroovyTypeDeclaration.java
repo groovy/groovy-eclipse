@@ -58,6 +58,11 @@ public class GroovyTypeDeclaration extends TypeDeclaration {
     }
     // FIXASC end
 
+    @Override
+    public void resolve() {
+        // prevent Groovy types from having their members resolved
+    }
+
     //--------------------------------------------------------------------------
 
     private GroovyTypeDeclaration[] anonymousTypes;
