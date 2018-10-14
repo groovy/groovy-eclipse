@@ -180,12 +180,26 @@ public class CompilationUnit extends ProcessingUnit {
         this.staticImportVisitor = new StaticImportVisitor();
         this.optimizer = new OptimizerVisitor(this);
 
-        phaseOperations = new LinkedList[Phases.ALL + 1];
-        newPhaseOperations = new LinkedList[Phases.ALL + 1];
+        initPhaseOperations();
+        addPhaseOperations();
+
+        applyCompilationCustomizers(configuration);
+
+        this.classgenCallback = null;
+        this.classNodeResolver = new ClassNodeResolver();
+    }
+
+    private void initPhaseOperations() {
+        int cnt = Phases.ALL + 1;
+        phaseOperations = new LinkedList[cnt];
+        newPhaseOperations = new LinkedList[cnt];
         for (int i = 0; i < phaseOperations.length; i++) {
             phaseOperations[i] = new LinkedList();
             newPhaseOperations[i] = new LinkedList();
         }
+    }
+
+    private void addPhaseOperations() {
         addPhaseOperation(new SourceUnitOperation() {
             public void call(SourceUnit source) throws CompilationFailedException {
                 source.parse();
@@ -272,7 +286,9 @@ public class CompilationUnit extends ProcessingUnit {
                 }
             }
         }, Phases.INSTRUCTION_SELECTION);
+    }
 
+    private void applyCompilationCustomizers(CompilerConfiguration configuration) {
         // apply configuration customizers if any
         if (configuration != null) {
             final List<CompilationCustomizer> customizers = configuration.getCompilationCustomizers();
@@ -283,8 +299,6 @@ public class CompilationUnit extends ProcessingUnit {
                 addPhaseOperation(customizer, customizer.getPhase().getPhaseNumber());
             }
         }
-        this.classgenCallback = null;
-        this.classNodeResolver = new ClassNodeResolver();
     }
 
     /**
@@ -297,17 +311,21 @@ public class CompilationUnit extends ProcessingUnit {
 
 
     public void addPhaseOperation(SourceUnitOperation op, int phase) {
-        if (phase < 0 || phase > Phases.ALL) throw new IllegalArgumentException("phase " + phase + " is unknown");
+        validatePhase(phase);
         phaseOperations[phase].add(op);
     }
 
     public void addPhaseOperation(PrimaryClassNodeOperation op, int phase) {
-        if (phase < 0 || phase > Phases.ALL) throw new IllegalArgumentException("phase " + phase + " is unknown");
+        validatePhase(phase);
         phaseOperations[phase].add(op);
     }
 
-    public void addFirstPhaseOperation(PrimaryClassNodeOperation op, int phase) {
+    private static void validatePhase(int phase) {
         if (phase < 0 || phase > Phases.ALL) throw new IllegalArgumentException("phase " + phase + " is unknown");
+    }
+
+    public void addFirstPhaseOperation(PrimaryClassNodeOperation op, int phase) {
+        validatePhase(phase);
         phaseOperations[phase].add(0, op);
     }
 
@@ -316,7 +334,7 @@ public class CompilationUnit extends ProcessingUnit {
     }
 
     public void addNewPhaseOperation(SourceUnitOperation op, int phase) {
-        if (phase < 0 || phase > Phases.ALL) throw new IllegalArgumentException("phase " + phase + " is unknown");
+        validatePhase(phase);
         newPhaseOperations[phase].add(op);
     }
 
@@ -480,7 +498,6 @@ public class CompilationUnit extends ProcessingUnit {
      */
     public Iterator<SourceUnit> iterator() {
         return new Iterator<SourceUnit>() {
-            // GRECLIPSE: Should this use an index instead of names.iterator() to prevent/reduce ConMod exceptions?
             Iterator<String> nameIterator = names.iterator();
 
             public boolean hasNext() {
@@ -739,20 +756,10 @@ public class CompilationUnit extends ProcessingUnit {
             //
             byte[] bytes = gclass.getBytes();
 
-            FileOutputStream stream = null;
-            try {
-                stream = new FileOutputStream(path);
+            try (FileOutputStream stream = new FileOutputStream(path)) {
                 stream.write(bytes, 0, bytes.length);
             } catch (IOException e) {
                 getErrorCollector().addError(Message.create(e.getMessage(), CompilationUnit.this));
-            } finally {
-                if (stream != null) {
-                    try {
-                        stream.close();
-                    } catch (Exception e) {
-                        // Ignore
-                    }
-                }
             }
         }
     };
@@ -1145,11 +1152,9 @@ public class CompilationUnit extends ProcessingUnit {
             } catch (GroovyBugError e) {
                 changeBugText(e, context);
                 throw e;
-            } catch (NoClassDefFoundError e) {
+            } catch (NoClassDefFoundError | Exception e) {
                 // effort to get more logging in case a dependency of a class is loaded
                 // although it shouldn't have
-                convertUncaughtExceptionToCompilationError(e);
-            } catch (Exception e) {
                 convertUncaughtExceptionToCompilationError(e);
             }
         }

@@ -53,8 +53,8 @@ import org.codehaus.groovy.syntax.Types;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import static java.beans.Introspector.decapitalize;
 import static java.lang.reflect.Modifier.isFinal;
+import static org.apache.groovy.ast.tools.MethodNodeUtils.getPropertyName;
 
 /**
  * goes through an AST and initializes the scopes
@@ -184,17 +184,16 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
 
         for (MethodNode mn : cn.getMethods()) {
             String pName = getPropertyName(mn);
-            // GRECLIPSE edit
-            //if (pName != null && pName.equals(name))
-            //    return new PropertyNode(pName, mn.getModifiers(), ClassHelper.OBJECT_TYPE, cn, null, null, null);
             if (name.equals(pName)) {
+                // GRECLIPSE edit
+                //PropertyNode property = new PropertyNode(name, mn.getModifiers(), ClassHelper.OBJECT_TYPE, cn, null, null, null);
                 PropertyNode property = new PropertyNode(name, mn.getModifiers(), getPropertyType(mn), cn, null, null, null);
+                // GRECLIPSE end
                 property.getField().setHasNoRealSourcePosition(true); property.getField().setSynthetic(true);
                 property.getField().setDeclaringClass(cn);
                 property.setDeclaringClass(cn);
                 return property;
             }
-            // GRECLIPSE end
         }
 
         for (PropertyNode pn : cn.getProperties()) {
@@ -204,39 +203,6 @@ public class VariableScopeVisitor extends ClassCodeVisitorSupport {
         Variable ret = findClassMember(cn.getSuperClass(), name);
         if (ret != null) return ret;
         return findClassMember(cn.getOuterClass(), name);
-    }
-
-    private static String getPropertyName(MethodNode m) {
-        String name = m.getName();
-        /* GRECLIPSE edit
-        if (!(name.startsWith("set") || name.startsWith("get"))) return null;
-        String pname = name.substring(3);
-        if (pname.length() == 0) return null;
-        pname = java.beans.Introspector.decapitalize(pname);
-
-        if (name.startsWith("get") && (m.getReturnType() == ClassHelper.VOID_TYPE || m.getParameters().length != 0)) {
-            return null;
-        }
-        if (name.startsWith("set") && m.getParameters().length != 1) {
-            return null;
-        }
-        return pname;
-        */
-        if (name.startsWith("set") || name.startsWith("get") || name.startsWith("is")) {
-            String pname = decapitalize(name.substring(name.startsWith("is") ? 2 : 3));
-            if (!pname.isEmpty()) {
-                if (name.startsWith("set")) {
-                    if (m.getParameters().length == 1) {
-                        return pname;
-                    }
-                } else if (m.getParameters().length == 0 && !ClassHelper.VOID_TYPE.equals(m.getReturnType())) {
-                    if (name.startsWith("get") || ClassHelper.boolean_TYPE.equals(m.getReturnType())) {
-                        return pname;
-                    }
-                }
-            }
-        }
-        return null;
     }
 
     // GRECLIPSE add

@@ -213,6 +213,17 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                 }
                 return result;
             }
+        } else if (v instanceof FieldNode) {
+            if (inSpecialConstructorCall) { // GROOVY-8819
+                FieldNode fn = (FieldNode) v;
+                ClassNode declaringClass = fn.getDeclaringClass();
+                if (fn.isStatic() && currentClass.isDerivedFrom(declaringClass)) {
+                    Expression result = new PropertyExpression(new ClassExpression(declaringClass), v.getName());
+                    result.setSourcePosition(ve);
+
+                    return result;
+                }
+            }
         }
         return ve;
     }
@@ -343,6 +354,12 @@ public class StaticImportVisitor extends ClassCodeExpressionTransformer {
                             setSourcePosition(smce, mce);
                             return smce;
                         }
+                    }
+
+                    if (mce.isImplicitThis() && lookForPossibleStaticMethod && hasPossibleStaticMethod(currentClass, methodName, args, true)) {
+                        StaticMethodCallExpression result = new StaticMethodCallExpression(currentClass, methodName, args);
+                        result.setSourcePosition(mce);
+                        return result;
                     }
                 }
             }

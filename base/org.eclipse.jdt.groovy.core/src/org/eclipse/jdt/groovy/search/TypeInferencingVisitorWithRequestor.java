@@ -99,6 +99,7 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Types;
+import org.codehaus.groovy.transform.AnnotationCollectorTransform;
 import org.codehaus.groovy.transform.FieldASTTransformation;
 import org.codehaus.groovy.transform.sc.ListOfExpressionsExpression;
 import org.codehaus.groovy.transform.sc.transformers.CompareToNullExpression;
@@ -289,10 +290,7 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
             visitAnnotations(node);
             if (isMetaAnnotation(node)) {
                 // visit relocated @AnnotationCollector annotations
-                MethodNode value = node.getMethod("value", NO_PARAMETERS);
-                if (value != null && value.getEnd() < 1) {
-                    visitClassCodeContainer(value.getCode());
-                }
+                visitAnnotations(AnnotationCollectorTransform.getMeta(node));
             }
 
             // visit name "node"
@@ -2709,9 +2707,8 @@ assert primaryExprType != null && dependentExprType != null;
         return isNotEmpty(GroovyUtils.getAnnotations(fieldNode, "groovy.lang.Lazy"));
     }
 
-    private static boolean isMetaAnnotation(ClassNode node) {
-        return (node.isAnnotated() && node.hasMethod("value", NO_PARAMETERS) &&
-            isNotEmpty(GroovyUtils.getAnnotations(node, "groovy.transform.AnnotationCollector")));
+    private static boolean isMetaAnnotation(ClassNode classNode) {
+        return isNotEmpty(GroovyUtils.getAnnotations(classNode, "groovy.transform.AnnotationCollector"));
     }
 
     private static boolean isNotEmpty(List<?> list) {

@@ -36,8 +36,10 @@ public final class NamedVariantTests extends GroovyCompilerTestSuite {
     public void testNamedVariant1() {
         String[] sources = {
             "Script.groovy",
-            "@groovy.transform.NamedVariant\n" +
-            "String m(Color c) {\n" +
+            "import groovy.transform.*\n" +
+            "\n" +
+            "@NamedVariant\n" +
+            "String m(@NamedDelegate Color c) {\n" +
             "  return c\n" +
             "}\n" +
             "\n" +

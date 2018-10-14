@@ -15,6 +15,7 @@
  */
 package org.eclipse.jdt.core.groovy.tests.builder;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -1658,8 +1659,12 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "class Widget {}\r\n");
 
         fullBuild();
-        expectingCompiledClasses("com.demo.MyAnnotation", "com.demo.Widget");
         expectingNoProblems();
+        if (!isAtLeastGroovy(25) || isAtLeastGroovy(26)) {
+            expectingCompiledClasses("com.demo.MyAnnotation", "com.demo.Widget");
+        } else {
+            expectingCompiledClasses("com.demo.MyAnnotation", "com.demo.MyAnnotation$CollectorHelper", "com.demo.Widget");
+        }
     }
 
     @Test
@@ -1695,8 +1700,12 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
             "		}\n");
 
         incrementalBuild(paths[0]);
-        expectingCompiledClasses("Book","Length","NotNull","ISBN");
         expectingNoProblems();
+        if (!isAtLeastGroovy(25) || isAtLeastGroovy(26)) {
+            expectingCompiledClasses("Book", "Length", "NotNull", "ISBN");
+        } else {
+            expectingCompiledClasses("Book", "Length", "NotNull", "ISBN", "ISBN$CollectorHelper");
+        }
         executeClass(paths[0], "Book", "@NotNull()\n@Length()\n", "");
 
         // whitespace change

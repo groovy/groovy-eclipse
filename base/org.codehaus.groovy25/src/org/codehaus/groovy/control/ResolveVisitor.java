@@ -60,6 +60,8 @@ import org.codehaus.groovy.ast.stmt.CatchStatement;
 import org.codehaus.groovy.ast.stmt.ForStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.ClassNodeResolver.LookupResult;
+import org.codehaus.groovy.runtime.memoize.ConcurrentCommonCache;
+import org.codehaus.groovy.runtime.memoize.EvictableCache;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.trait.Traits;
 import groovyjarjarasm.asm.Opcodes;
@@ -75,6 +77,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.codehaus.groovy.ast.GenericsType.GenericsTypeName;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.inSamePackage;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.isDefaultVisibility;
 
@@ -93,6 +96,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     private static final String BIGINTEGER_STR = "BigInteger";
     private static final String BIGDECIMAL_STR = "BigDecimal";
     public static final String QUESTION_MARK = "?";
+    public static final String[] EMPTY_STRING_ARRAY = new String[0];
 
     // GRECLIPSE private->protected
     protected ClassNode currentClass;
@@ -105,7 +109,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     private boolean inPropertyExpression = false;
     private boolean inClosure = false;
 
-    private Map<String, GenericsType> genericParameterNames = new HashMap<String, GenericsType>();
+    private Map<GenericsTypeName, GenericsType> genericParameterNames = new HashMap<GenericsTypeName, GenericsType>();
     private final Set<FieldNode> fieldTypesChecked = new HashSet<FieldNode>();
     // GRECLIPSE add
     private final Set<String> resolutionFailedCache = new HashSet<String>();
@@ -237,10 +241,10 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     protected void visitConstructorOrMethod(MethodNode node, boolean isConstructor) {
         VariableScope oldScope = currentScope;
         currentScope = node.getVariableScope();
-        Map<String, GenericsType> oldPNames = genericParameterNames;
+        Map<GenericsTypeName, GenericsType> oldPNames = genericParameterNames;
         genericParameterNames = node.isStatic()
-                ? new HashMap<String, GenericsType>()
-                : new HashMap<String, GenericsType>(genericParameterNames);
+                ? new HashMap<GenericsTypeName, GenericsType>()
+                : new HashMap<GenericsTypeName, GenericsType>(genericParameterNames);
 
         resolveGenericsHeader(node.getGenericsTypes());
 
@@ -274,9 +278,9 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
     }
 
     public void visitProperty(PropertyNode node) {
-        Map<String, GenericsType> oldPNames = genericParameterNames;
+        Map<GenericsTypeName, GenericsType> oldPNames = genericParameterNames;
         if (node.isStatic()) {
-            genericParameterNames = new HashMap<String, GenericsType>();
+            genericParameterNames = new HashMap<GenericsTypeName, GenericsType>();
         }
 
         ClassNode t = node.getType();
@@ -347,11 +351,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         }
 
         int modifiers = innerClassNode.getModifiers();
-        if (Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers)) {
-            return true;
-        }
-
-        return false;
+        return Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers);
     }
 
     private void resolveOrFail(ClassNode type, String msg, ASTNode node) {
@@ -402,7 +402,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
         String typeName = type.getName();
 
-        GenericsType genericsType = genericParameterNames.get(typeName);
+        GenericsType genericsType = genericParameterNames.get(new GenericsTypeName(typeName));
         if (genericsType != null) {
             type.setRedirect(genericsType.getType());
             type.setGenericsTypes(new GenericsType[]{ genericsType });
@@ -580,6 +580,45 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         return false;
     }
 
+    private static final EvictableCache<String, Set<String>> DEFAULT_IMPORT_CLASS_AND_PACKAGES_CACHE = new ConcurrentCommonCache<>();
+
+    private boolean resolveFromDefaultImports(final ClassNode type, final String[] packagePrefixes) {
+        final String typeName = type.getName();
+
+        for (String packagePrefix : packagePrefixes) {
+            // We limit the inner class lookups here by using ConstructedClassWithPackage.
+            // This way only the name will change, the packagePrefix will
+            // not be included in the lookup. The case where the
+            // packagePrefix is really a class is handled elsewhere.
+            // WARNING: This code does not expect a class that has a static
+            //          inner class in DEFAULT_IMPORTS
+            ConstructedClassWithPackage tmp = new ConstructedClassWithPackage(packagePrefix, typeName);
+            // GRECLIPSE add
+            if (resolutionFailedCache.contains(tmp.getName())) continue;
+            // GRECLIPSE end
+            if (resolve(tmp, false, false, false)) {
+                type.setRedirect(tmp.redirect());
+
+                if (DEFAULT_IMPORTS == packagePrefixes) { // Only the non-cached type and packages should be cached
+                    Set<String> packagePrefixSet = DEFAULT_IMPORT_CLASS_AND_PACKAGES_CACHE.getAndPut(typeName, new ConcurrentCommonCache.ValueProvider<String, Set<String>>() {
+                        @Override
+                        public Set<String> provide(String key) {
+                            return new HashSet<>(2);
+                        }
+                    });
+                    packagePrefixSet.add(packagePrefix);
+                }
+
+                return true;
+            }
+            // GRECLIPSE add
+            resolutionFailedCache.add(tmp.getName());
+            // GRECLIPSE end
+        }
+
+        return false;
+    }
+
     // GRECLIPSE private->protected
     protected boolean resolveFromDefaultImports(ClassNode type, boolean testDefaultImports) {
         // test default imports
@@ -591,24 +630,17 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         final String typeName = type.getName();
 
         if (testDefaultImports) {
-            for (String packagePrefix : DEFAULT_IMPORTS) {
-                // We limit the inner class lookups here by using ConstructedClassWithPackage.
-                // This way only the name will change, the packagePrefix will
-                // not be included in the lookup. The case where the
-                // packagePrefix is really a class is handled elsewhere.
-                // WARNING: This code does not expect a class that has a static
-                //          inner class in DEFAULT_IMPORTS
-                ConstructedClassWithPackage tmp = new ConstructedClassWithPackage(packagePrefix, typeName);
-                // GRECLIPSE add
-                if (resolutionFailedCache.contains(tmp.getName())) continue;
-                // GRECLIPSE end
-                if (resolve(tmp, false, false, false)) {
-                    type.setRedirect(tmp.redirect());
+            Set<String> packagePrefixSet = DEFAULT_IMPORT_CLASS_AND_PACKAGES_CACHE.get(typeName);
+            if (null != packagePrefixSet) {
+                // if the type name was resolved before, we can try the successfully resolved packages first, which are much less and very likely successful to resolve.
+                // As a result, we can avoid trying other default import packages and further resolving, which can improve the resolving performance to some extent.
+                if (resolveFromDefaultImports(type, packagePrefixSet.toArray(EMPTY_STRING_ARRAY))) {
                     return true;
                 }
-                // GRECLIPSE add
-                resolutionFailedCache.add(tmp.getName());
-                // GRECLIPSE end
+            }
+
+            if (resolveFromDefaultImports(type, DEFAULT_IMPORTS)) {
+                return true;
             }
 
             if (BIGINTEGER_STR.equals(typeName)) {
@@ -663,7 +695,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
          * foo.foo.bar rather than foo.bar. This means to cut at the dot in foo.bar and
          * foo for import
          */
-        while (true) {
+        do {
             pname = name.substring(0, index);
             ClassNode aliasedNode = null;
             ImportNode importNode = module.getImport(pname);
@@ -703,7 +735,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                     // completely and use a ConstructedClassWithPackage to prevent lookups against the package.
                     String className = aliasedNode.getNameWithoutPackage() + '$' +
                             name.substring(pname.length() + 1).replace('.', '$');
-                    ConstructedClassWithPackage tmp = new ConstructedClassWithPackage(aliasedNode.getPackageName()+".", className);
+                    ConstructedClassWithPackage tmp = new ConstructedClassWithPackage(aliasedNode.getPackageName() + ".", className);
                     if (resolve(tmp, true, true, false)) {
                         type.setRedirect(tmp.redirect());
                         return true;
@@ -711,8 +743,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 }
             }
             index = pname.lastIndexOf('.');
-            if (index == -1) break;
-        }
+        } while (index != -1);
         return false;
     }
 
@@ -1179,7 +1210,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                     return ce;
                 }
                 else {
-                    // may be we have C[k1:v1, k2:v2] -> should become (C)([k1:v1, k2:v2])
+                    // maybe we have C[k1:v1, k2:v2] -> should become (C)([k1:v1, k2:v2])
                     boolean map = true;
                     for (Expression expression : list.getExpressions()) {
                         if(!(expression instanceof MapEntryExpression)) {
@@ -1195,6 +1226,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                         }
                         me.setSourcePosition(list);
                         final CastExpression ce = new CastExpression(left.getType(), me);
+                        ce.setCoerce(true);
                         ce.setSourcePosition(be);
                         return ce;
                     }
@@ -1203,7 +1235,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 // we have C[*:map] -> should become (C) map
                 SpreadMapExpression mapExpression = (SpreadMapExpression) be.getRightExpression();
                 Expression right = transform(mapExpression.getExpression());
-                Expression ce = new CastExpression(left.getType(), right);
+                CastExpression ce = new CastExpression(left.getType(), right);
+                ce.setCoerce(true);
                 ce.setSourcePosition(be);
                 return ce;
             }
@@ -1234,14 +1267,12 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 resolveOrFail(t, ce);
                 visitAnnotations(para);
                 if (para.hasInitialExpression()) {
-                    Object initialVal = para.getInitialExpression();
-                    if (initialVal instanceof Expression) {
-                        para.setInitialExpression(transform((Expression) initialVal));
-                    }
+                    para.setInitialExpression(transform(para.getInitialExpression()));
                 }
                 visitAnnotations(para);
             }
         }
+
         Statement code = ce.getCode();
         if (code != null) code.visit(this);
         inClosure = oldInClosure;
@@ -1460,7 +1491,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
         if (node instanceof InnerClassNode) {
             if (Modifier.isStatic(node.getModifiers())) {
-                genericParameterNames = new HashMap<String, GenericsType>();
+                genericParameterNames = new HashMap<GenericsTypeName, GenericsType>();
             }
 
             InnerClassNode innerClassNode = (InnerClassNode) node;
@@ -1471,7 +1502,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                 }
             }
         } else {
-            genericParameterNames = new HashMap<String, GenericsType>();
+            genericParameterNames = new HashMap<GenericsTypeName, GenericsType>();
         }
 
         resolveGenericsHeader(node.getGenericsTypes());
@@ -1671,9 +1702,10 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
 
             ClassNode classNode = type.getType();
             String name = type.getName();
+            GenericsTypeName gtn = new GenericsTypeName(name);
             ClassNode[] bounds = type.getUpperBounds();
             boolean isWild = QUESTION_MARK.equals(name);
-            boolean toDealWithGenerics = 0 == level || (level > 0 && null != genericParameterNames.get(name));
+            boolean toDealWithGenerics = 0 == level || (level > 0 && null != genericParameterNames.get(gtn));
 
             if (bounds != null) {
                 boolean nameAdded = false;
@@ -1681,7 +1713,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
                     if (!isWild) {
                         if (!nameAdded && upperBound != null || !resolve(classNode)) {
                             if (toDealWithGenerics) {
-                                genericParameterNames.put(name, type);
+                                genericParameterNames.put(gtn, type);
                                 type.setPlaceholder(true);
                                 classNode.setRedirect(upperBound);
                                 nameAdded = true;
@@ -1698,8 +1730,8 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
             } else {
                 if (!isWild) {
                     if (toDealWithGenerics) {
-                        GenericsType originalGt = genericParameterNames.get(name);
-                        genericParameterNames.put(name, type);
+                        GenericsType originalGt = genericParameterNames.get(gtn);
+                        genericParameterNames.put(gtn, type);
                         type.setPlaceholder(true);
 
                         if (null == originalGt) {
@@ -1730,7 +1762,7 @@ public class ResolveVisitor extends ClassCodeExpressionTransformer {
         currentClass.setUsingGenerics(true);
         ClassNode type = genericsType.getType();
         // save name before redirect
-        String name = type.getName();
+        GenericsTypeName name = new GenericsTypeName(type.getName());
         ClassNode[] bounds = genericsType.getUpperBounds();
         if (!genericParameterNames.containsKey(name)) {
             if (bounds != null) {

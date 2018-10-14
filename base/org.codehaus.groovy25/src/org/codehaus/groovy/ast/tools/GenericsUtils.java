@@ -53,6 +53,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.codehaus.groovy.ast.GenericsType.GenericsTypeName;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.getCorrectedClassNode;
 import static org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf;
 
@@ -139,8 +140,8 @@ public class GenericsUtils {
         return gt;
     }
 
-    public static Map<String, GenericsType> extractPlaceholders(ClassNode cn) {
-        Map<String, GenericsType> ret = new HashMap<String, GenericsType>();
+    public static Map<GenericsTypeName, GenericsType> extractPlaceholders(ClassNode cn) {
+        Map<GenericsTypeName, GenericsType> ret = new HashMap<>();
         extractPlaceholders(cn, ret);
         return ret;
     }
@@ -152,7 +153,7 @@ public class GenericsUtils {
      * @param node the class node to check
      * @param map the generics type information collector
      */
-    public static void extractPlaceholders(ClassNode node, Map<String, GenericsType> map) {
+    public static void extractPlaceholders(ClassNode node, Map<GenericsTypeName, GenericsType> map) {
         if (node == null) return;
 
         if (node.isArray()) {
@@ -178,7 +179,7 @@ public class GenericsUtils {
         for (int i = 0; i < redirectGenericsTypes.length; i++) {
             GenericsType redirectType = redirectGenericsTypes[i];
             if (redirectType.isPlaceholder()) {
-                String name = redirectType.getName();
+                GenericsTypeName name = new GenericsTypeName(redirectType.getName());
                 if (!map.containsKey(name)) {
                     GenericsType value = parameterized[i];
                     map.put(name, value);
@@ -457,7 +458,26 @@ public class GenericsUtils {
         GenericsType[] sgts = current.getGenericsTypes();
         if (sgts != null) {
             for (GenericsType sgt : sgts) {
-                ret.put(sgt.getName(), sgt.getType());
+                String name = sgt.getName();
+                /* GRECLIPSE edit
+                if (sgt.isPlaceholder()) {
+                    ClassNode redirect;
+                    if (sgt.getUpperBounds() != null) {
+                        redirect = sgt.getUpperBounds()[0];
+                    } else if (sgt.getLowerBound() != null) {
+                        redirect = sgt.getLowerBound();
+                    } else {
+                        redirect = ClassHelper.OBJECT_TYPE;
+                    }
+                    ClassNode type = ClassHelper.makeWithoutCaching(name);
+                    type.setGenericsPlaceHolder(true);
+                    type.setRedirect(redirect);
+                    ret.put(name, type);
+                } else {
+                */
+                    ret.put(name, sgt.getType());
+                //}
+                // GRECLIPSE end
             }
         }
         return ret;
@@ -580,11 +600,7 @@ public class GenericsUtils {
                 signature[i] = resolveClassNode(sourceUnit, compilationUnit, mn, usage, genericsType.getType());
             }
             return signature;
-        } catch (RecognitionException e) {
-            sourceUnit.addError(new IncorrectTypeHintException(mn, e, usage.getLineNumber(), usage.getColumnNumber()));
-        } catch (TokenStreamException e) {
-            sourceUnit.addError(new IncorrectTypeHintException(mn, e, usage.getLineNumber(), usage.getColumnNumber()));
-        } catch (ParserException e) {
+        } catch (RecognitionException | ParserException | TokenStreamException e) {
             sourceUnit.addError(new IncorrectTypeHintException(mn, e, usage.getLineNumber(), usage.getColumnNumber()));
         }
         return null;
@@ -615,8 +631,9 @@ public class GenericsUtils {
     }
 
     /**
-     * transforms generics types from an old context to a new context using the given spec. This method assumes
-     * all generics types will be placeholders. WARNING: The resulting generics types may or may not be placeholders
+     * Transforms generics types from an old context to a new context using the
+     * given spec. This method assumes all generics types will be placeholders.
+     * WARNING: The resulting generics types may or may not be placeholders
      * after the transformation.
      *
      * @param genericsSpec    the generics context information spec
@@ -799,7 +816,7 @@ public class GenericsUtils {
      * Get the actual type according to the placeholder name
      *
      * @param placeholderName the placeholder name, e.g. T, E
-     * @param genericsPlaceholderAndTypeMap the result of {@link #makeDeclaringAndActualGenericsTypeMap(ClassNode, ClassNode}
+     * @param genericsPlaceholderAndTypeMap the result of {@link #makeDeclaringAndActualGenericsTypeMap(ClassNode, ClassNode)}
      * @return the actual type
      */
     public static ClassNode findActualTypeByGenericsPlaceholderName(String placeholderName, Map<GenericsType, GenericsType> genericsPlaceholderAndTypeMap) {

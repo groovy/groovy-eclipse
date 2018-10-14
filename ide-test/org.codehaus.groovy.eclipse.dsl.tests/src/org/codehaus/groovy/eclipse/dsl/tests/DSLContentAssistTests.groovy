@@ -797,32 +797,9 @@ final class DSLContentAssistTests extends CompletionTestSuite {
 
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
         proposalExists(proposals, 'meth', 2)
-        proposalExists(proposals, 'name : __', 1)
-        proposalExists(proposals, 'type : __', 1)
-    }
-
-    @Test
-    void testNamedVariantTransform1a() {
-        assumeTrue(isAtLeastGroovy(25)) // @NamedVariant added in Groovy 2.5
-
-        String contents = '''\
-            |import groovy.transform.*
-            |
-            |class Pogo {
-            |  String name, type
-            |}
-            |
-            |@NamedVariant
-            |def meth(Pogo pogo, int what) { }
-            |
-            |meth()
-            |'''.stripMargin()
-
-        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
-        proposalExists(proposals, 'meth', 2)
-        proposalExists(proposals, 'name : __', 1)
-        proposalExists(proposals, 'type : __', 1)
-        proposalExists(proposals, 'what : __', 0)
+        proposalExists(proposals, 'pogo : __', isAtLeastGroovy(26) ? 0 : 1)
+        proposalExists(proposals, 'name : __', isAtLeastGroovy(26) ? 1 : 0)
+        proposalExists(proposals, 'type : __', isAtLeastGroovy(26) ? 1 : 0)
     }
 
     @Test
@@ -846,6 +823,30 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         proposalExists(proposals, 'meth', 2)
         proposalExists(proposals, 'name : __', 1)
         proposalExists(proposals, 'type : __', 1)
+    }
+
+    @Test
+    void testNamedVariantTransform2a() {
+        assumeTrue(isAtLeastGroovy(25)) // @NamedVariant added in Groovy 2.5
+
+        String contents = '''\
+            |import groovy.transform.*
+            |
+            |class Pogo {
+            |  String name, type
+            |}
+            |
+            |@NamedVariant
+            |def meth(@NamedDelegate Pogo pogo, int what) { }
+            |
+            |meth()
+            |'''.stripMargin()
+
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, '('))
+        proposalExists(proposals, 'meth', 2)
+        proposalExists(proposals, 'name : __', 1)
+        proposalExists(proposals, 'type : __', 1)
+        proposalExists(proposals, 'what : __', 0)
     }
 
     @Test

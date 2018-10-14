@@ -65,7 +65,8 @@ import static groovyjarjarasm.asm.Opcodes.ACC_STATIC;
  */
 public class AnnotationCollectorTransform {
 
-    private static List<AnnotationNode> getMeta(ClassNode cn) {
+    // GRECLIPSE private->public
+    public static List<AnnotationNode> getMeta(ClassNode cn) {
         List<AnnotationNode> meta = cn.getNodeMetaData(AnnotationCollector.class);
         if (meta == null) {
             if (cn.isPrimaryClassNode()) {

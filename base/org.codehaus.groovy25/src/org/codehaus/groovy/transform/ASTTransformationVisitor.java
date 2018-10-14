@@ -147,13 +147,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
             for (Class<? extends ASTTransformation> transformClass : baseTransforms.keySet()) {
                 try {
                     transformInstances.put(transformClass, transformClass.newInstance());
-                } catch (InstantiationException e) {
-                    source.getErrorCollector().addError(
-                            new SimpleMessage(
-                                    "Could not instantiate Transformation Processor " + transformClass
-                                    , //+ " declared by " + annotation.getClassNode().getName(),
-                                    source));
-                } catch (IllegalAccessException e) {
+                } catch (InstantiationException | IllegalAccessException e) {
                     source.getErrorCollector().addError(
                             new SimpleMessage(
                                     "Could not instantiate Transformation Processor " + transformClass
@@ -288,9 +282,7 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                 // GRECLIPSE add -- don't consume our own META-INF entries
                 if (skipManifest(compilationUnit, service)) continue;
                 // GRECLIPSE end
-                BufferedReader svcIn = null;
-                try {
-                    svcIn = new BufferedReader(new InputStreamReader(URLStreams.openUncachedStream(service), "UTF-8"));
+                try (BufferedReader svcIn = new BufferedReader(new InputStreamReader(URLStreams.openUncachedStream(service), "UTF-8"))) {
                     try {
                         className = svcIn.readLine();
                     } catch (IOException ioe) {
@@ -338,9 +330,6 @@ public final class ASTTransformationVisitor extends ClassCodeVisitorSupport {
                             continue;
                         }
                     }
-                } finally {
-                    if (svcIn != null)
-                        svcIn.close();
                 }
             }
         } catch (IOException e) {

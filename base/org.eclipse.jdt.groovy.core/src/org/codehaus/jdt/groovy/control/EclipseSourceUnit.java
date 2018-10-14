@@ -27,8 +27,6 @@ import org.eclipse.core.resources.IFile;
 /**
  * Eclipse specific subclass of SourceUnit, attaches extra information to a
  * SourceUnit that is specific to compilation in an Eclipse context.
- *
- * @since 2.5.2
  */
 public class EclipseSourceUnit extends SourceUnit {
 
