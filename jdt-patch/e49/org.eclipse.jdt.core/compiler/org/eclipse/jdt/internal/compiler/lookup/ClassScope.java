@@ -243,7 +243,10 @@ public class ClassScope extends Scope {
 						continue nextMember;
 					}
 				}
-				ClassScope memberScope = new ClassScope(this, this.referenceContext.memberTypes[i]);
+				// GROOVY edit
+				//ClassScope memberScope = new ClassScope(this, this.referenceContext.memberTypes[i]);
+				ClassScope memberScope = this.referenceContext.memberTypes[i].newClassScope(this);
+				// GROOVY end
 				LocalTypeBinding memberBinding = memberScope.buildLocalType(localType, packageBinding);
 				memberBinding.setAsMemberType();
 				memberTypeBindings[count++] = memberBinding;
@@ -310,7 +313,7 @@ public class ClassScope extends Scope {
 				}
 				// GROOVY edit
 				//ClassScope memberScope = new ClassScope(this, memberContext);
-				ClassScope memberScope = buildClassScope(this, memberContext);
+				ClassScope memberScope = memberContext.newClassScope(this);
 				// GROOVY end
 				memberTypeBindings[count++] = memberScope.buildType(sourceType, sourceType.fPackage, accessRestriction);
 			}
@@ -319,12 +322,6 @@ public class ClassScope extends Scope {
 		}
 		sourceType.setMemberTypes(memberTypeBindings);
 	}
-
-	// GROOVY add -- overridable method so the scope can build the right kind of new scope
-	protected ClassScope buildClassScope(Scope parentScope, TypeDeclaration typeDecl) {
-		return new ClassScope(parentScope, typeDecl);
-	}
-	// GROOVY end
 
 	void buildMethods() {
 		SourceTypeBinding sourceType = this.referenceContext.binding;

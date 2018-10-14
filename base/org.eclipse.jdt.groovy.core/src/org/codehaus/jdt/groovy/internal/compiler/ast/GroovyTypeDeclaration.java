@@ -23,6 +23,8 @@ import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
 import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
+import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
+import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 
 public class GroovyTypeDeclaration extends TypeDeclaration {
@@ -57,6 +59,11 @@ public class GroovyTypeDeclaration extends TypeDeclaration {
         return false;
     }
     // FIXASC end
+
+    @Override
+    public ClassScope newClassScope(Scope outer) {
+        return new GroovyClassScope(outer, this);
+    }
 
     @Override
     public void resolve() {

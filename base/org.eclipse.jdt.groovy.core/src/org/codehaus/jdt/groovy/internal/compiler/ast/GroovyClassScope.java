@@ -353,11 +353,6 @@ public class GroovyClassScope extends ClassScope {
     }
 
     @Override
-    protected ClassScope buildClassScope(Scope parent, TypeDeclaration typeDecl) {
-        return new GroovyClassScope(parent, typeDecl);
-    }
-
-    @Override
     protected void buildFieldsAndMethods() {
         super.buildFieldsAndMethods();
 

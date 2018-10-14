@@ -1567,5 +1567,9 @@ public boolean isSecondary() {
 public boolean isScannerUsableOnThisDeclaration() {
 	return true;
 }
+
+public ClassScope newClassScope(Scope outer) {
+	return new ClassScope(outer, this);
+}
 // GROOVY end
 }

@@ -1,3 +1,4 @@
+// GROOVY PATCHED
 /*******************************************************************************
  * Copyright (c) 2000, 2018 IBM Corporation and others.
  *
@@ -97,7 +98,10 @@ protected BlockScope(int kind, Scope parent) {
 /* Create the class scope & binding for the anonymous type.
  */
 public final void addAnonymousType(TypeDeclaration anonymousType, ReferenceBinding superBinding) {
-	ClassScope anonymousClassScope = new ClassScope(this, anonymousType);
+	// GROOVY edit
+	//ClassScope anonymousClassScope = new ClassScope(this, anonymousType);
+	ClassScope anonymousClassScope = anonymousType.newClassScope(this);
+	// GROOVY end
 	anonymousClassScope.buildAnonymousTypeBinding(
 		enclosingSourceType(),
 		superBinding);
@@ -120,7 +124,10 @@ public final void addAnonymousType(TypeDeclaration anonymousType, ReferenceBindi
 /* Create the class scope & binding for the local type.
  */
 public final void addLocalType(TypeDeclaration localType) {
-	ClassScope localTypeScope = new ClassScope(this, localType);
+	// GROOVY edit
+	//ClassScope localTypeScope = new ClassScope(this, localType);
+	ClassScope localTypeScope = localType.newClassScope(this);
+	// GROOVY end
 	addSubscope(localTypeScope);
 	localTypeScope.buildLocalTypeBinding(enclosingSourceType());
 	
