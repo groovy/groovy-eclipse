@@ -15,14 +15,12 @@
  */
 package org.codehaus.jdt.groovy.internal.compiler.ast;
 
-import java.util.function.Supplier;
-
 import org.codehaus.groovy.ast.ClassNode;
 import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
+import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
-import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
 import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
@@ -42,8 +40,6 @@ public class GroovyTypeDeclaration extends TypeDeclaration {
     }
 
     private final ClassNode classNode;
-
-    protected Supplier<BlockScope> enclosingScope;
 
     // FIXASC Is this always what we want to do - are there any other implications?
     @Override
@@ -67,7 +63,18 @@ public class GroovyTypeDeclaration extends TypeDeclaration {
 
     @Override
     public void resolve() {
-        // prevent Groovy types from having their members resolved
+        if (memberTypes != null && memberTypes.length > 0) {
+            for (TypeDeclaration type : memberTypes) {
+                type.resolve(scope);
+            }
+        }
+        for (AbstractMethodDeclaration method : methods) {
+            method.resolve(scope);
+            if (method.isClinit()) {
+                method.resolveStatements();
+            }
+        }
+        // fields resolved earlier in GroovyClassScope
     }
 
     //--------------------------------------------------------------------------

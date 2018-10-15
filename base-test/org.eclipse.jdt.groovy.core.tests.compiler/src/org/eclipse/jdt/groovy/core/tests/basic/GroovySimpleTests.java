@@ -1119,6 +1119,98 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
     }
 
     @Test
+    public void testOverriding_MissingAnnotation1() {
+        Map<String, String> options = getCompilerOptions();
+        options.put(CompilerOptions.OPTION_ReportMissingOverrideAnnotation, CompilerOptions.ERROR);
+
+        runNegativeTest(new String[] {
+            "Foo.groovy",
+            "class Foo {\n" +
+            "  boolean equals(that) { false }\n" +
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in Foo.groovy (at line 2)\n" +
+        "\tboolean equals(that) { false }\n" +
+        "\t        ^^^^^^\n" +
+        "The method equals(Object) of type Foo should be tagged with @Override since it actually overrides a superclass method\n" +
+        "----------\n",
+        options);
+    }
+
+    @Test
+    public void testOverriding_MissingAnnotation2() {
+        Map<String, String> options = getCompilerOptions();
+        options.put(CompilerOptions.OPTION_ReportMissingOverrideAnnotation, CompilerOptions.ERROR);
+
+        runNegativeTest(new String[] {
+            "Foo.groovy",
+            "class Foo {\n" +
+            "  void bar() {\n" +
+            "    def baz = new Object() {" +
+            "      boolean equals(that) { false }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in Foo.groovy (at line 3)\n" +
+        "\tdef baz = new Object() {      boolean equals(that) { false }\n" +
+        "\t                                      ^^^^^^\n" +
+        "The method equals(Object) of type new Object(){} should be tagged with @Override since it actually overrides a superclass method\n" +
+        "----------\n",
+        options);
+    }
+
+    @Test
+    public void testOverriding_MissingAnnotation3() {
+        Map<String, String> options = getCompilerOptions();
+        options.put(CompilerOptions.OPTION_ReportRawTypeReference, CompilerOptions.IGNORE);
+        options.put(CompilerOptions.OPTION_ReportMissingOverrideAnnotation, CompilerOptions.ERROR);
+        options.put(CompilerOptions.OPTION_ReportMissingOverrideAnnotationForInterfaceMethodImplementation, CompilerOptions.ENABLED);
+
+        runNegativeTest(new String[] {
+            "Foo.groovy",
+            "class Foo implements Iterable {\n" +
+            "  Iterator iterator() { null }\n" +
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in Foo.groovy (at line 2)\n" +
+        "\tIterator iterator() { null }\n" +
+        "\t         ^^^^^^^^\n" +
+        "The method iterator() of type Foo should be tagged with @Override since it actually overrides a superinterface method\n" +
+        "----------\n",
+        options);
+    }
+
+    @Test
+    public void testOverriding_MissingAnnotation4() {
+        Map<String, String> options = getCompilerOptions();
+        options.put(CompilerOptions.OPTION_ReportRawTypeReference, CompilerOptions.IGNORE);
+        options.put(CompilerOptions.OPTION_ReportMissingOverrideAnnotation, CompilerOptions.ERROR);
+        options.put(CompilerOptions.OPTION_ReportMissingOverrideAnnotationForInterfaceMethodImplementation, CompilerOptions.ENABLED);
+
+        runNegativeTest(new String[] {
+            "Foo.groovy",
+            "class Foo {\n" +
+            "  void bar() {\n" +
+            "    def baz = new Iterable() {" +
+            "      Iterator iterator() { null }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}\n",
+        },
+        "----------\n" +
+        "1. ERROR in Foo.groovy (at line 3)\n" +
+        "\tdef baz = new Iterable() {      Iterator iterator() { null }\n" +
+        "\t                                         ^^^^^^^^\n" +
+        "The method iterator() of type new Iterable(){} should be tagged with @Override since it actually overrides a superinterface method\n" +
+        "----------\n",
+        options);
+    }
+
+    @Test
     public void testEnumPositions_GRE1072() {
         runConformTest(new String[] {
             "Color.groovy",

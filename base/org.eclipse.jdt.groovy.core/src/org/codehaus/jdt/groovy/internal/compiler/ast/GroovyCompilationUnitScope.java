@@ -31,6 +31,7 @@ import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
 import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
 import org.eclipse.jdt.internal.compiler.lookup.ImportBinding;
 import org.eclipse.jdt.internal.compiler.lookup.LookupEnvironment;
+import org.eclipse.jdt.internal.compiler.lookup.MethodVerifier;
 import org.eclipse.jdt.internal.compiler.lookup.PackageBinding;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReasons;
 import org.eclipse.jdt.internal.compiler.lookup.ProblemReferenceBinding;
@@ -242,4 +243,17 @@ public class GroovyCompilationUnitScope extends CompilationUnitScope {
         }
         return null;
     }
+
+    @Override
+    public void verifyMethods(MethodVerifier verifier) {
+        if (!verified) {
+            synchronized (this) {
+                if (!verified) {
+                    verified = true;
+                    super.verifyMethods(verifier);
+                }
+            }
+        }
+    }
+    private volatile boolean verified;
 }

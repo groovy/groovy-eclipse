@@ -1195,8 +1195,6 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                             methodDeclaration.bits |= ASTNode.HasLocalType;
                             methodDeclaration.statements = (org.eclipse.jdt.internal.compiler.ast.Statement[]) ArrayUtils.add(methodDeclaration.statements != null
                                         ? methodDeclaration.statements : new org.eclipse.jdt.internal.compiler.ast.Statement[0], innerTypeDeclaration.allocation);
-                            // methodDeclaration.scope/outerTypeDeclaration.staticInitializerScope is null at this time; defer creation of anonymous inner's enclosing scope
-                            innerTypeDeclaration.enclosingScope = () -> methodDeclaration.isClinit() ? outerTypeDeclaration.staticInitializerScope : methodDeclaration.scope;
                         } else if (location instanceof FieldDeclaration) {
                             FieldDeclaration fieldDeclaration = (FieldDeclaration) location;
                             fieldDeclaration.bits |= ASTNode.HasLocalType;
@@ -1440,13 +1438,11 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                 methodDeclaration.annotations = createAnnotations(methodNode.getAnnotations());
                 methodDeclaration.selector = methodNode.getName().toCharArray();
 
-                // Note: modifiers for the MethodBinding constructed for this declaration will be created marked with
-                // AccVarArgs if the bitset for the type reference in the final argument is marked IsVarArgs
+                // Note: modifiers for the MethodBinding constructed for this declaration will be created marked
+                // with AccVarArgs if the bitset for the type reference in the final argument is marked IsVarArgs
                 int modifiers = getModifiers(methodNode);
-                methodDeclaration.modifiers = modifiers;
                 Parameter[] params = methodNode.getParameters();
                 ClassNode returnType = methodNode.getReturnType();
-
                 // source of 'static main(args)' would become 'static Object main(Object args)' - so transform here
                 if (Flags.isStatic(modifiers) && params != null && params.length == 1 && "main".equals(methodNode.getName())) {
                     Parameter p = params[0];
@@ -1460,6 +1456,7 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
                     }
                 }
 
+                methodDeclaration.modifiers = modifiers;
                 methodDeclaration.arguments = createArguments(params);
                 if (methodDeclaration instanceof MethodDeclaration) {
                     GenericsType[] generics = methodNode.getGenericsTypes();
@@ -2195,6 +2192,9 @@ public class GroovyCompilationUnitDeclaration extends CompilationUnitDeclaration
         private int getModifiers(MethodNode node) {
             int modifiers = node.getModifiers();
             modifiers &= ~(Flags.AccSynthetic | Flags.AccTransient);
+            if (node.getCode() == null) {
+                modifiers |= ExtraCompilerModifiers.AccSemicolonBody;
+            }
             /*if (!node.isAbstract() && !node.isPrivate() && isTrait(node.getDeclaringClass())) {
                 modifiers |= Flags.AccDefaultMethod;
             }*/

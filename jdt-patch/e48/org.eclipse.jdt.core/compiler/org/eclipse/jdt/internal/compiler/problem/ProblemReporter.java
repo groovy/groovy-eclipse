@@ -6324,6 +6324,14 @@ public void localVariableRedundantNullAssignment(LocalVariableBinding local, AST
 
 public void methodMustOverride(AbstractMethodDeclaration method, long complianceLevel) {
 	MethodBinding binding = method.binding;
+	// GROOVY add
+	if (binding.declaringClass instanceof SourceTypeBinding) {
+		SourceTypeBinding stb = (SourceTypeBinding) binding.declaringClass;
+		if (stb.scope != null && !stb.scope.shouldReport(IProblem.MethodMustOverrideOrImplement)) {
+			return;
+		}
+	}
+	// GROOVY end
 	this.handle(
 		complianceLevel == ClassFileConstants.JDK1_5 ? IProblem.MethodMustOverride : IProblem.MethodMustOverrideOrImplement,
 		new String[] {new String(binding.selector), typesAsString(binding, false), new String(binding.declaringClass.readableName()), },
