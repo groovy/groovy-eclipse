@@ -566,6 +566,7 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
                 runMethod.setEnd(omega.getEnd());
                 runMethod.setLastLineNumber(omega.getLastLineNumber());
                 runMethod.setLastColumnNumber(omega.getLastColumnNumber());
+                runMethod.addAnnotation(makeAnnotationNode("java.lang.Override"));
             }
         }
         moduleNode.putNodeMetaData(LocationSupport.class, locationSupport);
@@ -773,6 +774,15 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     }
 
     // GRECLIPSE add
+    private static AnnotationNode makeAnnotationNode(String name) {
+        AnnotationNode node = new AnnotationNode(ClassHelper.make(name));
+        node.getClassNode().setStart(-1);
+        node.getClassNode().setEnd(-2);
+        node.setStart(-1);
+        node.setEnd(-2);
+        return node;
+    }
+
     private static ClassNode makeClassNode(String name) {
         ClassNode node = ClassHelper.make(name);
         if (node instanceof ImmutableClassNode) {
@@ -1536,12 +1546,17 @@ public class AstBuilder extends GroovyParserBaseVisitor<Object> {
     }
 
     private void attachTraitAnnotation(ClassNode classNode) {
-        attachAnnotation(classNode, GROOVY_TRANSFORM_TRAIT);
+        // GRECLIPSE edit
+        //attachAnnotation(classNode, GROOVY_TRANSFORM_TRAIT);
+        classNode.addAnnotation(makeAnnotationNode(GROOVY_TRANSFORM_TRAIT));
+        // GRECLIPSE end
     }
 
+    /* GRECLIPSE edit
     private void attachAnnotation(ClassNode classNode, String annotationClassName) {
         classNode.addAnnotation(new AnnotationNode(ClassHelper.make(annotationClassName)));
     }
+    */
 
     private boolean containsDefaultMethods(ClassDeclarationContext ctx) {
         for (ClassBodyDeclarationContext c : ctx.classBody().classBodyDeclaration()) {

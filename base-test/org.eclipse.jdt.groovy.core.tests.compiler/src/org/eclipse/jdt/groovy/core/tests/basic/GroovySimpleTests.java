@@ -4518,7 +4518,7 @@ public final class GroovySimpleTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
-            "  public java.lang.Object run() {\n" +
+            "  public @java.lang.Override java.lang.Object run() {\n" +
             "    new Runnable() {\n" +
             "      x() {\n" +
             "        super();\n" +

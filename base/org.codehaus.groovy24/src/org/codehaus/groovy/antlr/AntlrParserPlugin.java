@@ -778,7 +778,10 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         List<AnnotationNode> annotations = new ArrayList<AnnotationNode>();
 
         if (isType(TRAIT_DEF, classDef)) {
-            annotations.add(new AnnotationNode(ClassHelper.make("groovy.transform.Trait")));
+            // GRECLIPSE edit
+            //annotations.add(new AnnotationNode(ClassHelper.make("groovy.transform.Trait")));
+            annotations.add(makeAnnotationNode("groovy.transform.Trait"));
+            // GRECLIPSE end
         }
 
         AST node = classDef.getFirstChild();
@@ -3712,6 +3715,15 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         node.setNameEnd(locations.findOffset(nameStop.getLineLast(), nameStop.getColumnLast()) - 1);
     }
 
+    protected static AnnotationNode makeAnnotationNode(String name) {
+        AnnotationNode node = new AnnotationNode(ClassHelper.make(name));
+        node.getClassNode().setStart(-1);
+        node.getClassNode().setEnd(-2);
+        node.setStart(-1);
+        node.setEnd(-2);
+        return node;
+    }
+
     protected static ClassNode makeClassNode(String name) {
         ClassNode node = ClassHelper.make(name);
         if (node instanceof ImmutableClassNode) {
@@ -3829,6 +3841,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 runMethod.setEnd(last.getEnd());
                 runMethod.setLastLineNumber(last.getLastLineNumber());
                 runMethod.setLastColumnNumber(last.getLastColumnNumber());
+                runMethod.addAnnotation(makeAnnotationNode("java.lang.Override"));
             }
         }
     }
