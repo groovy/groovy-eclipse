@@ -16,7 +16,7 @@
 
    <category-def name="org.codehaus.groovy.compilers" label="More Compilers (optional)">
       <description>
-         The Groovy 2.5 compiler is installed automatically, but you may install any other Groovy compiler as well.
+         The Groovy 2.4 compiler is installed automatically, but you may install any other Groovy compiler as well.
       </description>
    </category-def>
 
