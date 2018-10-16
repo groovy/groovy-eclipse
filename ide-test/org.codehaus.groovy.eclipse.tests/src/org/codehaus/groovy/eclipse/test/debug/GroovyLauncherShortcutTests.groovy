@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -271,6 +271,7 @@ final class GroovyLauncherShortcutTests extends GroovyEclipseTestSuite {
         }*/
 
         def runner = new Runnable() {
+            @Override
             void run() {
                 MockGroovyScriptLaunchShortcut shortcut = new MockGroovyScriptLaunchShortcut()
                 ILaunchConfiguration config = shortcut.findOrCreateLaunchConfig(
@@ -280,11 +281,13 @@ final class GroovyLauncherShortcutTests extends GroovyEclipseTestSuite {
                 final StringBuilder stdout = new StringBuilder()
                 final StringBuilder stderr = new StringBuilder()
                 launch.processes[0].streamsProxy.outputStreamMonitor.addListener(new IStreamListener() {
+                    @Override
                     void streamAppended(String text, IStreamMonitor monitor) {
                         stdout.append(text)
                     }
                 })
                 launch.processes[0].streamsProxy.errorStreamMonitor.addListener(new IStreamListener() {
+                    @Override
                     void streamAppended(String text, IStreamMonitor monitor) {
                         stderr.append(text)
                     }

@@ -38,18 +38,23 @@ final class ASTPositionTests extends BrowsingTestSuite {
         // Need an active problem requestor to make reconcile turn on binding resolution.
         // This approximates better what is happening in reconciling for an actual editor in workspace.
         problemRequestor = new IProblemRequestor() {
+            @Override
             public boolean isActive() {
                 true
             }
+            @Override
             public void endReporting() {
             }
+            @Override
             public void beginReporting() {
             }
+            @Override
             public void acceptProblem(IProblem problem) {
                 println "problem: $problem"
             }
         }
         workingCopyOwner = new WorkingCopyOwner() {
+            @Override
             IProblemRequestor getProblemRequestor(ICompilationUnit workingCopy) {
                 problemRequestor
             }

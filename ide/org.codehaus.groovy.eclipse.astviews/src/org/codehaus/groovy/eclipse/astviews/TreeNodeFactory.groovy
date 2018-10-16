@@ -94,6 +94,7 @@ import org.codehaus.groovy.ast.ClassNode
         displayName = name
     }
 
+    @Override
     ITreeNode[] getChildren() {
         if (children == null) {
             children = loadChildren()
@@ -104,6 +105,7 @@ import org.codehaus.groovy.ast.ClassNode
         return children
     }
 
+    @Override
     boolean isLeaf() {
         if (leaf == null) {
             leaf = (getChildren().length == 0)
@@ -115,6 +117,7 @@ import org.codehaus.groovy.ast.ClassNode
 }
 
 @PackageScope class DefaultTreeNode extends TreeNode {
+    @Override
     ITreeNode[] loadChildren() {
         List<Method> methods = Arrays.asList(value.class.methods).findAll { Method method ->
             method.name =~ /^(is|get|redirect)/ && method.parameterTypes.length == 0 && method.declaringClass.name != 'java.lang.Object'
@@ -153,6 +156,7 @@ import org.codehaus.groovy.ast.ClassNode
 
 // This includes object arrays.
 @PackageScope class CollectionTreeNode extends TreeNode {
+    @Override
     ITreeNode[] loadChildren() {
         return value.collect {
             def name = StringUtil.toString(it)
@@ -165,6 +169,7 @@ import org.codehaus.groovy.ast.ClassNode
 }
 
 @PackageScope class MapTreeNode extends TreeNode {
+    @Override
     ITreeNode[] loadChildren() {
         return value.collect { k, v ->
             TreeNodeFactory.createTreeNode(this, v, k as String)
@@ -177,10 +182,12 @@ import org.codehaus.groovy.ast.ClassNode
     Object value
     String displayName
 
+    @Override
     boolean isLeaf() {
         true
     }
 
+    @Override
     ITreeNode[] getChildren() {
         TreeNode.NO_CHILDREN
     }

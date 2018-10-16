@@ -1,4 +1,4 @@
- /*
+/*
  * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -109,35 +109,44 @@ final class ConsoleLineTrackerTests extends GroovyEclipseTestSuite {
         this.doc = doc
     }
 
+    @Override
     void addLink(org.eclipse.debug.ui.console.IConsoleHyperlink link, int offset, int length) {
     }
 
+    @Override
     void connect(IStreamsProxy streamsProxy) {
     }
 
+    @Override
     void connect(IStreamMonitor streamMonitor, String streamIdentifer) {
     }
 
+    @Override
     IDocument getDocument() {
         return doc
     }
 
+    @Override
     IProcess getProcess() {
         return null
     }
 
+    @Override
     IRegion getRegion(org.eclipse.debug.ui.console.IConsoleHyperlink link) {
         return null
     }
 
+    @Override
     void addLink(IHyperlink link, int offset, int length) {
         regionLinkMap.put(link, new Region(offset, length))
         lastLink = link
     }
 
+    @Override
     void addPatternMatchListener(IPatternMatchListener matchListener) {
     }
 
+    @Override
     IRegion getRegion(IHyperlink link) {
         return regionLinkMap.get(link)
     }
@@ -146,10 +155,12 @@ final class ConsoleLineTrackerTests extends GroovyEclipseTestSuite {
         return lastLink
     }
 
+    @Override
     IOConsoleOutputStream getStream(String streamIdentifier) {
         return null
     }
 
+    @Override
     void removePatternMatchListener(IPatternMatchListener matchListener) {
     }
 }

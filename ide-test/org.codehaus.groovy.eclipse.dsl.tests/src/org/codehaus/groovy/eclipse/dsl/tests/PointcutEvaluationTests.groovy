@@ -61,6 +61,7 @@ final class PointcutEvaluationTests extends GroovyEclipseTestSuite {
             return context
         }
 
+        @Override
         VisitStatus acceptASTNode(ASTNode node, TypeLookupResult result, IJavaElement enclosingElement) {
             if (result != null && result.scope != null) {
                 context.setCurrentScope(result.scope)
