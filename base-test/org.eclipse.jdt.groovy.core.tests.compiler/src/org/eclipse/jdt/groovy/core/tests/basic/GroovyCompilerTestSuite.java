@@ -68,7 +68,7 @@ public abstract class GroovyCompilerTestSuite {
     protected static final long JDK8  = ClassFileConstants.JDK1_8;
     protected static final long JDK9  = ClassFileConstants.JDK9  ;
     protected static final long JDK10 = ClassFileConstants.JDK10 ;
-    protected static final long JDK11 = ClassFileConstants.JDK11 ;
+    protected static final long JDK11 = (55L << 16) + ClassFileConstants.MINOR_VERSION_0;
     protected static final List<Long> JDKs = Collections.unmodifiableList(Arrays.asList(JDK7, JDK8, JDK9, JDK10, JDK11));
 
     @Parameters(name = "Java {1}")

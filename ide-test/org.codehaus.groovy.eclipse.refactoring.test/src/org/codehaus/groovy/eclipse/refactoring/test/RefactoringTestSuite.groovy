@@ -34,8 +34,6 @@ import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.JavaModelException
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants
 import org.eclipse.jdt.core.refactoring.descriptors.JavaRefactoringDescriptor
-import org.eclipse.jdt.internal.corext.codemanipulation.StubUtility
-import org.eclipse.jdt.internal.corext.template.java.CodeTemplateContextType
 import org.eclipse.jdt.internal.corext.util.Strings
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.util.CoreUtility
@@ -70,24 +68,21 @@ abstract class RefactoringTestSuite {
 
     @BeforeClass
     static final void setUpTestSuite() {
-        fWasOptions = JavaCore.getOptions()
         fWasAutobuild = CoreUtility.setAutoBuilding(false)
-
-        Hashtable<String, String> options = TestOptions.getDefaultOptions()
-        options.put(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, '4')
-        options.put(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.TAB)
-        options.put(DefaultCodeFormatterConstants.FORMATTER_LINE_SPLIT, String.valueOf(9999))
-        options.put(DefaultCodeFormatterConstants.FORMATTER_NUMBER_OF_EMPTY_LINES_TO_PRESERVE, '0')
-
-        JavaCore.setOptions(options)
+        fWasOptions = JavaCore.getOptions()
+        TestOptions.defaultOptions.with {
+            put(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, '4')
+            put(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.TAB)
+            put(DefaultCodeFormatterConstants.FORMATTER_LINE_SPLIT, String.valueOf(9999))
+            put(DefaultCodeFormatterConstants.FORMATTER_NUMBER_OF_EMPTY_LINES_TO_PRESERVE, '0')
+            JavaCore.setOptions(it)
+        }
         TestOptions.initializeCodeGenerationOptions()
-        JavaPlugin.getDefault().codeTemplateStore.load()
+        JavaPlugin.getDefault().getCodeTemplateStore().load()
 
         fgJavaTestProject = JavaProjectHelper.createGroovyProject('TestProject', 'bin')
         fgRoot = JavaProjectHelper.addSourceContainer(fgJavaTestProject, 'src')
         fgPackageP = fgRoot.createPackageFragment('p', true, null)
-
-        StubUtility.setCodeTemplate(CodeTemplateContextType.CONSTRUCTORCOMMENT_ID, '/**\n * ${tags}\n */', null)
     }
 
     @AfterClass

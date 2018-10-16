@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.internal.corext.codemanipulation.StubUtility;
 import org.eclipse.jdt.internal.junit.util.JUnitStatus;
 import org.eclipse.jdt.junit.wizards.NewTestCaseWizardPageOne;
 import org.eclipse.jdt.junit.wizards.NewTestCaseWizardPageTwo;
@@ -102,7 +101,7 @@ public class NewGroovyTestTypeWizardPage extends NewTestCaseWizardPageOne {
             return super.superClassChanged();
         }
 
-        String superClassName= getSuperClass();
+        String superClassName = getSuperClass();
         if (getJUnit3TestSuperclassName().equals(superClassName)) {
             return new JUnitStatus();
         }
@@ -144,7 +143,7 @@ public class NewGroovyTestTypeWizardPage extends NewTestCaseWizardPageOne {
         if (pack == null) pack = getPackageFragmentRoot().getPackageFragment("");
         // if JUnit 3 and default package, calling super.creatType will be an error
         if (getJUnitVersion() == JUnitVersion.VERSION_3 && getPackageFragment().getElementName().equals("")) {
-            String newline = StubUtility.getLineDelimiterUsed(pack.getJavaProject());
+            String newline = pack.findRecommendedLineSeparator();
             StringBuilder source = new StringBuilder();
             String superClass = getSuperClass();
 

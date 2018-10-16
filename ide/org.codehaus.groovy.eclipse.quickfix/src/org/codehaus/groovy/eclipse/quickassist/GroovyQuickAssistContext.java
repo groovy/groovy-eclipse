@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,11 @@
  */
 package org.codehaus.groovy.eclipse.quickassist;
 
-import static org.eclipse.jdt.internal.corext.codemanipulation.StubUtility.getLineDelimiterPreference;
-
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.expr.GStringExpression;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.ASTNodeFinder;
 import org.codehaus.groovy.eclipse.codebrowsing.requestor.Region;
+import org.codehaus.groovy.eclipse.refactoring.core.utils.ASTTools;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.Assert;
@@ -91,7 +90,7 @@ public class GroovyQuickAssistContext {
             }
         } catch (BadLocationException ignore) {
         }
-        return ending != null ? ending : getLineDelimiterPreference(getProject());
+        return ending != null ? ending : ASTTools.getLineDelimeter(getCompilationUnit());
     }
 
     public String getNodeText(ASTNode node) {
