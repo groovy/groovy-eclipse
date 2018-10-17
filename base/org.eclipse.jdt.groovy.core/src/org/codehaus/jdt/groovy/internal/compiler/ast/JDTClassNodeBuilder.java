@@ -185,19 +185,23 @@ class JDTClassNodeBuilder {
      * Based on Java5.configureTypeVariableReference()
      */
     private ClassNode configureTypeVariableReference(TypeVariableBinding tv) {
-        ClassNode nodeInProgress = typeVariableConfigurationInProgress.get(tv);
-        if (nodeInProgress != null) {
-            return nodeInProgress;
+        ClassNode node = typeVariableConfigurationInProgress.get(tv);
+        if (node != null) {
+            return node;
+        }
+        String name = String.valueOf(tv.sourceName);
+        if (name.indexOf('@') >= 0) {
+            throw new IllegalStateException("Invalid type variable name: " + name);
         }
 
-        ClassNode cn = ClassHelper.makeWithoutCaching(tv.debugName());
+        ClassNode cn = ClassHelper.makeWithoutCaching(name);
         cn.setGenericsPlaceHolder(true);
-        ClassNode cn2 = ClassHelper.makeWithoutCaching(tv.debugName());
+        ClassNode cn2 = ClassHelper.makeWithoutCaching(name);
         cn2.setGenericsPlaceHolder(true);
         cn.setGenericsTypes(new GenericsType[] {new GenericsType(cn2)});
 
         typeVariableConfigurationInProgress.put(tv, cn);
-        if (tv.firstBound != null && !tv.firstBound.debugName().equals("java.lang.Object")) {
+        if (tv.firstBound != null && tv.firstBound.id != TypeIds.T_JavaLangObject) {
             setRedirect(cn, configureType(tv.firstBound));
         } else {
             cn.setRedirect(ClassHelper.OBJECT_TYPE);

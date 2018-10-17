@@ -389,7 +389,7 @@ public class JDTResolver extends ResolveVisitor {
 
             ClassNode node = null;
             if ((jdtBinding instanceof BinaryTypeBinding || jdtBinding instanceof SourceTypeBinding) &&
-                    (CharOperation.equals(compoundName, ((ReferenceBinding) jdtBinding).compoundName) || type.getName().equals(jdtBinding.debugName()))) {
+                    (CharOperation.equals(compoundName, ((ReferenceBinding) jdtBinding).compoundName) || type.getName().equals(String.valueOf(jdtBinding.readableName())))) {
                 node = convertToClassNode(jdtBinding);
             }
             if (DEBUG) {

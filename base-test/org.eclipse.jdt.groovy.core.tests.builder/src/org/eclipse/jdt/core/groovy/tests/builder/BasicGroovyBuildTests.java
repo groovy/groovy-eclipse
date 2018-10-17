@@ -74,7 +74,7 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
     }
 
     private IPath[] createSimpleProject(String name, boolean isGroovy) throws Exception {
-        IPath path = env.addProject(name);
+        IPath path = env.addProject(name, "1.8");
         if (isGroovy) {
             env.addGroovyJars(path);
         } else {
@@ -3351,6 +3351,51 @@ public final class BasicGroovyBuildTests extends BuilderTestSuite {
 
         fullBuild();
         expectingCompiledClasses("a.Hello", "b.Hello", "c.Hello", "d.Hello");
+        expectingNoProblems();
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/744
+    public void testTypeAnnotation() throws Exception {
+        IPath[] paths = createSimpleProject("Project", true);
+
+        env.addClass(paths[1], "p1", "Iterables",
+            "package p1;\n" +
+            "public class Iterables {\n" +
+            "   public <T> @Nullable T getFirst(Iterable<? extends T> iterable, @Nullable T defaultValue) {\n" +
+            "      return null;\n" +
+            "   }\n" +
+            "}\n");
+        env.addClass(paths[1], "p1", "Multimap",
+            "package p1;\n" +
+            "import java.util.Collection;\n" +
+            "public interface Multimap<K, V> {\n" +
+            "   Collection<V> get(@Nullable K key);\n" +
+            "}\n");
+        env.addClass(paths[1], "p1", "Nullable",
+            "package p1;\n" +
+            "import java.lang.annotation.*;\n" +
+            "@Documented\n" +
+            "@Retention(value = RetentionPolicy.RUNTIME)\n" +
+            "@Target(value = {ElementType.TYPE_USE, ElementType.TYPE_PARAMETER})\n" +
+            "public @interface Nullable {\n" +
+            "}\n");
+
+        incrementalBuild(paths[0]);
+        expectingCompiledClasses("p1.Iterables", "p1.Multimap", "p1.Nullable");
+        expectingNoProblems();
+
+        env.addGroovyClass(paths[1], "p2", "Script",
+            "package p2\n" +
+            "import p1.Iterables\n" +
+            "import p1.Multimap\n" +
+            "Multimap<String, String> getParams() {\n" +
+            "}\n" +
+            "def parseString(String string) {\n" +
+            "}\n" +
+            "def result = parseString(Iterables.getFirst(params.get('key'), null))\n");
+
+        incrementalBuild(paths[0]);
+        expectingCompiledClasses("p2.Script");
         expectingNoProblems();
     }
 }
