@@ -114,6 +114,7 @@ public class DSLContributionGroup extends ContributionGroup {
                 currentType = pattern.getCurrentType();
                 staticScope = pattern.isStatic();
                 isPrimaryExpression = pattern.isPrimaryNode();
+
                 contributionClosure.call();
             } catch (Exception e) {
                 GroovyLogManager.manager.logException(TraceCategory.DSL, e);
@@ -136,62 +137,36 @@ public class DSLContributionGroup extends ContributionGroup {
 
     @Override
     public Object getProperty(String property) {
-        if ("wormhole".equals(property)) {
-            return wormhole;
-        } else if ("currentNode".equals(property)) {
-            return scope.getCurrentNode();
-        } else if ("enclosingNode".equals(property)) {
-            return scope.getEnclosingNode();
-        } else if ("currentType".equals(property)) {
-            return currentType;
-        } else if ("resolver".equals(property)) {
+        switch (property) {
+        case "resolver":
             return resolver;
-        }
-        return bindings.get(property);
-    }
-
-    private ClassNode asClassNode(Object value) {
-        if (value == null) {
-            return null;
-        } else if (value instanceof String) {
-            return resolver.resolve((String) value);
-        } else if (value instanceof ClassNode) {
-            return (ClassNode) value;
-        } else if (value instanceof Class) {
-            return resolver.resolve(((Class<?>) value).getName());
-        } else {
-            return resolver.resolve(value.toString());
+        case "wormhole":
+            return wormhole;
+        case "currentType":
+            return currentType;
+        case "currentNode":
+            return scope.getCurrentNode();
+        case "enclosingNode":
+            return scope.getEnclosingNode();
+        default:
+            return bindings.get(property);
         }
     }
 
     private ParameterContribution[] extractParams(Map<String, Object> args, String paramKind) {
-        Object value;
         @SuppressWarnings("unchecked")
         Map<Object, Object> paramsMap = (Map<Object, Object>) args.get(paramKind);
-        ParameterContribution[] params;
-        if (paramsMap != null) {
+        ParameterContribution[] params = NO_PARAMS;
+        if (paramsMap != null && !paramsMap.isEmpty()) {
             params = new ParameterContribution[paramsMap.size()];
             int i = 0;
             for (Entry<Object, Object> entry : paramsMap.entrySet()) {
-                value = entry.getValue();
-                String type = value == null ? "java.lang.Object" : asString(value);
-                params[i++] = new ParameterContribution(asString(entry.getKey()), type);
+                String name = asString(entry.getKey());
+                String type = asString(entry.getValue());
+                params[i++] = new ParameterContribution(name != null ? name : NO_NAME, type != null ? type : NO_TYPE);
             }
-        } else {
-            params = NO_PARAMS;
         }
         return params;
-    }
-
-    private boolean asBoolean(Object object) {
-        if (object == null) {
-            return false;
-        }
-        if (object instanceof Boolean) {
-            return (Boolean) object;
-        }
-        String str = object.toString();
-        return ("true".equalsIgnoreCase(str) || "yes".equalsIgnoreCase(str));
     }
 
     /**
@@ -253,8 +228,7 @@ public class DSLContributionGroup extends ContributionGroup {
     }
 
     // FIXADE TODO combine with #delegateToCategoryMethod
-    private void delegateToNonCategoryMethod(boolean useNamedArgs, boolean isStatic, ClassNode type, MethodNode method,
-            ClassNode resolvedReturnType, boolean isDeprecated, List<IContributionElement> accessorContribs, boolean noParens) {
+    private void delegateToNonCategoryMethod(boolean useNamedArgs, boolean isStatic, ClassNode type, MethodNode method, ClassNode resolvedReturnType, boolean isDeprecated, List<IContributionElement> accessorContribs, boolean noParens) {
         String name = method.getName();
         contributions.add(new MethodContributionElement(name, toParameterContribution(method.getParameters()), NO_PARAMS, NO_PARAMS, getTypeName(resolvedReturnType), getTypeName(type), (method.isStatic() || isStatic), provider, null, useNamedArgs, noParens, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
         // also add the associated property if applicable
@@ -278,8 +252,30 @@ public class DSLContributionGroup extends ContributionGroup {
         }
     }
 
+    private ParameterContribution[] toParameterContribution(Parameter[] params) {
+        if (params != null && params.length > 0) {
+            ParameterContribution[] contribs = new ParameterContribution[params.length];
+            for (int i = 0, n = params.length; i < n; i += 1) {
+                contribs[i] = new ParameterContribution(params[i]);
+            }
+            return contribs;
+        }
+        return NO_PARAMS;
+    }
+
+    private ParameterContribution[] toParameterContributionRemoveFirst(Parameter[] params) {
+        if (params != null && params.length > 1) {
+            ParameterContribution[] contribs = new ParameterContribution[params.length - 1];
+            for (int i = 1, n = params.length; i < n; i += 1) {
+                contribs[i - 1] = new ParameterContribution(params[i]);
+            }
+            return contribs;
+        }
+        return NO_PARAMS;
+    }
+
     // TODO: Move to AccessorSupport or replace with something from it?
-    private String isAccessor(MethodNode method, String name, boolean isCategory) {
+    private static String isAccessor(MethodNode method, String name, boolean isCategory) {
         if (method.getParameters() == null || method.getParameters().length == (isCategory ? 1 : 0)) {
             if (name.length() > 3 && name.startsWith("get")) {
                 return decapitalize(name.substring(3));
@@ -290,56 +286,38 @@ public class DSLContributionGroup extends ContributionGroup {
         return null;
     }
 
-    private ParameterContribution[] toParameterContribution(Parameter[] params) {
-        if (params != null) {
-            ParameterContribution[] contribs = new ParameterContribution[params.length];
-            for (int i = 0; i < contribs.length; i += 1) {
-                contribs[i] = new ParameterContribution(params[i]);
-            }
-            return contribs;
-        } else {
-            return new ParameterContribution[0];
-        }
+    private static boolean isDeprecated(Map<?, ?> args) {
+        return asBoolean(args.get("isDeprecated"));
     }
 
-    private ParameterContribution[] toParameterContributionRemoveFirst(Parameter[] params) {
-        if (params != null) {
-            ParameterContribution[] contribs = new ParameterContribution[params.length - 1];
-            for (int i = 1; i < params.length; i += 1) {
-                contribs[i - 1] = new ParameterContribution(params[i]);
-            }
-            return contribs;
-        } else {
-            return new ParameterContribution[0];
-        }
+    private static boolean isStatic(Map<?, ?> args) {
+        return asBoolean(args.get("isStatic"));
     }
 
-    /**
-     * @param args map passed in from the call to method or property
-     * @return true iff the static argument is passed in.
-     */
-    private boolean isStatic(Map<?, ?> args) {
-        return getBoolean("isStatic", args);
-    }
-
-    private boolean isDeprecated(Map<?, ?> args) {
-        return getBoolean("isDeprecated", args);
-    }
-
-    private boolean getBoolean(String name, Map<?, ?> args) {
-        Object maybeStatic = args.get(name);
-        if (maybeStatic == null) {
+    private static boolean asBoolean(Object value) {
+        if (value == null) {
             return false;
-        } else if (maybeStatic instanceof Boolean) {
-            return (Boolean) maybeStatic;
+        } else if (value instanceof Boolean) {
+            return (Boolean) value;
+        }
+        String string = value.toString();
+        return ("true".equalsIgnoreCase(string) || "yes".equalsIgnoreCase(string));
+    }
+
+    private ClassNode asClassNode(Object value) {
+        if (value == null) {
+            return null;
+        } else if (value instanceof ClassNode) {
+            return (ClassNode) value;
+        } else if (value instanceof String) {
+            return resolver.resolve((String) value);
+        } else if (value instanceof Class) {
+            return resolver.resolve(((Class<?>) value).getCanonicalName());
         } else {
-            return Boolean.getBoolean(maybeStatic.toString());
+            return resolver.resolve(value.toString());
         }
     }
 
-    /**
-     * Converts an object into a string
-     */
     @SuppressWarnings("rawtypes")
     private String asString(Object value) {
         if (value == null) {
@@ -347,7 +325,7 @@ public class DSLContributionGroup extends ContributionGroup {
         } else if (value instanceof String) {
             return (String) value;
         } else if (value instanceof Class) {
-            return ((Class) value).getName();
+            return ((Class) value).getCanonicalName();
         } else if (value instanceof ClassNode) {
             return getTypeName(((ClassNode) value));
         } else if (value instanceof FieldNode) {
@@ -369,64 +347,63 @@ public class DSLContributionGroup extends ContributionGroup {
     //--------------------------------------------------------------------------
     // methods available within contribution closure:
 
-    void provider(Object args) {
-        provider = args == null ? null : asString(args);
-    }
-
-    /**
-     * Adds a method to the augmented class reference.
-     */
-    void method(Map<String, Object> args) {
-        String name = asString(args.get("name"));
-
-        Object value = args.get("type");
-        String returnType = (value == null ? "java.lang.Object" : asString(value));
-
-        value = args.get("declaringType");
-        String declaringType = (value == null ? getTypeName(currentType) : asString(value));
-
-        value = args.get("provider");
-        String provider = (value == null ? this.provider : asString(value));
-        value = args.get("doc");
-        String doc = (value == null ? null : asString(value));
-
-        boolean useNamedArgs = asBoolean(args.get("useNamedArgs"));
-        boolean noParens = asBoolean(args.get("noParens"));
-
-        ParameterContribution[] params = extractParams(args, "params");
-        ParameterContribution[] namedParams = extractParams(args, "namedParams");
-        ParameterContribution[] optionalParams = extractParams(args, "optionalParams");
-
-        boolean isStatic = isStatic(args);
-        boolean isDeprecated = isDeprecated(args);
-        if (!staticScope || (staticScope && isStatic)) {
-            contributions.add(new MethodContributionElement(name == null ? NO_NAME : name, params, namedParams, optionalParams,
-                returnType == null ? NO_TYPE : returnType, declaringType, isStatic, provider == null ? this.provider : provider,
-                    doc, useNamedArgs, noParens, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
-        }
+    void provider(Object value) {
+        provider = asString(value);
     }
 
     /**
      * Adds a property to the augmented class reference.
      */
     void property(Map<String, Object> args) {
-        String name = asString(args.get("name"));
-
-        Object value = args.get("type");
-        String type = (value == null ? NO_TYPE : asString(value));
-
-        value = args.get("declaringType");
-        String declaringType = (value == null ? getTypeName(currentType) : asString(value));
-
-        value = args.get("provider");
-        String provider = (value == null ? this.provider : asString(value));
-        String doc = asString(args.get("doc"));
-
         boolean isStatic = isStatic(args);
-        boolean isDeprecated = isDeprecated(args);
         if (!staticScope || (staticScope && isStatic)) {
-            contributions.add(new PropertyContributionElement(name == null ? NO_NAME : name, type,
-                declaringType, isStatic, provider, doc, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
+            String name = asString(args.get("name"));
+            if (name == null) name = NO_NAME;
+
+            String type = asString(args.get("type"));
+            if (type == null) type = NO_TYPE;
+
+            String declaringType = asString(args.get("declaringType"));
+            if (declaringType == null) declaringType = getTypeName(currentType);
+
+            String provider = asString(args.get("provider"));
+            if (provider == null) provider = this.provider;
+
+            String doc = asString(args.get("doc"));
+            boolean isDeprecated = isDeprecated(args);
+
+            contributions.add(new PropertyContributionElement(name, type, declaringType, isStatic, provider, doc, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
+        }
+    }
+
+    /**
+     * Adds a method to the augmented class reference.
+     */
+    void method(Map<String, Object> args) {
+        boolean isStatic = isStatic(args);
+        if (!staticScope || (staticScope && isStatic)) {
+            String name = asString(args.get("name"));
+            if (name == null) name = NO_NAME;
+
+            String returnType = asString(args.get("type"));
+            if (returnType == null) returnType = NO_TYPE;
+
+            String declaringType = asString(args.get("declaringType"));
+            if (declaringType == null) declaringType = getTypeName(currentType);
+
+            String provider = asString(args.get("provider"));
+            if (provider == null) provider = this.provider;
+
+            String doc = asString(args.get("doc"));
+            boolean isDeprecated = isDeprecated(args);
+            boolean noParens = asBoolean(args.get("noParens"));
+            boolean useNamedArgs = asBoolean(args.get("useNamedArgs"));
+            ParameterContribution[] params = extractParams(args, "params");
+            ParameterContribution[] namedParams = extractParams(args, "namedParams");
+            ParameterContribution[] optionalParams = extractParams(args, "optionalParams");
+
+            contributions.add(new MethodContributionElement(name, params, namedParams, optionalParams, returnType,
+                declaringType, isStatic, provider, doc, useNamedArgs, noParens, isDeprecated, DEFAULT_RELEVANCE_MULTIPLIER));
         }
     }
 
@@ -436,26 +413,25 @@ public class DSLContributionGroup extends ContributionGroup {
     void template(Map<String, String> args) {
     }
 
+    @SuppressWarnings("unchecked")
     void delegatesTo(Map<String, Object> args) {
-        String name = asString(args.get("type"));
-        boolean isStatic = isStatic(args);
-        boolean isDeprecated = isDeprecated(args);
-        boolean asCategory = getBoolean("asCategory", args);
-        boolean useNamed = getBoolean("useNamed", args);
-        boolean noParens = getBoolean("noParens", args);
-        @SuppressWarnings("unchecked")
-        List<String> except = (List<String>) args.get("except");
-        ClassNode type = this.resolver.resolve(name);
-        internalDelegatesTo(type, useNamed, isStatic, asCategory, isDeprecated, except, noParens);
+        internalDelegatesTo(
+            asClassNode(args.get("type")),
+            asBoolean(args.get("useNamed")),
+            isStatic(args),
+            asBoolean(args.get("asCategory")),
+            isDeprecated(args),
+            (List<String>) args.get("except"),
+            asBoolean(args.get("noParens")));
     }
 
     void delegatesTo(String className) {
-        delegatesTo(this.resolver.resolve(className));
+        delegatesTo(asClassNode(className));
     }
 
     void delegatesTo(Class<?> clazz) {
-        ClassNode resolved = this.resolver.resolve(clazz.getCanonicalName());
-        if (resolved == VariableScope.OBJECT_CLASS_NODE && !clazz.getName().equals(Object.class.getName())) {
+        ClassNode resolved = asClassNode(clazz);
+        if (resolved == VariableScope.OBJECT_CLASS_NODE && !clazz.getCanonicalName().equals(NO_TYPE)) {
             // likely that we are trying to resolve a class that is defined inside of a DSLD itself
             try {
                 resolved = ClassHelper.make(clazz);
@@ -474,11 +450,11 @@ public class DSLContributionGroup extends ContributionGroup {
     }
 
     void delegatesToUseNamedArgs(String className) {
-        delegatesToUseNamedArgs(this.resolver.resolve(className));
+        delegatesToUseNamedArgs(asClassNode(className));
     }
 
     void delegatesToUseNamedArgs(Class<?> clazz) {
-        delegatesToUseNamedArgs(this.resolver.resolve(clazz.getCanonicalName()));
+        delegatesToUseNamedArgs(asClassNode(clazz));
     }
 
     /**
@@ -489,11 +465,11 @@ public class DSLContributionGroup extends ContributionGroup {
     }
 
     void delegatesToCategory(String className) {
-        delegatesToCategory(this.resolver.resolve(className));
+        delegatesToCategory(asClassNode(className));
     }
 
     void delegatesToCategory(Class<?> clazz) {
-        delegatesToCategory(this.resolver.resolve(clazz.getCanonicalName()));
+        delegatesToCategory(asClassNode(clazz));
     }
 
     /**

@@ -45,11 +45,10 @@ public class ResolverCache {
      * using fully qualified names.
      */
     public ClassNode resolve(String qName) {
-        if (qName == null || qName.length() == 0) {
+        if (qName == null || (qName = qName.trim()).isEmpty()) {
             return ClassHelper.DYNAMIC_TYPE;
         }
-        qName = qName.trim();
-        if ("java.lang.Void".equals(qName) || "void".equals(qName)) {
+        if ("void".equals(qName) || "java.lang.Void".equals(qName)) {
             return VariableScope.VOID_CLASS_NODE;
         }
         ClassNode clazz = nameTypeCache.get(qName);

@@ -1076,60 +1076,95 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
               foo
             }
             '''.stripIndent()
-        int start = contents.lastIndexOf('fo')
-        int end = start + 'foo'.length()
-        assertType(contents, start, end, 'java.lang.Integer')
+        int offset = contents.lastIndexOf('foo')
+        assertType(contents, offset, offset + 3, 'java.lang.Integer')
     }
 
-    private static final String ARRAY_TYPE_DSLD = '''\
-        contribute(currentType()) {
-          property name:'foot1', type:'java.lang.String[]'
-          property name:'foot2', type:'java.lang.String[][]'
-          property name:'foot3', type:'java.util.List<java.lang.String[][]>'
-          property name:'foot4', type:'java.util.List<java.lang.String>[]'
-          property name:'foot5', type:'java.util.List<java.lang.String[]>[]'
-          property name:'foot6', type:'java.util.Map<java.lang.String[],java.lang.Integer[]>'
-        }'''.stripIndent()
-
-    @Test // GRECLIPSE-1555
+    @Test
     void testArrayType1() {
-        createDsls(ARRAY_TYPE_DSLD)
-        String contents = 'foot1'
+        createDsls '''\
+            contribute(currentType()) {
+              property name:'prop', type:'java.lang.String[]'
+            }
+            '''.stripIndent()
+        String contents = 'prop'
+        assertType(contents, 0, contents.length(), 'java.lang.String[]')
+    }
+
+    @Test
+    void testArrayType1a() {
+        createDsls '''\
+            contribute(currentType()) {
+              property name:'prop', type:String[]
+            }
+            '''.stripIndent()
+        String contents = 'prop'
         assertType(contents, 0, contents.length(), 'java.lang.String[]')
     }
 
     @Test
     void testArrayType2() {
-        createDsls(ARRAY_TYPE_DSLD)
-        String contents = 'foot2'
+        createDsls '''\
+            contribute(currentType()) {
+              property name:'prop', type:'java.lang.String[][]'
+            }
+            '''.stripIndent()
+        String contents = 'prop'
+        assertType(contents, 0, contents.length(), 'java.lang.String[][]')
+    }
+
+    @Test
+    void testArrayType2a() {
+        createDsls '''\
+            contribute(currentType()) {
+              property name:'prop', type:String[][]
+            }
+            '''.stripIndent()
+        String contents = 'prop'
         assertType(contents, 0, contents.length(), 'java.lang.String[][]')
     }
 
     @Test
     void testArrayType3() {
-        createDsls(ARRAY_TYPE_DSLD)
-        String contents = 'foot3'
+        createDsls '''\
+            contribute(currentType()) {
+              property name:'prop', type:'java.util.List<java.lang.String[][]>'
+            }
+            '''.stripIndent()
+        String contents = 'prop'
         assertType(contents, 0, contents.length(), 'java.util.List<java.lang.String[][]>')
     }
 
     @Test
     void testArrayType4() {
-        createDsls(ARRAY_TYPE_DSLD)
-        String contents = 'foot4'
+        createDsls '''\
+            contribute(currentType()) {
+              property name:'prop', type:'java.util.List<java.lang.String>[]'
+            }
+            '''.stripIndent()
+        String contents = 'prop'
         assertType(contents, 0, contents.length(), 'java.util.List<java.lang.String>[]')
     }
 
     @Test
     void testArrayType5() {
-        createDsls(ARRAY_TYPE_DSLD)
-        String contents = 'foot5'
+        createDsls '''\
+            contribute(currentType()) {
+              property name:'prop', type:'java.util.List<java.lang.String[]>[]'
+            }
+            '''.stripIndent()
+        String contents = 'prop'
         assertType(contents, 0, contents.length(), 'java.util.List<java.lang.String[]>[]')
     }
 
     @Test
     void testArrayType6() {
-        createDsls(ARRAY_TYPE_DSLD)
-        String contents = 'foot6'
+        createDsls '''\
+            contribute(currentType()) {
+              property name:'prop', type:'java.util.Map<java.lang.String[],java.lang.Integer[]>'
+            }
+            '''.stripIndent()
+        String contents = 'prop'
         assertType(contents, 0, contents.length(), 'java.util.Map<java.lang.String[],java.lang.Integer[]>')
     }
 
