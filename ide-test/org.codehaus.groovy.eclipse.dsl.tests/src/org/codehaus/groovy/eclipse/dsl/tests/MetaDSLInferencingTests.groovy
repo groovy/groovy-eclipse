@@ -77,7 +77,7 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
             '''.stripIndent())
 
         int offset = unit.source.lastIndexOf('types')
-        InferencingTestSuite.assertType(unit, offset, offset + 'types'.length(), 'java.util.Collection<E extends java.lang.Object>')
+        InferencingTestSuite.assertType(unit, offset, offset + 'types'.length(), 'java.util.Collection')
     }
 
     @Test
@@ -89,7 +89,7 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
             '''.stripIndent())
 
         int offset = unit.source.lastIndexOf('types')
-        InferencingTestSuite.assertType(unit, offset, offset + 'types'.length(), 'java.util.Collection<E extends java.lang.Object>')
+        InferencingTestSuite.assertType(unit, offset, offset + 'types'.length(), 'java.util.Collection')
     }
 
     @Test
@@ -101,7 +101,7 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
             '''.stripIndent())
 
         int offset = unit.source.lastIndexOf('annos')
-        InferencingTestSuite.assertType(unit, offset, offset + 'annos'.length(), 'java.util.Collection<E extends java.lang.Object>')
+        InferencingTestSuite.assertType(unit, offset, offset + 'annos'.length(), 'java.util.Collection')
     }
 
     @Test

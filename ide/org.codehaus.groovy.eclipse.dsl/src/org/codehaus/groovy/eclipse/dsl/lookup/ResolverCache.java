@@ -22,6 +22,7 @@ import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.GenericsType;
 import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
@@ -33,10 +34,12 @@ public class ResolverCache {
 
     private final Map<String, ClassNode> nameTypeCache;
     private final JDTResolver resolver;
+    public final ModuleNode module;
 
-    public ResolverCache(JDTResolver resolver, ModuleNode thisModule) {
+    public ResolverCache(JDTResolver resolver, ModuleNode module) {
         this.nameTypeCache = new WeakHashMap<>();
         this.resolver = resolver;
+        this.module = module;
     }
 
     /**
@@ -44,24 +47,24 @@ public class ResolverCache {
      * or the array type signature for arrays.  Can specify type parameters, also
      * using fully qualified names.
      */
-    public ClassNode resolve(String qName) {
-        if (qName == null || (qName = qName.trim()).isEmpty()) {
+    public ClassNode resolve(String name) {
+        if (name == null || (name = name.trim()).isEmpty()) {
             return ClassHelper.DYNAMIC_TYPE;
         }
-        if ("void".equals(qName) || "java.lang.Void".equals(qName)) {
+        if ("void".equals(name) || "java.lang.Void".equals(name)) {
             return VariableScope.VOID_CLASS_NODE;
         }
-        ClassNode clazz = nameTypeCache.get(qName);
-        int arrayCount = 0;
-        if (clazz == null && resolver != null) {
-            int typeParamEnd = qName.lastIndexOf('>');
-            int arrayStart = qName.indexOf('[', typeParamEnd);
+        ClassNode type = nameTypeCache.get(name);
+        if (type == null && resolver != null) {
+            int typeParamEnd = name.lastIndexOf('>');
+            int arrayStart = name.indexOf('[', typeParamEnd);
             String componentName;
+            int arrayCount = 0;
             if (arrayStart > 0) {
-                componentName = qName.substring(0, arrayStart);
-                arrayCount = calculateArrayCount(qName, arrayStart);
+                componentName = name.substring(0, arrayStart);
+                arrayCount = calculateArrayCount(name, arrayStart);
             } else {
-                componentName = qName;
+                componentName = name;
             }
 
             String erasureName = componentName;
@@ -72,47 +75,42 @@ public class ResolverCache {
                     erasureName = componentName.substring(0, typeParamStart);
                 }
             }
-            clazz = resolver.resolve(erasureName);
-            if (clazz == null) {
-                clazz = VariableScope.OBJECT_CLASS_NODE;
+            type = resolver.resolve(erasureName);
+            if (type == null) {
+                type = VariableScope.OBJECT_CLASS_NODE;
             }
-            nameTypeCache.put(erasureName, clazz);
+            nameTypeCache.put(erasureName, type);
 
             // now recur down through the type parameters
-            if (typeParamStart > 0) {
-                // only need to clone if generics are involved
-                clazz = VariableScope.clone(clazz);
-
+            if (typeParamStart > 0 && type.isUsingGenerics()) {
                 String[] typeParameterNames = componentName.substring(typeParamStart + 1, componentName.length() - 1).split(",");
-                ClassNode[] typeParameters = new ClassNode[typeParameterNames.length];
+                ClassNode[] typeParameterTypes = new ClassNode[typeParameterNames.length];
                 for (int i = 0; i < typeParameterNames.length; i += 1) {
-                    typeParameters[i] = resolve(typeParameterNames[i]);
+                    typeParameterTypes[i] = resolve(typeParameterNames[i]); // TODO: Handle "? extends T" and "? super T"
                 }
-                clazz = VariableScope.clone(clazz);
-                GenericsType[] genericsTypes = clazz.getGenericsTypes();
-                if (genericsTypes != null) {
-                    // need to be careful here...there may be too many or too few type parameters
-                    for (int i = 0; i < genericsTypes.length && i < typeParameters.length; i += 1) {
-                        genericsTypes[i].setResolved(true);
-                        genericsTypes[i].setWildcard(false);
-                        genericsTypes[i].setPlaceholder(false);
-                        genericsTypes[i].setLowerBound(null);
-                        genericsTypes[i].setUpperBounds(null);
-                        genericsTypes[i].setType(typeParameters[i]);
-                        genericsTypes[i].setName(typeParameters[i].getName());
-                    }
-                    nameTypeCache.put(componentName, clazz);
+                type = VariableScope.clone(type);
+                GenericsType[] genericsTypes = type.getGenericsTypes();
+                // need to be careful here...there may be too many or too few type parameters
+                for (int i = 0; i < genericsTypes.length && i < typeParameterTypes.length; i += 1) {
+                    genericsTypes[i].setResolved(true);
+                    genericsTypes[i].setWildcard(false);
+                    genericsTypes[i].setLowerBound(null);
+                    genericsTypes[i].setUpperBounds(null);
+                    genericsTypes[i].setPlaceholder(false);
+                    genericsTypes[i].setType(typeParameterTypes[i]);
+                    genericsTypes[i].setName(typeParameterTypes[i].getName());
                 }
+                nameTypeCache.put(componentName, type);
             }
+
             while (arrayCount > 0) {
                 arrayCount -= 1;
                 componentName += "[]";
-                clazz = clazz.makeArray();
-                nameTypeCache.put(componentName, clazz);
+                type = type.makeArray();
+                nameTypeCache.put(componentName, type);
             }
         }
-
-        return clazz;
+        return (name.indexOf('<') < 0 ? GenericsUtils.nonGeneric(type) : type);
     }
 
     private int calculateArrayCount(String qName, int arrayStart) {

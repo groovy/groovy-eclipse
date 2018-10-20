@@ -17,7 +17,6 @@ package org.codehaus.groovy.eclipse.dsl.contributions;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
 
 /**
@@ -27,29 +26,24 @@ public class ParameterContribution {
 
     final String name;
     final String type;
-    private Parameter cachedParameter;
+    private Parameter value;
 
     public ParameterContribution(String name, String type) {
         this.name = name;
         this.type = type;
     }
 
-    public ParameterContribution(Parameter cachedParameter) {
-        this.cachedParameter = cachedParameter;
-        this.name = cachedParameter.getName();
-        this.type = DSLContributionGroup.getTypeName(cachedParameter.getType());
-    }
-
-    public ParameterContribution(String name) {
-        this.name = name;
-        this.type = null;
+    public ParameterContribution(Parameter value) {
+        this.value = value;
+        this.name = value.getName();
+        this.type = DSLContributionGroup.getTypeName(value.getType());
     }
 
     public Parameter toParameter(ResolverCache resolver) {
-        if (cachedParameter == null) {
-            cachedParameter = new Parameter(resolver != null ? GenericsUtils.nonGeneric(resolver.resolve(type)) : ClassHelper.DYNAMIC_TYPE, name);
+        if (value == null) {
+            value = new Parameter(resolver != null ? resolver.resolve(type) : ClassHelper.DYNAMIC_TYPE, name);
         }
-        return cachedParameter;
+        return value;
     }
 
     @Override
