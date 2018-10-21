@@ -1169,6 +1169,39 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
     }
 
     @Test
+    void testWildcardType1() {
+        createDsls '''\
+            contribute(currentType()) {
+              property name:'prop', type:'Class<? extends java.lang.annotation.Annotation>'
+            }
+            '''.stripIndent()
+        String contents = 'prop'
+        assertType(contents, 0, contents.length(), 'java.lang.Class<? extends java.lang.annotation.Annotation>')
+    }
+
+    @Test
+    void testWildcardType2() {
+        createDsls '''\
+            contribute(currentType()) {
+              property name:'prop', type:'Map<String, ? extends java.lang.annotation.Annotation>'
+            }
+            '''.stripIndent()
+        String contents = 'prop'
+        assertType(contents, 0, contents.length(), 'java.util.Map<java.lang.String,? extends java.lang.annotation.Annotation>')
+    }
+
+    @Test
+    void testWildcardType3() {
+        createDsls '''\
+            contribute(currentType()) {
+              property name:'prop', type:'Map<String, List<? extends java.lang.annotation.Annotation>>'
+            }
+            '''.stripIndent()
+        String contents = 'prop'
+        assertType(contents, 0, contents.length(), 'java.util.Map<java.lang.String,java.util.List<? extends java.lang.annotation.Annotation>>')
+    }
+
+    @Test
     void testNestedCalls() {
         createDsls '''\
             contribute(bind(x: enclosingCall())) {

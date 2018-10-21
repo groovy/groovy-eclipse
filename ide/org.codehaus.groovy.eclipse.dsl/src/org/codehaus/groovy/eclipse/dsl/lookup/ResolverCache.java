@@ -83,22 +83,26 @@ public class ResolverCache {
 
             // now recur down through the type parameters
             if (typeParamStart > 0 && type.isUsingGenerics()) {
-                String[] typeParameterNames = componentName.substring(typeParamStart + 1, componentName.length() - 1).split(",");
+                String[] typeParameterNames = componentName.substring(typeParamStart + 1, componentName.length() - 1).split("\\s*,\\s*");
                 ClassNode[] typeParameterTypes = new ClassNode[typeParameterNames.length];
                 for (int i = 0; i < typeParameterNames.length; i += 1) {
-                    typeParameterTypes[i] = resolve(typeParameterNames[i]); // TODO: Handle "? extends T" and "? super T"
+                    typeParameterTypes[i] = resolve(typeParameterNames[i].replaceFirst("^\\?\\s+(extends|super)\\s+", ""));
                 }
                 type = VariableScope.clone(type);
                 GenericsType[] genericsTypes = type.getGenericsTypes();
                 // need to be careful here...there may be too many or too few type parameters
                 for (int i = 0; i < genericsTypes.length && i < typeParameterTypes.length; i += 1) {
+                    if (typeParameterNames[i].startsWith("?")) {
+                        genericsTypes[i] = GenericsUtils.buildWildcardType(typeParameterTypes[i]);
+                    } else {
+                        genericsTypes[i].setPlaceholder(false); // must precede setType
+                        genericsTypes[i].setName(typeParameterTypes[i].getName());
+                        genericsTypes[i].setType(typeParameterTypes[i]);
+                        genericsTypes[i].setUpperBounds(null);
+                        genericsTypes[i].setLowerBound(null);
+                        genericsTypes[i].setWildcard(false);
+                    }
                     genericsTypes[i].setResolved(true);
-                    genericsTypes[i].setWildcard(false);
-                    genericsTypes[i].setLowerBound(null);
-                    genericsTypes[i].setUpperBounds(null);
-                    genericsTypes[i].setPlaceholder(false);
-                    genericsTypes[i].setType(typeParameterTypes[i]);
-                    genericsTypes[i].setName(typeParameterTypes[i].getName());
                 }
                 nameTypeCache.put(componentName, type);
             }
