@@ -231,6 +231,11 @@ public class JDTResolver extends ResolveVisitor {
         if (DEBUG) {
             log("commencing resolution for " + currentClass.getName());
         }
+        if (currentClass.getOuterClass() == null) {
+            // ensure JDT pre-resolve steps completed before Groovy resolve step
+            activeScope.verifyMethods(activeScope.environment.methodVerifier());
+            typeDecl.resolve(activeScope); // must come after verifyMethods
+        }
         return true;
     }
 

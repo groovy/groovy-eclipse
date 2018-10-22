@@ -122,7 +122,6 @@ public class GroovyParser {
                 allowTransforms,
                 compilerOptions.groovyExcludeGlobalASTScan);
             this.resolver = new JDTResolver(unit);
-            unit.removeOutputPhaseOperation();
             unit.setResolveVisitor(resolver);
             unit.tweak(isReconcile);
             return unit;

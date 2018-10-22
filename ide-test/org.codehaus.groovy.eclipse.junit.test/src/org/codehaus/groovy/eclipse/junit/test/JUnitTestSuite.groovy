@@ -28,7 +28,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.junit.test;
+package org.codehaus.groovy.eclipse.junit.test
 
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
@@ -41,6 +41,7 @@ abstract class JUnitTestSuite extends GroovyEclipseTestSuite {
         addJUnit(4)
     }
 
+    @Override
     protected GroovyCompilationUnit addGroovySource(CharSequence contents, String name = 'Hello', String pack = 'p2') {
         GroovyCompilationUnit unit = super.addGroovySource(contents, name, pack)
         waitForIndex()

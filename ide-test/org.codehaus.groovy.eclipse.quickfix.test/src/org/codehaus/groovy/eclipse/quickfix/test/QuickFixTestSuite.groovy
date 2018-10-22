@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,20 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codehaus.groovy.eclipse.quickfix.test;
+package org.codehaus.groovy.eclipse.quickfix.test
 
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit
-import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.internal.core.CompilationUnit
-import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 
 abstract class QuickFixTestSuite extends GroovyEclipseTestSuite {
-
+    @Override
     protected GroovyCompilationUnit addGroovySource(CharSequence contents, String name = "QuickFix${nextUnitName()}", String pack = '') {
         super.addGroovySource(contents, name, pack)
     }
 
+    @Override
     protected CompilationUnit addJavaSource(CharSequence contents, String name = "QuickFix${nextUnitName()}", String pack = '') {
         super.addJavaSource(contents, name, pack)
     }

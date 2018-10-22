@@ -91,7 +91,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
-            "  public java.lang.Object run() {\n" +
+            "  public @java.lang.Override java.lang.Object run() {\n" +
             "  }\n" +
             "}\n");
     }
@@ -118,7 +118,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
-            "  public java.lang.Object run() {\n" +
+            "  public @java.lang.Override java.lang.Object run() {\n" +
             "  }\n" +
             "}\n");
     }
@@ -145,7 +145,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
-            "  public java.lang.Object run() {\n" +
+            "  public @java.lang.Override java.lang.Object run() {\n" +
             "  }\n" +
             "}\n");
     }
@@ -172,7 +172,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
-            "  public java.lang.Object run() {\n" +
+            "  public @java.lang.Override java.lang.Object run() {\n" +
             "  }\n" +
             "}\n");
     }
@@ -345,7 +345,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
-            "  public java.lang.Object run() {\n" +
+            "  public @java.lang.Override java.lang.Object run() {\n" +
             "  }\n" +
             "}\n");
     }
@@ -373,7 +373,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
-            "  public java.lang.Object run() {\n" +
+            "  public @java.lang.Override java.lang.Object run() {\n" +
             "  }\n" +
             "}\n");
     }
@@ -401,7 +401,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
-            "  public java.lang.Object run() {\n" +
+            "  public @java.lang.Override java.lang.Object run() {\n" +
             "  }\n" +
             "}\n");
     }
@@ -429,7 +429,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
-            "  public java.lang.Object run() {\n" +
+            "  public @java.lang.Override java.lang.Object run() {\n" +
             "  }\n" +
             "}\n");
     }
@@ -1024,7 +1024,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
-            "  public java.lang.Object run() {\n" +
+            "  public @java.lang.Override java.lang.Object run() {\n" +
             "  }\n" +
             "}\n");
     }
@@ -1186,7 +1186,7 @@ public final class ErrorRecoveryTests extends GroovyCompilerTestSuite {
             "  }\n" +
             "  public static void main(java.lang.String... args) {\n" +
             "  }\n" +
-            "  public java.lang.Object run() {\n" +
+            "  public @java.lang.Override java.lang.Object run() {\n" +
             "  }\n" +
             "}\n");
     }

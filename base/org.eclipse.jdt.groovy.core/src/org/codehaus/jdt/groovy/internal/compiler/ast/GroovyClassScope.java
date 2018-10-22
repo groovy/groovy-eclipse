@@ -55,6 +55,7 @@ import org.eclipse.jdt.internal.compiler.lookup.Scope;
 import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
 import org.eclipse.jdt.internal.compiler.lookup.TypeVariableBinding;
+import org.eclipse.jdt.internal.core.nd.util.CharArrayMap;
 
 public class GroovyClassScope extends ClassScope {
 
@@ -356,16 +357,6 @@ public class GroovyClassScope extends ClassScope {
     protected void buildFieldsAndMethods() {
         super.buildFieldsAndMethods();
 
-        for (MethodBinding method : referenceContext.binding.methods()) {
-            fixTypeParameters(method);
-        }
-
-        for (GroovyTypeDeclaration anonType : ((GroovyTypeDeclaration) referenceContext).getAnonymousTypes()) {
-            if (anonType.scope == null && anonType.enclosingScope != null) {
-                anonType.allocation.resolveType(anonType.enclosingScope.get());
-            }
-        }
-
         for (FieldDeclaration field : referenceContext.fields) {
             if (field.initialization instanceof QualifiedAllocationExpression) {
                 QualifiedAllocationExpression initialization = (QualifiedAllocationExpression) field.initialization;
@@ -378,38 +369,32 @@ public class GroovyClassScope extends ClassScope {
                 }
             }
         }
-    }
 
-    /**
-     * This is fix for generic methods with default parameter values. For those
-     * methods type variables and parameter arguments should be the same as it
-     * is for all other methods.
-     */
-    private void fixTypeParameters(MethodBinding method) {
-        if (method.typeVariables == null || method.typeVariables.length == 0) {
-            return;
-        }
-        if (method.parameters == null || method.parameters.length == 0) {
-            return;
-        }
-        Map<String, TypeBinding> bindings = new HashMap<>();
-        for (TypeVariableBinding v : method.typeVariables) {
-            bindings.put(new String(v.sourceName), v);
-        }
-        for (TypeBinding parameter : method.parameters) {
-            if (!(parameter instanceof ParameterizedTypeBinding)) {
-                continue;
-            }
-            TypeBinding[] arguments = ((ParameterizedTypeBinding) parameter).arguments;
-            if (arguments == null) {
-                continue;
-            }
-            for (int i = 0, n = arguments.length; i < n; i += 1) {
-                if (arguments[i] instanceof TypeVariableBinding) {
-                    String name = new String(arguments[i].sourceName());
-                    TypeBinding argument = bindings.get(name);
-                    if (argument != null && arguments[i].id != argument.id) {
-                        arguments[i] = argument;
+        /*
+         * Fix generic methods with default parameter values. For those methods
+         * type variables and parameter arguments should be the same as it is
+         * for all other methods.
+         */
+        for (MethodBinding method : referenceContext.binding.methods()) {
+            if (method.parameters != null && method.parameters.length > 0 &&
+                    method.typeVariables != null && method.typeVariables.length > 0) {
+                CharArrayMap<TypeVariableBinding> bindings = new CharArrayMap<>();
+                for (TypeVariableBinding tvb : method.typeVariables) {
+                    bindings.put(tvb.sourceName, tvb);
+                }
+                for (TypeBinding parameter : method.parameters) {
+                    if (parameter instanceof ParameterizedTypeBinding) {
+                        TypeBinding[] arguments = ((ParameterizedTypeBinding) parameter).arguments;
+                        if (arguments != null) {
+                            for (int i = 0, n = arguments.length; i < n; i += 1) {
+                                if (arguments[i] instanceof TypeVariableBinding) {
+                                    TypeBinding argument = bindings.get(arguments[i].sourceName());
+                                    if (argument != null && arguments[i].id != argument.id) {
+                                        arguments[i] = argument;
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -422,6 +407,7 @@ public class GroovyClassScope extends ClassScope {
         case IProblem.EnumConstantMustImplementAbstractMethod:
         case IProblem.AbstractMethodMustBeImplemented:
         case IProblem.FinalMethodCannotBeOverridden:
+        case IProblem.MethodMustOverrideOrImplement:
         case IProblem.MethodReducesVisibility:
         case IProblem.IncompatibleReturnType:
         case IProblem.SuperclassMustBeAClass:

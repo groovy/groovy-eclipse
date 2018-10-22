@@ -63,6 +63,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -91,7 +92,9 @@ public class CompilationUnit extends ProcessingUnit {
     protected Map summariesBySourceName;      // Summary of each SourceUnit
     protected Map summariesByPublicClassName;       // Summary of each SourceUnit
     protected Map classSourcesByPublicClassName;    // Summary of each Class
+    /* GRECLIPSE edit
     protected List<String> names;      // Names for each SourceUnit in sources.
+    */
     protected LinkedList<SourceUnit> queuedSources;
 
     protected CompileUnit ast;        // The overall AST for this CompilationUnit.
@@ -165,9 +168,11 @@ public class CompilationUnit extends ProcessingUnit {
         this.excludeGlobalASTScan = excludeGlobalASTScan;
         // GRECLIPSE end
         this.astTransformationsContext = new ASTTransformationsContext(this, transformLoader);
+        /* GRECLIPSE edit
         this.names = new ArrayList<String>();
+        */
         this.queuedSources = new LinkedList<SourceUnit>();
-        this.sources = new HashMap<String, SourceUnit>();
+        this.sources = new LinkedHashMap<String, SourceUnit>();
         this.summariesBySourceName = new HashMap();
         this.summariesByPublicClassName = new HashMap();
         this.classSourcesByPublicClassName = new HashMap();
@@ -328,17 +333,13 @@ public class CompilationUnit extends ProcessingUnit {
         super.configure(configuration);
         this.debug = configuration.getDebug();
 
+        /* GRECLIPSE edit
         if (!this.configured && this.classLoader instanceof GroovyClassLoader) {
             appendCompilerConfigurationClasspathToClassLoader(configuration, this.classLoader);
         }
+        */
 
         this.configured = true;
-    }
-
-    private void appendCompilerConfigurationClasspathToClassLoader(CompilerConfiguration configuration, GroovyClassLoader classLoader) {
-        /*for (Iterator iterator = configuration.getClasspath().iterator(); iterator.hasNext(); ) {
-            classLoader.addClasspath((String) iterator.next());
-        }*/
     }
 
     /**
@@ -480,8 +481,10 @@ public class CompilationUnit extends ProcessingUnit {
      */
     public Iterator<SourceUnit> iterator() {
         return new Iterator<SourceUnit>() {
-            // GRECLIPSE: Should this use an index instead of names.iterator() to prevent/reduce ConMod exceptions?
-            Iterator<String> nameIterator = names.iterator();
+            // GRECLIPSE edit
+            //Iterator<String> nameIterator = names.iterator();
+            Iterator<String> nameIterator = sources.keySet().iterator();
+            // GRECLIPSE end
 
             public boolean hasNext() {
                 return nameIterator.hasNext();
@@ -674,7 +677,9 @@ public class CompilationUnit extends ProcessingUnit {
         while (!queuedSources.isEmpty()) {
             SourceUnit su = queuedSources.removeFirst();
             String name = su.getName();
+            /* GRECLIPSE edit
             names.add(name);
+            */
             sources.put(name, su);
         }
         if (dequeue) {
@@ -970,7 +975,7 @@ public class CompilationUnit extends ProcessingUnit {
      */
     public void applyToSourceUnits(SourceUnitOperation body) throws CompilationFailedException {
         // GRECLIPSE edit -- prevent concurrent modification exceptions
-        for (String name : names.toArray(new String[names.size()])) {
+        for (String name : sources.keySet().toArray(new String[sources.size()])) {
             SourceUnit source = sources.get(name);
             if ((source.phase < phase) || (source.phase == phase && !source.phaseComplete)) {
                 try {
@@ -1241,19 +1246,12 @@ public class CompilationUnit extends ProcessingUnit {
         ASTTransformationVisitor.addPhaseOperations(this);
     }
 
-    // can be called to prevent classfile output (so only use if something else is taking charge of output)
-    public boolean removeOutputPhaseOperation() {
-        return phaseOperations[Phases.OUTPUT].remove(output);
-    }
-
     public String toString() {
-        if (sources == null || sources.isEmpty())
-            return super.toString();
-        // TODO: Why is this loop here?
-        for (String s : sources.keySet()) {
-            return "CompilationUnit: source is " + s;
+        if (sources != null && !sources.isEmpty()) {
+            String source = sources.keySet().iterator().next();
+            return "CompilationUnit: first source is " + source;
         }
-        return "CompilationUnit: null";
+        return super.toString();
     }
 
     /**
@@ -1263,13 +1261,9 @@ public class CompilationUnit extends ProcessingUnit {
      * @param isReconcile is this a reconciling compile?
      */
     public void tweak(boolean isReconcile) {
-        if (isReconcile) {
-            verifier.inlineStaticFieldInitializersIntoClinit = false;
-            staticImportVisitor.isReconcile = true;
-        } else {
-            verifier.inlineStaticFieldInitializersIntoClinit = true;
-        }
-        this.isReconcile = isReconcile;
+        staticImportVisitor.isReconcile = this.isReconcile = isReconcile;
+        verifier.inlineStaticFieldInitializersIntoClinit = !isReconcile;
+        phaseOperations[Phases.OUTPUT].remove(output);
     }
 
     public boolean isReconcile;
