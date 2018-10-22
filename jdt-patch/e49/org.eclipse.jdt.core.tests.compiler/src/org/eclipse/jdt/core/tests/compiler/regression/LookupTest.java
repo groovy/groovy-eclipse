@@ -1,9 +1,12 @@
 /*******************************************************************************
  * Copyright (c) 2000, 2018 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
+ *
+ * This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -668,6 +671,25 @@ public void test019() {
  * member class
  */
 public void test020() {
+	String errMessage = isMinimumCompliant(ClassFileConstants.JDK11) ?
+			"----------\n" +
+			"1. ERROR in p1\\A.java (at line 13)\n" +
+			"	System.out.println(foo.rating + bar.other);	\n" +
+			"	                                    ^^^^^\n" +
+			"other cannot be resolved or is not a field\n" +
+			"----------\n"
+			:
+			"----------\n" +
+			"1. WARNING in p1\\A.java (at line 6)\n" +
+			"	sth.rating = \"m\";						\n" +
+			"	    ^^^^^^\n" +
+			"Write access to enclosing field A.rating is emulated by a synthetic accessor method\n" +
+			"----------\n" +
+			"2. ERROR in p1\\A.java (at line 13)\n" +
+			"	System.out.println(foo.rating + bar.other);	\n" +
+			"	                                    ^^^^^\n" +
+			"other cannot be resolved or is not a field\n" +
+			"----------\n";
 	this.runNegativeTest(
 		new String[] {
 			/* p1.A */
@@ -688,17 +710,7 @@ public void test020() {
 			"	}												\n"+
 			"}"
 		},
-		"----------\n" +
-		"1. WARNING in p1\\A.java (at line 6)\n" +
-		"	sth.rating = \"m\";						\n" +
-		"	    ^^^^^^\n" +
-		"Write access to enclosing field A.rating is emulated by a synthetic accessor method\n" +
-		"----------\n" +
-		"2. ERROR in p1\\A.java (at line 13)\n" +
-		"	System.out.println(foo.rating + bar.other);	\n" +
-		"	                                    ^^^^^\n" +
-		"other cannot be resolved or is not a field\n" +
-		"----------\n");
+		errMessage);
 }
 /**
  * member class
@@ -3139,6 +3151,45 @@ public void test096() {
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id= 317212
 public void test097() {
+	String errMessage = isMinimumCompliant(ClassFileConstants.JDK11) ?
+			"----------\n" + 
+			"1. WARNING in B.java (at line 6)\n" + 
+			"	public class M {\n" + 
+			"	             ^\n" + 
+			"The type B.A.M is never used locally\n" + 
+			"----------\n" + 
+			"2. WARNING in B.java (at line 7)\n" + 
+			"	public M() {}\n" + 
+			"	       ^^^\n" + 
+			"The constructor B.A.M() is never used locally\n" + 
+			"----------\n" + 
+			"3. ERROR in B.java (at line 13)\n" + 
+			"	B.m().new M();\n" + 
+			"	^^^^^\n" + 
+			"The type B$A is not visible\n" + 
+			"----------\n"
+			:
+			"----------\n" + 
+			"1. WARNING in B.java (at line 3)\n" + 
+			"	return new B().new A();\n" + 
+			"	       ^^^^^^^^^^^^^^^\n" + 
+			"Access to enclosing constructor B.A() is emulated by a synthetic accessor method\n" + 
+			"----------\n" + 
+			"2. WARNING in B.java (at line 6)\n" + 
+			"	public class M {\n" + 
+			"	             ^\n" + 
+			"The type B.A.M is never used locally\n" + 
+			"----------\n" + 
+			"3. WARNING in B.java (at line 7)\n" + 
+			"	public M() {}\n" + 
+			"	       ^^^\n" + 
+			"The constructor B.A.M() is never used locally\n" + 
+			"----------\n" + 
+			"4. ERROR in B.java (at line 13)\n" + 
+			"	B.m().new M();\n" + 
+			"	^^^^^\n" + 
+			"The type B$A is not visible\n" + 
+			"----------\n";
 	this.runNegativeTest(
 		new String[] {
 			"B.java",//------------------------------
@@ -3158,27 +3209,7 @@ public void test097() {
 			"    }\n" +
 			"}\n",
 		},
-		"----------\n" + 
-		"1. WARNING in B.java (at line 3)\n" + 
-		"	return new B().new A();\n" + 
-		"	       ^^^^^^^^^^^^^^^\n" + 
-		"Access to enclosing constructor B.A() is emulated by a synthetic accessor method\n" + 
-		"----------\n" + 
-		"2. WARNING in B.java (at line 6)\n" + 
-		"	public class M {\n" + 
-		"	             ^\n" + 
-		"The type B.A.M is never used locally\n" + 
-		"----------\n" + 
-		"3. WARNING in B.java (at line 7)\n" + 
-		"	public M() {}\n" + 
-		"	       ^^^\n" + 
-		"The constructor B.A.M() is never used locally\n" + 
-		"----------\n" + 
-		"4. ERROR in B.java (at line 13)\n" + 
-		"	B.m().new M();\n" + 
-		"	^^^^^\n" + 
-		"The type B$A is not visible\n" + 
-		"----------\n");
+		errMessage);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=317858
 public void test098() {
@@ -3320,8 +3351,66 @@ public void test103() {
 	Map options = getCompilerOptions();
 	CompilerOptions compOptions = new CompilerOptions(options);
 	if (compOptions.complianceLevel < ClassFileConstants.JDK1_4) return;
-	Runner runner = new Runner();
-	runner.testFiles =
+	String errMessage = isMinimumCompliant(ClassFileConstants.JDK11) ?
+			"----------\n" + 
+			"1. WARNING in A.java (at line 2)\n" + 
+			"	private int x;\n" + 
+			"	            ^\n" + 
+			"The value of the field A.x is not used\n" + 
+			"----------\n" + 
+			"2. WARNING in A.java (at line 4)\n" + 
+			"	private int x;\n" + 
+			"	            ^\n" + 
+			"The value of the field A.B.x is not used\n" + 
+			"----------\n" + 
+			"3. WARNING in A.java (at line 5)\n" + 
+			"	private C c = new C() {\n" + 
+			"	          ^\n" + 
+			"The value of the field A.B.c is not used\n" + 
+			"----------\n" + 
+			"4. WARNING in A.java (at line 6)\n" + 
+			"	void foo() {\n" + 
+			"	     ^^^^^\n" + 
+			"The method foo() from the type new A.C(){} is never used locally\n" + 
+			"----------\n" + 
+			"5. WARNING in A.java (at line 12)\n" + 
+			"	private int x;\n" + 
+			"	            ^\n" + 
+			"The value of the field A.C.x is not used\n" + 
+			"----------\n"
+			:
+			"----------\n" + 
+			"1. WARNING in A.java (at line 2)\n" + 
+			"	private int x;\n" + 
+			"	            ^\n" + 
+			"The value of the field A.x is not used\n" + 
+			"----------\n" + 
+			"2. WARNING in A.java (at line 4)\n" + 
+			"	private int x;\n" + 
+			"	            ^\n" + 
+			"The value of the field A.B.x is not used\n" + 
+			"----------\n" + 
+			"3. WARNING in A.java (at line 5)\n" + 
+			"	private C c = new C() {\n" + 
+			"	          ^\n" + 
+			"The value of the field A.B.c is not used\n" + 
+			"----------\n" + 
+			"4. WARNING in A.java (at line 6)\n" + 
+			"	void foo() {\n" + 
+			"	     ^^^^^\n" + 
+			"The method foo() from the type new A.C(){} is never used locally\n" + 
+			"----------\n" + 
+			"5. WARNING in A.java (at line 7)\n" + 
+			"	x = 3;\n" + 
+			"	^\n" + 
+			"Write access to enclosing field A.B.x is emulated by a synthetic accessor method\n" + 
+			"----------\n" + 
+			"6. WARNING in A.java (at line 12)\n" + 
+			"	private int x;\n" + 
+			"	            ^\n" + 
+			"The value of the field A.C.x is not used\n" + 
+			"----------\n";
+	this.runNegativeTest(
 		new String[] {
 			"A.java",//------------------------------
 			"public class A {\n" +
@@ -3338,41 +3427,8 @@ public void test103() {
 			"	    private int x;\n" +
 			"	  }\n" +
 			"	}\n",
-		};
-	runner.expectedCompilerLog =
-		"----------\n" + 
-		"1. WARNING in A.java (at line 2)\n" + 
-		"	private int x;\n" + 
-		"	            ^\n" + 
-		"The value of the field A.x is not used\n" + 
-		"----------\n" + 
-		"2. WARNING in A.java (at line 4)\n" + 
-		"	private int x;\n" + 
-		"	            ^\n" + 
-		"The value of the field A.B.x is not used\n" + 
-		"----------\n" + 
-		"3. WARNING in A.java (at line 5)\n" + 
-		"	private C c = new C() {\n" + 
-		"	          ^\n" + 
-		"The value of the field A.B.c is not used\n" + 
-		"----------\n" + 
-		"4. WARNING in A.java (at line 6)\n" + 
-		"	void foo() {\n" + 
-		"	     ^^^^^\n" + 
-		"The method foo() from the type new A.C(){} is never used locally\n" + 
-		"----------\n" + 
-		"5. WARNING in A.java (at line 7)\n" + 
-		"	x = 3;\n" + 
-		"	^\n" + 
-		"Write access to enclosing field A.B.x is emulated by a synthetic accessor method\n" + 
-		"----------\n" + 
-		"6. WARNING in A.java (at line 12)\n" + 
-		"	private int x;\n" + 
-		"	            ^\n" + 
-		"The value of the field A.C.x is not used\n" + 
-		"----------\n";
-	runner.javacTestOptions = JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings;
-	runner.runWarningTest();
+		},
+		errMessage);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=316956
 public void test104() {
@@ -3428,8 +3484,57 @@ public void test105() {
 	Map options = getCompilerOptions();
 	CompilerOptions compOptions = new CompilerOptions(options);
 	if (compOptions.complianceLevel < ClassFileConstants.JDK1_4) return;
-	Runner runner = new Runner();
-	runner.testFiles =
+	String errMessage =	isMinimumCompliant(ClassFileConstants.JDK11) ?
+			"----------\n" + 
+			"1. WARNING in A.java (at line 2)\n" + 
+			"	private int x;\n" + 
+			"	            ^\n" + 
+			"The value of the field A.x is not used\n" + 
+			"----------\n" + 
+			"2. WARNING in A.java (at line 3)\n" + 
+			"	private C c = new C() {\n" + 
+			"	          ^\n" + 
+			"The value of the field A.c is not used\n" + 
+			"----------\n" + 
+			"3. WARNING in A.java (at line 4)\n" + 
+			"	void foo() {\n" + 
+			"	     ^^^^^\n" + 
+			"The method foo() from the type new A.C(){} is never used locally\n" + 
+			"----------\n" + 
+			"4. WARNING in A.java (at line 9)\n" + 
+			"	private int x;\n" + 
+			"	            ^\n" + 
+			"The value of the field A.C.x is not used\n" + 
+			"----------\n"
+			:
+			"----------\n" +
+			"1. WARNING in A.java (at line 2)\n" + 
+			"	private int x;\n" + 
+			"	            ^\n" + 
+			"The value of the field A.x is not used\n" + 
+			"----------\n" + 
+			"2. WARNING in A.java (at line 3)\n" + 
+			"	private C c = new C() {\n" + 
+			"	          ^\n" + 
+			"The value of the field A.c is not used\n" + 
+			"----------\n" + 
+			"3. WARNING in A.java (at line 4)\n" + 
+			"	void foo() {\n" + 
+			"	     ^^^^^\n" + 
+			"The method foo() from the type new A.C(){} is never used locally\n" + 
+			"----------\n" + 
+			"4. WARNING in A.java (at line 5)\n" + 
+			"	x = 3;\n" + 
+			"	^\n" + 
+			"Write access to enclosing field A.x is emulated by a synthetic accessor method\n" + 
+			"----------\n" + 
+			"5. WARNING in A.java (at line 9)\n" + 
+			"	private int x;\n" + 
+			"	            ^\n" + 
+			"The value of the field A.C.x is not used\n" + 
+			"----------\n";
+			
+	this.runNegativeTest(
 		new String[] {
 			"A.java",//------------------------------
 			"public class A {\n" +
@@ -3443,36 +3548,8 @@ public void test105() {
 			"	    private int x;\n" +
 			"	  }\n" +
 			"	 }\n",
-		};
-	runner.expectedCompilerLog =
-		"----------\n" + 
-		"1. WARNING in A.java (at line 2)\n" + 
-		"	private int x;\n" + 
-		"	            ^\n" + 
-		"The value of the field A.x is not used\n" + 
-		"----------\n" + 
-		"2. WARNING in A.java (at line 3)\n" + 
-		"	private C c = new C() {\n" + 
-		"	          ^\n" + 
-		"The value of the field A.c is not used\n" + 
-		"----------\n" + 
-		"3. WARNING in A.java (at line 4)\n" + 
-		"	void foo() {\n" + 
-		"	     ^^^^^\n" + 
-		"The method foo() from the type new A.C(){} is never used locally\n" + 
-		"----------\n" + 
-		"4. WARNING in A.java (at line 5)\n" + 
-		"	x = 3;\n" + 
-		"	^\n" + 
-		"Write access to enclosing field A.x is emulated by a synthetic accessor method\n" + 
-		"----------\n" + 
-		"5. WARNING in A.java (at line 9)\n" + 
-		"	private int x;\n" + 
-		"	            ^\n" + 
-		"The value of the field A.C.x is not used\n" + 
-		"----------\n";
-	runner.javacTestOptions = JavacTestOptions.Excuse.EclipseHasSomeMoreWarnings;
-	runner.runWarningTest();
+		},
+		errMessage);
 }
 // https://bugs.eclipse.org/bugs/show_bug.cgi?id=350738
 public void test106() {

@@ -187,9 +187,9 @@ mvn -Pe47  clean install
 
 Replace e47 with a different option to build it for another Eclipse version:
 
-* e49
 * e48
-* e47
+* e49
+* e4.10
 
 Tests will be executed as part of the build.  To skip them, append this option to the command: `-Dmaven.test.skip=true`.
 

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component id="org.eclipse.jdt.core" version="2">
+    <resource path="model/org/eclipse/jdt/core/util/IClassFileReader.java" type="org.eclipse.jdt.core.util.IClassFileReader">
+        <filter comment="default method added for getting nest members" id="404000815">
+            <message_arguments>
+                <message_argument value="org.eclipse.jdt.core.util.IClassFileReader"/>
+                <message_argument value="getNestMembersAttribute()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+</component>

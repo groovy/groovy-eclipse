@@ -28,8 +28,6 @@ import org.eclipse.jdt.core.IPackageFragmentRoot
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils
-import org.eclipse.jdt.internal.corext.codemanipulation.StubUtility
-import org.eclipse.jdt.internal.corext.template.java.CodeTemplateContextType
 import org.eclipse.jdt.internal.ui.wizards.dialogfields.SelectionButtonDialogFieldGroup
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.ui.wizards.NewElementWizardPage
@@ -37,10 +35,7 @@ import org.eclipse.jdt.ui.wizards.NewTypeWizardPage
 import org.junit.Before
 import org.junit.Test
 
-// Original source code: http://dev.eclipse.org/viewcvs/index.cgi/org.eclipse.jdt.ui.tests/ui/org/eclipse/jdt/ui/tests/wizardapi/NewTypeWizardTest.java?revision=1.8
 final class NewGroovyTypeWizardTests extends GroovyEclipseTestSuite {
-
-    // FIXKDV: the wizard has some options/controls that probably shouldn't be there
 
     @Before
     void setUp() {
@@ -49,19 +44,26 @@ final class NewGroovyTypeWizardTests extends GroovyEclipseTestSuite {
         setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, '4')
         setJavaPreference(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, JavaCore.SPACE)
 
-        String newFileTemplate = '${filecomment}\n${package_declaration}\n\n${typecomment}\n${type_declaration}'
-        StubUtility.setCodeTemplate(CodeTemplateContextType.NEWTYPE_ID, newFileTemplate, null)
-        StubUtility.setCodeTemplate(CodeTemplateContextType.TYPECOMMENT_ID, '/**\n * Type\n */', null)
-        StubUtility.setCodeTemplate(CodeTemplateContextType.FILECOMMENT_ID, '/**\n * File\n */', null)
-        StubUtility.setCodeTemplate(CodeTemplateContextType.CONSTRUCTORCOMMENT_ID, '/**\n * Constructor\n */', null)
-        StubUtility.setCodeTemplate(CodeTemplateContextType.METHODCOMMENT_ID, '/**\n * Method\n */', null)
-        StubUtility.setCodeTemplate(CodeTemplateContextType.OVERRIDECOMMENT_ID, '/**\n * Overridden\n */', null)
-        StubUtility.setCodeTemplate(CodeTemplateContextType.METHODSTUB_ID, '${body_statement}', null)
-        StubUtility.setCodeTemplate(CodeTemplateContextType.CONSTRUCTORSTUB_ID, '${body_statement}', null)
-        StubUtility.setCodeTemplate(CodeTemplateContextType.CLASSBODY_ID, '/* class body */\n', null)
-        StubUtility.setCodeTemplate(CodeTemplateContextType.INTERFACEBODY_ID, '/* interface body */\n', null)
-        StubUtility.setCodeTemplate(CodeTemplateContextType.ENUMBODY_ID, '/* enum body */\n', null)
-        StubUtility.setCodeTemplate(CodeTemplateContextType.ANNOTATIONBODY_ID, '/* annotation body */\n', null)
+        Class stubUtility, codeTemplateContextType
+        try {
+            stubUtility = Class.forName('org.eclipse.jdt.internal.core.manipulation.StubUtility')
+            codeTemplateContextType = Class.forName('org.eclipse.jdt.internal.core.manipulation.CodeTemplateContextType')
+        } catch (ClassNotFoundException e) {
+            stubUtility = Class.forName('org.eclipse.jdt.internal.corext.codemanipulation.StubUtility')
+            codeTemplateContextType = Class.forName('org.eclipse.jdt.internal.corext.template.java.CodeTemplateContextType')
+        }
+        stubUtility.setCodeTemplate(codeTemplateContextType.NEWTYPE_ID, '${filecomment}\n${package_declaration}\n\n${typecomment}\n${type_declaration}', null)
+        stubUtility.setCodeTemplate(codeTemplateContextType.TYPECOMMENT_ID, '/**\n * Type\n */', null)
+        stubUtility.setCodeTemplate(codeTemplateContextType.FILECOMMENT_ID, '/**\n * File\n */', null)
+        stubUtility.setCodeTemplate(codeTemplateContextType.CONSTRUCTORCOMMENT_ID, '/**\n * Constructor\n */', null)
+        stubUtility.setCodeTemplate(codeTemplateContextType.METHODCOMMENT_ID, '/**\n * Method\n */', null)
+        stubUtility.setCodeTemplate(codeTemplateContextType.OVERRIDECOMMENT_ID, '/**\n * Overridden\n */', null)
+        stubUtility.setCodeTemplate(codeTemplateContextType.METHODSTUB_ID, '${body_statement}', null)
+        stubUtility.setCodeTemplate(codeTemplateContextType.CONSTRUCTORSTUB_ID, '${body_statement}', null)
+        stubUtility.setCodeTemplate(codeTemplateContextType.CLASSBODY_ID, '/* class body */\n', null)
+        stubUtility.setCodeTemplate(codeTemplateContextType.INTERFACEBODY_ID, '/* interface body */\n', null)
+        stubUtility.setCodeTemplate(codeTemplateContextType.ENUMBODY_ID, '/* enum body */\n', null)
+        stubUtility.setCodeTemplate(codeTemplateContextType.ANNOTATIONBODY_ID, '/* annotation body */\n', null)
     }
 
     private NewClassWizardPage clearModifiers(NewClassWizardPage wizardPage) {

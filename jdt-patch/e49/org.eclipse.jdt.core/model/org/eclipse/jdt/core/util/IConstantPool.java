@@ -1,7 +1,6 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2017 IBM Corporation and others.
- *
- * This program and the accompanying materials
+ * Copyright (c) 2000, 2018 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License 2.0
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-2.0/
@@ -42,7 +41,9 @@ public interface IConstantPool {
 	 *
 	 * <p>The return value can be an instance of {@link IConstantPoolEntry2} if the value returned
 	 * by {@link #getEntryKind(int)} is either {@link IConstantPoolConstant#CONSTANT_MethodHandle},
-	 * {@link IConstantPoolConstant#CONSTANT_MethodType} or {@link IConstantPoolConstant#CONSTANT_InvokeDynamic}.</p>
+	 * {@link IConstantPoolConstant#CONSTANT_MethodType},
+	 * {@link IConstantPoolConstant#CONSTANT_InvokeDynamic},
+	 * {@link IConstantPoolConstant#CONSTANT_Dynamic}.</p>
 	 *
 	 * <p>The return value can be an instance of {@link IConstantPoolEntry3} if the value returned
 	 * by {@link #getEntryKind(int)} is either {@link IConstantPoolConstant#CONSTANT_Module}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,9 +22,11 @@ import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
 import org.codehaus.jdt.groovy.model.GroovyNature;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageFragment;
@@ -33,8 +35,8 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.rewrite.ImportRewrite;
 import org.eclipse.jdt.internal.core.ClasspathEntry;
+import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jdt.internal.core.util.Util;
-import org.eclipse.jdt.internal.corext.codemanipulation.StubUtility;
 import org.eclipse.jdt.internal.ui.dialogs.StatusInfo;
 import org.eclipse.jdt.internal.ui.wizards.NewWizardMessages;
 import org.eclipse.jdt.ui.CodeStyleConfiguration;
@@ -107,9 +109,10 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
             try {
                 ClasspathEntry entry = (ClasspathEntry) ((IPackageFragmentRoot) pack.getParent()).getRawClasspathEntry();
                 if (entry != null) {
+                    IPath unitPath = pack.getResource().getFullPath().append(getCompilationUnitName(typeName));
                     char[][] inclusionPatterns = entry.fullInclusionPatternChars();
                     char[][] exclusionPatterns = entry.fullExclusionPatternChars();
-                    if (Util.isExcluded(pack.getResource().getFullPath().append(getCompilationUnitName(typeName)), inclusionPatterns, exclusionPatterns, false)) {
+                    if (Util.isExcluded(unitPath, inclusionPatterns, exclusionPatterns, false)) {
                         status.setError("Cannot create Groovy type because of exclusion patterns on the source folder.");
                     }
                 }
@@ -157,7 +160,9 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
                 if (type.getJavadocRange() != null) {
                     offset = type.getJavadocRange().getOffset();
                     offset += type.getJavadocRange().getLength();
-                    while (contents[offset] == '\n' || contents[offset] == '\r') offset += 1;
+                    while (contents[offset] == '\n' || contents[offset] == '\r') {
+                        offset += 1;
+                    }
                 }
                 textEdit.addChild(new InsertEdit(offset, "@PackageScope "));
 
@@ -186,7 +191,9 @@ public class NewClassWizardPage extends org.eclipse.jdt.ui.wizards.NewClassWizar
             IMethod main = type.getMethod("main", new String[] {"[QString;"});
             if (main != null && main.exists()) {
                 main.delete(true, monitor);
-                String newline = StubUtility.getLineDelimiterUsed(main);
+                CompilationUnit unit = (CompilationUnit)
+                    main.getAncestor(IJavaElement.COMPILATION_UNIT);
+                String newline = unit.findRecommendedLineSeparator();
                 type.createMethod("static main(args) {" + newline + "}", null, true, monitor);
             }
         }

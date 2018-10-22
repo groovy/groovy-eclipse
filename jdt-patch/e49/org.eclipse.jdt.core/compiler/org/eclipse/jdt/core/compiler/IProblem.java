@@ -2074,5 +2074,7 @@ void setSourceStart(int sourceStart);
 	int VarIsReservedInFuture = Syntax + 1510; // ''var'' should not be used as an type name, since it is a reserved word from source level 10 on
 	/** @since 3.14 */
 	int VarIsNotAllowedHere = Syntax + 1511; // ''var'' is not allowed here
+	/** @since 3.15 */
+	int VarCannotBeMixedWithNonVarParams = Syntax + 1512; // ''var'' cannot be mixed with explicit or implicit parameters
 	
 }

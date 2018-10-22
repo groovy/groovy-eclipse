@@ -4880,6 +4880,9 @@ public NameReference createSingleAssistNameReference(char[] assistName, long pos
 					keywords[count++]= Keywords.VAR;
 				}
 			} else if(kind != K_BETWEEN_CASE_AND_COLON && kind != K_BETWEEN_DEFAULT_AND_COLON) {
+				if (kind == K_LOCAL_INITIALIZER_DELIMITER && this.options.complianceLevel >= ClassFileConstants.JDK11) {
+					keywords[count++]= Keywords.VAR;
+				}
 				keywords[count++]= Keywords.TRUE;
 				keywords[count++]= Keywords.FALSE;
 				keywords[count++]= Keywords.NULL;
