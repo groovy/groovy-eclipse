@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.compilerResolver;singleton:=true
 Bundle-Name: Groovy Compiler Resolver
-Bundle-Vendor: Codehaus.org
+Bundle-Vendor: Pivotal Software, Inc.
 Bundle-Version: 3.2.0.qualifier
 Export-Package: org.codehaus.groovy.eclipse.chooser,
  org.codehaus.groovy.frameworkadapter.util

@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.astviews;singleton:=true
 Bundle-Name: Groovy AST Views
-Bundle-Vendor: Codehaus.org
+Bundle-Vendor: Pivotal Software, Inc.
 Bundle-Version: 3.2.0.qualifier
 Require-Bundle: org.codehaus.groovy;bundle-version="[2.4.15,3)",
  org.codehaus.groovy.eclipse.core;bundle-version="3.2.0",

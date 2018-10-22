@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.codehaus.groovy.m2eclipse;singleton:=true
 Bundle-Name: Groovy m2e integration
-Bundle-Vendor: Codehaus.org
+Bundle-Vendor: Pivotal Software, Inc.
 Bundle-Version: 3.2.0.qualifier
 Import-Package: org.codehaus.groovy.eclipse.core.model,
  org.codehaus.jdt.groovy.model,

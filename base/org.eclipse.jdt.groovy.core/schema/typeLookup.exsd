@@ -113,10 +113,7 @@
          <meta.section type="apiinfo"/>
       </appinfo>
       <documentation>
-         Copyright (c) 2009 Codehaus.org, SpringSource, and others.
-&lt;br/&gt;
-Contributors:&lt;br/&gt;
-Andrew Eisenberg - Initial API and implementation
+         Copyright (c) 2009-2018 Pivotal Software, Inc. and others. All rights reserved.
       </documentation>
    </annotation>
 
@@ -134,10 +131,7 @@ Andrew Eisenberg - Initial API and implementation
          <meta.section type="copyright"/>
       </appinfo>
       <documentation>
-         Copyright (c) 2009 Codehaus.org, SpringSource, and others.
-&lt;br/&gt;
-Contributors:&lt;br/&gt;
-Andrew Eisenberg - Initial API and implementation
+         Copyright (c) 2009-2018 Pivotal Software, Inc. and others. All rights reserved.
       </documentation>
    </annotation>
 

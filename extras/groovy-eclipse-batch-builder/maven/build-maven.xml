@@ -28,13 +28,8 @@
     </target>
 
     <target name="-mavenDeployInit" depends="-mavenInit,-fake.jar">
+        <!-- Commented out, no longer using webdav to deploy. -->
         <!-- <artifact:install-provider artifactId="wagon-webdav" version="1.0-beta-2" /> -->
-        <!-- Commented out, no longer using webdav to deploy.
-             Use the simple http install provider that seems to work well and we can
-             use the urls described here
-             http://docs.codehaus.org/display/HAUSMATES/Codehaus+Maven+Repository+Usage+Guide#CodehausMavenRepositoryUsageGuide-3.MavenRepositories
-             together with settings.xml file to provide credentials as described here:
-             http://docs.codehaus.org/display/HAUSMATES/Codehaus+Maven+Repository+Usage+Guide#CodehausMavenRepositoryUsageGuide-6.POMandsettingsconfig -->
     </target>
 
     <target name="-fake.jar">

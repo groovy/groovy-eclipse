@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.codebrowsing; singleton:=true
 Bundle-Name: Groovy Code Browsing
-Bundle-Vendor: Codehaus.org
+Bundle-Vendor: Pivotal Software, Inc.
 Bundle-Version: 3.2.0.qualifier
 Export-Package: org.codehaus.groovy.eclipse.codebrowsing,
  org.codehaus.groovy.eclipse.codebrowsing.elements,

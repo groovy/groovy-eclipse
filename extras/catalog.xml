@@ -11,7 +11,7 @@
       <kind>lifecycles</kind>
       <license>EPL</license>
       <name>Groovy-Eclipse</name>
-      <provider>Codehaus.org</provider>
+      <provider>Pivotal Software, Inc.</provider>
       <p2>
         <iuId>org.codehaus.groovy.m2eclipse.feature.group</iuId>
         <lifecycleMappingIU>
