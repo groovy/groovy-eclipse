@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.eclipse.jdt.groovy.core;singleton:=true
 Bundle-Name: Groovy-Eclipse integration
 Bundle-Vendor: Codehaus.org
-Bundle-Version: 3.1.0.qualifier
+Bundle-Version: 3.2.0.qualifier
 Bundle-ClassPath: nlcl.jar, .
 Export-Package: org.codehaus.jdt.groovy.integration.internal,
  org.codehaus.jdt.groovy.internal.compiler.ast,

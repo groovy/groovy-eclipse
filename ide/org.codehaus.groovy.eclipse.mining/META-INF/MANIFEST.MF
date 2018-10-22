@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.mining;singleton:=true
 Bundle-Name: Groovy Mining
 Bundle-Vendor: Codehaus.org
-Bundle-Version: 3.1.0.qualifier
+Bundle-Version: 3.2.0.qualifier
 Export-Package: org.codehaus.groovy.eclipse.mining
 Import-Package: org.codehaus.groovy.eclipse.codeassist.completions,
  org.codehaus.jdt.groovy.model,
