@@ -3,8 +3,8 @@ Bundle-ManifestVersion: 2
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-SymbolicName: org.codehaus.groovy.eclipse.codeassist.completion.test;singleton:=true
 Bundle-Name: Groovy Content Assist Tests
-Bundle-Version: 3.1.0.qualifier
+Bundle-Version: 3.1.1.qualifier
 Export-Package: org.codehaus.groovy.eclipse.codeassist.tests
 Import-Package: org.eclipse.core.filesystem
-Require-Bundle: org.codehaus.groovy.eclipse.codeassist.completion;bundle-version="3.1.0",
- org.codehaus.groovy.eclipse.tests;bundle-version="3.1.0"
+Require-Bundle: org.codehaus.groovy.eclipse.codeassist.completion;bundle-version="3.1.1",
+ org.codehaus.groovy.eclipse.tests;bundle-version="3.1.1"
