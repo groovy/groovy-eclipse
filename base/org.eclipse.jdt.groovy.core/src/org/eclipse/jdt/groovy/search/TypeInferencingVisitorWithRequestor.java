@@ -2589,21 +2589,37 @@ assert primaryExprType != null && dependentExprType != null;
     private static Parameter findTargetParameter(Expression arg, MethodCallExpression call, MethodNode declaration, boolean isGroovyMethod) {
         // see ExpressionCompletionRequestor.getParameterPosition(ASTNode, MethodCallExpression)
         // see CompletionNodeFinder.isArgument(Expression, List<? extends Expression>)
-        int pos = -1;
+        String key = null; int pos = -1;
         if (call.getArguments() instanceof ArgumentListExpression) {
             int idx = -1;
-            for (Expression exp : (ArgumentListExpression) call.getArguments()) {
-                idx += 1;
-                if (arg == exp) {
-                    pos = idx;
-                    break;
+            out: for (Expression exp : (ArgumentListExpression) call.getArguments()) {
+                if (exp instanceof MapExpression) {
+                    for (MapEntryExpression ent : ((MapExpression) exp).getMapEntryExpressions()) {
+                        if (arg == ent.getValueExpression()) {
+                            key = ent.getKeyExpression().getText();
+                            break out;
+                        }
+                    }
+                } else {
+                    idx += 1;
+                    if (arg == exp) {
+                        pos = idx;
+                        break;
+                    }
                 }
             }
         }
-        if (pos != -1) {
-            if (isGroovyMethod) pos += 1; // skip self param
-            if (pos < declaration.getParameters().length || GenericsMapper.isVargs(declaration.getParameters())) {
-                return declaration.getParameters()[Math.min(pos, declaration.getParameters().length - 1)];
+        if (key != null) {
+            for (Parameter parameter : declaration.getParameters()) {
+                if (parameter.getName().equals(key)) {
+                    return parameter;
+                }
+            }
+        } else if (pos != -1) {
+            if (isGroovyMethod) pos += 1; // skip self parameter
+            Parameter[] parameters = getPositionalParameters(declaration);
+            if (pos < parameters.length || GenericsMapper.isVargs(parameters)) {
+                return parameters[Math.min(pos, parameters.length - 1)];
             }
         }
         return null;
@@ -2630,6 +2646,14 @@ assert primaryExprType != null && dependentExprType != null;
             return "bitwiseNegate";
         }
         return null;
+    }
+
+    private static Parameter[] getPositionalParameters(MethodNode methodNode) {
+        if (methodNode.getClass().getSimpleName().equals("NamedArgsMethodNode")) {
+            Parameter[] parameters = ReflectionUtils.executePrivateMethod(methodNode.getClass(), "getRegularParams", methodNode);
+            return parameters;
+        }
+        return methodNode.getParameters();
     }
 
     private static Map<String, ClassNode[]> inferInstanceOfType(BooleanExpression condition, VariableScope scope) {

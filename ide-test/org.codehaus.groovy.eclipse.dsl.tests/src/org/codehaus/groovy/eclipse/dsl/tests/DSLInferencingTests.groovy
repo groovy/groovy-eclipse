@@ -1202,6 +1202,95 @@ final class DSLInferencingTests extends DSLInferencingTestSuite {
     }
 
     @Test
+    void testAnnotatedType1() {
+        createDsls '''\
+            contribute(currentType()) {
+              method name:'meth', type:void, params:[code:'@ClosureParams(value=SimpleType, options=["java.util.regex.Pattern"]) Closure']
+            }
+            '''.stripIndent()
+        String contents = 'meth { one-> }'
+        int offset = contents.indexOf('one')
+        assertType(contents, offset, offset + 'one'.length(), 'java.util.regex.Pattern')
+    }
+
+    @Test
+    void testAnnotatedType2() {
+        createDsls '''\
+            contribute(currentType()) {
+              method name:'meth', type:void, params:[code:'@ClosureParams(value=SimpleType, options=["java.util.regex.Pattern","java.util.regex.Matcher"]) Closure']
+            }
+            '''.stripIndent()
+        String contents = 'meth { one, two-> }'
+        int offset = contents.indexOf('one')
+        assertType(contents, offset, offset + 'one'.length(), 'java.util.regex.Pattern')
+            offset = contents.indexOf('two')
+        assertType(contents, offset, offset + 'two'.length(), 'java.util.regex.Matcher')
+    }
+
+    @Test
+    void testAnnotatedType3() {
+        createDsls '''\
+            contribute(currentType()) {
+              method name:'meth', type:void, params:[code:'@ClosureParams(value=SimpleType, options=["java.util.regex.Pattern"]) Closure'], namedParams:[attr:String]
+            }
+            '''.stripIndent()
+        String contents = 'meth(attr:"value") { one-> }'
+        int offset = contents.indexOf('one')
+        assertType(contents, offset, offset + 'one'.length(), 'java.util.regex.Pattern')
+    }
+
+    @Test
+    void testAnnotatedType4() {
+        createDsls '''\
+            contribute(currentType()) {
+              method name:'meth', type:void, params:[code:'@ClosureParams(value=SimpleType, options=["java.util.regex.Pattern"]) Closure'], optionalParams:[attr:String]
+            }
+            '''.stripIndent()
+        String contents = 'meth(attr:"value") { one-> }'
+        int offset = contents.indexOf('one')
+        assertType(contents, offset, offset + 'one'.length(), 'java.util.regex.Pattern')
+    }
+
+    @Test
+    void testAnnotatedType5() {
+        createDsls '''\
+            contribute(currentType()) {
+              method name:'meth', params:[code:'@DelegatesTo(java.util.regex.Pattern) Closure']
+            }
+            '''.stripIndent()
+        String contents = 'meth { matcher("") }'
+        int offset = contents.indexOf('matcher')
+        assertType(contents, offset, offset + 'matcher'.length(), 'java.util.regex.Matcher')
+        assertDeclaringType(contents, offset, offset + 'matcher'.length(), 'java.util.regex.Pattern')
+    }
+
+    @Test
+    void testAnnotatedType6() {
+        createDsls '''\
+            contribute(currentType()) {
+              method name:'meth', params:[code:'@DelegatesTo(java.util.regex.Pattern) Closure'], namedParams:[attr:String]
+            }
+            '''.stripIndent()
+        String contents = 'meth(attr:"value") { matcher("") }'
+        int offset = contents.indexOf('matcher')
+        assertType(contents, offset, offset + 'matcher'.length(), 'java.util.regex.Matcher')
+        assertDeclaringType(contents, offset, offset + 'matcher'.length(), 'java.util.regex.Pattern')
+    }
+
+    @Test
+    void testAnnotatedType7() {
+        createDsls '''\
+            contribute(currentType()) {
+              method name:'meth', params:[code:'@DelegatesTo(java.util.regex.Pattern) Closure'], optionalParams:[attr:String]
+            }
+            '''.stripIndent()
+        String contents = 'meth(attr:"value") { matcher("") }'
+        int offset = contents.indexOf('matcher')
+        assertType(contents, offset, offset + 'matcher'.length(), 'java.util.regex.Matcher')
+        assertDeclaringType(contents, offset, offset + 'matcher'.length(), 'java.util.regex.Pattern')
+    }
+
+    @Test
     void testNestedCalls() {
         createDsls '''\
             contribute(bind(x: enclosingCall())) {

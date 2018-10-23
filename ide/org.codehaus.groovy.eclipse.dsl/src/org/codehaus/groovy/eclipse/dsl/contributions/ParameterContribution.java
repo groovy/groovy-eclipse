@@ -15,8 +15,16 @@
  */
 package org.codehaus.groovy.eclipse.dsl.contributions;
 
+import java.util.List;
+
+import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.builder.AstBuilder;
+import org.codehaus.groovy.control.CompilePhase;
+import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator;
 import org.codehaus.groovy.eclipse.dsl.lookup.ResolverCache;
 
 /**
@@ -41,6 +49,16 @@ public class ParameterContribution {
 
     public Parameter toParameter(ResolverCache resolver) {
         if (value == null) {
+            if (type.indexOf('@') >= 0) {
+                try {
+                    List<ASTNode> nodes = new AstBuilder().buildFromString(CompilePhase.CANONICALIZATION, false,
+                        "import groovy.transform.stc.*\n" + "void meth(" + type + " " + name + ") {}");
+                    MethodNode meth = ((ClassNode) nodes.get(1)).getMethods("meth").get(0);
+                    return meth.getParameters()[0];
+                } catch (Exception e) {
+                    GroovyDSLCoreActivator.logException(e);
+                }
+            }
             value = new Parameter(resolver != null ? resolver.resolve(type) : ClassHelper.DYNAMIC_TYPE, name);
         }
         return value;
