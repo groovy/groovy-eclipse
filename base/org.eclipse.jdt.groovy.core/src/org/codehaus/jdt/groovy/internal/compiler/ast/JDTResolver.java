@@ -265,30 +265,31 @@ public class JDTResolver extends ResolveVisitor {
         if (i > 0) {
             name = name.substring(0, i);
         }
-
-        for (ClassNode node : resolvedClassNodes) {
-            if (node.getName().equals(name)) {
-                return node;
+        if (name.indexOf('?') < 0) {
+            for (ClassNode node : resolvedClassNodes) {
+                if (node.getName().equals(name)) {
+                    return node;
+                }
             }
-        }
 
-        ClassNode firstClass = compilationUnit.getFirstClassNode();
-        String mainClassName = firstClass.getModule().getMainClassName();
-        Set<String> unresolvable = unresolvables.computeIfAbsent(mainClassName, x -> new HashSet<>());
-        if (!unresolvable.contains(name)) {
-            synchronized (this) {
-                ClassNode previousClass = currentClass;
-                try {
-                    currentClass = firstClass.getPlainNodeReference();
+            ClassNode firstClass = compilationUnit.getFirstClassNode();
+            String mainClassName = firstClass.getModule().getMainClassName();
+            Set<String> unresolvable = unresolvables.computeIfAbsent(mainClassName, x -> new HashSet<>());
+            if (!unresolvable.contains(name)) {
+                synchronized (this) {
+                    ClassNode previousClass = currentClass;
+                    try {
+                        currentClass = firstClass.getPlainNodeReference();
 
-                    ClassNode type = ClassHelper.makeWithoutCaching(name);
-                    if (super.resolve(type, true, true, true)) {
-                        return type.redirect();
-                    } else {
-                        unresolvable.add(name);
+                        ClassNode type = ClassHelper.makeWithoutCaching(name);
+                        if (super.resolve(type, true, true, true)) {
+                            return type.redirect();
+                        } else {
+                            unresolvable.add(name);
+                        }
+                    } finally {
+                        currentClass = previousClass;
                     }
-                } finally {
-                    currentClass = previousClass;
                 }
             }
         }
@@ -298,6 +299,7 @@ public class JDTResolver extends ResolveVisitor {
     @Override
     protected boolean resolve(ClassNode type, boolean testModuleImports, boolean testDefaultImports, boolean testStaticInnerClasses) {
         String name = type.getName();
+        if (name.indexOf('?') != -1) return false;
         if (name.charAt(0) == 'j' || name.length() <= BOOLEAN_LENGTH) {
             ClassNode commonRedirect = COMMON_TYPES.get(name);
             if (commonRedirect != null) {
