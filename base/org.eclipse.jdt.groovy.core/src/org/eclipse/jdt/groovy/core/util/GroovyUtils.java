@@ -44,6 +44,7 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.TernaryExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
@@ -312,11 +313,15 @@ public class GroovyUtils {
     }
 
     public static Expression getTraitFieldExpression(MethodCallExpression call) {
-        if (call.getObjectExpression().getType().getName().endsWith("$Trait$FieldHelper")) {
+        Expression objExpr = call.getObjectExpression();
+        if (objExpr instanceof TernaryExpression) {
+            objExpr = ((TernaryExpression) objExpr).getTrueExpression();
+        }
+        if (objExpr.getType().getName().endsWith("$Trait$FieldHelper")) {
             Matcher m = Pattern.compile(".+__(\\p{javaJavaIdentifierPart}+)\\$[gs]et").matcher(call.getMethodAsString());
             if (m.matches()) {
                 String fieldName = m.group(1);
-                List<FieldNode> traitFields = call.getObjectExpression().getType().getOuterClass().getNodeMetaData("trait.fields");
+                List<FieldNode> traitFields = objExpr.getType().getOuterClass().getNodeMetaData("trait.fields");
                 for (FieldNode field : traitFields) {
                     if (field.getName().equals(fieldName)) {
                         VariableExpression expr = new VariableExpression(field);

@@ -32,6 +32,48 @@ public final class TraitInferencingTests extends InferencingTestSuite {
     //--------------------------------------------------------------------------
 
     @Test
+    public void testPrivateField() {
+        String source =
+            "trait T {\n" +
+            "  private String field\n" +
+            "  void m() {\n" +
+            "    field\n" +
+            "  }\n" +
+            "}\n";
+
+        assertDeclType(source, "field", "T");
+        assertExprType(source, "field", "java.lang.String");
+    }
+
+    @Test
+    public void testPrivateStaticField() {
+        String source =
+            "trait T {\n" +
+            "  private static String field\n" +
+            "  void m() {\n" +
+            "    field\n" +
+            "  }\n" +
+            "}\n";
+
+        assertDeclType(source, "field", "T");
+        assertExprType(source, "field", "java.lang.String");
+    }
+
+    @Test
+    public void testPrivateStaticFinalField() {
+        String source =
+            "trait T {\n" +
+            "  private static final String field = 'value'\n" +
+            "  void m() {\n" +
+            "    field\n" +
+            "  }\n" +
+            "}\n";
+
+        assertDeclType(source, "field", "T");
+        assertExprType(source, "field", "java.lang.String");
+    }
+
+    @Test
     public void testPrivateMethod() {
         String source =
             "trait Auditable {\n" +
