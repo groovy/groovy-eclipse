@@ -603,7 +603,7 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
     }
 
     /**
-     * Finds a method with the given name in the declaring type.  Prioritizes methods
+     * Finds a method with the given name in the declaring type. Prioritizes methods
      * with the same number of arguments, but if multiple methods exist with same name,
      * then will return an arbitrary one.
      */
@@ -621,12 +621,13 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         LinkedHashSet<ClassNode> types = new LinkedHashSet<>();
         if (!declaringType.isInterface()) types.add(declaringType);
         VariableScope.findAllInterfaces(declaringType, types, true);
-        types.add(VariableScope.OBJECT_CLASS_NODE); // implicit super type
+        if (!implementsTrait(declaringType))
+            types.add(VariableScope.OBJECT_CLASS_NODE); // implicit super type
 
         MethodNode outerCandidate = null;
         for (ClassNode type : types) {
             MethodNode innerCandidate = null;
-            List<MethodNode> candidates = type.getMethods(name);
+            List<MethodNode> candidates = getMethods(name, type);
             if (!candidates.isEmpty()) {
                 innerCandidate = findMethodDeclaration0(candidates, argumentTypes, isStaticExpression).getOriginal();
                 if (outerCandidate == null) {
@@ -743,6 +744,21 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
             }
         }
         return declaringType;
+    }
+
+    protected static List<MethodNode> getMethods(String name, ClassNode type) {
+        List<MethodNode> methods = type.getMethods(name);
+        List<MethodNode> traitMethods =
+            type.redirect().getNodeMetaData("trait.methods");
+        if (traitMethods != null) {
+            methods = new ArrayList<>(methods);
+            for (MethodNode method : traitMethods) {
+                if (method.getName().equals(name)) {
+                    methods.add(method);
+                }
+            }
+        }
+        return methods;
     }
 
     /**

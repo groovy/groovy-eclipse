@@ -169,13 +169,13 @@ public abstract class DepthFirstVisitor implements GroovyClassVisitor, GroovyCod
         node.visitContents(this);
 
         // visit trait members
-        List<FieldNode> traitFields = node.getNodeMetaData("trait.fields");
+        List<FieldNode> traitFields = node.redirect().getNodeMetaData("trait.fields");
         if (traitFields != null) {
             for (FieldNode field : traitFields) {
                 visitField(field);
             }
         }
-        List<MethodNode> traitMethods = node.getNodeMetaData("trait.methods");
+        List<MethodNode> traitMethods = node.redirect().getNodeMetaData("trait.methods");
         if (traitMethods != null) {
             for (MethodNode method : traitMethods) {
                 visitMethod(method);

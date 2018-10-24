@@ -105,6 +105,7 @@ import org.codehaus.groovy.transform.sc.ListOfExpressionsExpression;
 import org.codehaus.groovy.transform.sc.transformers.CompareToNullExpression;
 import org.codehaus.groovy.transform.stc.StaticTypeCheckingSupport;
 import org.codehaus.groovy.transform.stc.StaticTypesMarker;
+import org.codehaus.groovy.transform.trait.Traits;
 import org.codehaus.jdt.groovy.internal.compiler.ast.GroovyEclipseBug;
 import org.codehaus.jdt.groovy.internal.compiler.ast.JDTResolver;
 import org.codehaus.jdt.groovy.model.GroovyCompilationUnit;
@@ -370,13 +371,13 @@ public class TypeInferencingVisitorWithRequestor extends ClassCodeVisitorSupport
                         }
                     } else {
                         // visit fields and methods relocated by @Trait
-                        List<FieldNode> traitFields = node.getNodeMetaData("trait.fields");
+                        List<FieldNode> traitFields = node.redirect().getNodeMetaData("trait.fields");
                         if (traitFields != null) {
                             for (FieldNode field : traitFields) {
                                 visitFieldInternal(field);
                             }
                         }
-                        List<MethodNode> traitMethods = node.getNodeMetaData("trait.methods");
+                        List<MethodNode> traitMethods = node.redirect().getNodeMetaData("trait.methods");
                         if (traitMethods != null) {
                             for (MethodNode method : traitMethods) {
                                 visitMethodInternal(method);
@@ -2054,6 +2055,8 @@ assert primaryExprType != null && dependentExprType != null;
                             types.add(exprType);
                         } else if (expression instanceof ConstantExpression && ((ConstantExpression) expression).isNullExpression()) {
                             types.add(VariableScope.NULL_TYPE); // sentinel for wildcard matching
+                        } else if (expression instanceof VariableExpression && expression.getText().equals("$self") && Traits.isTrait(expression.getType())) {
+                            continue; // skip this synthetic argument expression
                         } else if (ClassHelper.isNumberType(exprType) || VariableScope.BIG_DECIMAL_CLASS.equals(exprType) || VariableScope.BIG_INTEGER_CLASS.equals(exprType)) {
                             types.add(GroovyUtils.getWrapperTypeIfPrimitive(exprType));
                         } else if (expression instanceof GStringExpression || (expression instanceof ConstantExpression && ((ConstantExpression) expression).isEmptyStringExpression())) {
