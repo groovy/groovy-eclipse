@@ -88,6 +88,7 @@ import org.junit.runners.Suite
     org.eclipse.jdt.core.groovy.tests.search.OperatorOverloadingInferencingTests,
     org.eclipse.jdt.core.groovy.tests.search.StaticInferencingTests,
     org.eclipse.jdt.core.groovy.tests.search.SyntheticAccessorInferencingTests,
+    org.eclipse.jdt.core.groovy.tests.search.TraitInferencingTests,
     org.eclipse.jdt.core.groovy.tests.search.TypeReferenceSearchTests
 ])
 final class GroovyJDTTests {
