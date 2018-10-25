@@ -15,42 +15,18 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.tests
 
+import groovy.transform.NotYetImplemented
+
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Test
 
-/**
- * Tests that Local variable completions are working properly.
- * They should only be active when inside a script or in a closure.
- */
 final class LocalVariableCompletionTests extends CompletionTestSuite {
-
-    private static final String CONTENTS = 'class LocalsClass { public LocalsClass() {\n }\n void doNothing(int x) { def xxx\n def xx\n def y = { t -> print t\n }\n } }'
-    private static final String SCRIPTCONTENTS = 'def xx = 9\ndef xxx\ndef y = { t -> print t\n }\n'
-    private static final String SCRIPTCONTENTS2 = 'def xx = 9\ndef xxx\ndef y = { t -> print t\n.toString() }\n'
-
-    private ICompilationUnit createJava() {
-        addJavaSource(CONTENTS, nextUnitName())
-    }
-
-    private ICompilationUnit createGroovy() {
-        addGroovySource(CONTENTS, nextUnitName())
-    }
-
-    private ICompilationUnit createGroovyForScript() {
-        addGroovySource(SCRIPTCONTENTS, nextUnitName())
-    }
-
-    private ICompilationUnit createGroovyForScript2() {
-        addGroovySource(SCRIPTCONTENTS2, nextUnitName())
-    }
-
-    //
 
     @Test // should not find local vars here
     void testLocalVarsInJavaFile() {
-        ICompilationUnit unit = createJava()
-        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'y\n'))
+        String contents = 'class C {\n void m(int x) {\n def xxx\n def xx\n def y = { t -> print t\n }\n } }'
+        ICompletionProposal[] proposals = createProposalsAtOffset(addJavaSource(contents, nextUnitName()), getIndexOf(contents, 'y\n'))
         proposalExists(proposals, 'xxx', 0)
         proposalExists(proposals, 'xx', 0)
         proposalExists(proposals, 'y', 0)
@@ -58,8 +34,8 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
 
     @Test // should not find local vars here -- they are calculated by JDT
     void testLocalVarsInGroovyFile() {
-        ICompilationUnit unit = createGroovy()
-        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'y\n'))
+        String contents = 'class C {\n void m(int x) {\n def xxx\n def xx\n def y = { t -> print t\n }\n } }'
+        ICompletionProposal[] proposals = createProposalsAtOffset(addGroovySource(contents, nextUnitName()), getIndexOf(contents, 'y\n'))
         proposalExists(proposals, 'xxx', 0)
         proposalExists(proposals, 'xx', 0)
         proposalExists(proposals, 'y', 0)
@@ -67,8 +43,8 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
 
     @Test // should find local vars here
     void testLocalVarsInScript() {
-        ICompilationUnit unit = createGroovyForScript()
-        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(SCRIPTCONTENTS, '}\n'))
+        String contents = 'def xx = 9\ndef xxx\ndef y = { t -> print t\n }\n'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '}\n'))
         proposalExists(proposals, 'xxx', 1)
         proposalExists(proposals, 'xx', 1)
         proposalExists(proposals, 'y', 1)
@@ -76,8 +52,8 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
 
     @Test // should find local vars here
     void testLocalVarsInClosureInScript() {
-        ICompilationUnit unit = createGroovyForScript()
-        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(SCRIPTCONTENTS, 'print t\n'))
+        String contents = 'def xx = 9\ndef xxx\ndef y = { t -> print t\n }\n'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'print t\n'))
         proposalExists(proposals, 'xxx', 1)
         proposalExists(proposals, 'xx', 1)
         proposalExists(proposals, 'y', 1)
@@ -85,8 +61,8 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
 
     @Test // should not find local vars here
     void testLocalVarsInClosureInScript2() {
-        ICompilationUnit unit = createGroovyForScript2()
-        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(SCRIPTCONTENTS2, 'print t\n.toStr'))
+        String contents = 'def xx = 9\ndef xxx\ndef y = { t -> print t\n.toString() }\n'
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'print t\n.toStr'))
         proposalExists(proposals, 'xxx', 0)
         proposalExists(proposals, 'xx', 0)
         proposalExists(proposals, 'y', 0)
@@ -94,11 +70,22 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
 
     @Test // should find local vars here
     void testLocalVarsInClosureInMethod() {
-        ICompilationUnit unit = createGroovy()
-        ICompletionProposal[] proposals = createProposalsAtOffset(unit, getIndexOf(CONTENTS, 'print t\n'))
+        String contents = '''\
+            class C {
+              void m(int x) {
+                def xx, xxx
+                def y = { z ->
+                  print z
+                }
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, 'print z\n'))
         proposalExists(proposals, 'xxx', 1)
         proposalExists(proposals, 'xx', 1)
+        proposalExists(proposals, 'x', 1)
         proposalExists(proposals, 'y', 1)
+        proposalExists(proposals, 'z', 1)
     }
 
     @Test
@@ -174,6 +161,18 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
         proposalExists(proposals, 'abs', 1)
     }
 
+    @Test @NotYetImplemented
+    void testUndeclaredVar1() {
+        String contents = '''\
+            abc = 123
+            xyz = 789
+            println _
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('_', ''), contents.indexOf('_'))
+        proposalExists(proposals, 'abc', 1)
+        proposalExists(proposals, 'xyz', 1)
+    }
+
     @Test // https://github.com/groovy/groovy-eclipse/issues/409
     void testNamedArgumentCompletion() {
         String contents = '''\
@@ -197,5 +196,61 @@ final class LocalVariableCompletionTests extends CompletionTestSuite {
         // Pattern field is more relevant
         proposals = orderByRelevance(proposals)
         assertProposalOrdering(proposals, 'beanis', 'beanie')
+    }
+
+    @Test
+    void testTraitSyntheticParameters1() {
+        String contents = '''\
+            trait T {
+              public def m() {
+                _
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('_', ''), contents.indexOf('_'))
+        proposalExists(proposals, '$static$self', 0)
+        proposalExists(proposals, '$self', 0)
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/752
+    void testTraitSyntheticParameters1a() {
+        String contents = '''\
+            trait T {
+              private def m() {
+                // Ctrl+Space here shows proposal for "$self" parameter
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.indexOf('//') - 1)
+        proposalExists(proposals, '$static$self', 0)
+        proposalExists(proposals, '$self', 0)
+    }
+
+    @Test
+    void testTraitSyntheticParameters2() {
+        String contents = '''\
+            trait T {
+              public static def m() {
+                // Ctrl+Space here shows proposal for "$static$self" parameter
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.indexOf('//') - 1)
+        proposalExists(proposals, '$static$self', 0)
+        proposalExists(proposals, '$self', 0)
+    }
+
+    @Test
+    void testTraitSyntheticParameters2a() {
+        String contents = '''\
+            trait T {
+              private static def m() {
+                // Ctrl+Space here shows proposal for "$static$self" parameter
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents, contents.indexOf('//') - 1)
+        proposalExists(proposals, '$static$self', 0)
+        proposalExists(proposals, '$self', 0)
     }
 }

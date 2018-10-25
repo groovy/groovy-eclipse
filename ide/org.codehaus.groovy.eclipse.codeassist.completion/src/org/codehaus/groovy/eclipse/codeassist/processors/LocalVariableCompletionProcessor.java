@@ -142,7 +142,8 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
             end -= 1;
         }
         if (end >= 0) {
-            return fullExpression.substring(++end);
+            end += 1;
+            return fullExpression.substring(end);
         } else {
             return fullExpression;
         }
@@ -154,22 +155,23 @@ public class LocalVariableCompletionProcessor extends AbstractGroovyCompletionPr
             return Collections.emptyMap();
         }
 
-        final Map<String, ClassNode> nameTypeMap = new HashMap<>();
+        Map<String, ClassNode> nameTypeMap = new HashMap<>();
 
         VariableScope scope = block.getVariableScope();
         while (scope != null) {
-            for (Iterator<Variable> varIter = scope.getDeclaredVariablesIterator(); varIter.hasNext();) {
-                Variable var = varIter.next();
-
-                boolean inBounds;
+            for (Iterator<Variable> it = scope.getDeclaredVariablesIterator(); it.hasNext();) {
+                Variable var = it.next();
+                int end = Integer.MIN_VALUE;
                 if (var instanceof Parameter) {
-                    inBounds = ((Parameter) var).getEnd() < offset;
+                    end = ((Parameter) var).getEnd();
                 } else if (var instanceof VariableExpression) {
-                    inBounds = ((VariableExpression) var).getEnd() < offset;
-                } else {
-                    inBounds = true;
+                    end = ((VariableExpression) var).getEnd();
                 }
-                if (inBounds && ProposalUtils.looselyMatches(prefix, var.getName())) {
+
+                if (end < 1 && var.getName().charAt(0) == '$') {
+                    continue;
+                }
+                if (end < offset && ProposalUtils.looselyMatches(prefix, var.getName())) {
                     nameTypeMap.put(var.getName(), var.getOriginType() != null ? var.getOriginType() : var.getType());
                 }
             }
