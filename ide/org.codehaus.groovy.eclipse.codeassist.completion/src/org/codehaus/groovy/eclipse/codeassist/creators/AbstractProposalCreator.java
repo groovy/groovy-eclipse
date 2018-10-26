@@ -15,6 +15,7 @@
  */
 package org.codehaus.groovy.eclipse.codeassist.creators;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -56,10 +57,6 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
     protected BiPredicate<String, String> matcher = ProposalUtils::looselyMatches;
 
     //--------------------------------------------------------------------------
-
-    protected boolean checkName(String name) {
-        return (name.charAt(0) != '<' && !name.contains("$"));
-    }
 
     protected static FieldNode createMockField(MethodNode method) {
         String fieldName = ProposalUtils.createMockFieldName(method.getName());
@@ -116,13 +113,20 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
         Set<ClassNode> types = getAllSupers(thisType, exclude);
 
         for (ClassNode type : types) {
-            for (FieldNode field : type.getFields()) {
-                if (checkName(field.getName())) {
-                    // only add new field if the new field is more accessible than the existing one
-                    FieldNode existing = allFields.get(field.getName());
-                    if (existing == null || leftIsMoreAccessible(field, existing)) {
-                        allFields.put(field.getName(), field);
-                    }
+            List<FieldNode> fields = type.getFields();
+            if (type == thisType) {
+                List<FieldNode> traitFields = type.redirect().getNodeMetaData("trait.fields");
+                if (traitFields != null) {
+                    fields = new ArrayList<>(fields);
+                    fields.addAll(traitFields);
+                }
+            }
+
+            for (FieldNode field : fields) {
+                // only add new field if the new field is more accessible than the existing one
+                FieldNode existing = allFields.get(field.getName());
+                if (existing == null || leftIsMoreAccessible(field, existing)) {
+                    allFields.put(field.getName(), field);
                 }
             }
         }
@@ -134,9 +138,12 @@ public abstract class AbstractProposalCreator implements IProposalCreator {
     }
 
     protected Collection<MethodNode> getAllMethods(ClassNode type, Set<ClassNode> exclude) {
+        List<MethodNode> traitMethods = type.redirect().getNodeMetaData("trait.methods");
         List<MethodNode> allMethods = type.getAllDeclaredMethods();
+        if (traitMethods != null) allMethods.addAll(traitMethods);
+
         if (!exclude.isEmpty()) {
-            // remove all methods from classes that we have already visited
+            // remove all methods from classes that have already been visited
             for (Iterator<MethodNode> methodIter = allMethods.iterator(); methodIter.hasNext();) {
                 if (exclude.contains(methodIter.next().getDeclaringClass())) {
                     methodIter.remove();

@@ -127,7 +127,7 @@ final class RelevanceTests extends CompletionTestSuite {
             }
             '''.stripIndent()
         ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents.replace('|', ' '), getIndexOf(contents, '|')))
-        assertProposalOrdering(proposals, 'asList', 'copyOf', '$assertionsDisabled', 'INSERTIONSORT_THRESHOLD', 'MIN_ARRAY_SORT_GRAN', 'legacyMergeSort', 'rangeCheck', 'defaultMetaClass', 'getDefaultMetaClass()')
+        assertProposalOrdering(proposals, 'asList', 'copyOf', 'INSERTIONSORT_THRESHOLD', 'MIN_ARRAY_SORT_GRAN', 'legacyMergeSort', 'rangeCheck', 'defaultMetaClass', 'getDefaultMetaClass()')
     }
 
     @Test @Ignore('Need to find "public" in assertProposalOrdering without breaking other tests')

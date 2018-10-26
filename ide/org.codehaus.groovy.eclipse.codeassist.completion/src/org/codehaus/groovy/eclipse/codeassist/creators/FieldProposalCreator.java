@@ -18,6 +18,7 @@ package org.codehaus.groovy.eclipse.codeassist.creators;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,6 +38,7 @@ import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyFieldProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.GroovyMethodProposal;
 import org.codehaus.groovy.eclipse.codeassist.proposals.IGroovyProposal;
 import org.eclipse.jdt.core.Flags;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.search.VariableScope;
 
 /**
@@ -51,14 +53,14 @@ public class FieldProposalCreator extends AbstractProposalCreator {
     public List<IGroovyProposal> findAllProposals(ClassNode type, Set<ClassNode> categories, String prefix, boolean isStatic, boolean isPrimary) {
         List<IGroovyProposal> proposals = new ArrayList<>();
 
-        boolean isFirstTime = alreadySeen.isEmpty();
+        boolean firstTime = alreadySeen.isEmpty();
         Collection<FieldNode> allFields = getAllFields(type, alreadySeen);
 
         for (FieldNode field : allFields) {
             // in static context, only allow static fields
             if ((!isStatic || field.isStatic()) && matcher.test(prefix, field.getName())) {
                 // de-emphasize 'this' references inside closure
-                float relevanceMultiplier = !isFirstTime ? 0.1f : 1.0f;
+                float relevanceMultiplier = !firstTime ? 0.1f : 1.0f;
                 if (field.isEnum()) relevanceMultiplier *= 5.0f;
 
                 GroovyFieldProposal proposal = new GroovyFieldProposal(field);
@@ -82,10 +84,24 @@ public class FieldProposalCreator extends AbstractProposalCreator {
 
         if (currentScope != null) {
             ClassNode enclosingTypeDeclaration = currentScope.getEnclosingTypeDeclaration();
-            if (enclosingTypeDeclaration != null && isFirstTime && isPrimary && type.getModule() != null) {
+            if (enclosingTypeDeclaration != null && firstTime && isPrimary && type.getModule() != null) {
                 findStaticImportProposals(proposals, prefix, type.getModule());
                 findStaticFavoriteProposals(proposals, prefix, type.getModule());
                 demoteLowVisibilityProposals(proposals, type); // de-emphasize other's secrets
+            }
+        }
+
+        // remove proposals for synthetic members
+        for (Iterator<IGroovyProposal> it = proposals.iterator(); it.hasNext();) {
+            IGroovyProposal proposal = it.next();
+            if (proposal instanceof GroovyFieldProposal) {
+                if (GroovyUtils.isSynthetic(((GroovyFieldProposal) proposal).getField())) {
+                    it.remove();
+                }
+            } else if (proposal instanceof GroovyMethodProposal) {
+                if (GroovyUtils.isSynthetic(((GroovyMethodProposal) proposal).getMethod())) {
+                    it.remove();
+                }
             }
         }
 

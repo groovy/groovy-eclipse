@@ -59,8 +59,8 @@ public class MethodProposalCreator extends AbstractProposalCreator {
 
         for (MethodNode method : allMethods) {
             String methodName = method.getName();
-            if ((!isStatic || method.isStatic() || method.getDeclaringClass().equals(VariableScope.OBJECT_CLASS_NODE)) && checkName(methodName)) {
-                if (matcher.test(prefix, methodName)) {
+            if ((!isStatic || method.isStatic() || method.getDeclaringClass().equals(VariableScope.OBJECT_CLASS_NODE))) {
+                if (matcher.test(prefix, methodName) && !"<clinit>".equals(methodName)) {
                     GroovyMethodProposal proposal = new GroovyMethodProposal(method);
                     setRelevanceMultiplier(proposal, firstTime, isStatic);
                     proposals.add(proposal);

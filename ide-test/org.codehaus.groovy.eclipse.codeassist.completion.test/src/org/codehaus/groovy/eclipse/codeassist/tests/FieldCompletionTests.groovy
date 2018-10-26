@@ -295,9 +295,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
     void testClosure1() {
         String contents = 'class Other { def xxx = { a, b -> }  }\n new Other().'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
-        // the field
-        proposalExists(proposals, 'xxx', 2)
-        // the method
+        proposalExists(proposals, 'xxx : Object', 1)
         proposalExists(proposals, 'xxx(Object a, Object b)', 1)
     }
 
@@ -305,9 +303,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
     void testClosure2() {
         String contents = 'class Other { def xxx = { int a, int b -> }  }\n new Other().'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
-        // the field
-        proposalExists(proposals, 'xxx', 2)
-        // the method
+        proposalExists(proposals, 'xxx : Object', 1)
         proposalExists(proposals, 'xxx(int a, int b)', 1)
     }
 
@@ -315,9 +311,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
     void testClosure3() {
         String contents = 'class Other { def xxx = { }  }\n new Other().'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getIndexOf(contents, '.'))
-        // the field
-        proposalExists(proposals, 'xxx', 2)
-        // the method
+        proposalExists(proposals, 'xxx : Object', 1)
         proposalExists(proposals, 'xxx()', 1)
     }
 
@@ -325,10 +319,8 @@ final class FieldCompletionTests extends CompletionTestSuite {
     void testClosure4() {
         String contents = 'def xxx = { def bot\n b }'
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'b'))
-        // from the delegate
-        proposalExists(proposals, 'binding', 1)
-        // from inside closure
-        proposalExists(proposals, 'bot', 1)
+        proposalExists(proposals, 'binding', 1) // from the delegate
+        proposalExists(proposals, 'bot', 1) // from inside closure
     }
 
     @Test // GRECLIPSE-1114
@@ -340,8 +332,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
             }
             '''.stripIndent()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'xx'))
-        // from the delegate
-        proposalExists(proposals, 'xxx', 1)
+        proposalExists(proposals, 'xxx', 1) // from the delegate
     }
 
     @Test // GRECLIPSE-1114
@@ -359,8 +350,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
             }
             '''.stripIndent()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'xx'))
-        // from the delegate
-        proposalExists(proposals, 'xxx', 1)
+        proposalExists(proposals, 'xxx', 1) // from the delegate
     }
 
     @Test // GRECLIPSE-1114
@@ -378,8 +368,7 @@ final class FieldCompletionTests extends CompletionTestSuite {
             }
             '''.stripIndent()
         ICompletionProposal[] proposals = createProposalsAtOffset(contents, getLastIndexOf(contents, 'xx'))
-        // from the delegate
-        proposalExists(proposals, 'xxx', 1)
+        proposalExists(proposals, 'xxx', 1) // from the delegate
     }
 
     @Test // https://github.com/groovy/groovy-eclipse/issues/360
@@ -689,5 +678,77 @@ final class FieldCompletionTests extends CompletionTestSuite {
 
         //triggers = proposal.triggerCharacters
         //assert !triggers.contains('.' as char)
+    }
+
+    @Test
+    void testTraitFields1() {
+        String contents = '''\
+            trait T {
+              def m() {
+                |
+              }
+              private String field1
+              private static String field2
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('|', ''), contents.indexOf('|'))
+        proposalExists(proposals, 'field1', 1)
+        proposalExists(proposals, 'field2', 1)
+    }
+
+    @Test
+    void testTraitFields2() {
+        String contents = '''\
+            trait T {
+              static def m() {
+                |
+              }
+              private String field1
+              private static String field2
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('|', ''), contents.indexOf('|'))
+        proposalExists(proposals, 'field1', 0)
+        proposalExists(proposals, 'field2', 1)
+    }
+
+    @Test
+    void testTraitFields3() {
+        String contents = '''\
+            trait T {
+              private String field1
+              private static String field2
+            }
+            class C implements T {
+              def m() {
+                |
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('|', ''), contents.indexOf('|'))
+        proposalExists(proposals, 'T__field1', 1)
+        proposalExists(proposals, 'T__field2', 1)
+        proposalExists(proposals, 'field1', 0)
+        proposalExists(proposals, 'field2', 0)
+    }
+
+    @Test
+    void testTraitFields4() {
+        String contents = '''\
+            trait T {
+              private String field1
+              private static String field2
+            }
+            class C implements T {
+              static def m() {
+                |
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('|', ''), contents.indexOf('|'))
+        proposalExists(proposals, 'T__field1', 0)
+        proposalExists(proposals, 'T__field2', 1)
+        proposalExists(proposals, 'field1', 0)
+        proposalExists(proposals, 'field2', 0)
     }
 }

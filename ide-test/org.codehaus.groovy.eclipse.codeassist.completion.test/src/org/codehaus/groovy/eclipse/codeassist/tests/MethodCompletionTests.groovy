@@ -608,6 +608,22 @@ final class MethodCompletionTests extends CompletionTestSuite {
     }
 
     @Test
+    void testStaticInitializerMethod() {
+        String contents = '''\
+            class Foo {
+              static {
+                println '<clinit>'
+              }
+              void bar() {
+                |
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('|', ''), contents.indexOf('|'))
+        proposalExists(proposals, '<clinit>', 0)
+    }
+
+    @Test
     void testSyntheticBridgeMethod() {
         String contents = '''\
             class Foo implements Comparable<Foo> {
@@ -749,5 +765,157 @@ final class MethodCompletionTests extends CompletionTestSuite {
             createProposalsAtOffset(contents, getLastIndexOf(contents, '.')), 'equals')
         char[] triggers = proposal.triggerCharacters
         assert !triggers.contains('.' as char)
+    }
+
+    @Test
+    void testTraitMethods1() {
+        String contents = '''\
+            trait T {
+              def m1() { | }
+              private def m2() {}
+              public static def m3() {}
+              private static def m4() {}
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('|', ''), contents.indexOf('|'))
+        proposalExists(proposals, 'm1', 1)
+        proposalExists(proposals, 'm2', 1)
+        proposalExists(proposals, 'm3', 1)
+        proposalExists(proposals, 'm4', 1)
+    }
+
+    @Test
+    void testTraitMethods2() {
+        String contents = '''\
+            trait T {
+              def m1() {}
+              private def m2() { | }
+              public static def m3() {}
+              private static def m4() {}
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('|', ''), contents.indexOf('|'))
+        proposalExists(proposals, 'm1', 1)
+        proposalExists(proposals, 'm2', 1)
+        proposalExists(proposals, 'm3', 1)
+        proposalExists(proposals, 'm4', 1)
+    }
+
+    @Test
+    void testTraitMethods3() {
+        String contents = '''\
+            trait T {
+              def m1() {}
+              private def m2() {}
+              public static def m3() { | }
+              private static def m4() {}
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('|', ''), contents.indexOf('|'))
+        proposalExists(proposals, 'm1', 0)
+        proposalExists(proposals, 'm2', 0)
+        proposalExists(proposals, 'm3', 1)
+        proposalExists(proposals, 'm4', 1)
+    }
+
+    @Test
+    void testTraitMethods4() {
+        String contents = '''\
+            trait T {
+              def m1() {}
+              private def m2() {}
+              public static def m3() {}
+              private static def m4() { | }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('|', ''), contents.indexOf('|'))
+        proposalExists(proposals, 'm1', 0)
+        proposalExists(proposals, 'm2', 0)
+        proposalExists(proposals, 'm3', 1)
+        proposalExists(proposals, 'm4', 1)
+    }
+
+    @Test
+    void testTraitMethods5() {
+        String contents = '''\
+            trait T {
+              def m1() {}
+              private def m2() {}
+              public static def m3() {}
+              private static def m4() {}
+            }
+            class C implements T {
+              def m() {
+                |
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('|', ''), contents.indexOf('|'))
+        proposalExists(proposals, 'm1', 1)
+        proposalExists(proposals, 'm2', 0)
+        proposalExists(proposals, 'm3', 1)
+        proposalExists(proposals, 'm4', 1)
+    }
+
+    @Test
+    void testTraitMethods6() {
+        String contents = '''\
+            trait T {
+              def m1() {}
+              private def m2() {}
+              public static def m3() {}
+              private static def m4() {}
+            }
+            class C implements T {
+              static def m() {
+                |
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('|', ''), contents.indexOf('|'))
+        proposalExists(proposals, 'm1', 0)
+        proposalExists(proposals, 'm2', 0)
+        proposalExists(proposals, 'm3', 1)
+        proposalExists(proposals, 'm4', 1)
+    }
+
+    @Test
+    void testTraitSyntheticMethods1() {
+        String contents = '''\
+            trait T {
+              private String field1
+              private static String field2
+            }
+            class C implements T {
+              def m() {
+                |
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('|', ''), contents.indexOf('|'))
+        proposalExists(proposals, 'T__field1$get', 0)
+        proposalExists(proposals, 'T__field1$set', 0)
+        proposalExists(proposals, 'T__field2$get', 0)
+        proposalExists(proposals, 'T__field2$set', 0)
+    }
+
+    @Test
+    void testTraitSyntheticMethods2() {
+        String contents = '''\
+            trait T {
+              private String field1
+              private static String field2
+            }
+            class C implements T {
+              static def m() {
+                |
+              }
+            }
+            '''.stripIndent()
+        ICompletionProposal[] proposals = createProposalsAtOffset(contents.replace('|', ''), contents.indexOf('|'))
+        proposalExists(proposals, 'T__field1$get', 0)
+        proposalExists(proposals, 'T__field1$set', 0)
+        proposalExists(proposals, 'T__field2$get', 0)
+        proposalExists(proposals, 'T__field2$set', 0)
     }
 }
