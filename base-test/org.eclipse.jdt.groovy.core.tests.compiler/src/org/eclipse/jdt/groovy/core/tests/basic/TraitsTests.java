@@ -15,7 +15,9 @@
  */
 package org.eclipse.jdt.groovy.core.tests.basic;
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.control.CompilationUnit;
@@ -1176,7 +1178,61 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
         runConformTest(sources, "c");
     }
 
-    @Test @Ignore("Java classes should be able to implement traits as well -- this doesn't work in groovyc either as of Groovy 2.4.8")
+    @Test @Ignore // https://issues.apache.org/jira/browse/GROOVY-8854
+    public void testTraits51() {
+        String[] sources = {
+            "Main.groovy",
+            "class Main {\n" +
+            "  static class Child extends Pogo {}\n" +
+            "  static main(args) { new Child(name:'foo').audit() }\n" +
+            "}\n",
+
+            "Pogo.groovy",
+            "class Pogo implements Auditable {\n" +
+            "  String name\n" +
+            "}\n",
+
+            "Auditable.groovy",
+            "trait Auditable {\n" +
+            "  boolean audit() {\n" +
+            "    if (check()) {\n" +
+            "      print ' '\n" +
+            "    }\n" +
+            "    print 'audited'\n" +
+            "  }\n" +
+            "  private static boolean check() {\n" +
+            "    print 'checked'\n" +
+            "    return true\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runConformTest(sources, "checked audited");
+    }
+
+    @Test // https://issues.apache.org/jira/browse/GROOVY-8856
+    public void testTraits52() {
+        assumeTrue(isAtLeastGroovy(25));
+
+        String[] sources = {
+            "MyTrait.groovy",
+            "class Main {\n" +
+            "  static T myMethod() {\n" +
+            "    return [1, 2, 3]\n" +
+            "  }\n" +
+            "}\n",
+        };
+
+        runNegativeTest(sources,
+            "----------\n" +
+            "1. ERROR in MyTrait.groovy (at line 2)\n" +
+            "\tstatic T myMethod() {\n" +
+            "\t       ^\n" +
+            "Groovy:unable to resolve class T\n" +
+            "----------\n");
+    }
+
+    @Test @Ignore("Java classes should be able to implement traits as well; this doesn't work in groovyc either as of Groovy 2.4.15")
     public void testTraitsInteroperability() {
         String[] sources = {
             "Sample.java",
