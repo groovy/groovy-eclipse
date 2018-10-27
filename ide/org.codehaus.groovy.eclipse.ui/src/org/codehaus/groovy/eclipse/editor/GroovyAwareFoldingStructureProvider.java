@@ -15,20 +15,30 @@
  */
 package org.codehaus.groovy.eclipse.editor;
 
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Queue;
+
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.Comment;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
+import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedSourceMethod;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.IASTFragment;
 import org.codehaus.groovy.eclipse.codebrowsing.selection.FindSurroundingNode;
+import org.codehaus.groovy.transform.trait.Traits;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.groovy.core.util.DepthFirstVisitor;
+import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
+import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.ui.text.folding.DefaultJavaFoldingStructureProvider;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
@@ -68,8 +78,7 @@ public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStruc
                 computeClosureFoldingStructure(element, context);
 
                 // TODO: add folding for multi-line strings or array/list/map literals?
-            }
-            else if (isScriptMethod(element)) {
+            } else if (isScriptMethod(element)) {
                 // add folding for multi-line comments
                 computeCommentFoldingStructure(element, context);
 
@@ -77,11 +86,15 @@ public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStruc
 
                 return; // prevent folding of entire script body
             }
+
+            if (element instanceof IType) {
+                computeTraitMethodFoldingStructure((IType) element, context);
+            }
         }
         super.computeFoldingStructure(element, context);
     }
 
-    protected void computeClosureFoldingStructure(final IJavaElement element, final FoldingStructureComputationContext context) {
+    protected void computeClosureFoldingStructure(IJavaElement element, FoldingStructureComputationContext context) {
         DepthFirstVisitor visitor = new DepthFirstVisitor() {
             @Override
             public void visitClosureExpression(ClosureExpression expression) {
@@ -126,7 +139,42 @@ public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStruc
         }
     }
 
+    protected void computeTraitMethodFoldingStructure(IType maybeTrait, FoldingStructureComputationContext context) {
+        findType(maybeTrait).filter(Traits::isTrait).ifPresent(traitType -> {
+            List<MethodNode> traitMethods = traitType.getNodeMetaData("trait.methods");
+            if (traitMethods != null && !traitMethods.isEmpty()) {
+                for (MethodNode traitMethod : traitMethods) {
+                    IRegion normalized = alignRegion(new Region(traitMethod.getStart(), traitMethod.getLength()), context);
+                    if (normalized != null) {
+                        IMember method = new GroovyResolvedSourceMethod((JavaElement) maybeTrait, traitMethod.getName(),
+                            GroovyUtils.getParameterTypeSignatures(traitMethod, false), traitMethod.getText(), null, traitMethod);
+                        Position position = createMemberPosition(normalized, method);
+                        if (position != null) {
+                            boolean isCollapsed = false, isComment = false;
+                            context.addProjectionRange(new JavaProjectionAnnotation(isCollapsed, method, isComment), position);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     //--------------------------------------------------------------------------
+
+    protected final Optional<ClassNode> findType(IType type) {
+        String typeName = type.getFullyQualifiedName();
+        Queue<ClassNode> classNodes = new LinkedList<>(editor.getModuleNode().getClasses());
+        while (!classNodes.isEmpty()) {
+            ClassNode classNode = classNodes.remove();
+            if (classNode.getName().equals(typeName)) {
+                return Optional.of(classNode);
+            }
+            for (Iterator<? extends ClassNode> it = classNode.getInnerClasses(); it.hasNext();) {
+                classNodes.add(it.next());
+            }
+        }
+        return Optional.empty();
+    }
 
     protected final boolean isMainType(IJavaElement element) {
         if (element instanceof IType) {
@@ -138,17 +186,7 @@ public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStruc
 
     protected final boolean isScriptMethod(IJavaElement element) {
         if (element instanceof IMethod && "run".equals(element.getElementName()) && ((IMethod) element).getNumberOfParameters() == 0) {
-            String declaringTypeName = ((IMethod) element).getDeclaringType().getElementName();
-
-            ClassNode scriptNode = null;
-            for (ClassNode classNode : editor.getModuleNode().getClasses()) {
-                if (classNode.getNameWithoutPackage().equals(declaringTypeName)) {
-                    if (classNode.isScript()) scriptNode = classNode;
-                    break;
-                }
-            }
-
-            return (scriptNode != null);
+            return findType(((IMethod) element).getDeclaringType()).filter(ClassNode::isScript).isPresent();
         }
         return false;
     }
