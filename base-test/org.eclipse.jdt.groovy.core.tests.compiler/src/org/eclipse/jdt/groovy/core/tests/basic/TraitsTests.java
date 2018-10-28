@@ -1231,23 +1231,4 @@ public final class TraitsTests extends GroovyCompilerTestSuite {
             "Groovy:unable to resolve class T\n" +
             "----------\n");
     }
-
-    @Test @Ignore("Java classes should be able to implement traits as well; this doesn't work in groovyc either as of Groovy 2.4.15")
-    public void testTraitsInteroperability() {
-        String[] sources = {
-            "Sample.java",
-            "public class Sample implements Valuable {\n" +
-            "  public String showMeTheMoney() {\n" +
-            "    return \"$\" + getValue() + \"$\";\n" +
-            "  }\n" +
-            "}",
-
-            "Valuable.groovy",
-            "trait Valuable {\n" +
-            "  String value\n" +
-            "}",
-        };
-
-        runConformTest(sources);
-    }
 }
