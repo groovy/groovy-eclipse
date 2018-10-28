@@ -17,15 +17,13 @@ Export-Package: org.codehaus.groovy.eclipse.refactoring,
  org.codehaus.groovy.eclipse.refactoring.formatter.lineWrap,
  org.codehaus.groovy.eclipse.refactoring.ui.extract
 Require-Bundle: org.codehaus.groovy.eclipse.codebrowsing;bundle-version="3.2.0",
- org.eclipse.core.resources,
- org.eclipse.core.runtime,
- org.eclipse.jdt.core;visibility:=reexport,
+ org.codehaus.groovy.eclipse.core;bundle-version="3.2.0",
  org.eclipse.jdt.core.manipulation;visibility:=reexport,
- org.eclipse.jdt.ui;visibility:=reexport,
- org.eclipse.jface.text;visibility:=reexport,
+ org.eclipse.jdt.ui,
+ org.eclipse.jface.text,
  org.eclipse.ltk.core.refactoring;visibility:=reexport,
  org.eclipse.ltk.ui.refactoring;visibility:=reexport,
- org.eclipse.ui;visibility:=reexport,
+ org.eclipse.ui,
  org.eclipse.ui.editors
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.codehaus.groovy.eclipse.refactoring.Activator

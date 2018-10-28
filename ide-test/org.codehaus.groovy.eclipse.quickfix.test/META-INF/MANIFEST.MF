@@ -7,8 +7,7 @@ Bundle-Version: 3.2.0.qualifier
 Export-Package: org.codehaus.groovy.eclipse.quickfix.test,
  org.codehaus.groovy.eclipse.quickfix.test.resolvers,
  org.codehaus.groovy.eclipse.quickfix.test.templates
-Import-Package: org.codehaus.groovy.eclipse.codebrowsing.requestor,
- org.eclipse.core.filesystem
+Import-Package: org.codehaus.groovy.eclipse.codebrowsing.requestor
 Require-Bundle: org.codehaus.groovy.eclipse.quickfix;bundle-version="3.2.0",
  org.codehaus.groovy.eclipse.refactoring.test;bundle-version="3.2.0",
  org.codehaus.groovy.eclipse.tests;bundle-version="3.2.0"
