@@ -22,7 +22,6 @@
           http://wiki.eclipse.org/Tycho/Packaging_Types#eclipse-test-plugin
           http://www.eclipse.org/tycho/sitedocs/tycho-surefire/tycho-surefire-plugin/test-mojo.html
         -->
-
         <configuration>
           <argLine>-Xmx1G -XX:-OmitStackTraceInFastThrow</argLine>
           <forkedProcessTimeoutInSeconds>7200</forkedProcessTimeoutInSeconds>
@@ -39,13 +38,22 @@
           <dependencies>
             <dependency>
               <type>eclipse-feature</type>
-              <artifactId>org.eclipse.rcp</artifactId>
+              <artifactId>org.eclipse.platform</artifactId>
             </dependency>
             <dependency>
               <type>eclipse-plugin</type>
               <artifactId>org.eclipse.jdt.compiler.apt</artifactId>
             </dependency>
           </dependencies>
+
+          <!-- https://bugs.eclipse.org/bugs/show_bug.cgi?id=538564 -->
+          <bundleStartLevel>
+            <bundle>
+              <id>org.apache.felix.scr</id>
+              <autoStart>true</autoStart>
+              <level>0</level>
+            </bundle>
+          </bundleStartLevel>
 
         </configuration>
       </plugin>
