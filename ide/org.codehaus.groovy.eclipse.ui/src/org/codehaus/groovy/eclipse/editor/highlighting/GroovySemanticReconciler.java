@@ -207,6 +207,14 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
         return ReflectionUtils.invokeConstructor(HIGHLIGHTING_STYLE, new TextAttribute(color, null, style), Boolean.TRUE);
     }
 
+    protected void setHighlightingStyle(Position pos, Object val) {
+        try {
+            ReflectionUtils.throwableSetPrivateField(pos.getClass(), "fStyle", pos, val);
+        } catch (Exception e) {
+            ReflectionUtils.setPrivateField(pos.getClass().getSuperclass(), "fHighlighting", pos, val);
+        }
+    }
+
     public void install(GroovyEditor editor, JavaSourceViewer viewer) {
         this.editor = editor;
         presenter = new SemanticHighlightingPresenter();
@@ -266,8 +274,9 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
                         Object style = GET_HIGHLIGHTING.invoke(pos);
                         TextAttribute one = getTextAttribute(style);
                         TextAttribute two = getTextAttribute(ref.kind == DEPRECATED ? deprecatedRefHighlighting : undefinedRefHighlighting);
-                        // merge the text styling assigned to deprecated or unknown (usually strikethrough for deprecated and underline for unknown)
-                        ReflectionUtils.setPrivateField(pos.getClass(), "fStyle", pos, newHighlightingStyle(one.getForeground(), one.getStyle() | two.getStyle()));
+
+                        // merge the text styling assigned to deprecated or unknown (usually it's strikethrough or underline)
+                        setHighlightingStyle(pos, newHighlightingStyle(one.getForeground(), one.getStyle() | two.getStyle()));
                     }
                     last = ref;
                 }
@@ -311,7 +320,11 @@ public class GroovySemanticReconciler implements IJavaReconcilingListener {
 
     private List<Position> getHighlightedPositions() {
         // NOTE: Be very careful with this; fPositions is often accessed synchronously!
-        return ReflectionUtils.getPrivateField(SemanticHighlightingPresenter.class, "fPositions", presenter);
+        try {
+            return ReflectionUtils.throwableGetPrivateField(SemanticHighlightingPresenter.class, "fPositions", presenter);
+        } catch (Exception e) {
+            return ReflectionUtils.getPrivateField(SemanticHighlightingPresenter.class.getSuperclass(), "fPositions", presenter);
+        }
     }
 
     private Position newHighlightedPosition(HighlightedTypedPosition pos) {

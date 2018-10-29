@@ -79,11 +79,7 @@ public class ReflectionUtils {
 
     public static <R, T> R getPrivateField(Class<? extends T> clazz, String fieldName, T target) {
         try {
-            Field field = getDeclaredField(clazz, fieldName);
-
-            @SuppressWarnings("unchecked")
-            R result = (R) field.get(target);
-            return result;
+            return throwableGetPrivateField(clazz, fieldName, target);
         } catch (Exception e) {
             log("Error getting private field '" + fieldName + "' on class " + clazz, e);
             return null;
@@ -92,9 +88,7 @@ public class ReflectionUtils {
 
     public static <T> void setPrivateField(Class<? extends T> clazz, String fieldName, T target, Object value) {
         try {
-            Field field = getDeclaredField(clazz, fieldName);
-
-            field.set(target, value);
+            throwableSetPrivateField(clazz, fieldName, target, value);
         } catch (Exception e) {
             log("Error setting private field '" + fieldName + "' on class " + clazz, e);
         }
@@ -131,6 +125,12 @@ public class ReflectionUtils {
         @SuppressWarnings("unchecked")
         R result = (R) field.get(target);
         return result;
+    }
+
+    public static <T> void throwableSetPrivateField(Class<? extends T> clazz, String fieldName, T target, Object value) throws Exception {
+        Field field = getDeclaredField(clazz, fieldName);
+
+        field.set(target, value);
     }
 
     //--------------------------------------------------------------------------
