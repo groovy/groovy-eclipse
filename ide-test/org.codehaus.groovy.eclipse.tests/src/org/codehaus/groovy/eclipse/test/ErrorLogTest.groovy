@@ -31,15 +31,16 @@ import org.osgi.framework.Version
 final class ErrorLogTest {
 
     private static final List<String> KNOWN_MSGS = [
-        'Could not locate the running profile instance',
+        'org.eclipse.compare.win32',
+        'org.eclipse.mylyn.tasks.core',
+        'org.eclipse.test.performance.win32',
         'Listener failed',
         'Monitor UI start failed',
+        'Unable to run embedded server',
         'One or more bundles are not resolved',
-        'org.eclipse.mylyn.tasks.core',
-        'org.eclipse.test.performance.win32.translated_host_properties',
-        'The content type with id ".+" specified in the extension point does not exist',
+        'Could not locate the running profile instance',
         'The following is a complete list of bundles which are not resolved',
-        'Unable to run embedded server'
+        'The content type with id ".+" specified in the extension point does not exist'
     ].asImmutable()
 
     @Test
