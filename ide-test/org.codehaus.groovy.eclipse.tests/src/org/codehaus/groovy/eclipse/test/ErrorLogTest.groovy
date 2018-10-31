@@ -44,7 +44,7 @@ final class ErrorLogTest {
         LogView view = SynchronizationUtils.showView('org.eclipse.pde.runtime.LogView')
         Collection<AbstractEntry> errorsAndWarnings = view.elements.findAll { logEntry ->
             return (logEntry.severity == IStatus.ERROR || logEntry.severity == IStatus.WARNING) &&
-                !(KNOWN_MSGS.any { logEntry.message =~ it } && logEntry.pluginId != 'org.eclipse.compare.win32')
+                !(KNOWN_MSGS.any { logEntry.message =~ it }) && logEntry.pluginId != 'org.eclipse.compare.win32'
         }
 
         if (errorsAndWarnings) {
