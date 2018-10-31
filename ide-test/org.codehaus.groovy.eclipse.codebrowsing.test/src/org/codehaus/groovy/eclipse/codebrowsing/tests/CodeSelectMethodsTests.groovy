@@ -187,25 +187,93 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
 
     @Test
     void testCodeSelectMethodInScriptFromScript() {
-        String contents = 'def x() { }\nx()\n'
+        String contents = '''\
+            def x() {}
+            x()
+            '''.stripIndent()
         assertCodeSelect([contents], 'x')
     }
 
     @Test
     void testCodeSelectMethodInClassFromScript() {
-        String contents = 'class Inner { def x() { } }\nnew Inner().x()\n'
+        String contents = '''\
+            class Inner { def x() {} }
+            new Inner().x()
+            '''.stripIndent()
         assertCodeSelect([contents], 'x')
     }
 
     @Test
-    void testCodeSelectStaticMethodFromClass() {
-        String contents = 'class Inner { static def x() { }\ndef y() {\n Inner.x()\n } }'
+    void testCodeSelectStaticMethodInClassFromScript() {
+        String contents = '''\
+            class Inner { static def x() {} }
+            Inner.x()
+            '''.stripIndent()
         assertCodeSelect([contents], 'x')
     }
 
     @Test
-    void testCodeSelectStaticMethodFromScript() {
-        String contents = 'class Inner { static def x() { } }\ndef y() {\n Inner.x()\n }'
+    void testCodeSelectStaticMethodInClassFromScriptMethod() {
+        String contents = '''\
+            class Inner {
+              static def x() {}
+            }
+            def y() {
+              Inner.x()
+            }
+            '''.stripIndent()
+        assertCodeSelect([contents], 'x')
+    }
+
+    @Test
+    void testCodeSelectStaticMethodFromClass1() {
+        String contents = '''\
+            class Inner {
+              static def x() {}
+              def y() {
+                Inner.x()
+              }
+            }
+            '''.stripIndent()
+        assertCodeSelect([contents], 'x')
+    }
+
+    @Test
+    void testCodeSelectStaticMethodFromClass2() {
+        String contents = '''\
+            class Inner {
+              static def x() {}
+              def y() {
+                x()
+              }
+            }
+            '''.stripIndent()
+        assertCodeSelect([contents], 'x')
+    }
+
+    @Test
+    void testCodeSelectStaticMethodFromTrait1() {
+        String contents = '''\
+            trait Trait {
+              static def x() {}
+              def y() {
+                Trait.x()
+              }
+            }
+            '''.stripIndent()
+        assertCodeSelect([contents], 'x')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/755
+    void testCodeSelectStaticMethodFromTrait2() {
+        String contents = '''\
+            trait Trait {
+              static def x() {}
+              def y() {
+                x()
+              }
+            }
+            '''.stripIndent()
         assertCodeSelect([contents], 'x')
     }
 

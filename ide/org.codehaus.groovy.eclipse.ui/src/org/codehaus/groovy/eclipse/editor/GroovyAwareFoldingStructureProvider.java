@@ -27,7 +27,6 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.eclipse.GroovyPlugin;
-import org.codehaus.groovy.eclipse.codebrowsing.elements.GroovyResolvedSourceMethod;
 import org.codehaus.groovy.eclipse.codebrowsing.fragments.IASTFragment;
 import org.codehaus.groovy.eclipse.codebrowsing.selection.FindSurroundingNode;
 import org.codehaus.groovy.transform.trait.Traits;
@@ -38,7 +37,6 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.groovy.core.util.DepthFirstVisitor;
 import org.eclipse.jdt.groovy.core.util.GroovyUtils;
 import org.eclipse.jdt.groovy.core.util.ReflectionUtils;
-import org.eclipse.jdt.internal.core.JavaElement;
 import org.eclipse.jdt.ui.text.folding.DefaultJavaFoldingStructureProvider;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
@@ -146,8 +144,8 @@ public class GroovyAwareFoldingStructureProvider extends DefaultJavaFoldingStruc
                 for (MethodNode traitMethod : traitMethods) {
                     IRegion normalized = alignRegion(new Region(traitMethod.getStart(), traitMethod.getLength()), context);
                     if (normalized != null) {
-                        IMember method = new GroovyResolvedSourceMethod((JavaElement) maybeTrait, traitMethod.getName(),
-                            GroovyUtils.getParameterTypeSignatures(traitMethod, false), traitMethod.getText(), null, traitMethod);
+                        IMember method = maybeTrait.getMethod(traitMethod.getName(),
+                            GroovyUtils.getParameterTypeSignatures(traitMethod, true));
                         Position position = createMemberPosition(normalized, method);
                         if (position != null) {
                             boolean isCollapsed = false, isComment = false;

@@ -486,7 +486,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
             return true;
         }
         // check for @Trait field
-        List<FieldNode> traitFields = declaringType.getNodeMetaData("trait.fields");
+        List<FieldNode> traitFields = declaringType.redirect().getNodeMetaData("trait.fields");
         if (traitFields != null) {
             for (FieldNode traitField : traitFields) {
                 if (traitField == node) {
@@ -504,7 +504,7 @@ public class CodeSelectRequestor implements ITypeRequestor {
 
     private boolean existsOnlyInGroovyModel(MethodNode node, String name, ClassNode declaringType, IType jdtDeclaringType) throws JavaModelException {
         // check for @Trait method
-        List<MethodNode> traitMethods = declaringType.getNodeMetaData("trait.methods");
+        List<MethodNode> traitMethods = declaringType.redirect().getNodeMetaData("trait.methods");
         if (traitMethods != null) {
             for (MethodNode traitMethod : traitMethods) {
                 if (traitMethod == node) {
