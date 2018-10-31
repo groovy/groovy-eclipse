@@ -31,15 +31,9 @@ import org.osgi.framework.Version
 final class ErrorLogTest {
 
     private static final List<String> KNOWN_MSGS = [
-        'org.eclipse.compare.win32',
-        'org.eclipse.mylyn.tasks.core',
-        'org.eclipse.test.performance.win32',
-        'Listener failed',
         'Monitor UI start failed',
         'Unable to run embedded server',
-        'One or more bundles are not resolved',
         'Could not locate the running profile instance',
-        'The following is a complete list of bundles which are not resolved',
         'The content type with id ".+" specified in the extension point does not exist'
     ].asImmutable()
 
@@ -48,8 +42,9 @@ final class ErrorLogTest {
         assumeTrue(JavaCore.getPlugin().getBundle().getVersion().compareTo(Version.parseVersion('3.8')) >= 0)
 
         LogView view = SynchronizationUtils.showView('org.eclipse.pde.runtime.LogView')
-        Collection<AbstractEntry> errorsAndWarnings = view.elements.findAll { AbstractEntry e ->
-            (e.severity == IStatus.ERROR || e.severity == IStatus.WARNING) && !(KNOWN_MSGS.any { e.message =~ it })
+        Collection<AbstractEntry> errorsAndWarnings = view.elements.findAll { logEntry ->
+            return (logEntry.severity == IStatus.ERROR || logEntry.severity == IStatus.WARNING) &&
+                !(KNOWN_MSGS.any { logEntry.message =~ it } && logEntry.pluginId != 'org.eclipse.compare.win32')
         }
 
         if (errorsAndWarnings) {
