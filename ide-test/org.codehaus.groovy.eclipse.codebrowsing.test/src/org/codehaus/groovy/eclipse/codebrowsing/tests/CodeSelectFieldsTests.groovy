@@ -141,14 +141,12 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
         assertCodeSelect(['class X { \n static y= { z() }\nstatic z() { } }'], 'z')
     }
 
-    // GRECLIPSE-516
-    @Test
+    @Test // GRECLIPSE-516
     void testCodeSelectOfGeneratedGetter() {
         assertCodeSelect(['class C { \n int num\ndef foo() {\n getNum() } }'], 'getNum', 'num')
     }
 
-    // GRECLIPSE-516
-    @Test
+    @Test // GRECLIPSE-516
     void testCodeSelectOfGeneratedSetter() {
         assertCodeSelect(['class C { \n int num\ndef foo() {\n setNum() } }'], 'setNum', 'num')
     }
@@ -176,5 +174,50 @@ final class CodeSelectFieldsTests extends BrowsingTestSuite {
     @Test
     void testCodeSelectInsideGString5() {
         assertCodeSelect(['def foo\n"${toString()}"'], 'toString')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/756
+    void testCodeSelectFieldFromTrait1() {
+        def elem = assertCodeSelect(['''\
+            trait T {
+              private String f
+            }
+            class C implements T {
+              def m() {
+                T__f
+              }
+            }
+            '''.stripIndent()], 'T__f', 'f')
+        assert elem.inferredElement.declaringClass.nameWithoutPackage == 'T'
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/756
+    void testCodeSelectFieldFromTrait2() {
+        def elem = assertCodeSelect(['''\
+            trait T {
+              private static String f
+            }
+            class C implements T {
+              def m() {
+                T__f
+              }
+            }
+            '''.stripIndent()], 'T__f', 'f')
+        assert elem.inferredElement.declaringClass.nameWithoutPackage == 'T'
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/756
+    void testCodeSelectFieldFromTrait3() {
+        def elem = assertCodeSelect(['''\
+            trait T {
+              private static final String f = ""
+            }
+            class C implements T {
+              def m() {
+                T__f
+              }
+            }
+            '''.stripIndent()], 'T__f', 'f')
+        assert elem.inferredElement.declaringClass.nameWithoutPackage == 'T'
     }
 }

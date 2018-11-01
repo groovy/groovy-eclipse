@@ -460,6 +460,13 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         } else if (accessedVar instanceof DynamicVariable) {
             ASTNode candidate = findDeclarationForDynamicVariable(var, getMorePreciseType(declaringType, variableInfo), scope, resolveStrategy);
             if (candidate != null) {
+                if (candidate instanceof FieldNode) {
+                    FieldNode field = (FieldNode) candidate;
+                    ClassNode owner = field.getDeclaringClass();
+                    if (field.getName().contains("__") && implementsTrait(owner)) {
+                        candidate = findTraitField(field.getName(), owner).orElse(field);
+                    }
+                }
                 decl = candidate;
                 declaringType = getDeclaringTypeFromDeclaration(decl, variableInfo != null ? variableInfo.declaringType : VariableScope.OBJECT_CLASS_NODE);
                 type = getTypeFromDeclaration(decl, declaringType);
@@ -838,6 +845,18 @@ public class SimpleTypeLookup implements ITypeLookupExtension {
         } else {
             return typeOfDeclaration;
         }
+    }
+
+    protected static Optional<FieldNode> findTraitField(String name, ClassNode type) {
+        String[] parts = name.split("__");
+        for (ClassNode face : type.getInterfaces()) {
+            if (face.getName().equals(parts[0].replace('_', '.'))) {
+                List<FieldNode> traitFields = face.redirect().getNodeMetaData("trait.fields");
+                return Optional.ofNullable(traitFields).flatMap(fields ->
+                    fields.stream().filter(f -> f.getName().equals(parts[1])).findFirst());
+            }
+        }
+        return Optional.empty();
     }
 
     protected static boolean implementsTrait(ClassNode concreteType) {
