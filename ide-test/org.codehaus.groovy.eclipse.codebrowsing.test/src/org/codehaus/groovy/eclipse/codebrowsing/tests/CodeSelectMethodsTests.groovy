@@ -60,7 +60,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     void testCodeSelectGenericMethod1() {
         String contents = '[a: Number].keySet()'
         IJavaElement elem = assertCodeSelect([contents], 'keySet')
-        MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).getInferredElement())
+        MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).inferredElement)
         assert method.returnType.toString(false) == 'java.util.Set <java.lang.String>'
     }
 
@@ -68,7 +68,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     void testCodeSelectGenericMethod2() {
         String contents = '[a: Number].values()'
         IJavaElement elem = assertCodeSelect([contents], 'values')
-        MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).getInferredElement())
+        MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).inferredElement)
         assert method.returnType.toString(false) == 'java.util.Collection <java.lang.Class>'
     }
 
@@ -76,7 +76,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     void testCodeSelectGenericMethod3() {
         String contents = '[a: Number].entrySet()'
         IJavaElement elem = assertCodeSelect([contents], 'entrySet')
-        MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).getInferredElement())
+        MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).inferredElement)
         assert method.returnType.toString(false) == 'java.util.Set <java.util.Map$Entry>'
     }
 
@@ -84,7 +84,7 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
     void testCodeSelectGenericCategoryMethod3() {
         String contents = '[a: Number].getAt("a")'
         IJavaElement elem = assertCodeSelect([contents], 'getAt')
-        MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).getInferredElement())
+        MethodNode method = ((MethodNode) ((GroovyResolvedBinaryMethod) elem).inferredElement)
         assert method.returnType.toString(false) == 'java.lang.Class <java.lang.Number>'
     }
 
@@ -275,6 +275,22 @@ final class CodeSelectMethodsTests extends BrowsingTestSuite {
             }
             '''.stripIndent()
         assertCodeSelect([contents], 'x')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/756
+    void testCodeSelectStaticMethodFromTrait3() {
+        String contents = '''\
+            trait T {
+              static def x() {}
+            }
+            class C implements T {
+              def y() {
+                x()
+              }
+            }
+            '''.stripIndent()
+        IJavaElement elem = assertCodeSelect([contents], 'x')
+        assert elem.inferredElement.declaringClass.nameWithoutPackage == 'T'
     }
 
     @Test

@@ -380,9 +380,10 @@ public abstract class TraitComposer {
         AnnotationNode bridgeAnnotation = new AnnotationNode(Traits.TRAITBRIDGE_CLASSNODE);
         bridgeAnnotation.addMember("traitClass", new ClassExpression(trait));
         bridgeAnnotation.addMember("desc", new ConstantExpression(BytecodeHelper.getMethodDescriptor(helperMethod.getReturnType(), traitMethodParams)));
-        forwarder.addAnnotation(
-                bridgeAnnotation
-        );
+        forwarder.addAnnotation(bridgeAnnotation);
+        // GRECLIPSE add
+        forwarder.setOriginal(originalMethod);
+        // GRECLIPSE end
 
         if (!shouldSkipMethod(targetNode, forwarder.getName(), forwarderParams)) {
             targetNode.addMethod(forwarder);
