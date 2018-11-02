@@ -45,6 +45,10 @@ contribute(currentType(fields: fields(annotatedBy(Delegate)))) {
     }
 }
 
+//@groovy.lang.Grab, et al.
+
+//@groovy.lang.Lazy
+
 //@groovy.lang.Mixin
 contribute(currentType(mixins: annotatedBy(Mixin))) {
     provider = '{@link groovy.lang.Mixin Mixin} AST transform'
