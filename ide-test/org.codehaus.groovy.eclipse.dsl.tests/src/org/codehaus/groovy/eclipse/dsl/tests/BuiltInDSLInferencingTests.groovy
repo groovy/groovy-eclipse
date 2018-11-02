@@ -15,7 +15,9 @@
  */
 package org.codehaus.groovy.eclipse.dsl.tests
 
+import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
 import static org.junit.Assert.*
+import static org.junit.Assume.assumeFalse
 
 import org.codehaus.groovy.eclipse.core.model.GroovyRuntime
 import org.codehaus.groovy.eclipse.dsl.GroovyDSLCoreActivator
@@ -25,7 +27,6 @@ import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.core.IPackageFragmentRoot
 import org.eclipse.jdt.core.JavaCore
-import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -118,7 +119,6 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             class Submarine implements Vehicle {
               String getName() { "Yellow Submarine" }
             }
-
             assert new Plane().fly() == "I'm the Concorde and I FLY!"
             assert new Submarine().dive() == "I'm the Yellow Submarine and I DIVE!"
             '''.stripIndent()
@@ -135,7 +135,6 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             class JamesBondVehicle implements Vehicle {
               String getName() { "James Bond's vehicle" }
             }
-
             assert new JamesBondVehicle().fly() == "I'm the James Bond's vehicle and I FLY!"
             assert new JamesBondVehicle().dive() == "I'm the James Bond's vehicle and I DIVE!"
             '''.stripIndent()
@@ -152,7 +151,6 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
         String contents = '''\
             @Singleton
             class Foo {}
-
             Foo.instance
             Foo.getInstance()
             '''.stripIndent()
@@ -166,7 +164,6 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
         String contents = '''\
             @Singleton(property='thereCanBeOnlyOne')
             class Foo {}
-
             Foo.thereCanBeOnlyOne
             Foo.getThereCanBeOnlyOne()
             '''.stripIndent()
@@ -183,28 +180,23 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
             class Foo {
               String value
             }
-
-            Foo.comparatorByValue()
+            new Foo().compareTo(null)
             '''.stripIndent()
 
-        assertType(*findRange(contents, 'comparatorByValue'), 'java.util.Comparator', 'Sortable AST transform')
+        assertType(*findRange(contents, 'compareTo'), 'java.lang.Integer', 'Sortable AST transform')
     }
 
     @Test
     void testSortable2() {
         String contents = '''\
             import groovy.transform.*
-            @Sortable(includes='value')
+            @Sortable
             class Foo {
               String value
-              String zebra
             }
-
             Foo.comparatorByValue()
-            Foo.comparatorByZebra()
             '''.stripIndent()
 
-        assertUnknownConfidence(*findRange(contents, 'comparatorByZebra'), 'Foo')
         assertType(*findRange(contents, 'comparatorByValue'), 'java.util.Comparator', 'Sortable AST transform')
     }
 
@@ -212,12 +204,11 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
     void testSortable3() {
         String contents = '''\
             import groovy.transform.*
-            @Sortable(excludes='zebra')
+            @Sortable(includes='value')
             class Foo {
               String value
               String zebra
             }
-
             Foo.comparatorByValue()
             Foo.comparatorByZebra()
             '''.stripIndent()
@@ -226,16 +217,37 @@ final class BuiltInDSLInferencingTests extends DSLInferencingTestSuite {
         assertType(*findRange(contents, 'comparatorByValue'), 'java.util.Comparator', 'Sortable AST transform')
     }
 
-    @Test @Ignore('groovy-swing not included by default since 2.5')
+    @Test
+    void testSortable4() {
+        String contents = '''\
+            import groovy.transform.*
+            @Sortable(excludes='zebra')
+            class Foo {
+              String value
+              String zebra
+            }
+            Foo.comparatorByValue()
+            Foo.comparatorByZebra()
+            '''.stripIndent()
+
+        assertUnknownConfidence(*findRange(contents, 'comparatorByZebra'), 'Foo')
+        assertType(*findRange(contents, 'comparatorByValue'), 'java.util.Comparator', 'Sortable AST transform')
+    }
+
+    @Test
     void testSwingBuilder1() {
+        assumeFalse(isAtLeastGroovy(25)) // groovy-swing not included by default since 2.5
+
         String contents = 'new groovy.swing.SwingBuilder().edt { frame }'
 
         assertDeclaringType(*findRange(contents, 'frame'), 'groovy.swing.SwingBuilder')
         assertType(*findRange(contents, 'frame'), 'javax.swing.JFrame', 'SwingBuilder')
     }
 
-    @Test @Ignore('groovy-swing not included by default since 2.5')
+    @Test
     void testSwingBuilder2() {
+        assumeFalse(isAtLeastGroovy(25)) // groovy-swing not included by default since 2.5
+
         String contents = 'groovy.swing.SwingBuilder.edtBuilder { frame }'
 
         assertDeclaringType(*findRange(contents, 'frame'), 'groovy.swing.SwingBuilder')

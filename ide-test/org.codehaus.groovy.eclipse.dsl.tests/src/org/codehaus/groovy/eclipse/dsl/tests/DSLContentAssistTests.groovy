@@ -16,6 +16,7 @@
 package org.codehaus.groovy.eclipse.dsl.tests
 
 import static org.eclipse.jdt.groovy.core.tests.GroovyBundle.isAtLeastGroovy
+import static org.junit.Assume.assumeFalse
 import static org.junit.Assume.assumeTrue
 
 import org.codehaus.groovy.eclipse.codeassist.GroovyContentAssist
@@ -27,7 +28,6 @@ import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Before
 import org.junit.BeforeClass
-import org.junit.Ignore
 import org.junit.Test
 
 final class DSLContentAssistTests extends CompletionTestSuite {
@@ -1101,8 +1101,22 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         assertProposalOrdering(proposals, 'getInstance', 'getIjk')
     }
 
-    @Test @Ignore('groovy-swing not included by default since 2.5')
+    @Test
+    void testSortableTransform1() {
+        String contents = '''\
+            import groovy.transform.*
+            @Sortable class Foo {}
+            new Foo().com
+            '''.stripIndent()
+        ICompletionProposal[] proposals = orderByRelevance(createProposalsAtOffset(contents, getIndexOf(contents, 'com')))
+        // contributed by built-in DLSD for @Sortable AST transform
+        proposalExists(proposals, 'compareTo(Foo other) : int', 1)
+    }
+
+    @Test
     void testSwingBuilder1() {
+        assumeFalse(isAtLeastGroovy(25)) // groovy-swing not included by default since 2.5
+
         String contents = '''\
             import groovy.swing.SwingBuilder
             new SwingBuilder().edt {
@@ -1114,8 +1128,10 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         assertProposalOrdering(proposals, 'frame', 'find')
     }
 
-    @Test @Ignore('groovy-swing not included by default since 2.5')
+    @Test
     void testSwingBuilder2() {
+        assumeFalse(isAtLeastGroovy(25)) // groovy-swing not included by default since 2.5
+
         String contents = '''\
             import groovy.swing.SwingBuilder
             new SwingBuilder().edt {
@@ -1127,8 +1143,10 @@ final class DSLContentAssistTests extends CompletionTestSuite {
         assertProposalOrdering(proposals, 'frame', 'FrameFactory - groovy.swing.factory')
     }
 
-    @Test @Ignore('groovy-swing not included by default since 2.5')
+    @Test
     void testSwingBuilder3() {
+        assumeFalse(isAtLeastGroovy(25)) // groovy-swing not included by default since 2.5
+
         String contents = '''\
             import groovy.swing.SwingBuilder
             new SwingBuilder().edt {

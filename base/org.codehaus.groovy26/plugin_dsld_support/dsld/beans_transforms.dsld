@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,14 +87,14 @@ contribute(currentType(annotatedBy(groovy.beans.Bindable) | fields(annotatedBy(g
             '''.stripIndent()
 
     method name: 'getPropertyChangeListeners',
-        type: 'java.beans.PropertyChangeListener[]',
+        type: PropertyChangeListener[],
         doc: '''\
             Returns an array of all the listeners that were added to the PropertyChangeSupport object with addPropertyChangeListener().
             @return all of the PropertyChangeListeners added or an empty array if no listeners have been added
             '''.stripIndent()
 
     method name: 'getPropertyChangeListeners',
-        type: 'java.beans.PropertyChangeListener[]',
+        type: PropertyChangeListener[],
         params: [propertyName: String],
         doc: '''\
             Returns an array of all the listeners which have been associated with the named property.
@@ -170,7 +170,7 @@ contribute(currentType(annotatedBy(groovy.beans.Vetoable) | fields(annotatedBy(g
                '''.stripIndent()
 
     method name: 'getVetoableChangeListeners',
-           type: 'java.beans.VetoableChangeListener[]',
+           type: VetoableChangeListener[],
            doc: '''\
                Returns the list of VetoableChangeListeners. If named vetoable change listeners were added, then VetoableChangeListenerProxy
                wrappers will returned.
@@ -178,7 +178,7 @@ contribute(currentType(annotatedBy(groovy.beans.Vetoable) | fields(annotatedBy(g
                '''.stripIndent()
 
     method name: 'getVetoableChangeListeners',
-           type: 'java.beans.VetoableChangeListener[]',
+           type: VetoableChangeListener[],
            params: [propertyName: String],
            doc: '''\
                Returns an array of all the listeners which have been associated with the named property.
@@ -199,10 +199,10 @@ contribute(currentType(fields : fields(annotatedBy(groovy.beans.ListenerList))))
     provider = '{@link groovy.beans.ListenerList ListenerList} AST transform'
 
     for (FieldNode field : fields) {
-        def propertyName = MetaClassHelper.capitalize(field.name)
         def type = findElementType(field)
-
         def shortType = getShortName(type.name)
+        def propertyName = MetaClassHelper.capitalize(field.name)
+
         method name: 'add' + shortType, type: 'void', params: [listener: type], doc: 'Add ' + shortType + ' listener'
         method name: 'remove' + shortType, type: 'void', params: [listener: type], doc: 'Remove ' + shortType + ' listener'
 

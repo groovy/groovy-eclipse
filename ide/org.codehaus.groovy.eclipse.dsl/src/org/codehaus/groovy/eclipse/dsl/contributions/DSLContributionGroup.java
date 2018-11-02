@@ -215,11 +215,11 @@ public class DSLContributionGroup extends ContributionGroup {
             List<IContributionElement> accessorContribs = new ArrayList<>(1);
             for (MethodNode method : type.getMethods()) {
                 if ((exceptions == null || !exceptions.contains(method.getName())) && !(method instanceof ConstructorNode) && !method.getName().contains("$")) {
-                    ClassNode resolvedReturnType = VariableScope.resolveTypeParameterization(mapper, VariableScope.clone(method.getReturnType()));
+                    method = VariableScope.resolveTypeParameterization(mapper, method);
                     if (asCategory) {
-                        delegateToCategoryMethod(useNamedArgs, isStatic, type, method, resolvedReturnType, isDeprecated, accessorContribs, noParens);
+                        delegateToCategoryMethod(useNamedArgs, isStatic, type, method, method.getReturnType(), isDeprecated, accessorContribs, noParens);
                     } else {
-                        delegateToNonCategoryMethod(useNamedArgs, isStatic, type, method, resolvedReturnType, isDeprecated, accessorContribs, noParens);
+                        delegateToNonCategoryMethod(useNamedArgs, isStatic, type, method, method.getReturnType(), isDeprecated, accessorContribs, noParens);
                     }
                 }
             }

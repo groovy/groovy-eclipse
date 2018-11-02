@@ -257,7 +257,7 @@ contribute(bind(clazz: enclosingClass(annos: annotatedBy(SelfType)))) {
 //@groovy.transform.Sortable
 contribute(currentType(annotatedBy(Sortable))) {
     provider = '{@link groovy.transform.Sortable Sortable} AST transform'
-    //delegatesTo type: "java.lang.Comparable<${currentType.name}>"
+    delegatesTo type: "java.lang.Comparable<${currentType.name}>"
     for (MethodNode node : currentType.methods.findAll { MethodNode mn ->
         mn.isPublic() && mn.isStatic() && mn.name.startsWith('comparatorBy') && !mn.parameters
     }) {
