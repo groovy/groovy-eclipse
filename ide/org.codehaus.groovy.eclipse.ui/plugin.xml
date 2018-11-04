@@ -14,9 +14,9 @@
 
    <extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
       <launchConfigurationTypeImage
-            configTypeID="org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration"
+            configTypeID="org.codehaus.groovy.eclipse.groovyConsoleLaunchConfiguration"
             icon="$nl$/icons/run_as_groovy.png"
-            id="org.codehaus.groovy.eclipse.groovyLaunchConfigurationImage.groovyShell">
+            id="org.codehaus.groovy.eclipse.groovyLaunchConfigurationImage.groovyConsole">
       </launchConfigurationTypeImage>
       <launchConfigurationTypeImage
             configTypeID="org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration"
@@ -24,18 +24,18 @@
             id="org.codehaus.groovy.eclipse.groovyLaunchConfigurationImage.groovyScript">
       </launchConfigurationTypeImage>
       <launchConfigurationTypeImage
-            configTypeID="org.codehaus.groovy.eclipse.groovyConsoleLaunchConfiguration"
+            configTypeID="org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration"
             icon="$nl$/icons/run_as_groovy.png"
-            id="org.codehaus.groovy.eclipse.groovyLaunchConfigurationImage.groovyConsole">
+            id="org.codehaus.groovy.eclipse.groovyLaunchConfigurationImage.groovyShell">
       </launchConfigurationTypeImage>
    </extension>
 
    <extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">
       <launchConfigurationTabGroup
-            class="org.codehaus.groovy.eclipse.launchers.GroovyShellLaunchConfigurationTabGroup"
-            description="Launch an interactive Groovy Shell for a given project"
-            id="org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration.tabGroup"
-            type="org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration">
+            class="org.codehaus.groovy.eclipse.launchers.GroovyScriptLaunchConfigurationTabGroup"
+            description="Launch an interactive Groovy Console"
+            id="org.codehaus.groovy.eclipse.groovyConsoleLaunchConfiguration.tabGroup"
+            type="org.codehaus.groovy.eclipse.groovyConsoleLaunchConfiguration">
       </launchConfigurationTabGroup>
       <launchConfigurationTabGroup
             class="org.codehaus.groovy.eclipse.launchers.GroovyScriptLaunchConfigurationTabGroup"
@@ -44,43 +44,37 @@
             type="org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration">
       </launchConfigurationTabGroup>
       <launchConfigurationTabGroup
-            class="org.codehaus.groovy.eclipse.launchers.GroovyScriptLaunchConfigurationTabGroup"
-            description="Launch a Groovy Console"
-            id="org.codehaus.groovy.eclipse.groovyConsoleLaunchConfiguration.tabGroup"
-            type="org.codehaus.groovy.eclipse.groovyConsoleLaunchConfiguration">
+            class="org.codehaus.groovy.eclipse.launchers.GroovyShellLaunchConfigurationTabGroup"
+            description="Launch an interactive Groovy Shell"
+            id="org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration.tabGroup"
+            type="org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration">
       </launchConfigurationTabGroup>
    </extension>
 
    <extension point="org.eclipse.debug.ui.launchShortcuts">
       <shortcut
-            class="org.codehaus.groovy.eclipse.launchers.GroovyShellLaunchShortcut"
-            description="Launch an interactive Groovy Shell in the given project"
+            class="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLaunchShortcut"
+            description="Run a Groovy Console"
             icon="$nl$/icons/run_as_groovy.png"
-            id="org.codehaus.groovy.eclipse.debug.ui.groovyShellLaunchShortcut"
-            label="Groovy Shell"
-            modes="run,debug">
+            id="org.codehaus.groovy.eclipse.groovyConsoleLaunchShortcut"
+            label="Groovy Console"
+            modes="run">
          <contextualLaunch>
             <enablement>
                <with variable="selection">
-                  <count value="1">
-                  </count>
+                  <count value="1"/><!-- one item selected -->
                   <iterate>
-                     <test
-                           property="org.eclipse.debug.ui.projectNature"
-                           value="org.eclipse.jdt.groovy.core.groovyNature">
-                     </test>
-                     <adapt type="org.eclipse.core.resources.IProject"/>
+                     <or>
+                        <reference definitionId="org.eclipse.jdt.groovy.core.isGroovySource"/>
+                        <reference definitionId="org.eclipse.jdt.groovy.core.isGroovyProject"/>
+                     </or>
                   </iterate>
                </with>
             </enablement>
          </contextualLaunch>
          <description
-               description="Run a Groovy shell for the current project"
+               description="Open a Groovy Console"
                mode="run">
-         </description>
-         <description
-               description="Debug a Groovy shell for the current project"
-               mode="debug">
          </description>
       </shortcut>
       <shortcut
@@ -93,60 +87,46 @@
          <contextualLaunch>
             <enablement>
                <with variable="selection">
-                  <count value="1">
-                  </count>
+                  <count value="1"/><!-- one item selected -->
                   <iterate>
-                     <test
-                           property="org.eclipse.debug.ui.projectNature"
-                           value="org.eclipse.jdt.groovy.core.groovyNature">
-                     </test>
-                     <test property="org.codehaus.groovy.eclipse.ui.isScript"/>
+                     <reference definitionId="org.eclipse.jdt.groovy.core.isGroovySource"/>
+                     <test property="org.eclipse.jdt.groovy.core.isScript"/>
                   </iterate>
                </with>
             </enablement>
          </contextualLaunch>
          <description
-               description="Run a Groovy script"
+               description="Compile and run a Groovy script"
                mode="run">
          </description>
          <description
-               description="Debug a Groovy script"
+               description="Compile and debug a Groovy script"
                mode="debug">
          </description>
       </shortcut>
       <shortcut
-            class="org.codehaus.groovy.eclipse.launchers.GroovyConsoleLaunchShortcut"
-            description="Run a Groovy Console"
+            class="org.codehaus.groovy.eclipse.launchers.GroovyShellLaunchShortcut"
+            description="Launch an interactive Groovy Shell for the given project"
             icon="$nl$/icons/run_as_groovy.png"
-            id="org.codehaus.groovy.eclipse.groovyConsoleLaunchShortcut"
-            label="Groovy Console"
+            id="org.codehaus.groovy.eclipse.debug.ui.groovyShellLaunchShortcut"
+            label="Groovy Shell"
             modes="run,debug">
          <contextualLaunch>
             <enablement>
-               <or>
-                  <with variable="selection">
-                     <count value="1">
-                     </count>
-                     <iterate>
-                        <test
-                              property="org.eclipse.debug.ui.projectNature"
-                              value="org.eclipse.jdt.groovy.core.groovyNature">
-                        </test>
-                        <or>
-                           <adapt type="org.eclipse.core.resources.IProject"/>
-                           <test property="org.codehaus.groovy.eclipse.ui.isScript"/>
-                        </or>
-                     </iterate>
-                  </with>
-               </or>
+               <with variable="selection">
+                  <count value="1"/><!-- one item selected -->
+                  <iterate>
+                     <reference definitionId="org.eclipse.jdt.groovy.core.isGroovyProject"/>
+                  </iterate>
+               </with>
             </enablement>
          </contextualLaunch>
          <description
-               description="Run a Groovy console"
+               description="Run a Groovy Shell for the project"
                mode="run">
          </description>
          <description
-               description="Debug a Groovy console"
+               description="Debug a Groovy Shell for the project"
                mode="debug">
          </description>
       </shortcut>
@@ -885,6 +865,7 @@
       </consoleLineTracker>
    </extension>
 
+   <!-- TODO: Remove in some future release -->
    <extension point="org.eclipse.core.expressions.propertyTesters">
       <propertyTester
             class="org.codehaus.groovy.eclipse.ui.GroovyResourcePropertyTester"
@@ -955,7 +936,7 @@
                <instanceof value="org.codehaus.jdt.groovy.model.GroovyCompilationUnit" />
                <instanceof value="org.eclipse.core.resources.IFile" />
             </or>
-         </possibleChildren> 
+         </possibleChildren>
          <override
                policy="InvokeAlwaysRegardlessOfSuppressedExt"
                suppressedExtensionId="org.eclipse.jdt.java.ui.javaContent">
@@ -1129,15 +1110,6 @@
             id="org.codehaus.groovy.eclipse.GroovyExtraHover"
             label="Groovy Inferencing">
       </hover>
-   </extension>
-
-   <extension point="org.eclipse.core.variables.dynamicVariables">
-      <variable
-            description="The absolute file system location of the Groovy home used in this instance of Eclipse."
-            name="groovy_home"
-            resolver="org.codehaus.groovy.eclipse.launchers.GroovyHomeVariableResolver"
-            supportsArgument="false">
-      </variable>
    </extension>
 
    <extension point="org.eclipse.ui.workbench.texteditor.hyperlinkDetectorTargets">

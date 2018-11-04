@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 package org.codehaus.groovy.eclipse.test.adapters
 
 import org.codehaus.groovy.eclipse.test.GroovyEclipseTestSuite
-import org.codehaus.groovy.eclipse.ui.GroovyResourcePropertyTester
+import org.eclipse.jdt.groovy.core.GroovyPropertyTester
 import org.junit.Test
 
 /**
@@ -25,8 +25,8 @@ import org.junit.Test
 final class IsMainTesterTests extends GroovyEclipseTestSuite {
 
     private void doTest(String text, boolean expected) {
-        def unit = addGroovySource(text, 'MainClass', 'pack1').getResource()
-        boolean result = new GroovyResourcePropertyTester().test(unit, 'hasMain', null, null)
+        def unit = addGroovySource(text, 'MainClass', 'pack1')
+        boolean result = new GroovyPropertyTester().test(unit, 'hasMain', null, null)
         assert result == expected : 'Should have ' + (expected ? '' : '*not*') + ' found a main method in class:\n' + text
     }
 

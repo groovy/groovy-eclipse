@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,26 +15,24 @@
  */
 package org.codehaus.groovy.eclipse.adapters;
 
-import org.codehaus.groovy.eclipse.core.adapters.GroovyFileAdapterFactory;
 import org.codehaus.groovy.eclipse.editor.GroovyEditor;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.Adapters;
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IAdapterFactory;
+import org.eclipse.jdt.groovy.core.GroovyResourceAdapter;
 import org.eclipse.ui.IEditorInput;
 
 public class GroovyEditorAdapterFactory implements IAdapterFactory {
 
     @Override
     public Class<?>[] getAdapterList() {
-        return new GroovyFileAdapterFactory().getAdapterList();
+        return new GroovyResourceAdapter().getAdapterList();
     }
 
     @Override
     public <T> T getAdapter(Object adaptable, Class<T> adapterType) {
-        if (!(adaptable instanceof GroovyEditor)) {
-            throw new IllegalArgumentException("adaptable is not the GroovyEditor");
-        }
-
+        Assert.isLegal(adaptable instanceof GroovyEditor, "adaptable is not the GroovyEditor");
         IEditorInput editorInput = ((GroovyEditor) adaptable).getEditorInput();
 
         // delegate to GroovyIFileEditorInputAdapterFactory?
@@ -43,7 +41,7 @@ public class GroovyEditorAdapterFactory implements IAdapterFactory {
             return adapter;
         }
 
-        // delegate to GroovyFileAdapterFactory?
+        // delegate to GroovyResourceAdapter?
         IFile file = Adapters.adapt(editorInput, IFile.class);
         if (file != null) {
             return Adapters.adapt(file, adapterType);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.codehaus.groovy.eclipse.launchers;
 import java.util.List;
 
 import org.codehaus.groovy.eclipse.core.GroovyCore;
-import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
@@ -33,13 +32,22 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.dialogs.ListDialog;
 
 /**
- * Dialog for selecting the groovy class to run.
+ * Dialog for selecting the Groovy class or script to run.
  */
 public abstract class AbstractGroovyLauncherTab extends JavaMainTab {
 
-    /**
-     * Dialog for selecting the groovy class to run.
-     */
+    protected abstract List<IType> findAllRunnableTypes(IJavaProject javaProject) throws JavaModelException;
+
+    @Override
+    public Image getImage() {
+        return JavaUI.getSharedImages().getImage(ISharedImages.IMG_OBJS_CLASS);
+    }
+
+    @Override
+    public String getName() {
+        return "Groovy Main";
+    }
+
     @Override
     protected void handleSearchButtonSelected() {
         IJavaProject javaProject = getJavaProject();
@@ -50,7 +58,7 @@ public abstract class AbstractGroovyLauncherTab extends JavaMainTab {
          */
         try {
             final List<IType> availableClasses = findAllRunnableTypes(javaProject);
-            if (availableClasses.size() == 0) {
+            if (availableClasses.isEmpty()) {
                 MessageDialog.openWarning(getShell(), "No Groovy classes to run",
                     "There are no compiled groovy classes to run in this project");
                 return;
@@ -65,7 +73,6 @@ public abstract class AbstractGroovyLauncherTab extends JavaMainTab {
             if (dialog.open() == Window.CANCEL) {
                 return;
             }
-
             Object[] results = dialog.getResult();
             if (results == null || results.length == 0) {
                 return;
@@ -73,26 +80,8 @@ public abstract class AbstractGroovyLauncherTab extends JavaMainTab {
             if (results[0] instanceof IType) {
                 fMainText.setText(((IType) results[0]).getFullyQualifiedName());
             }
-
         } catch (JavaModelException e) {
             GroovyCore.logException("Exception when launching " + javaProject, e);
         }
-    }
-
-    protected abstract List<IType> findAllRunnableTypes(IJavaProject javaProject) throws JavaModelException;
-
-    @Override
-    public String getName() {
-        return "Groovy Main"; //$NON-NLS-1$
-    }
-
-    @Override
-    public Image getImage() {
-        return JavaUI.getSharedImages().getImage(ISharedImages.IMG_OBJS_CLASS);
-    }
-
-    @Override
-    public void activated(ILaunchConfigurationWorkingCopy workingCopy) {
-        super.activated(workingCopy);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,17 +15,17 @@
  */
 package org.codehaus.groovy.eclipse.adapters;
 
-import org.codehaus.groovy.eclipse.core.adapters.GroovyFileAdapterFactory;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.Adapters;
 import org.eclipse.core.runtime.IAdapterFactory;
+import org.eclipse.jdt.groovy.core.GroovyResourceAdapter;
 import org.eclipse.ui.IFileEditorInput;
 
 public class GroovyIFileEditorInputAdapterFactory implements IAdapterFactory {
 
     @Override
     public Class<?>[] getAdapterList() {
-        return new GroovyFileAdapterFactory().getAdapterList();
+        return new GroovyResourceAdapter().getAdapterList();
     }
 
     @Override
@@ -33,7 +33,6 @@ public class GroovyIFileEditorInputAdapterFactory implements IAdapterFactory {
         T result = null;
         if (adaptable instanceof IFileEditorInput) {
             IFile file = ((IFileEditorInput) adaptable).getFile();
-            // delegate to GroovyFileAdapterFactory
             result = Adapters.adapt(file, adapterType);
         }
         return result;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,12 +47,133 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
 
 public class GroovyConsoleLineTracker implements IConsoleLineTracker {
 
+    private static final Pattern LINE_PATTERN = Pattern.compile(".*\\((.*)\\.groovy(:(.*))?\\)");
+
+    private IConsole console;
+
+    @Override
+    public void init(IConsole console) {
+        this.console = console;
+    }
+
+    /**
+     * Hyperlink error lines to the editor.
+     */
+    @Override
+    public void lineAppended(IRegion line) {
+        if (console == null) return;
+
+        int lineOffset = line.getOffset();
+        int lineLength = line.getLength();
+        try {
+            String consoleLine = console.getDocument().get(lineOffset, lineLength);
+            GroovyPlugin.trace(consoleLine);
+            Matcher m = LINE_PATTERN.matcher(consoleLine);
+            String groovyFileName = null;
+            int lineNumber = -1;
+            int openParenIndexAt = -1;
+            int closeParenIndexAt = -1;
+            // match
+            if (m.matches()) {
+                GroovyCore.trace("match: " + m);
+
+                consoleLine = m.group(0);
+                openParenIndexAt = consoleLine.indexOf("(");
+                if (openParenIndexAt >= 0) {
+                    int end = consoleLine.indexOf(".groovy");
+                    if (end == -1 || (openParenIndexAt + 1) >= end) {
+                        return;
+                    }
+                    String groovyClassName = consoleLine.substring(openParenIndexAt + 1, end);
+                    int classIndex = consoleLine.indexOf(groovyClassName);
+                    int start = 3;
+                    if (classIndex < start || classIndex >= consoleLine.length()) {
+                        return;
+                    }
+                    String groovyFilePath = consoleLine.substring(start, classIndex).trim().replace('.', '/');
+                    groovyFileName = groovyFilePath + groovyClassName + ".groovy";
+                    int colonIndex = consoleLine.indexOf(":");
+                    // get the line number in groovy class
+                    closeParenIndexAt = consoleLine.lastIndexOf(")");
+                    if (colonIndex > 0) {
+                        lineNumber = Integer.parseInt(consoleLine.substring(colonIndex + 1, closeParenIndexAt));
+                    }
+                    GroovyPlugin.trace("groovyFile=" + groovyFileName + " lineNumber:" + lineNumber);
+                }
+                // hyperlink if we found something
+                if (groovyFileName != null) {
+                    IFile[] file = searchForFileInLaunchConfig(groovyFileName);
+                    if (file.length == 1) {
+                        IHyperlink link = new FileLink(file[0], GroovyEditor.EDITOR_ID, -1, -1, lineNumber);
+                        console.addLink(link, lineOffset + openParenIndexAt + 1, closeParenIndexAt - openParenIndexAt - 1);
+                    } else if (file.length > 1) {
+                        IHyperlink link = new AmbiguousFileLink(file, GroovyEditor.EDITOR_ID, -1, -1, lineNumber);
+                        console.addLink(link, lineOffset + openParenIndexAt + 1, closeParenIndexAt - openParenIndexAt - 1);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            GroovyPlugin.trace("unexpected error:" + e.getMessage());
+        }
+    }
+
+    private IFile[] searchForFileInLaunchConfig(String groovyFileName) throws JavaModelException {
+        List<IFile> files = new LinkedList<>();
+        IJavaProject[] projects = JavaModelManager.getJavaModelManager().getJavaModel().getJavaProjects();
+        for (IJavaProject javaProject : projects) {
+            if (GroovyNature.hasGroovyNature(javaProject.getProject())) {
+                for (IPackageFragmentRoot root : javaProject.getAllPackageFragmentRoots()) {
+                    if (root.getKind() == IPackageFragmentRoot.K_SOURCE) {
+                        IResource resource = root.getResource();
+                        if (resource.isAccessible() && resource.getType() != IResource.FILE) {
+                            IFile file = ((IContainer) resource).getFile(new Path(groovyFileName));
+                            if (file.isAccessible()) {
+                                files.add(file);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return files.toArray(new IFile[files.size()]);
+    }
+
+    IFile chooseFile(final IFile[] files) {
+        final IFile[] result = new IFile[1];
+        ConsolePlugin.getStandardDisplay().syncExec(() -> {
+            final ListDialog dialog = new ListDialog(ConsolePlugin.getStandardDisplay().getActiveShell());
+            dialog.setLabelProvider(new WorkbenchLabelProvider() {
+                @Override
+                protected String decorateText(String input, Object element) {
+                    return ((IFile) element).getFullPath().toPortableString();
+                }
+            });
+            dialog.setTitle("Choose file to open");
+            dialog.setInput(files);
+            dialog.setContentProvider(new FileContentProvider());
+            dialog.setAddCancelButton(true);
+            dialog.setMessage("Select a file:");
+            dialog.setBlockOnOpen(true);
+            int dialogResult = dialog.open();
+            if (dialogResult == Window.OK && dialog.getResult().length > 0) {
+                result[0] = (IFile) dialog.getResult()[0];
+            }
+        });
+        return result[0];
+    }
+
+    @Override
+    public void dispose() {
+        console = null;
+    }
+
+    //--------------------------------------------------------------------------
+
     public class AmbiguousFileLink extends FileLink implements IHyperlink {
         IFile[] files;
-        boolean fileChosen = false;
+        boolean fileChosen;
 
-        public AmbiguousFileLink(IFile[] files, String editorId, int fileOffset,
-                int fileLength, int fileLineNumber) {
+        public AmbiguousFileLink(IFile[] files, String editorId, int fileOffset, int fileLength, int fileLineNumber) {
             super(null, editorId, fileOffset, fileLength, fileLineNumber);
             this.files = files;
         }
@@ -91,125 +212,5 @@ public class GroovyConsoleLineTracker implements IConsoleLineTracker {
         @Override
         public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
         }
-    }
-
-    private IConsole console;
-    private final static Pattern linePattern = Pattern.compile(".*\\((.*)\\.groovy(:(.*))?\\)");
-
-
-    @Override
-    public void init(IConsole console) {
-        this.console = console;
-    }
-
-    /**
-     * Hyperlink error lines to the editor.
-     */
-    @Override
-    public void lineAppended(IRegion line) {
-        if (console == null) return;
-
-        int lineOffset = line.getOffset();
-        int lineLength = line.getLength();
-        try {
-            String consoleLine = console.getDocument().get(lineOffset, lineLength);
-            GroovyPlugin.trace(consoleLine);
-            Matcher m = linePattern.matcher(consoleLine);
-            String groovyFileName = null;
-            int lineNumber = -1;
-            int openParenIndexAt = -1;
-            int closeParenIndexAt = -1;
-            // match
-            if (m.matches()) {
-                GroovyCore.trace("match: " + m);
-
-                consoleLine = m.group(0);
-                openParenIndexAt = consoleLine.indexOf("(");
-                if (openParenIndexAt >= 0) {
-                    int end = consoleLine.indexOf(".groovy");
-                    if(end == -1 || (openParenIndexAt + 1) >= end) {
-                        return;
-                    }
-                    String groovyClassName = consoleLine.substring(openParenIndexAt + 1, end);
-                    int classIndex = consoleLine.indexOf(groovyClassName);
-                    int start = 3;
-                    if(classIndex < start || classIndex >= consoleLine.length()) {
-                        return;
-                    }
-                    String groovyFilePath = consoleLine.substring(start, classIndex).trim().replace('.','/');
-                    groovyFileName = groovyFilePath + groovyClassName + ".groovy";
-                    int colonIndex = consoleLine.indexOf(":");
-                    // get the line number in groovy class
-                    closeParenIndexAt = consoleLine.lastIndexOf(")");
-                    if (colonIndex > 0) {
-                        lineNumber = Integer.parseInt(consoleLine.substring(colonIndex + 1, closeParenIndexAt));
-                    }
-                    GroovyPlugin.trace("groovyFile=" + groovyFileName + " lineNumber:" + lineNumber);
-                }
-                // hyperlink if we found something
-                if (groovyFileName != null) {
-                    IFile[] file = searchForFileInLaunchConfig(groovyFileName);
-                    if (file.length == 1) {
-                        IHyperlink link = new FileLink(file[0], GroovyEditor.EDITOR_ID, -1, -1, lineNumber);
-                        console.addLink(link, lineOffset + openParenIndexAt + 1, closeParenIndexAt - openParenIndexAt -1);
-                    } else if (file.length > 1) {
-                        IHyperlink link = new AmbiguousFileLink(file, GroovyEditor.EDITOR_ID, -1, -1, lineNumber);
-                        console.addLink(link, lineOffset + openParenIndexAt + 1, closeParenIndexAt - openParenIndexAt -1);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            GroovyPlugin.trace("unexpected error:" +  e.getMessage());
-        }
-    }
-
-    private IFile[] searchForFileInLaunchConfig(String groovyFileName) throws JavaModelException {
-        List<IFile> files = new LinkedList<>();
-        IJavaProject[] projects = JavaModelManager.getJavaModelManager().getJavaModel().getJavaProjects();
-        for (IJavaProject javaProject : projects) {
-            if (GroovyNature.hasGroovyNature(javaProject.getProject())) {
-                for (IPackageFragmentRoot root : javaProject.getAllPackageFragmentRoots()) {
-                    if (root.getKind() == IPackageFragmentRoot.K_SOURCE) {
-                        IResource resource = root.getResource();
-                        if (resource.isAccessible() && resource.getType() != IResource.FILE) {
-                            IFile file = ((IContainer) resource).getFile(new Path(groovyFileName));
-                            if (file.isAccessible()) {
-                                files.add(file);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return files.toArray(new IFile[files.size()]);
-    }
-
-    IFile chooseFile(final IFile[] files) {
-        final IFile[] result = new IFile[] { null };
-        ConsolePlugin.getStandardDisplay().syncExec(() -> {
-            final ListDialog dialog = new ListDialog(ConsolePlugin.getStandardDisplay().getActiveShell());
-            dialog.setLabelProvider(new WorkbenchLabelProvider() {
-                @Override
-                protected String decorateText(String input, Object element) {
-                    return ((IFile) element).getFullPath().toPortableString();
-                }
-            });
-            dialog.setTitle("Choose file to open");
-            dialog.setInput(files);
-            dialog.setContentProvider(new FileContentProvider());
-            dialog.setAddCancelButton(true);
-            dialog.setMessage("Select a file:");
-            dialog.setBlockOnOpen(true);
-            int dialogResult = dialog.open();
-            if (dialogResult == Window.OK && dialog.getResult().length > 0) {
-                result[0] = (IFile) dialog.getResult()[0];
-            }
-        });
-        return result[0];
-    }
-
-    @Override
-    public void dispose() {
-        console = null;
     }
 }

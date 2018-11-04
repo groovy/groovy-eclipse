@@ -5,7 +5,6 @@ Bundle-Name: Groovy Core
 Bundle-Vendor: Pivotal Software, Inc.
 Bundle-Version: 3.2.0.qualifier
 Export-Package: org.codehaus.groovy.eclipse.core,
- org.codehaus.groovy.eclipse.core.adapters,
  org.codehaus.groovy.eclipse.core.builder,
  org.codehaus.groovy.eclipse.core.compiler,
  org.codehaus.groovy.eclipse.core.impl,

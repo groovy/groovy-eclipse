@@ -28,9 +28,7 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 
-/**
- * Determines if a groovy file has a main method or is a script.
- */
+@Deprecated
 public class GroovyResourcePropertyTester extends PropertyTester {
 
     /**

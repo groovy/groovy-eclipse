@@ -1,19 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-   <extension point="org.eclipse.core.runtime.adapters">
-      <factory
-            adaptableType="org.eclipse.core.resources.IFile"
-            class= "org.codehaus.groovy.eclipse.core.adapters.GroovyFileAdapterFactory">
-         <adapter
-               type="org.codehaus.groovy.ast.ClassNode"/>
-         <!--adapter
-               type="[Lorg.codehaus.groovy.ast.ClassNode;"/-->
-         <adapter
-               type="org.codehaus.groovy.ast.ModuleNode"/>
-      </factory>
-   </extension>
-
    <extension point="org.eclipse.core.resources.markers"
          id="compilerMismatch"
          name="Groovy compiler mismatch problem">
@@ -25,21 +12,22 @@
       </super>
    </extension>
 
-   <extension point="org.eclipse.debug.core.launchConfigurationTypes"
-         id="org.codehaus.groovy.eclipse.groovy.launcher">
+   <extension point="org.eclipse.debug.core.launchConfigurationTypes">
       <launchConfigurationType
-            delegate="org.codehaus.groovy.eclipse.core.launchers.GroovyShellLaunchDelegate"
-            delegateDescription="Launches a Groovy shell using the current project as its classpath"
-            delegateName="Groovy Shell Launcher"
-            id="org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration"
-            modes="run,debug"
-            name="Groovy Shell"
+            allowPrototypes="true"
+            delegate="org.eclipse.jdt.launching.JavaLaunchDelegate"
+            delegateDescription="Launches the Groovy Console and loads it with selected source"
+            delegateName="Groovy Console Launcher"
+            id="org.codehaus.groovy.eclipse.groovyConsoleLaunchConfiguration"
+            modes="run"
+            name="Groovy Console"
             sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
             sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
       </launchConfigurationType>
       <launchConfigurationType
+            allowPrototypes="true"
             delegate="org.eclipse.jdt.launching.JavaLaunchDelegate"
-            delegateDescription="Launches an uncompiled groovy script"
+            delegateDescription="Launches an uncompiled Groovy script"
             delegateName="Groovy Script Launcher"
             id="org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration"
             modes="run,debug"
@@ -48,12 +36,13 @@
             sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
       </launchConfigurationType>
       <launchConfigurationType
-            delegate="org.eclipse.jdt.launching.JavaLaunchDelegate"
-            delegateDescription="Launches the Groovy console and loads it with a given script"
-            delegateName="Groovy Console Launcher"
-            id="org.codehaus.groovy.eclipse.groovyConsoleLaunchConfiguration"
+            allowPrototypes="true"
+            delegate="org.codehaus.groovy.eclipse.core.launchers.GroovyShellLaunchDelegate"
+            delegateDescription="Launches a Groovy Shell using the current project as its classpath"
+            delegateName="Groovy Shell Launcher"
+            id="org.codehaus.groovy.eclipse.groovyShellLaunchConfiguration"
             modes="run,debug"
-            name="Groovy Console"
+            name="Groovy Shell"
             sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
             sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer">
       </launchConfigurationType>

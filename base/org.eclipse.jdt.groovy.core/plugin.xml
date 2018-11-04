@@ -11,6 +11,7 @@
          name="Type Lookup"
          schema="schema/typeLookup.exsd"
    />
+
    <extension point="org.eclipse.core.contenttype.contentTypes">
       <content-type
            base-type="org.eclipse.jdt.core.javaSource"
@@ -19,8 +20,6 @@
            name="Groovy Source File"
            priority="high"
       />
-   </extension>
-   <extension point="org.eclipse.core.contenttype.contentTypes">
       <content-type
            base-type="org.eclipse.jdt.groovy.core.groovySource"
            file-extensions="gradle"
@@ -29,10 +28,54 @@
            priority="low"
       />
    </extension>
-   <extension
+
+   <extension point="org.eclipse.core.expressions.definitions">
+      <definition
+            id="org.eclipse.jdt.groovy.core.isGroovyProject">
+         <adapt type="org.eclipse.core.resources.IProject">
+            <test
+                  property="org.eclipse.core.resources.projectNature"
+                  value="org.eclipse.jdt.groovy.core.groovyNature">
+            </test>
+        </adapt>
+      </definition>
+      <definition
+            id="org.eclipse.jdt.groovy.core.isGroovySource">
+         <adapt type="org.eclipse.core.resources.IResource">
+            <instanceof value="org.eclipse.core.resources.IFile"/>
+            <test
+                  property="org.eclipse.core.resources.projectNature"
+                  value="org.eclipse.jdt.groovy.core.groovyNature">
+            </test>
+            <test
+                  property="org.eclipse.core.resources.contentTypeId"
+                  value="org.eclipse.jdt.groovy.core.groovySource">
+            </test>
+         </adapt>
+      </definition>
+   </extension>
+
+   <extension point="org.eclipse.core.expressions.propertyTesters">
+      <propertyTester
+            class="org.eclipse.jdt.groovy.core.GroovyPropertyTester"
+            id="org.eclipse.jdt.groovy.core.propertyTester"
+            namespace="org.eclipse.jdt.groovy.core"
+            properties="hasMain,isScript"
+            type="org.eclipse.core.runtime.IAdaptable">
+      </propertyTester>
+   </extension>
+
+   <extension point="org.eclipse.core.resources.markers"
+         id="invalidBuilder"
+         name="Invalid Builder Marker">
+      <super
+            type="org.eclipse.jdt.core.buildpath_problem">
+      </super>
+   </extension>
+
+   <extension point="org.eclipse.core.resources.natures"
          id="groovyNature"
-         name="Groovy Nature"
-         point="org.eclipse.core.resources.natures">
+         name="Groovy Nature">
       <runtime>
          <run class="org.codehaus.jdt.groovy.model.GroovyNature"/>
       </runtime>
@@ -41,6 +84,29 @@
             id="org.eclipse.jdt.groovy.core.groovySource">
       </content-type>
    </extension>
+
+   <extension point="org.eclipse.core.runtime.adapters">
+      <factory
+            adaptableType="org.eclipse.core.resources.IResource"
+            class= "org.eclipse.jdt.groovy.core.GroovyResourceAdapter">
+         <adapter
+               type="org.codehaus.jdt.groovy.model.GroovyCompilationUnit"/>
+         <adapter
+               type="org.codehaus.groovy.ast.ModuleNode"/>
+         <adapter
+               type="org.codehaus.groovy.ast.ClassNode"/>
+      </factory>
+   </extension>
+
+   <extension point="org.eclipse.core.variables.dynamicVariables">
+      <variable
+            description="The location of the Groovy home used in this instance of Eclipse."
+            name="groovy_home"
+            resolver="org.eclipse.jdt.groovy.core.GroovyHomeVariable"
+            supportsArgument="false">
+      </variable>
+   </extension>
+
    <extension point="org.eclipse.jdt.core.compilationParticipant">
       <compilationParticipant
             class="org.codehaus.jdt.groovy.internal.compiler.ScriptFolderCompilationParticipant"
@@ -51,12 +117,5 @@
                markerType="org.eclipse.jdt.groovy.core.">
          </managedMarker>
       </compilationParticipant>
-   </extension>
-   <extension point="org.eclipse.core.resources.markers"
-         id="invalidBuilder"
-         name="Invalid Builder Marker">
-      <super
-            type="org.eclipse.jdt.core.buildpath_problem">
-      </super>
    </extension>
 </plugin>

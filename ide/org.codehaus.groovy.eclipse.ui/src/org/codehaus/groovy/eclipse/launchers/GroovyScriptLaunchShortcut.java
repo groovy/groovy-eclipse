@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2016 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,20 +17,11 @@ package org.codehaus.groovy.eclipse.launchers;
 
 import org.eclipse.debug.core.ILaunchConfigurationType;
 
-/**
- * This class is reponsible for creating a launching Groovy script files.  If an
- * existing launch configuration exists it will use that, if not it will
- * create a new launch configuration and launch it.
- *
- * @see ILaunchShortcut
- */
 public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
-
-    public static final String GROOVY_SCRIPT_LAUNCH_CONFIG_ID = "org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration" ;
 
     @Override
     public ILaunchConfigurationType getGroovyLaunchConfigType() {
-        return getLaunchManager().getLaunchConfigurationType(GROOVY_SCRIPT_LAUNCH_CONFIG_ID) ;
+        return getLaunchManager().getLaunchConfigurationType("org.codehaus.groovy.eclipse.groovyScriptLaunchConfiguration");
     }
 
     @Override
@@ -38,15 +29,13 @@ public class GroovyScriptLaunchShortcut extends AbstractGroovyLaunchShortcut {
         return "script";
     }
 
+    @Override
+    protected boolean canLaunchWithNoType() {
+        return false;
+    }
 
     @Override
     protected String classToRun() {
         return "groovy.ui.GroovyMain";
-    }
-
-
-    @Override
-    protected boolean canLaunchWithNoType() {
-        return false;
     }
 }

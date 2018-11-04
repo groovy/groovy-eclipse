@@ -33,11 +33,14 @@ import org.eclipse.swt.widgets.Composite;
  */
 public class GroovyShellLauncherTab extends JavaMainTab {
 
-    /**
-     * Dialog for selecting the groovy class to run.
-     */
     @Override
-    protected void handleSearchButtonSelected() {
+    public Image getImage() {
+        return JavaUI.getSharedImages().getImage(ISharedImages.IMG_OBJS_CLASS);
+    }
+
+    @Override
+    public String getName() {
+        return "Groovy Shell";
     }
 
     @Override
@@ -56,7 +59,7 @@ public class GroovyShellLauncherTab extends JavaMainTab {
     }
 
     @Override
-    protected void updateMainTypeFromConfig(ILaunchConfiguration config) {
+    protected void handleSearchButtonSelected() {
     }
 
     @Override
@@ -64,8 +67,7 @@ public class GroovyShellLauncherTab extends JavaMainTab {
         String projectName = EMPTY_STRING;
         try {
             projectName = config.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, EMPTY_STRING);
-        }
-        catch (CoreException ce) {
+        } catch (CoreException ce) {
             setErrorMessage(ce.getStatus().getMessage());
         }
         fProjText.setText(projectName);
@@ -74,12 +76,6 @@ public class GroovyShellLauncherTab extends JavaMainTab {
     }
 
     @Override
-    public String getName() {
-        return "Groovy Shell";
-    }
-
-    @Override
-    public Image getImage() {
-        return JavaUI.getSharedImages().getImage(ISharedImages.IMG_OBJS_CLASS);
+    protected void updateMainTypeFromConfig(ILaunchConfiguration config) {
     }
 }
