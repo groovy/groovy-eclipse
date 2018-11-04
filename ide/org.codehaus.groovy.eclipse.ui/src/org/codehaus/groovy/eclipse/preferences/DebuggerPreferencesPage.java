@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,12 +44,87 @@ import org.eclipse.ui.progress.UIJob;
 
 public class DebuggerPreferencesPage extends FieldEditorOverlayPage implements IWorkbenchPreferencePage {
 
-    private class PackagePrefixValidator implements IInputValidator {
+    private boolean doForceOptions;
+
+    public DebuggerPreferencesPage() {
+        super(GRID);
+        setPreferenceStore(GroovyPlugin.getDefault().getPreferenceStore());
+    }
+
+    @Override
+    protected void createFieldEditors() {
+        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_DEBUG_FILTER_STACK,
+            "Shade internal Groovy stack frames while debugging", getFieldEditorParent()));
+
+        addField(new PackageChooserListEditor(PreferenceConstants.GROOVY_DEBUG_FILTER_LIST,
+            "Prefixes of the filtered packages:", getFieldEditorParent()));
+
+        PreferenceLinkArea area = new PreferenceLinkArea(getFieldEditorParent(), SWT.WRAP,
+            "org.eclipse.jdt.debug.ui.JavaStepFilterPreferencePage",
+            " \n\n" +
+            "Stack frame filtering works best when it is combined with step filters." +
+            "\nUsing step filters, Groovy internal stack frames are ignored\n" +
+            "when stepping through instructions in the debugger.  \n\n" +
+            "You can <a>edit step filters...</a>\n\n" +
+            "Or you can add step filtering automatically by clicking below.",
+            (IWorkbenchPreferenceContainer) getContainer(), null);
+        GridData data = new GridData(SWT.FILL, SWT.CENTER, false, false);
+        area.getControl().setLayoutData(data);
+        @SuppressWarnings("unused")
+        Composite c1 = new Composite(getFieldEditorParent(), 0);
+        Button forceDebugOptions = new Button(getFieldEditorParent(), SWT.PUSH);
+        forceDebugOptions.setText("Automatically configure common Groovy step filtering");
+        forceDebugOptions.addSelectionListener(new SelectionListener() {
+            @Override
+            public void widgetSelected(SelectionEvent arg0) {
+                doForceOptions = true;
+                new GroovyDebugOptionsEnforcer().force();
+            }
+            @Override
+            public void widgetDefaultSelected(SelectionEvent arg0) {
+                doForceOptions = true;
+                new GroovyDebugOptionsEnforcer().force();
+            }
+        });
+        @SuppressWarnings("unused")
+        Composite c2 = new Composite(getFieldEditorParent(), 0);
+    }
+
+    @Override
+    protected String getPageId() {
+        return "org.codehaus.groovy.eclipse.preferences.debugger";
+    }
+
+    @Override
+    public void init(IWorkbench workbench) {
+    }
+
+    @Override
+    public boolean performOk() {
+        if (doForceOptions) {
+            // ensures that this runs after the preference page closes
+            // otherwise the forcing might be overridden by the actual Java Step
+            // Filter preferences page
+            UIJob job = new UIJob(this.getShell().getDisplay(), "Setting Groovy debug options") {
+                @Override
+                public IStatus runInUIThread(IProgressMonitor monitor) {
+                    new GroovyDebugOptionsEnforcer().force();
+                    return Status.OK_STATUS;
+                }
+            };
+            job.schedule();
+        }
+        return super.performOk();
+    }
+
+    //--------------------------------------------------------------------------
+
+    private static class PackagePrefixValidator implements IInputValidator {
         @Override
         public String isValid(String newText) {
             if (newText.trim().length() == 0)
                 return "";
-            IStatus s = JavaConventions.validatePackageName(newText, CompilerOptions.VERSION_1_3,CompilerOptions.VERSION_1_3);
+            IStatus s = JavaConventions.validatePackageName(newText, CompilerOptions.VERSION_1_3, CompilerOptions.VERSION_1_3);
             if (s.getSeverity() > IStatus.OK) {
                 return s.getMessage();
             }
@@ -59,7 +134,7 @@ public class DebuggerPreferencesPage extends FieldEditorOverlayPage implements I
 
     private class PackageChooserListEditor extends ListEditor {
 
-        public PackageChooserListEditor(String name, String labelText, Composite parent) {
+        PackageChooserListEditor(String name, String labelText, Composite parent) {
             super(name, labelText, parent);
             setPreferenceStore(DebuggerPreferencesPage.this.getPreferenceStore());
         }
@@ -91,7 +166,7 @@ public class DebuggerPreferencesPage extends FieldEditorOverlayPage implements I
         @Override
         protected String getNewInputObject() {
             InputDialog dialog = new InputDialog(getFieldEditorParent().getShell(), "Add new package to filter",
-                    "Add a package or a package prefix to grey out in the Debug view", "", new PackagePrefixValidator());
+                "Add a package or a package prefix to grey out in the Debug view", "", new PackagePrefixValidator());
             int res = dialog.open();
             if (res == Window.OK) {
                 return dialog.getValue();
@@ -105,79 +180,5 @@ public class DebuggerPreferencesPage extends FieldEditorOverlayPage implements I
             Arrays.sort(split);
             return split;
         }
-    }
-
-    private boolean doForceOptions = false;
-
-    public DebuggerPreferencesPage() {
-        super(GRID);
-        setPreferenceStore(GroovyPlugin.getDefault().getPreferenceStore());
-    }
-
-    @Override
-    protected String getPageId() {
-        return "org.codehaus.groovy.eclipse.preferences.debugger";
-    }
-
-    @Override
-    protected void createFieldEditors() {
-        addField(new BooleanFieldEditor(PreferenceConstants.GROOVY_DEBUG_FILTER_STACK,
-                "Gray-out internal Groovy stack frames while debugging.", getFieldEditorParent()));
-
-        addField(new PackageChooserListEditor(PreferenceConstants.GROOVY_DEBUG_FILTER_LIST,
-                "Configure prefixes of the packages to filter out", getFieldEditorParent()));
-
-        PreferenceLinkArea area = new PreferenceLinkArea(getFieldEditorParent(), SWT.WRAP,
-                "org.eclipse.jdt.debug.ui.JavaStepFilterPreferencePage",
-                " \n\n" +
-                "Stack frame filtering works best when it is combined with step filters." +
-                "\nUsing step filters, Groovy internal stack frames are ignored\n" +
-                "when stepping through instructions in the debugger.  \n\n" +
-                "You can <a>edit step filters...</a>\n\n" +
-                "Or you can add step filtering automatically by clicking below.",
-                (IWorkbenchPreferenceContainer) getContainer(), null);
-        GridData data = new GridData(SWT.FILL, SWT.CENTER, false, false);
-        area.getControl().setLayoutData(data);
-        @SuppressWarnings("unused")
-        Composite c1 = new Composite(getFieldEditorParent(), 0);
-        Button forceDebugOptions = new Button(getFieldEditorParent(), SWT.PUSH);
-        forceDebugOptions.setText("Automatically configure common Groovy step filtering");
-        forceDebugOptions.addSelectionListener(new SelectionListener() {
-            @Override
-            public void widgetSelected(SelectionEvent arg0) {
-                doForceOptions = true;
-                new GroovyDebugOptionsEnforcer().force();
-            }
-            @Override
-            public void widgetDefaultSelected(SelectionEvent arg0) {
-                doForceOptions = true;
-                new GroovyDebugOptionsEnforcer().force();
-            }
-        });
-        @SuppressWarnings("unused")
-        Composite c2 = new Composite(getFieldEditorParent(), 0);
-    }
-
-    @Override
-    public void init(IWorkbench workbench) {
-    }
-
-    @Override
-    public boolean performOk() {
-        if (doForceOptions) {
-            // ensures that this runs after the preference page closes
-            // otherwise the forcing might be overridden by the actual Java Step
-            // Filter preferences page
-            UIJob job = new UIJob(this.getShell().getDisplay(), "Setting Groovy debug options") {
-
-                @Override
-                public IStatus runInUIThread(IProgressMonitor monitor) {
-                    new GroovyDebugOptionsEnforcer().force();
-                    return Status.OK_STATUS;
-                }
-            };
-            job.schedule();
-        }
-        return super.performOk();
     }
 }

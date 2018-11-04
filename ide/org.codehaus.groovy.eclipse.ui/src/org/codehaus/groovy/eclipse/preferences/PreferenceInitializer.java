@@ -32,7 +32,9 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         // Debug
         prefs.setDefault(GROOVY_DEBUG_FILTER_STACK, true);
         prefs.setDefault(GROOVY_DEBUG_FORCE_DEBUG_OPTIONS_ON_STARTUP, true);
-        prefs.setDefault(GROOVY_DEBUG_FILTER_LIST, "groovy.lang,groovy.ui,java.lang.reflect,org.codehaus.groovy,sun.misc,sun.reflect");
+        prefs.setDefault(GROOVY_DEBUG_FILTER_LIST,
+            "sun,com.sun,groovy.lang,groovyjarjarasm,java.lang.reflect,jdk.internal," +
+            "org.apache.groovy,org.codehaus.groovy,org.eclipse.jdt.launching.internal");
 
         // General
         prefs.setDefault(GROOVY_JUNIT_MONOSPACE_FONT, false);

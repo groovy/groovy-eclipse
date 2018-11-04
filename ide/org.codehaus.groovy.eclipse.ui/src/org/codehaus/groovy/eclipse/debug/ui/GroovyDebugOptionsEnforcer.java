@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,13 @@
  */
 package org.codehaus.groovy.eclipse.debug.ui;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collections;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
+import org.codehaus.groovy.eclipse.GroovyPlugin;
 import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.jdt.internal.debug.ui.IJDIPreferencesConstants;
@@ -37,68 +40,12 @@ import org.eclipse.jface.preference.IPreferenceStore;
  */
 public class GroovyDebugOptionsEnforcer {
 
-    private final static String[] DEFAULT_GROOVY_STEP_FILTERS = { "groovy.lang.*", "org.codehaus.groovy.*", "java.lang.reflect.*",
-            "sun.misc.*", "groovy.ui.*", "sun.reflect.*" };
-
-    private IPreferenceStore preferenceStore;
-
-    public GroovyDebugOptionsEnforcer() {
-        preferenceStore = JDIDebugUIPlugin.getDefault().getPreferenceStore();
-    }
+    private final IPreferenceStore preferenceStore = JDIDebugUIPlugin.getDefault().getPreferenceStore();
 
     public void force() {
+        forceDetailFormatter();
         forceLogicalStructure();
         forceStepThroughFilters();
-        forceUseStepFilters();
-        forceGroovyStepFilters();
-        forceDetailFormatter();
-    }
-
-    private void forceDetailFormatter() {
-        // ensure that Reference objects in closures are formatted nicely in the
-        // variables view
-        new ForceDetailFormatter().forceReferenceFormatter();
-    }
-
-    private void forceLogicalStructure() {
-        // IPresentationContext context = new
-        // DebugModelPresentationContext(IDebugUIConstants.ID_VARIABLE_VIEW,
-        // null, null);
-        // context.setProperty(VariablesView.PRESENTATION_SHOW_LOGICAL_STRUCTURES,
-        // true);
-    }
-
-    private void forceStepThroughFilters() {
-        preferenceStore.setValue(IJDIPreferencesConstants.PREF_STEP_THRU_FILTERS, true);
-    }
-
-    private void forceUseStepFilters() {
-        DebugPlugin.setUseStepFilters(true);
-    }
-
-    private void forceGroovyStepFilters() {
-        String active = preferenceStore.getString(IJDIPreferencesConstants.PREF_ACTIVE_FILTERS_LIST);
-        String[] activeArr = JavaDebugOptionsManager.parseList(active);
-        List<String> activeList = new ArrayList<>(Arrays.asList(activeArr));
-        for (String filter : DEFAULT_GROOVY_STEP_FILTERS) {
-            if (!activeList.contains(filter)) {
-                activeList.add(filter);
-            }
-        }
-
-        String newActive = JavaDebugOptionsManager.serializeList(activeList.toArray(new String[0]));
-        preferenceStore.setValue(IJDIPreferencesConstants.PREF_ACTIVE_FILTERS_LIST, newActive);
-
-        String inactive = preferenceStore.getString(IJDIPreferencesConstants.PREF_INACTIVE_FILTERS_LIST);
-        String[] inactiveArr = JavaDebugOptionsManager.parseList(inactive);
-        List<String> inactiveList = new ArrayList<>(Arrays.asList(inactiveArr));
-        for (String filter : DEFAULT_GROOVY_STEP_FILTERS) {
-            // remove all dups
-            while (inactiveList.remove(filter)) {}
-        }
-
-        String newInactive = JavaDebugOptionsManager.serializeList(inactiveList.toArray(new String[0]));
-        preferenceStore.setValue(IJDIPreferencesConstants.PREF_INACTIVE_FILTERS_LIST, newInactive);
     }
 
     public void maybeForce(IPreferenceStore store) {
@@ -106,5 +53,56 @@ public class GroovyDebugOptionsEnforcer {
             force();
             store.setValue(PreferenceConstants.GROOVY_DEBUG_FORCE_DEBUG_OPTIONS_ON_STARTUP, false);
         }
+    }
+
+    //--------------------------------------------------------------------------
+
+    /**
+     * Ensures that Reference objects in closures are formatted nicely in the variables view.
+     */
+    private void forceDetailFormatter() {
+        new ForceDetailFormatter().forceReferenceFormatter();
+    }
+
+    /**
+     * TODO
+     */
+    private void forceLogicalStructure() {
+        //IPresentationContext context = new DebugModelPresentationContext(IDebugUIConstants.ID_VARIABLE_VIEW, null, null);
+        //context.setProperty(VariablesView.PRESENTATION_SHOW_LOGICAL_STRUCTURES, true);
+    }
+
+    /**
+     * TODO
+     */
+    private void forceStepThroughFilters() {
+        String groovyInternalPackages = GroovyPlugin.getDefault().getPreferenceStore().getDefaultString(PreferenceConstants.GROOVY_DEBUG_FILTER_LIST);
+        Set<String> defaultFilters = Arrays.stream(JavaDebugOptionsManager.parseList(groovyInternalPackages)).map(p -> p + ".*").collect(Collectors.toSet());
+
+        // add defaults to active list
+        Set<String> activeFilters = new TreeSet<>(defaultFilters);
+        Collections.addAll(activeFilters, JavaDebugOptionsManager.parseList(
+            preferenceStore.getString(IJDIPreferencesConstants.PREF_ACTIVE_FILTERS_LIST)));
+        activeFilters.remove("java.lang.ClassLoader");
+        activeFilters.remove("java.lang.reflect.*");
+        activeFilters.add("java.*");
+
+        // remove defaults from inactive list
+        Set<String> inactiveFilters = new TreeSet<>();
+        Collections.addAll(inactiveFilters, JavaDebugOptionsManager.parseList(
+            preferenceStore.getString(IJDIPreferencesConstants.PREF_INACTIVE_FILTERS_LIST)));
+        inactiveFilters.removeAll(activeFilters);
+
+        //
+
+        DebugPlugin.setUseStepFilters(true);
+
+        preferenceStore.setValue(IJDIPreferencesConstants.PREF_STEP_THRU_FILTERS, true);
+
+        preferenceStore.setValue(IJDIPreferencesConstants.PREF_ACTIVE_FILTERS_LIST,
+            JavaDebugOptionsManager.serializeList(activeFilters.toArray(new String[activeFilters.size()])));
+
+        preferenceStore.setValue(IJDIPreferencesConstants.PREF_INACTIVE_FILTERS_LIST,
+            JavaDebugOptionsManager.serializeList(inactiveFilters.toArray(new String[inactiveFilters.size()])));
     }
 }
