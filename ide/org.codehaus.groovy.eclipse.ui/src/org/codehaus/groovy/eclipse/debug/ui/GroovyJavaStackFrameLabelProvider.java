@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,55 +20,76 @@ import org.codehaus.groovy.eclipse.core.preferences.PreferenceConstants;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.internal.ui.viewers.model.provisional.ILabelUpdate;
 import org.eclipse.jdt.debug.core.IJavaStackFrame;
+import org.eclipse.jdt.internal.debug.ui.JavaDebugOptionsManager;
 import org.eclipse.jdt.internal.debug.ui.variables.JavaStackFrameLabelProvider;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.preference.JFacePreferences;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.graphics.RGB;
 
 class GroovyJavaStackFrameLabelProvider extends JavaStackFrameLabelProvider implements IPropertyChangeListener {
 
-    private boolean isEnabled;
-    private String[] filteredList;
-    private IPreferenceStore preferenceStore;
+    private boolean enabled;
+    private String[] filters;
+    private final IPreferenceStore preferenceStore;
 
-    public GroovyJavaStackFrameLabelProvider() {
+    GroovyJavaStackFrameLabelProvider() {
         preferenceStore = GroovyPlugin.getDefault().getPreferenceStore();
-        isEnabled = preferenceStore.getBoolean(PreferenceConstants.GROOVY_DEBUG_FILTER_STACK);
-        filteredList = computeFilteredList();
+        computeEnabled();
+        computeFilters();
     }
 
-    private String[] computeFilteredList() {
-        String filter = preferenceStore.getString(PreferenceConstants.GROOVY_DEBUG_FILTER_LIST);
-        if (filter != null) {
-            return filter.split(",");
-        } else {
-            return new String[0];
+    @Override
+    public void propertyChange(PropertyChangeEvent event) {
+        switch (event.getProperty()) {
+        case PreferenceConstants.GROOVY_DEBUG_FILTER_STACK:
+            computeEnabled();
+            break;
+        case PreferenceConstants.GROOVY_DEBUG_FILTER_LIST:
+            computeFilters();
+            break;
         }
     }
 
     @Override
     protected void retrieveLabel(ILabelUpdate update) throws CoreException {
         super.retrieveLabel(update);
-        if (isEnabled && !update.isCanceled()) {
+        if (enabled && !update.isCanceled()) {
             Object element = update.getElement();
             if (element instanceof IJavaStackFrame) {
-                IJavaStackFrame frame = (IJavaStackFrame) element;
-                if (isFiltered(frame.getDeclaringTypeName())) {
+                if (isFiltered(((IJavaStackFrame) element).getDeclaringTypeName())) {
                     try {
-                        update.setForeground(new RGB(200, 200, 200), 0);
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        // ignore, there are no columns in this LabelUpdate
-                    } catch (NullPointerException e) {
-                        // ignore, the columns are null
+                        RGB mutedColor = JFaceResources.getColorRegistry().getRGB(JFacePreferences.DECORATIONS_COLOR);
+                        update.setForeground(mutedColor, 0);
+                    } catch (ArrayIndexOutOfBoundsException ignore) {
+                        // there are no columns in this LabelUpdate
+                    } catch (NullPointerException ignore) {
+                        // the columns are null
                     }
                 }
             }
         }
     }
 
+    //--------------------------------------------------------------------------
+
+    private void computeEnabled() {
+        enabled = preferenceStore.getBoolean(PreferenceConstants.GROOVY_DEBUG_FILTER_STACK);
+    }
+
+    private void computeFilters() {
+        String filterList = preferenceStore.getString(PreferenceConstants.GROOVY_DEBUG_FILTER_LIST);
+        if (filterList != null) {
+            filters = JavaDebugOptionsManager.parseList(filterList);
+        } else {
+            filters = new String[0];
+        }
+    }
+
     private boolean isFiltered(String qualifiedName) {
-        for (String filter : filteredList) {
+        for (String filter : filters) {
             if (qualifiedName.startsWith(filter)) {
                 return true;
             }
@@ -76,20 +97,11 @@ class GroovyJavaStackFrameLabelProvider extends JavaStackFrameLabelProvider impl
         return false;
     }
 
-    @Override
-    public void propertyChange(PropertyChangeEvent event) {
-        if (PreferenceConstants.GROOVY_DEBUG_FILTER_STACK.equals(event.getProperty())) {
-            isEnabled = preferenceStore.getBoolean(PreferenceConstants.GROOVY_DEBUG_FILTER_STACK);
-        } else if (PreferenceConstants.GROOVY_DEBUG_FILTER_LIST.equals(event.getProperty())) {
-            filteredList = computeFilteredList();
-        }
-    }
-
     void connect() {
-        GroovyPlugin.getDefault().getPreferenceStore().addPropertyChangeListener(this);
+        preferenceStore.addPropertyChangeListener(this);
     }
 
     void disconnect() {
-        GroovyPlugin.getDefault().getPreferenceStore().removePropertyChangeListener(this);
+        preferenceStore.removePropertyChangeListener(this);
     }
 }
