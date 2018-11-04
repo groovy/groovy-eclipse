@@ -65,8 +65,11 @@
                   <count value="1"/><!-- one item selected -->
                   <iterate>
                      <or>
-                        <reference definitionId="org.eclipse.jdt.groovy.core.isGroovySource"/>
                         <reference definitionId="org.eclipse.jdt.groovy.core.isGroovyProject"/>
+                        <and>
+                           <reference definitionId="org.eclipse.jdt.groovy.core.isGroovySource"/>
+                           <test property="org.eclipse.jdt.groovy.core.hasMain"/>
+                        </and>
                      </or>
                   </iterate>
                </with>

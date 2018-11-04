@@ -20,11 +20,11 @@ import org.eclipse.debug.ui.CommonTab;
 import org.eclipse.debug.ui.EnvironmentTab;
 import org.eclipse.debug.ui.ILaunchConfigurationDialog;
 import org.eclipse.debug.ui.ILaunchConfigurationTab;
-import org.eclipse.debug.ui.PrototypeTab;
 import org.eclipse.debug.ui.sourcelookup.SourceLookupTab;
 import org.eclipse.jdt.debug.ui.launchConfigurations.JavaArgumentsTab;
 import org.eclipse.jdt.debug.ui.launchConfigurations.JavaClasspathTab;
 import org.eclipse.jdt.debug.ui.launchConfigurations.JavaJRETab;
+import org.eclipse.jdt.groovy.core.util.ArrayUtils;
 
 public class GroovyScriptLaunchConfigurationTabGroup extends AbstractLaunchConfigurationTabGroup {
 
@@ -38,7 +38,11 @@ public class GroovyScriptLaunchConfigurationTabGroup extends AbstractLaunchConfi
             new SourceLookupTab(),
             new EnvironmentTab(),
             new CommonTab(),
-            new PrototypeTab(),
         };
+        try {
+            fTabs = (ILaunchConfigurationTab[]) ArrayUtils.add(fTabs,
+                Class.forName("org.eclipse.debug.ui.PrototypeTab").newInstance());
+        } catch (Exception ignore) {
+        }
     }
 }
