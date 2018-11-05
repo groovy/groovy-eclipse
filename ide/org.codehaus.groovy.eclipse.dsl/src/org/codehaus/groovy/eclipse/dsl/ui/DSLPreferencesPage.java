@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,9 @@
 package org.codehaus.groovy.eclipse.dsl.ui;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -357,10 +359,11 @@ public class DSLPreferencesPage extends PreferencePage implements IWorkbenchPref
                 DSLDStore store = manager.getDSLDStore(project);
                 if (store != null) {
                     IStorage[] keys = store.getAllContextKeys();
+                    Arrays.sort(keys, Comparator.comparing(IStorage::getName));
                     ProjectContextKey[] pck = new ProjectContextKey[keys.length];
-                    for (int i = 0; i < pck.length; i++) {
+                    for (int i = 0, n = pck.length; i < n; i += 1) {
                         pck[i] = new ProjectContextKey(element, keys[i]);
-                        pck[i].isChecked = ! cache.isDisabled(DSLDStore.toUniqueString(pck[i].dslFile));
+                        pck[i].isChecked = !cache.isDisabled(DSLDStore.toUniqueString(pck[i].dslFile));
                     }
                     elementsMap.put(element, pck);
                 }

@@ -117,9 +117,15 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
     }
 
     @Test
-    void testMetaDSL3() {
+    void testMetaDSL3a() {
+        GroovyCompilationUnit unit = addDsldSource('assertVersion')
+        InferencingTestSuite.assertType(unit, 0, 'assertVersion'.length(), 'java.lang.Void')
+    }
+
+    @Test
+    void testMetaDSL3b() {
         GroovyCompilationUnit unit = addDsldSource('supportsVersion')
-        InferencingTestSuite.assertType(unit, 0, 'supportsVersion'.length(), 'java.lang.Void')
+        InferencingTestSuite.assertType(unit, 0, 'supportsVersion'.length(), 'java.lang.Boolean')
     }
 
     @Test

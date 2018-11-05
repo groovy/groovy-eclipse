@@ -29,7 +29,7 @@ import org.codehaus.groovy.eclipse.dsl.script.PointcutFactory
 // for this script to be evaluated any further, all conditions must be met
 // also supports grailsTooling and sts, which are synonyms and correspond to the STS version eg- 2.6.0
 // we can add more version checking on request
-supportsVersion(groovy: '2.6.0', groovyEclipse: '3.0.0')
+assertVersion(groovy: '2.6.0', groovyEclipse: '3.0.0')
 
 interface IPointcut {
     /**
@@ -97,14 +97,20 @@ def insideContribution = { (enclosingCallName('accept') | enclosingCallName('con
             params: [name: String, pointcutBody: Closure],
             doc: 'Registers a custom pointcut. This pointcut is only available from within the current script. You must specify a name for the pointcut as well as a closure that evaluates whether or not there is a match.'
 
-    method  name: 'supportsVersion',
+    method  name: 'assertVersion',
             type: void,
-            params: [versionConstraints: Map],
+            params: [versionConstraints: 'java.util.Map<java.lang.String, java.lang.String>'],
             doc: '''\
-                Specifies that this script is only active when the specified version constraints are met. Currently, the
-                following constraint keys are available: {@code groovy}, {@code groovyEclipse}, and {@code grailsTooling}.
-                <p>For example, to indicate that a script requires <b>both</b> Groovy 1.7.10 or later and Groovy-Eclipse 2.1.3 or later:
-                <code>supportsVersion(groovy: '1.7.10', groovyEclipse: '2.1.3')</code>
+                Specifies that this script is only active when the specified version constraints are met. The following constraint keys are available: {@code groovy}, {@code groovyEclipse}, {@code grailsTooling}, and {@code sts}.
+                <p>For example, to indicate that a script requires <b>both</b> Groovy 1.7.10 or later and Groovy-Eclipse 2.1.3 or later: <code>assertVersion(groovy: '1.7.10', groovyEclipse: '2.1.3')</code>
+                '''.stripIndent()
+
+    method  name: 'supportsVersion',
+            type: boolean,
+            params: [versionConstraints: 'java.util.Map<java.lang.String, java.lang.String>'],
+            doc: '''\
+                Determines if the specified version constraints are met. The following constraint keys are available: {@code groovy}, {@code groovyEclipse}, {@code grailsTooling}, and {@code sts}.
+                <p>For example, to check for <b>both</b> Groovy 1.7.10 or later and Groovy-Eclipse 2.1.3 or later: <code>def result = supportsVersion(groovy: '1.7.10', groovyEclipse: '2.1.3')</code>
                 '''.stripIndent()
 
     method  name: 'log', params: [message: Object], doc: 'Logs a message to the Groovy Event Console.'

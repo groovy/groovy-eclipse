@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,163 +50,6 @@ import org.osgi.framework.Version;
  */
 public class DSLDScriptExecutor {
 
-    private final class UnsupportedDSLVersion extends RuntimeException {
-        private static final long serialVersionUID = 1L;
-
-        public UnsupportedDSLVersion(String why) {
-            super(scriptFile.getName() + " is not supported because:\n" + why);
-        }
-    }
-
-    private final class RegisterClosure extends Closure<Object> {
-        private static final long serialVersionUID = 1162731585734041055L;
-
-        public RegisterClosure(Object owner) {
-            super(owner);
-        }
-
-        @Override
-        public Object call(Object arguments) {
-            return tryRegister(arguments);
-        }
-
-        @Override
-        public Object call(Object... arguments) {
-            return tryRegister(arguments);
-        }
-    }
-
-    private final class DSLDScriptBinding extends Binding {
-        private final Script dsldScript;
-
-        public DSLDScriptBinding(Script dsldScript) {
-            this.dsldScript = dsldScript;
-        }
-
-        @Override
-        public Object invokeMethod(String name, Object args) {
-            if (name.equals("registerPointcut")) {
-                return tryRegister(args);
-            } else if (name.equals("supportsVersion")) {
-                String result = (String) checkVersion(new Object[] {args});
-                return result == null;
-            } else if (name.equals("assertVersion")) {
-                String result = (String) checkVersion(new Object[] {args});
-                if (result != null) {
-                    throw new UnsupportedDSLVersion(result);
-                }
-                return null;
-            } else if (name.equals("contribute")) {
-                Object result = contribution(args);
-                if (result == null) {
-                    throw new MissingMethodException(name, dsldScript.getClass(), new Object[] { args });
-                }
-                return result;
-            } else if (name.equals("log")) {
-                if (GroovyLogManager.manager.hasLoggers()) {
-                    GroovyLogManager.manager.log(TraceCategory.DSL, "========== " + args);
-                }
-                return args;
-            }
-
-            IPointcut pc = factory.createPointcut(name);
-            if (pc != null) {
-                configure(pc, args);
-                return pc;
-            } else {
-                return super.invokeMethod(name, args);
-            }
-        }
-
-        @Override
-        public Object getVariable(String name) {
-            if ("registerPointcut".equals(name)) {
-                return new RegisterClosure(this);
-            } else if ("supportsVersion".equals(name)) {
-                return new Closure<Object>(this) {
-                    private static final long serialVersionUID = 1L;
-
-                    @Override
-                    public Object call(Object... args) {
-                        String result = (String) checkVersion(args);
-                        return result == null;
-                    }
-                };
-            } else if ("assertVersion".equals(name)) {
-                return new Closure<Object>(this) {
-                    private static final long serialVersionUID = 1L;
-
-                    @Override
-                    public Object call(Object... args) {
-                        String result = (String) checkVersion(args);
-                        if (result != null) {
-                            throw new UnsupportedDSLVersion(result);
-                        }
-                        return null;
-                    }
-                };
-            } else if ("contribute".equals(name)) {
-                return new Closure<Object>(this) {
-                    private static final long serialVersionUID = 1L;
-                    @Override
-                    public Object call(Object... args) {
-                        Object result = contribution(args);
-                        if (result == null) {
-                            throw new MissingMethodException("contribute", dsldScript.getClass(), new Object[] { args });
-                        }
-                        return result;
-                    }
-                };
-            } else if ("log".equals(name)) {
-                return new Closure<Object>(this) {
-                    private static final long serialVersionUID = 1L;
-                    @Override
-                    public Object call(Object... args) {
-                        if (GroovyLogManager.manager.hasLoggers()) {
-                            String msg;
-                            if (args == null) {
-                                msg = "null";
-                            } else if (args.length == 0) {
-                                msg = "";
-                            } else {
-                                msg = args[0].toString();
-                            }
-                            GroovyLogManager.manager.log(TraceCategory.DSL, "========== " + msg);
-                        }
-                        return args;
-                    }
-                };
-            }
-
-            IPointcut pc = factory.createPointcut(name);
-            if (pc != null) {
-                return new PointcutClosure(this, pc);
-            } else {
-                return super.getVariable(name);
-            }
-        }
-
-        @SuppressWarnings("unchecked")
-        private void configure(IPointcut pointcut, Object arguments) {
-            if (arguments instanceof Map) {
-                for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) arguments).entrySet()) {
-                    Object key = entry.getKey();
-                    pointcut.addArgument(key == null ? null : key.toString(), entry.getValue());
-                }
-            } else if (arguments instanceof Collection) {
-                for (Object arg : (Collection<Object>) arguments) {
-                    pointcut.addArgument(arg);
-                }
-            } else if (arguments instanceof Object[]) {
-                for (Object arg : (Object[]) arguments) {
-                    pointcut.addArgument(arg);
-                }
-            } else if (arguments != null) {
-                pointcut.addArgument(arguments);
-            }
-        }
-    }
-
     private final GroovyClassLoader gcl;
     private final IJavaProject project;
     private PointcutFactory factory;
@@ -238,12 +81,10 @@ public class DSLDScriptExecutor {
                     if (GroovyLogManager.manager.hasLoggers()) {
                         StringWriter writer = new StringWriter();
                         e.printStackTrace(new PrintWriter(writer));
-                        GroovyLogManager.manager.log(TraceCategory.DSL, "Attempted to compile " + scriptFile + "but failed because:\n" +
-                                writer.getBuffer());
+                        GroovyLogManager.manager.log(TraceCategory.DSL, "Attempted to compile " + scriptFile + "but failed because:\n" + writer.getBuffer());
                     }
                     return result;
                 }
-
 
                 if (!Script.class.isAssignableFrom(clazz)) {
                     // might be some strange compile error
@@ -343,10 +184,10 @@ public class DSLDScriptExecutor {
         return null;
     }
 
-    private static Version groovyEclipseVersion;
     private static Version groovyVersion;
+    private static Version groovyEclipseVersion;
     private static Version grailsToolingVersion;
-    private final static Object versionLock = new Object();
+    private static final Object versionLock = new Object();
 
     private static void initializeVersions() {
         groovyEclipseVersion = GroovyDSLCoreActivator.getDefault().getBundle().getVersion();
@@ -382,19 +223,19 @@ public class DSLDScriptExecutor {
         }
         Object args = array[0];
 
-        synchronized(versionLock) {
+        synchronized (versionLock) {
             if (groovyEclipseVersion == null) {
                 initializeVersions();
             }
         }
 
-        if (! (args instanceof Map)) {
+        if (!(args instanceof Map)) {
             return createInvalidVersionString(args);
         }
 
-        Map<?,?> versions = (Map<?,?>) args;
-        for (Map.Entry<?,?> entry : versions.entrySet()) {
-            if (! (entry.getValue() instanceof String)) {
+        Map<?, ?> versions = (Map<?, ?>) args;
+        for (Map.Entry<?, ?> entry : versions.entrySet()) {
+            if (!(entry.getValue() instanceof String)) {
                 return createInvalidVersionString(args);
             }
             Version v = null;
@@ -435,4 +276,171 @@ public class DSLDScriptExecutor {
                 "Supported version checking is: 'groovy', 'grailsTooling', 'groovyEclipse'.";
     }
 
+    private final class UnsupportedDSLVersion extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+
+        UnsupportedDSLVersion(String why) {
+            super(scriptFile.getName() + " is not supported because:\n" + why);
+        }
+    }
+
+    private final class RegisterClosure extends Closure<Object> {
+        private static final long serialVersionUID = 1162731585734041055L;
+
+        RegisterClosure(Object owner) {
+            super(owner);
+        }
+
+        @Override
+        public Object call(Object arguments) {
+            return tryRegister(arguments);
+        }
+
+        @Override
+        public Object call(Object... arguments) {
+            return tryRegister(arguments);
+        }
+    }
+
+    private final class DSLDScriptBinding extends Binding {
+        private final Script dsldScript;
+
+        DSLDScriptBinding(Script dsldScript) {
+            this.dsldScript = dsldScript;
+        }
+
+        @Override
+        public Object invokeMethod(String name, Object args) {
+            Object result;
+            switch (name) {
+            case "registerPointcut":
+                return tryRegister(args);
+
+            case "supportsVersion":
+                result = checkVersion(new Object[] {args});
+                return (result == null);
+
+            case "assertVersion":
+                result = checkVersion(new Object[] {args});
+                if (result != null) {
+                    throw new UnsupportedDSLVersion(result.toString());
+                }
+                return null;
+
+            case "contribute":
+                result = contribution(args);
+                if (result == null) {
+                    throw new MissingMethodException(name, dsldScript.getClass(), new Object[] {args});
+                }
+                return result;
+
+            case "log":
+                if (GroovyLogManager.manager.hasLoggers()) {
+                    GroovyLogManager.manager.log(TraceCategory.DSL, "========== " + args);
+                }
+                return args;
+            }
+
+            IPointcut pc = factory.createPointcut(name);
+            if (pc != null) {
+                configure(pc, args);
+                return pc;
+            } else {
+                return super.invokeMethod(name, args);
+            }
+        }
+
+        @Override
+        public Object getVariable(String name) {
+            switch (name) {
+            case "registerPointcut":
+                return new RegisterClosure(this);
+
+            case "supportsVersion":
+                return new Closure<Object>(this) {
+                    private static final long serialVersionUID = 1L;
+
+                    @Override
+                    public Object call(Object... args) {
+                        String result = (String) checkVersion(args);
+                        return result == null;
+                    }
+                };
+
+            case "assertVersion":
+                return new Closure<Object>(this) {
+                    private static final long serialVersionUID = 1L;
+
+                    @Override
+                    public Object call(Object... args) {
+                        String result = (String) checkVersion(args);
+                        if (result != null) {
+                            throw new UnsupportedDSLVersion(result);
+                        }
+                        return null;
+                    }
+                };
+
+            case "contribute":
+                return new Closure<Object>(this) {
+                    private static final long serialVersionUID = 1L;
+                    @Override
+                    public Object call(Object... args) {
+                        Object result = contribution(args);
+                        if (result == null) {
+                            throw new MissingMethodException("contribute", dsldScript.getClass(), new Object[] {args});
+                        }
+                        return result;
+                    }
+                };
+
+            case "log":
+                return new Closure<Object>(this) {
+                    private static final long serialVersionUID = 1L;
+                    @Override
+                    public Object call(Object... args) {
+                        if (GroovyLogManager.manager.hasLoggers()) {
+                            String msg;
+                            if (args == null) {
+                                msg = "null";
+                            } else if (args.length == 0) {
+                                msg = "";
+                            } else {
+                                msg = args[0].toString();
+                            }
+                            GroovyLogManager.manager.log(TraceCategory.DSL, "========== " + msg);
+                        }
+                        return args;
+                    }
+                };
+            }
+
+            IPointcut pc = factory.createPointcut(name);
+            if (pc != null) {
+                return new PointcutClosure(this, pc);
+            } else {
+                return super.getVariable(name);
+            }
+        }
+
+        @SuppressWarnings("unchecked")
+        private void configure(IPointcut pointcut, Object arguments) {
+            if (arguments instanceof Map) {
+                for (Map.Entry<Object, Object> entry : ((Map<Object, Object>) arguments).entrySet()) {
+                    Object key = entry.getKey();
+                    pointcut.addArgument(key == null ? null : key.toString(), entry.getValue());
+                }
+            } else if (arguments instanceof Collection) {
+                for (Object arg : (Collection<Object>) arguments) {
+                    pointcut.addArgument(arg);
+                }
+            } else if (arguments instanceof Object[]) {
+                for (Object arg : (Object[]) arguments) {
+                    pointcut.addArgument(arg);
+                }
+            } else if (arguments != null) {
+                pointcut.addArgument(arguments);
+            }
+        }
+    }
 }
