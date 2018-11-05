@@ -20,6 +20,7 @@ package org.codehaus.groovy.classgen.asm;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.BooleanExpression;
@@ -315,12 +316,22 @@ public class StatementWriter {
         ifElse.getIfBlock().visit(controller.getAcg());
         controller.getCompileStack().pop();
 
-        if (ifElse.getElseBlock()==EmptyStatement.INSTANCE) {
+        // GRECLIPSE edit
+        //if (ifElse.getElseBlock()==EmptyStatement.INSTANCE) {
+        if (ifElse.getElseBlock() instanceof EmptyStatement) {
+        // GRECLIPSE end
             mv.visitLabel(l0);
         } else {
             Label l1 = new Label();
             mv.visitJumpInsn(GOTO, l1);
             mv.visitLabel(l0);
+            // GRECLIPSE add
+            if (ifElse.getElseBlock().getLineNumber() < 1) {
+                MethodNode mn = controller.getConstructorNode();
+                if (mn == null) mn = controller.getMethodNode();
+                mv.visitLineNumber(mn.getLastLineNumber(), l0);
+            }
+            // GRECLIPSE end
     
             controller.getCompileStack().pushBooleanExpression();
             ifElse.getElseBlock().visit(controller.getAcg());
