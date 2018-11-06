@@ -20,7 +20,6 @@ package org.codehaus.groovy.classgen.asm;
 
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.BooleanExpression;
@@ -68,11 +67,11 @@ public class StatementWriter {
     // iterator
     private static final MethodCaller iteratorNextMethod = MethodCaller.newInterface(Iterator.class, "next");
     private static final MethodCaller iteratorHasNextMethod = MethodCaller.newInterface(Iterator.class, "hasNext");
-    
-    private final WriterController controller;
+
     public StatementWriter(WriterController controller) {
         this.controller = controller;
     }
+    private final WriterController controller;
 
     protected void writeStatementLabel(Statement statement) {
         String name = statement.getStatementLabel();
@@ -81,19 +80,25 @@ public class StatementWriter {
             controller.getMethodVisitor().visitLabel(label);
         }
     }
-    
-    public void writeBlockStatement(BlockStatement block) {
-        CompileStack compileStack = controller.getCompileStack();
 
-        //GROOVY-4505 use no line number information for the block
+    public void writeBlockStatement(BlockStatement block) {
         writeStatementLabel(block);
-        
+
         int mark = controller.getOperandStack().getStackLength();
+        CompileStack compileStack = controller.getCompileStack();
         compileStack.pushVariableScope(block.getVariableScope());
         for (Statement statement : block.getStatements()) {
             statement.visit(controller.getAcg());
         }
         compileStack.pop();
+
+        // GRECLIPSE add
+        if (block.getLastLineNumber() > 0) {
+            MethodVisitor mv = controller.getMethodVisitor();
+            Label blockEnd = new Label(); mv.visitLabel(blockEnd);
+            mv.visitLineNumber(block.getLastLineNumber(), blockEnd);
+        }
+        // GRECLIPSE end
 
         controller.getOperandStack().popDownTo(mark);
     }
@@ -311,13 +316,6 @@ public class StatementWriter {
             Label l1 = new Label();
             mv.visitJumpInsn(GOTO, l1);
             mv.visitLabel(l0);
-            // GRECLIPSE add
-            if (ifElse.getElseBlock().getLineNumber() < 1) {
-                MethodNode mn = controller.getConstructorNode();
-                if (mn == null) mn = controller.getMethodNode();
-                mv.visitLineNumber(mn.getLastLineNumber(), l0);
-            }
-            // GRECLIPSE end
     
             controller.getCompileStack().pushBooleanExpression();
             ifElse.getElseBlock().visit(controller.getAcg());
