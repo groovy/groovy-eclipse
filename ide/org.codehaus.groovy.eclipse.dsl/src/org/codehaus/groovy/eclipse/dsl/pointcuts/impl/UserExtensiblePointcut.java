@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import groovy.lang.Closure;
 
@@ -32,64 +31,75 @@ import org.eclipse.core.resources.IStorage;
 
 public class UserExtensiblePointcut extends AbstractPointcut {
 
-    @SuppressWarnings("rawtypes")
-    private Closure closure;
+    private Closure<?> closure;
 
     public UserExtensiblePointcut(IStorage containerIdentifier, String pointcutName) {
         super(containerIdentifier, pointcutName);
     }
 
-    @SuppressWarnings("rawtypes")
-    public UserExtensiblePointcut(IStorage containerIdentifier, String pointcutName, Closure closure) {
+    public UserExtensiblePointcut(IStorage containerIdentifier, String pointcutName, Closure<?> closure) {
         super(containerIdentifier, pointcutName);
         setClosure(closure);
     }
 
-    public void setClosure(@SuppressWarnings("rawtypes") Closure closure) {
-        this.closure = closure;
+    public void setClosure(Closure<?> closure) {
         closure.setResolveStrategy(Closure.DELEGATE_FIRST);
+        this.closure = closure;
     }
 
     @Override
-    public Collection<?> matches(GroovyDSLDContext pattern, Object toMatch) {
-        if (closure == null) {
-            return null;
-        }
-        try {
-            // named arguments are available in pointcut body
-            // non-named arguments are not
-            // named arguments assigned to pointcuts are also added to the binding
-            Map<String, Object> args = namedArgumentsAsMap();
-            Map<String,Object> newMap = new HashMap<>(args.size(), 1.0f);
-            for (Entry<String, Object> entry : args.entrySet()) {
-                String key = entry.getKey();
-                if (entry.getValue() instanceof IPointcut) {
-                    Collection<?> matches = matchOnPointcutArgument((IPointcut) entry.getValue(), pattern, ensureCollection(toMatch));
-                    if (matches != null && matches.size() > 0) {
-                        newMap.put(key, pattern.getCurrentBinding().getBinding(key));
-                    } else {
-                        newMap.put(key, null);
+    public Collection<?> matches(GroovyDSLDContext context, Object toMatch) {
+        if (closure != null) {
+            try {
+                Object result = null;
+                synchronized (closure) {
+                    closure.setDelegate(getClosureDelegate(context, toMatch));
+                    try {
+                        result = closure.call(toMatch);
+                    } finally {
+                        closure.setDelegate(null);
                     }
-                } else {
-                    newMap.put(key, entry.getValue());
                 }
+                return ensureCollection(result);
+            } catch (Exception e) {
+                GroovyLogManager.manager.logException(TraceCategory.DSL, e);
             }
-            // also ensure that the thing to match is available
-//            newMap.put("it2", toMatch);
-            Object result = null;
-            synchronized(closure) {
-                closure.setDelegate(newMap);
-                result = closure.call(toMatch);
-                closure.setDelegate(null);
-            }
-            return ensureCollection(result);
-        } catch (Exception e) {
-            GroovyLogManager.manager.logException(TraceCategory.DSL, e);
-            return null;
         }
+        return null;
     }
 
     @Override
     public void verify() throws PointcutVerificationException {
+    }
+
+    //--------------------------------------------------------------------------
+
+    /**
+     * Creates a map consisting of the pointcut's named arguments and the bound
+     * names of pointcut arguments. Also included is a references to the current
+     * type. These contributions are in the meta DSLD at the bottom, like this:
+     * <pre>
+     * contribute(dsldFile & enclosingCallName('registerPointcut') & inClosure() & isThisType()) {
+     *   property name: 'currentType', type: ClassNode
+     * }</pre>
+     */
+    private Object getClosureDelegate(GroovyDSLDContext context, Object toMatch) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("currentType", context.getCurrentType());
+        for (Map.Entry<String, Object> entry : namedArgumentsAsMap().entrySet()) {
+            String key = entry.getKey();
+            Object val = entry.getValue();
+            if (val instanceof IPointcut) {
+                Collection<?> matches = matchOnPointcutArgument((IPointcut) val, context, ensureCollection(toMatch));
+                if (matches != null && !matches.isEmpty()) {
+                    map.put(key, context.getCurrentBinding().getBinding(key));
+                } else {
+                    map.put(key, null);
+                }
+            } else {
+                map.put(key, val);
+            }
+        }
+        return map;
     }
 }

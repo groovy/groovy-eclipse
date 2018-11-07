@@ -238,9 +238,9 @@ def insideContribution = { (enclosingCallName('accept') | enclosingCallName('con
     }
 }
 
-// Adds the contributions for inside a 'registerPointcut' call.  User-registered pointcuts are not fully fleshed out yet, so best not to use them yet.
-(dsldFile & enclosingCallName('registerPointcut') & inClosure() & isThisType()).accept {
-    // a little naughty again...reference an internal Groovy-Eclipse type; this may be removed in future versions
-    property name: 'currentScope', type: 'org.eclipse.jdt.groovy.search.VariableScope'
-    property name: 'currenType', type: ClassNode
+// Adds the contributions for body of a 'registerPointcut' call
+contribute(dsldFile & enclosingCallName('registerPointcut') & inClosure() & isThisType()) {
+    provider = 'the meta-DSLD script'
+    property name: 'currentType', type: ClassNode, doc: 'The declaring type of the current expression.'
+    method   name: 'log', params: [message: Object], doc: 'Logs a message to the Groovy Event Console.'
 }

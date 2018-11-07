@@ -112,18 +112,12 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
 
     @Test
     void testMetaDSL2() {
-        GroovyCompilationUnit unit = addDsldSource('registerPointcut')
-        InferencingTestSuite.assertType(unit, 0, 'registerPointcut'.length(), 'java.lang.Void')
-    }
-
-    @Test
-    void testMetaDSL3a() {
         GroovyCompilationUnit unit = addDsldSource('assertVersion')
         InferencingTestSuite.assertType(unit, 0, 'assertVersion'.length(), 'java.lang.Void')
     }
 
     @Test
-    void testMetaDSL3b() {
+    void testMetaDSL3() {
         GroovyCompilationUnit unit = addDsldSource('supportsVersion')
         InferencingTestSuite.assertType(unit, 0, 'supportsVersion'.length(), 'java.lang.Boolean')
     }
@@ -246,5 +240,35 @@ final class MetaDSLInferencingTests extends DSLInferencingTestSuite {
         result = InferencingTestSuite.doVisit(start, until, unit, false).result
         assert result.declaration instanceof org.codehaus.groovy.ast.MethodNode
         assert result.type.toString(false) == 'java.util.Map <java.lang.String, org.codehaus.groovy.ast.ClassNode>'
+    }
+
+    @Test
+    void testRegisterPointcut1() {
+        def dsld = addDsldSource('registerPointcut')
+        InferencingTestSuite.assertType(dsld, 0, 'registerPointcut'.length(), 'java.lang.Void')
+    }
+
+    @Test
+    void testRegisterPointcut2() {
+        def dsld = addDsldSource('''\
+            registerPointcut('pointcutName') {
+                log ""
+            }
+            '''.stripIndent())
+        def target = 'log'
+        int offset = dsld.source.lastIndexOf(target)
+        InferencingTestSuite.assertType(dsld, offset, offset + target.length(), 'java.lang.Object')
+    }
+
+    @Test
+    void testRegisterPointcut3() {
+        def dsld = addDsldSource('''\
+            registerPointcut('pointcutName') {
+                currentType
+            }
+            '''.stripIndent())
+        def target = 'currentType'
+        int offset = dsld.source.lastIndexOf(target)
+        InferencingTestSuite.assertType(dsld, offset, offset + target.length(), 'org.codehaus.groovy.ast.ClassNode')
     }
 }
