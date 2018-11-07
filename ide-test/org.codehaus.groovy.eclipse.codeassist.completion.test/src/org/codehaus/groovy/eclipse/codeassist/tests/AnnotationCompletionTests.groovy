@@ -208,21 +208,44 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
             package p;
             import java.lang.annotation.*;
             @Target(ElementType.TYPE)
-            public @interface B {
+            public @interface A {
               String one();
               String two();
             }
-            ''', 'B', 'p'
+            ''', 'A', 'p'
 
         String contents = '''\
-            import p.B
-            @B(one=null,)
+            import p.A
+            @A(one=null,)
             class Something {
             }
             '''.stripIndent()
         def proposals = getProposals(contents, ',')
 
         assertThat(proposals).excludes('one').includes('two')
+    }
+
+    @Test
+    void testAnnoAttr6() {
+        addJavaSource '''\
+            package p;
+            import java.lang.annotation.*;
+            @Target(ElementType.TYPE)
+            public @interface A {
+              boolean one();
+              String two();
+            }
+            ''', 'A', 'p'
+
+        String contents = '''\
+            import p.A
+            @A(one=false)
+            class Something {
+            }
+            '''.stripIndent()
+        def proposals = getProposals(contents, 'false')
+
+        assertThat(proposals).excludes('one', 'two')
     }
 
     @Test

@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.CodeVisitorSupport;
@@ -162,6 +163,8 @@ public class ConstructorCompletionProcessor extends AbstractGroovyCompletionProc
                 containingCode = ((MethodNode) containingCode).getCode();
             } else if (containingCode instanceof Variable) {
                 containingCode = ((Variable) containingCode).getInitialExpression();
+            } else if (containingCode instanceof AnnotationNode) {
+                containingCode = null; // https://github.com/groovy/groovy-eclipse/issues/761
             }
 
             ConstructorCallExpression[] enclosingCall = new ConstructorCallExpression[1];
