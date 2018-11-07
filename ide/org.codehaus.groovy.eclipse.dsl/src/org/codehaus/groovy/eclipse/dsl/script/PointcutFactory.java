@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,6 +53,7 @@ import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindMethodPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.FindPropertyPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.HasArgumentsPointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.HasAttributesPointcut;
+import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.IsConfigScript;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.IsThisTypePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.NamePointcut;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.impl.NotPointcut;
@@ -97,7 +98,8 @@ public class PointcutFactory {
         // binding pointcuts
         registerGlobalPointcut("bind", BindPointcut.class, createDoc(//
             "Adds a named binding for the contained pointcut.  This pointcut is implicitly used when a named argument is applied to any other pointcut",
-            "any pointcut", "the return value of the contained pointcut"));
+            "any pointcut",
+            "the return value of the contained pointcut"));
 
         // semantic pointcuts
         registerGlobalPointcut("currentType", CurrentTypePointcut.class, createDoc(//
@@ -167,19 +169,19 @@ public class PointcutFactory {
             "The value expression of the method call as a Groovy AST node"));
 
         registerGlobalPointcut("value", ValuePointcut.class, createDoc(//
-                "Matches on the value of an argument to a method call or an annotation.",
-                "A constant or literal to match against, or empty to match against any value.",
-                "A reifed representation of the matched value."));
+            "Matches on the value of an argument to a method call or an annotation.",
+            "A constant or literal to match against, or empty to match against any value.",
+            "A reifed representation of the matched value."));
 
         registerGlobalPointcut("type", TypePointcut.class, createDoc(//
-                "Matches on the type of an expression, method, field, property, parameter, or variable.",
-                "A String, Class object, or ClassNode corresponding to the type to match.",
-                "A singleton set of the type as a Groovy ClassNode."));
+            "Matches on the type of an expression, method, field, property, parameter, or variable.",
+            "A String, Class object, or ClassNode corresponding to the type to match.",
+            "A singleton set of the type as a Groovy ClassNode."));
 
         registerGlobalPointcut("declaringType", DeclaringTypePointcut.class, createDoc(//
-                "Matches on the declaring type of an method, field, or property.",
-                "A String, Class object, or ClassNode corresponding to the type to match.",
-                "A singleton set of the type as a Groovy ClassNode."));
+            "Matches on the declaring type of an method, field, or property.",
+            "A String, Class object, or ClassNode corresponding to the type to match.",
+            "A singleton set of the type as a Groovy ClassNode."));
 
 
         // lexical pointcuts
@@ -202,6 +204,11 @@ public class PointcutFactory {
             "Matches if the current inferencing location is inside of a script declaration.  A synonym for <code>enclosingScript</code>",
             "A string, Class, ClassNode, or Pointcut further constraining what to match on.  If there are no arguments, then a simple check on the enclosing type is performed.",
             "The matched <code>ClassNode</code> as a singleton set.")); // synonym
+
+        registerGlobalPointcut("isConfigScript", IsConfigScript.class, createDoc(//
+            "Matches if the current inferencing location is inside of project's compiler configuration script.",
+            "none",
+            "The matched object(s)"));
 
         registerGlobalPointcut("enclosingField", EnclosingFieldPointcut.class, createDoc(//
             "Matches if the current inferencing location is enclosed by a field declaration.",
@@ -289,34 +296,29 @@ public class PointcutFactory {
             "The singleton set of the current type as a ClassNode."), true);
     }
 
-    private static String createModifier(String modifier) {
-        return createDoc("Matches if one or more of the passed in items are <code>" + modifier + "</code>", "none",
-                "A sub-set of passed in items that are all <code>" + modifier + "</code>.");
+    private static String createDoc(String description, String expects, String returns) {
+        return description + "<br/><br/>" +
+            "<b>Parameters:</b>" +
+            "<blockquote>" + expects + "</blockquote>" +
+            "<b>Return:</b>" +
+            "<blockquote>" + returns + "</blockquote>" +
+            "<b>More information:</b>" +
+            "<blockquote>See <a href=\"https://github.com/groovy/groovy-eclipse/wiki/DSLD-examples\">DSL Descriptors for Groovy-Eclipse</a></blockquote>";
     }
 
     private static String createFind(String kind, String kinds) {
         return createDoc(
-                "Matches when the containing pointcut passes in a type or a list of " + kind + " that has at least one " + kind
-                        + " specified by the argument of this pointcut.",
-                "A String corresponding to a " + kind + " name.  Alternatively, a pointcut, such as <code>annotatedBy</code>, which "
-                        + "would match all " + kinds + " annotated by the inner pointcut.",
-                "the " + kind + " or " + kinds + " matched by the argument. "
-                        + "Eg- If the surrounding pointcut passes in a type, then the value returned will be a set of all " + kinds + " in that "
-                        + "type that match the contained pointcut, or that have the specified name."
-                        + "  If the surrounding pointcut passes in a set of " + kinds + ", thne the result will be a subset of those "
-                        + kinds + " containing only nodes with the correct annotation.");
+            "Matches when the containing pointcut passes in a type or a list of " + kind + " that has at least one " + kind + " specified by the argument of this pointcut.",
+            "A String corresponding to a " + kind + " name.  Alternatively, a pointcut, such as <code>annotatedBy</code>, which " + "would match all " + kinds + " annotated by the inner pointcut.",
+            "the " + kind + " or " + kinds + " matched by the argument. " + "Eg- If the surrounding pointcut passes in a type, then the value returned will be a set of all " + kinds + " in that " +
+                "type that match the contained pointcut, or that have the specified name." + "  If the surrounding pointcut passes in a set of " + kinds + ", thne the result will be a subset of those " + kinds + " containing only nodes with the correct annotation.");
     }
 
-    @SuppressWarnings("rawtypes")
-    private final Map<String, Closure> localRegistry = new HashMap<>();
-
-    private final IStorage uniqueID;
-
-    private final IProject project;
-
-    public PointcutFactory(IStorage uniqueID, IProject project) {
-        this.uniqueID = uniqueID;
-        this.project = project;
+    private static String createModifier(String modifier) {
+        return createDoc(
+            "Matches if one or more of the passed in items are <code>" + modifier + "</code>",
+            "none",
+            "A sub-set of passed in items that are all <code>" + modifier + "</code>.");
     }
 
     private static void registerGlobalPointcut(String name, Class<? extends IPointcut> pcClazz, String doc) {
@@ -331,7 +333,20 @@ public class PointcutFactory {
         }
     }
 
-    public void registerLocalPointcut(String name, @SuppressWarnings("rawtypes") Closure c) {
+    //--------------------------------------------------------------------------
+
+    private final Map<String, Closure<?>> localRegistry = new HashMap<>();
+
+    private final IStorage uniqueID;
+
+    private final IProject project;
+
+    public PointcutFactory(IStorage uniqueID, IProject project) {
+        this.uniqueID = uniqueID;
+        this.project = project;
+    }
+
+    public void registerLocalPointcut(String name, Closure<?> c) {
         localRegistry.put(name, c);
     }
 
@@ -339,8 +354,7 @@ public class PointcutFactory {
      * creates a pointcut of the given name, or returns null if not registered
      */
     public IPointcut createPointcut(String name) {
-        @SuppressWarnings("rawtypes")
-        Closure c = localRegistry.get(name);
+        Closure<?> c = localRegistry.get(name);
         if (c != null) {
             UserExtensiblePointcut userExtensiblePointcut = new UserExtensiblePointcut(uniqueID, name, c);
             userExtensiblePointcut.setProject(project);
@@ -370,15 +384,5 @@ public class PointcutFactory {
             }
         }
         return null;
-    }
-
-    private static String createDoc(String description, String expects, String returns) {
-        return description + "<br/><br/>" +
-            "<b>Parameters:</b>" +
-            "<blockquote>" + expects + "</blockquote>" +
-            "<b>Return:</b>" +
-            "<blockquote>" + "" + "</blockquote>" +
-            "<b>More information:</b>" +
-            "<blockquote>See <a href=\"https://github.com/groovy/groovy-eclipse/wiki/DSLD-examples\">DSL Descriptors for Groovy-Eclipse</a></blockquote>";
     }
 }

@@ -401,12 +401,10 @@ public class DSLDScriptExecutor {
                     public Object call(Object... args) {
                         if (GroovyLogManager.manager.hasLoggers()) {
                             String msg;
-                            if (args == null) {
-                                msg = "null";
-                            } else if (args.length == 0) {
+                            if (args == null || args.length == 0) {
                                 msg = "";
                             } else {
-                                msg = args[0].toString();
+                                msg = String.valueOf(args[0]);
                             }
                             GroovyLogManager.manager.log(TraceCategory.DSL, "========== " + msg);
                         }

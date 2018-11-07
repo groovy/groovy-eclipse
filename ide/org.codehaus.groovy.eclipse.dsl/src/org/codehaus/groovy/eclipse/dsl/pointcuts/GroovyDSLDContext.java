@@ -17,6 +17,7 @@ package org.codehaus.groovy.eclipse.dsl.pointcuts;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.codehaus.groovy.ast.ClassNode;
@@ -69,11 +70,20 @@ public class GroovyDSLDContext {
 
     private IJavaProject currentProject;
 
+    private Map<String, String> currentOptions;
+
     /**
      * the type of the expression currently being analyzed
      * set by the type lookup, should not be set by the pointcuts
      */
     private ClassNode targetType;
+
+    /** cached type hierarchy for checking type matches (consider caching more) */
+    private Set<ClassNode> cachedHierarchy;
+
+    private boolean isStatic;
+
+    private boolean isPrimaryNode;
 
     public GroovyDSLDContext(GroovyCompilationUnit unit, ModuleNode module, JDTResolver jdtResolver) throws CoreException {
         this(getProjectNatures(unit), getFullPathToFile(unit), getPathToPackage(unit));
@@ -113,9 +123,8 @@ public class GroovyDSLDContext {
         this.projectNatures = projectNatures;
     }
 
-    private static String getPathToPackage(GroovyCompilationUnit unit) {
-        IResource resource = unit.getPackageFragmentRoot().getResource();
-        return resource == null ? null : resource.getFullPath().removeFirstSegments(1).toPortableString();
+    private static String[] getProjectNatures(GroovyCompilationUnit unit) throws CoreException {
+        return unit.getJavaProject().getProject().getDescription().getNatureIds();
     }
 
     private static String getFullPathToFile(GroovyCompilationUnit unit) {
@@ -123,37 +132,19 @@ public class GroovyDSLDContext {
         return resource == null ? null : resource.getFullPath().removeFirstSegments(1).toPortableString();
     }
 
-    private static String[] getProjectNatures(GroovyCompilationUnit unit) throws CoreException {
-        return unit.getJavaProject().getProject().getDescription().getNatureIds();
+    private static String getPathToPackage(GroovyCompilationUnit unit) {
+        IResource resource = unit.getPackageFragmentRoot().getResource();
+        return resource == null ? null : resource.getFullPath().removeFirstSegments(1).toPortableString();
     }
 
-    /** cached type hierarchy for checking type matches (consider caching more) */
-    private Set<ClassNode> cachedHierarchy;
-
-    private boolean isStatic;
-
-    private boolean isPrimaryNode;
+    //--------------------------------------------------------------------------
 
     /**
-     * Called by type lookup, not by the pointcuts.
+     * Adds the collection to the currnt binding.  At this point, currentBinding should never be null.
+     * Used by the pointcuts only.
      */
-    public void setTargetType(ClassNode targetType) {
-        if (currentScope.isPrimaryNode() && VariableScope.CLASS_CLASS_NODE.equals(targetType) && targetType.isUsingGenerics()) {
-            targetType = targetType.getGenericsTypes()[0].getType();
-        }
-        this.targetType = targetType;
-        cachedHierarchy = null;
-    }
-
-    /**
-     * Only type lookup should use this method.
-     */
-    public void setCurrentBinding(BindingSet currentBinding) {
-        this.currentBinding = currentBinding;
-    }
-
-    public void resetBinding() {
-        this.currentBinding = new BindingSet();
+    public void addToBinding(String bindingName, Collection<?> toAdd) {
+        currentBinding.addToBinding(bindingName, toAdd);
     }
 
     /**
@@ -163,12 +154,35 @@ public class GroovyDSLDContext {
         return currentBinding;
     }
 
-    /**
-     * Adds the collection to the currnt binding.  At this point, currentBinding should never be null.
-     * Used by the pointcuts only.
-     */
-    public void addToBinding(String bindingName, Collection<?> toAdd) {
-        currentBinding.addToBinding(bindingName, toAdd);
+    public Map<String, String> getCurrentOptions() {
+        if (currentOptions == null) {
+            currentOptions = currentProject.getOptions(true);
+        }
+        return currentOptions;
+    }
+
+    public IJavaProject getCurrentProject() {
+        return currentProject;
+    }
+
+    public VariableScope getCurrentScope() {
+        return currentScope;
+    }
+
+    public ClassNode getCurrentType() {
+        return targetType;
+    }
+
+    public ResolverCache getResolverCache() {
+        return resolverCache;
+    }
+
+    public boolean isPrimaryNode() {
+        return isPrimaryNode;
+    }
+
+    public boolean isStatic() {
+        return isStatic;
     }
 
     public boolean matchesNature(String natureId) {
@@ -184,7 +198,7 @@ public class GroovyDSLDContext {
     }
 
     /**
-     * @return true iff typeName equals the targetType name or any type in the hierarchy
+     * @return {@code true} iff {@code typeName} matches the current type or any type in the hierarchy.
      */
     public boolean matchesType(String typeName) {
         return matchesType(typeName, targetType);
@@ -214,29 +228,20 @@ public class GroovyDSLDContext {
         return false;
     }
 
-    public IJavaProject getCurrentProject() {
-        return currentProject;
+    public void resetBinding() {
+        setCurrentBinding(new BindingSet());
     }
 
-    public VariableScope getCurrentScope() {
-        return currentScope;
+    /**
+     * Only type lookup should use this method.
+     */
+    public void setCurrentBinding(BindingSet currentBinding) {
+        this.currentBinding = currentBinding;
     }
 
     public void setCurrentScope(VariableScope currentScope) {
         this.currentScope = currentScope;
         setPrimaryNode(currentScope.isPrimaryNode());
-    }
-
-    public ClassNode getCurrentType() {
-        return targetType;
-    }
-
-    public ResolverCache getResolverCache() {
-        return resolverCache;
-    }
-
-    public boolean isPrimaryNode() {
-        return isPrimaryNode;
     }
 
     public void setPrimaryNode(boolean isPrimaryNode) {
@@ -247,8 +252,15 @@ public class GroovyDSLDContext {
         isStatic = s;
     }
 
-    public boolean isStatic() {
-        return isStatic;
+    /**
+     * Called by type lookup, not by the pointcuts.
+     */
+    public void setTargetType(ClassNode targetType) {
+        if (currentScope.isPrimaryNode() && VariableScope.CLASS_CLASS_NODE.equals(targetType) && targetType.isUsingGenerics()) {
+            targetType = targetType.getGenericsTypes()[0].getType();
+        }
+        this.targetType = targetType;
+        cachedHierarchy = null;
     }
 
     @Override

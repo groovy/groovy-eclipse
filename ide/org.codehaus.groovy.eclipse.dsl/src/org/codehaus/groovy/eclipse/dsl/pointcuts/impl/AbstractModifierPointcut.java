@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2017 the original author or authors.
+ * Copyright 2009-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package org.codehaus.groovy.eclipse.dsl.pointcuts.impl;
 
-import groovyjarjarasm.asm.Opcodes;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
@@ -24,42 +23,12 @@ import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.GroovyDSLDContext;
 import org.codehaus.groovy.eclipse.dsl.pointcuts.PointcutVerificationException;
 import org.eclipse.core.resources.IStorage;
+import org.eclipse.jdt.core.Flags;
 
 /**
- * the match returns true if the pattern passed in has a modifier of the kind specified
+ * Returns true if the pattern passed in has a modifier of the kind specified.
  */
-public class AbstractModifierPointcut extends FilteringPointcut<AnnotatedNode> {
-
-    public static class FinalPointcut extends AbstractModifierPointcut {
-        public FinalPointcut(IStorage containerIdentifier, String pointcutName) {
-            super(containerIdentifier, pointcutName, Opcodes.ACC_FINAL);
-        }
-    }
-
-    public static class StaticPointcut extends AbstractModifierPointcut {
-        public StaticPointcut(IStorage containerIdentifier, String pointcutName) {
-            super(containerIdentifier, pointcutName, Opcodes.ACC_STATIC);
-        }
-    }
-
-    public static class PublicPointcut extends AbstractModifierPointcut {
-        public PublicPointcut(IStorage containerIdentifier, String pointcutName) {
-            super(containerIdentifier, pointcutName, Opcodes.ACC_PUBLIC);
-        }
-    }
-
-    public static class PrivatePointcut extends AbstractModifierPointcut {
-        public PrivatePointcut(IStorage containerIdentifier, String pointcutName) {
-            super(containerIdentifier, pointcutName, Opcodes.ACC_PRIVATE);
-        }
-    }
-
-    public static class SynchronizedPointcut extends AbstractModifierPointcut {
-        public SynchronizedPointcut(IStorage containerIdentifier, String pointcutName) {
-            super(containerIdentifier, pointcutName, Opcodes.ACC_SYNCHRONIZED);
-        }
-    }
-
+public abstract class AbstractModifierPointcut extends FilteringPointcut<AnnotatedNode> {
 
     private final int modifier;
 
@@ -69,9 +38,7 @@ public class AbstractModifierPointcut extends FilteringPointcut<AnnotatedNode> {
     }
 
     /**
-     * filters the passed in object based on the modifier
-     * @param result
-     * @return
+     * Filters the passed in object based on the modifier.
      */
     @Override
     protected AnnotatedNode filterObject(AnnotatedNode result, GroovyDSLDContext pattern, String firstArgAsString) {
@@ -90,8 +57,40 @@ public class AbstractModifierPointcut extends FilteringPointcut<AnnotatedNode> {
 
     @Override
     public void verify() throws PointcutVerificationException {
-        if(getArgumentValues().length > 0) {
+        if (getArgumentValues().length > 0) {
             throw new PointcutVerificationException("This pointcut does not take any arguments.", this);
+        }
+    }
+
+    //--------------------------------------------------------------------------
+
+    public static class FinalPointcut extends AbstractModifierPointcut {
+        public FinalPointcut(IStorage containerIdentifier, String pointcutName) {
+            super(containerIdentifier, pointcutName, Flags.AccFinal);
+        }
+    }
+
+    public static class PrivatePointcut extends AbstractModifierPointcut {
+        public PrivatePointcut(IStorage containerIdentifier, String pointcutName) {
+            super(containerIdentifier, pointcutName, Flags.AccPrivate);
+        }
+    }
+
+    public static class PublicPointcut extends AbstractModifierPointcut {
+        public PublicPointcut(IStorage containerIdentifier, String pointcutName) {
+            super(containerIdentifier, pointcutName, Flags.AccPublic);
+        }
+    }
+
+    public static class StaticPointcut extends AbstractModifierPointcut {
+        public StaticPointcut(IStorage containerIdentifier, String pointcutName) {
+            super(containerIdentifier, pointcutName, Flags.AccStatic);
+        }
+    }
+
+    public static class SynchronizedPointcut extends AbstractModifierPointcut {
+        public SynchronizedPointcut(IStorage containerIdentifier, String pointcutName) {
+            super(containerIdentifier, pointcutName, Flags.AccSynchronized);
         }
     }
 }
