@@ -282,7 +282,7 @@ tokens {
     List errorList;
     public List getErrorList() { return errorList; }
 
-    List<Comment> comments = new ArrayList<Comment>();
+    List<Comment> comments = new ArrayList<>();
     public List<Comment> getComments() { return comments; }
     // GRECLIPSE end
 
@@ -1127,7 +1127,7 @@ modifier
     ;
 
 annotation!  {Token first = LT(1);}
-    :   AT! i:identifier nls! (options{greedy=true;}: LPAREN! ( args:annotationArguments )? RPAREN! )?
+    :   AT! i:identifier nls! ( LPAREN! ( args:annotationArguments )? RPAREN! )?
         {#annotation = #(create(ANNOTATION,"ANNOTATION",first,LT(1)), i, args);}
     // GRECLIPSE add -- allow freestanding '@' for content assist
     |   AT! nls!
@@ -1141,51 +1141,43 @@ annotationsInternal
             {break; /* go out of the ()* loop*/}
             AT "interface"
         |
-            annotation nls!)*
+            annotation nls!
+        )*
     ;
 
 annotationsOpt  {Token first = LT(1);}
     :   (
-               // See comment above on hushing warnings.
-               options{generateAmbigWarnings=false;}:
-               annotationsInternal
+            // See comment above on hushing warnings.
+            options{generateAmbigWarnings=false;}:
+            annotationsInternal
         )?
-        {#annotationsOpt = #(create(ANNOTATIONS, "ANNOTATIONS", first, LT(1)), #annotationsOpt);}
+        {#annotationsOpt = #(create(ANNOTATIONS,"ANNOTATIONS",first,LT(1)), #annotationsOpt);}
     ;
 
 annotationArguments
     :   v:annotationMemberValueInitializer
-            { Token itkn = new Token(IDENT, "value");
-              AST i;
-              #i = #(create(IDENT, "value", itkn, itkn));
-                #annotationArguments = #(create(ANNOTATION_MEMBER_VALUE_PAIR,"ANNOTATION_MEMBER_VALUE_PAIR",LT(1),LT(1)), i, v);}
-            | annotationMemberValuePairs
+        {Token itkn = new Token(IDENT,"value"); AST i; #i = #(create(IDENT,"value",itkn,itkn));
+         #annotationArguments = #(create(ANNOTATION_MEMBER_VALUE_PAIR,"ANNOTATION_MEMBER_VALUE_PAIR",LT(1),LT(1)), i, v);}
+        | annotationMemberValuePairs
     ;
 
 annotationMemberValuePairs
-    :   annotationMemberValuePair ( COMMA! nls! annotationMemberValuePair )*
+    // GRECLIPSE edit -- allow trailing comma
+    //:   annotationMemberValuePair ( COMMA! nls! annotationMemberValuePair )*
+    :   annotationMemberValuePair (
+            (COMMA nls! RPAREN) => COMMA! nls!
+        |
+            COMMA! nls! annotationMemberValuePair
+        )*
+    // GRECLIPSE end
     ;
 
 annotationMemberValuePair!  {Token first = LT(1);}
-    // GRECLIPSE edit -- allow the pair to exist with no value initializer; user may want content assist for value
+    // GRECLIPSE edit -- allow pair with no value initializer
     //:   i:annotationIdent ASSIGN! nls! v:annotationMemberValueInitializer
-    :   i:annotationIdent ASSIGN! nls! ( v:annotationMemberValueInitializer )?
-            {#annotationMemberValuePair = #(create(ANNOTATION_MEMBER_VALUE_PAIR,"ANNOTATION_MEMBER_VALUE_PAIR",first,LT(1)),i,v);}
-        // GRECLIPSE add
-        exception
-        catch [RecognitionException e] {
-            // finish invalid member-value pair if the closing parenthesis is next
-            if (LT(1).getType() == RPAREN) {
-                reportError(e);
-                if (#i == null) {
-                    #i = missingIdentifier(first, LT(1));
-                }
-                #annotationMemberValuePair = #(create(ANNOTATION_MEMBER_VALUE_PAIR,"ANNOTATION_MEMBER_VALUE_PAIR",first,LT(1)),i,v);
-            } else {
-                throw e;
-            }
-        }
-        // GRECLIPSE end
+    :   i:annotationIdent ( ASSIGN! nls! ( v:annotationMemberValueInitializer )? )?
+        {#annotationMemberValuePair = #(create(ANNOTATION_MEMBER_VALUE_PAIR,"ANNOTATION_MEMBER_VALUE_PAIR",first,LT(1)), i, v);}
+    // GRECLIPSE end
     ;
 
 annotationIdent
@@ -1196,35 +1188,6 @@ annotationIdent
 annotationMemberValueInitializer
     :   conditionalExpression[0] | annotation
     ;
-
-/*OBS*
-// This is an initializer used to set up an annotation member array.
-annotationMemberArrayInitializer
-    :   lc:LCURLY^ {#lc.setType(ANNOTATION_ARRAY_INIT);}
-        (   annotationMemberArrayValueInitializer
-            (
-                // CONFLICT: does a COMMA after an initializer start a new
-                // initializer or start the option ',' at end?
-                // ANTLR generates proper code by matching
-                // the comma as soon as possible.
-                options {
-                        warnWhenFollowAmbig = false;
-                }
-            :
-                COMMA! nls! annotationMemberArrayValueInitializer
-            )*
-            (COMMA! nls!)?
-        )?
-        RCURLY!
-    ;
-
-// The two things that can initialize an annotation array element are a conditional expression
-// and an annotation (nested annotation array initialisers are not valid)
-annotationMemberArrayValueInitializer
-    :   conditionalExpression[0]
-    |   annotation nls!
-    ;
-*OBS*/
 
 superClassClause!
     {Token first = LT(1);}

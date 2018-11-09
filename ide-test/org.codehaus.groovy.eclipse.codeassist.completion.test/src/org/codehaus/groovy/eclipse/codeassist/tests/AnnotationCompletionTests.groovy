@@ -225,8 +225,32 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
         assertThat(proposals).excludes('one').includes('two')
     }
 
-    @Test
+    @Test // https://github.com/groovy/groovy-eclipse/issues/761
     void testAnnoAttr6() {
+        addJavaSource '''\
+            package p;
+            import java.lang.annotation.*;
+            @Target(ElementType.METHOD)
+            public @interface A {
+              String one();
+              String two();
+            }
+            ''', 'A', 'p'
+
+        String contents = '''\
+            import p.A
+            class Something {
+              @A(one=null,)
+              void meth() {}
+            }
+            '''.stripIndent()
+        def proposals = getProposals(contents, ',')
+
+        assertThat(proposals).excludes('one').includes('two')
+    }
+
+    @Test // https://github.com/groovy/groovy-eclipse/issues/761
+    void testAnnoAttr7() {
         addJavaSource '''\
             package p;
             import java.lang.annotation.*;
@@ -370,6 +394,31 @@ final class AnnotationCompletionTests extends CompletionTestSuite {
             import p.K
             @K(one=null, two = )
             class C {
+              public static final int TWO = 2
+            }
+            '''.stripIndent()
+        def proposals = getProposals(contents, ' = ')
+
+        assertThat(proposals).includes('TWO')
+    }
+
+    @Test
+    void testAnnoAttrConst8() {
+        addJavaSource '''\
+            package p;
+            import java.lang.annotation.*;
+            @Target(ElementType.METHOD)
+            public @interface L {
+              int one();
+              int two();
+            }
+            ''', 'L', 'p'
+
+        String contents = '''\
+            import p.L
+            class C {
+              @L(one=null, two = )
+              String somethingSpecial
               public static final int TWO = 2
             }
             '''.stripIndent()
